@@ -109,6 +109,11 @@ enum AdaptivePlanEngine {
         } else {
             // Same week, just a day rolled over: move the "today" marker and pick up today's
             // already-planned session — no regeneration, this week was fully planned upfront.
+            // Exception: a profile that predates weekSessions (migrated from an older build) has
+            // never had one generated at all — backfill it now rather than leaving it empty.
+            if profile.weekSessions.count != 7 {
+                profile.weekSessions = generateWeekSessions(weekNumber: profile.weekNumber, runningDays: profile.runningDays, tier: profile.weekTier)
+            }
             profile.weekStrip = profile.weekStrip.map { day in
                 guard day.state != .rest, day.state != .done else { return day }
                 var d = day

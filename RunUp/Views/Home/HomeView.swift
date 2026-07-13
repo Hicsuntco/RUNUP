@@ -126,10 +126,11 @@ struct HomeView: View {
 
     private var sessionCard: some View {
         let session = profile.todaySession
+        let isRestDay = session.durationMinutes == 0
         return Button(action: { appState.openSessionDetail() }) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    EyebrowLabel(text: "Séance clé", color: RUColor.rose)
+                    EyebrowLabel(text: isRestDay ? "Aujourd'hui" : "Séance clé", color: RUColor.rose)
                     Spacer()
                     if let adj = session.adjustment {
                         StatChip(text: adj, color: RUColor.rose2)
@@ -137,18 +138,25 @@ struct HomeView: View {
                 }
                 Text(session.title).displayStyle(23).foregroundColor(.white).padding(.top, 6)
                 Text(session.subtitle).font(RUFont.sans(11)).foregroundColor(RUColor.text2).padding(.top, 4)
-                HStack(spacing: 16) {
-                    MetricColumn(value: "\(session.durationMinutes)′", label: "Durée")
-                    MetricColumn(value: session.pace, label: "Allure")
-                    MetricColumn(value: session.zone, label: "Zone", valueColor: RUColor.rose2)
-                }
-                .padding(.top, 14)
 
-                Button(action: { appState.startRun() }) {
-                    HStack { Image(systemName: "play.fill"); Text("DÉMARRER") }
+                if isRestDay {
+                    Text("Pas de séance prévue — profite-en pour récupérer.")
+                        .font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+                        .padding(.top, 14)
+                } else {
+                    HStack(spacing: 16) {
+                        MetricColumn(value: "\(session.durationMinutes)′", label: "Durée")
+                        MetricColumn(value: session.pace, label: "Allure")
+                        MetricColumn(value: session.zone, label: "Zone", valueColor: RUColor.rose2)
+                    }
+                    .padding(.top, 14)
+
+                    Button(action: { appState.startRun() }) {
+                        HStack { Image(systemName: "play.fill"); Text("DÉMARRER") }
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .padding(.top, 15)
                 }
-                .buttonStyle(PrimaryButtonStyle())
-                .padding(.top, 15)
             }
             .padding(16)
         }

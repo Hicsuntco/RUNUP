@@ -11,6 +11,8 @@ enum AdaptivePlanEngine {
         WorkoutSession(title: "Sortie découverte", subtitle: "change d'itinéraire, explore un nouveau parcours", durationMinutes: 45, pace: "5:30", zone: "Z2", adjustment: nil)
     ]
 
+    static let restSession = WorkoutSession(title: "Repos", subtitle: "Jour de repos — laisse ton corps récupérer", durationMinutes: 0, pace: "—", zone: "—", adjustment: nil)
+
     // MARK: Onboarding → initial program
 
     struct OnboardingResult {
@@ -56,15 +58,12 @@ enum AdaptivePlanEngine {
         profile.weeklyTimeBudget = result.weeklyTimeBudget
         profile.preferredTimeOfDay = result.preferredTimeOfDay
         profile.goalDisplay = goalDisplay(goal: result.goal, distance: result.raceDistance, custom: result.raceDistanceCustom, chrono: result.raceChrono)
-        let today = currentWeekdayIndex()
-        profile.weekStrip = (0..<7).map { i in
-            let state: DayStatus.State = result.runningDays.contains(i) ? (i == today ? .today : .upcoming) : .rest
-            return DayStatus(weekday: i, letter: DayStatus.letters[i], state: state)
-        }
         profile.onboarded = true
         profile.programPhase = .active
         profile.weekNumber = 1
         profile.programStartDate = .now
+        profile.weekTier = 1
+        beginWeek(weekNumber: 1, tier: 1, profile: profile)
     }
 
     /// Total length of a program block before it hands off to recovery.
@@ -76,10 +75,10 @@ enum AdaptivePlanEngine {
         return cal
     }
 
-    /// Advances `weekNumber`/`weekStrip` (and, at week 9, `programPhase`) to match the device's
-    /// real calendar date — call each time the app becomes active. This needs no network access:
-    /// the device clock is available offline, so a real day/week always ticks forward on its own
-    /// without the app having to be opened on a fixed schedule.
+    /// Advances `weekNumber`/`weekStrip`/`weekSessions` (and, at week 9, `programPhase`) to match
+    /// the device's real calendar date — call each time the app becomes active. This needs no
+    /// network access: the device clock is available offline, so a real day/week always ticks
+    /// forward on its own without the app having to be opened on a fixed schedule.
     static func refreshProgramForCurrentDate(_ profile: UserProfile) {
         guard profile.programPhase == .active else { return }
         guard let startDate = profile.programStartDate else {
@@ -103,21 +102,46 @@ enum AdaptivePlanEngine {
         let newWeekNumber = elapsedWeeks + 1
 
         if newWeekNumber != profile.weekNumber {
-            // Crossed into a new week: last week's strip no longer applies, start a fresh one.
-            profile.weekNumber = newWeekNumber
-            profile.weekStrip = (0..<7).map { i in
-                let state: DayStatus.State = profile.runningDays.contains(i) ? (i == today ? .today : .upcoming) : .rest
-                return DayStatus(weekday: i, letter: DayStatus.letters[i], state: state)
-            }
+            // Crossed into a new week: adapt the tier from last week's average RPE — the plan
+            // only ever changes here, never after a single run — then regenerate the whole week.
+            profile.weekTier = max(1, profile.weekTier + tierDelta(sum: profile.weekRPESum, count: profile.weekRPECount))
+            beginWeek(weekNumber: newWeekNumber, tier: profile.weekTier, profile: profile)
         } else {
-            // Same week: just move the "today" marker forward, keeping days already done.
+            // Same week, just a day rolled over: move the "today" marker and pick up today's
+            // already-planned session — no regeneration, this week was fully planned upfront.
             profile.weekStrip = profile.weekStrip.map { day in
                 guard day.state != .rest, day.state != .done else { return day }
                 var d = day
                 d.state = day.weekday == today ? .today : .upcoming
                 return d
             }
+            profile.todaySession = profile.weekSessions.first(where: { $0.weekday == today })?.session ?? restSession
         }
+    }
+
+    /// Resets week-scoped state (strip, plan, RPE accumulator) and generates a fresh 7-day plan —
+    /// shared by onboarding, week-boundary adaptation, and starting a new program.
+    private static func beginWeek(weekNumber: Int, tier: Int, profile: UserProfile) {
+        let today = currentWeekdayIndex()
+        profile.weekNumber = weekNumber
+        profile.weekRPESum = 0
+        profile.weekRPECount = 0
+        profile.weekStrip = (0..<7).map { i in
+            let state: DayStatus.State = profile.runningDays.contains(i) ? (i == today ? .today : .upcoming) : .rest
+            return DayStatus(weekday: i, letter: DayStatus.letters[i], state: state)
+        }
+        profile.weekSessions = generateWeekSessions(weekNumber: weekNumber, runningDays: profile.runningDays, tier: tier)
+        profile.todaySession = profile.weekSessions.first(where: { $0.weekday == today })?.session ?? restSession
+    }
+
+    /// Tier change to apply at a week boundary, from the previous week's average RPE severity
+    /// (`3 - RPE.rawValue`, so 0 = facile, 3 = tropDur). No runs logged → no change.
+    private static func tierDelta(sum: Int, count: Int) -> Int {
+        guard count > 0 else { return 0 }
+        let avg = Double(sum) / Double(count)
+        if avg <= 1.5 { return 1 }   // mostly facile/juste bien → progress
+        if avg <= 2.5 { return 0 }   // mostly dur → hold steady
+        return -1                   // mostly trop dur → ease off
     }
 
     /// Today's index in the app's Monday-first week (0 = Monday … 6 = Sunday), derived from the
@@ -125,6 +149,74 @@ enum AdaptivePlanEngine {
     /// (1...7), so this remaps it.
     private static func currentWeekdayIndex() -> Int {
         (Calendar.current.component(.weekday, from: .now) + 5) % 7
+    }
+
+    /// The 3 named blocks of the 9-week program: weeks 1-3 Base, 4-7 Spécifique, 8-9 Affûtage.
+    enum TrainingBlock: String {
+        case base = "Base", specifique = "Spécifique", affutage = "Affûtage"
+    }
+
+    static func trainingBlock(forWeek week: Int) -> TrainingBlock {
+        switch week {
+        case ..<4: return .base
+        case 4..<8: return .specifique
+        default: return .affutage
+        }
+    }
+
+    private struct SessionArchetype {
+        var title: String
+        var subtitle: String
+        var pace: String
+        var zone: String
+        var baseDuration: Int
+    }
+
+    private static func archetypes(for block: TrainingBlock) -> [SessionArchetype] {
+        switch block {
+        case .base:
+            return [
+                SessionArchetype(title: "Footing tranquille", subtitle: "installe l'endurance de fond, allure confort", pace: "5:40", zone: "Z2", baseDuration: 30),
+                SessionArchetype(title: "Fractionné léger 5 × 500 m", subtitle: "récup 300 m · garde le tonus sans se cramer", pace: "4:50", zone: "Z3", baseDuration: 32),
+                SessionArchetype(title: "Sortie longue", subtitle: "allonge progressivement la distance", pace: "5:30", zone: "Z2", baseDuration: 45)
+            ]
+        case .specifique:
+            return [
+                SessionArchetype(title: "Fractionné VMA 6 × 800 m", subtitle: "récup 400 m · travaille la vitesse", pace: "4:20", zone: "Z4", baseDuration: 40),
+                SessionArchetype(title: "Tempo run", subtitle: "allure seuil soutenue", pace: "4:45", zone: "Z3", baseDuration: 35),
+                SessionArchetype(title: "Sortie longue", subtitle: "bloc spécifique, un peu d'allure course", pace: "5:15", zone: "Z2-3", baseDuration: 55)
+            ]
+        case .affutage:
+            return [
+                SessionArchetype(title: "Footing d'entretien", subtitle: "relâché, garde les jambes fraîches", pace: "5:40", zone: "Z2", baseDuration: 25),
+                SessionArchetype(title: "Rappel d'allure 3 × 1 km", subtitle: "à l'allure visée le jour J", pace: "4:45", zone: "Z3", baseDuration: 25),
+                SessionArchetype(title: "Sortie courte", subtitle: "décharge avant l'objectif", pace: "5:30", zone: "Z2", baseDuration: 20)
+            ]
+        }
+    }
+
+    /// Builds the full 7-day plan for a given week from its training block's session archetypes,
+    /// cycled across the user's running days and scaled by `tier` — the only place session
+    /// duration/labeling changes, and it only ever runs once per week (see
+    /// `refreshProgramForCurrentDate`), never per individual run.
+    static func generateWeekSessions(weekNumber: Int, runningDays: [Int], tier: Int) -> [PlannedDay] {
+        let templates = archetypes(for: trainingBlock(forWeek: weekNumber))
+        let sortedRunDays = runningDays.sorted()
+        return (0..<7).map { weekday in
+            guard let idx = sortedRunDays.firstIndex(of: weekday) else {
+                return PlannedDay(weekday: weekday, session: nil)
+            }
+            let archetype = templates[idx % templates.count]
+            let session = WorkoutSession(
+                title: archetype.title,
+                subtitle: archetype.subtitle,
+                durationMinutes: archetype.baseDuration + (tier - 1) * 4,
+                pace: archetype.pace,
+                zone: archetype.zone,
+                adjustment: tier > 1 ? "Niveau \(tier)" : nil
+            )
+            return PlannedDay(weekday: weekday, session: session)
+        }
     }
 
     private static func goalDisplay(goal: GoalType, distance: RaceDistance?, custom: String?, chrono: String?) -> String {
@@ -167,52 +259,30 @@ enum AdaptivePlanEngine {
         )
     }
 
-    // MARK: Debrief → rings/streak/xp/next session
+    // MARK: Debrief → rings/streak/xp/weekly RPE accumulator
 
+    /// Records this run's outcome but does **not** change any session — today's and the rest of
+    /// the week's sessions were already planned when the week began. The RPE just feeds the
+    /// accumulator that `refreshProgramForCurrentDate` averages at the next week boundary.
     @discardableResult
     static func applyDebrief(rpe: RPE, run: RunRecord, profile: UserProfile) -> String {
         profile.moveValue = min(profile.moveGoal, profile.moveValue + Double(run.kcal))
         profile.activeValue = min(profile.activeGoal, (profile.activeValue + Double(run.durationSeconds) / 60).rounded())
         profile.runValue = min(profile.runGoal, ((profile.runValue + run.distanceKm) * 100).rounded() / 100)
+        let today = currentWeekdayIndex()
         profile.weekStrip = profile.weekStrip.map { day in
             var d = day
             if d.state == .today { d.state = .done }
             return d
         }
+        if let idx = profile.weekSessions.firstIndex(where: { $0.weekday == today }) {
+            profile.weekSessions[idx].completed = true
+        }
+        profile.weekRPESum += 3 - rpe.rawValue
+        profile.weekRPECount += 1
         profile.streak += 1
         profile.xp += 120
-        profile.todaySession = nextSession(after: rpe, current: profile.todaySession)
         return "Programme mis à jour · +120 XP"
-    }
-
-    private static func nextSession(after rpe: RPE, current: WorkoutSession) -> WorkoutSession {
-        switch rpe {
-        case .facile, .justeBien:
-            return WorkoutSession(
-                title: bumpedTitle(current.title),
-                subtitle: "progression · récup 400 m",
-                durationMinutes: current.durationMinutes + 4,
-                pace: current.pace,
-                zone: current.zone,
-                adjustment: "+1 palier"
-            )
-        case .dur:
-            return WorkoutSession(title: current.title, subtitle: current.subtitle, durationMinutes: current.durationMinutes, pace: current.pace, zone: current.zone, adjustment: nil)
-        case .tropDur:
-            return WorkoutSession(title: "Récupération active", subtitle: "allure confort · laisse le corps récupérer", durationMinutes: 30, pace: "5:40", zone: "Z2", adjustment: "allégée")
-        }
-    }
-
-    /// Appends/bumps a "· niveau N" marker so progression is always visible in the title, even for
-    /// session names with no embedded number (e.g. "Footing de reprise", "Récupération active") —
-    /// bumping the first arbitrary digit in the title silently no-op'd on those.
-    private static func bumpedTitle(_ title: String) -> String {
-        guard let range = title.range(of: #"· niveau (\d+)$"#, options: .regularExpression) else {
-            return title + " · niveau 2"
-        }
-        let digitsRange = title.range(of: #"\d+"#, options: .regularExpression, range: range)!
-        let n = Int(title[digitsRange]) ?? 1
-        return title.replacingCharacters(in: digitsRange, with: String(n + 1))
     }
 
     // MARK: Program-end flow
@@ -255,17 +325,12 @@ enum AdaptivePlanEngine {
         profile.goalDisplay = goalDisplay(goal: result.goal, distance: result.distance, custom: nil, chrono: result.chrono)
         profile.runningDays = result.runningDays
         profile.programPhase = .active
-        profile.weekNumber = 1
         profile.programStartDate = .now
         profile.recoveryDaysLeft = 0
+        profile.weekTier = 1
         if result.goal == .race {
             profile.raceDate = Calendar.current.date(byAdding: .day, value: 63, to: .now)
         }
-        let today = currentWeekdayIndex()
-        profile.weekStrip = (0..<7).map { i in
-            let state: DayStatus.State = result.runningDays.contains(i) ? (i == today ? .today : .upcoming) : .rest
-            return DayStatus(weekday: i, letter: DayStatus.letters[i], state: state)
-        }
-        profile.todaySession = .reprise
+        beginWeek(weekNumber: 1, tier: 1, profile: profile)
     }
 }

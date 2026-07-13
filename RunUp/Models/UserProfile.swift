@@ -46,6 +46,16 @@ final class UserProfile {
     var runningDays: [Int]
     var todaySession: WorkoutSession
     var weekStrip: [DayStatus]
+    /// The current week's full 7-day plan — regenerated once per week (see
+    /// `AdaptivePlanEngine.refreshProgramForCurrentDate`), not mutated after each run.
+    var weekSessions: [PlannedDay]
+    /// Difficulty tier for session duration/labeling — only ever changes at a week boundary,
+    /// based on the previous week's average RPE, never after a single run.
+    var weekTier: Int
+    /// Accumulates this week's submitted RPEs (as `3 - RPE.rawValue`, so higher = harder) so the
+    /// week-boundary adaptation can average them; reset to 0 whenever a new week starts.
+    var weekRPESum: Int
+    var weekRPECount: Int
     var freeRunTemplateIndex: Int
 
     // MARK: Rings
@@ -94,6 +104,10 @@ final class UserProfile {
         self.runningDays = [0, 1, 3, 5]
         self.todaySession = .reprise
         self.weekStrip = (0..<7).map { DayStatus(weekday: $0, letter: DayStatus.letters[$0], state: .upcoming) }
+        self.weekSessions = (0..<7).map { PlannedDay(weekday: $0, session: nil) }
+        self.weekTier = 1
+        self.weekRPESum = 0
+        self.weekRPECount = 0
         self.freeRunTemplateIndex = 0
         self.moveValue = 0
         self.moveGoal = 650

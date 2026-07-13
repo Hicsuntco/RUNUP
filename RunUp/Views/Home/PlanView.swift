@@ -1,39 +1,39 @@
 import SwiftUI
 
-/// Full 9-week plan — mirrors `PlanScreen` in screensA.jsx. Week/session data here is
-/// illustrative (the design is a fixed 9-week template); only the current week reflects live
-/// profile state (today's session, adjustment chip).
+/// Full 9-week plan — mirrors `PlanScreen` in screensA.jsx, now driven by real profile state.
+/// The current week's sessions come straight from `AdaptivePlanEngine`-generated data, adapted
+/// once per week from the previous week's average RPE (see `refreshProgramForCurrentDate`) —
+/// never after a single run. Other weeks show a template preview generated the same way, labeled
+/// as such since their exact difficulty depends on adaptation that hasn't happened yet.
 struct PlanView: View {
     @Environment(AppState.self) private var appState
     private var profile: UserProfile { appState.profile }
 
-    private struct DaySlot { var letter: String; var name: String; var meta: String; var color: Color; var status: String }
-    private struct WeekRow { var number: Int; var phase: String; var km: String; var status: String }
+    @State private var expandedWeek: Int?
 
-    private var currentWeekDays: [DaySlot] {
-        let s = profile.todaySession
-        return [
-            DaySlot(letter: "Lun", name: "Récup active", meta: "30′ · Z2", color: RUColor.cyan, status: "done"),
-            DaySlot(letter: "Mar", name: "Fractionné 6×800", meta: "48′ · Z4", color: RUColor.rose, status: "done"),
-            DaySlot(letter: "Mer", name: "Repos", meta: "—", color: .white.opacity(0.2), status: "rest"),
-            DaySlot(letter: "Jeu", name: s.title, meta: "\(s.durationMinutes)′ · \(s.zone)", color: RUColor.rose, status: "today"),
-            DaySlot(letter: "Ven", name: "Récup active", meta: "30′ · Z2", color: RUColor.cyan, status: ""),
-            DaySlot(letter: "Sam", name: "Sortie longue", meta: "1h05 · Z2-3", color: RUColor.rose2, status: ""),
-            DaySlot(letter: "Dim", name: "Repos", meta: "—", color: .white.opacity(0.2), status: "rest")
-        ]
+    private struct WeekSummary: Identifiable {
+        var id: Int { number }
+        var number: Int
+        var block: AdaptivePlanEngine.TrainingBlock
+        var estimatedKm: Int
+        var isDone: Bool
+        var isCurrent: Bool
     }
 
-    private let weeks: [WeekRow] = [
-        WeekRow(number: 1, phase: "Base", km: "32 km", status: "done"),
-        WeekRow(number: 2, phase: "Base", km: "35 km", status: "done"),
-        WeekRow(number: 3, phase: "Base", km: "34 km", status: "done"),
-        WeekRow(number: 4, phase: "VMA · en cours", km: "33 km", status: "current"),
-        WeekRow(number: 5, phase: "Spécifique", km: "38 km", status: ""),
-        WeekRow(number: 6, phase: "Spécifique", km: "40 km", status: ""),
-        WeekRow(number: 7, phase: "Spécifique", km: "36 km", status: ""),
-        WeekRow(number: 8, phase: "Affûtage", km: "28 km", status: "taper"),
-        WeekRow(number: 9, phase: "Course", km: "10 km", status: "race")
-    ]
+    private var weekSummaries: [WeekSummary] {
+        (1...9).map { number in
+            let sessions = number == profile.weekNumber
+                ? profile.weekSessions
+                : AdaptivePlanEngine.generateWeekSessions(weekNumber: number, runningDays: profile.runningDays, tier: profile.weekTier)
+            return WeekSummary(
+                number: number,
+                block: AdaptivePlanEngine.trainingBlock(forWeek: number),
+                estimatedKm: estimatedKm(for: sessions),
+                isDone: number < profile.weekNumber,
+                isCurrent: number == profile.weekNumber
+            )
+        }
+    }
 
     var body: some View {
         ScrollView {
@@ -46,22 +46,18 @@ struct PlanView: View {
                     }
                 }
 
-                Text("9 semaines · 3 phases. Il évolue à chaque séance selon ta forme.")
+                Text("9 semaines · 3 phases. Il s'ajuste chaque semaine selon ta forme de la semaine passée — pas séance par séance.")
                     .font(RUFont.sans(12)).foregroundColor(RUColor.text2).lineSpacing(3)
 
                 PhaseProgressBar(phases: [
-                    PhaseSegment(name: "Base", done: 3, total: 3, color: RUColor.rose),
-                    PhaseSegment(name: "Spécifique", done: 1, total: 4, color: RUColor.rose2),
-                    PhaseSegment(name: "Affûtage", done: 0, total: 2, color: RUColor.violet)
+                    PhaseSegment(name: "Base", done: min(profile.weekNumber, 3), total: 3, color: RUColor.rose),
+                    PhaseSegment(name: "Spécifique", done: max(0, min(profile.weekNumber - 3, 4)), total: 4, color: RUColor.rose2),
+                    PhaseSegment(name: "Affûtage", done: max(0, min(profile.weekNumber - 7, 2)), total: 2, color: RUColor.violet)
                 ])
 
                 VStack(spacing: 6) {
-                    ForEach(weeks, id: \.number) { week in
-                        if week.status == "current" {
-                            currentWeekCard(week)
-                        } else {
-                            weekRow(week)
-                        }
+                    ForEach(weekSummaries) { week in
+                        weekCard(week)
                     }
                 }
             }
@@ -69,71 +65,123 @@ struct PlanView: View {
             .padding(.top, 8)
             .padding(.bottom, 130)
         }
+        .onAppear {
+            if expandedWeek == nil { expandedWeek = profile.weekNumber }
+        }
     }
 
-    private func currentWeekCard(_ week: WeekRow) -> some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 12) {
-                Text("\(week.number)").displayStyle(14).foregroundColor(.white)
-                    .frame(width: 30, height: 30)
-                    .background(RUColor.rose, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                VStack(alignment: .leading, spacing: 1) {
-                    Text("Semaine \(week.number) · \(week.phase)").font(RUFont.sans(13, weight: .semibold)).foregroundColor(.white)
-                    Text("\(week.km) · 2/4 séances faites").font(RUFont.sans(10)).foregroundColor(RUColor.text2)
-                }
-                Spacer()
-                Text("▾").foregroundColor(RUColor.rose2)
+    private func weekCard(_ week: WeekSummary) -> some View {
+        let isExpanded = expandedWeek == week.number
+        return VStack(spacing: 0) {
+            Button(action: { withAnimation(.easeOut(duration: 0.2)) { expandedWeek = isExpanded ? nil : week.number } }) {
+                weekHeader(week, isExpanded: isExpanded)
             }
-            .padding(13)
-            .background(RUColor.rose.opacity(0.08))
+            .buttonStyle(PressableStyle())
 
-            VStack(spacing: 0) {
-                ForEach(currentWeekDays.indices, id: \.self) { i in
-                    let d = currentWeekDays[i]
-                    HStack(spacing: 11) {
-                        Text(d.letter).displayStyle(10).foregroundColor(RUColor.text2).frame(width: 26, alignment: .leading)
-                        Circle().fill(d.color).opacity(d.status == "done" ? 1 : 0.5).frame(width: 6, height: 6)
-                        Text(d.name)
-                            .font(RUFont.sans(12.5, weight: d.status == "today" ? .semibold : .regular))
-                            .foregroundColor(d.status == "rest" ? RUColor.text3 : .white)
-                        if d.status == "today" {
-                            StatChip(text: "aujourd'hui", color: RUColor.rose2)
-                        }
-                        Spacer()
-                        Text(d.meta).font(RUFont.mono(10)).foregroundColor(RUColor.text2)
-                        if d.status == "done" {
-                            Text("✓").foregroundColor(RUColor.rose).font(.system(size: 11))
-                        }
-                    }
-                    .padding(.vertical, 9).padding(.horizontal, 4)
-                }
+            if isExpanded {
+                weekDayList(week)
             }
-            .padding(.horizontal, 12).padding(.bottom, 12).padding(.top, 6)
         }
-        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.rose.opacity(0.3), lineWidth: RUSpacing.hairline))
+        .background(week.isCurrent ? RUColor.card : RUColor.card2, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(week.isCurrent ? RUColor.rose.opacity(0.3) : RUColor.line, lineWidth: RUSpacing.hairline))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
-    private func weekRow(_ week: WeekRow) -> some View {
-        let done = week.status == "done"
-        let badge = week.status == "race" ? "🏁" : week.status == "taper" ? "▽" : done ? "✓" : "›"
-        let color: Color = week.status == "race" ? RUColor.rose : week.status == "taper" ? RUColor.violet : done ? RUColor.text3 : RUColor.text2
+    private func weekHeader(_ week: WeekSummary, isExpanded: Bool) -> some View {
+        let isRaceWeek = week.number == 9 && profile.goalId == .race
+        let badge = isRaceWeek ? "🏁" : week.block == .affutage ? "▽" : week.isDone ? "✓" : "›"
+        let color: Color = isRaceWeek ? RUColor.rose : week.block == .affutage ? RUColor.violet : week.isDone ? RUColor.text3 : RUColor.text2
         return HStack(spacing: 12) {
-            Text("\(week.number)").displayStyle(13).foregroundColor(color)
+            Text("\(week.number)").displayStyle(14).foregroundColor(.white)
                 .frame(width: 30, height: 30)
-                .background(done ? Color.white.opacity(0.06) : (week.status == "race" ? RUColor.rose.opacity(0.15) : Color.white.opacity(0.05)), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                .background(week.isCurrent ? RUColor.rose : Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).stroke(RUColor.line, lineWidth: week.isCurrent ? 0 : RUSpacing.hairline))
             VStack(alignment: .leading, spacing: 1) {
-                Text("Semaine \(week.number) · \(week.phase)").font(RUFont.sans(13, weight: .medium)).foregroundColor(.white)
-                Text(week.km).font(RUFont.sans(10)).foregroundColor(RUColor.text2)
+                Text("Semaine \(week.number) · \(week.block.rawValue)\(week.isCurrent ? " · en cours" : "")")
+                    .font(RUFont.sans(13, weight: week.isCurrent ? .semibold : .medium)).foregroundColor(.white)
+                Text("~\(week.estimatedKm) km" + (week.isCurrent ? " · \(completedCount)/\(plannedCount) séances faites" : ""))
+                    .font(RUFont.sans(10)).foregroundColor(RUColor.text2)
             }
             Spacer()
-            Text(badge).foregroundColor(color).font(.system(size: 13))
+            Text(isExpanded ? "▾" : badge).foregroundColor(isExpanded ? RUColor.rose2 : color).font(.system(size: 13))
         }
         .padding(13)
-        .opacity(done ? 0.6 : 1)
-        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(week.status == "race" ? RUColor.rose.opacity(0.25) : RUColor.line, lineWidth: RUSpacing.hairline))
+        .opacity(week.isDone && !week.isCurrent ? 0.6 : 1)
+        .background(week.isCurrent ? RUColor.rose.opacity(0.08) : Color.clear)
+    }
+
+    private var completedCount: Int { profile.weekSessions.filter(\.completed).count }
+    private var plannedCount: Int { profile.weekSessions.filter { ($0.session?.durationMinutes ?? 0) > 0 }.count }
+
+    private func weekDayList(_ week: WeekSummary) -> some View {
+        VStack(spacing: 0) {
+            if !week.isCurrent {
+                Text(week.isDone ? "Résumé type de cette semaine passée" : "Aperçu — s'ajustera selon ta forme de la semaine précédente")
+                    .font(RUFont.sans(9.5, weight: .semibold)).foregroundColor(RUColor.text3)
+                    .padding(.horizontal, 4).padding(.top, 8)
+            }
+            ForEach(dayList(for: week), id: \.0) { letter, day, state in
+                dayRow(letter: letter, day: day, state: state)
+            }
+        }
+        .padding(.horizontal, 12).padding(.bottom, 12).padding(.top, 6)
+    }
+
+    private static let dayLetters = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
+
+    private func dayList(for week: WeekSummary) -> [(String, PlannedDay, DayStatus.State?)] {
+        if week.isCurrent {
+            return profile.weekSessions.map { day in
+                (Self.dayLetters[day.weekday], day, profile.weekStrip.first { $0.weekday == day.weekday }?.state)
+            }
+        }
+        let preview = AdaptivePlanEngine.generateWeekSessions(weekNumber: week.number, runningDays: profile.runningDays, tier: profile.weekTier)
+        return preview.map { (Self.dayLetters[$0.weekday], $0, nil) }
+    }
+
+    private func dayRow(letter: String, day: PlannedDay, state: DayStatus.State?) -> some View {
+        let session = day.session
+        let isRest = session == nil || session?.durationMinutes == 0
+        let isToday = state == .today
+        return HStack(spacing: 11) {
+            Text(letter).displayStyle(10).foregroundColor(RUColor.text2).frame(width: 30, alignment: .leading)
+            Circle().fill(isRest ? Color.white.opacity(0.2) : RUColor.rose).opacity(day.completed ? 1 : 0.5).frame(width: 6, height: 6)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(session?.title ?? "Repos")
+                    .font(RUFont.sans(12.5, weight: isToday ? .semibold : .regular))
+                    .foregroundColor(isRest ? RUColor.text3 : .white)
+                if let subtitle = session?.subtitle, !isRest {
+                    Text(subtitle).font(RUFont.sans(10)).foregroundColor(RUColor.text3).lineLimit(2)
+                }
+            }
+            if isToday {
+                StatChip(text: "aujourd'hui", color: RUColor.rose2)
+            }
+            Spacer(minLength: 8)
+            if let session, !isRest {
+                VStack(alignment: .trailing, spacing: 1) {
+                    Text("\(session.durationMinutes)′ · \(session.zone)").font(RUFont.mono(10)).foregroundColor(RUColor.text2)
+                    Text("\(session.pace)/km").font(RUFont.mono(9)).foregroundColor(RUColor.text3)
+                }
+            }
+            if day.completed {
+                Text("✓").foregroundColor(RUColor.rose).font(.system(size: 11))
+            }
+        }
+        .padding(.vertical, 9).padding(.horizontal, 4)
+    }
+
+    private func paceMinutesPerKm(_ pace: String) -> Double? {
+        let parts = pace.split(separator: ":")
+        guard parts.count == 2, let m = Double(parts[0]), let s = Double(parts[1]) else { return nil }
+        return m + s / 60
+    }
+
+    private func estimatedKm(for sessions: [PlannedDay]) -> Int {
+        let total = sessions.compactMap { day -> Double? in
+            guard let session = day.session, session.durationMinutes > 0, let paceMin = paceMinutesPerKm(session.pace) else { return nil }
+            return Double(session.durationMinutes) / paceMin
+        }.reduce(0, +)
+        return Int(total.rounded())
     }
 }

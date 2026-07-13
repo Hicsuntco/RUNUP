@@ -19,6 +19,19 @@ struct WorkoutSession: Codable, Equatable {
     )
 }
 
+/// One day in the current week's real training plan (as opposed to `DayStatus`, which only
+/// tracks the home strip's done/today/rest badge). `session == nil` means a rest day. Generated
+/// fresh for the whole week at once by `AdaptivePlanEngine.generateWeekSessions`, so every day is
+/// already planned before the week starts — adaptation only regenerates this at a week boundary,
+/// never after an individual run.
+struct PlannedDay: Codable, Equatable, Identifiable {
+    var id: Int { weekday }
+    /// 0 = Monday ... 6 = Sunday.
+    var weekday: Int
+    var session: WorkoutSession?
+    var completed: Bool = false
+}
+
 /// One day in the 7-cell week strip on Home.
 struct DayStatus: Codable, Equatable, Identifiable {
     enum State: String, Codable {

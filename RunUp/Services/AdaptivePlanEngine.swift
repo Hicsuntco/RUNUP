@@ -81,6 +81,16 @@ enum AdaptivePlanEngine {
     /// forward on its own without the app having to be opened on a fixed schedule.
     static func refreshProgramForCurrentDate(_ profile: UserProfile) {
         guard profile.programPhase == .active else { return }
+
+        // Backfill for any profile that never had a real week plan generated — migrated from a
+        // build before this existed, or a launch that returned early below before reaching it.
+        // Independent of every other branch here so it can never be skipped.
+        if profile.weekSessions.count != 7 {
+            profile.weekSessions = generateWeekSessions(weekNumber: profile.weekNumber, runningDays: profile.runningDays, tier: profile.weekTier)
+            let today = currentWeekdayIndex()
+            profile.todaySession = profile.weekSessions.first(where: { $0.weekday == today })?.session ?? restSession
+        }
+
         guard let startDate = profile.programStartDate else {
             // Pre-existing profile from before this field was tracked: adopt "now" as the
             // block's start so future launches can measure elapsed weeks from a real date.
@@ -108,12 +118,8 @@ enum AdaptivePlanEngine {
             beginWeek(weekNumber: newWeekNumber, tier: profile.weekTier, profile: profile)
         } else {
             // Same week, just a day rolled over: move the "today" marker and pick up today's
-            // already-planned session — no regeneration, this week was fully planned upfront.
-            // Exception: a profile that predates weekSessions (migrated from an older build) has
-            // never had one generated at all — backfill it now rather than leaving it empty.
-            if profile.weekSessions.count != 7 {
-                profile.weekSessions = generateWeekSessions(weekNumber: profile.weekNumber, runningDays: profile.runningDays, tier: profile.weekTier)
-            }
+            // already-planned session — no regeneration, this week was fully planned upfront
+            // (the backfill above already covers a plan that was missing entirely).
             profile.weekStrip = profile.weekStrip.map { day in
                 guard day.state != .rest, day.state != .done else { return day }
                 var d = day

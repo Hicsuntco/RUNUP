@@ -41,17 +41,6 @@ struct ProfileView: View {
 
                 sectionTitle("Programme")
                 programCard
-
-                if profile.programPhase == .active {
-                    demoButton("Terminer le programme (démo)") {
-                        AdaptivePlanEngine.endProgram(profile)
-                        appState.toast("Programme terminé — place à la récup")
-                        appState.go(.home)
-                    }
-                }
-                demoButton(profile.coachOfflineDemo ? "Reconnecter le coach (démo)" : "Simuler coach hors ligne (démo)") {
-                    profile.coachOfflineDemo.toggle()
-                }
             }
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.top, 8)
@@ -211,18 +200,5 @@ struct ProfileView: View {
             .padding(.horizontal, 14).padding(.vertical, 13)
         }
         .buttonStyle(PressableStyle())
-    }
-
-    private func demoButton(_ label: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(label)
-                .font(RUFont.sans(11.5, weight: .semibold))
-                .foregroundColor(RUColor.text3)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-        }
-        .buttonStyle(PressableStyle())
-        .background(Color.white.opacity(0.03), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(style: StrokeStyle(lineWidth: RUSpacing.hairline, dash: [4, 3])).foregroundColor(RUColor.line))
     }
 }

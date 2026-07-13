@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>RUNUP 4.0 — Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0E0E14; --bg2:#15151E; --ink:#fff;
+  --rose:#FF0F5B; --rose2:#FF4D7D; --violet:#7C5CFF; --lime:#C8FF3D; --cyan:#38E0D0;
+  --t2:rgba(255,255,255,.5); --t3:rgba(255,255,255,.32); --t4:rgba(255,255,255,.2);
+  --card:rgba(255,255,255,.045); --card2:rgba(255,255,255,.03); --line:rgba(255,255,255,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#08080C;font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden;height:100vh}
+.b{font-family:'Bebas Neue',sans-serif;letter-spacing:.5px}
+.m{font-family:'DM Mono',monospace}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+::-webkit-scrollbar{display:none}
+
+/* stage + device */
+#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(120% 90% at 50% -10%,#1a0d16 0%,#08080C 55%)}
+#device{width:390px;height:844px;border-radius:54px;background:#000;padding:11px;box-shadow:0 60px 120px -20px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.06);transform-origin:center;flex-shrink:0}
+#screen{position:relative;width:100%;height:100%;border-radius:44px;overflow:hidden;background:var(--bg);color:#fff;display:flex;flex-direction:column}
+#root{position:absolute;inset:0;display:flex;flex-direction:column}
+.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:118px;height:30px;background:#000;border-radius:0 0 18px 18px;z-index:200}
+
+/* status bar */
+.sb{display:flex;justify-content:space-between;align-items:center;padding:14px 28px 4px;font-size:14px;font-weight:600;flex-shrink:0;z-index:50}
+.sb .r{display:flex;gap:6px;align-items:center}
+.sb svg{width:16px;height:16px}
+
+/* generic */
+.eye{font-size:9px;letter-spacing:3px;text-transform:uppercase;font-weight:700}
+.scan{flex:1;overflow-y:auto;overflow-x:hidden;position:relative}
+.pad{padding:0 18px}
+.card{background:var(--card);border:.5px solid var(--line);border-radius:20px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:99px;font-size:10px;font-weight:600;letter-spacing:.3px}
+.bar{height:6px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:99px;transition:width .8s cubic-bezier(.2,.7,.2,1)}
+.metric{display:flex;flex-direction:column;gap:3px}
+.metric .v{font-family:'Bebas Neue',sans-serif;font-size:30px;line-height:.85}
+.metric .l{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--t2);font-weight:700}
+.ring{transform:rotate(-90deg)}
+.gg{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:34px 34px}
+.press{transition:transform .1s,opacity .15s}
+.press:active{transform:scale(.96);opacity:.9}
+.btn-rose{background:var(--rose);color:#fff;border-radius:14px;padding:15px;width:100%;font-size:16px;box-shadow:0 6px 22px rgba(255,15,91,.35)}
+
+/* screen fade */
+.fade{animation:fade .28s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.rise{animation:rise .3s cubic-bezier(.2,.7,.2,1)}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* sheet */
+.sheet-wrap{position:absolute;inset:0;z-index:300;display:flex;align-items:flex-end;justify-content:center}
+.sheet-bg{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(2px);animation:fade .2s}
+.sheet{position:relative;width:100%;max-height:92%;background:#14141C;border-radius:28px 28px 0 0;border-top:.5px solid var(--line);overflow-y:auto;animation:up .32s cubic-bezier(.2,.8,.2,1)}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.handle{width:38px;height:4px;border-radius:99px;background:rgba(255,255,255,.2);margin:12px auto 4px}
+
+/* toast */
+#toast{position:absolute;bottom:104px;left:50%;transform:translateX(-50%) translateY(20px);background:#fff;color:#0A0A0A;padding:11px 20px;border-radius:99px;font-size:13px;font-weight:600;z-index:400;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap;box-shadow:0 12px 30px rgba(0,0,0,.4)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* typing dots */
+.dots span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--t2);margin:0 1px;animation:blink 1.2s infinite}
+.dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,60%,100%{opacity:.25;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+.pulse{animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+a{color:var(--rose2)}a:hover{color:var(--rose)}
+.hint{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);font-size:11px;color:rgba(255,255,255,.3);letter-spacing:.5px;z-index:5}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="device">
+    <div class="notch"></div>
+    <div id="screen"><div id="root"></div></div>
+    <div id="toast"></div>
+  </div>
+</div>
+<div class="hint">RUNUP 4.0 · prototype — Direction Midnight Rose</div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="ui.jsx"></script>
+<script type="text/babel" src="onboarding.jsx"></script>
+<script type="text/babel" src="screensA.jsx"></script>
+<script type="text/babel" src="screensB.jsx"></script>
+<script type="text/babel" src="screensC.jsx"></script>
+<script type="text/babel" src="screensD.jsx"></script>
+<script type="text/babel" src="screensE.jsx"></script>
+<script type="text/babel" src="app.jsx"></script>
+<script>
+// device scaling
+function fit(){
+  const s = Math.min(1,(window.innerHeight-32)/844,(window.innerWidth-32)/390);
+  document.getElementById('device').style.transform='scale('+s+')';
+}
+window.addEventListener('resize',fit);fit();
+</script>
+</body>
+</html>

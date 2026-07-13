@@ -1,0 +1,150 @@
+import Foundation
+
+/// The 5 onboarding objectives. See README § Onboarding step 3.
+enum GoalType: String, Codable, CaseIterable, Identifiable {
+    case race, progress, restart, weight, health
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .race: return "Préparer une course"
+        case .progress: return "Progresser"
+        case .restart: return "(Re)commencer"
+        case .weight: return "Perdre du poids"
+        case .health: return "Rester en forme"
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .race: return "Un dossard en vue — on construit le plan pour le jour J"
+        case .progress: return "Courir plus vite ou plus longtemps, sans course précise"
+        case .restart: return "Reprendre en douceur, sans se blesser"
+        case .weight: return "Un programme qui allie course et déficit calorique"
+        case .health: return "Une routine régulière qui tient dans ta semaine"
+        }
+    }
+
+    var emoji: String {
+        switch self {
+        case .race: return "🏁"
+        case .progress: return "📈"
+        case .restart: return "🌱"
+        case .weight: return "🔥"
+        case .health: return "⚡"
+        }
+    }
+
+    /// Recovery length (days) once a 9-week program built for this goal ends. See README § 14.
+    var recoveryDays: Int {
+        switch self {
+        case .race: return 6
+        case .weight: return 3
+        case .progress: return 4
+        case .restart: return 5
+        case .health: return 3
+        }
+    }
+}
+
+enum ExperienceLevel: String, Codable, CaseIterable, Identifiable {
+    case debutante, intermediaire, confirmee
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .debutante: return "Débutante"
+        case .intermediaire: return "Intermédiaire"
+        case .confirmee: return "Confirmée"
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .debutante: return "Je cours depuis moins de 6 mois"
+        case .intermediaire: return "Je cours 2-3 fois par semaine"
+        case .confirmee: return "Je m'entraîne sérieusement depuis des années"
+        }
+    }
+}
+
+enum RaceDistance: String, Codable, CaseIterable, Identifiable {
+    case k5, k10, semi, marathon, other
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .k5: return "5 km"
+        case .k10: return "10 km"
+        case .semi: return "Semi"
+        case .marathon: return "Marathon"
+        case .other: return "Autre distance"
+        }
+    }
+
+    var chronoPresets: [String] {
+        switch self {
+        case .k5: return ["20:00", "22:30", "25:00", "28:00"]
+        case .k10: return ["42:00", "47:30", "52:00", "58:00"]
+        case .semi: return ["1:40", "1:50", "2:00", "2:15"]
+        case .marathon: return ["3:30", "3:50", "4:15", "4:45"]
+        case .other: return []
+        }
+    }
+}
+
+enum ConnectedSource: String, Codable, CaseIterable, Identifiable {
+    case apple, strava, garmin
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .apple: return "Apple Santé"
+        case .strava: return "Strava"
+        case .garmin: return "Garmin Connect"
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .apple: return "FC, sommeil, course"
+        case .strava: return "Historique & segments"
+        case .garmin: return "Montre & données avancées"
+        }
+    }
+
+    /// Only Apple Health has a real native integration in v1; Strava/Garmin are UI stubs.
+    var isNativelySupported: Bool { self == .apple }
+}
+
+enum ProgramPhase: String, Codable {
+    case active, recovery, choice, freerun
+}
+
+enum RPE: Int, Codable, CaseIterable, Identifiable {
+    case tropDur, dur, justeBien, facile
+
+    var id: Int { rawValue }
+
+    var emoji: String {
+        switch self {
+        case .tropDur: return "😮‍💨"
+        case .dur: return "😤"
+        case .justeBien: return "🙂"
+        case .facile: return "😎"
+        }
+    }
+
+    var label: String {
+        switch self {
+        case .tropDur: return "Trop dur"
+        case .dur: return "Dur"
+        case .justeBien: return "Juste bien"
+        case .facile: return "Facile"
+        }
+    }
+}

@@ -38,12 +38,15 @@ enum RUFont {
 
 extension Text {
     /// Class `.b` in the prototype — Bebas Neue display type, tight tracking.
-    func displayStyle(_ size: CGFloat) -> Text {
+    /// `.tracking`/`.textCase` are `View`-only modifiers (not declared on `Text` itself), so this
+    /// returns `some View` rather than `Text` — safe everywhere it's used since none of these
+    /// call sites concatenate the result with `+` (that requires `Text` on both sides).
+    func displayStyle(_ size: CGFloat) -> some View {
         self.font(RUFont.bebas(size)).tracking(0.5)
     }
 
     /// Class `.eye` — eyebrow label above section/card titles.
-    func eyebrowStyle(color: Color = RUColor.text2) -> Text {
+    func eyebrowStyle(color: Color = RUColor.text2) -> some View {
         self.font(RUFont.sans(9, weight: .bold)).tracking(3).textCase(.uppercase).foregroundColor(color)
     }
 

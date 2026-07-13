@@ -53,9 +53,3 @@ struct Rings3View<Content: View>: View {
         .frame(width: size, height: size)
     }
 }
-
-extension RingView where Content == EmptyView {
-    init(pct: Double, color: Color, size: CGFloat = 96, strokeWidth: CGFloat = 6) {
-        self.init(pct: pct, color: color, size: size, strokeWidth: strokeWidth) { EmptyView() }
-    }
-}

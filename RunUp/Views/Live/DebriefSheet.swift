@@ -9,13 +9,14 @@ struct DebriefSheet: View {
     @State private var rpe: RPE = .justeBien
 
     private var impactLines: [(String, String, String)] {
+        let nextStreak = appState.profile.streak + 1
         switch rpe {
         case .facile, .justeBien:
-            return [("📈", "Tu progresses vite → prochain intervalle : ", "séance relevée"), ("🛌", "Demain = ", "récup active 30′")]
+            return [("📈", "Prochaine séance : ", "relevée d'un palier"), ("🔥", "Série en cours : ", "jour \(nextStreak)")]
         case .dur:
-            return [("👍", "Bon rythme → ", "on garde la même intensité"), ("🛌", "Demain = ", "récup active 30′")]
+            return [("👍", "Prochaine séance : ", "on garde la même intensité"), ("🔥", "Série en cours : ", "jour \(nextStreak)")]
         case .tropDur:
-            return [("🧘", "On lève le pied → ", "prochaine séance allégée"), ("🛌", "Demain = ", "récupération active")]
+            return [("🧘", "Prochaine séance : ", "récupération allégée"), ("🔥", "Série en cours : ", "jour \(nextStreak)")]
         }
     }
 

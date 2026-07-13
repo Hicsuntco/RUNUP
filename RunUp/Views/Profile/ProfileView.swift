@@ -185,6 +185,13 @@ struct ProfileView: View {
             programRow("Modifier jours & objectif") { appState.openProgramSettings() }
             Divider().background(RUColor.line)
             programRow("Refaire l'onboarding") { appState.replayOnboarding() }
+            if profile.programPhase == .active {
+                Divider().background(RUColor.line)
+                programRow("Terminer le programme") {
+                    AdaptivePlanEngine.endProgram(profile)
+                    appState.toast("Programme terminé · récupération en cours")
+                }
+            }
         }
         .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))

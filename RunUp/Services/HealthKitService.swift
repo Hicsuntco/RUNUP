@@ -13,7 +13,7 @@ final class HealthKitService {
 
     static var isHealthDataAvailable: Bool { HKHealthStore.isHealthDataAvailable() }
 
-    private var readTypes: Set<HKObjectType> {
+    private static let readTypes: Set<HKObjectType> = {
         var types: Set<HKObjectType> = [
             HKObjectType.quantityType(forIdentifier: .heartRate)!,
             HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!,
@@ -25,15 +25,13 @@ final class HealthKitService {
             types.insert(sleep)
         }
         return types
-    }
+    }()
 
-    private var writeTypes: Set<HKSampleType> {
-        [HKObjectType.workoutType()]
-    }
+    private static let writeTypes: Set<HKSampleType> = [HKObjectType.workoutType()]
 
     func requestAuthorization() async throws {
         guard Self.isHealthDataAvailable else { return }
-        try await store.requestAuthorization(toShare: writeTypes, read: readTypes)
+        try await store.requestAuthorization(toShare: Self.writeTypes, read: Self.readTypes)
         isAuthorized = true
     }
 

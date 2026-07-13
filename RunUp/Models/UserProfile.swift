@@ -61,8 +61,6 @@ final class UserProfile {
     var onboarded: Bool
     var distanceUnit: String
     var coachNotificationsEnabled: Bool
-    /// Demo-only toggle (see Profile screen) — never surfaced to real users in production builds.
-    var coachOfflineDemo: Bool
 
     init(name: String = "") {
         self.name = name
@@ -104,7 +102,6 @@ final class UserProfile {
         self.onboarded = false
         self.distanceUnit = "km"
         self.coachNotificationsEnabled = true
-        self.coachOfflineDemo = false
     }
 
     // MARK: Derived
@@ -126,6 +123,6 @@ final class UserProfile {
     var daysUntilRace: Int? {
         guard let raceDate else { return nil }
         let days = Calendar.current.dateComponents([.day], from: .now, to: raceDate).day ?? 0
-        return max(1, days)
+        return days >= 0 ? days : nil
     }
 }

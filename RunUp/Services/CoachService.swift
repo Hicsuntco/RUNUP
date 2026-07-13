@@ -13,6 +13,12 @@ enum CoachServiceError: Error {
 enum CoachService {
     private static let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
     private static let model = "claude-opus-4-8"
+    private static let raceDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "fr_FR")
+        f.dateFormat = "d MMMM"
+        return f
+    }()
 
     static func send(history: [ChatMessage], profile: UserProfile) async throws -> String {
         guard let apiKey = KeychainService.loadAPIKey(), !apiKey.isEmpty else {
@@ -80,10 +86,7 @@ enum CoachService {
 
         let raceDateStr: String
         if let raceDate = s.raceDate {
-            let formatter = DateFormatter()
-            formatter.locale = Locale(identifier: "fr_FR")
-            formatter.dateFormat = "d MMMM"
-            raceDateStr = " le \(formatter.string(from: raceDate))"
+            raceDateStr = " le \(raceDateFormatter.string(from: raceDate))"
         } else {
             raceDateStr = ""
         }

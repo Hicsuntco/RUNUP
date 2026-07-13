@@ -26,17 +26,6 @@ final class CoachViewModel {
         draft = ""
         isTyping = true
 
-        if profile.coachOfflineDemo {
-            Task {
-                try? await Task.sleep(for: .seconds(0.9))
-                await MainActor.run {
-                    modelContext.insert(ChatMessage(role: .error, text: "Impossible de joindre ton coach — vérifie ta connexion et réessaie."))
-                    isTyping = false
-                }
-            }
-            return
-        }
-
         Task {
             do {
                 let reply = try await CoachService.send(history: history + [userMessage], profile: profile)

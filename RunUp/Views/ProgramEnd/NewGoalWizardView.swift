@@ -13,7 +13,7 @@ struct NewGoalWizardView: View {
     @State private var days: Set<Int> = [1, 2, 4, 6]
     @State private var building = false
 
-    private let goals: [GoalType] = [.race, .progress, .weight, .health]
+    private let goals: [GoalType] = GoalType.allCases.filter { $0 != .restart }
 
     var body: some View {
         ZStack {

@@ -45,6 +45,14 @@ final class AppState {
     }
 
     func startRun() {
+        // Guard here (not per call site) so every entry point — Home's session card, the session
+        // detail sheet, the tab bar's resume pill — is protected from silently overwriting an
+        // in-progress run's LiveRunViewModel (which would orphan its timer/location task with no
+        // RunRecord ever produced for it).
+        guard !isRunActive else {
+            screen = .live
+            return
+        }
         let vm = LiveRunViewModel(profile: profile, healthKit: healthKit)
         liveRun = vm
         vm.start()

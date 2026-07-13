@@ -56,13 +56,21 @@ enum AdaptivePlanEngine {
         profile.weeklyTimeBudget = result.weeklyTimeBudget
         profile.preferredTimeOfDay = result.preferredTimeOfDay
         profile.goalDisplay = goalDisplay(goal: result.goal, distance: result.raceDistance, custom: result.raceDistanceCustom, chrono: result.raceChrono)
+        let today = currentWeekdayIndex()
         profile.weekStrip = (0..<7).map { i in
-            let state: DayStatus.State = result.runningDays.contains(i) ? (i == 3 ? .today : .upcoming) : .rest
+            let state: DayStatus.State = result.runningDays.contains(i) ? (i == today ? .today : .upcoming) : .rest
             return DayStatus(weekday: i, letter: DayStatus.letters[i], state: state)
         }
         profile.onboarded = true
         profile.programPhase = .active
         profile.weekNumber = 1
+    }
+
+    /// Today's index in the app's Monday-first week (0 = Monday … 6 = Sunday), derived from the
+    /// real calendar date rather than hardcoded — `Calendar.component(.weekday)` is Sunday-first
+    /// (1...7), so this remaps it.
+    private static func currentWeekdayIndex() -> Int {
+        (Calendar.current.component(.weekday, from: .now) + 5) % 7
     }
 
     private static func goalDisplay(goal: GoalType, distance: RaceDistance?, custom: String?, chrono: String?) -> String {
@@ -141,10 +149,16 @@ enum AdaptivePlanEngine {
         }
     }
 
+    /// Appends/bumps a "· niveau N" marker so progression is always visible in the title, even for
+    /// session names with no embedded number (e.g. "Footing de reprise", "Récupération active") —
+    /// bumping the first arbitrary digit in the title silently no-op'd on those.
     private static func bumpedTitle(_ title: String) -> String {
-        guard let range = title.range(of: #"\d+"#, options: .regularExpression),
-              let n = Int(title[range]) else { return title }
-        return title.replacingCharacters(in: range, with: String(n + 1))
+        guard let range = title.range(of: #"· niveau (\d+)$"#, options: .regularExpression) else {
+            return title + " · niveau 2"
+        }
+        let digitsRange = title.range(of: #"\d+"#, options: .regularExpression, range: range)!
+        let n = Int(title[digitsRange]) ?? 1
+        return title.replacingCharacters(in: digitsRange, with: String(n + 1))
     }
 
     // MARK: Program-end flow
@@ -192,8 +206,9 @@ enum AdaptivePlanEngine {
         if result.goal == .race {
             profile.raceDate = Calendar.current.date(byAdding: .day, value: 63, to: .now)
         }
+        let today = currentWeekdayIndex()
         profile.weekStrip = (0..<7).map { i in
-            let state: DayStatus.State = result.runningDays.contains(i) ? (i == 3 ? .today : .upcoming) : .rest
+            let state: DayStatus.State = result.runningDays.contains(i) ? (i == today ? .today : .upcoming) : .rest
             return DayStatus(weekday: i, letter: DayStatus.letters[i], state: state)
         }
         profile.todaySession = .reprise

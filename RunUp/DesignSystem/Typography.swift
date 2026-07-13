@@ -49,11 +49,6 @@ extension Text {
     func eyebrowStyle(color: Color = RUColor.text2) -> some View {
         self.font(RUFont.sans(9, weight: .bold)).tracking(3).textCase(.uppercase).foregroundColor(color)
     }
-
-    /// Class `.m` — DM Mono numeric readouts.
-    func monoStyle(_ size: CGFloat, weight: RUFont.DMWeight = .regular, color: Color = RUColor.textPrimary) -> Text {
-        self.font(RUFont.mono(size, weight: weight)).foregroundColor(color)
-    }
 }
 
 struct EyebrowLabel: View {

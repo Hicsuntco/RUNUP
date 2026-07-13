@@ -84,12 +84,16 @@ struct RaceGoalView: View {
         }
     }
 
+    private static let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "fr_FR")
+        f.dateFormat = "EEEE d MMMM"
+        return f
+    }()
+
     private var dateLine: String {
         guard let date = profile.raceDate else { return "Dimanche 16 août · 09:00" }
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "fr_FR")
-        formatter.dateFormat = "EEEE d MMMM"
-        return "\(formatter.string(from: date)) · 09:00"
+        return "\(Self.dateFormatter.string(from: date)) · 09:00"
     }
 
     private func tile(_ value: String, _ label: String, highlighted: Bool) -> some View {

@@ -57,14 +57,14 @@ struct CoachView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            AppMarkView(size: 40).opacity(profile.coachOfflineDemo ? 0.4 : 1)
+            AppMarkView(size: 40)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Ton coach").displayStyle(19).foregroundColor(.white)
                 HStack(spacing: 5) {
-                    Circle().fill(profile.coachOfflineDemo ? RUColor.amber : RUColor.lime).frame(width: 5, height: 5)
-                    Text(profile.coachOfflineDemo ? "hors ligne — nouvelle tentative en cours" : "en ligne · connaît ton historique")
+                    Circle().fill(RUColor.lime).frame(width: 5, height: 5)
+                    Text("en ligne · connaît ton historique")
                         .font(RUFont.sans(10))
-                        .foregroundColor(profile.coachOfflineDemo ? RUColor.amber : RUColor.lime)
+                        .foregroundColor(RUColor.lime)
                 }
             }
             Spacer()

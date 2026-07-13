@@ -25,7 +25,6 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
         manager.activityType = .fitness
-        manager.allowsBackgroundLocationUpdates = true
         manager.pausesLocationUpdatesAutomatically = false
         authorizationStatus = manager.authorizationStatus
     }
@@ -38,6 +37,12 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         route = []
         distanceMeters = 0
         lastLocation = nil
+        // Only valid once authorization is actually granted — setting this beforehand risks the
+        // manager silently ignoring it (or worse, depending on OS version) since background
+        // delivery has nothing to attach to without at least When-In-Use authorization.
+        if authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways {
+            manager.allowsBackgroundLocationUpdates = true
+        }
         manager.startUpdatingLocation()
     }
 

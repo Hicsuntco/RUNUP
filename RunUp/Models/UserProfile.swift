@@ -47,15 +47,17 @@ final class UserProfile {
     var todaySession: WorkoutSession
     var weekStrip: [DayStatus]
     /// The current week's full 7-day plan — regenerated once per week (see
-    /// `AdaptivePlanEngine.refreshProgramForCurrentDate`), not mutated after each run.
-    var weekSessions: [PlannedDay]
+    /// `AdaptivePlanEngine.refreshProgramForCurrentDate`), not mutated after each run. Needs an
+    /// inline default (not just one set in `init`) so SwiftData's lightweight migration can add
+    /// this column to profiles saved before this field existed, instead of crashing at launch.
+    var weekSessions: [PlannedDay] = []
     /// Difficulty tier for session duration/labeling — only ever changes at a week boundary,
     /// based on the previous week's average RPE, never after a single run.
-    var weekTier: Int
+    var weekTier: Int = 1
     /// Accumulates this week's submitted RPEs (as `3 - RPE.rawValue`, so higher = harder) so the
     /// week-boundary adaptation can average them; reset to 0 whenever a new week starts.
-    var weekRPESum: Int
-    var weekRPECount: Int
+    var weekRPESum: Int = 0
+    var weekRPECount: Int = 0
     var freeRunTemplateIndex: Int
 
     // MARK: Rings

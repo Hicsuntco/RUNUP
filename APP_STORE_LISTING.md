@@ -61,7 +61,7 @@ Aucun contenu sensible (pas de violence, contenu adulte, jeu d'argent...) → ty
 
 ## URLs requises
 - **URL de support** : [à compléter — une page où les utilisatrices peuvent te contacter en cas de problème ; peut être une simple page web ou un mailto:]
-- **URL de politique de confidentialité** : [à compléter — héberge `privacy.html` (à la racine de ce repo) quelque part accessible publiquement, par ex. GitHub Pages, et mets l'URL ici]
+- **URL de politique de confidentialité** : `https://hicsuntco.github.io/RUNUP/privacy.html`
 - **URL marketing** (optionnelle) : —
 
 ## Copyright

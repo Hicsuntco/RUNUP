@@ -35,6 +35,11 @@ final class UserProfile {
 
     // MARK: Program
     var weekNumber: Int
+    /// When the current 9-week block began — used to derive `weekNumber` and the week strip from
+    /// the device's real calendar date instead of requiring the app to be opened on a schedule.
+    /// Optional so profiles created before this field existed migrate in as `nil` and self-heal
+    /// (see `AdaptivePlanEngine.refreshProgramForCurrentDate`).
+    var programStartDate: Date?
     var programPhase: ProgramPhase
     var recoveryDaysLeft: Int
     /// 0 = Monday ... 6 = Sunday.
@@ -83,6 +88,7 @@ final class UserProfile {
         self.preferredTimeOfDay = nil
         self.goalDisplay = "Rester en forme"
         self.weekNumber = 1
+        self.programStartDate = .now
         self.programPhase = .active
         self.recoveryDaysLeft = 0
         self.runningDays = [0, 1, 3, 5]

@@ -18,6 +18,7 @@ struct RunUpApp: App {
 /// off to `ContentRouterView`.
 private struct RootView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     @State private var appState: AppState?
 
     var body: some View {
@@ -31,6 +32,11 @@ private struct RootView: View {
         .onAppear {
             if appState == nil {
                 appState = AppState(modelContext: modelContext)
+            }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                appState?.refreshProgramForCurrentDate()
             }
         }
     }

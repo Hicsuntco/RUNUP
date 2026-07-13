@@ -38,6 +38,14 @@ final class AppState {
             modelContext.insert(fresh)
             self.profile = fresh
         }
+        AdaptivePlanEngine.refreshProgramForCurrentDate(self.profile)
+    }
+
+    /// Re-checks the program week/phase against the real calendar date — call whenever the app
+    /// returns to the foreground so a skipped week or program completion is picked up even if the
+    /// user didn't open the app on the exact day it happened.
+    func refreshProgramForCurrentDate() {
+        AdaptivePlanEngine.refreshProgramForCurrentDate(profile)
     }
 
     func go(_ screen: AppScreen) {

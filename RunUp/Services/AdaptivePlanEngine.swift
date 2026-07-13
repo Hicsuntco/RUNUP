@@ -64,6 +64,60 @@ enum AdaptivePlanEngine {
         profile.onboarded = true
         profile.programPhase = .active
         profile.weekNumber = 1
+        profile.programStartDate = .now
+    }
+
+    /// Total length of a program block before it hands off to recovery.
+    private static let programLengthWeeks = 9
+
+    private static var mondayCalendar: Calendar {
+        var cal = Calendar.current
+        cal.firstWeekday = 2 // Monday — matches the app's L-M-M-J-V-S-D week strip.
+        return cal
+    }
+
+    /// Advances `weekNumber`/`weekStrip` (and, at week 9, `programPhase`) to match the device's
+    /// real calendar date — call each time the app becomes active. This needs no network access:
+    /// the device clock is available offline, so a real day/week always ticks forward on its own
+    /// without the app having to be opened on a fixed schedule.
+    static func refreshProgramForCurrentDate(_ profile: UserProfile) {
+        guard profile.programPhase == .active else { return }
+        guard let startDate = profile.programStartDate else {
+            // Pre-existing profile from before this field was tracked: adopt "now" as the
+            // block's start so future launches can measure elapsed weeks from a real date.
+            profile.programStartDate = .now
+            return
+        }
+
+        let cal = mondayCalendar
+        let startOfStartWeek = cal.dateInterval(of: .weekOfYear, for: startDate)?.start ?? startDate
+        let startOfThisWeek = cal.dateInterval(of: .weekOfYear, for: .now)?.start ?? .now
+        let elapsedWeeks = max(0, cal.dateComponents([.weekOfYear], from: startOfStartWeek, to: startOfThisWeek).weekOfYear ?? 0)
+
+        if elapsedWeeks >= programLengthWeeks {
+            endProgram(profile)
+            return
+        }
+
+        let today = currentWeekdayIndex()
+        let newWeekNumber = elapsedWeeks + 1
+
+        if newWeekNumber != profile.weekNumber {
+            // Crossed into a new week: last week's strip no longer applies, start a fresh one.
+            profile.weekNumber = newWeekNumber
+            profile.weekStrip = (0..<7).map { i in
+                let state: DayStatus.State = profile.runningDays.contains(i) ? (i == today ? .today : .upcoming) : .rest
+                return DayStatus(weekday: i, letter: DayStatus.letters[i], state: state)
+            }
+        } else {
+            // Same week: just move the "today" marker forward, keeping days already done.
+            profile.weekStrip = profile.weekStrip.map { day in
+                guard day.state != .rest, day.state != .done else { return day }
+                var d = day
+                d.state = day.weekday == today ? .today : .upcoming
+                return d
+            }
+        }
     }
 
     /// Today's index in the app's Monday-first week (0 = Monday … 6 = Sunday), derived from the
@@ -202,6 +256,7 @@ enum AdaptivePlanEngine {
         profile.runningDays = result.runningDays
         profile.programPhase = .active
         profile.weekNumber = 1
+        profile.programStartDate = .now
         profile.recoveryDaysLeft = 0
         if result.goal == .race {
             profile.raceDate = Calendar.current.date(byAdding: .day, value: 63, to: .now)

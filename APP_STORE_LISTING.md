@@ -42,8 +42,6 @@ Classement, défis mensuels, fil d'activité entre coureuses et coureurs.
 FIN DE PROGRAMME, PAS FIN DE L'HISTOIRE
 À la fin de tes 9 semaines : récupération encadrée, puis nouvel objectif ou mode course libre sans plan fixe.
 
-RUNUP Premium débloque un coach sans limite, des stats avancées et des connexions illimitées à tes autres apps de santé.
-
 Nécessite iOS 17 ou version ultérieure. La connexion à Apple Santé est optionnelle mais recommandée pour une forme du jour plus précise.
 ```
 

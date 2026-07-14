@@ -42,7 +42,7 @@ private struct RootView: View {
     }
 }
 
-/// Top-level switch: onboarding → paywall (post-onboarding upsell) → main tabbed app.
+/// Top-level switch: onboarding → main tabbed app.
 private struct ContentRouterView: View {
     @Environment(AppState.self) private var appState
 
@@ -50,8 +50,6 @@ private struct ContentRouterView: View {
         Group {
             if !appState.profile.onboarded {
                 OnboardingContainerView()
-            } else if appState.showPaywall {
-                PaywallView()
             } else {
                 RootTabView()
             }

@@ -74,6 +74,8 @@ final class UserProfile {
     var readiness: Int
 
     // MARK: Meta
+    /// No paid tier ships in this version — everyone gets full access. Kept as a field (rather
+    /// than removed outright) so a future real subscription can gate on it without a migration.
     var premium: Bool
     var onboarded: Bool
     var distanceUnit: String
@@ -120,7 +122,7 @@ final class UserProfile {
         self.streak = 0
         self.xp = 0
         self.readiness = 80
-        self.premium = false
+        self.premium = true
         self.onboarded = false
         self.distanceUnit = "km"
         self.coachNotificationsEnabled = true

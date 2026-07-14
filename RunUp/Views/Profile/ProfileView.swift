@@ -29,8 +29,6 @@ struct ProfileView: View {
                     }
                 }
 
-                premiumBanner
-
                 coachApiKeySection
 
                 sectionTitle("Sources de données")
@@ -54,34 +52,6 @@ struct ProfileView: View {
 
     private func sectionTitle(_ text: String) -> some View {
         EyebrowLabel(text: text, color: RUColor.text3)
-    }
-
-    private var premiumBanner: some View {
-        Button(action: { if !profile.premium { appState.openPaywall() } }) {
-            HStack(spacing: 12) {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(profile.premium ? RUColor.lime.opacity(0.15) : RUColor.violet.opacity(0.2))
-                    .frame(width: 34, height: 34)
-                    .overlay(Image(systemName: "star.fill").foregroundColor(profile.premium ? RUColor.lime : RUColor.violet).font(.system(size: 14)))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(profile.premium ? "Runner Premium" : "Passer à Premium").font(RUFont.sans(14, weight: .bold)).foregroundColor(.white)
-                    Text(profile.premium ? "Coach illimité, stats avancées, connexions étendues" : "Coach illimité, prédictions de course, plus encore")
-                        .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
-                }
-                Spacer(minLength: 0)
-                if !profile.premium { Text("→").foregroundColor(RUColor.violet) }
-            }
-            .padding(14)
-            .background(bannerFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(profile.premium ? RUColor.lime.opacity(0.3) : RUColor.violet.opacity(0.35), lineWidth: RUSpacing.hairline))
-        }
-        .buttonStyle(PressableStyle())
-    }
-
-    private var bannerFill: AnyShapeStyle {
-        profile.premium
-            ? AnyShapeStyle(RUColor.lime.opacity(0.08))
-            : AnyShapeStyle(LinearGradient(colors: [RUColor.violet.opacity(0.16), RUColor.rose.opacity(0.12)], startPoint: .topLeading, endPoint: .bottomTrailing))
     }
 
     private var coachApiKeySection: some View {

@@ -12,7 +12,6 @@ final class AppState {
 
     var profile: UserProfile
     var screen: AppScreen = .home
-    var showPaywall = false
 
     // Sheets
     var sessionDetailPresented = false
@@ -80,7 +79,6 @@ final class AppState {
     func openSessionDetail() { sessionDetailPresented = true }
     func openProgramSettings() { programSettingsPresented = true }
     func openNotifications() { notificationsPresented = true }
-    func openPaywall() { showPaywall = true }
 
     func replayOnboarding() {
         profile.onboarded = false

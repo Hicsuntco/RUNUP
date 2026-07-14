@@ -53,9 +53,6 @@ struct OnboardingContainerView: View {
 
     private func finish() {
         AdaptivePlanEngine.applyOnboarding(vm.buildResult(), to: appState.profile)
-        if !appState.profile.premium {
-            appState.showPaywall = true
-        }
         appState.toast("Ton programme de 9 semaines est prêt")
     }
 }

@@ -1,13 +1,13 @@
 # Politique de confidentialité — RUNUP
 
-**Dernière mise à jour : [à compléter avant publication]**
+**Dernière mise à jour : 14 juillet 2026**
 
 Cette politique explique quelles données l'application RUNUP collecte, comment elles sont utilisées, et avec qui elles sont partagées.
 
 ## Qui sommes-nous
 
-RUNUP est éditée par **[Nom de l'éditeur / auto-entreprise à compléter]**.
-Contact : **[email de contact à compléter]**
+RUNUP est éditée par **Charlotte Grudé**.
+Contact : **charlottegrudep@gmail.com**
 
 ## Données collectées
 
@@ -55,4 +55,4 @@ Cette politique peut être mise à jour ; la date de dernière mise à jour est 
 
 ## Contact
 
-Pour toute question relative à cette politique ou à tes données : **[email de contact à compléter]**
+Pour toute question relative à cette politique ou à tes données : **charlottegrudep@gmail.com**

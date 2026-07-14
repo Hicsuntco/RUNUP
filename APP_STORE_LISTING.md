@@ -1,6 +1,6 @@
 # Fiche App Store — RUNUP
 
-Contenu prêt à copier-coller dans App Store Connect (App Information / Fiche de l'app). Les champs marqués **[à compléter]** nécessitent une info que je n'ai pas (compte, URLs, contact).
+Contenu prêt à copier-coller dans App Store Connect (App Information / Fiche de l'app).
 
 ## Nom de l'app (30 caractères max)
 ```
@@ -60,11 +60,11 @@ course,running,coach,ia,entrainement,fractionné,cardio,santé,marathon,10km,sem
 Aucun contenu sensible (pas de violence, contenu adulte, jeu d'argent...) → typiquement **4+**. À confirmer via le questionnaire App Store Connect.
 
 ## URLs requises
-- **URL de support** : [à compléter — une page où les utilisatrices peuvent te contacter en cas de problème ; peut être une simple page web ou un mailto:]
+- **URL de support** : `mailto:charlottegrudep@gmail.com`
 - **URL de politique de confidentialité** : `https://hicsuntco.github.io/RUNUP/privacy.html`
 - **URL marketing** (optionnelle) : —
 
 ## Copyright
 ```
-© 2026 [Nom de l'éditeur à compléter]
+© 2026 Charlotte Grudé
 ```

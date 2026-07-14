@@ -11,7 +11,7 @@ enum CoachServiceError: Error {
 }
 
 enum CoachService {
-    private static let endpoint = URL(string: "https://runup-coach.vercel.app/api/coach")!
+    private static let endpoint = URL(string: "https://runup-nu.vercel.app/api/coach")!
     /// Shared secret between the app and `api/coach.js` — not a per-user credential, just a
     /// deterrent against random callers hitting the endpoint and spending the real Anthropic key.
     private static let appSecret = "b8556afa2e3e90aa8df107136a4fffa4d2d64dfa3f473df2"

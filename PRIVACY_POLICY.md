@@ -25,7 +25,7 @@ Pendant une course, RUNUP utilise ta position pour mesurer la distance parcourue
 ### Historique de course et données de progression
 Distance, durée, allure, fréquence cardiaque moyenne et splits de chaque course sont enregistrés localement sur ton appareil pour alimenter tes statistiques, ton historique et l'adaptation de ton programme.
 
-### Messages envoyés au coach IA
+### Messages envoyés au coach
 Les messages que tu écris au coach, ainsi qu'un résumé de ton profil et de ta forme du jour (nécessaires pour que le coach te réponde de façon pertinente), sont envoyés à **l'API d'Anthropic (Claude)** pour générer les réponses du coach. Cette clé API est celle que tu renseignes toi-même dans Profil → Réglages.
 
 Voir la politique de confidentialité d'Anthropic : https://www.anthropic.com/legal/privacy
@@ -37,13 +37,13 @@ RUNUP ne contient aucun SDK publicitaire, aucun traceur tiers, et ne vend aucune
 
 Toutes tes données (profil, historique, messages du coach) sont stockées **localement sur ton appareil** (aucun compte serveur RUNUP n'existe). La suppression de l'application supprime l'ensemble de ces données.
 
-La seule donnée qui quitte ton appareil est celle envoyée à l'API Anthropic pour faire fonctionner le coach IA conversationnel (voir ci-dessus), et les données Apple Santé que tu choisis explicitement de synchroniser.
+La seule donnée qui quitte ton appareil est celle envoyée à l'API Anthropic pour faire fonctionner le coach conversationnel (voir ci-dessus), et les données Apple Santé que tu choisis explicitement de synchroniser.
 
 ## Tes droits
 
 - **Supprimer tes données** : désinstalle l'application, ou utilise "Refaire l'onboarding" pour repartir de zéro.
 - **Révoquer l'accès à Apple Santé ou à la localisation** : Réglages iOS → Confidentialité et sécurité → Santé / Service de localisation → RUNUP.
-- **Supprimer ta clé API Anthropic** : Profil → Réglages → Coach IA.
+- **Supprimer ta clé API Anthropic** : Profil → Réglages → Coach.
 
 ## Âge minimum
 

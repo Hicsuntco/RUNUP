@@ -13,7 +13,7 @@ struct PaywallView: View {
     @State private var loading = false
 
     private let features: [(String, String)] = [
-        ("Coach IA sans limite", "Discussions illimitées, à toute heure, avant et après chaque sortie."),
+        ("Coach sans limite", "Discussions illimitées, à toute heure, avant et après chaque sortie."),
         ("Programme qui s'adapte en continu", "Ajustements automatiques après chaque séance, chaque ressenti."),
         ("Stats avancées", "VO₂max, prédictions de course, analyse de charge sur 12 semaines."),
         ("Connexions illimitées", "Apple Santé, Strava, Garmin synchronisés en temps réel.")

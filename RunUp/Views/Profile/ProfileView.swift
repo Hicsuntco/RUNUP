@@ -86,7 +86,7 @@ struct ProfileView: View {
 
     private var coachApiKeySection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionTitle("Coach IA")
+            sectionTitle("Coach")
             VStack(alignment: .leading, spacing: 10) {
                 Text("Colle ta clé API Anthropic pour activer les réponses réelles du coach.")
                     .font(RUFont.sans(11.5)).foregroundColor(RUColor.text2).lineSpacing(2)

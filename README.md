@@ -10,10 +10,11 @@ design, description écran par écran, prototype de référence).
 - Onboarding multi-étapes adaptatif selon l'objectif (course, progression, perte de poids, reprise, forme)
 - Accueil avec anneaux d'activité, séance du jour, plan de 9 semaines
 - Suivi de course en direct avec MapKit + CoreLocation (vraie géolocalisation)
-- Coach IA conversationnel branché sur l'API Anthropic (Claude)
-- Mécanique de plan adaptatif : le ressenti post-course fait évoluer le programme
+- Coach IA conversationnel branché sur l'API Anthropic (Claude), via un proxy serveur — aucune clé
+  à fournir côté utilisatrice
+- Mécanique de plan adaptatif : la forme moyenne de la semaine passée fait évoluer la suivante
 - Intégration Apple Santé (HealthKit) pour la forme du jour
-- Stats, historique, club social (mock), paywall premium
+- Stats, historique, club social (mock)
 - Flux de fin de programme : récupération → nouvel objectif ou mode course libre
 
 ## Démarrage rapide
@@ -29,7 +30,7 @@ RunUp/
 ├── RunUpApp.swift               — point d'entrée
 ├── Models/                      — SwiftData (@Model) + enums/structs
 ├── ViewModels/                  — état par écran/flow
-├── Services/                    — HealthKit, CoreLocation, Anthropic API, Keychain, persistance,
+├── Services/                    — HealthKit, CoreLocation, appel au proxy coach, persistance,
 │                                   moteur du plan adaptatif
 ├── DesignSystem/                — couleurs, typographie (Bebas Neue/DM Sans/DM Mono), espacements
 ├── Views/                       — un dossier par section, un fichier par écran
@@ -41,7 +42,6 @@ RunUp/
 │   ├── Club/
 │   ├── Race/
 │   ├── Profile/
-│   ├── Paywall/
 │   ├── ProgramEnd/
 │   └── Components/               — primitives partagées (anneaux, cartes, boutons, tab bar…)
 └── Resources/
@@ -49,9 +49,8 @@ RunUp/
     └── Assets.xcassets
 ```
 
-## Clé API Anthropic
+## Coach backend
 
-Le coach IA appelle directement l'API Anthropic (Messages API) depuis l'app avec la clé de
-l'utilisateur, saisie et stockée dans le Keychain via Profil → Réglages. Voir
-[IOS_SETUP.md](IOS_SETUP.md) pour le détail et les alternatives possibles avant une diffusion
-grand public.
+Le coach n'appelle jamais l'API Anthropic directement depuis l'app — aucune utilisatrice n'a de
+clé à fournir. L'app appelle un proxy (`api/coach.js`, fonction serverless Vercel) qui détient la
+vraie clé Anthropic côté serveur. Voir [IOS_SETUP.md](IOS_SETUP.md) pour le déploiement.

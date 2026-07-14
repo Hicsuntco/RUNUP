@@ -33,11 +33,6 @@ final class CoachViewModel {
                     modelContext.insert(ChatMessage(role: .coach, text: reply))
                     isTyping = false
                 }
-            } catch CoachServiceError.missingAPIKey {
-                await MainActor.run {
-                    modelContext.insert(ChatMessage(role: .error, text: "Ajoute ta clé API Anthropic dans Profil → Réglages pour parler à ton coach."))
-                    isTyping = false
-                }
             } catch {
                 await MainActor.run {
                     modelContext.insert(ChatMessage(role: .error, text: "Connexion coupée — le coach n'a pas pu répondre. Réessaie dans un instant."))

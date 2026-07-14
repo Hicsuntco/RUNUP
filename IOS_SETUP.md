@@ -23,26 +23,30 @@ Relance `xcodegen generate` à chaque fois que `project.yml` change (nouveau fic
 nouvelle capability, etc.) — les fichiers `.swift` eux n'ont pas besoin d'être ajoutés
 manuellement au projet, `project.yml` référence le dossier `RunUp/` entier.
 
-## Configurer la clé API Anthropic (coach IA)
+## Coach backend (proxy Vercel)
 
-Le coach IA appelle directement l'API Anthropic (`https://api.anthropic.com/v1/messages`) depuis
-l'app, avec une clé saisie par l'utilisateur dans **Profil → Réglages → Coach IA**, stockée dans
-le Keychain iOS (`Services/KeychainService.swift`).
+Le coach n'appelle jamais l'API Anthropic directement depuis l'app — aucune utilisatrice n'a de
+clé à fournir. L'app appelle `api/coach.js` (une fonction serverless Vercel, à la racine de ce
+repo), qui détient la vraie clé Anthropic côté serveur et la relaie. `Services/CoachService.swift`
+est le seul point d'appel réseau côté app.
 
-**Pourquoi ce choix pour la v1** (voir aussi le README principal) : c'est la solution la plus
-simple à shipper sans backend. Elle convient pour du développement, du test, ou une diffusion
-limitée où chaque utilisatrice fournit sa propre clé.
+**Déploiement (une fois) :**
+1. Importe ce repo dans Vercel (vercel.com → Add New → Project → sélectionne ce repo). Vercel
+   détecte automatiquement le dossier `api/` et déploie `api/coach.js` comme fonction serverless.
+2. Dans les réglages du projet Vercel → **Environment Variables**, ajoute :
+   - `ANTHROPIC_API_KEY` — une vraie clé API Anthropic (console.anthropic.com), avec un plafond de
+     dépense configuré côté Anthropic — c'est le vrai garde-fou contre une facture qui explose,
+     pas la fonction elle-même.
+   - `RUNUP_APP_SECRET` — doit être identique à la constante `appSecret` dans
+     `RunUp/Services/CoachService.swift` (secret partagé app↔serveur, pas un identifiant
+     utilisateur — juste un frein contre un appel externe au hasard sur cette URL).
+3. Redéploie, puis vérifie que `RunUp/Services/CoachService.swift`'s `endpoint` pointe bien vers
+   l'URL Vercel réelle du projet (`https://<projet>.vercel.app/api/coach`).
 
-**Avant une diffusion App Store grand public**, il vaut mieux ne pas demander à chaque
-utilisatrice sa propre clé API. Deux alternatives, sans avoir à toucher aux écrans :
-`Services/CoachService.swift` est le seul point d'appel réseau du coach — remplacer son
-implémentation suffit.
-1. **Proxy backend** (recommandé) — une fonction serverless (ex. Supabase Edge Function,
-   Cloudflare Worker) qui détient la clé Anthropic côté serveur et que l'app appelle à la place
-   de l'API Anthropic directement. Permet aussi de limiter l'usage par utilisateur/palier
-   d'abonnement.
-2. **Clé embarquée via configuration de build** (xcconfig non commité) — plus simple, mais la
-   clé reste extractible du binaire distribué ; à réserver à des builds internes/TestFlight.
+`api/coach.js` force son propre `model`/`max_tokens` côté serveur (ignore ce que le client envoie)
+et ne journalise jamais le contenu des messages — seule protection de contenu réellement fiable
+contre un client modifié ; la protection anti-abus/coût reste principalement le plafond de
+dépense Anthropic ci-dessus, pas une limite de débit applicative (aucune n'est implémentée en v1).
 
 ## HealthKit (Apple Santé)
 

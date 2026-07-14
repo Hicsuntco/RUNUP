@@ -1,13 +1,12 @@
 import SwiftUI
 
-/// Profile & Settings — mirrors `ProfileScreen` in screensC.jsx, plus an API-key entry section
-/// for the coach (see README/user decision: key entered here, stored in Keychain).
+/// Profile & Settings — mirrors `ProfileScreen` in screensC.jsx. The coach needs no API key from
+/// the user (it's proxied through RunUp's own backend, see `Services/CoachService.swift`), so
+/// there's no key-entry section here.
 struct ProfileView: View {
     @Environment(AppState.self) private var appState
     private var profile: UserProfile { appState.profile }
 
-    @State private var apiKeyDraft = ""
-    @State private var apiKeySaved = false
     @State private var unit = "km"
 
     var body: some View {
@@ -29,8 +28,6 @@ struct ProfileView: View {
                     }
                 }
 
-                coachApiKeySection
-
                 sectionTitle("Sources de données")
                 dataSourcesCard
 
@@ -45,43 +42,12 @@ struct ProfileView: View {
             .padding(.bottom, 130)
         }
         .onAppear {
-            apiKeyDraft = KeychainService.loadAPIKey() ?? ""
             unit = profile.distanceUnit
         }
     }
 
     private func sectionTitle(_ text: String) -> some View {
         EyebrowLabel(text: text, color: RUColor.text3)
-    }
-
-    private var coachApiKeySection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            sectionTitle("Coach")
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Colle ta clé API Anthropic pour activer les réponses réelles du coach.")
-                    .font(RUFont.sans(11.5)).foregroundColor(RUColor.text2).lineSpacing(2)
-                SecureField("", text: $apiKeyDraft, prompt: Text("sk-ant-…").foregroundColor(RUColor.text3))
-                    .font(RUFont.mono(12))
-                    .foregroundColor(.white)
-                    .padding(12)
-                    .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
-                HStack {
-                    Text(KeychainService.loadAPIKey()?.isEmpty == false ? "Clé enregistrée ✓" : "Aucune clé enregistrée")
-                        .font(RUFont.sans(11, weight: .semibold))
-                        .foregroundColor(KeychainService.loadAPIKey()?.isEmpty == false ? RUColor.lime : RUColor.text3)
-                    Spacer()
-                    Button("Enregistrer") {
-                        KeychainService.saveAPIKey(apiKeyDraft.trimmingCharacters(in: .whitespacesAndNewlines))
-                        appState.toast("Clé API enregistrée")
-                    }
-                    .font(RUFont.sans(12, weight: .bold))
-                    .foregroundColor(RUColor.rose2)
-                }
-            }
-            .padding(14)
-            .ruCard()
-        }
     }
 
     private var dataSourcesCard: some View {

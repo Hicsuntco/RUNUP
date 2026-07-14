@@ -1,18 +1,20 @@
 import Foundation
 
-/// Calls the Anthropic Messages API directly from the client using the user's own API key
-/// (see README § AI Coach System Prompt and Profile → Réglages for key entry). Swift has no
-/// official Anthropic SDK, so this talks to the REST endpoint directly with URLSession.
+/// Calls RunUp's own coach backend (a small Vercel serverless function, see `api/coach.js`),
+/// never Anthropic directly — the app has no per-user API key to manage, and the real Anthropic
+/// key only ever lives server-side. Swift has no official Anthropic SDK either way, so this talks
+/// to the REST endpoint directly with URLSession.
 enum CoachServiceError: Error {
-    case missingAPIKey
     case network(Error)
     case badResponse(Int, String)
     case emptyReply
 }
 
 enum CoachService {
-    private static let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
-    private static let model = "claude-opus-4-8"
+    private static let endpoint = URL(string: "https://runup-coach.vercel.app/api/coach")!
+    /// Shared secret between the app and `api/coach.js` — not a per-user credential, just a
+    /// deterrent against random callers hitting the endpoint and spending the real Anthropic key.
+    private static let appSecret = "b8556afa2e3e90aa8df107136a4fffa4d2d64dfa3f473df2"
     private static let raceDateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "fr_FR")
@@ -21,19 +23,12 @@ enum CoachService {
     }()
 
     static func send(history: [ChatMessage], profile: UserProfile) async throws -> String {
-        guard let apiKey = KeychainService.loadAPIKey(), !apiKey.isEmpty else {
-            throw CoachServiceError.missingAPIKey
-        }
-
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
-        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
-        request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        request.setValue(appSecret, forHTTPHeaderField: "x-runup-secret")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
 
         let body = MessagesRequest(
-            model: model,
-            max_tokens: 400,
             system: systemPrompt(for: profile),
             messages: history
                 .filter { $0.role != .error }
@@ -102,8 +97,6 @@ enum CoachService {
 }
 
 private struct MessagesRequest: Encodable {
-    var model: String
-    var max_tokens: Int
     var system: String
     var messages: [RequestMessage]
 }

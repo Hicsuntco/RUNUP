@@ -9,6 +9,10 @@ struct RingsView: View {
     private var remainingSteps: Int { max(0, Int(p.stepsGoal - p.stepsToday)) }
     private var remainingStrengthMinutes: Int { max(0, Int(p.strengthGoalMinutes - p.strengthMinutesToday)) }
 
+    /// [Séance, Renfo & mobilité, Pas] — same array `DailyGoalsBarsView` draws its bars in, so
+    /// each row's legend dot always matches its bar's actual color.
+    private var goalColors: [Color] { DailyGoalsBarsView.fillColors }
+
     /// The most useful thing to nudge about right now — first incomplete goal, in priority order.
     private var coachNudge: String? {
         if !p.seanceDoneToday, p.todaySession.durationMinutes > 0 {
@@ -43,8 +47,8 @@ struct RingsView: View {
 
                 VStack(spacing: 9) {
                     seanceRow
-                    ringRow(name: "Renfo & mobilité", color: RUColor.rose2, value: p.strengthMinutesToday, goal: p.strengthGoalMinutes, unit: "min")
-                    ringRow(name: "Pas", color: .white, value: p.stepsToday, goal: p.stepsGoal, unit: "pas")
+                    ringRow(name: "Renfo & mobilité", color: goalColors[1], value: p.strengthMinutesToday, goal: p.strengthGoalMinutes, unit: "min")
+                    ringRow(name: "Pas", color: goalColors[2], value: p.stepsToday, goal: p.stepsGoal, unit: "pas")
                 }
 
                 if let coachNudge {
@@ -74,8 +78,9 @@ struct RingsView: View {
     }
 
     private var seanceRow: some View {
-        HStack(spacing: 12) {
-            Circle().fill(RUColor.rose).frame(width: 10, height: 10).shadow(color: RUColor.rose.opacity(0.4), radius: 6)
+        let color = goalColors[0]
+        return HStack(spacing: 12) {
+            Circle().fill(color).frame(width: 10, height: 10).shadow(color: color.opacity(0.4), radius: 6)
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Text("Séance du jour").font(RUFont.sans(16, weight: .semibold)).foregroundColor(.white)
@@ -84,7 +89,7 @@ struct RingsView: View {
                         .font(RUFont.sans(11, weight: .bold))
                         .foregroundColor(p.seanceDoneToday ? RUColor.lime : RUColor.text2)
                 }
-                LinearBar(fraction: p.seanceDoneToday ? 1 : 0, color: RUColor.rose, height: 5)
+                LinearBar(fraction: p.seanceDoneToday ? 1 : 0, color: color, height: 5)
             }
         }
         .padding(14)

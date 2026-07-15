@@ -16,7 +16,7 @@ struct DailyGoalsBarsView: View {
     var radius: CGFloat? = nil
 
     private var cornerRadius: CGFloat { radius ?? size * 0.26 }
-    private var glyphSize: CGFloat { size * 0.72 }
+    private var glyphSize: CGFloat { size * 0.78 }
 
     /// (x1, y1, x2, y2, fillColor, fillOpacity) in the design's 100×100 viewBox — bars 2–4 of
     /// `AppMarkView.bars`. Colors lift straight from the logo's own rose→violet gradient
@@ -35,7 +35,14 @@ struct DailyGoalsBarsView: View {
     }
 
     private var strokeStyle: StrokeStyle {
-        StrokeStyle(lineWidth: 23 * (glyphSize / 100), lineCap: .round)
+        StrokeStyle(lineWidth: 26 * (glyphSize / 100), lineCap: .round)
+    }
+
+    /// The 3 fill colors, in order — exposed so other views showing the same 3 goals (the legend
+    /// dots in `RingsView`, the stat labels in `HomeView`) can match the widget's bars exactly
+    /// instead of keeping a second, driftable copy of the palette.
+    static var fillColors: [Color] {
+        bars.map { $0.4.opacity($0.5) }
     }
 
     var body: some View {

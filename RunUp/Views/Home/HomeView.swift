@@ -166,15 +166,18 @@ struct HomeView: View {
 
     private var ringsCard: some View {
         let p = profile
+        // Same array `DailyGoalsBarsView` draws its bars in, so each stat's color always matches
+        // its bar's actual color.
+        let goalColors = DailyGoalsBarsView.fillColors
         return Button(action: { appState.go(.rings) }) {
             HStack(spacing: 16) {
                 DailyGoalsBarsView(progress: p.dailyGoalsProgress, size: 72)
                 VStack(alignment: .leading, spacing: 8) {
                     EyebrowLabel(text: "Tes objectifs · \(p.dailyGoalsDone)/3 bouclés")
                     HStack(spacing: 14) {
-                        ringStat(value: p.seanceDoneToday ? "Faite" : "À faire", unit: "séance", color: RUColor.rose)
-                        ringStat(value: "\(Int(p.strengthMinutesToday))", unit: "/\(Int(p.strengthGoalMinutes)) MIN", color: RUColor.rose2)
-                        ringStat(value: "\(Int(p.stepsToday))", unit: "/\(Int(p.stepsGoal)) PAS", color: .white)
+                        ringStat(value: p.seanceDoneToday ? "Faite" : "À faire", unit: "séance", color: goalColors[0])
+                        ringStat(value: "\(Int(p.strengthMinutesToday))", unit: "/\(Int(p.strengthGoalMinutes)) MIN", color: goalColors[1])
+                        ringStat(value: "\(Int(p.stepsToday))", unit: "/\(Int(p.stepsGoal)) PAS", color: goalColors[2])
                     }
                 }
                 Spacer(minLength: 0)

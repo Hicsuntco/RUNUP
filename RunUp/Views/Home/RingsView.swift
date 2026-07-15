@@ -40,7 +40,7 @@ struct RingsView: View {
 
                 VStack(spacing: 14) {
                     Text("\(p.dailyGoalsDone) / 3 bouclés").font(RUFont.sans(13, weight: .semibold)).tracking(1).foregroundColor(RUColor.text2)
-                    DailyGoalsBarsView(progress: p.dailyGoalsProgress, size: 168)
+                    DailyGoalsBarsView(progress: p.dailyGoalsProgress, size: 168, animateOnAppear: true)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 6)

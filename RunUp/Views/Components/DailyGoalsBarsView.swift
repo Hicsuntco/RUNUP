@@ -22,6 +22,23 @@ struct DailyGoalsBarsView: View {
     var progress: [Double]
     var size: CGFloat = 96
     var radius: CGFloat? = nil
+    /// When true, bars fill up from empty the first time this view appears instead of snapping
+    /// straight to `progress` — used on `RingsView`'s hero widget so opening "Ta journée" reads
+    /// as the bars filling in front of you, not a static picture.
+    var animateOnAppear: Bool = false
+
+    /// What's actually drawn — starts at 0 when `animateOnAppear` is set, then springs to
+    /// `progress` in `onAppear`, so the existing per-bar `.animation(value:)` has something to
+    /// animate between on first appearance (it only fires on a *change*, not an initial value).
+    @State private var displayedProgress: [Double]
+
+    init(progress: [Double], size: CGFloat = 96, radius: CGFloat? = nil, animateOnAppear: Bool = false) {
+        self.progress = progress
+        self.size = size
+        self.radius = radius
+        self.animateOnAppear = animateOnAppear
+        _displayedProgress = State(initialValue: animateOnAppear ? progress.map { _ in 0 } : progress)
+    }
 
     private var cornerRadius: CGFloat { radius ?? size * 0.26 }
     private var glyphSize: CGFloat { size * 0.93 }
@@ -62,7 +79,7 @@ struct DailyGoalsBarsView: View {
 
                         // Fill: from the same start point, out to `pct` of the way along the
                         // track, in this bar's flat color.
-                        let pct = max(0, min(1, i < progress.count ? progress[i] : 0))
+                        let pct = max(0, min(1, i < displayedProgress.count ? displayedProgress[i] : 0))
                         barPath(bar, to: pct)
                             .stroke(bar.4, style: strokeStyle)
                             .animation(.easeOut(duration: 0.8), value: pct)
@@ -70,6 +87,12 @@ struct DailyGoalsBarsView: View {
                 }
                 .frame(width: glyphSize, height: glyphSize)
             )
+            .onAppear {
+                if animateOnAppear { displayedProgress = progress }
+            }
+            .onChange(of: progress) { _, newValue in
+                displayedProgress = newValue
+            }
     }
 
     private func barPath(_ bar: (CGFloat, CGFloat, CGFloat, CGFloat, Color), to pct: Double) -> Path {

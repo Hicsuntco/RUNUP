@@ -35,14 +35,18 @@ Contact : <strong>charlottegrudep@gmail.com</strong></p>
 
 <p><strong>Messages envoyés au coach</strong> — tes messages, ainsi qu'un résumé de ton profil et de ta forme du jour, sont envoyés à notre serveur, qui les relaie à l'API d'Anthropic (Claude) pour générer les réponses du coach. Nous ne stockons pas ces messages sur notre serveur — ils ne font que transiter le temps de la réponse. Voir la <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener">politique de confidentialité d'Anthropic</a>.</p>
 
+<p><strong>Compte Le Club (optionnel)</strong> — Le Club (classement, fil d'activité entre membres) est la seule fonctionnalité de RUNUP qui nécessite un vrai compte ; tout le reste de l'app fonctionne sans jamais te connecter. Si tu te connectes (Apple, Google, ou email/mot de passe), nous créons un compte sur notre serveur contenant : ton identifiant de connexion (identifiant Apple/Google, jamais ton mot de passe Apple/Google ; ou ton email et un mot de passe stocké haché si tu utilises email/mot de passe), ton prénom, ton XP total, les activités que tu postes au fil du club (visibles par les autres membres), le club que tu as créé ou rejoint, et les kudos que tu donnes ou reçois. Ces données sont stockées sur notre serveur (hébergé chez Vercel, base de données Neon) — contrairement au reste de tes données — puisque c'est ce qui permet un classement et un fil d'activité réellement partagés entre plusieurs personnes.</p>
+
 <p><strong>Aucune collecte publicitaire</strong> — RUNUP ne contient aucun SDK publicitaire, aucun traceur tiers, et ne vend aucune donnée.</p>
 
 <h2>Où sont stockées tes données</h2>
-<p>Toutes tes données sont stockées localement sur ton appareil (aucun compte serveur RUNUP n'existe). Désinstaller l'application supprime l'ensemble de ces données. La seule donnée qui quitte l'appareil est celle envoyée à notre serveur pour le coach, et les données Apple Santé que tu choisis explicitement de synchroniser.</p>
+<p>Ton profil, ton historique de courses et tes messages au coach restent localement sur ton appareil — désinstaller l'application supprime l'ensemble de ces données. Si tu te connectes pour le Club, ton compte (voir ci-dessus) est stocké sur notre serveur tant que tu ne le supprimes pas. La seule autre donnée qui quitte l'appareil est celle envoyée à notre serveur pour le coach, et les données Apple Santé que tu choisis explicitement de synchroniser.</p>
 
 <h2>Tes droits</h2>
 <ul>
-  <li>Supprimer tes données : désinstalle l'application, ou utilise « Refaire l'onboarding ».</li>
+  <li>Supprimer tes données locales : désinstalle l'application, ou utilise « Refaire l'onboarding ».</li>
+  <li>Supprimer ton compte Le Club : Profil → Compte → « Supprimer mon compte » — supprime immédiatement et définitivement ton compte, ton XP et tes activités postées de notre serveur.</li>
+  <li>Se déconnecter sans supprimer le compte : Profil → Compte → « Se déconnecter ».</li>
   <li>Révoquer l'accès à Apple Santé ou à la localisation : Réglages iOS → Confidentialité et sécurité → Santé / Service de localisation → RUNUP.</li>
 </ul>
 

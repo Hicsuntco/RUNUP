@@ -12,11 +12,10 @@ import SwiftUI
 /// here, so they can never drift out of sync again. Colors are the app's 3 core accent tones
 /// (`RUColor.rose2` → `.rose` → `.violet`, theme-aware), so the mark re-themes live with the
 /// accent picker in Profil → Apparence. Geometry ported 1:1 from the design handoff
-/// (`DAILY_GOALS_WIDGET.md`), which reuses `AppMarkView`'s bars 2–4 (skips the shortest bar) —
-/// same stroke-width-to-glyph ratio as the logo (19/100), just drawn at a larger glyph fraction
-/// of the tile so it reads clearly. Nothing like a ring: Apple's Human Interface Guidelines
-/// reserve the concentric-ring look for the system Activity control (Move/Exercise/Stand), and
-/// app review rejects lookalikes under guideline 5.2.5.
+/// (`DAILY_GOALS_WIDGET.md`), which reuses `AppMarkView`'s bars 2–4 (skips the shortest bar).
+/// Nothing like a ring: Apple's Human Interface Guidelines reserve the concentric-ring look for
+/// the system Activity control (Move/Exercise/Stand), and app review rejects lookalikes under
+/// guideline 5.2.5.
 struct DailyGoalsBarsView: View {
     /// [Séance du jour, Renfo & mobilité, Pas], each 0...1.
     var progress: [Double]
@@ -28,8 +27,9 @@ struct DailyGoalsBarsView: View {
     var animateOnAppear: Bool = false
 
     /// What's actually drawn — starts at 0 when `animateOnAppear` is set, then springs to
-    /// `progress` in `onAppear`, so the existing per-bar `.animation(value:)` has something to
-    /// animate between on first appearance (it only fires on a *change*, not an initial value).
+    /// `progress` in `onAppear`, so `BarShape`'s animatable `pct` has something to interpolate
+    /// from on first appearance (`.animation(value:)` only fires on a *change*, never an initial
+    /// value).
     @State private var displayedProgress: [Double]
 
     init(progress: [Double], size: CGFloat = 96, radius: CGFloat? = nil, animateOnAppear: Bool = false) {
@@ -55,10 +55,6 @@ struct DailyGoalsBarsView: View {
         ]
     }
 
-    private var strokeStyle: StrokeStyle {
-        StrokeStyle(lineWidth: 19 * (glyphSize / 100), lineCap: .round)
-    }
-
     /// Each bar's fill color, in order — exposed so other views showing the same 3 goals (the
     /// legend dots in `RingsView`, the stat labels in `HomeView`) draw from this instead of
     /// keeping a second, driftable copy of the palette.
@@ -75,17 +71,21 @@ struct DailyGoalsBarsView: View {
                 ZStack {
                     ForEach(Array(Self.bars.enumerated()), id: \.offset) { i, bar in
                         // Track: the goal, always full length, dim.
-                        barPath(bar, to: 1).stroke(Color.white.opacity(0.12), style: strokeStyle)
+                        BarShape(x1: bar.0, y1: bar.1, x2: bar.2, y2: bar.3, pct: 1)
+                            .stroke(Color.white.opacity(0.12), style: StrokeStyle(lineWidth: 19, lineCap: .round))
 
                         // Fill: from the same start point, out to `pct` of the way along the
-                        // track, in this bar's flat color.
+                        // track, in this bar's flat color. `BarShape.pct` is the shape's
+                        // `animatableData`, so — unlike a plain `Path` (which SwiftUI can't
+                        // interpolate) — this actually animates instead of snapping instantly.
                         let pct = max(0, min(1, i < displayedProgress.count ? displayedProgress[i] : 0))
-                        barPath(bar, to: pct)
-                            .stroke(bar.4, style: strokeStyle)
-                            .animation(.easeOut(duration: 0.8), value: pct)
+                        BarShape(x1: bar.0, y1: bar.1, x2: bar.2, y2: bar.3, pct: pct)
+                            .stroke(bar.4, style: StrokeStyle(lineWidth: 19, lineCap: .round))
+                            .animation(.easeOut(duration: 0.9), value: pct)
                     }
                 }
-                .frame(width: glyphSize, height: glyphSize)
+                .frame(width: 100, height: 100)
+                .scaleEffect(glyphSize / 100)
             )
             .onAppear {
                 if animateOnAppear { displayedProgress = progress }
@@ -94,15 +94,31 @@ struct DailyGoalsBarsView: View {
                 displayedProgress = newValue
             }
     }
+}
 
-    private func barPath(_ bar: (CGFloat, CGFloat, CGFloat, CGFloat, Color), to pct: Double) -> Path {
-        let scale = glyphSize / 100
-        let fx = bar.0 + (bar.2 - bar.0) * pct
-        let fy = bar.1 + (bar.3 - bar.1) * pct
-        return Path { path in
-            path.move(to: CGPoint(x: bar.0 * scale, y: bar.1 * scale))
-            path.addLine(to: CGPoint(x: fx * scale, y: fy * scale))
-        }
+/// A single bar, drawn from `(x1,y1)` out to `pct` of the way to `(x2,y2)` — a real `Shape`
+/// (not a raw `Path`) because SwiftUI can only smoothly animate shape geometry that exposes an
+/// interpolatable `animatableData`; a bare `Path` built from `move`/`addLine` has none, so
+/// `.animation(value:)` on one just jumps straight to the end state with no visible transition.
+private struct BarShape: Shape {
+    let x1: CGFloat
+    let y1: CGFloat
+    let x2: CGFloat
+    let y2: CGFloat
+    var pct: CGFloat
+
+    var animatableData: CGFloat {
+        get { pct }
+        set { pct = newValue }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        let fx = x1 + (x2 - x1) * pct
+        let fy = y1 + (y2 - y1) * pct
+        var path = Path()
+        path.move(to: CGPoint(x: x1, y: y1))
+        path.addLine(to: CGPoint(x: fx, y: fy))
+        return path
     }
 }
 

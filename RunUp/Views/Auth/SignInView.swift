@@ -1,11 +1,10 @@
 import SwiftUI
 import AuthenticationServices
-import GoogleSignIn
 
 /// Sign-in sheet, presented only from `ClubView` — the rest of the app works fully offline, an
-/// account is only needed for the real, server-backed Club (leaderboard/feed/kudos). Offers all 3
-/// methods so nobody needs a password if they'd rather not have one, and Sign in with Apple is
-/// always included alongside Google per App Store guideline 4.8.
+/// account is only needed for the real, server-backed Club (leaderboard/feed/kudos). Offers Sign
+/// in with Apple plus email/password, so nobody needs to create yet another password if they'd
+/// rather not.
 struct SignInView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.dismiss) private var dismiss
@@ -37,18 +36,6 @@ struct SignInView: View {
                     .signInWithAppleButtonStyle(.white)
                     .frame(height: 50)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-
-                Button(action: signInWithGoogle) {
-                    HStack(spacing: 10) {
-                        Text("G").font(RUFont.sans(16, weight: .bold))
-                        Text("Continuer avec Google").font(RUFont.sans(14, weight: .semibold))
-                    }
-                    .foregroundColor(.black)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(Color.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                }
-                .buttonStyle(PressableStyle())
 
                 HStack {
                     Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
@@ -132,26 +119,6 @@ struct SignInView: View {
         }
     }
 
-    private func signInWithGoogle() {
-        guard let rootVC = UIApplication.shared.ru_rootViewController else {
-            errorMessage = "Impossible d'ouvrir la connexion Google."
-            return
-        }
-        isLoading = true
-        GIDSignIn.sharedInstance.signIn(withPresenting: rootVC) { result, error in
-            Task {
-                guard let idToken = result?.user.idToken?.tokenString, error == nil else {
-                    await MainActor.run {
-                        isLoading = false
-                        errorMessage = "Connexion Google annulée ou impossible."
-                    }
-                    return
-                }
-                await runAuth { try await appState.auth.signInWithGoogle(idToken: idToken) }
-            }
-        }
-    }
-
     private func submitEmailForm() {
         let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
         Task {
@@ -193,15 +160,5 @@ private struct AuthFieldStyle: TextFieldStyle {
             .padding(.vertical, 12)
             .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
-    }
-}
-
-private extension UIApplication {
-    var ru_rootViewController: UIViewController? {
-        connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .flatMap { $0.windows }
-            .first { $0.isKeyWindow }?
-            .rootViewController
     }
 }

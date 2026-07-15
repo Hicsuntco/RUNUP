@@ -31,15 +31,15 @@ Les messages que tu écris au coach, ainsi qu'un résumé de ton profil et de ta
 Voir la politique de confidentialité d'Anthropic : https://www.anthropic.com/legal/privacy
 
 ### Compte Le Club (optionnel)
-Le Club (classement, fil d'activité entre membres) est la seule fonctionnalité de RUNUP qui nécessite un vrai compte — tout le reste de l'app fonctionne sans jamais te connecter. Si tu choisis de te connecter (Apple, Google, ou email/mot de passe), nous créons un compte sur notre serveur contenant :
+Le Club (classement, fil d'activité entre membres) est la seule fonctionnalité de RUNUP qui nécessite un vrai compte — tout le reste de l'app fonctionne sans jamais te connecter. Si tu choisis de te connecter (Apple, ou email/mot de passe), nous créons un compte sur notre serveur contenant :
 
-- **Identifiant de connexion** : selon la méthode choisie, un identifiant Apple ou Google (jamais ton mot de passe Apple/Google, que nous ne voyons jamais), ou ton email et un mot de passe (stocké sous forme hachée, jamais en clair) si tu choisis email/mot de passe.
-- **Prénom** — le tien, ou celui transmis par Apple/Google lors de la première connexion.
+- **Identifiant de connexion** : selon la méthode choisie, un identifiant Apple (jamais ton mot de passe Apple, que nous ne voyons jamais), ou ton email et un mot de passe (stocké sous forme hachée, jamais en clair) si tu choisis email/mot de passe.
+- **Prénom** — le tien, ou celui transmis par Apple lors de la première connexion.
 - **XP total et activité du Club** : les séances/objectifs que tu termines sont envoyées à notre serveur pour alimenter le classement de ton club et le fil d'activité partagé avec ses membres (ex. "a couru 8.2 km · Sortie longue"). Les autres membres de ton club voient ton prénom, ton XP et ces activités.
 - **Appartenance à un club** : le club que tu as créé ou rejoint (nom, code d'invitation).
 - **Kudos** : les 👏 que tu donnes ou reçois sur le fil d'activité.
 
-Ces données Club **sont stockées sur notre serveur** (contrairement au reste de tes données, voir ci-dessous) puisque c'est ce qui permet à un classement et un fil d'activité d'être réellement partagés entre plusieurs personnes. Elles ne sont jamais vendues ni partagées avec un tiers en dehors des sous-traitants nécessaires à la connexion (Apple, Google — voir leurs propres politiques de confidentialité) et de l'hébergement (Vercel).
+Ces données Club **sont stockées sur notre serveur** (contrairement au reste de tes données, voir ci-dessous) puisque c'est ce qui permet à un classement et un fil d'activité d'être réellement partagés entre plusieurs personnes. Elles ne sont jamais vendues ni partagées avec un tiers en dehors des sous-traitants nécessaires à la connexion (Apple — voir sa propre politique de confidentialité) et de l'hébergement (Vercel).
 
 ### Aucune collecte publicitaire
 RUNUP ne contient aucun SDK publicitaire, aucun traceur tiers, et ne vend aucune donnée.

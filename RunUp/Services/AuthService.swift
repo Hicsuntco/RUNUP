@@ -39,10 +39,6 @@ final class AuthService {
         try await authenticate(path: "api/auth/apple", body: ["identityToken": identityToken, "name": name ?? ""])
     }
 
-    func signInWithGoogle(idToken: String) async throws {
-        try await authenticate(path: "api/auth/google", body: ["idToken": idToken])
-    }
-
     func signUp(email: String, password: String, name: String) async throws {
         try await authenticate(path: "api/auth/signup", body: ["email": email, "password": password, "name": name])
     }

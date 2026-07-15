@@ -77,7 +77,6 @@ Dans les réglages du projet Vercel → **Environment Variables**, ajoute (en pl
   `ANTHROPIC_API_KEY`.
 - `APPLE_BUNDLE_ID` — `com.hicsuntco.runup` (vérifie qu'il correspond bien à
   `PRODUCT_BUNDLE_IDENTIFIER` dans `project.yml`).
-- `GOOGLE_CLIENT_ID` — le Client ID créé à l'étape 4 ci-dessous.
 
 ### 3. Sign in with Apple
 
@@ -88,31 +87,14 @@ développeur. Si Xcode affiche une erreur de provisioning à ce sujet : Signing 
 vérifie que "Sign In with Apple" apparaît dans la liste des capabilities de la cible RunUp (elle
 devrait y être automatiquement, générée depuis `project.yml`) et relance le build.
 
-### 4. Google Sign-In
-
-1. Va sur [console.cloud.google.com](https://console.cloud.google.com) → crée un projet (ou
-   réutilise un projet existant) → **APIs & Services** → **Credentials** → **Create Credentials**
-   → **OAuth client ID** → type **iOS**.
-2. Bundle ID : `com.hicsuntco.runup`.
-3. Une fois créé, Google te donne un **Client ID** (ressemble à
-   `123456-abc.apps.googleusercontent.com`) et son équivalent "reversed" (le même ID avec les
-   segments inversés, ex. `com.googleusercontent.apps.123456-abc`).
-4. Dans `project.yml`, remplace les deux placeholders :
-   - `GIDClientID: "REPLACE_ME.apps.googleusercontent.com"` → ton Client ID tel quel.
-   - `CFBundleURLSchemes: ["REPLACE_ME_REVERSED_CLIENT_ID"]` → la version reversed.
-5. Ajoute aussi ce Client ID comme variable d'environnement Vercel `GOOGLE_CLIENT_ID` (étape 2) —
-   c'est ce qui permet à `api/auth/google.js` de vérifier que le token vient bien de cette app.
-6. `xcodegen generate` pour que Xcode récupère le package SPM `GoogleSignIn-iOS` (déjà déclaré
-   dans `project.yml` sous `packages:`) et les nouveaux réglages Info.plist.
-
-### 5. Déployer et tester
+### 4. Déployer et tester
 
 1. Pousse ces changements sur la branche connectée à Vercel — le projet redéploie automatiquement
    et prend en compte le nouveau dossier `api/` (comptes, clubs, activités) et `package.json`
    (nouvelles dépendances : `@neondatabase/serverless`, `bcryptjs`, `jose`).
-2. Dans l'app : onglet **Le Club** → "Se connecter" → teste les 3 méthodes (Apple, Google,
-   email/mot de passe) → crée un club → termine une course → vérifie qu'elle apparaît dans le fil
-   d'activité et que ton XP bouge dans le classement.
+2. Dans l'app : onglet **Le Club** → "Se connecter" → teste les 2 méthodes (Apple, email/mot de
+   passe) → crée un club → termine une course → vérifie qu'elle apparaît dans le fil d'activité et
+   que ton XP bouge dans le classement.
 3. Pour supprimer un compte de test : Profil → Compte → "Supprimer mon compte" (supprime aussi
    ses données Club côté serveur, requis par les règles App Store sur la suppression de compte).
 

@@ -11,7 +11,6 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT UNIQUE,
   password_hash TEXT,
   apple_sub TEXT UNIQUE,
-  google_sub TEXT UNIQUE,
   name TEXT NOT NULL,
   xp_total INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()

@@ -14,7 +14,7 @@ design, description écran par écran, prototype de référence).
   à fournir côté utilisatrice
 - Mécanique de plan adaptatif : la forme moyenne de la semaine passée fait évoluer la suivante
 - Intégration Apple Santé (HealthKit) pour la forme du jour
-- Stats, historique, club social réel (comptes Apple/Google/email, classement et fil d'activité
+- Stats, historique, club social réel (comptes Apple/email, classement et fil d'activité
   partagés entre membres, via un backend Vercel + Postgres)
 - Flux de fin de programme : récupération → nouvel objectif ou mode course libre
 
@@ -59,7 +59,7 @@ vraie clé Anthropic côté serveur. Voir [IOS_SETUP.md](IOS_SETUP.md) pour le d
 ## Backend Club (comptes, clubs, activités)
 
 Le Club est un vrai backend multi-utilisateurs — mêmes fonctions serverless Vercel que le coach,
-plus une base Postgres (Neon). `api/auth/*.js` (Apple/Google/email), `api/clubs/*.js`,
+plus une base Postgres (Neon). `api/auth/*.js` (Apple/email), `api/clubs/*.js`,
 `api/activities/*.js`, `api/me.js`, `api/account/delete.js` ; schéma dans `db/schema.sql`. Voir
 [IOS_SETUP.md](IOS_SETUP.md) § "Backend (comptes, clubs, activités)" pour le déploiement complet
-(base de données, variables d'environnement, Sign in with Apple, Google Sign-In).
+(base de données, variables d'environnement, Sign in with Apple).

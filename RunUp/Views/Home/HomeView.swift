@@ -168,10 +168,10 @@ struct HomeView: View {
         let p = profile
         return Button(action: { appState.go(.rings) }) {
             HStack(spacing: 16) {
-                GoalBadgeRowView(
+                TrackProgressStackView(
                     vals: [p.moveValue / p.moveGoal * 100, p.activeValue / p.activeGoal * 100, p.runValue / p.runGoal * 100],
                     colors: [RUColor.rose, RUColor.lime, RUColor.cyan],
-                    size: 46, spacing: 8
+                    width: 110, height: 22, spacing: 6
                 )
                 VStack(alignment: .leading, spacing: 8) {
                     EyebrowLabel(text: "Tes objectifs · \(p.ringsDone)/3 bouclés")

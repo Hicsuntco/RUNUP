@@ -23,52 +23,55 @@ struct RingView<Content: View>: View {
     }
 }
 
-/// A single goal's progress as a "liquid fill" squircle — deliberately not a circular ring at
-/// all, since Apple's Human Interface Guidelines reserve the concentric-ring look for the system
-/// Activity control (Move/Exercise/Stand) and app review rejects lookalikes under guideline
-/// 5.2.5. Fills bottom-to-top instead of tracing an arc, so it reads as a different mechanic, not
-/// just a differently-colored ring.
-struct GoalBadgeView<Content: View>: View {
+/// A single goal's progress drawn as a running track — an oval "capsule" a runner traces a lap
+/// around, filling from the start line. Deliberately nothing like a circle: Apple's Human
+/// Interface Guidelines reserve the concentric-ring look for the system Activity control
+/// (Move/Exercise/Stand), and app review rejects lookalikes under guideline 5.2.5. This leans
+/// into the running theme instead of reaching for another generic progress shape.
+struct TrackProgressView<Content: View>: View {
     var pct: Double
     var color: Color
-    var size: CGFloat = 72
+    var width: CGFloat = 120
+    var height: CGFloat = 40
+    var strokeWidth: CGFloat = 10
     @ViewBuilder var content: Content
 
-    private var corner: CGFloat { size * 0.28 }
-    private var fillHeight: CGFloat { size * CGFloat(max(0, min(pct, 100)) / 100) }
+    private var fraction: CGFloat { CGFloat(max(0, min(pct, 100))) / 100 }
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            RoundedRectangle(cornerRadius: corner, style: .continuous)
-                .fill(color.opacity(0.12))
-            RoundedRectangle(cornerRadius: corner, style: .continuous)
-                .fill(color.gradient)
-                .frame(height: fillHeight)
+        ZStack {
+            Capsule()
+                .stroke(Color.white.opacity(0.09), lineWidth: strokeWidth)
+            Capsule()
+                .trim(from: 0, to: fraction)
+                .stroke(color, style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
                 .animation(.easeOut(duration: 1), value: pct)
-            RoundedRectangle(cornerRadius: corner, style: .continuous)
-                .stroke(color.opacity(0.35), lineWidth: 1.5)
-            content
+            HStack {
+                Text("🏃").font(.system(size: strokeWidth * 1.5))
+                Spacer(minLength: 4)
+                content
+            }
+            .padding(.horizontal, strokeWidth * 1.1)
         }
-        .frame(width: size, height: size)
-        .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
+        .frame(width: width, height: height)
     }
 }
 
-/// A row of `GoalBadgeView`s, one per goal — see its doc comment for why squircles, not rings.
-struct GoalBadgeRowView: View {
+/// A stack of `TrackProgressView`s, one per goal — see its doc comment for why tracks, not rings.
+struct TrackProgressStackView: View {
     var vals: [Double]
     var colors: [Color]
-    var size: CGFloat = 72
-    var spacing: CGFloat = 14
+    var width: CGFloat = 130
+    var height: CGFloat = 26
+    var spacing: CGFloat = 8
 
     var body: some View {
-        HStack(spacing: spacing) {
+        VStack(spacing: spacing) {
             ForEach(vals.indices, id: \.self) { i in
-                GoalBadgeView(pct: vals[i], color: colors[i % colors.count], size: size) {
+                TrackProgressView(pct: vals[i], color: colors[i % colors.count], width: width, height: height, strokeWidth: height * 0.32) {
                     Text("\(Int(max(0, min(vals[i], 100))))%")
-                        .font(RUFont.mono(size * 0.15, weight: .bold))
+                        .font(RUFont.mono(height * 0.34, weight: .bold))
                         .foregroundColor(.white)
-                        .shadow(color: .black.opacity(0.35), radius: 2)
                 }
             }
         }

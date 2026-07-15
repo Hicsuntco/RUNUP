@@ -22,10 +22,10 @@ struct RingsView: View {
 
                 VStack(spacing: 14) {
                     Text("\(p.ringsDone) / 3 bouclés").font(RUFont.sans(13, weight: .semibold)).tracking(1).foregroundColor(RUColor.text2)
-                    HStack(spacing: 22) {
-                        ringWithLabel(name: "Bouger", pct: p.moveValue / p.moveGoal * 100, color: RUColor.rose)
-                        ringWithLabel(name: "Actif", pct: p.activeValue / p.activeGoal * 100, color: RUColor.lime)
-                        ringWithLabel(name: "Courir", pct: p.runValue / p.runGoal * 100, color: RUColor.cyan)
+                    VStack(spacing: 12) {
+                        trackWithLabel(name: "Bouger", pct: p.moveValue / p.moveGoal * 100, color: RUColor.rose)
+                        trackWithLabel(name: "Actif", pct: p.activeValue / p.activeGoal * 100, color: RUColor.lime)
+                        trackWithLabel(name: "Courir", pct: p.runValue / p.runGoal * 100, color: RUColor.cyan)
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -86,15 +86,13 @@ struct RingsView: View {
         v == v.rounded() ? "\(Int(v))" : String(format: "%.1f", v)
     }
 
-    private func ringWithLabel(name: String, pct: Double, color: Color) -> some View {
-        VStack(spacing: 8) {
-            GoalBadgeView(pct: pct, color: color, size: 84) {
-                Text("\(Int(max(0, min(pct, 100))))%")
-                    .font(RUFont.mono(14, weight: .bold))
-                    .foregroundColor(.white)
-                    .shadow(color: .black.opacity(0.35), radius: 2)
+    private func trackWithLabel(name: String, pct: Double, color: Color) -> some View {
+        HStack(spacing: 12) {
+            Text(name).font(RUFont.sans(12.5, weight: .semibold)).foregroundColor(.white).frame(width: 52, alignment: .leading)
+            TrackProgressView(pct: pct, color: color, width: 190, height: 36, strokeWidth: 11) {
+                EmptyView()
             }
-            Text(name).font(RUFont.sans(11, weight: .semibold)).foregroundColor(RUColor.text2)
+            Text("\(Int(max(0, min(pct, 100))))%").font(RUFont.mono(13, weight: .bold)).foregroundColor(color).frame(width: 38, alignment: .trailing)
         }
     }
 }

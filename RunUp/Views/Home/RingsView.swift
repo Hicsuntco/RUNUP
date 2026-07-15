@@ -88,8 +88,11 @@ struct RingsView: View {
 
     private func ringWithLabel(name: String, pct: Double, color: Color) -> some View {
         VStack(spacing: 8) {
-            RingView(pct: pct, color: color, size: 84, strokeWidth: 10) {
-                Text("\(Int(max(0, min(pct, 100))))%").font(RUFont.mono(13, weight: .medium)).foregroundColor(color)
+            GoalBadgeView(pct: pct, color: color, size: 84) {
+                Text("\(Int(max(0, min(pct, 100))))%")
+                    .font(RUFont.mono(14, weight: .bold))
+                    .foregroundColor(.white)
+                    .shadow(color: .black.opacity(0.35), radius: 2)
             }
             Text(name).font(RUFont.sans(11, weight: .semibold)).foregroundColor(RUColor.text2)
         }

@@ -14,7 +14,7 @@ Ton coach personnel de course
 
 ## Texte promotionnel (170 caractères max — modifiable à tout moment sans nouvelle review)
 ```
-Un programme qui s'adapte après chaque sortie, un vrai coach qui te connaît, et tes anneaux d'activité. Cours comme si tu avais un coach.
+Un programme qui s'adapte après chaque sortie, un vrai coach qui te connaît, et tes objectifs du jour en un coup d'œil. Cours comme si tu avais un coach.
 ```
 
 ## Description (4000 caractères max)
@@ -27,7 +27,7 @@ Un vrai coach personnel qui connaît ton objectif, ton historique et ta forme du
 UN PROGRAMME QUI VIT AVEC TOI
 Après chaque course, donne ton ressenti (RPE) — le programme adapte immédiatement la difficulté de tes prochaines séances. Base, spécifique, affûtage : un vrai plan de 9 semaines construit autour de ton objectif (course, progression, perte de poids, reprise en douceur, ou juste rester en forme).
 
-TES ANNEAUX, COMME SUR TA MONTRE
+TES OBJECTIFS DU JOUR, EN UN COUP D'ŒIL
 Bouger, rester actif, courir — trois objectifs simples à boucler chaque jour, synchronisés avec Apple Santé.
 
 SUIVI DE COURSE EN DIRECT

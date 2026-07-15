@@ -20,16 +20,15 @@ struct RingsView: View {
                     }
                 }
 
-                HStack {
-                    Spacer()
-                    Rings3View(vals: [p.moveValue / p.moveGoal * 100, p.activeValue / p.activeGoal * 100, p.runValue / p.runGoal * 100], size: 210, strokeWidth: 18, gap: 6) {
-                        VStack(spacing: 2) {
-                            Text("\(p.ringsDone) / 3").font(RUFont.sans(15, weight: .semibold)).tracking(1).foregroundColor(RUColor.text2)
-                            Text("bouclés").font(RUFont.sans(9)).foregroundColor(RUColor.text3)
-                        }
+                VStack(spacing: 14) {
+                    Text("\(p.ringsDone) / 3 bouclés").font(RUFont.sans(13, weight: .semibold)).tracking(1).foregroundColor(RUColor.text2)
+                    HStack(spacing: 22) {
+                        ringWithLabel(name: "Bouger", pct: p.moveValue / p.moveGoal * 100, color: RUColor.rose)
+                        ringWithLabel(name: "Actif", pct: p.activeValue / p.activeGoal * 100, color: RUColor.lime)
+                        ringWithLabel(name: "Courir", pct: p.runValue / p.runGoal * 100, color: RUColor.cyan)
                     }
-                    Spacer()
                 }
+                .frame(maxWidth: .infinity)
                 .padding(.vertical, 6)
 
                 VStack(spacing: 9) {
@@ -85,5 +84,14 @@ struct RingsView: View {
 
     private func formattedValue(_ v: Double) -> String {
         v == v.rounded() ? "\(Int(v))" : String(format: "%.1f", v)
+    }
+
+    private func ringWithLabel(name: String, pct: Double, color: Color) -> some View {
+        VStack(spacing: 8) {
+            RingView(pct: pct, color: color, size: 84, strokeWidth: 10) {
+                Text("\(Int(max(0, min(pct, 100))))%").font(RUFont.mono(13, weight: .medium)).foregroundColor(color)
+            }
+            Text(name).font(RUFont.sans(11, weight: .semibold)).foregroundColor(RUColor.text2)
+        }
     }
 }

@@ -168,9 +168,13 @@ struct HomeView: View {
         let p = profile
         return Button(action: { appState.go(.rings) }) {
             HStack(spacing: 16) {
-                Rings3View(vals: [p.moveValue / p.moveGoal * 100, p.activeValue / p.activeGoal * 100, p.runValue / p.runGoal * 100], size: 72, strokeWidth: 6, gap: 3) { EmptyView() }
+                RingRowView(
+                    vals: [p.moveValue / p.moveGoal * 100, p.activeValue / p.activeGoal * 100, p.runValue / p.runGoal * 100],
+                    colors: [RUColor.rose, RUColor.lime, RUColor.cyan],
+                    size: 46, strokeWidth: 5, spacing: 8
+                )
                 VStack(alignment: .leading, spacing: 8) {
-                    EyebrowLabel(text: "Tes anneaux · \(p.ringsDone)/3 bouclés")
+                    EyebrowLabel(text: "Tes objectifs · \(p.ringsDone)/3 bouclés")
                     HStack(spacing: 14) {
                         ringStat(value: "\(Int(p.moveValue))", unit: "/\(Int(p.moveGoal)) KCAL", color: RUColor.rose)
                         ringStat(value: "\(Int(p.activeValue))", unit: "/\(Int(p.activeGoal)) MIN", color: RUColor.lime)

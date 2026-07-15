@@ -23,33 +23,26 @@ struct RingView<Content: View>: View {
     }
 }
 
-/// Three concentric activity rings (move/rose, active/lime, run/cyan). Mirrors `Rings3` in ui.jsx.
-struct Rings3View<Content: View>: View {
+/// A row of separate (not nested/concentric) progress rings, one per metric — deliberately not a
+/// shared-center multi-ring control, since Apple's Human Interface Guidelines reserve that
+/// specific look for the system Activity control (Move/Exercise/Stand) and app review rejects
+/// lookalikes under guideline 5.2.5. Each ring here has its own center and frame.
+struct RingRowView: View {
     var vals: [Double]
-    var size: CGFloat = 200
-    var strokeWidth: CGFloat = 16
-    var gap: CGFloat = 5
-    @ViewBuilder var content: Content
-
-    private let colors = [RUColor.rose, RUColor.lime, RUColor.cyan]
+    var colors: [Color]
+    var size: CGFloat = 72
+    var strokeWidth: CGFloat = 8
+    var spacing: CGFloat = 14
 
     var body: some View {
-        ZStack {
+        HStack(spacing: spacing) {
             ForEach(vals.indices, id: \.self) { i in
-                let inset = strokeWidth / 2 + CGFloat(i) * (strokeWidth + gap)
-                let col = colors[i % colors.count]
-                Circle()
-                    .stroke(col.opacity(0.16), lineWidth: strokeWidth)
-                    .padding(inset)
-                Circle()
-                    .trim(from: 0, to: max(0, min(vals[i], 100)) / 100)
-                    .stroke(col, style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
-                    .padding(inset)
-                    .animation(.easeOut(duration: 1.1), value: vals[i])
+                RingView(pct: vals[i], color: colors[i % colors.count], size: size, strokeWidth: strokeWidth) {
+                    Text("\(Int(max(0, min(vals[i], 100))))%")
+                        .font(RUFont.mono(size * 0.15, weight: .medium))
+                        .foregroundColor(colors[i % colors.count])
+                }
             }
-            content
         }
-        .frame(width: size, height: size)
     }
 }

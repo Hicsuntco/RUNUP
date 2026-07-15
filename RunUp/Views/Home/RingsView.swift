@@ -1,12 +1,26 @@
 import SwiftUI
 
-/// Rings detail — mirrors `RingsScreen` in screensA.jsx.
+/// Daily goals detail — mirrors `RingsScreen` in screensA.jsx, redefined around 3 distinct daily
+/// behaviors (Séance du jour / Renfo & mobilité / Pas) instead of 3 measures of the same run.
 struct RingsView: View {
     @Environment(AppState.self) private var appState
     private var p: UserProfile { appState.profile }
 
-    private var remainingRunKm: String {
-        String(format: "%.1f", max(0, p.runGoal - p.runValue))
+    private var remainingSteps: Int { max(0, Int(p.stepsGoal - p.stepsToday)) }
+    private var remainingStrengthMinutes: Int { max(0, Int(p.strengthGoalMinutes - p.strengthMinutesToday)) }
+
+    /// The most useful thing to nudge about right now — first incomplete goal, in priority order.
+    private var coachNudge: String? {
+        if !p.seanceDoneToday, p.todaySession.durationMinutes > 0 {
+            return "Ta séance du jour t'attend : \(p.todaySession.title) (\(p.todaySession.durationMinutes)′)."
+        }
+        if p.strengthMinutesToday < p.strengthGoalMinutes {
+            return "Pas encore de renfo aujourd'hui — encore \(remainingStrengthMinutes) min pour boucler l'objectif."
+        }
+        if p.stepsToday < p.stepsGoal {
+            return "Encore \(remainingSteps) pas pour boucler ton objectif — une petite marche ?"
+        }
+        return nil
     }
 
     var body: some View {
@@ -21,30 +35,24 @@ struct RingsView: View {
                 }
 
                 VStack(spacing: 14) {
-                    Text("\(p.ringsDone) / 3 bouclés").font(RUFont.sans(13, weight: .semibold)).tracking(1).foregroundColor(RUColor.text2)
-                    VStack(spacing: 12) {
-                        trackWithLabel(name: "Bouger", pct: p.moveValue / p.moveGoal * 100, color: RUColor.rose)
-                        trackWithLabel(name: "Actif", pct: p.activeValue / p.activeGoal * 100, color: RUColor.lime)
-                        trackWithLabel(name: "Courir", pct: p.runValue / p.runGoal * 100, color: RUColor.cyan)
-                    }
+                    Text("\(p.dailyGoalsDone) / 3 bouclés").font(RUFont.sans(13, weight: .semibold)).tracking(1).foregroundColor(RUColor.text2)
+                    DailyGoalsBarsView(progress: p.dailyGoalsProgress, size: 168)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 6)
 
                 VStack(spacing: 9) {
-                    ringRow(name: "Bouger", color: RUColor.rose, value: p.moveValue, goal: p.moveGoal, unit: "kcal")
-                    ringRow(name: "Actif", color: RUColor.lime, value: p.activeValue, goal: p.activeGoal, unit: "min actives")
-                    ringRow(name: "Courir", color: RUColor.cyan, value: p.runValue, goal: p.runGoal, unit: "km du jour")
+                    seanceRow
+                    ringRow(name: "Renfo & mobilité", color: RUColor.rose2, value: p.strengthMinutesToday, goal: p.strengthGoalMinutes, unit: "min")
+                    ringRow(name: "Pas", color: .white, value: p.stepsToday, goal: p.stepsGoal, unit: "pas")
                 }
 
-                if p.ringsDone < 3 {
+                if let coachNudge {
                     HStack(spacing: 12) {
                         AppMarkView(size: 34)
                         VStack(alignment: .leading, spacing: 3) {
                             EyebrowLabel(text: "Coach", color: RUColor.rose2)
-                            Text("Plus que ") .font(RUFont.sans(12.5)).foregroundColor(.white)
-                                + Text("\(remainingRunKm) km").font(RUFont.sans(12.5, weight: .bold)).foregroundColor(RUColor.cyan)
-                                + Text(" pour boucler Courir. Une sortie footing ce soir ?").font(RUFont.sans(12.5)).foregroundColor(.white)
+                            Text(coachNudge).font(RUFont.sans(12.5)).foregroundColor(.white)
                         }
                     }
                     .padding(15)
@@ -52,7 +60,7 @@ struct RingsView: View {
                 } else {
                     VStack(spacing: 6) {
                         Text("JOURNÉE BOUCLÉE").displayStyle(26).foregroundColor(.white)
-                        Text("Les 3 anneaux fermés 👏 +120 XP").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+                        Text("Les 3 objectifs atteints 👏 +120 XP").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(18)
@@ -63,6 +71,24 @@ struct RingsView: View {
             .padding(.top, 8)
             .padding(.bottom, 130)
         }
+    }
+
+    private var seanceRow: some View {
+        HStack(spacing: 12) {
+            Circle().fill(RUColor.rose).frame(width: 10, height: 10).shadow(color: RUColor.rose.opacity(0.4), radius: 6)
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("Séance du jour").font(RUFont.sans(16, weight: .semibold)).foregroundColor(.white)
+                    Spacer()
+                    Text(p.seanceDoneToday ? "Faite ✓" : "À faire")
+                        .font(RUFont.sans(11, weight: .bold))
+                        .foregroundColor(p.seanceDoneToday ? RUColor.lime : RUColor.text2)
+                }
+                LinearBar(fraction: p.seanceDoneToday ? 1 : 0, color: RUColor.rose, height: 5)
+            }
+        }
+        .padding(14)
+        .ruCard()
     }
 
     private func ringRow(name: String, color: Color, value: Double, goal: Double, unit: String) -> some View {
@@ -84,15 +110,5 @@ struct RingsView: View {
 
     private func formattedValue(_ v: Double) -> String {
         v == v.rounded() ? "\(Int(v))" : String(format: "%.1f", v)
-    }
-
-    private func trackWithLabel(name: String, pct: Double, color: Color) -> some View {
-        HStack(spacing: 12) {
-            Text(name).font(RUFont.sans(12.5, weight: .semibold)).foregroundColor(.white).frame(width: 52, alignment: .leading)
-            TrackProgressView(pct: pct, color: color, width: 190, height: 36, strokeWidth: 11) {
-                EmptyView()
-            }
-            Text("\(Int(max(0, min(pct, 100))))%").font(RUFont.mono(13, weight: .bold)).foregroundColor(color).frame(width: 38, alignment: .trailing)
-        }
     }
 }

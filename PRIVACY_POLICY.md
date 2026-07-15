@@ -1,6 +1,6 @@
 # Politique de confidentialité — RUNUP
 
-**Dernière mise à jour : 14 juillet 2026**
+**Dernière mise à jour : 15 juillet 2026**
 
 Cette politique explique quelles données l'application RUNUP collecte, comment elles sont utilisées, et avec qui elles sont partagées.
 
@@ -15,7 +15,7 @@ Contact : **charlottegrudep@gmail.com**
 Prénom, date de naissance, objectif de course (course à préparer, progression, perte de poids, reprise, forme), niveau d'expérience, jours de course choisis. Ces données sont saisies par toi lors de l'inscription (onboarding) et modifiables à tout moment dans Profil → Réglages.
 
 ### Données de santé (Apple Santé / HealthKit)
-Si tu actives la connexion Apple Santé, RUNUP lit : fréquence cardiaque, énergie active (calories), minutes d'exercice, distance de course/marche. RUNUP écrit dans Apple Santé les séances de course que tu termines dans l'app (distance, durée, calories).
+Si tu actives la connexion Apple Santé, RUNUP lit : fréquence cardiaque, nombre de pas, et le type/durée de tes séances de sport (course, renforcement musculaire, mobilité, yoga, pilates) — ces dernières alimentent tes objectifs quotidiens "Renfo & mobilité" et "Pas". RUNUP écrit dans Apple Santé les séances de course que tu termines dans l'app (distance, durée, calories).
 
 **Ces données de santé ne sont jamais transmises à un tiers, ni stockées sur un serveur distant.** Elles restent sur ton appareil et dans ta base Apple Santé, conformément aux règles d'Apple sur les données de santé.
 

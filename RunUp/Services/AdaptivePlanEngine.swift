@@ -145,6 +145,21 @@ enum AdaptivePlanEngine {
         profile.todaySession = profile.weekSessions.first(where: { $0.weekday == today })?.session ?? restSession
     }
 
+    // MARK: Daily goals
+
+    /// Resets Renfo/Pas back to 0 (and lets `runValue` fall back to 0 too) the first time this
+    /// runs on a new calendar day — call unconditionally on every foreground, regardless of
+    /// `programPhase`, since daily goals apply in recovery/free-run too. `Séance du jour` needs no
+    /// reset here: it's computed live from `weekSessions`, which regenerates on its own schedule.
+    static func resetDailyGoalsIfNewDay(_ profile: UserProfile) {
+        let today = Calendar.current.startOfDay(for: .now)
+        guard profile.lastDailyResetDay != today else { return }
+        profile.lastDailyResetDay = today
+        profile.strengthMinutesToday = 0
+        profile.stepsToday = 0
+        profile.runValue = 0
+    }
+
     /// Tier change to apply at a week boundary, from the previous week's average RPE severity
     /// (`3 - RPE.rawValue`, so 0 = facile, 3 = tropDur). No runs logged → no change.
     private static func tierDelta(sum: Int, count: Int) -> Int {
@@ -277,8 +292,6 @@ enum AdaptivePlanEngine {
     /// accumulator that `refreshProgramForCurrentDate` averages at the next week boundary.
     @discardableResult
     static func applyDebrief(rpe: RPE, run: RunRecord, profile: UserProfile) -> String {
-        profile.moveValue = min(profile.moveGoal, profile.moveValue + Double(run.kcal))
-        profile.activeValue = min(profile.activeGoal, (profile.activeValue + Double(run.durationSeconds) / 60).rounded())
         profile.runValue = min(profile.runGoal, ((profile.runValue + run.distanceKm) * 100).rounded() / 100)
         let today = currentWeekdayIndex()
         profile.weekStrip = profile.weekStrip.map { day in

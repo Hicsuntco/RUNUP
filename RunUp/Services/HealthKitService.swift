@@ -16,9 +16,7 @@ final class HealthKitService {
     private static let readTypes: Set<HKObjectType> = {
         var types: Set<HKObjectType> = [
             HKObjectType.quantityType(forIdentifier: .heartRate)!,
-            HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!,
-            HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning)!,
-            HKObjectType.quantityType(forIdentifier: .appleExerciseTime)!,
+            HKObjectType.quantityType(forIdentifier: .stepCount)!,
             HKObjectType.workoutType()
         ]
         if let sleep = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) {
@@ -35,22 +33,29 @@ final class HealthKitService {
         isAuthorized = true
     }
 
-    /// Active energy burned today (kcal) — feeds the "Bouger" ring.
-    func activeEnergyToday() async -> Double {
-        guard let type = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else { return 0 }
-        return await sumToday(type: type, unit: .kilocalorie())
+    /// Steps recorded today — used as-is (not literally isolated from step-during-a-run time) for
+    /// the "Pas" daily goal; a reasonable proxy since a single run is a small fraction of most
+    /// days' total steps, and RunRecord doesn't store precise start/end timestamps to subtract by.
+    func stepsToday() async -> Double {
+        guard let type = HKObjectType.quantityType(forIdentifier: .stepCount) else { return 0 }
+        return await sumToday(type: type, unit: .count())
     }
 
-    /// Apple Exercise minutes today — feeds the "Actif" ring.
-    func exerciseMinutesToday() async -> Double {
-        guard let type = HKObjectType.quantityType(forIdentifier: .appleExerciseTime) else { return 0 }
-        return await sumToday(type: type, unit: .minute())
-    }
-
-    /// Running/walking distance today (km) — feeds the "Courir" ring.
-    func runDistanceKmToday() async -> Double {
-        guard let type = HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning) else { return 0 }
-        return await sumToday(type: type, unit: .meterUnit(with: .kilo))
+    /// Minutes of strength/mobility workouts (functional & traditional strength training,
+    /// flexibility, core, yoga, pilates) logged today — feeds the "Renfo & mobilité" daily goal.
+    func strengthMobilityMinutesToday() async -> Double {
+        let relevant: Set<HKWorkoutActivityType> = [.functionalStrengthTraining, .traditionalStrengthTraining, .flexibility, .coreTraining, .yoga, .pilates]
+        let start = Calendar.current.startOfDay(for: .now)
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: .now)
+        return await withCheckedContinuation { continuation in
+            let query = HKSampleQuery(sampleType: HKObjectType.workoutType(), predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, samples, _ in
+                let minutes = (samples as? [HKWorkout] ?? [])
+                    .filter { relevant.contains($0.workoutActivityType) }
+                    .reduce(0.0) { $0 + $1.duration / 60 }
+                continuation.resume(returning: minutes)
+            }
+            store.execute(query)
+        }
     }
 
     /// Most recent resting/average heart rate sample (bpm), used for coach readiness copy.

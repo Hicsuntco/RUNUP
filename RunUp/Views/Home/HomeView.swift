@@ -168,17 +168,13 @@ struct HomeView: View {
         let p = profile
         return Button(action: { appState.go(.rings) }) {
             HStack(spacing: 16) {
-                TrackProgressStackView(
-                    vals: [p.moveValue / p.moveGoal * 100, p.activeValue / p.activeGoal * 100, p.runValue / p.runGoal * 100],
-                    colors: [RUColor.rose, RUColor.lime, RUColor.cyan],
-                    width: 110, height: 22, spacing: 6
-                )
+                DailyGoalsBarsView(progress: p.dailyGoalsProgress, size: 72)
                 VStack(alignment: .leading, spacing: 8) {
-                    EyebrowLabel(text: "Tes objectifs · \(p.ringsDone)/3 bouclés")
+                    EyebrowLabel(text: "Tes objectifs · \(p.dailyGoalsDone)/3 bouclés")
                     HStack(spacing: 14) {
-                        ringStat(value: "\(Int(p.moveValue))", unit: "/\(Int(p.moveGoal)) KCAL", color: RUColor.rose)
-                        ringStat(value: "\(Int(p.activeValue))", unit: "/\(Int(p.activeGoal)) MIN", color: RUColor.lime)
-                        ringStat(value: String(format: "%.1f", p.runValue), unit: "/\(Int(p.runGoal)) KM", color: RUColor.cyan)
+                        ringStat(value: p.seanceDoneToday ? "Faite" : "À faire", unit: "séance", color: RUColor.rose)
+                        ringStat(value: "\(Int(p.strengthMinutesToday))", unit: "/\(Int(p.strengthGoalMinutes)) MIN", color: RUColor.rose2)
+                        ringStat(value: "\(Int(p.stepsToday))", unit: "/\(Int(p.stepsGoal)) PAS", color: .white)
                     }
                 }
                 Spacer(minLength: 0)

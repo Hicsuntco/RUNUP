@@ -60,11 +60,19 @@ final class UserProfile {
     var weekRPECount: Int = 0
     var freeRunTemplateIndex: Int
 
-    // MARK: Rings
-    var moveValue: Double
-    var moveGoal: Double
-    var activeValue: Double
-    var activeGoal: Double
+    // MARK: Daily goals
+    // Séance du jour / Renfo & mobilité / Pas, reset each calendar day (see
+    // `AdaptivePlanEngine.resetDailyGoalsIfNewDay`). Deliberately 3 distinct behaviors rather
+    // than 3 measures of the same run (the old Bouger/Actif/Courir always moved together).
+    // Tracks the last day these were reset, so a day rollover can be detected and self-heals
+    // like `programStartDate` for profiles that predate this field.
+    var lastDailyResetDay: Date?
+    var strengthMinutesToday: Double = 0
+    var strengthGoalMinutes: Double = 15
+    var stepsToday: Double = 0
+    var stepsGoal: Double = 6000
+    /// Distance run today (km) — no longer part of the daily-goals widget, but still used
+    /// elsewhere (Club leaderboard, program-end summary) as a rough recent-activity figure.
     var runValue: Double
     var runGoal: Double
 
@@ -113,10 +121,6 @@ final class UserProfile {
         self.weekRPESum = 0
         self.weekRPECount = 0
         self.freeRunTemplateIndex = 0
-        self.moveValue = 0
-        self.moveGoal = 650
-        self.activeValue = 0
-        self.activeGoal = 60
         self.runValue = 0
         self.runGoal = 10
         self.streak = 0
@@ -130,8 +134,30 @@ final class UserProfile {
 
     // MARK: Derived
 
-    var ringsDone: Int {
-        [moveValue >= moveGoal, activeValue >= activeGoal, runValue >= runGoal].filter { $0 }.count
+    private var todayWeekdayIndex: Int {
+        (Calendar.current.component(.weekday, from: .now) + 5) % 7
+    }
+
+    /// True once today's planned session is done, or trivially true on a rest day (nothing was
+    /// asked of you). Falls back to `false` if `weekSessions` hasn't been generated yet.
+    var seanceDoneToday: Bool {
+        guard let day = weekSessions.first(where: { $0.weekday == todayWeekdayIndex }) else { return false }
+        guard let session = day.session, session.durationMinutes > 0 else { return true }
+        return day.completed
+    }
+
+    /// [Séance du jour, Renfo & mobilité, Pas] as 0...1 fractions, in that order — feeds
+    /// `DailyGoalsBarsView`.
+    var dailyGoalsProgress: [Double] {
+        [
+            seanceDoneToday ? 1 : 0,
+            strengthGoalMinutes > 0 ? min(1, strengthMinutesToday / strengthGoalMinutes) : 0,
+            stepsGoal > 0 ? min(1, stepsToday / stepsGoal) : 0
+        ]
+    }
+
+    var dailyGoalsDone: Int {
+        dailyGoalsProgress.filter { $0 >= 1 }.count
     }
 
     var age: Int? {

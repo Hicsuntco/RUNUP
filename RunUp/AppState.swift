@@ -38,6 +38,8 @@ final class AppState {
             self.profile = fresh
         }
         AdaptivePlanEngine.refreshProgramForCurrentDate(self.profile)
+        AdaptivePlanEngine.resetDailyGoalsIfNewDay(self.profile)
+        Task { await self.syncDailyGoalsFromHealthKit() }
     }
 
     /// Re-checks the program week/phase against the real calendar date — call whenever the app
@@ -45,6 +47,19 @@ final class AppState {
     /// user didn't open the app on the exact day it happened.
     func refreshProgramForCurrentDate() {
         AdaptivePlanEngine.refreshProgramForCurrentDate(profile)
+        AdaptivePlanEngine.resetDailyGoalsIfNewDay(profile)
+        Task { await syncDailyGoalsFromHealthKit() }
+    }
+
+    /// Pulls today's step count and strength/mobility workout minutes from Apple Santé, if
+    /// connected — the "Renfo & mobilité" and "Pas" daily goals are HealthKit-sourced, not
+    /// something logged inside the app.
+    private func syncDailyGoalsFromHealthKit() async {
+        guard profile.connectedSources.contains(.apple) else { return }
+        async let steps = healthKit.stepsToday()
+        async let strength = healthKit.strengthMobilityMinutesToday()
+        profile.stepsToday = await steps
+        profile.strengthMinutesToday = await strength
     }
 
     func go(_ screen: AppScreen) {

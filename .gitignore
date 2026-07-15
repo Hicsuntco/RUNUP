@@ -6,3 +6,4 @@ DerivedData/
 *.xcuserstate
 *.xcworkspace/
 Secrets.xcconfig
+node_modules/

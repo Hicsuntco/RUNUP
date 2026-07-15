@@ -71,6 +71,10 @@ final class UserProfile {
     var strengthGoalMinutes: Double = 15
     var stepsToday: Double = 0
     var stepsGoal: Double = 6000
+    /// Whether the "all 3 daily goals done" +120 XP bonus (see
+    /// `AdaptivePlanEngine.checkDailyGoalsBonus`) has already been granted today — without this,
+    /// re-checking `dailyGoalsDone == 3` on every HealthKit sync would regrant it repeatedly.
+    var dailyGoalsBonusAwarded: Bool = false
     /// Distance run today (km) — no longer part of the daily-goals widget, but still used
     /// elsewhere (Club leaderboard, program-end summary) as a rough recent-activity figure.
     var runValue: Double

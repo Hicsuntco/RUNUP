@@ -12,11 +12,19 @@ settings:
     TARGETED_DEVICE_FAMILY: "1"
     ENABLE_PREVIEWS: YES
 
+packages:
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS
+    from: 7.1.0
+
 targets:
   RunUp:
     type: application
     platform: iOS
     deploymentTarget: "17.0"
+    dependencies:
+      - package: GoogleSignIn
+        product: GoogleSignIn
     sources:
       - path: RunUp
         excludes:
@@ -29,7 +37,7 @@ targets:
       properties:
         CFBundleDisplayName: RunUp
         CFBundleShortVersionString: "1.0"
-        CFBundleVersion: "2"
+        CFBundleVersion: "3"
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
@@ -43,6 +51,14 @@ targets:
         UIBackgroundModes:
           - location
         ITSAppUsesNonExemptEncryption: false
+        # Google Sign-In — replace both placeholders after creating an OAuth client ID in Google
+        # Cloud Console (see IOS_SETUP.md § "Backend (comptes, clubs, activités)"). GIDClientID is
+        # the client ID itself; the URL scheme below is that same ID reversed (Google's SDK reads
+        # both — one to configure itself, one so iOS can hand the OAuth redirect back to the app).
+        GIDClientID: "REPLACE_ME.apps.googleusercontent.com"
+        CFBundleURLTypes:
+          - CFBundleURLSchemes:
+              - "REPLACE_ME_REVERSED_CLIENT_ID"
         UIAppFonts:
           - BebasNeue-Regular.ttf
           - DMSans-Light.ttf
@@ -58,6 +74,8 @@ targets:
       properties:
         com.apple.developer.healthkit: true
         com.apple.developer.healthkit.access: []
+        com.apple.developer.applesignin:
+          - Default
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.hicsuntco.runup

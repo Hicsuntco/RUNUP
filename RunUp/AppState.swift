@@ -9,6 +9,7 @@ final class AppState {
     let modelContext: ModelContext
     let healthKit = HealthKitService()
     let toastCenter = ToastCenter()
+    let auth = AuthService()
 
     var profile: UserProfile
     var screen: AppScreen = .home
@@ -61,6 +62,19 @@ final class AppState {
         async let strength = healthKit.strengthMobilityMinutesToday()
         profile.stepsToday = await steps
         profile.strengthMinutesToday = await strength
+        if AdaptivePlanEngine.checkDailyGoalsBonus(profile) {
+            postClubActivity(type: "badge", text: "a bouclé ses 3 objectifs du jour", xpEarned: 120)
+            toast("Journée bouclée · +120 XP 🎉")
+        }
+    }
+
+    /// Posts to the real club feed/leaderboard if signed in — silently does nothing otherwise
+    /// (Club participation is optional; this must never block the flow it's called from). See
+    /// `ClubService.postActivity`.
+    func postClubActivity(type: String, text: String, xpEarned: Int) {
+        guard auth.isSignedIn else { return }
+        let service = ClubService(auth: auth)
+        Task { try? await service.postActivity(type: type, text: text, xpEarned: xpEarned) }
     }
 
     func go(_ screen: AppScreen) {

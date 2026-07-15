@@ -158,6 +158,20 @@ enum AdaptivePlanEngine {
         profile.strengthMinutesToday = 0
         profile.stepsToday = 0
         profile.runValue = 0
+        profile.dailyGoalsBonusAwarded = false
+    }
+
+    /// Grants the "all 3 daily goals done" +120 XP bonus the first time all 3 are complete on a
+    /// given day — call after anything that can flip a goal to done (HealthKit sync, run
+    /// debrief). Returns whether it was newly granted, so callers can post it to the club feed /
+    /// show a toast. Previously `RingsView`'s "JOURNÉE BOUCLÉE" state showed a "+120 XP" label
+    /// with no XP ever actually granted — this is the real version of that.
+    @discardableResult
+    static func checkDailyGoalsBonus(_ profile: UserProfile) -> Bool {
+        guard !profile.dailyGoalsBonusAwarded, profile.dailyGoalsDone == 3 else { return false }
+        profile.dailyGoalsBonusAwarded = true
+        profile.xp += 120
+        return true
     }
 
     /// Tier change to apply at a week boundary, from the previous week's average RPE severity

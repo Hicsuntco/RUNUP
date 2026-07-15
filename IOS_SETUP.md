@@ -48,6 +48,74 @@ et ne journalise jamais le contenu des messages — seule protection de contenu 
 contre un client modifié ; la protection anti-abus/coût reste principalement le plafond de
 dépense Anthropic ci-dessus, pas une limite de débit applicative (aucune n'est implémentée en v1).
 
+## Backend (comptes, clubs, activités)
+
+Le Club (classement, fil d'activité, kudos) est maintenant un vrai backend multi-utilisateurs —
+plus des données simulées. Il vit dans le **même projet Vercel** que le proxy coach ci-dessus
+(mêmes `api/`), mais a besoin de sa propre base de données et de ses propres identifiants
+d'authentification. Rien de ceci n'est fait automatiquement — voici les étapes, une fois.
+
+### 1. Base de données (Neon Postgres, via l'intégration Vercel)
+
+1. Dans le projet Vercel → onglet **Storage** → **Create Database** → choisis **Neon** (Postgres
+   serverless, gratuit pour démarrer) → connecte-la au projet.
+2. Vercel ajoute automatiquement une variable d'environnement `DATABASE_URL` (parfois nommée
+   `POSTGRES_URL` selon l'intégration — `lib/db.js` accepte les deux) au projet. Rien à faire de
+   plus ici.
+3. Ouvre l'onglet **SQL Editor** de Neon (accessible depuis le dashboard Neon, lié depuis l'onglet
+   Storage de Vercel) et colle-y tout le contenu de **`db/schema.sql`** (à la racine de ce repo),
+   puis exécute-le. Ça crée les tables `users`, `clubs`, `club_members`, `activities`,
+   `activity_kudos`. À refaire seulement si `db/schema.sql` change plus tard.
+
+### 2. Variables d'environnement Vercel
+
+Dans les réglages du projet Vercel → **Environment Variables**, ajoute (en plus de
+`ANTHROPIC_API_KEY`/`RUNUP_APP_SECRET` déjà configurées pour le coach) :
+
+- `RUNUP_SESSION_SECRET` — une chaîne aléatoire longue (ex. `openssl rand -hex 32` dans un
+  terminal) : sert à signer les sessions des utilisatrices connectées. À garder secrète, comme
+  `ANTHROPIC_API_KEY`.
+- `APPLE_BUNDLE_ID` — `com.hicsuntco.runup` (vérifie qu'il correspond bien à
+  `PRODUCT_BUNDLE_IDENTIFIER` dans `project.yml`).
+- `GOOGLE_CLIENT_ID` — le Client ID créé à l'étape 4 ci-dessous.
+
+### 3. Sign in with Apple
+
+L'entitlement est déjà dans `project.yml` (`com.apple.developer.applesignin`). Avec la signature
+automatique (`CODE_SIGN_STYLE: Automatic`, déjà configuré), Xcode devrait activer la capability
+"Sign In with Apple" tout seul au premier build sur un appareil/simulateur connecté à ton compte
+développeur. Si Xcode affiche une erreur de provisioning à ce sujet : Signing & Capabilities →
+vérifie que "Sign In with Apple" apparaît dans la liste des capabilities de la cible RunUp (elle
+devrait y être automatiquement, générée depuis `project.yml`) et relance le build.
+
+### 4. Google Sign-In
+
+1. Va sur [console.cloud.google.com](https://console.cloud.google.com) → crée un projet (ou
+   réutilise un projet existant) → **APIs & Services** → **Credentials** → **Create Credentials**
+   → **OAuth client ID** → type **iOS**.
+2. Bundle ID : `com.hicsuntco.runup`.
+3. Une fois créé, Google te donne un **Client ID** (ressemble à
+   `123456-abc.apps.googleusercontent.com`) et son équivalent "reversed" (le même ID avec les
+   segments inversés, ex. `com.googleusercontent.apps.123456-abc`).
+4. Dans `project.yml`, remplace les deux placeholders :
+   - `GIDClientID: "REPLACE_ME.apps.googleusercontent.com"` → ton Client ID tel quel.
+   - `CFBundleURLSchemes: ["REPLACE_ME_REVERSED_CLIENT_ID"]` → la version reversed.
+5. Ajoute aussi ce Client ID comme variable d'environnement Vercel `GOOGLE_CLIENT_ID` (étape 2) —
+   c'est ce qui permet à `api/auth/google.js` de vérifier que le token vient bien de cette app.
+6. `xcodegen generate` pour que Xcode récupère le package SPM `GoogleSignIn-iOS` (déjà déclaré
+   dans `project.yml` sous `packages:`) et les nouveaux réglages Info.plist.
+
+### 5. Déployer et tester
+
+1. Pousse ces changements sur la branche connectée à Vercel — le projet redéploie automatiquement
+   et prend en compte le nouveau dossier `api/` (comptes, clubs, activités) et `package.json`
+   (nouvelles dépendances : `@neondatabase/serverless`, `bcryptjs`, `jose`).
+2. Dans l'app : onglet **Le Club** → "Se connecter" → teste les 3 méthodes (Apple, Google,
+   email/mot de passe) → crée un club → termine une course → vérifie qu'elle apparaît dans le fil
+   d'activité et que ton XP bouge dans le classement.
+3. Pour supprimer un compte de test : Profil → Compte → "Supprimer mon compte" (supprime aussi
+   ses données Club côté serveur, requis par les règles App Store sur la suppression de compte).
+
 ## HealthKit (Apple Santé)
 
 Le simulateur iOS ne fournit pas de vraies données Santé — pour tester la lecture/écriture

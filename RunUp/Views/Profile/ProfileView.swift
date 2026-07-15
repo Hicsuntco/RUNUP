@@ -8,6 +8,7 @@ struct ProfileView: View {
     private var profile: UserProfile { appState.profile }
 
     @State private var unit = "km"
+    @State private var showDeleteAccountConfirm = false
 
     var body: some View {
         ScrollView {
@@ -39,6 +40,11 @@ struct ProfileView: View {
 
                 sectionTitle("Programme")
                 programCard
+
+                if appState.auth.isSignedIn {
+                    sectionTitle("Compte")
+                    accountCard
+                }
             }
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.top, 8)
@@ -180,5 +186,47 @@ struct ProfileView: View {
             .padding(.horizontal, 14).padding(.vertical, 13)
         }
         .buttonStyle(PressableStyle())
+    }
+
+    /// Real account, tied to the Club backend (see `AuthService`) — includes account deletion,
+    /// required by App Store guideline 5.1.1(v) whenever an app offers account creation.
+    private var accountCard: some View {
+        VStack(spacing: 0) {
+            if let user = appState.auth.currentUser {
+                HStack {
+                    Text("Connectée en tant que \(user.name)").font(RUFont.sans(14, weight: .medium)).foregroundColor(.white)
+                    Spacer()
+                }
+                .padding(.horizontal, 14).padding(.vertical, 13)
+                Divider().background(RUColor.line)
+            }
+            programRow("Se déconnecter") { appState.auth.signOut() }
+            Divider().background(RUColor.line)
+            Button(action: { showDeleteAccountConfirm = true }) {
+                HStack {
+                    Text("Supprimer mon compte").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.rose)
+                    Spacer()
+                }
+                .padding(.horizontal, 14).padding(.vertical, 13)
+            }
+            .buttonStyle(PressableStyle())
+        }
+        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        .confirmationDialog("Supprimer définitivement ton compte ?", isPresented: $showDeleteAccountConfirm, titleVisibility: .visible) {
+            Button("Supprimer", role: .destructive) { Task { await deleteAccount() } }
+            Button("Annuler", role: .cancel) {}
+        } message: {
+            Text("Ton club, ton classement et ton fil d'activité seront définitivement supprimés du serveur. Cette action est irréversible.")
+        }
+    }
+
+    private func deleteAccount() async {
+        do {
+            try await appState.auth.deleteAccount()
+            appState.toast("Compte supprimé")
+        } catch {
+            appState.toast("Impossible de supprimer le compte — réessaie.")
+        }
     }
 }

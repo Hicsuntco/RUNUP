@@ -1,0 +1,207 @@
+import SwiftUI
+import AuthenticationServices
+import GoogleSignIn
+
+/// Sign-in sheet, presented only from `ClubView` — the rest of the app works fully offline, an
+/// account is only needed for the real, server-backed Club (leaderboard/feed/kudos). Offers all 3
+/// methods so nobody needs a password if they'd rather not have one, and Sign in with Apple is
+/// always included alongside Google per App Store guideline 4.8.
+struct SignInView: View {
+    @Environment(AppState.self) private var appState
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var mode: Mode = .signIn
+    @State private var name = ""
+    @State private var email = ""
+    @State private var password = ""
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+
+    private enum Mode { case signIn, signUp }
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 18) {
+                VStack(spacing: 10) {
+                    AppMarkView(size: 56)
+                    Text("Connecte-toi").displayStyle(22).foregroundColor(.white)
+                    Text("Pour rejoindre un vrai club, avec un classement et un fil d'activité réels.")
+                        .font(RUFont.sans(12.5))
+                        .foregroundColor(RUColor.text2)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 20)
+                }
+                .padding(.top, 24)
+
+                SignInWithAppleButton(.signIn, onRequest: configureAppleRequest, onCompletion: handleAppleCompletion)
+                    .signInWithAppleButtonStyle(.white)
+                    .frame(height: 50)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+                Button(action: signInWithGoogle) {
+                    HStack(spacing: 10) {
+                        Text("G").font(RUFont.sans(16, weight: .bold))
+                        Text("Continuer avec Google").font(RUFont.sans(14, weight: .semibold))
+                    }
+                    .foregroundColor(.black)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .background(Color.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+                .buttonStyle(PressableStyle())
+
+                HStack {
+                    Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
+                    Text("ou").font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+                    Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
+                }
+
+                emailForm
+
+                if let errorMessage {
+                    Text(errorMessage)
+                        .font(RUFont.sans(12))
+                        .foregroundColor(RUColor.rose)
+                        .multilineTextAlignment(.center)
+                }
+
+                Button(mode == .signIn ? "Pas de compte ? Crée-en un" : "Déjà un compte ? Connecte-toi") {
+                    mode = mode == .signIn ? .signUp : .signIn
+                    errorMessage = nil
+                }
+                .font(RUFont.sans(12, weight: .semibold))
+                .foregroundColor(RUColor.text2)
+                .padding(.top, 4)
+            }
+            .padding(.horizontal, RUSpacing.pagePadding)
+            .padding(.bottom, 40)
+        }
+        .background(RUColor.bg)
+        .disabled(isLoading)
+        .overlay {
+            if isLoading {
+                ProgressView().tint(.white)
+            }
+        }
+    }
+
+    private var emailForm: some View {
+        VStack(spacing: 10) {
+            if mode == .signUp {
+                TextField("Prénom", text: $name)
+                    .textFieldStyle(AuthFieldStyle())
+                    .textContentType(.givenName)
+            }
+            TextField("Email", text: $email)
+                .textFieldStyle(AuthFieldStyle())
+                .textContentType(.emailAddress)
+                .keyboardType(.emailAddress)
+                .textInputAutocapitalization(.never)
+            SecureField("Mot de passe", text: $password)
+                .textFieldStyle(AuthFieldStyle())
+                .textContentType(mode == .signIn ? .password : .newPassword)
+
+            Button(mode == .signIn ? "SE CONNECTER" : "CRÉER MON COMPTE") {
+                submitEmailForm()
+            }
+            .buttonStyle(PrimaryButtonStyle())
+            .disabled(email.trimmingCharacters(in: .whitespaces).isEmpty || password.isEmpty || (mode == .signUp && name.trimmingCharacters(in: .whitespaces).isEmpty))
+        }
+    }
+
+    private func configureAppleRequest(_ request: ASAuthorizationAppleIDRequest) {
+        request.requestedScopes = [.fullName, .email]
+    }
+
+    private func handleAppleCompletion(_ result: Result<ASAuthorization, Error>) {
+        switch result {
+        case .success(let authorization):
+            guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                  let tokenData = credential.identityToken,
+                  let identityToken = String(data: tokenData, encoding: .utf8) else {
+                errorMessage = "Connexion Apple impossible."
+                return
+            }
+            // Apple only sends `fullName` the very first time this Apple ID signs into this app.
+            let name = [credential.fullName?.givenName, credential.fullName?.familyName]
+                .compactMap { $0 }
+                .joined(separator: " ")
+            Task { await runAuth { try await appState.auth.signInWithApple(identityToken: identityToken, name: name.isEmpty ? nil : name) } }
+        case .failure:
+            errorMessage = "Connexion Apple annulée ou impossible."
+        }
+    }
+
+    private func signInWithGoogle() {
+        guard let rootVC = UIApplication.shared.ru_rootViewController else {
+            errorMessage = "Impossible d'ouvrir la connexion Google."
+            return
+        }
+        isLoading = true
+        GIDSignIn.sharedInstance.signIn(withPresenting: rootVC) { result, error in
+            Task {
+                guard let idToken = result?.user.idToken?.tokenString, error == nil else {
+                    await MainActor.run {
+                        isLoading = false
+                        errorMessage = "Connexion Google annulée ou impossible."
+                    }
+                    return
+                }
+                await runAuth { try await appState.auth.signInWithGoogle(idToken: idToken) }
+            }
+        }
+    }
+
+    private func submitEmailForm() {
+        let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
+        Task {
+            await runAuth {
+                if mode == .signIn {
+                    try await appState.auth.logIn(email: trimmedEmail, password: password)
+                } else {
+                    try await appState.auth.signUp(email: trimmedEmail, password: password, name: name.trimmingCharacters(in: .whitespaces))
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func runAuth(_ action: @escaping () async throws -> Void) async {
+        isLoading = true
+        errorMessage = nil
+        do {
+            try await action()
+            try? await appState.auth.refreshMe()
+            dismiss()
+        } catch AuthServiceError.badResponse(409, _) {
+            errorMessage = "Un compte existe déjà avec cet email."
+        } catch AuthServiceError.badResponse(401, _) {
+            errorMessage = "Email ou mot de passe incorrect."
+        } catch {
+            errorMessage = "Connexion impossible — vérifie ta connexion internet."
+        }
+        isLoading = false
+    }
+}
+
+private struct AuthFieldStyle: TextFieldStyle {
+    func _body(configuration: TextField<Self._Label>) -> some View {
+        configuration
+            .font(RUFont.sans(14))
+            .foregroundColor(.white)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+    }
+}
+
+private extension UIApplication {
+    var ru_rootViewController: UIViewController? {
+        connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow }?
+            .rootViewController
+    }
+}

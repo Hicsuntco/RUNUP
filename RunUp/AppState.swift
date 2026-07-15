@@ -39,6 +39,7 @@ final class AppState {
         }
         AdaptivePlanEngine.refreshProgramForCurrentDate(self.profile)
         AdaptivePlanEngine.resetDailyGoalsIfNewDay(self.profile)
+        ThemeStore.shared.themeID = self.profile.accentThemeID
         Task { await self.syncDailyGoalsFromHealthKit() }
     }
 

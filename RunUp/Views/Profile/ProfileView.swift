@@ -31,6 +31,9 @@ struct ProfileView: View {
                 sectionTitle("Sources de données")
                 dataSourcesCard
 
+                sectionTitle("Apparence")
+                appearanceCard
+
                 sectionTitle("Préférences")
                 preferencesCard
 
@@ -79,6 +82,40 @@ struct ProfileView: View {
         }
         .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+    }
+
+    /// Nuancier — tap a swatch to re-theme the whole app (buttons, highlights, the logo mark)
+    /// with that accent. Persists to `profile.accentThemeID` and mirrors into `ThemeStore` so
+    /// every `RUColor.rose`/`.rose2`/`.violet` call site updates immediately, live.
+    private var appearanceCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Couleur de l'app").font(RUFont.sans(14, weight: .medium)).foregroundColor(.white)
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: 4), spacing: 16) {
+                ForEach(AccentTheme.all) { theme in
+                    Button(action: { selectAccent(theme) }) {
+                        ZStack {
+                            Circle()
+                                .fill(LinearGradient(colors: [theme.primary, theme.tail], startPoint: .topLeading, endPoint: .bottomTrailing))
+                                .frame(width: 40, height: 40)
+                            if profile.accentThemeID == theme.id {
+                                Circle().stroke(Color.white, lineWidth: 2.5).frame(width: 46, height: 46)
+                                Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)).foregroundColor(.white)
+                            }
+                        }
+                        .frame(width: 46, height: 46)
+                    }
+                    .buttonStyle(PressableStyle())
+                }
+            }
+        }
+        .padding(14)
+        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+    }
+
+    private func selectAccent(_ theme: AccentTheme) {
+        profile.accentThemeID = theme.id
+        ThemeStore.shared.themeID = theme.id
     }
 
     private var preferencesCard: some View {

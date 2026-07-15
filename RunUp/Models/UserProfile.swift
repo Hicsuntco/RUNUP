@@ -88,6 +88,9 @@ final class UserProfile {
     var onboarded: Bool
     var distanceUnit: String
     var coachNotificationsEnabled: Bool
+    /// Which `AccentTheme` swatch the user picked in Profil → Apparence — mirrored into
+    /// `ThemeStore.shared` on load so `RUColor.rose`/`.rose2`/`.violet` reflect it everywhere.
+    var accentThemeID: String = AccentTheme.defaultID
 
     init(name: String = "") {
         self.name = name

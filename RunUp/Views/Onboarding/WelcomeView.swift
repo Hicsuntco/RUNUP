@@ -7,7 +7,7 @@ struct WelcomeView: View {
     private let valueProps: [(icon: String, title: String, desc: String)] = [
         ("bolt.fill", "Un plan qui vit avec toi", "Pas un PDF figé — il change selon ta forme et ton ressenti après chaque séance."),
         ("circle.circle", "Tes objectifs du jour, en un coup d'œil", "Bouger, rester actif, courir — trois objectifs simples à boucler chaque jour."),
-        ("bubble.left.fill", "Un vrai coach, pas un chatbot", "Il connaît ton objectif, ton historique, et te répond comme un humain le ferait.")
+        ("bubble.left.fill", "Un vrai coach, disponible à tout moment", "Il connaît ton objectif, ton historique, et te répond comme un humain le ferait.")
     ]
 
     var body: some View {

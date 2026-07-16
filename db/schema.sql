@@ -1,5 +1,7 @@
--- RunUp backend schema — Postgres (Vercel Postgres / Neon). Run this once against the database
--- connected to the Vercel project (see IOS_SETUP.md § "Backend (comptes, clubs, activités)").
+-- RunUp backend schema — Postgres (Vercel Postgres / Neon). Every statement is idempotent
+-- (CREATE ... IF NOT EXISTS), so re-running this whole file after it's grown new tables is safe —
+-- no need to track which snippet you already ran. See IOS_SETUP.md § "Backend (comptes, clubs,
+-- activités)".
 --
 -- v1 scope: a user belongs to at most one club at a time — enforced in application code
 -- (api/clubs/*.js), not a DB constraint, so multi-club support later doesn't need a migration.
@@ -52,4 +54,23 @@ CREATE TABLE IF NOT EXISTS activity_kudos (
   activity_id UUID NOT NULL REFERENCES activities(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   PRIMARY KEY (activity_id, user_id)
+);
+
+-- Moderation (App Store guideline 1.2 — user-generated content: club names, display names, and
+-- the activity feed need a block + report mechanism, not just a content filter at creation time).
+
+CREATE TABLE IF NOT EXISTS blocks (
+  blocker_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  blocked_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (blocker_id, blocked_id)
+);
+
+CREATE TABLE IF NOT EXISTS reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  reporter_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  target_type TEXT NOT NULL, -- 'user' | 'club' | 'activity'
+  target_id UUID NOT NULL,
+  reason TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

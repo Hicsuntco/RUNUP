@@ -4,6 +4,7 @@
 const { sql } = require('../../lib/db');
 const { requireAuth } = require('../../lib/auth');
 const { withErrorHandling } = require('../../lib/http');
+const { containsObjectionableContent } = require('../../lib/moderation');
 
 module.exports = withErrorHandling(async function handler(req, res) {
   const userId = await requireAuth(req);
@@ -42,6 +43,7 @@ async function handleCreate(req, res, userId) {
 
   const { name } = req.body || {};
   if (!name || !name.trim()) return res.status(400).json({ error: 'bad_request' });
+  if (containsObjectionableContent(name)) return res.status(422).json({ error: 'objectionable_content' });
 
   let club;
   // Retry on the astronomically rare invite_code collision instead of trusting a single attempt.
@@ -95,12 +97,18 @@ async function handleMine(req, res, userId) {
   const { rows: clubRows } = await sql`SELECT id, name, invite_code FROM clubs WHERE id = ${clubId}`;
   const club = clubRows[0];
 
+  // Rank is computed over every member first (a subquery), then blocked users are filtered out
+  // of the outer result — so someone you've blocked disappears from your view, but everyone
+  // else's rank number still reflects their true position rather than shifting to fill the gap.
   const { rows: leaderboard } = await sql`
-    SELECT u.id, u.name, u.xp_total, RANK() OVER (ORDER BY u.xp_total DESC) AS rank
-    FROM club_members cm
-    JOIN users u ON u.id = cm.user_id
-    WHERE cm.club_id = ${clubId}
-    ORDER BY u.xp_total DESC
+    SELECT id, name, xp_total, rank FROM (
+      SELECT u.id, u.name, u.xp_total, RANK() OVER (ORDER BY u.xp_total DESC) AS rank
+      FROM club_members cm
+      JOIN users u ON u.id = cm.user_id
+      WHERE cm.club_id = ${clubId}
+    ) ranked
+    WHERE id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+    ORDER BY xp_total DESC
   `;
 
   const { rows: countRows } = await sql`SELECT COUNT(*)::int AS count FROM club_members WHERE club_id = ${clubId}`;

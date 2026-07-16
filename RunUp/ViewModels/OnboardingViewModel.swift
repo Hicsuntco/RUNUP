@@ -33,6 +33,14 @@ final class OnboardingViewModel {
     var preferredTimeOfDay: String?
     // Step 4
     var runningDays: Set<Int> = [1, 2, 4, 6]
+    var preferredLongRunDay: Int?
+
+    /// The day the long run actually lands on — falls back to the latest selected running day if
+    /// none was explicitly chosen, or if the chosen one got deselected.
+    var effectiveLongRunDay: Int? {
+        if let day = preferredLongRunDay, runningDays.contains(day) { return day }
+        return runningDays.max()
+    }
     // Step 5
     var level: ExperienceLevel = .intermediaire
     // Step 6
@@ -119,6 +127,7 @@ final class OnboardingViewModel {
             raceChrono: isRace ? chrono : nil,
             raceDate: isRace ? raceDate : nil,
             runningDays: Array(runningDays),
+            preferredLongRunDay: effectiveLongRunDay,
             level: level,
             connectedSources: Array(connected),
             weightNowKg: Double(weightNow),

@@ -103,15 +103,24 @@ struct HomeView: View {
         }
     }
 
+    private var readinessMessage: String {
+        switch profile.readiness {
+        case 85...: return "Bien récupérée → séance relevée d'un palier aujourd'hui."
+        case 65..<85: return "Forme correcte → séance du jour comme prévu."
+        case 50..<65: return "Un peu de fatigue → écoute-toi sur l'intensité aujourd'hui."
+        default: return "Fatigue accumulée → pense à une séance plus légère ou à du repos."
+        }
+    }
+
     private var readinessCard: some View {
-        Button(action: { appState.go(.rings) }) {
+        Button(action: { appState.go(.readiness) }) {
             HStack(spacing: 14) {
                 RingView(pct: Double(profile.readiness), color: RUColor.lime, size: 64) {
                     Text("\(profile.readiness)").displayStyle(20).foregroundColor(RUColor.lime)
                 }
                 VStack(alignment: .leading, spacing: 5) {
-                    EyebrowLabel(text: "Forme du jour · excellente")
-                    Text("Bien récupérée → séance relevée d'un palier aujourd'hui.")
+                    EyebrowLabel(text: "Forme du jour · \(profile.readinessLabel)")
+                    Text(readinessMessage)
                         .font(RUFont.sans(12))
                         .foregroundColor(.white.opacity(0.7))
                         .lineSpacing(2)
@@ -195,22 +204,32 @@ struct HomeView: View {
         }
     }
 
+    private var planShape: AdaptivePlanEngine.ProgramShape {
+        AdaptivePlanEngine.ProgramShape.compute(goal: profile.goalId, raceDate: profile.raceDate, from: profile.programStartDate ?? .now)
+    }
+
     private var planTeaserCard: some View {
-        Button(action: { appState.go(.plan) }) {
+        let shape = planShape
+        let block = AdaptivePlanEngine.trainingBlock(forWeek: profile.weekNumber, shape: shape)
+        return Button(action: { appState.go(.plan) }) {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     EyebrowLabel(text: "Objectif · \(profile.goalDisplay) · J-\(profile.daysUntilRace ?? 0)", color: RUColor.rose)
                     Spacer()
                     Text("→").foregroundColor(RUColor.rose2)
                 }
-                Text("Semaine \(profile.weekNumber) · Bloc VMA").displayStyle(17).foregroundColor(.white)
-                PhaseProgressBar(phases: [
-                    PhaseSegment(name: "Base", done: 3, total: 3, color: RUColor.rose),
-                    PhaseSegment(name: "Spécifique", done: 1, total: 4, color: RUColor.rose2),
-                    PhaseSegment(name: "Affûtage", done: 0, total: 2, color: RUColor.violet)
-                ], showLabels: false)
-                .padding(.top, 10)
-                Text("9 semaines · voir le plan complet").font(RUFont.sans(10)).foregroundColor(RUColor.text2).padding(.top, 7)
+                Text("Semaine \(profile.weekNumber) · Bloc \(block.rawValue)").displayStyle(17).foregroundColor(.white)
+                if let total = shape.totalWeeks {
+                    PhaseProgressBar(phases: [
+                        PhaseSegment(name: "Base", done: min(profile.weekNumber, shape.baseWeeks), total: shape.baseWeeks, color: RUColor.rose),
+                        PhaseSegment(name: "Spécifique", done: max(0, min(profile.weekNumber - shape.baseWeeks, shape.specificWeeks)), total: shape.specificWeeks, color: RUColor.rose2),
+                        PhaseSegment(name: "Affûtage", done: max(0, min(profile.weekNumber - shape.baseWeeks - shape.specificWeeks, shape.taperWeeks)), total: shape.taperWeeks, color: RUColor.violet)
+                    ], showLabels: false)
+                    .padding(.top, 10)
+                    Text("\(total) semaines · voir le plan complet").font(RUFont.sans(10)).foregroundColor(RUColor.text2).padding(.top, 7)
+                } else {
+                    Text("Programme ouvert · voir le plan complet").font(RUFont.sans(10)).foregroundColor(RUColor.text2).padding(.top, 7)
+                }
             }
             .padding(16)
         }

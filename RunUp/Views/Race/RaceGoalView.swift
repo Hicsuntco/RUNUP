@@ -1,17 +1,53 @@
 import SwiftUI
 
-/// Race/objective detail — mirrors `RaceScreen` in screensB.jsx. Title/date/pace are dynamic,
-/// computed from the real profile state set during onboarding.
+/// Race/objective detail — mirrors `RaceScreen` in screensB.jsx. Title/date/pace/prep are all
+/// dynamic, computed from the real profile state (race target, `PaceModel`, `AdaptivePlanEngine`)
+/// instead of a fixed 10K pacing table shown regardless of the actual goal or distance.
 struct RaceGoalView: View {
     @Environment(AppState.self) private var appState
     private var profile: UserProfile { appState.profile }
 
-    private let pacingPlan: [(String, String, String)] = [
-        ("1-3 km", "Départ contrôlé", "4:52"),
-        ("4-8 km", "Rythme cible", "4:45"),
-        ("9 km", "Relance", "4:40"),
-        ("10 km", "Sprint final", "4:20")
-    ]
+    private var shape: AdaptivePlanEngine.ProgramShape {
+        AdaptivePlanEngine.ProgramShape.compute(goal: profile.goalId, raceDate: profile.raceDate, from: profile.programStartDate ?? .now)
+    }
+
+    /// Real target pace (seconds/km) implied by the goal chrono over the goal distance — falls
+    /// back to the reference threshold pace `PaceModel` already seeds the plan from when there's
+    /// no race chrono (progress/weight/restart/health goals).
+    private var racePaceSecPerKm: Double? {
+        guard let chrono = profile.raceChrono,
+              let km = profile.raceDistance?.km,
+              let totalSeconds = PaceModel.parseChronoSeconds(chrono, distance: profile.raceDistance),
+              km > 0
+        else { return nil }
+        return totalSeconds / km
+    }
+
+    private var targetPaceLabel: String {
+        PaceModel.formatDuration(racePaceSecPerKm ?? PaceModel.zones(for: profile).thresholdSecPerKm)
+    }
+
+    /// Splits the real goal distance into 3-4 pacing phases around the real target pace, instead
+    /// of a fixed "1-3 / 4-8 / 9 / 10 km @ 4:52.../4:20" table that only ever made sense for a 10K.
+    private var pacingPlan: [(String, String, String)] {
+        let km = profile.raceDistance?.km ?? 10
+        let base = racePaceSecPerKm ?? PaceModel.zones(for: profile).thresholdSecPerKm
+        let totalKm = max(3, Int(km.rounded()))
+        let startEnd = max(1, Int((Double(totalKm) * 0.2).rounded()))
+        let cruiseEnd = min(totalKm - 1, max(startEnd + 1, Int((Double(totalKm) * 0.75).rounded())))
+
+        func rangeLabel(_ a: Int, _ b: Int) -> String { a == b ? "\(a) km" : "\(a)-\(b) km" }
+
+        var plan: [(String, String, String)] = [
+            (rangeLabel(1, startEnd), "Départ contrôlé", PaceModel.formatDuration(base + 8)),
+            (rangeLabel(startEnd + 1, cruiseEnd), "Rythme cible", PaceModel.formatDuration(base))
+        ]
+        if cruiseEnd + 1 < totalKm {
+            plan.append((rangeLabel(cruiseEnd + 1, totalKm - 1), "Relance", PaceModel.formatDuration(max(60, base - 5))))
+        }
+        plan.append((rangeLabel(totalKm, totalKm), "Sprint final", PaceModel.formatDuration(max(60, base - 20))))
+        return plan
+    }
 
     private var goalTitle: String {
         profile.goalDisplay.contains("·") ? String(profile.goalDisplay.split(separator: "·").first ?? "").trimmingCharacters(in: .whitespaces) : profile.goalDisplay
@@ -35,24 +71,31 @@ struct RaceGoalView: View {
                 Text(dateLine).font(RUFont.sans(12)).foregroundColor(RUColor.text2).padding(.leading, 34)
 
                 HStack(spacing: 10) {
-                    tile("\(profile.daysUntilRace ?? 63)", "JOURS", highlighted: true)
+                    tile("\(profile.daysUntilRace ?? 0)", "JOURS", highlighted: true)
                     tile(goalTarget, "OBJECTIF", highlighted: false)
-                    tile("4:45", "ALLURE", highlighted: false)
+                    tile(targetPaceLabel, "ALLURE", highlighted: false)
                 }
 
                 VStack(spacing: 10) {
                     HStack {
                         EyebrowLabel(text: "Préparation")
                         Spacer()
-                        StatChip(text: "Dans les temps", color: RUColor.lime)
+                        if let total = shape.totalWeeks {
+                            StatChip(text: "Semaine \(min(profile.weekNumber, total))/\(total)", color: RUColor.lime)
+                        }
                     }
-                    LinearBar(fraction: 0.68, color: RUColor.rose, height: 8, gradient: LinearGradient(colors: [RUColor.rose, RUColor.lime], startPoint: .leading, endPoint: .trailing))
-                    HStack {
-                        Text("Base ✓").font(RUFont.sans(10)).foregroundColor(RUColor.text2)
-                        Spacer()
-                        Text("Spécifique ●").font(RUFont.sans(10)).foregroundColor(RUColor.text2)
-                        Spacer()
-                        Text("Affûtage").font(RUFont.sans(10)).foregroundColor(RUColor.text2)
+                    if let total = shape.totalWeeks {
+                        LinearBar(fraction: min(1, Double(profile.weekNumber) / Double(total)), color: RUColor.rose, height: 8, gradient: LinearGradient(colors: [RUColor.rose, RUColor.lime], startPoint: .leading, endPoint: .trailing))
+                        HStack {
+                            phaseLabel("Base", state: phaseState(endWeek: shape.baseWeeks))
+                            Spacer()
+                            phaseLabel("Spécifique", state: phaseState(endWeek: shape.baseWeeks + shape.specificWeeks))
+                            Spacer()
+                            phaseLabel("Affûtage", state: phaseState(endWeek: total))
+                        }
+                    } else {
+                        Text("Programme ouvert, sans date de fin fixe.")
+                            .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
                     }
                 }
                 .padding(14)
@@ -92,8 +135,32 @@ struct RaceGoalView: View {
     }()
 
     private var dateLine: String {
-        guard let date = profile.raceDate else { return "Dimanche 16 août · 09:00" }
-        return "\(Self.dateFormatter.string(from: date)) · 09:00"
+        guard let date = profile.raceDate else { return "Date à définir" }
+        return Self.dateFormatter.string(from: date)
+    }
+
+    private enum PhaseState { case done, current, upcoming }
+
+    /// A phase reads "done" once the program has moved past its last week, "current" while the
+    /// program is inside it, "upcoming" otherwise — replaces a fixed "Base ✓ / Spécifique ● /
+    /// Affûtage" that never actually reflected which block the program was in.
+    private func phaseState(endWeek: Int) -> PhaseState {
+        if profile.weekNumber > endWeek { return .done }
+        let block = AdaptivePlanEngine.trainingBlock(forWeek: profile.weekNumber, shape: shape)
+        let isCurrent = (block == .base && endWeek == shape.baseWeeks)
+            || (block == .specifique && endWeek == shape.baseWeeks + shape.specificWeeks)
+            || (block == .affutage && endWeek == (shape.totalWeeks ?? endWeek))
+        return isCurrent ? .current : .upcoming
+    }
+
+    private func phaseLabel(_ name: String, state: PhaseState) -> some View {
+        let suffix: String
+        switch state {
+        case .done: suffix = " ✓"
+        case .current: suffix = " ●"
+        case .upcoming: suffix = ""
+        }
+        return Text("\(name)\(suffix)").font(RUFont.sans(10)).foregroundColor(RUColor.text2)
     }
 
     private func tile(_ value: String, _ label: String, highlighted: Bool) -> some View {

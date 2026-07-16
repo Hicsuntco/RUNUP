@@ -94,6 +94,18 @@ enum RaceDistance: String, Codable, CaseIterable, Identifiable {
         case .other: return []
         }
     }
+
+    /// nil for `.other` — a free-text custom distance can't be converted to a number, so any
+    /// pace/periodization math keyed on real distance falls back to a generic reference instead.
+    var km: Double? {
+        switch self {
+        case .k5: return 5
+        case .k10: return 10
+        case .semi: return 21.0975
+        case .marathon: return 42.195
+        case .other: return nil
+        }
+    }
 }
 
 enum ConnectedSource: String, Codable, CaseIterable, Identifiable {

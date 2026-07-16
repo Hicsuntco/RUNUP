@@ -8,13 +8,43 @@ struct SessionDetailSheet: View {
 
     private var session: WorkoutSession { appState.profile.todaySession }
 
+    /// The real archetype titles from `AdaptivePlanEngine` fall into 3 shapes — a footing/sortie
+    /// longue IS an easy continuous effort throughout (no separate warmup/cooldown block at a
+    /// different pace makes sense there), a tempo run is one sustained threshold effort, and only
+    /// a "Fractionné"/"Rappel d'allure" session is actually structured as reps + recovery. Every
+    /// session used to show the same "warmup + N×800m + cooldown" regardless of which of these it
+    /// actually was.
     private var steps: [(String, String, Color)] {
-        let reps = session.title.firstNumber ?? 6
-        return [
-            ("Échauffement", "15′ · Z2 · footing relâché", RUColor.cyan),
-            ("\(reps) × 800 m", "\(session.pace) /km · \(session.zone) · récup 400 m entre chaque", RUColor.rose),
-            ("Retour au calme", "10′ · Z1 · marche + étirements", RUColor.lime)
-        ]
+        let title = session.title.lowercased()
+        let warmup = ("Échauffement", "10-15′ · Z2 · footing relâché", RUColor.cyan)
+        let cooldown = ("Retour au calme", "5-10′ · Z1 · marche + étirements", RUColor.lime)
+
+        if title.contains("fractionné") || title.contains("rappel d'allure") {
+            return [
+                warmup,
+                (intervalDescription, "\(session.pace) /km · \(session.zone) · récupération entre chaque", RUColor.rose),
+                cooldown
+            ]
+        }
+        if title.contains("tempo") {
+            return [
+                warmup,
+                ("Bloc tempo", "\(max(10, session.durationMinutes - 20))′ · \(session.pace) /km · \(session.zone) · effort soutenu et continu", RUColor.rose),
+                cooldown
+            ]
+        }
+        // Footing / sortie longue / sortie courte / découverte / récup — the whole run is the
+        // target effort, not a warmup building up to something else.
+        return [("Course continue", "\(session.durationMinutes)′ · \(session.pace) /km · \(session.zone)", RUColor.rose)]
+    }
+
+    /// Pulls the exact "N × distance" straight from the archetype's own title (e.g. "5 × 500 m",
+    /// "6 × 800 m", "3 × 1 km") instead of assuming every interval session is 800m repeats.
+    private var intervalDescription: String {
+        if let range = session.title.range(of: #"\d+\s*×\s*\d+\s?(m|km)"#, options: .regularExpression) {
+            return String(session.title[range])
+        }
+        return "Fractionné"
     }
 
     private var isRestDay: Bool { session.durationMinutes == 0 }
@@ -107,12 +137,5 @@ struct SessionDetailSheet: View {
             .padding(.horizontal, 18)
             .padding(.bottom, 24)
         }
-    }
-}
-
-private extension String {
-    var firstNumber: Int? {
-        guard let range = range(of: #"\d+"#, options: .regularExpression) else { return nil }
-        return Int(self[range])
     }
 }

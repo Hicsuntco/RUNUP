@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Full 9-week plan — mirrors `PlanScreen` in screensA.jsx, now driven by real profile state.
+/// Full plan — mirrors `PlanScreen` in screensA.jsx, now driven by real profile state.
 /// The current week's sessions come straight from `AdaptivePlanEngine`-generated data, adapted
 /// once per week from the previous week's average RPE (see `refreshProgramForCurrentDate`) —
 /// never after a single run. Other weeks show a template preview generated the same way, labeled
@@ -20,14 +20,25 @@ struct PlanView: View {
         var isCurrent: Bool
     }
 
+    /// Real program shape — a race goal periodizes toward the actual race date (variable length,
+    /// not a fixed 9 weeks); every other goal is open-ended (`totalWeeks == nil`), so there's no
+    /// fixed "whole plan" to show — the preview window below just looks a reasonable distance ahead.
+    private var shape: AdaptivePlanEngine.ProgramShape {
+        AdaptivePlanEngine.ProgramShape.compute(goal: profile.goalId, raceDate: profile.raceDate, from: profile.programStartDate ?? .now)
+    }
+
+    private var weeksToShow: Int {
+        shape.totalWeeks ?? max(profile.weekNumber + 7, 8)
+    }
+
     private var weekSummaries: [WeekSummary] {
-        (1...9).map { number in
+        (1...weeksToShow).map { number in
             let sessions = number == profile.weekNumber
                 ? profile.weekSessions
-                : AdaptivePlanEngine.generateWeekSessions(weekNumber: number, runningDays: profile.runningDays, tier: profile.weekTier)
+                : AdaptivePlanEngine.generateWeekSessions(weekNumber: number, tier: profile.weekTier, profile: profile)
             return WeekSummary(
                 number: number,
-                block: AdaptivePlanEngine.trainingBlock(forWeek: number),
+                block: AdaptivePlanEngine.trainingBlock(forWeek: number, shape: shape),
                 estimatedKm: estimatedKm(for: sessions),
                 isDone: number < profile.weekNumber,
                 isCurrent: number == profile.weekNumber
@@ -46,14 +57,19 @@ struct PlanView: View {
                     }
                 }
 
-                Text("9 semaines · 3 phases. Il s'ajuste chaque semaine selon ta forme de la semaine passée — pas séance par séance.")
-                    .font(RUFont.sans(12)).foregroundColor(RUColor.text2).lineSpacing(3)
+                if let total = shape.totalWeeks {
+                    Text("\(total) semaines · 3 phases, calées sur ta date de course. Il s'ajuste chaque semaine selon ta forme de la semaine passée — pas séance par séance.")
+                        .font(RUFont.sans(12)).foregroundColor(RUColor.text2).lineSpacing(3)
 
-                PhaseProgressBar(phases: [
-                    PhaseSegment(name: "Base", done: min(profile.weekNumber, 3), total: 3, color: RUColor.rose),
-                    PhaseSegment(name: "Spécifique", done: max(0, min(profile.weekNumber - 3, 4)), total: 4, color: RUColor.rose2),
-                    PhaseSegment(name: "Affûtage", done: max(0, min(profile.weekNumber - 7, 2)), total: 2, color: RUColor.violet)
-                ])
+                    PhaseProgressBar(phases: [
+                        PhaseSegment(name: "Base", done: min(profile.weekNumber, shape.baseWeeks), total: shape.baseWeeks, color: RUColor.rose),
+                        PhaseSegment(name: "Spécifique", done: max(0, min(profile.weekNumber - shape.baseWeeks, shape.specificWeeks)), total: shape.specificWeeks, color: RUColor.rose2),
+                        PhaseSegment(name: "Affûtage", done: max(0, min(profile.weekNumber - shape.baseWeeks - shape.specificWeeks, shape.taperWeeks)), total: shape.taperWeeks, color: RUColor.violet)
+                    ])
+                } else {
+                    Text("Programme ouvert, sans date de fin fixe — une semaine plus légère tous les 4 semaines pour récupérer. Il s'ajuste chaque semaine selon ta forme de la semaine passée.")
+                        .font(RUFont.sans(12)).foregroundColor(RUColor.text2).lineSpacing(3)
+                }
 
                 VStack(spacing: 6) {
                     ForEach(weekSummaries) { week in
@@ -88,7 +104,7 @@ struct PlanView: View {
     }
 
     private func weekHeader(_ week: WeekSummary, isExpanded: Bool) -> some View {
-        let isRaceWeek = week.number == 9 && profile.goalId == .race
+        let isRaceWeek = week.number == shape.totalWeeks && profile.goalId == .race
         let badge = isRaceWeek ? "🏁" : week.block == .affutage ? "▽" : week.isDone ? "✓" : "›"
         let color: Color = isRaceWeek ? RUColor.rose : week.block == .affutage ? RUColor.violet : week.isDone ? RUColor.text3 : RUColor.text2
         return HStack(spacing: 12) {
@@ -135,7 +151,7 @@ struct PlanView: View {
                 (Self.dayLetters[day.weekday], day, profile.weekStrip.first { $0.weekday == day.weekday }?.state)
             }
         }
-        let preview = AdaptivePlanEngine.generateWeekSessions(weekNumber: week.number, runningDays: profile.runningDays, tier: profile.weekTier)
+        let preview = AdaptivePlanEngine.generateWeekSessions(weekNumber: week.number, tier: profile.weekTier, profile: profile)
         return preview.map { (Self.dayLetters[$0.weekday], $0, nil) }
     }
 

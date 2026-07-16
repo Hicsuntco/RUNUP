@@ -44,6 +44,11 @@ final class UserProfile {
     var recoveryDaysLeft: Int
     /// 0 = Monday ... 6 = Sunday.
     var runningDays: [Int]
+    /// Which weekday carries the long run — chosen at onboarding
+    /// (`OnboardingViewModel.effectiveLongRunDay`), falls back to the latest `runningDays` entry
+    /// for profiles that predate this field. `AdaptivePlanEngine.generateWeekSessions` places the
+    /// long-run archetype here specifically, instead of wherever it lands positionally.
+    var preferredLongRunDay: Int?
     var todaySession: WorkoutSession
     var weekStrip: [DayStatus]
     /// The current week's full 7-day plan — regenerated once per week (see
@@ -83,7 +88,10 @@ final class UserProfile {
     // MARK: Gamification
     var streak: Int
     var xp: Int
-    var readiness: Int
+    /// Last up to 5 debrief severities (`3 - RPE.rawValue`, so 0 = facile ... 3 = tropDur, same
+    /// scale the weekly tier adaptation already uses) — feeds the real `readiness` score below.
+    /// Capped and updated in `AdaptivePlanEngine.applyDebrief`.
+    var recentRPESeverities: [Int] = []
 
     // MARK: Meta
     /// No paid tier ships in this version — everyone gets full access. Kept as a field (rather
@@ -132,7 +140,6 @@ final class UserProfile {
         self.runGoal = 10
         self.streak = 0
         self.xp = 0
-        self.readiness = 80
         self.premium = true
         self.onboarded = false
         self.distanceUnit = "km"
@@ -165,6 +172,30 @@ final class UserProfile {
 
     var dailyGoalsDone: Int {
         dailyGoalsProgress.filter { $0 >= 1 }.count
+    }
+
+    /// Real "forme du jour" score — computed, not a static value, from the severity trend of your
+    /// last few sessions (`recentRPESeverities`, 0 = facile ... 3 = tropDur) and how many
+    /// consecutive days you've trained without rest. No lab-grade recovery data (HRV, sleep) —
+    /// just what's already tracked locally, but genuinely responsive instead of a fixed 80.
+    var readiness: Int {
+        guard !recentRPESeverities.isEmpty else { return 80 }
+        let avgSeverity = Double(recentRPESeverities.reduce(0, +)) / Double(recentRPESeverities.count)
+        let severityAdjustment = (1.5 - avgSeverity) * 12 // easier recent sessions → higher score
+        let streakPenalty = min(12, Double(max(0, streak - 3)) * 2) // fatigue past a 3-day run without rest
+        let score = 82 + severityAdjustment - streakPenalty
+        return Int(max(35, min(98, score)))
+    }
+
+    /// Short label for `readiness` — drives the readiness card's copy instead of a fixed
+    /// "excellente" regardless of the actual score.
+    var readinessLabel: String {
+        switch readiness {
+        case 85...: return "excellente"
+        case 65..<85: return "bonne"
+        case 50..<65: return "correcte"
+        default: return "à surveiller"
+        }
     }
 
     var age: Int? {

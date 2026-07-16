@@ -10,6 +10,7 @@ struct NewGoalWizardView: View {
     @State private var goal: GoalType?
     @State private var distance: RaceDistance = .k10
     @State private var chrono: String = RaceDistance.k10.chronoPresets[1]
+    @State private var raceDate = Calendar.current.date(byAdding: .day, value: 60, to: .now)!
     @State private var days: Set<Int> = [1, 2, 4, 6]
     @State private var building = false
 
@@ -80,6 +81,19 @@ struct NewGoalWizardView: View {
                     SelectableChip(label: t, selected: chrono == t) { chrono = t }
                 }
             }
+            EyebrowLabel(text: "Date de la course", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
+            DatePicker(
+                "",
+                selection: $raceDate,
+                in: Calendar.current.date(byAdding: .day, value: 1, to: .now)!...,
+                displayedComponents: .date
+            )
+            .datePickerStyle(.compact)
+            .labelsHidden()
+            .colorScheme(.dark)
+            .padding(13)
+            .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
             Button("CONTINUER") { step = 2 }
                 .buttonStyle(PrimaryButtonStyle())
                 .padding(.top, 20)
@@ -122,7 +136,7 @@ struct NewGoalWizardView: View {
         Task {
             try? await Task.sleep(for: .seconds(2.2))
             await MainActor.run {
-                let result = AdaptivePlanEngine.NewGoalResult(goal: goal ?? .health, distance: goal == .race ? distance : nil, chrono: goal == .race ? chrono : nil, runningDays: Array(days))
+                let result = AdaptivePlanEngine.NewGoalResult(goal: goal ?? .health, distance: goal == .race ? distance : nil, chrono: goal == .race ? chrono : nil, raceDate: goal == .race ? raceDate : nil, runningDays: Array(days))
                 AdaptivePlanEngine.startNewProgram(result, profile: appState.profile)
                 appState.toast("Ton nouveau programme est prêt")
                 dismiss()

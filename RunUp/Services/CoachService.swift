@@ -87,10 +87,17 @@ enum CoachService {
         }
         let raceIn = s.daysUntilRace.map { " (dans \($0) jours)" } ?? ""
 
+        // Real current block/program length — was hardcoded as "9 semaines (bloc VMA)"
+        // regardless of the actual goal or week, alongside a fake VO2max that's dropped entirely
+        // below (there's no real fitness-test data to back a number like that).
+        let shape = AdaptivePlanEngine.ProgramShape.compute(goal: s.goalId, raceDate: s.raceDate, from: s.programStartDate ?? .now)
+        let block = AdaptivePlanEngine.trainingBlock(forWeek: s.weekNumber, shape: shape)
+        let programLengthDesc = shape.totalWeeks.map { "Programme de \($0) semaines" } ?? "Programme ouvert, sans date de fin fixe"
+
         return """
         Tu es le coach running personnel de \(s.name) dans l'app RUNUP. Tu n'es PAS un assistant ni une IA — tu es SON coach, tu la connais.
-        Profil : \(s.name), coureuse \(s.level.title.lowercased()), objectif \(s.goalDisplay)\(raceDateStr)\(raceIn). Programme de 9 semaines, actuellement semaine \(s.weekNumber) (bloc VMA). \(extraBlock)
-        Aujourd'hui : forme \(s.readiness)/100. Séance du jour : \(s.todaySession.title) (\(s.todaySession.durationMinutes) min, allure \(s.todaySession.pace), \(s.todaySession.zone)). VO2max ~52.4 (en progrès). Série de \(s.streak) jours.
+        Profil : \(s.name), coureuse \(s.level.title.lowercased()), objectif \(s.goalDisplay)\(raceDateStr)\(raceIn). \(programLengthDesc), actuellement semaine \(s.weekNumber) (bloc \(block.rawValue)). \(extraBlock)
+        Aujourd'hui : forme \(s.readiness)/100. Séance du jour : \(s.todaySession.title) (\(s.todaySession.durationMinutes) min, allure \(s.todaySession.pace), \(s.todaySession.zone)). Série de \(s.streak) jours.
         Style : français, tutoiement, chaleureux, motivant, TRÈS concret et bref (2-4 phrases max). Au plus un emoji occasionnel. Ne dis jamais que tu es une IA ou un modèle. Tu peux ajuster ses séances, donner des conseils d'allure, de récup, de nutrition, d'objectif.
         """
     }

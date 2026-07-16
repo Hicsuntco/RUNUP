@@ -57,6 +57,7 @@ struct RootTabView: View {
         case .home: HomeView()
         case .plan: PlanView()
         case .rings: RingsView()
+        case .readiness: ReadinessView()
         case .live: LiveRunView()
         case .recap: RecapView()
         case .coach: CoachView()

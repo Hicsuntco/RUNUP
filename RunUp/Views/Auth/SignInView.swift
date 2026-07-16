@@ -144,6 +144,8 @@ struct SignInView: View {
             errorMessage = "Un compte existe déjà avec cet email."
         } catch AuthServiceError.badResponse(401, _) {
             errorMessage = "Email ou mot de passe incorrect."
+        } catch AuthServiceError.badResponse(422, _) {
+            errorMessage = "Ce prénom n'est pas autorisé — choisis-en un autre."
         } catch {
             errorMessage = "Connexion impossible — vérifie ta connexion internet."
         }

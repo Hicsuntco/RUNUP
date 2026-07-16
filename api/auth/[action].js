@@ -5,6 +5,7 @@
 const { sql } = require('../../lib/db');
 const { verifyAppleIdentityToken, signSession, bcrypt } = require('../../lib/auth');
 const { withErrorHandling } = require('../../lib/http');
+const { containsObjectionableContent } = require('../../lib/moderation');
 
 module.exports = withErrorHandling(async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
@@ -39,8 +40,11 @@ async function handleApple(req, res) {
   if (!user) {
     // Apple only sends a display name on the very first sign-in ever for this Apple ID on this
     // app (every later sign-in omits it) — trust what the client passed this one time, fall back
-    // to a generic name if Apple withheld even that.
-    const displayName = (name && name.trim()) || 'Coureur';
+    // to a generic name if Apple withheld even that, or if it fails the content filter (this
+    // field isn't itself part of Apple's signed token, so a tampered client could still put
+    // anything in it).
+    const rawName = name && name.trim();
+    const displayName = (rawName && !containsObjectionableContent(rawName)) ? rawName : 'Coureur';
     const { rows } = await sql`
       INSERT INTO users (apple_sub, email, name)
       VALUES (${claims.sub}, ${claims.email}, ${displayName})
@@ -58,6 +62,7 @@ async function handleSignup(req, res) {
   const { email, password, name } = req.body || {};
   if (!email || !password || !name || !name.trim()) return res.status(400).json({ error: 'bad_request' });
   if (password.length < 8) return res.status(400).json({ error: 'weak_password' });
+  if (containsObjectionableContent(name)) return res.status(422).json({ error: 'objectionable_content' });
 
   const normalizedEmail = String(email).trim().toLowerCase();
   const { rows: existing } = await sql`SELECT id FROM users WHERE email = ${normalizedEmail}`;

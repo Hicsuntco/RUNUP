@@ -41,6 +41,9 @@ Le Club (classement, fil d'activité entre membres) est la seule fonctionnalité
 
 Ces données Club **sont stockées sur notre serveur** (contrairement au reste de tes données, voir ci-dessous) puisque c'est ce qui permet à un classement et un fil d'activité d'être réellement partagés entre plusieurs personnes. Elles ne sont jamais vendues ni partagées avec un tiers en dehors des sous-traitants nécessaires à la connexion (Apple — voir sa propre politique de confidentialité) et de l'hébergement (Vercel).
 
+### Modération du Club
+Le nom d'un club et ton prénom sont filtrés automatiquement pour bloquer les contenus manifestement injurieux. Depuis Le Club, tu peux à tout moment **signaler** un club, une personne ou une activité (Profil du club/classement/fil → appui long → "Signaler"), ou **bloquer** quelqu'un pour ne plus voir son score ni ses activités (sans avoir à quitter le club). Les signalements sont conservés (qui signale, quoi, pourquoi) le temps qu'on les traite. Un lien "Signaler un problème ou nous contacter" est aussi visible directement dans Le Club.
+
 ### Aucune collecte publicitaire
 RUNUP ne contient aucun SDK publicitaire, aucun traceur tiers, et ne vend aucune donnée.
 

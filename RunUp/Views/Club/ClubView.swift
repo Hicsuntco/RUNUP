@@ -18,6 +18,8 @@ struct ClubView: View {
     @State private var showSignIn = false
     @State private var newClubName = ""
     @State private var joinCode = ""
+    @State private var reportTarget: ReportTarget?
+    @State private var pendingBlock: (userId: String, name: String)?
 
     private enum Tab { case board, feed }
 
@@ -45,6 +47,16 @@ struct ClubView: View {
                 if let errorMessage {
                     Text(errorMessage).font(RUFont.sans(11)).foregroundColor(RUColor.rose).padding(.top, 4)
                 }
+
+                if auth.isSignedIn {
+                    // Published contact info, surfaced directly here rather than only buried in
+                    // the privacy policy — App Store guideline 1.2.
+                    Link("Signaler un problème ou nous contacter", destination: URL(string: "mailto:charlottegrudep@gmail.com")!)
+                        .font(RUFont.sans(10.5))
+                        .foregroundColor(RUColor.text3)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 10)
+                }
             }
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.top, 8)
@@ -56,6 +68,30 @@ struct ClubView: View {
         }
         .onChange(of: auth.isSignedIn) { _, signedIn in
             if signedIn { Task { await loadIfSignedIn() } }
+        }
+        // Report reason picker — App Store guideline 1.2. `reportTarget` is set by the context
+        // menus on leaderboard rows / feed items / the club itself.
+        .confirmationDialog(
+            "Signaler",
+            isPresented: Binding(get: { reportTarget != nil }, set: { if !$0 { reportTarget = nil } }),
+            presenting: reportTarget
+        ) { target in
+            Button("Contenu inapproprié") { Task { await submitReport(target, reason: "Contenu inapproprié") } }
+            Button("Harcèlement") { Task { await submitReport(target, reason: "Harcèlement") } }
+            Button("Spam") { Task { await submitReport(target, reason: "Spam") } }
+            Button("Annuler", role: .cancel) {}
+        } message: { target in
+            Text("Pourquoi signales-tu \(target.displayName) ?")
+        }
+        // Block confirmation — the other half of guideline 1.2, doesn't require leaving the club.
+        .alert(
+            "Bloquer \(pendingBlock?.name ?? "") ?",
+            isPresented: Binding(get: { pendingBlock != nil }, set: { if !$0 { pendingBlock = nil } })
+        ) {
+            Button("Bloquer", role: .destructive) { Task { await confirmBlock() } }
+            Button("Annuler", role: .cancel) {}
+        } message: {
+            Text("Tu ne verras plus son score ni ses activités, sans avoir à quitter le club.")
         }
     }
 
@@ -131,6 +167,13 @@ struct ClubView: View {
                 Text("Code : \(code)").font(RUFont.mono(11)).foregroundColor(RUColor.text2)
             }
             Spacer()
+            if let club = board.club {
+                Button("Signaler ce club") {
+                    reportTarget = ReportTarget(targetType: "club", targetId: club.id, displayName: "le club \(club.name)")
+                }
+                .font(RUFont.sans(11, weight: .semibold))
+                .foregroundColor(RUColor.text3)
+            }
             Button("Quitter le club") { Task { await leaveClub() } }
                 .font(RUFont.sans(11, weight: .semibold))
                 .foregroundColor(RUColor.text3)
@@ -255,6 +298,16 @@ struct ClubView: View {
                     .padding(.horizontal, 13).padding(.vertical, 11)
                     .background(entry.isMe ? RUColor.rose.opacity(0.1) : RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(entry.isMe ? RUColor.rose.opacity(0.28) : RUColor.line, lineWidth: RUSpacing.hairline))
+                    .contextMenu {
+                        if !entry.isMe {
+                            Button("Signaler \(entry.name)") {
+                                reportTarget = ReportTarget(targetType: "user", targetId: entry.id, displayName: entry.name)
+                            }
+                            Button("Bloquer \(entry.name)", role: .destructive) {
+                                pendingBlock = (entry.id, entry.name)
+                            }
+                        }
+                    }
                 }
             }
 
@@ -310,6 +363,16 @@ struct ClubView: View {
                 }
                 .padding(13)
                 .ruCard()
+                .contextMenu {
+                    if item.userId != auth.currentUser?.id {
+                        Button("Signaler cette activité") {
+                            reportTarget = ReportTarget(targetType: "activity", targetId: item.id, displayName: "l'activité de \(item.name)")
+                        }
+                        Button("Bloquer \(item.name)", role: .destructive) {
+                            pendingBlock = (item.userId, item.name)
+                        }
+                    }
+                }
             }
         }
     }
@@ -344,6 +407,8 @@ struct ClubView: View {
             _ = try await clubService.createClub(name: newClubName.trimmingCharacters(in: .whitespaces))
             newClubName = ""
             board = try await clubService.fetchBoard()
+        } catch ClubServiceError.badResponse(422, _) {
+            errorMessage = "Ce nom n'est pas autorisé — choisis-en un autre."
         } catch {
             errorMessage = "Impossible de créer le club."
         }
@@ -388,6 +453,36 @@ struct ClubView: View {
             feed[index].kudos += wasKudoed ? 1 : -1
         }
     }
+
+    private func submitReport(_ target: ReportTarget, reason: String) async {
+        do {
+            try await clubService.report(targetType: target.targetType, targetId: target.targetId, reason: reason)
+            appState.toast("Signalement envoyé — merci")
+        } catch {
+            appState.toast("Impossible d'envoyer le signalement, réessaie.")
+        }
+    }
+
+    private func confirmBlock() async {
+        guard let pendingBlock else { return }
+        do {
+            try await clubService.blockUser(userId: pendingBlock.userId)
+            // Refresh so the blocked person disappears from the leaderboard/feed immediately.
+            board = try await clubService.fetchBoard()
+            feed = try await clubService.fetchFeed()
+        } catch {
+            errorMessage = "Impossible de bloquer cette personne."
+        }
+    }
+}
+
+/// Identifies what a report is about — a club, a user, or one activity — so the reason picker
+/// can post to `api/moderation/report` with the right target.
+private struct ReportTarget: Identifiable {
+    let id = UUID()
+    var targetType: String
+    var targetId: String
+    var displayName: String
 }
 
 /// A badge computed locally from real activity (streak, session titles, elevation) — not part of

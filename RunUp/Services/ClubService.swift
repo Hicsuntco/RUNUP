@@ -94,6 +94,27 @@ struct ClubService {
         )
     }
 
+    /// Flags a club name, display name, or activity as objectionable — lands in the `reports`
+    /// table for manual review (App Store guideline 1.2). `targetType` is "user", "club", or
+    /// "activity"; `targetId` the relevant id.
+    func report(targetType: String, targetId: String, reason: String) async throws {
+        let _: OkResponse = try await send(
+            path: "api/moderation/report",
+            method: "POST",
+            body: ["targetType": targetType, "targetId": targetId, "reason": reason]
+        )
+    }
+
+    /// Stops seeing a specific person's leaderboard entry and feed activity — the other half of
+    /// guideline 1.2 alongside `report`. Doesn't require leaving the club.
+    func blockUser(userId: String) async throws {
+        let _: OkResponse = try await send(path: "api/moderation/block", method: "POST", body: ["userId": userId])
+    }
+
+    func unblockUser(userId: String) async throws {
+        let _: OkResponse = try await send(path: "api/moderation/unblock", method: "POST", body: ["userId": userId])
+    }
+
     // MARK: -
 
     private func send<T: Decodable>(path: String, method: String, body: [String: Any]? = nil) async throws -> T {

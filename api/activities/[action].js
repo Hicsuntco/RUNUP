@@ -68,6 +68,7 @@ async function handleFeed(req, res, userId) {
     FROM activities a
     JOIN users u ON u.id = a.user_id
     WHERE a.club_id = ${clubId}
+      AND a.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
     ORDER BY a.created_at DESC
     LIMIT 50
   `;

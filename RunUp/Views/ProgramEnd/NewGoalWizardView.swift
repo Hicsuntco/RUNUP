@@ -13,6 +13,7 @@ struct NewGoalWizardView: View {
     @State private var raceDate = Calendar.current.date(byAdding: .day, value: 60, to: .now)!
     @State private var days: Set<Int> = [1, 2, 4, 6]
     @State private var building = false
+    @State private var buildPct: Double = 0
 
     private let goals: [GoalType] = GoalType.allCases.filter { $0 != .restart }
 
@@ -124,8 +125,13 @@ struct NewGoalWizardView: View {
 
     private var buildingView: some View {
         VStack(spacing: 20) {
-            RingView(pct: 70, color: RUColor.rose, size: 100, strokeWidth: 7) {
-                Text("🎯").font(.system(size: 26))
+            // Was a fixed pct: 70 — a gauge that never actually moved or finished reads as fake
+            // progress; this now genuinely animates to 100% over the same wait `scheduleFinish`
+            // uses before the new program is actually ready.
+            RingView(pct: buildPct, color: RUColor.rose, size: 100, strokeWidth: 7) {
+                Text(buildPct >= 100 ? "✓" : "🎯")
+                    .font(.system(size: 26))
+                    .foregroundColor(buildPct >= 100 ? RUColor.lime : .white)
             }
             Text("Ton nouveau\nprogramme arrive").displayStyle(22).multilineTextAlignment(.center).foregroundColor(.white)
         }
@@ -133,6 +139,7 @@ struct NewGoalWizardView: View {
     }
 
     private func scheduleFinish() {
+        withAnimation(.easeInOut(duration: 2.2)) { buildPct = 100 }
         Task {
             try? await Task.sleep(for: .seconds(2.2))
             await MainActor.run {

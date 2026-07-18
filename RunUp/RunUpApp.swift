@@ -1,8 +1,10 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 @main
 struct RunUpApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     let container = PersistenceController.makeContainer()
 
     var body: some Scene {
@@ -11,6 +13,21 @@ struct RunUpApp: App {
                 .modelContainer(container)
                 .preferredColorScheme(.dark)
         }
+    }
+}
+
+/// Real APNs device tokens only ever arrive through this UIKit callback — there's no SwiftUI
+/// equivalent — so this stays a thin pass-through into `NotificationService` rather than growing
+/// any app logic of its own.
+final class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        NotificationService.shared.handleDeviceToken(deviceToken)
+    }
+
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        // No APNs entitlement yet, Simulator (which can't receive real push), or a transient
+        // registration failure — none of these should be user-facing; local reminders still work
+        // either way.
     }
 }
 

@@ -42,6 +42,7 @@ targets:
         NSLocationWhenInUseUsageDescription: "RunUp utilise ta position pour suivre ta distance, ton allure et ton tracé pendant une course."
         UIBackgroundModes:
           - location
+          - remote-notification
         ITSAppUsesNonExemptEncryption: false
         UIAppFonts:
           - BebasNeue-Regular.ttf
@@ -60,6 +61,10 @@ targets:
         com.apple.developer.healthkit.access: []
         com.apple.developer.applesignin:
           - Default
+        # Xcode's automatic signing rewrites this to "production" itself when archiving for
+        # TestFlight/App Store (matched to the distribution provisioning profile) — "development"
+        # here is what a Debug run from Xcode to a real device actually needs.
+        aps-environment: development
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.hicsuntco.runup

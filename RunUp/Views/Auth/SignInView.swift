@@ -142,6 +142,10 @@ struct SignInView: View {
             // trip: ClubView's `onChange(of: auth.isSignedIn)` fires the moment this dismisses and
             // reloads everything (including a fresh refreshMe) anyway.
             try await action()
+            // Fire-and-forget: a device token obtained earlier (e.g. during onboarding, before
+            // any account existed) only ever gets a chance to reach the backend once signed in.
+            // Not awaited — registering it isn't worth delaying the dismiss for.
+            Task { await NotificationService.shared.sendPendingDeviceTokenIfSignedIn() }
             dismiss()
         } catch AuthServiceError.badResponse(409, _) {
             errorMessage = "Un compte existe déjà avec cet email."

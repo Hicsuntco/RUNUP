@@ -1,26 +1,66 @@
 import Foundation
+import UIKit
 import UserNotifications
 
-/// Local (on-device) reminders — deliberately separate from the in-app bell (`AppNotification`,
-/// see `AppState.notify`). No APNs/backend involved here, so this needs no server infrastructure
-/// or Apple Developer push key: `UNUserNotificationCenter` can schedule and fire a real system
-/// notification purely from the device's own clock, even while the app isn't running.
-///
-/// Scope is intentionally narrow — a single daily reminder for today's planned session — rather
-/// than a general-purpose scheduler, since that's the one thing genuinely worth interrupting
-/// someone for without a live backend behind it.
-final class NotificationService {
+/// Local (on-device) reminders — the daily session nudge — plus real APNs push (a club-mate's
+/// kudos or activity landing while the app isn't open) once signed in. Both share the same
+/// `UNUserNotificationCenter` authorization prompt and the same delegate, so from the user's side
+/// it's one permission and one place notifications show up; only the *source* differs (this
+/// device's clock vs. RunUp's backend).
+final class NotificationService: NSObject {
     static let shared = NotificationService()
     private let center = UNUserNotificationCenter.current()
     private static let reminderID = "runup.daily-session-reminder"
+    private static let deviceTokenDefaultsKey = "runup.apns-device-token-hex"
+    private static let baseURL = URL(string: "https://runup-nu.vercel.app")!
 
-    private init() {}
+    /// The device's real APNs token (hex-encoded), once the OS has handed one back — persisted so
+    /// it survives relaunches and can be (re-)sent to the backend as soon as she's signed in, even
+    /// if that happens well after the token itself was granted (push permission is asked during
+    /// onboarding, an account is only ever created later, from Club).
+    private(set) var deviceTokenHex: String? {
+        didSet { UserDefaults.standard.set(deviceTokenHex, forKey: Self.deviceTokenDefaultsKey) }
+    }
 
-    /// Call when the user turns "Notifications du coach" on in Profil — the local system prompt
-    /// only ever shows once per install, so later calls are harmless no-ops.
+    private override init() {
+        deviceTokenHex = UserDefaults.standard.string(forKey: Self.deviceTokenDefaultsKey)
+        super.init()
+        center.delegate = self
+    }
+
+    /// Call when the user turns "Notifications du coach" on in Profil (or once at the end of
+    /// onboarding) — the local system prompt only ever shows once per install, so later calls are
+    /// harmless no-ops. Also kicks off real APNs registration on success: local reminders and
+    /// remote push share one authorization, no separate prompt for the latter.
     @discardableResult
     func requestAuthorization() async -> Bool {
-        (try? await center.requestAuthorization(options: [.alert, .sound, .badge])) ?? false
+        let granted = (try? await center.requestAuthorization(options: [.alert, .sound, .badge])) ?? false
+        if granted {
+            await MainActor.run { UIApplication.shared.registerForRemoteNotifications() }
+        }
+        return granted
+    }
+
+    /// Called by `AppDelegate` once the OS hands back a real APNs token. Stores it locally and, if
+    /// she already has an account, registers it with the backend right away — otherwise
+    /// `sendPendingDeviceTokenIfSignedIn()` picks it up the moment she signs in.
+    func handleDeviceToken(_ data: Data) {
+        deviceTokenHex = data.map { String(format: "%02x", $0) }.joined()
+        Task { await sendPendingDeviceTokenIfSignedIn() }
+    }
+
+    /// Registers whatever device token is on hand with the backend — call right after a successful
+    /// sign-in (a token obtained during onboarding, before any account existed, would otherwise
+    /// never make it to the server) and from `handleDeviceToken` for the common case where she's
+    /// already signed in when a (re-)issued token arrives.
+    func sendPendingDeviceTokenIfSignedIn() async {
+        guard let deviceTokenHex, let authToken = KeychainService.loadToken() else { return }
+        var request = URLRequest(url: Self.baseURL.appending(path: "api/notifications/register"))
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "content-type")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: ["deviceToken": deviceTokenHex, "platform": "ios"])
+        _ = try? await URLSession.shared.data(for: request)
     }
 
     /// Re-schedules (or clears) today's reminder to match the current plan — call whenever
@@ -54,5 +94,18 @@ final class NotificationService {
     /// still fire after they've explicitly opted out.
     func cancelDailyReminder() {
         center.removePendingNotificationRequests(withIdentifiers: [Self.reminderID])
+    }
+}
+
+extension NotificationService: UNUserNotificationCenterDelegate {
+    /// Without this, a notification that arrives while the app is already open (the common case
+    /// for a push about a club-mate's kudos landing mid-session) is delivered silently — iOS only
+    /// auto-banners ones received while the app is backgrounded.
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .sound, .badge])
     }
 }

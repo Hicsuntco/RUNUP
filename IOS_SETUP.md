@@ -98,6 +98,57 @@ devrait y être automatiquement, générée depuis `project.yml`) et relance le 
 3. Pour supprimer un compte de test : Profil → Compte → "Supprimer mon compte" (supprime aussi
    ses données Club côté serveur, requis par les règles App Store sur la suppression de compte).
 
+## Notifications push (APNs)
+
+Les rappels quotidiens ("ta séance du jour t'attend") sont des notifications **locales** — elles
+marchent déjà sans rien configurer, purement depuis l'horloge de l'appareil. Ce qui suit active en
+plus de **vraies notifications push serveur** (un kudos reçu, un membre du club qui poste une
+activité) — ça arrive même si l'app est complètement fermée, ce que les notifications locales ne
+peuvent pas faire. `lib/apns.js` signe les requêtes avec une clé d'authentification APNs (`.p8`),
+pas un certificat par app — une seule clé suffit pour tous les builds.
+
+### 1. Créer (ou vérifier) la clé APNs sur Apple Developer
+
+1. [developer.apple.com](https://developer.apple.com/account) → **Certificates, Identifiers &
+   Profiles** → **Keys** → si tu as déjà une clé d'une session précédente, ouvre-la et vérifie que
+   la case **"Apple Push Notifications service (APNs)"** est cochée — sinon crée une clé (bouton
+   **+**), coche cette case, **Continue** → **Register**.
+2. **Télécharge le fichier `AuthKey_XXXXXXXXXX.p8`** — c'est la seule fois où Apple te laisse le
+   télécharger, garde-le en lieu sûr (ne le commite jamais dans le repo).
+3. Note le **Key ID** (10 caractères, affiché sur la page de la clé, aussi présent dans le nom du
+   fichier téléchargé).
+
+Le **Team ID** est déjà connu : `SW49TQ25NV` (visible dans `project.yml`, `DEVELOPMENT_TEAM`).
+
+### 2. Variables d'environnement Vercel
+
+Dans les réglages du projet Vercel → **Environment Variables**, ajoute :
+
+- `APNS_KEY_ID` — le Key ID noté ci-dessus.
+- `APNS_TEAM_ID` — `SW49TQ25NV`.
+- `APNS_PRIVATE_KEY` — ouvre le fichier `.p8` dans un éditeur de texte et colle **tout son
+  contenu tel quel**, lignes `-----BEGIN PRIVATE KEY-----`/`-----END PRIVATE KEY-----` incluses.
+- `APNS_ENV` — laisse absent (ou mets `development`) tant que tu testes depuis Xcode sur un
+  appareil branché ; passe-la à `production` une fois que tu testes via TestFlight ou l'App Store
+  — un jeton d'appareil obtenu dans un environnement ne fonctionne que sur le serveur APNs de ce
+  même environnement, d'où l'importance de ne pas se tromper.
+
+Redéploie ensuite le projet Vercel pour que ces variables prennent effet.
+
+### 3. Rejouer `db/schema.sql`
+
+Une nouvelle table `device_tokens` a été ajoutée — retourne dans le **SQL Editor** de Neon (voir
+section précédente) et réexécute tout le contenu de `db/schema.sql` (`CREATE TABLE IF NOT EXISTS`
+partout, donc sans risque pour les données déjà présentes).
+
+### 4. Régénérer le projet Xcode et tester
+
+`project.yml` a changé (nouvel entitlement `aps-environment`, nouveau `UIBackgroundModes`) —
+relance `xcodegen generate` puis rebuild. Les push **ne fonctionnent jamais sur le Simulateur** —
+teste sur un vrai appareil : connecte-toi au Club, verrouille l'appareil ou quitte l'app, puis
+depuis un second compte, applaudis une de tes activités ou poste dans le même club — une
+notification doit arriver.
+
 ## HealthKit (Apple Santé)
 
 Le simulateur iOS ne fournit pas de vraies données Santé — pour tester la lecture/écriture

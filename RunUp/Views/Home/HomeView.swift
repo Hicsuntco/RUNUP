@@ -217,7 +217,7 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     EyebrowLabel(text: "Tes objectifs · \(p.dailyGoalsDone)/3 bouclés")
                     HStack(spacing: 14) {
-                        ringStat(value: p.seanceDoneToday ? "Faite" : "À faire", unit: "séance", color: goalColors[0])
+                        ringStat(value: p.isRestDayToday ? "Repos" : (p.seanceDoneToday ? "Faite" : "À faire"), unit: "séance", color: goalColors[0])
                         ringStat(value: "\(Int(p.strengthMinutesToday))", unit: "/\(Int(p.strengthGoalMinutes)) MIN", color: goalColors[1])
                         ringStat(value: "\(Int(p.stepsToday))", unit: "/\(Int(p.stepsGoal)) PAS", color: goalColors[2])
                     }

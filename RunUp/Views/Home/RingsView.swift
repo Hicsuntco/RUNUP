@@ -85,11 +85,11 @@ struct RingsView: View {
                 HStack {
                     Text("Séance du jour").font(RUFont.sans(16, weight: .semibold)).foregroundColor(.white)
                     Spacer()
-                    Text(p.seanceDoneToday ? "Faite ✓" : "À faire")
+                    Text(p.isRestDayToday ? "Repos" : (p.seanceDoneToday ? "Faite ✓" : "À faire"))
                         .font(RUFont.sans(11, weight: .bold))
-                        .foregroundColor(p.seanceDoneToday ? RUColor.lime : RUColor.text2)
+                        .foregroundColor(p.isRestDayToday ? RUColor.text2 : (p.seanceDoneToday ? RUColor.lime : RUColor.text2))
                 }
-                LinearBar(fraction: p.seanceDoneToday ? 1 : 0, color: color, height: 5)
+                LinearBar(fraction: p.seanceDoneToday ? 1 : 0, color: p.isRestDayToday ? RUColor.text3 : color, height: 5)
             }
         }
         .padding(14)

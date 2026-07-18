@@ -164,6 +164,17 @@ final class UserProfile {
         return day.completed
     }
 
+    /// True when today has no planned session at all — distinct from `seanceDoneToday`, which is
+    /// trivially `true` on a rest day too (so the daily-goals bonus isn't blocked by a day off).
+    /// UI reads this to show "Repos" instead of "Faite" — showing a run as "done" on a day nothing
+    /// was ever planned reads as a bug (a gauge claiming a session happened with nothing in
+    /// History to back it).
+    var isRestDayToday: Bool {
+        guard let day = weekSessions.first(where: { $0.weekday == todayWeekdayIndex }) else { return false }
+        guard let session = day.session else { return true }
+        return session.durationMinutes == 0
+    }
+
     /// [Séance du jour, Renfo & mobilité, Pas] as 0...1 fractions, in that order — feeds
     /// `DailyGoalsBarsView`.
     var dailyGoalsProgress: [Double] {

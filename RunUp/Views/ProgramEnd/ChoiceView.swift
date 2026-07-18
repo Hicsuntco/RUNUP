@@ -10,7 +10,7 @@ struct ChoiceView: View {
     private var profile: UserProfile { appState.profile }
 
     private var totalKm: Int {
-        Int(profile.runValue + runs.reduce(0) { $0 + $1.distanceKm } + 40)
+        Int(profile.runValue + runs.reduce(0) { $0 + $1.distanceKm })
     }
 
     var body: some View {
@@ -22,7 +22,7 @@ struct ChoiceView: View {
                     EyebrowLabel(text: "Bilan de ton programme")
                     HStack(spacing: 20) {
                         MetricColumn(value: "\(totalKm)", label: "km parcourus")
-                        MetricColumn(value: "9", label: "semaines")
+                        MetricColumn(value: "\(profile.weekNumber)", label: "semaines")
                         MetricColumn(value: "\(profile.streak)", label: "jours de série", valueColor: RUColor.rose2)
                     }
                 }

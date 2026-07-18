@@ -7,7 +7,7 @@ struct ClubInfo: Decodable {
     var memberCount: Int
 }
 
-struct LeaderboardRow: Decodable, Identifiable {
+struct LeaderboardRow: Decodable, Identifiable, Hashable {
     var id: String
     var name: String
     var xp: Int

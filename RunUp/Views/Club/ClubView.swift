@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import UIKit
 
 /// Social/club screen — a real, server-backed club (see `ClubService`, `api/clubs/*.js`,
 /// `api/activities/*.js`), not `ClubMockData`: the leaderboard is computed from real members' XP,
@@ -21,6 +20,7 @@ struct ClubView: View {
     @State private var joinCode = ""
     @State private var reportTarget: ReportTarget?
     @State private var pendingBlock: (userId: String, name: String)?
+    @State private var showManagement = false
 
     private enum Tab { case board, feed }
 
@@ -96,10 +96,59 @@ struct ClubView: View {
         }
     }
 
+    /// The club's name doubles as the entry point to "Gestion du club" (invite code, member
+    /// list, member profiles) — those used to be scattered across the main page (the invite code
+    /// in particular sat as its own card, which read as clutter on a screen that's really about
+    /// the leaderboard and feed).
     private var header: some View {
-        HeaderView(eyebrow: "Le Club", title: board.club?.name ?? "Rejoins un club") {
+        HStack(alignment: .center) {
+            if let club = board.club {
+                Button(action: { showManagement = true }) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        EyebrowLabel(text: "Le Club", color: RUColor.rose)
+                        HStack(spacing: 6) {
+                            Text(club.name).displayStyle(24).foregroundColor(.white)
+                            Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundColor(RUColor.text3)
+                        }
+                    }
+                }
+                .buttonStyle(PressableStyle())
+            } else {
+                VStack(alignment: .leading, spacing: 2) {
+                    EyebrowLabel(text: "Le Club", color: RUColor.rose)
+                    Text("Rejoins un club").displayStyle(24).foregroundColor(.white)
+                }
+            }
+            Spacer()
             if let club = board.club {
                 StatChip(text: "\(club.memberCount) membre\(club.memberCount > 1 ? "s" : "")", color: .white.opacity(0.7), background: RUColor.card)
+            }
+        }
+        .padding(.vertical, 2)
+        .sheet(isPresented: $showManagement) {
+            if let club = board.club {
+                ClubManagementView(
+                    club: club,
+                    members: board.leaderboard,
+                    onReport: { member in
+                        // Dismiss the sheet first, then set the target once its dismiss animation
+                        // is out of the way — setting both in the same tick makes SwiftUI try to
+                        // dismiss the sheet and present the confirmationDialog simultaneously,
+                        // and one of the two silently loses.
+                        showManagement = false
+                        Task {
+                            try? await Task.sleep(for: .milliseconds(400))
+                            reportTarget = ReportTarget(targetType: "user", targetId: member.id, displayName: member.name)
+                        }
+                    },
+                    onBlock: { member in
+                        showManagement = false
+                        Task {
+                            try? await Task.sleep(for: .milliseconds(400))
+                            pendingBlock = (member.id, member.name)
+                        }
+                    }
+                )
             }
         }
     }
@@ -162,54 +211,22 @@ struct ClubView: View {
         .ruCard()
     }
 
+    /// The invite code used to sit here too, as its own card — now lives in "Gestion du club"
+    /// (reached from the header) alongside the member list, so this row is just quick actions.
     private var membershipRow: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        HStack {
             if let club = board.club {
-                inviteCodeCard(club.inviteCode)
-            }
-            HStack {
-                if let club = board.club {
-                    Button("Signaler ce club") {
-                        reportTarget = ReportTarget(targetType: "club", targetId: club.id, displayName: "le club \(club.name)")
-                    }
-                    .font(RUFont.sans(11, weight: .semibold))
-                    .foregroundColor(RUColor.text3)
+                Button("Signaler ce club") {
+                    reportTarget = ReportTarget(targetType: "club", targetId: club.id, displayName: "le club \(club.name)")
                 }
-                Spacer()
-                Button("Quitter le club") { Task { await leaveClub() } }
-                    .font(RUFont.sans(11, weight: .semibold))
-                    .foregroundColor(RUColor.text3)
+                .font(RUFont.sans(11, weight: .semibold))
+                .foregroundColor(RUColor.text3)
             }
-        }
-    }
-
-    /// The invite code used to only be a tiny mono label with no way to actually get it to a
-    /// friend — tap to copy, or use the share sheet to send it directly.
-    private func inviteCodeCard(_ code: String) -> some View {
-        HStack(spacing: 12) {
-            Button(action: {
-                UIPasteboard.general.string = code
-                appState.toast("Code copié")
-            }) {
-                VStack(alignment: .leading, spacing: 2) {
-                    EyebrowLabel(text: "Code d'invitation · toucher pour copier", color: RUColor.text3)
-                    Text(code).font(RUFont.mono(20, weight: .bold)).foregroundColor(.white).tracking(3)
-                }
-            }
-            .buttonStyle(PressableStyle())
             Spacer()
-            ShareLink(item: "Rejoins mon club sur RunUp avec le code \(code) !") {
-                Image(systemName: "square.and.arrow.up")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(width: 38, height: 38)
-                    .background(RUColor.rose, in: Circle())
-            }
-            .buttonStyle(PressableStyle())
+            Button("Quitter le club") { Task { await leaveClub() } }
+                .font(RUFont.sans(11, weight: .semibold))
+                .foregroundColor(RUColor.text3)
         }
-        .padding(14)
-        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
     }
 
     // MARK: Signed in, in a club

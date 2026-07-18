@@ -48,7 +48,12 @@ struct ObNext: View {
         // full-bleed edge-to-edge CTA read as too heavy/dominant; this pulls it in further so it
         // sits with real breathing room instead of touching the screen's margins.
         .padding(.horizontal, 12)
-        .padding(.bottom, 24)
+        // OnboardingContainerView's root .ignoresSafeArea() (needed so the background bleeds
+        // behind the notch/home indicator) also strips the bottom safe area from this button, so
+        // a plain .padding(.bottom, 24) sits almost flush with the home indicator instead of
+        // clearing it — safeAreaPadding re-adds that inset on top of the 24pt so the button sits
+        // with real breathing room above it, like a normal app's CTA.
+        .safeAreaPadding(.bottom, 24)
     }
 }
 

@@ -11,14 +11,20 @@ struct ClubManagementView: View {
     @Environment(AppState.self) private var appState
     var club: ClubInfo
     var members: [LeaderboardRow]
+    var challenge: ClubChallenge?
+    var onCreateChallenge: (String, Double, Date) async throws -> Void
     var onReport: (LeaderboardRow) -> Void
     var onBlock: (LeaderboardRow) -> Void
+
+    @State private var showCreateChallenge = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     inviteCodeCard
+
+                    challengeSection
 
                     VStack(alignment: .leading, spacing: 10) {
                         EyebrowLabel(text: "\(members.count) membre\(members.count > 1 ? "s" : "")", color: RUColor.text3)
@@ -47,8 +53,36 @@ struct ClubManagementView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Fermer") { dismiss() } }
             }
+            .sheet(isPresented: $showCreateChallenge) {
+                CreateChallengeSheet(onCreate: onCreateChallenge)
+            }
         }
         .preferredColorScheme(.dark)
+    }
+
+    private var challengeSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                EyebrowLabel(text: "Défi du club", color: RUColor.text3)
+                Spacer()
+                Button(challenge == nil ? "Créer" : "Changer") { showCreateChallenge = true }
+                    .font(RUFont.sans(11.5, weight: .semibold))
+                    .foregroundColor(RUColor.rose2)
+            }
+            if let challenge {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(challenge.title).font(RUFont.sans(14, weight: .semibold)).foregroundColor(.white)
+                    Text("\(Int(challenge.progressKm)) / \(Int(challenge.targetKm)) km parcourus ensemble")
+                        .font(RUFont.sans(11.5)).foregroundColor(RUColor.text2)
+                }
+                .padding(13)
+                .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+            } else {
+                Text("Aucun défi en cours pour l'instant.")
+                    .font(RUFont.sans(11.5)).foregroundColor(RUColor.text3)
+            }
+        }
     }
 
     /// Used to be its own bold card up top — too loud for something you touch once in a while.
@@ -128,5 +162,94 @@ struct ClubMemberProfileView: View {
         .frame(maxWidth: .infinity, alignment: .top)
         .background(RUColor.bg)
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// Any member can set the club's challenge (a distance target by a deadline) — replaces whichever
+/// one was active before it, since a club has at most one at a time.
+struct CreateChallengeSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    var onCreate: (String, Double, Date) async throws -> Void
+
+    @State private var title = ""
+    @State private var targetKmText = ""
+    @State private var endDate = Calendar.current.date(byAdding: .day, value: 30, to: .now) ?? .now
+    @State private var isSaving = false
+    @State private var errorMessage: String?
+
+    private var targetKm: Double? { Double(targetKmText.replacingOccurrences(of: ",", with: ".")) }
+    private var isValid: Bool { !title.trimmingCharacters(in: .whitespaces).isEmpty && (targetKm ?? 0) > 0 }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        EyebrowLabel(text: "Nom du défi", color: RUColor.text3)
+                        ObTextField(placeholder: "Ex. 200 km avant l'été", text: $title)
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        EyebrowLabel(text: "Distance cible", color: RUColor.text3)
+                        HStack {
+                            TextField("", text: $targetKmText, prompt: Text("200").foregroundColor(RUColor.text3))
+                                .keyboardType(.decimalPad)
+                                .foregroundColor(.white)
+                                .toolbar {
+                                    ToolbarItemGroup(placement: .keyboard) {
+                                        Spacer()
+                                        Button("Terminé") {
+                                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                                        }
+                                    }
+                                }
+                            Text("km").font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.text2)
+                        }
+                        .padding(13)
+                        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        EyebrowLabel(text: "Jusqu'au", color: RUColor.text3)
+                        DatePicker("", selection: $endDate, in: Calendar.current.date(byAdding: .day, value: 1, to: .now)!..., displayedComponents: .date)
+                            .datePickerStyle(.compact)
+                            .labelsHidden()
+                            .colorScheme(.dark)
+                    }
+
+                    if let errorMessage {
+                        Text(errorMessage).font(RUFont.sans(11.5)).foregroundColor(RUColor.rose)
+                    }
+                }
+                .padding(18)
+            }
+            .background(RUColor.bg)
+            .navigationTitle("Nouveau défi")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Créer") { Task { await save() } }
+                        .disabled(!isValid || isSaving)
+                }
+            }
+        }
+        .preferredColorScheme(.dark)
+    }
+
+    private func save() async {
+        guard let targetKm else { return }
+        isSaving = true
+        errorMessage = nil
+        do {
+            try await onCreate(title.trimmingCharacters(in: .whitespaces), targetKm, endDate)
+            dismiss()
+        } catch ClubServiceError.badResponse(422, _) {
+            errorMessage = "Ce nom n'est pas autorisé — choisis-en un autre."
+        } catch {
+            errorMessage = "Impossible de créer le défi, réessaie."
+        }
+        isSaving = false
     }
 }

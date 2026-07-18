@@ -94,10 +94,10 @@ final class AppState {
     /// Posts to the real club feed/leaderboard if signed in — silently does nothing otherwise
     /// (Club participation is optional; this must never block the flow it's called from). See
     /// `ClubService.postActivity`.
-    func postClubActivity(type: String, text: String, xpEarned: Int) {
+    func postClubActivity(type: String, text: String, xpEarned: Int, distanceKm: Double? = nil) {
         guard auth.isSignedIn else { return }
         let service = ClubService(auth: auth)
-        Task { try? await service.postActivity(type: type, text: text, xpEarned: xpEarned) }
+        Task { try? await service.postActivity(type: type, text: text, xpEarned: xpEarned, distanceKm: distanceKm) }
     }
 
     func go(_ screen: AppScreen) {

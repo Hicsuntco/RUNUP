@@ -18,6 +18,18 @@ struct LeaderboardRow: Decodable, Identifiable, Hashable {
 struct ClubBoard: Decodable {
     var club: ClubInfo?
     var leaderboard: [LeaderboardRow]
+    var challenge: ClubChallenge?
+}
+
+/// A member-set club challenge (distance target by a deadline) — `progressKm` is a real sum
+/// computed server-side over every 'run' activity logged to the club since the challenge was
+/// created, not a running counter tracked client-side.
+struct ClubChallenge: Decodable, Identifiable {
+    var id: String
+    var title: String
+    var targetKm: Double
+    var progressKm: Double
+    var endDate: Date
 }
 
 struct FeedItem: Decodable, Identifiable {
@@ -63,6 +75,18 @@ struct ClubService {
         try await send(path: "api/clubs/create", method: "POST", body: ["name": name])
     }
 
+    /// Sets the club's active challenge — replaces whichever one was active before (a club has at
+    /// most one at a time). `endDate` is sent as a plain "YYYY-MM-DD" to match the DB's DATE column.
+    func createChallenge(title: String, targetKm: Double, endDate: Date) async throws -> ClubChallenge {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withFullDate]
+        return try await send(
+            path: "api/clubs/createChallenge",
+            method: "POST",
+            body: ["title": title, "targetKm": targetKm, "endDate": formatter.string(from: endDate)]
+        )
+    }
+
     func joinClub(inviteCode: String) async throws -> ClubJoinedResponse {
         try await send(path: "api/clubs/join", method: "POST", body: ["inviteCode": inviteCode])
     }
@@ -85,12 +109,15 @@ struct ClubService {
     /// Posts one completed activity to the club feed and credits its XP to the account's real
     /// server-side total. `clientId` is a fresh UUID per call so a retried request (flaky
     /// network) never double-counts the XP or duplicates the feed entry — see
-    /// `api/activities/create.js`.
-    func postActivity(clientId: UUID = UUID(), type: String, text: String, xpEarned: Int) async throws {
+    /// `api/activities/create.js`. `distanceKm` (run activities only) feeds real club-challenge
+    /// progress server-side.
+    func postActivity(clientId: UUID = UUID(), type: String, text: String, xpEarned: Int, distanceKm: Double? = nil) async throws {
+        var body: [String: Any] = ["clientId": clientId.uuidString, "type": type, "text": text, "xpEarned": xpEarned]
+        if let distanceKm { body["distanceKm"] = distanceKm }
         let _: OkResponse = try await send(
             path: "api/activities/create",
             method: "POST",
-            body: ["clientId": clientId.uuidString, "type": type, "text": text, "xpEarned": xpEarned]
+            body: body
         )
     }
 

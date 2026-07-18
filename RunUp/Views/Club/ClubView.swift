@@ -130,6 +130,10 @@ struct ClubView: View {
                 ClubManagementView(
                     club: club,
                     members: board.leaderboard,
+                    challenge: board.challenge,
+                    onCreateChallenge: { title, targetKm, endDate in
+                        try await createChallenge(title: title, targetKm: targetKm, endDate: endDate)
+                    },
                     onReport: { member in
                         // Dismiss the sheet first, then set the target once its dismiss animation
                         // is out of the way — setting both in the same tick makes SwiftUI try to
@@ -260,36 +264,49 @@ struct ClubView: View {
         .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(RUColor.violet.opacity(0.3), lineWidth: RUSpacing.hairline))
     }
 
-    /// Real distance run this calendar month, from local run history — no longer a fixed "71 km"
-    /// base padded by today's overflow.
-    private var kmThisMonth: Double {
-        runs.filter { Calendar.current.isDate($0.date, equalTo: .now, toGranularity: .month) }
-            .reduce(0) { $0 + $1.distanceKm }
+    private func daysLeft(until date: Date) -> Int {
+        max(0, Calendar.current.dateComponents([.day], from: .now, to: date).day ?? 0)
     }
 
-    private var daysLeftInMonth: Int {
-        let cal = Calendar.current
-        guard let range = cal.range(of: .day, in: .month, for: .now) else { return 0 }
-        return max(0, range.count - cal.component(.day, from: .now))
-    }
-
+    /// Any member can set the club's challenge (see "Gestion du club") — this used to always show
+    /// a fixed "100 km ce mois-ci" regardless of whether anyone had actually agreed to that goal.
+    /// `progressKm` is a real sum computed server-side over every member's logged runs since the
+    /// challenge was created, not just this device's local history.
     private var challengeCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                EyebrowLabel(text: "Défi du mois", color: RUColor.rose2)
-                Spacer()
-                StatChip(text: "J-\(daysLeftInMonth)", color: RUColor.rose2)
-            }
-            Text("100 km ce mois-ci").displayStyle(19).foregroundColor(.white)
-            LinearBar(fraction: min(1, kmThisMonth / 100), color: RUColor.rose)
-            HStack {
-                Text("\(Int(kmThisMonth)) km parcourus").font(RUFont.sans(11)).foregroundColor(RUColor.text2)
-                Spacer()
-                Text("ce mois-ci").font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+        Group {
+            if let challenge = board.challenge {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        EyebrowLabel(text: "Défi du club", color: RUColor.rose2)
+                        Spacer()
+                        StatChip(text: "J-\(daysLeft(until: challenge.endDate))", color: RUColor.rose2)
+                    }
+                    Text(challenge.title).displayStyle(19).foregroundColor(.white)
+                    LinearBar(fraction: challenge.targetKm > 0 ? min(1, challenge.progressKm / challenge.targetKm) : 0, color: RUColor.rose)
+                    HStack {
+                        Text("\(Int(challenge.progressKm)) / \(Int(challenge.targetKm)) km").font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                        Spacer()
+                        Text("ensemble").font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                    }
+                }
+                .padding(16)
+                .ruCard()
+            } else {
+                Button(action: { showManagement = true }) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 3) {
+                            EyebrowLabel(text: "Défi du club", color: RUColor.rose2)
+                            Text("Aucun défi en cours — en créer un").font(RUFont.sans(13)).foregroundColor(.white)
+                        }
+                        Spacer()
+                        Image(systemName: "plus.circle.fill").font(.system(size: 20)).foregroundColor(RUColor.rose2)
+                    }
+                    .padding(16)
+                }
+                .buttonStyle(PressableStyle())
+                .ruCard()
             }
         }
-        .padding(16)
-        .ruCard()
     }
 
     private var segmentedControl: some View {
@@ -488,6 +505,15 @@ struct ClubView: View {
             errorMessage = "Impossible de créer le club."
         }
         isLoading = false
+    }
+
+    /// Sets the club's active challenge and updates `board` immediately so the card on the main
+    /// page reflects it without a full refetch. Throws (rather than setting `errorMessage`, which
+    /// lives on the page underneath) so the create-challenge form — its own sheet stacked on top
+    /// of "Gestion du club" — can show its own inline error.
+    private func createChallenge(title: String, targetKm: Double, endDate: Date) async throws {
+        let challenge = try await clubService.createChallenge(title: title, targetKm: targetKm, endDate: endDate)
+        board.challenge = challenge
     }
 
     private func joinClub() async {

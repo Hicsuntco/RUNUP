@@ -30,7 +30,7 @@ module.exports = withErrorHandling(async function handler(req, res) {
 // user's club feed, and credits its XP to their real, server-side total — this is what makes the
 // leaderboard and feed genuinely backed by real actions instead of mock data.
 async function handleCreate(req, res, userId) {
-  const { clientId, type, text, xpEarned } = req.body || {};
+  const { clientId, type, text, xpEarned, distanceKm } = req.body || {};
   if (!clientId || !ALLOWED_TYPES.has(type) || !text || typeof xpEarned !== 'number') {
     return res.status(400).json({ error: 'bad_request' });
   }
@@ -38,6 +38,9 @@ async function handleCreate(req, res, userId) {
   // uses) — this cap just stops a tampered client from inflating the shared leaderboard, it's not
   // meant to be the real anti-cheat mechanism.
   const xp = Math.max(0, Math.min(500, Math.round(xpEarned)));
+  // Only 'run' activities carry a real distance — a structured column (rather than parsing it
+  // back out of `text`) is what lets club challenges compute real collective progress.
+  const distance = type === 'run' && typeof distanceKm === 'number' && distanceKm > 0 ? distanceKm : null;
 
   // Idempotent on clientId: a retried request (flaky network) must not double-count XP or post
   // the same activity to the feed twice.
@@ -48,8 +51,8 @@ async function handleCreate(req, res, userId) {
   const clubId = memberRows[0]?.club_id || null;
 
   await sql`
-    INSERT INTO activities (client_id, user_id, club_id, type, text, xp_earned)
-    VALUES (${clientId}, ${userId}, ${clubId}, ${type}, ${text}, ${xp})
+    INSERT INTO activities (client_id, user_id, club_id, type, text, xp_earned, distance_km)
+    VALUES (${clientId}, ${userId}, ${clubId}, ${type}, ${text}, ${xp}, ${distance})
   `;
   await sql`UPDATE users SET xp_total = xp_total + ${xp} WHERE id = ${userId}`;
 

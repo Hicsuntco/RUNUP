@@ -4,6 +4,15 @@ import SwiftData
 /// One completed run — a growing collection, queried newest-first. Mirrors `history` in app.jsx.
 @Model
 final class RunRecord {
+    /// A GPS fix from the real route — plain lat/lng rather than `CLLocationCoordinate2D` (not
+    /// natively `Codable`), so SwiftData can store it like any other value-type array (same
+    /// pattern as `splits: [String]`). Feeds the share-card route trace; empty for runs with no
+    /// GPS behind them (manually logged, or the no-GPS "Marquer comme faite" path).
+    struct RoutePoint: Codable, Equatable {
+        var lat: Double
+        var lng: Double
+    }
+
     var date: Date
     var title: String
     var distanceKm: Double
@@ -13,6 +22,7 @@ final class RunRecord {
     var kcal: Int
     var elevationGainM: Int
     var splits: [String]
+    var route: [RoutePoint] = []
 
     init(
         date: Date = .now,
@@ -23,7 +33,8 @@ final class RunRecord {
         avgHeartRate: Int,
         kcal: Int,
         elevationGainM: Int = 0,
-        splits: [String] = []
+        splits: [String] = [],
+        route: [RoutePoint] = []
     ) {
         self.date = date
         self.title = title
@@ -34,5 +45,6 @@ final class RunRecord {
         self.kcal = kcal
         self.elevationGainM = elevationGainM
         self.splits = splits
+        self.route = route
     }
 }

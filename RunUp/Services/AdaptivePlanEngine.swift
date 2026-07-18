@@ -425,7 +425,8 @@ enum AdaptivePlanEngine {
         kcal: Double,
         avgHeartRate: Int,
         elevationGainM: Int = 0,
-        realSplitSeconds: [Double]? = nil
+        realSplitSeconds: [Double]? = nil,
+        route: [RunRecord.RoutePoint] = []
     ) -> RunRecord {
         let dist = max(0.4, distanceKm)
         let t = max(30, elapsedSeconds)
@@ -448,7 +449,8 @@ enum AdaptivePlanEngine {
             avgHeartRate: avgHeartRate,
             kcal: Int(kcal.rounded()),
             elevationGainM: elevationGainM,
-            splits: splits
+            splits: splits,
+            route: route
         )
     }
 

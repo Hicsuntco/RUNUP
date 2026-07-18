@@ -1,10 +1,16 @@
 import SwiftUI
+import UIKit
 
 /// Post-run recap + "Ressenti" debrief. Mirrors `RecapScreen` in screensA.jsx — this is the
 /// entry point to the adaptive-plan mechanic (submitting RPE recalculates the next session).
 struct RecapView: View {
     @Environment(AppState.self) private var appState
     @State private var showDebrief = false
+    /// The "instagrammable" share card (real route trace + distance/pace), rendered off-screen
+    /// once via `ImageRenderer` as soon as the recap appears — a share sheet needs a ready item
+    /// to present, and rendering this small a view is fast enough that eager beats on-demand
+    /// (no visible delay when tapping "Partager", no separate render-then-share double tap).
+    @State private var shareImage: Image?
 
     private var run: RunRecord? { appState.lastRun }
 
@@ -35,6 +41,20 @@ struct RecapView: View {
                             }
                         }
 
+                        if let shareImage {
+                            ShareLink(
+                                item: shareImage,
+                                preview: SharePreview("Ma course sur RunUp", image: shareImage)
+                            ) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "square.and.arrow.up")
+                                    Text("PARTAGER MA COURSE")
+                                }
+                            }
+                            .buttonStyle(SecondaryButtonStyle())
+                            .padding(.top, 6)
+                        }
+
                         Button("DONNER MON RESSENTI") { showDebrief = true }
                             .buttonStyle(PrimaryButtonStyle())
                             .padding(.top, 6)
@@ -49,6 +69,10 @@ struct RecapView: View {
             .sheet(isPresented: $showDebrief) {
                 DebriefSheet(run: run)
                     .runUpSheetStyle()
+            }
+            .onAppear {
+                guard shareImage == nil else { return }
+                renderShareCard(for: run)
             }
         } else {
             Color.clear.onAppear { appState.go(.home) }
@@ -85,6 +109,14 @@ struct RecapView: View {
         }
         .frame(height: 190)
         .clipped()
+    }
+
+    private func renderShareCard(for run: RunRecord) {
+        let renderer = ImageRenderer(content: RunShareCardView(run: run))
+        renderer.scale = 3 // retina-quality output at the card's 360×640pt logical size
+        if let uiImage = renderer.uiImage {
+            shareImage = Image(uiImage: uiImage)
+        }
     }
 
     private func statTile(_ value: String, _ label: String, _ color: Color = .white) -> some View {

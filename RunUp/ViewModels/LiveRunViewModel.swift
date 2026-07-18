@@ -140,7 +140,8 @@ final class LiveRunViewModel {
             // rather than show a fake number when there's no real reading behind it.
             avgHeartRate: heartRate ?? 0,
             elevationGainM: Int(location.elevationGainMeters.rounded()),
-            realSplitSeconds: splitSecondsPerKm
+            realSplitSeconds: splitSecondsPerKm,
+            route: location.route.map { RunRecord.RoutePoint(lat: $0.latitude, lng: $0.longitude) }
         )
         let endedAt = Date()
         Task { try? await healthKit.saveRun(start: startedAt, end: endedAt, distanceKm: record.distanceKm, kcal: Double(record.kcal)) }

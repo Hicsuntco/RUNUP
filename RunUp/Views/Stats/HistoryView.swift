@@ -11,44 +11,45 @@ struct HistoryView: View {
     @State private var pendingDelete: RunRecord?
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 12) {
-                    BackChevronButton { appState.go(.stats) }
-                    VStack(alignment: .leading, spacing: 1) {
-                        EyebrowLabel(text: "\(runs.count) sorties", color: RUColor.rose)
-                        Text("Historique").displayStyle(22).foregroundColor(.white)
-                    }
-                    Spacer()
-                    Button(action: { showAddRun = true }) {
-                        Image(systemName: "plus")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundColor(.white)
-                            .frame(width: 36, height: 36)
-                            .background(RUColor.card, in: Circle())
-                            .overlay(Circle().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
-                    }
-                    .buttonStyle(PressableStyle())
-                }
-                .padding(.bottom, 8)
+        // A plain ScrollView/VStack can't do real swipe-to-delete — .swipeActions only works on
+        // List rows — so this is a List dressed up to look like the same card-based layout
+        // (clear row backgrounds, hidden separators/insets) rather than a stock List.
+        List {
+            header
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
 
-                if runs.isEmpty {
-                    Text("Aucune course pour l'instant — termine une sortie ou ajoutes-en une manuellement.")
-                        .font(RUFont.sans(12)).foregroundColor(RUColor.text2)
-                        .padding(.top, 8)
-                }
-
-                ForEach(runs) { run in
-                    runCard(run)
-                        .contextMenu {
-                            Button("Supprimer", role: .destructive) { pendingDelete = run }
-                        }
-                }
+            if runs.isEmpty {
+                Text("Aucune course pour l'instant — termine une sortie ou ajoutes-en une manuellement.")
+                    .font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+                    .padding(.horizontal, RUSpacing.pagePadding)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
             }
-            .padding(.horizontal, RUSpacing.pagePadding)
-            .padding(.top, 8)
-            .padding(.bottom, 130)
+
+            ForEach(runs) { run in
+                runCard(run)
+                    .listRowInsets(EdgeInsets(top: 4, leading: RUSpacing.pagePadding, bottom: 4, trailing: RUSpacing.pagePadding))
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .swipeActions(edge: .trailing) {
+                        Button("Supprimer", role: .destructive) { pendingDelete = run }
+                    }
+                    .contextMenu {
+                        Button("Supprimer", role: .destructive) { pendingDelete = run }
+                    }
+            }
+
+            Color.clear.frame(height: 130)
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(RUColor.bg)
         .sheet(isPresented: $showAddRun) { AddRunSheet() }
         .alert(
             "Supprimer cette course ?",
@@ -64,6 +65,29 @@ struct HistoryView: View {
         }
     }
 
+    private var header: some View {
+        HStack(spacing: 12) {
+            BackChevronButton { appState.go(.stats) }
+            VStack(alignment: .leading, spacing: 1) {
+                EyebrowLabel(text: "\(runs.count) sorties", color: RUColor.rose)
+                Text("Historique").displayStyle(22).foregroundColor(.white)
+            }
+            Spacer()
+            Button(action: { showAddRun = true }) {
+                Image(systemName: "plus")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(width: 36, height: 36)
+                    .background(RUColor.card, in: Circle())
+                    .overlay(Circle().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+            }
+            .buttonStyle(PressableStyle())
+        }
+        .padding(.horizontal, RUSpacing.pagePadding)
+        .padding(.top, 8)
+        .padding(.bottom, 8)
+    }
+
     private func runCard(_ run: RunRecord) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
@@ -74,9 +98,6 @@ struct HistoryView: View {
                 // number dressed up as data, so the line is dropped entirely instead.
                 if run.avgHeartRate > 0 {
                     Text("FC moy \(run.avgHeartRate)").font(RUFont.sans(11)).foregroundColor(RUColor.text3)
-                }
-                Button(action: { pendingDelete = run }) {
-                    Image(systemName: "trash").font(.system(size: 12)).foregroundColor(RUColor.text3)
                 }
             }
             Text(run.title).font(RUFont.sans(15, weight: .semibold)).foregroundColor(.white)

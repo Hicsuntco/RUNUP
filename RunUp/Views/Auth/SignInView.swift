@@ -137,8 +137,11 @@ struct SignInView: View {
         isLoading = true
         errorMessage = nil
         do {
+            // `action()` (signInWithApple/logIn/signUp) already populates `currentUser` from its
+            // own response — a follow-up refreshMe() here was a second, fully redundant round
+            // trip: ClubView's `onChange(of: auth.isSignedIn)` fires the moment this dismisses and
+            // reloads everything (including a fresh refreshMe) anyway.
             try await action()
-            try? await appState.auth.refreshMe()
             dismiss()
         } catch AuthServiceError.badResponse(409, _) {
             errorMessage = "Un compte existe déjà avec cet email."

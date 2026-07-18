@@ -600,9 +600,12 @@ struct ClubView: View {
         guard let pendingBlock else { return }
         do {
             try await clubService.blockUser(userId: pendingBlock.userId)
-            // Refresh so the blocked person disappears from the leaderboard/feed immediately.
-            board = try await clubService.fetchBoard()
-            feed = try await clubService.fetchFeed()
+            // Refresh so the blocked person disappears from the leaderboard/feed immediately —
+            // both refetches only depend on blockUser having completed, not on each other, so
+            // they run concurrently instead of paying two round trips back to back.
+            async let boardAttempt = clubService.fetchBoard()
+            async let feedAttempt = clubService.fetchFeed()
+            (board, feed) = try await (boardAttempt, feedAttempt)
         } catch {
             errorMessage = "Impossible de bloquer cette personne."
         }

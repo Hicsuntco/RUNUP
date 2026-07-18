@@ -39,7 +39,7 @@ struct DeepDiveStepView: View {
                 NumField(label: "Poids visé", value: $vm.weightTarget, unit: "kg", placeholder: "64")
             }
             NumField(label: "Taille", value: $vm.height, unit: "cm", placeholder: "168")
-            Text("On calcule ton déficit calorique cible et on l'allie à la course — sans jamais sacrifier ta forme.")
+            Text("Ton coach adapte ses conseils course et nutrition à ton objectif — sans jamais sacrifier ta forme.")
                 .font(RUFont.sans(11.5)).foregroundColor(RUColor.text2).lineSpacing(3)
         }
         .padding(.top, 20)

@@ -9,7 +9,7 @@ struct BirthdateStepView: View {
             ObTitle(
                 eyebrow: "Étape 1 · \(vm.name.isEmpty ? "toi" : vm.name)",
                 title: "TA DATE DE NAISSANCE ?",
-                subtitle: "Ça nous aide à calibrer tes zones de fréquence cardiaque et ton estimation VO₂max."
+                subtitle: "Ça aide ton coach à mieux te connaître."
             )
             VStack(alignment: .leading, spacing: 12) {
                 DatePicker(

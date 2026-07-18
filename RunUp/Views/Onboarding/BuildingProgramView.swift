@@ -23,6 +23,15 @@ struct BuildingProgramView: View {
         ]
     }
 
+    /// Program length is variable (tied to a real race date, or open-ended for other goals) since
+    /// the plan-engine rebuild — this used to just say "9 semaines" regardless of what was
+    /// actually about to be built.
+    private var buildingLabel: String {
+        let shape = AdaptivePlanEngine.ProgramShape.compute(goal: vm.goal ?? .health, raceDate: vm.raceDate, from: .now)
+        if let total = shape.totalWeeks { return "\(total) semaines en préparation…" }
+        return "Programme sur mesure en préparation…"
+    }
+
     var body: some View {
         ObScreen {
             Spacer()
@@ -64,7 +73,7 @@ struct BuildingProgramView: View {
             }
             .padding(.top, 26)
             Spacer()
-            Text(vm.buildProgress == 4 ? "Prêt !" : "9 semaines en préparation…")
+            Text(vm.buildProgress == 4 ? "Prêt !" : buildingLabel)
                 .font(RUFont.sans(11))
                 .foregroundColor(RUColor.text3)
                 .padding(.bottom, 24)

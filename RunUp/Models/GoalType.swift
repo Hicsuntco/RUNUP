@@ -21,7 +21,7 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         case .race: return "Un dossard en vue — on construit le plan pour le jour J"
         case .progress: return "Courir plus vite ou plus longtemps, sans course précise"
         case .restart: return "Reprendre en douceur, sans se blesser"
-        case .weight: return "Un programme qui allie course et déficit calorique"
+        case .weight: return "Un programme qui allie course et rééquilibrage alimentaire"
         case .health: return "Une routine régulière qui tient dans ta semaine"
         }
     }

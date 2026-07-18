@@ -53,6 +53,9 @@ struct OnboardingContainerView: View {
 
     private func finish() {
         AdaptivePlanEngine.applyOnboarding(vm.buildResult(), to: appState.profile)
-        appState.toast("Ton programme de 9 semaines est prêt")
+        let profile = appState.profile
+        let shape = AdaptivePlanEngine.ProgramShape.compute(goal: profile.goalId, raceDate: profile.raceDate, from: profile.programStartDate ?? .now)
+        let message = shape.totalWeeks.map { "Ton programme de \($0) semaines est prêt" } ?? "Ton programme sur mesure est prêt"
+        appState.toast(message)
     }
 }

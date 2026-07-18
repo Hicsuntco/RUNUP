@@ -39,7 +39,7 @@ struct RingsView: View {
                 }
 
                 VStack(spacing: 14) {
-                    Text("\(p.dailyGoalsDone) / 3 bouclés").font(RUFont.sans(13, weight: .semibold)).tracking(1).foregroundColor(RUColor.text2)
+                    Text("\(p.dailyGoalsDone) / \(p.dailyGoalsTotal) bouclés").font(RUFont.sans(13, weight: .semibold)).tracking(1).foregroundColor(RUColor.text2)
                     DailyGoalsBarsView(progress: p.dailyGoalsProgress, size: 168, animateOnAppear: true)
                 }
                 .frame(maxWidth: .infinity)
@@ -89,7 +89,7 @@ struct RingsView: View {
                         .font(RUFont.sans(11, weight: .bold))
                         .foregroundColor(p.isRestDayToday ? RUColor.text2 : (p.seanceDoneToday ? RUColor.lime : RUColor.text2))
                 }
-                LinearBar(fraction: p.seanceDoneToday ? 1 : 0, color: p.isRestDayToday ? RUColor.text3 : color, height: 5)
+                LinearBar(fraction: p.dailyGoalsProgress[0], color: p.isRestDayToday ? RUColor.text3 : color, height: 5)
             }
         }
         .padding(14)

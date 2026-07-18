@@ -209,7 +209,7 @@ enum AdaptivePlanEngine {
     /// with no XP ever actually granted — this is the real version of that.
     @discardableResult
     static func checkDailyGoalsBonus(_ profile: UserProfile) -> Bool {
-        guard !profile.dailyGoalsBonusAwarded, profile.dailyGoalsDone == 3 else { return false }
+        guard !profile.dailyGoalsBonusAwarded, profile.dailyGoalsDone == profile.dailyGoalsTotal else { return false }
         profile.dailyGoalsBonusAwarded = true
         profile.xp += 120
         return true

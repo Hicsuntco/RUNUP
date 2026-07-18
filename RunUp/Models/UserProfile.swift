@@ -76,9 +76,10 @@ final class UserProfile {
     var strengthGoalMinutes: Double = 15
     var stepsToday: Double = 0
     var stepsGoal: Double = 6000
-    /// Whether the "all 3 daily goals done" +120 XP bonus (see
+    /// Whether the "all daily goals done" +120 XP bonus (see
     /// `AdaptivePlanEngine.checkDailyGoalsBonus`) has already been granted today — without this,
-    /// re-checking `dailyGoalsDone == 3` on every HealthKit sync would regrant it repeatedly.
+    /// re-checking `dailyGoalsDone == dailyGoalsTotal` on every HealthKit sync would regrant it
+    /// repeatedly.
     var dailyGoalsBonusAwarded: Bool = false
     /// Distance run today (km) — no longer part of the daily-goals widget, but still used
     /// elsewhere (Club leaderboard, program-end summary) as a rough recent-activity figure.
@@ -176,10 +177,13 @@ final class UserProfile {
     }
 
     /// [Séance du jour, Renfo & mobilité, Pas] as 0...1 fractions, in that order — feeds
-    /// `DailyGoalsBarsView`.
+    /// `DailyGoalsBarsView`. On a rest day there's no real "séance" goal to close, so that slot
+    /// stays at 0 rather than the trivially-true `seanceDoneToday` — a gauge showing full for a
+    /// goal nothing ever asked of you reads as a bug (the same complaint already fixed for the
+    /// "Faite"/"Repos" label; this is the bar underneath it, which still filled to 100% either way).
     var dailyGoalsProgress: [Double] {
         [
-            seanceDoneToday ? 1 : 0,
+            isRestDayToday ? 0 : (seanceDoneToday ? 1 : 0),
             strengthGoalMinutes > 0 ? min(1, strengthMinutesToday / strengthGoalMinutes) : 0,
             stepsGoal > 0 ? min(1, stepsToday / stepsGoal) : 0
         ]
@@ -188,6 +192,12 @@ final class UserProfile {
     var dailyGoalsDone: Int {
         dailyGoalsProgress.filter { $0 >= 1 }.count
     }
+
+    /// Real goals to close today — 2 on a rest day (no session was ever asked of you), 3
+    /// otherwise. Drives the "X / Y bouclés" copy and the +120 XP bonus threshold below, so the
+    /// bonus stays reachable on a rest day from the other 2 goals alone, without needing a fake
+    /// "séance" credit to get there.
+    var dailyGoalsTotal: Int { isRestDayToday ? 2 : 3 }
 
     /// False until at least one session has a real RPE behind it — the readiness ring reads as a
     /// confident, near-full gauge ("bonne forme !") the moment it shows any number at all, which

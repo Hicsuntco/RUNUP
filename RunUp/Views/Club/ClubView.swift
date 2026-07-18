@@ -13,7 +13,11 @@ struct ClubView: View {
     @State private var tab: Tab = .board
     @State private var board = ClubBoard(club: nil, leaderboard: [])
     @State private var feed: [FeedItem] = []
-    @State private var isLoading = false
+    // Starts true (not false) so the very first render — before `.task` below has had a chance to
+    // run — reads as "checking for your club" rather than immediately flashing the create/join
+    // form. `.id(appState.screen)` on the parent means a fresh ClubView (and fresh isLoading=true)
+    // is created every time this tab is opened, so this covers every visit, not just the first.
+    @State private var isLoading = true
     @State private var errorMessage: String?
     @State private var showSignIn = false
     @State private var newClubName = ""
@@ -35,6 +39,11 @@ struct ClubView: View {
 
                 if !auth.isSignedIn {
                     signInPrompt
+                } else if isLoading && board.club == nil {
+                    // Without this, the ~few seconds `loadIfSignedIn` takes to fetch her real
+                    // club read as "the create/join form flashes, then flips to the leaderboard" —
+                    // confusing when she already has a club (looks like it vanished, not loaded).
+                    loadingCard
                 } else if board.club == nil {
                     clubSetupCard
                 } else {
@@ -155,6 +164,17 @@ struct ClubView: View {
                 )
             }
         }
+    }
+
+    // MARK: Loading — signed in, real club status not back from the server yet
+
+    private var loadingCard: some View {
+        VStack(spacing: 10) {
+            ProgressView().tint(RUColor.rose)
+            Text("Chargement de ton club…").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
     }
 
     // MARK: Not signed in

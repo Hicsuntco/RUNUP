@@ -435,6 +435,10 @@ struct ClubView: View {
         do {
             try await auth.refreshMe()
             board = try await clubService.fetchBoard()
+            // Piggyback a kudos check on every Club tab open, not just when switching to the
+            // "Fil d'activité" segment — otherwise a new kudos notification only ever surfaces if
+            // she happens to tap into the feed specifically.
+            await loadFeed()
         } catch {
             errorMessage = "Impossible de charger le club — vérifie ta connexion."
         }
@@ -444,8 +448,30 @@ struct ClubView: View {
     private func loadFeed() async {
         do {
             feed = try await clubService.fetchFeed()
+            notifyNewKudos(in: feed)
         } catch {
             errorMessage = "Impossible de charger le fil d'activité."
+        }
+    }
+
+    /// Real kudos notifications — compares each of *your own* posts' current kudos count against
+    /// what was last seen (`profile.kudosSeenCounts`, keyed by activity id) and posts one bell
+    /// notification per post that gained new kudos since. Only ever moves forward (kudos are
+    /// additive from this client's point of view), so a post that lost kudos some other way isn't
+    /// treated as new claps by mistake.
+    private func notifyNewKudos(in feed: [FeedItem]) {
+        guard let myId = auth.currentUser?.id else { return }
+        for item in feed where item.userId == myId {
+            let seen = profile.kudosSeenCounts[item.id] ?? 0
+            if item.kudos > seen {
+                let gained = item.kudos - seen
+                appState.notify(
+                    icon: "👏", colorHex: 0xFF3B6B,
+                    title: "Nouveaux encouragements",
+                    text: gained == 1 ? "Quelqu'un a applaudi ta séance." : "\(gained) personnes ont applaudi ta séance."
+                )
+            }
+            profile.kudosSeenCounts[item.id] = item.kudos
         }
     }
 

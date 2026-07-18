@@ -57,5 +57,13 @@ struct OnboardingContainerView: View {
         let shape = AdaptivePlanEngine.ProgramShape.compute(goal: profile.goalId, raceDate: profile.raceDate, from: profile.programStartDate ?? .now)
         let message = shape.totalWeeks.map { "Ton programme de \($0) semaines est prêt" } ?? "Ton programme sur mesure est prêt"
         appState.toast(message)
+        // `coachNotificationsEnabled` defaults to true, but the system permission itself was
+        // never actually requested yet — do it once here so the daily reminder can work out of
+        // the box, matching the toggle's default state, rather than silently doing nothing until
+        // she happens to visit Profil and re-toggle it.
+        Task {
+            await NotificationService.shared.requestAuthorization()
+            NotificationService.shared.rescheduleDailyReminder(for: profile)
+        }
     }
 }

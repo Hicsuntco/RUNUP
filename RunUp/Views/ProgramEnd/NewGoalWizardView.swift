@@ -138,6 +138,7 @@ struct NewGoalWizardView: View {
             await MainActor.run {
                 let result = AdaptivePlanEngine.NewGoalResult(goal: goal ?? .health, distance: goal == .race ? distance : nil, chrono: goal == .race ? chrono : nil, raceDate: goal == .race ? raceDate : nil, runningDays: Array(days))
                 AdaptivePlanEngine.startNewProgram(result, profile: appState.profile)
+                NotificationService.shared.rescheduleDailyReminder(for: appState.profile)
                 appState.toast("Ton nouveau programme est prêt")
                 dismiss()
                 appState.go(.home)

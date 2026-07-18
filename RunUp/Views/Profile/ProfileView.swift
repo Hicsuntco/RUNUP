@@ -154,7 +154,20 @@ struct ProfileView: View {
             HStack {
                 Text("Notifications du coach").font(RUFont.sans(14, weight: .medium)).foregroundColor(.white)
                 Spacer()
-                Toggle("", isOn: Binding(get: { profile.coachNotificationsEnabled }, set: { profile.coachNotificationsEnabled = $0 }))
+                Toggle("", isOn: Binding(
+                    get: { profile.coachNotificationsEnabled },
+                    set: { on in
+                        profile.coachNotificationsEnabled = on
+                        if on {
+                            Task {
+                                await NotificationService.shared.requestAuthorization()
+                                NotificationService.shared.rescheduleDailyReminder(for: profile)
+                            }
+                        } else {
+                            NotificationService.shared.cancelDailyReminder()
+                        }
+                    }
+                ))
                     .labelsHidden()
                     .tint(RUColor.rose)
             }

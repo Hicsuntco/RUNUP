@@ -42,6 +42,7 @@ final class AppState {
         AdaptivePlanEngine.refreshProgramForCurrentDate(self.profile)
         AdaptivePlanEngine.resetDailyGoalsIfNewDay(self.profile)
         ThemeStore.shared.themeID = self.profile.accentThemeID
+        NotificationService.shared.rescheduleDailyReminder(for: self.profile)
         Task { await self.syncDailyGoalsFromHealthKit() }
     }
 
@@ -49,8 +50,18 @@ final class AppState {
     /// returns to the foreground so a skipped week or program completion is picked up even if the
     /// user didn't open the app on the exact day it happened.
     func refreshProgramForCurrentDate() {
+        let previousWeek = profile.weekNumber
         AdaptivePlanEngine.refreshProgramForCurrentDate(profile)
         AdaptivePlanEngine.resetDailyGoalsIfNewDay(profile)
+        if profile.weekNumber != previousWeek {
+            notify(
+                icon: "mark", colorHex: 0xFF3B6B,
+                title: "Nouvelle semaine",
+                text: "Semaine \(profile.weekNumber) prête, ajustée d'après ta forme de la semaine passée.",
+                coachOnly: true
+            )
+        }
+        NotificationService.shared.rescheduleDailyReminder(for: profile)
         Task { await syncDailyGoalsFromHealthKit() }
     }
 
@@ -65,8 +76,19 @@ final class AppState {
         profile.strengthMinutesToday = await strength
         if AdaptivePlanEngine.checkDailyGoalsBonus(profile) {
             postClubActivity(type: "badge", text: "a bouclé ses 3 objectifs du jour", xpEarned: 120)
+            notify(icon: "🎉", colorHex: 0xC9FF3B, title: "Journée bouclée", text: "Tes 3 objectifs du jour sont faits — +120 XP.")
             toast("Journée bouclée · +120 XP 🎉")
         }
+    }
+
+    /// Inserts a real bell-icon notification — replaces what used to be a purely decorative UI
+    /// (the bell/badge/sheet existed and read from `AppNotification`, but nothing ever created
+    /// one). `coachOnly` gates it on the "Notifications du coach" toggle in Profil, for
+    /// program-related updates specifically; social/gamification ones (kudos, daily goals) always
+    /// post regardless of that toggle.
+    func notify(icon: String, colorHex: Int, title: String, text: String, coachOnly: Bool = false) {
+        if coachOnly && !profile.coachNotificationsEnabled { return }
+        modelContext.insert(AppNotification(icon: icon, colorHex: colorHex, title: title, text: text))
     }
 
     /// Posts to the real club feed/leaderboard if signed in — silently does nothing otherwise

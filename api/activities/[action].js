@@ -4,6 +4,7 @@
 const { sql } = require('../../lib/db');
 const { requireAuth } = require('../../lib/auth');
 const { withErrorHandling } = require('../../lib/http');
+const { sendPushToUser } = require('../../lib/apns');
 
 const ALLOWED_TYPES = new Set(['run', 'strength', 'badge']);
 
@@ -57,6 +58,27 @@ async function handleCreate(req, res, userId) {
   await sql`UPDATE users SET xp_total = xp_total + ${xp} WHERE id = ${userId}`;
 
   res.status(201).json({ ok: true });
+
+  // Push, after the response — a club-mate finding out from a notification while the app is
+  // closed is the whole point of this being a *push*, not something the response should wait on.
+  if (clubId) await notifyClubOfNewActivity(clubId, userId, text);
+}
+
+// Every other member of the poster's club, except anyone who's blocked the poster (mirrors the
+// feed's own visibility rule — someone you've blocked shouldn't be able to reach you by posting).
+async function notifyClubOfNewActivity(clubId, posterId, text) {
+  const { rows: poster } = await sql`SELECT name FROM users WHERE id = ${posterId}`;
+  const posterName = poster[0]?.name || 'Un membre';
+  const { rows: recipients } = await sql`
+    SELECT user_id FROM club_members
+    WHERE club_id = ${clubId} AND user_id != ${posterId}
+      AND user_id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${posterId})
+  `;
+  await Promise.all(
+    recipients.map((r) =>
+      sendPushToUser(sql, r.user_id, { title: 'Le Club', body: `${posterName} ${text}` })
+    )
+  );
 }
 
 async function handleFeed(req, res, userId) {
@@ -102,11 +124,23 @@ async function handleKudos(req, res, userId) {
   if (existing.length > 0) {
     await sql`DELETE FROM activity_kudos WHERE activity_id = ${activityId} AND user_id = ${userId}`;
     res.status(200).json({ kudoed: false });
-  } else {
-    await sql`
-      INSERT INTO activity_kudos (activity_id, user_id) VALUES (${activityId}, ${userId})
-      ON CONFLICT DO NOTHING
-    `;
-    res.status(200).json({ kudoed: true });
+    return;
+  }
+
+  await sql`
+    INSERT INTO activity_kudos (activity_id, user_id) VALUES (${activityId}, ${userId})
+    ON CONFLICT DO NOTHING
+  `;
+  res.status(200).json({ kudoed: true });
+
+  // Only on a new kudos, never on removal, and never for kudoing your own post.
+  const { rows: activityRows } = await sql`SELECT user_id, text FROM activities WHERE id = ${activityId}`;
+  const activity = activityRows[0];
+  if (activity && activity.user_id !== userId) {
+    const { rows: kudoer } = await sql`SELECT name FROM users WHERE id = ${userId}`;
+    await sendPushToUser(sql, activity.user_id, {
+      title: 'Le Club',
+      body: `${kudoer[0]?.name || 'Quelqu’un'} a applaudi : ${activity.text}`,
+    });
   }
 }

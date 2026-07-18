@@ -97,3 +97,16 @@ CREATE TABLE IF NOT EXISTS challenges (
 );
 
 CREATE INDEX IF NOT EXISTS idx_challenges_club_end ON challenges(club_id, end_date DESC);
+
+-- Real APNs push (kudos received, a club-mate posts an activity) — one row per device a user has
+-- signed in from. `token` is unique on its own (not per-user): the same physical device
+-- re-registering after a sign-out/sign-in as a *different* account must move the token to the new
+-- owner, not create a stale duplicate still pointing at the old one.
+CREATE TABLE IF NOT EXISTS device_tokens (
+  token TEXT PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  platform TEXT NOT NULL DEFAULT 'ios',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_device_tokens_user ON device_tokens(user_id);

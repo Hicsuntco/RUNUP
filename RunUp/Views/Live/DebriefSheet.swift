@@ -8,15 +8,20 @@ struct DebriefSheet: View {
     var run: RunRecord
     @State private var rpe: RPE = .justeBien
 
+    /// The plan only ever re-adjusts at a week boundary (see `AdaptivePlanEngine.tierDelta`),
+    /// never session-to-session — this used to say "Prochaine séance" (next session), implying
+    /// tomorrow's plan would shift, when what's really true is the *next week's* plan reacts to
+    /// this week's average RPE. Wording it any tighter than "semaine prochaine" would be a promise
+    /// the engine doesn't keep.
     private var impactLines: [(String, String, String)] {
         let nextStreak = appState.profile.streak + 1
         switch rpe {
         case .facile, .justeBien:
-            return [("📈", "Prochaine séance : ", "relevée d'un palier"), ("🔥", "Série en cours : ", "jour \(nextStreak)")]
+            return [("📈", "Semaine prochaine : ", "relevée d'un palier"), ("🔥", "Série en cours : ", "jour \(nextStreak)")]
         case .dur:
-            return [("👍", "Prochaine séance : ", "on garde la même intensité"), ("🔥", "Série en cours : ", "jour \(nextStreak)")]
+            return [("👍", "Semaine prochaine : ", "on garde la même intensité"), ("🔥", "Série en cours : ", "jour \(nextStreak)")]
         case .tropDur:
-            return [("🧘", "Prochaine séance : ", "récupération allégée"), ("🔥", "Série en cours : ", "jour \(nextStreak)")]
+            return [("🧘", "Semaine prochaine : ", "récupération allégée"), ("🔥", "Série en cours : ", "jour \(nextStreak)")]
         }
     }
 

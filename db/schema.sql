@@ -45,8 +45,15 @@ CREATE TABLE IF NOT EXISTS activities (
   type TEXT NOT NULL, -- 'run' | 'strength' | 'badge'
   text TEXT NOT NULL, -- human-readable, e.g. "a couru 8.2 km · Sortie longue"
   xp_earned INTEGER NOT NULL DEFAULT 0,
+  -- Structured distance for 'run' activities — NULL for 'strength'/'badge'. Lets real challenge
+  -- progress (see `challenges` below) be a real SUM() instead of parsing it back out of `text`.
+  distance_km NUMERIC,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- CREATE TABLE IF NOT EXISTS is a no-op on a table that already exists — this ALTER is what
+-- actually adds distance_km to a database from before this column existed.
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS distance_km NUMERIC;
 
 CREATE INDEX IF NOT EXISTS idx_activities_club_created ON activities(club_id, created_at DESC);
 
@@ -74,3 +81,19 @@ CREATE TABLE IF NOT EXISTS reports (
   reason TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Any member can set a club challenge (a distance target by a deadline) — replaces what used to
+-- be a fixed "100 km ce mois-ci" shown to everyone regardless of the real club. Progress is a real
+-- SUM() over `activities.distance_km` logged since the challenge was created (see
+-- api/clubs/[action].js), not tracked as a running counter here.
+CREATE TABLE IF NOT EXISTS challenges (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  club_id UUID NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+  created_by UUID NOT NULL REFERENCES users(id),
+  title TEXT NOT NULL,
+  target_km NUMERIC NOT NULL,
+  end_date DATE NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_challenges_club_end ON challenges(club_id, end_date DESC);

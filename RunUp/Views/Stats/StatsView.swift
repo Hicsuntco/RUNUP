@@ -28,6 +28,7 @@ struct StatsView: View {
                 }
 
                 summaryCard
+                weekCard
                 paceCard
                 recordsCard
                 predictionCard
@@ -66,6 +67,54 @@ struct StatsView: View {
             MetricColumn(value: formatTotalDuration(totalDurationSeconds), label: "temps total", valueSize: 22)
             Spacer()
             MetricColumn(value: "\(profile.streak)", label: "jours de suite", valueColor: profile.streak > 0 ? RUColor.lime : .white, valueSize: 22)
+        }
+        .padding(16)
+        .ruCard()
+    }
+
+    // MARK: This week — recency + consistency against the actual plan, missing before this: the
+    // rest of the tab only ever looked at trailing windows (5 runs, 8 weeks), nothing anchored to
+    // "where am I right now, against what my program actually asks of me this week."
+
+    private var thisWeekRuns: [RunRecord] {
+        guard let weekStart = Calendar.current.dateInterval(of: .weekOfYear, for: .now)?.start else { return [] }
+        return runs.filter { $0.date >= weekStart }
+    }
+
+    private var thisWeekKm: Double { thisWeekRuns.reduce(0) { $0 + $1.distanceKm } }
+
+    private var lastWeekKm: Double {
+        let cal = Calendar.current
+        guard let thisWeekStart = cal.dateInterval(of: .weekOfYear, for: .now)?.start,
+              let lastWeekStart = cal.date(byAdding: .weekOfYear, value: -1, to: thisWeekStart)
+        else { return 0 }
+        return runs.filter { $0.date >= lastWeekStart && $0.date < thisWeekStart }.reduce(0) { $0 + $1.distanceKm }
+    }
+
+    private var weekCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                EyebrowLabel(text: "Cette semaine")
+                Spacer()
+                if lastWeekKm > 0 {
+                    let deltaKm = thisWeekKm - lastWeekKm
+                    StatChip(
+                        text: deltaKm >= 0 ? "▲ +\(String(format: "%.1f", deltaKm)) km" : "▼ \(String(format: "%.1f", -deltaKm)) km",
+                        color: deltaKm >= 0 ? RUColor.lime : RUColor.amber
+                    )
+                }
+            }
+            HStack(spacing: 24) {
+                MetricColumn(value: String(format: "%.1f", thisWeekKm), label: "km", valueSize: 24)
+                if !profile.runningDays.isEmpty {
+                    MetricColumn(
+                        value: "\(thisWeekRuns.count)/\(profile.runningDays.count)",
+                        label: "séances prévues",
+                        valueColor: thisWeekRuns.count >= profile.runningDays.count ? RUColor.lime : .white,
+                        valueSize: 24
+                    )
+                }
+            }
         }
         .padding(16)
         .ruCard()

@@ -51,32 +51,25 @@ struct ClubManagementView: View {
         .preferredColorScheme(.dark)
     }
 
+    /// Used to be its own bold card up top — too loud for something you touch once in a while.
+    /// A slim row reads as secondary info, not a headline.
     private var inviteCodeCard: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            EyebrowLabel(text: "Code d'invitation", color: RUColor.rose2)
-            HStack(spacing: 12) {
-                Button(action: {
-                    UIPasteboard.general.string = club.inviteCode
-                    appState.toast("Code copié")
-                }) {
-                    Text(club.inviteCode).font(RUFont.mono(22, weight: .bold)).foregroundColor(.white).tracking(3)
-                }
-                .buttonStyle(PressableStyle())
-                Spacer()
-                ShareLink(item: "Rejoins mon club sur RunUp avec le code \(club.inviteCode) !") {
-                    Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(width: 38, height: 38)
-                        .background(RUColor.rose, in: Circle())
-                }
-                .buttonStyle(PressableStyle())
+        HStack(spacing: 8) {
+            Text("Code").font(RUFont.sans(11.5)).foregroundColor(RUColor.text3)
+            Button(action: {
+                UIPasteboard.general.string = club.inviteCode
+                appState.toast("Code copié")
+            }) {
+                Text(club.inviteCode).font(RUFont.mono(12.5, weight: .semibold)).foregroundColor(RUColor.text2).tracking(1.5)
             }
-            Text("Touche le code pour le copier.").font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
+            .buttonStyle(PressableStyle())
+            Spacer()
+            ShareLink(item: "Rejoins mon club sur RunUp avec le code \(club.inviteCode) !") {
+                Image(systemName: "square.and.arrow.up").font(.system(size: 12, weight: .medium)).foregroundColor(RUColor.text3)
+            }
+            .buttonStyle(PressableStyle())
         }
-        .padding(16)
-        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        .padding(.horizontal, 4)
     }
 
     private func memberRow(_ member: LeaderboardRow) -> some View {

@@ -56,7 +56,14 @@ struct HistoryView: View {
             isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } })
         ) {
             Button("Supprimer", role: .destructive) {
-                if let run = pendingDelete { modelContext.delete(run) }
+                if let run = pendingDelete {
+                    // A deleted run that was today's "séance faite" shouldn't leave the daily
+                    // goals gauge claiming it's done with nothing left backing it.
+                    if Calendar.current.isDateInToday(run.date) {
+                        AdaptivePlanEngine.undoTodaySessionCompletion(appState.profile)
+                    }
+                    modelContext.delete(run)
+                }
                 pendingDelete = nil
             }
             Button("Annuler", role: .cancel) { pendingDelete = nil }

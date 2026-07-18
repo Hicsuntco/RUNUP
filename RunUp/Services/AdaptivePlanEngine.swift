@@ -215,6 +215,23 @@ enum AdaptivePlanEngine {
         return true
     }
 
+    /// Reverses today's "séance faite" flag — call when the `RunRecord` behind it gets deleted
+    /// from History, so the daily-goals gauge stops claiming a session is done with nothing left
+    /// backing it. Deliberately narrow: only clears today's completion, never touches streak/XP
+    /// (those aren't safely reversible without knowing exactly what this one run contributed —
+    /// other activity may already have built on top of them since).
+    static func undoTodaySessionCompletion(_ profile: UserProfile) {
+        let today = currentWeekdayIndex()
+        guard let idx = profile.weekSessions.firstIndex(where: { $0.weekday == today }) else { return }
+        profile.weekSessions[idx].completed = false
+        profile.weekStrip = profile.weekStrip.map { day in
+            guard day.weekday == today, day.state == .done else { return day }
+            var d = day
+            d.state = .today
+            return d
+        }
+    }
+
     /// Tier change to apply at a week boundary, from the previous week's average RPE severity
     /// (`3 - RPE.rawValue`, so 0 = facile, 3 = tropDur). No runs logged → no change.
     private static func tierDelta(sum: Int, count: Int) -> Int {

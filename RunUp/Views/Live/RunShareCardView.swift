@@ -96,7 +96,17 @@ struct RunShareCardView: View {
             var path = Path()
             path.move(to: points[0])
             for p in points.dropFirst() { path.addLine(to: p) }
-            context.stroke(path, with: .color(.white), style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
+            // Same brand gradient as the app mark (rose → violet) rather than a plain white
+            // trace — ties the route visually to the logo right above it.
+            context.stroke(
+                path,
+                with: .linearGradient(
+                    Gradient(colors: [RUColor.rose, RUColor.violet]),
+                    startPoint: points.first ?? .zero,
+                    endPoint: points.last ?? .zero
+                ),
+                style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round)
+            )
         }
     }
 

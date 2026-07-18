@@ -29,7 +29,7 @@ targets:
       properties:
         CFBundleDisplayName: RunUp
         CFBundleShortVersionString: "1.1"
-        CFBundleVersion: "5"
+        CFBundleVersion: "6"
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait

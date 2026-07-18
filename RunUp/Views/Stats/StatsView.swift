@@ -27,7 +27,9 @@ struct StatsView: View {
                     .buttonStyle(PressableStyle())
                 }
 
+                summaryCard
                 paceCard
+                recordsCard
                 predictionCard
                 loadCard
             }
@@ -41,6 +43,32 @@ struct StatsView: View {
         let parts = pace.split(separator: ":").compactMap { Double($0) }
         guard parts.count == 2 else { return nil }
         return parts[0] * 60 + parts[1]
+    }
+
+    // MARK: Summary — at-a-glance totals, the numbers a "progression" tab was otherwise missing
+    // entirely (it jumped straight to trend/prediction cards with nothing grounding them).
+
+    private var totalDistanceKm: Double { runs.reduce(0) { $0 + $1.distanceKm } }
+    private var totalDurationSeconds: Int { runs.reduce(0) { $0 + $1.durationSeconds } }
+
+    private func formatTotalDuration(_ seconds: Int) -> String {
+        let h = seconds / 3600
+        let m = (seconds % 3600) / 60
+        return h > 0 ? "\(h)h\(String(format: "%02d", m))" : "\(m) min"
+    }
+
+    private var summaryCard: some View {
+        HStack {
+            MetricColumn(value: String(format: "%.0f", totalDistanceKm), label: "km total", valueSize: 22)
+            Spacer()
+            MetricColumn(value: "\(runs.count)", label: "sorties", valueSize: 22)
+            Spacer()
+            MetricColumn(value: formatTotalDuration(totalDurationSeconds), label: "temps total", valueSize: 22)
+            Spacer()
+            MetricColumn(value: "\(profile.streak)", label: "jours de suite", valueColor: profile.streak > 0 ? RUColor.lime : .white, valueSize: 22)
+        }
+        .padding(16)
+        .ruCard()
     }
 
     // MARK: Pace trend — was a fixed "VO2max 52.4" that never actually moved
@@ -88,24 +116,78 @@ struct StatsView: View {
                         var line = Path()
                         var fill = Path()
                         fill.move(to: CGPoint(x: 0, y: size.height))
+                        var lastPoint = CGPoint.zero
                         for (i, p) in points.enumerated() {
                             let t = CGFloat((p - minPace) / range) // 0 = fastest ... 1 = slowest
                             let point = CGPoint(x: CGFloat(i) * stepX, y: size.height * (0.15 + 0.7 * t))
                             if i == 0 { line.move(to: point) } else { line.addLine(to: point) }
                             fill.addLine(to: point)
+                            lastPoint = point
                         }
                         fill.addLine(to: CGPoint(x: size.width, y: size.height))
                         fill.closeSubpath()
                         context.fill(fill, with: .linearGradient(Gradient(colors: [RUColor.rose.opacity(0.35), .clear]), startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
                         context.stroke(line, with: .color(RUColor.rose), lineWidth: 2.5)
+                        context.fill(Path(ellipseIn: CGRect(x: lastPoint.x - 3.5, y: lastPoint.y - 3.5, width: 7, height: 7)), with: .color(RUColor.rose))
                     }
                     .frame(height: 70)
                     .padding(.top, 6)
+
+                    if let minPace = recentPacesSecPerKm.min(), let maxPace = recentPacesSecPerKm.max(), minPace != maxPace {
+                        HStack {
+                            Text("Plus rapide \(PaceModel.formatDuration(minPace))/km")
+                            Spacer()
+                            Text("Plus lente \(PaceModel.formatDuration(maxPace))/km")
+                        }
+                        .font(RUFont.sans(10)).foregroundColor(RUColor.text3)
+                        .padding(.top, 4)
+                    }
                 }
             } else {
                 Text("Termine quelques courses pour voir ton allure évoluer ici.")
                     .font(RUFont.sans(12)).foregroundColor(RUColor.text2)
                     .padding(.top, 4)
+            }
+        }
+        .padding(16)
+        .ruCard()
+    }
+
+    // MARK: Personal records — real bests pulled from history, not shown anywhere before this
+
+    private var longestRun: RunRecord? { runs.max(by: { $0.distanceKm < $1.distanceKm }) }
+
+    private var bestPaceSecPerKm: Double? {
+        runs.compactMap { run -> Double? in
+            guard run.distanceKm >= 1 else { return nil }
+            return paceSecPerKm(run.avgPace)
+        }.min()
+    }
+
+    /// Best single calendar week, across all of history — not just the 8-week window `loadCard`
+    /// charts, so an older peak still shows up here.
+    private var bestWeekKm: Double {
+        let cal = Calendar.current
+        var weekTotals: [Date: Double] = [:]
+        for run in runs {
+            guard let weekStart = cal.dateInterval(of: .weekOfYear, for: run.date)?.start else { continue }
+            weekTotals[weekStart, default: 0] += run.distanceKm
+        }
+        return weekTotals.values.max() ?? 0
+    }
+
+    private var recordsCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            EyebrowLabel(text: "Records personnels")
+            if runs.isEmpty {
+                Text("Tes records apparaîtront ici après ta première course.")
+                    .font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+            } else {
+                HStack(spacing: 8) {
+                    predictionTile("PLUS LONGUE", longestRun.map { String(format: "%.1f km", $0.distanceKm) } ?? "—", highlighted: false)
+                    predictionTile("MEILLEURE ALLURE", bestPaceSecPerKm.map { "\(PaceModel.formatDuration($0))/km" } ?? "—", highlighted: false)
+                    predictionTile("MEILLEURE SEM.", bestWeekKm > 0 ? String(format: "%.0f km", bestWeekKm) : "—", highlighted: false)
+                }
             }
         }
         .padding(16)

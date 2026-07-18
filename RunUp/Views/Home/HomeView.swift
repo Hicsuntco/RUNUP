@@ -80,20 +80,35 @@ struct HomeView: View {
         }
     }
 
+    /// Shows the real date number (today circled), not just the bare weekday letter — so it's
+    /// unambiguous which real calendar day each cell is, instead of an abstract L/M/M/J/V/S/D
+    /// that says nothing about "today" until you count.
     private var weekStrip: some View {
         HStack(spacing: 5) {
             ForEach(profile.weekStrip) { day in
-                let (bg, border, color, mark): (Color, Color, Color, String) = {
+                let (bg, border, color): (Color, Color, Color) = {
                     switch day.state {
-                    case .done: return (RUColor.rose, RUColor.rose, .white, "✓")
-                    case .today: return (RUColor.rose.opacity(0.12), RUColor.rose.opacity(0.5), RUColor.rose2, "")
-                    case .rest: return (RUColor.card, RUColor.line, RUColor.text4, "·")
-                    case .upcoming: return (RUColor.card, RUColor.line, RUColor.text2, "")
+                    case .done: return (RUColor.rose, RUColor.rose, .white)
+                    case .today: return (RUColor.rose.opacity(0.12), RUColor.rose.opacity(0.5), RUColor.rose2)
+                    case .rest: return (RUColor.card, RUColor.line, RUColor.text4)
+                    case .upcoming: return (RUColor.card, RUColor.line, RUColor.text2)
                     }
                 }()
                 VStack(spacing: 5) {
                     Text(day.letter).displayStyle(11).foregroundColor(color)
-                    Text(mark).font(RUFont.sans(11)).foregroundColor(color)
+                    ZStack {
+                        if day.state == .today {
+                            Circle().stroke(RUColor.rose2, lineWidth: 1.5).frame(width: 19, height: 19)
+                        }
+                        if day.state == .done {
+                            Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundColor(color)
+                        } else {
+                            Text("\(Calendar.current.component(.day, from: day.date))")
+                                .font(RUFont.sans(11, weight: day.state == .today ? .bold : .regular))
+                                .foregroundColor(color)
+                        }
+                    }
+                    .frame(width: 19, height: 19)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)

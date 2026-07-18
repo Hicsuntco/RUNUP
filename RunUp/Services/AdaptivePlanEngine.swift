@@ -137,11 +137,19 @@ enum AdaptivePlanEngine {
         } else {
             // Same week, just a day rolled over: move the "today" marker and pick up today's
             // already-planned session — no regeneration, this week was fully planned upfront
-            // (the backfill above already covers a plan that was missing entirely).
+            // (the backfill above already covers a plan that was missing entirely). A running day
+            // that's now in the past without ever being completed (app wasn't opened that day)
+            // reads as neutral (`.rest`), not "upcoming" — it can't be upcoming if it's over.
             profile.weekStrip = profile.weekStrip.map { day in
                 guard day.state != .rest, day.state != .done else { return day }
                 var d = day
-                d.state = day.weekday == today ? .today : .upcoming
+                if day.weekday == today {
+                    d.state = .today
+                } else if day.weekday < today {
+                    d.state = .rest
+                } else {
+                    d.state = .upcoming
+                }
                 return d
             }
             profile.todaySession = profile.weekSessions.first(where: { $0.weekday == today })?.session ?? restSession
@@ -155,9 +163,24 @@ enum AdaptivePlanEngine {
         profile.weekNumber = weekNumber
         profile.weekRPESum = 0
         profile.weekRPECount = 0
+        let cal = mondayCalendar
+        let startOfThisWeek = cal.dateInterval(of: .weekOfYear, for: .now)?.start ?? .now
         profile.weekStrip = (0..<7).map { i in
-            let state: DayStatus.State = profile.runningDays.contains(i) ? (i == today ? .today : .upcoming) : .rest
-            return DayStatus(weekday: i, letter: DayStatus.letters[i], state: state)
+            let state: DayStatus.State
+            if !profile.runningDays.contains(i) {
+                state = .rest
+            } else if i == today {
+                state = .today
+            } else if i < today {
+                // A running day that's already behind us this week (the plan is only being
+                // generated now, mid-week — e.g. onboarding finishing on a Thursday) was never
+                // "upcoming" to begin with.
+                state = .rest
+            } else {
+                state = .upcoming
+            }
+            let date = cal.date(byAdding: .day, value: i, to: startOfThisWeek) ?? .now
+            return DayStatus(weekday: i, letter: DayStatus.letters[i], state: state, date: date)
         }
         profile.weekSessions = generateWeekSessions(weekNumber: weekNumber, tier: tier, profile: profile)
         profile.todaySession = profile.weekSessions.first(where: { $0.weekday == today })?.session ?? restSession

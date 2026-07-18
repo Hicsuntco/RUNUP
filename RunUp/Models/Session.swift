@@ -43,6 +43,28 @@ struct DayStatus: Codable, Equatable, Identifiable {
     var weekday: Int
     var letter: String
     var state: State
+    /// The real calendar date this cell represents — lets the strip show an actual date number
+    /// (like "12", today circled) instead of just a bare weekday letter. Defaults to `.now` when
+    /// decoding a `weekStrip` persisted before this field existed, so existing profiles don't
+    /// crash on launch.
+    var date: Date = .now
 
     static let letters = ["L", "M", "M", "J", "V", "S", "D"]
+
+    private enum CodingKeys: String, CodingKey { case weekday, letter, state, date }
+
+    init(weekday: Int, letter: String, state: State, date: Date = .now) {
+        self.weekday = weekday
+        self.letter = letter
+        self.state = state
+        self.date = date
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        weekday = try c.decode(Int.self, forKey: .weekday)
+        letter = try c.decode(String.self, forKey: .letter)
+        state = try c.decode(State.self, forKey: .state)
+        date = try c.decodeIfPresent(Date.self, forKey: .date) ?? .now
+    }
 }

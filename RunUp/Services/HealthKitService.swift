@@ -58,12 +58,16 @@ final class HealthKitService {
         }
     }
 
-    /// Most recent resting/average heart rate sample (bpm), used for coach readiness copy.
-    func latestHeartRate() async -> Double? {
+    /// Most recent heart-rate sample within the last `maxAge` seconds — used to poll a genuinely
+    /// live-ish reading during a run (see `LiveRunViewModel`). Filtered to `maxAge` rather than
+    /// "the last sample ever" so a stale reading from hours/days ago (no Watch worn right now)
+    /// correctly returns `nil` instead of being displayed as if it were current.
+    func latestHeartRate(maxAge: TimeInterval = 90) async -> Double? {
         guard let type = HKObjectType.quantityType(forIdentifier: .heartRate) else { return nil }
+        let predicate = HKQuery.predicateForSamples(withStart: Date().addingTimeInterval(-maxAge), end: .now)
         let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
         return await withCheckedContinuation { continuation in
-            let query = HKSampleQuery(sampleType: type, predicate: nil, limit: 1, sortDescriptors: [sort]) { _, samples, _ in
+            let query = HKSampleQuery(sampleType: type, predicate: predicate, limit: 1, sortDescriptors: [sort]) { _, samples, _ in
                 let bpm = (samples?.first as? HKQuantitySample)?.quantity.doubleValue(for: HKUnit(from: "count/min"))
                 continuation.resume(returning: bpm)
             }

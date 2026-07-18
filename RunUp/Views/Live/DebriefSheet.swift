@@ -13,6 +13,30 @@ struct DebriefSheet: View {
     /// tomorrow's plan would shift, when what's really true is the *next week's* plan reacts to
     /// this week's average RPE. Wording it any tighter than "semaine prochaine" would be a promise
     /// the engine doesn't keep.
+    /// Was a single hardcoded line claiming the last split was always the fastest and "FC
+    /// maîtrisée en Z4" — true or not, for every run. Now derived from `run.splits`'s real pace
+    /// values (no HR-zone claim at all: there's no real per-user zone threshold to check FC
+    /// against, so that part is dropped rather than kept as an unbacked guess).
+    private var insightMessage: String {
+        let paces = run.splits.compactMap(paceSeconds)
+        guard paces.count > 1, let minPace = paces.min(), let maxPace = paces.max(), maxPace > minPace else {
+            return "Séance enregistrée 💪 Bien joué."
+        }
+        if paces.last == minPace {
+            return "Séance solide 💪 Ton dernier kilomètre était ton plus rapide — tu avais encore du jus."
+        }
+        if paces.first == minPace {
+            return "Séance solide 💪 Tu es partie fort et tu as tenu jusqu'au bout."
+        }
+        return "Séance solide 💪 Allure plutôt régulière du début à la fin."
+    }
+
+    private func paceSeconds(_ time: String) -> Double? {
+        let parts = time.split(separator: ":").compactMap { Double($0) }
+        guard parts.count == 2 else { return nil }
+        return parts[0] * 60 + parts[1]
+    }
+
     private var impactLines: [(String, String, String)] {
         let nextStreak = appState.profile.streak + 1
         switch rpe {
@@ -33,7 +57,7 @@ struct DebriefSheet: View {
 
                 HStack(alignment: .top, spacing: 10) {
                     AppMarkView(size: 18, radius: 9)
-                    Text("Séance solide 💪 Ton dernier bloc était ton plus rapide — tu avais encore du jus. FC maîtrisée en Z4.")
+                    Text(insightMessage)
                         .font(RUFont.sans(13)).foregroundColor(.white).lineSpacing(3)
                 }
                 .padding(14)

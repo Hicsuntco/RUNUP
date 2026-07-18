@@ -15,6 +15,10 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     private(set) var currentSpeedMetersPerSecond: Double = 0
     private(set) var isSignalUnstable = false
     private(set) var authorizationStatus: CLAuthorizationStatus = .notDetermined
+    /// Sum of positive altitude deltas between consecutive fixes with a trustworthy
+    /// `verticalAccuracy` — real GPS-derived elevation gain, not the flat 0 `RunRecord` used to
+    /// always ship with (nothing tracked altitude at all).
+    private(set) var elevationGainMeters: Double = 0
 
     /// Horizontal accuracy above this (meters) is treated as an unstable fix.
     private let unstableAccuracyThreshold: CLLocationAccuracy = 30
@@ -36,6 +40,7 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     func start() {
         route = []
         distanceMeters = 0
+        elevationGainMeters = 0
         lastLocation = nil
         // Only valid once authorization is actually granted — setting this beforehand risks the
         // manager silently ignoring it (or worse, depending on OS version) since background
@@ -63,6 +68,13 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
 
         if let last = lastLocation {
             distanceMeters += loc.distance(from: last)
+            // Vertical accuracy is typically much worse than horizontal — negative means invalid,
+            // and a loose 20m threshold keeps out the worst GPS altitude noise without discarding
+            // every real fix (altitude readings are noisy by nature, even accepted ones).
+            if loc.verticalAccuracy >= 0, loc.verticalAccuracy < 20 {
+                let delta = loc.altitude - last.altitude
+                if delta > 0 { elevationGainMeters += delta }
+            }
         }
         currentSpeedMetersPerSecond = max(0, loc.speed)
         lastLocation = loc

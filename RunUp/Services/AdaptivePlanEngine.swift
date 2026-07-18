@@ -413,14 +413,32 @@ enum AdaptivePlanEngine {
         return "\(Int(s / 60)):\(String(format: "%02d", Int(s.truncatingRemainder(dividingBy: 60))))"
     }
 
-    static func buildRunRecord(title: String, elapsedSeconds: Double, distanceKm: Double, kcal: Double, avgHeartRate: Int) -> RunRecord {
+    /// `realSplitSeconds` is the actual elapsed time between consecutive whole-km GPS crossings
+    /// (see `LiveRunViewModel`) — when available, splits are the real pace-per-km the runner
+    /// actually ran, not a formula-shaped curve. Falls back to that formula only for the
+    /// no-GPS "Marquer comme faite" path, where there's no real per-km data to derive splits
+    /// from at all (and that record's splits are never shown in the UI either way).
+    static func buildRunRecord(
+        title: String,
+        elapsedSeconds: Double,
+        distanceKm: Double,
+        kcal: Double,
+        avgHeartRate: Int,
+        elevationGainM: Int = 0,
+        realSplitSeconds: [Double]? = nil
+    ) -> RunRecord {
         let dist = max(0.4, distanceKm)
         let t = max(30, elapsedSeconds)
         let secPerKm = t / dist
-        let nkm = max(1, Int(dist))
-        let splits = (0..<nkm).map { i -> String in
-            let sec = secPerKm - 8 + Double(i) * 3 + (i == nkm - 1 ? -10 : 0)
-            return fmt(max(230, sec))
+        let splits: [String]
+        if let realSplitSeconds, !realSplitSeconds.isEmpty {
+            splits = realSplitSeconds.map { fmt(max(0, $0)) }
+        } else {
+            let nkm = max(1, Int(dist))
+            splits = (0..<nkm).map { i -> String in
+                let sec = secPerKm - 8 + Double(i) * 3 + (i == nkm - 1 ? -10 : 0)
+                return fmt(max(230, sec))
+            }
         }
         return RunRecord(
             title: title,
@@ -429,6 +447,7 @@ enum AdaptivePlanEngine {
             avgPace: fmt(secPerKm),
             avgHeartRate: avgHeartRate,
             kcal: Int(kcal.rounded()),
+            elevationGainM: elevationGainM,
             splits: splits
         )
     }

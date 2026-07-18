@@ -17,6 +17,15 @@ struct WorkoutSession: Codable, Equatable {
         subtitle: "on repart en douceur sur de nouvelles bases",
         durationMinutes: 30, pace: "5:30", zone: "Z2", adjustment: nil
     )
+
+    /// True only for the archetypes actually structured as reps + recovery (see
+    /// `AdaptivePlanEngine.archetypes`) — a footing/tempo/sortie longue is one continuous effort,
+    /// not a set of intervals. Shared by `SessionDetailSheet` (step breakdown) and the Live Run
+    /// screen (interval-progress badge) so both agree on what counts as an interval session.
+    var isIntervalSession: Bool {
+        let t = title.lowercased()
+        return t.contains("fractionné") || t.contains("rappel d'allure")
+    }
 }
 
 /// One day in the current week's real training plan (as opposed to `DayStatus`, which only

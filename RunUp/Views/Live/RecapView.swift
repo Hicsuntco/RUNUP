@@ -29,8 +29,9 @@ struct RecapView: View {
                         EyebrowLabel(text: "Splits par km", color: RUColor.text3).padding(.top, 8)
 
                         VStack(spacing: 5) {
+                            let fractions = splitFractions(run.splits)
                             ForEach(run.splits.indices, id: \.self) { i in
-                                splitRow(index: i, time: run.splits[i], isLast: i == run.splits.count - 1)
+                                splitRow(index: i, time: run.splits[i], fraction: fractions[i], isLast: i == run.splits.count - 1)
                             }
                         }
 
@@ -96,7 +97,7 @@ struct RecapView: View {
         .ruCard(radius: 14)
     }
 
-    private func splitRow(index: Int, time: String, isLast: Bool) -> some View {
+    private func splitRow(index: Int, time: String, fraction: Double, isLast: Bool) -> some View {
         HStack(spacing: 12) {
             Text("\(index + 1)").font(RUFont.mono(11)).foregroundColor(RUColor.text2).frame(width: 16)
             GeometryReader { geo in
@@ -104,11 +105,33 @@ struct RecapView: View {
                     RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.05))
                     RoundedRectangle(cornerRadius: 6)
                         .fill(isLast ? RUColor.rose : Color.white.opacity(0.14))
-                        .frame(width: geo.size.width * min(1, 0.45 + Double(index) * 0.07))
+                        .frame(width: geo.size.width * fraction)
                 }
             }
             .frame(height: 22)
             Text(time).displayStyle(14).foregroundColor(isLast ? RUColor.rose2 : .white).frame(width: 38, alignment: .trailing)
+        }
+    }
+
+    private func splitPaceSeconds(_ time: String) -> Double? {
+        let parts = time.split(separator: ":").compactMap { Double($0) }
+        guard parts.count == 2 else { return nil }
+        return parts[0] * 60 + parts[1]
+    }
+
+    /// Bar length relative to this run's own fastest/slowest split — was previously
+    /// `0.45 + index * 0.07`, a shape that grew with the split's position in the list regardless
+    /// of whether the runner actually sped up or slowed down.
+    private func splitFractions(_ splits: [String]) -> [Double] {
+        let seconds = splits.map { splitPaceSeconds($0) }
+        let known = seconds.compactMap { $0 }
+        guard let minSec = known.min(), let maxSec = known.max(), maxSec > minSec else {
+            return splits.map { _ in 0.6 }
+        }
+        return seconds.map { sec in
+            guard let sec else { return 0.6 }
+            let t = (sec - minSec) / (maxSec - minSec) // 0 = fastest split ... 1 = slowest
+            return 0.35 + (1 - t) * 0.6
         }
     }
 }

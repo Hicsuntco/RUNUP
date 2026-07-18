@@ -26,7 +26,7 @@ struct CoachView: View {
                             .padding(.top, 4)
 
                         if messages.isEmpty {
-                            coachBubble("Salut \(profile.name) 👋 Ta forme est au top aujourd'hui (\(profile.readiness)/100). J'ai relevé ta séance à \(profile.todaySession.title). Une question avant de te lancer ?")
+                            coachBubble(welcomeMessage)
                         }
 
                         ForEach(messages) { message in
@@ -53,6 +53,25 @@ struct CoachView: View {
         .onAppear {
             if vm == nil { vm = CoachViewModel(modelContext: modelContext, profile: profile) }
         }
+    }
+
+    /// The zero-message welcome bubble used to always claim "Ta forme est au top" regardless of
+    /// the real `readiness` score (even a low one) and regardless of whether any real data backed
+    /// it at all — mirrors the honest, `hasReadinessData`-gated copy `HomeView.readinessMessage`
+    /// already uses.
+    private var welcomeMessage: String {
+        let sessionPart = "J'ai relevé ta séance à \(profile.todaySession.title)."
+        guard profile.hasReadinessData else {
+            return "Salut \(profile.name) 👋 \(sessionPart) Une question avant de te lancer ?"
+        }
+        let formPart: String
+        switch profile.readiness {
+        case 85...: formPart = "Ta forme est au top aujourd'hui (\(profile.readiness)/100)."
+        case 65..<85: formPart = "Ta forme est correcte aujourd'hui (\(profile.readiness)/100)."
+        case 50..<65: formPart = "Un peu de fatigue aujourd'hui (\(profile.readiness)/100)."
+        default: formPart = "Fatigue accumulée aujourd'hui (\(profile.readiness)/100)."
+        }
+        return "Salut \(profile.name) 👋 \(formPart) \(sessionPart) Une question avant de te lancer ?"
     }
 
     private var header: some View {

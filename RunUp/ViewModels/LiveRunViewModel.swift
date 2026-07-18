@@ -14,17 +14,35 @@ final class LiveRunViewModel {
 
     private(set) var elapsedSeconds: Double = 0
     private(set) var isPaused = false
-    private(set) var heartRate = 150
+    /// Nil until a real, recent (last 90s) HealthKit sample comes in — no Watch/HR strap paired
+    /// or streaming means this genuinely has no live reading, which is different from "0 bpm" and
+    /// shouldn't be displayed as a number at all. Was previously a fabricated sine-wave formula
+    /// dressed up as a live measurement; polled for real via `pollHeartRate()` instead.
+    private(set) var heartRate: Int?
     private(set) var coachCue: String?
 
     private var timerTask: Task<Void, Never>?
+    private var heartRatePollTask: Task<Void, Never>?
     private var firedCueTimestamps: Set<Int> = []
     private var coachCueClearTask: Task<Void, Never>?
+
+    /// Real elapsed time for each completed km, recorded the instant real GPS distance crosses a
+    /// whole-km boundary — replaces the formula-shaped fake splits `buildRunRecord` used to
+    /// generate (`secPerKm - 8 + i*3`, the same curve every single run regardless of how the
+    /// runner actually paced it).
+    private(set) var splitSecondsPerKm: [Double] = []
+    private var lastSplitKm = 0
+    private var lastSplitElapsedSeconds: Double = 0
 
     private let cues: [(Int, String)]
 
     var distanceKm: Double { location.distanceMeters / 1000 }
     var isSignalUnstable: Bool { location.isSignalUnstable }
+    /// Only meaningful for the archetypes actually structured as reps (see
+    /// `WorkoutSession.isIntervalSession`) — a continuous footing/tempo/sortie longue has no
+    /// "interval" to be on. Still an approximation (flat 1.2km chunks, not real lap detection —
+    /// no per-km split tracking exists), but no longer shown on session types it doesn't apply to.
+    var isIntervalSession: Bool { profile.todaySession.isIntervalSession }
     var intervalIndex: Int { min(6, 1 + Int(distanceKm / 1.2)) }
     var kcal: Double { distanceKm * 65 }
 
@@ -57,16 +75,39 @@ final class LiveRunViewModel {
                 await MainActor.run { self.tick() }
             }
         }
+        heartRatePollTask = Task { [weak self] in
+            while let self, !Task.isCancelled {
+                await self.pollHeartRate()
+                try? await Task.sleep(for: .seconds(5))
+            }
+        }
     }
 
     private func tick() {
         guard !isPaused else { return }
         elapsedSeconds += 1
-        heartRate = 156 + Int(sin(elapsedSeconds / 40) * 6) + Int.random(in: -2...3)
+        let currentKm = Int(distanceKm)
+        if currentKm > lastSplitKm {
+            splitSecondsPerKm.append(elapsedSeconds - lastSplitElapsedSeconds)
+            lastSplitElapsedSeconds = elapsedSeconds
+            lastSplitKm = currentKm
+        }
         let t = Int(elapsedSeconds)
         for (threshold, message) in cues where t >= threshold && !firedCueTimestamps.contains(threshold) {
             firedCueTimestamps.insert(threshold)
             showCue(message)
+        }
+    }
+
+    /// Polls HealthKit for a genuinely recent heart-rate sample every 5s — separate from `tick()`
+    /// (which runs every second) since there's no reason to hit HealthKit that often, and a real
+    /// sample doesn't update that fast anyway. Stays `nil` (not a fabricated number) whenever
+    /// nothing recent is available — no paired Watch/HR strap streaming into HealthKit, most
+    /// simulators, or HealthKit access never granted.
+    private func pollHeartRate() async {
+        guard !isPaused else { return }
+        if let bpm = await healthKit.latestHeartRate() {
+            await MainActor.run { self.heartRate = Int(bpm.rounded()) }
         }
     }
 
@@ -88,13 +129,18 @@ final class LiveRunViewModel {
     /// Stops tracking and produces a `RunRecord`. Caller (AppState) inserts it into SwiftData.
     func stop() -> RunRecord {
         timerTask?.cancel()
+        heartRatePollTask?.cancel()
         location.stop()
         let record = AdaptivePlanEngine.buildRunRecord(
             title: profile.todaySession.title,
             elapsedSeconds: elapsedSeconds,
             distanceKm: distanceKm,
             kcal: kcal,
-            avgHeartRate: heartRate
+            // 0, same as a manually-logged run — HistoryView already knows to hide the FC line
+            // rather than show a fake number when there's no real reading behind it.
+            avgHeartRate: heartRate ?? 0,
+            elevationGainM: Int(location.elevationGainMeters.rounded()),
+            realSplitSeconds: splitSecondsPerKm
         )
         let endedAt = Date()
         Task { try? await healthKit.saveRun(start: startedAt, end: endedAt, distanceKm: record.distanceKm, kcal: Double(record.kcal)) }

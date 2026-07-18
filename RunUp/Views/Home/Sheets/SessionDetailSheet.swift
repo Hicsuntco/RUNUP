@@ -19,7 +19,7 @@ struct SessionDetailSheet: View {
         let warmup = ("Échauffement", "10-15′ · Z2 · footing relâché", RUColor.cyan)
         let cooldown = ("Retour au calme", "5-10′ · Z1 · marche + étirements", RUColor.lime)
 
-        if title.contains("fractionné") || title.contains("rappel d'allure") {
+        if session.isIntervalSession {
             return [
                 warmup,
                 (intervalDescription, "\(session.pace) /km · \(session.zone) · récupération entre chaque", RUColor.rose),

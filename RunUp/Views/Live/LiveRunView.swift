@@ -63,12 +63,14 @@ struct LiveRunView: View {
                 .background(.ultraThinMaterial, in: Capsule())
             }
             Spacer()
-            Text("Interv. \(vm?.intervalIndex ?? 1)/6")
-                .font(RUFont.bebas(12))
-                .foregroundColor(.white)
-                .padding(.horizontal, 12).padding(.vertical, 7)
-                .background(.black.opacity(0.4), in: Capsule())
-                .background(.ultraThinMaterial, in: Capsule())
+            if vm?.isIntervalSession == true {
+                Text("Interv. \(vm?.intervalIndex ?? 1)/6")
+                    .font(RUFont.bebas(12))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 12).padding(.vertical, 7)
+                    .background(.black.opacity(0.4), in: Capsule())
+                    .background(.ultraThinMaterial, in: Capsule())
+            }
         }
         .overlay(alignment: .top) {
             if vm?.isSignalUnstable == true {
@@ -116,7 +118,13 @@ struct LiveRunView: View {
 
             HStack(spacing: 10) {
                 liveMetric(vm?.paceLabel ?? "--:--", "ALLURE", RUColor.rose2)
-                liveMetric("\(vm?.heartRate ?? 0)", "FC · Z4", RUColor.rose)
+                // No live sensor stream means no real reading — "--" rather than a fabricated
+                // number (was a fake sine-wave formula dressed up as a live measurement).
+                liveMetric(
+                    vm?.heartRate.map { "\($0)" } ?? "--",
+                    "FC · \(appState.profile.todaySession.zone)",
+                    RUColor.rose
+                )
                 liveMetric("\(Int(vm?.kcal ?? 0))", "KCAL", RUColor.cyan)
             }
 

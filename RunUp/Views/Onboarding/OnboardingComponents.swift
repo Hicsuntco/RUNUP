@@ -44,6 +44,10 @@ struct ObNext: View {
         }
         .buttonStyle(PrimaryButtonStyle(isDisabled: disabled))
         .disabled(disabled)
+        // On top of whatever horizontal padding the screen around it already applies — a
+        // full-bleed edge-to-edge CTA read as too heavy/dominant; this pulls it in further so it
+        // sits with real breathing room instead of touching the screen's margins.
+        .padding(.horizontal, 12)
         .padding(.bottom, 24)
     }
 }

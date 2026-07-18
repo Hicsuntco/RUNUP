@@ -63,7 +63,7 @@ struct WelcomeView: View {
                     .padding(.horizontal, 26)
                 }
                 ObNext(label: "COMMENCER", action: onStart)
-                    .padding(.horizontal, 4)
+                    .padding(.horizontal, 22)
             }
         }
     }

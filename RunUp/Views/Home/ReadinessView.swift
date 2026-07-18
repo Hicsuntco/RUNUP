@@ -23,13 +23,22 @@ struct ReadinessView: View {
                 }
 
                 VStack(spacing: 10) {
-                    RingView(pct: Double(profile.readiness), color: RUColor.lime, size: 140, strokeWidth: 10) {
-                        VStack(spacing: 2) {
-                            Text("\(profile.readiness)").displayStyle(30).foregroundColor(RUColor.lime)
-                            Text("/ 100").font(RUFont.mono(11)).foregroundColor(RUColor.text2)
+                    if profile.hasReadinessData {
+                        RingView(pct: Double(profile.readiness), color: RUColor.lime, size: 140, strokeWidth: 10) {
+                            VStack(spacing: 2) {
+                                Text("\(profile.readiness)").displayStyle(30).foregroundColor(RUColor.lime)
+                                Text("/ 100").font(RUFont.mono(11)).foregroundColor(RUColor.text2)
+                            }
                         }
+                        Text("Forme \(profile.readinessLabel)").font(RUFont.sans(15, weight: .semibold)).foregroundColor(.white)
+                    } else {
+                        // An empty ring, not the near-full default score — there's no real RPE
+                        // behind it yet, so nothing should read as "already measured".
+                        RingView(pct: 0, color: RUColor.text3, size: 140, strokeWidth: 10) {
+                            Text("–").displayStyle(30).foregroundColor(RUColor.text3)
+                        }
+                        Text("Pas encore de données").font(RUFont.sans(15, weight: .semibold)).foregroundColor(.white)
                     }
-                    Text("Forme \(profile.readinessLabel)").font(RUFont.sans(15, weight: .semibold)).foregroundColor(.white)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)

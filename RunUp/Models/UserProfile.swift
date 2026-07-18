@@ -189,10 +189,17 @@ final class UserProfile {
         dailyGoalsProgress.filter { $0 >= 1 }.count
     }
 
+    /// False until at least one session has a real RPE behind it — the readiness ring reads as a
+    /// confident, near-full gauge ("bonne forme !") the moment it shows any number at all, which
+    /// is misleading before there's a single real data point feeding it. UI should show an honest
+    /// "pas encore de données" state instead of `readiness` while this is false.
+    var hasReadinessData: Bool { !recentRPESeverities.isEmpty }
+
     /// Real "forme du jour" score — computed, not a static value, from the severity trend of your
     /// last few sessions (`recentRPESeverities`, 0 = facile ... 3 = tropDur) and how many
     /// consecutive days you've trained without rest. No lab-grade recovery data (HRV, sleep) —
     /// just what's already tracked locally, but genuinely responsive instead of a fixed 80.
+    /// Meaningless before `hasReadinessData` — callers should check that first.
     var readiness: Int {
         guard !recentRPESeverities.isEmpty else { return 80 }
         let avgSeverity = Double(recentRPESeverities.reduce(0, +)) / Double(recentRPESeverities.count)

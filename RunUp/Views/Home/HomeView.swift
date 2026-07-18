@@ -119,6 +119,9 @@ struct HomeView: View {
     }
 
     private var readinessMessage: String {
+        guard profile.hasReadinessData else {
+            return "S'affine après ta première séance débriefée."
+        }
         switch profile.readiness {
         case 85...: return "Bien récupérée → séance relevée d'un palier aujourd'hui."
         case 65..<85: return "Forme correcte → séance du jour comme prévu."
@@ -130,11 +133,19 @@ struct HomeView: View {
     private var readinessCard: some View {
         Button(action: { appState.go(.readiness) }) {
             HStack(spacing: 14) {
-                RingView(pct: Double(profile.readiness), color: RUColor.lime, size: 64) {
-                    Text("\(profile.readiness)").displayStyle(20).foregroundColor(RUColor.lime)
+                if profile.hasReadinessData {
+                    RingView(pct: Double(profile.readiness), color: RUColor.lime, size: 64) {
+                        Text("\(profile.readiness)").displayStyle(20).foregroundColor(RUColor.lime)
+                    }
+                } else {
+                    // An empty, un-filled ring rather than the near-full default `readiness`
+                    // (80) — nothing's actually been measured yet, so nothing should look "full".
+                    RingView(pct: 0, color: RUColor.text3, size: 64) {
+                        Text("–").displayStyle(20).foregroundColor(RUColor.text3)
+                    }
                 }
                 VStack(alignment: .leading, spacing: 5) {
-                    EyebrowLabel(text: "Forme du jour · \(profile.readinessLabel)")
+                    EyebrowLabel(text: profile.hasReadinessData ? "Forme du jour · \(profile.readinessLabel)" : "Forme du jour · pas encore de données")
                     Text(readinessMessage)
                         .font(RUFont.sans(12))
                         .foregroundColor(.white.opacity(0.7))

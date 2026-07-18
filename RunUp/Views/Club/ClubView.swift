@@ -469,15 +469,27 @@ struct ClubView: View {
         guard auth.isSignedIn else { return }
         isLoading = true
         errorMessage = nil
-        do {
-            try await auth.refreshMe()
-            board = try await clubService.fetchBoard()
-            // Piggyback a kudos check on every Club tab open, not just when switching to the
-            // "Fil d'activité" segment — otherwise a new kudos notification only ever surfaces if
-            // she happens to tap into the feed specifically.
-            await loadFeed()
-        } catch {
+        // These three requests used to run one after another (refreshMe → fetchBoard → feed),
+        // each paying its own network/cold-start latency on top of the last — the real cause of
+        // the ~5s wait before this tab showed anything (the create/join form sat there the whole
+        // time). None of them actually depends on another's result, so firing them concurrently
+        // cuts the wait to the slowest single request instead of the sum of all three.
+        async let meAttempt = try? await auth.refreshMe()
+        async let boardAttempt = try? await clubService.fetchBoard()
+        async let feedAttempt = try? await clubService.fetchFeed()
+        let (_, boardResult, feedResult) = await (meAttempt, boardAttempt, feedAttempt)
+
+        if let boardResult {
+            board = boardResult
+        } else {
             errorMessage = "Impossible de charger le club — vérifie ta connexion."
+        }
+        // Piggyback a kudos check on every Club tab open, not just when switching to the
+        // "Fil d'activité" segment — otherwise a new kudos notification only ever surfaces if she
+        // happens to tap into the feed specifically.
+        if let feedResult {
+            feed = feedResult
+            notifyNewKudos(in: feedResult)
         }
         isLoading = false
     }

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Step 3 for non-race goals — branches by `goal` (weight/progress/restart/health). Mirrors the
 /// `!isRace` branch of step 3 in onboarding.jsx.
@@ -105,6 +106,18 @@ private struct NumField: View {
                 TextField("", text: $value, prompt: Text(placeholder).foregroundColor(RUColor.text3))
                     .keyboardType(.numberPad)
                     .foregroundColor(.white)
+                    .toolbar {
+                        // .numberPad has no return key and this screen has no scroll-to-dismiss —
+                        // without this, the keyboard has no way to close and permanently covers
+                        // the Continuer button underneath (the bug reported as the weight-goal
+                        // step being "stuck").
+                        ToolbarItemGroup(placement: .keyboard) {
+                            Spacer()
+                            Button("Terminé") {
+                                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                            }
+                        }
+                    }
                 Text(unit).font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.text2)
             }
             .padding(13)

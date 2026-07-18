@@ -18,13 +18,13 @@ struct PrimaryButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(RUFont.bebas(17))
+            .font(RUFont.bebas(16))
             .tracking(1)
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 15)
+            .padding(.vertical, 12)
             .background(fill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .shadow(color: RUColor.rose.opacity(isDisabled ? 0 : 0.35), radius: 22, x: 0, y: 6)
+            .shadow(color: RUColor.rose.opacity(isDisabled ? 0 : 0.3), radius: 16, x: 0, y: 4)
             .opacity(isDisabled ? 0.35 : (configuration.isPressed ? 0.85 : 1))
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
             .animation(.easeOut(duration: 0.12), value: configuration.isPressed)

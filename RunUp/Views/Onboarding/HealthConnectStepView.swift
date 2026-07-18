@@ -32,17 +32,16 @@ struct HealthConnectStepView: View {
     }
 
     private func handleTap(_ source: ConnectedSource) {
-        if source == .apple && !vm.connected.contains(.apple) {
-            vm.connecting = .apple
-            Task {
-                try? await appState.healthKit.requestAuthorization()
-                await MainActor.run {
-                    vm.connected.insert(.apple)
-                    vm.connecting = nil
-                }
+        // Strava/Garmin have no real integration yet — tapping them does nothing rather than
+        // faking a successful connection (see ConnectRow below).
+        guard source == .apple, !vm.connected.contains(.apple) else { return }
+        vm.connecting = .apple
+        Task {
+            try? await appState.healthKit.requestAuthorization()
+            await MainActor.run {
+                vm.connected.insert(.apple)
+                vm.connecting = nil
             }
-        } else {
-            vm.toggleConnect(source)
         }
     }
 }
@@ -72,7 +71,9 @@ private struct ConnectRow: View {
                     Text(source.subtitle).font(RUFont.sans(11.5)).foregroundColor(RUColor.text2)
                 }
                 Spacer()
-                if busy {
+                if source != .apple {
+                    Text("Bientôt").font(RUFont.sans(11, weight: .semibold)).foregroundColor(RUColor.text3)
+                } else if busy {
                     ProgressView().tint(.white)
                 } else if connected {
                     Text("CONNECTÉ ✓").font(RUFont.sans(11, weight: .bold)).foregroundColor(RUColor.lime)
@@ -85,9 +86,11 @@ private struct ConnectRow: View {
                 }
             }
             .padding(15)
+            .opacity(source != .apple ? 0.5 : 1)
             .background(connected ? RUColor.lime.opacity(0.1) : RUColor.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(connected ? RUColor.lime.opacity(0.35) : RUColor.line, lineWidth: RUSpacing.hairline))
         }
         .buttonStyle(PressableStyle())
+        .disabled(source != .apple)
     }
 }

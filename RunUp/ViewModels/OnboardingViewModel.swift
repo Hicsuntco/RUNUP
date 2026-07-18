@@ -102,20 +102,6 @@ final class OnboardingViewModel {
         }
     }
 
-    func toggleConnect(_ source: ConnectedSource) {
-        if connected.contains(source) {
-            connected.remove(source)
-            return
-        }
-        connecting = source
-        Task {
-            try? await Task.sleep(for: .seconds(1.1))
-            await MainActor.run {
-                connected.insert(source)
-                connecting = nil
-            }
-        }
-    }
 
     func buildResult() -> AdaptivePlanEngine.OnboardingResult {
         AdaptivePlanEngine.OnboardingResult(

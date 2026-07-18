@@ -18,6 +18,7 @@ final class AppState {
     var sessionDetailPresented = false
     var programSettingsPresented = false
     var notificationsPresented = false
+    var manualDebriefPresented = false
 
     // Live run (ephemeral, survives navigating away from the Live screen)
     var liveRun: LiveRunViewModel?
@@ -104,6 +105,36 @@ final class AppState {
         liveRun = nil
         screen = .recap
         return record
+    }
+
+    /// Logs today's planned session as done without going through the GPS Live Run flow — for a
+    /// strength day, a treadmill session, or simply forgetting to hit record. Builds a synthetic
+    /// `RunRecord` from the session's own planned duration/pace (no real heart-rate reading, so
+    /// `avgHeartRate` is 0 — `HistoryView` already knows to hide that line rather than show a
+    /// fake number) and opens the same RPE debrief every other run goes through, so streak/XP/
+    /// plan-adaptation all work identically either way.
+    func markTodaySessionDone() {
+        let session = profile.todaySession
+        guard session.durationMinutes > 0 else { return }
+        let elapsedSeconds = Double(session.durationMinutes * 60)
+        let secPerKm = parsePaceSecondsPerKm(session.pace) ?? 300
+        let distanceKm = elapsedSeconds / secPerKm
+        let record = AdaptivePlanEngine.buildRunRecord(
+            title: session.title,
+            elapsedSeconds: elapsedSeconds,
+            distanceKm: distanceKm,
+            kcal: distanceKm * 62,
+            avgHeartRate: 0
+        )
+        modelContext.insert(record)
+        lastRun = record
+        manualDebriefPresented = true
+    }
+
+    private func parsePaceSecondsPerKm(_ pace: String) -> Double? {
+        let parts = pace.split(separator: ":").compactMap { Double($0) }
+        guard parts.count == 2 else { return nil }
+        return parts[0] * 60 + parts[1]
     }
 
     func openSessionDetail() { sessionDetailPresented = true }

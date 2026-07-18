@@ -5,7 +5,10 @@ import SwiftData
 /// so newly completed runs appear automatically ahead of older ones (newest-first).
 struct HistoryView: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.modelContext) private var modelContext
     @Query(sort: \RunRecord.date, order: .reverse) private var runs: [RunRecord]
+    @State private var showAddRun = false
+    @State private var pendingDelete: RunRecord?
 
     var body: some View {
         ScrollView {
@@ -16,16 +19,48 @@ struct HistoryView: View {
                         EyebrowLabel(text: "\(runs.count) sorties", color: RUColor.rose)
                         Text("Historique").displayStyle(22).foregroundColor(.white)
                     }
+                    Spacer()
+                    Button(action: { showAddRun = true }) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(width: 36, height: 36)
+                            .background(RUColor.card, in: Circle())
+                            .overlay(Circle().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                    }
+                    .buttonStyle(PressableStyle())
                 }
                 .padding(.bottom, 8)
 
+                if runs.isEmpty {
+                    Text("Aucune course pour l'instant — termine une sortie ou ajoutes-en une manuellement.")
+                        .font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+                        .padding(.top, 8)
+                }
+
                 ForEach(runs) { run in
                     runCard(run)
+                        .contextMenu {
+                            Button("Supprimer", role: .destructive) { pendingDelete = run }
+                        }
                 }
             }
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.top, 8)
             .padding(.bottom, 130)
+        }
+        .sheet(isPresented: $showAddRun) { AddRunSheet() }
+        .alert(
+            "Supprimer cette course ?",
+            isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } })
+        ) {
+            Button("Supprimer", role: .destructive) {
+                if let run = pendingDelete { modelContext.delete(run) }
+                pendingDelete = nil
+            }
+            Button("Annuler", role: .cancel) { pendingDelete = nil }
+        } message: {
+            Text("Cette action est définitive.")
         }
     }
 
@@ -35,7 +70,14 @@ struct HistoryView: View {
                 Text(run.date, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated))
                     .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
                 Spacer()
-                Text("FC moy \(run.avgHeartRate)").font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+                // A manually-logged run has no real heart-rate reading — 0 would just be a fake
+                // number dressed up as data, so the line is dropped entirely instead.
+                if run.avgHeartRate > 0 {
+                    Text("FC moy \(run.avgHeartRate)").font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+                }
+                Button(action: { pendingDelete = run }) {
+                    Image(systemName: "trash").font(.system(size: 12)).foregroundColor(RUColor.text3)
+                }
             }
             Text(run.title).font(RUFont.sans(15, weight: .semibold)).foregroundColor(.white)
             HStack(spacing: 20) {

@@ -66,19 +66,26 @@ struct ProfileView: View {
                     Text(source == .apple ? "🍎" : source == .strava ? "🟠" : "⌚").font(.system(size: 17))
                     Text(source.title).font(RUFont.sans(14, weight: .medium)).foregroundColor(.white)
                     Spacer()
-                    Toggle("", isOn: Binding(
-                        get: { profile.connectedSources.contains(source) },
-                        set: { on in
-                            if on {
-                                profile.connectedSources.append(source)
-                                if source == .apple { Task { try? await appState.healthKit.requestAuthorization() } }
-                            } else {
-                                profile.connectedSources.removeAll { $0 == source }
+                    if source == .apple {
+                        Toggle("", isOn: Binding(
+                            get: { profile.connectedSources.contains(source) },
+                            set: { on in
+                                if on {
+                                    profile.connectedSources.append(source)
+                                    Task { try? await appState.healthKit.requestAuthorization() }
+                                } else {
+                                    profile.connectedSources.removeAll { $0 == source }
+                                }
                             }
-                        }
-                    ))
-                    .labelsHidden()
-                    .tint(RUColor.rose)
+                        ))
+                        .labelsHidden()
+                        .tint(RUColor.rose)
+                    } else {
+                        // Strava/Garmin have no real integration yet — a working-looking toggle
+                        // here would silently do nothing, which reads as broken rather than
+                        // simply "not built yet".
+                        Text("Bientôt").font(RUFont.sans(11, weight: .semibold)).foregroundColor(RUColor.text3)
+                    }
                 }
                 .padding(.horizontal, 14).padding(.vertical, 13)
                 if source != ConnectedSource.allCases.last {

@@ -62,7 +62,7 @@ struct CoachView: View {
                 Text("Ton coach").displayStyle(19).foregroundColor(.white)
                 HStack(spacing: 5) {
                     Circle().fill(RUColor.lime).frame(width: 5, height: 5)
-                    Text("en ligne · connaît ton historique")
+                    Text("en ligne")
                         .font(RUFont.sans(10))
                         .foregroundColor(RUColor.lime)
                 }

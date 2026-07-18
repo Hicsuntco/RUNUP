@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 /// Social/club screen — a real, server-backed club (see `ClubService`, `api/clubs/*.js`,
 /// `api/activities/*.js`), not `ClubMockData`: the leaderboard is computed from real members' XP,
@@ -162,22 +163,53 @@ struct ClubView: View {
     }
 
     private var membershipRow: some View {
-        HStack {
-            if let code = board.club?.inviteCode {
-                Text("Code : \(code)").font(RUFont.mono(11)).foregroundColor(RUColor.text2)
-            }
-            Spacer()
+        VStack(alignment: .leading, spacing: 10) {
             if let club = board.club {
-                Button("Signaler ce club") {
-                    reportTarget = ReportTarget(targetType: "club", targetId: club.id, displayName: "le club \(club.name)")
-                }
-                .font(RUFont.sans(11, weight: .semibold))
-                .foregroundColor(RUColor.text3)
+                inviteCodeCard(club.inviteCode)
             }
-            Button("Quitter le club") { Task { await leaveClub() } }
-                .font(RUFont.sans(11, weight: .semibold))
-                .foregroundColor(RUColor.text3)
+            HStack {
+                if let club = board.club {
+                    Button("Signaler ce club") {
+                        reportTarget = ReportTarget(targetType: "club", targetId: club.id, displayName: "le club \(club.name)")
+                    }
+                    .font(RUFont.sans(11, weight: .semibold))
+                    .foregroundColor(RUColor.text3)
+                }
+                Spacer()
+                Button("Quitter le club") { Task { await leaveClub() } }
+                    .font(RUFont.sans(11, weight: .semibold))
+                    .foregroundColor(RUColor.text3)
+            }
         }
+    }
+
+    /// The invite code used to only be a tiny mono label with no way to actually get it to a
+    /// friend — tap to copy, or use the share sheet to send it directly.
+    private func inviteCodeCard(_ code: String) -> some View {
+        HStack(spacing: 12) {
+            Button(action: {
+                UIPasteboard.general.string = code
+                appState.toast("Code copié")
+            }) {
+                VStack(alignment: .leading, spacing: 2) {
+                    EyebrowLabel(text: "Code d'invitation · toucher pour copier", color: RUColor.text3)
+                    Text(code).font(RUFont.mono(20, weight: .bold)).foregroundColor(.white).tracking(3)
+                }
+            }
+            .buttonStyle(PressableStyle())
+            Spacer()
+            ShareLink(item: "Rejoins mon club sur RunUp avec le code \(code) !") {
+                Image(systemName: "square.and.arrow.up")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(width: 38, height: 38)
+                    .background(RUColor.rose, in: Circle())
+            }
+            .buttonStyle(PressableStyle())
+        }
+        .padding(14)
+        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
     }
 
     // MARK: Signed in, in a club

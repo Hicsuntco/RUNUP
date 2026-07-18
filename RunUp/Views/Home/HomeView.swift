@@ -152,6 +152,10 @@ struct HomeView: View {
                     Text("Pas de séance prévue — profite-en pour récupérer.")
                         .font(RUFont.sans(11)).foregroundColor(RUColor.text3)
                         .padding(.top, 14)
+                } else if profile.seanceDoneToday {
+                    Text("Séance faite aujourd'hui ✓")
+                        .font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.lime)
+                        .padding(.top, 14)
                 } else {
                     HStack(spacing: 16) {
                         MetricColumn(value: "\(session.durationMinutes)′", label: "Durée")
@@ -160,10 +164,19 @@ struct HomeView: View {
                     }
                     .padding(.top, 14)
 
-                    Button(action: { appState.startRun() }) {
-                        HStack { Image(systemName: "play.fill"); Text("DÉMARRER") }
+                    HStack(spacing: 8) {
+                        // For a strength session, a treadmill run, or just forgetting to hit
+                        // record — logging it shouldn't require the full GPS flow.
+                        Button(action: { appState.markTodaySessionDone() }) {
+                            HStack { Image(systemName: "checkmark"); Text("FAIT") }
+                        }
+                        .buttonStyle(SecondaryButtonStyle())
+
+                        Button(action: { appState.startRun() }) {
+                            HStack { Image(systemName: "play.fill"); Text("DÉMARRER") }
+                        }
+                        .buttonStyle(PrimaryButtonStyle())
                     }
-                    .buttonStyle(PrimaryButtonStyle())
                     .padding(.top, 15)
                 }
             }
@@ -171,6 +184,11 @@ struct HomeView: View {
         }
         .buttonStyle(PressableStyle())
         .ruCard()
+        .sheet(isPresented: Binding(get: { appState.manualDebriefPresented }, set: { appState.manualDebriefPresented = $0 })) {
+            if let run = appState.lastRun {
+                DebriefSheet(run: run).runUpSheetStyle()
+            }
+        }
     }
 
     private var ringsCard: some View {

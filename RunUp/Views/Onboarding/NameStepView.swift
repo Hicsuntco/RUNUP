@@ -21,7 +21,6 @@ struct NameStepView: View {
                 ObTextField(placeholder: "Léa", text: $vm.name)
                     .padding(.top, 22)
                 Spacer()
-                Spacer()
             }
             ObNext(disabled: !vm.canProceed(fromStep: 0), action: onNext)
         }

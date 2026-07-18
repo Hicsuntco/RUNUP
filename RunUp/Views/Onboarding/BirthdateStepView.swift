@@ -6,6 +6,7 @@ struct BirthdateStepView: View {
 
     var body: some View {
         ObScreen {
+            Spacer()
             ObTitle(
                 eyebrow: "Étape 1 · \(vm.name.isEmpty ? "toi" : vm.name)",
                 title: "TA DATE DE NAISSANCE ?",

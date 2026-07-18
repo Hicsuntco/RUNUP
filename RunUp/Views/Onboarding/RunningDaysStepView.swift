@@ -6,6 +6,7 @@ struct RunningDaysStepView: View {
 
     var body: some View {
         ObScreen {
+            Spacer()
             ObTitle(eyebrow: "Étape 4 · ton rythme", title: "TES JOURS DE COURSE", subtitle: "Le programme se cale dessus — tu pourras toujours bouger une séance.")
             HStack(spacing: 7) {
                 ForEach(0..<7) { i in

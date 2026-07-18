@@ -9,6 +9,7 @@ struct HealthConnectStepView: View {
 
     var body: some View {
         ObScreen {
+            Spacer()
             ObTitle(
                 eyebrow: "Étape 6 · tes données",
                 title: "CONNECTE TA MONTRE",

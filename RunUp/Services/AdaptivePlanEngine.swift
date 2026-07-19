@@ -396,12 +396,33 @@ enum AdaptivePlanEngine {
             }
         }
 
-        if profile.cyclePhase == .menstrual {
+        // Every phase gets a real, distinct treatment — not just menstrual with the other three
+        // silently ignored. Grounded in general exercise-physiology guidance (energy/recovery
+        // capacity shifts across the cycle), framed as a nudge to listen to her body, never as a
+        // medical claim.
+        if let phase = profile.cyclePhase {
             result = result.map { a in
                 var eased = a
-                eased.baseDuration = Int(Double(a.baseDuration) * 0.85)
-                if a.role == .speed {
-                    eased.subtitle += " · allégé (phase menstruelle)"
+                switch phase {
+                case .menstrual:
+                    // Energy/recovery capacity is typically lowest here — ease the whole week.
+                    eased.baseDuration = Int(Double(a.baseDuration) * 0.85)
+                    if a.role == .speed { eased.subtitle += " · allégé (phase menstruelle)" }
+                case .luteal:
+                    // Progesterone rise can raise perceived effort for the same real pace — a
+                    // lighter touch than menstrual, and only on the hardest session.
+                    if a.role == .speed {
+                        eased.baseDuration = Int(Double(a.baseDuration) * 0.92)
+                        eased.subtitle += " · vise le ressenti plus que le chrono (phase lutéale)"
+                    }
+                case .follicular:
+                    // Rising estrogen typically means rising energy/recovery capacity — a real
+                    // green light, not just "no adjustment".
+                    if a.role == .speed { eased.subtitle += " · bon moment pour pousser (phase folliculaire)" }
+                case .ovulation:
+                    // Often the cycle's real performance peak — session stays exactly as planned,
+                    // said explicitly rather than leaving it unremarked.
+                    if a.role == .speed { eased.subtitle += " · pic de forme estimé, allure comme prévu (ovulation)" }
                 }
                 return eased
             }

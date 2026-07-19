@@ -41,6 +41,11 @@ struct ProfileView: View {
                 sectionTitle("Programme")
                 programCard
 
+                if profile.sex == "female" {
+                    sectionTitle("Cycle")
+                    cycleCard
+                }
+
                 if appState.auth.isSignedIn {
                     sectionTitle("Compte")
                     accountCard
@@ -194,6 +199,91 @@ struct ProfileView: View {
         }
         .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+    }
+
+    /// Only shown when `profile.sex == "female"` — lets her set up cycle tracking after
+    /// onboarding (or change it later) rather than only ever getting the one chance during
+    /// onboarding. `AdaptivePlanEngine.adjustForWellbeing` reads `profile.cyclePhase` directly, so
+    /// editing these fields here immediately changes next week's plan, same as any other program
+    /// setting.
+    private var cycleCard: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("Suivi du cycle").font(RUFont.sans(14, weight: .medium)).foregroundColor(.white)
+                Spacer()
+                Toggle("", isOn: Binding(
+                    get: { profile.cycleTrackingEnabled },
+                    set: { on in
+                        profile.cycleTrackingEnabled = on
+                        if on && profile.lastPeriodStartDate == nil { profile.lastPeriodStartDate = .now }
+                    }
+                ))
+                .labelsHidden()
+                .tint(RUColor.rose)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 13)
+
+            if profile.cycleTrackingEnabled {
+                Divider().background(RUColor.line)
+                VStack(alignment: .leading, spacing: 14) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Date des dernières règles").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+                        DatePicker(
+                            "",
+                            selection: Binding(get: { profile.lastPeriodStartDate ?? .now }, set: { profile.lastPeriodStartDate = $0 }),
+                            in: ...Date(),
+                            displayedComponents: .date
+                        )
+                        .datePickerStyle(.compact)
+                        .labelsHidden()
+                        .colorScheme(.dark)
+                    }
+
+                    HStack {
+                        Text("Durée moyenne du cycle").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+                        Spacer()
+                        Stepper(
+                            "\(profile.averageCycleLengthDays) jours",
+                            value: Binding(get: { profile.averageCycleLengthDays }, set: { profile.averageCycleLengthDays = $0 }),
+                            in: 21...35
+                        )
+                        .fixedSize()
+                        .tint(RUColor.rose)
+                        .foregroundColor(.white)
+                    }
+
+                    if let phase = profile.cyclePhase {
+                        HStack(spacing: 7) {
+                            Circle().fill(cyclePhaseColor(phase)).frame(width: 8, height: 8)
+                            Text("Phase actuelle estimée : \(cyclePhaseLabel(phase))")
+                                .font(RUFont.sans(12, weight: .semibold))
+                                .foregroundColor(cyclePhaseColor(phase))
+                        }
+                    }
+                }
+                .padding(.horizontal, 14).padding(.bottom, 14).padding(.top, 2)
+            }
+        }
+        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+    }
+
+    private func cyclePhaseLabel(_ phase: UserProfile.CyclePhase) -> String {
+        switch phase {
+        case .menstrual: return "menstruelle"
+        case .follicular: return "folliculaire"
+        case .ovulation: return "ovulatoire"
+        case .luteal: return "lutéale"
+        }
+    }
+
+    private func cyclePhaseColor(_ phase: UserProfile.CyclePhase) -> Color {
+        switch phase {
+        case .menstrual: return RUColor.rose
+        case .follicular: return RUColor.lime
+        case .ovulation: return RUColor.cyan
+        case .luteal: return RUColor.amber
+        }
     }
 
     private func programRow(_ label: String, action: @escaping () -> Void) -> some View {

@@ -127,6 +127,9 @@ final class UserProfile {
     /// when someone new claps for one of your runs and post a real notification for it, instead
     /// of silently refetching the same feed over and over.
     var kudosSeenCounts: [String: Int] = [:]
+    /// Same idea as `kudosSeenCounts` but for comments — lets `ClubView` notice when someone
+    /// leaves a new comment on one of your own posted activities.
+    var commentsSeenCounts: [String: Int] = [:]
 
     init(name: String = "") {
         self.name = name

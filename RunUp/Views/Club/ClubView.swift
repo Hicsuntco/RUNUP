@@ -25,6 +25,7 @@ struct ClubView: View {
     @State private var reportTarget: ReportTarget?
     @State private var pendingBlock: (userId: String, name: String)?
     @State private var showManagement = false
+    @State private var commentsActivity: FeedItem?
 
     private enum Tab { case board, feed }
 
@@ -75,6 +76,28 @@ struct ClubView: View {
         .task { await loadIfSignedIn() }
         .sheet(isPresented: $showSignIn) {
             SignInView()
+        }
+        .sheet(item: $commentsActivity) { activity in
+            ActivityCommentsSheet(
+                activity: activity,
+                currentUserId: auth.currentUser?.id,
+                clubService: clubService,
+                onCommentPosted: { bumpCommentsCount(activity.id) },
+                onReport: { comment in
+                    commentsActivity = nil
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(400))
+                        reportTarget = ReportTarget(targetType: "comment", targetId: comment.id, displayName: "le commentaire de \(comment.name)")
+                    }
+                },
+                onBlock: { comment in
+                    commentsActivity = nil
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(400))
+                        pendingBlock = (comment.userId, comment.name)
+                    }
+                }
+            )
         }
         .onChange(of: auth.isSignedIn) { _, signedIn in
             if signedIn { Task { await loadIfSignedIn() } }
@@ -434,18 +457,33 @@ struct ClubView: View {
                         }
                         Spacer(minLength: 0)
                     }
-                    Button(action: { Task { await toggleKudos(item) } }) {
-                        HStack(spacing: 6) {
-                            Text("👏")
-                            Text("\(item.kudos)")
+                    HStack(spacing: 8) {
+                        Button(action: { Task { await toggleKudos(item) } }) {
+                            HStack(spacing: 6) {
+                                Text("👏")
+                                Text("\(item.kudos)")
+                            }
+                            .font(RUFont.sans(11.5, weight: .semibold))
+                            .foregroundColor(item.kudoedByMe ? RUColor.rose2 : RUColor.text2)
+                            .padding(.horizontal, 12).padding(.vertical, 6)
+                            .background(item.kudoedByMe ? RUColor.rose.opacity(0.16) : RUColor.card2, in: Capsule())
+                            .overlay(Capsule().stroke(item.kudoedByMe ? RUColor.rose.opacity(0.35) : RUColor.line, lineWidth: RUSpacing.hairline))
                         }
-                        .font(RUFont.sans(11.5, weight: .semibold))
-                        .foregroundColor(item.kudoedByMe ? RUColor.rose2 : RUColor.text2)
-                        .padding(.horizontal, 12).padding(.vertical, 6)
-                        .background(item.kudoedByMe ? RUColor.rose.opacity(0.16) : RUColor.card2, in: Capsule())
-                        .overlay(Capsule().stroke(item.kudoedByMe ? RUColor.rose.opacity(0.35) : RUColor.line, lineWidth: RUSpacing.hairline))
+                        .buttonStyle(PressableStyle())
+
+                        Button(action: { commentsActivity = item }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "bubble.left")
+                                Text("\(item.commentsCount)")
+                            }
+                            .font(RUFont.sans(11.5, weight: .semibold))
+                            .foregroundColor(RUColor.text2)
+                            .padding(.horizontal, 12).padding(.vertical, 6)
+                            .background(RUColor.card2, in: Capsule())
+                            .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                        }
+                        .buttonStyle(PressableStyle())
                     }
-                    .buttonStyle(PressableStyle())
                 }
                 .padding(13)
                 .ruCard()
@@ -490,6 +528,7 @@ struct ClubView: View {
         if let feedResult {
             feed = feedResult
             notifyNewKudos(in: feedResult)
+            notifyNewComments(in: feedResult)
         }
         isLoading = false
     }
@@ -498,6 +537,7 @@ struct ClubView: View {
         do {
             feed = try await clubService.fetchFeed()
             notifyNewKudos(in: feed)
+            notifyNewComments(in: feed)
         } catch {
             errorMessage = "Impossible de charger le fil d'activité."
         }
@@ -587,6 +627,36 @@ struct ClubView: View {
         }
     }
 
+    /// Optimistic local bump after posting a comment — avoids a full feed refetch just to reflect
+    /// the +1 this device already knows about.
+    private func bumpCommentsCount(_ activityId: String) {
+        guard let index = feed.firstIndex(where: { $0.id == activityId }) else { return }
+        feed[index].commentsCount += 1
+        if let myId = auth.currentUser?.id, feed[index].userId == myId {
+            profile.commentsSeenCounts[activityId] = feed[index].commentsCount
+        }
+    }
+
+    /// Same idea as `notifyNewKudos`: compares each of your own posts' current comment count
+    /// against what was last seen and posts one bell notification per post that gained new
+    /// comments since — never for comments left by yourself in `ActivityCommentsSheet`, since
+    /// `bumpCommentsCount` above already advances the "seen" mark for those.
+    private func notifyNewComments(in feed: [FeedItem]) {
+        guard let myId = auth.currentUser?.id else { return }
+        for item in feed where item.userId == myId {
+            let seen = profile.commentsSeenCounts[item.id] ?? 0
+            if item.commentsCount > seen {
+                let gained = item.commentsCount - seen
+                appState.notify(
+                    icon: "💬", colorHex: 0xFF3B6B,
+                    title: "Nouveaux commentaires",
+                    text: gained == 1 ? "Quelqu'un a commenté ta séance." : "\(gained) personnes ont commenté ta séance."
+                )
+            }
+            profile.commentsSeenCounts[item.id] = item.commentsCount
+        }
+    }
+
     private func submitReport(_ target: ReportTarget, reason: String) async {
         do {
             try await clubService.report(targetType: target.targetType, targetId: target.targetId, reason: reason)
@@ -630,7 +700,9 @@ private struct ClubBadge: Identifiable {
     var earned: Bool
 }
 
-private extension Date {
+extension Date {
+    /// Shared with `ActivityCommentsSheet` — one relative-time formatter for the feed and its
+    /// comment threads instead of two copies.
     var relativeDescription: String {
         let formatter = RelativeDateTimeFormatter()
         formatter.locale = Locale(identifier: "fr_FR")

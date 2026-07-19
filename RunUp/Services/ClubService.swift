@@ -40,6 +40,17 @@ struct FeedItem: Decodable, Identifiable {
     var createdAt: Date
     var kudos: Int
     var kudoedByMe: Bool
+    var commentsCount: Int
+}
+
+/// A real comment on a club-mate's activity — several per activity/user, unlike kudos (one toggle
+/// per user per activity).
+struct CommentItem: Decodable, Identifiable {
+    var id: String
+    var userId: String
+    var name: String
+    var text: String
+    var createdAt: Date
 }
 
 /// Returned by `createClub` — used by the caller to show the invite code to share.
@@ -106,6 +117,17 @@ struct ClubService {
         return response.kudoed
     }
 
+    /// Oldest-first — a comment thread reads top-down, same as any chat/comment UI.
+    func fetchComments(activityId: String) async throws -> [CommentItem] {
+        let response: CommentsResponse = try await send(path: "api/activities/comments", method: "GET", query: ["activityId": activityId])
+        return response.items
+    }
+
+    @discardableResult
+    func postComment(activityId: String, text: String) async throws -> CommentItem {
+        try await send(path: "api/activities/comments", method: "POST", body: ["activityId": activityId, "text": text])
+    }
+
     /// Posts one completed activity to the club feed and credits its XP to the account's real
     /// server-side total. `clientId` is a fresh UUID per call so a retried request (flaky
     /// network) never double-counts the XP or duplicates the feed entry — see
@@ -144,9 +166,13 @@ struct ClubService {
 
     // MARK: -
 
-    private func send<T: Decodable>(path: String, method: String, body: [String: Any]? = nil) async throws -> T {
+    private func send<T: Decodable>(path: String, method: String, body: [String: Any]? = nil, query: [String: String]? = nil) async throws -> T {
         guard let token = auth.token else { throw ClubServiceError.notSignedIn }
-        var request = URLRequest(url: Self.baseURL.appending(path: path))
+        var url = Self.baseURL.appending(path: path)
+        if let query, !query.isEmpty {
+            url.append(queryItems: query.map { URLQueryItem(name: $0.key, value: $0.value) })
+        }
+        var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         if let body {
@@ -178,6 +204,10 @@ private struct FeedResponse: Decodable {
 
 private struct KudosResponse: Decodable {
     var kudoed: Bool
+}
+
+private struct CommentsResponse: Decodable {
+    var items: [CommentItem]
 }
 
 private struct OkResponse: Decodable {

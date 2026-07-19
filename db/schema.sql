@@ -63,6 +63,19 @@ CREATE TABLE IF NOT EXISTS activity_kudos (
   PRIMARY KEY (activity_id, user_id)
 );
 
+-- Real comments on a club-mate's activity — several per activity, per user, unlike kudos (one
+-- toggle per user). Moderated the same way as everything else user-generated: the blocklist filter
+-- at submission (lib/moderation.js) plus the report mechanism (target_type 'comment').
+CREATE TABLE IF NOT EXISTS activity_comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  activity_id UUID NOT NULL REFERENCES activities(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  text TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_activity_comments_activity_created ON activity_comments(activity_id, created_at ASC);
+
 -- Moderation (App Store guideline 1.2 — user-generated content: club names, display names, and
 -- the activity feed need a block + report mechanism, not just a content filter at creation time).
 

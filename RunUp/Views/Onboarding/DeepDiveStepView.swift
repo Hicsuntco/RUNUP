@@ -27,6 +27,8 @@ struct DeepDiveStepView: View {
                 case .restart: restartFields
                 default: healthFields
                 }
+
+                WellbeingFieldsView(vm: vm)
             }
             ObNext(disabled: !vm.canProceed(fromStep: 3), action: onNext)
         }
@@ -64,12 +66,6 @@ struct DeepDiveStepView: View {
             ChipFlowLayout {
                 ForEach([("1m", "Moins d'1 mois"), ("6m", "1 à 6 mois"), ("1y", "6 mois à 1 an"), ("1y+", "Plus d'1 an")], id: \.0) { id, label in
                     SelectableChip(label: label, selected: vm.lastRanRecency == id) { vm.lastRanRecency = id }
-                }
-            }
-            EyebrowLabel(text: "Une douleur ou blessure à surveiller ?", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
-            ChipFlowLayout {
-                ForEach([("none", "Aucune"), ("knee", "Genou"), ("ankle", "Cheville"), ("back", "Dos"), ("other", "Autre")], id: \.0) { id, label in
-                    SelectableChip(label: label, selected: vm.injuryArea == id) { vm.injuryArea = id }
                 }
             }
         }

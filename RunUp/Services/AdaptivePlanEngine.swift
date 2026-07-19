@@ -18,6 +18,7 @@ enum AdaptivePlanEngine {
     struct OnboardingResult {
         var name: String
         var birthdate: Date?
+        var sex: String?
         var goal: GoalType
         var raceDistance: RaceDistance?
         var raceDistanceCustom: String?
@@ -38,11 +39,15 @@ enum AdaptivePlanEngine {
         var injuryArea: String?
         var weeklyTimeBudget: String?
         var preferredTimeOfDay: String?
+        var cycleTrackingEnabled: Bool
+        var lastPeriodStartDate: Date?
+        var averageCycleLengthDays: Int
     }
 
     static func applyOnboarding(_ result: OnboardingResult, to profile: UserProfile) {
         profile.name = result.name.isEmpty ? "Toi" : result.name
         profile.birthdate = result.birthdate
+        profile.sex = result.sex
         profile.goalId = result.goal
         profile.raceDistance = result.raceDistance
         profile.raceDistanceCustom = result.raceDistanceCustom
@@ -61,6 +66,9 @@ enum AdaptivePlanEngine {
         profile.injuryArea = result.injuryArea
         profile.weeklyTimeBudget = result.weeklyTimeBudget
         profile.preferredTimeOfDay = result.preferredTimeOfDay
+        profile.cycleTrackingEnabled = result.cycleTrackingEnabled
+        profile.lastPeriodStartDate = result.lastPeriodStartDate
+        profile.averageCycleLengthDays = result.averageCycleLengthDays
         profile.goalDisplay = goalDisplay(goal: result.goal, distance: result.raceDistance, custom: result.raceDistanceCustom, chrono: result.raceChrono)
         profile.onboarded = true
         profile.programPhase = .active
@@ -319,35 +327,87 @@ enum AdaptivePlanEngine {
             max(20, Int((km * zones.easySecPerKm / 60).rounded()))
         }
 
+        let base: [SessionArchetype]
         switch block {
         case .base:
             let longRunKm = min(raceKm * 0.55, 14)
-            return [
+            base = [
                 SessionArchetype(role: .easy, title: "Footing tranquille", subtitle: "installe l'endurance de fond, allure confort", pace: zones.easy, zone: "Z2", baseDuration: 30),
                 SessionArchetype(role: .speed, title: "Fractionné léger 5 × 500 m", subtitle: "récup 300 m · garde le tonus sans se cramer", pace: zones.threshold, zone: "Z3", baseDuration: 32),
                 SessionArchetype(role: .longRun, title: "Sortie longue", subtitle: "allonge progressivement la distance", pace: zones.easy, zone: "Z2", baseDuration: longRunDuration(longRunKm))
             ]
         case .specifique:
             let longRunKm = min(raceKm * 0.8, 30)
-            return [
+            base = [
                 SessionArchetype(role: .speed, title: "Fractionné VMA 6 × 800 m", subtitle: "récup 400 m · travaille la vitesse", pace: zones.interval, zone: "Z4", baseDuration: 40),
                 SessionArchetype(role: .speed, title: "Tempo run", subtitle: "allure seuil soutenue", pace: zones.threshold, zone: "Z3", baseDuration: 35),
                 SessionArchetype(role: .longRun, title: "Sortie longue", subtitle: "bloc spécifique, un peu d'allure course", pace: zones.marathon, zone: "Z2-3", baseDuration: longRunDuration(longRunKm))
             ]
         case .affutage:
             let longRunKm = max(6, raceKm * 0.35)
-            return [
+            base = [
                 SessionArchetype(role: .easy, title: "Footing d'entretien", subtitle: "relâché, garde les jambes fraîches", pace: zones.easy, zone: "Z2", baseDuration: 25),
                 SessionArchetype(role: .speed, title: "Rappel d'allure 3 × 1 km", subtitle: "à l'allure visée le jour J", pace: zones.marathon, zone: "Z3", baseDuration: 25),
                 SessionArchetype(role: .longRun, title: "Sortie courte", subtitle: "décharge avant l'objectif", pace: zones.easy, zone: "Z2", baseDuration: longRunDuration(longRunKm))
             ]
         case .deload:
-            return [
+            base = [
                 SessionArchetype(role: .easy, title: "Footing récup", subtitle: "coupe le volume, écoute tes jambes", pace: zones.easy, zone: "Z1-2", baseDuration: 22),
                 SessionArchetype(role: .speed, title: "Footing tonique", subtitle: "quelques accélérations libres, sans chrono", pace: zones.threshold, zone: "Z2-3", baseDuration: 28),
                 SessionArchetype(role: .longRun, title: "Sortie longue allégée", subtitle: "aucune pression de distance cette semaine", pace: zones.easy, zone: "Z2", baseDuration: longRunDuration(min(raceKm * 0.4, 8)))
             ]
         }
+
+        return adjustForWellbeing(base, profile: profile)
+    }
+
+    /// Real, human-readable label for the raw onboarding id — `CoachService` used to interpolate
+    /// the raw id ("knee") straight into the coach's system prompt instead of this.
+    static func injuryLabel(_ id: String) -> String {
+        switch id {
+        case "knee": return "genou"
+        case "ankle": return "cheville"
+        case "back": return "dos"
+        case "other": return "zone sensible"
+        default: return id
+        }
+    }
+
+    /// Eases the week's plan around a flagged injury and/or the estimated cycle phase — never
+    /// changes the *shape* of the week (still easy/speed/longRun), only lightens the load and
+    /// says so honestly in the subtitle, rather than silently deviating from what's printed.
+    /// Both signals are opt-in/user-provided (`profile.injuryArea`, `profile.cyclePhase`), so
+    /// this is a no-op for anyone who hasn't shared either.
+    private static func adjustForWellbeing(_ archetypes: [SessionArchetype], profile: UserProfile) -> [SessionArchetype] {
+        var result = archetypes
+        let injury = profile.injuryArea
+        let hasInjury = injury != nil && injury != "none"
+
+        if hasInjury, let injury {
+            result = result.map { a in
+                guard a.role == .speed else { return a }
+                var eased = a
+                // Title is left as-is (still "Fractionné VMA 6 × 800 m" etc.) — SessionDetailSheet
+                // parses the real rep count straight out of it; only the load actually eases.
+                eased.subtitle = "adapté à ta \(injuryLabel(injury)) sensible · impact réduit"
+                eased.zone = "Z2-3"
+                eased.baseDuration = Int(Double(a.baseDuration) * 0.7)
+                return eased
+            }
+        }
+
+        if profile.cyclePhase == .menstrual {
+            result = result.map { a in
+                var eased = a
+                eased.baseDuration = Int(Double(a.baseDuration) * 0.85)
+                if a.role == .speed {
+                    eased.subtitle += " · allégé (phase menstruelle)"
+                }
+                return eased
+            }
+        }
+
+        return result
     }
 
     /// Builds the full 7-day plan for a given week: archetypes come from the training block

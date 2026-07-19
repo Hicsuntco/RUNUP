@@ -31,6 +31,17 @@ struct BirthdateStepView: View {
                 }
             }
             .padding(.top, 22)
+
+            VStack(alignment: .leading, spacing: 0) {
+                // Only ever used to decide whether to offer cycle-tracking further along —
+                // adapting the plan around it, never gating any feature behind it.
+                EyebrowLabel(text: "Tu es", color: RUColor.text3).padding(.top, 24).padding(.bottom, 10)
+                ChipFlowLayout {
+                    ForEach([("female", "Femme"), ("male", "Homme"), ("unspecified", "Je préfère ne pas dire")], id: \.0) { id, label in
+                        SelectableChip(label: label, selected: vm.sex == id) { vm.sex = id }
+                    }
+                }
+            }
             Spacer()
             ObNext(disabled: !vm.canProceed(fromStep: 1), action: onNext)
         }

@@ -15,6 +15,20 @@ final class UserProfile {
     var level: ExperienceLevel
     var connectedSources: [ConnectedSource]
 
+    /// "female" | "male" | "unspecified" — collected once in onboarding (paired with birthdate).
+    /// Only ever used to decide whether to offer cycle-tracking and folded into `CoachService`'s
+    /// system prompt like every other onboarding fact; never used to gate any other feature.
+    var sex: String? = nil
+
+    // MARK: Cycle-aware training — opt-in, only ever offered when `sex == "female"`. Estimated
+    // from real user-provided dates (same spirit as `readiness`: honestly approximate, never
+    // fabricated) — see `cyclePhase` below. No HealthKit menstrual-flow sync yet; that's a real
+    // future upgrade path, but a manual start date works from day one for everyone regardless of
+    // whether they already log cycle data in Apple Santé.
+    var cycleTrackingEnabled: Bool = false
+    var lastPeriodStartDate: Date? = nil
+    var averageCycleLengthDays: Int = 28
+
     // MARK: Goal-specific deep-dive fields (only the relevant subset is populated)
     var raceDistance: RaceDistance?
     var raceDistanceCustom: String?
@@ -244,5 +258,29 @@ final class UserProfile {
         guard let raceDate else { return nil }
         let days = Calendar.current.dateComponents([.day], from: .now, to: raceDate).day ?? 0
         return days >= 0 ? days : nil
+    }
+
+    enum CyclePhase: String {
+        case menstrual, follicular, ovulation, luteal
+    }
+
+    /// Estimated from `lastPeriodStartDate` + `averageCycleLengthDays` via a standard
+    /// proportional phase model — real user-provided data, honestly approximate (same spirit as
+    /// `readiness`), never a fabricated guess. `nil` unless she's opted in and given a start
+    /// date; `AdaptivePlanEngine` treats `nil` as "no adjustment" rather than assuming a phase.
+    var cyclePhase: CyclePhase? {
+        guard cycleTrackingEnabled, let lastPeriodStartDate else { return nil }
+        let length = max(21, min(35, averageCycleLengthDays))
+        let daysSince = Calendar.current.dateComponents([.day], from: lastPeriodStartDate, to: .now).day ?? 0
+        guard daysSince >= 0 else { return nil }
+        let cycleDay = (daysSince % length) + 1 // 1-indexed, wraps every `length` days
+        let ovulationDay = length / 2
+
+        switch cycleDay {
+        case 1...5: return .menstrual
+        case (ovulationDay - 1)...(ovulationDay + 1): return .ovulation
+        case 6..<(ovulationDay - 1): return .follicular
+        default: return .luteal
+        }
     }
 }

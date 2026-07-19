@@ -13,6 +13,7 @@ final class OnboardingViewModel {
     var name = ""
     // Step 1
     var birthdate: Date?
+    var sex: String?
     // Step 2
     var goal: GoalType?
     // Step 3 — race branch
@@ -28,9 +29,14 @@ final class OnboardingViewModel {
     var focusArea: String?
     var bestRecentPerf = ""
     var lastRanRecency: String?
-    var injuryArea: String?
     var weeklyTimeBudget: String?
     var preferredTimeOfDay: String?
+    // Step 3 — shared across every branch (race included): injury is asked regardless of goal,
+    // cycle tracking only ever offered when `sex == "female"`.
+    var injuryArea: String?
+    var cycleTrackingEnabled = false
+    var lastPeriodStartDate: Date?
+    var averageCycleLengthDays = 28
     // Step 4
     var runningDays: Set<Int> = [1, 2, 4, 6]
     var preferredLongRunDay: Int?
@@ -65,7 +71,7 @@ final class OnboardingViewModel {
     func canProceed(fromStep step: Int) -> Bool {
         switch step {
         case 0: return !name.trimmingCharacters(in: .whitespaces).isEmpty
-        case 1: return birthdate != nil
+        case 1: return birthdate != nil && sex != nil
         case 2: return goal != nil
         case 3: return isRace ? raceStepValid : deepDiveValid
         case 4: return runningDays.count >= 2
@@ -86,7 +92,10 @@ final class OnboardingViewModel {
         switch goal {
         case .weight: return !weightNow.isEmpty && !weightTarget.isEmpty && !height.isEmpty
         case .progress: return focusArea != nil
-        case .restart: return lastRanRecency != nil && injuryArea != nil
+        // Injury/cycle fields are shared across every branch and always optional — a real,
+        // known injury/blessure worth flagging is the exception, not the rule, so requiring an
+        // answer here would just add friction for the common case of "nothing to report."
+        case .restart: return lastRanRecency != nil
         case .health: return weeklyTimeBudget != nil && preferredTimeOfDay != nil
         default: return true
         }
@@ -107,6 +116,7 @@ final class OnboardingViewModel {
         AdaptivePlanEngine.OnboardingResult(
             name: name.trimmingCharacters(in: .whitespaces),
             birthdate: birthdate,
+            sex: sex,
             goal: goal ?? .health,
             raceDistance: isRace ? distance : nil,
             raceDistanceCustom: isRace ? customDistance : nil,
@@ -124,7 +134,10 @@ final class OnboardingViewModel {
             lastRanRecency: lastRanRecency,
             injuryArea: injuryArea,
             weeklyTimeBudget: weeklyTimeBudget,
-            preferredTimeOfDay: preferredTimeOfDay
+            preferredTimeOfDay: preferredTimeOfDay,
+            cycleTrackingEnabled: sex == "female" && cycleTrackingEnabled,
+            lastPeriodStartDate: cycleTrackingEnabled ? lastPeriodStartDate : nil,
+            averageCycleLengthDays: averageCycleLengthDays
         )
     }
 }

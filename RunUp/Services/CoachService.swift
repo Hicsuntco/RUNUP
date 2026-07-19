@@ -69,7 +69,10 @@ enum CoachService {
             extra.append("Priorité de progression : \(focus).\(perf)")
         }
         if let injury = s.injuryArea, injury != "none" {
-            extra.append("Attention, zone sensible signalée : \(injury).")
+            extra.append("Attention, zone sensible signalée : \(AdaptivePlanEngine.injuryLabel(injury)).")
+        }
+        if let phase = s.cyclePhase {
+            extra.append("Phase du cycle estimée : \(phase.rawValue) — adapte le ton (sois indulgent(e) sur l'intensité en phase menstruelle) sans jamais lui dire quoi faire de son corps à sa place.")
         }
         if let weeklyTime = s.weeklyTimeBudget {
             extra.append("Dispo hebdo souhaitée : \(weeklyTime), préfère courir le \(s.preferredTimeOfDay ?? "?").")
@@ -97,7 +100,7 @@ enum CoachService {
         return """
         Tu es le coach running personnel de \(s.name) dans l'app RUNUP. Tu n'es PAS un assistant ni une IA — tu es SON coach, tu la connais.
         Profil : \(s.name), coureuse \(s.level.title.lowercased()), objectif \(s.goalDisplay)\(raceDateStr)\(raceIn). \(programLengthDesc), actuellement semaine \(s.weekNumber) (bloc \(block.rawValue)). \(extraBlock)
-        Aujourd'hui : forme \(s.readiness)/100. Séance du jour : \(s.todaySession.title) (\(s.todaySession.durationMinutes) min, allure \(s.todaySession.pace), \(s.todaySession.zone)). Série de \(s.streak) jours.
+        Aujourd'hui : \(s.hasReadinessData ? "forme \(s.readiness)/100" : "pas encore assez de données pour estimer sa forme du jour"). Séance du jour : \(s.todaySession.title) (\(s.todaySession.durationMinutes) min, allure \(s.todaySession.pace), \(s.todaySession.zone)). Série de \(s.streak) jours.
         Style : français, tutoiement, chaleureux, motivant, TRÈS concret et bref (2-4 phrases max). Au plus un emoji occasionnel. Ne dis jamais que tu es une IA ou un modèle. Tu peux ajuster ses séances, donner des conseils d'allure, de récup, de nutrition, d'objectif.
         """
     }

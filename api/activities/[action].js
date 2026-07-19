@@ -5,6 +5,7 @@ const { sql } = require('../../lib/db');
 const { requireAuth } = require('../../lib/auth');
 const { withErrorHandling } = require('../../lib/http');
 const { sendPushToUser } = require('../../lib/apns');
+const { containsObjectionableContent } = require('../../lib/moderation');
 
 const ALLOWED_TYPES = new Set(['run', 'strength', 'badge']);
 
@@ -22,6 +23,10 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'kudos':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleKudos(req, res, userId);
+    case 'comments':
+      if (req.method === 'GET') return handleCommentsList(req, res, userId);
+      if (req.method === 'POST') return handleCommentCreate(req, res, userId);
+      return res.status(405).json({ error: 'method_not_allowed' });
     default:
       return res.status(404).json({ error: 'not_found' });
   }
@@ -89,7 +94,8 @@ async function handleFeed(req, res, userId) {
   const { rows } = await sql`
     SELECT a.id, a.text, a.created_at, u.name, u.id AS user_id,
            (SELECT COUNT(*)::int FROM activity_kudos k WHERE k.activity_id = a.id) AS kudos,
-           EXISTS(SELECT 1 FROM activity_kudos k WHERE k.activity_id = a.id AND k.user_id = ${userId}) AS kudoed_by_me
+           EXISTS(SELECT 1 FROM activity_kudos k WHERE k.activity_id = a.id AND k.user_id = ${userId}) AS kudoed_by_me,
+           (SELECT COUNT(*)::int FROM activity_comments c WHERE c.activity_id = a.id) AS comments_count
     FROM activities a
     JOIN users u ON u.id = a.user_id
     WHERE a.club_id = ${clubId}
@@ -107,6 +113,7 @@ async function handleFeed(req, res, userId) {
       createdAt: r.created_at,
       kudos: r.kudos,
       kudoedByMe: r.kudoed_by_me,
+      commentsCount: r.comments_count,
     })),
   });
 }
@@ -141,6 +148,82 @@ async function handleKudos(req, res, userId) {
     await sendPushToUser(sql, activity.user_id, {
       title: 'Le Club',
       body: `${kudoer[0]?.name || 'Quelqu’un'} a applaudi : ${activity.text}`,
+    });
+  }
+}
+
+// Lists real comments on one activity, oldest first (a conversation reads top-down) — scoped to
+// the caller's own club (an activity from another club, or one that's since had its club_id
+// cleared, 404s rather than leaking it) and filtered the same way the feed already is: no
+// comments from anyone the caller has blocked.
+async function handleCommentsList(req, res, userId) {
+  const { activityId } = req.query || {};
+  if (!activityId) return res.status(400).json({ error: 'bad_request' });
+
+  const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
+  const clubId = memberRows[0]?.club_id;
+  if (!clubId) return res.status(200).json({ items: [] });
+
+  const { rows: activityRows } = await sql`SELECT club_id FROM activities WHERE id = ${activityId}`;
+  if (activityRows[0]?.club_id !== clubId) return res.status(404).json({ error: 'not_found' });
+
+  const { rows } = await sql`
+    SELECT c.id, c.text, c.created_at, u.id AS user_id, u.name
+    FROM activity_comments c
+    JOIN users u ON u.id = c.user_id
+    WHERE c.activity_id = ${activityId}
+      AND c.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+    ORDER BY c.created_at ASC
+    LIMIT 200
+  `;
+
+  res.status(200).json({
+    items: rows.map((r) => ({
+      id: r.id,
+      userId: r.user_id,
+      name: r.name,
+      text: r.text,
+      createdAt: r.created_at,
+    })),
+  });
+}
+
+// Posts a real comment on a club-mate's activity — same moderation (blocklist filter) as club
+// names/challenge titles, plus a push to the activity's owner (never for commenting on your own).
+async function handleCommentCreate(req, res, userId) {
+  const { activityId, text } = req.body || {};
+  const trimmed = (text || '').trim().slice(0, 500);
+  if (!activityId || !trimmed) return res.status(400).json({ error: 'bad_request' });
+  if (containsObjectionableContent(trimmed)) return res.status(422).json({ error: 'objectionable_content' });
+
+  const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
+  const clubId = memberRows[0]?.club_id;
+  if (!clubId) return res.status(409).json({ error: 'not_in_club' });
+
+  const { rows: activityRows } = await sql`SELECT club_id, user_id, text FROM activities WHERE id = ${activityId}`;
+  const activity = activityRows[0];
+  if (!activity || activity.club_id !== clubId) return res.status(404).json({ error: 'not_found' });
+
+  const { rows: inserted } = await sql`
+    INSERT INTO activity_comments (activity_id, user_id, text)
+    VALUES (${activityId}, ${userId}, ${trimmed})
+    RETURNING id, created_at
+  `;
+  const { rows: me } = await sql`SELECT name FROM users WHERE id = ${userId}`;
+  const commenterName = me[0]?.name || 'Toi';
+
+  res.status(201).json({
+    id: inserted[0].id,
+    userId,
+    name: commenterName,
+    text: trimmed,
+    createdAt: inserted[0].created_at,
+  });
+
+  if (activity.user_id !== userId) {
+    await sendPushToUser(sql, activity.user_id, {
+      title: 'Le Club',
+      body: `${commenterName} a commenté : ${activity.text}`,
     });
   }
 }

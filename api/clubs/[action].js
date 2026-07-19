@@ -26,10 +26,20 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'createChallenge':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleCreateChallenge(req, res, userId);
+    case 'updateBio':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleUpdateBio(req, res, userId);
+    case 'syncBadges':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleSyncBadges(req, res, userId);
     default:
       return res.status(404).json({ error: 'not_found' });
   }
 });
+
+// Must match `ClubBadgeCatalog.all` keys on the client — anything else is silently dropped rather
+// than trusted, since a tampered client could otherwise write arbitrary junk keys here.
+const KNOWN_BADGES = new Set(['streak3', 'interval3', 'earlyRun', 'elevation300']);
 
 function randomInviteCode() {
   // No 0/O/1/I — avoids ambiguity when a code is read aloud or typed by hand.
@@ -132,9 +142,16 @@ async function handleMine(req, res, userId) {
   // Rank is computed over every member first (a subquery), then blocked users are filtered out
   // of the outer result — so someone you've blocked disappears from your view, but everyone
   // else's rank number still reflects their true position rather than shifting to fill the gap.
+  // bio/joined_at/activities_count/badge_keys power the real club-profile screen — real per-member
+  // data (join date already tracked, activity count a plain COUNT scoped to this club, badges a
+  // real array_agg over `user_badges`) instead of anything computed only from this device's own
+  // local history.
   const { rows: leaderboard } = await sql`
-    SELECT id, name, xp_total, rank FROM (
-      SELECT u.id, u.name, u.xp_total, RANK() OVER (ORDER BY u.xp_total DESC) AS rank
+    SELECT id, name, xp_total, rank, bio, joined_at, activities_count, badge_keys FROM (
+      SELECT u.id, u.name, u.xp_total, u.bio, cm.joined_at,
+             RANK() OVER (ORDER BY u.xp_total DESC) AS rank,
+             (SELECT COUNT(*)::int FROM activities a WHERE a.user_id = u.id AND a.club_id = cm.club_id) AS activities_count,
+             COALESCE((SELECT array_agg(ub.badge_key) FROM user_badges ub WHERE ub.user_id = u.id), ARRAY[]::text[]) AS badge_keys
       FROM club_members cm
       JOIN users u ON u.id = cm.user_id
       WHERE cm.club_id = ${clubId}
@@ -166,6 +183,10 @@ async function handleMine(req, res, userId) {
     club: { id: club.id, name: club.name, inviteCode: club.invite_code, memberCount: countRows[0].count },
     leaderboard: leaderboard.map((r) => ({
       id: r.id, name: r.name, xp: r.xp_total, rank: Number(r.rank), isMe: r.id === userId,
+      bio: r.bio || null,
+      joinedAt: r.joined_at,
+      activitiesCount: r.activities_count,
+      badgeKeys: r.badge_keys || [],
     })),
     challenge: challenge ? {
       id: challenge.id,
@@ -175,4 +196,33 @@ async function handleMine(req, res, userId) {
       endDate: challenge.end_date,
     } : null,
   });
+}
+
+// A short, optional, self-authored status shown on the caller's own club profile — only ever the
+// caller's own row (there's no targetId; the token is the identity), same moderation as club
+// names and challenge titles.
+async function handleUpdateBio(req, res, userId) {
+  const { bio } = req.body || {};
+  const trimmed = (bio || '').trim().slice(0, 140);
+  if (trimmed && containsObjectionableContent(trimmed)) return res.status(422).json({ error: 'objectionable_content' });
+  await sql`UPDATE users SET bio = ${trimmed || null} WHERE id = ${userId}`;
+  res.status(200).json({ ok: true, bio: trimmed || null });
+}
+
+// Upserts real, permanent achievements from keys the client computed locally (streak, run
+// history, elevation — data only the client has). Never deletes: once earned, a badge stays
+// earned even if the underlying streak later resets, same as any other achievement system.
+// Unknown keys are silently dropped rather than trusted, since a tampered client could otherwise
+// write arbitrary junk here.
+async function handleSyncBadges(req, res, userId) {
+  const { badgeKeys } = req.body || {};
+  if (!Array.isArray(badgeKeys)) return res.status(400).json({ error: 'bad_request' });
+  const valid = [...new Set(badgeKeys)].filter((k) => KNOWN_BADGES.has(k));
+  await Promise.all(
+    valid.map((key) => sql`
+      INSERT INTO user_badges (user_id, badge_key) VALUES (${userId}, ${key})
+      ON CONFLICT DO NOTHING
+    `)
+  );
+  res.status(200).json({ ok: true });
 }

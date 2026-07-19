@@ -15,6 +15,7 @@ struct ClubManagementView: View {
     var onCreateChallenge: (String, Double, Date) async throws -> Void
     var onReport: (LeaderboardRow) -> Void
     var onBlock: (LeaderboardRow) -> Void
+    var onUpdateBio: (String) async throws -> Void
 
     @State private var showCreateChallenge = false
 
@@ -47,7 +48,8 @@ struct ClubManagementView: View {
                 ClubMemberProfileView(
                     member: member,
                     onReport: { onReport(member) },
-                    onBlock: { onBlock(member) }
+                    onBlock: { onBlock(member) },
+                    onUpdateBio: member.isMe ? onUpdateBio : nil
                 )
             }
             .toolbar {
@@ -123,45 +125,163 @@ struct ClubManagementView: View {
     }
 }
 
-/// A member's mini-profile — deliberately minimal since the backend only ever hands back
-/// id/name/xp/rank for the leaderboard (see `LeaderboardRow`), not a richer public profile.
+/// A member's mini-profile — real membership date, real per-club activity count, real permanent
+/// badges (synced server-side, see `ClubBadgeCatalog`), and an editable status for your own
+/// profile. Used to only ever show id/name/xp/rank (`LeaderboardRow`'s original shape).
 struct ClubMemberProfileView: View {
     var member: LeaderboardRow
     var onReport: () -> Void
     var onBlock: () -> Void
+    /// Only non-nil for your own profile — `ClubManagementView` passes `nil` for anyone else.
+    var onUpdateBio: ((String) async throws -> Void)?
+
+    @State private var savedBio: String?
+    @State private var bioText = ""
+    @State private var isEditingBio = false
+    @State private var isSavingBio = false
+    @State private var bioError: String?
+    @State private var selectedBadge: ClubBadge?
 
     private static let levelTitles = ["Premiers pas", "Foulée légère", "Rythme trouvé", "Foulée d'or", "Vitesse de croisière", "Endurance de fer", "Élite locale"]
     private var level: Int { member.xp / 250 + 1 }
     private var levelTitle: String { Self.levelTitles[(level - 1) % Self.levelTitles.count] }
 
-    var body: some View {
-        VStack(spacing: 14) {
-            Circle().fill(RUColor.rose).frame(width: 72, height: 72)
-                .overlay(Text(String(member.name.prefix(1))).displayStyle(28).foregroundColor(.white))
-                .padding(.top, 20)
-            Text(member.name).font(RUFont.sans(18, weight: .semibold)).foregroundColor(.white)
-            Text("Niveau \(level) · \(levelTitle)").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+    private static let joinedFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "fr_FR")
+        f.dateFormat = "MMMM yyyy"
+        return f
+    }()
 
-            HStack(spacing: 24) {
-                MetricColumn(value: "\(member.xp)", label: "XP")
-                MetricColumn(value: "#\(member.rank)", label: "Rang club", valueColor: RUColor.rose2)
-            }
-            .padding(.top, 6)
-
-            if !member.isMe {
-                HStack(spacing: 10) {
-                    Button("Signaler") { onReport() }.buttonStyle(SecondaryButtonStyle())
-                    Button("Bloquer") { onBlock() }.buttonStyle(SecondaryButtonStyle())
-                }
-                .padding(.top, 12)
-            }
-
-            Spacer()
+    /// Real earned/locked state from the server's `badgeKeys` — never a live progress number
+    /// here, unlike `ClubView.badges`: this device has no access to another member's run history.
+    private var badges: [ClubBadge] {
+        ClubBadgeCatalog.all.map { def in
+            ClubBadge(key: def.key, emoji: def.emoji, name: def.name, detail: def.detail, progressText: nil, earned: member.badgeKeys.contains(def.key))
         }
-        .padding(.horizontal, 24)
-        .frame(maxWidth: .infinity, alignment: .top)
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 14) {
+                Circle().fill(RUColor.rose).frame(width: 72, height: 72)
+                    .overlay(Text(String(member.name.prefix(1))).displayStyle(28).foregroundColor(.white))
+                    .padding(.top, 20)
+                Text(member.name).font(RUFont.sans(18, weight: .semibold)).foregroundColor(.white)
+                Text("Niveau \(level) · \(levelTitle)").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+                Text("Membre depuis \(Self.joinedFormatter.string(from: member.joinedAt))")
+                    .font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+
+                bioSection
+
+                HStack(spacing: 20) {
+                    MetricColumn(value: "\(member.xp)", label: "XP")
+                    MetricColumn(value: "#\(member.rank)", label: "Rang club", valueColor: RUColor.rose2)
+                    MetricColumn(value: "\(member.activitiesCount)", label: "Activités")
+                }
+                .padding(.top, 6)
+
+                badgesSection
+
+                if !member.isMe {
+                    HStack(spacing: 10) {
+                        Button("Signaler") { onReport() }.buttonStyle(SecondaryButtonStyle())
+                        Button("Bloquer") { onBlock() }.buttonStyle(SecondaryButtonStyle())
+                    }
+                    .padding(.top, 12)
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 30)
+            .frame(maxWidth: .infinity, alignment: .top)
+        }
         .background(RUColor.bg)
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            savedBio = member.bio
+            bioText = member.bio ?? ""
+        }
+        .sheet(item: $selectedBadge) { badge in
+            BadgeDetailView(badge: badge).runUpSheetStyle(detents: [.height(300)])
+        }
+    }
+
+    @ViewBuilder
+    private var bioSection: some View {
+        if let onUpdateBio {
+            VStack(spacing: 8) {
+                if isEditingBio {
+                    TextField("Un petit statut…", text: $bioText, axis: .vertical)
+                        .textFieldStyle(.plain)
+                        .font(RUFont.sans(13))
+                        .foregroundColor(.white)
+                        .lineLimit(1...3)
+                        .padding(11)
+                        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                    if let bioError {
+                        Text(bioError).font(RUFont.sans(10.5)).foregroundColor(RUColor.rose)
+                    }
+                    HStack(spacing: 14) {
+                        Button("Annuler") {
+                            isEditingBio = false
+                            bioText = savedBio ?? ""
+                            bioError = nil
+                        }
+                        .font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.text3)
+                        Spacer()
+                        Button(isSavingBio ? "…" : "Enregistrer") { Task { await saveBio(onUpdateBio) } }
+                            .font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.rose2)
+                            .disabled(isSavingBio)
+                    }
+                } else {
+                    Button(action: { isEditingBio = true }) {
+                        Text(savedBio?.isEmpty == false ? savedBio! : "Ajouter un statut")
+                            .font(RUFont.sans(12.5)).foregroundColor(savedBio?.isEmpty == false ? RUColor.text2 : RUColor.text3)
+                            .multilineTextAlignment(.center)
+                    }
+                    .buttonStyle(PressableStyle())
+                }
+            }
+            .padding(.horizontal, 10)
+        } else if let bio = member.bio, !bio.isEmpty {
+            Text(bio).font(RUFont.sans(12.5)).foregroundColor(RUColor.text2).multilineTextAlignment(.center).padding(.horizontal, 20)
+        }
+    }
+
+    private var badgesSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            EyebrowLabel(text: "Badges", color: RUColor.text3)
+            HStack(spacing: 10) {
+                ForEach(badges) { badge in
+                    Button(action: { selectedBadge = badge }) {
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(badge.earned ? RUColor.card : Color.white.opacity(0.02))
+                            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                            .aspectRatio(1, contentMode: .fit)
+                            .overlay(Text(badge.emoji).font(.system(size: 22)))
+                            .opacity(badge.earned ? 1 : 0.35)
+                    }
+                    .buttonStyle(PressableStyle())
+                }
+            }
+        }
+        .padding(.top, 10)
+    }
+
+    private func saveBio(_ onUpdateBio: (String) async throws -> Void) async {
+        isSavingBio = true
+        bioError = nil
+        do {
+            try await onUpdateBio(bioText)
+            savedBio = bioText.trimmingCharacters(in: .whitespacesAndNewlines)
+            isEditingBio = false
+        } catch ClubServiceError.badResponse(422, _) {
+            bioError = "Ce texte n'est pas autorisé — reformule-le."
+        } catch {
+            bioError = "Impossible d'enregistrer, réessaie."
+        }
+        isSavingBio = false
     }
 }
 

@@ -18,6 +18,10 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Short, optional, self-authored status shown on a member's club profile — moderated the same
+-- way as everything else user-generated (lib/moderation.js's blocklist filter).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT;
+
 CREATE TABLE IF NOT EXISTS clubs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
@@ -75,6 +79,17 @@ CREATE TABLE IF NOT EXISTS activity_comments (
 );
 
 CREATE INDEX IF NOT EXISTS idx_activity_comments_activity_created ON activity_comments(activity_id, created_at ASC);
+
+-- Real, permanent achievements — the client computes eligibility from data only it has (streak,
+-- run history, elevation) and syncs earned keys up via api/clubs/syncBadges; once a row exists
+-- here it stays (an achievement doesn't un-earn itself if the underlying streak later resets).
+-- This is what makes badges visible on OTHER members' club profiles, not just your own device.
+CREATE TABLE IF NOT EXISTS user_badges (
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  badge_key TEXT NOT NULL,
+  earned_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, badge_key)
+);
 
 -- Moderation (App Store guideline 1.2 — user-generated content: club names, display names, and
 -- the activity feed need a block + report mechanism, not just a content filter at creation time).

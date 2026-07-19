@@ -30,7 +30,11 @@ targets:
         CFBundleDisplayName: RunUp
         CFBundleShortVersionString: "1.1"
         CFBundleVersion: "8"
-        UILaunchScreen: {}
+        # Synthesized launch storyboard (no custom .storyboard file) — a plain color is all it
+        # can show (the real animated wordmark only runs once app code is live, see
+        # `SplashView`), but this stops the default white flash before that even appears.
+        UILaunchScreen:
+          UIColorName: LaunchBackground
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         # Portrait-only design (see DesignSystem/); without this, Apple's App Store validation

@@ -13,6 +13,16 @@ struct LeaderboardRow: Decodable, Identifiable, Hashable {
     var xp: Int
     var rank: Int
     var isMe: Bool
+    /// Short, optional, self-authored status — editable only for `isMe` (see `ClubService.updateBio`).
+    var bio: String?
+    /// Real membership date (`club_members.joined_at`) — was tracked in the DB from day one but
+    /// never surfaced anywhere in the UI until now.
+    var joinedAt: Date
+    /// Real count of this member's activities posted to *this* club, alongside their XP.
+    var activitiesCount: Int
+    /// Real, permanent achievement keys synced server-side (see `ClubBadgeCatalog`) — what makes
+    /// badges visible on every member's profile, not just the device that earned them.
+    var badgeKeys: [String]
 }
 
 struct ClubBoard: Decodable {
@@ -164,6 +174,22 @@ struct ClubService {
         let _: OkResponse = try await send(path: "api/moderation/unblock", method: "POST", body: ["userId": userId])
     }
 
+    /// Sets the caller's own club-profile status — always the caller's own row (there's no
+    /// targetId, the auth token is the identity), same moderation as club names/challenge titles.
+    @discardableResult
+    func updateBio(_ bio: String) async throws -> String? {
+        let response: BioResponse = try await send(path: "api/clubs/updateBio", method: "POST", body: ["bio": bio])
+        return response.bio
+    }
+
+    /// Upserts real, permanent achievements from keys computed locally (streak, run history,
+    /// elevation — data only this device has). Fire-and-forget from the caller's point of view:
+    /// harmless to call with the same already-earned keys repeatedly (`ON CONFLICT DO NOTHING`
+    /// server-side).
+    func syncBadges(_ badgeKeys: [String]) async throws {
+        let _: OkResponse = try await send(path: "api/clubs/syncBadges", method: "POST", body: ["badgeKeys": badgeKeys])
+    }
+
     // MARK: -
 
     private func send<T: Decodable>(path: String, method: String, body: [String: Any]? = nil, query: [String: String]? = nil) async throws -> T {
@@ -212,4 +238,9 @@ private struct CommentsResponse: Decodable {
 
 private struct OkResponse: Decodable {
     var ok: Bool
+}
+
+private struct BioResponse: Decodable {
+    var ok: Bool
+    var bio: String?
 }

@@ -18,7 +18,7 @@ struct NameStepView: View {
                     .font(RUFont.sans(13))
                     .foregroundColor(RUColor.text2)
                     .padding(.top, 12)
-                ObTextField(placeholder: "Léa", text: $vm.name)
+                ObTextField(placeholder: "Prénom", text: $vm.name)
                     .padding(.top, 22)
                 Spacer()
             }

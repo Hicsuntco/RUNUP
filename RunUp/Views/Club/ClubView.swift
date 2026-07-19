@@ -26,6 +26,7 @@ struct ClubView: View {
     @State private var pendingBlock: (userId: String, name: String)?
     @State private var showManagement = false
     @State private var commentsActivity: FeedItem?
+    @State private var selectedBadge: ClubBadge?
 
     private enum Tab { case board, feed }
 
@@ -76,6 +77,9 @@ struct ClubView: View {
         .task { await loadIfSignedIn() }
         .sheet(isPresented: $showSignIn) {
             SignInView()
+        }
+        .sheet(item: $selectedBadge) { badge in
+            BadgeDetailView(badge: badge).runUpSheetStyle(detents: [.height(300)])
         }
         .sheet(item: $commentsActivity) { activity in
             ActivityCommentsSheet(
@@ -183,7 +187,8 @@ struct ClubView: View {
                             try? await Task.sleep(for: .milliseconds(400))
                             pendingBlock = (member.id, member.name)
                         }
-                    }
+                    },
+                    onUpdateBio: { bio in try await updateBio(bio) }
                 )
             }
         }
@@ -377,16 +382,33 @@ struct ClubView: View {
         .buttonStyle(PressableStyle())
     }
 
+    /// "My" badges — the only place with real access to this device's local `RunRecord`/streak
+    /// history, so the only place that can compute live progress toward a locked badge. Earned
+    /// keys get synced to the server (see `syncBadgesIfNeeded`), which is what makes them show up
+    /// on this profile for other club members too — see `ClubBadgeCatalog`.
     private var badges: [ClubBadge] {
         let intervalRuns = runs.filter { $0.title.localizedCaseInsensitiveContains("Fractionné") }.count
         let earlyRun = runs.contains { Calendar.current.component(.hour, from: $0.date) < 7 }
         let totalElevation = runs.reduce(0) { $0 + $1.elevationGainM }
-        return [
-            ClubBadge(emoji: "🔥", name: "Série \(profile.streak)j", earned: profile.streak >= 3),
-            ClubBadge(emoji: "⚡", name: "Fractionné pro", earned: intervalRuns >= 3),
-            ClubBadge(emoji: "🌅", name: "Lève-tôt", earned: earlyRun),
-            ClubBadge(emoji: "🏔", name: "300 m de D+", earned: totalElevation >= 300)
+        let earned: [String: Bool] = [
+            "streak3": profile.streak >= 3,
+            "interval3": intervalRuns >= 3,
+            "earlyRun": earlyRun,
+            "elevation300": totalElevation >= 300
         ]
+        let progress: [String: String?] = [
+            "streak3": "\(min(profile.streak, 3))/3 jours",
+            "interval3": "\(min(intervalRuns, 3))/3 séances",
+            "earlyRun": nil,
+            "elevation300": "\(min(Int(totalElevation), 300))/300 m"
+        ]
+        return ClubBadgeCatalog.all.map { def in
+            ClubBadge(
+                key: def.key, emoji: def.emoji, name: def.name, detail: def.detail,
+                progressText: progress[def.key] ?? nil,
+                earned: earned[def.key] ?? false
+            )
+        }
     }
 
     private var boardContent: some View {
@@ -423,15 +445,18 @@ struct ClubView: View {
             EyebrowLabel(text: "Derniers badges", color: RUColor.text3)
             HStack(spacing: 10) {
                 ForEach(badges) { badge in
-                    VStack(spacing: 5) {
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(badge.earned ? RUColor.card : Color.white.opacity(0.02))
-                            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
-                            .aspectRatio(1, contentMode: .fit)
-                            .overlay(Text(badge.emoji).font(.system(size: 26)))
-                            .opacity(badge.earned ? 1 : 0.35)
-                        Text(badge.name).font(RUFont.sans(8, weight: .semibold)).foregroundColor(RUColor.text2)
+                    Button(action: { selectedBadge = badge }) {
+                        VStack(spacing: 5) {
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(badge.earned ? RUColor.card : Color.white.opacity(0.02))
+                                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                                .aspectRatio(1, contentMode: .fit)
+                                .overlay(Text(badge.emoji).font(.system(size: 26)))
+                                .opacity(badge.earned ? 1 : 0.35)
+                            Text(badge.name).font(RUFont.sans(8, weight: .semibold)).foregroundColor(RUColor.text2)
+                        }
                     }
+                    .buttonStyle(PressableStyle())
                 }
             }
         }
@@ -519,6 +544,7 @@ struct ClubView: View {
 
         if let boardResult {
             board = boardResult
+            syncBadgesIfNeeded()
         } else {
             errorMessage = "Impossible de charger le club — vérifie ta connexion."
         }
@@ -657,6 +683,25 @@ struct ClubView: View {
         }
     }
 
+    /// Saves the caller's own club-profile status and mirrors it into the local leaderboard so
+    /// re-opening "Gestion du club" reflects it immediately, without a full refetch.
+    private func updateBio(_ bio: String) async throws {
+        let saved = try await clubService.updateBio(bio)
+        if let index = board.leaderboard.firstIndex(where: { $0.isMe }) {
+            board.leaderboard[index].bio = saved
+        }
+    }
+
+    /// Syncs whichever of `badges` are currently earned up to the server — harmless to call every
+    /// time the board loads (the server upserts with `ON CONFLICT DO NOTHING`), and it's what
+    /// makes an achievement earned on this device show up on this member's profile for everyone
+    /// else in the club, not just locally.
+    private func syncBadgesIfNeeded() {
+        let earnedKeys = badges.filter { $0.earned }.map { $0.key }
+        guard !earnedKeys.isEmpty else { return }
+        Task { try? await clubService.syncBadges(earnedKeys) }
+    }
+
     private func submitReport(_ target: ReportTarget, reason: String) async {
         do {
             try await clubService.report(targetType: target.targetType, targetId: target.targetId, reason: reason)
@@ -691,13 +736,60 @@ private struct ReportTarget: Identifiable {
     var displayName: String
 }
 
-/// A badge computed locally from real activity (streak, session titles, elevation) — not part of
-/// the server API, so it lives here rather than in `ClubService`.
-private struct ClubBadge: Identifiable {
+/// One badge tile's real state — `key` matches `ClubBadgeCatalog`/the server's `KNOWN_BADGES`, so
+/// this same shape works whether the progress/earned state came from local data (mine, in
+/// `ClubView`) or from another member's synced `badgeKeys` (`ClubMemberProfileView`). Internal
+/// (not private) since both files construct one.
+struct ClubBadge: Identifiable {
     let id = UUID()
+    var key: String
     var emoji: String
     var name: String
+    var detail: String
+    /// nil for binary badges ("Lève-tôt") or whenever there's no local data to compute progress
+    /// from (any badge on someone else's profile).
+    var progressText: String?
     var earned: Bool
+}
+
+/// Was previously just a static, untappable tile — no way to know what a badge required or how
+/// close she was to earning a locked one. Tapping now opens this real detail instead. Internal so
+/// `ClubMemberProfileView` can reuse it for other members' badges too.
+struct BadgeDetailView: View {
+    var badge: ClubBadge
+
+    var body: some View {
+        VStack(spacing: 14) {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(badge.earned ? RUColor.card : Color.white.opacity(0.02))
+                .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                .frame(width: 76, height: 76)
+                .overlay(Text(badge.emoji).font(.system(size: 34)))
+                .opacity(badge.earned ? 1 : 0.4)
+                .padding(.top, 22)
+
+            Text(badge.name).font(RUFont.sans(17, weight: .semibold)).foregroundColor(.white)
+
+            StatChip(
+                text: badge.earned ? "Débloqué" : "Pas encore débloqué",
+                color: badge.earned ? RUColor.lime : RUColor.text3,
+                background: badge.earned ? RUColor.lime.opacity(0.14) : RUColor.card2
+            )
+
+            Text(badge.detail)
+                .font(RUFont.sans(13)).foregroundColor(RUColor.text2)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 30)
+
+            if let progressText = badge.progressText, !badge.earned {
+                Text(progressText).font(RUFont.mono(13, weight: .semibold)).foregroundColor(RUColor.rose2)
+            }
+
+            Spacer()
+        }
+        .frame(maxWidth: .infinity)
+        .background(RUColor.bg)
+    }
 }
 
 extension Date {

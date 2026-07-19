@@ -38,8 +38,14 @@ struct ProfileView: View {
                 sectionTitle("Préférences")
                 preferencesCard
 
+                sectionTitle("Objectifs quotidiens")
+                dailyGoalsCard
+
                 sectionTitle("Programme")
                 programCard
+
+                sectionTitle("Santé & blessures")
+                injuryCard
 
                 if profile.sex == "female" {
                     sectionTitle("Cycle")
@@ -178,6 +184,64 @@ struct ProfileView: View {
             }
             .padding(.horizontal, 14).padding(.vertical, 13)
         }
+        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+    }
+
+    /// Both goals used to only ever be fixed defaults (`UserProfile.stepsGoal` = 6000,
+    /// `strengthGoalMinutes` = 15) with no way to change them — the daily-goals bars on Home read
+    /// those values directly, so editing here immediately reshapes what counts as "done" today.
+    private var dailyGoalsCard: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("Objectif de pas").font(RUFont.sans(14, weight: .medium)).foregroundColor(.white)
+                Spacer()
+                Stepper(
+                    "\(Int(profile.stepsGoal)) pas",
+                    value: Binding(get: { profile.stepsGoal }, set: { profile.stepsGoal = $0 }),
+                    in: 2000...20000,
+                    step: 500
+                )
+                .fixedSize()
+                .tint(RUColor.rose)
+                .foregroundColor(.white)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 13)
+            Divider().background(RUColor.line)
+            HStack {
+                Text("Objectif renfo & mobilité").font(RUFont.sans(14, weight: .medium)).foregroundColor(.white)
+                Spacer()
+                Stepper(
+                    "\(Int(profile.strengthGoalMinutes)) min",
+                    value: Binding(get: { profile.strengthGoalMinutes }, set: { profile.strengthGoalMinutes = $0 }),
+                    in: 0...60,
+                    step: 5
+                )
+                .fixedSize()
+                .tint(RUColor.rose)
+                .foregroundColor(.white)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 13)
+        }
+        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+    }
+
+    /// Injury used to only ever be askable once, during onboarding — with no way back to it, a
+    /// blessure that heals (or a new one that shows up) could never actually update the plan
+    /// `AdaptivePlanEngine.adjustForWellbeing` is already computing every week from this field.
+    private var injuryCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Une douleur ou blessure à surveiller ?").font(RUFont.sans(14, weight: .medium)).foregroundColor(.white)
+            ChipFlowLayout {
+                ForEach([("none", "Aucune"), ("knee", "Genou"), ("ankle", "Cheville"), ("back", "Dos"), ("other", "Autre")], id: \.0) { id, label in
+                    SelectableChip(label: label, selected: (profile.injuryArea ?? "none") == id) { profile.injuryArea = id }
+                }
+            }
+            Text("Le coach adapte tes séances de fractionné/VMA en conséquence, chaque semaine.")
+                .font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+        }
+        .padding(14)
         .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
     }

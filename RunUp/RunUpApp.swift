@@ -37,6 +37,10 @@ private struct RootView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
     @State private var appState: AppState?
+    /// True only on this process's cold launch — `RootView` is created once per launch (SwiftUI
+    /// doesn't recreate it on background/foreground), so this never re-shows the splash just from
+    /// backgrounding the app, only from a real relaunch.
+    @State private var showSplash = true
 
     var body: some View {
         ZStack {
@@ -44,6 +48,9 @@ private struct RootView: View {
             if let appState {
                 ContentRouterView()
                     .environment(appState)
+            }
+            if showSplash {
+                SplashView(onFinished: { showSplash = false })
             }
         }
         .onAppear {

@@ -49,6 +49,17 @@ struct RaceGoalView: View {
         return plan
     }
 
+    /// Real structural race-day guidance for HYROX — no fake per-km split table (the format isn't
+    /// a continuous run), but real pace/effort advice grounded in what actually determines a HYROX
+    /// result: running under accumulated station fatigue, not raw running speed alone.
+    private var hyroxStrategy: [(String, String)] {
+        [
+            ("Segments course (8 × 1 km)", "vise \(targetPaceLabel) /km sur chaque segment, même sous fatigue — pas l'allure d'un 8 km isolé"),
+            ("Stations", "technique avant vitesse — un geste propre coûte moins cher qu'un geste rapide et cassé"),
+            ("Gestion globale", "les 4 premiers km + stations posent le rythme, les 4 derniers décident du chrono")
+        ]
+    }
+
     private var goalTitle: String {
         profile.goalDisplay.contains("·") ? String(profile.goalDisplay.split(separator: "·").first ?? "").trimmingCharacters(in: .whitespaces) : profile.goalDisplay
     }
@@ -101,23 +112,46 @@ struct RaceGoalView: View {
                 .padding(14)
                 .ruCard()
 
-                EyebrowLabel(text: "Stratégie d'allure · jour J", color: RUColor.text3)
-                VStack(spacing: 6) {
-                    ForEach(pacingPlan.indices, id: \.self) { i in
-                        let isLast = i == pacingPlan.count - 1
-                        HStack(spacing: 12) {
-                            RoundedRectangle(cornerRadius: 2).fill(isLast ? RUColor.rose : Color.white.opacity(0.2)).frame(width: 3, height: 30)
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text(pacingPlan[i].1).font(RUFont.sans(13, weight: .semibold)).foregroundColor(.white)
-                                Text(pacingPlan[i].0).font(RUFont.sans(10)).foregroundColor(RUColor.text2)
+                // A per-km pacing table with a "Sprint final" phase only makes sense for a
+                // continuous road-race distance — HYROX alternates running with functional
+                // stations, so it gets its own honest, structural strategy instead of a fake
+                // per-km split table over a format that isn't a straight run.
+                if profile.goalId == .hyrox {
+                    EyebrowLabel(text: "Stratégie · jour J", color: RUColor.text3)
+                    VStack(spacing: 6) {
+                        ForEach(hyroxStrategy.indices, id: \.self) { i in
+                            HStack(spacing: 12) {
+                                RoundedRectangle(cornerRadius: 2).fill(Color.white.opacity(0.2)).frame(width: 3, height: 30)
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(hyroxStrategy[i].0).font(RUFont.sans(13, weight: .semibold)).foregroundColor(.white)
+                                    Text(hyroxStrategy[i].1).font(RUFont.sans(10)).foregroundColor(RUColor.text2).lineSpacing(2)
+                                }
+                                Spacer()
                             }
-                            Spacer()
-                            (Text(pacingPlan[i].2).font(RUFont.bebas(18)).foregroundColor(isLast ? RUColor.rose2 : .white)
-                                + Text(" /km").font(RUFont.sans(9)).foregroundColor(RUColor.text2))
+                            .padding(.horizontal, 14).padding(.vertical, 12)
+                            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                         }
-                        .padding(.horizontal, 14).padding(.vertical, 12)
-                        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                    }
+                } else {
+                    EyebrowLabel(text: "Stratégie d'allure · jour J", color: RUColor.text3)
+                    VStack(spacing: 6) {
+                        ForEach(pacingPlan.indices, id: \.self) { i in
+                            let isLast = i == pacingPlan.count - 1
+                            HStack(spacing: 12) {
+                                RoundedRectangle(cornerRadius: 2).fill(isLast ? RUColor.rose : Color.white.opacity(0.2)).frame(width: 3, height: 30)
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(pacingPlan[i].1).font(RUFont.sans(13, weight: .semibold)).foregroundColor(.white)
+                                    Text(pacingPlan[i].0).font(RUFont.sans(10)).foregroundColor(RUColor.text2)
+                                }
+                                Spacer()
+                                (Text(pacingPlan[i].2).font(RUFont.bebas(18)).foregroundColor(isLast ? RUColor.rose2 : .white)
+                                    + Text(" /km").font(RUFont.sans(9)).foregroundColor(RUColor.text2))
+                            }
+                            .padding(.horizontal, 14).padding(.vertical, 12)
+                            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                        }
                     }
                 }
             }

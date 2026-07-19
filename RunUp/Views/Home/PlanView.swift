@@ -104,7 +104,7 @@ struct PlanView: View {
     }
 
     private func weekHeader(_ week: WeekSummary, isExpanded: Bool) -> some View {
-        let isRaceWeek = week.number == shape.totalWeeks && profile.goalId == .race
+        let isRaceWeek = week.number == shape.totalWeeks && (profile.goalId == .race || profile.goalId == .hyrox)
         let badge = isRaceWeek ? "🏁" : week.block == .affutage ? "▽" : week.isDone ? "✓" : "›"
         let color: Color = isRaceWeek ? RUColor.rose : week.block == .affutage ? RUColor.violet : week.isDone ? RUColor.text3 : RUColor.text2
         return HStack(spacing: 12) {

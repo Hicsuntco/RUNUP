@@ -24,6 +24,7 @@ enum AdaptivePlanEngine {
         var raceDistanceCustom: String?
         var raceChrono: String?
         var raceDate: Date?
+        var hyroxDivision: String?
         var runningDays: [Int]
         /// Which weekday (0=Monday...6=Sunday) carries the long run — chosen at onboarding, see
         /// `OnboardingViewModel.effectiveLongRunDay`.
@@ -53,6 +54,7 @@ enum AdaptivePlanEngine {
         profile.raceDistanceCustom = result.raceDistanceCustom
         profile.raceChrono = result.raceChrono
         profile.raceDate = result.raceDate
+        profile.hyroxDivision = result.hyroxDivision
         profile.runningDays = result.runningDays
         profile.preferredLongRunDay = result.preferredLongRunDay
         profile.level = result.level
@@ -69,7 +71,7 @@ enum AdaptivePlanEngine {
         profile.cycleTrackingEnabled = result.cycleTrackingEnabled
         profile.lastPeriodStartDate = result.lastPeriodStartDate
         profile.averageCycleLengthDays = result.averageCycleLengthDays
-        profile.goalDisplay = goalDisplay(goal: result.goal, distance: result.raceDistance, custom: result.raceDistanceCustom, chrono: result.raceChrono)
+        profile.goalDisplay = goalDisplay(goal: result.goal, distance: result.raceDistance, custom: result.raceDistanceCustom, chrono: result.raceChrono, hyroxDivision: result.hyroxDivision)
         profile.onboarded = true
         profile.programPhase = .active
         profile.weekNumber = 1
@@ -273,7 +275,7 @@ enum AdaptivePlanEngine {
         var taperWeeks: Int
 
         static func compute(goal: GoalType, raceDate: Date?, from startDate: Date) -> ProgramShape {
-            guard goal == .race, let raceDate, raceDate > startDate else {
+            guard goal == .race || goal == .hyrox, let raceDate, raceDate > startDate else {
                 return ProgramShape(totalWeeks: nil, baseWeeks: 0, specificWeeks: 0, taperWeeks: 0)
             }
             let weeksUntilRace = Calendar.current.dateComponents([.weekOfYear], from: startDate, to: raceDate).weekOfYear ?? 9
@@ -361,6 +363,48 @@ enum AdaptivePlanEngine {
         return adjustForWellbeing(base, profile: profile)
     }
 
+    /// HYROX-specific archetypes: real running still anchors pace/effort (via `PaceModel`, same as
+    /// every other goal), but the week is built around the format's actual demand — running under
+    /// accumulated fatigue from functional stations, not a continuous road-race build. Deliberately
+    /// never states a precise competition kg figure (see `HyroxDivision`) — sessions describe
+    /// structure/technique/effort, which stays true across seasons and skill levels instead of
+    /// risking a stale or wrong "real" number.
+    private static func hyroxArchetypes(for block: TrainingBlock, profile: UserProfile) -> [SessionArchetype] {
+        let zones = PaceModel.zones(for: profile)
+        let division = profile.hyroxDivision.flatMap { HyroxDivision(rawValue: $0) } ?? .open
+        let loadNote = division == .pro ? "charge renforcée" : "charge standard"
+
+        let base: [SessionArchetype]
+        switch block {
+        case .base:
+            base = [
+                SessionArchetype(role: .easy, title: "Footing base HYROX", subtitle: "endurance de fond — construit le volume de course du format", pace: zones.easy, zone: "Z2", baseDuration: 30),
+                SessionArchetype(role: .speed, title: "Fonctionnel HYROX · Technique", subtitle: "SkiErg, rameur, farmers carry, wall balls — travaille le geste, \(loadNote) légère", pace: "—", zone: "Technique", baseDuration: 35),
+                SessionArchetype(role: .longRun, title: "Course compromise 3 × 1 km", subtitle: "course + bloc fonctionnel entre chaque km — apprivoise la fatigue du format", pace: zones.easy, zone: "Z2-3", baseDuration: 40)
+            ]
+        case .specifique:
+            base = [
+                SessionArchetype(role: .speed, title: "Fonctionnel HYROX · Circuit intense", subtitle: "stations enchaînées à intensité course, sous fatigue, \(loadNote)", pace: "—", zone: "Z3-4", baseDuration: 40),
+                SessionArchetype(role: .speed, title: "Tempo course + sled", subtitle: "allure seuil entrecoupée de sled push/pull", pace: zones.threshold, zone: "Z3", baseDuration: 35),
+                SessionArchetype(role: .longRun, title: "Course compromise 6 × 1 km", subtitle: "simulation partielle : course + fonctionnel enchaînés, rythme course visé", pace: zones.marathon, zone: "Z3", baseDuration: 55)
+            ]
+        case .affutage:
+            base = [
+                SessionArchetype(role: .easy, title: "Footing d'entretien", subtitle: "relâché, garde les jambes et les bras frais", pace: zones.easy, zone: "Z2", baseDuration: 25),
+                SessionArchetype(role: .speed, title: "Rappel technique stations", subtitle: "gestes affûtés, charge légère, aucune fatigue à accumuler", pace: "—", zone: "Technique", baseDuration: 25),
+                SessionArchetype(role: .longRun, title: "Simulation HYROX allégée", subtitle: "format complet à intensité réduite — dernière répétition avant le jour J", pace: zones.marathon, zone: "Z2-3", baseDuration: 45)
+            ]
+        case .deload:
+            base = [
+                SessionArchetype(role: .easy, title: "Footing récup", subtitle: "coupe le volume, écoute ton corps", pace: zones.easy, zone: "Z1-2", baseDuration: 22),
+                SessionArchetype(role: .speed, title: "Fonctionnel léger", subtitle: "mobilité et gestes techniques, sans charge", pace: "—", zone: "Récup", baseDuration: 25),
+                SessionArchetype(role: .longRun, title: "Course compromise légère 2 × 1 km", subtitle: "aucune pression de chrono cette semaine", pace: zones.easy, zone: "Z2", baseDuration: 30)
+            ]
+        }
+
+        return adjustForWellbeing(base, profile: profile)
+    }
+
     /// Real, human-readable label for the raw onboarding id — `CoachService` used to interpolate
     /// the raw id ("knee") straight into the coach's system prompt instead of this.
     static func injuryLabel(_ id: String) -> String {
@@ -441,7 +485,7 @@ enum AdaptivePlanEngine {
     static func generateWeekSessions(weekNumber: Int, tier: Int, profile: UserProfile) -> [PlannedDay] {
         let shape = ProgramShape.compute(goal: profile.goalId, raceDate: profile.raceDate, from: profile.programStartDate ?? .now)
         let block = trainingBlock(forWeek: weekNumber, shape: shape)
-        let templates = archetypes(for: block, profile: profile)
+        let templates = profile.goalId == .hyrox ? hyroxArchetypes(for: block, profile: profile) : archetypes(for: block, profile: profile)
         let sortedRunDays = profile.runningDays.sorted()
 
         let longRunDay = profile.preferredLongRunDay.flatMap { sortedRunDays.contains($0) ? $0 : nil } ?? sortedRunDays.max()
@@ -474,7 +518,7 @@ enum AdaptivePlanEngine {
         }
     }
 
-    private static func goalDisplay(goal: GoalType, distance: RaceDistance?, custom: String?, chrono: String?) -> String {
+    private static func goalDisplay(goal: GoalType, distance: RaceDistance?, custom: String?, chrono: String?, hyroxDivision: String? = nil) -> String {
         switch goal {
         case .race:
             let label = distance == .other ? (custom?.isEmpty == false ? custom! : "Ta course") : (distance?.label ?? "Ta course")
@@ -484,6 +528,10 @@ enum AdaptivePlanEngine {
         case .restart: return "Reprise en douceur"
         case .weight: return "Perte de poids"
         case .health: return "Rester en forme"
+        case .hyrox:
+            let divisionLabel = hyroxDivision.flatMap { HyroxDivision(rawValue: $0)?.title }
+            let chronoLabel = (chrono?.isEmpty ?? true) ? "finir" : chrono!
+            return divisionLabel.map { "HYROX \($0) · \(chronoLabel)" } ?? "HYROX · \(chronoLabel)"
         }
     }
 

@@ -37,6 +37,8 @@ struct OnboardingContainerView: View {
         case 3:
             if vm.isRace {
                 RaceDetailsStepView(vm: vm) { advance() }
+            } else if vm.isHyrox {
+                HyroxDetailsStepView(vm: vm) { advance() }
             } else {
                 DeepDiveStepView(vm: vm) { advance() }
             }

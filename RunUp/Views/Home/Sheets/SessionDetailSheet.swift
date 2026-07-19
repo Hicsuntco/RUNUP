@@ -19,6 +19,14 @@ struct SessionDetailSheet: View {
         let warmup = ("Échauffement", "10-15′ · Z2 · footing relâché", RUColor.cyan)
         let cooldown = ("Retour au calme", "5-10′ · Z1 · marche + étirements", RUColor.lime)
 
+        // HYROX sessions are structurally different from a running-only week — a "compromised
+        // running" block or a functional circuit isn't a warmup/interval/cooldown shape at all,
+        // so this branches before the running-only logic below ever gets a chance to mislabel it
+        // as a generic "Course continue".
+        if appState.profile.goalId == .hyrox {
+            return hyroxSteps(title: title, warmup: warmup, cooldown: cooldown)
+        }
+
         if session.isIntervalSession {
             return [
                 warmup,
@@ -36,6 +44,37 @@ struct SessionDetailSheet: View {
         // Footing / sortie longue / sortie courte / découverte / récup — the whole run is the
         // target effort, not a warmup building up to something else.
         return [("Course continue", "\(session.durationMinutes)′ · \(session.pace) /km · \(session.zone)", RUColor.rose)]
+    }
+
+    /// HYROX-specific breakdown — "Course compromise" alternates running with functional work
+    /// (real structure, no fixed kg since this app has no verified current-season loads to state
+    /// as fact — see `HyroxDivision`), "Fonctionnel"/"technique" sessions are one circuit block,
+    /// and a full "Simulation" mirrors the actual 8×1km + 8-station race shape.
+    private func hyroxSteps(title: String, warmup: (String, String, Color), cooldown: (String, String, Color)) -> [(String, String, Color)] {
+        if title.contains("compromise") {
+            return [
+                warmup,
+                ("\(intervalDescription) + fonctionnel", "\(session.pace) /km entre les blocs · \(session.zone) · enchaîne course et mouvement, sans repos complet", RUColor.rose),
+                cooldown
+            ]
+        }
+        if title.contains("simulation") {
+            return [
+                warmup,
+                ("8 × 1 km + 8 stations", "format complet HYROX · \(session.zone) · gère l'effort sur l'ensemble, pas juste la course", RUColor.rose),
+                cooldown
+            ]
+        }
+        if title.contains("tempo") {
+            return [
+                warmup,
+                ("Tempo + sled", "\(max(10, session.durationMinutes - 20))′ · \(session.pace) /km · \(session.zone) · allure seuil entrecoupée de sled push/pull", RUColor.rose),
+                cooldown
+            ]
+        }
+        // "Fonctionnel HYROX" / "Rappel technique stations" — a standalone circuit, no running
+        // warmup/cooldown shape fits (the circuit itself includes the movement prep).
+        return [("Circuit fonctionnel", "\(session.durationMinutes)′ · \(session.zone) · stations enchaînées, technique avant charge", RUColor.rose)]
     }
 
     /// Pulls the exact "N × distance" straight from the archetype's own title (e.g. "5 × 500 m",

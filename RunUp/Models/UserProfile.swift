@@ -43,6 +43,11 @@ final class UserProfile {
     var injuryArea: String?
     var weeklyTimeBudget: String?
     var preferredTimeOfDay: String?
+    /// "open" | "pro" — only ever populated when `goalId == .hyrox`. Reuses `raceDate` (event
+    /// date) and `raceChrono` (target finish time) rather than adding parallel fields, since
+    /// they mean the same thing for a HYROX goal; `PaceModel.referenceThresholdPace`'s
+    /// `.race`-only guard already keeps `raceChrono` from being misparsed as a running-race split.
+    var hyroxDivision: String? = nil
 
     // MARK: Goal display (free text summary shown across the app, e.g. "10 km · 47:30")
     var goalDisplay: String
@@ -142,6 +147,7 @@ final class UserProfile {
         self.injuryArea = nil
         self.weeklyTimeBudget = nil
         self.preferredTimeOfDay = nil
+        self.hyroxDivision = nil
         self.goalDisplay = "Rester en forme"
         self.weekNumber = 1
         self.programStartDate = .now

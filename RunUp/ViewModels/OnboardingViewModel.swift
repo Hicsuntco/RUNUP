@@ -22,6 +22,8 @@ final class OnboardingViewModel {
     var chrono: String?
     var isCustomChrono = false
     var raceDate: Date?
+    // Step 3 — HYROX branch (reuses `chrono`/`raceDate` above for target finish time/event date)
+    var hyroxDivision: HyroxDivision?
     // Step 3 — non-race branches
     var weightNow = ""
     var weightTarget = ""
@@ -56,6 +58,7 @@ final class OnboardingViewModel {
     var buildProgress = 0
 
     var isRace: Bool { goal == .race }
+    var isHyrox: Bool { goal == .hyrox }
 
     var age: Int? {
         guard let birthdate else { return nil }
@@ -73,7 +76,7 @@ final class OnboardingViewModel {
         case 0: return !name.trimmingCharacters(in: .whitespaces).isEmpty
         case 1: return birthdate != nil && sex != nil
         case 2: return goal != nil
-        case 3: return isRace ? raceStepValid : deepDiveValid
+        case 3: return isRace ? raceStepValid : (isHyrox ? hyroxStepValid : deepDiveValid)
         case 4: return runningDays.count >= 2
         case 5: return true
         case 6: return true
@@ -86,6 +89,11 @@ final class OnboardingViewModel {
         if distance == .other && customDistance.trimmingCharacters(in: .whitespaces).isEmpty { return false }
         let hasChrono = isCustomChrono ? !(chrono ?? "").isEmpty : chrono != nil
         return hasChrono && raceDate != nil
+    }
+
+    private var hyroxStepValid: Bool {
+        let hasChrono = isCustomChrono ? !(chrono ?? "").isEmpty : chrono != nil
+        return hasChrono && raceDate != nil && hyroxDivision != nil
     }
 
     private var deepDiveValid: Bool {
@@ -120,8 +128,9 @@ final class OnboardingViewModel {
             goal: goal ?? .health,
             raceDistance: isRace ? distance : nil,
             raceDistanceCustom: isRace ? customDistance : nil,
-            raceChrono: isRace ? chrono : nil,
-            raceDate: isRace ? raceDate : nil,
+            raceChrono: isRace ? chrono : (isHyrox ? chrono : nil),
+            raceDate: isRace ? raceDate : (isHyrox ? raceDate : nil),
+            hyroxDivision: isHyrox ? hyroxDivision?.rawValue : nil,
             runningDays: Array(runningDays),
             preferredLongRunDay: effectiveLongRunDay,
             level: level,

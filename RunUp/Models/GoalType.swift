@@ -1,8 +1,8 @@
 import Foundation
 
-/// The 5 onboarding objectives. See README § Onboarding step 3.
+/// The 6 onboarding objectives. See README § Onboarding step 3.
 enum GoalType: String, Codable, CaseIterable, Identifiable {
-    case race, progress, restart, weight, health
+    case race, progress, restart, weight, health, hyrox
 
     var id: String { rawValue }
 
@@ -13,6 +13,7 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         case .restart: return "(Re)commencer"
         case .weight: return "Perdre du poids"
         case .health: return "Rester en forme"
+        case .hyrox: return "Préparer un HYROX"
         }
     }
 
@@ -23,6 +24,7 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         case .restart: return "Reprendre en douceur, sans se blesser"
         case .weight: return "Un programme qui allie course et rééquilibrage alimentaire"
         case .health: return "Une routine régulière qui tient dans ta semaine"
+        case .hyrox: return "8 × 1 km de course + stations fonctionnelles — un vrai plan hybride"
         }
     }
 
@@ -33,6 +35,7 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         case .restart: return "🌱"
         case .weight: return "🔥"
         case .health: return "⚡"
+        case .hyrox: return "🏋️"
         }
     }
 
@@ -44,6 +47,31 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         case .progress: return 4
         case .restart: return 5
         case .health: return 3
+        case .hyrox: return 6
+        }
+    }
+}
+
+/// HYROX division — Open uses lighter prescribed loads than Pro. Deliberately no kg figures
+/// anywhere in the app for either division (see `AdaptivePlanEngine.hyroxArchetypes`) — this app
+/// has no verified current-season rulebook weights to assert as fact, and a wrong "real" number
+/// would be exactly the kind of fake precision this codebase has been fixing everywhere else.
+enum HyroxDivision: String, Codable, CaseIterable, Identifiable {
+    case open, pro
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .open: return "Open"
+        case .pro: return "Pro"
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .open: return "Charges standard — le format le plus couru"
+        case .pro: return "Charges renforcées — pour les coureurs confirmés"
         }
     }
 }

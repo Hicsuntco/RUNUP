@@ -23,6 +23,10 @@ final class RunRecord {
     var elevationGainM: Int
     var splits: [String]
     var route: [RoutePoint] = []
+    /// Non-nil only for a run imported from Strava (see `StravaService.importActivities`) — lets
+    /// re-importing skip activities already pulled in, instead of duplicating History on every
+    /// sync.
+    var stravaActivityId: Int? = nil
 
     init(
         date: Date = .now,
@@ -34,7 +38,8 @@ final class RunRecord {
         kcal: Int,
         elevationGainM: Int = 0,
         splits: [String] = [],
-        route: [RoutePoint] = []
+        route: [RoutePoint] = [],
+        stravaActivityId: Int? = nil
     ) {
         self.date = date
         self.title = title
@@ -46,5 +51,6 @@ final class RunRecord {
         self.elevationGainM = elevationGainM
         self.splits = splits
         self.route = route
+        self.stravaActivityId = stravaActivityId
     }
 }

@@ -608,6 +608,7 @@ enum AdaptivePlanEngine {
         if profile.recentRPESeverities.count > 5 { profile.recentRPESeverities.removeFirst() }
         profile.streak += 1
         profile.xp += 120
+        profile.completedDebriefsCount += 1
         return "Programme mis à jour · +120 XP"
     }
 

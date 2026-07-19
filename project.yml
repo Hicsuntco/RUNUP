@@ -35,6 +35,12 @@ targets:
         # `SplashView`), but this stops the default white flash before that even appears.
         UILaunchScreen:
           UIColorName: LaunchBackground
+        # Lets ASWebAuthenticationSession capture Strava's OAuth redirect (see StravaService.swift)
+        # — Strava's app settings must have this exact URI (runup://strava-callback) added as an
+        # "Authorization Callback Domain"/redirect URI once she creates her Strava API application.
+        CFBundleURLTypes:
+          - CFBundleURLSchemes:
+              - runup
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         # Portrait-only design (see DesignSystem/); without this, Apple's App Store validation

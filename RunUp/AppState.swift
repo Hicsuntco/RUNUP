@@ -43,6 +43,7 @@ final class AppState {
         AdaptivePlanEngine.resetDailyGoalsIfNewDay(self.profile)
         ThemeStore.shared.themeID = self.profile.accentThemeID
         NotificationService.shared.rescheduleDailyReminder(for: self.profile)
+        NotificationService.shared.rescheduleInactivityReminder(for: self.profile)
         Task { await self.syncDailyGoalsFromHealthKit() }
     }
 
@@ -62,6 +63,7 @@ final class AppState {
             )
         }
         NotificationService.shared.rescheduleDailyReminder(for: profile)
+        NotificationService.shared.rescheduleInactivityReminder(for: profile)
         Task { await syncDailyGoalsFromHealthKit() }
     }
 
@@ -169,5 +171,24 @@ final class AppState {
 
     func toast(_ message: String) {
         toastCenter.show(message)
+    }
+
+    /// Real, deliberate gating for Apple's review prompt — never a fixed schedule or every
+    /// launch, only right after a genuinely positive moment (a run that felt easy/good) at a
+    /// meaningful progress milestone, and never more than once every 90 days from this app's own
+    /// side (on top of whatever StoreKit itself already throttles system-wide).
+    func shouldRequestReview(rpe: RPE) -> Bool {
+        guard rpe == .facile || rpe == .justeBien else { return false }
+        let milestones: Set<Int> = [3, 10, 25, 50, 100]
+        guard milestones.contains(profile.completedDebriefsCount) else { return false }
+        if let last = profile.lastReviewPromptDate,
+           (Calendar.current.dateComponents([.day], from: last, to: .now).day ?? 999) < 90 {
+            return false
+        }
+        return true
+    }
+
+    func recordReviewPromptShown() {
+        profile.lastReviewPromptDate = .now
     }
 }

@@ -1,10 +1,12 @@
 import SwiftUI
+import StoreKit
 
 /// RPE debrief bottom sheet — submitting this is the core adaptive-plan mechanic. Mirrors the
 /// `debrief` sheet inside `RecapScreen` in screensA.jsx.
 struct DebriefSheet: View {
     @Environment(AppState.self) private var appState
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.requestReview) private var requestReview
     var run: RunRecord
     @State private var rpe: RPE = .justeBien
 
@@ -114,6 +116,12 @@ struct DebriefSheet: View {
                     // Today's session is done — an evening reminder for it would be stale now.
                     NotificationService.shared.rescheduleDailyReminder(for: appState.profile)
                     appState.toast("Programme mis à jour · +120 XP 🔥")
+                    // Ask for a rating right after a run that felt good, not on a fixed schedule —
+                    // `shouldRequestReview` also caps this to real milestones and a 90-day cooldown.
+                    if appState.shouldRequestReview(rpe: rpe) {
+                        appState.recordReviewPromptShown()
+                        requestReview()
+                    }
                     dismiss()
                     appState.go(.rings)
                 }

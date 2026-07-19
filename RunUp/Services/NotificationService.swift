@@ -11,6 +11,7 @@ final class NotificationService: NSObject {
     static let shared = NotificationService()
     private let center = UNUserNotificationCenter.current()
     private static let reminderID = "runup.daily-session-reminder"
+    private static let inactivityReminderID = "runup.inactivity-reminder"
     private static let deviceTokenDefaultsKey = "runup.apns-device-token-hex"
     private static let baseURL = URL(string: "https://runup-nu.vercel.app")!
 
@@ -94,6 +95,33 @@ final class NotificationService: NSObject {
     /// still fire after they've explicitly opted out.
     func cancelDailyReminder() {
         center.removePendingNotificationRequests(withIdentifiers: [Self.reminderID])
+    }
+
+    /// Re-arms a 3-day-out "on ne t'a pas vu" nudge every time the app comes to the foreground —
+    /// cancelled and rescheduled from scratch each time (see `AppState.refreshProgramForCurrentDate`
+    /// and `init`), so it only actually fires if she genuinely doesn't reopen the app for 3 real
+    /// days. Same authorization/toggle as the daily session reminder, no separate opt-in — and
+    /// unlike that one, fires regardless of `programPhase` (recovery/free-run included), since the
+    /// point is bringing her back to the app at all, not to one specific planned session.
+    func rescheduleInactivityReminder(for profile: UserProfile) {
+        center.removePendingNotificationRequests(withIdentifiers: [Self.inactivityReminderID])
+        guard profile.coachNotificationsEnabled else { return }
+
+        center.getNotificationSettings { [center] settings in
+            guard settings.authorizationStatus == .authorized else { return }
+            let content = UNMutableNotificationContent()
+            content.title = "Ça fait un moment…"
+            content.body = "Ton programme t'attend toujours — une petite séance aujourd'hui ?"
+            content.sound = .default
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 3 * 24 * 60 * 60, repeats: false)
+            let request = UNNotificationRequest(identifier: Self.inactivityReminderID, content: content, trigger: trigger)
+            center.add(request)
+        }
+    }
+
+    /// Call when the user turns "Notifications du coach" off — same reasoning as `cancelDailyReminder`.
+    func cancelInactivityReminder() {
+        center.removePendingNotificationRequests(withIdentifiers: [Self.inactivityReminderID])
     }
 }
 

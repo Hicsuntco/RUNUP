@@ -13,6 +13,7 @@ struct SignInView: View {
     @State private var name = ""
     @State private var email = ""
     @State private var password = ""
+    @State private var referralCode = ""
     @State private var isLoading = false
     @State private var errorMessage: String?
 
@@ -88,6 +89,12 @@ struct SignInView: View {
                 .textFieldStyle(AuthFieldStyle())
                 .textContentType(mode == .signIn ? .password : .newPassword)
 
+            if mode == .signUp {
+                TextField("Code de parrainage (facultatif)", text: $referralCode)
+                    .textFieldStyle(AuthFieldStyle())
+                    .textInputAutocapitalization(.characters)
+            }
+
             Button(mode == .signIn ? "SE CONNECTER" : "CRÉER MON COMPTE") {
                 submitEmailForm()
             }
@@ -95,6 +102,7 @@ struct SignInView: View {
             .disabled(email.trimmingCharacters(in: .whitespaces).isEmpty || password.isEmpty || (mode == .signUp && name.trimmingCharacters(in: .whitespaces).isEmpty))
         }
     }
+
 
     private func configureAppleRequest(_ request: ASAuthorizationAppleIDRequest) {
         request.requestedScopes = [.fullName, .email]
@@ -113,7 +121,8 @@ struct SignInView: View {
             let name = [credential.fullName?.givenName, credential.fullName?.familyName]
                 .compactMap { $0 }
                 .joined(separator: " ")
-            Task { await runAuth { try await appState.auth.signInWithApple(identityToken: identityToken, name: name.isEmpty ? nil : name) } }
+            let trimmedReferral = referralCode.trimmingCharacters(in: .whitespaces)
+            Task { await runAuth { try await appState.auth.signInWithApple(identityToken: identityToken, name: name.isEmpty ? nil : name, referralCode: trimmedReferral.isEmpty ? nil : trimmedReferral) } }
         case .failure:
             errorMessage = "Connexion Apple annulée ou impossible."
         }
@@ -126,7 +135,8 @@ struct SignInView: View {
                 if mode == .signIn {
                     try await appState.auth.logIn(email: trimmedEmail, password: password)
                 } else {
-                    try await appState.auth.signUp(email: trimmedEmail, password: password, name: name.trimmingCharacters(in: .whitespaces))
+                    let trimmedReferral = referralCode.trimmingCharacters(in: .whitespaces)
+                    try await appState.auth.signUp(email: trimmedEmail, password: password, name: name.trimmingCharacters(in: .whitespaces), referralCode: trimmedReferral.isEmpty ? nil : trimmedReferral)
                 }
             }
         }

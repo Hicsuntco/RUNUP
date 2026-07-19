@@ -9,6 +9,10 @@ struct AuthenticatedUser: Codable, Equatable {
     var id: String
     var name: String
     var xpTotal: Int
+    /// This account's own shareable code (see `api/auth/[action].js`) — nil only in the brief
+    /// window before the very first sign-in response comes back, or for very old accounts on a
+    /// backend that hasn't run the referral migration yet.
+    var referralCode: String?
 }
 
 enum AuthServiceError: Error {
@@ -35,12 +39,12 @@ final class AuthService {
 
     var isSignedIn: Bool { token != nil }
 
-    func signInWithApple(identityToken: String, name: String?) async throws {
-        try await authenticate(path: "api/auth/apple", body: ["identityToken": identityToken, "name": name ?? ""])
+    func signInWithApple(identityToken: String, name: String?, referralCode: String? = nil) async throws {
+        try await authenticate(path: "api/auth/apple", body: ["identityToken": identityToken, "name": name ?? "", "referralCode": referralCode ?? ""])
     }
 
-    func signUp(email: String, password: String, name: String) async throws {
-        try await authenticate(path: "api/auth/signup", body: ["email": email, "password": password, "name": name])
+    func signUp(email: String, password: String, name: String, referralCode: String? = nil) async throws {
+        try await authenticate(path: "api/auth/signup", body: ["email": email, "password": password, "name": name, "referralCode": referralCode ?? ""])
     }
 
     func logIn(email: String, password: String) async throws {
@@ -56,7 +60,7 @@ final class AuthService {
         var request = URLRequest(url: Self.baseURL.appending(path: "api/me"))
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         let decoded: MeResponse = try await send(request)
-        let user = AuthenticatedUser(id: decoded.id, name: decoded.name, xpTotal: decoded.xpTotal)
+        let user = AuthenticatedUser(id: decoded.id, name: decoded.name, xpTotal: decoded.xpTotal, referralCode: decoded.referralCode)
         currentUser = user
         return user
     }
@@ -117,6 +121,7 @@ private struct MeResponse: Decodable {
     var id: String
     var name: String
     var xpTotal: Int
+    var referralCode: String?
     var clubId: String?
 }
 

@@ -130,6 +130,11 @@ final class UserProfile {
     /// Same idea as `kudosSeenCounts` but for comments — lets `ClubView` notice when someone
     /// leaves a new comment on one of your own posted activities.
     var commentsSeenCounts: [String: Int] = [:]
+    /// Real progress counters that gate the App Store review prompt (see
+    /// `AppState.shouldRequestReview`) — asking right after a genuinely positive moment, at
+    /// meaningful milestones, never on a fixed schedule or every single run.
+    var completedDebriefsCount: Int = 0
+    var lastReviewPromptDate: Date? = nil
 
     init(name: String = "") {
         self.name = name

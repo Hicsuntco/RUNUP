@@ -157,8 +157,9 @@ enum ConnectedSource: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    /// Only Apple Health has a real native integration in v1; Strava/Garmin are UI stubs.
-    var isNativelySupported: Bool { self == .apple }
+    /// Apple Health (HealthKit) and Strava (real OAuth, see `StravaService`) both have a real
+    /// integration; Garmin is still a UI stub.
+    var isNativelySupported: Bool { self == .apple || self == .strava }
 }
 
 enum ProgramPhase: String, Codable {

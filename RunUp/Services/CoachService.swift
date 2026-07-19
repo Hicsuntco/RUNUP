@@ -23,18 +23,32 @@ enum CoachService {
     }()
 
     static func send(history: [ChatMessage], profile: UserProfile) async throws -> String {
-        var request = URLRequest(url: endpoint)
-        request.httpMethod = "POST"
-        request.setValue(appSecret, forHTTPHeaderField: "x-runup-secret")
-        request.setValue("application/json", forHTTPHeaderField: "content-type")
-
-        let body = MessagesRequest(
+        try await performRequest(
             system: systemPrompt(for: profile),
             messages: history
                 .filter { $0.role != .error }
                 .map { RequestMessage(role: $0.role == .coach ? "assistant" : "user", content: $0.text) }
         )
-        request.httpBody = try JSONEncoder().encode(body)
+    }
+
+    /// A question asked out loud mid-run (see `VoiceCoachController`) — same coach, same backend,
+    /// but a deliberately different system prompt: she's mid-effort and the reply gets read aloud
+    /// via text-to-speech, so it needs to be one short spoken sentence, not chat-length copy.
+    static func sendLiveVoiceQuery(question: String, liveContext: String, profile: UserProfile) async throws -> String {
+        let system = """
+        Tu es le coach running personnel de \(profile.name). Elle est EN TRAIN DE COURIR là, maintenant, et vient de te poser une question à voix haute pendant sa séance.
+        \(liveContext)
+        Réponds en UNE SEULE phrase courte (15 mots maximum), à l'oral, actionnable dans l'instant — elle ne peut pas lire, la réponse est lue à voix haute. Aucun emoji, aucune ponctuation exotique. Tutoiement, chaleureux, direct. Ne dis jamais que tu es une IA.
+        """
+        return try await performRequest(system: system, messages: [RequestMessage(role: "user", content: question)])
+    }
+
+    private static func performRequest(system: String, messages: [RequestMessage]) async throws -> String {
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue(appSecret, forHTTPHeaderField: "x-runup-secret")
+        request.setValue("application/json", forHTTPHeaderField: "content-type")
+        request.httpBody = try JSONEncoder().encode(MessagesRequest(system: system, messages: messages))
 
         let data: Data
         let response: URLResponse

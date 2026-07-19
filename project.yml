@@ -29,7 +29,7 @@ targets:
       properties:
         CFBundleDisplayName: RunUp
         CFBundleShortVersionString: "1.1"
-        CFBundleVersion: "6"
+        CFBundleVersion: "7"
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
@@ -40,6 +40,8 @@ targets:
         NSHealthShareUsageDescription: "RunUp lit tes données Santé (fréquence cardiaque, nombre de pas, séances de sport) pour calculer ta forme du jour, adapter ton programme et suivre tes objectifs quotidiens."
         NSHealthUpdateUsageDescription: "RunUp enregistre tes séances de course dans Santé après chaque sortie."
         NSLocationWhenInUseUsageDescription: "RunUp utilise ta position pour suivre ta distance, ton allure et ton tracé pendant une course."
+        NSMicrophoneUsageDescription: "RunUp utilise le micro pour t'écouter quand tu poses une question à voix haute à ton coach pendant une course."
+        NSSpeechRecognitionUsageDescription: "RunUp transcrit ce que tu dis pour que ton coach puisse te répondre à voix haute pendant une course."
         UIBackgroundModes:
           - location
           - remote-notification

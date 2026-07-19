@@ -36,6 +36,12 @@ final class LiveRunViewModel {
 
     private let cues: [(Int, String)]
 
+    /// Real hands-free voice coaching (tap the mic, ask a question out loud, hear a real spoken
+    /// reply) — nil until `start()` sets it, since its live-context closure needs a fully
+    /// initialized `self` to capture (weakly), which the `init` body constructing `self` can't
+    /// safely provide yet.
+    private(set) var voiceCoach: VoiceCoachController?
+
     var distanceKm: Double { location.distanceMeters / 1000 }
     var isSignalUnstable: Bool { location.isSignalUnstable }
     /// Only meaningful for the archetypes actually structured as reps (see
@@ -69,6 +75,11 @@ final class LiveRunViewModel {
     func start() {
         location.requestAuthorization()
         location.start()
+        if voiceCoach == nil {
+            voiceCoach = VoiceCoachController(profile: profile) { [weak self] in
+                self?.liveVoiceContext() ?? ""
+            }
+        }
         timerTask = Task { [weak self] in
             while let self, !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
@@ -111,6 +122,14 @@ final class LiveRunViewModel {
         }
     }
 
+    /// Real, current run stats handed to `VoiceCoachController` at the moment a voice question is
+    /// sent — not the profile-level context `CoachService.systemPrompt` already builds, since
+    /// that has no idea a run is even in progress.
+    private func liveVoiceContext() -> String {
+        let target = profile.todaySession.pace
+        return "Distance parcourue jusqu'ici : \(String(format: "%.2f", distanceKm)) km. Allure actuelle : \(paceLabel) /km (allure cible du jour : \(target) /km). Temps écoulé : \(AdaptivePlanEngine.fmt(elapsedSeconds))."
+    }
+
     private func showCue(_ message: String) {
         coachCueClearTask?.cancel()
         coachCue = message
@@ -130,6 +149,7 @@ final class LiveRunViewModel {
     func stop() -> RunRecord {
         timerTask?.cancel()
         heartRatePollTask?.cancel()
+        voiceCoach?.stop()
         location.stop()
         let record = AdaptivePlanEngine.buildRunRecord(
             title: profile.todaySession.title,

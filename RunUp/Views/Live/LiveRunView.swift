@@ -16,8 +16,8 @@ struct LiveRunView: View {
             mapLayer
             VStack {
                 topOverlay
-                if let cue = vm?.coachCue {
-                    coachBubble(cue)
+                if let text = topBannerText {
+                    coachBubble(text)
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
                 Spacer()
@@ -32,7 +32,22 @@ struct LiveRunView: View {
         }
         .background(Color(hex: 0x0A0A0E))
         .ignoresSafeArea()
-        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: vm?.coachCue)
+        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: topBannerText)
+    }
+
+    /// Voice coaching takes over the same banner scripted cues already use — a live "je
+    /// t'écoute…"/transcript while listening, then the coach's real spoken reply while it plays,
+    /// falling back to the scripted timestamp cues the rest of the time.
+    private var topBannerText: String? {
+        if let vc = vm?.voiceCoach {
+            switch vc.state {
+            case .listening: return vc.partialTranscript.isEmpty ? "Je t'écoute…" : vc.partialTranscript
+            case .thinking: return "…"
+            case .speaking: return vc.lastReply
+            case .idle: break
+            }
+        }
+        return vm?.coachCue
     }
 
     private var mapLayer: some View {
@@ -145,12 +160,7 @@ struct LiveRunView: View {
                 .background(.white, in: Circle())
                 .buttonStyle(PressableStyle())
 
-                ZStack {
-                    Circle().fill(RUColor.rose.opacity(0.15))
-                    Circle().strokeBorder(RUColor.rose.opacity(0.3), lineWidth: RUSpacing.hairline)
-                    Image(systemName: "lock.fill").foregroundColor(RUColor.rose2).font(.system(size: 15))
-                }
-                .frame(width: 52, height: 52)
+                voiceCoachButton
             }
         }
         .padding(.horizontal, 20)
@@ -163,6 +173,42 @@ struct LiveRunView: View {
         .background(.ultraThinMaterial)
         .clipShape(RoundedCornerShape(radius: 26, corners: [.topLeft, .topRight]))
         .overlay(RoundedCornerShape(radius: 26, corners: [.topLeft, .topRight]).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+    }
+
+    /// Was a purely decorative lock icon with no `Button`/action at all — replaced with the real
+    /// tap-to-talk voice coach control (see `VoiceCoachController`): tap to ask a question out
+    /// loud, tap again to stop and send, hear a real spoken reply.
+    private var voiceCoachButton: some View {
+        let state = vm?.voiceCoach?.state ?? .idle
+        return Button(action: handleMicTap) {
+            ZStack {
+                Circle().fill(RUColor.rose.opacity(state == .listening ? 0.35 : 0.15))
+                Circle().strokeBorder(RUColor.rose.opacity(state == .listening ? 0.6 : 0.3), lineWidth: RUSpacing.hairline)
+                switch state {
+                case .idle:
+                    Image(systemName: "mic.fill").foregroundColor(RUColor.rose2).font(.system(size: 15))
+                case .listening:
+                    Image(systemName: "waveform").foregroundColor(RUColor.rose2).font(.system(size: 15))
+                case .thinking:
+                    ProgressView().tint(RUColor.rose2)
+                case .speaking:
+                    Image(systemName: "speaker.wave.2.fill").foregroundColor(RUColor.rose2).font(.system(size: 15))
+                }
+            }
+            .frame(width: 52, height: 52)
+        }
+        .buttonStyle(PressableStyle())
+        .disabled(state == .thinking || state == .speaking)
+    }
+
+    private func handleMicTap() {
+        guard let voiceCoach = vm?.voiceCoach else { return }
+        Task {
+            if voiceCoach.state == .idle {
+                guard await voiceCoach.requestAuthorization() else { return }
+            }
+            voiceCoach.toggle()
+        }
     }
 
     private func liveMetric(_ value: String, _ label: String, _ color: Color) -> some View {

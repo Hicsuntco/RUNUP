@@ -22,6 +22,16 @@ CREATE TABLE IF NOT EXISTS users (
 -- way as everything else user-generated (lib/moderation.js's blocklist filter).
 ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT;
 
+-- Real referral loop — every user gets a personal code (generated at signup, see
+-- api/auth/[action].js) to share; `referred_by` is set once, at signup, from whatever code (if
+-- any) the new signup provided; `referral_reward_granted` flips once, the first time the referred
+-- person logs a real activity (api/activities/[action].js) — a reward for a signup that actually
+-- became a real user, not just an install. Postgres allows multiple NULLs under UNIQUE, so
+-- existing rows (no code yet) don't collide with each other or with a fresh code.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code TEXT UNIQUE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by UUID REFERENCES users(id);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_reward_granted BOOLEAN NOT NULL DEFAULT false;
+
 CREATE TABLE IF NOT EXISTS clubs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
@@ -138,3 +148,15 @@ CREATE TABLE IF NOT EXISTS device_tokens (
 );
 
 CREATE INDEX IF NOT EXISTS idx_device_tokens_user ON device_tokens(user_id);
+
+-- Real Strava OAuth connection (see lib/strava.js, api/strava/[action].js) — tokens live only
+-- server-side, the client_secret must never reach the app. `expires_at` drives when a stored
+-- access token gets refreshed before the next call to Strava's API.
+CREATE TABLE IF NOT EXISTS strava_connections (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  strava_athlete_id BIGINT NOT NULL,
+  access_token TEXT NOT NULL,
+  refresh_token TEXT NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  connected_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

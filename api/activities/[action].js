@@ -8,6 +8,7 @@ const { sendPushToUser } = require('../../lib/apns');
 const { containsObjectionableContent } = require('../../lib/moderation');
 
 const ALLOWED_TYPES = new Set(['run', 'strength', 'badge']);
+const REFERRAL_REWARD_XP = 100;
 
 module.exports = withErrorHandling(async function handler(req, res) {
   const userId = await requireAuth(req);
@@ -53,6 +54,12 @@ async function handleCreate(req, res, userId) {
   const { rows: existing } = await sql`SELECT id FROM activities WHERE client_id = ${clientId}`;
   if (existing.length > 0) return res.status(200).json({ ok: true, duplicate: true });
 
+  // Checked before the INSERT below — this is the referral-reward trigger (see
+  // `grantReferralRewardIfNeeded`): a signup that goes on to log a real first activity, not just
+  // an install.
+  const { rows: priorActivityRows } = await sql`SELECT COUNT(*)::int AS count FROM activities WHERE user_id = ${userId}`;
+  const isFirstActivity = priorActivityRows[0].count === 0;
+
   const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
   const clubId = memberRows[0]?.club_id || null;
 
@@ -67,6 +74,27 @@ async function handleCreate(req, res, userId) {
   // Push, after the response — a club-mate finding out from a notification while the app is
   // closed is the whole point of this being a *push*, not something the response should wait on.
   if (clubId) await notifyClubOfNewActivity(clubId, userId, text);
+  if (isFirstActivity) await grantReferralRewardIfNeeded(userId);
+}
+
+// Rewards both sides of a referral — but only the first time the referred person logs a real
+// activity, not at signup itself (an install that never actually runs isn't worth rewarding).
+// Idempotent via `referral_reward_granted`, flipped in the same statement that grants the XP.
+async function grantReferralRewardIfNeeded(userId) {
+  const { rows } = await sql`
+    SELECT referred_by FROM users WHERE id = ${userId} AND referred_by IS NOT NULL AND referral_reward_granted = false
+  `;
+  const referrerId = rows[0]?.referred_by;
+  if (!referrerId) return;
+
+  await sql`UPDATE users SET referral_reward_granted = true, xp_total = xp_total + ${REFERRAL_REWARD_XP} WHERE id = ${userId}`;
+  await sql`UPDATE users SET xp_total = xp_total + ${REFERRAL_REWARD_XP} WHERE id = ${referrerId}`;
+
+  const { rows: referredRows } = await sql`SELECT name FROM users WHERE id = ${userId}`;
+  await sendPushToUser(sql, referrerId, {
+    title: 'Parrainage',
+    body: `${referredRows[0]?.name || 'Un ami'} a rejoint RunUp grâce à toi — +${REFERRAL_REWARD_XP} XP !`,
+  });
 }
 
 // Every other member of the poster's club, except anyone who's blocked the poster (mirrors the

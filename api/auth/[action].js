@@ -7,6 +7,34 @@ const { verifyAppleIdentityToken, signSession, bcrypt } = require('../../lib/aut
 const { withErrorHandling } = require('../../lib/http');
 const { containsObjectionableContent } = require('../../lib/moderation');
 
+// Real referral loop (see db/schema.sql) — every new account gets its own shareable code;
+// signing up with someone else's code links `referred_by`, rewarded later on the referred
+// person's first real activity (api/activities/[action].js).
+function randomReferralCode() {
+  // No 0/O/1/I — avoids ambiguity when a code is read aloud, screenshotted, or typed by hand.
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) code += alphabet[Math.floor(Math.random() * alphabet.length)];
+  return code;
+}
+
+async function generateUniqueReferralCode() {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const code = randomReferralCode();
+    const { rows } = await sql`SELECT 1 FROM users WHERE referral_code = ${code}`;
+    if (rows.length === 0) return code;
+  }
+  return null; // astronomically unlikely — this one account just goes without a code
+}
+
+// A junk/typo'd/nonexistent code is never a signup error — it just means no referral link, same
+// as leaving the field empty.
+async function resolveReferrerId(referralCode) {
+  if (!referralCode) return null;
+  const { rows } = await sql`SELECT id FROM users WHERE referral_code = ${String(referralCode).trim().toUpperCase()}`;
+  return rows[0]?.id || null;
+}
+
 module.exports = withErrorHandling(async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
 
@@ -25,7 +53,7 @@ module.exports = withErrorHandling(async function handler(req, res) {
 // Sign in with Apple — verify the identity token against Apple's own public keys (never trust a
 // client-claimed user id) and upsert a user keyed on Apple's stable `sub`.
 async function handleApple(req, res) {
-  const { identityToken, name } = req.body || {};
+  const { identityToken, name, referralCode } = req.body || {};
   if (!identityToken) return res.status(400).json({ error: 'bad_request' });
 
   let claims;
@@ -35,7 +63,7 @@ async function handleApple(req, res) {
     return res.status(401).json({ error: 'invalid_token' });
   }
 
-  const { rows: existing } = await sql`SELECT id, name, xp_total FROM users WHERE apple_sub = ${claims.sub}`;
+  const { rows: existing } = await sql`SELECT id, name, xp_total, referral_code FROM users WHERE apple_sub = ${claims.sub}`;
   let user = existing[0];
   if (!user) {
     // Apple only sends a display name on the very first sign-in ever for this Apple ID on this
@@ -45,21 +73,28 @@ async function handleApple(req, res) {
     // anything in it).
     const rawName = name && name.trim();
     const displayName = (rawName && !containsObjectionableContent(rawName)) ? rawName : 'Coureur';
+    const referrerId = await resolveReferrerId(referralCode);
+    const myReferralCode = await generateUniqueReferralCode();
     const { rows } = await sql`
-      INSERT INTO users (apple_sub, email, name)
-      VALUES (${claims.sub}, ${claims.email}, ${displayName})
-      RETURNING id, name, xp_total
+      INSERT INTO users (apple_sub, email, name, referral_code, referred_by)
+      VALUES (${claims.sub}, ${claims.email}, ${displayName}, ${myReferralCode}, ${referrerId})
+      RETURNING id, name, xp_total, referral_code
     `;
     user = rows[0];
+  } else if (!user.referral_code) {
+    // Lazily backfills a code for an account created before the referral feature existed —
+    // rather than leaving her (or any early user) permanently without one to share.
+    user.referral_code = await generateUniqueReferralCode();
+    if (user.referral_code) await sql`UPDATE users SET referral_code = ${user.referral_code} WHERE id = ${user.id}`;
   }
 
   const token = await signSession(user.id);
-  res.status(200).json({ token, user: { id: user.id, name: user.name, xpTotal: user.xp_total } });
+  res.status(200).json({ token, user: { id: user.id, name: user.name, xpTotal: user.xp_total, referralCode: user.referral_code } });
 }
 
 // Email + password sign-up. Passwords are never stored in plain text — only a bcrypt hash.
 async function handleSignup(req, res) {
-  const { email, password, name } = req.body || {};
+  const { email, password, name, referralCode } = req.body || {};
   if (!email || !password || !name || !name.trim()) return res.status(400).json({ error: 'bad_request' });
   if (password.length < 8) return res.status(400).json({ error: 'weak_password' });
   if (containsObjectionableContent(name)) return res.status(422).json({ error: 'objectionable_content' });
@@ -69,15 +104,17 @@ async function handleSignup(req, res) {
   if (existing.length > 0) return res.status(409).json({ error: 'email_taken' });
 
   const passwordHash = await bcrypt.hash(password, 12);
+  const referrerId = await resolveReferrerId(referralCode);
+  const myReferralCode = await generateUniqueReferralCode();
   const { rows } = await sql`
-    INSERT INTO users (email, password_hash, name)
-    VALUES (${normalizedEmail}, ${passwordHash}, ${name.trim()})
-    RETURNING id, name, xp_total
+    INSERT INTO users (email, password_hash, name, referral_code, referred_by)
+    VALUES (${normalizedEmail}, ${passwordHash}, ${name.trim()}, ${myReferralCode}, ${referrerId})
+    RETURNING id, name, xp_total, referral_code
   `;
   const user = rows[0];
 
   const token = await signSession(user.id);
-  res.status(201).json({ token, user: { id: user.id, name: user.name, xpTotal: user.xp_total } });
+  res.status(201).json({ token, user: { id: user.id, name: user.name, xpTotal: user.xp_total, referralCode: user.referral_code } });
 }
 
 async function handleLogin(req, res) {
@@ -85,7 +122,7 @@ async function handleLogin(req, res) {
   if (!email || !password) return res.status(400).json({ error: 'bad_request' });
 
   const normalizedEmail = String(email).trim().toLowerCase();
-  const { rows } = await sql`SELECT id, name, xp_total, password_hash FROM users WHERE email = ${normalizedEmail}`;
+  const { rows } = await sql`SELECT id, name, xp_total, password_hash, referral_code FROM users WHERE email = ${normalizedEmail}`;
   const user = rows[0];
   // Same "invalid_credentials" whether the email doesn't exist or the password's wrong — doesn't
   // confirm to a caller which emails have an account.
@@ -94,6 +131,11 @@ async function handleLogin(req, res) {
   const ok = await bcrypt.compare(password, user.password_hash);
   if (!ok) return res.status(401).json({ error: 'invalid_credentials' });
 
+  if (!user.referral_code) {
+    user.referral_code = await generateUniqueReferralCode();
+    if (user.referral_code) await sql`UPDATE users SET referral_code = ${user.referral_code} WHERE id = ${user.id}`;
+  }
+
   const token = await signSession(user.id);
-  res.status(200).json({ token, user: { id: user.id, name: user.name, xpTotal: user.xp_total } });
+  res.status(200).json({ token, user: { id: user.id, name: user.name, xpTotal: user.xp_total, referralCode: user.referral_code } });
 }

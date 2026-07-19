@@ -10,7 +10,7 @@ module.exports = withErrorHandling(async function handler(req, res) {
   if (!userId) return res.status(401).json({ error: 'unauthorized' });
 
   const { rows } = await sql`
-    SELECT u.id, u.name, u.xp_total, cm.club_id
+    SELECT u.id, u.name, u.xp_total, u.referral_code, cm.club_id
     FROM users u
     LEFT JOIN club_members cm ON cm.user_id = u.id
     WHERE u.id = ${userId}
@@ -18,5 +18,5 @@ module.exports = withErrorHandling(async function handler(req, res) {
   const row = rows[0];
   if (!row) return res.status(404).json({ error: 'not_found' });
 
-  res.status(200).json({ id: row.id, name: row.name, xpTotal: row.xp_total, clubId: row.club_id || null });
+  res.status(200).json({ id: row.id, name: row.name, xpTotal: row.xp_total, referralCode: row.referral_code, clubId: row.club_id || null });
 });

@@ -1,17 +1,20 @@
 import SwiftUI
 
 /// The "3 daily goals" widget — one ring, split into 3 colored arc segments, instead of 3
-/// separate bars. Deliberately one ring with segments, not 3 concentric rings: Apple's Human
-/// Interface Guidelines reserve the concentric-ring look for the system Activity control
-/// (Move/Exercise/Stand), and app review rejects lookalikes under guideline 5.2.5. Each goal gets
-/// 120° of the circle minus a small gap on either side, so the 3 goals stay clearly distinct even
-/// though they now share one ring. Colors are the app's 3 core accent tones (`RUColor.rose2` →
-/// `.rose` → `.violet`, theme-aware) — the same logo gradient stops as before, drawn as flat
-/// per-segment colors rather than a continuous gradient so each segment reads as one unambiguous
-/// color instead of shifting hue as it fills. Every legend dot (`RingsView`, `HomeView`) reads
-/// `fillColors` below, so they can never drift out of sync with what's actually drawn here.
-/// Drawn in a fixed 100×100 space then `scaleEffect`-ed to `size`, so stroke width and gaps stay
-/// in the same proportion to the ring at every size this is used at.
+/// separate bars. Takes a little of its polish from Apple's Fitness/Activity rings (a glossy
+/// per-ring gradient sweep, a color-tinted track instead of flat gray, a soft lift shadow) without
+/// copying the actual design: Apple's is 3 CONCENTRIC full rings in fixed Move/Exercise/Stand
+/// colors, this is a SINGLE ring split into 3 gapped arc segments in the app's own brand colors —
+/// a different principle, not just a different palette. The concentric-ring look itself is also
+/// reserved for the system Activity control by Apple's Human Interface Guidelines, and app review
+/// rejects lookalikes under guideline 5.2.5, so staying single-ring isn't just aesthetic. Each
+/// goal gets 120° of the circle minus a small gap on either side, so the 3 goals stay clearly
+/// distinct even though they now share one ring. Colors are the app's 3 core accent tones
+/// (`RUColor.rose2` → `.rose` → `.violet`, theme-aware) — the same logo gradient stops as before.
+/// Every legend dot (`RingsView`, `HomeView`) reads `fillColors` below, so they can never drift
+/// out of sync with what's actually drawn here. Drawn in a fixed 100×100 space then
+/// `scaleEffect`-ed to `size`, so stroke width, gaps, and shadow all stay in the same proportion
+/// to the ring at every size this is used at.
 struct DailyGoalsBarsView: View {
     /// [Séance du jour, Calories actives, Pas], each 0...1.
     var progress: [Double]
@@ -50,23 +53,37 @@ struct DailyGoalsBarsView: View {
             ForEach(Array(Self.fillColors.enumerated()), id: \.offset) { i, color in
                 let start = Double(i) / 3
                 let span = (120 - Self.gapDegrees) / 360
+                let startDeg = Double(i) * 120
+                let endDeg = startDeg + (120 - Self.gapDegrees)
                 let pct = max(0, min(1, i < displayedProgress.count ? displayedProgress[i] : 0))
 
-                // Track: the goal, always the full segment length, dim.
+                // Track: the goal, always the full segment length — a dim tint of this segment's
+                // own color (like Apple's rings), not a neutral gray, so even the empty part hints
+                // at which goal it belongs to.
                 Circle()
                     .trim(from: start, to: start + span)
-                    .stroke(RUColor.line, style: StrokeStyle(lineWidth: Self.strokeWidth, lineCap: .round))
+                    .stroke(color.opacity(RUColor.isLight ? 0.16 : 0.22), style: StrokeStyle(lineWidth: Self.strokeWidth, lineCap: .round))
 
-                // Fill: from the same start point, out to `pct` of the way along the segment, in
-                // this goal's own flat color.
+                // Fill: from the same start point, out to `pct` of the way along the segment. The
+                // gradient sweep spans the segment's full angular range (not just the filled
+                // part), so the trim below reveals progressively more of the same fixed sweep —
+                // early progress reads a touch muted, filling all the way to the goal reaches the
+                // fully saturated color, the same "brightens as it completes" read Apple's rings
+                // have, without animating the gradient itself (only `trim` — a `Shape`'s own
+                // `animatableData` — needs to interpolate for this to animate smoothly).
                 Circle()
                     .trim(from: start, to: start + span * pct)
-                    .stroke(color, style: StrokeStyle(lineWidth: Self.strokeWidth, lineCap: .round))
+                    .stroke(
+                        AngularGradient(gradient: Gradient(colors: [color.darkened(0.28), color]), center: .center, startAngle: .degrees(startDeg), endAngle: .degrees(endDeg)),
+                        style: StrokeStyle(lineWidth: Self.strokeWidth, lineCap: .round)
+                    )
                     .animation(.easeOut(duration: 0.9), value: pct)
             }
         }
         // A circle's own trim starts at 3 o'clock; rotate so segment 0 starts at 12, going clockwise.
         .rotationEffect(.degrees(-90))
+        .compositingGroup() // flatten before shadowing, so the 3 segments cast one soft lift shadow instead of each stacking its own
+        .shadow(color: .black.opacity(RUColor.isLight ? 0.16 : 0.4), radius: 5, x: 0, y: 3)
         .frame(width: Self.canvasSize, height: Self.canvasSize)
         .scaleEffect(size / Self.canvasSize)
         .frame(width: size, height: size)

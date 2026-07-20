@@ -112,6 +112,7 @@ struct DebriefSheet: View {
                     if AdaptivePlanEngine.checkDailyGoalsBonus(appState.profile) {
                         appState.postClubActivity(type: "badge", text: "a bouclé ses 3 objectifs du jour", xpEarned: 120)
                         appState.notify(icon: "🎉", colorHex: 0xC9FF3B, title: "Journée bouclée", text: "Tes 3 objectifs du jour sont faits — +120 XP.")
+                        NotificationService.shared.postImmediateNotification(title: "Journée bouclée 🎉", body: "Tes 3 objectifs du jour sont faits — +120 XP.")
                     }
                     // Today's session is done — an evening reminder for it would be stale now.
                     NotificationService.shared.rescheduleDailyReminder(for: appState.profile)

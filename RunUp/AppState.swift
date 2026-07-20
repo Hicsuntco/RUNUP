@@ -102,6 +102,7 @@ final class AppState {
         if AdaptivePlanEngine.checkDailyGoalsBonus(profile) {
             postClubActivity(type: "badge", text: "a bouclé ses 3 objectifs du jour", xpEarned: 120)
             notify(icon: "🎉", colorHex: 0xC9FF3B, title: "Journée bouclée", text: "Tes 3 objectifs du jour sont faits — +120 XP.")
+            NotificationService.shared.postImmediateNotification(title: "Journée bouclée 🎉", body: "Tes 3 objectifs du jour sont faits — +120 XP.")
             toast("Journée bouclée · +120 XP 🎉")
         }
         // The sole publish for this event when HealthKit is connected — `init`/

@@ -157,6 +157,25 @@ final class NotificationService: NSObject {
     func cancelWeeklyRecapReminder() {
         center.removePendingNotificationRequests(withIdentifiers: [Self.weeklyRecapReminderID])
     }
+
+    /// Fires a real system notification right away, for an in-the-moment event that already
+    /// happened (daily goals bonus, etc.) — distinct from the scheduled reminders above, this has
+    /// no trigger delay (`trigger: nil`) and isn't gated on `coachNotificationsEnabled`, matching
+    /// `AppState.notify`'s own `coachOnly` reasoning: a gamification/celebration moment, not a
+    /// coach nudge. Thanks to `willPresent` below, this shows as a real banner even while the app
+    /// is already open in the foreground, not just when backgrounded. Still requires real,
+    /// already-granted OS authorization like every other notification here — never prompts.
+    func postImmediateNotification(title: String, body: String) {
+        center.getNotificationSettings { [center] settings in
+            guard settings.authorizationStatus == .authorized else { return }
+            let content = UNMutableNotificationContent()
+            content.title = title
+            content.body = body
+            content.sound = .default
+            let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
+            center.add(request)
+        }
+    }
 }
 
 extension Notification.Name {

@@ -66,16 +66,16 @@ private struct ConnectRow: View {
             HStack(spacing: 14) {
                 Text(icon).font(.system(size: 18))
                     .frame(width: 40, height: 40)
-                    .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(source.title).font(RUFont.sans(15, weight: .semibold)).foregroundColor(.white)
+                    Text(source.title).font(RUFont.sans(15, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                     Text(source.subtitle).font(RUFont.sans(11.5)).foregroundColor(RUColor.text2)
                 }
                 Spacer()
                 if source != .apple {
                     Text("Bientôt").font(RUFont.sans(11, weight: .semibold)).foregroundColor(RUColor.text3)
                 } else if busy {
-                    ProgressView().tint(.white)
+                    ProgressView().tint(RUColor.textPrimary)
                 } else if connected {
                     Text("CONNECTÉ ✓").font(RUFont.sans(11, weight: .bold)).foregroundColor(RUColor.lime)
                 } else {

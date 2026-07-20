@@ -53,7 +53,7 @@ struct PlanView: View {
                     BackChevronButton { appState.go(.home) }
                     VStack(alignment: .leading, spacing: 1) {
                         EyebrowLabel(text: "Ton programme · \(profile.goalDisplay)", color: RUColor.rose)
-                        Text("Le plan complet").displayStyle(22).foregroundColor(.white)
+                        Text("Le plan complet").displayStyle(22).foregroundColor(RUColor.textPrimary)
                     }
                 }
 
@@ -108,13 +108,13 @@ struct PlanView: View {
         let badge = isRaceWeek ? "🏁" : week.block == .affutage ? "▽" : week.isDone ? "✓" : "›"
         let color: Color = isRaceWeek ? RUColor.rose : week.block == .affutage ? RUColor.violet : week.isDone ? RUColor.text3 : RUColor.text2
         return HStack(spacing: 12) {
-            Text("\(week.number)").displayStyle(14).foregroundColor(.white)
+            Text("\(week.number)").displayStyle(14).foregroundColor(week.isCurrent ? .white : RUColor.textPrimary)
                 .frame(width: 30, height: 30)
-                .background(week.isCurrent ? RUColor.rose : Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .background(week.isCurrent ? RUColor.rose : RUColor.card, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).stroke(RUColor.line, lineWidth: week.isCurrent ? 0 : RUSpacing.hairline))
             VStack(alignment: .leading, spacing: 1) {
                 Text("Semaine \(week.number) · \(week.block.rawValue)\(week.isCurrent ? " · en cours" : "")")
-                    .font(RUFont.sans(13, weight: week.isCurrent ? .semibold : .medium)).foregroundColor(.white)
+                    .font(RUFont.sans(13, weight: week.isCurrent ? .semibold : .medium)).foregroundColor(RUColor.textPrimary)
                 Text("~\(week.estimatedKm) km" + (week.isCurrent ? " · \(completedCount)/\(plannedCount) séances faites" : ""))
                     .font(RUFont.sans(10)).foregroundColor(RUColor.text2)
             }
@@ -161,11 +161,11 @@ struct PlanView: View {
         let isToday = state == .today
         return HStack(spacing: 11) {
             Text(letter).displayStyle(10).foregroundColor(RUColor.text2).frame(width: 30, alignment: .leading)
-            Circle().fill(isRest ? Color.white.opacity(0.2) : RUColor.rose).opacity(day.completed ? 1 : 0.5).frame(width: 6, height: 6)
+            Circle().fill(isRest ? RUColor.text4 : RUColor.rose).opacity(day.completed ? 1 : 0.5).frame(width: 6, height: 6)
             VStack(alignment: .leading, spacing: 1) {
                 Text(session?.title ?? "Repos")
                     .font(RUFont.sans(12.5, weight: isToday ? .semibold : .regular))
-                    .foregroundColor(isRest ? RUColor.text3 : .white)
+                    .foregroundColor(isRest ? RUColor.text3 : RUColor.textPrimary)
                 if let subtitle = session?.subtitle, !isRest {
                     Text(subtitle).font(RUFont.sans(10)).foregroundColor(RUColor.text3).lineLimit(2)
                 }

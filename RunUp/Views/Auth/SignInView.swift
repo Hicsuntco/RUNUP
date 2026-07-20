@@ -24,7 +24,7 @@ struct SignInView: View {
             VStack(spacing: 18) {
                 VStack(spacing: 10) {
                     AppMarkView(size: 56)
-                    Text("Connecte-toi").displayStyle(22).foregroundColor(.white)
+                    Text("Connecte-toi").displayStyle(22).foregroundColor(RUColor.textPrimary)
                     Text("Pour rejoindre un vrai club, avec un classement et un fil d'activité réels.")
                         .font(RUFont.sans(12.5))
                         .foregroundColor(RUColor.text2)
@@ -68,7 +68,7 @@ struct SignInView: View {
         .disabled(isLoading)
         .overlay {
             if isLoading {
-                ProgressView().tint(.white)
+                ProgressView().tint(RUColor.textPrimary)
             }
         }
     }
@@ -174,7 +174,7 @@ private struct AuthFieldStyle: TextFieldStyle {
     func _body(configuration: TextField<Self._Label>) -> some View {
         configuration
             .font(RUFont.sans(14))
-            .foregroundColor(.white)
+            .foregroundColor(RUColor.textPrimary)
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
             .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))

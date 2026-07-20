@@ -10,7 +10,7 @@ struct HeaderView<Trailing: View>: View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 2) {
                 EyebrowLabel(text: eyebrow, color: RUColor.rose)
-                Text(title).displayStyle(24).foregroundColor(.white)
+                Text(title).displayStyle(24).foregroundColor(RUColor.textPrimary)
             }
             Spacer()
             trailing

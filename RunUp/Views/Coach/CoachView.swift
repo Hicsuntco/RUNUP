@@ -78,7 +78,7 @@ struct CoachView: View {
         HStack(spacing: 12) {
             AppMarkView(size: 40)
             VStack(alignment: .leading, spacing: 2) {
-                Text("Ton coach").displayStyle(19).foregroundColor(.white)
+                Text("Ton coach").displayStyle(19).foregroundColor(RUColor.textPrimary)
                 HStack(spacing: 5) {
                     Circle().fill(RUColor.lime).frame(width: 5, height: 5)
                     Text("en ligne")
@@ -99,7 +99,7 @@ struct CoachView: View {
         case .error:
             HStack(spacing: 10) {
                 Image(systemName: "exclamationmark.triangle.fill").foregroundColor(RUColor.amber).font(.system(size: 15))
-                Text(message.text).font(RUFont.sans(12.5)).foregroundColor(Color(hex: 0xFFD79A)).lineSpacing(2)
+                Text(message.text).font(RUFont.sans(12.5)).foregroundColor(RUColor.isLight ? Color(hex: 0x8A5A00) : Color(hex: 0xFFD79A)).lineSpacing(2)
                 Spacer(minLength: 0)
                 Button("Réessayer") { retryLast() }
                     .font(RUFont.sans(11, weight: .bold))
@@ -127,10 +127,10 @@ struct CoachView: View {
         HStack {
             Text(text)
                 .font(RUFont.sans(13))
-                .foregroundColor(.white)
+                .foregroundColor(RUColor.textPrimary)
                 .lineSpacing(3)
                 .padding(12)
-                .background(Color.white.opacity(0.06), in: BubbleShape(tailCorner: .topLeft))
+                .background(RUColor.card, in: BubbleShape(tailCorner: .topLeft))
                 .overlay(BubbleShape(tailCorner: .topLeft).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
             Spacer(minLength: 40)
         }
@@ -142,7 +142,7 @@ struct CoachView: View {
                 ForEach(0..<3) { _ in Circle().fill(RUColor.text2).frame(width: 6, height: 6) }
             }
             .padding(13)
-            .background(Color.white.opacity(0.06), in: BubbleShape(tailCorner: .topLeft))
+            .background(RUColor.card, in: BubbleShape(tailCorner: .topLeft))
             Spacer()
         }
     }
@@ -150,7 +150,7 @@ struct CoachView: View {
     private var inputBar: some View {
         HStack(spacing: 10) {
             TextField("", text: Binding(get: { vm?.draft ?? "" }, set: { vm?.draft = $0 }), prompt: Text("Écris à ton coach…").foregroundColor(RUColor.text3))
-                .foregroundColor(.white)
+                .foregroundColor(RUColor.textPrimary)
                 .font(RUFont.sans(13))
             Button(action: { send(vm?.draft ?? "") }) {
                 Image(systemName: "arrow.up").foregroundColor(.white).font(.system(size: 14, weight: .bold))
@@ -160,7 +160,7 @@ struct CoachView: View {
             .buttonStyle(PressableStyle())
         }
         .padding(.leading, 16).padding(.trailing, 8).padding(.vertical, 8)
-        .background(Color.white.opacity(0.06), in: Capsule())
+        .background(RUColor.card, in: Capsule())
         .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
         .padding(.horizontal, 16)
         .padding(.bottom, 96)
@@ -202,7 +202,7 @@ struct FlowChips: View {
                 Button(action: { onTap(chip) }) {
                     Text(chip)
                         .font(RUFont.sans(11, weight: .semibold))
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(RUColor.text2)
                         .padding(.horizontal, 11).padding(.vertical, 6)
                         .background(RUColor.card, in: Capsule())
                         .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))

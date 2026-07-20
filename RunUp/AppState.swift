@@ -42,6 +42,7 @@ final class AppState {
         AdaptivePlanEngine.refreshProgramForCurrentDate(self.profile)
         AdaptivePlanEngine.resetDailyGoalsIfNewDay(self.profile)
         ThemeStore.shared.themeID = self.profile.accentThemeID
+        ThemeStore.shared.isLightMode = self.profile.isLightMode
         NotificationService.shared.rescheduleDailyReminder(for: self.profile)
         NotificationService.shared.rescheduleInactivityReminder(for: self.profile)
         Task { await self.syncDailyGoalsFromHealthKit() }

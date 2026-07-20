@@ -40,7 +40,11 @@ struct RunShareCardView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(colors: [Color(hex: 0x1A0B2E), RUColor.bg], startPoint: .top, endPoint: .bottom)
+            // Deliberately fixed dark, not `RUColor.bg` — this card is rendered once into a
+            // shareable image (Instagram Stories etc.), independent of whatever app theme she
+            // currently has selected. A share card that quietly went light/dark depending on an
+            // unrelated in-app setting would be an inconsistent, unbranded artifact once posted.
+            LinearGradient(colors: [Color(hex: 0x1A0B2E), Color(hex: 0x0E0E14)], startPoint: .top, endPoint: .bottom)
             RadialGradient(colors: [RUColor.rose.opacity(0.22), .clear], center: .top, startRadius: 0, endRadius: 420)
 
             VStack(spacing: 0) {
@@ -68,7 +72,7 @@ struct RunShareCardView: View {
 
                 Text(run.title)
                     .font(RUFont.sans(15, weight: .semibold))
-                    .foregroundColor(RUColor.text2)
+                    .foregroundColor(Color.white.opacity(0.5))
                     .padding(.bottom, 8)
 
                 HStack(spacing: 30) {
@@ -80,7 +84,7 @@ struct RunShareCardView: View {
 
                 Text(Self.dateFormatter.string(from: run.date))
                     .font(RUFont.mono(11))
-                    .foregroundColor(RUColor.text3)
+                    .foregroundColor(Color.white.opacity(0.32))
                     .padding(.bottom, 36)
             }
         }

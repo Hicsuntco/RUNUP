@@ -16,7 +16,7 @@ struct ProfileView: View {
             VStack(alignment: .leading, spacing: 20) {
                 HStack(spacing: 12) {
                     BackChevronButton { appState.go(.home) }
-                    Text("Profil & réglages").displayStyle(22).foregroundColor(.white)
+                    Text("Profil & réglages").displayStyle(22).foregroundColor(RUColor.textPrimary)
                 }
 
                 HStack(spacing: 14) {
@@ -25,7 +25,7 @@ struct ProfileView: View {
                         .frame(width: 60, height: 60)
                         .overlay(Text(String(profile.name.prefix(1))).displayStyle(24).foregroundColor(.white))
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(profile.name).displayStyle(20).foregroundColor(.white)
+                        Text(profile.name).displayStyle(20).foregroundColor(RUColor.textPrimary)
                         Text("Objectif · \(profile.goalDisplay)").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
                     }
                 }
@@ -91,7 +91,7 @@ struct ProfileView: View {
     private var appleHealthRow: some View {
         HStack(spacing: 12) {
             Text("🍎").font(.system(size: 17))
-            Text(ConnectedSource.apple.title).font(RUFont.sans(14, weight: .medium)).foregroundColor(.white)
+            Text(ConnectedSource.apple.title).font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
             Spacer()
             Toggle("", isOn: Binding(
                 get: { profile.connectedSources.contains(.apple) },
@@ -115,7 +115,7 @@ struct ProfileView: View {
     private var garminRow: some View {
         HStack(spacing: 12) {
             Text("⌚").font(.system(size: 17))
-            Text(ConnectedSource.garmin.title).font(RUFont.sans(14, weight: .medium)).foregroundColor(.white)
+            Text(ConnectedSource.garmin.title).font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
             Spacer()
             Text("Bientôt").font(RUFont.sans(11, weight: .semibold)).foregroundColor(RUColor.text3)
         }
@@ -124,10 +124,25 @@ struct ProfileView: View {
 
     /// Nuancier — tap a swatch to re-theme the whole app (buttons, highlights, the logo mark)
     /// with that accent. Persists to `profile.accentThemeID` and mirrors into `ThemeStore` so
-    /// every `RUColor.rose`/`.rose2`/`.violet` call site updates immediately, live.
+    /// every `RUColor.rose`/`.rose2`/`.violet` call site updates immediately, live. The mode row
+    /// above it (Sombre/Blanc) is the same mirror-into-`ThemeStore` mechanism, one level up —
+    /// dark/light instead of an accent hue, see `RUColor`'s theme-aware tokens.
     private var appearanceCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Couleur de l'app").font(RUFont.sans(14, weight: .medium)).foregroundColor(.white)
+            HStack {
+                Text("Mode d'affichage").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                Spacer()
+                HStack(spacing: 4) {
+                    modeButton("Sombre", isLight: false)
+                    modeButton("Blanc", isLight: true)
+                }
+                .padding(3)
+                .background(RUColor.card2, in: Capsule())
+            }
+
+            Divider().background(RUColor.line)
+
+            Text("Couleur de l'app").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: 4), spacing: 16) {
                 ForEach(AccentTheme.all) { theme in
                     Button(action: { selectAccent(theme) }) {
@@ -151,6 +166,23 @@ struct ProfileView: View {
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
     }
 
+    private func modeButton(_ label: String, isLight: Bool) -> some View {
+        let selected = profile.isLightMode == isLight
+        return Button(action: { selectMode(isLight: isLight) }) {
+            Text(label)
+                .font(RUFont.sans(12, weight: .semibold))
+                .foregroundColor(selected ? .white : RUColor.text2)
+                .padding(.horizontal, 14).padding(.vertical, 6)
+                .background(selected ? RUColor.rose : .clear, in: Capsule())
+        }
+        .buttonStyle(PressableStyle())
+    }
+
+    private func selectMode(isLight: Bool) {
+        profile.isLightMode = isLight
+        ThemeStore.shared.isLightMode = isLight
+    }
+
     private func selectAccent(_ theme: AccentTheme) {
         profile.accentThemeID = theme.id
         ThemeStore.shared.themeID = theme.id
@@ -159,12 +191,12 @@ struct ProfileView: View {
     private var preferencesCard: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("Unité de distance").font(RUFont.sans(14, weight: .medium)).foregroundColor(.white)
+                Text("Unité de distance").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
                 HStack(spacing: 4) {
                     ForEach(["km", "mi"], id: \.self) { u in
                         Button(action: { unit = u; profile.distanceUnit = u }) {
-                            Text(u).font(RUFont.sans(12, weight: .semibold)).foregroundColor(.white)
+                            Text(u).font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                                 .padding(.horizontal, 14).padding(.vertical, 6)
                                 .background(unit == u ? RUColor.rose : .clear, in: Capsule())
                         }
@@ -172,12 +204,12 @@ struct ProfileView: View {
                     }
                 }
                 .padding(3)
-                .background(Color.white.opacity(0.06), in: Capsule())
+                .background(RUColor.card, in: Capsule())
             }
             .padding(.horizontal, 14).padding(.vertical, 13)
             Divider().background(RUColor.line)
             HStack {
-                Text("Notifications du coach").font(RUFont.sans(14, weight: .medium)).foregroundColor(.white)
+                Text("Notifications du coach").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
                 Toggle("", isOn: Binding(
                     get: { profile.coachNotificationsEnabled },
@@ -210,7 +242,7 @@ struct ProfileView: View {
     private var dailyGoalsCard: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("Objectif de pas").font(RUFont.sans(14, weight: .medium)).foregroundColor(.white)
+                Text("Objectif de pas").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
                 Stepper(
                     "\(Int(profile.stepsGoal)) pas",
@@ -220,12 +252,12 @@ struct ProfileView: View {
                 )
                 .fixedSize()
                 .tint(RUColor.rose)
-                .foregroundColor(.white)
+                .foregroundColor(RUColor.textPrimary)
             }
             .padding(.horizontal, 14).padding(.vertical, 13)
             Divider().background(RUColor.line)
             HStack {
-                Text("Objectif renfo & mobilité").font(RUFont.sans(14, weight: .medium)).foregroundColor(.white)
+                Text("Objectif renfo & mobilité").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
                 Stepper(
                     "\(Int(profile.strengthGoalMinutes)) min",
@@ -235,7 +267,7 @@ struct ProfileView: View {
                 )
                 .fixedSize()
                 .tint(RUColor.rose)
-                .foregroundColor(.white)
+                .foregroundColor(RUColor.textPrimary)
             }
             .padding(.horizontal, 14).padding(.vertical, 13)
         }
@@ -248,7 +280,7 @@ struct ProfileView: View {
     /// `AdaptivePlanEngine.adjustForWellbeing` is already computing every week from this field.
     private var injuryCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Une douleur ou blessure à surveiller ?").font(RUFont.sans(14, weight: .medium)).foregroundColor(.white)
+            Text("Une douleur ou blessure à surveiller ?").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
             ChipFlowLayout {
                 ForEach([("none", "Aucune"), ("knee", "Genou"), ("ankle", "Cheville"), ("back", "Dos"), ("other", "Autre")], id: \.0) { id, label in
                     SelectableChip(label: label, selected: (profile.injuryArea ?? "none") == id) { profile.injuryArea = id }
@@ -289,7 +321,7 @@ struct ProfileView: View {
     private var cycleCard: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text("Suivi du cycle").font(RUFont.sans(14, weight: .medium)).foregroundColor(.white)
+                Text("Suivi du cycle").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
                 Toggle("", isOn: Binding(
                     get: { profile.cycleTrackingEnabled },
@@ -329,7 +361,7 @@ struct ProfileView: View {
                         )
                         .fixedSize()
                         .tint(RUColor.rose)
-                        .foregroundColor(.white)
+                        .foregroundColor(RUColor.textPrimary)
                     }
 
                     if let phase = profile.cyclePhase {
@@ -376,7 +408,7 @@ struct ProfileView: View {
             HStack(spacing: 10) {
                 Text(code)
                     .font(RUFont.mono(18, weight: .semibold))
-                    .foregroundColor(.white)
+                    .foregroundColor(RUColor.textPrimary)
                     .tracking(2)
                     .padding(.horizontal, 16).padding(.vertical, 10)
                     .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -400,7 +432,7 @@ struct ProfileView: View {
     private func programRow(_ label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack {
-                Text(label).font(RUFont.sans(14, weight: .medium)).foregroundColor(.white)
+                Text(label).font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
                 Text("›").foregroundColor(RUColor.text2)
             }
@@ -415,7 +447,7 @@ struct ProfileView: View {
         VStack(spacing: 0) {
             if let user = appState.auth.currentUser {
                 HStack {
-                    Text("Connectée en tant que \(user.name)").font(RUFont.sans(14, weight: .medium)).foregroundColor(.white)
+                    Text("Connectée en tant que \(user.name)").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
                     Spacer()
                 }
                 .padding(.horizontal, 14).padding(.vertical, 13)
@@ -472,7 +504,7 @@ private struct StravaConnectionRow: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 12) {
                 Text("🟠").font(.system(size: 17))
-                Text("Strava").font(RUFont.sans(14, weight: .medium)).foregroundColor(.white)
+                Text("Strava").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
                 if !auth.isSignedIn {
                     Text("Nécessite un compte").font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)

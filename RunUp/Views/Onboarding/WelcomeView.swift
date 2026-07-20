@@ -24,7 +24,7 @@ struct WelcomeView: View {
 
                         Text("COURS COMME\nSI TU AVAIS\nUN COACH")
                             .displayStyle(42)
-                            .foregroundColor(.white)
+                            .foregroundColor(RUColor.textPrimary)
                             .lineSpacing(-4)
                             .padding(.top, 24)
 
@@ -43,7 +43,7 @@ struct WelcomeView: View {
                                         .frame(width: 38, height: 38)
                                         .overlay(Image(systemName: prop.icon).foregroundColor(RUColor.rose2).font(.system(size: 15)))
                                     VStack(alignment: .leading, spacing: 3) {
-                                        Text(prop.title).font(RUFont.sans(14, weight: .semibold)).foregroundColor(.white)
+                                        Text(prop.title).font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                                         Text(prop.desc).font(RUFont.sans(12)).foregroundColor(RUColor.text2).lineSpacing(3)
                                     }
                                 }

@@ -43,7 +43,7 @@ struct SecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(RUFont.sans(13, weight: .semibold))
-            .foregroundColor(.white)
+            .foregroundColor(RUColor.textPrimary)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
             .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))

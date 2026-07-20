@@ -143,7 +143,7 @@ struct ClubView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         EyebrowLabel(text: "Le Club", color: RUColor.rose)
                         HStack(spacing: 6) {
-                            Text(club.name).displayStyle(24).foregroundColor(.white)
+                            Text(club.name).displayStyle(24).foregroundColor(RUColor.textPrimary)
                             Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundColor(RUColor.text3)
                         }
                     }
@@ -152,12 +152,12 @@ struct ClubView: View {
             } else {
                 VStack(alignment: .leading, spacing: 2) {
                     EyebrowLabel(text: "Le Club", color: RUColor.rose)
-                    Text("Rejoins un club").displayStyle(24).foregroundColor(.white)
+                    Text("Rejoins un club").displayStyle(24).foregroundColor(RUColor.textPrimary)
                 }
             }
             Spacer()
             if let club = board.club {
-                StatChip(text: "\(club.memberCount) membre\(club.memberCount > 1 ? "s" : "")", color: .white.opacity(0.7), background: RUColor.card)
+                StatChip(text: "\(club.memberCount) membre\(club.memberCount > 1 ? "s" : "")", color: RUColor.text2, background: RUColor.card)
             }
         }
         .padding(.vertical, 2)
@@ -210,7 +210,7 @@ struct ClubView: View {
     private var signInPrompt: some View {
         VStack(spacing: 12) {
             AppMarkView(size: 44)
-            Text("Le Club, c'est mieux à plusieurs").font(RUFont.sans(15, weight: .semibold)).foregroundColor(.white)
+            Text("Le Club, c'est mieux à plusieurs").font(RUFont.sans(15, weight: .semibold)).foregroundColor(RUColor.textPrimary)
             Text("Connecte-toi pour rejoindre un vrai club, avec un classement et un fil d'activité alimentés par de vraies personnes.")
                 .font(RUFont.sans(12)).foregroundColor(RUColor.text2).multilineTextAlignment(.center)
             Button("SE CONNECTER") { showSignIn = true }
@@ -232,7 +232,7 @@ struct ClubView: View {
                     TextField("Nom du club", text: $newClubName)
                         .textFieldStyle(.plain)
                         .font(RUFont.sans(14))
-                        .foregroundColor(.white)
+                        .foregroundColor(RUColor.textPrimary)
                         .padding(.horizontal, 14).padding(.vertical, 11)
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
@@ -248,7 +248,7 @@ struct ClubView: View {
                     TextField("Code d'invitation", text: $joinCode)
                         .textFieldStyle(.plain)
                         .font(RUFont.mono(14))
-                        .foregroundColor(.white)
+                        .foregroundColor(RUColor.textPrimary)
                         .textInputAutocapitalization(.characters)
                         .padding(.horizontal, 14).padding(.vertical, 11)
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -329,7 +329,7 @@ struct ClubView: View {
                         Spacer()
                         StatChip(text: "J-\(daysLeft(until: challenge.endDate))", color: RUColor.rose2)
                     }
-                    Text(challenge.title).displayStyle(19).foregroundColor(.white)
+                    Text(challenge.title).displayStyle(19).foregroundColor(RUColor.textPrimary)
                     LinearBar(fraction: challenge.targetKm > 0 ? min(1, challenge.progressKm / challenge.targetKm) : 0, color: RUColor.rose)
                     HStack {
                         Text("\(Int(challenge.progressKm)) / \(Int(challenge.targetKm)) km").font(RUFont.sans(11)).foregroundColor(RUColor.text2)
@@ -344,7 +344,7 @@ struct ClubView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 3) {
                             EyebrowLabel(text: "Défi du club", color: RUColor.rose2)
-                            Text("Aucun défi en cours — en créer un").font(RUFont.sans(13)).foregroundColor(.white)
+                            Text("Aucun défi en cours — en créer un").font(RUFont.sans(13)).foregroundColor(RUColor.textPrimary)
                         }
                         Spacer()
                         Image(systemName: "plus.circle.fill").font(.system(size: 20)).foregroundColor(RUColor.rose2)
@@ -363,7 +363,7 @@ struct ClubView: View {
             segment("Fil d'activité", .feed)
         }
         .padding(3)
-        .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
     }
 
@@ -374,7 +374,10 @@ struct ClubView: View {
         }) {
             Text(label)
                 .font(RUFont.sans(12.5, weight: .semibold))
-                .foregroundColor(.white)
+                // White stays literal only when selected (background is the opaque RUColor.rose
+                // accent fill below); unselected sits on the plain page/card surface and needs to
+                // invert with the theme.
+                .foregroundColor(tab == value ? .white : RUColor.textPrimary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 9)
                 .background(tab == value ? RUColor.rose : .clear, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
@@ -422,9 +425,9 @@ struct ClubView: View {
                             .frame(width: 20)
                         Text(entry.isMe ? "\(entry.name) · toi" : entry.name)
                             .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
-                            .foregroundColor(.white)
+                            .foregroundColor(RUColor.textPrimary)
                         Spacer()
-                        Text("\(entry.xp)").displayStyle(15).foregroundColor(entry.isMe ? RUColor.rose2 : .white)
+                        Text("\(entry.xp)").displayStyle(15).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
                     }
                     .padding(.horizontal, 13).padding(.vertical, 11)
                     .background(entry.isMe ? RUColor.rose.opacity(0.1) : RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -448,7 +451,7 @@ struct ClubView: View {
                     Button(action: { selectedBadge = badge }) {
                         VStack(spacing: 5) {
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(badge.earned ? RUColor.card : Color.white.opacity(0.02))
+                                .fill(badge.earned ? RUColor.card : RUColor.card2)
                                 .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                                 .aspectRatio(1, contentMode: .fit)
                                 .overlay(Text(badge.emoji).font(.system(size: 26)))
@@ -477,7 +480,7 @@ struct ClubView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             (Text(item.name).fontWeight(.semibold) + Text(" \(item.text)"))
                                 .font(RUFont.sans(13))
-                                .foregroundColor(.white)
+                                .foregroundColor(RUColor.textPrimary)
                             Text(item.createdAt.relativeDescription).font(RUFont.sans(10)).foregroundColor(RUColor.text3)
                         }
                         Spacer(minLength: 0)
@@ -761,14 +764,14 @@ struct BadgeDetailView: View {
     var body: some View {
         VStack(spacing: 14) {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(badge.earned ? RUColor.card : Color.white.opacity(0.02))
+                .fill(badge.earned ? RUColor.card : RUColor.card2)
                 .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                 .frame(width: 76, height: 76)
                 .overlay(Text(badge.emoji).font(.system(size: 34)))
                 .opacity(badge.earned ? 1 : 0.4)
                 .padding(.top, 22)
 
-            Text(badge.name).font(RUFont.sans(17, weight: .semibold)).foregroundColor(.white)
+            Text(badge.name).font(RUFont.sans(17, weight: .semibold)).foregroundColor(RUColor.textPrimary)
 
             StatChip(
                 text: badge.earned ? "Débloqué" : "Pas encore débloqué",

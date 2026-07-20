@@ -66,7 +66,7 @@ struct StatsView: View {
             Spacer()
             MetricColumn(value: formatTotalDuration(totalDurationSeconds), label: "temps total", valueSize: 22)
             Spacer()
-            MetricColumn(value: "\(profile.streak)", label: "jours de suite", valueColor: profile.streak > 0 ? RUColor.lime : .white, valueSize: 22)
+            MetricColumn(value: "\(profile.streak)", label: "jours de suite", valueColor: profile.streak > 0 ? RUColor.lime : RUColor.textPrimary, valueSize: 22)
         }
         .padding(16)
         .ruCard()
@@ -110,7 +110,7 @@ struct StatsView: View {
                     MetricColumn(
                         value: "\(thisWeekRuns.count)/\(profile.runningDays.count)",
                         label: "séances prévues",
-                        valueColor: thisWeekRuns.count >= profile.runningDays.count ? RUColor.lime : .white,
+                        valueColor: thisWeekRuns.count >= profile.runningDays.count ? RUColor.lime : RUColor.textPrimary,
                         valueSize: 24
                     )
                 }
@@ -143,7 +143,7 @@ struct StatsView: View {
             EyebrowLabel(text: "Allure moyenne récente")
             if let recentAvgPace {
                 HStack(alignment: .lastTextBaseline, spacing: 6) {
-                    Text(PaceModel.formatDuration(recentAvgPace)).displayStyle(44).foregroundColor(.white)
+                    Text(PaceModel.formatDuration(recentAvgPace)).displayStyle(44).foregroundColor(RUColor.textPrimary)
                     Text("/km").font(RUFont.sans(14)).foregroundColor(RUColor.text2)
                     if let previousAvgPace {
                         let deltaSeconds = previousAvgPace - recentAvgPace // positive = faster now
@@ -295,7 +295,7 @@ struct StatsView: View {
     private func predictionTile(_ label: String, _ value: String, highlighted: Bool) -> some View {
         VStack(spacing: 4) {
             Text(label).font(RUFont.sans(8, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
-            Text(value).displayStyle(22).foregroundColor(highlighted ? RUColor.rose2 : .white)
+            Text(value).displayStyle(22).foregroundColor(highlighted ? RUColor.rose2 : RUColor.textPrimary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)
@@ -359,7 +359,7 @@ struct StatsView: View {
                 HStack(alignment: .bottom, spacing: 5) {
                     ForEach(bars.indices, id: \.self) { i in
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(i == bars.count - 1 ? RUColor.rose : Color.white.opacity(0.14))
+                            .fill(i == bars.count - 1 ? RUColor.rose : RUColor.line)
                             .frame(height: max(4, bars[i] / maxBar * 70))
                             .frame(maxWidth: .infinity)
                     }

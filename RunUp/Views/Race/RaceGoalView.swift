@@ -76,7 +76,7 @@ struct RaceGoalView: View {
                     BackChevronButton { appState.go(.profile) }
                     VStack(alignment: .leading, spacing: 1) {
                         EyebrowLabel(text: "Ton objectif", color: RUColor.rose)
-                        Text(goalTitle).displayStyle(24).foregroundColor(.white)
+                        Text(goalTitle).displayStyle(24).foregroundColor(RUColor.textPrimary)
                     }
                 }
                 Text(dateLine).font(RUFont.sans(12)).foregroundColor(RUColor.text2).padding(.leading, 34)
@@ -121,9 +121,9 @@ struct RaceGoalView: View {
                     VStack(spacing: 6) {
                         ForEach(hyroxStrategy.indices, id: \.self) { i in
                             HStack(spacing: 12) {
-                                RoundedRectangle(cornerRadius: 2).fill(Color.white.opacity(0.2)).frame(width: 3, height: 30)
+                                RoundedRectangle(cornerRadius: 2).fill(RUColor.text4).frame(width: 3, height: 30)
                                 VStack(alignment: .leading, spacing: 1) {
-                                    Text(hyroxStrategy[i].0).font(RUFont.sans(13, weight: .semibold)).foregroundColor(.white)
+                                    Text(hyroxStrategy[i].0).font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                                     Text(hyroxStrategy[i].1).font(RUFont.sans(10)).foregroundColor(RUColor.text2).lineSpacing(2)
                                 }
                                 Spacer()
@@ -139,13 +139,13 @@ struct RaceGoalView: View {
                         ForEach(pacingPlan.indices, id: \.self) { i in
                             let isLast = i == pacingPlan.count - 1
                             HStack(spacing: 12) {
-                                RoundedRectangle(cornerRadius: 2).fill(isLast ? RUColor.rose : Color.white.opacity(0.2)).frame(width: 3, height: 30)
+                                RoundedRectangle(cornerRadius: 2).fill(isLast ? RUColor.rose : RUColor.text4).frame(width: 3, height: 30)
                                 VStack(alignment: .leading, spacing: 1) {
-                                    Text(pacingPlan[i].1).font(RUFont.sans(13, weight: .semibold)).foregroundColor(.white)
+                                    Text(pacingPlan[i].1).font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                                     Text(pacingPlan[i].0).font(RUFont.sans(10)).foregroundColor(RUColor.text2)
                                 }
                                 Spacer()
-                                (Text(pacingPlan[i].2).font(RUFont.bebas(18)).foregroundColor(isLast ? RUColor.rose2 : .white)
+                                (Text(pacingPlan[i].2).font(RUFont.bebas(18)).foregroundColor(isLast ? RUColor.rose2 : RUColor.textPrimary)
                                     + Text(" /km").font(RUFont.sans(9)).foregroundColor(RUColor.text2))
                             }
                             .padding(.horizontal, 14).padding(.vertical, 12)
@@ -199,7 +199,7 @@ struct RaceGoalView: View {
 
     private func tile(_ value: String, _ label: String, highlighted: Bool) -> some View {
         VStack(spacing: 4) {
-            Text(value).displayStyle(30).foregroundColor(highlighted ? RUColor.rose2 : .white)
+            Text(value).displayStyle(30).foregroundColor(highlighted ? RUColor.rose2 : RUColor.textPrimary)
             Text(label).font(RUFont.sans(8, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
         }
         .frame(maxWidth: .infinity)

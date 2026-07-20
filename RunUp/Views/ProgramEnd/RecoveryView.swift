@@ -17,14 +17,14 @@ struct RecoveryView: View {
 
                 VStack(spacing: 12) {
                     Text("🌿").font(.system(size: 34))
-                    Text("Place à la récupération").displayStyle(22).foregroundColor(.white)
+                    Text("Place à la récupération").displayStyle(22).foregroundColor(RUColor.textPrimary)
                     Text("Ton corps a fait le plus dur. On souffle \(total) jours avant de repartir — c'est ce qui fait tenir les progrès dans la durée.")
                         .font(RUFont.sans(12.5)).foregroundColor(RUColor.text2).multilineTextAlignment(.center).lineSpacing(3)
 
                     HStack(spacing: 5) {
                         ForEach(0..<total, id: \.self) { i in
                             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(i < done ? RUColor.lime : Color.white.opacity(0.06))
+                                .fill(i < done ? RUColor.lime : RUColor.card)
                                 .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(i < done ? RUColor.lime : RUColor.line, lineWidth: RUSpacing.hairline))
                                 .frame(width: 34, height: 34)
                                 .overlay(
@@ -42,7 +42,7 @@ struct RecoveryView: View {
 
                 VStack(alignment: .leading, spacing: 6) {
                     EyebrowLabel(text: "Aujourd'hui", color: RUColor.rose2)
-                    Text("Marche, étirements ou repos complet").font(RUFont.sans(14, weight: .semibold)).foregroundColor(.white)
+                    Text("Marche, étirements ou repos complet").font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                     Text("Pas de course prévue — hydrate-toi bien et dors un peu plus si tu peux.")
                         .font(RUFont.sans(12)).foregroundColor(RUColor.text2).lineSpacing(3)
                 }

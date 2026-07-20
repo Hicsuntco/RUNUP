@@ -81,7 +81,7 @@ struct RecapView: View {
 
     private func heroHeader(_ run: RunRecord) -> some View {
         ZStack(alignment: .bottomLeading) {
-            LinearGradient(colors: [Color(hex: 0x12121A), RUColor.bg], startPoint: .top, endPoint: .bottom)
+            LinearGradient(colors: [RUColor.bg2, RUColor.bg], startPoint: .top, endPoint: .bottom)
             Canvas { context, size in
                 var path = Path()
                 path.move(to: CGPoint(x: size.width * 0.1, y: size.height * 0.82))
@@ -102,7 +102,7 @@ struct RecapView: View {
             .frame(maxHeight: .infinity, alignment: .top)
             VStack(alignment: .leading, spacing: 3) {
                 EyebrowLabel(text: "✓ Séance terminée", color: RUColor.lime)
-                Text(run.title).displayStyle(26).foregroundColor(.white)
+                Text(run.title).displayStyle(26).foregroundColor(RUColor.textPrimary)
             }
             .padding(.horizontal, 18)
             .padding(.bottom, 14)
@@ -119,7 +119,7 @@ struct RecapView: View {
         }
     }
 
-    private func statTile(_ value: String, _ label: String, _ color: Color = .white) -> some View {
+    private func statTile(_ value: String, _ label: String, _ color: Color = RUColor.textPrimary) -> some View {
         VStack(spacing: 3) {
             Text(value).displayStyle(24).foregroundColor(color)
             Text(label).font(RUFont.sans(8, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
@@ -134,14 +134,14 @@ struct RecapView: View {
             Text("\(index + 1)").font(RUFont.mono(11)).foregroundColor(RUColor.text2).frame(width: 16)
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.05))
+                    RoundedRectangle(cornerRadius: 6).fill(RUColor.card)
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(isLast ? RUColor.rose : Color.white.opacity(0.14))
+                        .fill(isLast ? RUColor.rose : RUColor.text4)
                         .frame(width: geo.size.width * fraction)
                 }
             }
             .frame(height: 22)
-            Text(time).displayStyle(14).foregroundColor(isLast ? RUColor.rose2 : .white).frame(width: 38, alignment: .trailing)
+            Text(time).displayStyle(14).foregroundColor(isLast ? RUColor.rose2 : RUColor.textPrimary).frame(width: 38, alignment: .trailing)
         }
     }
 

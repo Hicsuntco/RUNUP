@@ -41,5 +41,8 @@ struct AccentTheme: Identifiable, Equatable {
 final class ThemeStore {
     static let shared = ThemeStore()
     var themeID: String = AccentTheme.defaultID
+    /// Mirrors `UserProfile.isLightMode` the same way `themeID` mirrors `accentThemeID` — see
+    /// `RUColor`'s theme-aware tokens.
+    var isLightMode: Bool = false
     private init() {}
 }

@@ -39,12 +39,12 @@ struct BuildingProgramView: View {
                 RingView(pct: Double(vm.buildProgress) / 4 * 100, color: RUColor.rose, size: 110, strokeWidth: 7) {
                     Text(vm.buildProgress == 4 ? "✓" : "\(Int(Double(vm.buildProgress) / 4 * 100))%")
                         .displayStyle(30)
-                        .foregroundColor(vm.buildProgress == 4 ? RUColor.lime : .white)
+                        .foregroundColor(vm.buildProgress == 4 ? RUColor.lime : RUColor.textPrimary)
                 }
                 Text("ON CONSTRUIT\nTON PROGRAMME")
                     .displayStyle(28)
                     .multilineTextAlignment(.center)
-                    .foregroundColor(.white)
+                    .foregroundColor(RUColor.textPrimary)
                     .lineSpacing(-2)
             }
 
@@ -53,8 +53,8 @@ struct BuildingProgramView: View {
                     HStack(spacing: 14) {
                         ZStack {
                             Circle()
-                                .fill(vm.buildProgress > i ? RUColor.rose : Color.white.opacity(0.06))
-                                .overlay(Circle().stroke(Color.white.opacity(vm.buildProgress > i ? 0 : 0.15), lineWidth: 1))
+                                .fill(vm.buildProgress > i ? RUColor.rose : RUColor.card)
+                                .overlay(Circle().stroke(vm.buildProgress > i ? Color.clear : RUColor.line, lineWidth: 1))
                             if vm.buildProgress > i {
                                 Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundColor(.white)
                             } else if vm.buildProgress == i {
@@ -64,11 +64,11 @@ struct BuildingProgramView: View {
                         .frame(width: 24, height: 24)
                         Text(buildSteps[i])
                             .font(RUFont.sans(14))
-                            .foregroundColor(vm.buildProgress > i ? .white : RUColor.text2)
+                            .foregroundColor(vm.buildProgress > i ? RUColor.textPrimary : RUColor.text2)
                         Spacer()
                     }
                     .padding(.vertical, 13)
-                    .overlay(Divider().background(Color.white.opacity(0.06)), alignment: .bottom)
+                    .overlay(Divider().background(RUColor.line), alignment: .bottom)
                 }
             }
             .padding(.top, 26)

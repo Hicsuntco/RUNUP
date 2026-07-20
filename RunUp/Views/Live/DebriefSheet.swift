@@ -55,15 +55,15 @@ struct DebriefSheet: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 EyebrowLabel(text: "Bilan · \(run.title)", color: RUColor.rose).padding(.top, 8)
-                Text("Comment tu te sens ?").displayStyle(24).foregroundColor(.white).padding(.top, 4)
+                Text("Comment tu te sens ?").displayStyle(24).foregroundColor(RUColor.textPrimary).padding(.top, 4)
 
                 HStack(alignment: .top, spacing: 10) {
                     AppMarkView(size: 18, radius: 9)
                     Text(insightMessage)
-                        .font(RUFont.sans(13)).foregroundColor(.white).lineSpacing(3)
+                        .font(RUFont.sans(13)).foregroundColor(RUColor.textPrimary).lineSpacing(3)
                 }
                 .padding(14)
-                .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                 .padding(.top, 14)
 
@@ -89,8 +89,8 @@ struct DebriefSheet: View {
                     ForEach(impactLines.indices, id: \.self) { i in
                         HStack(spacing: 12) {
                             Text(impactLines[i].0).font(.system(size: 18))
-                            (Text(impactLines[i].1).foregroundColor(.white.opacity(0.75))
-                                + Text(impactLines[i].2).foregroundColor(i == 0 ? .white : RUColor.cyan).fontWeight(.bold))
+                            (Text(impactLines[i].1).foregroundColor(RUColor.text2)
+                                + Text(impactLines[i].2).foregroundColor(i == 0 ? RUColor.textPrimary : RUColor.cyan).fontWeight(.bold))
                                 .font(RUFont.sans(12.5))
                                 .lineSpacing(2)
                         }

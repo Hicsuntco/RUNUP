@@ -16,7 +16,7 @@ struct SplashView: View {
             Text("RUNUP")
                 .font(RUFont.bebas(40))
                 .tracking(7)
-                .foregroundColor(.white)
+                .foregroundColor(RUColor.textPrimary)
                 .opacity(opacity)
                 .scaleEffect(scale)
         }

@@ -9,7 +9,7 @@ struct OnboardingProgressBar: View {
         HStack(spacing: 5) {
             ForEach(0..<total, id: \.self) { i in
                 Capsule()
-                    .fill(i <= step ? RUColor.rose : Color.white.opacity(0.1))
+                    .fill(i <= step ? RUColor.rose : RUColor.line)
                     .frame(height: 3)
                     .animation(.easeOut(duration: 0.3), value: step)
             }
@@ -21,7 +21,7 @@ struct OnboardingProgressBar: View {
 struct LinearBar: View {
     var fraction: Double
     var color: Color
-    var background: Color = Color.white.opacity(0.08)
+    var background: Color = RUColor.line
     var height: CGFloat = 5
     var gradient: LinearGradient? = nil
 

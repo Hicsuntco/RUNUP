@@ -43,14 +43,14 @@ struct SelectableCard: View {
                     Text(emoji).font(.system(size: 24))
                 }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(RUFont.sans(15, weight: .semibold)).foregroundColor(.white)
+                    Text(title).font(RUFont.sans(15, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                     if let subtitle {
                         Text(subtitle).font(RUFont.sans(11.5)).foregroundColor(RUColor.text2).lineSpacing(2)
                     }
                 }
                 Spacer()
                 Circle()
-                    .strokeBorder(selected ? RUColor.rose : Color.white.opacity(0.2), lineWidth: 2)
+                    .strokeBorder(selected ? RUColor.rose : RUColor.line, lineWidth: 2)
                     .background(Circle().fill(selected ? RUColor.rose : .clear))
                     .frame(width: 20, height: 20)
                     .overlay(

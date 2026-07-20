@@ -41,12 +41,12 @@ struct WellbeingFieldsView: View {
                         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
 
                         HStack {
-                            Text("Durée moyenne du cycle").font(RUFont.sans(13)).foregroundColor(.white)
+                            Text("Durée moyenne du cycle").font(RUFont.sans(13)).foregroundColor(RUColor.textPrimary)
                             Spacer()
                             Stepper("\(vm.averageCycleLengthDays) jours", value: $vm.averageCycleLengthDays, in: 21...35)
                                 .fixedSize()
                                 .tint(RUColor.rose)
-                                .foregroundColor(.white)
+                                .foregroundColor(RUColor.textPrimary)
                         }
                         .padding(13)
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))

@@ -101,7 +101,7 @@ private struct NumField: View {
             HStack {
                 TextField("", text: $value, prompt: Text(placeholder).foregroundColor(RUColor.text3))
                     .keyboardType(.numberPad)
-                    .foregroundColor(.white)
+                    .foregroundColor(RUColor.textPrimary)
                     .toolbar {
                         // .numberPad has no return key and this screen has no scroll-to-dismiss —
                         // without this, the keyboard has no way to close and permanently covers

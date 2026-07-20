@@ -77,13 +77,13 @@ struct HistoryView: View {
             BackChevronButton { appState.go(.stats) }
             VStack(alignment: .leading, spacing: 1) {
                 EyebrowLabel(text: "\(runs.count) sorties", color: RUColor.rose)
-                Text("Historique").displayStyle(22).foregroundColor(.white)
+                Text("Historique").displayStyle(22).foregroundColor(RUColor.textPrimary)
             }
             Spacer()
             Button(action: { showAddRun = true }) {
                 Image(systemName: "plus")
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(.white)
+                    .foregroundColor(RUColor.textPrimary)
                     .frame(width: 36, height: 36)
                     .background(RUColor.card, in: Circle())
                     .overlay(Circle().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
@@ -107,7 +107,7 @@ struct HistoryView: View {
                     Text("FC moy \(run.avgHeartRate)").font(RUFont.sans(11)).foregroundColor(RUColor.text3)
                 }
             }
-            Text(run.title).font(RUFont.sans(15, weight: .semibold)).foregroundColor(.white)
+            Text(run.title).font(RUFont.sans(15, weight: .semibold)).foregroundColor(RUColor.textPrimary)
             HStack(spacing: 20) {
                 MetricColumn(value: String(format: "%.1f", run.distanceKm), label: "km", valueSize: 20)
                 MetricColumn(value: AdaptivePlanEngine.fmt(Double(run.durationSeconds)), label: "temps", valueSize: 20)

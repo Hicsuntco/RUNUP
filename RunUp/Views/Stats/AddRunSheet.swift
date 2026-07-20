@@ -64,7 +64,7 @@ struct AddRunSheet: View {
                 }
             }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(RUColor.colorScheme)
     }
 
     private func save() {
@@ -93,7 +93,7 @@ struct AddRunSheet: View {
             HStack {
                 TextField("", text: value, prompt: Text(placeholder).foregroundColor(RUColor.text3))
                     .keyboardType(.decimalPad)
-                    .foregroundColor(.white)
+                    .foregroundColor(RUColor.textPrimary)
                     .toolbar {
                         ToolbarItemGroup(placement: .keyboard) {
                             Spacer()

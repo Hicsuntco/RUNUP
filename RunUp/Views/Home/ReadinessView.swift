@@ -18,7 +18,7 @@ struct ReadinessView: View {
                     BackChevronButton { appState.go(.home) }
                     VStack(alignment: .leading, spacing: 1) {
                         EyebrowLabel(text: "Aujourd'hui", color: RUColor.lime)
-                        Text("Forme du jour").displayStyle(22).foregroundColor(.white)
+                        Text("Forme du jour").displayStyle(22).foregroundColor(RUColor.textPrimary)
                     }
                 }
 
@@ -30,14 +30,14 @@ struct ReadinessView: View {
                                 Text("/ 100").font(RUFont.mono(11)).foregroundColor(RUColor.text2)
                             }
                         }
-                        Text("Forme \(profile.readinessLabel)").font(RUFont.sans(15, weight: .semibold)).foregroundColor(.white)
+                        Text("Forme \(profile.readinessLabel)").font(RUFont.sans(15, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                     } else {
                         // An empty ring, not the near-full default score — there's no real RPE
                         // behind it yet, so nothing should read as "already measured".
                         RingView(pct: 0, color: RUColor.text3, size: 140, strokeWidth: 10) {
                             Text("–").displayStyle(30).foregroundColor(RUColor.text3)
                         }
-                        Text("Pas encore de données").font(RUFont.sans(15, weight: .semibold)).foregroundColor(.white)
+                        Text("Pas encore de données").font(RUFont.sans(15, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -47,7 +47,7 @@ struct ReadinessView: View {
                     EyebrowLabel(text: "Basé sur", color: RUColor.text3)
                     HStack(spacing: 10) {
                         Text("🔥").font(.system(size: 16))
-                        Text("Série en cours : jour \(profile.streak)").font(RUFont.sans(13)).foregroundColor(.white)
+                        Text("Série en cours : jour \(profile.streak)").font(RUFont.sans(13)).foregroundColor(RUColor.textPrimary)
                     }
                     if profile.recentRPESeverities.isEmpty {
                         Text("Pas encore de séance enregistrée — la forme du jour s'affine après ta première course.")

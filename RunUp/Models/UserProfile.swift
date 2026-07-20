@@ -123,6 +123,9 @@ final class UserProfile {
     /// Which `AccentTheme` swatch the user picked in Profil → Apparence — mirrored into
     /// `ThemeStore.shared` on load so `RUColor.rose`/`.rose2`/`.violet` reflect it everywhere.
     var accentThemeID: String = AccentTheme.defaultID
+    /// Dark (default) or light app-wide theme — same mirror-into-`ThemeStore` pattern as
+    /// `accentThemeID`, see `RUColor`'s theme-aware tokens.
+    var isLightMode: Bool = false
     /// The kudos count last seen per own posted activity (`FeedItem.id`) — lets `ClubView` notice
     /// when someone new claps for one of your runs and post a real notification for it, instead
     /// of silently refetching the same feed over and over.

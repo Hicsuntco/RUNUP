@@ -33,7 +33,7 @@ struct ChoiceView: View {
                     HStack(spacing: 14) {
                         Text("🎯").font(.system(size: 26))
                         VStack(alignment: .leading, spacing: 3) {
-                            Text("Se fixer un nouvel objectif").displayStyle(17).foregroundColor(.white)
+                            Text("Se fixer un nouvel objectif").displayStyle(17).foregroundColor(RUColor.textPrimary)
                             Text("Une nouvelle course, progresser encore, perdre du poids…")
                                 .font(RUFont.sans(11.5)).foregroundColor(RUColor.text2).lineSpacing(2)
                         }
@@ -53,7 +53,7 @@ struct ChoiceView: View {
                     HStack(spacing: 14) {
                         AppMarkView(size: 26, radius: 8)
                         VStack(alignment: .leading, spacing: 3) {
-                            Text("Mode course libre").displayStyle(17).foregroundColor(.white)
+                            Text("Mode course libre").displayStyle(17).foregroundColor(RUColor.textPrimary)
                             Text("Pas d'objectif précis — on te propose juste de quoi garder la forme.")
                                 .font(RUFont.sans(11.5)).foregroundColor(RUColor.text2).lineSpacing(2)
                         }

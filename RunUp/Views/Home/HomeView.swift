@@ -34,7 +34,7 @@ struct HomeView: View {
                                     .fill(RUColor.card)
                                     .overlay(Circle().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                                     .frame(width: 36, height: 36)
-                                    .overlay(Image(systemName: "bell").font(.system(size: 15)).foregroundColor(.white))
+                                    .overlay(Image(systemName: "bell").font(.system(size: 15)).foregroundColor(RUColor.textPrimary))
                                 if unreadCount > 0 {
                                     Circle().fill(RUColor.rose).frame(width: 8, height: 8)
                                         .overlay(Circle().stroke(RUColor.bg, lineWidth: 1.5))
@@ -148,7 +148,7 @@ struct HomeView: View {
                     EyebrowLabel(text: profile.hasReadinessData ? "Forme du jour · \(profile.readinessLabel)" : "Forme du jour · pas encore de données")
                     Text(readinessMessage)
                         .font(RUFont.sans(12))
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(RUColor.textPrimary.opacity(0.7))
                         .lineSpacing(2)
                 }
                 Spacer(minLength: 0)
@@ -171,7 +171,7 @@ struct HomeView: View {
                         StatChip(text: adj, color: RUColor.rose2)
                     }
                 }
-                Text(session.title).displayStyle(23).foregroundColor(.white).padding(.top, 6)
+                Text(session.title).displayStyle(23).foregroundColor(RUColor.textPrimary).padding(.top, 6)
                 Text(session.subtitle).font(RUFont.sans(11)).foregroundColor(RUColor.text2).padding(.top, 4)
 
                 if isRestDay {
@@ -262,7 +262,7 @@ struct HomeView: View {
                     Spacer()
                     Text("→").foregroundColor(RUColor.rose2)
                 }
-                Text("Semaine \(profile.weekNumber) · Bloc \(block.rawValue)").displayStyle(17).foregroundColor(.white)
+                Text("Semaine \(profile.weekNumber) · Bloc \(block.rawValue)").displayStyle(17).foregroundColor(RUColor.textPrimary)
                 if let total = shape.totalWeeks {
                     PhaseProgressBar(phases: [
                         PhaseSegment(name: "Base", done: min(profile.weekNumber, shape.baseWeeks), total: shape.baseWeeks, color: RUColor.rose),

@@ -34,7 +34,7 @@ struct RingsView: View {
                     BackChevronButton { appState.go(.home) }
                     VStack(alignment: .leading, spacing: 1) {
                         EyebrowLabel(text: "Aujourd'hui", color: RUColor.rose)
-                        Text("Ta journée").displayStyle(22).foregroundColor(.white)
+                        Text("Ta journée").displayStyle(22).foregroundColor(RUColor.textPrimary)
                     }
                 }
 
@@ -56,14 +56,14 @@ struct RingsView: View {
                         AppMarkView(size: 34)
                         VStack(alignment: .leading, spacing: 3) {
                             EyebrowLabel(text: "Coach", color: RUColor.rose2)
-                            Text(coachNudge).font(RUFont.sans(12.5)).foregroundColor(.white)
+                            Text(coachNudge).font(RUFont.sans(12.5)).foregroundColor(RUColor.textPrimary)
                         }
                     }
                     .padding(15)
                     .ruHeroCard(radius: 18)
                 } else {
                     VStack(spacing: 6) {
-                        Text("JOURNÉE BOUCLÉE").displayStyle(26).foregroundColor(.white)
+                        Text("JOURNÉE BOUCLÉE").displayStyle(26).foregroundColor(RUColor.textPrimary)
                         Text("Les 3 objectifs atteints 👏 +120 XP").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
                     }
                     .frame(maxWidth: .infinity)
@@ -83,7 +83,7 @@ struct RingsView: View {
             Circle().fill(color).frame(width: 10, height: 10).shadow(color: color.opacity(0.4), radius: 6)
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("Séance du jour").font(RUFont.sans(16, weight: .semibold)).foregroundColor(.white)
+                    Text("Séance du jour").font(RUFont.sans(16, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                     Spacer()
                     Text(p.isRestDayToday ? "Repos" : (p.seanceDoneToday ? "Faite ✓" : "À faire"))
                         .font(RUFont.sans(11, weight: .bold))
@@ -101,7 +101,7 @@ struct RingsView: View {
             Circle().fill(color).frame(width: 10, height: 10).shadow(color: color.opacity(0.4), radius: 6)
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text(name).font(RUFont.sans(16, weight: .semibold)).foregroundColor(.white)
+                    Text(name).font(RUFont.sans(16, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                     Spacer()
                     (Text(formattedValue(value)).font(RUFont.sans(11, weight: .bold)).foregroundColor(color)
                         + Text(" / \(formattedValue(goal)) \(unit)").font(RUFont.mono(11)).foregroundColor(RUColor.text2))

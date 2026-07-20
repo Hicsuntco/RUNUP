@@ -11,7 +11,7 @@ struct RunUpApp: App {
         WindowGroup {
             RootView()
                 .modelContainer(container)
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(RUColor.colorScheme)
         }
     }
 }

@@ -10,7 +10,7 @@ struct ProgramSettingsSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text("Modifier mon programme").displayStyle(22).foregroundColor(.white).padding(.top, 8)
+                Text("Modifier mon programme").displayStyle(22).foregroundColor(RUColor.textPrimary).padding(.top, 8)
 
                 EyebrowLabel(text: "Jours de course", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
                 HStack(spacing: 7) {

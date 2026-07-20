@@ -10,7 +10,7 @@ struct SelectableChip: View {
         Button(action: action) {
             Text(label)
                 .font(RUFont.sans(13, weight: .semibold))
-                .foregroundColor(.white)
+                .foregroundColor(selected ? .white : RUColor.text2)
                 .padding(.horizontal, 15)
                 .padding(.vertical, 11)
                 .background(selected ? RUColor.rose : RUColor.card, in: Capsule())
@@ -40,7 +40,7 @@ struct StatChip: View {
 struct MetricColumn: View {
     var value: String
     var label: String
-    var valueColor: Color = .white
+    var valueColor: Color = RUColor.textPrimary
     var valueSize: CGFloat = 20
 
     var body: some View {

@@ -72,7 +72,7 @@ struct DailyGoalsBarsView: View {
                     ForEach(Array(Self.bars.enumerated()), id: \.offset) { i, bar in
                         // Track: the goal, always full length, dim.
                         BarShape(x1: bar.0, y1: bar.1, x2: bar.2, y2: bar.3, pct: 1)
-                            .stroke(Color.white.opacity(0.12), style: StrokeStyle(lineWidth: 19, lineCap: .round))
+                            .stroke(RUColor.line, style: StrokeStyle(lineWidth: 19, lineCap: .round))
 
                         // Fill: from the same start point, out to `pct` of the way along the
                         // track, in this bar's flat color. `BarShape.pct` is the shape's

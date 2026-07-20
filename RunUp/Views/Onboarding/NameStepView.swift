@@ -11,7 +11,7 @@ struct NameStepView: View {
                 EyebrowLabel(text: "Pour commencer", color: RUColor.rose)
                 Text("C'EST QUOI\nTON PRÉNOM ?")
                     .displayStyle(32)
-                    .foregroundColor(.white)
+                    .foregroundColor(RUColor.textPrimary)
                     .lineSpacing(-2)
                     .padding(.top, 8)
                 Text("Ton coach va s'adresser à toi — autant se présenter.")

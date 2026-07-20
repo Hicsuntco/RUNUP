@@ -9,7 +9,7 @@ struct NotificationsSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Notifications").displayStyle(22).foregroundColor(.white).padding(.top, 8)
+                Text("Notifications").displayStyle(22).foregroundColor(RUColor.textPrimary).padding(.top, 8)
 
                 VStack(spacing: 8) {
                     ForEach(notifications) { n in
@@ -21,7 +21,7 @@ struct NotificationsSheet: View {
                                     .overlay(Text(n.icon).font(.system(size: 15)))
                             }
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(n.title).font(RUFont.sans(13, weight: .semibold)).foregroundColor(.white)
+                                Text(n.title).font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                                 Text(n.text).font(RUFont.sans(12)).foregroundColor(RUColor.text2).lineSpacing(2)
                                 Text(n.timestamp, style: .relative).font(RUFont.sans(10)).foregroundColor(RUColor.text3)
                             }

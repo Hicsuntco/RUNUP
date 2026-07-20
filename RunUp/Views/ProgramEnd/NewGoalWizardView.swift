@@ -35,7 +35,7 @@ struct NewGoalWizardView: View {
                     BackChevronButton {
                         if step == 0 { dismiss() } else { step -= 1 }
                     }
-                    Text("Nouvel objectif").displayStyle(20).foregroundColor(.white)
+                    Text("Nouvel objectif").displayStyle(20).foregroundColor(RUColor.textPrimary)
                 }
                 .padding(.top, 8)
 
@@ -68,7 +68,7 @@ struct NewGoalWizardView: View {
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                 ForEach([RaceDistance.k5, .k10, .semi, .marathon], id: \.self) { d in
                     Button(action: { distance = d; chrono = d.chronoPresets[1] }) {
-                        Text(d.label).displayStyle(20).foregroundColor(distance == d ? RUColor.rose2 : .white)
+                        Text(d.label).displayStyle(20).foregroundColor(distance == d ? RUColor.rose2 : RUColor.textPrimary)
                             .frame(maxWidth: .infinity).padding(.vertical, 16)
                             .background(distance == d ? RUColor.rose.opacity(0.12) : RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(distance == d ? RUColor.rose.opacity(0.4) : RUColor.line, lineWidth: RUSpacing.hairline))
@@ -131,9 +131,9 @@ struct NewGoalWizardView: View {
             RingView(pct: buildPct, color: RUColor.rose, size: 100, strokeWidth: 7) {
                 Text(buildPct >= 100 ? "✓" : "🎯")
                     .font(.system(size: 26))
-                    .foregroundColor(buildPct >= 100 ? RUColor.lime : .white)
+                    .foregroundColor(buildPct >= 100 ? RUColor.lime : RUColor.textPrimary)
             }
-            Text("Ton nouveau\nprogramme arrive").displayStyle(22).multilineTextAlignment(.center).foregroundColor(.white)
+            Text("Ton nouveau\nprogramme arrive").displayStyle(22).multilineTextAlignment(.center).foregroundColor(RUColor.textPrimary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

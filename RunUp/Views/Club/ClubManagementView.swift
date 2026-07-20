@@ -59,7 +59,7 @@ struct ClubManagementView: View {
                 CreateChallengeSheet(onCreate: onCreateChallenge)
             }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(RUColor.colorScheme)
     }
 
     private var challengeSection: some View {
@@ -73,7 +73,7 @@ struct ClubManagementView: View {
             }
             if let challenge {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(challenge.title).font(RUFont.sans(14, weight: .semibold)).foregroundColor(.white)
+                    Text(challenge.title).font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                     Text("\(Int(challenge.progressKm)) / \(Int(challenge.targetKm)) km parcourus ensemble")
                         .font(RUFont.sans(11.5)).foregroundColor(RUColor.text2)
                 }
@@ -111,10 +111,12 @@ struct ClubManagementView: View {
     private func memberRow(_ member: LeaderboardRow) -> some View {
         HStack(spacing: 12) {
             Circle().fill(member.isMe ? RUColor.rose : RUColor.card2).frame(width: 36, height: 36)
-                .overlay(Text(String(member.name.prefix(1))).displayStyle(13).foregroundColor(.white))
+                // Fill is only the opaque rose accent for `isMe` — otherwise it's the faint
+                // RUColor.card2, so the initial needs to invert with the theme in that case too.
+                .overlay(Text(String(member.name.prefix(1))).displayStyle(13).foregroundColor(member.isMe ? .white : RUColor.textPrimary))
             Text(member.isMe ? "\(member.name) · toi" : member.name)
                 .font(RUFont.sans(13, weight: member.isMe ? .semibold : .regular))
-                .foregroundColor(.white)
+                .foregroundColor(RUColor.textPrimary)
             Spacer()
             Text("\(member.xp) XP").font(RUFont.mono(11)).foregroundColor(RUColor.text2)
             Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold)).foregroundColor(RUColor.text3)
@@ -167,7 +169,7 @@ struct ClubMemberProfileView: View {
                 Circle().fill(RUColor.rose).frame(width: 72, height: 72)
                     .overlay(Text(String(member.name.prefix(1))).displayStyle(28).foregroundColor(.white))
                     .padding(.top, 20)
-                Text(member.name).font(RUFont.sans(18, weight: .semibold)).foregroundColor(.white)
+                Text(member.name).font(RUFont.sans(18, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                 Text("Niveau \(level) · \(levelTitle)").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
                 Text("Membre depuis \(Self.joinedFormatter.string(from: member.joinedAt))")
                     .font(RUFont.sans(11)).foregroundColor(RUColor.text3)
@@ -214,7 +216,7 @@ struct ClubMemberProfileView: View {
                     TextField("Un petit statut…", text: $bioText, axis: .vertical)
                         .textFieldStyle(.plain)
                         .font(RUFont.sans(13))
-                        .foregroundColor(.white)
+                        .foregroundColor(RUColor.textPrimary)
                         .lineLimit(1...3)
                         .padding(11)
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -256,7 +258,7 @@ struct ClubMemberProfileView: View {
                 ForEach(badges) { badge in
                     Button(action: { selectedBadge = badge }) {
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(badge.earned ? RUColor.card : Color.white.opacity(0.02))
+                            .fill(badge.earned ? RUColor.card : RUColor.card2)
                             .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                             .aspectRatio(1, contentMode: .fit)
                             .overlay(Text(badge.emoji).font(.system(size: 22)))
@@ -314,7 +316,7 @@ struct CreateChallengeSheet: View {
                         HStack {
                             TextField("", text: $targetKmText, prompt: Text("200").foregroundColor(RUColor.text3))
                                 .keyboardType(.decimalPad)
-                                .foregroundColor(.white)
+                                .foregroundColor(RUColor.textPrimary)
                                 .toolbar {
                                     ToolbarItemGroup(placement: .keyboard) {
                                         Spacer()
@@ -355,7 +357,7 @@ struct CreateChallengeSheet: View {
                 }
             }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(RUColor.colorScheme)
     }
 
     private func save() async {

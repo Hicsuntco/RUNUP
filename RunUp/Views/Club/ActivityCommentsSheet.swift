@@ -56,7 +56,7 @@ struct ActivityCommentsSheet: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Fermer") { dismiss() } }
             }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(RUColor.colorScheme)
         .task { await load() }
     }
 
@@ -66,7 +66,7 @@ struct ActivityCommentsSheet: View {
                 .overlay(Text(String(comment.name.prefix(1))).displayStyle(11).foregroundColor(.white))
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
-                    Text(comment.name).font(RUFont.sans(12, weight: .semibold)).foregroundColor(.white)
+                    Text(comment.name).font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                     Text(comment.createdAt.relativeDescription).font(RUFont.sans(9.5)).foregroundColor(RUColor.text3)
                 }
                 Text(comment.text).font(RUFont.sans(12.5)).foregroundColor(RUColor.text2).lineSpacing(2)
@@ -86,7 +86,7 @@ struct ActivityCommentsSheet: View {
             TextField("Écris un commentaire…", text: $newText, axis: .vertical)
                 .textFieldStyle(.plain)
                 .font(RUFont.sans(13))
-                .foregroundColor(.white)
+                .foregroundColor(RUColor.textPrimary)
                 .lineLimit(1...4)
                 .padding(.horizontal, 14).padding(.vertical, 10)
                 .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))

@@ -20,7 +20,7 @@ struct ObTitle: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             EyebrowLabel(text: eyebrow, color: RUColor.rose)
-            Text(title).displayStyle(30).foregroundColor(.white).lineSpacing(-2)
+            Text(title).displayStyle(30).foregroundColor(RUColor.textPrimary).lineSpacing(-2)
             if let subtitle {
                 Text(subtitle)
                     .font(RUFont.sans(13))
@@ -65,7 +65,7 @@ struct ObProgress: View {
         HStack(spacing: 5) {
             ForEach(0..<total, id: \.self) { i in
                 Capsule()
-                    .fill(i <= step ? RUColor.rose : Color.white.opacity(0.1))
+                    .fill(i <= step ? RUColor.rose : RUColor.line)
                     .frame(height: 3)
             }
         }
@@ -84,7 +84,7 @@ struct ObTextField: View {
         TextField("", text: $text, prompt: Text(placeholder).foregroundColor(RUColor.text3))
             .keyboardType(keyboard)
             .font(RUFont.sans(16))
-            .foregroundColor(.white)
+            .foregroundColor(RUColor.textPrimary)
             .padding(14)
             .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))

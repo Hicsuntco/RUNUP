@@ -92,32 +92,36 @@ struct StatsView: View {
     }
 
     private var weekCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                EyebrowLabel(text: "Cette semaine")
-                Spacer()
-                if lastWeekKm > 0 {
-                    let deltaKm = thisWeekKm - lastWeekKm
-                    StatChip(
-                        text: deltaKm >= 0 ? "▲ +\(String(format: "%.1f", deltaKm)) km" : "▼ \(String(format: "%.1f", -deltaKm)) km",
-                        color: deltaKm >= 0 ? RUColor.lime : RUColor.amber
-                    )
+        Button(action: { appState.go(.weeklyRecap) }) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    EyebrowLabel(text: "Cette semaine")
+                    Spacer()
+                    if lastWeekKm > 0 {
+                        let deltaKm = thisWeekKm - lastWeekKm
+                        StatChip(
+                            text: deltaKm >= 0 ? "▲ +\(String(format: "%.1f", deltaKm)) km" : "▼ \(String(format: "%.1f", -deltaKm)) km",
+                            color: deltaKm >= 0 ? RUColor.lime : RUColor.amber
+                        )
+                    }
+                    Text("›").font(RUFont.sans(15, weight: .semibold)).foregroundColor(RUColor.text3)
+                }
+                HStack(spacing: 24) {
+                    MetricColumn(value: String(format: "%.1f", thisWeekKm), label: "km", valueSize: 24)
+                    if !profile.runningDays.isEmpty {
+                        MetricColumn(
+                            value: "\(thisWeekRuns.count)/\(profile.runningDays.count)",
+                            label: "séances prévues",
+                            valueColor: thisWeekRuns.count >= profile.runningDays.count ? RUColor.lime : RUColor.textPrimary,
+                            valueSize: 24
+                        )
+                    }
                 }
             }
-            HStack(spacing: 24) {
-                MetricColumn(value: String(format: "%.1f", thisWeekKm), label: "km", valueSize: 24)
-                if !profile.runningDays.isEmpty {
-                    MetricColumn(
-                        value: "\(thisWeekRuns.count)/\(profile.runningDays.count)",
-                        label: "séances prévues",
-                        valueColor: thisWeekRuns.count >= profile.runningDays.count ? RUColor.lime : RUColor.textPrimary,
-                        valueSize: 24
-                    )
-                }
-            }
+            .padding(16)
+            .ruCard()
         }
-        .padding(16)
-        .ruCard()
+        .buttonStyle(PressableStyle())
     }
 
     // MARK: Pace trend — was a fixed "VO2max 52.4" that never actually moved

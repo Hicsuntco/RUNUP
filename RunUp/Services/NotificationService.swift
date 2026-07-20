@@ -12,6 +12,7 @@ final class NotificationService: NSObject {
     private let center = UNUserNotificationCenter.current()
     private static let reminderID = "runup.daily-session-reminder"
     private static let inactivityReminderID = "runup.inactivity-reminder"
+    private static let weeklyRecapReminderID = "runup.weekly-recap-reminder"
     private static let deviceTokenDefaultsKey = "runup.apns-device-token-hex"
     private static let baseURL = URL(string: "https://runup-nu.vercel.app")!
 
@@ -123,6 +124,45 @@ final class NotificationService: NSObject {
     func cancelInactivityReminder() {
         center.removePendingNotificationRequests(withIdentifiers: [Self.inactivityReminderID])
     }
+
+    /// A recurring "your week is ready" nudge, Sunday evening — same spirit as Strava's weekly
+    /// email, but a local push so it needs no server round-trip. Unlike the daily/inactivity
+    /// reminders, its content never depends on profile state (there's always a real week to look
+    /// back on), so this schedules once with `repeats: true` rather than re-arming from scratch
+    /// on every foreground — still idempotent to call repeatedly, like the others, since
+    /// `add(request:)` with the same identifier just replaces the pending one.
+    func scheduleWeeklyRecapReminder(for profile: UserProfile) {
+        guard profile.coachNotificationsEnabled else {
+            center.removePendingNotificationRequests(withIdentifiers: [Self.weeklyRecapReminderID])
+            return
+        }
+        center.getNotificationSettings { [center] settings in
+            guard settings.authorizationStatus == .authorized else { return }
+            let content = UNMutableNotificationContent()
+            content.title = "Ta semaine est prête"
+            content.body = "Distance, séances, série — le récap de ta semaine t'attend."
+            content.sound = .default
+
+            var dateComponents = DateComponents()
+            dateComponents.weekday = 1 // Sunday (Foundation's Calendar.component(.weekday) convention)
+            dateComponents.hour = 19
+            dateComponents.minute = 0
+            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+            let request = UNNotificationRequest(identifier: Self.weeklyRecapReminderID, content: content, trigger: trigger)
+            center.add(request)
+        }
+    }
+
+    /// Call when the user turns "Notifications du coach" off — same reasoning as `cancelDailyReminder`.
+    func cancelWeeklyRecapReminder() {
+        center.removePendingNotificationRequests(withIdentifiers: [Self.weeklyRecapReminderID])
+    }
+}
+
+extension Notification.Name {
+    /// Posted when she taps the weekly-recap notification — `RootTabView` listens and navigates,
+    /// since this singleton has no reference to `AppState` to call `.go(.weeklyRecap)` directly.
+    static let runUpOpenWeeklyRecap = Notification.Name("runup.open-weekly-recap")
 }
 
 extension NotificationService: UNUserNotificationCenterDelegate {
@@ -135,5 +175,19 @@ extension NotificationService: UNUserNotificationCenterDelegate {
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
         completionHandler([.banner, .sound, .badge])
+    }
+
+    /// Fires when she taps a delivered notification (banner or from Notification Center) — only
+    /// the weekly recap needs to route anywhere specific, everything else just opens the app to
+    /// wherever it already was, as before.
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        if response.notification.request.identifier == Self.weeklyRecapReminderID {
+            NotificationCenter.default.post(name: .runUpOpenWeeklyRecap, object: nil)
+        }
+        completionHandler()
     }
 }

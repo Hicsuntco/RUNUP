@@ -220,10 +220,12 @@ struct ProfileView: View {
                                 await NotificationService.shared.requestAuthorization()
                                 NotificationService.shared.rescheduleDailyReminder(for: profile)
                                 NotificationService.shared.rescheduleInactivityReminder(for: profile)
+                                NotificationService.shared.scheduleWeeklyRecapReminder(for: profile)
                             }
                         } else {
                             NotificationService.shared.cancelDailyReminder()
                             NotificationService.shared.cancelInactivityReminder()
+                            NotificationService.shared.cancelWeeklyRecapReminder()
                         }
                     }
                 ))

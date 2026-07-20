@@ -14,4 +14,5 @@ enum AppScreen: String, Hashable {
     case race
     case profile
     case history
+    case weeklyRecap
 }

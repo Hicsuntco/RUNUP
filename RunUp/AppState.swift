@@ -45,6 +45,7 @@ final class AppState {
         ThemeStore.shared.isLightMode = self.profile.isLightMode
         NotificationService.shared.rescheduleDailyReminder(for: self.profile)
         NotificationService.shared.rescheduleInactivityReminder(for: self.profile)
+        NotificationService.shared.scheduleWeeklyRecapReminder(for: self.profile)
         Task { await self.syncDailyGoalsFromHealthKit() }
     }
 
@@ -65,6 +66,7 @@ final class AppState {
         }
         NotificationService.shared.rescheduleDailyReminder(for: profile)
         NotificationService.shared.rescheduleInactivityReminder(for: profile)
+        NotificationService.shared.scheduleWeeklyRecapReminder(for: profile)
         Task { await syncDailyGoalsFromHealthKit() }
     }
 

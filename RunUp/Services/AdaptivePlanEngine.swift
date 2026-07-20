@@ -98,6 +98,16 @@ enum AdaptivePlanEngine {
         return cal
     }
 
+    /// The current Monday-to-Monday week, as a half-open range (`WeeklyRecapView` filters
+    /// `RunRecord.date` against this) — same Monday-first week the plan/week strip already use,
+    /// so "this week" means the same thing everywhere in the app.
+    static func currentWeekRange(from date: Date = .now) -> Range<Date> {
+        let cal = mondayCalendar
+        let start = cal.dateInterval(of: .weekOfYear, for: date)?.start ?? date
+        let end = cal.date(byAdding: .day, value: 7, to: start) ?? date
+        return start..<end
+    }
+
     /// Advances `weekNumber`/`weekStrip`/`weekSessions` (and, once the program's real length is
     /// reached, `programPhase`) to match the device's real calendar date — call each time the app
     /// becomes active. This needs no network access: the device clock is available offline, so a

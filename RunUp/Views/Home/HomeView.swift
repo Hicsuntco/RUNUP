@@ -28,6 +28,7 @@ struct HomeView: View {
                     title: "Salut \(profile.name)"
                 ) {
                     HStack(spacing: 8) {
+                        streakChip
                         Button(action: { appState.openNotifications() }) {
                             ZStack(alignment: .topTrailing) {
                                 Circle()
@@ -239,6 +240,21 @@ struct HomeView: View {
         }
         .buttonStyle(PressableStyle())
         .ruCard()
+    }
+
+    /// `profile.streak` was already tracked (`AdaptivePlanEngine.applyDebrief`) and shown deep in
+    /// Stats/Readiness/Club, but never on Home — the screen actually opened every day, where a
+    /// visible streak does the most to make her not want to break it.
+    private var streakChip: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "flame.fill").font(.system(size: 12))
+            Text("\(profile.streak)").font(RUFont.sans(13, weight: .bold))
+        }
+        .foregroundColor(profile.streak > 0 ? RUColor.amber : RUColor.text3)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .background(RUColor.card, in: Capsule())
+        .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
     }
 
     private func ringStat(value: String, unit: String, color: Color) -> some View {

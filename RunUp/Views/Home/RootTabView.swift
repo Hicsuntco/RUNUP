@@ -49,6 +49,12 @@ struct RootTabView: View {
             NotificationsSheet()
                 .runUpSheetStyle()
         }
+        // Tapping the weekly-recap local notification lands here rather than wherever the app
+        // happened to be left open — `NotificationService` can't reach `AppState` directly (it's a
+        // plain singleton with no app-state reference), so it posts this instead.
+        .onReceive(NotificationCenter.default.publisher(for: .runUpOpenWeeklyRecap)) { _ in
+            appState.go(.weeklyRecap)
+        }
     }
 
     @ViewBuilder
@@ -66,6 +72,7 @@ struct RootTabView: View {
         case .race: RaceGoalView()
         case .profile: ProfileView()
         case .history: HistoryView()
+        case .weeklyRecap: WeeklyRecapView()
         }
     }
 }

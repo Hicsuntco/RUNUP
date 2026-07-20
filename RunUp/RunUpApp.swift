@@ -63,6 +63,9 @@ private struct RootView: View {
                 appState?.refreshProgramForCurrentDate()
             }
         }
+        .onOpenURL { url in
+            ReferralLinkHandler.handle(url)
+        }
     }
 }
 

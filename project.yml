@@ -73,6 +73,15 @@ targets:
         com.apple.developer.healthkit.access: []
         com.apple.developer.applesignin:
           - Default
+        # Lets a tapped referral link (https://runup-nu.vercel.app/r/CODE) open straight into the
+        # app with the code prefilled instead of just a webpage — see
+        # public/.well-known/apple-app-site-association (must stay in sync: same domain here as
+        # `appIDs`/`components` there) and `ReferralLinkHandler.swift`. Apple only actually
+        # verifies this once the app is signed with a real provisioning profile on a device/
+        # TestFlight — the Simulator can still open the URL via `.onOpenURL` for testing, it just
+        # won't have gone through the system's AASA verification step first.
+        com.apple.developer.associated-domains:
+          - applinks:runup-nu.vercel.app
         # Xcode's automatic signing rewrites this to "production" itself when archiving for
         # TestFlight/App Store (matched to the distribution provisioning profile) — "development"
         # here is what a Debug run from Xcode to a real device actually needs.

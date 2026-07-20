@@ -71,6 +71,14 @@ struct SignInView: View {
                 ProgressView().tint(RUColor.textPrimary)
             }
         }
+        .onAppear {
+            // A referral only ever matters for a brand-new account — prefilling it also switches
+            // straight to the sign-up form, since someone who tapped a friend's link almost
+            // certainly doesn't have an account yet.
+            guard referralCode.isEmpty, let pending = ReferralLinkHandler.pendingCode else { return }
+            referralCode = pending
+            mode = .signUp
+        }
     }
 
     private var emailForm: some View {
@@ -152,6 +160,7 @@ struct SignInView: View {
             // trip: ClubView's `onChange(of: auth.isSignedIn)` fires the moment this dismisses and
             // reloads everything (including a fresh refreshMe) anyway.
             try await action()
+            ReferralLinkHandler.clearPendingCode()
             // Fire-and-forget: a device token obtained earlier (e.g. during onboarding, before
             // any account existed) only ever gets a chance to reach the backend once signed in.
             // Not awaited — registering it isn't worth delaying the dismiss for.

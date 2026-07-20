@@ -62,12 +62,15 @@ final class AppState {
         AdaptivePlanEngine.refreshProgramForCurrentDate(profile)
         AdaptivePlanEngine.resetDailyGoalsIfNewDay(profile)
         if profile.weekNumber != previousWeek {
-            notify(
-                icon: "mark", colorHex: 0xFF3B6B,
-                title: "Nouvelle semaine",
-                text: "Semaine \(profile.weekNumber) prête, ajustée d'après ta forme de la semaine passée.",
-                coachOnly: true
-            )
+            let title = "Nouvelle semaine"
+            let text = "Semaine \(profile.weekNumber) prête, ajustée d'après ta forme de la semaine passée."
+            notify(icon: "mark", colorHex: 0xFF3B6B, title: title, text: text, coachOnly: true)
+            // `notify` above already no-ops the bell entry when this toggle is off (`coachOnly:
+            // true`) — mirror that here so the real notification doesn't fire when the in-app one
+            // didn't either.
+            if profile.coachNotificationsEnabled {
+                NotificationService.shared.postImmediateNotification(title: title, body: text)
+            }
         }
         NotificationService.shared.rescheduleDailyReminder(for: profile)
         NotificationService.shared.rescheduleInactivityReminder(for: profile)

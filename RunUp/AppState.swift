@@ -47,7 +47,10 @@ final class AppState {
         NotificationService.shared.rescheduleDailyReminder(for: self.profile)
         NotificationService.shared.rescheduleInactivityReminder(for: self.profile)
         NotificationService.shared.scheduleWeeklyRecapReminder(for: self.profile)
-        publishWidgetSnapshot()
+        // When HealthKit is connected, `syncDailyGoalsFromHealthKit` below publishes once itself
+        // with fresh numbers — publishing here too would just be an immediately-stale extra
+        // reload against WidgetKit's per-day budget for no visible benefit.
+        if !self.profile.connectedSources.contains(.apple) { publishWidgetSnapshot() }
         Task { await self.syncDailyGoalsFromHealthKit() }
     }
 
@@ -69,7 +72,7 @@ final class AppState {
         NotificationService.shared.rescheduleDailyReminder(for: profile)
         NotificationService.shared.rescheduleInactivityReminder(for: profile)
         NotificationService.shared.scheduleWeeklyRecapReminder(for: profile)
-        publishWidgetSnapshot()
+        if !profile.connectedSources.contains(.apple) { publishWidgetSnapshot() }
         Task { await syncDailyGoalsFromHealthKit() }
     }
 
@@ -101,8 +104,9 @@ final class AppState {
             notify(icon: "🎉", colorHex: 0xC9FF3B, title: "Journée bouclée", text: "Tes 3 objectifs du jour sont faits — +120 XP.")
             toast("Journée bouclée · +120 XP 🎉")
         }
-        // Runs after the synchronous publish already in `init`/`refreshProgramForCurrentDate` —
-        // this one actually reflects the fresh HealthKit numbers just fetched above.
+        // The sole publish for this event when HealthKit is connected — `init`/
+        // `refreshProgramForCurrentDate` skip their own synchronous publish in that case so this
+        // one (with fresh step/calorie numbers) is the only one that fires.
         publishWidgetSnapshot()
     }
 

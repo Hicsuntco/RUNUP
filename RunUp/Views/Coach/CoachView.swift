@@ -99,7 +99,7 @@ struct CoachView: View {
         case .error:
             HStack(spacing: 10) {
                 Image(systemName: "exclamationmark.triangle.fill").foregroundColor(RUColor.amber).font(.system(size: 15))
-                Text(message.text).font(RUFont.sans(12.5)).foregroundColor(RUColor.isLight ? Color(hex: 0x8A5A00) : Color(hex: 0xFFD79A)).lineSpacing(2)
+                Text(message.text).font(RUFont.sans(12.5)).foregroundColor(RUColor.amberText).lineSpacing(2)
                 Spacer(minLength: 0)
                 Button("Réessayer") { retryLast() }
                     .font(RUFont.sans(11, weight: .bold))

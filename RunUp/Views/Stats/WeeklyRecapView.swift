@@ -24,19 +24,9 @@ struct WeeklyRecapView: View {
     private var totalKcal: Int { weekRuns.reduce(0) { $0 + $1.kcal } }
 
     private var avgPaceSecPerKm: Double? {
-        let paces = weekRuns.compactMap { run -> Double? in
-            let parts = run.avgPace.split(separator: ":").compactMap { Double($0) }
-            guard parts.count == 2 else { return nil }
-            return parts[0] * 60 + parts[1]
-        }
+        let paces = weekRuns.compactMap { PaceModel.parseSecPerKm($0.avgPace) }
         guard !paces.isEmpty else { return nil }
         return paces.reduce(0, +) / Double(paces.count)
-    }
-
-    private func formatDuration(_ seconds: Int) -> String {
-        let h = seconds / 3600
-        let m = (seconds % 3600) / 60
-        return h > 0 ? "\(h)h\(String(format: "%02d", m))" : "\(m) min"
     }
 
     var body: some View {
@@ -54,7 +44,7 @@ struct WeeklyRecapView: View {
 
                 HStack(spacing: 24) {
                     MetricColumn(value: "\(weekRuns.count)/\(profile.runningDays.count)", label: "séances", valueSize: 22)
-                    MetricColumn(value: formatDuration(totalDurationSeconds), label: "temps total", valueSize: 22)
+                    MetricColumn(value: PaceModel.formatTotalDuration(totalDurationSeconds), label: "temps total", valueSize: 22)
                     MetricColumn(value: "\(totalKcal)", label: "kcal", valueColor: RUColor.cyan, valueSize: 22)
                     MetricColumn(value: "\(profile.streak)", label: "jours de série", valueColor: profile.streak > 0 ? RUColor.amber : RUColor.textPrimary, valueSize: 22)
                 }

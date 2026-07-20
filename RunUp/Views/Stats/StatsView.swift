@@ -40,23 +40,11 @@ struct StatsView: View {
         }
     }
 
-    private func paceSecPerKm(_ pace: String) -> Double? {
-        let parts = pace.split(separator: ":").compactMap { Double($0) }
-        guard parts.count == 2 else { return nil }
-        return parts[0] * 60 + parts[1]
-    }
-
     // MARK: Summary — at-a-glance totals, the numbers a "progression" tab was otherwise missing
     // entirely (it jumped straight to trend/prediction cards with nothing grounding them).
 
     private var totalDistanceKm: Double { runs.reduce(0) { $0 + $1.distanceKm } }
     private var totalDurationSeconds: Int { runs.reduce(0) { $0 + $1.durationSeconds } }
-
-    private func formatTotalDuration(_ seconds: Int) -> String {
-        let h = seconds / 3600
-        let m = (seconds % 3600) / 60
-        return h > 0 ? "\(h)h\(String(format: "%02d", m))" : "\(m) min"
-    }
 
     private var summaryCard: some View {
         HStack {
@@ -64,7 +52,7 @@ struct StatsView: View {
             Spacer()
             MetricColumn(value: "\(runs.count)", label: "sorties", valueSize: 22)
             Spacer()
-            MetricColumn(value: formatTotalDuration(totalDurationSeconds), label: "temps total", valueSize: 22)
+            MetricColumn(value: PaceModel.formatTotalDuration(totalDurationSeconds), label: "temps total", valueSize: 22)
             Spacer()
             MetricColumn(value: "\(profile.streak)", label: "jours de suite", valueColor: profile.streak > 0 ? RUColor.lime : RUColor.textPrimary, valueSize: 22)
         }
@@ -76,18 +64,21 @@ struct StatsView: View {
     // rest of the tab only ever looked at trailing windows (5 runs, 8 weeks), nothing anchored to
     // "where am I right now, against what my program actually asks of me this week."
 
+    /// Same Monday-first week `AdaptivePlanEngine`/`WeeklyRecapView` use — this card links straight
+    /// into `WeeklyRecapView`, so "this week" needs to mean the same date range in both places
+    /// (this used to read `Calendar.current.dateInterval(of: .weekOfYear, ...)`, whose start-of-week
+    /// follows the device's region setting — a mismatch with the recap screen on any non-Monday-
+    /// first locale).
     private var thisWeekRuns: [RunRecord] {
-        guard let weekStart = Calendar.current.dateInterval(of: .weekOfYear, for: .now)?.start else { return [] }
-        return runs.filter { $0.date >= weekStart }
+        let range = AdaptivePlanEngine.currentWeekRange()
+        return runs.filter { range.contains($0.date) }
     }
 
     private var thisWeekKm: Double { thisWeekRuns.reduce(0) { $0 + $1.distanceKm } }
 
     private var lastWeekKm: Double {
-        let cal = Calendar.current
-        guard let thisWeekStart = cal.dateInterval(of: .weekOfYear, for: .now)?.start,
-              let lastWeekStart = cal.date(byAdding: .weekOfYear, value: -1, to: thisWeekStart)
-        else { return 0 }
+        let thisWeekStart = AdaptivePlanEngine.currentWeekRange().lowerBound
+        guard let lastWeekStart = Calendar.current.date(byAdding: .day, value: -7, to: thisWeekStart) else { return 0 }
         return runs.filter { $0.date >= lastWeekStart && $0.date < thisWeekStart }.reduce(0) { $0 + $1.distanceKm }
     }
 
@@ -127,17 +118,17 @@ struct StatsView: View {
     // MARK: Pace trend — was a fixed "VO2max 52.4" that never actually moved
 
     private var recentPacesSecPerKm: [Double] {
-        runs.prefix(8).reversed().compactMap { paceSecPerKm($0.avgPace) }
+        runs.prefix(8).reversed().compactMap { PaceModel.parseSecPerKm($0.avgPace) }
     }
 
     private var recentAvgPace: Double? {
-        let last5 = runs.prefix(5).compactMap { paceSecPerKm($0.avgPace) }
+        let last5 = runs.prefix(5).compactMap { PaceModel.parseSecPerKm($0.avgPace) }
         guard !last5.isEmpty else { return nil }
         return last5.reduce(0, +) / Double(last5.count)
     }
 
     private var previousAvgPace: Double? {
-        let previous5 = runs.dropFirst(5).prefix(5).compactMap { paceSecPerKm($0.avgPace) }
+        let previous5 = runs.dropFirst(5).prefix(5).compactMap { PaceModel.parseSecPerKm($0.avgPace) }
         guard !previous5.isEmpty else { return nil }
         return previous5.reduce(0, +) / Double(previous5.count)
     }
@@ -213,7 +204,7 @@ struct StatsView: View {
     private var bestPaceSecPerKm: Double? {
         runs.compactMap { run -> Double? in
             guard run.distanceKm >= 1 else { return nil }
-            return paceSecPerKm(run.avgPace)
+            return PaceModel.parseSecPerKm(run.avgPace)
         }.min()
     }
 
@@ -254,7 +245,7 @@ struct StatsView: View {
     /// (target time / best recent perf / level) when there's no run history yet.
     private var bestRecentPerformance: (km: Double, secPerKm: Double)? {
         let candidates = runs.prefix(10).compactMap { run -> (Double, Double)? in
-            guard run.distanceKm >= 2, let pace = paceSecPerKm(run.avgPace) else { return nil }
+            guard run.distanceKm >= 2, let pace = PaceModel.parseSecPerKm(run.avgPace) else { return nil }
             return (run.distanceKm, pace)
         }
         return candidates.min(by: { $0.1 < $1.1 }).map { (km: $0.0, secPerKm: $0.1) }

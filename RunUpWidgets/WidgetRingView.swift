@@ -7,28 +7,31 @@ struct WidgetRingView: View {
     var progress: [Double]
     var colors: [Color]
     var size: CGFloat
+    /// Same reasoning as `DailyGoalsBarsView.lightTrackOpacity` — a saturated color at low opacity
+    /// washes out more over a near-white background than over near-black, so light mode needs a
+    /// touch more opacity to read as a clear track instead of barely-there.
+    var isLight: Bool
 
     private static let canvasSize: CGFloat = 100
     private static let strokeWidth: CGFloat = 20
-    private static let gapDegrees: Double = 14
+    private static let lightTrackOpacity = 0.20
+    private static let darkTrackOpacity = 0.22
 
     var body: some View {
         ZStack {
             ForEach(Array(colors.enumerated()), id: \.offset) { i, color in
-                let start = Double(i) / 3
-                let span = (120 - Self.gapDegrees) / 360
-                let startDeg = Double(i) * 120
-                let endDeg = startDeg + (120 - Self.gapDegrees)
+                let seg = RingSegmentGeometry.segment(at: i)
                 let pct = max(0, min(1, i < progress.count ? progress[i] : 0))
+                let fillEnd = seg.trimStart + (seg.trimEnd - seg.trimStart) * pct
 
                 Circle()
-                    .trim(from: start, to: start + span)
-                    .stroke(color.opacity(0.22), style: StrokeStyle(lineWidth: Self.strokeWidth, lineCap: .round))
+                    .trim(from: seg.trimStart, to: seg.trimEnd)
+                    .stroke(color.opacity(isLight ? Self.lightTrackOpacity : Self.darkTrackOpacity), style: StrokeStyle(lineWidth: Self.strokeWidth, lineCap: .round))
 
                 Circle()
-                    .trim(from: start, to: start + span * pct)
+                    .trim(from: seg.trimStart, to: fillEnd)
                     .stroke(
-                        AngularGradient(gradient: Gradient(colors: [color.darkened(0.28), color]), center: .center, startAngle: .degrees(startDeg), endAngle: .degrees(endDeg)),
+                        AngularGradient(gradient: Gradient(colors: [color.darkened(0.28), color]), center: .center, startAngle: .degrees(seg.gradientStartDegrees), endAngle: .degrees(seg.gradientEndDegrees)),
                         style: StrokeStyle(lineWidth: Self.strokeWidth, lineCap: .round)
                     )
             }

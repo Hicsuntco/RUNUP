@@ -48,7 +48,7 @@ struct DailyGoalsWidgetView: View {
 
     private var smallBody: some View {
         VStack(spacing: 8) {
-            WidgetRingView(progress: snapshot.progress, colors: colors, size: 64)
+            WidgetRingView(progress: snapshot.progress, colors: colors, size: 64, isLight: snapshot.isLightMode)
             HStack(spacing: 3) {
                 Image(systemName: "flame.fill").font(.system(size: 11))
                 Text("\(snapshot.streak)").font(.system(size: 13, weight: .bold, design: .rounded))
@@ -61,7 +61,7 @@ struct DailyGoalsWidgetView: View {
 
     private var mediumBody: some View {
         HStack(spacing: 16) {
-            WidgetRingView(progress: snapshot.progress, colors: colors, size: 64)
+            WidgetRingView(progress: snapshot.progress, colors: colors, size: 64, isLight: snapshot.isLightMode)
             VStack(alignment: .leading, spacing: 6) {
                 Text("TES OBJECTIFS").font(.system(size: 10, weight: .bold, design: .rounded)).tracking(1).foregroundColor(text2)
                 HStack(spacing: 4) {

@@ -59,6 +59,24 @@ enum PaceModel {
         return h > 0 ? "\(h):\(String(format: "%02d", m)):\(String(format: "%02d", s))" : "\(m):\(String(format: "%02d", s))"
     }
 
+    /// A `RunRecord.avgPace` string ("m:ss") → seconds/km — shared by every screen that averages
+    /// or compares real per-run paces (`StatsView`, `WeeklyRecapView`) instead of each keeping its
+    /// own copy of the same split.
+    static func parseSecPerKm(_ pace: String) -> Double? {
+        let parts = pace.split(separator: ":").compactMap { Double($0) }
+        guard parts.count == 2 else { return nil }
+        return parts[0] * 60 + parts[1]
+    }
+
+    /// Total elapsed time across possibly many runs, e.g. "1h23" or "45 min" — distinct from
+    /// `formatDuration` above, which formats a single pace/split as "m:ss". Shared by `StatsView`'s
+    /// and `WeeklyRecapView`'s "temps total" tiles.
+    static func formatTotalDuration(_ seconds: Int) -> String {
+        let h = seconds / 3600
+        let m = (seconds % 3600) / 60
+        return h > 0 ? "\(h)h\(String(format: "%02d", m))" : "\(m) min"
+    }
+
     /// Seconds-per-km at "threshold" — the anchor every other zone is a percentage offset of.
     /// Priority: real race target time > best recent performance (parsed opportunistically) >
     /// declared experience level.

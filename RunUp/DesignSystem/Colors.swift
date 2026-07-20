@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 /// Design tokens — see design_handoff_runup_app/README.md § Design Tokens / Colors. Every token
 /// here is theme-aware (dark/light — see `ThemeStore.isLightMode`, set from Profil → Apparence),
@@ -29,6 +28,10 @@ enum RUColor {
     static var lime: Color { isLight ? Color(hex: 0x6B9E00) : Color(hex: 0xC8FF3D) }
     static var cyan: Color { isLight ? Color(hex: 0x0E9C8C) : Color(hex: 0x38E0D0) }
     static var amber: Color { isLight ? Color(hex: 0xB86A00) : Color(hex: 0xFFB03D) }
+    /// Amber warning *text* on an amber-tinted card (`CoachView`'s error bubble) — the plain
+    /// `amber` token is tuned for icons/accents, not for body text at length, same reasoning as
+    /// `rose2` above.
+    static var amberText: Color { isLight ? Color(hex: 0x8A5A00) : Color(hex: 0xFFD79A) }
 
     static var textPrimary: Color { isLight ? Color(hex: 0x15151C) : Color.white }
     static var text2: Color { isLight ? Color.black.opacity(0.55) : Color.white.opacity(0.5) }
@@ -49,24 +52,5 @@ enum RUColor {
 
     static var violetRoseGradient: LinearGradient {
         LinearGradient(colors: [violet, rose], startPoint: .leading, endPoint: .trailing)
-    }
-}
-
-extension Color {
-    init(hex: UInt32, opacity: Double = 1) {
-        let r = Double((hex >> 16) & 0xFF) / 255
-        let g = Double((hex >> 8) & 0xFF) / 255
-        let b = Double(hex & 0xFF) / 255
-        self.init(.sRGB, red: r, green: g, blue: b, opacity: opacity)
-    }
-
-    /// Pushes RGB channels down uniformly — used to turn a dark-mode "light tint" accent (see
-    /// `RUColor.rose2`) into something with real contrast as text on a white background, without
-    /// hand-authoring a second value per accent swatch.
-    func darkened(_ amount: Double) -> Color {
-        let ui = UIColor(self)
-        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        ui.getRed(&r, green: &g, blue: &b, alpha: &a)
-        return Color(red: max(0, r - amount), green: max(0, g - amount), blue: max(0, b - amount), opacity: a)
     }
 }

@@ -44,25 +44,26 @@ struct DailyGoalsBarsView: View {
 
     private static let canvasSize: CGFloat = 100
     private static let strokeWidth: CGFloat = 20
-    /// Degrees of empty space between adjacent segments. Round line caps eat into this visually,
-    /// so the actual gap reads narrower than this number.
-    private static let gapDegrees: Double = 14
+    /// A touch more visible than the original 0.16 — a saturated color at low opacity over a
+    /// near-white background washes out more than the same opacity over near-black, so light mode
+    /// needs its own (still lighter-touch-than-dark) value to read as a clear track rather than
+    /// barely-there.
+    private static let lightTrackOpacity = 0.20
+    private static let darkTrackOpacity = 0.22
 
     var body: some View {
         ZStack {
             ForEach(Array(Self.fillColors.enumerated()), id: \.offset) { i, color in
-                let start = Double(i) / 3
-                let span = (120 - Self.gapDegrees) / 360
-                let startDeg = Double(i) * 120
-                let endDeg = startDeg + (120 - Self.gapDegrees)
+                let seg = RingSegmentGeometry.segment(at: i)
                 let pct = max(0, min(1, i < displayedProgress.count ? displayedProgress[i] : 0))
+                let fillEnd = seg.trimStart + (seg.trimEnd - seg.trimStart) * pct
 
                 // Track: the goal, always the full segment length — a dim tint of this segment's
                 // own color (like Apple's rings), not a neutral gray, so even the empty part hints
                 // at which goal it belongs to.
                 Circle()
-                    .trim(from: start, to: start + span)
-                    .stroke(color.opacity(RUColor.isLight ? 0.16 : 0.22), style: StrokeStyle(lineWidth: Self.strokeWidth, lineCap: .round))
+                    .trim(from: seg.trimStart, to: seg.trimEnd)
+                    .stroke(color.opacity(RUColor.isLight ? Self.lightTrackOpacity : Self.darkTrackOpacity), style: StrokeStyle(lineWidth: Self.strokeWidth, lineCap: .round))
 
                 // Fill: from the same start point, out to `pct` of the way along the segment. The
                 // gradient sweep spans the segment's full angular range (not just the filled
@@ -72,9 +73,9 @@ struct DailyGoalsBarsView: View {
                 // have, without animating the gradient itself (only `trim` — a `Shape`'s own
                 // `animatableData` — needs to interpolate for this to animate smoothly).
                 Circle()
-                    .trim(from: start, to: start + span * pct)
+                    .trim(from: seg.trimStart, to: fillEnd)
                     .stroke(
-                        AngularGradient(gradient: Gradient(colors: [color.darkened(0.28), color]), center: .center, startAngle: .degrees(startDeg), endAngle: .degrees(endDeg)),
+                        AngularGradient(gradient: Gradient(colors: [color.darkened(0.28), color]), center: .center, startAngle: .degrees(seg.gradientStartDegrees), endAngle: .degrees(seg.gradientEndDegrees)),
                         style: StrokeStyle(lineWidth: Self.strokeWidth, lineCap: .round)
                     )
                     .animation(.easeOut(duration: 0.9), value: pct)

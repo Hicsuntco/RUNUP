@@ -17,18 +17,20 @@ struct DailyGoalsSnapshot: Codable {
 
     static let appGroupID = "group.com.hicsuntco.runup"
     private static let defaultsKey = "runup.widget.daily-goals-snapshot"
+    // `UserDefaults(suiteName:)` re-resolves the App Group container each time it's instantiated —
+    // not free — and this is written on every launch/foreground/goal change and read on every
+    // widget timeline reload, so a fresh instance (and fresh encoder/decoder) per call adds up.
+    private static let defaults = UserDefaults(suiteName: appGroupID)
+    private static let encoder = JSONEncoder()
+    private static let decoder = JSONDecoder()
 
     static func save(_ snapshot: DailyGoalsSnapshot) {
-        guard let defaults = UserDefaults(suiteName: appGroupID),
-              let data = try? JSONEncoder().encode(snapshot)
-        else { return }
+        guard let defaults, let data = try? encoder.encode(snapshot) else { return }
         defaults.set(data, forKey: defaultsKey)
     }
 
     static func load() -> DailyGoalsSnapshot? {
-        guard let defaults = UserDefaults(suiteName: appGroupID),
-              let data = defaults.data(forKey: defaultsKey)
-        else { return nil }
-        return try? JSONDecoder().decode(DailyGoalsSnapshot.self, from: data)
+        guard let defaults, let data = defaults.data(forKey: defaultsKey) else { return nil }
+        return try? decoder.decode(DailyGoalsSnapshot.self, from: data)
     }
 }

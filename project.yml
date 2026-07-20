@@ -114,10 +114,11 @@ targets:
   # Home Screen widget — shows the same single-ring 3-goal widget as `DailyGoalsBarsView`/streak,
   # fed by `DailyGoalsSnapshot` over the shared App Group rather than any live in-app state (a
   # widget extension is a separate process, restarted on its own schedule by the system — it can
-  # never hold a live reference to `AppState`). Deliberately does NOT reuse `RunUp/DesignSystem` —
-  # `RUColor`/`ThemeStore` are in-memory singletons the app's process keeps live and this one
-  # can't, and system fonts read better than a condensed display face at small widget sizes anyway
-  # — so `WidgetColor.swift`/`WidgetAccentPalette.swift` mirror just the handful of values needed.
+  # never hold a live reference to `AppState`). Reuses `RunUp/Shared`'s `Color(hex:)`/`.darkened(_:)`
+  # (pure, target-agnostic math), but not the rest of `RunUp/DesignSystem` — `RUColor`/`ThemeStore`
+  # are in-memory singletons the app's process keeps live and this one can't, and system fonts read
+  # better than a condensed display face at small widget sizes anyway — so `WidgetAccentPalette.swift`
+  # mirrors just the handful of theme values needed.
   RunUpWidgets:
     type: app-extension
     platform: iOS

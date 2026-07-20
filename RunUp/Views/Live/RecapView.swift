@@ -11,6 +11,10 @@ struct RecapView: View {
     /// to present, and rendering this small a view is fast enough that eager beats on-demand
     /// (no visible delay when tapping "Partager", no separate render-then-share double tap).
     @State private var shareImage: Image?
+    /// Same card, background stripped — trace + stats only, alpha-transparent everywhere else —
+    /// so she can drop it as a layer/sticker on top of her own photo instead of sharing a
+    /// self-contained card.
+    @State private var shareImageTransparent: Image?
 
     private var run: RunRecord? { appState.lastRun }
 
@@ -55,6 +59,20 @@ struct RecapView: View {
                             .padding(.top, 6)
                         }
 
+                        if let shareImageTransparent {
+                            ShareLink(
+                                item: shareImageTransparent,
+                                preview: SharePreview("Ma course sur RunUp", image: shareImageTransparent)
+                            ) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "photo.on.rectangle.angled")
+                                    Text("SUPERPOSER SUR UNE PHOTO")
+                                }
+                            }
+                            .buttonStyle(SecondaryButtonStyle())
+                            .padding(.top, 6)
+                        }
+
                         Button("DONNER MON RESSENTI") { showDebrief = true }
                             .buttonStyle(PrimaryButtonStyle())
                             .padding(.top, 6)
@@ -73,6 +91,7 @@ struct RecapView: View {
             .onAppear {
                 guard shareImage == nil else { return }
                 renderShareCard(for: run)
+                renderShareCard(for: run, transparent: true)
             }
         } else {
             Color.clear.onAppear { appState.go(.home) }
@@ -111,10 +130,15 @@ struct RecapView: View {
         .clipped()
     }
 
-    private func renderShareCard(for run: RunRecord) {
-        let renderer = ImageRenderer(content: RunShareCardView(run: run))
+    private func renderShareCard(for run: RunRecord, transparent: Bool = false) {
+        let renderer = ImageRenderer(content: RunShareCardView(run: run, transparentBackground: transparent))
         renderer.scale = 3 // retina-quality output at the card's 360×640pt logical size
-        if let uiImage = renderer.uiImage {
+        // `isOpaque` defaults to false, which is exactly what the transparent variant needs —
+        // anything left unpainted in the view keeps its alpha in the rendered UIImage.
+        guard let uiImage = renderer.uiImage else { return }
+        if transparent {
+            shareImageTransparent = Image(uiImage: uiImage)
+        } else {
             shareImage = Image(uiImage: uiImage)
         }
     }

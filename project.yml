@@ -55,6 +55,12 @@ targets:
         UIBackgroundModes:
           - location
           - remote-notification
+        # Lets `LiveRunViewModel` start a Live Activity (Lock Screen + Dynamic Island) for the
+        # in-progress run — see `RunActivityAttributes` (Shared/) and `RunActivityWidget`
+        # (RunUpWidgets/). `FrequentUpdates` avoids the system throttling `Activity.update` calls
+        # down to roughly once a minute — a run updates its own Live Activity every 5s.
+        NSSupportsLiveActivities: true
+        NSSupportsLiveActivitiesFrequentUpdates: true
         ITSAppUsesNonExemptEncryption: false
         UIAppFonts:
           - BebasNeue-Regular.ttf

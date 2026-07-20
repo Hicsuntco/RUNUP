@@ -5,5 +5,6 @@ import SwiftUI
 struct RunUpWidgetsBundle: WidgetBundle {
     var body: some Widget {
         DailyGoalsWidget()
+        RunActivityWidget()
     }
 }

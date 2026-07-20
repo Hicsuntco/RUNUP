@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import ActivityKit
 
 /// Drives the Live Run screen: real elapsed time + GPS distance (via `LocationService`), coach
 /// voice cues at scripted timestamps, and real GPS-instability detection. Ported from the
@@ -42,6 +43,11 @@ final class LiveRunViewModel {
     /// safely provide yet.
     private(set) var voiceCoach: VoiceCoachController?
 
+    /// Nil whenever Live Activities are off system-wide (Settings toggle) or `request` throws —
+    /// every call site below just no-ops on a live run tracked with no on-screen indicator at all,
+    /// the same as before this existed.
+    private var liveActivity: Activity<RunActivityAttributes>?
+
     var distanceKm: Double { location.distanceMeters / 1000 }
     var isSignalUnstable: Bool { location.isSignalUnstable }
     /// Only meaningful for the archetypes actually structured as reps (see
@@ -80,6 +86,7 @@ final class LiveRunViewModel {
                 self?.liveVoiceContext() ?? ""
             }
         }
+        startLiveActivity()
         timerTask = Task { [weak self] in
             while let self, !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
@@ -108,6 +115,9 @@ final class LiveRunViewModel {
             firedCueTimestamps.insert(threshold)
             showCue(message)
         }
+        // Every 5s, not every tick — ActivityKit updates are meant to be occasional, not a
+        // per-second stream, and the Lock Screen/Dynamic Island don't need second-level precision.
+        if t % 5 == 0 { updateLiveActivity() }
     }
 
     /// Polls HealthKit for a genuinely recent heart-rate sample every 5s — separate from `tick()`
@@ -143,10 +153,36 @@ final class LiveRunViewModel {
     func togglePause() {
         isPaused.toggle()
         if isPaused { location.stop() } else { location.start() }
+        updateLiveActivity()
+    }
+
+    private func startLiveActivity() {
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        let attributes = RunActivityAttributes(sessionTitle: profile.todaySession.title)
+        let state = RunActivityAttributes.ContentState(distanceKm: 0, elapsedSeconds: 0, paceLabel: "--:--", isPaused: false)
+        liveActivity = try? Activity.request(attributes: attributes, content: ActivityContent(state: state, staleDate: nil), pushType: nil)
+    }
+
+    private func updateLiveActivity() {
+        guard let liveActivity else { return }
+        let state = RunActivityAttributes.ContentState(distanceKm: distanceKm, elapsedSeconds: elapsedSeconds, paceLabel: paceLabel, isPaused: isPaused)
+        Task { await liveActivity.update(ActivityContent(state: state, staleDate: nil)) }
+    }
+
+    /// Ends the Live Activity with the run's final tally still showing for a few seconds
+    /// (`.default` dismissal) rather than yanking it off the Lock Screen the instant she stops —
+    /// call from `stop()`, before `location`/timers are torn down so `distanceKm`/`elapsedSeconds`
+    /// still read the real final values.
+    private func endLiveActivity() {
+        guard let liveActivity else { return }
+        let finalState = RunActivityAttributes.ContentState(distanceKm: distanceKm, elapsedSeconds: elapsedSeconds, paceLabel: paceLabel, isPaused: true)
+        Task { await liveActivity.end(ActivityContent(state: finalState, staleDate: nil), dismissalPolicy: .default) }
+        self.liveActivity = nil
     }
 
     /// Stops tracking and produces a `RunRecord`. Caller (AppState) inserts it into SwiftData.
     func stop() -> RunRecord {
+        endLiveActivity()
         timerTask?.cancel()
         heartRatePollTask?.cancel()
         voiceCoach?.stop()

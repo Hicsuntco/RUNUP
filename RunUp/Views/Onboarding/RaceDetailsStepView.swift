@@ -18,7 +18,7 @@ struct RaceDetailsStepView: View {
                         Button(action: { vm.selectDistance(d) }) {
                             Text(d.label)
                                 .displayStyle(d == .other ? 16 : 22)
-                                .foregroundColor(vm.distance == d ? RUColor.rose2 : .white)
+                                .foregroundColor(vm.distance == d ? RUColor.rose2 : RUColor.textPrimary)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 18)
                                 .background(vm.distance == d ? RUColor.rose.opacity(0.12) : RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))

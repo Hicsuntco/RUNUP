@@ -1,15 +1,15 @@
 import SwiftUI
 
 /// Daily goals detail — mirrors `RingsScreen` in screensA.jsx, redefined around 3 distinct daily
-/// behaviors (Séance du jour / Renfo & mobilité / Pas) instead of 3 measures of the same run.
+/// behaviors (Séance du jour / Calories actives / Pas) instead of 3 measures of the same run.
 struct RingsView: View {
     @Environment(AppState.self) private var appState
     private var p: UserProfile { appState.profile }
 
     private var remainingSteps: Int { max(0, Int(p.stepsGoal - p.stepsToday)) }
-    private var remainingStrengthMinutes: Int { max(0, Int(p.strengthGoalMinutes - p.strengthMinutesToday)) }
+    private var remainingActiveCalories: Int { max(0, Int(p.activeCaloriesGoal - p.activeCaloriesToday)) }
 
-    /// [Séance, Renfo & mobilité, Pas] — same array `DailyGoalsBarsView` draws its bars in, so
+    /// [Séance, Calories actives, Pas] — same array `DailyGoalsBarsView` draws its bars in, so
     /// each row's legend dot always matches its bar's actual color.
     private var goalColors: [Color] { DailyGoalsBarsView.fillColors }
 
@@ -18,8 +18,8 @@ struct RingsView: View {
         if !p.seanceDoneToday, p.todaySession.durationMinutes > 0 {
             return "Ta séance du jour t'attend : \(p.todaySession.title) (\(p.todaySession.durationMinutes)′)."
         }
-        if p.strengthMinutesToday < p.strengthGoalMinutes {
-            return "Pas encore de renfo aujourd'hui — encore \(remainingStrengthMinutes) min pour boucler l'objectif."
+        if p.activeCaloriesToday < p.activeCaloriesGoal {
+            return "Encore \(remainingActiveCalories) kcal actives pour boucler l'objectif du jour."
         }
         if p.stepsToday < p.stepsGoal {
             return "Encore \(remainingSteps) pas pour boucler ton objectif — une petite marche ?"
@@ -47,7 +47,7 @@ struct RingsView: View {
 
                 VStack(spacing: 9) {
                     seanceRow
-                    ringRow(name: "Renfo & mobilité", color: goalColors[1], value: p.strengthMinutesToday, goal: p.strengthGoalMinutes, unit: "min")
+                    ringRow(name: "Calories actives", color: goalColors[1], value: p.activeCaloriesToday, goal: p.activeCaloriesGoal, unit: "kcal")
                     ringRow(name: "Pas", color: goalColors[2], value: p.stepsToday, goal: p.stepsGoal, unit: "pas")
                 }
 

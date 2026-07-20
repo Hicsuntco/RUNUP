@@ -68,15 +68,15 @@ final class AppState {
         Task { await syncDailyGoalsFromHealthKit() }
     }
 
-    /// Pulls today's step count and strength/mobility workout minutes from Apple Santé, if
-    /// connected — the "Renfo & mobilité" and "Pas" daily goals are HealthKit-sourced, not
-    /// something logged inside the app.
+    /// Pulls today's step count and active calories from Apple Santé, if connected — the
+    /// "Calories actives" and "Pas" daily goals are HealthKit-sourced, not something logged inside
+    /// the app.
     private func syncDailyGoalsFromHealthKit() async {
         guard profile.connectedSources.contains(.apple) else { return }
         async let steps = healthKit.stepsToday()
-        async let strength = healthKit.strengthMobilityMinutesToday()
+        async let calories = healthKit.activeCaloriesToday()
         profile.stepsToday = await steps
-        profile.strengthMinutesToday = await strength
+        profile.activeCaloriesToday = await calories
         if AdaptivePlanEngine.checkDailyGoalsBonus(profile) {
             postClubActivity(type: "badge", text: "a bouclé ses 3 objectifs du jour", xpEarned: 120)
             notify(icon: "🎉", colorHex: 0xC9FF3B, title: "Journée bouclée", text: "Tes 3 objectifs du jour sont faits — +120 XP.")

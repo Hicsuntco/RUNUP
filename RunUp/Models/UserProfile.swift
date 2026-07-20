@@ -85,14 +85,19 @@ final class UserProfile {
     var freeRunTemplateIndex: Int
 
     // MARK: Daily goals
-    // Séance du jour / Renfo & mobilité / Pas, reset each calendar day (see
+    // Séance du jour / Calories actives / Pas, reset each calendar day (see
     // `AdaptivePlanEngine.resetDailyGoalsIfNewDay`). Deliberately 3 distinct behaviors rather
     // than 3 measures of the same run (the old Bouger/Actif/Courir always moved together).
     // Tracks the last day these were reset, so a day rollover can be detected and self-heals
     // like `programStartDate` for profiles that predate this field.
     var lastDailyResetDay: Date?
-    var strengthMinutesToday: Double = 0
-    var strengthGoalMinutes: Double = 15
+    /// Was "Renfo & mobilité" (strength/mobility minutes) — replaced because a *daily* strength
+    /// target doesn't match real training guidance (2-3x/week, not every day), which made the
+    /// goal honestly near-impossible rather than motivating. Active calories work for everyone
+    /// day to day (including non-Watch users — see `HealthKitService.activeCaloriesToday`) and a
+    /// real daily-appropriate target.
+    var activeCaloriesToday: Double = 0
+    var activeCaloriesGoal: Double = 400
     var stepsToday: Double = 0
     var stepsGoal: Double = 6000
     /// Whether the "all daily goals done" +120 XP bonus (see
@@ -207,7 +212,7 @@ final class UserProfile {
         return session.durationMinutes == 0
     }
 
-    /// [Séance du jour, Renfo & mobilité, Pas] as 0...1 fractions, in that order — feeds
+    /// [Séance du jour, Calories actives, Pas] as 0...1 fractions, in that order — feeds
     /// `DailyGoalsBarsView`. On a rest day there's no real "séance" goal to close, so that slot
     /// stays at 0 rather than the trivially-true `seanceDoneToday` — a gauge showing full for a
     /// goal nothing ever asked of you reads as a bug (the same complaint already fixed for the
@@ -215,7 +220,7 @@ final class UserProfile {
     var dailyGoalsProgress: [Double] {
         [
             isRestDayToday ? 0 : (seanceDoneToday ? 1 : 0),
-            strengthGoalMinutes > 0 ? min(1, strengthMinutesToday / strengthGoalMinutes) : 0,
+            activeCaloriesGoal > 0 ? min(1, activeCaloriesToday / activeCaloriesGoal) : 0,
             stepsGoal > 0 ? min(1, stepsToday / stepsGoal) : 0
         ]
     }

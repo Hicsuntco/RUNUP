@@ -198,15 +198,15 @@ enum AdaptivePlanEngine {
 
     // MARK: Daily goals
 
-    /// Resets Renfo/Pas back to 0 (and lets `runValue` fall back to 0 too) the first time this
-    /// runs on a new calendar day — call unconditionally on every foreground, regardless of
-    /// `programPhase`, since daily goals apply in recovery/free-run too. `Séance du jour` needs no
-    /// reset here: it's computed live from `weekSessions`, which regenerates on its own schedule.
+    /// Resets Calories actives/Pas back to 0 (and lets `runValue` fall back to 0 too) the first
+    /// time this runs on a new calendar day — call unconditionally on every foreground, regardless
+    /// of `programPhase`, since daily goals apply in recovery/free-run too. `Séance du jour` needs
+    /// no reset here: it's computed live from `weekSessions`, which regenerates on its own schedule.
     static func resetDailyGoalsIfNewDay(_ profile: UserProfile) {
         let today = Calendar.current.startOfDay(for: .now)
         guard profile.lastDailyResetDay != today else { return }
         profile.lastDailyResetDay = today
-        profile.strengthMinutesToday = 0
+        profile.activeCaloriesToday = 0
         profile.stepsToday = 0
         profile.runValue = 0
         profile.dailyGoalsBonusAwarded = false

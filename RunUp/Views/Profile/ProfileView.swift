@@ -237,7 +237,7 @@ struct ProfileView: View {
     }
 
     /// Both goals used to only ever be fixed defaults (`UserProfile.stepsGoal` = 6000,
-    /// `strengthGoalMinutes` = 15) with no way to change them — the daily-goals bars on Home read
+    /// `activeCaloriesGoal` = 400) with no way to change them — the daily-goals bars on Home read
     /// those values directly, so editing here immediately reshapes what counts as "done" today.
     private var dailyGoalsCard: some View {
         VStack(spacing: 0) {
@@ -257,13 +257,13 @@ struct ProfileView: View {
             .padding(.horizontal, 14).padding(.vertical, 13)
             Divider().background(RUColor.line)
             HStack {
-                Text("Objectif renfo & mobilité").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                Text("Objectif calories actives").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
                 Stepper(
-                    "\(Int(profile.strengthGoalMinutes)) min",
-                    value: Binding(get: { profile.strengthGoalMinutes }, set: { profile.strengthGoalMinutes = $0 }),
-                    in: 0...60,
-                    step: 5
+                    "\(Int(profile.activeCaloriesGoal)) kcal",
+                    value: Binding(get: { profile.activeCaloriesGoal }, set: { profile.activeCaloriesGoal = $0 }),
+                    in: 100...1000,
+                    step: 50
                 )
                 .fixedSize()
                 .tint(RUColor.rose)

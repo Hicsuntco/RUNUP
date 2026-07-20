@@ -17,7 +17,7 @@ final class HealthKitService {
         var types: Set<HKObjectType> = [
             HKObjectType.quantityType(forIdentifier: .heartRate)!,
             HKObjectType.quantityType(forIdentifier: .stepCount)!,
-            HKObjectType.workoutType()
+            HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!
         ]
         if let sleep = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) {
             types.insert(sleep)
@@ -41,21 +41,16 @@ final class HealthKitService {
         return await sumToday(type: type, unit: .count())
     }
 
-    /// Minutes of strength/mobility workouts (functional & traditional strength training,
-    /// flexibility, core, yoga, pilates) logged today — feeds the "Renfo & mobilité" daily goal.
-    func strengthMobilityMinutesToday() async -> Double {
-        let relevant: Set<HKWorkoutActivityType> = [.functionalStrengthTraining, .traditionalStrengthTraining, .flexibility, .coreTraining, .yoga, .pilates]
-        let start = Calendar.current.startOfDay(for: .now)
-        let predicate = HKQuery.predicateForSamples(withStart: start, end: .now)
-        return await withCheckedContinuation { continuation in
-            let query = HKSampleQuery(sampleType: HKObjectType.workoutType(), predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, samples, _ in
-                let minutes = (samples as? [HKWorkout] ?? [])
-                    .filter { relevant.contains($0.workoutActivityType) }
-                    .reduce(0.0) { $0 + $1.duration / 60 }
-                continuation.resume(returning: minutes)
-            }
-            store.execute(query)
-        }
+    /// Active calories burned today — feeds the "Calories actives" daily goal. Deliberately not
+    /// "minutes actives"/Exercise Time (`appleExerciseTime`): that quantity type is effectively
+    /// Apple-Watch-only in practice (third-party sources rarely write to it), while active energy
+    /// is a standard quantity type most fitness ecosystems do write to — including RunUp's own
+    /// `saveRun` below, so even a runner with no watch at all gets a real, non-zero number on any
+    /// day she logs a run, and a Garmin (or any other) watch's own Health-sync app contributes the
+    /// rest for the days it's worn.
+    func activeCaloriesToday() async -> Double {
+        guard let type = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else { return 0 }
+        return await sumToday(type: type, unit: .kilocalorie())
     }
 
     /// Most recent heart-rate sample within the last `maxAge` seconds — used to poll a genuinely

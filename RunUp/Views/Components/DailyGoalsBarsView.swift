@@ -17,7 +17,7 @@ import SwiftUI
 /// the system Activity control (Move/Exercise/Stand), and app review rejects lookalikes under
 /// guideline 5.2.5.
 struct DailyGoalsBarsView: View {
-    /// [Séance du jour, Renfo & mobilité, Pas], each 0...1.
+    /// [Séance du jour, Calories actives, Pas], each 0...1.
     var progress: [Double]
     var size: CGFloat = 96
     var radius: CGFloat? = nil

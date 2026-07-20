@@ -115,6 +115,7 @@ struct DebriefSheet: View {
                     }
                     // Today's session is done — an evening reminder for it would be stale now.
                     NotificationService.shared.rescheduleDailyReminder(for: appState.profile)
+                    appState.publishWidgetSnapshot()
                     appState.toast("Programme mis à jour · +120 XP 🔥")
                     // Ask for a rating right after a run that felt good, not on a fixed schedule —
                     // `shouldRequestReview` also caps this to real milestones and a 90-day cooldown.

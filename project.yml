@@ -66,6 +66,9 @@ targets:
           - DMSans-Italic.ttf
           - DMMono-Regular.ttf
           - DMMono-Medium.ttf
+    dependencies:
+      - target: RunUpWidgets
+        embed: true
     entitlements:
       path: RunUp/RunUp.entitlements
       properties:
@@ -73,6 +76,14 @@ targets:
         com.apple.developer.healthkit.access: []
         com.apple.developer.applesignin:
           - Default
+        # Shares today's goals/streak/theme with the Home Screen widget (`RunUpWidgets` target) —
+        # the widget runs in its own process with no other way to reach `UserProfile`. Needs a real
+        # App Group created under her Apple Developer account (Certificates, Identifiers & Profiles
+        # → Identifiers → App Groups) before this entitlement can actually provision — Xcode's
+        # automatic signing usually offers to create it inline the first time you add the "App
+        # Groups" capability in Signing & Capabilities if it doesn't exist yet.
+        com.apple.security.application-groups:
+          - group.com.hicsuntco.runup
         # Lets a tapped referral link (https://runup-nu.vercel.app/r/CODE) open straight into the
         # app with the code prefilled instead of just a webpage — see
         # public/.well-known/apple-app-site-association (must stay in sync: same domain here as
@@ -93,3 +104,39 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: SW49TQ25NV
+
+  # Home Screen widget — shows the same single-ring 3-goal widget as `DailyGoalsBarsView`/streak,
+  # fed by `DailyGoalsSnapshot` over the shared App Group rather than any live in-app state (a
+  # widget extension is a separate process, restarted on its own schedule by the system — it can
+  # never hold a live reference to `AppState`). Deliberately does NOT reuse `RunUp/DesignSystem` —
+  # `RUColor`/`ThemeStore` are in-memory singletons the app's process keeps live and this one
+  # can't, and system fonts read better than a condensed display face at small widget sizes anyway
+  # — so `WidgetColor.swift`/`WidgetAccentPalette.swift` mirror just the handful of values needed.
+  RunUpWidgets:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: RunUpWidgets
+      - path: RunUp/Shared
+    info:
+      path: RunUpWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: RunUp
+        # App Store validation requires an extension's version to match its host app's — keep
+        # these two in step with `RunUp`'s `CFBundleShortVersionString`/`CFBundleVersion` above.
+        CFBundleShortVersionString: "1.1"
+        CFBundleVersion: "8"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: RunUpWidgets/RunUpWidgets.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.hicsuntco.runup
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.hicsuntco.runup.widgets
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: SW49TQ25NV
+        TARGETED_DEVICE_FAMILY: "1"

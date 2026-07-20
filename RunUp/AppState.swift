@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import Observation
+import WidgetKit
 
 /// Central app store + router — mirrors the `store`/`ctx` object threaded through the
 /// prototype via React context. Held once at the root and read via `@Environment(AppState.self)`.
@@ -46,6 +47,7 @@ final class AppState {
         NotificationService.shared.rescheduleDailyReminder(for: self.profile)
         NotificationService.shared.rescheduleInactivityReminder(for: self.profile)
         NotificationService.shared.scheduleWeeklyRecapReminder(for: self.profile)
+        publishWidgetSnapshot()
         Task { await self.syncDailyGoalsFromHealthKit() }
     }
 
@@ -67,7 +69,22 @@ final class AppState {
         NotificationService.shared.rescheduleDailyReminder(for: profile)
         NotificationService.shared.rescheduleInactivityReminder(for: profile)
         NotificationService.shared.scheduleWeeklyRecapReminder(for: profile)
+        publishWidgetSnapshot()
         Task { await syncDailyGoalsFromHealthKit() }
+    }
+
+    /// Mirrors today's goals/streak/theme into the shared App Group container and asks WidgetKit
+    /// to redraw the Home Screen widget — call anywhere `dailyGoalsProgress`, `streak`, or the
+    /// accent/light-mode theme could have just changed, since the widget's own process has no way
+    /// to observe `profile` directly (see `DailyGoalsSnapshot`).
+    func publishWidgetSnapshot() {
+        DailyGoalsSnapshot.save(DailyGoalsSnapshot(
+            progress: profile.dailyGoalsProgress,
+            streak: profile.streak,
+            accentThemeID: profile.accentThemeID,
+            isLightMode: profile.isLightMode
+        ))
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     /// Pulls today's step count and active calories from Apple Santé, if connected — the
@@ -84,6 +101,9 @@ final class AppState {
             notify(icon: "🎉", colorHex: 0xC9FF3B, title: "Journée bouclée", text: "Tes 3 objectifs du jour sont faits — +120 XP.")
             toast("Journée bouclée · +120 XP 🎉")
         }
+        // Runs after the synchronous publish already in `init`/`refreshProgramForCurrentDate` —
+        // this one actually reflects the fresh HealthKit numbers just fetched above.
+        publishWidgetSnapshot()
     }
 
     /// Inserts a real bell-icon notification — replaces what used to be a purely decorative UI

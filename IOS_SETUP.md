@@ -168,6 +168,29 @@ Les fichiers `.ttf` (Bebas Neue, DM Sans, DM Mono — Google Fonts, licence OFL)
 dans `RunUp/Resources/Fonts/` et déclarés dans `project.yml` (`UIAppFonts`) — rien à faire de
 plus, XcodeGen les enregistre automatiquement.
 
+## Widget écran d'accueil
+
+Un nouveau target `RunUpWidgets` (WidgetKit) affiche l'anneau des 3 objectifs du jour + la série
+sur l'écran d'accueil. Il tourne dans son propre processus, séparé de l'app — il ne voit jamais
+`UserProfile` directement, seulement l'instantané que l'app publie dans un App Group partagé
+(`DailyGoalsSnapshot`, `AppState.publishWidgetSnapshot()`).
+
+1. `xcodegen generate` (voir plus haut) crée le nouveau target automatiquement à partir de
+   `project.yml` — rien à ajouter à la main dans Xcode.
+2. Au premier build, Xcode peut demander de créer le véritable **App Group**
+   (`group.com.hicsuntco.runup`) sur ton compte développeur — avec la signature automatique
+   (`CODE_SIGN_STYLE: Automatic`, déjà configuré sur les deux targets), il devrait proposer de le
+   créer tout seul. Si Xcode affiche une erreur de provisioning à ce sujet : sélectionne la cible
+   `RunUp` → Signing & Capabilities → vérifie que "App Groups" apparaît et que
+   `group.com.hicsuntco.runup` est bien coché, puis fais pareil pour la cible `RunUpWidgets`.
+3. Lance l'app une première fois sur un appareil (pas besoin du Simulateur, mais ça marche aussi)
+   pour qu'elle publie un premier instantané, puis ajoute le widget : appui long sur l'écran
+   d'accueil → **+** → cherche "RunUp" → choisis la taille (petite ou moyenne).
+4. Le widget ne se met à jour tout seul qu'une fois par heure environ (limite du système) — mais
+   l'app lui demande de se rafraîchir immédiatement à chaque fois que les objectifs du jour
+   changent (fin de séance, sync Santé, changement de thème), donc en pratique il devrait toujours
+   être à jour peu après avoir rouvert l'app.
+
 ## Icône de l'app
 
 `RunUp/Resources/Assets.xcassets/AppIcon.appiconset/` contient un slot d'icône App Store

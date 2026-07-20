@@ -181,11 +181,13 @@ struct ProfileView: View {
     private func selectMode(isLight: Bool) {
         profile.isLightMode = isLight
         ThemeStore.shared.isLightMode = isLight
+        appState.publishWidgetSnapshot()
     }
 
     private func selectAccent(_ theme: AccentTheme) {
         profile.accentThemeID = theme.id
         ThemeStore.shared.themeID = theme.id
+        appState.publishWidgetSnapshot()
     }
 
     private var preferencesCard: some View {

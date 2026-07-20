@@ -33,7 +33,7 @@ struct AddRunSheet: View {
                         DatePicker("", selection: $date, in: ...Date.now, displayedComponents: .date)
                             .datePickerStyle(.compact)
                             .labelsHidden()
-                            .colorScheme(.dark)
+                            .colorScheme(RUColor.colorScheme)
                     }
 
                     VStack(alignment: .leading, spacing: 8) {

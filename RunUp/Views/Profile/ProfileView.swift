@@ -352,7 +352,7 @@ struct ProfileView: View {
                         )
                         .datePickerStyle(.compact)
                         .labelsHidden()
-                        .colorScheme(.dark)
+                        .colorScheme(RUColor.colorScheme)
                     }
 
                     HStack {

@@ -15,9 +15,16 @@ enum ReferralLinkHandler {
         UserDefaults.standard.set(code, forKey: defaultsKey)
     }
 
-    /// `/r/CODE` in either a universal link's path or a plain `runup://r/CODE` custom-scheme link
-    /// (`url.pathComponents` gives the same `["/", "r", "CODE"]` shape for both).
+    /// `/r/CODE` in either a universal link (`https://…/r/CODE`) or the `runup://r/CODE` custom
+    /// scheme — Foundation parses the two differently even though they look the same: a
+    /// `scheme://host/path` URL puts "r" in `.host`, not in `.pathComponents`, so the universal
+    /// link's `parts[0] == "r"` check never matches a custom-scheme link at all.
     private static func referralCode(from url: URL) -> String? {
+        if url.host == "r" {
+            let code = url.pathComponents.filter { $0 != "/" }.first
+            guard let code, !code.isEmpty else { return nil }
+            return code.uppercased()
+        }
         let parts = url.pathComponents.filter { $0 != "/" }
         guard parts.count >= 2, parts[0] == "r", !parts[1].isEmpty else { return nil }
         return parts[1].uppercased()

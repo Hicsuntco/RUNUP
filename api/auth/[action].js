@@ -6,26 +6,11 @@ const { sql } = require('../../lib/db');
 const { verifyAppleIdentityToken, signSession, bcrypt } = require('../../lib/auth');
 const { withErrorHandling } = require('../../lib/http');
 const { containsObjectionableContent } = require('../../lib/moderation');
-
 // Real referral loop (see db/schema.sql) — every new account gets its own shareable code;
 // signing up with someone else's code links `referred_by`, rewarded later on the referred
-// person's first real activity (api/activities/[action].js).
-function randomReferralCode() {
-  // No 0/O/1/I — avoids ambiguity when a code is read aloud, screenshotted, or typed by hand.
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '';
-  for (let i = 0; i < 6; i++) code += alphabet[Math.floor(Math.random() * alphabet.length)];
-  return code;
-}
-
-async function generateUniqueReferralCode() {
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const code = randomReferralCode();
-    const { rows } = await sql`SELECT 1 FROM users WHERE referral_code = ${code}`;
-    if (rows.length === 0) return code;
-  }
-  return null; // astronomically unlikely — this one account just goes without a code
-}
+// person's first real activity (api/activities/[action].js). Shared with api/me.js, which
+// backfills a code for accounts created before this feature existed.
+const { generateUniqueReferralCode } = require('../../lib/referral');
 
 // A junk/typo'd/nonexistent code is never a signup error — it just means no referral link, same
 // as leaving the field empty.

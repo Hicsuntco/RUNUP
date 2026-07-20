@@ -337,7 +337,7 @@ struct CreateChallengeSheet: View {
                         DatePicker("", selection: $endDate, in: Calendar.current.date(byAdding: .day, value: 1, to: .now)!..., displayedComponents: .date)
                             .datePickerStyle(.compact)
                             .labelsHidden()
-                            .colorScheme(.dark)
+                            .colorScheme(RUColor.colorScheme)
                     }
 
                     if let errorMessage {

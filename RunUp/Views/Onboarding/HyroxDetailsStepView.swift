@@ -53,7 +53,7 @@ struct HyroxDetailsStepView: View {
                 )
                 .datePickerStyle(.compact)
                 .labelsHidden()
-                .colorScheme(.dark)
+                .colorScheme(RUColor.colorScheme)
                 .padding(13)
                 .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))

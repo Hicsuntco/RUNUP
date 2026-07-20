@@ -28,8 +28,8 @@ targets:
       path: RunUp/Info.plist
       properties:
         CFBundleDisplayName: RunUp
-        CFBundleShortVersionString: "1.1"
-        CFBundleVersion: "8"
+        CFBundleShortVersionString: "2.0"
+        CFBundleVersion: "9"
         # Synthesized launch storyboard (no custom .storyboard file) — a plain color is all it
         # can show (the real animated wordmark only runs once app code is live, see
         # `SplashView`), but this stops the default white flash before that even appears.
@@ -131,8 +131,8 @@ targets:
         CFBundleDisplayName: RunUp
         # App Store validation requires an extension's version to match its host app's — keep
         # these two in step with `RunUp`'s `CFBundleShortVersionString`/`CFBundleVersion` above.
-        CFBundleShortVersionString: "1.1"
-        CFBundleVersion: "8"
+        CFBundleShortVersionString: "2.0"
+        CFBundleVersion: "9"
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     entitlements:

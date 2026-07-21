@@ -17,7 +17,7 @@ struct CardBackground: ViewModifier {
             // mode has the opposite problem: a ~3%-opacity fill on a white page is nearly
             // invisible without something to actually lift the card off the page, so it gets a
             // real (but soft) elevation shadow instead.
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.11 : 0), radius: 14, x: 0, y: 4)
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.16 : 0), radius: 16, x: 0, y: 5)
     }
 }
 
@@ -35,6 +35,6 @@ extension View {
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
                     .stroke(RUColor.rose.opacity(borderOpacity), lineWidth: RUSpacing.hairline)
             )
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.13 : 0), radius: 16, x: 0, y: 5)
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.18 : 0), radius: 18, x: 0, y: 6)
     }
 }

@@ -14,7 +14,7 @@ struct WidgetRingView: View {
 
     private static let canvasSize: CGFloat = 100
     private static let strokeWidth: CGFloat = 20
-    private static let lightTrackOpacity = 0.28
+    private static let lightTrackOpacity = 0.36
     private static let darkTrackOpacity = 0.22
 
     var body: some View {

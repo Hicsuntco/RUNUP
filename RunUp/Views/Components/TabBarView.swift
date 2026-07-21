@@ -27,12 +27,12 @@ struct TabBarView: View {
         // Was a fixed dark-navy tint regardless of theme — fine when the whole app was always
         // dark, but a heavy near-black pill floating on a white page in light mode reads as a
         // grey smudge rather than the same frosted-glass chrome the dark theme gets.
-        .background(RUColor.isLight ? Color(hex: 0xF3F3F8).opacity(0.85) : Color(hex: 0x12121A).opacity(0.72))
+        .background(RUColor.isLight ? Color(hex: 0xEDEDF4).opacity(0.92) : Color(hex: 0x12121A).opacity(0.72))
         .overlay(
-            Capsule().stroke(RUColor.isLight ? Color.black.opacity(0.09) : Color.white.opacity(0.09), lineWidth: RUSpacing.hairline)
+            Capsule().stroke(RUColor.isLight ? Color.black.opacity(0.13) : Color.white.opacity(0.09), lineWidth: RUSpacing.hairline)
         )
         .clipShape(Capsule())
-        .shadow(color: .black.opacity(RUColor.isLight ? 0.24 : 0.5), radius: 22, x: 0, y: 12)
+        .shadow(color: .black.opacity(RUColor.isLight ? 0.30 : 0.5), radius: 24, x: 0, y: 13)
     }
 
     private func tabButton(_ item: (AppScreen, String, String)) -> some View {

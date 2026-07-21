@@ -50,16 +50,16 @@ enum RUColor {
     /// wash to register; the same trick barely shows on white. A real (if still soft) off-white
     /// fill instead, matching the energy the "Midnight Rose" reference has via its own high-
     /// contrast dark cards.
-    static var card: Color { isLight ? Color(hex: 0xF6F6FA) : Color.white.opacity(0.045) }
-    static var card2: Color { isLight ? Color(hex: 0xEEEEF3) : Color.white.opacity(0.03) }
-    static var line: Color { isLight ? Color.black.opacity(0.11) : Color.white.opacity(0.08) }
+    static var card: Color { isLight ? Color(hex: 0xF0F0F6) : Color.white.opacity(0.045) }
+    static var card2: Color { isLight ? Color(hex: 0xE7E7EF) : Color.white.opacity(0.03) }
+    static var line: Color { isLight ? Color.black.opacity(0.14) : Color.white.opacity(0.08) }
 
     static var brandGradient: LinearGradient {
         LinearGradient(colors: [rose, violet], startPoint: .topLeading, endPoint: .bottomTrailing)
     }
 
     static var heroGradient: LinearGradient {
-        LinearGradient(colors: [isLight ? Color(hex: 0xFAE1EC) : Color(hex: 0x20101C), bg], startPoint: .top, endPoint: .bottom)
+        LinearGradient(colors: [isLight ? Color(hex: 0xF7D2E4) : Color(hex: 0x20101C), bg], startPoint: .top, endPoint: .bottom)
     }
 
     static var violetRoseGradient: LinearGradient {

@@ -6,22 +6,22 @@ struct GoalStepView: View {
 
     var body: some View {
         ObScreen {
-            Spacer()
-            ObTitle(eyebrow: "Étape 2 · \(vm.name.isEmpty ? "toi" : vm.name)", title: "POURQUOI TU COURS ?", subtitle: "C'est la base de tout ton programme.")
-            VStack(spacing: 8) {
-                ForEach(GoalType.allCases) { goal in
-                    SelectableCard(
-                        selected: vm.goal == goal,
-                        emoji: goal.emoji,
-                        title: goal.title,
-                        subtitle: goal.subtitle
-                    ) {
-                        vm.goal = goal
+            ScrollView {
+                ObTitle(eyebrow: "Étape 2 · \(vm.name.isEmpty ? "toi" : vm.name)", title: "POURQUOI TU COURS ?", subtitle: "C'est la base de tout ton programme.")
+                VStack(spacing: 8) {
+                    ForEach(GoalType.allCases) { goal in
+                        SelectableCard(
+                            selected: vm.goal == goal,
+                            emoji: goal.emoji,
+                            title: goal.title,
+                            subtitle: goal.subtitle
+                        ) {
+                            vm.goal = goal
+                        }
                     }
                 }
+                .padding(.top, 20)
             }
-            .padding(.top, 20)
-            Spacer()
             ObNext(disabled: !vm.canProceed(fromStep: 2), action: onNext)
         }
     }

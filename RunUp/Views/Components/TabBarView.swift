@@ -24,18 +24,21 @@ struct TabBarView: View {
         .padding(.horizontal, 6)
         .frame(height: RUSpacing.tabBarHeight)
         .background(.ultraThinMaterial.opacity(0.9))
-        .background(Color(hex: 0x12121A).opacity(0.72))
+        // Was a fixed dark-navy tint regardless of theme — fine when the whole app was always
+        // dark, but a heavy near-black pill floating on a white page in light mode reads as a
+        // grey smudge rather than the same frosted-glass chrome the dark theme gets.
+        .background(RUColor.isLight ? Color.white.opacity(0.6) : Color(hex: 0x12121A).opacity(0.72))
         .overlay(
-            Capsule().stroke(Color.white.opacity(0.09), lineWidth: RUSpacing.hairline)
+            Capsule().stroke(RUColor.isLight ? Color.black.opacity(0.07) : Color.white.opacity(0.09), lineWidth: RUSpacing.hairline)
         )
         .clipShape(Capsule())
-        .shadow(color: .black.opacity(0.5), radius: 22, x: 0, y: 12)
+        .shadow(color: .black.opacity(RUColor.isLight ? 0.18 : 0.5), radius: 22, x: 0, y: 12)
     }
 
     private func tabButton(_ item: (AppScreen, String, String)) -> some View {
         let (screen, label, icon) = item
         let on = selected == screen
-        let color = on ? RUColor.rose2 : Color.white.opacity(0.4)
+        let color = on ? RUColor.rose2 : (RUColor.isLight ? Color.black.opacity(0.32) : Color.white.opacity(0.4))
         return Button(action: { onSelect(screen) }) {
             VStack(spacing: 5) {
                 Circle()

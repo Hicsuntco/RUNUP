@@ -115,10 +115,10 @@ targets:
   # fed by `DailyGoalsSnapshot` over the shared App Group rather than any live in-app state (a
   # widget extension is a separate process, restarted on its own schedule by the system — it can
   # never hold a live reference to `AppState`). Reuses `RunUp/Shared`'s `Color(hex:)`/`.darkened(_:)`
-  # (pure, target-agnostic math), but not the rest of `RunUp/DesignSystem` — `RUColor`/`ThemeStore`
-  # are in-memory singletons the app's process keeps live and this one can't, and system fonts read
-  # better than a condensed display face at small widget sizes anyway — so `WidgetAccentPalette.swift`
-  # mirrors just the handful of theme values needed.
+  # (pure, target-agnostic math) and the app's real brand fonts (bundled + declared below, same as
+  # the main target), but not the rest of `RunUp/DesignSystem` — `RUColor`/`ThemeStore` are
+  # in-memory singletons the app's process keeps live and this one can't, so
+  # `WidgetAccentPalette.swift` mirrors just the handful of theme values needed.
   RunUpWidgets:
     type: app-extension
     platform: iOS
@@ -126,6 +126,10 @@ targets:
     sources:
       - path: RunUpWidgets
       - path: RunUp/Shared
+    resources:
+      - path: RunUp/Resources/Fonts
+        excludes:
+          - "*.md"
     info:
       path: RunUpWidgets/Info.plist
       properties:
@@ -136,6 +140,13 @@ targets:
         CFBundleVersion: "9"
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
+        # Only the 2 families this widget's redesign actually uses (Bebas Neue for the streak/ring
+        # numerals, DM Sans Bold for labels) — no need to ship the whole main-app font set into a
+        # second bundle.
+        UIAppFonts:
+          - BebasNeue-Regular.ttf
+          - DMSans-Bold.ttf
+          - DMSans-SemiBold.ttf
     entitlements:
       path: RunUpWidgets/RunUpWidgets.entitlements
       properties:

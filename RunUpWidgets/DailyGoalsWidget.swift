@@ -29,52 +29,91 @@ struct DailyGoalsProvider: TimelineProvider {
     }
 }
 
+/// Second pass on the visual design — the first version used flat system-rounded text on a flat
+/// fill and read as generic/placeholder-ish rather than something belonging to the app's actual
+/// brand. This one borrows the same techniques `RunShareCardView` already uses for the same
+/// reason (a corner glow instead of a flat fill, a real drop shadow under the ring, the app's own
+/// Bebas Neue/DM Sans faces instead of the system font) so the widget reads as unmistakably RunUp,
+/// not a generic iOS widget template.
 struct DailyGoalsWidgetView: View {
     @Environment(\.widgetFamily) private var family
     let snapshot: DailyGoalsSnapshot
 
-    private var colors: [Color] { WidgetAccentPalette.ringColors(themeID: snapshot.accentThemeID, isLight: snapshot.isLightMode) }
-    private var bg: Color { snapshot.isLightMode ? .white : Color(hex: 0x0E0E14) }
-    private var textPrimary: Color { snapshot.isLightMode ? Color(hex: 0x15151C) : .white }
-    private var text2: Color { snapshot.isLightMode ? .black.opacity(0.55) : .white.opacity(0.5) }
+    private var isLight: Bool { snapshot.isLightMode }
+    private var colors: [Color] { WidgetAccentPalette.ringColors(themeID: snapshot.accentThemeID, isLight: isLight) }
+    /// The ring's "rose" swatch — used for the corner glow so the glow tint always matches
+    /// whatever accent she actually picked, not a fixed brand color.
+    private var glowColor: Color { colors[1] }
+
+    private var bgGradient: LinearGradient {
+        LinearGradient(
+            colors: isLight ? [Color(hex: 0xFAFAFC), .white] : [Color(hex: 0x17171F), Color(hex: 0x0E0E14)],
+            startPoint: .topLeading, endPoint: .bottomTrailing
+        )
+    }
+    private var textPrimary: Color { isLight ? Color(hex: 0x15151C) : .white }
+    private var text2: Color { isLight ? .black.opacity(0.5) : .white.opacity(0.5) }
     private var flameColor: Color { snapshot.streak > 0 ? Color(hex: 0xFFB03D) : text2 }
+    private var textShadow: Color { .black.opacity(isLight ? 0.1 : 0.35) }
 
     var body: some View {
-        switch family {
-        case .systemMedium: mediumBody
-        default: smallBody
+        Group {
+            switch family {
+            case .systemMedium: mediumBody
+            default: smallBody
+            }
+        }
+        .containerBackground(for: .widget) {
+            ZStack {
+                bgGradient
+                RadialGradient(colors: [glowColor.opacity(isLight ? 0.16 : 0.3), .clear], center: .topLeading, startRadius: 0, endRadius: 130)
+            }
         }
     }
 
     private var smallBody: some View {
-        VStack(spacing: 8) {
-            WidgetRingView(progress: snapshot.progress, colors: colors, size: 64, isLight: snapshot.isLightMode)
-            HStack(spacing: 3) {
-                Image(systemName: "flame.fill").font(.system(size: 11))
-                Text("\(snapshot.streak)").font(.system(size: 13, weight: .bold, design: .rounded))
-            }
-            .foregroundColor(flameColor)
+        VStack(spacing: 10) {
+            ring
+            streakLabel(size: 15)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .containerBackground(bg, for: .widget)
     }
 
     private var mediumBody: some View {
-        HStack(spacing: 16) {
-            WidgetRingView(progress: snapshot.progress, colors: colors, size: 64, isLight: snapshot.isLightMode)
-            VStack(alignment: .leading, spacing: 6) {
-                Text("TES OBJECTIFS").font(.system(size: 10, weight: .bold, design: .rounded)).tracking(1).foregroundColor(text2)
-                HStack(spacing: 4) {
-                    Image(systemName: "flame.fill").font(.system(size: 12))
-                    Text("\(snapshot.streak) jours de série").font(.system(size: 13, weight: .semibold, design: .rounded))
-                }
-                .foregroundColor(flameColor)
+        HStack(spacing: 18) {
+            ring
+            VStack(alignment: .leading, spacing: 7) {
+                Text("RUNUP")
+                    .font(.custom("BebasNeue-Regular", size: 12))
+                    .tracking(2.5)
+                    .foregroundColor(text2)
+                Text("TES OBJECTIFS")
+                    .font(.custom("DMSans-Bold", size: 10))
+                    .tracking(1.2)
+                    .foregroundColor(textPrimary)
+                streakLabel(size: 17)
             }
             Spacer(minLength: 0)
         }
-        .padding(16)
+        .padding(.horizontal, 18)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-        .containerBackground(bg, for: .widget)
+    }
+
+    private var ring: some View {
+        WidgetRingView(progress: snapshot.progress, colors: colors, size: 64, isLight: isLight)
+            .shadow(color: .black.opacity(isLight ? 0.14 : 0.4), radius: 6, x: 0, y: 3)
+    }
+
+    private func streakLabel(size: CGFloat) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: "flame.fill").font(.system(size: size * 0.68))
+            Text("\(snapshot.streak)").font(.custom("BebasNeue-Regular", size: size))
+            if family == .systemMedium {
+                Text("JOURS").font(.custom("DMSans-SemiBold", size: size * 0.5)).tracking(0.5)
+            }
+        }
+        .foregroundColor(flameColor)
+        .shadow(color: textShadow, radius: 3)
     }
 }
 

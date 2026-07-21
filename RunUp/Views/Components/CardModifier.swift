@@ -12,6 +12,12 @@ struct CardBackground: ViewModifier {
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
                     .stroke(RUColor.line, lineWidth: RUSpacing.hairline)
             )
+            // Dark mode gets its definition for free from `fill`/`line`'s contrast against the
+            // near-black page background — a shadow there just looks like a muddy smear. Light
+            // mode has the opposite problem: a ~3%-opacity fill on a white page is nearly
+            // invisible without something to actually lift the card off the page, so it gets a
+            // real (but soft) elevation shadow instead.
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.06 : 0), radius: 10, x: 0, y: 3)
     }
 }
 
@@ -29,5 +35,6 @@ extension View {
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
                     .stroke(RUColor.rose.opacity(borderOpacity), lineWidth: RUSpacing.hairline)
             )
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.07 : 0), radius: 12, x: 0, y: 4)
     }
 }

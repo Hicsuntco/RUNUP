@@ -88,7 +88,11 @@ final class AppState {
             progress: profile.dailyGoalsProgress,
             streak: profile.streak,
             accentThemeID: profile.accentThemeID,
-            isLightMode: profile.isLightMode
+            isLightMode: profile.isLightMode,
+            dailyGoalsDone: profile.dailyGoalsDone,
+            dailyGoalsTotal: profile.dailyGoalsTotal,
+            activeCaloriesRemaining: max(0, Int((profile.activeCaloriesGoal - profile.activeCaloriesToday).rounded())),
+            stepsRemaining: max(0, Int((profile.stepsGoal - profile.stepsToday).rounded()))
         ))
         WidgetCenter.shared.reloadAllTimelines()
     }

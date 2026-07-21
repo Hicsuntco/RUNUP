@@ -14,6 +14,16 @@ struct DailyGoalsSnapshot: Codable {
     var streak: Int
     var accentThemeID: String
     var isLightMode: Bool
+    /// `UserProfile.dailyGoalsDone`/`.dailyGoalsTotal` — the widget's own "X/3 bouclés" eyebrow,
+    /// so it doesn't have to re-derive completion count from `progress` (which alone can't tell
+    /// "1 done at 100%" apart from "all 3 half-done" without the same `>= 1` threshold logic
+    /// `UserProfile` already applies once).
+    var dailyGoalsDone: Int
+    var dailyGoalsTotal: Int
+    /// Raw remaining amounts (not just the 0...1 fractions in `progress`) so the widget can phrase
+    /// a real sentence ("Encore 110 kcal actives et 2400 pas") instead of just showing the ring.
+    var activeCaloriesRemaining: Int
+    var stepsRemaining: Int
 
     static let appGroupID = "group.com.hicsuntco.runup"
     private static let defaultsKey = "runup.widget.daily-goals-snapshot"

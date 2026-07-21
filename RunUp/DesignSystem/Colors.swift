@@ -45,16 +45,21 @@ enum RUColor {
     static var text3: Color { isLight ? Color.black.opacity(0.38) : Color.white.opacity(0.32) }
     static var text4: Color { isLight ? Color.black.opacity(0.22) : Color.white.opacity(0.2) }
 
-    static var card: Color { isLight ? Color.black.opacity(0.035) : Color.white.opacity(0.045) }
-    static var card2: Color { isLight ? Color.black.opacity(0.025) : Color.white.opacity(0.03) }
-    static var line: Color { isLight ? Color.black.opacity(0.09) : Color.white.opacity(0.08) }
+    /// A near-invisible opacity-on-white (was 0.035) reads as almost no card at all — dark mode's
+    /// 0.045-on-near-black works because that background is already dark enough for a faint white
+    /// wash to register; the same trick barely shows on white. A real (if still soft) off-white
+    /// fill instead, matching the energy the "Midnight Rose" reference has via its own high-
+    /// contrast dark cards.
+    static var card: Color { isLight ? Color(hex: 0xF6F6FA) : Color.white.opacity(0.045) }
+    static var card2: Color { isLight ? Color(hex: 0xEEEEF3) : Color.white.opacity(0.03) }
+    static var line: Color { isLight ? Color.black.opacity(0.11) : Color.white.opacity(0.08) }
 
     static var brandGradient: LinearGradient {
         LinearGradient(colors: [rose, violet], startPoint: .topLeading, endPoint: .bottomTrailing)
     }
 
     static var heroGradient: LinearGradient {
-        LinearGradient(colors: [isLight ? Color(hex: 0xFBEFF5) : Color(hex: 0x20101C), bg], startPoint: .top, endPoint: .bottom)
+        LinearGradient(colors: [isLight ? Color(hex: 0xFAE1EC) : Color(hex: 0x20101C), bg], startPoint: .top, endPoint: .bottom)
     }
 
     static var violetRoseGradient: LinearGradient {

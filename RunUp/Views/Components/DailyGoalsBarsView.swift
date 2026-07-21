@@ -48,7 +48,7 @@ struct DailyGoalsBarsView: View {
     /// near-white background washes out more than the same opacity over near-black, so light mode
     /// needs its own (still lighter-touch-than-dark) value to read as a clear track rather than
     /// barely-there.
-    private static let lightTrackOpacity = 0.20
+    private static let lightTrackOpacity = 0.28
     private static let darkTrackOpacity = 0.22
 
     var body: some View {
@@ -84,7 +84,7 @@ struct DailyGoalsBarsView: View {
         // A circle's own trim starts at 3 o'clock; rotate so segment 0 starts at 12, going clockwise.
         .rotationEffect(.degrees(-90))
         .compositingGroup() // flatten before shadowing, so the 3 segments cast one soft lift shadow instead of each stacking its own
-        .shadow(color: .black.opacity(RUColor.isLight ? 0.16 : 0.4), radius: 5, x: 0, y: 3)
+        .shadow(color: .black.opacity(RUColor.isLight ? 0.22 : 0.4), radius: 6, x: 0, y: 4)
         .frame(width: Self.canvasSize, height: Self.canvasSize)
         .scaleEffect(size / Self.canvasSize)
         .frame(width: size, height: size)

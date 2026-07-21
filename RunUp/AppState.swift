@@ -92,7 +92,8 @@ final class AppState {
             dailyGoalsDone: profile.dailyGoalsDone,
             dailyGoalsTotal: profile.dailyGoalsTotal,
             activeCaloriesRemaining: max(0, Int((profile.activeCaloriesGoal - profile.activeCaloriesToday).rounded())),
-            stepsRemaining: max(0, Int((profile.stepsGoal - profile.stepsToday).rounded()))
+            stepsRemaining: max(0, Int((profile.stepsGoal - profile.stepsToday).rounded())),
+            weekStrip: profile.weekStrip.map { WidgetWeekDay(letter: $0.letter, isDone: $0.state == .done, isToday: $0.state == .today) }
         ))
         WidgetCenter.shared.reloadAllTimelines()
     }

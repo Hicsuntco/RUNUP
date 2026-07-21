@@ -9,6 +9,10 @@ struct RingsView: View {
     private var remainingSteps: Int { max(0, Int(p.stepsGoal - p.stepsToday)) }
     private var remainingActiveCalories: Int { max(0, Int(p.activeCaloriesGoal - p.activeCaloriesToday)) }
 
+    private static var todayLabel: String {
+        Date.now.formatted(.dateTime.weekday(.wide).day())
+    }
+
     /// [Séance, Calories actives, Pas] — same array `DailyGoalsBarsView` draws its bars in, so
     /// each row's legend dot always matches its bar's actual color.
     private var goalColors: [Color] { DailyGoalsBarsView.fillColors }
@@ -33,14 +37,17 @@ struct RingsView: View {
                 HStack(spacing: 12) {
                     BackChevronButton { appState.go(.home) }
                     VStack(alignment: .leading, spacing: 1) {
-                        EyebrowLabel(text: "Aujourd'hui", color: RUColor.rose)
+                        EyebrowLabel(text: "Aujourd'hui · \(Self.todayLabel)", color: RUColor.rose)
                         Text("Ta journée").displayStyle(22).foregroundColor(RUColor.textPrimary)
                     }
                 }
 
-                VStack(spacing: 14) {
-                    Text("\(p.dailyGoalsDone) / \(p.dailyGoalsTotal) bouclés").font(RUFont.sans(13, weight: .semibold)).tracking(1).foregroundColor(RUColor.text2)
+                ZStack {
                     DailyGoalsBarsView(progress: p.dailyGoalsProgress, size: 168, animateOnAppear: true)
+                    VStack(spacing: 2) {
+                        Text("\(p.dailyGoalsDone) / \(p.dailyGoalsTotal)").displayStyle(28).foregroundColor(RUColor.textPrimary)
+                        Text("BOUCLÉS").font(RUFont.sans(10, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 6)

@@ -11,7 +11,16 @@ struct DailyGoalsProvider: TimelineProvider {
     /// "rose" matches `AccentTheme.defaultID` in the app target.
     private static let placeholderSnapshot = DailyGoalsSnapshot(
         progress: [1, 0.6, 0.3], streak: 4, accentThemeID: "rose", isLightMode: false,
-        dailyGoalsDone: 2, dailyGoalsTotal: 3, activeCaloriesRemaining: 110, stepsRemaining: 2400
+        dailyGoalsDone: 2, dailyGoalsTotal: 3, activeCaloriesRemaining: 110, stepsRemaining: 2400,
+        weekStrip: [
+            WidgetWeekDay(letter: "L", isDone: true, isToday: false),
+            WidgetWeekDay(letter: "M", isDone: true, isToday: false),
+            WidgetWeekDay(letter: "M", isDone: false, isToday: false),
+            WidgetWeekDay(letter: "J", isDone: false, isToday: true),
+            WidgetWeekDay(letter: "V", isDone: false, isToday: false),
+            WidgetWeekDay(letter: "S", isDone: false, isToday: false),
+            WidgetWeekDay(letter: "D", isDone: false, isToday: false)
+        ]
     )
 
     func placeholder(in context: Context) -> DailyGoalsEntry {
@@ -77,32 +86,57 @@ struct DailyGoalsWidgetView: View {
 
     private var smallBody: some View {
         VStack(spacing: 10) {
-            ring
+            ring(size: 64)
             streakLabel(size: 15, showSuffix: false)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var mediumBody: some View {
-        HStack(alignment: .center, spacing: 18) {
-            ring
-            VStack(alignment: .leading, spacing: 6) {
-                Text("OBJECTIFS DU JOUR · \(snapshot.dailyGoalsDone)/\(snapshot.dailyGoalsTotal)")
-                    .font(.custom("DMSans-Bold", size: 9.5))
-                    .tracking(1.1)
-                    .foregroundColor(roseColor)
-                remainingText
-                    .font(.custom("DMSans-Medium", size: 12))
-                    .foregroundColor(textPrimary)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-                streakLabel(size: 16, showSuffix: true)
-                    .padding(.top, 2)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center, spacing: 16) {
+                ring(size: 56)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("OBJECTIFS DU JOUR · \(snapshot.dailyGoalsDone)/\(snapshot.dailyGoalsTotal)")
+                        .font(.custom("DMSans-Bold", size: 9.5))
+                        .tracking(1.1)
+                        .foregroundColor(roseColor)
+                    remainingText
+                        .font(.custom("DMSans-Medium", size: 11.5))
+                        .foregroundColor(textPrimary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                    streakLabel(size: 14, showSuffix: true)
+                }
+                Spacer(minLength: 0)
             }
-            Spacer(minLength: 0)
+            weekStripRow
         }
-        .padding(.horizontal, 18)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+    }
+
+    /// The mockup's day-by-day checkmark row underneath the ring — real `weekStrip` data (already
+    /// tracked on `UserProfile` for the Home tab's own week strip), not a separate invented widget
+    /// feature.
+    private var weekStripRow: some View {
+        HStack(spacing: 5) {
+            ForEach(Array(snapshot.weekStrip.enumerated()), id: \.offset) { _, day in
+                VStack(spacing: 2) {
+                    Text(day.letter).font(.custom("DMSans-Bold", size: 7)).foregroundColor(text2)
+                    ZStack {
+                        Circle().fill(day.isToday ? roseColor.opacity(0.18) : Color.clear)
+                        Circle().stroke(day.isToday ? roseColor : text2.opacity(0.3), lineWidth: 1)
+                        if day.isDone {
+                            Image(systemName: "checkmark").font(.system(size: 7, weight: .bold)).foregroundColor(roseColor)
+                        }
+                    }
+                    .frame(width: 15, height: 15)
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
     }
 
     /// "Encore 110 kcal actives et 2400 pas." with the two real numbers picked out in the ring's
@@ -123,9 +157,9 @@ struct DailyGoalsWidgetView: View {
         return Text("Encore ") + joined + Text(".")
     }
 
-    private var ring: some View {
-        WidgetRingView(progress: snapshot.progress, colors: colors, size: 64, isLight: isLight)
-            .shadow(color: .black.opacity(isLight ? 0.14 : 0.4), radius: 6, x: 0, y: 3)
+    private func ring(size: CGFloat) -> some View {
+        WidgetRingView(progress: snapshot.progress, colors: colors, size: size, isLight: isLight)
+            .shadow(color: .black.opacity(isLight ? 0.14 : 0.4), radius: size / 10.5, x: 0, y: size / 21)
     }
 
     private func streakLabel(size: CGFloat, showSuffix: Bool) -> some View {

@@ -1,5 +1,15 @@
 import Foundation
 
+/// One cell of the week strip, for the widget's compact day-by-day row — mirrors the handful of
+/// `DayStatus` fields the widget actually renders (letter + done/today), rather than sharing the
+/// app's own `DayStatus` type (which lives in `RunUp/Models/`, not `Shared/`, and carries a full
+/// `Date` plus a 4-case state the widget doesn't need to distinguish at this size).
+struct WidgetWeekDay: Codable {
+    var letter: String
+    var isDone: Bool
+    var isToday: Bool
+}
+
 /// The tiny slice of `UserProfile` the Home Screen widget needs, mirrored into an App Group
 /// container — the widget extension runs in its own process with no access to the main app's
 /// SwiftData store, so it can only ever read what the app last chose to publish here. The app
@@ -24,6 +34,9 @@ struct DailyGoalsSnapshot: Codable {
     /// a real sentence ("Encore 110 kcal actives et 2400 pas") instead of just showing the ring.
     var activeCaloriesRemaining: Int
     var stepsRemaining: Int
+    /// Monday...Sunday, mirrors `UserProfile.weekStrip` — the medium widget's compact
+    /// done/today/upcoming row underneath the ring.
+    var weekStrip: [WidgetWeekDay]
 
     static let appGroupID = "group.com.hicsuntco.runup"
     private static let defaultsKey = "runup.widget.daily-goals-snapshot"

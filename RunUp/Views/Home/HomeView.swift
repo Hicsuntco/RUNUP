@@ -24,7 +24,7 @@ struct HomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 HeaderView(
-                    eyebrow: isFreeRun ? "Mode course libre" : "Semaine \(profile.weekNumber)",
+                    eyebrow: isFreeRun ? "Mode course libre" : weekEyebrow,
                     title: "Salut \(profile.name)"
                 ) {
                     HStack(spacing: 8) {
@@ -63,6 +63,10 @@ struct HomeView: View {
                 sessionCard
 
                 ringsCard
+
+                if !isFreeRun && !upcomingSessions.isEmpty {
+                    upcomingCard
+                }
 
                 if isFreeRun {
                     Text("Pas de plan fixe — le coach te propose de quoi garder la forme, jour après jour.")
@@ -218,6 +222,45 @@ struct HomeView: View {
         }
     }
 
+    private var todayWeekdayIndex: Int {
+        (Calendar.current.component(.weekday, from: .now) + 5) % 7
+    }
+
+    /// The next up-to-2 real planned sessions later this week — `PROGRAMME · l'écran héros`
+    /// reference's "À venir cette semaine" list. `weekSessions` already carries the full 7-day
+    /// plan (used for the tab's own week strip); this was tracked but never surfaced as its own
+    /// glanceable list before.
+    private var upcomingSessions: [PlannedDay] {
+        profile.weekSessions
+            .filter { $0.weekday > todayWeekdayIndex && ($0.session?.durationMinutes ?? 0) > 0 && !$0.completed }
+            .sorted { $0.weekday < $1.weekday }
+    }
+
+    private var upcomingCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            EyebrowLabel(text: "À venir cette semaine", color: RUColor.text3)
+            VStack(spacing: 8) {
+                ForEach(upcomingSessions.prefix(2), id: \.weekday) { day in
+                    upcomingRow(day)
+                }
+            }
+        }
+    }
+
+    private func upcomingRow(_ day: PlannedDay) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(day.session?.title ?? "").font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                Text("\(DayStatus.letters[day.weekday]) · \(day.session?.durationMinutes ?? 0)′ · \(day.session?.zone ?? "")")
+                    .font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
+            }
+            Spacer()
+            Text("›").foregroundColor(RUColor.text3)
+        }
+        .padding(14)
+        .ruCard(radius: 14)
+    }
+
     private var ringsCard: some View {
         let p = profile
         // Same array `DailyGoalsBarsView` draws its bars in, so each stat's color always matches
@@ -262,6 +305,16 @@ struct HomeView: View {
             Text(value).displayStyle(16).foregroundColor(color)
             Text(unit).font(RUFont.sans(8)).foregroundColor(RUColor.text2)
         }
+    }
+
+    /// "Semaine 4/9" when the program has a real end (a race goal periodizes toward one), else
+    /// just "Semaine 4" — matches the mockup's "SEM. 4/9" without claiming a total for the
+    /// open-ended goals (progress/weight/restart/health) that genuinely don't have one.
+    private var weekEyebrow: String {
+        if let total = planShape.totalWeeks {
+            return "Semaine \(profile.weekNumber)/\(total)"
+        }
+        return "Semaine \(profile.weekNumber)"
     }
 
     private var planShape: AdaptivePlanEngine.ProgramShape {

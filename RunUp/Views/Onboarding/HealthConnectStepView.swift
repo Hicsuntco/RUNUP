@@ -65,18 +65,25 @@ private struct ConnectRow: View {
     var busy: Bool
     var action: () -> Void
 
-    private var icon: String {
+    /// Real brand logos instead of the 🍎/🟠/⌚ emoji stand-ins — same asset-naming contract as
+    /// `BrandLogoIcon` (Profil's data-source rows), Apple stays an SF Symbol (its logo IS a
+    /// system symbol).
+    @ViewBuilder
+    private var icon: some View {
         switch source {
-        case .apple: return "🍎"
-        case .strava: return "🟠"
-        case .garmin: return "⌚"
+        case .apple:
+            Image(systemName: "apple.logo").font(.system(size: 18)).foregroundColor(RUColor.textPrimary)
+        case .strava:
+            BrandLogoIcon(assetName: "strava-logo", fallbackText: "S", fullBleed: true, size: 26)
+        case .garmin:
+            BrandLogoIcon(assetName: "garmin-logo", fallbackText: "G", fullBleed: false, size: 26)
         }
     }
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 14) {
-                Text(icon).font(.system(size: 18))
+                icon
                     .frame(width: 40, height: 40)
                     .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {

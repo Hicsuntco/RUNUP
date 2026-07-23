@@ -88,7 +88,7 @@ struct ProfileView: View {
             // reads as broken, not "not built yet" — greyed out like Garmin until she's actually
             // configured it, same as `garminRow` below. `StravaConnectionRow` itself is untouched:
             // swap this row back for it once Strava is configured server-side.
-            comingSoonRow(logo: "Strava", title: ConnectedSource.strava.title)
+            comingSoonRow(assetName: "strava-logo", fallback: "Strava", fullBleed: true, title: ConnectedSource.strava.title)
             Divider().background(RUColor.line)
             garminRow
         }
@@ -133,19 +133,15 @@ struct ProfileView: View {
     /// No real Garmin Connect integration yet — a working-looking toggle here would silently do
     /// nothing, which reads as broken rather than simply "not built yet".
     private var garminRow: some View {
-        comingSoonRow(logo: "Garmin", title: ConnectedSource.garmin.title)
+        comingSoonRow(assetName: "garmin-logo", fallback: "Garmin", fullBleed: false, title: ConnectedSource.garmin.title)
     }
 
-    /// Shared "not available yet" treatment for a data source — a plain wordmark placeholder
-    /// (`logo`) stands in for the brand's real logo until real asset files (from Strava's/
-    /// Garmin's brand guideline pages) are added to the asset catalog; swap `Image(systemName:)`
-    /// for `Image("strava-logo")`/`Image("garmin-logo")` once they're in.
-    private func comingSoonRow(logo: String, title: String) -> some View {
+    /// Shared "not available yet" treatment for a data source — the official brand logo (see
+    /// `BrandLogoIcon` for the asset-naming contract) with a text fallback until the artwork is
+    /// dropped into the asset catalog.
+    private func comingSoonRow(assetName: String, fallback: String, fullBleed: Bool, title: String) -> some View {
         HStack(spacing: 12) {
-            Text(logo)
-                .font(RUFont.sans(10, weight: .bold))
-                .foregroundColor(RUColor.text3)
-                .frame(width: 22, alignment: .leading)
+            BrandLogoIcon(assetName: assetName, fallbackText: fallback, fullBleed: fullBleed, size: 24)
             Text(title).font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.text2)
             Spacer()
             Text("Bientôt").font(RUFont.sans(11, weight: .semibold)).foregroundColor(RUColor.text3)

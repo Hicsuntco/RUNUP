@@ -623,6 +623,12 @@ enum AdaptivePlanEngine {
         return "Programme mis à jour · +120 XP"
     }
 
+    /// Round, motivating streak lengths worth calling out — checked against `profile.streak`
+    /// right after it increments in `applyDebrief`, so the bell (`AppState.notify`) gets a real
+    /// entry on the days it means something instead of never firing at all outside the (rare)
+    /// same-day 3-goals bonus.
+    static let streakMilestones: Set<Int> = [3, 7, 14, 21, 30, 60, 100, 180, 365]
+
     // MARK: Program-end flow
 
     static func endProgram(_ profile: UserProfile) {

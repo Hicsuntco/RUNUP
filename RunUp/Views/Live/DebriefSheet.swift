@@ -109,6 +109,15 @@ struct DebriefSheet: View {
                     AdaptivePlanEngine.applyDebrief(rpe: rpe, run: run, profile: appState.profile)
                     let distance = String(format: "%.1f", run.distanceKm)
                     appState.postClubActivity(type: "run", text: "a couru \(distance) km · \(run.title)", xpEarned: 120, distanceKm: run.distanceKm)
+                    // Every completed session earns its own bell entry — before this, the only
+                    // notify() call sites were the rare same-day 3-goals bonus, a club kudos/
+                    // comment, or a weekly plan update, so a solo runner who just isn't hitting
+                    // that exact daily combo would never see anything land in the bell at all.
+                    appState.notify(icon: "✅", colorHex: 0xC9FF3B, title: "Séance terminée", text: "\(run.title) · \(distance) km · +120 XP")
+                    let streak = appState.profile.streak
+                    if AdaptivePlanEngine.streakMilestones.contains(streak) {
+                        appState.notify(icon: "🔥", colorHex: 0xFF6B4A, title: "Série de \(streak) jours", text: "Tu enchaînes les séances sans lâcher — continue comme ça !")
+                    }
                     if AdaptivePlanEngine.checkDailyGoalsBonus(appState.profile) {
                         appState.postClubActivity(type: "badge", text: "a bouclé ses 3 objectifs du jour", xpEarned: 120)
                         appState.notify(icon: "🎉", colorHex: 0xC9FF3B, title: "Journée bouclée", text: "Tes 3 objectifs du jour sont faits — +120 XP.")

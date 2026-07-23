@@ -90,30 +90,40 @@ struct RaceDetailsStepView: View {
 struct ChipFlowLayout: Layout {
     var spacing: CGFloat = 7
 
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let width = proposal.width ?? .infinity
+    // `sizeThatFits` and `placeSubviews` must wrap chips onto IDENTICAL rows, or the parent stack
+    // reserves the wrong height for whatever this reports and the next sibling overlaps the last
+    // row (exactly what happened before this fix: a card's caption text drawn on top of a wrapped
+    // "Autre" chip in Profil → Santé & blessures). The old code defaulted an unspecified
+    // `proposal.width` to `.infinity` — a correct "ideal size" answer in isolation (everything
+    // fits on one row given infinite space), but SwiftUI's own stacks ask this exact question, with
+    // this exact nil-width fallback, to size a non-flexible child *before* they've settled on its
+    // real width — then reuse that (single-row, too-short) height once the child is actually placed
+    // at its real, narrower width. `replacingUnspecifiedDimensions()` leaves a real proposal's width
+    // untouched and only swaps in a small, finite placeholder for a genuinely unspecified one, so an
+    // ideal-size probe now over-wraps (extra whitespace, never overlap) instead of under-wrapping.
+    private func layout(subviews: Subviews, containerWidth: CGFloat) -> (positions: [CGPoint], size: CGSize) {
+        var positions: [CGPoint] = []
         var x: CGFloat = 0, y: CGFloat = 0, rowHeight: CGFloat = 0
         for subview in subviews {
             let size = subview.sizeThatFits(.unspecified)
-            if x + size.width > width, x > 0 {
+            if x + size.width > containerWidth, x > 0 {
                 x = 0; y += rowHeight + spacing; rowHeight = 0
             }
+            positions.append(CGPoint(x: x, y: y))
             x += size.width + spacing
             rowHeight = max(rowHeight, size.height)
         }
-        return CGSize(width: width, height: y + rowHeight)
+        return (positions, CGSize(width: containerWidth, height: y + rowHeight))
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        layout(subviews: subviews, containerWidth: proposal.replacingUnspecifiedDimensions().width).size
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        var x = bounds.minX, y = bounds.minY, rowHeight: CGFloat = 0
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            if x + size.width > bounds.maxX, x > bounds.minX {
-                x = bounds.minX; y += rowHeight + spacing; rowHeight = 0
-            }
-            subview.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
-            x += size.width + spacing
-            rowHeight = max(rowHeight, size.height)
+        let result = layout(subviews: subviews, containerWidth: proposal.replacingUnspecifiedDimensions().width)
+        for (index, position) in result.positions.enumerated() {
+            subviews[index].place(at: CGPoint(x: bounds.minX + position.x, y: bounds.minY + position.y), proposal: .unspecified)
         }
     }
 }

@@ -28,6 +28,9 @@ struct ClubView: View {
     @State private var commentsActivity: FeedItem?
     @State private var selectedBadge: ClubBadge?
     @State private var skeletonPulse = false
+    /// Drives the feed rows' staggered entrance — flipped once the first feed load lands, after
+    /// which each row's own per-index delay takes over (same pattern as `RecapView`'s splits).
+    @State private var feedRevealed = false
 
     private enum Tab { case board, feed }
 
@@ -84,6 +87,9 @@ struct ClubView: View {
         }
         .task { await loadIfSignedIn() }
         .refreshable { await loadIfSignedIn() }
+        .onChange(of: feed.count) { _, count in
+            if count > 0 { feedRevealed = true }
+        }
         .sheet(isPresented: $showSignIn) {
             SignInView()
         }
@@ -477,11 +483,14 @@ struct ClubView: View {
                         VStack(spacing: 5) {
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .fill(badge.earned ? RUColor.card : RUColor.card2)
-                                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(badge.earned ? RUColor.rose.opacity(0.35) : RUColor.line, lineWidth: RUSpacing.hairline))
                                 .aspectRatio(1, contentMode: .fit)
                                 .overlay(Text(badge.emoji).font(.system(size: 26)))
                                 .opacity(badge.earned ? 1 : 0.35)
-                            Text(badge.name).font(RUFont.sans(8, weight: .semibold)).foregroundColor(RUColor.text2)
+                                // A real glow on earned tiles — opacity alone made locked vs.
+                                // earned read as "faded vs. normal" rather than "locked vs. won".
+                                .shadow(color: badge.earned ? RUColor.rose.opacity(0.3) : .clear, radius: 8, x: 0, y: 3)
+                            Text(badge.name).font(RUFont.sans(8, weight: .semibold)).foregroundColor(badge.earned ? RUColor.textPrimary : RUColor.text2)
                         }
                     }
                     .buttonStyle(PressableStyle())
@@ -497,7 +506,7 @@ struct ClubView: View {
                     .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
                     .frame(maxWidth: .infinity).padding(.vertical, 20)
             }
-            ForEach(feed) { item in
+            ForEach(Array(feed.enumerated()), id: \.element.id) { index, item in
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 10) {
                         Circle().fill(RUColor.rose).frame(width: 34, height: 34)
@@ -545,6 +554,12 @@ struct ClubView: View {
                 }
                 .padding(13)
                 .ruCard()
+                // Rows fade/slide in one after the other on first load instead of the whole feed
+                // materializing at once — delay capped past the 8th row so a long feed doesn't
+                // keep animating below the fold.
+                .opacity(feedRevealed ? 1 : 0)
+                .offset(x: feedRevealed ? 0 : -14)
+                .animation(.easeOut(duration: 0.35).delay(Double(min(index, 8)) * 0.05), value: feedRevealed)
                 .contextMenu {
                     if item.userId != auth.currentUser?.id {
                         Button("Signaler cette activité") {

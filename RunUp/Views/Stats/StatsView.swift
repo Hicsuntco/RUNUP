@@ -8,6 +8,7 @@ import SwiftData
 struct StatsView: View {
     @Environment(AppState.self) private var appState
     @Query(sort: \RunRecord.date, order: .reverse) private var runs: [RunRecord]
+    @State private var chartRevealed = false
     private var profile: UserProfile { appState.profile }
 
     var body: some View {
@@ -355,11 +356,14 @@ struct StatsView: View {
                     ForEach(bars.indices, id: \.self) { i in
                         RoundedRectangle(cornerRadius: 4)
                             .fill(i == bars.count - 1 ? RUColor.rose : RUColor.line)
-                            .frame(height: max(4, bars[i] / maxBar * 70))
+                            // Same grow-from-baseline reveal as WeeklyRecapView's volume chart.
+                            .frame(height: chartRevealed ? max(4, bars[i] / maxBar * 70) : 4)
                             .frame(maxWidth: .infinity)
+                            .animation(.easeOut(duration: 0.5).delay(Double(i) * 0.04), value: chartRevealed)
                     }
                 }
                 .frame(height: 70, alignment: .bottom)
+                .onAppear { chartRevealed = true }
                 HStack {
                     Text("S-7").font(RUFont.sans(10)).foregroundColor(RUColor.text3)
                     Spacer()

@@ -13,6 +13,7 @@ import SwiftData
 struct WeeklyRecapView: View {
     @Environment(AppState.self) private var appState
     @Query(sort: \RunRecord.date, order: .reverse) private var allRuns: [RunRecord]
+    @State private var chartRevealed = false
     private var profile: UserProfile { appState.profile }
 
     private var weekRange: Range<Date> { AdaptivePlanEngine.currentWeekRange() }
@@ -192,11 +193,15 @@ struct WeeklyRecapView: View {
                 ForEach(bars.indices, id: \.self) { i in
                     RoundedRectangle(cornerRadius: 4)
                         .fill(i == todayWeekdayIndex ? RUColor.rose : RUColor.line)
-                        .frame(height: max(4, bars[i] / maxBar * 60))
+                        // Bars grow up from the baseline day-by-day on appear — same "revealed,
+                        // not pre-drawn" treatment the Recap splits and the Home ring already get.
+                        .frame(height: chartRevealed ? max(4, bars[i] / maxBar * 60) : 4)
                         .frame(maxWidth: .infinity)
+                        .animation(.easeOut(duration: 0.5).delay(Double(i) * 0.05), value: chartRevealed)
                 }
             }
             .frame(height: 60, alignment: .bottom)
+            .onAppear { chartRevealed = true }
             HStack {
                 ForEach(DayStatus.letters, id: \.self) { letter in
                     Text(letter).font(RUFont.sans(9, weight: .bold)).foregroundColor(RUColor.text3).frame(maxWidth: .infinity)

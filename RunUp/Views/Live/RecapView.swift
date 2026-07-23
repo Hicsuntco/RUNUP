@@ -29,14 +29,14 @@ struct RecapView: View {
 
                     VStack(alignment: .leading, spacing: 8) {
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                            statTile(String(format: "%.2f", run.distanceKm), "KM")
-                            statTile(PaceModel.formatDuration(Double(run.durationSeconds)), "TEMPS")
-                            statTile(run.avgPace, "ALLURE MOY")
+                            statTile(String(format: "%.2f", run.distanceKm), "KM", index: 0)
+                            statTile(PaceModel.formatDuration(Double(run.durationSeconds)), "TEMPS", index: 1)
+                            statTile(run.avgPace, "ALLURE MOY", index: 2)
                         }
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                            statTile("\(run.avgHeartRate)", "FC MOY", RUColor.rose)
-                            statTile("\(run.kcal)", "KCAL", RUColor.cyan)
-                            statTile("+\(run.elevationGainM)", "D+ (m)", RUColor.lime)
+                            statTile("\(run.avgHeartRate)", "FC MOY", RUColor.rose, index: 3)
+                            statTile("\(run.kcal)", "KCAL", RUColor.cyan, index: 4)
+                            statTile("+\(run.elevationGainM)", "D+ (m)", RUColor.lime, index: 5)
                         }
 
                         EyebrowLabel(text: "Splits par km", color: RUColor.text3).padding(.top, 8)
@@ -159,7 +159,10 @@ struct RecapView: View {
         }
     }
 
-    private func statTile(_ value: String, _ label: String, _ color: Color = RUColor.textPrimary) -> some View {
+    /// Tiles pop in one after the other (riding the same `splitsRevealed` flag as the split bars
+    /// below them) — the run's numbers are the emotional payoff of the whole screen, and they used
+    /// to just be there, fully formed, before the entrance transition even settled.
+    private func statTile(_ value: String, _ label: String, _ color: Color = RUColor.textPrimary, index: Int = 0) -> some View {
         VStack(spacing: 3) {
             Text(value).displayStyle(24).foregroundColor(color)
             Text(label).font(RUFont.sans(8, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
@@ -167,6 +170,9 @@ struct RecapView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
         .ruCard(radius: 14)
+        .opacity(splitsRevealed ? 1 : 0)
+        .scaleEffect(splitsRevealed ? 1 : 0.92)
+        .animation(.spring(response: 0.4, dampingFraction: 0.8).delay(Double(index) * 0.05), value: splitsRevealed)
     }
 
     private func splitRow(index: Int, time: String, fraction: Double, isLast: Bool) -> some View {

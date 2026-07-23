@@ -125,7 +125,9 @@ struct RunShareCardView: View {
                 .font(RUFont.bebas(valueSize))
                 .foregroundStyle(valueStyle)
                 .modifier(OutlinedTextShadow(light: outlineIsLight))
-                .shadow(color: Color(hex: 0xFF0F5B).opacity(textColor == .noir ? 0 : 0.3), radius: 22)
+                // Rose neon glow only on the brand-gradient style, where it belongs to the look —
+                // around plain white (or black) text it read as too much.
+                .shadow(color: Color(hex: 0xFF0F5B).opacity(textColor == .runup ? 0.3 : 0), radius: 22)
         }
         .frame(maxWidth: .infinity)
     }

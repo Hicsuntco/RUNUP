@@ -1,18 +1,15 @@
 import SwiftUI
 
-/// The "instagrammable" share card — real route trace as a glowing neon line, a huge hero
-/// distance number, real pace/time/elevation, RunUp branding. Rendered off-screen (via
-/// `ImageRenderer` in `RecapView`) into a `UIImage` and handed to the system share sheet; never
-/// actually pushed on screen as a navigable view itself.
+/// The share card — Strava-style stacked stats (label over big value, centered) floating on a
+/// fully transparent background, with the real route trace as a glowing neon signature above and
+/// RunUp branding below. Rendered off-screen (via `ImageRenderer` in `RecapView`) into a `UIImage`
+/// with alpha preserved, so the exported PNG layers cleanly over any photo (Instagram Stories,
+/// Snapchat, any editor). There used to be two variants (an opaque dark card + this transparent
+/// one, two separate share buttons) — one transparent card covers both uses: it reads fine shared
+/// as-is on a dark story background, and it's the only version that works over a photo. Every
+/// element carries a strong drop shadow so legibility doesn't depend on what ends up underneath.
 struct RunShareCardView: View {
     var run: RunRecord
-    /// When true, skips the card's own background entirely — `ImageRenderer` preserves alpha for
-    /// anything left unpainted, so the exported PNG has a transparent background with just the
-    /// glowing route trace + stats floating over it. Meant to be layered on top of her own photo
-    /// (Instagram Stories' own sticker/layer tools, or any photo editor) rather than shared as a
-    /// self-contained card. Text/trace keep their glow and gain a drop shadow either way, so
-    /// legibility doesn't depend on what photo ends up underneath.
-    var transparentBackground: Bool = false
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -43,86 +40,61 @@ struct RunShareCardView: View {
         }
     }
 
-    private var textShadow: Color { .black.opacity(transparentBackground ? 0.65 : 0.4) }
+    private var textShadow: Color { .black.opacity(0.65) }
 
     var body: some View {
-        ZStack {
-            if !transparentBackground {
-                // Deliberately fixed dark, not `RUColor.bg` — this card is rendered once into a
-                // shareable image (Instagram Stories etc.), independent of whatever app theme she
-                // currently has selected. A share card that quietly went light/dark depending on
-                // an unrelated in-app setting would be an inconsistent, unbranded artifact once
-                // posted.
-                LinearGradient(
-                    colors: [Color(hex: 0x2A0E36), Color(hex: 0x0D0B14), Color(hex: 0x08070C)],
-                    startPoint: .topLeading, endPoint: .bottomTrailing
-                )
-                RadialGradient(colors: [Color(hex: 0xFF0F5B).opacity(0.22), .clear], center: .topLeading, startRadius: 0, endRadius: 460)
+        VStack(spacing: 0) {
+            if normalizedRoutePoints.count > 1 {
+                neonRouteTrace
+                    .frame(height: 230)
+                    .padding(.top, 26)
+            } else {
+                // No GPS behind this run (manually logged) — no trace to fake; the stats just
+                // breathe in the extra space.
+                Spacer().frame(height: 90)
             }
 
-            VStack(spacing: 0) {
-                HStack(spacing: 7) {
-                    AppMarkView(size: 22, radius: 6)
-                    Text("RUNUP").font(RUFont.bebas(13)).tracking(3).foregroundColor(.white)
-                    Spacer()
+            Spacer(minLength: 12)
+
+            VStack(spacing: 22) {
+                statBlock("DISTANCE", String(format: "%.2f km", run.distanceKm), valueSize: 66)
+                statBlock("ALLURE", "\(run.avgPace) /km", valueSize: 46)
+                statBlock("TEMPS", PaceModel.formatDuration(Double(run.durationSeconds)), valueSize: 46)
+            }
+
+            Spacer(minLength: 12)
+
+            VStack(spacing: 6) {
+                HStack(spacing: 8) {
+                    AppMarkView(size: 26, radius: 7)
+                    Text("RUNUP").font(RUFont.bebas(17)).tracking(4).foregroundColor(.white)
                 }
-                .shadow(color: textShadow, radius: 6)
-                .padding(.top, 30)
-                .padding(.horizontal, 26)
-
-                if normalizedRoutePoints.count > 1 {
-                    neonRouteTrace
-                        .frame(height: 300)
-                        .padding(.top, 6)
-                } else {
-                    // No GPS behind this run (manually logged) — no trace to fake, just more
-                    // breathing room around the hero stat instead.
-                    Spacer().frame(height: 300)
-                }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(String(format: "%.2f", run.distanceKm))
-                        .font(RUFont.bebas(88))
-                        .foregroundColor(.white)
-                        .shadow(color: Color(hex: 0xFF0F5B).opacity(transparentBackground ? 0.35 : 0.55), radius: 30)
-                    Text("KILOMÈTRES")
-                        .font(RUFont.mono(12))
-                        .tracking(2)
-                        .foregroundColor(.white.opacity(0.55))
-                        .shadow(color: textShadow, radius: 6)
-                    Text(run.title)
-                        .font(RUFont.sans(13, weight: .semibold))
-                        .foregroundColor(.white.opacity(0.85))
-                        .shadow(color: textShadow, radius: 6)
-                        .padding(.top, 2)
-                }
-                .padding(.horizontal, 26)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                Spacer(minLength: 20)
-
-                VStack(spacing: 14) {
-                    Rectangle().fill(Color.white.opacity(0.16)).frame(height: 1)
-                    HStack {
-                        shareStat(run.avgPace, "ALLURE MOY")
-                        Spacer()
-                        shareStat(PaceModel.formatDuration(Double(run.durationSeconds)), "TEMPS")
-                        Spacer()
-                        shareStat("+\(run.elevationGainM) M", "D+")
-                    }
-                }
-                .padding(.horizontal, 26)
-                .shadow(color: textShadow, radius: 6)
-
                 Text(Self.dateFormatter.string(from: run.date))
                     .font(RUFont.mono(10))
-                    .foregroundColor(.white.opacity(0.4))
-                    .shadow(color: textShadow, radius: 6)
-                    .padding(.top, 12)
-                    .padding(.bottom, 34)
+                    .tracking(1)
+                    .foregroundColor(.white.opacity(0.55))
             }
+            .shadow(color: textShadow, radius: 6)
+            .padding(.bottom, 34)
         }
         .frame(width: 360, height: 640)
+    }
+
+    /// One Strava-style stacked stat — small tracked label over a big Bebas value, centered.
+    private func statBlock(_ label: String, _ value: String, valueSize: CGFloat) -> some View {
+        VStack(spacing: 2) {
+            Text(label)
+                .font(RUFont.sans(11, weight: .bold))
+                .tracking(2.5)
+                .foregroundColor(.white.opacity(0.65))
+                .shadow(color: textShadow, radius: 5)
+            Text(value)
+                .font(RUFont.bebas(valueSize))
+                .foregroundColor(.white)
+                .shadow(color: textShadow, radius: 8)
+                .shadow(color: Color(hex: 0xFF0F5B).opacity(0.3), radius: 24)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     /// A wide, blurred pass underneath a crisp pass — the same brand gradient (rose → violet) as
@@ -156,13 +128,6 @@ struct RunShareCardView: View {
 
             context.fill(Path(ellipseIn: CGRect(x: first.x - 4, y: first.y - 4, width: 8, height: 8)), with: .color(.white))
             context.fill(Path(ellipseIn: CGRect(x: last.x - 5, y: last.y - 5, width: 10, height: 10)), with: .color(.white))
-        }
-    }
-
-    private func shareStat(_ value: String, _ label: String) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text(value).font(RUFont.bebas(20)).foregroundColor(.white)
-            Text(label).font(RUFont.sans(8.5, weight: .bold)).tracking(1.2).foregroundColor(.white.opacity(0.45))
         }
     }
 }

@@ -6,18 +6,14 @@ import UIKit
 struct RecapView: View {
     @Environment(AppState.self) private var appState
     @State private var showDebrief = false
-    /// The "instagrammable" share card (real route trace + distance/pace), rendered off-screen
-    /// once via `ImageRenderer` as soon as the recap appears — a share sheet needs a ready item
-    /// to present, and rendering this small a view is fast enough that eager beats on-demand
-    /// (no visible delay when tapping "Partager", no separate render-then-share double tap).
+    /// The "instagrammable" share card (route trace + Strava-style stacked stats on a fully
+    /// transparent background — see `RunShareCardView`), rendered off-screen once via
+    /// `ImageRenderer` shortly after the recap appears — a share sheet needs a ready item to
+    /// present, and rendering this small a view is fast enough that eager beats on-demand.
     @State private var shareImage: Image?
     /// Drives the staggered split-bar reveal — flipped in `onAppear`, after which each bar's own
     /// per-index delay takes over.
     @State private var splitsRevealed = false
-    /// Same card, background stripped — trace + stats only, alpha-transparent everywhere else —
-    /// so she can drop it as a layer/sticker on top of her own photo instead of sharing a
-    /// self-contained card.
-    @State private var shareImageTransparent: Image?
 
     private var run: RunRecord? { appState.lastRun }
 
@@ -49,6 +45,9 @@ struct RecapView: View {
                         }
 
                         if let shareImage {
+                            // One share action, not two — the transparent card covers both uses
+                            // (shared as-is on a story, or layered over a photo), so the old
+                            // opaque-card/transparent-card button pair collapsed into this.
                             ShareLink(
                                 item: shareImage,
                                 preview: SharePreview("Ma course sur RunUp", image: shareImage)
@@ -56,20 +55,6 @@ struct RecapView: View {
                                 HStack(spacing: 8) {
                                     Image(systemName: "square.and.arrow.up")
                                     Text("PARTAGER MA COURSE")
-                                }
-                            }
-                            .buttonStyle(SecondaryButtonStyle())
-                            .padding(.top, 6)
-                        }
-
-                        if let shareImageTransparent {
-                            ShareLink(
-                                item: shareImageTransparent,
-                                preview: SharePreview("Ma course sur RunUp", image: shareImageTransparent)
-                            ) {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "photo.on.rectangle.angled")
-                                    Text("SUPERPOSER SUR UNE PHOTO")
                                 }
                             }
                             .buttonStyle(SecondaryButtonStyle())
@@ -94,15 +79,14 @@ struct RecapView: View {
             .onAppear {
                 splitsRevealed = true
                 guard shareImage == nil else { return }
-                // ImageRenderer is main-actor-bound, so these two 3x-scale renders can't move off
-                // the main thread — but they don't have to run during the entrance transition
-                // either, which is exactly when they used to stutter the screen every run ended
-                // at. Deferring them past the transition costs nothing visible: the share buttons
-                // only render once the images exist, ~half a second after arrival.
+                // ImageRenderer is main-actor-bound, so the 3x-scale render can't move off the
+                // main thread — but it doesn't have to run during the entrance transition either,
+                // which is exactly when it used to stutter the screen every run ended at.
+                // Deferring it past the transition costs nothing visible: the share button only
+                // renders once the image exists, ~half a second after arrival.
                 Task { @MainActor in
                     try? await Task.sleep(for: .milliseconds(450))
                     renderShareCard(for: run)
-                    renderShareCard(for: run, transparent: true)
                 }
             }
         } else {
@@ -146,17 +130,14 @@ struct RecapView: View {
         .frame(minHeight: 190)
     }
 
-    private func renderShareCard(for run: RunRecord, transparent: Bool = false) {
-        let renderer = ImageRenderer(content: RunShareCardView(run: run, transparentBackground: transparent))
+    private func renderShareCard(for run: RunRecord) {
+        let renderer = ImageRenderer(content: RunShareCardView(run: run))
         renderer.scale = 3 // retina-quality output at the card's 360×640pt logical size
-        // `isOpaque` defaults to false, which is exactly what the transparent variant needs —
-        // anything left unpainted in the view keeps its alpha in the rendered UIImage.
+        // `isOpaque` defaults to false, which is exactly what the card needs — anything left
+        // unpainted in the view keeps its alpha in the rendered UIImage, so the PNG layers
+        // cleanly over any photo.
         guard let uiImage = renderer.uiImage else { return }
-        if transparent {
-            shareImageTransparent = Image(uiImage: uiImage)
-        } else {
-            shareImage = Image(uiImage: uiImage)
-        }
+        shareImage = Image(uiImage: uiImage)
     }
 
     /// Tiles pop in one after the other (riding the same `splitsRevealed` flag as the split bars

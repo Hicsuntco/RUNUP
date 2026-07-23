@@ -14,6 +14,8 @@ struct RecapView: View {
     /// Drives the staggered split-bar reveal — flipped in `onAppear`, after which each bar's own
     /// per-index delay takes over.
     @State private var splitsRevealed = false
+    /// Text-color style for the share card — re-rendered on the spot when a chip is tapped.
+    @State private var shareTextColor: ShareCardTextColor = .blanc
 
     private var run: RunRecord? { appState.lastRun }
 
@@ -47,18 +49,41 @@ struct RecapView: View {
                         if let shareImage {
                             // One share action, not two — the transparent card covers both uses
                             // (shared as-is on a story, or layered over a photo), so the old
-                            // opaque-card/transparent-card button pair collapsed into this.
-                            ShareLink(
-                                item: shareImage,
-                                preview: SharePreview("Ma course sur RunUp", image: shareImage)
-                            ) {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "square.and.arrow.up")
-                                    Text("PARTAGER MA COURSE")
+                            // opaque-card/transparent-card button pair collapsed into this. The
+                            // preview shows the actual rendered PNG (on the app background, since
+                            // the card itself is transparent), and the chips re-render it with
+                            // the picked text color before sharing.
+                            VStack(spacing: 10) {
+                                EyebrowLabel(text: "Partage ta course", color: RUColor.text3)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                shareImage
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(height: 230)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 8)
+                                    .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                                    .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                                HStack(spacing: 7) {
+                                    ForEach(ShareCardTextColor.allCases) { style in
+                                        SelectableChip(label: style.label, selected: shareTextColor == style) {
+                                            shareTextColor = style
+                                            renderShareCard(for: run)
+                                        }
+                                    }
                                 }
+                                ShareLink(
+                                    item: shareImage,
+                                    preview: SharePreview("Ma course sur RunUp", image: shareImage)
+                                ) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "square.and.arrow.up")
+                                        Text("PARTAGER MA COURSE")
+                                    }
+                                }
+                                .buttonStyle(SecondaryButtonStyle())
                             }
-                            .buttonStyle(SecondaryButtonStyle())
-                            .padding(.top, 6)
+                            .padding(.top, 10)
                         }
 
                         Button("DONNER MON RESSENTI") { showDebrief = true }
@@ -131,7 +156,7 @@ struct RecapView: View {
     }
 
     private func renderShareCard(for run: RunRecord) {
-        let renderer = ImageRenderer(content: RunShareCardView(run: run))
+        let renderer = ImageRenderer(content: RunShareCardView(run: run, textColor: shareTextColor))
         renderer.scale = 3 // retina-quality output at the card's 360×640pt logical size
         // `isOpaque` defaults to false, which is exactly what the card needs — anything left
         // unpainted in the view keeps its alpha in the rendered UIImage, so the PNG layers

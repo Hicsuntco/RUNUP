@@ -1,5 +1,20 @@
 import SwiftUI
 
+/// Text-color styles for the share card, picked on the recap screen before sharing — the photo
+/// underneath decides which one works (white over a dark evening run, black over snow/sky, the
+/// brand gradient when she wants the RunUp identity front and center).
+enum ShareCardTextColor: String, CaseIterable, Identifiable {
+    case blanc, noir, runup
+    var id: String { rawValue }
+    var label: String {
+        switch self {
+        case .blanc: return "Blanc"
+        case .noir: return "Noir"
+        case .runup: return "RunUp"
+        }
+    }
+}
+
 /// The share card — Strava-style stacked stats (label over big value, centered) floating on a
 /// fully transparent background, with the real route trace as a glowing neon signature above and
 /// RunUp branding below. Rendered off-screen (via `ImageRenderer` in `RecapView`) into a `UIImage`
@@ -10,6 +25,30 @@ import SwiftUI
 /// element carries a strong drop shadow so legibility doesn't depend on what ends up underneath.
 struct RunShareCardView: View {
     var run: RunRecord
+    var textColor: ShareCardTextColor = .blanc
+
+    /// The big stat values — a flat color, or the brand rose→violet sweep for the `runup` style
+    /// (fixed hexes, same stops as the route trace, deliberately not the in-app theme tokens: the
+    /// exported image shouldn't change with an unrelated app setting).
+    private var valueStyle: AnyShapeStyle {
+        switch textColor {
+        case .blanc: return AnyShapeStyle(Color.white)
+        case .noir: return AnyShapeStyle(Color(hex: 0x0E0E14))
+        case .runup: return AnyShapeStyle(LinearGradient(colors: [Color(hex: 0xFF3D7F), Color(hex: 0x8A5CFF)], startPoint: .leading, endPoint: .trailing))
+        }
+    }
+
+    /// Labels, wordmark and date — a quieter companion to `valueStyle`.
+    private var secondaryColor: Color {
+        switch textColor {
+        case .blanc: return .white.opacity(0.9)
+        case .noir: return Color(hex: 0x0E0E14).opacity(0.9)
+        case .runup: return Color(hex: 0xFF3D7F)
+        }
+    }
+
+    /// Dark text needs a LIGHT halo to hold up over dark photos, and vice versa.
+    private var outlineIsLight: Bool { textColor == .noir }
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -61,14 +100,14 @@ struct RunShareCardView: View {
             VStack(spacing: 5) {
                 HStack(spacing: 7) {
                     AppMarkView(size: 22, radius: 6)
-                    Text("RUNUP").font(RUFont.bebas(15)).tracking(4).foregroundColor(.white)
+                    Text("RUNUP").font(RUFont.bebas(15)).tracking(4).foregroundStyle(valueStyle)
                 }
                 Text(Self.dateFormatter.string(from: run.date))
                     .font(RUFont.mono(9.5))
                     .tracking(1)
-                    .foregroundColor(.white.opacity(0.75))
+                    .foregroundColor(secondaryColor.opacity(0.85))
             }
-            .modifier(OutlinedTextShadow())
+            .modifier(OutlinedTextShadow(light: outlineIsLight))
             .padding(.top, 22)
         }
         .frame(width: 360, height: 640)
@@ -80,26 +119,28 @@ struct RunShareCardView: View {
             Text(label)
                 .font(RUFont.sans(11.5, weight: .bold))
                 .tracking(2.5)
-                .foregroundColor(.white.opacity(0.9))
-                .modifier(OutlinedTextShadow())
+                .foregroundColor(secondaryColor)
+                .modifier(OutlinedTextShadow(light: outlineIsLight))
             Text(value)
                 .font(RUFont.bebas(valueSize))
-                .foregroundColor(.white)
-                .modifier(OutlinedTextShadow())
-                .shadow(color: Color(hex: 0xFF0F5B).opacity(0.3), radius: 22)
+                .foregroundStyle(valueStyle)
+                .modifier(OutlinedTextShadow(light: outlineIsLight))
+                .shadow(color: Color(hex: 0xFF0F5B).opacity(textColor == .noir ? 0 : 0.3), radius: 22)
         }
         .frame(maxWidth: .infinity)
     }
 
-    /// Legibility over ANY photo without a background veil: a tight, near-opaque dark shadow
-    /// hugging the glyphs (reads as an outline, the trick text-over-video apps use) plus a wider
-    /// soft halo. A single soft drop shadow — the previous pass — washed out over bright photos
-    /// (sky, snow, pale walls).
+    /// Legibility over ANY photo without a background veil: a tight, near-opaque shadow hugging
+    /// the glyphs (reads as an outline, the trick text-over-video apps use) plus a wider soft
+    /// halo. `light` flips the halo to white for the black-text style — a dark outline under dark
+    /// text would vanish over a dark photo.
     private struct OutlinedTextShadow: ViewModifier {
+        var light: Bool = false
+
         func body(content: Content) -> some View {
             content
-                .shadow(color: .black.opacity(0.85), radius: 1.5, x: 0, y: 1)
-                .shadow(color: .black.opacity(0.45), radius: 10, x: 0, y: 3)
+                .shadow(color: light ? .white.opacity(0.9) : .black.opacity(0.85), radius: 1.5, x: 0, y: light ? 0 : 1)
+                .shadow(color: light ? .white.opacity(0.5) : .black.opacity(0.45), radius: 10, x: 0, y: light ? 0 : 3)
         }
     }
 

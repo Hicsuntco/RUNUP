@@ -51,6 +51,17 @@ struct DailyGoalsProvider: TimelineProvider {
 struct DailyGoalsWidgetView: View {
     @Environment(\.widgetFamily) private var family
     let snapshot: DailyGoalsSnapshot
+    /// The timeline entry's date — for the footer date label (a widget render is a frozen frame;
+    /// `.now` at body-evaluation time is the wrong clock to read).
+    var entryDate: Date = .now
+
+    /// "MER. 23 JUIL." — the medium footer's date stamp.
+    private static let footerDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "fr_FR")
+        f.dateFormat = "EEE d MMM"
+        return f
+    }()
 
     private var isLight: Bool { snapshot.isLightMode }
     private var colors: [Color] { WidgetAccentPalette.ringColors(themeID: snapshot.accentThemeID, isLight: isLight) }
@@ -93,8 +104,14 @@ struct DailyGoalsWidgetView: View {
                 bgGradient
                 // Dual corner glows (rose top-left, violet bottom-right) — the same two-tone
                 // atmosphere the app's own hero cards carry, instead of a single washed corner.
-                RadialGradient(colors: [roseColor.opacity(isLight ? 0.14 : 0.26), .clear], center: .topLeading, startRadius: 0, endRadius: 150)
-                RadialGradient(colors: [violetColor.opacity(isLight ? 0.10 : 0.20), .clear], center: .bottomTrailing, startRadius: 0, endRadius: 150)
+                RadialGradient(colors: [roseColor.opacity(isLight ? 0.14 : 0.30), .clear], center: .topLeading, startRadius: 0, endRadius: 150)
+                RadialGradient(colors: [violetColor.opacity(isLight ? 0.10 : 0.22), .clear], center: .bottomTrailing, startRadius: 0, endRadius: 150)
+                // Ghost arc bleeding off the top-right corner — pure depth, no data. The flat
+                // gradient alone read as empty around the content.
+                Circle()
+                    .stroke((isLight ? Color.black : Color.white).opacity(0.035), lineWidth: 13)
+                    .frame(width: 170, height: 170)
+                    .offset(x: 105, y: -75)
             }
         }
     }
@@ -109,20 +126,33 @@ struct DailyGoalsWidgetView: View {
     }
 
     private var mediumBody: some View {
-        HStack(spacing: 16) {
-            centerCountRing(size: 96, countSize: 28)
+        HStack(spacing: 15) {
+            centerCountRing(size: 100, countSize: 30)
             VStack(alignment: .leading, spacing: 8) {
-                goalBar(index: 0, label: "SÉANCE", trailing: snapshot.progress[safe: 0] ?? 0 >= 1 ? "✓" : "à faire")
-                goalBar(index: 1, label: "KCAL", trailing: snapshot.activeCaloriesRemaining > 0 ? "-\(grouped(snapshot.activeCaloriesRemaining))" : "✓")
-                goalBar(index: 2, label: "PAS", trailing: snapshot.stepsRemaining > 0 ? "-\(grouped(snapshot.stepsRemaining))" : "✓")
-                HStack(spacing: 8) {
+                // Header: eyebrow + streak — anchors the panel the way the app's own cards open
+                // with an eyebrow, instead of dropping straight into bars.
+                HStack(alignment: .center) {
+                    Text("AUJOURD'HUI")
+                        .font(.custom("DMSans-Bold", size: 8.5))
+                        .tracking(1.8)
+                        .foregroundColor(roseColor)
+                    Spacer(minLength: 0)
                     HStack(spacing: 3) {
                         Image(systemName: "flame.fill").font(.system(size: 10))
                         Text("\(snapshot.streak)").font(.custom("BebasNeue-Regular", size: 15))
                     }
                     .foregroundColor(flameColor)
-                    Spacer(minLength: 0)
+                }
+                goalBar(index: 0, label: "SÉANCE", trailing: snapshot.progress[safe: 0] ?? 0 >= 1 ? nil : "à faire")
+                goalBar(index: 1, label: "KCAL", trailing: snapshot.activeCaloriesRemaining > 0 ? "-\(grouped(snapshot.activeCaloriesRemaining))" : nil)
+                goalBar(index: 2, label: "PAS", trailing: snapshot.stepsRemaining > 0 ? "-\(grouped(snapshot.stepsRemaining))" : nil)
+                HStack(spacing: 8) {
                     weekDots
+                    Spacer(minLength: 0)
+                    Text(Self.footerDateFormatter.string(from: entryDate).uppercased())
+                        .font(.custom("DMSans-SemiBold", size: 7))
+                        .tracking(0.8)
+                        .foregroundColor(text2.opacity(0.7))
                 }
                 .padding(.top, 1)
             }
@@ -148,28 +178,39 @@ struct DailyGoalsWidgetView: View {
         }
     }
 
-    /// One compact goal row: label, a thin track/fill bar in the goal's own ring color, and
-    /// what's left (or a check) on the trailing edge.
-    private func goalBar(index: Int, label: String, trailing: String) -> some View {
+    /// One compact goal row: label, a gradient-filled bar in the goal's own ring color (same
+    /// darkened→full sweep as the ring's own segments), and what's left — or a checkmark — on the
+    /// trailing edge in the display face. `trailing: nil` means the goal is done.
+    private func goalBar(index: Int, label: String, trailing: String?) -> some View {
         let pct = max(0, min(1, snapshot.progress[safe: index] ?? 0))
         let color = colors[safe: index] ?? roseColor
         return HStack(spacing: 8) {
             Text(label)
                 .font(.custom("DMSans-Bold", size: 8))
-                .tracking(0.8)
+                .tracking(1.4)
                 .foregroundColor(text2)
-                .frame(width: 42, alignment: .leading)
+                .frame(width: 44, alignment: .leading)
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(color.opacity(isLight ? 0.22 : 0.2))
-                    Capsule().fill(color).frame(width: geo.size.width * pct)
+                    Capsule().fill(color.opacity(isLight ? 0.22 : 0.18))
+                    Capsule()
+                        .fill(LinearGradient(colors: [color.darkened(0.28), color], startPoint: .leading, endPoint: .trailing))
+                        .frame(width: geo.size.width * pct)
                 }
             }
-            .frame(height: 4)
-            Text(trailing)
-                .font(.custom("DMSans-Bold", size: 9))
-                .foregroundColor(pct >= 1 ? color : textPrimary)
-                .frame(minWidth: 30, alignment: .trailing)
+            .frame(height: 5.5)
+            Group {
+                if let trailing {
+                    Text(trailing)
+                        .font(trailing == "à faire" ? .custom("DMSans-Bold", size: 8) : .custom("BebasNeue-Regular", size: 13))
+                        .foregroundColor(trailing == "à faire" ? text2 : textPrimary)
+                } else {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundColor(color)
+                }
+            }
+            .frame(minWidth: 34, alignment: .trailing)
         }
     }
 
@@ -213,7 +254,7 @@ struct DailyGoalsWidget: Widget {
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: DailyGoalsProvider()) { entry in
-            DailyGoalsWidgetView(snapshot: entry.snapshot)
+            DailyGoalsWidgetView(snapshot: entry.snapshot, entryDate: entry.date)
         }
         .configurationDisplayName("Objectifs du jour")
         .description("Ta séance, tes calories actives et tes pas, d'un coup d'œil.")

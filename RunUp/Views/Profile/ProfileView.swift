@@ -86,7 +86,14 @@ struct ProfileView: View {
         VStack(spacing: 0) {
             appleHealthRow
             Divider().background(RUColor.line)
-            StravaConnectionRow(auth: appState.auth)
+            // Strava's OAuth handshake (`StravaConnectionRow`/`StravaService`) is real, working
+            // code — but the server side needs a real Strava API app (Client ID/Secret) she hasn't
+            // set up yet, so tapping "Connecter" today always ends in
+            // `StravaServiceError.notConfigured`. An active-looking button that reliably errors
+            // reads as broken, not "not built yet" — greyed out like Garmin until she's actually
+            // configured it, same as `garminRow` below. `StravaConnectionRow` itself is untouched:
+            // swap this row back for it once Strava is configured server-side.
+            comingSoonRow(logo: "Strava", title: ConnectedSource.strava.title)
             Divider().background(RUColor.line)
             garminRow
         }
@@ -96,7 +103,7 @@ struct ProfileView: View {
 
     private var appleHealthRow: some View {
         HStack(spacing: 12) {
-            Text("🍎").font(.system(size: 17))
+            Image(systemName: "apple.logo").font(.system(size: 16)).foregroundColor(RUColor.textPrimary)
             Text(ConnectedSource.apple.title).font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
             Spacer()
             Toggle("", isOn: Binding(
@@ -119,9 +126,20 @@ struct ProfileView: View {
     /// No real Garmin Connect integration yet — a working-looking toggle here would silently do
     /// nothing, which reads as broken rather than simply "not built yet".
     private var garminRow: some View {
+        comingSoonRow(logo: "Garmin", title: ConnectedSource.garmin.title)
+    }
+
+    /// Shared "not available yet" treatment for a data source — a plain wordmark placeholder
+    /// (`logo`) stands in for the brand's real logo until real asset files (from Strava's/
+    /// Garmin's brand guideline pages) are added to the asset catalog; swap `Image(systemName:)`
+    /// for `Image("strava-logo")`/`Image("garmin-logo")` once they're in.
+    private func comingSoonRow(logo: String, title: String) -> some View {
         HStack(spacing: 12) {
-            Text("⌚").font(.system(size: 17))
-            Text(ConnectedSource.garmin.title).font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+            Text(logo)
+                .font(RUFont.sans(10, weight: .bold))
+                .foregroundColor(RUColor.text3)
+                .frame(width: 22, alignment: .leading)
+            Text(title).font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.text2)
             Spacer()
             Text("Bientôt").font(RUFont.sans(11, weight: .semibold)).foregroundColor(RUColor.text3)
         }

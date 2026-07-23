@@ -50,6 +50,14 @@ struct RunShareCardView: View {
     /// Dark text needs a LIGHT halo to hold up over dark photos, and vice versa.
     private var outlineIsLight: Bool { textColor == .noir }
 
+    private var roseGlowOpacity: Double {
+        switch textColor {
+        case .blanc: return 0.12
+        case .noir: return 0
+        case .runup: return 0.16
+        }
+    }
+
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "fr_FR")
@@ -125,9 +133,9 @@ struct RunShareCardView: View {
                 .font(RUFont.bebas(valueSize))
                 .foregroundStyle(valueStyle)
                 .modifier(OutlinedTextShadow(light: outlineIsLight))
-                // Rose neon glow only on the brand-gradient style, where it belongs to the look —
-                // around plain white (or black) text it read as too much.
-                .shadow(color: Color(hex: 0xFF0F5B).opacity(textColor == .runup ? 0.3 : 0), radius: 22)
+                // A whisper of rose around white, a restrained one on the gradient style, none on
+                // black — tuned down twice from the original 0.3, which read as too much.
+                .shadow(color: Color(hex: 0xFF0F5B).opacity(roseGlowOpacity), radius: 20)
         }
         .frame(maxWidth: .infinity)
     }
@@ -140,9 +148,11 @@ struct RunShareCardView: View {
         var light: Bool = false
 
         func body(content: Content) -> some View {
+            // Softened from 0.85/0.45 — enough presence for legibility over a photo, without the
+            // grey-black smudge the heavier version drew around every glyph.
             content
-                .shadow(color: light ? .white.opacity(0.9) : .black.opacity(0.85), radius: 1.5, x: 0, y: light ? 0 : 1)
-                .shadow(color: light ? .white.opacity(0.5) : .black.opacity(0.45), radius: 10, x: 0, y: light ? 0 : 3)
+                .shadow(color: light ? .white.opacity(0.7) : .black.opacity(0.55), radius: 1.5, x: 0, y: light ? 0 : 1)
+                .shadow(color: light ? .white.opacity(0.3) : .black.opacity(0.25), radius: 8, x: 0, y: light ? 0 : 2)
         }
     }
 

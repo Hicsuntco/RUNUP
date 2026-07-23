@@ -5,26 +5,27 @@ import SwiftData
 /// the user (it's proxied through RunUp's own backend, see `Services/CoachService.swift`), so
 /// there's no key-entry section here.
 ///
-/// Every settings group below is a `SettingsSection` — a single collapsible card instead of a
-/// permanently-expanded one. The old layout put every card's full content on screen at once,
-/// which read as overwhelming even though no individual option was unwanted — collapsing lets the
-/// two she's most likely to actually adjust (Apparence, Objectifs quotidiens) stay open by
-/// default while everything else starts as just a title, one tap away.
+/// Only the 4 sections she's likely to actually touch often (Sources de données, Apparence,
+/// Préférences, Objectifs quotidiens) stay directly on this page, fully expanded — a first attempt
+/// at cutting down the page's density collapsed every section behind a tap-to-expand accordion,
+/// but that added a second tap on top of whatever tap actually changes the setting, for things
+/// meant to be quick. Everything reached less often (Programme, Santé & blessures, Cycle,
+/// Parrainage, Compte) now lives one tap away on `MoreSettingsView`, the same cost a
+/// permanently-expanded section already had — nothing gets slower, the page just gets shorter.
 struct ProfileView: View {
     @Environment(AppState.self) private var appState
     private var profile: UserProfile { appState.profile }
 
     @State private var unit = "km"
-    @State private var showDeleteAccountConfirm = false
+    @State private var showMoreSettings = false
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 20) {
                 HStack(spacing: 12) {
                     BackChevronButton { appState.go(.home) }
                     Text("Profil & réglages").displayStyle(22).foregroundColor(RUColor.textPrimary)
                 }
-                .padding(.bottom, 6)
 
                 HStack(spacing: 14) {
                     Circle()
@@ -36,26 +37,20 @@ struct ProfileView: View {
                         Text("Objectif · \(profile.goalDisplay)").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
                     }
                 }
-                .padding(.bottom, 6)
 
-                SettingsSection(title: "Sources de données") { dataSourcesRows }
-                SettingsSection(title: "Apparence", defaultExpanded: true) { appearanceRows }
-                SettingsSection(title: "Préférences") { preferencesRows }
-                SettingsSection(title: "Objectifs quotidiens", defaultExpanded: true) { dailyGoalsRows }
-                SettingsSection(title: "Programme") { programRows }
-                SettingsSection(title: "Santé & blessures") { injuryRows }
+                sectionTitle("Sources de données")
+                dataSourcesCard
 
-                if profile.sex == "female" {
-                    SettingsSection(title: "Cycle") { cycleRows }
-                }
+                sectionTitle("Apparence")
+                appearanceCard
 
-                if appState.auth.isSignedIn, let code = appState.auth.currentUser?.referralCode {
-                    SettingsSection(title: "Parraine un ami") { referralRows(code: code) }
-                }
+                sectionTitle("Préférences")
+                preferencesCard
 
-                if appState.auth.isSignedIn {
-                    SettingsSection(title: "Compte") { accountRows }
-                }
+                sectionTitle("Objectifs quotidiens")
+                dailyGoalsCard
+
+                moreSettingsRow
             }
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.top, 8)
@@ -64,9 +59,30 @@ struct ProfileView: View {
         .onAppear {
             unit = profile.distanceUnit
         }
+        .sheet(isPresented: $showMoreSettings) {
+            MoreSettingsView()
+        }
     }
 
-    private var dataSourcesRows: some View {
+    private func sectionTitle(_ text: String) -> some View {
+        EyebrowLabel(text: text, color: RUColor.text3)
+    }
+
+    private var moreSettingsRow: some View {
+        Button(action: { showMoreSettings = true }) {
+            HStack {
+                Text("Plus de réglages").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                Spacer()
+                Text("›").foregroundColor(RUColor.text2)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 13)
+        }
+        .buttonStyle(PressableStyle())
+        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+    }
+
+    private var dataSourcesCard: some View {
         VStack(spacing: 0) {
             appleHealthRow
             Divider().background(RUColor.line)
@@ -74,6 +90,8 @@ struct ProfileView: View {
             Divider().background(RUColor.line)
             garminRow
         }
+        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
     }
 
     private var appleHealthRow: some View {
@@ -115,7 +133,7 @@ struct ProfileView: View {
     /// every `RUColor.rose`/`.rose2`/`.violet` call site updates immediately, live. The mode row
     /// above it (Sombre/Blanc) is the same mirror-into-`ThemeStore` mechanism, one level up —
     /// dark/light instead of an accent hue, see `RUColor`'s theme-aware tokens.
-    private var appearanceRows: some View {
+    private var appearanceCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Mode d'affichage").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
@@ -150,6 +168,8 @@ struct ProfileView: View {
             }
         }
         .padding(14)
+        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
     }
 
     private func modeButton(_ label: String, isLight: Bool) -> some View {
@@ -176,7 +196,7 @@ struct ProfileView: View {
         appState.publishWidgetSnapshot()
     }
 
-    private var preferencesRows: some View {
+    private var preferencesCard: some View {
         VStack(spacing: 0) {
             HStack {
                 Text("Unité de distance").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
@@ -222,12 +242,14 @@ struct ProfileView: View {
             }
             .padding(.horizontal, 14).padding(.vertical, 13)
         }
+        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
     }
 
     /// Both goals used to only ever be fixed defaults (`UserProfile.stepsGoal` = 6000,
     /// `activeCaloriesGoal` = 400) with no way to change them — the daily-goals bars on Home read
     /// those values directly, so editing here immediately reshapes what counts as "done" today.
-    private var dailyGoalsRows: some View {
+    private var dailyGoalsCard: some View {
         VStack(spacing: 0) {
             HStack {
                 Text("Objectif de pas").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
@@ -259,248 +281,6 @@ struct ProfileView: View {
             }
             .padding(.horizontal, 14).padding(.vertical, 13)
         }
-    }
-
-    /// Injury used to only ever be askable once, during onboarding — with no way back to it, a
-    /// blessure that heals (or a new one that shows up) could never actually update the plan
-    /// `AdaptivePlanEngine.adjustForWellbeing` is already computing every week from this field.
-    private var injuryRows: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Une douleur ou blessure à surveiller ?").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
-            ChipFlowLayout {
-                ForEach([("none", "Aucune"), ("knee", "Genou"), ("ankle", "Cheville"), ("back", "Dos"), ("other", "Autre")], id: \.0) { id, label in
-                    SelectableChip(label: label, selected: (profile.injuryArea ?? "none") == id) { profile.injuryArea = id }
-                }
-            }
-            Text("Le coach adapte tes séances de fractionné/VMA en conséquence, chaque semaine.")
-                .font(RUFont.sans(11)).foregroundColor(RUColor.text3)
-        }
-        .padding(14)
-    }
-
-    private var programRows: some View {
-        VStack(spacing: 0) {
-            programRow("Voir mon objectif") { appState.go(.race) }
-            Divider().background(RUColor.line)
-            programRow("Modifier jours & objectif") { appState.openProgramSettings() }
-            Divider().background(RUColor.line)
-            programRow("Refaire l'onboarding") { appState.replayOnboarding() }
-            if profile.programPhase == .active {
-                Divider().background(RUColor.line)
-                programRow("Terminer le programme") {
-                    AdaptivePlanEngine.endProgram(profile)
-                    appState.toast("Programme terminé · récupération en cours")
-                }
-            }
-        }
-    }
-
-    /// Only shown when `profile.sex == "female"` — lets her set up cycle tracking after
-    /// onboarding (or change it later) rather than only ever getting the one chance during
-    /// onboarding. `AdaptivePlanEngine.adjustForWellbeing` reads `profile.cyclePhase` directly, so
-    /// editing these fields here immediately changes next week's plan, same as any other program
-    /// setting.
-    private var cycleRows: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text("Suivi du cycle").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
-                Spacer()
-                Toggle("", isOn: Binding(
-                    get: { profile.cycleTrackingEnabled },
-                    set: { on in
-                        profile.cycleTrackingEnabled = on
-                        if on && profile.lastPeriodStartDate == nil { profile.lastPeriodStartDate = .now }
-                    }
-                ))
-                .labelsHidden()
-                .tint(RUColor.rose)
-            }
-            .padding(.horizontal, 14).padding(.vertical, 13)
-
-            if profile.cycleTrackingEnabled {
-                Divider().background(RUColor.line)
-                VStack(alignment: .leading, spacing: 14) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Date des dernières règles").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
-                        DatePicker(
-                            "",
-                            selection: Binding(get: { profile.lastPeriodStartDate ?? .now }, set: { profile.lastPeriodStartDate = $0 }),
-                            in: ...Date(),
-                            displayedComponents: .date
-                        )
-                        .datePickerStyle(.compact)
-                        .labelsHidden()
-                        .colorScheme(RUColor.colorScheme)
-                    }
-
-                    HStack {
-                        Text("Durée moyenne du cycle").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
-                        Spacer()
-                        Stepper(
-                            "\(profile.averageCycleLengthDays) jours",
-                            value: Binding(get: { profile.averageCycleLengthDays }, set: { profile.averageCycleLengthDays = $0 }),
-                            in: 21...35
-                        )
-                        .fixedSize()
-                        .tint(RUColor.rose)
-                        .foregroundColor(RUColor.textPrimary)
-                    }
-
-                    if let phase = profile.cyclePhase {
-                        HStack(spacing: 7) {
-                            Circle().fill(cyclePhaseColor(phase)).frame(width: 8, height: 8)
-                            Text("Phase actuelle estimée : \(cyclePhaseLabel(phase))")
-                                .font(RUFont.sans(12, weight: .semibold))
-                                .foregroundColor(cyclePhaseColor(phase))
-                        }
-                    }
-                }
-                .padding(.horizontal, 14).padding(.bottom, 14).padding(.top, 2)
-            }
-        }
-    }
-
-    private func cyclePhaseLabel(_ phase: UserProfile.CyclePhase) -> String {
-        switch phase {
-        case .menstrual: return "menstruelle"
-        case .follicular: return "folliculaire"
-        case .ovulation: return "ovulatoire"
-        case .luteal: return "lutéale"
-        }
-    }
-
-    private func cyclePhaseColor(_ phase: UserProfile.CyclePhase) -> Color {
-        switch phase {
-        case .menstrual: return RUColor.rose
-        case .follicular: return RUColor.lime
-        case .ovulation: return RUColor.cyan
-        case .luteal: return RUColor.amber
-        }
-    }
-
-    /// A real, personal referral code (see `api/auth/[action].js`) — sharing it and having the
-    /// friend actually log a first activity rewards both accounts +100 XP (see
-    /// `api/activities/[action].js`'s `grantReferralRewardIfNeeded`), not just for installing.
-    private func referralRows(code: String) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Invite un ami avec ton code — vous gagnez tous les deux +100 XP dès sa première séance.")
-                .font(RUFont.sans(12.5)).foregroundColor(RUColor.text2).lineSpacing(2)
-            HStack(spacing: 10) {
-                Text(code)
-                    .font(RUFont.mono(18, weight: .semibold))
-                    .foregroundColor(RUColor.textPrimary)
-                    .tracking(2)
-                    .padding(.horizontal, 16).padding(.vertical, 10)
-                    .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
-                Spacer()
-                ShareLink(item: "Rejoins-moi sur RunUp, mon appli de coaching running — utilise mon code \(code) à l'inscription : https://runup-nu.vercel.app") {
-                    HStack(spacing: 6) {
-                        Image(systemName: "square.and.arrow.up")
-                        Text("Partager")
-                    }
-                    .font(RUFont.sans(12.5, weight: .semibold))
-                }
-                .buttonStyle(SecondaryButtonStyle())
-            }
-        }
-        .padding(14)
-    }
-
-    private func programRow(_ label: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack {
-                Text(label).font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
-                Spacer()
-                Text("›").foregroundColor(RUColor.text2)
-            }
-            .padding(.horizontal, 14).padding(.vertical, 13)
-        }
-        .buttonStyle(PressableStyle())
-    }
-
-    /// Real account, tied to the Club backend (see `AuthService`) — includes account deletion,
-    /// required by App Store guideline 5.1.1(v) whenever an app offers account creation.
-    private var accountRows: some View {
-        VStack(spacing: 0) {
-            if let user = appState.auth.currentUser {
-                HStack {
-                    Text("Connectée en tant que \(user.name)").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
-                    Spacer()
-                }
-                .padding(.horizontal, 14).padding(.vertical, 13)
-                Divider().background(RUColor.line)
-            }
-            programRow("Se déconnecter") { appState.auth.signOut() }
-            Divider().background(RUColor.line)
-            Button(action: { showDeleteAccountConfirm = true }) {
-                HStack {
-                    Text("Supprimer mon compte").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.rose)
-                    Spacer()
-                }
-                .padding(.horizontal, 14).padding(.vertical, 13)
-            }
-            .buttonStyle(PressableStyle())
-        }
-        .confirmationDialog("Supprimer définitivement ton compte ?", isPresented: $showDeleteAccountConfirm, titleVisibility: .visible) {
-            Button("Supprimer", role: .destructive) { Task { await deleteAccount() } }
-            Button("Annuler", role: .cancel) {}
-        } message: {
-            Text("Ton club, ton classement et ton fil d'activité seront définitivement supprimés du serveur. Cette action est irréversible.")
-        }
-    }
-
-    private func deleteAccount() async {
-        do {
-            try await appState.auth.deleteAccount()
-            appState.toast("Compte supprimé")
-        } catch {
-            appState.toast("Impossible de supprimer le compte — réessaie.")
-        }
-    }
-}
-
-/// A single collapsible settings card: an always-visible header row (title + chevron) that
-/// expands/collapses its content on tap. Replaces `ProfileView`'s old pattern of an
-/// always-expanded `EyebrowLabel` + card per section — with 9 sections, that put everything on
-/// screen at once regardless of how often each one actually gets touched. `defaultExpanded` lets
-/// the couple of settings she's likely to actually adjust regularly (Apparence, Objectifs
-/// quotidiens) start open while the rest start as just a title.
-private struct SettingsSection<Content: View>: View {
-    var title: String
-    var defaultExpanded: Bool = false
-    @ViewBuilder var content: () -> Content
-
-    @State private var isExpanded: Bool
-
-    init(title: String, defaultExpanded: Bool = false, @ViewBuilder content: @escaping () -> Content) {
-        self.title = title
-        self.defaultExpanded = defaultExpanded
-        self.content = content
-        _isExpanded = State(initialValue: defaultExpanded)
-    }
-
-    var body: some View {
-        VStack(spacing: 0) {
-            Button(action: { withAnimation(.easeInOut(duration: 0.22)) { isExpanded.toggle() } }) {
-                HStack {
-                    Text(title).eyebrowStyle()
-                    Spacer()
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(RUColor.text3)
-                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
-                }
-                .padding(.horizontal, 14).padding(.vertical, 14)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(PressableStyle())
-
-            if isExpanded {
-                Divider().background(RUColor.line)
-                content()
-            }
-        }
         .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
     }
@@ -508,7 +288,7 @@ private struct SettingsSection<Content: View>: View {
 
 /// Real Strava connect/disconnect + "import my history" — the only data source here backed by a
 /// real OAuth handshake (see `StravaService`) rather than a native framework (HealthKit) or a
-/// stub ("Bientôt"). A separate view (not inlined in `dataSourcesRows`) since it owns real
+/// stub ("Bientôt"). A separate view (not inlined in `dataSourcesCard`) since it owns real
 /// async state — connection status, an in-flight import, its own error messages.
 private struct StravaConnectionRow: View {
     var auth: AuthService

@@ -40,61 +40,67 @@ struct RunShareCardView: View {
         }
     }
 
-    private var textShadow: Color { .black.opacity(0.65) }
-
     var body: some View {
+        // One compact, centered block with generous transparent margins around it — the previous
+        // pass spread the content across the full 360×640 canvas, which covered the whole photo
+        // once layered on a story. A tight sticker-like block over an untouched photo is the
+        // instagramable shape.
         VStack(spacing: 0) {
             if normalizedRoutePoints.count > 1 {
                 neonRouteTrace
-                    .frame(height: 230)
-                    .padding(.top, 26)
-            } else {
-                // No GPS behind this run (manually logged) — no trace to fake; the stats just
-                // breathe in the extra space.
-                Spacer().frame(height: 90)
+                    .frame(height: 160)
+                    .padding(.bottom, 8)
             }
 
-            Spacer(minLength: 12)
-
-            VStack(spacing: 22) {
-                statBlock("DISTANCE", String(format: "%.2f km", run.distanceKm), valueSize: 66)
-                statBlock("ALLURE", "\(run.avgPace) /km", valueSize: 46)
-                statBlock("TEMPS", PaceModel.formatDuration(Double(run.durationSeconds)), valueSize: 46)
+            VStack(spacing: 16) {
+                statBlock("DISTANCE", String(format: "%.2f km", run.distanceKm), valueSize: 58)
+                statBlock("ALLURE", "\(run.avgPace) /km", valueSize: 40)
+                statBlock("TEMPS", PaceModel.formatDuration(Double(run.durationSeconds)), valueSize: 40)
             }
 
-            Spacer(minLength: 12)
-
-            VStack(spacing: 6) {
-                HStack(spacing: 8) {
-                    AppMarkView(size: 26, radius: 7)
-                    Text("RUNUP").font(RUFont.bebas(17)).tracking(4).foregroundColor(.white)
+            VStack(spacing: 5) {
+                HStack(spacing: 7) {
+                    AppMarkView(size: 22, radius: 6)
+                    Text("RUNUP").font(RUFont.bebas(15)).tracking(4).foregroundColor(.white)
                 }
                 Text(Self.dateFormatter.string(from: run.date))
-                    .font(RUFont.mono(10))
+                    .font(RUFont.mono(9.5))
                     .tracking(1)
-                    .foregroundColor(.white.opacity(0.55))
+                    .foregroundColor(.white.opacity(0.75))
             }
-            .shadow(color: textShadow, radius: 6)
-            .padding(.bottom, 34)
+            .modifier(OutlinedTextShadow())
+            .padding(.top, 22)
         }
         .frame(width: 360, height: 640)
     }
 
     /// One Strava-style stacked stat — small tracked label over a big Bebas value, centered.
     private func statBlock(_ label: String, _ value: String, valueSize: CGFloat) -> some View {
-        VStack(spacing: 2) {
+        VStack(spacing: 1) {
             Text(label)
-                .font(RUFont.sans(11, weight: .bold))
+                .font(RUFont.sans(11.5, weight: .bold))
                 .tracking(2.5)
-                .foregroundColor(.white.opacity(0.65))
-                .shadow(color: textShadow, radius: 5)
+                .foregroundColor(.white.opacity(0.9))
+                .modifier(OutlinedTextShadow())
             Text(value)
                 .font(RUFont.bebas(valueSize))
                 .foregroundColor(.white)
-                .shadow(color: textShadow, radius: 8)
-                .shadow(color: Color(hex: 0xFF0F5B).opacity(0.3), radius: 24)
+                .modifier(OutlinedTextShadow())
+                .shadow(color: Color(hex: 0xFF0F5B).opacity(0.3), radius: 22)
         }
         .frame(maxWidth: .infinity)
+    }
+
+    /// Legibility over ANY photo without a background veil: a tight, near-opaque dark shadow
+    /// hugging the glyphs (reads as an outline, the trick text-over-video apps use) plus a wider
+    /// soft halo. A single soft drop shadow — the previous pass — washed out over bright photos
+    /// (sky, snow, pale walls).
+    private struct OutlinedTextShadow: ViewModifier {
+        func body(content: Content) -> some View {
+            content
+                .shadow(color: .black.opacity(0.85), radius: 1.5, x: 0, y: 1)
+                .shadow(color: .black.opacity(0.45), radius: 10, x: 0, y: 3)
+        }
     }
 
     /// A wide, blurred pass underneath a crisp pass — the same brand gradient (rose → violet) as

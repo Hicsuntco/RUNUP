@@ -61,6 +61,20 @@ struct MoreSettingsView: View {
             programRow("Modifier jours & objectif") { dismiss(); appState.openProgramSettings() }
             Divider().background(RUColor.line)
             programRow("Refaire l'onboarding") { dismiss(); appState.replayOnboarding() }
+            if profile.programPhase != .freerun {
+                Divider().background(RUColor.line)
+                // The direct route to `.freerun` — before this, the only way in was "Terminer le
+                // programme" -> several days of recovery countdown -> a "Choix" screen that
+                // finally offers it. That reads as the app forcing a rest phase just to stop and
+                // run casually for a while, when what's actually wanted (course libre: suggested
+                // sessions with no pace/distance target, just maintien/progression) already
+                // exists — it just needed a way in that doesn't run through recovery first.
+                programRow("Passer en mode course libre") {
+                    AdaptivePlanEngine.chooseFreeRun(profile)
+                    appState.toast("Mode course libre activé — suggestions sans objectif de perf")
+                    dismiss()
+                }
+            }
             if profile.programPhase == .active {
                 Divider().background(RUColor.line)
                 programRow("Terminer le programme") {

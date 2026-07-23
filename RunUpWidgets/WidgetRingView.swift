@@ -13,9 +13,12 @@ struct WidgetRingView: View {
     var isLight: Bool
 
     private static let canvasSize: CGFloat = 100
-    private static let strokeWidth: CGFloat = 20
+    /// Thinner than `DailyGoalsBarsView`'s 20 — the widget mockup's ring is a 10%-of-diameter
+    /// stroke, more elegant at glance size than the app's chunky hero ring; this view is
+    /// widget-only, so the app's ring keeps its own weight.
+    private static let strokeWidth: CGFloat = 12
     private static let lightTrackOpacity = 0.36
-    private static let darkTrackOpacity = 0.22
+    private static let darkTrackOpacity = 0.20
 
     var body: some View {
         ZStack {

@@ -72,7 +72,7 @@ struct DailyGoalsWidgetView: View {
 
     private var bgGradient: LinearGradient {
         LinearGradient(
-            colors: isLight ? [Color(hex: 0xFAFAFC), .white] : [Color(hex: 0x17171F), Color(hex: 0x0E0E14)],
+            colors: isLight ? [Color(hex: 0xFAFAFC), .white] : [Color(hex: 0x191922), Color(hex: 0x0E0E14)],
             startPoint: .topLeading, endPoint: .bottomTrailing
         )
     }
@@ -118,7 +118,7 @@ struct DailyGoalsWidgetView: View {
 
     /// Small: the ring IS the widget — count inside, streak as a corner badge, nothing else.
     private var smallBody: some View {
-        centerCountRing(size: 104, countSize: 30)
+        centerCountRing(size: 116, countSize: 32)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .overlay(alignment: .topTrailing) {
                 if snapshot.streak > 0 { streakBadge }
@@ -127,7 +127,7 @@ struct DailyGoalsWidgetView: View {
 
     private var mediumBody: some View {
         HStack(spacing: 15) {
-            centerCountRing(size: 100, countSize: 30)
+            centerCountRing(size: 104, countSize: 32)
             VStack(alignment: .leading, spacing: 8) {
                 // Header: eyebrow + streak — anchors the panel the way the app's own cards open
                 // with an eyebrow, instead of dropping straight into bars.
@@ -187,7 +187,7 @@ struct DailyGoalsWidgetView: View {
         return HStack(spacing: 8) {
             Text(label)
                 .font(.custom("DMSans-Bold", size: 8))
-                .tracking(1.4)
+                .tracking(0.8)
                 .foregroundColor(text2)
                 .frame(width: 44, alignment: .leading)
             GeometryReader { geo in
@@ -202,42 +202,42 @@ struct DailyGoalsWidgetView: View {
             Group {
                 if let trailing {
                     Text(trailing)
-                        .font(trailing == "à faire" ? .custom("DMSans-Bold", size: 8) : .custom("BebasNeue-Regular", size: 13))
-                        .foregroundColor(trailing == "à faire" ? text2 : textPrimary)
+                        .font(trailing == "à faire" ? .custom("DMSans-Bold", size: 8) : .custom("BebasNeue-Regular", size: 12))
+                        .foregroundColor(trailing == "à faire" ? text2 : textPrimary.opacity(0.92))
                 } else {
                     Image(systemName: "checkmark")
                         .font(.system(size: 9, weight: .bold))
                         .foregroundColor(color)
                 }
             }
-            .frame(minWidth: 34, alignment: .trailing)
+            .frame(minWidth: 37, alignment: .trailing)
         }
     }
 
-    /// The week at a glance, compressed to 7 dots (done = filled, today = ringed) — the previous
-    /// lettered 15pt-circle row ate a third of the widget for information that only needs a hint.
+    /// The week at a glance, compressed to 7 dots (done = filled rose, today = an open rose ring,
+    /// rest = faint) — the previous lettered 15pt-circle row ate a third of the widget for
+    /// information that only needs a hint.
     private var weekDots: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 4.5) {
             ForEach(Array(snapshot.weekStrip.enumerated()), id: \.offset) { _, day in
-                Circle()
-                    .fill(day.isDone ? roseColor : text2.opacity(0.25))
-                    .frame(width: 5, height: 5)
-                    .overlay {
-                        if day.isToday {
-                            Circle().stroke(roseColor, lineWidth: 1).frame(width: 8, height: 8)
-                        }
-                    }
+                if day.isToday && !day.isDone {
+                    Circle().stroke(roseColor, lineWidth: 1.2).frame(width: 5, height: 5)
+                } else {
+                    Circle()
+                        .fill(day.isDone ? roseColor : text2.opacity(0.25))
+                        .frame(width: 5.5, height: 5.5)
+                }
             }
         }
     }
 
     private var streakBadge: some View {
         HStack(spacing: 2) {
-            Image(systemName: "flame.fill").font(.system(size: 9))
-            Text("\(snapshot.streak)").font(.custom("BebasNeue-Regular", size: 13))
+            Image(systemName: "flame.fill").font(.system(size: 8))
+            Text("\(snapshot.streak)").font(.custom("BebasNeue-Regular", size: 12))
         }
         .foregroundColor(flameColor)
-        .padding(.horizontal, 7)
+        .padding(.horizontal, 6.5)
         .padding(.vertical, 3)
         .background(flameColor.opacity(isLight ? 0.12 : 0.16), in: Capsule())
     }

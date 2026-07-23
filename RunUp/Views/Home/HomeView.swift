@@ -67,10 +67,6 @@ struct HomeView: View {
 
                 ringsCard
 
-                if !isFreeRun && !upcomingSessions.isEmpty {
-                    upcomingCard
-                }
-
                 if isFreeRun {
                     Text("Pas de plan fixe — le coach te propose de quoi garder la forme, jour après jour.")
                         .font(RUFont.sans(11))
@@ -223,45 +219,6 @@ struct HomeView: View {
                 DebriefSheet(run: run).runUpSheetStyle()
             }
         }
-    }
-
-    private var todayWeekdayIndex: Int {
-        (Calendar.current.component(.weekday, from: .now) + 5) % 7
-    }
-
-    /// The next up-to-2 real planned sessions later this week — `PROGRAMME · l'écran héros`
-    /// reference's "À venir cette semaine" list. `weekSessions` already carries the full 7-day
-    /// plan (used for the tab's own week strip); this was tracked but never surfaced as its own
-    /// glanceable list before.
-    private var upcomingSessions: [PlannedDay] {
-        profile.weekSessions
-            .filter { $0.weekday > todayWeekdayIndex && ($0.session?.durationMinutes ?? 0) > 0 && !$0.completed }
-            .sorted { $0.weekday < $1.weekday }
-    }
-
-    private var upcomingCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            EyebrowLabel(text: "À venir cette semaine", color: RUColor.text3)
-            VStack(spacing: 8) {
-                ForEach(upcomingSessions.prefix(2), id: \.weekday) { day in
-                    upcomingRow(day)
-                }
-            }
-        }
-    }
-
-    private func upcomingRow(_ day: PlannedDay) -> some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(day.session?.title ?? "").font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                Text("\(DayStatus.letters[day.weekday]) · \(day.session?.durationMinutes ?? 0)′ · \(day.session?.zone ?? "")")
-                    .font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
-            }
-            Spacer()
-            Text("›").foregroundColor(RUColor.text3)
-        }
-        .padding(14)
-        .ruCard(radius: 14)
     }
 
     private var ringsCard: some View {

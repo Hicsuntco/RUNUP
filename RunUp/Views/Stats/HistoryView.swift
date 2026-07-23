@@ -87,8 +87,11 @@ struct HistoryView: View {
                     .frame(width: 36, height: 36)
                     .background(RUColor.card, in: Circle())
                     .overlay(Circle().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(PressableStyle())
+            .accessibilityLabel("Ajouter une course")
         }
         .padding(.horizontal, RUSpacing.pagePadding)
         .padding(.top, 8)

@@ -111,7 +111,19 @@ struct ProfileView: View {
                 set: { on in
                     if on {
                         profile.connectedSources.append(.apple)
-                        Task { try? await appState.healthKit.requestAuthorization() }
+                        // See HealthConnectStepView's identical toggle for why this can't just
+                        // swallow the error with `try?` — a genuine failure (HealthKit
+                        // unavailable) shouldn't silently leave "Apple Santé" marked connected.
+                        Task {
+                            do {
+                                try await appState.healthKit.requestAuthorization()
+                            } catch {
+                                await MainActor.run {
+                                    profile.connectedSources.removeAll { $0 == .apple }
+                                    appState.toast("Connexion à Apple Santé impossible, réessaie plus tard.")
+                                }
+                            }
+                        }
                     } else {
                         profile.connectedSources.removeAll { $0 == .apple }
                     }
@@ -119,6 +131,7 @@ struct ProfileView: View {
             ))
             .labelsHidden()
             .tint(RUColor.rose)
+            .accessibilityLabel("Synchroniser avec Apple Santé")
         }
         .padding(.horizontal, 14).padding(.vertical, 13)
     }
@@ -257,6 +270,7 @@ struct ProfileView: View {
                 ))
                     .labelsHidden()
                     .tint(RUColor.rose)
+                    .accessibilityLabel("Notifications du coach")
             }
             .padding(.horizontal, 14).padding(.vertical, 13)
         }

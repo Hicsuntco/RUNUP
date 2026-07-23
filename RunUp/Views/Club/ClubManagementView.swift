@@ -102,8 +102,11 @@ struct ClubManagementView: View {
             Spacer()
             ShareLink(item: "Rejoins mon club sur RunUp avec le code \(club.inviteCode) !") {
                 Image(systemName: "square.and.arrow.up").font(.system(size: 12, weight: .medium)).foregroundColor(RUColor.text3)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(PressableStyle())
+            .accessibilityLabel("Partager le code d'invitation")
         }
         .padding(.horizontal, 4)
     }

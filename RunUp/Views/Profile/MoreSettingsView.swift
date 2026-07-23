@@ -138,6 +138,7 @@ struct MoreSettingsView: View {
                 ))
                 .labelsHidden()
                 .tint(RUColor.rose)
+                .accessibilityLabel("Suivi du cycle")
             }
             .padding(.horizontal, 14).padding(.vertical, 13)
 

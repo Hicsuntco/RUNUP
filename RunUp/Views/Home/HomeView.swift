@@ -41,8 +41,11 @@ struct HomeView: View {
                                         .overlay(Circle().stroke(RUColor.bg, lineWidth: 1.5))
                                 }
                             }
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(PressableStyle())
+                        .accessibilityLabel(unreadCount > 0 ? "Notifications, \(unreadCount) non lues" : "Notifications")
                         AvatarButton(initial: String(profile.name.prefix(1))) { appState.go(.profile) }
                     }
                 }

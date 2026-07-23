@@ -126,8 +126,12 @@ struct RecapView: View {
             .padding(.horizontal, 18)
             .padding(.bottom, 14)
         }
-        .frame(height: 190)
-        .clipped()
+        // Was a fixed `.frame(height: 190)` + `.clipped()` — fine for the run title at normal
+        // text sizes, but at larger accessibility Dynamic Type sizes a long title wraps to 2
+        // lines and `.clipped()` sliced it off entirely. `minHeight` lets the card grow to fit a
+        // wrapped title instead of cropping it; the gradient/route-trace backgrounds already fill
+        // whatever height they're given, so a taller card at large text sizes still looks right.
+        .frame(minHeight: 190)
     }
 
     private func renderShareCard(for run: RunRecord, transparent: Bool = false) {

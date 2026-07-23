@@ -57,7 +57,14 @@ struct ClubView: View {
                 }
 
                 if let errorMessage {
-                    Text(errorMessage).font(RUFont.sans(11)).foregroundColor(RUColor.rose).padding(.top, 4)
+                    // Was color-only (rose text, no icon) — reads as regular text rather than an
+                    // error, especially on a light theme with a pale accent swatch selected.
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 11))
+                        Text(errorMessage).font(RUFont.sans(11))
+                    }
+                    .foregroundColor(RUColor.rose)
+                    .padding(.top, 4)
                 }
 
                 if auth.isSignedIn {
@@ -75,6 +82,7 @@ struct ClubView: View {
             .padding(.bottom, 130)
         }
         .task { await loadIfSignedIn() }
+        .refreshable { await loadIfSignedIn() }
         .sheet(isPresented: $showSignIn) {
             SignInView()
         }

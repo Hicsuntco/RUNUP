@@ -11,6 +11,20 @@ struct NotificationsSheet: View {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Notifications").displayStyle(22).foregroundColor(RUColor.textPrimary).padding(.top, 8)
 
+                if notifications.isEmpty {
+                    // Was a blank scroll area under the title with no empty-state copy at all —
+                    // every other list screen in the app at least says something here.
+                    VStack(spacing: 10) {
+                        Image(systemName: "bell.slash").font(.system(size: 28)).foregroundColor(RUColor.text3)
+                        Text("Rien pour l'instant").font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                        Text("Tes séances, tes séries et l'activité du club apparaîtront ici.")
+                            .font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 60)
+                }
+
                 VStack(spacing: 8) {
                     ForEach(notifications) { n in
                         HStack(alignment: .top, spacing: 12) {

@@ -78,8 +78,7 @@ struct ProfileView: View {
             .padding(.horizontal, 14).padding(.vertical, 13)
         }
         .buttonStyle(PressableStyle())
-        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        .ruCard(radius: 16)
     }
 
     private var dataSourcesCard: some View {
@@ -97,8 +96,7 @@ struct ProfileView: View {
             Divider().background(RUColor.line)
             garminRow
         }
-        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        .ruCard(radius: 16)
     }
 
     private var appleHealthRow: some View {
@@ -199,8 +197,7 @@ struct ProfileView: View {
             }
         }
         .padding(14)
-        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        .ruCard(radius: 16)
     }
 
     private func modeButton(_ label: String, isLight: Bool) -> some View {
@@ -274,8 +271,7 @@ struct ProfileView: View {
             }
             .padding(.horizontal, 14).padding(.vertical, 13)
         }
-        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        .ruCard(radius: 16)
     }
 
     /// Both goals used to only ever be fixed defaults (`UserProfile.stepsGoal` = 6000,
@@ -313,8 +309,7 @@ struct ProfileView: View {
             }
             .padding(.horizontal, 14).padding(.vertical, 13)
         }
-        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        .ruCard(radius: 16)
     }
 }
 

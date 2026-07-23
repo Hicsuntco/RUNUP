@@ -4,6 +4,7 @@ import SwiftUI
 /// behaviors (Séance du jour / Calories actives / Pas) instead of 3 measures of the same run.
 struct RingsView: View {
     @Environment(AppState.self) private var appState
+    @State private var celebrationShown = false
     private var p: UserProfile { appState.profile }
 
     private var remainingSteps: Int { max(0, Int(p.stepsGoal - p.stepsToday)) }
@@ -69,6 +70,9 @@ struct RingsView: View {
                     .padding(15)
                     .ruHeroCard(radius: 18)
                 } else {
+                    // The one genuine celebration state on this screen (all 3 goals done) — a
+                    // spring scale-in gives it the "achievement unlocked" beat the static text
+                    // didn't have, matching the ring's own animate-on-appear fill above.
                     VStack(spacing: 6) {
                         Text("JOURNÉE BOUCLÉE").displayStyle(26).foregroundColor(RUColor.textPrimary)
                         Text("Les 3 objectifs atteints 👏 +120 XP").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
@@ -76,6 +80,11 @@ struct RingsView: View {
                     .frame(maxWidth: .infinity)
                     .padding(18)
                     .background(RadialGradient(colors: [RUColor.rose.opacity(0.2), .clear], center: .top, startRadius: 0, endRadius: 200), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .scaleEffect(celebrationShown ? 1 : 0.85)
+                    .opacity(celebrationShown ? 1 : 0)
+                    .onAppear {
+                        withAnimation(.spring(response: 0.45, dampingFraction: 0.6)) { celebrationShown = true }
+                    }
                 }
             }
             .padding(.horizontal, RUSpacing.pagePadding)

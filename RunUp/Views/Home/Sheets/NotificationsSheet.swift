@@ -42,8 +42,7 @@ struct NotificationsSheet: View {
                             Spacer(minLength: 0)
                         }
                         .padding(13)
-                        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                        .ruCard(radius: 16, fill: RUColor.card2)
                     }
                 }
             }

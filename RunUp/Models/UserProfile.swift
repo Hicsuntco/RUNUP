@@ -282,11 +282,16 @@ final class UserProfile {
     /// `.other` (a bare enum case can't hold the free-text number) — every place that scales pace
     /// or long-run distance to the real race goal should read this instead, so a custom distance
     /// doesn't silently fall back to a generic reference the way `raceDistance?.km` alone would.
+    /// Compiled once — this getter is read from `StatsView`'s body on every render for a
+    /// race-goal user, and `.range(of:options:.regularExpression)` re-compiles the pattern per
+    /// call.
+    private static let customDistanceRegex = /\d+(\.\d+)?/
+
     var effectiveRaceDistanceKm: Double? {
         if let km = raceDistance?.km { return km }
         guard raceDistance == .other, let custom = raceDistanceCustom,
-              let match = custom.range(of: #"\d+(\.\d+)?"#, options: .regularExpression),
-              let km = Double(custom[match]), km > 0
+              let match = custom.firstMatch(of: Self.customDistanceRegex),
+              let km = Double(match.0), km > 0
         else { return nil }
         return km
     }

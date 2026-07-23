@@ -128,8 +128,7 @@ struct SessionDetailSheet: View {
                                 Spacer()
                             }
                             .padding(12)
-                            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                            .ruCard(radius: 14, fill: RUColor.card2)
                         }
                     }
 
@@ -139,8 +138,7 @@ struct SessionDetailSheet: View {
                             .foregroundColor(RUColor.text2)
                             .lineSpacing(3)
                             .padding(13)
-                            .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                            .ruCard(radius: 16)
                             .padding(.top, 16)
                     }
 

@@ -91,7 +91,16 @@ struct LiveRunView: View {
             if vm?.isSignalUnstable == true {
                 gpsWarningBanner
                     .padding(.top, 48)
+                    // The coach bubble right above gets a slide+fade via `topBannerText`'s
+                    // animation; this sibling banner used to just pop in with no transition.
+                    .transition(.move(edge: .top).combined(with: .opacity))
             }
+        }
+        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: vm?.isSignalUnstable == true)
+        .onChange(of: vm?.isSignalUnstable == true) { _, unstable in
+            // One buzz when the signal first degrades (not per frame it stays degraded) — she's
+            // mid-run and not watching the screen; the warning is useless if it arrives silently.
+            if unstable { Haptics.warning() }
         }
     }
 

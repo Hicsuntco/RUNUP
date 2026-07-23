@@ -109,6 +109,10 @@ final class LiveRunViewModel {
             splitSecondsPerKm.append(elapsedSeconds - lastSplitElapsedSeconds)
             lastSplitElapsedSeconds = elapsedSeconds
             lastSplitKm = currentKm
+            // The runner isn't looking at the screen mid-run — a buzz at each completed km is how
+            // Nike Run Club/Strava mark the boundary, and it's the one live moment worth physical
+            // feedback (the voice cues cover the rest).
+            Haptics.impact(.medium)
         }
         let t = Int(elapsedSeconds)
         for (threshold, message) in cues where t >= threshold && !firedCueTimestamps.contains(threshold) {

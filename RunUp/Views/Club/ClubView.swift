@@ -27,6 +27,7 @@ struct ClubView: View {
     @State private var showManagement = false
     @State private var commentsActivity: FeedItem?
     @State private var selectedBadge: ClubBadge?
+    @State private var skeletonPulse = false
 
     private enum Tab { case board, feed }
 
@@ -204,13 +205,29 @@ struct ClubView: View {
 
     // MARK: Loading — signed in, real club status not back from the server yet
 
+    /// Skeleton of the leaderboard it's about to become (pulsing placeholder rows shaped like the
+    /// real content) instead of the generic spinner it used to be — shown on every Club tab open
+    /// (the view is re-`.id()`'d fresh each visit), so this is the app's most-seen loading state.
     private var loadingCard: some View {
-        VStack(spacing: 10) {
-            ProgressView().tint(RUColor.rose)
-            Text("Chargement de ton club…").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+        VStack(alignment: .leading, spacing: 10) {
+            ForEach(0..<4, id: \.self) { i in
+                HStack(spacing: 12) {
+                    Circle().fill(RUColor.card2).frame(width: 34, height: 34)
+                    VStack(alignment: .leading, spacing: 6) {
+                        RoundedRectangle(cornerRadius: 4).fill(RUColor.card2)
+                            .frame(width: i.isMultiple(of: 2) ? 140 : 110, height: 10)
+                        RoundedRectangle(cornerRadius: 4).fill(RUColor.card2)
+                            .frame(width: 70, height: 8)
+                    }
+                    Spacer()
+                }
+            }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
+        .padding(16)
+        .ruCard()
+        .opacity(skeletonPulse ? 0.45 : 1)
+        .animation(.easeInOut(duration: 0.85).repeatForever(autoreverses: true), value: skeletonPulse)
+        .onAppear { skeletonPulse = true }
     }
 
     // MARK: Not signed in
@@ -809,12 +826,19 @@ struct BadgeDetailView: View {
 }
 
 extension Date {
-    /// Shared with `ActivityCommentsSheet` — one relative-time formatter for the feed and its
-    /// comment threads instead of two copies.
-    var relativeDescription: String {
+    /// Formatter construction (locale lookup included) is the expensive part, and this is called
+    /// once per feed row on every redraw — one shared instance instead of a fresh allocation each
+    /// call. Safe as a plain static: everything touching it runs on the main actor.
+    private static let relativeFormatter: RelativeDateTimeFormatter = {
         let formatter = RelativeDateTimeFormatter()
         formatter.locale = Locale(identifier: "fr_FR")
         formatter.unitsStyle = .short
-        return formatter.localizedString(for: self, relativeTo: .now)
+        return formatter
+    }()
+
+    /// Shared with `ActivityCommentsSheet` — one relative-time formatter for the feed and its
+    /// comment threads instead of two copies.
+    var relativeDescription: String {
+        Self.relativeFormatter.localizedString(for: self, relativeTo: .now)
     }
 }

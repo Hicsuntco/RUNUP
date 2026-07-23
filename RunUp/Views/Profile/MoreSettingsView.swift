@@ -84,8 +84,7 @@ struct MoreSettingsView: View {
                 }
             }
         }
-        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        .ruCard(radius: 16)
     }
 
     private func programRow(_ label: String, action: @escaping () -> Void) -> some View {
@@ -115,8 +114,7 @@ struct MoreSettingsView: View {
                 .font(RUFont.sans(11)).foregroundColor(RUColor.text3)
         }
         .padding(14)
-        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        .ruCard(radius: 16)
     }
 
     /// Only shown when `profile.sex == "female"` — lets her set up cycle tracking after
@@ -183,8 +181,7 @@ struct MoreSettingsView: View {
                 .padding(.horizontal, 14).padding(.bottom, 14).padding(.top, 2)
             }
         }
-        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        .ruCard(radius: 16)
     }
 
     private func cyclePhaseLabel(_ phase: UserProfile.CyclePhase) -> String {
@@ -218,8 +215,7 @@ struct MoreSettingsView: View {
                     .foregroundColor(RUColor.textPrimary)
                     .tracking(2)
                     .padding(.horizontal, 16).padding(.vertical, 10)
-                    .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                    .ruCard(radius: 12, fill: RUColor.card2)
                 Spacer()
                 ShareLink(item: "Rejoins-moi sur RunUp, mon appli de coaching running — utilise mon code \(code) à l'inscription : https://runup-nu.vercel.app") {
                     HStack(spacing: 6) {
@@ -232,8 +228,7 @@ struct MoreSettingsView: View {
             }
         }
         .padding(14)
-        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        .ruCard(radius: 16)
     }
 
     /// Real account, tied to the Club backend (see `AuthService`) — includes account deletion,
@@ -259,8 +254,7 @@ struct MoreSettingsView: View {
             }
             .buttonStyle(PressableStyle())
         }
-        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        .ruCard(radius: 16)
         .confirmationDialog("Supprimer définitivement ton compte ?", isPresented: $showDeleteAccountConfirm, titleVisibility: .visible) {
             Button("Supprimer", role: .destructive) { Task { await deleteAccount() } }
             Button("Annuler", role: .cancel) {}

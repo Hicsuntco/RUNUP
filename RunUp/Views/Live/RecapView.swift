@@ -11,6 +11,9 @@ struct RecapView: View {
     /// to present, and rendering this small a view is fast enough that eager beats on-demand
     /// (no visible delay when tapping "Partager", no separate render-then-share double tap).
     @State private var shareImage: Image?
+    /// Drives the staggered split-bar reveal — flipped in `onAppear`, after which each bar's own
+    /// per-index delay takes over.
+    @State private var splitsRevealed = false
     /// Same card, background stripped — trace + stats only, alpha-transparent everywhere else —
     /// so she can drop it as a layer/sticker on top of her own photo instead of sharing a
     /// self-contained card.
@@ -89,9 +92,18 @@ struct RecapView: View {
                     .runUpSheetStyle()
             }
             .onAppear {
+                splitsRevealed = true
                 guard shareImage == nil else { return }
-                renderShareCard(for: run)
-                renderShareCard(for: run, transparent: true)
+                // ImageRenderer is main-actor-bound, so these two 3x-scale renders can't move off
+                // the main thread — but they don't have to run during the entrance transition
+                // either, which is exactly when they used to stutter the screen every run ended
+                // at. Deferring them past the transition costs nothing visible: the share buttons
+                // only render once the images exist, ~half a second after arrival.
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(450))
+                    renderShareCard(for: run)
+                    renderShareCard(for: run, transparent: true)
+                }
             }
         } else {
             Color.clear.onAppear { appState.go(.home) }
@@ -165,7 +177,11 @@ struct RecapView: View {
                     RoundedRectangle(cornerRadius: 6).fill(RUColor.card)
                     RoundedRectangle(cornerRadius: 6)
                         .fill(isLast ? RUColor.rose : RUColor.text4)
-                        .frame(width: geo.size.width * fraction)
+                        // Bars sweep in one after the other (40ms stagger per row) instead of the
+                        // whole list appearing pre-drawn — same "revealed, not dumped" read as the
+                        // Home ring's animate-on-appear fill, on the screen every run ends at.
+                        .frame(width: geo.size.width * fraction * (splitsRevealed ? 1 : 0))
+                        .animation(.easeOut(duration: 0.5).delay(Double(index) * 0.04), value: splitsRevealed)
                 }
             }
             .frame(height: 22)

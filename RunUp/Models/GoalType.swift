@@ -123,8 +123,11 @@ enum RaceDistance: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    /// nil for `.other` — a free-text custom distance can't be converted to a number, so any
-    /// pace/periodization math keyed on real distance falls back to a generic reference instead.
+    /// nil for `.other` — a bare enum case has no way to hold the number from a free-text custom
+    /// distance ("Trail 22 km"). That number still exists on `UserProfile.raceDistanceCustom`
+    /// though, so anything scaling pace/periodization to the real race distance should read
+    /// `UserProfile.effectiveRaceDistanceKm` instead of this property directly — it falls back to
+    /// parsing the custom text rather than silently discarding a real, just-not-preset distance.
     var km: Double? {
         switch self {
         case .k5: return 5

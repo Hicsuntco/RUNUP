@@ -83,7 +83,7 @@ enum PaceModel {
     private static func referenceThresholdPace(for profile: UserProfile) -> Double {
         if profile.goalId == .race,
            let chrono = profile.raceChrono,
-           let km = profile.raceDistance?.km,
+           let km = profile.effectiveRaceDistanceKm,
            let totalSeconds = parseChrono(chrono, distance: profile.raceDistance),
            totalSeconds > 0 {
             return thresholdPace(fromPerformanceSeconds: totalSeconds, km: km)
@@ -108,13 +108,23 @@ enum PaceModel {
     }
 
     /// `chronoPresets` use "MM:SS" for 5K/10K but "H:MM" for semi/marathon (the presets
-    /// themselves are already in whichever format fits the distance — see `GoalType.swift`).
+    /// themselves are already in whichever format fits the distance — see `GoalType.swift`). A
+    /// custom chrono ("Mon propre temps") is free text, though, and its own placeholder
+    /// (`RaceDetailsStepView`'s "Ex. 1:52:00") suggests full H:MM:SS — which used to fail to parse
+    /// entirely (the old code only accepted exactly 2 colon-separated parts) and silently fall
+    /// back to a generic level-based pace, regardless of the real chrono she'd just typed.
     private static func parseChrono(_ text: String, distance: RaceDistance?) -> Double? {
         let parts = text.split(separator: ":").compactMap { Int($0) }
-        guard parts.count == 2 else { return nil }
-        switch distance {
-        case .k5, .k10: return Double(parts[0] * 60 + parts[1])
-        default: return Double(parts[0] * 3600 + parts[1] * 60)
+        switch parts.count {
+        case 3:
+            return Double(parts[0] * 3600 + parts[1] * 60 + parts[2])
+        case 2:
+            switch distance {
+            case .k5, .k10: return Double(parts[0] * 60 + parts[1])
+            default: return Double(parts[0] * 3600 + parts[1] * 60)
+            }
+        default:
+            return nil
         }
     }
 

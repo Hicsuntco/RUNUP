@@ -325,15 +325,16 @@ enum AdaptivePlanEngine {
     }
 
     /// Reference distance (km) the long run scales toward — the user's real race distance when
-    /// known, otherwise a generic 10K-ish reference so the long run still makes sense for
+    /// known (including a custom ".other" distance she typed in free text, e.g. "20 km"),
+    /// otherwise a generic 10K-ish reference so the long run still makes sense for
     /// progress/weight/restart/health goals.
-    private static func referenceRaceKm(_ raceDistance: RaceDistance?) -> Double {
-        raceDistance?.km ?? 10
+    private static func referenceRaceKm(_ profile: UserProfile) -> Double {
+        profile.effectiveRaceDistanceKm ?? 10
     }
 
     private static func archetypes(for block: TrainingBlock, profile: UserProfile) -> [SessionArchetype] {
         let zones = PaceModel.zones(for: profile)
-        let raceKm = referenceRaceKm(profile.raceDistance)
+        let raceKm = referenceRaceKm(profile)
 
         func longRunDuration(_ km: Double) -> Int {
             max(20, Int((km * zones.easySecPerKm / 60).rounded()))

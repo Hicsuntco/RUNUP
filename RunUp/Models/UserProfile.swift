@@ -276,6 +276,21 @@ final class UserProfile {
         return raceDistance == .other ? (raceDistanceCustom?.isEmpty == false ? raceDistanceCustom! : "Ta course") : raceDistance.label
     }
 
+    /// Real numeric race distance in km — a preset's fixed value, or a best-effort parse of the
+    /// free-text `raceDistanceCustom` (".other", e.g. "Trail 22 km", "15 km") when she typed a
+    /// distance instead of picking a preset. `RaceDistance.km` itself always returns nil for
+    /// `.other` (a bare enum case can't hold the free-text number) — every place that scales pace
+    /// or long-run distance to the real race goal should read this instead, so a custom distance
+    /// doesn't silently fall back to a generic reference the way `raceDistance?.km` alone would.
+    var effectiveRaceDistanceKm: Double? {
+        if let km = raceDistance?.km { return km }
+        guard raceDistance == .other, let custom = raceDistanceCustom,
+              let match = custom.range(of: #"\d+(\.\d+)?"#, options: .regularExpression),
+              let km = Double(custom[match]), km > 0
+        else { return nil }
+        return km
+    }
+
     var daysUntilRace: Int? {
         guard let raceDate else { return nil }
         let days = Calendar.current.dateComponents([.day], from: .now, to: raceDate).day ?? 0

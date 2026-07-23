@@ -272,7 +272,7 @@ struct StatsView: View {
                 Text("Estimation basée sur ton profil — termine une course pour une prédiction plus précise.")
                     .font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
             } else if profile.goalId == .race,
-                      let raceKm = profile.raceDistance?.km,
+                      let raceKm = profile.effectiveRaceDistanceKm,
                       let chrono = profile.raceChrono,
                       let targetSeconds = PaceModel.parseChronoSeconds(chrono, distance: profile.raceDistance) {
                 let deltaSeconds = targetSeconds - predictedSeconds(forKm: raceKm)

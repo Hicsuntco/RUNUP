@@ -16,7 +16,7 @@ struct RaceGoalView: View {
     /// no race chrono (progress/weight/restart/health goals).
     private var racePaceSecPerKm: Double? {
         guard let chrono = profile.raceChrono,
-              let km = profile.raceDistance?.km,
+              let km = profile.effectiveRaceDistanceKm,
               let totalSeconds = PaceModel.parseChronoSeconds(chrono, distance: profile.raceDistance),
               km > 0
         else { return nil }
@@ -30,7 +30,7 @@ struct RaceGoalView: View {
     /// Splits the real goal distance into 3-4 pacing phases around the real target pace, instead
     /// of a fixed "1-3 / 4-8 / 9 / 10 km @ 4:52.../4:20" table that only ever made sense for a 10K.
     private var pacingPlan: [(String, String, String)] {
-        let km = profile.raceDistance?.km ?? 10
+        let km = profile.effectiveRaceDistanceKm ?? 10
         let base = racePaceSecPerKm ?? PaceModel.zones(for: profile).thresholdSecPerKm
         let totalKm = max(3, Int(km.rounded()))
         let startEnd = max(1, Int((Double(totalKm) * 0.2).rounded()))

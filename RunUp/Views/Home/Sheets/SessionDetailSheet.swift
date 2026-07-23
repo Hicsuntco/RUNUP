@@ -154,8 +154,16 @@ struct SessionDetailSheet: View {
                     } else {
                         HStack(spacing: 8) {
                             Button("Déplacer à demain") {
-                                moved = true
-                                appState.toast("Séance déplacée à demain")
+                                // Really swaps today/tomorrow in the plan — this used to only set
+                                // the local `moved` flag and claim success without touching
+                                // `weekSessions` at all.
+                                if AdaptivePlanEngine.moveTodaySessionToTomorrow(appState.profile) {
+                                    moved = true
+                                    appState.publishWidgetSnapshot()
+                                    appState.toast("Séance déplacée à demain")
+                                } else {
+                                    appState.toast("Impossible de déplacer cette séance — dernier jour de la semaine.")
+                                }
                             }
                             .buttonStyle(SecondaryButtonStyle())
 

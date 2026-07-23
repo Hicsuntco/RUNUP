@@ -25,6 +25,28 @@ final class VoiceCoachController: NSObject {
     private(set) var lastReply: String?
     /// Live partial transcript while listening — lets the UI show what it's hearing.
     private(set) var partialTranscript: String = ""
+    /// Surfaced by `LiveRunView`'s top banner — every failure path here used to be a bare
+    /// `return`, so tapping the mic with a denied permission (or losing the network mid-question)
+    /// did literally nothing visible. Auto-clears after a few seconds (same idea as the scripted
+    /// cues) so a one-off failure doesn't occupy the banner for the rest of the run.
+    private(set) var lastError: String?
+    private var errorClearTask: Task<Void, Never>?
+
+    private func reportError(_ message: String) {
+        errorClearTask?.cancel()
+        lastError = message
+        errorClearTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(6))
+            guard !Task.isCancelled else { return }
+            await MainActor.run { self?.lastError = nil }
+        }
+    }
+
+    /// Called by the mic button when the system permission request comes back denied — the
+    /// controller can't know that itself (the view owns the request flow).
+    func reportAuthorizationDenied() {
+        reportError("Micro non autorisé — active-le dans Réglages > RunUp.")
+    }
 
     private let profile: UserProfile
     /// Supplies live run stats (pace/distance/elapsed) at the moment a question is sent — a
@@ -67,11 +89,19 @@ final class VoiceCoachController: NSObject {
     }
 
     private func startListening() {
-        guard let speechRecognizer, speechRecognizer.isAvailable else { return }
-        guard let recognitionRequest = try? configureAudioSession() else { return }
+        guard let speechRecognizer, speechRecognizer.isAvailable else {
+            reportError("Reconnaissance vocale indisponible sur cet appareil.")
+            return
+        }
+        guard let recognitionRequest = try? configureAudioSession() else {
+            reportError("Micro indisponible — vérifie l'autorisation dans Réglages > RunUp.")
+            return
+        }
 
         state = .listening
         partialTranscript = ""
+        errorClearTask?.cancel()
+        lastError = nil
         self.recognitionRequest = recognitionRequest
 
         recognitionTask = speechRecognizer.recognitionTask(with: recognitionRequest) { [weak self] result, _ in
@@ -124,7 +154,10 @@ final class VoiceCoachController: NSObject {
                 )
                 await MainActor.run { self.speak(reply) }
             } catch {
-                await MainActor.run { self.state = .idle }
+                await MainActor.run {
+                    self.state = .idle
+                    self.reportError("Le coach n'a pas pu répondre — vérifie ta connexion.")
+                }
             }
         }
     }

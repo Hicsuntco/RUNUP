@@ -186,7 +186,9 @@ final class AppState {
             kcal: distanceKm * 62,
             avgHeartRate: 0
         )
-        modelContext.insert(record)
+        // Deliberately NOT inserted into SwiftData here — `DebriefSheet` inserts it on VALIDER.
+        // Inserting up front meant dismissing the debrief sheet without validating left a phantom
+        // synthetic run in History/Stats for a session that was never actually confirmed done.
         lastRun = record
         manualDebriefPresented = true
     }

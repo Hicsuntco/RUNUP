@@ -8,6 +8,7 @@ import UIKit
 struct LiveRunView: View {
     @Environment(AppState.self) private var appState
     @State private var cameraPosition: MapCameraPosition = .userLocation(fallback: .automatic)
+    @State private var showStopConfirm = false
 
     private var vm: LiveRunViewModel? { appState.liveRun }
 
@@ -40,6 +41,9 @@ struct LiveRunView: View {
     /// falling back to the scripted timestamp cues the rest of the time.
     private var topBannerText: String? {
         if let vc = vm?.voiceCoach {
+            // Failures surface here too — a denied mic permission or a failed coach reply used to
+            // leave the tap doing literally nothing visible.
+            if vc.state == .idle, let error = vc.lastError { return "⚠️ \(error)" }
             switch vc.state {
             case .listening: return vc.partialTranscript.isEmpty ? "Je t'écoute…" : vc.partialTranscript
             case .thinking: return "…"
@@ -155,13 +159,19 @@ struct LiveRunView: View {
             HStack(spacing: 16) {
                 Button(action: {
                     Haptics.impact(.heavy)
-                    _ = appState.endLiveRun()
+                    showStopConfirm = true
                 }) {
                     Text("STOP").displayStyle(11).tracking(1).foregroundColor(.white)
                 }
                 .frame(width: 52, height: 52)
                 .background(Color.white.opacity(0.08), in: Circle())
                 .buttonStyle(PressableStyle())
+                // A 52pt button right next to pause used to end the workout irreversibly on a
+                // single tap — one mid-run mis-tap killed the session.
+                .confirmationDialog("Terminer la course ?", isPresented: $showStopConfirm, titleVisibility: .visible) {
+                    Button("Terminer", role: .destructive) { _ = appState.endLiveRun() }
+                    Button("Continuer à courir", role: .cancel) {}
+                }
 
                 Button(action: {
                     Haptics.impact(.medium)
@@ -220,7 +230,10 @@ struct LiveRunView: View {
         guard let voiceCoach = vm?.voiceCoach else { return }
         Task {
             if voiceCoach.state == .idle {
-                guard await voiceCoach.requestAuthorization() else { return }
+                guard await voiceCoach.requestAuthorization() else {
+                    voiceCoach.reportAuthorizationDenied()
+                    return
+                }
             }
             voiceCoach.toggle()
         }

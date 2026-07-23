@@ -217,7 +217,9 @@ struct WeeklyRecapView: View {
             Text("🏅").font(.system(size: 22))
             VStack(alignment: .leading, spacing: 2) {
                 Text(record.label).font(RUFont.sans(12, weight: .bold)).foregroundColor(RUColor.textPrimary)
-                (Text(record.value).foregroundColor(RUColor.violet).fontWeight(.bold) + Text(" · +120 XP").foregroundColor(RUColor.text2))
+                // No "+120 XP" suffix — no record-specific XP is ever granted (the 120 is the
+                // ordinary per-debrief award), so the label promised a bonus that doesn't exist.
+                Text(record.value).foregroundColor(RUColor.violet).fontWeight(.bold)
                     .font(RUFont.sans(12))
             }
             Spacer(minLength: 0)

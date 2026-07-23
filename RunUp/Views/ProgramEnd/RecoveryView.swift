@@ -49,10 +49,23 @@ struct RecoveryView: View {
                 .padding(16)
                 .ruCard()
 
-                Button(profile.recoveryDaysLeft > 1 ? "JOUR SUIVANT →" : "JE SUIS PRÊTE") {
-                    AdaptivePlanEngine.tickRecovery(profile)
+                // Days now tick with the real calendar (see `refreshProgramForCurrentDate`) — no
+                // more tap-to-advance. What remains is an honest, explicit early exit.
+                if profile.recoveryDaysLeft > 0 {
+                    Text("Jour \(done + 1) sur \(total) — la suite se débloque demain.")
+                        .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                        .frame(maxWidth: .infinity)
+                        .multilineTextAlignment(.center)
+                    Button("JE ME SENS PRÊTE, PASSER LA RÉCUPÉRATION") {
+                        AdaptivePlanEngine.skipRecovery(profile)
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                } else {
+                    Button("JE SUIS PRÊTE") {
+                        AdaptivePlanEngine.skipRecovery(profile)
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
                 }
-                .buttonStyle(PrimaryButtonStyle())
             }
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.top, 8)

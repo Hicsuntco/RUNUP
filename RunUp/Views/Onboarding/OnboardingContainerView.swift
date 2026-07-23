@@ -15,7 +15,20 @@ struct OnboardingContainerView: View {
                 WelcomeView(onStart: { vm.showWelcome = false })
             } else {
                 VStack(spacing: 0) {
-                    Spacer().frame(height: 44)
+                    Spacer().frame(height: 12)
+                    // Back navigation — the 8-step wizard used to be forward-only, so a mistyped
+                    // birthdate or a mis-picked goal could only be fixed by finishing onboarding
+                    // and replaying the whole thing from Profil. Hidden on the first step (nothing
+                    // to go back to) and the final "building" step (the program is generating).
+                    HStack {
+                        if vm.step > 0 && vm.step < OnboardingViewModel.totalSteps - 1 {
+                            BackChevronButton { vm.step -= 1 }
+                        } else {
+                            Color.clear.frame(width: 44, height: 44)
+                        }
+                        Spacer()
+                    }
+                    .padding(.horizontal, 10)
                     ObProgress(step: vm.step, total: OnboardingViewModel.totalSteps)
                     currentStep
                         .id(vm.step)

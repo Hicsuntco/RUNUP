@@ -1,7 +1,7 @@
 import Foundation
 
 /// Pure business logic for the adaptive-plan mechanic — ported from `app.jsx`
-/// (`finishOb`, `stopRun`, `finishDebrief`, `endProgram`, `tickRecovery`, `chooseFreeRun`,
+/// (`finishOb`, `stopRun`, `finishDebrief`, `endProgram`, `skipRecovery`, `chooseFreeRun`,
 /// `startNewProgram`). Kept free of SwiftData/SwiftUI so it's easy to reason about and test;
 /// callers (ViewModels) pass in a `UserProfile` to mutate and get back a toast string.
 enum AdaptivePlanEngine {
@@ -114,6 +114,20 @@ enum AdaptivePlanEngine {
     /// real day/week always ticks forward on its own without the app having to be opened on a
     /// fixed schedule.
     static func refreshProgramForCurrentDate(_ profile: UserProfile) {
+        // Recovery advances with the real calendar, exactly like the active program below — it
+        // used to advance one day per tap of a "JOUR SUIVANT" button instead, which let N quick
+        // taps skip recovery entirely while never opening the app never advanced it at all.
+        if profile.programPhase == .recovery {
+            let start = profile.recoveryStartedAt ?? .now
+            if profile.recoveryStartedAt == nil { profile.recoveryStartedAt = start }
+            let cal = mondayCalendar
+            let daysElapsed = cal.dateComponents([.day], from: cal.startOfDay(for: start), to: cal.startOfDay(for: .now)).day ?? 0
+            profile.recoveryDaysLeft = max(0, profile.goalId.recoveryDays - daysElapsed)
+            if profile.recoveryDaysLeft <= 0 {
+                profile.programPhase = .choice
+            }
+            return
+        }
         guard profile.programPhase == .active else { return }
 
         // Backfill for any profile that never had a real week plan generated — migrated from a
@@ -633,21 +647,73 @@ enum AdaptivePlanEngine {
     /// same-day 3-goals bonus.
     static let streakMilestones: Set<Int> = [3, 7, 14, 21, 30, 60, 100, 180, 365]
 
+    /// Regenerates the current week's plan in place around just-changed settings (running days,
+    /// goal) — `ProgramSettingsSheet`'s save promises "le coach recalcule tes prochaines séances
+    /// dès l'enregistrement", which used to be false: nothing regenerated until the next week
+    /// boundary, so the visible week kept the old days. Unlike `beginWeek`, this preserves what
+    /// already happened this week: done markers, completed sessions, and the RPE accumulator.
+    static func applyProgramSettingsChange(_ profile: UserProfile) {
+        let today = currentWeekdayIndex()
+        let doneDays = Set(profile.weekStrip.filter { $0.state == .done }.map(\.weekday))
+        let completedDays = Set(profile.weekSessions.filter(\.completed).map(\.weekday))
+        let cal = mondayCalendar
+        let startOfThisWeek = cal.dateInterval(of: .weekOfYear, for: .now)?.start ?? .now
+        profile.weekStrip = (0..<7).map { i in
+            let state: DayStatus.State
+            if doneDays.contains(i) {
+                state = .done
+            } else if !profile.runningDays.contains(i) {
+                state = .rest
+            } else if i == today {
+                state = .today
+            } else if i < today {
+                state = .rest
+            } else {
+                state = .upcoming
+            }
+            let date = cal.date(byAdding: .day, value: i, to: startOfThisWeek) ?? .now
+            return DayStatus(weekday: i, letter: DayStatus.letters[i], state: state, date: date)
+        }
+        profile.weekSessions = generateWeekSessions(weekNumber: profile.weekNumber, tier: profile.weekTier, profile: profile)
+        for i in profile.weekSessions.indices where completedDays.contains(profile.weekSessions[i].weekday) {
+            profile.weekSessions[i].completed = true
+        }
+        profile.todaySession = profile.weekSessions.first(where: { $0.weekday == today })?.session ?? restSession
+    }
+
+    /// Really swaps today's session with tomorrow's — "Déplacer à demain" used to set a purely
+    /// local flag in `SessionDetailSheet` and show a success message while the plan itself never
+    /// changed (Home kept showing the session today). Swapping (rather than pushing everything
+    /// back a day) keeps the rest of the week intact; today inherits whatever tomorrow had, which
+    /// is usually a rest day. Returns false when there's nothing to move (rest day, already done)
+    /// or no tomorrow inside this plan week (Sunday).
+    static func moveTodaySessionToTomorrow(_ profile: UserProfile) -> Bool {
+        let today = currentWeekdayIndex()
+        guard today < 6,
+              let todayIdx = profile.weekSessions.firstIndex(where: { $0.weekday == today }),
+              let tomorrowIdx = profile.weekSessions.firstIndex(where: { $0.weekday == today + 1 }),
+              let session = profile.weekSessions[todayIdx].session, session.durationMinutes > 0,
+              !profile.weekSessions[todayIdx].completed
+        else { return false }
+        profile.weekSessions[todayIdx].session = profile.weekSessions[tomorrowIdx].session
+        profile.weekSessions[tomorrowIdx].session = session
+        profile.todaySession = profile.weekSessions[todayIdx].session ?? restSession
+        return true
+    }
+
     // MARK: Program-end flow
 
     static func endProgram(_ profile: UserProfile) {
         profile.programPhase = .recovery
         profile.recoveryDaysLeft = profile.goalId.recoveryDays
+        profile.recoveryStartedAt = .now
     }
 
-    static func tickRecovery(_ profile: UserProfile) {
-        let left = profile.recoveryDaysLeft - 1
-        if left <= 0 {
-            profile.recoveryDaysLeft = 0
-            profile.programPhase = .choice
-        } else {
-            profile.recoveryDaysLeft = left
-        }
+    /// Explicit, deliberate early exit from recovery ("Je me sens prête") — an honest user choice,
+    /// unlike the old tap-to-advance mechanic that pretended days had passed.
+    static func skipRecovery(_ profile: UserProfile) {
+        profile.recoveryDaysLeft = 0
+        profile.programPhase = .choice
     }
 
     static func chooseFreeRun(_ profile: UserProfile) {

@@ -160,6 +160,10 @@ struct CoachView: View {
             TextField("", text: Binding(get: { vm?.draft ?? "" }, set: { vm?.draft = $0 }), prompt: Text("Écris à ton coach…").foregroundColor(RUColor.text3))
                 .foregroundColor(RUColor.textPrimary)
                 .font(RUFont.sans(13))
+                // The keyboard return key used to just dismiss without sending — in a chat, return
+                // means send, same as every messaging app.
+                .submitLabel(.send)
+                .onSubmit { send(vm?.draft ?? "") }
             Button(action: { send(vm?.draft ?? "") }) {
                 Image(systemName: "arrow.up").foregroundColor(.white).font(.system(size: 14, weight: .bold))
             }

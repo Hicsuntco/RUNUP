@@ -28,6 +28,7 @@ struct ClubView: View {
     @State private var commentsActivity: FeedItem?
     @State private var selectedBadge: ClubBadge?
     @State private var skeletonPulse = false
+    @State private var showLeaveConfirm = false
     /// Drives the feed rows' staggered entrance — flipped once the first feed load lands, after
     /// which each row's own per-index delay takes over (same pattern as `RecapView`'s splits).
     @State private var feedRevealed = false
@@ -306,9 +307,19 @@ struct ClubView: View {
                 .foregroundColor(RUColor.text3)
             }
             Spacer()
-            Button("Quitter le club") { Task { await leaveClub() } }
+            // Confirmation + in-flight guard — one accidental tap used to leave the club
+            // instantly (rejoining needs the invite code again), and a double-tap made the second
+            // call fail with a misleading error after the first had already succeeded.
+            Button("Quitter le club") { showLeaveConfirm = true }
                 .font(RUFont.sans(11, weight: .semibold))
                 .foregroundColor(RUColor.text3)
+                .disabled(isLoading)
+                .confirmationDialog("Quitter le club ?", isPresented: $showLeaveConfirm, titleVisibility: .visible) {
+                    Button("Quitter", role: .destructive) { Task { await leaveClub() } }
+                    Button("Annuler", role: .cancel) {}
+                } message: {
+                    Text("Tu devras redemander le code d'invitation pour revenir.")
+                }
         }
     }
 
@@ -678,6 +689,8 @@ struct ClubView: View {
     }
 
     private func leaveClub() async {
+        guard !isLoading else { return }
+        isLoading = true
         do {
             try await clubService.leaveClub()
             board = ClubBoard(club: nil, leaderboard: [])
@@ -685,6 +698,7 @@ struct ClubView: View {
         } catch {
             errorMessage = "Impossible de quitter le club."
         }
+        isLoading = false
     }
 
     private func toggleKudos(_ item: FeedItem) async {
@@ -695,9 +709,11 @@ struct ClubView: View {
         do {
             try await clubService.toggleKudos(activityId: item.id)
         } catch {
-            // Roll back on failure — the optimistic toggle above was wrong.
+            // Roll back on failure — the optimistic toggle above was wrong. With feedback: a clap
+            // that silently un-claps itself just reads as a broken button.
             feed[index].kudoedByMe = wasKudoed
             feed[index].kudos += wasKudoed ? 1 : -1
+            appState.toast("Kudos non envoyé — vérifie ta connexion.")
         }
     }
 

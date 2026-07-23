@@ -16,7 +16,6 @@ struct ProfileView: View {
     @Environment(AppState.self) private var appState
     private var profile: UserProfile { appState.profile }
 
-    @State private var unit = "km"
     @State private var showMoreSettings = false
 
     var body: some View {
@@ -55,9 +54,6 @@ struct ProfileView: View {
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.top, 8)
             .padding(.bottom, 130)
-        }
-        .onAppear {
-            unit = profile.distanceUnit
         }
         .sheet(isPresented: $showMoreSettings) {
             MoreSettingsView()
@@ -224,26 +220,12 @@ struct ProfileView: View {
         appState.publishWidgetSnapshot()
     }
 
+    // The "Unité de distance" km/mi toggle used to sit here — removed rather than left as dead
+    // state: `distanceUnit` was written and persisted but read by nothing, so picking "mi"
+    // visibly changed nothing anywhere in the app. Reinstate only alongside real unit conversion
+    // in every distance display.
     private var preferencesCard: some View {
         VStack(spacing: 0) {
-            HStack {
-                Text("Unité de distance").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
-                Spacer()
-                HStack(spacing: 4) {
-                    ForEach(["km", "mi"], id: \.self) { u in
-                        Button(action: { unit = u; profile.distanceUnit = u }) {
-                            Text(u).font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                                .padding(.horizontal, 14).padding(.vertical, 6)
-                                .background(unit == u ? RUColor.rose : .clear, in: Capsule())
-                        }
-                        .buttonStyle(PressableStyle())
-                    }
-                }
-                .padding(3)
-                .background(RUColor.card2, in: Capsule())
-            }
-            .padding(.horizontal, 14).padding(.vertical, 13)
-            Divider().background(RUColor.line)
             HStack {
                 Text("Notifications du coach").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
@@ -253,10 +235,21 @@ struct ProfileView: View {
                         profile.coachNotificationsEnabled = on
                         if on {
                             Task {
-                                await NotificationService.shared.requestAuthorization()
-                                NotificationService.shared.rescheduleDailyReminder(for: profile)
-                                NotificationService.shared.rescheduleInactivityReminder(for: profile)
-                                NotificationService.shared.scheduleWeeklyRecapReminder(for: profile)
+                                // The OS grant used to be ignored — if she'd denied the system
+                                // prompt, the toggle stayed ON while every scheduler silently
+                                // no-op'd (they all guard on real authorization). Reflect reality:
+                                // revert the toggle and point at Réglages instead.
+                                let granted = await NotificationService.shared.requestAuthorization()
+                                if granted {
+                                    NotificationService.shared.rescheduleDailyReminder(for: profile)
+                                    NotificationService.shared.rescheduleInactivityReminder(for: profile)
+                                    NotificationService.shared.scheduleWeeklyRecapReminder(for: profile)
+                                } else {
+                                    await MainActor.run {
+                                        profile.coachNotificationsEnabled = false
+                                        appState.toast("Notifications refusées côté iPhone — active-les dans Réglages > RunUp.")
+                                    }
+                                }
                             }
                         } else {
                             NotificationService.shared.cancelDailyReminder()

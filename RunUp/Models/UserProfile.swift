@@ -61,6 +61,11 @@ final class UserProfile {
     var programStartDate: Date?
     var programPhase: ProgramPhase
     var recoveryDaysLeft: Int
+    /// When the recovery phase actually began — recovery days used to advance one per TAP of
+    /// "JOUR SUIVANT" (N quick taps skipped recovery entirely; never opening the app never
+    /// advanced it). Now derived from this real date, same mechanism as `programStartDate` above.
+    /// Optional for the same migrate-as-nil-and-self-heal reason.
+    var recoveryStartedAt: Date?
     /// 0 = Monday ... 6 = Sunday.
     var runningDays: [Int]
     /// Which weekday carries the long run — chosen at onboarding

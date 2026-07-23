@@ -69,13 +69,27 @@ final class LiveRunViewModel {
         self.healthKit = healthKit
         let name = profile.name
         let targetPace = profile.todaySession.pace
-        cues = [
-            (6, "C'est parti \(name). Échauffement tranquille, reste en Z2."),
-            (120, "Fin d'échauffement. Premier 800 : vise \(targetPace), foulée relâchée."),
-            (360, "Beau rythme, tu tiens ton allure — FC bien maîtrisée 👊"),
-            (720, "Mi-séance, tu gères parfaitement. Garde ta cadence."),
-            (1080, "Dernier bloc, c'est le moment — lâche tout dessus 🔥")
-        ]
+        // Cues match what the session actually is — the old fixed set said "Premier 800 : vise X"
+        // on continuous footings (no 800s exist there) and claimed "FC bien maîtrisée" with no
+        // real heart-rate reading behind it, the exact kind of fabricated claim the rest of the
+        // app already scrubbed out.
+        if profile.todaySession.isIntervalSession {
+            cues = [
+                (6, "C'est parti \(name). Échauffement tranquille, reste en Z2."),
+                (120, "Fin d'échauffement. Première répétition : vise \(targetPace), foulée relâchée."),
+                (360, "Tiens ton allure sur chaque répétition, récupère bien entre les blocs 👊"),
+                (720, "Mi-séance, tu gères. Garde ta cadence sur les prochaines répétitions."),
+                (1080, "Dernier bloc, c'est le moment — lâche tout dessus 🔥")
+            ]
+        } else {
+            cues = [
+                (6, "C'est parti \(name). Départ tranquille, laisse le corps se mettre en route."),
+                (120, "Trouve ton rythme de croisière : vise \(targetPace), foulée relâchée."),
+                (360, "Beau rythme, reste régulière — c'est la constance qui paie 👊"),
+                (720, "Mi-séance, tu gères parfaitement. Garde ta cadence."),
+                (1080, "Dernière partie — finis proprement, sans t'arracher 🔥")
+            ]
+        }
     }
 
     func start() {

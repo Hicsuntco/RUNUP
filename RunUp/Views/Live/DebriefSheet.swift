@@ -100,6 +100,12 @@ struct DebriefSheet: View {
                 .padding(.top, 16)
 
                 Button("VALIDER & METTRE À JOUR") {
+                    // A GPS run is inserted by `endLiveRun` (it really happened, validated or
+                    // not); a manual "FAIT" run reaches here NOT yet inserted, so a dismissed
+                    // sheet leaves no phantom record — it only becomes real on this tap.
+                    if run.modelContext == nil {
+                        appState.modelContext.insert(run)
+                    }
                     AdaptivePlanEngine.applyDebrief(rpe: rpe, run: run, profile: appState.profile)
                     let distance = String(format: "%.1f", run.distanceKm)
                     appState.postClubActivity(type: "run", text: "a couru \(distance) km · \(run.title)", xpEarned: 120, distanceKm: run.distanceKm)

@@ -39,6 +39,10 @@ struct ProgramSettingsSheet: View {
                 Button("ENREGISTRER") {
                     appState.profile.runningDays = Array(days)
                     appState.profile.goalDisplay = goal
+                    // Makes the copy above true — regenerate this week around the new days now,
+                    // instead of silently waiting for the next week boundary.
+                    AdaptivePlanEngine.applyProgramSettingsChange(appState.profile)
+                    appState.publishWidgetSnapshot()
                     appState.toast("Programme mis à jour")
                     dismiss()
                 }

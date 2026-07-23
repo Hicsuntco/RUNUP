@@ -548,6 +548,10 @@ enum AdaptivePlanEngine {
 
     // MARK: Live run → history
 
+    /// "m:ss" — pace-per-km only (never exceeds an hour in any realistic run), used for
+    /// `avgPace`/live pace display. A total run duration or elapsed-time display needs
+    /// `PaceModel.formatDuration` instead: this never rolls over to hours, so a 95-minute long run
+    /// used to render as "95:00" instead of "1:35:00" everywhere this was (mis)used for that.
     static func fmt(_ seconds: Double) -> String {
         let s = max(0, seconds)
         return "\(Int(s / 60)):\(String(format: "%02d", Int(s.truncatingRemainder(dividingBy: 60))))"

@@ -20,6 +20,9 @@ struct HeaderView<Trailing: View>: View {
 }
 
 /// Circular first-initial avatar button, the default trailing accessory used across headers.
+/// The visible circle stays 36pt (unchanged look), but the tappable area grows to Apple's 44pt
+/// HIG minimum via the outer frame + `.contentShape` — no `accessibilityLabel` existed anywhere
+/// in the app before this pass, so VoiceOver read every icon-only button as just "button".
 struct AvatarButton: View {
     var initial: String
     var action: () -> Void
@@ -30,12 +33,16 @@ struct AvatarButton: View {
                 .fill(RUColor.rose)
                 .frame(width: 36, height: 36)
                 .overlay(Text(initial.uppercased()).displayStyle(15).foregroundColor(.white))
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())
+        .accessibilityLabel("Profil")
     }
 }
 
-/// Back chevron button used at the top of most sub-screens.
+/// Back chevron button used at the top of most sub-screens. Same 44pt-tap-target /
+/// `accessibilityLabel` treatment as `AvatarButton` above.
 struct BackChevronButton: View {
     var action: () -> Void
 
@@ -45,12 +52,16 @@ struct BackChevronButton: View {
                 .font(.system(size: 22))
                 .foregroundColor(RUColor.text2)
                 .frame(width: 30, height: 30)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())
+        .accessibilityLabel("Retour")
     }
 }
 
-/// Frosted circular chevron used over imagery (Live Run, Recap hero).
+/// Frosted circular chevron used over imagery (Live Run, Recap hero). Same treatment as
+/// `BackChevronButton` above.
 struct FrostedBackButton: View {
     var action: () -> Void
 
@@ -62,7 +73,10 @@ struct FrostedBackButton: View {
                 .frame(width: 34, height: 34)
                 .background(.black.opacity(0.45), in: Circle())
                 .background(.ultraThinMaterial, in: Circle())
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())
+        .accessibilityLabel("Retour")
     }
 }

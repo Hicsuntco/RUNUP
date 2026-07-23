@@ -38,10 +38,22 @@ struct HealthConnectStepView: View {
         guard source == .apple, !vm.connected.contains(.apple) else { return }
         vm.connecting = .apple
         Task {
-            try? await appState.healthKit.requestAuthorization()
-            await MainActor.run {
-                vm.connected.insert(.apple)
-                vm.connecting = nil
+            do {
+                try await appState.healthKit.requestAuthorization()
+                await MainActor.run {
+                    vm.connected.insert(.apple)
+                    vm.connecting = nil
+                }
+            } catch {
+                // HealthKit deliberately never reveals whether she actually granted or denied each
+                // individual read type (a privacy design choice by Apple) — this only throws for a
+                // genuine failure (HealthKit unavailable on this device, a malformed type list),
+                // which is the one case worth surfacing as "not connected" instead of the old
+                // `try?` swallowing it and marking `.apple` connected regardless of outcome.
+                await MainActor.run {
+                    vm.connecting = nil
+                    appState.toast("Connexion à Apple Santé impossible, réessaie plus tard.")
+                }
             }
         }
     }

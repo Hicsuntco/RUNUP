@@ -18,7 +18,7 @@ struct RootTabView: View {
                 .id(appState.screen)
 
             if showBar && appState.isRunActive {
-                RunInProgressPill(elapsed: appState.liveRun.map { AdaptivePlanEngine.fmt($0.elapsedSeconds) } ?? "0:00") {
+                RunInProgressPill(elapsed: appState.liveRun.map { PaceModel.formatDuration($0.elapsedSeconds) } ?? "0:00") {
                     appState.go(.live)
                 }
                 .padding(.bottom, RUSpacing.tabBarBottomInset + RUSpacing.tabBarHeight + 14)

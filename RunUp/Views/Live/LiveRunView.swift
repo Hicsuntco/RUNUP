@@ -127,7 +127,7 @@ struct LiveRunView: View {
     private var metricsPanel: some View {
         VStack(spacing: 14) {
             VStack(spacing: 4) {
-                Text(AdaptivePlanEngine.fmt(vm?.elapsedSeconds ?? 0)).displayStyle(64).foregroundColor(.white)
+                Text(PaceModel.formatDuration(vm?.elapsedSeconds ?? 0)).displayStyle(64).foregroundColor(.white)
                 EyebrowLabel(text: "Temps · \(String(format: "%.2f", vm?.distanceKm ?? 0)) km")
             }
 

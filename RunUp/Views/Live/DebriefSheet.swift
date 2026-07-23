@@ -20,7 +20,7 @@ struct DebriefSheet: View {
     /// values (no HR-zone claim at all: there's no real per-user zone threshold to check FC
     /// against, so that part is dropped rather than kept as an unbacked guess).
     private var insightMessage: String {
-        let paces = run.splits.compactMap(paceSeconds)
+        let paces = run.splits.compactMap(PaceModel.parseSecPerKm)
         guard paces.count > 1, let minPace = paces.min(), let maxPace = paces.max(), maxPace > minPace else {
             return "Séance enregistrée 💪 Bien joué."
         }
@@ -31,12 +31,6 @@ struct DebriefSheet: View {
             return "Séance solide 💪 Tu es partie fort et tu as tenu jusqu'au bout."
         }
         return "Séance solide 💪 Allure plutôt régulière du début à la fin."
-    }
-
-    private func paceSeconds(_ time: String) -> Double? {
-        let parts = time.split(separator: ":").compactMap { Double($0) }
-        guard parts.count == 2 else { return nil }
-        return parts[0] * 60 + parts[1]
     }
 
     private var impactLines: [(String, String, String)] {

@@ -137,7 +137,7 @@ final class LiveRunViewModel {
     /// that has no idea a run is even in progress.
     private func liveVoiceContext() -> String {
         let target = profile.todaySession.pace
-        return "Distance parcourue jusqu'ici : \(String(format: "%.2f", distanceKm)) km. Allure actuelle : \(paceLabel) /km (allure cible du jour : \(target) /km). Temps écoulé : \(AdaptivePlanEngine.fmt(elapsedSeconds))."
+        return "Distance parcourue jusqu'ici : \(String(format: "%.2f", distanceKm)) km. Allure actuelle : \(paceLabel) /km (allure cible du jour : \(target) /km). Temps écoulé : \(PaceModel.formatDuration(elapsedSeconds))."
     }
 
     private func showCue(_ message: String) {

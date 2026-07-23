@@ -110,7 +110,7 @@ struct HistoryView: View {
             Text(run.title).font(RUFont.sans(15, weight: .semibold)).foregroundColor(RUColor.textPrimary)
             HStack(spacing: 20) {
                 MetricColumn(value: String(format: "%.1f", run.distanceKm), label: "km", valueSize: 20)
-                MetricColumn(value: AdaptivePlanEngine.fmt(Double(run.durationSeconds)), label: "temps", valueSize: 20)
+                MetricColumn(value: PaceModel.formatDuration(Double(run.durationSeconds)), label: "temps", valueSize: 20)
                 MetricColumn(value: run.avgPace, label: "allure moy", valueColor: RUColor.rose2, valueSize: 20)
             }
         }

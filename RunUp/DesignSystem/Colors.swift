@@ -42,7 +42,11 @@ enum RUColor {
 
     static var textPrimary: Color { isLight ? Color(hex: 0x15151C) : Color.white }
     static var text2: Color { isLight ? Color.black.opacity(0.55) : Color.white.opacity(0.5) }
-    static var text3: Color { isLight ? Color.black.opacity(0.38) : Color.white.opacity(0.32) }
+    /// Light-mode value was 0.38 — roughly a 2.7:1 contrast ratio against `bg`'s white, well under
+    /// WCAG's 4.5:1 for normal text, even though this token is read as real caption/timestamp text
+    /// (not purely decorative) all over the app. 0.5 brings that to ~4:1 while staying visibly
+    /// lighter than `text2`'s 0.55, preserving the two tokens' hierarchy.
+    static var text3: Color { isLight ? Color.black.opacity(0.5) : Color.white.opacity(0.32) }
     static var text4: Color { isLight ? Color.black.opacity(0.22) : Color.white.opacity(0.2) }
 
     /// A near-invisible opacity-on-white (was 0.035) reads as almost no card at all — dark mode's

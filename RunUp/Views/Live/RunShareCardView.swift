@@ -106,7 +106,7 @@ struct RunShareCardView: View {
                     HStack {
                         shareStat(run.avgPace, "ALLURE MOY")
                         Spacer()
-                        shareStat(AdaptivePlanEngine.fmt(Double(run.durationSeconds)), "TEMPS")
+                        shareStat(PaceModel.formatDuration(Double(run.durationSeconds)), "TEMPS")
                         Spacer()
                         shareStat("+\(run.elevationGainM) M", "D+")
                     }

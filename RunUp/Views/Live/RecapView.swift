@@ -27,7 +27,7 @@ struct RecapView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                             statTile(String(format: "%.2f", run.distanceKm), "KM")
-                            statTile(AdaptivePlanEngine.fmt(Double(run.durationSeconds)), "TEMPS")
+                            statTile(PaceModel.formatDuration(Double(run.durationSeconds)), "TEMPS")
                             statTile(run.avgPace, "ALLURE MOY")
                         }
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
@@ -165,21 +165,17 @@ struct RecapView: View {
                 }
             }
             .frame(height: 22)
-            Text(time).displayStyle(14).foregroundColor(isLast ? RUColor.rose2 : RUColor.textPrimary).frame(width: 38, alignment: .trailing)
+            // minWidth, not a fixed width — a plain "m:ss" fits 38pt at the default text size, but
+            // larger Dynamic Type sizes need the row to grow rather than truncate the split time.
+            Text(time).displayStyle(14).foregroundColor(isLast ? RUColor.rose2 : RUColor.textPrimary).frame(minWidth: 38, alignment: .trailing)
         }
-    }
-
-    private func splitPaceSeconds(_ time: String) -> Double? {
-        let parts = time.split(separator: ":").compactMap { Double($0) }
-        guard parts.count == 2 else { return nil }
-        return parts[0] * 60 + parts[1]
     }
 
     /// Bar length relative to this run's own fastest/slowest split — was previously
     /// `0.45 + index * 0.07`, a shape that grew with the split's position in the list regardless
     /// of whether the runner actually sped up or slowed down.
     private func splitFractions(_ splits: [String]) -> [Double] {
-        let seconds = splits.map { splitPaceSeconds($0) }
+        let seconds = splits.map { PaceModel.parseSecPerKm($0) }
         let known = seconds.compactMap { $0 }
         guard let minSec = known.min(), let maxSec = known.max(), maxSec > minSec else {
             return splits.map { _ in 0.6 }

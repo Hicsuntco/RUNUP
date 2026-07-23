@@ -419,7 +419,7 @@ struct ClubView: View {
             VStack(spacing: 6) {
                 ForEach(board.leaderboard) { entry in
                     HStack(spacing: 12) {
-                        Text(entry.rank <= 3 ? ["🥇", "🥈", "🥉"][entry.rank - 1] : "\(entry.rank)")
+                        Text(entry.rank >= 1 && entry.rank <= 3 ? ["🥇", "🥈", "🥉"][entry.rank - 1] : "\(entry.rank)")
                             .displayStyle(15)
                             .foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.text2)
                             .frame(width: 20)

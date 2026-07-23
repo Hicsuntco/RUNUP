@@ -177,7 +177,7 @@ final class AppState {
         let session = profile.todaySession
         guard session.durationMinutes > 0 else { return }
         let elapsedSeconds = Double(session.durationMinutes * 60)
-        let secPerKm = parsePaceSecondsPerKm(session.pace) ?? 300
+        let secPerKm = PaceModel.parseSecPerKm(session.pace) ?? 300
         let distanceKm = elapsedSeconds / secPerKm
         let record = AdaptivePlanEngine.buildRunRecord(
             title: session.title,
@@ -189,12 +189,6 @@ final class AppState {
         modelContext.insert(record)
         lastRun = record
         manualDebriefPresented = true
-    }
-
-    private func parsePaceSecondsPerKm(_ pace: String) -> Double? {
-        let parts = pace.split(separator: ":").compactMap { Double($0) }
-        guard parts.count == 2 else { return nil }
-        return parts[0] * 60 + parts[1]
     }
 
     func openSessionDetail() { sessionDetailPresented = true }

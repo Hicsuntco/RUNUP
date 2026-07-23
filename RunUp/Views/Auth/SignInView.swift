@@ -106,7 +106,7 @@ struct SignInView: View {
             Button(mode == .signIn ? "SE CONNECTER" : "CRÉER MON COMPTE") {
                 submitEmailForm()
             }
-            .buttonStyle(PrimaryButtonStyle())
+            .buttonStyle(PrimaryButtonStyle(isDisabled: email.trimmingCharacters(in: .whitespaces).isEmpty || password.isEmpty || (mode == .signUp && name.trimmingCharacters(in: .whitespaces).isEmpty)))
             .disabled(email.trimmingCharacters(in: .whitespaces).isEmpty || password.isEmpty || (mode == .signUp && name.trimmingCharacters(in: .whitespaces).isEmpty))
         }
     }

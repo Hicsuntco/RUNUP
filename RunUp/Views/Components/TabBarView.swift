@@ -39,12 +39,20 @@ struct TabBarView: View {
         let (screen, label, icon) = item
         let on = selected == screen
         let color = on ? RUColor.rose2 : (RUColor.isLight ? Color.black.opacity(0.32) : Color.white.opacity(0.4))
-        return Button(action: { onSelect(screen) }) {
+        return Button(action: {
+            Haptics.selection()
+            onSelect(screen)
+        }) {
             VStack(spacing: 5) {
                 Circle()
                     .fill(RUColor.rose)
                     .frame(width: 4, height: 4)
                     .opacity(on ? 1 : 0)
+                    .scaleEffect(on ? 1 : 0.3)
+                    // Snapped on/off before this — RootTabView already animates the screen swap
+                    // itself (`.animation(.easeInOut(duration: 0.25), value: appState.screen)`),
+                    // but the selection dot one layer down didn't match that with its own.
+                    .animation(.easeOut(duration: 0.2), value: on)
                 Image(systemName: icon)
                     .font(.system(size: 18, weight: on ? .semibold : .regular))
                     .foregroundColor(color)

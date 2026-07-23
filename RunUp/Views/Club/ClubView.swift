@@ -237,7 +237,7 @@ struct ClubView: View {
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                     Button("Créer") { Task { await createClub() } }
-                        .buttonStyle(PrimaryButtonStyle())
+                        .buttonStyle(PrimaryButtonStyle(isDisabled: newClubName.trimmingCharacters(in: .whitespaces).isEmpty || isLoading))
                         .disabled(newClubName.trimmingCharacters(in: .whitespaces).isEmpty || isLoading)
                 }
             }
@@ -254,7 +254,7 @@ struct ClubView: View {
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                     Button("Rejoindre") { Task { await joinClub() } }
-                        .buttonStyle(PrimaryButtonStyle())
+                        .buttonStyle(PrimaryButtonStyle(isDisabled: joinCode.trimmingCharacters(in: .whitespaces).isEmpty || isLoading))
                         .disabled(joinCode.trimmingCharacters(in: .whitespaces).isEmpty || isLoading)
                 }
             }
@@ -486,7 +486,10 @@ struct ClubView: View {
                         Spacer(minLength: 0)
                     }
                     HStack(spacing: 8) {
-                        Button(action: { Task { await toggleKudos(item) } }) {
+                        Button(action: {
+                            Haptics.impact(.light)
+                            Task { await toggleKudos(item) }
+                        }) {
                             HStack(spacing: 6) {
                                 Text("👏")
                                 Text("\(item.kudos)")
@@ -496,6 +499,8 @@ struct ClubView: View {
                             .padding(.horizontal, 12).padding(.vertical, 6)
                             .background(item.kudoedByMe ? RUColor.rose.opacity(0.16) : RUColor.card2, in: Capsule())
                             .overlay(Capsule().stroke(item.kudoedByMe ? RUColor.rose.opacity(0.35) : RUColor.line, lineWidth: RUSpacing.hairline))
+                            .scaleEffect(item.kudoedByMe ? 1.08 : 1.0)
+                            .animation(.spring(response: 0.3, dampingFraction: 0.45), value: item.kudoedByMe)
                         }
                         .buttonStyle(PressableStyle())
 

@@ -144,14 +144,20 @@ struct LiveRunView: View {
             }
 
             HStack(spacing: 16) {
-                Button(action: { _ = appState.endLiveRun() }) {
+                Button(action: {
+                    Haptics.impact(.heavy)
+                    _ = appState.endLiveRun()
+                }) {
                     Text("STOP").displayStyle(11).tracking(1).foregroundColor(.white)
                 }
                 .frame(width: 52, height: 52)
                 .background(Color.white.opacity(0.08), in: Circle())
                 .buttonStyle(PressableStyle())
 
-                Button(action: { vm?.togglePause() }) {
+                Button(action: {
+                    Haptics.impact(.medium)
+                    vm?.togglePause()
+                }) {
                     Image(systemName: vm?.isPaused == true ? "play.fill" : "pause.fill")
                         .font(.system(size: 22))
                         .foregroundColor(Color(hex: 0x0A0A0A))

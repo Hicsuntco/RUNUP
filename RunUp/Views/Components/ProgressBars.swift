@@ -37,6 +37,11 @@ struct LinearBar: View {
                     }
                 }
                 .frame(width: geo.size.width * max(0, min(fraction, 1)))
+                // `RingView` (the circular counterpart used for the same kind of goal/XP progress)
+                // animates its fill; this had none at all, so every screen using `LinearBar`
+                // instead — Club's XP bar, challenge progress, RingsView's goal rows, weekly stat
+                // tiles — snapped straight to the new value instead of filling in front of you.
+                .animation(.easeOut(duration: 0.8), value: fraction)
             }
         }
         .frame(height: height)

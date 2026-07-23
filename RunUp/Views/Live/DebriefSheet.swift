@@ -108,14 +108,21 @@ struct DebriefSheet: View {
                     // comment, or a weekly plan update, so a solo runner who just isn't hitting
                     // that exact daily combo would never see anything land in the bell at all.
                     appState.notify(icon: "✅", colorHex: 0xC9FF3B, title: "Séance terminée", text: "\(run.title) · \(distance) km · +120 XP")
+                    // This single tap awards XP, updates the streak, and possibly a daily-goals
+                    // bonus — the app's core adaptive-plan mechanic — but had zero haptic feedback,
+                    // the same as tapping a settings toggle. A success tap here, and a stronger one
+                    // on the two branches below that are genuine celebration moments.
+                    Haptics.success()
                     let streak = appState.profile.streak
                     if AdaptivePlanEngine.streakMilestones.contains(streak) {
                         appState.notify(icon: "🔥", colorHex: 0xFF6B4A, title: "Série de \(streak) jours", text: "Tu enchaînes les séances sans lâcher — continue comme ça !")
+                        Haptics.impact(.heavy)
                     }
                     if AdaptivePlanEngine.checkDailyGoalsBonus(appState.profile) {
                         appState.postClubActivity(type: "badge", text: "a bouclé ses 3 objectifs du jour", xpEarned: 120)
                         appState.notify(icon: "🎉", colorHex: 0xC9FF3B, title: "Journée bouclée", text: "Tes 3 objectifs du jour sont faits — +120 XP.")
                         NotificationService.shared.postImmediateNotification(title: "Journée bouclée 🎉", body: "Tes 3 objectifs du jour sont faits — +120 XP.")
+                        Haptics.impact(.heavy)
                     }
                     // Today's session is done — an evening reminder for it would be stale now.
                     NotificationService.shared.rescheduleDailyReminder(for: appState.profile)

@@ -9,6 +9,7 @@ struct CoachView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \ChatMessage.timestamp) private var messages: [ChatMessage]
     @State private var vm: CoachViewModel?
+    @State private var typingBounce = false
 
     private let chips = ["Adapte ma semaine", "Je suis fatiguée", "Conseils nutrition", "Analyse ma dernière sortie"]
 
@@ -136,15 +137,22 @@ struct CoachView: View {
         }
     }
 
+    /// Was 3 static dots with no animation at all — every chat app's typing indicator pulses in
+    /// sequence, and this is the loading state for the AI reply, shown on every single message.
     private var typingIndicator: some View {
         HStack {
             HStack(spacing: 4) {
-                ForEach(0..<3) { _ in Circle().fill(RUColor.text2).frame(width: 6, height: 6) }
+                ForEach(0..<3, id: \.self) { i in
+                    Circle().fill(RUColor.text2).frame(width: 6, height: 6)
+                        .offset(y: typingBounce ? -3 : 0)
+                        .animation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true).delay(Double(i) * 0.15), value: typingBounce)
+                }
             }
             .padding(13)
             .background(RUColor.card, in: BubbleShape(tailCorner: .topLeft))
             Spacer()
         }
+        .onAppear { typingBounce = true }
     }
 
     private var inputBar: some View {

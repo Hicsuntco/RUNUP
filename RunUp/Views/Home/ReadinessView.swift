@@ -46,7 +46,10 @@ struct ReadinessView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     EyebrowLabel(text: "Basé sur", color: RUColor.text3)
                     HStack(spacing: 10) {
-                        Text("🔥").font(.system(size: 16))
+                        // Matches HomeView's streakChip icon treatment — an SF Symbol tinted via
+                        // RUColor instead of an emoji, so the same concept doesn't look like two
+                        // different icon languages depending which screen you're on.
+                        Image(systemName: "flame.fill").font(.system(size: 14)).foregroundColor(RUColor.amber)
                         Text("Série en cours : jour \(profile.streak)").font(RUFont.sans(13)).foregroundColor(RUColor.textPrimary)
                     }
                     if profile.recentRPESeverities.isEmpty {

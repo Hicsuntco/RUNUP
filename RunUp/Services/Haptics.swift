@@ -16,4 +16,10 @@ enum Haptics {
     static func warning() {
         UINotificationFeedbackGenerator().notificationOccurred(.warning)
     }
+
+    /// The correct generator for picker/tab/segmented-style selection changes — lighter and more
+    /// appropriate than `.impact` for "you moved to a different option," not "something happened."
+    static func selection() {
+        UISelectionFeedbackGenerator().selectionChanged()
+    }
 }

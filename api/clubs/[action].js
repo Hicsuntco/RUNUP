@@ -3,8 +3,9 @@
 // still work exactly as before.
 const { sql } = require('../../lib/db');
 const { requireAuth } = require('../../lib/auth');
-const { withErrorHandling } = require('../../lib/http');
+const { withErrorHandling, isUuid } = require('../../lib/http');
 const { containsObjectionableContent } = require('../../lib/moderation');
+const { sendPushToUsers } = require('../../lib/apns');
 
 module.exports = withErrorHandling(async function handler(req, res) {
   const userId = await requireAuth(req);
@@ -32,6 +33,15 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'syncBadges':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleSyncBadges(req, res, userId);
+    case 'createEvent':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleCreateEvent(req, res, userId);
+    case 'rsvpEvent':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleRsvpEvent(req, res, userId);
+    case 'deleteEvent':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleDeleteEvent(req, res, userId);
     default:
       return res.status(404).json({ error: 'not_found' });
   }
@@ -205,6 +215,39 @@ async function handleMine(req, res, userId) {
   `;
   const challenge = challengeRows[0];
 
+  // Weekly leaderboard: real km actually run THIS week (date_trunc('week') is ISO/Monday-start,
+  // same convention as the app's plan engine) — a fresh race every Monday, next to the all-time
+  // XP board which a newcomer could otherwise never climb.
+  const { rows: weekly } = await sql`
+    SELECT u.id, u.name, COALESCE(SUM(a.distance_km), 0) AS week_km
+    FROM club_members cm
+    JOIN users u ON u.id = cm.user_id
+    LEFT JOIN activities a ON a.user_id = u.id AND a.club_id = cm.club_id
+      AND a.type = 'run' AND a.distance_km IS NOT NULL
+      AND a.created_at >= date_trunc('week', now())
+    WHERE cm.club_id = ${clubId}
+      AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+    GROUP BY u.id, u.name
+    ORDER BY week_km DESC, u.name ASC
+    LIMIT 100
+  `;
+
+  // Upcoming sorties de groupe — includes ones started in the last 3h (a 9h meetup should still
+  // show mid-morning), capped at the next 10.
+  const { rows: events } = await sql`
+    SELECT e.id, e.title, e.location, e.starts_at, e.created_by,
+           (SELECT COUNT(*)::int FROM event_rsvps r WHERE r.event_id = e.id) AS going,
+           EXISTS(SELECT 1 FROM event_rsvps r WHERE r.event_id = e.id AND r.user_id = ${userId}) AS going_by_me
+    FROM club_events e
+    WHERE e.club_id = ${clubId} AND e.starts_at >= now() - interval '3 hours'
+    ORDER BY e.starts_at ASC
+    LIMIT 10
+  `;
+
+  const weeklyMapped = weekly.map((r, i) => ({
+    id: r.id, name: r.name, weekKm: Number(r.week_km), rank: i + 1, isMe: r.id === userId,
+  }));
+
   res.status(200).json({
     club: { id: club.id, name: club.name, inviteCode: club.invite_code, memberCount: countRows[0].count },
     leaderboard: leaderboard.map((r) => ({
@@ -214,6 +257,20 @@ async function handleMine(req, res, userId) {
       activitiesCount: r.activities_count,
       badgeKeys: r.badge_keys || [],
     })),
+    weekly: weeklyMapped,
+    weekStats: {
+      totalKm: weeklyMapped.reduce((sum, r) => sum + r.weekKm, 0),
+      activeMembers: weeklyMapped.filter((r) => r.weekKm > 0).length,
+    },
+    events: events.map((e) => ({
+      id: e.id,
+      title: e.title,
+      location: e.location || null,
+      startsAt: e.starts_at,
+      going: e.going,
+      goingByMe: e.going_by_me,
+      isMine: e.created_by === userId,
+    })),
     challenge: challenge ? {
       id: challenge.id,
       title: challenge.title,
@@ -222,6 +279,87 @@ async function handleMine(req, res, userId) {
       endDate: challenge.end_date,
     } : null,
   });
+}
+
+// A member proposes a real group run — title + optional meeting point + date/time. The creator
+// is auto-RSVP'd (proposing a sortie means going), and every other member gets a push.
+async function handleCreateEvent(req, res, userId) {
+  const { title, location, startsAt } = req.body || {};
+  const cleanTitle = typeof title === 'string' ? title.trim().slice(0, 80) : '';
+  const cleanLocation = typeof location === 'string' ? location.trim().slice(0, 80) : '';
+  if (!cleanTitle || !startsAt) return res.status(400).json({ error: 'bad_request' });
+  if (containsObjectionableContent(cleanTitle) || containsObjectionableContent(cleanLocation)) {
+    return res.status(422).json({ error: 'objectionable_content' });
+  }
+  const when = new Date(startsAt);
+  if (Number.isNaN(when.getTime())) return res.status(400).json({ error: 'bad_request' });
+  const oneYear = 365 * 24 * 3600 * 1000;
+  if (when.getTime() < Date.now() - 3600 * 1000 || when.getTime() > Date.now() + oneYear) {
+    return res.status(400).json({ error: 'bad_date' });
+  }
+
+  const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
+  const clubId = memberRows[0]?.club_id;
+  if (!clubId) return res.status(409).json({ error: 'not_in_club' });
+
+  const { rows: inserted } = await sql`
+    INSERT INTO club_events (club_id, created_by, title, location, starts_at)
+    VALUES (${clubId}, ${userId}, ${cleanTitle}, ${cleanLocation || null}, ${when.toISOString()})
+    RETURNING id, title, location, starts_at
+  `;
+  const event = inserted[0];
+  await sql`INSERT INTO event_rsvps (event_id, user_id) VALUES (${event.id}, ${userId}) ON CONFLICT DO NOTHING`;
+
+  // Push before the response — Vercel may freeze the function once the response is sent.
+  const { rows: me } = await sql`SELECT name FROM users WHERE id = ${userId}`;
+  const { rows: recipients } = await sql`
+    SELECT user_id FROM club_members
+    WHERE club_id = ${clubId} AND user_id != ${userId}
+      AND user_id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
+  `;
+  await sendPushToUsers(sql, recipients.map((r) => r.user_id), {
+    title: 'Sortie de groupe',
+    body: `${me[0]?.name || 'Un membre'} propose : ${cleanTitle}`,
+  });
+
+  res.status(201).json({
+    id: event.id,
+    title: event.title,
+    location: event.location || null,
+    startsAt: event.starts_at,
+    going: 1,
+    goingByMe: true,
+    isMine: true,
+  });
+}
+
+// Toggles the caller's "J'y serai" on one sortie — scoped to their own club.
+async function handleRsvpEvent(req, res, userId) {
+  const { eventId } = req.body || {};
+  if (!isUuid(eventId)) return res.status(400).json({ error: 'bad_request' });
+
+  const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
+  const clubId = memberRows[0]?.club_id;
+  const { rows: eventRows } = await sql`SELECT club_id FROM club_events WHERE id = ${eventId}`;
+  if (!clubId || eventRows[0]?.club_id !== clubId) return res.status(404).json({ error: 'not_found' });
+
+  const { rows: existing } = await sql`SELECT 1 FROM event_rsvps WHERE event_id = ${eventId} AND user_id = ${userId}`;
+  if (existing.length > 0) {
+    await sql`DELETE FROM event_rsvps WHERE event_id = ${eventId} AND user_id = ${userId}`;
+  } else {
+    await sql`INSERT INTO event_rsvps (event_id, user_id) VALUES (${eventId}, ${userId}) ON CONFLICT DO NOTHING`;
+  }
+  const { rows: countRows } = await sql`SELECT COUNT(*)::int AS count FROM event_rsvps WHERE event_id = ${eventId}`;
+  res.status(200).json({ going: existing.length === 0, count: countRows[0].count });
+}
+
+// Only the sortie's creator can cancel it.
+async function handleDeleteEvent(req, res, userId) {
+  const { eventId } = req.body || {};
+  if (!isUuid(eventId)) return res.status(400).json({ error: 'bad_request' });
+  const { rows } = await sql`DELETE FROM club_events WHERE id = ${eventId} AND created_by = ${userId} RETURNING id`;
+  if (rows.length === 0) return res.status(404).json({ error: 'not_found' });
+  res.status(200).json({ ok: true });
 }
 
 // A short, optional, self-authored status shown on the caller's own club profile — only ever the

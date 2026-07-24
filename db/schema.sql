@@ -212,6 +212,28 @@ END $$;
 -- `memberRows[0]` in the API then picked one arbitrarily.
 CREATE UNIQUE INDEX IF NOT EXISTS uniq_club_members_user ON club_members(user_id);
 
+-- Sorties de groupe — a member proposes a real group run (title, meeting point, date/time), the
+-- others RSVP. Creator deletion detaches (SET NULL) rather than cancelling the event, same
+-- policy as clubs/challenges.
+CREATE TABLE IF NOT EXISTS club_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  club_id UUID NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  title TEXT NOT NULL,
+  location TEXT,
+  starts_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_club_events_club_starts ON club_events(club_id, starts_at);
+
+CREATE TABLE IF NOT EXISTS event_rsvps (
+  event_id UUID NOT NULL REFERENCES club_events(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (event_id, user_id)
+);
+
 -- Daily request counter behind api/coach.js's rate limit — keyed by user id when signed in,
 -- client IP otherwise. Rows are tiny and only ever grow by one per key per day; prune old days
 -- opportunistically if it ever matters.

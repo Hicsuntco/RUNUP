@@ -47,6 +47,9 @@ final class CoachViewModel {
                     }
                     modelContext.insert(ChatMessage(role: .coach, text: reply))
                     isTyping = false
+                    // The reply often lands while she's mid-warmup, phone in hand but eyes
+                    // elsewhere — a light tap says "réponse arrivée" without needing to look.
+                    Haptics.impact(.light)
                 }
             } catch {
                 await MainActor.run {

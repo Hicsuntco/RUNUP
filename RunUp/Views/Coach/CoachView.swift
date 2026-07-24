@@ -10,6 +10,7 @@ struct CoachView: View {
     @Query(sort: \ChatMessage.timestamp) private var messages: [ChatMessage]
     @State private var vm: CoachViewModel?
     @State private var typingBounce = false
+    @State private var showClearConfirm = false
 
     private let chips = ["Adapte ma semaine", "Je suis fatiguée", "Conseils nutrition", "Analyse ma dernière sortie"]
 
@@ -21,18 +22,18 @@ struct CoachView: View {
             ScrollViewReader { scrollProxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 10) {
-                        // Neutral label — the thread holds the whole persisted history, and the
-                        // old "AUJOURD'HUI" sat on top of messages from any past day.
-                        Text("TON COACH")
-                            .font(RUFont.sans(10)).foregroundColor(RUColor.text3)
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, 4)
-
                         if messages.isEmpty {
+                            daySeparator(.now)
                             coachBubble(welcomeMessage)
                         }
 
-                        ForEach(messages) { message in
+                        // Day separators between message groups ("AUJOURD'HUI" / "HIER" / date) —
+                        // the whole persisted history lives in one thread, and without them a
+                        // reply from last Tuesday read as part of today's conversation.
+                        ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
+                            if index == 0 || !Calendar.current.isDate(message.timestamp, inSameDayAs: messages[index - 1].timestamp) {
+                                daySeparator(message.timestamp)
+                            }
                             bubble(for: message)
                                 .id(message.id)
                         }
@@ -87,18 +88,56 @@ struct CoachView: View {
             AppMarkView(size: 40)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Ton coach").displayStyle(19).foregroundColor(RUColor.textPrimary)
-                HStack(spacing: 5) {
-                    Circle().fill(RUColor.lime).frame(width: 5, height: 5)
-                    Text("en ligne")
-                        .font(RUFont.sans(10))
-                        .foregroundColor(RUColor.lime)
-                }
+                // Honest subtitle — the old green "en ligne" dot measured nothing (it was
+                // hardcoded, lit even in airplane mode).
+                Text("Coach IA · connaît ton programme")
+                    .font(RUFont.sans(10))
+                    .foregroundColor(RUColor.text2)
             }
             Spacer()
+            if !messages.isEmpty {
+                Button(action: { showClearConfirm = true }) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 13))
+                        .foregroundColor(RUColor.text3)
+                        .frame(width: 34, height: 34)
+                        .background(RUColor.card, in: Circle())
+                        .overlay(Circle().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                }
+                .buttonStyle(PressableStyle())
+                .accessibilityLabel("Effacer la conversation")
+                .confirmationDialog("Effacer toute la conversation ?", isPresented: $showClearConfirm, titleVisibility: .visible) {
+                    Button("Effacer", role: .destructive) {
+                        for message in messages { modelContext.delete(message) }
+                    }
+                    Button("Annuler", role: .cancel) {}
+                } message: {
+                    Text("Le coach garde ton programme et ta forme en tête — seul l'historique des messages est effacé.")
+                }
+            }
         }
         .padding(.horizontal, 18)
         .padding(.top, 6)
         .padding(.bottom, 10)
+    }
+
+    private static let separatorFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "fr_FR")
+        f.dateFormat = "EEEE d MMMM"
+        return f
+    }()
+
+    private func daySeparator(_ date: Date) -> some View {
+        let label: String
+        if Calendar.current.isDateInToday(date) { label = "Aujourd'hui" }
+        else if Calendar.current.isDateInYesterday(date) { label = "Hier" }
+        else { label = Self.separatorFormatter.string(from: date) }
+        return Text(label.uppercased())
+            .font(RUFont.sans(9, weight: .bold)).tracking(1.2)
+            .foregroundColor(RUColor.text3)
+            .frame(maxWidth: .infinity)
+            .padding(.top, 6)
     }
 
     @ViewBuilder

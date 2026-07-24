@@ -70,7 +70,7 @@ struct HomeView: View {
                     Button("Annuler", role: .cancel) {}
                 }
 
-                weekStrip
+                programWeekCard
 
                 readinessCard
 
@@ -85,14 +85,50 @@ struct HomeView: View {
                         .frame(maxWidth: .infinity)
                         .multilineTextAlignment(.center)
                         .padding(.top, 4)
-                } else {
-                    planTeaserCard
                 }
             }
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.top, 8)
             .padding(.bottom, 130)
         }
+    }
+
+    /// The week strip and the program teaser, merged into ONE card (owner's call — they're two
+    /// halves of the same information, "où j'en suis cette semaine / dans le programme", and
+    /// lived at opposite ends of the screen). Tapping anywhere opens the full plan. In course
+    /// libre there's no program to tease, so the card is just the days, not tappable.
+    private var programWeekCard: some View {
+        let shape = planShape
+        let block = AdaptivePlanEngine.trainingBlock(forWeek: profile.weekNumber, shape: shape)
+        return Button(action: { appState.go(.plan) }) {
+            VStack(alignment: .leading, spacing: 12) {
+                if !isFreeRun {
+                    HStack {
+                        EyebrowLabel(text: profile.daysUntilRace.map { "Objectif · \(profile.goalDisplay) · J-\($0)" } ?? "Objectif · \(profile.goalDisplay)", color: RUColor.rose)
+                        Spacer()
+                        Text("→").foregroundColor(RUColor.rose2)
+                    }
+                    Text("Semaine \(profile.weekNumber) · Bloc \(block.rawValue)").displayStyle(17).foregroundColor(RUColor.textPrimary)
+                }
+                weekStrip
+                if !isFreeRun {
+                    if let total = shape.totalWeeks {
+                        PhaseProgressBar(phases: [
+                            PhaseSegment(name: "Base", done: min(profile.weekNumber, shape.baseWeeks), total: shape.baseWeeks, color: RUColor.rose),
+                            PhaseSegment(name: "Spécifique", done: max(0, min(profile.weekNumber - shape.baseWeeks, shape.specificWeeks)), total: shape.specificWeeks, color: RUColor.rose2),
+                            PhaseSegment(name: "Affûtage", done: max(0, min(profile.weekNumber - shape.baseWeeks - shape.specificWeeks, shape.taperWeeks)), total: shape.taperWeeks, color: RUColor.violet)
+                        ], showLabels: false)
+                        Text("\(total) semaines · voir le plan complet").font(RUFont.sans(10)).foregroundColor(RUColor.text2)
+                    } else {
+                        Text("Programme ouvert · voir le plan complet").font(RUFont.sans(10)).foregroundColor(RUColor.text2)
+                    }
+                }
+            }
+            .padding(14)
+        }
+        .buttonStyle(PressableStyle())
+        .ruCard()
+        .disabled(isFreeRun)
     }
 
     /// Shows the real date number (today circled), not just the bare weekday letter — so it's
@@ -289,32 +325,4 @@ struct HomeView: View {
         AdaptivePlanEngine.ProgramShape.compute(goal: profile.goalId, raceDate: profile.raceDate, from: profile.programStartDate ?? .now)
     }
 
-    private var planTeaserCard: some View {
-        let shape = planShape
-        let block = AdaptivePlanEngine.trainingBlock(forWeek: profile.weekNumber, shape: shape)
-        return Button(action: { appState.go(.plan) }) {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    EyebrowLabel(text: profile.daysUntilRace.map { "Objectif · \(profile.goalDisplay) · J-\($0)" } ?? "Objectif · \(profile.goalDisplay)", color: RUColor.rose)
-                    Spacer()
-                    Text("→").foregroundColor(RUColor.rose2)
-                }
-                Text("Semaine \(profile.weekNumber) · Bloc \(block.rawValue)").displayStyle(17).foregroundColor(RUColor.textPrimary)
-                if let total = shape.totalWeeks {
-                    PhaseProgressBar(phases: [
-                        PhaseSegment(name: "Base", done: min(profile.weekNumber, shape.baseWeeks), total: shape.baseWeeks, color: RUColor.rose),
-                        PhaseSegment(name: "Spécifique", done: max(0, min(profile.weekNumber - shape.baseWeeks, shape.specificWeeks)), total: shape.specificWeeks, color: RUColor.rose2),
-                        PhaseSegment(name: "Affûtage", done: max(0, min(profile.weekNumber - shape.baseWeeks - shape.specificWeeks, shape.taperWeeks)), total: shape.taperWeeks, color: RUColor.violet)
-                    ], showLabels: false)
-                    .padding(.top, 10)
-                    Text("\(total) semaines · voir le plan complet").font(RUFont.sans(10)).foregroundColor(RUColor.text2).padding(.top, 7)
-                } else {
-                    Text("Programme ouvert · voir le plan complet").font(RUFont.sans(10)).foregroundColor(RUColor.text2).padding(.top, 7)
-                }
-            }
-            .padding(16)
-        }
-        .buttonStyle(PressableStyle())
-        .ruCard()
-    }
 }

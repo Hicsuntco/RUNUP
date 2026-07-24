@@ -2,7 +2,7 @@ import SwiftUI
 
 /// The "3 daily goals" widget — one ring, split into 3 colored arc segments, instead of 3
 /// separate bars. Takes a little of its polish from Apple's Fitness/Activity rings (a glossy
-/// per-ring gradient sweep, a color-tinted track instead of flat gray, a soft lift shadow) without
+/// per-ring gradient sweep, a color-tinted track instead of flat gray) without
 /// copying the actual design: Apple's is 3 CONCENTRIC full rings in fixed Move/Exercise/Stand
 /// colors, this is a SINGLE ring split into 3 gapped arc segments in the app's own brand colors —
 /// a different principle, not just a different palette. The concentric-ring look itself is also
@@ -43,13 +43,16 @@ struct DailyGoalsBarsView: View {
     static var fillColors: [Color] { [RUColor.rose2, RUColor.rose, RUColor.violet] }
 
     private static let canvasSize: CGFloat = 100
-    private static let strokeWidth: CGFloat = 20
+    /// Same 12%-of-diameter stroke as `WidgetRingView` — the app used to draw a chunkier 20 with
+    /// a heavy lift shadow, and next to the widget the thick version read muddy (owner compared
+    /// them side by side and preferred the widget's ring); both surfaces now render identically.
+    private static let strokeWidth: CGFloat = 12
     /// A touch more visible than the original 0.16 — a saturated color at low opacity over a
     /// near-white background washes out more than the same opacity over near-black, so light mode
     /// needs its own (still lighter-touch-than-dark) value to read as a clear track rather than
     /// barely-there.
     private static let lightTrackOpacity = 0.36
-    private static let darkTrackOpacity = 0.22
+    private static let darkTrackOpacity = 0.20
 
     var body: some View {
         ZStack {
@@ -82,9 +85,9 @@ struct DailyGoalsBarsView: View {
             }
         }
         // A circle's own trim starts at 3 o'clock; rotate so segment 0 starts at 12, going clockwise.
+        // No lift shadow — the widget's ring doesn't have one, and at hero size the shadow was a
+        // big part of the smeared "ghost ring" look in the screenshot that prompted this change.
         .rotationEffect(.degrees(-90))
-        .compositingGroup() // flatten before shadowing, so the 3 segments cast one soft lift shadow instead of each stacking its own
-        .shadow(color: .black.opacity(RUColor.isLight ? 0.28 : 0.4), radius: 7, x: 0, y: 5)
         .frame(width: Self.canvasSize, height: Self.canvasSize)
         .scaleEffect(size / Self.canvasSize)
         .frame(width: size, height: size)

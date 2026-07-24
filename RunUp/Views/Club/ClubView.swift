@@ -27,7 +27,6 @@ struct ClubView: View {
     @State private var showManagement = false
     @State private var commentsActivity: FeedItem?
     @State private var selectedBadge: ClubBadge?
-    @State private var skeletonPulse = false
     @State private var showLeaveConfirm = false
     /// Drives the feed rows' staggered entrance — flipped once the first feed load lands, after
     /// which each row's own per-index delay takes over (same pattern as `RecapView`'s splits).
@@ -212,29 +211,18 @@ struct ClubView: View {
 
     // MARK: Loading — signed in, real club status not back from the server yet
 
-    /// Skeleton of the leaderboard it's about to become (pulsing placeholder rows shaped like the
-    /// real content) instead of the generic spinner it used to be — shown on every Club tab open
-    /// (the view is re-`.id()`'d fresh each visit), so this is the app's most-seen loading state.
+    /// A spinner + explicit "Chargement du club…" — the skeleton-rows version read as a broken/
+    /// empty "Rejoins un club" screen (owner's call: the plain message says what's happening).
     private var loadingCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            ForEach(0..<4, id: \.self) { i in
-                HStack(spacing: 12) {
-                    Circle().fill(RUColor.card2).frame(width: 34, height: 34)
-                    VStack(alignment: .leading, spacing: 6) {
-                        RoundedRectangle(cornerRadius: 4).fill(RUColor.card2)
-                            .frame(width: i.isMultiple(of: 2) ? 140 : 110, height: 10)
-                        RoundedRectangle(cornerRadius: 4).fill(RUColor.card2)
-                            .frame(width: 70, height: 8)
-                    }
-                    Spacer()
-                }
-            }
+        VStack(spacing: 12) {
+            ProgressView().tint(RUColor.rose)
+            Text("Chargement du club…")
+                .font(RUFont.sans(13, weight: .semibold))
+                .foregroundColor(RUColor.text2)
         }
-        .padding(16)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
         .ruCard()
-        .opacity(skeletonPulse ? 0.45 : 1)
-        .animation(.easeInOut(duration: 0.85).repeatForever(autoreverses: true), value: skeletonPulse)
-        .onAppear { skeletonPulse = true }
     }
 
     // MARK: Not signed in

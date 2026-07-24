@@ -51,11 +51,11 @@ struct StatsView: View {
         HStack {
             MetricColumn(value: String(format: "%.0f", totalDistanceKm), label: "km total", valueSize: 22)
             Spacer()
-            MetricColumn(value: "\(runs.count)", label: "sorties", valueSize: 22)
+            MetricColumn(value: "\(runs.count)", label: "sortie\(runs.count > 1 ? "s" : "")", valueSize: 22)
             Spacer()
             MetricColumn(value: PaceModel.formatTotalDuration(totalDurationSeconds), label: "temps total", valueSize: 22)
             Spacer()
-            MetricColumn(value: "\(profile.streak)", label: "jours de suite", valueColor: profile.streak > 0 ? RUColor.lime : RUColor.textPrimary, valueSize: 22)
+            MetricColumn(value: "\(profile.streak)", label: "jour\(profile.streak > 1 ? "s" : "") de suite", valueColor: profile.streak > 0 ? RUColor.lime : RUColor.textPrimary, valueSize: 22)
         }
         .padding(16)
         .ruCard()
@@ -92,14 +92,14 @@ struct StatsView: View {
                     if lastWeekKm > 0 {
                         let deltaKm = thisWeekKm - lastWeekKm
                         StatChip(
-                            text: deltaKm >= 0 ? "▲ +\(String(format: "%.1f", deltaKm)) km" : "▼ \(String(format: "%.1f", -deltaKm)) km",
+                            text: deltaKm >= 0 ? "▲ +\(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), deltaKm)) km" : "▼ \(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), -deltaKm)) km",
                             color: deltaKm >= 0 ? RUColor.lime : RUColor.amber
                         )
                     }
                     Text("›").font(RUFont.sans(15, weight: .semibold)).foregroundColor(RUColor.text3)
                 }
                 HStack(spacing: 24) {
-                    MetricColumn(value: String(format: "%.1f", thisWeekKm), label: "km", valueSize: 24)
+                    MetricColumn(value: String(format: "%.1f", locale: Locale(identifier: "fr_FR"), thisWeekKm), label: "km", valueSize: 24)
                     if !profile.runningDays.isEmpty {
                         MetricColumn(
                             value: "\(thisWeekRuns.count)/\(profile.runningDays.count)",
@@ -149,7 +149,7 @@ struct StatsView: View {
                         )
                     }
                 }
-                Text("Sur tes \(min(5, runs.count)) dernières courses").font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                Text(runs.count == 1 ? "Sur ta dernière course" : "Sur tes \(min(5, runs.count)) dernières courses").font(RUFont.sans(11)).foregroundColor(RUColor.text2)
 
                 if recentPacesSecPerKm.count >= 2 {
                     Canvas { context, size in
@@ -229,7 +229,7 @@ struct StatsView: View {
                     .font(RUFont.sans(12)).foregroundColor(RUColor.text2)
             } else {
                 HStack(spacing: 8) {
-                    predictionTile("PLUS LONGUE", longestRun.map { String(format: "%.1f km", $0.distanceKm) } ?? "—", highlighted: false)
+                    predictionTile("PLUS LONGUE", longestRun.map { String(format: "%.1f km", locale: Locale(identifier: "fr_FR"), $0.distanceKm) } ?? "—", highlighted: false)
                     predictionTile("MEILLEURE ALLURE", bestPaceSecPerKm.map { "\(PaceModel.formatDuration($0))/km" } ?? "—", highlighted: false)
                     predictionTile("MEILLEURE SEM.", bestWeekKm > 0 ? String(format: "%.0f km", bestWeekKm) : "—", highlighted: false)
                 }
@@ -368,7 +368,7 @@ struct StatsView: View {
                     Text("S-7").font(RUFont.sans(10)).foregroundColor(RUColor.text3)
                     Spacer()
                     if let ratio = acuteChronicRatio {
-                        Text("ratio charge \(String(format: "%.1f", ratio))").font(RUFont.sans(10)).foregroundColor(RUColor.text3)
+                        Text("ratio charge \(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), ratio))").font(RUFont.sans(10)).foregroundColor(RUColor.text3)
                     }
                     Spacer()
                     Text("Cette sem.").font(RUFont.sans(10)).foregroundColor(RUColor.text3)

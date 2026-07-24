@@ -82,7 +82,7 @@ struct RaceGoalView: View {
                 Text(dateLine).font(RUFont.sans(12)).foregroundColor(RUColor.text2).padding(.leading, 34)
 
                 HStack(spacing: 10) {
-                    tile("\(profile.daysUntilRace ?? 0)", "JOURS", highlighted: true)
+                    tile(profile.daysUntilRace.map(String.init) ?? "—", "JOUR\((profile.daysUntilRace ?? 2) > 1 ? "S" : "")", highlighted: true)
                     tile(goalTarget, "OBJECTIF", highlighted: false)
                     tile(targetPaceLabel, "ALLURE", highlighted: false)
                 }

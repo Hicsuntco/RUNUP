@@ -287,7 +287,7 @@ struct HomeView: View {
         return Button(action: { appState.go(.plan) }) {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    EyebrowLabel(text: "Objectif · \(profile.goalDisplay) · J-\(profile.daysUntilRace ?? 0)", color: RUColor.rose)
+                    EyebrowLabel(text: profile.daysUntilRace.map { "Objectif · \(profile.goalDisplay) · J-\($0)" } ?? "Objectif · \(profile.goalDisplay)", color: RUColor.rose)
                     Spacer()
                     Text("→").foregroundColor(RUColor.rose2)
                 }

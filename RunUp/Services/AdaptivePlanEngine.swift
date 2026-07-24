@@ -589,16 +589,12 @@ enum AdaptivePlanEngine {
         let dist = max(0.4, distanceKm)
         let t = max(30, elapsedSeconds)
         let secPerKm = t / dist
-        let splits: [String]
-        if let realSplitSeconds, !realSplitSeconds.isEmpty {
-            splits = realSplitSeconds.map { fmt(max(0, $0)) }
-        } else {
-            let nkm = max(1, Int(dist))
-            splits = (0..<nkm).map { i -> String in
-                let sec = secPerKm - 8 + Double(i) * 3 + (i == nkm - 1 ? -10 : 0)
-                return fmt(max(230, sec))
-            }
-        }
+        // Real splits or none at all — the old fallback generated a formula-shaped curve
+        // (`secPerKm - 8 + i*3`) for any run without real per-km timings (manual entries, GPS
+        // runs under 1 km), and RecapView rendered it under "Splits par km" as if measured.
+        // Consumers already handle an empty list: RecapView hides the section, DebriefSheet's
+        // insight falls back to its generic line.
+        let splits: [String] = (realSplitSeconds ?? []).map { fmt(max(0, $0)) }
         return RunRecord(
             title: title,
             distanceKm: dist,

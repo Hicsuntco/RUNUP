@@ -11,7 +11,7 @@ struct RingsView: View {
     private var remainingActiveCalories: Int { max(0, Int(p.activeCaloriesGoal - p.activeCaloriesToday)) }
 
     private static var todayLabel: String {
-        Date.now.formatted(.dateTime.weekday(.wide).day())
+        Date.now.formatted(.dateTime.weekday(.wide).day().locale(Locale(identifier: "fr_FR")))
     }
 
     /// [Séance, Calories actives, Pas] — same array `DailyGoalsBarsView` draws its bars in, so
@@ -130,6 +130,6 @@ struct RingsView: View {
     }
 
     private func formattedValue(_ v: Double) -> String {
-        v == v.rounded() ? "\(Int(v))" : String(format: "%.1f", v)
+        v == v.rounded() ? "\(Int(v))" : String(format: "%.1f", locale: Locale(identifier: "fr_FR"), v)
     }
 }

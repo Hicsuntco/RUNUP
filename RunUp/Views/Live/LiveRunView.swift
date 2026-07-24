@@ -82,8 +82,10 @@ struct LiveRunView: View {
                 .background(.ultraThinMaterial, in: Capsule())
             }
             Spacer()
-            if vm?.isIntervalSession == true {
-                Text("Interv. \(vm?.intervalIndex ?? 1)/6")
+            // Only when the session's own title declares a real rep count ("5 × 500 m") — the
+            // denominator used to be a hardcoded /6 regardless of the actual session structure.
+            if vm?.isIntervalSession == true, let reps = vm?.intervalRepCount {
+                Text("Interv. \(vm?.intervalIndex ?? 1)/\(reps)")
                     .font(RUFont.bebas(12))
                     .foregroundColor(.white)
                     .padding(.horizontal, 12).padding(.vertical, 7)
@@ -141,7 +143,7 @@ struct LiveRunView: View {
         VStack(spacing: 14) {
             VStack(spacing: 4) {
                 Text(PaceModel.formatDuration(vm?.elapsedSeconds ?? 0)).displayStyle(64).foregroundColor(.white)
-                EyebrowLabel(text: "Temps · \(String(format: "%.2f", vm?.distanceKm ?? 0)) km")
+                EyebrowLabel(text: "Temps · \(String(format: "%.2f", locale: Locale(identifier: "fr_FR"), vm?.distanceKm ?? 0)) km")
             }
 
             HStack(spacing: 10) {

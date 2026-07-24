@@ -100,7 +100,7 @@ struct RunShareCardView: View {
             }
 
             VStack(spacing: 16) {
-                statBlock("DISTANCE", String(format: "%.2f km", run.distanceKm), valueSize: 58)
+                statBlock("DISTANCE", String(format: "%.2f km", locale: Locale(identifier: "fr_FR"), run.distanceKm), valueSize: 58)
                 statBlock("ALLURE", "\(run.avgPace) /km", valueSize: 40)
                 statBlock("TEMPS", PaceModel.formatDuration(Double(run.durationSeconds)), valueSize: 40)
             }

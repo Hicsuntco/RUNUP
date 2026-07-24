@@ -47,14 +47,17 @@ targets:
         # rejects the bundle for not supporting iPad Split View multitasking's full 4-orientation
         # set. This opts the app out of that requirement instead of adding rotation support.
         UIRequiresFullScreen: true
-        NSHealthShareUsageDescription: "RunUp lit tes données Santé (fréquence cardiaque, nombre de pas, séances de sport) pour calculer ta forme du jour, adapter ton programme et suivre tes objectifs quotidiens."
+        NSHealthShareUsageDescription: "RunUp lit tes données Santé (fréquence cardiaque, nombre de pas, calories actives, sommeil) pour calculer ta forme du jour, adapter ton programme et suivre tes objectifs quotidiens."
         NSHealthUpdateUsageDescription: "RunUp enregistre tes séances de course dans Santé après chaque sortie."
         NSLocationWhenInUseUsageDescription: "RunUp utilise ta position pour suivre ta distance, ton allure et ton tracé pendant une course."
         NSMicrophoneUsageDescription: "RunUp utilise le micro pour t'écouter quand tu poses une question à voix haute à ton coach pendant une course."
         NSSpeechRecognitionUsageDescription: "RunUp transcrit ce que tu dis pour que ton coach puisse te répondre à voix haute pendant une course."
+        # `location` only — the run tracker really does keep GPS alive with the screen off.
+        # `remote-notification` used to be listed too, but the server only ever sends visible
+        # alert pushes (lib/apns.js), which need no background mode, and no silent-push handler
+        # exists — an unused background mode is an App Review 2.5.4 flag.
         UIBackgroundModes:
           - location
-          - remote-notification
         # Lets `LiveRunViewModel` start a Live Activity (Lock Screen + Dynamic Island) for the
         # in-progress run — see `RunActivityAttributes` (Shared/) and `RunActivityWidget`
         # (RunUpWidgets/). `FrequentUpdates` avoids the system throttling `Activity.update` calls

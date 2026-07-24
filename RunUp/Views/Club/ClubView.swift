@@ -159,7 +159,7 @@ struct ClubView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         EyebrowLabel(text: "Le Club", color: RUColor.rose)
                         HStack(spacing: 6) {
-                            Text(club.name).displayStyle(24).foregroundColor(RUColor.textPrimary)
+                            Text(club.name).displayStyle(24).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
                             Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundColor(RUColor.text3)
                         }
                     }
@@ -330,7 +330,7 @@ struct ClubView: View {
         let xp = auth.currentUser?.xpTotal ?? 0
         let xpPerLevel = 250
         let level = xp / xpPerLevel + 1
-        let title = titles[(level - 1) % titles.count]
+        let title = titles[min(max(level - 1, 0), titles.count - 1)]
         return (level, title, xp % xpPerLevel, xpPerLevel)
     }
 

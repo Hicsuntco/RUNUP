@@ -22,8 +22,8 @@ struct ChoiceView: View {
                     EyebrowLabel(text: "Bilan de ton programme")
                     HStack(spacing: 20) {
                         MetricColumn(value: "\(totalKm)", label: "km parcourus")
-                        MetricColumn(value: "\(profile.weekNumber)", label: "semaines")
-                        MetricColumn(value: "\(profile.streak)", label: "jours de série", valueColor: RUColor.rose2)
+                        MetricColumn(value: "\(profile.weekNumber)", label: "semaine\(profile.weekNumber > 1 ? "s" : "")")
+                        MetricColumn(value: "\(profile.streak)", label: "jour\(profile.streak > 1 ? "s" : "") de série", valueColor: RUColor.rose2)
                     }
                 }
                 .padding(16)

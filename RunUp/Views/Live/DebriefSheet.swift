@@ -107,7 +107,7 @@ struct DebriefSheet: View {
                         appState.modelContext.insert(run)
                     }
                     AdaptivePlanEngine.applyDebrief(rpe: rpe, run: run, profile: appState.profile)
-                    let distance = String(format: "%.1f", run.distanceKm)
+                    let distance = String(format: "%.1f", locale: Locale(identifier: "fr_FR"), run.distanceKm)
                     appState.postClubActivity(type: "run", text: "a couru \(distance) km · \(run.title)", xpEarned: 120, distanceKm: run.distanceKm)
                     // Every completed session earns its own bell entry — before this, the only
                     // notify() call sites were the rare same-day 3-goals bonus, a club kudos/

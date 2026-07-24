@@ -76,7 +76,7 @@ struct HistoryView: View {
         HStack(spacing: 12) {
             BackChevronButton { appState.go(.stats) }
             VStack(alignment: .leading, spacing: 1) {
-                EyebrowLabel(text: "\(runs.count) sorties", color: RUColor.rose)
+                EyebrowLabel(text: "\(runs.count) sortie\(runs.count > 1 ? "s" : "")", color: RUColor.rose)
                 Text("Historique").displayStyle(22).foregroundColor(RUColor.textPrimary)
             }
             Spacer()
@@ -101,7 +101,7 @@ struct HistoryView: View {
     private func runCard(_ run: RunRecord) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text(run.date, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated))
+                Text(run.date, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated).locale(Locale(identifier: "fr_FR")))
                     .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
                 Spacer()
                 // A manually-logged run has no real heart-rate reading — 0 would just be a fake
@@ -112,7 +112,7 @@ struct HistoryView: View {
             }
             Text(run.title).font(RUFont.sans(15, weight: .semibold)).foregroundColor(RUColor.textPrimary)
             HStack(spacing: 20) {
-                MetricColumn(value: String(format: "%.1f", run.distanceKm), label: "km", valueSize: 20)
+                MetricColumn(value: String(format: "%.1f", locale: Locale(identifier: "fr_FR"), run.distanceKm), label: "km", valueSize: 20)
                 MetricColumn(value: PaceModel.formatDuration(Double(run.durationSeconds)), label: "temps", valueSize: 20)
                 MetricColumn(value: run.avgPace, label: "allure moy", valueColor: RUColor.rose2, valueSize: 20)
             }

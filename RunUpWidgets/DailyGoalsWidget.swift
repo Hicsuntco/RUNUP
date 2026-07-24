@@ -143,7 +143,7 @@ struct DailyGoalsWidgetView: View {
                     }
                     .foregroundColor(flameColor)
                 }
-                goalBar(index: 0, label: "SÉANCE", trailing: snapshot.progress[safe: 0] ?? 0 >= 1 ? nil : "à faire")
+                goalBar(index: 0, label: "SÉANCE", trailing: snapshot.progress[safe: 0] ?? 0 >= 1 ? nil : "À faire")
                 goalBar(index: 1, label: "KCAL", trailing: snapshot.activeCaloriesRemaining > 0 ? "-\(grouped(snapshot.activeCaloriesRemaining))" : nil)
                 goalBar(index: 2, label: "PAS", trailing: snapshot.stepsRemaining > 0 ? "-\(grouped(snapshot.stepsRemaining))" : nil)
                 HStack(spacing: 8) {
@@ -202,8 +202,8 @@ struct DailyGoalsWidgetView: View {
             Group {
                 if let trailing {
                     Text(trailing)
-                        .font(trailing == "à faire" ? .custom("DMSans-Bold", size: 8) : .custom("BebasNeue-Regular", size: 12))
-                        .foregroundColor(trailing == "à faire" ? text2 : textPrimary.opacity(0.92))
+                        .font(trailing == "À faire" ? .custom("DMSans-Bold", size: 8) : .custom("BebasNeue-Regular", size: 12))
+                        .foregroundColor(trailing == "À faire" ? text2 : textPrimary.opacity(0.92))
                 } else {
                     Image(systemName: "checkmark")
                         .font(.system(size: 9, weight: .bold))

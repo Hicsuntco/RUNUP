@@ -27,22 +27,26 @@ struct RecapView: View {
 
                     VStack(alignment: .leading, spacing: 8) {
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                            statTile(String(format: "%.2f", run.distanceKm), "KM", index: 0)
+                            statTile(String(format: "%.2f", locale: Locale(identifier: "fr_FR"), run.distanceKm), "KM", index: 0)
                             statTile(PaceModel.formatDuration(Double(run.durationSeconds)), "TEMPS", index: 1)
                             statTile(run.avgPace, "ALLURE MOY", index: 2)
                         }
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                            statTile("\(run.avgHeartRate)", "FC MOY", RUColor.rose, index: 3)
+                            statTile(run.avgHeartRate > 0 ? "\(run.avgHeartRate)" : "—", "FC MOY", RUColor.rose, index: 3)
                             statTile("\(run.kcal)", "KCAL", RUColor.cyan, index: 4)
-                            statTile("+\(run.elevationGainM)", "D+ (m)", RUColor.lime, index: 5)
+                            statTile(run.elevationGainM > 0 ? "+\(run.elevationGainM)" : "—", "D+ (m)", RUColor.lime, index: 5)
                         }
 
-                        EyebrowLabel(text: "Splits par km", color: RUColor.text3).padding(.top, 8)
+                        // Only when real per-km timings exist — a manual entry or a GPS run under
+                        // 1 km has none, and `buildRunRecord` no longer fabricates a stand-in set.
+                        if !run.splits.isEmpty {
+                            EyebrowLabel(text: "Splits par km", color: RUColor.text3).padding(.top, 8)
 
-                        VStack(spacing: 5) {
-                            let fractions = splitFractions(run.splits)
-                            ForEach(run.splits.indices, id: \.self) { i in
-                                splitRow(index: i, time: run.splits[i], fraction: fractions[i], isLast: i == run.splits.count - 1)
+                            VStack(spacing: 5) {
+                                let fractions = splitFractions(run.splits)
+                                ForEach(run.splits.indices, id: \.self) { i in
+                                    splitRow(index: i, time: run.splits[i], fraction: fractions[i], isLast: i == run.splits.count - 1)
+                                }
                             }
                         }
 

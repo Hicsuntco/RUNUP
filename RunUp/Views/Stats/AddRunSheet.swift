@@ -46,7 +46,7 @@ struct AddRunSheet: View {
                     }
 
                     HStack(spacing: 10) {
-                        numField(label: "Distance", value: $distanceText, unit: "km", placeholder: "8.2")
+                        numField(label: "Distance", value: $distanceText, unit: "km", placeholder: "8,2")
                         numField(label: "Durée", value: $durationMinutesText, unit: "min", placeholder: "45")
                     }
                 }

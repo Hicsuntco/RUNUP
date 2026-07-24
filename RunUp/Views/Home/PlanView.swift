@@ -67,7 +67,7 @@ struct PlanView: View {
                         PhaseSegment(name: "Affûtage", done: max(0, min(profile.weekNumber - shape.baseWeeks - shape.specificWeeks, shape.taperWeeks)), total: shape.taperWeeks, color: RUColor.violet)
                     ])
                 } else {
-                    Text("Programme ouvert, sans date de fin fixe — une semaine plus légère tous les 4 semaines pour récupérer. Il s'ajuste chaque semaine selon ta forme de la semaine passée.")
+                    Text("Programme ouvert, sans date de fin fixe — une semaine plus légère toutes les 4 semaines pour récupérer. Il s'ajuste chaque semaine selon ta forme de la semaine passée.")
                         .font(RUFont.sans(12)).foregroundColor(RUColor.text2).lineSpacing(3)
                 }
 

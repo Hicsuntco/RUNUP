@@ -55,7 +55,14 @@ final class LiveRunViewModel {
     /// "interval" to be on. Still an approximation (flat 1.2km chunks, not real lap detection —
     /// no per-km split tracking exists), but no longer shown on session types it doesn't apply to.
     var isIntervalSession: Bool { profile.todaySession.isIntervalSession }
-    var intervalIndex: Int { min(6, 1 + Int(distanceKm / 1.2)) }
+    /// The session's real rep count, parsed from its own title ("5 × 500 m" → 5) — nil when the
+    /// title doesn't declare one, in which case the live counter chip is hidden entirely rather
+    /// than shown over a denominator that was previously a hardcoded 6 regardless of the session.
+    var intervalRepCount: Int? {
+        guard let range = profile.todaySession.title.range(of: #"\d+\s*×"#, options: .regularExpression) else { return nil }
+        return Int(profile.todaySession.title[range].filter(\.isNumber))
+    }
+    var intervalIndex: Int { min(intervalRepCount ?? 6, 1 + Int(distanceKm / 1.2)) }
     var kcal: Double { distanceKm * 65 }
 
     var paceLabel: String {
@@ -155,7 +162,7 @@ final class LiveRunViewModel {
     /// that has no idea a run is even in progress.
     private func liveVoiceContext() -> String {
         let target = profile.todaySession.pace
-        return "Distance parcourue jusqu'ici : \(String(format: "%.2f", distanceKm)) km. Allure actuelle : \(paceLabel) /km (allure cible du jour : \(target) /km). Temps écoulé : \(PaceModel.formatDuration(elapsedSeconds))."
+        return "Distance parcourue jusqu'ici : \(String(format: "%.2f", locale: Locale(identifier: "fr_FR"), distanceKm)) km. Allure actuelle : \(paceLabel) /km (allure cible du jour : \(target) /km). Temps écoulé : \(PaceModel.formatDuration(elapsedSeconds))."
     }
 
     private func showCue(_ message: String) {

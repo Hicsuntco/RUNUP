@@ -160,3 +160,42 @@ CREATE TABLE IF NOT EXISTS strava_connections (
   expires_at TIMESTAMPTZ NOT NULL,
   connected_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- ============================================================================
+-- Corrective migrations (idempotent) — run after any of the tables above
+-- already exist. Fresh databases get the same end state from the blocks below
+-- because every statement here is a no-op once applied.
+-- ============================================================================
+
+-- Account deletion used to 500 with an FK violation for anyone who had created a club or a
+-- challenge, or referred someone: these three columns referenced users(id) with no ON DELETE
+-- action. App Store guideline 5.1.1(v) requires deletion to actually work — the creator's row
+-- going away shouldn't take the club/challenge down with it, just detach it.
+ALTER TABLE clubs ALTER COLUMN created_by DROP NOT NULL;
+ALTER TABLE clubs DROP CONSTRAINT IF EXISTS clubs_created_by_fkey;
+ALTER TABLE clubs ADD CONSTRAINT clubs_created_by_fkey
+  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;
+
+ALTER TABLE challenges ALTER COLUMN created_by DROP NOT NULL;
+ALTER TABLE challenges DROP CONSTRAINT IF EXISTS challenges_created_by_fkey;
+ALTER TABLE challenges ADD CONSTRAINT challenges_created_by_fkey
+  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;
+
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_referred_by_fkey;
+ALTER TABLE users ADD CONSTRAINT users_referred_by_fkey
+  FOREIGN KEY (referred_by) REFERENCES users(id) ON DELETE SET NULL;
+
+-- One club per user, enforced by the database — the app-level check was check-then-insert, so a
+-- double-submitted "join" raced into membership of two clubs at once, and every
+-- `memberRows[0]` in the API then picked one arbitrarily.
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_club_members_user ON club_members(user_id);
+
+-- Daily request counter behind api/coach.js's rate limit — keyed by user id when signed in,
+-- client IP otherwise. Rows are tiny and only ever grow by one per key per day; prune old days
+-- opportunistically if it ever matters.
+CREATE TABLE IF NOT EXISTS coach_usage (
+  key TEXT NOT NULL,
+  day DATE NOT NULL,
+  count INTEGER NOT NULL DEFAULT 1,
+  PRIMARY KEY (key, day)
+);

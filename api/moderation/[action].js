@@ -5,7 +5,7 @@
 // they land in the `reports` table for the developer to review directly.
 const { sql } = require('../../lib/db');
 const { requireAuth } = require('../../lib/auth');
-const { withErrorHandling } = require('../../lib/http');
+const { withErrorHandling, isUuid } = require('../../lib/http');
 
 const REPORT_TARGET_TYPES = new Set(['user', 'club', 'activity', 'comment']);
 
@@ -28,19 +28,20 @@ module.exports = withErrorHandling(async function handler(req, res) {
 
 async function handleReport(req, res, userId) {
   const { targetType, targetId, reason } = req.body || {};
-  if (!REPORT_TARGET_TYPES.has(targetType) || !targetId || !reason || !reason.trim()) {
+  const cleanReason = typeof reason === 'string' ? reason.trim().slice(0, 1000) : '';
+  if (!REPORT_TARGET_TYPES.has(targetType) || !isUuid(targetId) || !cleanReason) {
     return res.status(400).json({ error: 'bad_request' });
   }
   await sql`
     INSERT INTO reports (reporter_id, target_type, target_id, reason)
-    VALUES (${userId}, ${targetType}, ${targetId}, ${reason.trim()})
+    VALUES (${userId}, ${targetType}, ${targetId}, ${cleanReason})
   `;
   res.status(201).json({ ok: true });
 }
 
 async function handleBlock(req, res, userId) {
   const { userId: blockedId } = req.body || {};
-  if (!blockedId || blockedId === userId) return res.status(400).json({ error: 'bad_request' });
+  if (!isUuid(blockedId) || blockedId === userId) return res.status(400).json({ error: 'bad_request' });
   await sql`
     INSERT INTO blocks (blocker_id, blocked_id) VALUES (${userId}, ${blockedId})
     ON CONFLICT DO NOTHING
@@ -50,7 +51,7 @@ async function handleBlock(req, res, userId) {
 
 async function handleUnblock(req, res, userId) {
   const { userId: blockedId } = req.body || {};
-  if (!blockedId) return res.status(400).json({ error: 'bad_request' });
+  if (!isUuid(blockedId)) return res.status(400).json({ error: 'bad_request' });
   await sql`DELETE FROM blocks WHERE blocker_id = ${userId} AND blocked_id = ${blockedId}`;
   res.status(200).json({ ok: true });
 }

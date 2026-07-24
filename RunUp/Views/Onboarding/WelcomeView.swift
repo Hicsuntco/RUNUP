@@ -6,7 +6,7 @@ struct WelcomeView: View {
 
     private let valueProps: [(icon: String, title: String, desc: String)] = [
         ("bolt.fill", "Un plan qui vit avec toi", "Pas un PDF figé — il s'ajuste chaque semaine selon ta forme et ton ressenti, jamais séance par séance : tu peux toujours anticiper ce qui t'attend."),
-        ("circle.circle", "Tes objectifs du jour, en un coup d'œil", "Bouger, rester actif, courir — trois objectifs simples à boucler chaque jour."),
+        ("circle.circle", "Tes objectifs du jour, en un coup d'œil", "Ta séance, tes calories actives, tes pas — trois objectifs simples à boucler chaque jour."),
         ("bubble.left.fill", "Un vrai coach, disponible à tout moment", "Il connaît ton objectif, ton historique, et te répond comme un humain le ferait.")
     ]
 
@@ -53,7 +53,7 @@ struct WelcomeView: View {
 
                         HStack(spacing: 8) {
                             Text("★★★★★").foregroundColor(RUColor.lime)
-                            Text("Rejoins des milliers de coureurs qui progressent chaque semaine")
+                            Text("Un programme qui progresse avec toi, semaine après semaine")
                                 .foregroundColor(RUColor.text3)
                         }
                         .font(RUFont.sans(11.5))

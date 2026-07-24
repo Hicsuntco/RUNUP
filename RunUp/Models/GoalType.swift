@@ -71,7 +71,7 @@ enum HyroxDivision: String, Codable, CaseIterable, Identifiable {
     var subtitle: String {
         switch self {
         case .open: return "Charges standard — le format le plus couru"
-        case .pro: return "Charges renforcées — pour les coureurs confirmés"
+        case .pro: return "Charges renforcées — pour un niveau confirmé"
         }
     }
 }

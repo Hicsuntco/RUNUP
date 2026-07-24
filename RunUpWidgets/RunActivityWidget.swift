@@ -19,7 +19,7 @@ struct RunActivityWidget: Widget {
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(String(format: "%.2f", context.state.distanceKm))
+                        Text(String(format: "%.2f", locale: Locale(identifier: "fr_FR"), context.state.distanceKm))
                             .font(.system(size: 22, weight: .bold, design: .rounded))
                             .foregroundColor(.white)
                         Text("KM").font(.system(size: 9, weight: .bold, design: .rounded)).foregroundColor(.white.opacity(0.5))
@@ -34,7 +34,7 @@ struct RunActivityWidget: Widget {
                 DynamicIslandExpandedRegion(.bottom) {
                     HStack(spacing: 6) {
                         Image(systemName: context.state.isPaused ? "pause.circle.fill" : "figure.run")
-                        Text(context.attributes.sessionTitle).font(.system(size: 12, weight: .medium, design: .rounded)).lineLimit(1)
+                        Text(context.attributes.sessionTitle).font(.system(size: 12, weight: .medium, design: .rounded)).lineLimit(1).minimumScaleFactor(0.7)
                         Spacer()
                         Text(formatDuration(context.state.elapsedSeconds))
                             .font(.system(size: 13, weight: .semibold, design: .rounded))
@@ -63,7 +63,7 @@ struct RunActivityWidget: Widget {
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .foregroundColor(.white.opacity(0.6))
                     .lineLimit(1)
-                Text(String(format: "%.2f km", context.state.distanceKm))
+                Text(String(format: "%.2f km", locale: Locale(identifier: "fr_FR"), context.state.distanceKm))
                     .font(.system(size: 26, weight: .bold, design: .rounded))
                     .foregroundColor(.white)
             }

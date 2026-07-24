@@ -80,23 +80,34 @@ async function handleApple(req, res) {
 // Email + password sign-up. Passwords are never stored in plain text — only a bcrypt hash.
 async function handleSignup(req, res) {
   const { email, password, name, referralCode } = req.body || {};
-  if (!email || !password || !name || !name.trim()) return res.status(400).json({ error: 'bad_request' });
-  if (password.length < 8) return res.status(400).json({ error: 'weak_password' });
-  if (containsObjectionableContent(name)) return res.status(422).json({ error: 'objectionable_content' });
+  const cleanName = typeof name === 'string' ? name.trim().slice(0, 60) : '';
+  if (!email || !password || !cleanName) return res.status(400).json({ error: 'bad_request' });
+  if (password.length < 8 || password.length > 200) return res.status(400).json({ error: 'weak_password' });
+  if (containsObjectionableContent(cleanName)) return res.status(422).json({ error: 'objectionable_content' });
 
-  const normalizedEmail = String(email).trim().toLowerCase();
+  const normalizedEmail = String(email).trim().toLowerCase().slice(0, 254);
   const { rows: existing } = await sql`SELECT id FROM users WHERE email = ${normalizedEmail}`;
   if (existing.length > 0) return res.status(409).json({ error: 'email_taken' });
 
   const passwordHash = await bcrypt.hash(password, 12);
   const referrerId = await resolveReferrerId(referralCode);
   const myReferralCode = await generateUniqueReferralCode();
-  const { rows } = await sql`
-    INSERT INTO users (email, password_hash, name, referral_code, referred_by)
-    VALUES (${normalizedEmail}, ${passwordHash}, ${name.trim()}, ${myReferralCode}, ${referrerId})
-    RETURNING id, name, xp_total, referral_code
-  `;
-  const user = rows[0];
+  let user;
+  try {
+    const { rows } = await sql`
+      INSERT INTO users (email, password_hash, name, referral_code, referred_by)
+      VALUES (${normalizedEmail}, ${passwordHash}, ${cleanName}, ${myReferralCode}, ${referrerId})
+      RETURNING id, name, xp_total, referral_code
+    `;
+    user = rows[0];
+  } catch (e) {
+    // Two concurrent signups with the same email race past the pre-check above — the unique
+    // constraint is the real guard, and its violation is a 409, not a 500.
+    if (String(e.message).includes('users_email_key')) {
+      return res.status(409).json({ error: 'email_taken' });
+    }
+    throw e;
+  }
 
   const token = await signSession(user.id);
   res.status(201).json({ token, user: { id: user.id, name: user.name, xpTotal: user.xp_total, referralCode: user.referral_code } });

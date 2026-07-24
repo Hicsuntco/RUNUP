@@ -25,9 +25,41 @@ struct LeaderboardRow: Decodable, Identifiable, Hashable {
     var badgeKeys: [String]
 }
 
+/// One row of the WEEKLY board — real km run this week (Monday reset, server-computed), the
+/// fresh race a newcomer can win even against members with months of XP.
+struct WeeklyRow: Decodable, Identifiable, Hashable {
+    var id: String
+    var name: String
+    var weekKm: Double
+    var rank: Int
+    var isMe: Bool
+}
+
+/// Club-wide pulse for the current week — total km + how many members actually ran.
+struct ClubWeekStats: Decodable {
+    var totalKm: Double
+    var activeMembers: Int
+}
+
+/// A sortie de groupe — a member proposes a run (title, meeting point, date), others RSVP.
+struct ClubEvent: Decodable, Identifiable {
+    var id: String
+    var title: String
+    var location: String?
+    var startsAt: Date
+    var going: Int
+    var goingByMe: Bool
+    var isMine: Bool
+}
+
 struct ClubBoard: Decodable {
     var club: ClubInfo?
     var leaderboard: [LeaderboardRow]
+    // Optional (not just empty-default) so a response from a backend build predating these
+    // fields still decodes instead of taking the whole Club tab down.
+    var weekly: [WeeklyRow]?
+    var weekStats: ClubWeekStats?
+    var events: [ClubEvent]?
     var challenge: ClubChallenge?
 }
 
@@ -106,6 +138,27 @@ struct ClubService {
             method: "POST",
             body: ["title": title, "targetKm": targetKm, "endDate": formatter.string(from: endDate)]
         )
+    }
+
+    /// Proposes a sortie de groupe — the server auto-RSVPs the creator and pushes the club.
+    func createEvent(title: String, location: String?, startsAt: Date) async throws -> ClubEvent {
+        var body: [String: Any] = [
+            "title": title,
+            "startsAt": ISO8601DateFormatter().string(from: startsAt),
+        ]
+        if let location, !location.isEmpty { body["location"] = location }
+        return try await send(path: "api/clubs/createEvent", method: "POST", body: body)
+    }
+
+    /// Toggles "J'y serai" — returns the new state + the fresh count.
+    func toggleEventRsvp(eventId: String) async throws -> (going: Bool, count: Int) {
+        let response: RsvpResponse = try await send(path: "api/clubs/rsvpEvent", method: "POST", body: ["eventId": eventId])
+        return (response.going, response.count)
+    }
+
+    /// Cancels a sortie — creator only (the server enforces it).
+    func deleteEvent(eventId: String) async throws {
+        let _: OkResponse = try await send(path: "api/clubs/deleteEvent", method: "POST", body: ["eventId": eventId])
     }
 
     func joinClub(inviteCode: String) async throws -> ClubJoinedResponse {
@@ -245,6 +298,11 @@ struct ClubService {
 
 private struct FeedResponse: Decodable {
     var items: [FeedItem]
+}
+
+private struct RsvpResponse: Decodable {
+    var going: Bool
+    var count: Int
 }
 
 private struct KudosResponse: Decodable {

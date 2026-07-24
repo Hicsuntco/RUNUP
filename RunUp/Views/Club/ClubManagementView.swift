@@ -379,3 +379,75 @@ struct CreateChallengeSheet: View {
         isSaving = false
     }
 }
+
+/// Bottom sheet to propose a sortie de groupe — mirrors `CreateChallengeSheet`'s structure
+/// (same visual language, same error handling), for a title + optional meeting point + date/time.
+struct CreateEventSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    var onCreate: (String, String?, Date) async throws -> Void
+
+    @State private var title = ""
+    @State private var location = ""
+    @State private var startsAt = Calendar.current.date(byAdding: .day, value: 1, to: .now) ?? .now
+    @State private var isSaving = false
+    @State private var errorMessage: String?
+
+    private var isValid: Bool { !title.trimmingCharacters(in: .whitespaces).isEmpty }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        EyebrowLabel(text: "Quelle sortie ?", color: RUColor.text3)
+                        ObTextField(placeholder: "Ex. Sortie longue tranquille 10 km", text: $title)
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        EyebrowLabel(text: "Point de rendez-vous (facultatif)", color: RUColor.text3)
+                        ObTextField(placeholder: "Ex. Entrée du parc de la Tête d'Or", text: $location)
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        EyebrowLabel(text: "Quand ?", color: RUColor.text3)
+                        DatePicker("", selection: $startsAt, in: .now..., displayedComponents: [.date, .hourAndMinute])
+                            .datePickerStyle(.compact)
+                            .labelsHidden()
+                            .colorScheme(RUColor.colorScheme)
+                    }
+
+                    if let errorMessage {
+                        Text(errorMessage).font(RUFont.sans(11.5)).foregroundColor(RUColor.rose)
+                    }
+                }
+                .padding(18)
+            }
+            .background(RUColor.bg)
+            .navigationTitle("Sortie de groupe")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Proposer") { Task { await save() } }
+                        .disabled(!isValid || isSaving)
+                }
+            }
+        }
+        .preferredColorScheme(RUColor.colorScheme)
+    }
+
+    private func save() async {
+        isSaving = true
+        errorMessage = nil
+        do {
+            let trimmedLocation = location.trimmingCharacters(in: .whitespaces)
+            try await onCreate(title.trimmingCharacters(in: .whitespaces), trimmedLocation.isEmpty ? nil : trimmedLocation, startsAt)
+            dismiss()
+        } catch ClubServiceError.badResponse(422, _) {
+            errorMessage = "Ce texte n'est pas autorisé — reformule."
+        } catch {
+            errorMessage = "Impossible de proposer la sortie, réessaie."
+        }
+        isSaving = false
+    }
+}

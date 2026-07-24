@@ -28,6 +28,11 @@ struct ClubView: View {
     @State private var commentsActivity: FeedItem?
     @State private var selectedBadge: ClubBadge?
     @State private var showLeaveConfirm = false
+    @State private var showCreateEvent = false
+    /// Which board the Classement tab shows — the fresh Monday-reset km race, or all-time XP.
+    @State private var boardMode: BoardMode = .week
+
+    private enum BoardMode { case week, general }
     /// Drives the feed rows' staggered entrance — flipped once the first feed load lands, after
     /// which each row's own per-index delay takes over (same pattern as `RecapView`'s splits).
     @State private var feedRevealed = false
@@ -54,7 +59,9 @@ struct ClubView: View {
                     clubSetupCard
                 } else {
                     levelCard
+                    weekPulseCard
                     challengeCard
+                    eventsCard
                     membershipRow
                     segmentedControl
                     if tab == .board { boardContent } else { feedContent }
@@ -399,6 +406,18 @@ struct ClubView: View {
         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
     }
 
+    private func boardModeChip(_ label: String, _ value: BoardMode) -> some View {
+        Button(action: { boardMode = value }) {
+            Text(label)
+                .font(RUFont.sans(11, weight: .semibold))
+                .foregroundColor(boardMode == value ? RUColor.rose2 : RUColor.text2)
+                .padding(.horizontal, 11).padding(.vertical, 6)
+                .background(boardMode == value ? RUColor.rose.opacity(0.12) : RUColor.card2, in: Capsule())
+                .overlay(Capsule().stroke(boardMode == value ? RUColor.rose.opacity(0.4) : RUColor.line, lineWidth: RUSpacing.hairline))
+        }
+        .buttonStyle(PressableStyle())
+    }
+
     private func segment(_ label: String, _ value: Tab) -> some View {
         Button(action: {
             tab = value
@@ -446,8 +465,166 @@ struct ClubView: View {
         }
     }
 
+    /// The club's pulse this week — real collective km + how many members actually ran, computed
+    /// server-side over this Monday-started week. Gives the club a shared "we" number, not just
+    /// individual rankings.
+    private var weekPulseCard: some View {
+        let stats = board.weekStats
+        let km = String(format: "%.1f", locale: Locale(identifier: "fr_FR"), stats?.totalKm ?? 0)
+        return HStack(spacing: 14) {
+            VStack(alignment: .leading, spacing: 2) {
+                EyebrowLabel(text: "Le club cette semaine", color: RUColor.rose)
+                HStack(alignment: .lastTextBaseline, spacing: 4) {
+                    Text(km).displayStyle(26).foregroundColor(RUColor.textPrimary)
+                    Text("KM").font(RUFont.sans(10, weight: .bold)).foregroundColor(RUColor.text2)
+                }
+            }
+            Spacer()
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("\(stats?.activeMembers ?? 0)").displayStyle(20).foregroundColor(RUColor.rose2)
+                Text(stats?.activeMembers == 1 ? "membre actif" : "membres actifs")
+                    .font(RUFont.sans(10)).foregroundColor(RUColor.text2)
+            }
+        }
+        .padding(14)
+        .ruCard()
+    }
+
+    private static let eventDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "fr_FR")
+        f.dateFormat = "EEE d MMM · HH:mm"
+        return f
+    }()
+
+    /// Sorties de groupe — real proposed group runs with RSVP. The one feature that turns a
+    /// leaderboard into an actual club: people running TOGETHER.
+    private var eventsCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                EyebrowLabel(text: "Sorties de groupe", color: RUColor.violet)
+                Spacer()
+                Button(action: { showCreateEvent = true }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "plus").font(.system(size: 10, weight: .bold))
+                        Text("Proposer").font(RUFont.sans(11, weight: .semibold))
+                    }
+                    .foregroundColor(RUColor.rose2)
+                }
+                .buttonStyle(PressableStyle())
+            }
+            if (board.events ?? []).isEmpty {
+                Text("Aucune sortie prévue — propose un créneau, les autres n'ont qu'à dire « J'y serai ».")
+                    .font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+            }
+            ForEach(board.events ?? []) { event in
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(Self.eventDateFormatter.string(from: event.startsAt).uppercased())
+                            .font(RUFont.sans(9, weight: .bold)).tracking(0.6).foregroundColor(RUColor.rose2)
+                        Text(event.title).font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                        if let location = event.location, !location.isEmpty {
+                            HStack(spacing: 3) {
+                                Image(systemName: "mappin").font(.system(size: 8))
+                                Text(location).font(RUFont.sans(10.5))
+                            }
+                            .foregroundColor(RUColor.text2)
+                        }
+                    }
+                    Spacer()
+                    Button(action: { toggleRsvp(event) }) {
+                        VStack(spacing: 2) {
+                            Text(event.goingByMe ? "J'y serai ✓" : "J'y serai")
+                                .font(RUFont.sans(11, weight: .bold))
+                                .foregroundColor(event.goingByMe ? .white : RUColor.textPrimary)
+                                .padding(.horizontal, 11).padding(.vertical, 6)
+                                .background(event.goingByMe ? RUColor.rose : RUColor.card, in: Capsule())
+                                .overlay(Capsule().stroke(event.goingByMe ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
+                            Text("\(event.going) au départ")
+                                .font(RUFont.sans(9)).foregroundColor(RUColor.text3)
+                        }
+                    }
+                    .buttonStyle(PressableStyle())
+                }
+                .padding(12)
+                .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                .contextMenu {
+                    if event.isMine {
+                        Button("Annuler cette sortie", role: .destructive) { deleteEvent(event) }
+                    }
+                }
+            }
+        }
+        .padding(14)
+        .ruCard()
+        .sheet(isPresented: $showCreateEvent) {
+            CreateEventSheet { title, location, date in
+                let created = try await clubService.createEvent(title: title, location: location, startsAt: date)
+                await MainActor.run {
+                    var events = board.events ?? []
+                    events.append(created)
+                    events.sort { $0.startsAt < $1.startsAt }
+                    board.events = events
+                }
+            }
+            .runUpSheetStyle()
+        }
+    }
+
+    private func toggleRsvp(_ event: ClubEvent) {
+        Haptics.selection()
+        Task {
+            guard let result = try? await clubService.toggleEventRsvp(eventId: event.id) else {
+                await MainActor.run { appState.toast("Impossible de répondre — réessaie.") }
+                return
+            }
+            await MainActor.run {
+                if let index = board.events?.firstIndex(where: { $0.id == event.id }) {
+                    board.events?[index].goingByMe = result.going
+                    board.events?[index].going = result.count
+                }
+            }
+        }
+    }
+
+    private func deleteEvent(_ event: ClubEvent) {
+        Task {
+            try? await clubService.deleteEvent(eventId: event.id)
+            await MainActor.run { board.events?.removeAll { $0.id == event.id } }
+        }
+    }
+
     private var boardContent: some View {
         VStack(alignment: .leading, spacing: 14) {
+            // Two real races: km of THIS week (Monday reset — a newcomer can win her first week)
+            // and the all-time XP board.
+            HStack(spacing: 6) {
+                boardModeChip("Cette semaine", .week)
+                boardModeChip("Général (XP)", .general)
+            }
+            if boardMode == .week {
+                VStack(spacing: 6) {
+                    ForEach(board.weekly ?? []) { entry in
+                        HStack(spacing: 12) {
+                            Text(entry.rank >= 1 && entry.rank <= 3 ? ["🥇", "🥈", "🥉"][entry.rank - 1] : "\(entry.rank)")
+                                .displayStyle(15)
+                                .foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.text2)
+                                .frame(width: 20)
+                            Text(entry.isMe ? "\(entry.name) · toi" : entry.name)
+                                .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
+                                .foregroundColor(RUColor.textPrimary)
+                            Spacer()
+                            Text("\(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), entry.weekKm)) km")
+                                .displayStyle(14).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
+                        }
+                        .padding(.horizontal, 13).padding(.vertical, 11)
+                        .background(entry.isMe ? RUColor.rose.opacity(0.1) : RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(entry.isMe ? RUColor.rose.opacity(0.28) : RUColor.line, lineWidth: RUSpacing.hairline))
+                    }
+                }
+            }
+            if boardMode == .general {
             VStack(spacing: 6) {
                 ForEach(board.leaderboard) { entry in
                     HStack(spacing: 12) {
@@ -475,6 +652,7 @@ struct ClubView: View {
                         }
                     }
                 }
+            }
             }
 
             EyebrowLabel(text: "Derniers badges", color: RUColor.text3)

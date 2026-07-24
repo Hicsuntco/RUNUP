@@ -77,20 +77,14 @@ struct ProfileView: View {
         .ruCard(radius: 16)
     }
 
+    // Apple Santé only — the Strava and Garmin rows are removed entirely until those
+    // integrations actually work (per the owner's call: no visible mention of a service that
+    // isn't functional yet). To reinstate: Strava gets `StravaConnectionRow(auth: appState.auth)`
+    // back (the OAuth code below is intact, it only needs server credentials), Garmin gets a
+    // `BrandLogoIcon`-based row once a real integration exists.
     private var dataSourcesCard: some View {
         VStack(spacing: 0) {
             appleHealthRow
-            Divider().background(RUColor.line)
-            // Strava's OAuth handshake (`StravaConnectionRow`/`StravaService`) is real, working
-            // code — but the server side needs a real Strava API app (Client ID/Secret) she hasn't
-            // set up yet, so tapping "Connecter" today always ends in
-            // `StravaServiceError.notConfigured`. An active-looking button that reliably errors
-            // reads as broken, not "not built yet" — greyed out like Garmin until she's actually
-            // configured it, same as `garminRow` below. `StravaConnectionRow` itself is untouched:
-            // swap this row back for it once Strava is configured server-side.
-            comingSoonRow(assetName: "strava-logo", fallback: "Strava", fullBleed: true, title: ConnectedSource.strava.title)
-            Divider().background(RUColor.line)
-            garminRow
         }
         .ruCard(radius: 16)
     }
@@ -126,25 +120,6 @@ struct ProfileView: View {
             .labelsHidden()
             .tint(RUColor.rose)
             .accessibilityLabel("Synchroniser avec Apple Santé")
-        }
-        .padding(.horizontal, 14).padding(.vertical, 13)
-    }
-
-    /// No real Garmin Connect integration yet — a working-looking toggle here would silently do
-    /// nothing, which reads as broken rather than simply "not built yet".
-    private var garminRow: some View {
-        comingSoonRow(assetName: "garmin-logo", fallback: "Garmin", fullBleed: false, title: ConnectedSource.garmin.title)
-    }
-
-    /// Shared "not available yet" treatment for a data source — the official brand logo (see
-    /// `BrandLogoIcon` for the asset-naming contract) with a text fallback until the artwork is
-    /// dropped into the asset catalog.
-    private func comingSoonRow(assetName: String, fallback: String, fullBleed: Bool, title: String) -> some View {
-        HStack(spacing: 12) {
-            BrandLogoIcon(assetName: assetName, fallbackText: fallback, fullBleed: fullBleed, size: 24)
-            Text(title).font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.text2)
-            Spacer()
-            Text("Bientôt").font(RUFont.sans(11, weight: .semibold)).foregroundColor(RUColor.text3)
         }
         .padding(.horizontal, 14).padding(.vertical, 13)
     }

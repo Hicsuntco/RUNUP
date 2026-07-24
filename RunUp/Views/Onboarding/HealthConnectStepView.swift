@@ -16,7 +16,10 @@ struct HealthConnectStepView: View {
                 subtitle: "Pour une forme du jour plus précise — FC, sommeil, sorties passées. Facultatif, tu peux le faire plus tard."
             )
             VStack(spacing: 8) {
-                ForEach(ConnectedSource.allCases) { source in
+                // Apple Santé only — Strava/Garmin rows are removed until those integrations
+                // actually work (owner's call: no visible mention of a non-functional service).
+                // Add the source back into this array to reinstate its row.
+                ForEach([ConnectedSource.apple]) { source in
                     ConnectRow(
                         source: source,
                         connected: vm.connected.contains(source),

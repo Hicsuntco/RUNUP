@@ -55,8 +55,9 @@ async function handleCreate(req, res, userId) {
   if (already.length > 0) return res.status(409).json({ error: 'already_in_club' });
 
   const { name } = req.body || {};
-  if (!name || !name.trim()) return res.status(400).json({ error: 'bad_request' });
-  if (containsObjectionableContent(name)) return res.status(422).json({ error: 'objectionable_content' });
+  const cleanName = typeof name === 'string' ? name.trim().slice(0, 60) : '';
+  if (!cleanName) return res.status(400).json({ error: 'bad_request' });
+  if (containsObjectionableContent(cleanName)) return res.status(422).json({ error: 'objectionable_content' });
 
   let club;
   // Retry on the astronomically rare invite_code collision instead of trusting a single attempt.
@@ -65,7 +66,7 @@ async function handleCreate(req, res, userId) {
     try {
       const { rows } = await sql`
         INSERT INTO clubs (name, invite_code, created_by)
-        VALUES (${name.trim()}, ${code}, ${userId})
+        VALUES (${cleanName}, ${code}, ${userId})
         RETURNING id, name, invite_code
       `;
       club = rows[0];
@@ -75,7 +76,17 @@ async function handleCreate(req, res, userId) {
   }
   if (!club) return res.status(500).json({ error: 'could_not_create' });
 
-  await sql`INSERT INTO club_members (club_id, user_id) VALUES (${club.id}, ${userId})`;
+  // The DB now enforces one club per user (uniq_club_members_user) — a double-submitted create
+  // that raced past the pre-check above lands here instead of silently joining a second club.
+  try {
+    await sql`INSERT INTO club_members (club_id, user_id) VALUES (${club.id}, ${userId})`;
+  } catch (e) {
+    if (String(e.message).includes('uniq_club_members_user')) {
+      await sql`DELETE FROM clubs WHERE id = ${club.id}`;
+      return res.status(409).json({ error: 'already_in_club' });
+    }
+    throw e;
+  }
   res.status(201).json({ id: club.id, name: club.name, inviteCode: club.invite_code });
 }
 
@@ -86,11 +97,20 @@ async function handleJoin(req, res, userId) {
   const { inviteCode } = req.body || {};
   if (!inviteCode) return res.status(400).json({ error: 'bad_request' });
 
-  const { rows } = await sql`SELECT id, name FROM clubs WHERE invite_code = ${String(inviteCode).trim().toUpperCase()}`;
+  const { rows } = await sql`SELECT id, name FROM clubs WHERE invite_code = ${String(inviteCode).trim().toUpperCase().slice(0, 12)}`;
   const club = rows[0];
   if (!club) return res.status(404).json({ error: 'not_found' });
 
-  await sql`INSERT INTO club_members (club_id, user_id) VALUES (${club.id}, ${userId})`;
+  // Same double-submit race as create — the unique index is the real guard, the pre-check above
+  // just gives the common case a friendlier path.
+  try {
+    await sql`INSERT INTO club_members (club_id, user_id) VALUES (${club.id}, ${userId})`;
+  } catch (e) {
+    if (String(e.message).includes('uniq_club_members_user')) {
+      return res.status(409).json({ error: 'already_in_club' });
+    }
+    throw e;
+  }
   res.status(200).json({ id: club.id, name: club.name });
 }
 
@@ -107,15 +127,20 @@ async function handleCreateChallenge(req, res, userId) {
   if (!clubId) return res.status(409).json({ error: 'not_in_club' });
 
   const { title, targetKm, endDate } = req.body || {};
+  const cleanTitle = typeof title === 'string' ? title.trim().slice(0, 100) : '';
   const target = Number(targetKm);
-  if (!title || !title.trim() || !Number.isFinite(target) || target <= 0 || !endDate) {
+  // endDate must be a real, parseable YYYY-MM-DD that isn't already past — an arbitrary string
+  // used to reach Postgres as a cast error (a 500), and a target with no upper bound let a
+  // tampered client store absurd values the whole club then sees.
+  const validDate = typeof endDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(endDate) && !Number.isNaN(Date.parse(endDate));
+  if (!cleanTitle || !Number.isFinite(target) || target <= 0 || target > 10000 || !validDate) {
     return res.status(400).json({ error: 'bad_request' });
   }
-  if (containsObjectionableContent(title)) return res.status(422).json({ error: 'objectionable_content' });
+  if (containsObjectionableContent(cleanTitle)) return res.status(422).json({ error: 'objectionable_content' });
 
   const { rows } = await sql`
     INSERT INTO challenges (club_id, created_by, title, target_km, end_date)
-    VALUES (${clubId}, ${userId}, ${title.trim()}, ${target}, ${endDate})
+    VALUES (${clubId}, ${userId}, ${cleanTitle}, ${target}, ${endDate})
     RETURNING id, title, target_km, end_date, created_at
   `;
   const challenge = rows[0];

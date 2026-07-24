@@ -3,7 +3,7 @@
 // exactly as before.
 const { sql } = require('../../lib/db');
 const { requireAuth } = require('../../lib/auth');
-const { withErrorHandling } = require('../../lib/http');
+const { withErrorHandling, isUuid } = require('../../lib/http');
 const { sendPushToUser } = require('../../lib/apns');
 const { containsObjectionableContent } = require('../../lib/moderation');
 
@@ -38,7 +38,8 @@ module.exports = withErrorHandling(async function handler(req, res) {
 // leaderboard and feed genuinely backed by real actions instead of mock data.
 async function handleCreate(req, res, userId) {
   const { clientId, type, text, xpEarned, distanceKm } = req.body || {};
-  if (!clientId || !ALLOWED_TYPES.has(type) || !text || typeof xpEarned !== 'number') {
+  const cleanText = typeof text === 'string' ? text.trim().slice(0, 200) : '';
+  if (!isUuid(clientId) || !ALLOWED_TYPES.has(type) || !cleanText || typeof xpEarned !== 'number') {
     return res.status(400).json({ error: 'bad_request' });
   }
   // The client computes xpEarned locally (same gamification formula the rest of the app already
@@ -49,11 +50,6 @@ async function handleCreate(req, res, userId) {
   // back out of `text`) is what lets club challenges compute real collective progress.
   const distance = type === 'run' && typeof distanceKm === 'number' && distanceKm > 0 ? distanceKm : null;
 
-  // Idempotent on clientId: a retried request (flaky network) must not double-count XP or post
-  // the same activity to the feed twice.
-  const { rows: existing } = await sql`SELECT id FROM activities WHERE client_id = ${clientId}`;
-  if (existing.length > 0) return res.status(200).json({ ok: true, duplicate: true });
-
   // Checked before the INSERT below — this is the referral-reward trigger (see
   // `grantReferralRewardIfNeeded`): a signup that goes on to log a real first activity, not just
   // an install.
@@ -63,31 +59,40 @@ async function handleCreate(req, res, userId) {
   const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
   const clubId = memberRows[0]?.club_id || null;
 
-  await sql`
+  // Idempotent on clientId, atomically: the old check-then-insert raced a fast retry into a
+  // unique-constraint 500 instead of `duplicate: true`, and XP must only be credited when this
+  // request is the one that actually inserted the row.
+  const { rows: inserted } = await sql`
     INSERT INTO activities (client_id, user_id, club_id, type, text, xp_earned, distance_km)
-    VALUES (${clientId}, ${userId}, ${clubId}, ${type}, ${text}, ${xp}, ${distance})
+    VALUES (${clientId}, ${userId}, ${clubId}, ${type}, ${cleanText}, ${xp}, ${distance})
+    ON CONFLICT (client_id) DO NOTHING
+    RETURNING id
   `;
+  if (inserted.length === 0) return res.status(200).json({ ok: true, duplicate: true });
   await sql`UPDATE users SET xp_total = xp_total + ${xp} WHERE id = ${userId}`;
 
-  res.status(201).json({ ok: true });
-
-  // Push, after the response — a club-mate finding out from a notification while the app is
-  // closed is the whole point of this being a *push*, not something the response should wait on.
-  if (clubId) await notifyClubOfNewActivity(clubId, userId, text);
+  // Before the response, deliberately — Vercel may freeze the function the moment the response
+  // is sent, silently dropping anything still in flight. A referral reward that sometimes
+  // doesn't arrive is worse than a create call that takes half a second longer.
   if (isFirstActivity) await grantReferralRewardIfNeeded(userId);
+  if (clubId) await notifyClubOfNewActivity(clubId, userId, cleanText);
+
+  res.status(201).json({ ok: true });
 }
 
 // Rewards both sides of a referral — but only the first time the referred person logs a real
 // activity, not at signup itself (an install that never actually runs isn't worth rewarding).
-// Idempotent via `referral_reward_granted`, flipped in the same statement that grants the XP.
+// The flip of `referral_reward_granted` is conditional inside the UPDATE itself, so two
+// concurrent "first activities" can't both pass a pre-check and double-pay the referrer.
 async function grantReferralRewardIfNeeded(userId) {
-  const { rows } = await sql`
-    SELECT referred_by FROM users WHERE id = ${userId} AND referred_by IS NOT NULL AND referral_reward_granted = false
+  const { rows: flipped } = await sql`
+    UPDATE users SET referral_reward_granted = true, xp_total = xp_total + ${REFERRAL_REWARD_XP}
+    WHERE id = ${userId} AND referred_by IS NOT NULL AND referral_reward_granted = false
+    RETURNING referred_by
   `;
-  const referrerId = rows[0]?.referred_by;
+  const referrerId = flipped[0]?.referred_by;
   if (!referrerId) return;
 
-  await sql`UPDATE users SET referral_reward_granted = true, xp_total = xp_total + ${REFERRAL_REWARD_XP} WHERE id = ${userId}`;
   await sql`UPDATE users SET xp_total = xp_total + ${REFERRAL_REWARD_XP} WHERE id = ${referrerId}`;
 
   const { rows: referredRows } = await sql`SELECT name FROM users WHERE id = ${userId}`;
@@ -150,7 +155,15 @@ async function handleFeed(req, res, userId) {
 // @State Set that resets whenever the app relaunches.
 async function handleKudos(req, res, userId) {
   const { activityId } = req.body || {};
-  if (!activityId) return res.status(400).json({ error: 'bad_request' });
+  if (!isUuid(activityId)) return res.status(400).json({ error: 'bad_request' });
+
+  // Scoped to the caller's own club, like the comments handlers always were — without this,
+  // anyone holding an activity UUID could kudos (and push-notify) across club boundaries.
+  const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
+  const clubId = memberRows[0]?.club_id;
+  const { rows: activityRows } = await sql`SELECT user_id, text, club_id FROM activities WHERE id = ${activityId}`;
+  const activity = activityRows[0];
+  if (!activity || !clubId || activity.club_id !== clubId) return res.status(404).json({ error: 'not_found' });
 
   const { rows: existing } = await sql`
     SELECT 1 FROM activity_kudos WHERE activity_id = ${activityId} AND user_id = ${userId}
@@ -166,18 +179,17 @@ async function handleKudos(req, res, userId) {
     INSERT INTO activity_kudos (activity_id, user_id) VALUES (${activityId}, ${userId})
     ON CONFLICT DO NOTHING
   `;
-  res.status(200).json({ kudoed: true });
 
-  // Only on a new kudos, never on removal, and never for kudoing your own post.
-  const { rows: activityRows } = await sql`SELECT user_id, text FROM activities WHERE id = ${activityId}`;
-  const activity = activityRows[0];
-  if (activity && activity.user_id !== userId) {
+  // Only on a new kudos, never on removal, and never for kudoing your own post. Before the
+  // response — Vercel may freeze the function once the response is sent.
+  if (activity.user_id !== userId) {
     const { rows: kudoer } = await sql`SELECT name FROM users WHERE id = ${userId}`;
     await sendPushToUser(sql, activity.user_id, {
       title: 'Le Club',
       body: `${kudoer[0]?.name || 'Quelqu’un'} a applaudi : ${activity.text}`,
     });
   }
+  res.status(200).json({ kudoed: true });
 }
 
 // Lists real comments on one activity, oldest first (a conversation reads top-down) — scoped to
@@ -186,7 +198,7 @@ async function handleKudos(req, res, userId) {
 // comments from anyone the caller has blocked.
 async function handleCommentsList(req, res, userId) {
   const { activityId } = req.query || {};
-  if (!activityId) return res.status(400).json({ error: 'bad_request' });
+  if (!isUuid(activityId)) return res.status(400).json({ error: 'bad_request' });
 
   const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
   const clubId = memberRows[0]?.club_id;
@@ -221,7 +233,7 @@ async function handleCommentsList(req, res, userId) {
 async function handleCommentCreate(req, res, userId) {
   const { activityId, text } = req.body || {};
   const trimmed = (text || '').trim().slice(0, 500);
-  if (!activityId || !trimmed) return res.status(400).json({ error: 'bad_request' });
+  if (!isUuid(activityId) || !trimmed) return res.status(400).json({ error: 'bad_request' });
   if (containsObjectionableContent(trimmed)) return res.status(422).json({ error: 'objectionable_content' });
 
   const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
@@ -240,6 +252,14 @@ async function handleCommentCreate(req, res, userId) {
   const { rows: me } = await sql`SELECT name FROM users WHERE id = ${userId}`;
   const commenterName = me[0]?.name || 'Toi';
 
+  // Push before the response — Vercel may freeze the function once the response is sent.
+  if (activity.user_id !== userId) {
+    await sendPushToUser(sql, activity.user_id, {
+      title: 'Le Club',
+      body: `${commenterName} a commenté : ${activity.text}`,
+    });
+  }
+
   res.status(201).json({
     id: inserted[0].id,
     userId,
@@ -247,11 +267,4 @@ async function handleCommentCreate(req, res, userId) {
     text: trimmed,
     createdAt: inserted[0].created_at,
   });
-
-  if (activity.user_id !== userId) {
-    await sendPushToUser(sql, activity.user_id, {
-      title: 'Le Club',
-      body: `${commenterName} a commenté : ${activity.text}`,
-    });
-  }
 }

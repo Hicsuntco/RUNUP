@@ -23,7 +23,9 @@ module.exports = withErrorHandling(async function handler(req, res) {
 // of leaving a duplicate row still pointing at whoever used it before.
 async function handleRegister(req, res, userId) {
   const { deviceToken } = req.body || {};
-  if (!deviceToken || typeof deviceToken !== 'string') {
+  // A real APNs token is 64 hex chars — the format check rejects arbitrary junk being stored
+  // (and later sent to Apple) as a "token", with headroom in the length cap for format changes.
+  if (!deviceToken || typeof deviceToken !== 'string' || deviceToken.length > 200 || !/^[0-9a-f]+$/i.test(deviceToken)) {
     return res.status(400).json({ error: 'bad_request' });
   }
   // Only iOS exists today — `platform` is stored for whenever that stops being true, not read yet.

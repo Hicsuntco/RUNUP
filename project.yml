@@ -183,6 +183,7 @@ targets:
       # (RunActivityAttributes imports ActivityKit, which doesn't exist on watchOS).
       - path: RunUp/Shared/ColorHex.swift
     resources:
+      - path: RunUpWatch/Assets.xcassets
       - path: RunUp/Resources/Fonts
         excludes:
           - "*.md"
@@ -217,3 +218,8 @@ targets:
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: SW49TQ25NV
         TARGETED_DEVICE_FAMILY: "4"
+        # Single 1024×1024 source icon, same as the RunUp target — Xcode generates every required
+        # watch size at build/App Store processing time and auto-populates CFBundleIconName. Its
+        # absence is exactly what the upload rejection (missing CFBundleIconName + "no icons found
+        # for watch application") flagged.
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

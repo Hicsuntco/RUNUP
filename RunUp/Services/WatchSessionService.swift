@@ -1,0 +1,121 @@
+import Foundation
+import WatchConnectivity
+
+/// The iPhone's half of the phone↔watch bridge (the watch half is
+/// `RunUpWatch/WatchConnectivityManager`). Two flows:
+/// - Outbound: today's session (title, target pace, duration) via `updateApplicationContext` —
+///   latest-state semantics, so the watch always has the current session even if it was
+///   unreachable when the plan changed. Pushed from `AppState.publishWidgetSnapshot()`, which
+///   already fires on every plan/theme/goal change.
+/// - Inbound: a run finished on the wrist arrives via `didReceiveUserInfo` (queued — survives
+///   airplane mode, delivered when the devices reconnect). The phone builds the `RunRecord`,
+///   inserts it, and opens the same RPE debrief every other run goes through, so streak/XP/
+///   plan-adaptation work identically whether the run was tracked from pocket or wrist.
+final class WatchSessionService: NSObject {
+    private unowned let appState: AppState
+    /// Last context actually handed to WCSession — `publishWidgetSnapshot` fires on plenty of
+    /// changes that don't touch the session (theme, steps), and re-sending an identical context
+    /// would just burn the transfer budget.
+    private var lastSentContext: [String: String] = [:]
+
+    private static let seenClientIdsKey = "watchRunSeenClientIds"
+
+    init(appState: AppState) {
+        self.appState = appState
+        super.init()
+        guard WCSession.isSupported() else { return }
+        WCSession.default.delegate = self
+        WCSession.default.activate()
+    }
+
+    /// Mirrors today's session to the watch. Rest days send an empty context — the watch then
+    /// shows its "course libre" framing instead of yesterday's stale séance.
+    func pushTodaySession() {
+        guard WCSession.isSupported(), WCSession.default.activationState == .activated else { return }
+        let profile = appState.profile
+        let today = AdaptivePlanEngine.currentWeekdayIndex()
+        let isRestDay = profile.weekSessions.first(where: { $0.weekday == today }).map { $0.session == nil } ?? false
+
+        // Two parallel dictionaries: the [String: String] one exists only because [String: Any]
+        // isn't Equatable — it's what makes the "did anything change?" guard possible.
+        var context: [String: String] = [:]
+        var payload: [String: Any] = [:]
+        if !isRestDay {
+            let session = profile.todaySession
+            context = [
+                "sessionTitle": session.title,
+                "sessionPace": session.pace,
+                "sessionDurationMinutes": String(session.durationMinutes),
+            ]
+            payload = [
+                "sessionTitle": session.title,
+                "sessionPace": session.pace,
+                "sessionDurationMinutes": session.durationMinutes,
+            ]
+        }
+        guard context != lastSentContext else { return }
+        do {
+            try WCSession.default.updateApplicationContext(payload)
+            lastSentContext = context
+        } catch {
+            // Not paired / watch app not installed — nothing to do, next call retries.
+        }
+    }
+
+    // MARK: Inbound completed run
+
+    private func handleCompletedRun(_ userInfo: [String: Any]) {
+        guard let clientId = userInfo["clientId"] as? String else { return }
+        // Idempotency — transferUserInfo can re-deliver (and the watch could retry): the same
+        // wrist run must never become two RunRecords.
+        var seen = UserDefaults.standard.stringArray(forKey: Self.seenClientIdsKey) ?? []
+        guard !seen.contains(clientId) else { return }
+        seen.append(clientId)
+        if seen.count > 100 { seen.removeFirst(seen.count - 100) }
+        UserDefaults.standard.set(seen, forKey: Self.seenClientIdsKey)
+
+        let elapsedSeconds = userInfo["elapsedSeconds"] as? Double ?? 0
+        let distanceKm = userInfo["distanceKm"] as? Double ?? 0
+        let kcal = userInfo["kcal"] as? Double ?? 0
+        let avgHeartRate = userInfo["avgHeartRate"] as? Int ?? 0
+        // A tap-started-tap-stopped accident on the wrist (a few seconds, no distance) shouldn't
+        // pollute History — same spirit as the Live screen's own minimum.
+        guard elapsedSeconds >= 60, distanceKm >= 0.1 else { return }
+
+        let record = AdaptivePlanEngine.buildRunRecord(
+            title: userInfo["title"] as? String ?? "Course libre",
+            elapsedSeconds: elapsedSeconds,
+            distanceKm: distanceKm,
+            kcal: kcal,
+            avgHeartRate: avgHeartRate
+        )
+        // Inserted right away — like a GPS run, it really happened (DebriefSheet sees
+        // `modelContext != nil` and won't re-insert). The debrief only adds the RPE on top.
+        appState.modelContext.insert(record)
+        appState.lastRun = record
+        appState.manualDebriefPresented = true
+        let distance = String(format: "%.1f", locale: Locale(identifier: "fr_FR"), record.distanceKm)
+        appState.notify(icon: "⌚", colorHex: 0xFF3B6B, title: "Course reçue de ta montre", text: "\(record.title) · \(distance) km — valide ton ressenti pour mettre à jour le programme.")
+        appState.toast("Course reçue de ta montre ⌚")
+    }
+}
+
+extension WatchSessionService: WCSessionDelegate {
+    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
+        guard activationState == .activated else { return }
+        Task { @MainActor in self.pushTodaySession() }
+    }
+
+    // iOS-only requirements — fire when the user switches to a different paired watch.
+    // Re-activating hands the session over to the newly active watch.
+    func sessionDidBecomeInactive(_ session: WCSession) {}
+
+    func sessionDidDeactivate(_ session: WCSession) {
+        session.activate()
+    }
+
+    func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
+        guard userInfo["kind"] as? String == "completedRun" else { return }
+        Task { @MainActor in self.handleCompletedRun(userInfo) }
+    }
+}

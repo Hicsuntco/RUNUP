@@ -14,6 +14,9 @@ final class AppState {
 
     var profile: UserProfile
     var screen: AppScreen = .home
+    /// Phone↔watch bridge — receives runs finished on the wrist, mirrors today's session out.
+    /// Optional only because it needs `self` (created at the end of `init`); never nil after.
+    @ObservationIgnored private(set) var watchSession: WatchSessionService?
 
     // Sheets
     var sessionDetailPresented = false
@@ -51,6 +54,9 @@ final class AppState {
         // with fresh numbers — publishing here too would just be an immediately-stale extra
         // reload against WidgetKit's per-day budget for no visible benefit.
         if !self.profile.connectedSources.contains(.apple) { publishWidgetSnapshot() }
+        // Created last: the service holds `unowned self` and activates WCSession immediately, so
+        // a queued watch run (finished while the phone app was closed) is delivered right away.
+        self.watchSession = WatchSessionService(appState: self)
         Task { await self.syncDailyGoalsFromHealthKit() }
     }
 
@@ -96,6 +102,9 @@ final class AppState {
             weekStrip: profile.weekStrip.map { WidgetWeekDay(letter: $0.letter, isDone: $0.state == .done, isToday: $0.state == .today) }
         ))
         WidgetCenter.shared.reloadAllTimelines()
+        // Same trigger points work for the watch: anywhere the plan/session could have changed,
+        // this already fires — the service itself skips the send when nothing session-related moved.
+        watchSession?.pushTodaySession()
     }
 
     /// Pulls today's step count and active calories from Apple Santé, if connected — the

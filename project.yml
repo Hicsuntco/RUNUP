@@ -78,6 +78,8 @@ targets:
     dependencies:
       - target: RunUpWidgets
         embed: true
+      - target: RunUpWatch
+        embed: true
     entitlements:
       path: RunUp/RunUp.entitlements
       properties:
@@ -161,3 +163,50 @@ targets:
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: SW49TQ25NV
         TARGETED_DEVICE_FAMILY: "1"
+
+  # Apple Watch companion — a real standalone run tracker on the wrist: HKWorkoutSession +
+  # HKLiveWorkoutBuilder (live wrist heart rate, distance, active calories — sensor data the
+  # iPhone app alone never had), today's session pushed from the phone over WatchConnectivity,
+  # and each finished run transferred back to the phone, which inserts the RunRecord and runs the
+  # debrief/adaptive-plan mechanic (that engine stays phone-side on purpose). Reuses RunUp/Shared
+  # (Color(hex:)/darkened — pure, target-agnostic) the same way RunUpWidgets does.
+  RunUpWatch:
+    type: application
+    platform: watchOS
+    deploymentTarget: "10.0"
+    sources:
+      - path: RunUpWatch
+      # Only the hex/darken color math — the rest of Shared/ is widget/Live Activity plumbing
+      # (RunActivityAttributes imports ActivityKit, which doesn't exist on watchOS).
+      - path: RunUp/Shared/ColorHex.swift
+    resources:
+      - path: RunUp/Resources/Fonts
+        excludes:
+          - "*.md"
+    info:
+      path: RunUpWatch/Info.plist
+      properties:
+        CFBundleDisplayName: RunUp
+        # Must track the iOS app's version pair exactly — App Store validation requires it.
+        CFBundleShortVersionString: "2.1"
+        CFBundleVersion: "11"
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: com.hicsuntco.runup
+        NSHealthShareUsageDescription: "RunUp lit ta fréquence cardiaque pendant la course pour l'afficher en direct au poignet."
+        NSHealthUpdateUsageDescription: "RunUp enregistre ta course comme une vraie séance dans Santé — elle compte dans tes anneaux."
+        NSLocationWhenInUseUsageDescription: "RunUp utilise ta position pour mesurer distance et allure pendant une course depuis la montre."
+        UIAppFonts:
+          - BebasNeue-Regular.ttf
+          - DMSans-Bold.ttf
+          - DMSans-SemiBold.ttf
+    entitlements:
+      path: RunUpWatch/RunUpWatch.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.hicsuntco.runup.watchkitapp
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: SW49TQ25NV
+        TARGETED_DEVICE_FAMILY: "4"

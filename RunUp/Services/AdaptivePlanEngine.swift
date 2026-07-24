@@ -279,7 +279,7 @@ enum AdaptivePlanEngine {
     /// Today's index in the app's Monday-first week (0 = Monday … 6 = Sunday), derived from the
     /// real calendar date rather than hardcoded — `Calendar.component(.weekday)` is Sunday-first
     /// (1...7), so this remaps it.
-    private static func currentWeekdayIndex() -> Int {
+    static func currentWeekdayIndex() -> Int {
         (Calendar.current.component(.weekday, from: .now) + 5) % 7
     }
 

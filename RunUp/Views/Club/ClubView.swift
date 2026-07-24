@@ -29,6 +29,8 @@ struct ClubView: View {
     @State private var selectedBadge: ClubBadge?
     @State private var showLeaveConfirm = false
     @State private var showCreateEvent = false
+    /// My own feed activity pending delete confirmation (appui long → Supprimer).
+    @State private var pendingDeleteActivity: FeedItem?
     /// Which board the Classement tab shows — the fresh Monday-reset km race, or all-time XP.
     @State private var boardMode: BoardMode = .week
 
@@ -151,6 +153,31 @@ struct ClubView: View {
             Button("Annuler", role: .cancel) {}
         } message: {
             Text("Tu ne verras plus son score ni ses activités, sans avoir à quitter le club.")
+        }
+        // Deleting my own feed post — permanent (kudos et commentaires partent avec), so it
+        // confirms instead of firing straight from the context menu.
+        .alert(
+            "Supprimer cette activité ?",
+            isPresented: Binding(get: { pendingDeleteActivity != nil }, set: { if !$0 { pendingDeleteActivity = nil } })
+        ) {
+            Button("Supprimer", role: .destructive) { Task { await confirmDeleteActivity() } }
+            Button("Annuler", role: .cancel) {}
+        } message: {
+            Text("Elle disparaîtra du fil du club, avec ses applaudissements et commentaires. Tes XP restent acquis.")
+        }
+    }
+
+    private func confirmDeleteActivity() async {
+        guard let item = pendingDeleteActivity else { return }
+        pendingDeleteActivity = nil
+        do {
+            try await clubService.deleteActivity(activityId: item.id)
+            await MainActor.run {
+                feed.removeAll { $0.id == item.id }
+                appState.toast("Activité supprimée du fil.")
+            }
+        } catch {
+            await MainActor.run { appState.toast("Suppression impossible — réessaie.") }
         }
     }
 
@@ -746,6 +773,10 @@ struct ClubView: View {
                         }
                         Button("Bloquer \(item.name)", role: .destructive) {
                             pendingBlock = (item.userId, item.name)
+                        }
+                    } else {
+                        Button("Supprimer cette activité", role: .destructive) {
+                            pendingDeleteActivity = item
                         }
                     }
                 }

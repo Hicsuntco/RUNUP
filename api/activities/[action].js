@@ -28,10 +28,26 @@ module.exports = withErrorHandling(async function handler(req, res) {
       if (req.method === 'GET') return handleCommentsList(req, res, userId);
       if (req.method === 'POST') return handleCommentCreate(req, res, userId);
       return res.status(405).json({ error: 'method_not_allowed' });
+    case 'delete':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleDelete(req, res, userId);
     default:
       return res.status(404).json({ error: 'not_found' });
   }
 });
+
+// Removes ONE of the caller's own activities from the club feed — scoped to user_id in the
+// DELETE itself, so nobody can remove anyone else's post. Kudos and comments cascade with the
+// row (FKs), and any challenge progress it contributed drops out automatically (progress is a
+// live SUM over these rows). The XP it earned stays: the run really happened — removal is a
+// feed-privacy action, not an undo of the training.
+async function handleDelete(req, res, userId) {
+  const { activityId } = req.body || {};
+  if (!isUuid(activityId)) return res.status(400).json({ error: 'bad_request' });
+  const { rows } = await sql`DELETE FROM activities WHERE id = ${activityId} AND user_id = ${userId} RETURNING id`;
+  if (rows.length === 0) return res.status(404).json({ error: 'not_found' });
+  res.status(200).json({ ok: true });
+}
 
 // Posts one completed activity (a run, a strength/mobility session, or a badge unlock) to the
 // user's club feed, and credits its XP to their real, server-side total — this is what makes the

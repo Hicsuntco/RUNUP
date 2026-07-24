@@ -174,6 +174,11 @@ struct ClubService {
         return response.items
     }
 
+    /// Removes one of MY activities from the club feed — the server enforces ownership.
+    func deleteActivity(activityId: String) async throws {
+        let _: OkResponse = try await send(path: "api/activities/delete", method: "POST", body: ["activityId": activityId])
+    }
+
     @discardableResult
     func toggleKudos(activityId: String) async throws -> Bool {
         let response: KudosResponse = try await send(path: "api/activities/kudos", method: "POST", body: ["activityId": activityId])

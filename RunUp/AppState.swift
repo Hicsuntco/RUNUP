@@ -135,6 +135,15 @@ final class AppState {
     @MainActor
     private func syncDailyGoalsFromHealthKit() async {
         guard profile.connectedSources.contains(.apple) else { return }
+        // Idempotent (only the first call registers) — placed here, on the sync path itself, so
+        // observation starts whenever Santé is connected: at launch, and right after she connects
+        // it in onboarding/Profil. The observer fires on new steps/calories samples — including
+        // hourly background deliveries — and re-runs this same sync, which republishes the
+        // widget. `[weak self]` because the closure outlives any single call.
+        healthKit.startObservingDailyGoals { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in await self.syncDailyGoalsFromHealthKit() }
+        }
         async let steps = healthKit.stepsToday()
         async let calories = healthKit.activeCaloriesToday()
         profile.stepsToday = await steps

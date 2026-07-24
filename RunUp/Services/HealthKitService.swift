@@ -33,6 +33,34 @@ final class HealthKitService {
         isAuthorized = true
     }
 
+    /// Long-lived observer queries — kept so `startObservingDailyGoals` is idempotent (called on
+    /// every foreground sync; only the first call actually registers anything).
+    @ObservationIgnored private var observerQueries: [HKObserverQuery] = []
+
+    /// Watches steps + active calories and fires `onChange` whenever Santé records new samples —
+    /// including in the BACKGROUND (hourly batches, via `enableBackgroundDelivery` + the
+    /// healthkit.background-delivery entitlement). This is what keeps the Home Screen widget's
+    /// "PAS -2 400" honest while she walks all day without opening the app: each delivery wakes
+    /// the app briefly, the sync re-reads today's totals and republishes the widget snapshot.
+    func startObservingDailyGoals(onChange: @escaping () -> Void) {
+        guard Self.isHealthDataAvailable, observerQueries.isEmpty else { return }
+        let identifiers: [HKQuantityTypeIdentifier] = [.stepCount, .activeEnergyBurned]
+        for identifier in identifiers {
+            guard let type = HKObjectType.quantityType(forIdentifier: identifier) else { continue }
+            let query = HKObserverQuery(sampleType: type, predicate: nil) { _, completionHandler, error in
+                if error == nil { onChange() }
+                // Always called, even on error — HealthKit throttles observers that don't
+                // acknowledge deliveries.
+                completionHandler()
+            }
+            store.execute(query)
+            observerQueries.append(query)
+            // Hourly is the floor iOS actually honors for these high-frequency types — matches
+            // the widget's own reload budget anyway.
+            store.enableBackgroundDelivery(for: type, frequency: .hourly) { _, _ in }
+        }
+    }
+
     /// Steps recorded today — used as-is (not literally isolated from step-during-a-run time) for
     /// the "Pas" daily goal; a reasonable proxy since a single run is a small fraction of most
     /// days' total steps, and RunRecord doesn't store precise start/end timestamps to subtract by.

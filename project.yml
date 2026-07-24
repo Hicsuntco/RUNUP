@@ -85,6 +85,9 @@ targets:
       properties:
         com.apple.developer.healthkit: true
         com.apple.developer.healthkit.access: []
+        # Required (iOS 15+) for HKObserverQuery background delivery — what lets steps/calories
+        # updates wake the app briefly so the widget refreshes without her opening the app.
+        com.apple.developer.healthkit.background-delivery: true
         com.apple.developer.applesignin:
           - Default
         # Shares today's goals/streak/theme with the Home Screen widget (`RunUpWidgets` target) —

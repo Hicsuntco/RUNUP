@@ -149,7 +149,13 @@ struct ClubView: View {
             "Bloquer \(pendingBlock?.name ?? "") ?",
             isPresented: Binding(get: { pendingBlock != nil }, set: { if !$0 { pendingBlock = nil } })
         ) {
-            Button("Bloquer", role: .destructive) { Task { await confirmBlock() } }
+            // Same synchronous capture as the delete alert below — the alert's dismissal nils
+            // `pendingBlock` before an async Task body would read it (silent no-op otherwise).
+            Button("Bloquer", role: .destructive) {
+                if let target = pendingBlock {
+                    Task { await confirmBlock(target.userId) }
+                }
+            }
             Button("Annuler", role: .cancel) {}
         } message: {
             Text("Tu ne verras plus son score ni ses activités, sans avoir à quitter le club.")
@@ -160,16 +166,21 @@ struct ClubView: View {
             "Supprimer cette activité ?",
             isPresented: Binding(get: { pendingDeleteActivity != nil }, set: { if !$0 { pendingDeleteActivity = nil } })
         ) {
-            Button("Supprimer", role: .destructive) { Task { await confirmDeleteActivity() } }
+            // The item is captured SYNCHRONOUSLY here: dismissing the alert nils
+            // `pendingDeleteActivity` before an async Task body would get to read it, which made
+            // the whole action a silent no-op.
+            Button("Supprimer", role: .destructive) {
+                if let item = pendingDeleteActivity {
+                    Task { await confirmDeleteActivity(item) }
+                }
+            }
             Button("Annuler", role: .cancel) {}
         } message: {
             Text("Elle disparaîtra du fil du club, avec ses applaudissements et commentaires. Tes XP restent acquis.")
         }
     }
 
-    private func confirmDeleteActivity() async {
-        guard let item = pendingDeleteActivity else { return }
-        pendingDeleteActivity = nil
+    private func confirmDeleteActivity(_ item: FeedItem) async {
         do {
             try await clubService.deleteActivity(activityId: item.id)
             await MainActor.run {
@@ -974,10 +985,9 @@ struct ClubView: View {
         }
     }
 
-    private func confirmBlock() async {
-        guard let pendingBlock else { return }
+    private func confirmBlock(_ userId: String) async {
         do {
-            try await clubService.blockUser(userId: pendingBlock.userId)
+            try await clubService.blockUser(userId: userId)
             // Refresh so the blocked person disappears from the leaderboard/feed immediately —
             // both refetches only depend on blockUser having completed, not on each other, so
             // they run concurrently instead of paying two round trips back to back.

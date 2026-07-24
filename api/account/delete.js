@@ -11,6 +11,22 @@ module.exports = withErrorHandling(async function handler(req, res) {
   const userId = await requireAuth(req);
   if (!userId) return res.status(401).json({ error: 'unauthorized' });
 
+  // Revoke RunUp's Strava grant before the row (and its tokens) vanish — otherwise the app
+  // stays authorized on her Strava account invisibly, with no way left to undo it from our side.
+  try {
+    const { rows } = await sql`SELECT access_token FROM strava_connections WHERE user_id = ${userId}`;
+    if (rows[0]) {
+      await fetch('https://www.strava.com/oauth/deauthorize', {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: `access_token=${encodeURIComponent(rows[0].access_token)}`,
+      });
+    }
+  } catch { /* deletion must not fail because Strava is unreachable */ }
+
   await sql`DELETE FROM users WHERE id = ${userId}`;
+  // coach_usage rows are keyed by string ("u:<id>"), not an FK — clean them up explicitly so no
+  // user-linked identifier survives deletion (guideline 5.1.1(v)).
+  await sql`DELETE FROM coach_usage WHERE key = ${'u:' + userId} OR key = ${'act:' + userId}`;
   res.status(200).json({ ok: true });
 });

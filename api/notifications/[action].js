@@ -13,10 +13,24 @@ module.exports = withErrorHandling(async function handler(req, res) {
   switch (req.query.action) {
     case 'register':
       return handleRegister(req, res, userId);
+    case 'unregister':
+      return handleUnregister(req, res, userId);
     default:
       return res.status(404).json({ error: 'not_found' });
   }
 });
+
+// Called at sign-out — without it, user A signing out on a shared device kept receiving A's
+// club pushes on it forever (the row only moved when a DIFFERENT account registered the token).
+async function handleUnregister(req, res, userId) {
+  const { deviceToken } = req.body || {};
+  if (!deviceToken || typeof deviceToken !== 'string' || deviceToken.length > 200) {
+    return res.status(400).json({ error: 'bad_request' });
+  }
+  // Scoped to the caller's own row — one user must not be able to unregister another's device.
+  await sql`DELETE FROM device_tokens WHERE token = ${deviceToken} AND user_id = ${userId}`;
+  res.status(200).json({ ok: true });
+}
 
 // Upserts on `token` (not `user_id`) — the primary key is the physical device, so a device that
 // re-registers after a different account signs in on it moves ownership to that account instead

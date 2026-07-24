@@ -233,16 +233,24 @@ async function handleMine(req, res, userId) {
   `;
 
   // Upcoming sorties de groupe — includes ones started in the last 3h (a 9h meetup should still
-  // show mid-morning), capped at the next 10.
-  const { rows: events } = await sql`
-    SELECT e.id, e.title, e.location, e.starts_at, e.created_by,
-           (SELECT COUNT(*)::int FROM event_rsvps r WHERE r.event_id = e.id) AS going,
-           EXISTS(SELECT 1 FROM event_rsvps r WHERE r.event_id = e.id AND r.user_id = ${userId}) AS going_by_me
-    FROM club_events e
-    WHERE e.club_id = ${clubId} AND e.starts_at >= now() - interval '3 hours'
-    ORDER BY e.starts_at ASC
-    LIMIT 10
-  `;
+  // show mid-morning), capped at the next 10. Isolated in its own try/catch: club_events/
+  // event_rsvps are the newest tables, added after everything else here — if the Neon migration
+  // that creates them hasn't run yet on a given deploy, a "relation does not exist" error must
+  // only cost the sorties section, not 500 the entire Club tab (club info, both leaderboards,
+  // the challenge) for every member.
+  let events = [];
+  try {
+    const { rows } = await sql`
+      SELECT e.id, e.title, e.location, e.starts_at, e.created_by,
+             (SELECT COUNT(*)::int FROM event_rsvps r WHERE r.event_id = e.id) AS going,
+             EXISTS(SELECT 1 FROM event_rsvps r WHERE r.event_id = e.id AND r.user_id = ${userId}) AS going_by_me
+      FROM club_events e
+      WHERE e.club_id = ${clubId} AND e.starts_at >= now() - interval '3 hours'
+      ORDER BY e.starts_at ASC
+      LIMIT 10
+    `;
+    events = rows;
+  } catch { /* table not migrated yet on this deploy — degrade to no events, not a 500 */ }
 
   const weeklyMapped = weekly.map((r, i) => ({
     id: r.id, name: r.name, weekKm: Number(r.week_km), rank: i + 1, isMe: r.id === userId,

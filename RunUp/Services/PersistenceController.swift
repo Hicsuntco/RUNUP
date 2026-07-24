@@ -24,6 +24,10 @@ enum PersistenceController {
             // with a reset local cache beats a permanently crashing one.
             let storeURL = configuration.url
             try? FileManager.default.removeItem(at: storeURL)
+            // The SQLite WAL/SHM sidecars must go too — a stale WAL re-associated with the fresh
+            // store can re-corrupt it on the retry, landing in the fatalError this exists to avoid.
+            try? FileManager.default.removeItem(at: URL(fileURLWithPath: storeURL.path + "-wal"))
+            try? FileManager.default.removeItem(at: URL(fileURLWithPath: storeURL.path + "-shm"))
             do {
                 return try ModelContainer(for: schema, configurations: [configuration])
             } catch {

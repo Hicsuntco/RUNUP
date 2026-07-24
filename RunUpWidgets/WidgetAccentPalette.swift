@@ -25,6 +25,8 @@ enum WidgetAccentPalette {
         let light = Color(hex: swatch.light)
         let tail = Color(hex: swatch.tail)
         let rose2 = isLight ? primary.darkened(0.14) : light
-        return [rose2, primary, tail]
+        // Same light-mode darkening as RUColor.rose/.violet in-app — without it the widget's
+        // light ring was visibly more washed out than the identical in-app ring.
+        return isLight ? [rose2, primary.darkened(0.10), tail.darkened(0.10)] : [rose2, primary, tail]
     }
 }

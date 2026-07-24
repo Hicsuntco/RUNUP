@@ -15,8 +15,10 @@ final class WatchSessionService: NSObject {
     private unowned let appState: AppState
     /// Last context actually handed to WCSession — `publishWidgetSnapshot` fires on plenty of
     /// changes that don't touch the session (theme, steps), and re-sending an identical context
-    /// would just burn the transfer budget.
-    private var lastSentContext: [String: String] = [:]
+    /// would just burn the transfer budget. Nil (not `[:]`) until the first send of this launch:
+    /// a rest day's context IS the empty dictionary, and seeding with `[:]` made the "unchanged"
+    /// guard skip that first send — the watch kept showing yesterday's séance all rest day.
+    private var lastSentContext: [String: String]?
 
     private static let seenClientIdsKey = "watchRunSeenClientIds"
 
@@ -89,6 +91,11 @@ final class WatchSessionService: NSObject {
             kcal: kcal,
             avgHeartRate: avgHeartRate
         )
+        // Dated when she actually ran, not when the queued transfer finally arrived — a run
+        // finished Saturday in airplane mode must not appear as a Sunday run in History.
+        if let startedAtEpoch = userInfo["startedAt"] as? Double {
+            record.date = Date(timeIntervalSince1970: startedAtEpoch)
+        }
         // Inserted right away — like a GPS run, it really happened (DebriefSheet sees
         // `modelContext != nil` and won't re-insert). The debrief only adds the RPE on top.
         appState.modelContext.insert(record)

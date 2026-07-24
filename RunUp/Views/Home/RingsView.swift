@@ -75,7 +75,7 @@ struct RingsView: View {
                     // didn't have, matching the ring's own animate-on-appear fill above.
                     VStack(spacing: 6) {
                         Text("JOURNÉE BOUCLÉE").displayStyle(26).foregroundColor(RUColor.textPrimary)
-                        Text("Les 3 objectifs atteints 👏 +120 XP").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+                        Text("Tes \(profile.dailyGoalsTotal) objectifs du jour atteints 👏 +120 XP").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(18)

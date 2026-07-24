@@ -117,6 +117,10 @@ final class UserProfile {
 
     // MARK: Gamification
     var streak: Int
+    /// Date of the last debrief that counted toward `streak` — what lets the série actually
+    /// reset after a real gap (and not double-count a 2-session day). Optional so profiles from
+    /// before this field existed migrate as nil (their first debrief just continues the streak).
+    var lastStreakDate: Date?
     var xp: Int
     /// Last up to 5 debrief severities (`3 - RPE.rawValue`, so 0 = facile ... 3 = tropDur, same
     /// scale the weekly tier adaptation already uses) — feeds the real `readiness` score below.
@@ -290,13 +294,16 @@ final class UserProfile {
     /// Compiled once — this getter is read from `StatsView`'s body on every render for a
     /// race-goal user, and `.range(of:options:.regularExpression)` re-compiles the pattern per
     /// call.
-    private static let customDistanceRegex = /\d+(\.\d+)?/
+    /// Anchored to a "km" suffix (comma or dot decimals) — a bare first-number grab turned
+    /// "EcoTrail 2026 80 km" into a 2026 km race and "Course des 3 Châteaux 15 km" into 3 km,
+    /// then fed that into every pace projection.
+    private static let customDistanceRegex = /(\d+(?:[.,]\d+)?)\s*(?:km|k\b)/.ignoresCase()
 
     var effectiveRaceDistanceKm: Double? {
         if let km = raceDistance?.km { return km }
         guard raceDistance == .other, let custom = raceDistanceCustom,
               let match = custom.firstMatch(of: Self.customDistanceRegex),
-              let km = Double(match.0), km > 0
+              let km = Double(match.1.replacingOccurrences(of: ",", with: ".")), km > 0, km < 500
         else { return nil }
         return km
     }

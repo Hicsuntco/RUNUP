@@ -219,9 +219,28 @@ struct ClubService {
         }
 
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        decoder.dateDecodingStrategy = Self.serverDateStrategy
         return try decoder.decode(T.self, from: data)
     }
+
+    /// The backend (Neon → JSON.stringify) serializes every timestamp WITH fractional seconds
+    /// ("2026-07-24T09:15:32.123Z") — which plain `.iso8601` cannot parse at all, so every date
+    /// field in the Club API used to throw `DecodingError` and take the whole response down with
+    /// it (the Club tab stuck on "Chargement du club…" forever). Accept both forms.
+    private static let serverDateStrategy: JSONDecoder.DateDecodingStrategy = {
+        let fractional = ISO8601DateFormatter()
+        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let plain = ISO8601DateFormatter()
+        plain.formatOptions = [.withInternetDateTime]
+        return .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let raw = try container.decode(String.self)
+            if let date = fractional.date(from: raw) ?? plain.date(from: raw) {
+                return date
+            }
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Date non reconnue: \(raw)")
+        }
+    }()
 }
 
 private struct FeedResponse: Decodable {

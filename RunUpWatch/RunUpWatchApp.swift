@@ -24,7 +24,7 @@ struct WatchRootView: View {
 
     var body: some View {
         switch workout.state {
-        case .idle:
+        case .idle, .starting:
             WatchStartView()
         case .running, .paused:
             WatchRunView()

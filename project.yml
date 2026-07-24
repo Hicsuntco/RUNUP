@@ -192,6 +192,10 @@ targets:
         CFBundleVersion: "11"
         WKApplication: true
         WKCompanionAppBundleIdentifier: com.hicsuntco.runup
+        # Without the workout-processing background mode, watchOS suspends the app seconds after
+        # the wrist drops — the HKWorkoutSession stops collecting mid-run.
+        WKBackgroundModes:
+          - workout-processing
         NSHealthShareUsageDescription: "RunUp lit ta fréquence cardiaque pendant la course pour l'afficher en direct au poignet."
         NSHealthUpdateUsageDescription: "RunUp enregistre ta course comme une vraie séance dans Santé — elle compte dans tes anneaux."
         NSLocationWhenInUseUsageDescription: "RunUp utilise ta position pour mesurer distance et allure pendant une course depuis la montre."

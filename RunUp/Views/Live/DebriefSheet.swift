@@ -35,13 +35,16 @@ struct DebriefSheet: View {
 
     private var impactLines: [(String, String, String)] {
         let nextStreak = appState.profile.streak + 1
+        // Phrased as a tendency ("compte pour...") — the tier really moves on the WEEK's average
+        // RPE at the boundary, so a flat promise ("relevée d'un palier") from one single tap
+        // could contradict what actually happens after two harder sessions the same week.
         switch rpe {
         case .facile, .justeBien:
-            return [("📈", "Semaine prochaine : ", "relevée d'un palier"), ("🔥", "Série en cours : ", "jour \(nextStreak)")]
+            return [("📈", "Semaine prochaine : ", "compte pour relever l'intensité"), ("🔥", "Série en cours : ", "jour \(nextStreak)")]
         case .dur:
-            return [("👍", "Semaine prochaine : ", "on garde la même intensité"), ("🔥", "Série en cours : ", "jour \(nextStreak)")]
+            return [("👍", "Semaine prochaine : ", "compte pour garder ce niveau"), ("🔥", "Série en cours : ", "jour \(nextStreak)")]
         case .tropDur:
-            return [("🧘", "Semaine prochaine : ", "récupération allégée"), ("🔥", "Série en cours : ", "jour \(nextStreak)")]
+            return [("🧘", "Semaine prochaine : ", "compte pour alléger la charge"), ("🔥", "Série en cours : ", "jour \(nextStreak)")]
         }
     }
 
@@ -108,12 +111,17 @@ struct DebriefSheet: View {
                     }
                     AdaptivePlanEngine.applyDebrief(rpe: rpe, run: run, profile: appState.profile)
                     let distance = String(format: "%.1f", locale: Locale(identifier: "fr_FR"), run.distanceKm)
-                    appState.postClubActivity(type: "run", text: "a couru \(distance) km · \(run.title)", xpEarned: 120, distanceKm: run.distanceKm)
+                    // A distance-less séance (HYROX/renfo logged without GPS) shouldn't read
+                    // "a couru 0,0 km" in the club feed.
+                    let feedText = run.distanceKm > 0.05
+                        ? "a couru \(distance) km · \(run.title)"
+                        : "a fait sa séance · \(run.title)"
+                    appState.postClubActivity(type: "run", text: feedText, xpEarned: 120, distanceKm: run.distanceKm)
                     // Every completed session earns its own bell entry — before this, the only
                     // notify() call sites were the rare same-day 3-goals bonus, a club kudos/
                     // comment, or a weekly plan update, so a solo runner who just isn't hitting
                     // that exact daily combo would never see anything land in the bell at all.
-                    appState.notify(icon: "✅", colorHex: 0xC9FF3B, title: "Séance terminée", text: "\(run.title) · \(distance) km · +120 XP")
+                    appState.notify(icon: "✅", colorHex: 0xC9FF3B, title: "Séance terminée", text: run.distanceKm > 0.05 ? "\(run.title) · \(distance) km · +120 XP" : "\(run.title) · +120 XP")
                     // This single tap awards XP, updates the streak, and possibly a daily-goals
                     // bonus — the app's core adaptive-plan mechanic — but had zero haptic feedback,
                     // the same as tapping a settings toggle. A success tap here, and a stronger one

@@ -332,7 +332,9 @@ struct ClubView: View {
                 HStack(alignment: .lastTextBaseline) {
                     Text("Niveau \(info.level) · \(info.title)").font(RUFont.sans(16, weight: .semibold)).foregroundColor(.white)
                     Spacer()
-                    Text("\(info.xpIntoLevel) / \(info.xpForLevel) XP").font(RUFont.mono(10)).foregroundColor(RUColor.text2)
+                    // Fixed light-on-dark — this card keeps its dark violet gradient in BOTH
+                    // themes, so theme-aware text2 went dark-on-dark in light mode.
+                    Text("\(info.xpIntoLevel) / \(info.xpForLevel) XP").font(RUFont.mono(10)).foregroundColor(.white.opacity(0.65))
                 }
                 LinearBar(fraction: Double(info.xpIntoLevel) / Double(info.xpForLevel), color: RUColor.violet, gradient: LinearGradient(colors: [RUColor.violet, RUColor.rose], startPoint: .leading, endPoint: .trailing))
             }

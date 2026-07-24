@@ -171,19 +171,41 @@ CREATE TABLE IF NOT EXISTS strava_connections (
 -- challenge, or referred someone: these three columns referenced users(id) with no ON DELETE
 -- action. App Store guideline 5.1.1(v) requires deletion to actually work — the creator's row
 -- going away shouldn't take the club/challenge down with it, just detach it.
+-- Each DROP/ADD pair is guarded so a re-run is a true no-op: the bare pair re-ran DROP+ADD every
+-- time (ACCESS EXCLUSIVE lock + full FK re-validation), and a run dying between the two
+-- statements (autocommit, no transaction) would leave the FK missing entirely. The guard checks
+-- the delete rule: already ON DELETE SET NULL ('n') → skip.
 ALTER TABLE clubs ALTER COLUMN created_by DROP NOT NULL;
-ALTER TABLE clubs DROP CONSTRAINT IF EXISTS clubs_created_by_fkey;
-ALTER TABLE clubs ADD CONSTRAINT clubs_created_by_fkey
-  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'clubs_created_by_fkey' AND confdeltype = 'n'
+  ) THEN
+    ALTER TABLE clubs DROP CONSTRAINT IF EXISTS clubs_created_by_fkey;
+    ALTER TABLE clubs ADD CONSTRAINT clubs_created_by_fkey
+      FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;
+  END IF;
+END $$;
 
 ALTER TABLE challenges ALTER COLUMN created_by DROP NOT NULL;
-ALTER TABLE challenges DROP CONSTRAINT IF EXISTS challenges_created_by_fkey;
-ALTER TABLE challenges ADD CONSTRAINT challenges_created_by_fkey
-  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'challenges_created_by_fkey' AND confdeltype = 'n'
+  ) THEN
+    ALTER TABLE challenges DROP CONSTRAINT IF EXISTS challenges_created_by_fkey;
+    ALTER TABLE challenges ADD CONSTRAINT challenges_created_by_fkey
+      FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;
+  END IF;
+END $$;
 
-ALTER TABLE users DROP CONSTRAINT IF EXISTS users_referred_by_fkey;
-ALTER TABLE users ADD CONSTRAINT users_referred_by_fkey
-  FOREIGN KEY (referred_by) REFERENCES users(id) ON DELETE SET NULL;
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'users_referred_by_fkey' AND confdeltype = 'n'
+  ) THEN
+    ALTER TABLE users DROP CONSTRAINT IF EXISTS users_referred_by_fkey;
+    ALTER TABLE users ADD CONSTRAINT users_referred_by_fkey
+      FOREIGN KEY (referred_by) REFERENCES users(id) ON DELETE SET NULL;
+  END IF;
+END $$;
 
 -- One club per user, enforced by the database — the app-level check was check-then-insert, so a
 -- double-submitted "join" raced into membership of two clubs at once, and every

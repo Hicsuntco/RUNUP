@@ -212,11 +212,11 @@ struct StatsView: View {
     /// Best single calendar week, across all of history — not just the 8-week window `loadCard`
     /// charts, so an older peak still shows up here.
     private var bestWeekKm: Double {
-        let cal = Calendar.current
+        // Monday-first weeks via the engine's own range — `Calendar.current` weeks start on the
+        // device region's day (Sunday on en-US), which made this disagree with the week card.
         var weekTotals: [Date: Double] = [:]
         for run in runs {
-            guard let weekStart = cal.dateInterval(of: .weekOfYear, for: run.date)?.start else { continue }
-            weekTotals[weekStart, default: 0] += run.distanceKm
+            weekTotals[AdaptivePlanEngine.currentWeekRange(from: run.date).lowerBound, default: 0] += run.distanceKm
         }
         return weekTotals.values.max() ?? 0
     }
@@ -302,13 +302,13 @@ struct StatsView: View {
     // MARK: Training load — was a fixed fake bar chart + fake "ratio charge 1.1"
 
     private var weeklyDistances: [Double] {
+        // Same Monday-first anchoring as `bestWeekKm` — see comment there.
         let cal = Calendar.current
         var weekTotals: [Date: Double] = [:]
         for run in runs {
-            guard let weekStart = cal.dateInterval(of: .weekOfYear, for: run.date)?.start else { continue }
-            weekTotals[weekStart, default: 0] += run.distanceKm
+            weekTotals[AdaptivePlanEngine.currentWeekRange(from: run.date).lowerBound, default: 0] += run.distanceKm
         }
-        let thisWeekStart = cal.dateInterval(of: .weekOfYear, for: .now)?.start ?? .now
+        let thisWeekStart = AdaptivePlanEngine.currentWeekRange().lowerBound
         return (0..<8).reversed().compactMap { offset in
             guard let weekStart = cal.date(byAdding: .weekOfYear, value: -offset, to: thisWeekStart) else { return nil }
             return weekTotals[weekStart] ?? 0

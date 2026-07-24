@@ -183,6 +183,7 @@ async function handleMine(req, res, userId) {
     ) ranked
     WHERE id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
     ORDER BY xp_total DESC
+    LIMIT 100
   `;
 
   const { rows: countRows } = await sql`SELECT COUNT(*)::int AS count FROM club_members WHERE club_id = ${clubId}`;

@@ -71,12 +71,15 @@ final class HealthKitService {
     }
 
     /// Saves a completed run as an HKWorkout.
-    func saveRun(start: Date, end: Date, distanceKm: Double, kcal: Double) async throws {
+    /// `duration` is the real moving time (pauses excluded) — passed separately from start/end
+    /// because `end - start` includes every pause, and Santé would otherwise show a 30-min run
+    /// with a 15-min coffee stop as a 45-min workout.
+    func saveRun(start: Date, end: Date, duration: TimeInterval, distanceKm: Double, kcal: Double) async throws {
         let workout = HKWorkout(
             activityType: .running,
             start: start,
             end: end,
-            duration: end.timeIntervalSince(start),
+            duration: duration,
             totalEnergyBurned: HKQuantity(unit: .kilocalorie(), doubleValue: kcal),
             totalDistance: HKQuantity(unit: .meterUnit(with: .kilo), doubleValue: distanceKm),
             metadata: nil

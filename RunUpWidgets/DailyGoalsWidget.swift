@@ -28,16 +28,26 @@ struct DailyGoalsProvider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (DailyGoalsEntry) -> Void) {
-        completion(DailyGoalsEntry(date: .now, snapshot: DailyGoalsSnapshot.load() ?? Self.placeholderSnapshot))
+        // `.empty`, not the demo placeholder — outside the gallery, fabricated "2/3 bouclés"
+        // numbers on a fresh install would be the exact fake-data the app refuses everywhere else.
+        completion(DailyGoalsEntry(date: .now, snapshot: DailyGoalsSnapshot.load() ?? .empty))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<DailyGoalsEntry>) -> Void) {
-        let entry = DailyGoalsEntry(date: .now, snapshot: DailyGoalsSnapshot.load() ?? Self.placeholderSnapshot)
+        let snapshot = DailyGoalsSnapshot.load() ?? .empty
+        let entry = DailyGoalsEntry(date: .now, snapshot: snapshot)
         // The app calls `WidgetCenter.shared.reloadAllTimelines()` itself the moment anything
         // actually changes (`AppState.publishWidgetSnapshot`) — this hourly fallback only covers
         // the rare case that never fires (app force-quit mid-sync, etc.), not the normal path.
+        var entries = [entry]
+        // A second entry at midnight flips the footer date/"today" dot on time — WidgetKit defers
+        // budgeted `.after` reloads overnight, so without it the widget showed yesterday's date
+        // well into the morning.
+        if let midnight = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: .now)) {
+            entries.append(DailyGoalsEntry(date: midnight, snapshot: snapshot))
+        }
         let nextRefresh = Calendar.current.date(byAdding: .hour, value: 1, to: .now) ?? .now.addingTimeInterval(3600)
-        completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
+        completion(Timeline(entries: entries, policy: .after(nextRefresh)))
     }
 }
 
@@ -117,12 +127,18 @@ struct DailyGoalsWidgetView: View {
     }
 
     /// Small: the ring IS the widget — count inside, streak as a corner badge, nothing else.
+    /// Sized from the real available space (iOS 17 content margins vary per device) — the old
+    /// fixed 116pt ring drew a ~130pt visual extent (centered stroke overshoots the frame) and
+    /// clipped its outer arcs on smaller widgets.
     private var smallBody: some View {
-        centerCountRing(size: 116, countSize: 32)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .overlay(alignment: .topTrailing) {
-                if snapshot.streak > 0 { streakBadge }
-            }
+        GeometryReader { geo in
+            let side = min(geo.size.width, geo.size.height)
+            centerCountRing(size: max(80, side - 14), countSize: 32)
+                .frame(width: geo.size.width, height: geo.size.height)
+        }
+        .overlay(alignment: .topTrailing) {
+            if snapshot.streak > 0 { streakBadge }
+        }
     }
 
     private var mediumBody: some View {
@@ -143,7 +159,7 @@ struct DailyGoalsWidgetView: View {
                     }
                     .foregroundColor(flameColor)
                 }
-                goalBar(index: 0, label: "SÉANCE", trailing: snapshot.progress[safe: 0] ?? 0 >= 1 ? nil : "À faire")
+                goalBar(index: 0, label: "SÉANCE", trailing: snapshot.isRestDay ? "Repos" : (snapshot.progress[safe: 0] ?? 0 >= 1 ? nil : "À faire"))
                 goalBar(index: 1, label: "KCAL", trailing: snapshot.activeCaloriesRemaining > 0 ? "-\(grouped(snapshot.activeCaloriesRemaining))" : nil)
                 goalBar(index: 2, label: "PAS", trailing: snapshot.stepsRemaining > 0 ? "-\(grouped(snapshot.stepsRemaining))" : nil)
                 HStack(spacing: 8) {

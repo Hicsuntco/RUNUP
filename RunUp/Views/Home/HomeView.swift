@@ -5,6 +5,7 @@ import SwiftData
 struct HomeView: View {
     @Environment(AppState.self) private var appState
     @Query(sort: \AppNotification.timestamp, order: .reverse) private var notifications: [AppNotification]
+    @State private var showReplayConfirm = false
 
     private var profile: UserProfile { appState.profile }
     private var isFreeRun: Bool { profile.programPhase == .freerun }
@@ -50,7 +51,7 @@ struct HomeView: View {
                     }
                 }
 
-                Button(action: { appState.replayOnboarding() }) {
+                Button(action: { showReplayConfirm = true }) {
                     HStack(spacing: 5) {
                         Image(systemName: "arrow.counterclockwise").font(.system(size: 11))
                         Text("Revoir l'intro").font(RUFont.sans(10.5, weight: .semibold))
@@ -58,6 +59,16 @@ struct HomeView: View {
                     .foregroundColor(RUColor.text3)
                 }
                 .buttonStyle(PressableStyle())
+                // Redoing the onboarding regenerates the program from week 1 — an innocent-looking
+                // link must not silently wipe a week-6 progression on a mistap.
+                .confirmationDialog(
+                    "Refaire l'onboarding ? Ton programme repartira de la semaine 1.",
+                    isPresented: $showReplayConfirm,
+                    titleVisibility: .visible
+                ) {
+                    Button("Refaire l'onboarding", role: .destructive) { appState.replayOnboarding() }
+                    Button("Annuler", role: .cancel) {}
+                }
 
                 weekStrip
 
@@ -214,11 +225,8 @@ struct HomeView: View {
         }
         .buttonStyle(PressableStyle())
         .ruCard()
-        .sheet(isPresented: Binding(get: { appState.manualDebriefPresented }, set: { appState.manualDebriefPresented = $0 })) {
-            if let run = appState.lastRun {
-                DebriefSheet(run: run).runUpSheetStyle()
-            }
-        }
+        // The manual-debrief sheet presents from RootTabView now — anchored here it could only
+        // ever appear while this specific card was mounted on screen.
     }
 
     private var ringsCard: some View {

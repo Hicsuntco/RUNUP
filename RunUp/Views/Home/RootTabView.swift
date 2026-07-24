@@ -49,6 +49,15 @@ struct RootTabView: View {
             NotificationsSheet()
                 .runUpSheetStyle()
         }
+        // Presented from the ROOT, not HomeView's session card — a debrief can be triggered while
+        // she's on any tab (a run arriving from the Apple Watch, "Marquer comme faite" flows),
+        // and a sheet anchored inside a view that isn't currently mounted simply never appears
+        // (the RPE, streak and plan adaptation were then silently lost).
+        .sheet(isPresented: Binding(get: { appState.manualDebriefPresented }, set: { appState.manualDebriefPresented = $0 })) {
+            if let run = appState.lastRun {
+                DebriefSheet(run: run).runUpSheetStyle()
+            }
+        }
         // Tapping the weekly-recap local notification lands here rather than wherever the app
         // happened to be left open — `NotificationService` can't reach `AppState` directly (it's a
         // plain singleton with no app-state reference), so it posts this instead.

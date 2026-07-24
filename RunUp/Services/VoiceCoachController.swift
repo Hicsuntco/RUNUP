@@ -106,7 +106,10 @@ final class VoiceCoachController: NSObject {
 
         recognitionTask = speechRecognizer.recognitionTask(with: recognitionRequest) { [weak self] result, _ in
             guard let self, let result else { return }
-            self.partialTranscript = result.bestTranscription.formattedString
+            // The recognizer calls back on its own private queue — this drives SwiftUI (the live
+            // transcript bubble), so hop to main like the synthesizer delegate already does.
+            let text = result.bestTranscription.formattedString
+            Task { @MainActor in self.partialTranscript = text }
         }
     }
 

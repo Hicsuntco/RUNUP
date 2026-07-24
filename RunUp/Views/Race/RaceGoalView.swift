@@ -199,7 +199,12 @@ struct RaceGoalView: View {
 
     private func tile(_ value: String, _ label: String, highlighted: Bool) -> some View {
         VStack(spacing: 4) {
+            // Free-text values ("Sous 1h30", a custom chrono) must shrink in a third-of-screen
+            // tile, not wrap or clip on 320-375pt phones.
             Text(value).displayStyle(30).foregroundColor(highlighted ? RUColor.rose2 : RUColor.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.45)
+                .padding(.horizontal, 6)
             Text(label).font(RUFont.sans(8, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
         }
         .frame(maxWidth: .infinity)

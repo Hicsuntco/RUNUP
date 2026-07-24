@@ -166,7 +166,15 @@ enum AdaptivePlanEngine {
         if newWeekNumber != profile.weekNumber {
             // Crossed into a new week: adapt the tier from last week's average RPE — the plan
             // only ever changes here, never after a single run — then regenerate the whole week.
-            profile.weekTier = max(1, profile.weekTier + tierDelta(sum: profile.weekRPESum, count: profile.weekRPECount))
+            // Only when exactly one week passed: after a multi-week gap the accumulator belongs
+            // to a week long gone, and "her last logged week felt easy" must not bump difficulty
+            // UP after a month of detraining — a gap steps the tier DOWN one instead.
+            let gapWeeks = newWeekNumber - profile.weekNumber
+            if gapWeeks == 1 {
+                profile.weekTier = max(1, profile.weekTier + tierDelta(sum: profile.weekRPESum, count: profile.weekRPECount))
+            } else if gapWeeks > 1 {
+                profile.weekTier = max(1, profile.weekTier - 1)
+            }
             beginWeek(weekNumber: newWeekNumber, tier: profile.weekTier, profile: profile)
         } else {
             // Same week, just a day rolled over: move the "today" marker and pick up today's
@@ -302,7 +310,14 @@ enum AdaptivePlanEngine {
             guard goal == .race || goal == .hyrox, let raceDate, raceDate > startDate else {
                 return ProgramShape(totalWeeks: nil, baseWeeks: 0, specificWeeks: 0, taperWeeks: 0)
             }
-            let weeksUntilRace = Calendar.current.dateComponents([.weekOfYear], from: startDate, to: raceDate).weekOfYear ?? 9
+            // Same Monday-week anchoring as `elapsedWeeks` in `refreshProgramForCurrentDate` —
+            // the old raw 7-day-span count used a different anchor, so onboarding on a Sunday
+            // could end the program (→ recovery) almost a week BEFORE the race. `+ 1` makes the
+            // race's own week the final program week: the program ends the Monday after it.
+            let cal = mondayCalendar
+            let startWeek = cal.dateInterval(of: .weekOfYear, for: startDate)?.start ?? startDate
+            let raceWeek = cal.dateInterval(of: .weekOfYear, for: raceDate)?.start ?? raceDate
+            let weeksUntilRace = (cal.dateComponents([.weekOfYear], from: startWeek, to: raceWeek).weekOfYear ?? 8) + 1
             let total = max(4, min(20, weeksUntilRace))
             let taper = max(1, Int((Double(total) * 0.15).rounded()))
             let specific = max(1, Int((Double(total) * 0.35).rounded()))
@@ -586,9 +601,13 @@ enum AdaptivePlanEngine {
         realSplitSeconds: [Double]? = nil,
         route: [RunRecord.RoutePoint] = []
     ) -> RunRecord {
-        let dist = max(0.4, distanceKm)
-        let t = max(30, elapsedSeconds)
-        let secPerKm = t / dist
+        // No minimum clamps — the old `max(0.4, distanceKm)` fabricated 400 m for a HYROX/renfo
+        // session logged without distance, and padded accidental 50 m starts into "real" runs
+        // (AppState.endLiveRun now discards those instead). Pace shows "—" when there's no
+        // meaningful distance to divide by.
+        let dist = max(0, distanceKm)
+        let t = max(0, elapsedSeconds)
+        let avgPace = dist > 0.05 ? fmt(t / dist) : "—"
         // Real splits or none at all — the old fallback generated a formula-shaped curve
         // (`secPerKm - 8 + i*3`) for any run without real per-km timings (manual entries, GPS
         // runs under 1 km), and RecapView rendered it under "Splits par km" as if measured.
@@ -599,7 +618,7 @@ enum AdaptivePlanEngine {
             title: title,
             distanceKm: dist,
             durationSeconds: Int(t),
-            avgPace: fmt(secPerKm),
+            avgPace: avgPace,
             avgHeartRate: avgHeartRate,
             kcal: Int(kcal.rounded()),
             elevationGainM: elevationGainM,
@@ -631,7 +650,24 @@ enum AdaptivePlanEngine {
         profile.weekRPECount += 1
         profile.recentRPESeverities.append(severity)
         if profile.recentRPESeverities.count > 5 { profile.recentRPESeverities.removeFirst() }
-        profile.streak += 1
+        // Real "série" semantics — the old bare `streak += 1` never reset and counted twice on a
+        // 2-session day, so a once-a-week runner showed "Série de 52 jours" after a year. One
+        // increment per calendar day; a gap longer than 3 days (bigger than any planned rest
+        // block in a 3-4 sessions/week plan) means the chain broke and restarts at 1.
+        let cal = Calendar.current
+        if let last = profile.lastStreakDate {
+            let gapDays = cal.dateComponents([.day], from: cal.startOfDay(for: last), to: cal.startOfDay(for: .now)).day ?? 0
+            if gapDays == 0 {
+                // Second séance today — the day is already counted.
+            } else if gapDays <= 3 {
+                profile.streak += 1
+            } else {
+                profile.streak = 1
+            }
+        } else {
+            profile.streak = max(1, profile.streak == 0 ? 1 : profile.streak + 1)
+        }
+        profile.lastStreakDate = .now
         profile.xp += 120
         profile.completedDebriefsCount += 1
         return "Programme mis à jour · +120 XP"

@@ -78,6 +78,12 @@ final class AuthService {
     }
 
     func signOut() {
+        // Fire-and-forget with the token captured NOW (the Keychain entry is deleted below,
+        // before the Task necessarily runs) — the device must stop receiving this account's
+        // pushes once she signs out.
+        if let authToken = token {
+            Task { await NotificationService.shared.unregisterDeviceToken(authToken: authToken) }
+        }
         token = nil
         currentUser = nil
         KeychainService.deleteToken()

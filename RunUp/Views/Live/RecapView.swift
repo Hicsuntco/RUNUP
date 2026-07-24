@@ -50,32 +50,41 @@ struct RecapView: View {
                             }
                         }
 
-                        if let shareImage {
-                            // One share action, not two — the transparent card covers both uses
-                            // (shared as-is on a story, or layered over a photo), so the old
-                            // opaque-card/transparent-card button pair collapsed into this. The
-                            // preview shows the actual rendered PNG (on the app background, since
-                            // the card itself is transparent), and the chips re-render it with
-                            // the picked text color before sharing.
-                            VStack(spacing: 10) {
-                                EyebrowLabel(text: "Partage ta course", color: RUColor.text3)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                shareImage
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(height: 230)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 8)
-                                    .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-                                    .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
-                                HStack(spacing: 7) {
-                                    ForEach(ShareCardTextColor.allCases) { style in
-                                        SelectableChip(label: style.label, selected: shareTextColor == style) {
-                                            shareTextColor = style
-                                            renderShareCard(for: run)
-                                        }
+                        // One share action, not two — the transparent card covers both uses
+                        // (shared as-is on a story, or layered over a photo), so the old
+                        // opaque-card/transparent-card button pair collapsed into this. The
+                        // preview shows the actual rendered PNG (on the app background, since
+                        // the card itself is transparent), and the chips re-render it with
+                        // the picked text color before sharing. The section is ALWAYS laid out
+                        // (spinner in the preview slot until the deferred render lands) — it used
+                        // to pop into the middle of the scroll ~half a second in, shifting
+                        // content under her finger.
+                        VStack(spacing: 10) {
+                            EyebrowLabel(text: "Partage ta course", color: RUColor.text3)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            Group {
+                                if let shareImage {
+                                    shareImage
+                                        .resizable()
+                                        .scaledToFit()
+                                } else {
+                                    ProgressView().tint(RUColor.text2)
+                                }
+                            }
+                            .frame(height: 230)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                            .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                            HStack(spacing: 7) {
+                                ForEach(ShareCardTextColor.allCases) { style in
+                                    SelectableChip(label: style.label, selected: shareTextColor == style) {
+                                        shareTextColor = style
+                                        renderShareCard(for: run)
                                     }
                                 }
+                            }
+                            if let shareImage {
                                 ShareLink(
                                     item: shareImage,
                                     preview: SharePreview("Ma course sur RunUp", image: shareImage)
@@ -86,9 +95,19 @@ struct RecapView: View {
                                     }
                                 }
                                 .buttonStyle(SecondaryButtonStyle())
+                            } else {
+                                Button(action: {}) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "square.and.arrow.up")
+                                        Text("PARTAGER MA COURSE")
+                                    }
+                                }
+                                .buttonStyle(SecondaryButtonStyle())
+                                .disabled(true)
+                                .opacity(0.5)
                             }
-                            .padding(.top, 10)
                         }
+                        .padding(.top, 10)
 
                         Button("DONNER MON RESSENTI") { showDebrief = true }
                             .buttonStyle(PrimaryButtonStyle())

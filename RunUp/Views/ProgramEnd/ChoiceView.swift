@@ -10,7 +10,9 @@ struct ChoiceView: View {
     private var profile: UserProfile { appState.profile }
 
     private var totalKm: Int {
-        Int(profile.runValue + runs.reduce(0) { $0 + $1.distanceKm })
+        // Just the run records — `profile.runValue` is today's km, already inside `runs`, so
+        // adding it double-counted today's distance in the end-of-program bilan.
+        Int(runs.reduce(0) { $0 + $1.distanceKm })
     }
 
     var body: some View {

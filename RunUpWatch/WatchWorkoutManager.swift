@@ -1,5 +1,6 @@
 import Foundation
 import HealthKit
+import CoreLocation
 import Observation
 
 /// Drives a real watchOS running workout — `HKWorkoutSession` keeps the app alive with the
@@ -13,6 +14,10 @@ import Observation
 final class WatchWorkoutManager: NSObject {
     enum State: Equatable {
         case idle
+        /// Between the COURIR tap and the session actually collecting — authorization prompts can
+        /// hold this open for a while, and the start button must be dead during it (a second tap
+        /// used to spawn a second HKWorkoutSession over the first).
+        case starting
         case running
         case paused
         case ended
@@ -35,6 +40,14 @@ final class WatchWorkoutManager: NSObject {
     private var session: HKWorkoutSession?
     private var builder: HKLiveWorkoutBuilder?
     private var startedAt: Date?
+    /// Refreshes `elapsedSeconds` every second from `builder.elapsedTime` (which already excludes
+    /// paused time) — the builder's data callbacks alone arrive every 2-5 s, which made the hero
+    /// chrono jump instead of tick.
+    private var tickerTask: Task<Void, Never>?
+    /// watchOS only engages GPS for the outdoor session if location is authorized — the purpose
+    /// string was declared but nothing ever asked, silently downgrading distance to the
+    /// motion-based estimate.
+    private let locationManager = CLLocationManager()
 
     var paceLabel: String {
         let km = distanceMeters / 1000
@@ -69,7 +82,12 @@ final class WatchWorkoutManager: NSObject {
     }()
 
     func start() {
+        guard state == .idle else { return }
+        state = .starting
         errorMessage = nil
+        if locationManager.authorizationStatus == .notDetermined {
+            locationManager.requestWhenInUseAuthorization()
+        }
         let configuration = HKWorkoutConfiguration()
         configuration.activityType = .running
         configuration.locationType = .outdoor
@@ -92,11 +110,27 @@ final class WatchWorkoutManager: NSObject {
                     self.builder = builder
                     self.startedAt = start
                     self.state = .running
+                    self.startTicker()
                 }
             } catch {
                 await MainActor.run {
+                    self.state = .idle
                     self.errorMessage = "Impossible de démarrer — vérifie l'accès Santé dans Réglages."
                 }
+            }
+        }
+    }
+
+    private func startTicker() {
+        tickerTask?.cancel()
+        tickerTask = Task { [weak self] in
+            while !Task.isCancelled {
+                guard let self else { return }
+                let elapsed = self.builder?.elapsedTime ?? 0
+                await MainActor.run {
+                    if self.state == .running || self.state == .paused { self.elapsedSeconds = elapsed }
+                }
+                try? await Task.sleep(for: .seconds(1))
             }
         }
     }
@@ -112,19 +146,50 @@ final class WatchWorkoutManager: NSObject {
         }
     }
 
+    /// Only asks the session to end — the actual endCollection/finishWorkout/send sequence runs
+    /// from the delegate once the session really reaches `.ended` (ending collection while the
+    /// state is still `.running` intermittently throws, which used to skip `finishWorkout()`
+    /// entirely: no workout in Santé, no ring credit).
     func end() {
-        guard let session, let builder else { return }
+        guard let session, state == .running || state == .paused else { return }
         state = .ended
+        tickerTask?.cancel()
         session.end()
+    }
+
+    /// Called from the session delegate when the state really is `.ended`.
+    private func finishAndSend(at date: Date) {
+        guard let builder else { return }
         Task {
             do {
-                try await builder.endCollection(at: Date())
+                try await builder.endCollection(at: date)
                 try await builder.finishWorkout()
             } catch {
                 // The workout data is still in the builder's samples even when finishing throws
                 // (rare) — the run summary below is what the phone consumes either way.
             }
+            // Final numbers read straight from the builder, not the cached observable values —
+            // the last data callbacks hop to MainActor as unordered Tasks and could land after
+            // this, undercounting the payload's final seconds/meters.
+            let bpmUnit = HKUnit.count().unitDivided(by: .minute())
+            let elapsed = builder.elapsedTime
+            var distance: Double?
+            var kcal: Double?
+            var avgBpm: Double?
+            if let type = HKQuantityType.quantityType(forIdentifier: .distanceWalkingRunning) {
+                distance = builder.statistics(for: type)?.sumQuantity()?.doubleValue(for: .meter())
+            }
+            if let type = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned) {
+                kcal = builder.statistics(for: type)?.sumQuantity()?.doubleValue(for: .kilocalorie())
+            }
+            if let type = HKQuantityType.quantityType(forIdentifier: .heartRate) {
+                avgBpm = builder.statistics(for: type)?.averageQuantity()?.doubleValue(for: bpmUnit)
+            }
             await MainActor.run {
+                self.elapsedSeconds = elapsed
+                if let distance { self.distanceMeters = distance }
+                if let kcal { self.activeCalories = kcal }
+                if let avgBpm { self.avgHeartRate = Int(avgBpm.rounded()) }
                 WatchConnectivityManager.shared.sendCompletedRun(
                     startedAt: self.startedAt ?? Date(),
                     elapsedSeconds: self.elapsedSeconds,
@@ -137,6 +202,8 @@ final class WatchWorkoutManager: NSObject {
     }
 
     func reset() {
+        tickerTask?.cancel()
+        tickerTask = nil
         session = nil
         builder = nil
         startedAt = nil
@@ -150,7 +217,11 @@ final class WatchWorkoutManager: NSObject {
 }
 
 extension WatchWorkoutManager: HKWorkoutSessionDelegate {
-    func workoutSession(_ workoutSession: HKWorkoutSession, didChangeTo toState: HKWorkoutSessionState, from fromState: HKWorkoutSessionState, date: Date) {}
+    func workoutSession(_ workoutSession: HKWorkoutSession, didChangeTo toState: HKWorkoutSessionState, from fromState: HKWorkoutSessionState, date: Date) {
+        if toState == .ended {
+            finishAndSend(at: date)
+        }
+    }
 
     func workoutSession(_ workoutSession: HKWorkoutSession, didFailWithError error: Error) {
         Task { @MainActor in

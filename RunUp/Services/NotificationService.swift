@@ -65,6 +65,20 @@ final class NotificationService: NSObject {
         _ = try? await URLSession.shared.data(for: request)
     }
 
+    /// Detaches this device from the account — the auth token is passed in (not re-read from the
+    /// Keychain) because sign-out deletes the Keychain entry synchronously while this runs as a
+    /// fire-and-forget Task; without it, someone signing out on a shared device kept receiving
+    /// the old account's club pushes indefinitely.
+    func unregisterDeviceToken(authToken: String) async {
+        guard let deviceTokenHex else { return }
+        var request = URLRequest(url: Self.baseURL.appending(path: "api/notifications/unregister"))
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "content-type")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: ["deviceToken": deviceTokenHex])
+        _ = try? await URLSession.shared.data(for: request)
+    }
+
     /// Re-schedules (or clears) today's reminder to match the current plan — call whenever
     /// program/profile state could have changed (app foreground, onboarding finish, a session
     /// just got logged). Fires at 18:00 local time, only if the coach-notifications toggle is on,
@@ -76,6 +90,16 @@ final class NotificationService: NSObject {
         let session = profile.todaySession
         guard session.durationMinutes > 0 else { return }
 
+        // TODAY at 18:00, as a full date — hour-only components meant "the next 18:00", so an
+        // open after 18:00 scheduled TOMORROW's reminder with TODAY's séance baked into the body
+        // (nagging about Monday's fractionné on what might be Tuesday's rest day). Past 18:00,
+        // there's nothing left to remind today; tomorrow's own foreground pass reschedules with
+        // tomorrow's real session.
+        var dateComponents = Calendar.current.dateComponents([.year, .month, .day], from: .now)
+        dateComponents.hour = 18
+        dateComponents.minute = 0
+        guard let fireDate = Calendar.current.date(from: dateComponents), fireDate > .now else { return }
+
         center.getNotificationSettings { [center] settings in
             guard settings.authorizationStatus == .authorized else { return }
             let content = UNMutableNotificationContent()
@@ -83,9 +107,6 @@ final class NotificationService: NSObject {
             content.body = "\(session.title) t'attend — \(session.durationMinutes)′ à \(session.pace)/km."
             content.sound = .default
 
-            var dateComponents = DateComponents()
-            dateComponents.hour = 18
-            dateComponents.minute = 0
             let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
             let request = UNNotificationRequest(identifier: Self.reminderID, content: content, trigger: trigger)
             center.add(request)

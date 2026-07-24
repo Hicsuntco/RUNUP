@@ -153,7 +153,9 @@ struct ProfileView: View {
                                 .fill(LinearGradient(colors: [theme.primary, theme.tail], startPoint: .topLeading, endPoint: .bottomTrailing))
                                 .frame(width: 40, height: 40)
                             if profile.accentThemeID == theme.id {
-                                Circle().stroke(Color.white, lineWidth: 2.5).frame(width: 46, height: 46)
+                                // Theme-aware — a white selection ring was invisible on the
+                                // near-white light-mode card.
+                                Circle().stroke(RUColor.textPrimary, lineWidth: 2.5).frame(width: 46, height: 46)
                                 Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)).foregroundColor(.white)
                             }
                         }

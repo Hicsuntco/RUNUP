@@ -4,9 +4,18 @@
 //
 // Two env vars, set in the Vercel project (never committed): ANTHROPIC_API_KEY, RUNUP_APP_SECRET.
 
+const crypto = require('crypto');
 const { sql } = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
 const { withErrorHandling } = require('../lib/http');
+
+// Constant-time string comparison — `!==` leaks how many leading characters matched through
+// response timing. Hash both sides first so lengths never have to match for the comparison.
+function timingSafeEqualStrings(a, b) {
+  const ha = crypto.createHash('sha256').update(String(a)).digest();
+  const hb = crypto.createHash('sha256').update(String(b)).digest();
+  return crypto.timingSafeEqual(ha, hb);
+}
 
 const ALLOWED_MODEL = 'claude-opus-4-8';
 const MAX_TOKENS_CAP = 500;
@@ -24,7 +33,7 @@ module.exports = withErrorHandling(async function handler(req, res) {
   }
 
   const secret = req.headers['x-runup-secret'];
-  if (!secret || secret !== process.env.RUNUP_APP_SECRET) {
+  if (!secret || !process.env.RUNUP_APP_SECRET || !timingSafeEqualStrings(secret, process.env.RUNUP_APP_SECRET)) {
     res.status(401).json({ error: 'unauthorized' });
     return;
   }

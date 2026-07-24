@@ -37,17 +37,23 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         manager.requestWhenInUseAuthorization()
     }
 
+    /// Begins a FRESH run — zeroes route/distance/elevation. Resuming after a pause must go
+    /// through `resume()` instead: this reset living in the same method as "turn GPS on" is
+    /// exactly what used to wipe a paused run's 5 km back to 0.00 at the traffic light.
     func start() {
         route = []
         distanceMeters = 0
         elevationGainMeters = 0
         lastLocation = nil
-        // Only valid once authorization is actually granted — setting this beforehand risks the
-        // manager silently ignoring it (or worse, depending on OS version) since background
-        // delivery has nothing to attach to without at least When-In-Use authorization.
-        if authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways {
-            manager.allowsBackgroundLocationUpdates = true
-        }
+        resume()
+    }
+
+    /// Restarts GPS delivery without touching accumulated data. Drops `lastLocation` first so the
+    /// pause gap itself is never counted as distance — if she walked 200 m during the pause, the
+    /// next fix starts a fresh segment instead of bridging from where she pressed pause.
+    func resume() {
+        lastLocation = nil
+        applyBackgroundUpdatesIfAuthorized()
         manager.startUpdatingLocation()
     }
 
@@ -55,30 +61,52 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         manager.stopUpdatingLocation()
     }
 
+    /// Only valid once authorization is actually granted — setting the flag beforehand risks the
+    /// manager silently ignoring it, since background delivery has nothing to attach to without
+    /// at least When-In-Use authorization. Called again from the authorization callback because
+    /// on the very first run the grant arrives AFTER `start()` (the system prompt is still up),
+    /// and without the retry the whole first run would freeze the moment she locked the screen.
+    private func applyBackgroundUpdatesIfAuthorized() {
+        if authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways {
+            manager.allowsBackgroundLocationUpdates = true
+        }
+    }
+
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         authorizationStatus = manager.authorizationStatus
+        applyBackgroundUpdatesIfAuthorized()
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let loc = locations.last else { return }
+        guard let newest = locations.last else { return }
+        isSignalUnstable = newest.horizontalAccuracy > unstableAccuracyThreshold || newest.horizontalAccuracy < 0
 
-        isSignalUnstable = loc.horizontalAccuracy > unstableAccuracyThreshold || loc.horizontalAccuracy < 0
+        // All delivered fixes, not just the last — batched background delivery otherwise cuts
+        // the corners off every curve and undercounts distance.
+        for loc in locations {
+            guard loc.horizontalAccuracy >= 0, loc.horizontalAccuracy < 65 else { continue }
 
-        guard loc.horizontalAccuracy >= 0, loc.horizontalAccuracy < 65 else { return }
-
-        if let last = lastLocation {
-            distanceMeters += loc.distance(from: last)
-            // Vertical accuracy is typically much worse than horizontal — negative means invalid,
-            // and a loose 20m threshold keeps out the worst GPS altitude noise without discarding
-            // every real fix (altitude readings are noisy by nature, even accepted ones).
-            if loc.verticalAccuracy >= 0, loc.verticalAccuracy < 20 {
-                let delta = loc.altitude - last.altitude
-                if delta > 0 { elevationGainMeters += delta }
+            if let last = lastLocation {
+                let meters = loc.distance(from: last)
+                let dt = loc.timestamp.timeIntervalSince(last.timestamp)
+                // Re-acquired fix after signal loss (tunnel, dense blocks) arrives as one huge
+                // straight-line jump — an implied speed no runner reaches (12 m/s ≈ 1:23/km)
+                // means the gap wasn't run, so start a fresh segment instead of counting it.
+                if dt > 0, meters / dt <= 12 {
+                    distanceMeters += meters
+                    // Vertical accuracy is typically much worse than horizontal — negative means
+                    // invalid, and a loose 20m threshold keeps out the worst GPS altitude noise
+                    // without discarding every real fix.
+                    if loc.verticalAccuracy >= 0, loc.verticalAccuracy < 20 {
+                        let delta = loc.altitude - last.altitude
+                        if delta > 0 { elevationGainMeters += delta }
+                    }
+                }
             }
+            currentSpeedMetersPerSecond = max(0, loc.speed)
+            lastLocation = loc
+            route.append(loc.coordinate)
         }
-        currentSpeedMetersPerSecond = max(0, loc.speed)
-        lastLocation = loc
-        route.append(loc.coordinate)
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {

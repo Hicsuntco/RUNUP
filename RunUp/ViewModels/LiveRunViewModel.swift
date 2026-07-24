@@ -11,7 +11,16 @@ final class LiveRunViewModel {
     let location = LocationService()
     private let profile: UserProfile
     private let healthKit: HealthKitService
-    private let startedAt = Date()
+    /// Set in `start()`, not at init — the view model can exist briefly before the run begins,
+    /// and this date anchors both the wall-clock elapsed math and the HealthKit workout.
+    private var startedAt = Date()
+    /// Wall-clock pause bookkeeping: elapsed = now - startedAt - accumulated pauses. The old
+    /// `elapsedSeconds += 1` per `Task.sleep(1s)` iteration systematically undercounted (sleep is
+    /// "at least 1s", plus scheduling gaps) — minutes of drift over a long run, corrupting pace
+    /// and splits.
+    private var accumulatedPauseSeconds: Double = 0
+    private var pauseBeganAt: Date?
+    private var lastActivityPush = Date.distantPast
 
     private(set) var elapsedSeconds: Double = 0
     private(set) var isPaused = false
@@ -63,7 +72,9 @@ final class LiveRunViewModel {
         return Int(profile.todaySession.title[range].filter(\.isNumber))
     }
     var intervalIndex: Int { min(intervalRepCount ?? 6, 1 + Int(distanceKm / 1.2)) }
-    var kcal: Double { distanceKm * 65 }
+    // Same 62 kcal/km estimate as `markTodaySessionDone` — two different constants for the same
+    // approximation meant a GPS run and a manual run disagreed on identical distances.
+    var kcal: Double { distanceKm * 62 }
 
     var paceLabel: String {
         guard distanceKm > 0.05 else { return "--:--" }
@@ -100,6 +111,7 @@ final class LiveRunViewModel {
     }
 
     func start() {
+        startedAt = Date()
         location.requestAuthorization()
         location.start()
         if voiceCoach == nil {
@@ -124,7 +136,7 @@ final class LiveRunViewModel {
 
     private func tick() {
         guard !isPaused else { return }
-        elapsedSeconds += 1
+        elapsedSeconds = max(0, Date().timeIntervalSince(startedAt) - accumulatedPauseSeconds)
         let currentKm = Int(distanceKm)
         if currentKm > lastSplitKm {
             splitSecondsPerKm.append(elapsedSeconds - lastSplitElapsedSeconds)
@@ -141,8 +153,12 @@ final class LiveRunViewModel {
             showCue(message)
         }
         // Every 5s, not every tick — ActivityKit updates are meant to be occasional, not a
-        // per-second stream, and the Lock Screen/Dynamic Island don't need second-level precision.
-        if t % 5 == 0 { updateLiveActivity() }
+        // per-second stream (the chrono ticks itself via `timerReference`; these pushes only
+        // refresh distance/pace).
+        if Date().timeIntervalSince(lastActivityPush) >= 5 {
+            lastActivityPush = Date()
+            updateLiveActivity()
+        }
     }
 
     /// Polls HealthKit for a genuinely recent heart-rate sample every 5s — separate from `tick()`
@@ -177,31 +193,50 @@ final class LiveRunViewModel {
 
     func togglePause() {
         isPaused.toggle()
-        if isPaused { location.stop() } else { location.start() }
+        if isPaused {
+            pauseBeganAt = Date()
+            location.stop()
+        } else {
+            if let pauseBeganAt {
+                accumulatedPauseSeconds += Date().timeIntervalSince(pauseBeganAt)
+                self.pauseBeganAt = nil
+            }
+            // resume(), never start() — start() zeroes route/distance, which is exactly what used
+            // to wipe a paused run back to 0,00 km at the traffic light.
+            location.resume()
+        }
         updateLiveActivity()
     }
 
     private func startLiveActivity() {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         let attributes = RunActivityAttributes(sessionTitle: profile.todaySession.title)
-        let state = RunActivityAttributes.ContentState(distanceKm: 0, elapsedSeconds: 0, paceLabel: "--:--", isPaused: false)
-        liveActivity = try? Activity.request(attributes: attributes, content: ActivityContent(state: state, staleDate: nil), pushType: nil)
+        let state = RunActivityAttributes.ContentState(distanceKm: 0, elapsedSeconds: 0, paceLabel: "--:--", isPaused: false, timerReference: Date())
+        liveActivity = try? Activity.request(attributes: attributes, content: ActivityContent(state: state, staleDate: .now + 60), pushType: nil)
     }
 
     private func updateLiveActivity() {
         guard let liveActivity else { return }
-        let state = RunActivityAttributes.ContentState(distanceKm: distanceKm, elapsedSeconds: elapsedSeconds, paceLabel: paceLabel, isPaused: isPaused)
-        Task { await liveActivity.update(ActivityContent(state: state, staleDate: nil)) }
+        let state = RunActivityAttributes.ContentState(
+            distanceKm: distanceKm,
+            elapsedSeconds: elapsedSeconds,
+            paceLabel: paceLabel,
+            isPaused: isPaused,
+            timerReference: isPaused ? nil : Date(timeIntervalSinceNow: -elapsedSeconds)
+        )
+        // staleDate dims the card if updates stop arriving (app killed mid-run) instead of
+        // leaving a frozen "in-progress" run on the Lock Screen for hours.
+        Task { await liveActivity.update(ActivityContent(state: state, staleDate: .now + 60)) }
     }
 
-    /// Ends the Live Activity with the run's final tally still showing for a few seconds
-    /// (`.default` dismissal) rather than yanking it off the Lock Screen the instant she stops —
-    /// call from `stop()`, before `location`/timers are torn down so `distanceKm`/`elapsedSeconds`
-    /// still read the real final values.
+    /// Ends the Live Activity with the run's final tally kept briefly on the Lock Screen (30s,
+    /// explicitly — `.default` actually leaves it for up to 4 hours), marked `isEnded` so the
+    /// widget shows a checkmark, not a pause icon implying the run is still going. Call from
+    /// `stop()`, before `location`/timers are torn down so the final values still read true.
     private func endLiveActivity() {
         guard let liveActivity else { return }
-        let finalState = RunActivityAttributes.ContentState(distanceKm: distanceKm, elapsedSeconds: elapsedSeconds, paceLabel: paceLabel, isPaused: true)
-        Task { await liveActivity.end(ActivityContent(state: finalState, staleDate: nil), dismissalPolicy: .default) }
+        let finalState = RunActivityAttributes.ContentState(distanceKm: distanceKm, elapsedSeconds: elapsedSeconds, paceLabel: paceLabel, isPaused: false, timerReference: nil, isEnded: true)
+        Task { await liveActivity.end(ActivityContent(state: finalState, staleDate: nil), dismissalPolicy: .after(.now + 30)) }
         self.liveActivity = nil
     }
 
@@ -225,7 +260,9 @@ final class LiveRunViewModel {
             route: location.route.map { RunRecord.RoutePoint(lat: $0.latitude, lng: $0.longitude) }
         )
         let endedAt = Date()
-        Task { try? await healthKit.saveRun(start: startedAt, end: endedAt, distanceKm: record.distanceKm, kcal: Double(record.kcal)) }
+        // duration = real moving time (pauses excluded) — start/end alone would tell Santé a
+        // 30-min run with a 15-min coffee pause was a 45-min workout.
+        Task { try? await healthKit.saveRun(start: startedAt, end: endedAt, duration: elapsedSeconds, distanceKm: record.distanceKm, kcal: Double(record.kcal)) }
         return record
     }
 }

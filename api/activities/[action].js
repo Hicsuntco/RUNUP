@@ -4,7 +4,7 @@
 const { sql } = require('../../lib/db');
 const { requireAuth } = require('../../lib/auth');
 const { withErrorHandling, isUuid } = require('../../lib/http');
-const { sendPushToUser } = require('../../lib/apns');
+const { sendPushToUser, sendPushToUsers } = require('../../lib/apns');
 const { containsObjectionableContent } = require('../../lib/moderation');
 
 const ALLOWED_TYPES = new Set(['run', 'strength', 'badge']);
@@ -42,13 +42,32 @@ async function handleCreate(req, res, userId) {
   if (!isUuid(clientId) || !ALLOWED_TYPES.has(type) || !cleanText || typeof xpEarned !== 'number') {
     return res.status(400).json({ error: 'bad_request' });
   }
+  // Same filter as club names/challenge titles/comments — activity text lands in every club
+  // member's feed AND on their lock screens via push, so it can't be the one unfiltered field.
+  if (containsObjectionableContent(cleanText)) return res.status(422).json({ error: 'objectionable_content' });
   // The client computes xpEarned locally (same gamification formula the rest of the app already
   // uses) — this cap just stops a tampered client from inflating the shared leaderboard, it's not
   // meant to be the real anti-cheat mechanism.
   const xp = Math.max(0, Math.min(500, Math.round(xpEarned)));
   // Only 'run' activities carry a real distance — a structured column (rather than parsing it
-  // back out of `text`) is what lets club challenges compute real collective progress.
-  const distance = type === 'run' && typeof distanceKm === 'number' && distanceKm > 0 ? distanceKm : null;
+  // back out of `text`) is what lets club challenges compute real collective progress. Finite +
+  // capped at 500 km: `Infinity > 0` is true in JS, and a tampered client's `1e12` would
+  // otherwise instantly "complete" every club challenge (progress is a raw SUM).
+  const distance = type === 'run' && Number.isFinite(distanceKm) && distanceKm > 0
+    ? Math.min(distanceKm, 500)
+    : null;
+
+  // Per-user daily activity cap — each fresh clientId is otherwise a fresh XP award, so a
+  // scripted loop with random UUIDs could farm unbounded xp_total onto the shared leaderboard.
+  // 40/day is far beyond any real day of running + goals. Fails open on counter errors.
+  try {
+    const { rows: capRows } = await sql`
+      INSERT INTO coach_usage (key, day, count) VALUES (${'act:' + userId}, CURRENT_DATE, 1)
+      ON CONFLICT (key, day) DO UPDATE SET count = coach_usage.count + 1
+      RETURNING count
+    `;
+    if (capRows[0] && capRows[0].count > 40) return res.status(429).json({ error: 'too_many_activities' });
+  } catch { /* the cap must never take activity posting down with it */ }
 
   // Checked before the INSERT below — this is the referral-reward trigger (see
   // `grantReferralRewardIfNeeded`): a signup that goes on to log a real first activity, not just
@@ -112,11 +131,7 @@ async function notifyClubOfNewActivity(clubId, posterId, text) {
     WHERE club_id = ${clubId} AND user_id != ${posterId}
       AND user_id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${posterId})
   `;
-  await Promise.all(
-    recipients.map((r) =>
-      sendPushToUser(sql, r.user_id, { title: 'Le Club', body: `${posterName} ${text}` })
-    )
-  );
+  await sendPushToUsers(sql, recipients.map((r) => r.user_id), { title: 'Le Club', body: `${posterName} ${text}` });
 }
 
 async function handleFeed(req, res, userId) {

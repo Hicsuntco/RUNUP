@@ -58,8 +58,13 @@ struct HistoryView: View {
             Button("Supprimer", role: .destructive) {
                 if let run = pendingDelete {
                     // A deleted run that was today's "séance faite" shouldn't leave the daily
-                    // goals gauge claiming it's done with nothing left backing it.
-                    if Calendar.current.isDateInToday(run.date) {
+                    // goals gauge claiming it's done with nothing left backing it — but only when
+                    // NO other run today remains (deleting a second short jog must not un-check a
+                    // séance the morning's real run still backs).
+                    let otherRunToday = runs.contains {
+                        $0 !== run && Calendar.current.isDateInToday($0.date)
+                    }
+                    if Calendar.current.isDateInToday(run.date) && !otherRunToday {
                         AdaptivePlanEngine.undoTodaySessionCompletion(appState.profile)
                     }
                     modelContext.delete(run)

@@ -60,12 +60,29 @@ async function handleApple(req, res) {
     const displayName = (rawName && !containsObjectionableContent(rawName)) ? rawName : 'Coureur';
     const referrerId = await resolveReferrerId(referralCode);
     const myReferralCode = await generateUniqueReferralCode();
-    const { rows } = await sql`
-      INSERT INTO users (apple_sub, email, name, referral_code, referred_by)
-      VALUES (${claims.sub}, ${claims.email}, ${displayName}, ${myReferralCode}, ${referrerId})
-      RETURNING id, name, xp_total, referral_code
-    `;
-    user = rows[0];
+    try {
+      const { rows } = await sql`
+        INSERT INTO users (apple_sub, email, name, referral_code, referred_by)
+        VALUES (${claims.sub}, ${claims.email}, ${displayName}, ${myReferralCode}, ${referrerId})
+        RETURNING id, name, xp_total, referral_code
+      `;
+      user = rows[0];
+    } catch (e) {
+      // She signed up with email/password using her iCloud address, then tapped "Sign in with
+      // Apple" (non-hidden email): the email UNIQUE constraint fires. Apple's signed token proves
+      // she controls that email, so LINK the accounts instead of 500-ing forever.
+      if (String(e.message).includes('users_email_key') && claims.email) {
+        const { rows } = await sql`
+          UPDATE users SET apple_sub = ${claims.sub}
+          WHERE email = ${claims.email} AND apple_sub IS NULL
+          RETURNING id, name, xp_total, referral_code
+        `;
+        user = rows[0];
+        if (!user) return res.status(409).json({ error: 'email_taken' });
+      } else {
+        throw e;
+      }
+    }
   } else if (!user.referral_code) {
     // Lazily backfills a code for an account created before the referral feature existed —
     // rather than leaving her (or any early user) permanently without one to share.
@@ -116,6 +133,19 @@ async function handleSignup(req, res) {
 async function handleLogin(req, res) {
   const { email, password } = req.body || {};
   if (!email || !password) return res.status(400).json({ error: 'bad_request' });
+
+  // Per-IP daily attempt cap (same counter table as the coach rate limit) — without it, login
+  // was an unthrottled credential-stuffing oracle where every attempt also burns a ~250ms
+  // cost-12 bcrypt. 60/day is far beyond any real user's typos. Fails open on counter errors.
+  try {
+    const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
+    const { rows } = await sql`
+      INSERT INTO coach_usage (key, day, count) VALUES (${'login:' + ip}, CURRENT_DATE, 1)
+      ON CONFLICT (key, day) DO UPDATE SET count = coach_usage.count + 1
+      RETURNING count
+    `;
+    if (rows[0] && rows[0].count > 60) return res.status(429).json({ error: 'too_many_attempts' });
+  } catch { /* counter must never take login down with it */ }
 
   const normalizedEmail = String(email).trim().toLowerCase();
   const { rows } = await sql`SELECT id, name, xp_total, password_hash, referral_code FROM users WHERE email = ${normalizedEmail}`;

@@ -21,7 +21,9 @@ struct CoachView: View {
             ScrollViewReader { scrollProxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("AUJOURD'HUI")
+                        // Neutral label — the thread holds the whole persisted history, and the
+                        // old "AUJOURD'HUI" sat on top of messages from any past day.
+                        Text("TON COACH")
                             .font(RUFont.sans(10)).foregroundColor(RUColor.text3)
                             .frame(maxWidth: .infinity)
                             .padding(.top, 4)
@@ -46,6 +48,11 @@ struct CoachView: View {
                 }
                 .onChange(of: messages.count) {
                     if let last = messages.last { withAnimation { scrollProxy.scrollTo(last.id, anchor: .bottom) } }
+                }
+                // Land on the latest message when (re)opening the tab — `onChange` alone only
+                // fires on NEW messages, so a thread with history opened at the oldest bubble.
+                .onAppear {
+                    if let last = messages.last { scrollProxy.scrollTo(last.id, anchor: .bottom) }
                 }
             }
             inputBar
@@ -184,8 +191,9 @@ struct CoachView: View {
     }
 
     private func retryLast() {
-        guard let lastUser = messages.last(where: { $0.role == .user }) else { return }
-        send(lastUser.text)
+        // The error bubble sits after her message in `messages` — the VM re-sends from the
+        // existing history without inserting a duplicate user bubble.
+        vm?.retry(history: messages.filter { $0.role != .error })
     }
 }
 

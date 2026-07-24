@@ -61,17 +61,22 @@ struct WatchStartView: View {
                 }
 
                 Button(action: { workout.start() }) {
-                    Text("COURIR")
-                        .font(WTheme.bebas(22))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 44)
-                        .background(
-                            LinearGradient(colors: [WTheme.rose, WTheme.violet], startPoint: .leading, endPoint: .trailing),
-                            in: Capsule()
-                        )
+                    Group {
+                        if workout.state == .starting {
+                            ProgressView().tint(.white)
+                        } else {
+                            Text("COURIR").font(WTheme.bebas(22)).foregroundStyle(.white)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 44)
+                    .background(
+                        LinearGradient(colors: [WTheme.rose, WTheme.violet], startPoint: .leading, endPoint: .trailing),
+                        in: Capsule()
+                    )
                 }
                 .buttonStyle(.plain)
+                .disabled(workout.state == .starting)
                 .padding(.top, 4)
 
                 if let message = workout.errorMessage {

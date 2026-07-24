@@ -34,7 +34,9 @@ struct SignInView: View {
                 .padding(.top, 24)
 
                 SignInWithAppleButton(.signIn, onRequest: configureAppleRequest, onCompletion: handleAppleCompletion)
-                    .signInWithAppleButtonStyle(.white)
+                    // Black-on-light / white-on-dark — a fixed .white button was invisible
+                    // against the near-white light-mode sheet.
+                    .signInWithAppleButtonStyle(RUColor.isLight ? .black : .white)
                     .frame(height: 50)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
 

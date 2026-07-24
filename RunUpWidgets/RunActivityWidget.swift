@@ -33,10 +33,10 @@ struct RunActivityWidget: Widget {
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     HStack(spacing: 6) {
-                        Image(systemName: context.state.isPaused ? "pause.circle.fill" : "figure.run")
+                        Image(systemName: statusIcon(context.state))
                         Text(context.attributes.sessionTitle).font(.system(size: 12, weight: .medium, design: .rounded)).lineLimit(1).minimumScaleFactor(0.7)
                         Spacer()
-                        Text(formatDuration(context.state.elapsedSeconds))
+                        elapsedText(context.state)
                             .font(.system(size: 13, weight: .semibold, design: .rounded))
                             .monospacedDigit()
                     }
@@ -45,10 +45,11 @@ struct RunActivityWidget: Widget {
             } compactLeading: {
                 Image(systemName: "figure.run").foregroundColor(Self.accent)
             } compactTrailing: {
-                Text(formatDuration(context.state.elapsedSeconds))
+                elapsedText(context.state)
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .monospacedDigit()
                     .foregroundColor(.white)
+                    .frame(maxWidth: 52)
             } minimal: {
                 Image(systemName: "figure.run").foregroundColor(Self.accent)
             }
@@ -70,7 +71,7 @@ struct RunActivityWidget: Widget {
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 2) {
                 Text("\(context.state.paceLabel)/km").font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundColor(.white)
-                Text(formatDuration(context.state.elapsedSeconds))
+                elapsedText(context.state)
                     .font(.system(size: 13, design: .rounded))
                     .monospacedDigit()
                     .foregroundColor(.white.opacity(0.6))
@@ -79,6 +80,23 @@ struct RunActivityWidget: Widget {
         .padding(16)
         .activityBackgroundTint(Self.bg)
         .activitySystemActionForegroundColor(.white)
+    }
+
+    private func statusIcon(_ state: RunActivityAttributes.ContentState) -> String {
+        if state.isEnded { return "checkmark.circle.fill" }
+        return state.isPaused ? "pause.circle.fill" : "figure.run"
+    }
+
+    /// Self-ticking chrono while running (`Text(timerInterval:)` updates every second with zero
+    /// pushes from the app — the state only carries the reference date); frozen static label when
+    /// paused/ended, which is exactly when the clock shouldn't move.
+    @ViewBuilder
+    private func elapsedText(_ state: RunActivityAttributes.ContentState) -> some View {
+        if let reference = state.timerReference, !state.isPaused, !state.isEnded {
+            Text(timerInterval: reference...Date.distantFuture, countsDown: false)
+        } else {
+            Text(formatDuration(state.elapsedSeconds))
+        }
     }
 
     private func formatDuration(_ seconds: Double) -> String {

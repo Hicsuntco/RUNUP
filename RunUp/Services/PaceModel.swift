@@ -121,7 +121,11 @@ enum PaceModel {
         case 2:
             switch distance {
             case .k5, .k10: return Double(parts[0] * 60 + parts[1])
-            default: return Double(parts[0] * 3600 + parts[1] * 60)
+            default:
+                // "1:45" for a semi/marathon is H:MM — but a custom distance's "45:00" is MM:SS,
+                // and the old blanket H:MM read that as 45 HOURS (→ absurd "162:00 /km" plans).
+                // No real race chrono here starts at 10+ hours, so a first part ≥ 10 is minutes.
+                return parts[0] >= 10 ? Double(parts[0] * 60 + parts[1]) : Double(parts[0] * 3600 + parts[1] * 60)
             }
         default:
             return nil

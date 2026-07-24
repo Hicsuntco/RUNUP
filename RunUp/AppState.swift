@@ -2,6 +2,7 @@ import Foundation
 import SwiftData
 import Observation
 import WidgetKit
+import ActivityKit
 
 /// Central app store + router — mirrors the `store`/`ctx` object threaded through the
 /// prototype via React context. Held once at the root and read via `@Environment(AppState.self)`.
@@ -17,6 +18,7 @@ final class AppState {
     /// Phone↔watch bridge — receives runs finished on the wrist, mirrors today's session out.
     /// Optional only because it needs `self` (created at the end of `init`); never nil after.
     @ObservationIgnored private(set) var watchSession: WatchSessionService?
+    @ObservationIgnored private var lastPublishedSnapshot: DailyGoalsSnapshot?
 
     // Sheets
     var sessionDetailPresented = false
@@ -58,6 +60,14 @@ final class AppState {
         // a queued watch run (finished while the phone app was closed) is delivered right away.
         self.watchSession = WatchSessionService(appState: self)
         Task { await self.syncDailyGoalsFromHealthKit() }
+        // A Live Activity left over from a killed/crashed app is an orphan by definition
+        // (`liveRun` doesn't survive relaunch) — end it instead of leaving a frozen "in-progress"
+        // run on the Lock Screen for hours.
+        Task {
+            for activity in Activity<RunActivityAttributes>.activities {
+                await activity.end(nil, dismissalPolicy: .immediate)
+            }
+        }
     }
 
     /// Re-checks the program week/phase against the real calendar date — call whenever the app
@@ -90,7 +100,8 @@ final class AppState {
     /// accent/light-mode theme could have just changed, since the widget's own process has no way
     /// to observe `profile` directly (see `DailyGoalsSnapshot`).
     func publishWidgetSnapshot() {
-        DailyGoalsSnapshot.save(DailyGoalsSnapshot(
+        let today = AdaptivePlanEngine.currentWeekdayIndex()
+        let snapshot = DailyGoalsSnapshot(
             progress: profile.dailyGoalsProgress,
             streak: profile.streak,
             accentThemeID: profile.accentThemeID,
@@ -99,9 +110,17 @@ final class AppState {
             dailyGoalsTotal: profile.dailyGoalsTotal,
             activeCaloriesRemaining: max(0, Int((profile.activeCaloriesGoal - profile.activeCaloriesToday).rounded())),
             stepsRemaining: max(0, Int((profile.stepsGoal - profile.stepsToday).rounded())),
-            weekStrip: profile.weekStrip.map { WidgetWeekDay(letter: $0.letter, isDone: $0.state == .done, isToday: $0.state == .today) }
-        ))
-        WidgetCenter.shared.reloadAllTimelines()
+            weekStrip: profile.weekStrip.map { WidgetWeekDay(letter: $0.letter, isDone: $0.state == .done, isToday: $0.state == .today) },
+            isRestDay: profile.weekSessions.first(where: { $0.weekday == today }).map { $0.session == nil } ?? false
+        )
+        // Only burn a WidgetKit reload (daily budget ~40-70) when something the widget shows
+        // actually changed — browsing the color nuancier used to exhaust it and silently freeze
+        // the widget for the rest of the day.
+        if snapshot != lastPublishedSnapshot {
+            lastPublishedSnapshot = snapshot
+            DailyGoalsSnapshot.save(snapshot)
+            WidgetCenter.shared.reloadAllTimelines()
+        }
         // Same trigger points work for the watch: anywhere the plan/session could have changed,
         // this already fires — the service itself skips the send when nothing session-related moved.
         watchSession?.pushTodaySession()
@@ -110,6 +129,10 @@ final class AppState {
     /// Pulls today's step count and active calories from Apple Santé, if connected — the
     /// "Calories actives" and "Pas" daily goals are HealthKit-sourced, not something logged inside
     /// the app.
+    // @MainActor: this used to run on whatever executor the Task landed on, then mutate the
+    // SwiftData profile and insert notifications from a background thread — intermittent
+    // crashes/lost writes on every foreground sync. The HealthKit awaits still run off-main.
+    @MainActor
     private func syncDailyGoalsFromHealthKit() async {
         guard profile.connectedSources.contains(.apple) else { return }
         async let steps = healthKit.stepsToday()
@@ -169,9 +192,16 @@ final class AppState {
     func endLiveRun() -> RunRecord? {
         guard let vm = liveRun else { return nil }
         let record = vm.stop()
+        liveRun = nil
+        // An accidental start (a pocket tap killed 40 s later, under 100 m moved) is not a run —
+        // recording it would put a fabricated-looking "0,05 km" entry in History/Stats forever.
+        guard record.distanceKm >= 0.1 || record.durationSeconds >= 120 else {
+            toast("Course trop courte — rien n'a été enregistré.")
+            screen = .home
+            return nil
+        }
         modelContext.insert(record)
         lastRun = record
-        liveRun = nil
         screen = .recap
         return record
     }
@@ -186,13 +216,17 @@ final class AppState {
         let session = profile.todaySession
         guard session.durationMinutes > 0 else { return }
         let elapsedSeconds = Double(session.durationMinutes * 60)
-        let secPerKm = PaceModel.parseSecPerKm(session.pace) ?? 300
-        let distanceKm = elapsedSeconds / secPerKm
+        // A session without a real pace (HYROX "Fonctionnel", pace "—") has no distance to
+        // derive: the old `?? 300` fallback logged a 35-min station workout as a fake 7 km run
+        // at 5:00/km, inflating Stats and pumping phantom kilometers into the club challenge.
+        // Distance 0 is the honest record; kcal falls back to a time-based strength estimate.
+        let secPerKm = PaceModel.parseSecPerKm(session.pace)
+        let distanceKm = secPerKm.map { elapsedSeconds / $0 } ?? 0
         let record = AdaptivePlanEngine.buildRunRecord(
             title: session.title,
             elapsedSeconds: elapsedSeconds,
             distanceKm: distanceKm,
-            kcal: distanceKm * 62,
+            kcal: distanceKm > 0 ? distanceKm * 62 : Double(session.durationMinutes) * 7,
             avgHeartRate: 0
         )
         // Deliberately NOT inserted into SwiftData here — `DebriefSheet` inserts it on VALIDER.

@@ -12,6 +12,14 @@ struct RunActivityAttributes: ActivityAttributes {
         var elapsedSeconds: Double
         var paceLabel: String
         var isPaused: Bool
+        /// Reference date such that `now - timerReference == elapsed` — lets the widget render a
+        /// self-ticking `Text(timerInterval:)` chrono (per-second, zero pushes) instead of the
+        /// static label that only moved on each 5s update. Nil while paused/ended, where the
+        /// frozen `elapsedSeconds` label is the honest display.
+        var timerReference: Date?
+        /// True on the final update — the Lock Screen card lingers a moment after the run, and
+        /// without this it showed a pause icon as if the run were still going.
+        var isEnded: Bool = false
     }
 
     /// Fixed for the run's whole lifetime, set once at `Activity.request(attributes:)` — unlike

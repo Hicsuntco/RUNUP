@@ -149,7 +149,8 @@ struct ClubMemberProfileView: View {
 
     private static let levelTitles = ["Premiers pas", "Foulée légère", "Rythme trouvé", "Foulée d'or", "Vitesse de croisière", "Endurance de fer", "Élite locale"]
     private var level: Int { member.xp / 250 + 1 }
-    private var levelTitle: String { Self.levelTitles[(level - 1) % Self.levelTitles.count] }
+    // Clamped like ClubView.levelInfo — the old `%` wrapped a level-8 member back to "Premiers pas".
+    private var levelTitle: String { Self.levelTitles[min(max(level - 1, 0), Self.levelTitles.count - 1)] }
 
     private static let joinedFormatter: DateFormatter = {
         let f = DateFormatter()

@@ -4,7 +4,7 @@ import Foundation
 /// `DayStatus` fields the widget actually renders (letter + done/today), rather than sharing the
 /// app's own `DayStatus` type (which lives in `RunUp/Models/`, not `Shared/`, and carries a full
 /// `Date` plus a 4-case state the widget doesn't need to distinguish at this size).
-struct WidgetWeekDay: Codable {
+struct WidgetWeekDay: Codable, Equatable {
     var letter: String
     var isDone: Bool
     var isToday: Bool
@@ -17,7 +17,10 @@ struct WidgetWeekDay: Codable {
 /// changed, then asks WidgetKit to reload; the widget only ever reads via `load()`, never writes.
 /// Deliberately just `progress`/`streak`/theme id — not the full `UserProfile` — so a change to
 /// that model never has to think about what an entirely separate process/target does with it.
-struct DailyGoalsSnapshot: Codable {
+// Equatable so `AppState.publishWidgetSnapshot` can skip identical re-publishes — WidgetKit's
+// daily reload budget is ~40-70; browsing the color nuancier alone used to burn through it and
+// silently freeze the widget for the rest of the day.
+struct DailyGoalsSnapshot: Codable, Equatable {
     /// [Séance du jour, Calories actives, Pas], each 0...1 — same order/meaning as
     /// `UserProfile.dailyGoalsProgress`.
     var progress: [Double]
@@ -37,6 +40,53 @@ struct DailyGoalsSnapshot: Codable {
     /// Monday...Sunday, mirrors `UserProfile.weekStrip` — the medium widget's compact
     /// done/today/upcoming row underneath the ring.
     var weekStrip: [WidgetWeekDay]
+    /// Rest day: the widget hides the séance goal bar and shows "Repos" instead of an empty
+    /// "À faire" contradicting its own "X/2" denominator. Decoded with a default so a snapshot
+    /// written by an older app build doesn't fail the whole decode (which would silently flip
+    /// the widget to placeholder data).
+    var isRestDay: Bool = false
+
+    private enum CodingKeys: String, CodingKey {
+        case progress, streak, accentThemeID, isLightMode, dailyGoalsDone, dailyGoalsTotal
+        case activeCaloriesRemaining, stepsRemaining, weekStrip, isRestDay
+    }
+
+    init(progress: [Double], streak: Int, accentThemeID: String, isLightMode: Bool,
+         dailyGoalsDone: Int, dailyGoalsTotal: Int, activeCaloriesRemaining: Int,
+         stepsRemaining: Int, weekStrip: [WidgetWeekDay], isRestDay: Bool = false) {
+        self.progress = progress
+        self.streak = streak
+        self.accentThemeID = accentThemeID
+        self.isLightMode = isLightMode
+        self.dailyGoalsDone = dailyGoalsDone
+        self.dailyGoalsTotal = dailyGoalsTotal
+        self.activeCaloriesRemaining = activeCaloriesRemaining
+        self.stepsRemaining = stepsRemaining
+        self.weekStrip = weekStrip
+        self.isRestDay = isRestDay
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        progress = try c.decode([Double].self, forKey: .progress)
+        streak = try c.decode(Int.self, forKey: .streak)
+        accentThemeID = try c.decode(String.self, forKey: .accentThemeID)
+        isLightMode = try c.decode(Bool.self, forKey: .isLightMode)
+        dailyGoalsDone = try c.decode(Int.self, forKey: .dailyGoalsDone)
+        dailyGoalsTotal = try c.decode(Int.self, forKey: .dailyGoalsTotal)
+        activeCaloriesRemaining = try c.decode(Int.self, forKey: .activeCaloriesRemaining)
+        stepsRemaining = try c.decode(Int.self, forKey: .stepsRemaining)
+        weekStrip = try c.decode([WidgetWeekDay].self, forKey: .weekStrip)
+        isRestDay = try c.decodeIfPresent(Bool.self, forKey: .isRestDay) ?? false
+    }
+
+    /// The honest empty state — what the widget shows before the app has ever published
+    /// (fresh install) instead of fabricated demo numbers.
+    static var empty: DailyGoalsSnapshot {
+        DailyGoalsSnapshot(progress: [0, 0, 0], streak: 0, accentThemeID: "rose", isLightMode: false,
+                           dailyGoalsDone: 0, dailyGoalsTotal: 3, activeCaloriesRemaining: 0,
+                           stepsRemaining: 0, weekStrip: [])
+    }
 
     static let appGroupID = "group.com.hicsuntco.runup"
     private static let defaultsKey = "runup.widget.daily-goals-snapshot"

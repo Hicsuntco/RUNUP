@@ -11,6 +11,7 @@ const { containsObjectionableContent } = require('../../lib/moderation');
 // person's first real activity (api/activities/[action].js). Shared with api/me.js, which
 // backfills a code for accounts created before this feature existed.
 const { generateUniqueReferralCode } = require('../../lib/referral');
+const { underDailyCap } = require('../../lib/rateLimit');
 
 // A junk/typo'd/nonexistent code is never a signup error — it just means no referral link, same
 // as leaving the field empty.
@@ -101,6 +102,13 @@ async function handleSignup(req, res) {
   if (!email || !password || !cleanName) return res.status(400).json({ error: 'bad_request' });
   if (password.length < 8 || password.length > 200) return res.status(400).json({ error: 'weak_password' });
   if (containsObjectionableContent(cleanName)) return res.status(422).json({ error: 'objectionable_content' });
+
+  // Same reasoning as login's per-IP cap: every attempt burns a ~250ms cost-12 bcrypt hash, and
+  // without a limit this is an unthrottled way to exhaust server resources, mass-create throwaway
+  // accounts, or enumerate taken emails via the 409 below. 30/day is far beyond any real signup
+  // flow (including retries after a typo).
+  const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
+  if (!(await underDailyCap('signup:' + ip, 30))) return res.status(429).json({ error: 'too_many_attempts' });
 
   const normalizedEmail = String(email).trim().toLowerCase().slice(0, 254);
   const { rows: existing } = await sql`SELECT id FROM users WHERE email = ${normalizedEmail}`;

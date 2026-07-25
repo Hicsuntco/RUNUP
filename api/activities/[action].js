@@ -6,6 +6,7 @@ const { requireAuth } = require('../../lib/auth');
 const { withErrorHandling, isUuid } = require('../../lib/http');
 const { sendPushToUser, sendPushToUsers } = require('../../lib/apns');
 const { containsObjectionableContent } = require('../../lib/moderation');
+const { underDailyCap } = require('../../lib/rateLimit');
 
 const ALLOWED_TYPES = new Set(['run', 'strength', 'badge']);
 const REFERRAL_REWARD_XP = 100;
@@ -139,6 +140,20 @@ async function grantReferralRewardIfNeeded(userId) {
   });
 }
 
+// Used by kudos/comments to reject the write entirely (not just skip the push) when either side
+// has blocked the other — without this, a blocked user could still comment/kudos every one of the
+// target's posts and land a real push on their lock screen, the exact contact the block feature
+// exists to prevent. Checked both directions since either party may have initiated the block.
+async function isBlockedEitherWay(userA, userB) {
+  const { rows } = await sql`
+    SELECT 1 FROM blocks
+    WHERE (blocker_id = ${userA} AND blocked_id = ${userB})
+       OR (blocker_id = ${userB} AND blocked_id = ${userA})
+    LIMIT 1
+  `;
+  return rows.length > 0;
+}
+
 // Every other member of the poster's club, except anyone who's blocked the poster (mirrors the
 // feed's own visibility rule — someone you've blocked shouldn't be able to reach you by posting).
 async function notifyClubOfNewActivity(clubId, posterId, text) {
@@ -192,6 +207,10 @@ async function handleKudos(req, res, userId) {
   const { activityId } = req.body || {};
   if (!isUuid(activityId)) return res.status(400).json({ error: 'bad_request' });
 
+  // Toggling is cheap per-call but unthrottled, it's a free way to flood a target with pushes —
+  // 300/day is far beyond any real usage (toggling kudos on every post in an active club feed).
+  if (!(await underDailyCap('kudos:' + userId, 300))) return res.status(429).json({ error: 'too_many_requests' });
+
   // Scoped to the caller's own club, like the comments handlers always were — without this,
   // anyone holding an activity UUID could kudos (and push-notify) across club boundaries.
   const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
@@ -199,6 +218,7 @@ async function handleKudos(req, res, userId) {
   const { rows: activityRows } = await sql`SELECT user_id, text, club_id FROM activities WHERE id = ${activityId}`;
   const activity = activityRows[0];
   if (!activity || !clubId || activity.club_id !== clubId) return res.status(404).json({ error: 'not_found' });
+  if (await isBlockedEitherWay(userId, activity.user_id)) return res.status(404).json({ error: 'not_found' });
 
   const { rows: existing } = await sql`
     SELECT 1 FROM activity_kudos WHERE activity_id = ${activityId} AND user_id = ${userId}
@@ -272,6 +292,9 @@ async function handleCommentCreate(req, res, userId) {
   const trimmed = (text || '').trim().slice(0, 500);
   if (!isUuid(activityId) || !trimmed) return res.status(400).json({ error: 'bad_request' });
   if (containsObjectionableContent(trimmed)) return res.status(422).json({ error: 'objectionable_content' });
+  // 100/day is far beyond any real conversation volume, and stops comments from being used to
+  // flood a target (or the whole club feed) with pushes.
+  if (!(await underDailyCap('comment:' + userId, 100))) return res.status(429).json({ error: 'too_many_requests' });
 
   const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
   const clubId = memberRows[0]?.club_id;
@@ -280,6 +303,7 @@ async function handleCommentCreate(req, res, userId) {
   const { rows: activityRows } = await sql`SELECT club_id, user_id, text FROM activities WHERE id = ${activityId}`;
   const activity = activityRows[0];
   if (!activity || activity.club_id !== clubId) return res.status(404).json({ error: 'not_found' });
+  if (await isBlockedEitherWay(userId, activity.user_id)) return res.status(404).json({ error: 'not_found' });
 
   const { rows: inserted } = await sql`
     INSERT INTO activity_comments (activity_id, user_id, text)

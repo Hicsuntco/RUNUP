@@ -88,8 +88,10 @@ async function handleCreate(req, res, userId) {
   // Checked before the INSERT below — this is the referral-reward trigger (see
   // `grantReferralRewardIfNeeded`): a signup that goes on to log a real first activity, not just
   // an install.
-  const { rows: priorActivityRows } = await sql`SELECT COUNT(*)::int AS count FROM activities WHERE user_id = ${userId}`;
-  const isFirstActivity = priorActivityRows[0].count === 0;
+  // An existence check, not a full COUNT — this runs on every single activity creation, and only
+  // ever needs to know "is there at least one prior row", not how many.
+  const { rows: priorActivityRows } = await sql`SELECT 1 FROM activities WHERE user_id = ${userId} LIMIT 1`;
+  const isFirstActivity = priorActivityRows.length === 0;
 
   const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
   const clubId = memberRows[0]?.club_id || null;

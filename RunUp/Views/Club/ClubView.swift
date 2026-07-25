@@ -935,6 +935,10 @@ struct ClubView: View {
 
     private func loadIfSignedIn() async {
         guard auth.isSignedIn else { return }
+        // Opportunistic: retries anything still stuck in the local outbox from a prior failed
+        // `postClubActivity` (see ClubActivityOutbox.swift) — e.g. a run posted on a spotty
+        // connection right before she opened Club to check the leaderboard.
+        appState.retryPendingClubActivities()
         isLoading = true
         errorMessage = nil
         // These three requests used to run one after another (refreshMe → fetchBoard → feed),
@@ -1070,6 +1074,11 @@ struct ClubView: View {
             try await clubService.leaveClub()
             board = ClubBoard(club: nil, leaderboard: [])
             feed = []
+            // Both dictionaries are keyed by activity UUIDs from the club she's leaving — none of
+            // those ids can ever appear in a feed she can see again, so without this they'd just
+            // accumulate permanently in UserProfile across every club she's ever cycled through.
+            profile.kudosSeenCounts.removeAll()
+            profile.commentsSeenCounts.removeAll()
         } catch {
             errorMessage = "Impossible de quitter le club."
         }

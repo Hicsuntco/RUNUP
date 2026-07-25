@@ -61,6 +61,7 @@ private struct RootView: View {
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
                 appState?.refreshProgramForCurrentDate()
+                appState?.retryPendingClubActivities()
             }
         }
         .onOpenURL { url in

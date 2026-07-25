@@ -175,14 +175,8 @@ final class AppState {
         modelContext.insert(AppNotification(icon: icon, colorHex: colorHex, title: title, text: text))
     }
 
-    /// Posts to the real club feed/leaderboard if signed in — silently does nothing otherwise
-    /// (Club participation is optional; this must never block the flow it's called from). See
-    /// `ClubService.postActivity`.
-    func postClubActivity(type: String, text: String, xpEarned: Int, distanceKm: Double? = nil) {
-        guard auth.isSignedIn else { return }
-        let service = ClubService(auth: auth)
-        Task { try? await service.postActivity(type: type, text: text, xpEarned: xpEarned, distanceKm: distanceKm) }
-    }
+    // `postClubActivity`/`retryPendingClubActivities` live in ClubActivityOutbox.swift — a local
+    // outbox now backs the post so a failed network call doesn't silently drop it forever.
 
     func go(_ screen: AppScreen) {
         self.screen = screen

@@ -10336,6 +10336,22 @@
           }
         }
       }
+    },
+    "Photo supprimée localement, mais toujours visible du club — vérifie ta connexion.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo removed locally, but still visible to the club — check your connection."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto eliminada localmente, pero aún visible para el club — comprueba tu conexión."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

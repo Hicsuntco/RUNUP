@@ -129,7 +129,15 @@ struct ProfileView: View {
             avatarPickerItem = nil
         }
         guard appState.auth.isSignedIn else { return }
-        try? await appState.auth.updateAvatar(dataURI: nil)
+        do {
+            try await appState.auth.updateAvatar(dataURI: nil)
+        } catch {
+            // Mirrors setAvatar's error handling above — the local photo is already cleared, but
+            // the server (and every other club member's leaderboard/feed/comments view) still
+            // shows the old one until this actually lands, and without this she'd have no signal
+            // that the removal didn't take.
+            appState.toast("Photo supprimée localement, mais toujours visible du club — vérifie ta connexion.")
+        }
     }
 
     private var moreSettingsRow: some View {

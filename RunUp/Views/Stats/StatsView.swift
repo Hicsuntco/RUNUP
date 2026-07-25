@@ -9,6 +9,11 @@ struct StatsView: View {
     @Environment(AppState.self) private var appState
     @Query(sort: \RunRecord.date, order: .reverse) private var runs: [RunRecord]
     @State private var chartRevealed = false
+    /// Records/prédiction/charge start collapsed — 6 dense analytical cards stacked at once read
+    /// as a wall nobody actually reads. The 3 that answer "où j'en suis là" (totaux, cette
+    /// semaine, allure récente) stay always visible; the deeper analysis is a tap away instead of
+    /// scroll-past-and-ignore.
+    @State private var showDeepAnalysis = false
     private var profile: UserProfile { appState.profile }
 
     var body: some View {
@@ -31,9 +36,16 @@ struct StatsView: View {
                 summaryCard
                 weekCard
                 paceCard
-                recordsCard
-                predictionCard
-                loadCard
+
+                deepAnalysisToggle
+                if showDeepAnalysis {
+                    recordsCard
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    predictionCard
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    loadCard
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                }
             }
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.top, 8)
@@ -196,6 +208,29 @@ struct StatsView: View {
         }
         .padding(16)
         .ruCard()
+    }
+
+    private var deepAnalysisToggle: some View {
+        Button(action: {
+            Haptics.selection()
+            withAnimation(.easeInOut(duration: 0.25)) { showDeepAnalysis.toggle() }
+        }) {
+            HStack {
+                Text(showDeepAnalysis ? "Masquer l'analyse approfondie" : "Voir l'analyse approfondie")
+                    .font(RUFont.sans(12.5, weight: .semibold))
+                    .foregroundColor(RUColor.text2)
+                Spacer()
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(RUColor.text3)
+                    .rotationEffect(.degrees(showDeepAnalysis ? 180 : 0))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 13)
+            .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        }
+        .buttonStyle(PressableStyle())
     }
 
     // MARK: Personal records — real bests pulled from history, not shown anywhere before this

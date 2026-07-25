@@ -84,13 +84,9 @@ struct HistoryView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 12) {
-            BackChevronButton { appState.go(.stats) }
-            VStack(alignment: .leading, spacing: 1) {
-                EyebrowLabel(text: "\(runs.count) sortie\(runs.count > 1 ? "s" : "")", color: RUColor.rose)
-                Text("Historique").displayStyle(22).foregroundColor(RUColor.textPrimary)
-            }
-            Spacer()
+        BackTitleHeaderView(eyebrow: "\(runs.count) sortie\(runs.count > 1 ? "s" : "")", title: "Historique") {
+            appState.go(.stats)
+        } trailing: {
             Button(action: { showAddRun = true }) {
                 Image(systemName: "plus")
                     .font(.system(size: 15, weight: .semibold))

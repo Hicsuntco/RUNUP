@@ -25,10 +25,7 @@ struct ProfileView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                HStack(spacing: 12) {
-                    BackChevronButton { appState.go(.home) }
-                    Text("Profil & réglages").displayStyle(22).foregroundColor(RUColor.textPrimary)
-                }
+                BackTitleHeaderView(title: "Profil & réglages") { appState.go(.home) }
 
                 HStack(spacing: 14) {
                     PhotosPicker(selection: $avatarPickerItem, matching: .images) {

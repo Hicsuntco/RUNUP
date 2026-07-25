@@ -14,12 +14,8 @@ struct ReadinessView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                HStack(spacing: 12) {
-                    BackChevronButton { appState.go(.home) }
-                    VStack(alignment: .leading, spacing: 1) {
-                        EyebrowLabel(text: "Aujourd'hui", color: RUColor.lime)
-                        Text("Forme du jour").displayStyle(22).foregroundColor(RUColor.textPrimary)
-                    }
+                BackTitleHeaderView(eyebrow: "Aujourd'hui", eyebrowColor: RUColor.lime, title: "Forme du jour") {
+                    appState.go(.home)
                 }
 
                 VStack(spacing: 10) {

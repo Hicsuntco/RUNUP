@@ -383,6 +383,7 @@ struct ClubView: View {
         let info = levelInfo
         return HStack(spacing: 14) {
             Text("\(info.level)").displayStyle(22).foregroundColor(.white)
+                .contentTransition(.numericText())
                 .frame(width: 52, height: 52)
                 .background(LinearGradient(colors: [RUColor.violet, RUColor.rose], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             VStack(alignment: .leading, spacing: 8) {
@@ -392,13 +393,16 @@ struct ClubView: View {
                     // Fixed light-on-dark — this card keeps its dark violet gradient in BOTH
                     // themes, so theme-aware text2 went dark-on-dark in light mode.
                     Text("\(info.xpIntoLevel) / \(info.xpForLevel) XP").font(RUFont.mono(10)).foregroundColor(.white.opacity(0.65))
+                        .contentTransition(.numericText())
                 }
                 LinearBar(fraction: Double(info.xpIntoLevel) / Double(info.xpForLevel), color: RUColor.violet, gradient: RUColor.violetRoseGradient)
             }
         }
+        .animation(.easeOut(duration: 0.4), value: info.level)
+        .animation(.easeOut(duration: 0.4), value: info.xpIntoLevel)
         .padding(16)
-        .background(LinearGradient(colors: [Color(hex: 0x241046), Color(hex: 0x160B1F)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(RUColor.violet.opacity(0.3), lineWidth: RUSpacing.hairline))
+        .background(LinearGradient(colors: [Color(hex: 0x241046), Color(hex: 0x160B1F)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: RUSpacing.radiusHero, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusHero, style: .continuous).stroke(RUColor.violet.opacity(0.3), lineWidth: RUSpacing.hairline))
     }
 
     private func daysLeft(until date: Date) -> Int {

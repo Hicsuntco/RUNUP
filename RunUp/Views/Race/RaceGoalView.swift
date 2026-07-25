@@ -72,13 +72,7 @@ struct RaceGoalView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                HStack(spacing: 12) {
-                    BackChevronButton { appState.go(.profile) }
-                    VStack(alignment: .leading, spacing: 1) {
-                        EyebrowLabel(text: "Ton objectif", color: RUColor.rose)
-                        Text(goalTitle).displayStyle(24).foregroundColor(RUColor.textPrimary)
-                    }
-                }
+                BackTitleHeaderView(eyebrow: "Ton objectif", title: goalTitle, titleSize: 24) { appState.go(.profile) }
                 Text(dateLine).font(RUFont.sans(12)).foregroundColor(RUColor.text2).padding(.leading, 34)
 
                 HStack(spacing: 10) {

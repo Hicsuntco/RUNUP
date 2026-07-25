@@ -49,12 +49,8 @@ struct PlanView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                HStack(spacing: 12) {
-                    BackChevronButton { appState.go(.home) }
-                    VStack(alignment: .leading, spacing: 1) {
-                        EyebrowLabel(text: "Ton programme · \(profile.goalDisplay)", color: RUColor.rose)
-                        Text("Le plan complet").displayStyle(22).foregroundColor(RUColor.textPrimary)
-                    }
+                BackTitleHeaderView(eyebrow: "Ton programme · \(profile.goalDisplay)", title: "Le plan complet") {
+                    appState.go(.home)
                 }
 
                 if let total = shape.totalWeeks {

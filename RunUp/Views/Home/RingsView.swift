@@ -93,12 +93,8 @@ struct RingsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                HStack(spacing: 12) {
-                    BackChevronButton { appState.go(.home) }
-                    VStack(alignment: .leading, spacing: 1) {
-                        EyebrowLabel(text: isToday ? "Aujourd'hui" : "Journée passée", color: RUColor.rose)
-                        Text("Ta journée").displayStyle(22).foregroundColor(RUColor.textPrimary)
-                    }
+                BackTitleHeaderView(eyebrow: isToday ? "Aujourd'hui" : "Journée passée", title: "Ta journée") {
+                    appState.go(.home)
                 }
 
                 dayNavigator

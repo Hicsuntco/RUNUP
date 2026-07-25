@@ -31,11 +31,8 @@ struct NewGoalWizardView: View {
     private var content: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                HStack(spacing: 12) {
-                    BackChevronButton {
-                        if step == 0 { dismiss() } else { step -= 1 }
-                    }
-                    Text("Nouvel objectif").displayStyle(20).foregroundColor(RUColor.textPrimary)
+                BackTitleHeaderView(title: "Nouvel objectif", titleSize: 20) {
+                    if step == 0 { dismiss() } else { step -= 1 }
                 }
                 .padding(.top, 8)
 

@@ -127,19 +127,35 @@ struct MoreSettingsView: View {
     /// but a real opt-out for runners whose interval sessions include genuine short walk breaks
     /// that shouldn't freeze the chrono.
     private var runSettingsCard: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Pause automatique aux arrêts").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
-                Text("Met la course en pause si tu t'arrêtes, reprend toute seule.")
-                    .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Pause automatique aux arrêts").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                    Text("Met la course en pause si tu t'arrêtes, reprend toute seule.")
+                        .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                }
+                Spacer()
+                Toggle("", isOn: Binding(get: { profile.autoPauseEnabled }, set: { profile.autoPauseEnabled = $0 }))
+                    .labelsHidden()
+                    .tint(RUColor.rose)
+                    .accessibilityLabel("Pause automatique aux arrêts")
             }
-            Spacer()
-            Toggle("", isOn: Binding(get: { profile.autoPauseEnabled }, set: { profile.autoPauseEnabled = $0 }))
-                .labelsHidden()
-                .tint(RUColor.rose)
-                .accessibilityLabel("Pause automatique aux arrêts")
+            .padding(14)
+            Divider().background(RUColor.line)
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Alertes vocales d'allure").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                    Text("Prévient à voix haute si tu t'écartes de ton allure cible.")
+                        .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                }
+                Spacer()
+                Toggle("", isOn: Binding(get: { profile.paceAlertsEnabled }, set: { profile.paceAlertsEnabled = $0 }))
+                    .labelsHidden()
+                    .tint(RUColor.rose)
+                    .accessibilityLabel("Alertes vocales d'allure")
+            }
+            .padding(14)
         }
-        .padding(14)
         .ruCard(radius: 16)
     }
 

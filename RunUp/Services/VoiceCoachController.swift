@@ -168,10 +168,25 @@ final class VoiceCoachController: NSObject {
     private func speak(_ text: String) {
         lastReply = text
         state = .speaking
+        // Standalone announcements (see `announce(_:)`) never went through `configureAudioSession`
+        // (that only runs on mic tap), so without this the very first pace alert of a run could
+        // speak into whatever ambient session category the OS defaulted to — silent, or not
+        // ducking a podcast/music app. Safe to (re)apply here even after a real listen → reply
+        // flow: recording has already stopped by the time a reply is ready to speak.
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio, options: [.duckOthers])
+        try? AVAudioSession.sharedInstance().setActive(true)
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = AVSpeechSynthesisVoice(language: "fr-FR")
         utterance.rate = AVSpeechUtteranceDefaultSpeechRate
         synthesizer.speak(utterance)
+    }
+
+    /// An app-initiated spoken alert (a pace-zone nudge from `LiveRunViewModel`) — distinct from
+    /// the tap-to-ask flow: only speaks when the mic is genuinely idle, so it can never interrupt
+    /// or talk over a real question/answer exchange already in progress.
+    func announce(_ text: String) {
+        guard state == .idle else { return }
+        speak(text)
     }
 
     /// Call when the run ends/pauses so the mic doesn't keep the audio session claimed.

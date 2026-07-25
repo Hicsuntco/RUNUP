@@ -154,6 +154,12 @@ final class UserProfile {
     /// Strava/Garmin, but some runners find it fights real short walk breaks in an interval
     /// session, so it's a real opt-out, not just a hidden behavior.
     var autoPauseEnabled: Bool = true
+    /// Spoken pace-zone nudges during a live run ("accélère un peu" / "ralentis légèrement") when
+    /// her real recent pace drifts off the session's target — on by default (this is the one
+    /// place a competitor's "voice coaching" is usually just a scripted clip; RunUp's is a real
+    /// comparison against her actual GPS pace), but a real opt-out for anyone who'd rather run in
+    /// silence or just glance at the screen.
+    var paceAlertsEnabled: Bool = true
     /// Which `AccentTheme` swatch the user picked in Profil → Apparence — mirrored into
     /// `ThemeStore.shared` on load so `RUColor.rose`/`.rose2`/`.violet` reflect it everywhere.
     var accentThemeID: String = AccentTheme.defaultID

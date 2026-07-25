@@ -26,6 +26,24 @@ struct WorkoutSession: Codable, Equatable {
         let t = title.lowercased()
         return t.contains("fractionné") || t.contains("rappel d'allure")
     }
+
+    /// Parses "N × Dm" / "N × D km" straight from the title (e.g. "5 × 500 m", "6 × 800m",
+    /// "3 × 1 km") — the same pattern `SessionDetailSheet.intervalDescription` already extracts
+    /// for display, reused here so Live can actually DRIVE guided execution (real segment-by-
+    /// segment cues) instead of just labeling a flat distance-based progress chip. Nil when the
+    /// title doesn't declare a real rep/distance structure — callers fall back to non-guided
+    /// behavior rather than guessing a shape that isn't there.
+    var intervalStructure: (reps: Int, repKm: Double)? {
+        guard let range = title.range(of: #"\d+\s*×\s*\d+\s?(m|km)"#, options: .regularExpression) else { return nil }
+        let matched = String(title[range])
+        let parts = matched.components(separatedBy: "×")
+        guard parts.count == 2, let reps = Int(parts[0].trimmingCharacters(in: .whitespaces)), reps > 0 else { return nil }
+        var distancePart = parts[1].trimmingCharacters(in: .whitespaces)
+        let isKm = distancePart.lowercased().hasSuffix("km")
+        distancePart = distancePart.replacingOccurrences(of: "km", with: "").replacingOccurrences(of: "m", with: "").trimmingCharacters(in: .whitespaces)
+        guard let value = Double(distancePart), value > 0 else { return nil }
+        return (reps, isKm ? value : value / 1000)
+    }
 }
 
 /// One day in the current week's real training plan (as opposed to `DayStatus`, which only

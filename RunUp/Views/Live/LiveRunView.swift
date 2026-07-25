@@ -82,10 +82,11 @@ struct LiveRunView: View {
                 .background(.ultraThinMaterial, in: Capsule())
             }
             Spacer()
-            // Only when the session's own title declares a real rep count ("5 × 500 m") — the
-            // denominator used to be a hardcoded /6 regardless of the actual session structure.
-            if vm?.isIntervalSession == true, let reps = vm?.intervalRepCount {
-                Text("Interv. \(vm?.intervalIndex ?? 1)/\(reps)")
+            // Only when the session's own title declares a real rep structure ("5 × 500 m") —
+            // driven by `LiveRunViewModel`'s real segment state machine (actual GPS distance per
+            // rep, actual elapsed recovery time), not a guessed flat-distance chunk.
+            if let label = vm?.segmentLabel {
+                Text(label)
                     .font(RUFont.bebas(12))
                     .foregroundColor(.white)
                     .padding(.horizontal, 12).padding(.vertical, 7)

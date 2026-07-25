@@ -39,6 +39,19 @@ final class LiveRunViewModel {
     /// Deliberately higher than the pause threshold (hysteresis) — resuming right at the same
     /// speed that triggered the pause would flicker pause/resume on every small fluctuation.
     private static let autoResumeSpeedThreshold: Double = 1.3
+
+    /// Real-time pace-zone alerts: a rolling window (real distance covered over the last
+    /// `paceWindowSeconds`) compared against the session's target pace — reacts to her CURRENT
+    /// effort, unlike the whole-run average `paceLabel` shows, which barely moves late in a run.
+    private var paceWindowStartDistanceKm: Double = 0
+    private var paceWindowStartElapsed: Double = 0
+    private var lastPaceAlertAtElapsed: Double = -.infinity
+    private static let paceWindowSeconds: Double = 30
+    private static let paceAlertMinElapsedSeconds: Double = 180
+    private static let paceAlertCooldownSeconds: Double = 90
+    /// A real coaching tolerance, not a hair-trigger — normal stride-to-stride pace noise
+    /// shouldn't nag her every 30 seconds.
+    private static let paceAlertToleranceSecPerKm: Double = 20
     /// Nil until a real, recent (last 90s) HealthKit sample comes in — no Watch/HR strap paired
     /// or streaming means this genuinely has no live reading, which is different from "0 bpm" and
     /// shouldn't be displayed as a number at all. Was previously a fabricated sine-wave formula
@@ -74,19 +87,40 @@ final class LiveRunViewModel {
 
     var distanceKm: Double { location.distanceMeters / 1000 }
     var isSignalUnstable: Bool { location.isSignalUnstable }
-    /// Only meaningful for the archetypes actually structured as reps (see
-    /// `WorkoutSession.isIntervalSession`) — a continuous footing/tempo/sortie longue has no
-    /// "interval" to be on. Still an approximation (flat 1.2km chunks, not real lap detection —
-    /// no per-km split tracking exists), but no longer shown on session types it doesn't apply to.
-    var isIntervalSession: Bool { profile.todaySession.isIntervalSession }
-    /// The session's real rep count, parsed from its own title ("5 × 500 m" → 5) — nil when the
-    /// title doesn't declare one, in which case the live counter chip is hidden entirely rather
-    /// than shown over a denominator that was previously a hardcoded 6 regardless of the session.
-    var intervalRepCount: Int? {
-        guard let range = profile.todaySession.title.range(of: #"\d+\s*×"#, options: .regularExpression) else { return nil }
-        return Int(profile.todaySession.title[range].filter(\.isNumber))
+
+    /// Real guided execution for a structured session ("5 × 500 m") — warmup → each rep (ends the
+    /// moment real GPS distance covers `repKm` since the rep began, not a guessed flat 1.2 km
+    /// chunk the old approximation used) → a fixed recovery jog → the next rep → cooldown after
+    /// the last one. Nil for a continuous session (footing/tempo/sortie longue — nothing to
+    /// segment) or when the title doesn't parse into a real structure.
+    enum IntervalSegment: Equatable {
+        case warmup
+        case rep(Int)
+        case recovery(Int)
+        case cooldown
     }
-    var intervalIndex: Int { min(intervalRepCount ?? 6, 1 + Int(distanceKm / 1.2)) }
+    private(set) var currentSegment: IntervalSegment?
+    private var segmentStartDistanceKm: Double = 0
+    private var segmentStartElapsed: Double = 0
+    /// A real archetype always states its own warmup as "10-15′" (see
+    /// `SessionDetailSheet.steps`) — 8 min lands inside that range without eating too far into
+    /// the actual work reps on a shorter session.
+    private static let warmupSeconds: Double = 8 * 60
+    /// A coaching default (typical easy-jog recovery between track reps), not a measurement —
+    /// same spirit as the app's other pace-zone heuristics (`PaceModel`).
+    private static let recoverySeconds: Double = 90
+
+    /// Chip text for the Live overlay — nil when there's no real structure to narrate, in which
+    /// case the UI shows nothing rather than a guess.
+    var segmentLabel: String? {
+        guard let currentSegment, let reps = profile.todaySession.intervalStructure?.reps else { return nil }
+        switch currentSegment {
+        case .warmup: return "ÉCHAUFFEMENT"
+        case .rep(let n): return "RÉP. \(n)/\(reps)"
+        case .recovery: return "RÉCUPÉRATION"
+        case .cooldown: return "RETOUR AU CALME"
+        }
+    }
     // Same 62 kcal/km estimate as `markTodaySessionDone` — two different constants for the same
     // approximation meant a GPS run and a manual run disagreed on identical distances.
     var kcal: Double { distanceKm * 62 }
@@ -127,6 +161,12 @@ final class LiveRunViewModel {
 
     func start() {
         startedAt = Date()
+        // A real structure takes over segment-by-segment guidance from the flat scripted `cues`
+        // above (see `tick()`) — only when the title actually parses into reps, so a session
+        // still gets narrated even if it happens not to.
+        if profile.todaySession.intervalStructure != nil {
+            currentSegment = .warmup
+        }
         location.requestAuthorization()
         location.start()
         if voiceCoach == nil {
@@ -170,10 +210,19 @@ final class LiveRunViewModel {
             Haptics.impact(.medium)
         }
         let t = Int(elapsedSeconds)
-        for (threshold, message) in cues where t >= threshold && !firedCueTimestamps.contains(threshold) {
-            firedCueTimestamps.insert(threshold)
-            showCue(message)
+        // Only for a continuous session (currentSegment stays nil the whole run) — a real
+        // structure is narrated by `advanceIntervalSegmentIfNeeded()` below instead, with cues
+        // tied to the ACTUAL rep boundaries rather than fixed timestamps that drift the moment
+        // she runs faster or slower than the archetype assumed.
+        if currentSegment == nil {
+            for (threshold, message) in cues where t >= threshold && !firedCueTimestamps.contains(threshold) {
+                firedCueTimestamps.insert(threshold)
+                showCue(message)
+            }
+        } else {
+            advanceIntervalSegmentIfNeeded()
         }
+        checkPaceAlert()
         if profile.autoPauseEnabled {
             if location.currentSpeedMetersPerSecond < Self.autoPauseSpeedThreshold {
                 stationarySeconds += 1
@@ -191,6 +240,84 @@ final class LiveRunViewModel {
             lastActivityPush = Date()
             updateLiveActivity()
         }
+    }
+
+    /// Checks the CURRENT segment's real completion condition (distance for a rep, elapsed time
+    /// for warmup/recovery) and transitions the moment it's met — driven by actual GPS/time
+    /// progress, not a fixed schedule, so it stays accurate whether she runs the rep faster or
+    /// slower than the archetype's target pace assumed.
+    private func advanceIntervalSegmentIfNeeded() {
+        guard let structure = profile.todaySession.intervalStructure, let segment = currentSegment else { return }
+        switch segment {
+        case .warmup:
+            if elapsedSeconds - segmentStartElapsed >= Self.warmupSeconds {
+                beginSegment(.rep(1), reps: structure.reps)
+            }
+        case .rep(let n):
+            if distanceKm - segmentStartDistanceKm >= structure.repKm {
+                beginSegment(n < structure.reps ? .recovery(n) : .cooldown, reps: structure.reps)
+            }
+        case .recovery(let n):
+            if elapsedSeconds - segmentStartElapsed >= Self.recoverySeconds {
+                beginSegment(.rep(n + 1), reps: structure.reps)
+            }
+        case .cooldown:
+            break
+        }
+    }
+
+    private func beginSegment(_ segment: IntervalSegment, reps: Int) {
+        currentSegment = segment
+        segmentStartDistanceKm = distanceKm
+        segmentStartElapsed = elapsedSeconds
+        Haptics.impact(.medium)
+        let targetPace = profile.todaySession.pace
+        switch segment {
+        case .warmup:
+            break
+        case .rep(let n):
+            showCue(n == 1
+                ? "Échauffement terminé. Première répétition : vise \(targetPace)/km, foulée relâchée."
+                : "Répétition \(n)/\(reps) — vise \(targetPace)/km.")
+        case .recovery:
+            showCue("Récupération — souffle, foulée relâchée.")
+        case .cooldown:
+            showCue("Dernière répétition faite, bien joué 🔥 Retour au calme.")
+        }
+    }
+
+    /// Warmup/recovery/cooldown are deliberately off the target pace — only an actual rep (or a
+    /// continuous session, which has no segments at all) is the effort worth nudging her on.
+    private var isInTargetEffortSegment: Bool {
+        guard let currentSegment else { return true }
+        if case .rep = currentSegment { return true }
+        return false
+    }
+
+    /// Compares real recent pace (distance actually covered in the last `paceWindowSeconds`)
+    /// against the session's target and speaks a nudge when she's meaningfully off it — the
+    /// audio equivalent of glancing at the pace number, for when she isn't looking at the screen.
+    private func checkPaceAlert() {
+        defer {
+            if elapsedSeconds - paceWindowStartElapsed >= Self.paceWindowSeconds {
+                paceWindowStartDistanceKm = distanceKm
+                paceWindowStartElapsed = elapsedSeconds
+            }
+        }
+        guard profile.paceAlertsEnabled,
+              elapsedSeconds >= Self.paceAlertMinElapsedSeconds,
+              isInTargetEffortSegment,
+              elapsedSeconds - paceWindowStartElapsed >= Self.paceWindowSeconds,
+              elapsedSeconds - lastPaceAlertAtElapsed >= Self.paceAlertCooldownSeconds,
+              let targetSecPerKm = PaceModel.parseSecPerKm(profile.todaySession.pace)
+        else { return }
+        let windowDistanceKm = distanceKm - paceWindowStartDistanceKm
+        guard windowDistanceKm > 0.05 else { return }
+        let recentSecPerKm = (elapsedSeconds - paceWindowStartElapsed) / windowDistanceKm
+        let delta = recentSecPerKm - targetSecPerKm
+        guard abs(delta) > Self.paceAlertToleranceSecPerKm else { return }
+        lastPaceAlertAtElapsed = elapsedSeconds
+        voiceCoach?.announce(delta > 0 ? "Accélère un peu, tu es sous ton allure cible." : "Ralentis légèrement, tu vas plus vite que ton allure cible.")
     }
 
     /// A genuine stop held for `autoPauseDelaySeconds` (red light, water fountain) — pauses the

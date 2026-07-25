@@ -24,10 +24,18 @@ targets:
     resources:
       - path: RunUp/Resources/Fonts
       - path: RunUp/Resources/Assets.xcassets
+      - path: RunUp/Resources/Localizable.xcstrings
     info:
       path: RunUp/Info.plist
       properties:
         CFBundleDisplayName: RunUp
+        # Declares real support for English/Spanish alongside the French source strings in
+        # Localizable.xcstrings — lets App Store Connect list the app as localized in these
+        # languages, and is what App Review checks against actual in-app coverage.
+        CFBundleLocalizations:
+          - fr
+          - en
+          - es
         CFBundleShortVersionString: "2.2"
         CFBundleVersion: "12"
         # Synthesized launch storyboard (no custom .storyboard file) — a plain color is all it

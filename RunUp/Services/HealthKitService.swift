@@ -66,7 +66,7 @@ final class HealthKitService {
     /// days' total steps, and RunRecord doesn't store precise start/end timestamps to subtract by.
     func stepsToday() async -> Double {
         guard let type = HKObjectType.quantityType(forIdentifier: .stepCount) else { return 0 }
-        return await sumToday(type: type, unit: .count())
+        return await sum(type: type, unit: .count(), on: .now)
     }
 
     /// Active calories burned today — feeds the "Calories actives" daily goal. Deliberately not
@@ -78,7 +78,21 @@ final class HealthKitService {
     /// rest for the days it's worn.
     func activeCaloriesToday() async -> Double {
         guard let type = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else { return 0 }
-        return await sumToday(type: type, unit: .kilocalorie())
+        return await sum(type: type, unit: .kilocalorie(), on: .now)
+    }
+
+    /// Same two reads as above, but for any past calendar day — Santé keeps this data
+    /// indefinitely, RunUp just never asked for a day other than today until now. Powers the
+    /// "Ta journée" day browser (`RingsView`) so a past day's ring isn't limited to what's in
+    /// History (which only ever had actual runs, never the steps/calories side).
+    func steps(on date: Date) async -> Double {
+        guard let type = HKObjectType.quantityType(forIdentifier: .stepCount) else { return 0 }
+        return await sum(type: type, unit: .count(), on: date)
+    }
+
+    func activeCalories(on date: Date) async -> Double {
+        guard let type = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else { return 0 }
+        return await sum(type: type, unit: .kilocalorie(), on: date)
     }
 
     /// Most recent heart-rate sample within the last `maxAge` seconds — used to poll a genuinely
@@ -115,9 +129,13 @@ final class HealthKitService {
         try await store.save(workout)
     }
 
-    private func sumToday(type: HKQuantityType, unit: HKUnit) async -> Double {
-        let start = Calendar.current.startOfDay(for: .now)
-        let predicate = HKQuery.predicateForSamples(withStart: start, end: .now)
+    /// `end` is `.now` for today (only counts what's actually happened so far — not a future
+    /// window) and the real end of day for any earlier date.
+    private func sum(type: HKQuantityType, unit: HKUnit, on date: Date) async -> Double {
+        let cal = Calendar.current
+        let start = cal.startOfDay(for: date)
+        let end = cal.isDateInToday(date) ? Date.now : (cal.date(byAdding: .day, value: 1, to: start) ?? start)
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
         return await withCheckedContinuation { continuation in
             let query = HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: .cumulativeSum) { _, stats, _ in
                 continuation.resume(returning: stats?.sumQuantity()?.doubleValue(for: unit) ?? 0)

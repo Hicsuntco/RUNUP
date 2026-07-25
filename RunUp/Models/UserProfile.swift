@@ -227,11 +227,7 @@ final class UserProfile {
     /// goal nothing ever asked of you reads as a bug (the same complaint already fixed for the
     /// "Faite"/"Repos" label; this is the bar underneath it, which still filled to 100% either way).
     var dailyGoalsProgress: [Double] {
-        [
-            isRestDayToday ? 0 : (seanceDoneToday ? 1 : 0),
-            activeCaloriesGoal > 0 ? min(1, activeCaloriesToday / activeCaloriesGoal) : 0,
-            stepsGoal > 0 ? min(1, stepsToday / stepsGoal) : 0
-        ]
+        Self.dailyGoalsProgress(sessionDone: isRestDayToday ? nil : seanceDoneToday, steps: stepsToday, stepsGoal: stepsGoal, activeCalories: activeCaloriesToday, activeCaloriesGoal: activeCaloriesGoal)
     }
 
     var dailyGoalsDone: Int {
@@ -243,6 +239,29 @@ final class UserProfile {
     /// bonus stays reachable on a rest day from the other 2 goals alone, without needing a fake
     /// "séance" credit to get there.
     var dailyGoalsTotal: Int { isRestDayToday ? 2 : 3 }
+
+    /// [Séance du jour, Calories actives, Pas] as 0...1 fractions — the same shape as
+    /// `dailyGoalsProgress` above (which now just calls this for `.now`), pulled out into a pure
+    /// function so `RingsView`'s day browser can compute an honest ring for ANY past date without
+    /// duplicating the "rest day excludes the séance slot" logic. `sessionDone: nil` means rest
+    /// day (no séance goal existed that day) — matches `isRestDayToday`'s semantics.
+    static func dailyGoalsProgress(sessionDone: Bool?, steps: Double, stepsGoal: Double, activeCalories: Double, activeCaloriesGoal: Double) -> [Double] {
+        [
+            sessionDone == true ? 1 : 0,
+            activeCaloriesGoal > 0 ? min(1, activeCalories / activeCaloriesGoal) : 0,
+            stepsGoal > 0 ? min(1, steps / stepsGoal) : 0
+        ]
+    }
+
+    /// Best-effort "was this weekday a running day" for a date that isn't necessarily in the
+    /// current week — `weekSessions` only ever holds the CURRENT week's plan (regenerated at
+    /// every week boundary, older weeks aren't retained), so there's no way to know exactly what
+    /// was planned on an older date. `runningDays` is the stable weekly pattern the plan is built
+    /// around and rarely changes, so it's the honest best answer available rather than guessing —
+    /// same spirit as `isRestDayToday`, just without a real `weekSessions` entry to read.
+    func isRunningDay(weekday: Int) -> Bool {
+        runningDays.contains(weekday)
+    }
 
     /// False until at least one session has a real RPE behind it — the readiness ring reads as a
     /// confident, near-full gauge ("bonne forme !") the moment it shows any number at all, which

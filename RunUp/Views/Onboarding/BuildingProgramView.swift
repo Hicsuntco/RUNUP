@@ -74,10 +74,23 @@ struct BuildingProgramView: View {
             }
             .padding(.top, 26)
             Spacer()
-            Text(vm.buildProgress == 4 ? "Prêt !" : buildingLabel)
-                .font(RUFont.sans(11))
-                .foregroundColor(RUColor.text3)
-                .padding(.bottom, 24)
+            VStack(spacing: 4) {
+                Text(vm.buildProgress == 4 ? "Prêt !" : buildingLabel)
+                    .font(RUFont.sans(11))
+                    .foregroundColor(RUColor.text3)
+                // Shown right before the system notification permission prompt fires (see
+                // `OnboardingContainerView.finish()`) — that dialog used to appear with zero lead-
+                // in, right as she lands on Home, so a blind "Autoriser ?" read as coming from
+                // nowhere. This gives it a reason before it shows up.
+                if vm.buildProgress == 4 {
+                    Text("On t'enverra un petit rappel pour tes séances 🔔")
+                        .font(RUFont.sans(10.5))
+                        .foregroundColor(RUColor.text3)
+                        .transition(.opacity)
+                }
+            }
+            .animation(.easeIn(duration: 0.25), value: vm.buildProgress)
+            .padding(.bottom, 24)
         }
         .onAppear(perform: runSequence)
     }

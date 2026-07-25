@@ -103,8 +103,8 @@ final class NotificationService: NSObject {
         center.getNotificationSettings { [center] settings in
             guard settings.authorizationStatus == .authorized else { return }
             let content = UNMutableNotificationContent()
-            content.title = "Séance du jour"
-            content.body = "\(session.title) t'attend — \(session.durationMinutes)′ à \(session.pace)/km."
+            content.title = String(localized: "Séance du jour")
+            content.body = String(localized: "\(session.title) t'attend — \(session.durationMinutes)′ à \(session.pace)/km.")
             content.sound = .default
 
             let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
@@ -132,8 +132,8 @@ final class NotificationService: NSObject {
         center.getNotificationSettings { [center] settings in
             guard settings.authorizationStatus == .authorized else { return }
             let content = UNMutableNotificationContent()
-            content.title = "Ça fait un moment…"
-            content.body = "Ton programme t'attend toujours — une petite séance aujourd'hui ?"
+            content.title = String(localized: "Ça fait un moment…")
+            content.body = String(localized: "Ton programme t'attend toujours — une petite séance aujourd'hui ?")
             content.sound = .default
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 3 * 24 * 60 * 60, repeats: false)
             let request = UNNotificationRequest(identifier: Self.inactivityReminderID, content: content, trigger: trigger)
@@ -160,8 +160,8 @@ final class NotificationService: NSObject {
         center.getNotificationSettings { [center] settings in
             guard settings.authorizationStatus == .authorized else { return }
             let content = UNMutableNotificationContent()
-            content.title = "Ta semaine est prête"
-            content.body = "Distance, séances, série — le récap de ta semaine t'attend."
+            content.title = String(localized: "Ta semaine est prête")
+            content.body = String(localized: "Distance, séances, série — le récap de ta semaine t'attend.")
             content.sound = .default
 
             var dateComponents = DateComponents()

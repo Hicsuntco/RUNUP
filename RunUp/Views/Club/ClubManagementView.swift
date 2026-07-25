@@ -196,7 +196,7 @@ struct ClubMemberProfileView: View {
                     .padding(.top, 12)
                 }
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.bottom, 30)
             .frame(maxWidth: .infinity, alignment: .top)
         }

@@ -26,6 +26,11 @@ struct ProgramSettingsSheet: View {
                                 .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(on ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
                         }
                         .buttonStyle(PressableStyle())
+                        // Visually identical to onboarding's RunningDaysStepView day picker, which
+                        // already has this — VoiceOver was otherwise reading bare single-letter
+                        // abbreviations ("L", "M", "M"...) with no full day name or selected state.
+                        .accessibilityLabel(DayStatus.fullNames[i])
+                        .accessibilityAddTraits(on ? .isSelected : [])
                     }
                 }
 

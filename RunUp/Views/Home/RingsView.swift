@@ -104,7 +104,12 @@ struct RingsView: View {
                         .opacity(isLoadingHistoricalDay ? 0.4 : 1)
                     VStack(spacing: 2) {
                         Text("\(displayDone) / \(displayTotal)").displayStyle(28).foregroundColor(RUColor.textPrimary)
-                        Text("BOUCLÉS").font(RUFont.sans(10, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
+                        Text("BOUCLÉS")
+                            .font(RUFont.sans(10, weight: .bold))
+                            .tracking(1.5)
+                            .foregroundColor(RUColor.text2)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
                     }
                     .opacity(isLoadingHistoricalDay ? 0.4 : 1)
                 }
@@ -164,6 +169,11 @@ struct RingsView: View {
                     .frame(width: 32, height: 32)
                     .background(RUColor.card, in: Circle())
                     .overlay(Circle().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                    // The visible circle stays 32pt, but the tappable area grows to Apple's 44pt
+                    // HIG minimum, same treatment as every other icon button in the app
+                    // (HeaderView's AvatarButton/BackChevronButton, HistoryView's add button).
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(PressableStyle())
             .accessibilityLabel("Jour précédent")
@@ -182,6 +192,8 @@ struct RingsView: View {
                     .frame(width: 32, height: 32)
                     .background(RUColor.card, in: Circle())
                     .overlay(Circle().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(PressableStyle())
             .disabled(isToday)

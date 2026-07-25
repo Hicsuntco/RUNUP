@@ -38,7 +38,7 @@ struct RecoveryView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 22).padding(.horizontal, 18)
-                .ruHeroCard(radius: 22, borderOpacity: 0.22)
+                .ruHeroCard(radius: RUSpacing.radiusHero, borderOpacity: 0.22)
 
                 VStack(alignment: .leading, spacing: 6) {
                     EyebrowLabel(text: "Aujourd'hui", color: RUColor.rose2)

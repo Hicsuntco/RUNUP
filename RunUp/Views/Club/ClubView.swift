@@ -720,6 +720,8 @@ struct ClubView: View {
                             Text(entry.isMe ? "\(entry.name) · toi" : entry.name)
                                 .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
                                 .foregroundColor(RUColor.textPrimary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
                             Spacer()
                             Text("\(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), entry.weekKm)) km")
                                 .displayStyle(14).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
@@ -743,6 +745,8 @@ struct ClubView: View {
                         Text(entry.isMe ? "\(entry.name) · toi" : entry.name)
                             .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
                             .foregroundColor(RUColor.textPrimary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
                         Spacer()
                         Text("\(entry.xp)").displayStyle(15).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
                     }
@@ -837,6 +841,8 @@ struct ClubView: View {
                                 Text(entry.isMe ? "\(entry.name) · toi" : entry.name)
                                     .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
                                     .foregroundColor(RUColor.textPrimary)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.7)
                                 Spacer()
                                 Text("\(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), entry.weekKm)) km")
                                     .displayStyle(14).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
@@ -903,6 +909,10 @@ struct ClubView: View {
                             .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                         }
                         .buttonStyle(PressableStyle())
+                        // Mirrors the kudos button right next to it — was reading as just the bare
+                        // count with no indication it's a comment button or what tapping does.
+                        .accessibilityLabel("Voir les commentaires")
+                        .accessibilityValue("\(item.commentsCount)")
                     }
                 }
                 .padding(13)

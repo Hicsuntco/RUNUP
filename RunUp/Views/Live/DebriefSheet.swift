@@ -84,6 +84,10 @@ struct DebriefSheet: View {
                             .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(rpe == opt ? RUColor.rose.opacity(0.35) : RUColor.line, lineWidth: RUSpacing.hairline))
                         }
                         .buttonStyle(PressableStyle())
+                        // The app's own core adaptive-plan mechanic, asked after every single run
+                        // — selected state was conveyed by color alone, so VoiceOver had no way to
+                        // confirm which option was picked before tapping VALIDER.
+                        .accessibilityAddTraits(rpe == opt ? .isSelected : [])
                     }
                 }
 

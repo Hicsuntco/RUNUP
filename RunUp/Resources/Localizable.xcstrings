@@ -10352,6 +10352,22 @@
           }
         }
       }
+    },
+    "Voir les commentaires": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View comments"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver comentarios"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

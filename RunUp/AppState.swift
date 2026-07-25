@@ -208,12 +208,15 @@ final class AppState {
         let record = vm.stop()
         liveRun = nil
         // An accidental start (a pocket tap killed 40 s later, under 100 m moved) is not a run —
-        // recording it would put a fabricated-looking "0,05 km" entry in History/Stats forever.
+        // recording it would put a fabricated-looking "0,05 km" entry in History/Stats forever,
+        // and (since the HealthKit write only fires below, after this guard) it won't create a
+        // phantom workout in Apple Health either.
         guard record.distanceKm >= 0.1 || record.durationSeconds >= 120 else {
             toast("Course trop courte — rien n'a été enregistré.")
             screen = .home
             return nil
         }
+        vm.saveToHealthKit(record)
         modelContext.insert(record)
         lastRun = record
         screen = .recap

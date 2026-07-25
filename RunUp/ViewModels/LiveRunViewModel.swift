@@ -14,6 +14,7 @@ final class LiveRunViewModel {
     /// Set in `start()`, not at init — the view model can exist briefly before the run begins,
     /// and this date anchors both the wall-clock elapsed math and the HealthKit workout.
     private var startedAt = Date()
+    private var endedAt = Date()
     /// Wall-clock pause bookkeeping: elapsed = now - startedAt - accumulated pauses. The old
     /// `elapsedSeconds += 1` per `Task.sleep(1s)` iteration systematically undercounted (sleep is
     /// "at least 1s", plus scheduling gaps) — minutes of drift over a long run, corrupting pace
@@ -432,7 +433,11 @@ final class LiveRunViewModel {
         self.liveActivity = nil
     }
 
-    /// Stops tracking and produces a `RunRecord`. Caller (AppState) inserts it into SwiftData.
+    /// Stops tracking and produces a `RunRecord`. Caller (AppState) inserts it into SwiftData and
+    /// only then calls `saveToHealthKit`, once its own "too short to count" guard has passed — the
+    /// HealthKit write used to fire unconditionally from here, so a discarded pocket-tap run still
+    /// landed a permanent phantom workout in Apple Health even though the app's own History
+    /// correctly refused to keep it and told her nothing was recorded.
     func stop() -> RunRecord {
         endLiveActivity()
         timerTask?.cancel()
@@ -453,10 +458,15 @@ final class LiveRunViewModel {
                 RunRecord.RoutePoint(lat: coord.latitude, lng: coord.longitude, altitude: altitude)
             }
         )
-        let endedAt = Date()
-        // duration = real moving time (pauses excluded) — start/end alone would tell Santé a
-        // 30-min run with a 15-min coffee pause was a 45-min workout.
-        Task { try? await healthKit.saveRun(start: startedAt, end: endedAt, duration: elapsedSeconds, distanceKm: record.distanceKm, kcal: Double(record.kcal)) }
+        endedAt = Date()
         return record
+    }
+
+    /// Writes the run to Apple Health — call only once the caller has actually decided to keep the
+    /// run (see `stop()`'s doc comment). `startedAt`/`endedAt` are moving-time bounds (pauses
+    /// excluded via `duration`) — start/end alone would tell Santé a 30-min run with a 15-min
+    /// coffee pause was a 45-min workout.
+    func saveToHealthKit(_ record: RunRecord) {
+        Task { try? await healthKit.saveRun(start: startedAt, end: endedAt, duration: Double(record.durationSeconds), distanceKm: record.distanceKm, kcal: Double(record.kcal)) }
     }
 }

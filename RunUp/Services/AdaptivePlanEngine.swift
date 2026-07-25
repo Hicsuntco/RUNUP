@@ -734,6 +734,21 @@ enum AdaptivePlanEngine {
         profile.weekSessions[todayIdx].session = profile.weekSessions[tomorrowIdx].session
         profile.weekSessions[tomorrowIdx].session = session
         profile.todaySession = profile.weekSessions[todayIdx].session ?? restSession
+
+        // The strip's per-day `state` tracks scheduling, not just completion — without updating it
+        // here too, tomorrow's cell (`.rest`, since it wasn't a running day to begin with) could
+        // never become `.today` once tomorrow actually arrives: the day-rollover in
+        // `refreshProgramForCurrentDate` explicitly skips any cell already `.rest`/`.done`, so it
+        // stayed a plain rest day forever even after the swapped-in session was completed.
+        if let stripTodayIdx = profile.weekStrip.firstIndex(where: { $0.weekday == today }),
+           let stripTomorrowIdx = profile.weekStrip.firstIndex(where: { $0.weekday == today + 1 }) {
+            // Today now holds whatever tomorrow's content was — usually a rest day, so it drops
+            // the "today" highlight the same way a non-running today already does in `beginWeek`.
+            profile.weekStrip[stripTodayIdx].state = profile.weekSessions[todayIdx].session != nil ? .today : .rest
+            // Tomorrow now holds a real, not-yet-happened session — `.upcoming` so the rollover
+            // can promote it to `.today` once tomorrow actually arrives.
+            profile.weekStrip[stripTomorrowIdx].state = .upcoming
+        }
         return true
     }
 

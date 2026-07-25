@@ -1,10 +1,13 @@
 import SwiftUI
 import UIKit
+import SwiftData
+import CoreLocation
 
 /// Post-run recap + "Ressenti" debrief. Mirrors `RecapScreen` in screensA.jsx — this is the
 /// entry point to the adaptive-plan mechanic (submitting RPE recalculates the next session).
 struct RecapView: View {
     @Environment(AppState.self) private var appState
+    @Query(sort: \RunRecord.date) private var allRuns: [RunRecord]
     @State private var showDebrief = false
     /// The "instagrammable" share card (route trace + Strava-style stacked stats on a fully
     /// transparent background — see `RunShareCardView`), rendered off-screen once via
@@ -19,11 +22,57 @@ struct RecapView: View {
 
     private var run: RunRecord? { appState.lastRun }
 
+    /// A genuine personal record vs every OTHER real run on file — pace (2 km+ runs only, same
+    /// honest floor `StatsView.bestRecentPerformance` uses so a short jog can't "beat" a real
+    /// long run's pace by comparison quirk) or raw distance. Never true against an empty history:
+    /// there's nothing to have beaten yet, so a first-ever run is just a first run, not a record.
+    private func isPersonalRecord(_ run: RunRecord) -> Bool {
+        let priorRuns = allRuns.filter { $0 !== run }
+        let priorBestPace = priorRuns.filter { $0.distanceKm >= 2 }.compactMap { PaceModel.parseSecPerKm($0.avgPace) }.min()
+        let priorBestDistance = priorRuns.map(\.distanceKm).max() ?? 0
+        var isPaceRecord = false
+        if run.distanceKm >= 2, let pace = PaceModel.parseSecPerKm(run.avgPace), let priorBestPace {
+            isPaceRecord = pace < priorBestPace
+        }
+        let isDistanceRecord = run.distanceKm > 0 && priorBestDistance > 0 && run.distanceKm > priorBestDistance
+        return isPaceRecord || isDistanceRecord
+    }
+
+    /// A best time on a familiar loop, even when it's nowhere near an all-time PR — "same route"
+    /// is a real (if approximate) match: starts within 150 m of each other and total distance
+    /// within 15%, both GPS facts, not a guess about which streets were actually run.
+    private func isRoutePersonalRecord(_ run: RunRecord) -> Bool {
+        guard let first = run.route.first, run.distanceKm >= 1, let pace = PaceModel.parseSecPerKm(run.avgPace) else { return false }
+        let startLocation = CLLocation(latitude: first.lat, longitude: first.lng)
+        let similarRuns = allRuns.filter { other in
+            guard other !== run, let otherFirst = other.route.first, other.distanceKm > 0 else { return false }
+            let start = CLLocation(latitude: otherFirst.lat, longitude: otherFirst.lng)
+            guard startLocation.distance(from: start) < 150 else { return false }
+            let ratio = other.distanceKm / run.distanceKm
+            return ratio > 0.85 && ratio < 1.15
+        }
+        guard let priorBestPace = similarRuns.compactMap({ PaceModel.parseSecPerKm($0.avgPace) }).min() else { return false }
+        return pace < priorBestPace
+    }
+
+    private enum RecordKind { case overall, route }
+    private func recordKind(for run: RunRecord) -> RecordKind? {
+        if isPersonalRecord(run) { return .overall }
+        if isRoutePersonalRecord(run) { return .route }
+        return nil
+    }
+
     var body: some View {
         if let run {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     heroHeader(run)
+
+                    if let kind = recordKind(for: run) {
+                        recordBanner(kind)
+                            .padding(.horizontal, 18)
+                            .padding(.top, 14)
+                    }
 
                     VStack(alignment: .leading, spacing: 8) {
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
@@ -138,6 +187,7 @@ struct RecapView: View {
             }
             .onAppear {
                 splitsRevealed = true
+                if recordKind(for: run) != nil { Haptics.success() }
                 guard shareImage == nil else { return }
                 // ImageRenderer is main-actor-bound, so the 3x-scale render can't move off the
                 // main thread — but it doesn't have to run during the entrance transition either,
@@ -152,6 +202,19 @@ struct RecapView: View {
         } else {
             Color.clear.onAppear { appState.go(.home) }
         }
+    }
+
+    private func recordBanner(_ kind: RecordKind) -> some View {
+        HStack(spacing: 10) {
+            Text("🏆").font(.system(size: 20))
+            Text(kind == .overall ? "Nouveau record personnel !" : "Meilleur temps sur ce parcours !")
+                .font(RUFont.sans(13, weight: .bold))
+                .foregroundColor(RUColor.textPrimary)
+            Spacer(minLength: 0)
+        }
+        .padding(14)
+        .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
     }
 
     private func heroHeader(_ run: RunRecord) -> some View {
@@ -198,7 +261,7 @@ struct RecapView: View {
     }
 
     private func renderShareCard(for run: RunRecord) {
-        let renderer = ImageRenderer(content: RunShareCardView(run: run, textColor: shareTextColor))
+        let renderer = ImageRenderer(content: RunShareCardView(run: run, textColor: shareTextColor, isPersonalRecord: recordKind(for: run) != nil))
         renderer.scale = 3 // retina-quality output at the card's 360×640pt logical size
         // `isOpaque` defaults to false, which is exactly what the card needs — anything left
         // unpainted in the view keeps its alpha in the rendered UIImage, so the PNG layers

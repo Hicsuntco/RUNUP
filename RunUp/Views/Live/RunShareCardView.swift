@@ -26,6 +26,9 @@ enum ShareCardTextColor: String, CaseIterable, Identifiable {
 struct RunShareCardView: View {
     var run: RunRecord
     var textColor: ShareCardTextColor = .blanc
+    /// True only when `RecapView` verified this run genuinely beat every prior real run (pace or
+    /// distance) — never a guess made just for the card.
+    var isPersonalRecord: Bool = false
 
     /// The big stat values — a flat color, or the brand rose→violet sweep for the `runup` style
     /// (fixed hexes, same stops as the route trace, deliberately not the in-app theme tokens: the
@@ -93,6 +96,14 @@ struct RunShareCardView: View {
         // once layered on a story. A tight sticker-like block over an untouched photo is the
         // instagramable shape.
         VStack(spacing: 0) {
+            if isPersonalRecord {
+                Text("🏆 NOUVEAU RECORD")
+                    .font(RUFont.sans(12, weight: .bold))
+                    .tracking(2)
+                    .foregroundColor(secondaryColor)
+                    .modifier(OutlinedTextShadow(light: outlineIsLight))
+                    .padding(.bottom, 10)
+            }
             if normalizedRoutePoints.count > 1 {
                 neonRouteTrace
                     .frame(height: 160)

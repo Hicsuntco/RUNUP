@@ -11,6 +11,12 @@ final class RunRecord {
     struct RoutePoint: Codable, Equatable {
         var lat: Double
         var lng: Double
+        /// Real GPS altitude in meters, only when the fix's vertical accuracy was trustworthy
+        /// (see `LocationService`) — Optional (not a 0 default) so it reads as "unknown" rather
+        /// than "sea level" when there's no trustworthy reading, and so every run recorded
+        /// before this field existed still decodes fine (a non-optional field with no inline
+        /// default would fail Codable synthesis against old, key-less JSON).
+        var altitude: Double?
     }
 
     var date: Date

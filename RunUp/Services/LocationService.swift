@@ -11,6 +11,11 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
 
     private(set) var route: [CLLocationCoordinate2D] = []
+    /// Parallel to `route` (same index, same length) — real GPS altitude per point when the fix's
+    /// vertical accuracy was trustworthy, nil otherwise. Feeds the elevation profile chart; kept
+    /// separate from `route` rather than folding into a richer point type since most call sites
+    /// (distance/route-trace rendering) only ever needed lat/lng.
+    private(set) var routeAltitudes: [Double?] = []
     private(set) var distanceMeters: Double = 0
     private(set) var currentSpeedMetersPerSecond: Double = 0
     private(set) var isSignalUnstable = false
@@ -47,6 +52,7 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     /// exactly what used to wipe a paused run's 5 km back to 0.00 at the traffic light.
     func start() {
         route = []
+        routeAltitudes = []
         distanceMeters = 0
         elevationGainMeters = 0
         lastLocation = nil
@@ -124,6 +130,7 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
             }
             lastLocation = loc
             route.append(loc.coordinate)
+            routeAltitudes.append(loc.verticalAccuracy >= 0 && loc.verticalAccuracy < 20 ? loc.altitude : nil)
         }
     }
 

@@ -449,7 +449,9 @@ final class LiveRunViewModel {
             avgHeartRate: heartRate ?? 0,
             elevationGainM: Int(location.elevationGainMeters.rounded()),
             realSplitSeconds: splitSecondsPerKm,
-            route: location.route.map { RunRecord.RoutePoint(lat: $0.latitude, lng: $0.longitude) }
+            route: zip(location.route, location.routeAltitudes).map { coord, altitude in
+                RunRecord.RoutePoint(lat: coord.latitude, lng: coord.longitude, altitude: altitude)
+            }
         )
         let endedAt = Date()
         // duration = real moving time (pauses excluded) — start/end alone would tell Santé a

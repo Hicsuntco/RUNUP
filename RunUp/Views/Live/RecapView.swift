@@ -99,6 +99,11 @@ struct RecapView: View {
                             }
                         }
 
+                        if ElevationProfileView.hasData(run.route) {
+                            EyebrowLabel(text: "Profil d'élévation", color: RUColor.text3).padding(.top, 8)
+                            elevationCard(run)
+                        }
+
                         // One share action, not two — the transparent card covers both uses
                         // (shared as-is on a story, or layered over a photo), so the old
                         // opaque-card/transparent-card button pair collapsed into this. The
@@ -215,6 +220,25 @@ struct RecapView: View {
         .padding(14)
         .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+    }
+
+    private func elevationCard(_ run: RunRecord) -> some View {
+        let altitudes = run.route.compactMap(\.altitude)
+        let minAlt = altitudes.min() ?? 0
+        let maxAlt = altitudes.max() ?? 0
+        return VStack(alignment: .leading, spacing: 8) {
+            ElevationProfileView(route: run.route)
+                .frame(height: 80)
+            HStack {
+                Text("\(Int(minAlt.rounded())) m").font(RUFont.mono(11)).foregroundColor(RUColor.text2)
+                Spacer()
+                Text("+\(run.elevationGainM) m D+").font(RUFont.sans(11, weight: .bold)).foregroundColor(RUColor.lime)
+                Spacer()
+                Text("\(Int(maxAlt.rounded())) m").font(RUFont.mono(11)).foregroundColor(RUColor.text2)
+            }
+        }
+        .padding(14)
+        .ruCard()
     }
 
     private func heroHeader(_ run: RunRecord) -> some View {

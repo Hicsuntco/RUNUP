@@ -261,3 +261,12 @@ CREATE TABLE IF NOT EXISTS coach_usage (
   count INTEGER NOT NULL DEFAULT 1,
   PRIMARY KEY (key, day)
 );
+
+-- Idempotency keys, same pattern as activities.client_id above — createEvent/createChallenge had
+-- no protection beyond a client-side isSaving flag, so a request that timed out client-side after
+-- the server already processed it (then retried, by the user re-tapping after seeing a spinner
+-- hang) could insert a duplicate row and re-notify the whole club a second time. Nullable: existing
+-- rows predate this and stay NULL, which is fine since Postgres allows any number of NULLs under a
+-- UNIQUE constraint — only new, client-generated ids need to actually be unique.
+ALTER TABLE club_events ADD COLUMN IF NOT EXISTS client_id UUID UNIQUE;
+ALTER TABLE challenges ADD COLUMN IF NOT EXISTS client_id UUID UNIQUE;

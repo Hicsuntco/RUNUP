@@ -158,19 +158,24 @@ struct ClubService {
 
     /// Sets the club's active challenge — replaces whichever one was active before (a club has at
     /// most one at a time). `endDate` is sent as a plain "YYYY-MM-DD" to match the DB's DATE column.
-    func createChallenge(title: String, targetKm: Double, endDate: Date) async throws -> ClubChallenge {
+    /// `clientId` defaults to a fresh UUID — the server dedupes on it (`ON CONFLICT (client_id) DO
+    /// NOTHING`), same idempotency pattern as `postActivity`, so a caller can safely retry with the
+    /// same id after a timeout instead of risking a duplicate challenge on every retry.
+    func createChallenge(clientId: UUID = UUID(), title: String, targetKm: Double, endDate: Date) async throws -> ClubChallenge {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
         return try await send(
             path: "api/clubs/createChallenge",
             method: "POST",
-            body: ["title": title, "targetKm": targetKm, "endDate": formatter.string(from: endDate)]
+            body: ["clientId": clientId.uuidString, "title": title, "targetKm": targetKm, "endDate": formatter.string(from: endDate)]
         )
     }
 
     /// Proposes a sortie de groupe — the server auto-RSVPs the creator and pushes the club.
-    func createEvent(title: String, location: String?, startsAt: Date) async throws -> ClubEvent {
+    /// `clientId` defaults to a fresh UUID, same idempotency pattern as `createChallenge` above.
+    func createEvent(clientId: UUID = UUID(), title: String, location: String?, startsAt: Date) async throws -> ClubEvent {
         var body: [String: Any] = [
+            "clientId": clientId.uuidString,
             "title": title,
             "startsAt": ISO8601DateFormatter().string(from: startsAt),
         ]

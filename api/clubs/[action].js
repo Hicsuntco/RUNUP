@@ -165,17 +165,46 @@ async function handleCreateChallenge(req, res, userId) {
   }
   if (containsObjectionableContent(cleanTitle)) return res.status(422).json({ error: 'objectionable_content' });
 
-  const { rows } = await sql`
-    INSERT INTO challenges (club_id, created_by, title, target_km, end_date)
-    VALUES (${clubId}, ${userId}, ${cleanTitle}, ${target}, ${endDate})
+  // Idempotent on the client-generated clientId, same pattern as activities.client_id — a
+  // request that timed out client-side after the server already processed it (then retried by
+  // the user re-tapping) must not insert a second challenge and re-notify... well, this endpoint
+  // doesn't push, but it would otherwise silently create an orphaned duplicate row. clientId is
+  // optional (older clients / callers that don't send one just skip the dedup, same as before).
+  const { clientId } = req.body || {};
+  const cleanClientId = isUuid(clientId) ? clientId : null;
+
+  const { rows: inserted } = await sql`
+    INSERT INTO challenges (club_id, created_by, title, target_km, end_date, client_id)
+    VALUES (${clubId}, ${userId}, ${cleanTitle}, ${target}, ${endDate}, ${cleanClientId})
+    ON CONFLICT (client_id) DO NOTHING
     RETURNING id, title, target_km, end_date, created_at
   `;
-  const challenge = rows[0];
+
+  let challenge = inserted[0];
+  let progressKm = 0;
+  if (!challenge && cleanClientId) {
+    // A retried request that already landed — return the existing row (with its real progress)
+    // instead of erroring or silently creating a duplicate.
+    const { rows: existing } = await sql`
+      SELECT c.id, c.title, c.target_km, c.end_date,
+             COALESCE((
+               SELECT SUM(a.distance_km) FROM activities a
+               WHERE a.club_id = ${clubId} AND a.type = 'run' AND a.distance_km IS NOT NULL
+                 AND a.created_at >= c.created_at
+             ), 0) AS progress_km
+      FROM challenges c
+      WHERE c.client_id = ${cleanClientId}
+    `;
+    challenge = existing[0];
+    progressKm = Number(challenge?.progress_km ?? 0);
+  }
+  if (!challenge) return res.status(500).json({ error: 'could_not_create' });
+
   res.status(201).json({
     id: challenge.id,
     title: challenge.title,
     targetKm: Number(challenge.target_km),
-    progressKm: 0,
+    progressKm,
     endDate: challenge.end_date,
   });
 }
@@ -333,11 +362,30 @@ async function handleCreateEvent(req, res, userId) {
   // the whole club's lock screens. 20/day is far beyond any real day of group-run proposals.
   if (!(await underDailyCap('event:' + userId, 20))) return res.status(429).json({ error: 'too_many_requests' });
 
+  // Idempotent on the client-generated clientId, same pattern as activities.client_id — without
+  // it, a request that timed out client-side after the server already processed it (then retried
+  // by the user re-tapping "Proposer" after seeing a spinner hang) inserted a second near-
+  // identical event and re-pushed the whole club a second time. clientId is optional (older
+  // clients just skip the dedup, same as before).
+  const { clientId } = req.body || {};
+  const cleanClientId = isUuid(clientId) ? clientId : null;
+
   const { rows: inserted } = await sql`
-    INSERT INTO club_events (club_id, created_by, title, location, starts_at)
-    VALUES (${clubId}, ${userId}, ${cleanTitle}, ${cleanLocation || null}, ${when.toISOString()})
+    INSERT INTO club_events (club_id, created_by, title, location, starts_at, client_id)
+    VALUES (${clubId}, ${userId}, ${cleanTitle}, ${cleanLocation || null}, ${when.toISOString()}, ${cleanClientId})
+    ON CONFLICT (client_id) DO NOTHING
     RETURNING id, title, location, starts_at
   `;
+
+  if (inserted.length === 0 && cleanClientId) {
+    // Already created by an earlier attempt of this same request — return it as-is, RSVP'd and
+    // pushed already, rather than doing either a second time.
+    const { rows: existing } = await sql`SELECT id, title, location, starts_at FROM club_events WHERE client_id = ${cleanClientId}`;
+    const event = existing[0];
+    if (!event) return res.status(500).json({ error: 'could_not_create' });
+    return res.status(201).json({ id: event.id, title: event.title, location: event.location || null, startsAt: event.starts_at, going: 1, goingByMe: true, isMine: true });
+  }
+
   const event = inserted[0];
   await sql`INSERT INTO event_rsvps (event_id, user_id) VALUES (${event.id}, ${userId}) ON CONFLICT DO NOTHING`;
 

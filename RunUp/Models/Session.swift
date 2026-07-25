@@ -59,6 +59,9 @@ struct DayStatus: Codable, Equatable, Identifiable {
     var date: Date = .now
 
     static let letters = ["L", "M", "M", "J", "V", "S", "D"]
+    /// Mardi/Mercredi share the same letter — VoiceOver needs the real name behind a day button,
+    /// not just its ambiguous glyph.
+    static let fullNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
 
     private enum CodingKeys: String, CodingKey { case weekday, letter, state, date }
 

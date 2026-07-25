@@ -759,6 +759,11 @@ enum AdaptivePlanEngine {
         profile.goalDisplay = "Course libre"
         profile.todaySession = template
         profile.freeRunTemplateIndex = 0
+        // Re-entering course libre later the same day a previous run was already debriefed
+        // (e.g. switching out of it and back) must not carry that old completion forward — left
+        // set, `seanceDoneToday` would read true from the moment she lands back on Home, the
+        // exact false "séance faite" bug this field was added to fix in the first place.
+        profile.freeRunSessionDoneDate = nil
     }
 
     struct NewGoalResult {

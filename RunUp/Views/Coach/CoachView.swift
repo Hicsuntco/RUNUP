@@ -100,7 +100,7 @@ struct CoachView: View {
                     Image(systemName: "trash")
                         .font(.system(size: 13))
                         .foregroundColor(RUColor.text3)
-                        .frame(width: 34, height: 34)
+                        .frame(width: 44, height: 44)
                         .background(RUColor.card, in: Circle())
                         .overlay(Circle().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                 }
@@ -151,6 +151,7 @@ struct CoachView: View {
                 Button("Réessayer") { retryLast() }
                     .font(RUFont.sans(11, weight: .bold))
                     .foregroundColor(RUColor.amber)
+                    .buttonStyle(PressableStyle())
             }
             .padding(12)
             .background(RUColor.amber.opacity(0.1), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -213,9 +214,11 @@ struct CoachView: View {
             Button(action: { send(vm?.draft ?? "") }) {
                 Image(systemName: "arrow.up").foregroundColor(.white).font(.system(size: 14, weight: .bold))
             }
-            .frame(width: 34, height: 34)
+            .frame(width: 44, height: 44)
             .background(RUColor.rose, in: Circle())
             .buttonStyle(PressableStyle())
+            .disabled((vm?.draft ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .accessibilityLabel("Envoyer")
         }
         .padding(.leading, 16).padding(.trailing, 8).padding(.vertical, 8)
         .background(RUColor.card, in: Capsule())

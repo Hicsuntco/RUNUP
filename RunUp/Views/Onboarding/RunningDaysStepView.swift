@@ -12,6 +12,7 @@ struct RunningDaysStepView: View {
                     ForEach(0..<7) { i in
                         let on = vm.runningDays.contains(i)
                         Button(action: {
+                            vm.runningDaysTouched = true
                             if on { vm.runningDays.remove(i) } else { vm.runningDays.insert(i) }
                         }) {
                             Text(DayStatus.letters[i])
@@ -23,6 +24,8 @@ struct RunningDaysStepView: View {
                                 .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(on ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
                         }
                         .buttonStyle(PressableStyle())
+                        .accessibilityLabel(DayStatus.fullNames[i])
+                        .accessibilityAddTraits(on ? .isSelected : [])
                     }
                 }
                 .padding(.top, 22)

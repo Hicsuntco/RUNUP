@@ -42,6 +42,11 @@ final class OnboardingViewModel {
     // Step 4
     var runningDays: Set<Int> = [1, 2, 4, 6]
     var preferredLongRunDay: Int?
+    /// Set the moment she taps any day toggle — `runningDays` starts pre-filled with a plausible
+    /// default so the screen isn't empty, but a plan built from that default without her ever
+    /// touching it would be guessing at her real rhythm, not asking. Gates `canProceed(fromStep:
+    /// 4)` alongside the existing 2-day minimum.
+    var runningDaysTouched = false
 
     /// The day the long run actually lands on — falls back to the latest selected running day if
     /// none was explicitly chosen, or if the chosen one got deselected.
@@ -51,6 +56,10 @@ final class OnboardingViewModel {
     }
     // Step 5
     var level: ExperienceLevel = .intermediaire
+    /// Same reasoning as `runningDaysTouched` — `level` defaults to `.intermediaire` so a card is
+    /// always shown as selected, but the plan's whole starting difficulty comes from this one
+    /// answer and shouldn't ship on a default she never confirmed.
+    var levelTouched = false
     // Step 6
     var connected: Set<ConnectedSource> = []
     var connecting: ConnectedSource?
@@ -77,8 +86,8 @@ final class OnboardingViewModel {
         case 1: return birthdate != nil && sex != nil
         case 2: return goal != nil
         case 3: return isRace ? raceStepValid : (isHyrox ? hyroxStepValid : deepDiveValid)
-        case 4: return runningDays.count >= 2
-        case 5: return true
+        case 4: return runningDays.count >= 2 && runningDaysTouched
+        case 5: return levelTouched
         case 6: return true
         default: return true
         }

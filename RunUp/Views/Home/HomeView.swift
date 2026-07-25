@@ -172,7 +172,11 @@ struct HomeView: View {
             return "S'affine après ta première séance débriefée."
         }
         switch profile.readiness {
-        case 85...: return "Bien récupérée → séance relevée d'un palier aujourd'hui."
+        // Was "→ séance relevée d'un palier aujourd'hui" — the plan only ever re-adjusts at the
+        // WEEK boundary (see AdaptivePlanEngine.tierDelta), never same-day, so that line promised
+        // an intensity bump that wasn't actually happening. Reworded as a suggestion for today,
+        // not a claim about what the engine already did.
+        case 85...: return "Bien récupérée → tu peux pousser un peu aujourd'hui si tu le sens."
         case 65..<85: return "Forme correcte → séance du jour comme prévu."
         case 50..<65: return "Un peu de fatigue → écoute-toi sur l'intensité aujourd'hui."
         default: return "Fatigue accumulée → pense à une séance plus légère ou à du repos."

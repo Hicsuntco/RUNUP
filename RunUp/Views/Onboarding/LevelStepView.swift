@@ -10,14 +10,15 @@ struct LevelStepView: View {
             ObTitle(eyebrow: "Étape 5 · ton niveau", title: "OÙ TU EN ES ?")
             VStack(spacing: 8) {
                 ForEach(ExperienceLevel.allCases, id: \.self) { level in
-                    SelectableCard(selected: vm.level == level, emoji: nil, title: level.title, subtitle: level.subtitle) {
+                    SelectableCard(selected: vm.levelTouched && vm.level == level, emoji: nil, title: level.title, subtitle: level.subtitle) {
                         vm.level = level
+                        vm.levelTouched = true
                     }
                 }
             }
             .padding(.top, 20)
             Spacer()
-            ObNext(label: "SUIVANT", action: onNext)
+            ObNext(label: "SUIVANT", disabled: !vm.canProceed(fromStep: 5), action: onNext)
         }
     }
 }

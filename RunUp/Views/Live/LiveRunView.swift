@@ -186,6 +186,7 @@ struct LiveRunView: View {
                 .frame(width: 70, height: 70)
                 .background(.white, in: Circle())
                 .buttonStyle(PressableStyle())
+                .accessibilityLabel(vm?.isPaused == true ? "Reprendre" : "Mettre en pause")
 
                 voiceCoachButton
             }
@@ -226,6 +227,7 @@ struct LiveRunView: View {
         }
         .buttonStyle(PressableStyle())
         .disabled(state == .thinking || state == .speaking)
+        .accessibilityLabel(state == .listening ? "Arrêter et envoyer" : "Parler au coach")
     }
 
     private func handleMicTap() {

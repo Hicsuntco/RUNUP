@@ -95,9 +95,11 @@ struct ActivityCommentsSheet: View {
                 Image(systemName: "arrow.up.circle.fill")
                     .font(.system(size: 30))
                     .foregroundColor(newText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? RUColor.text3 : RUColor.rose)
+                    .frame(width: 44, height: 44)
             }
             .buttonStyle(PressableStyle())
             .disabled(newText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSending)
+            .accessibilityLabel("Envoyer le commentaire")
         }
         .padding(.horizontal, 16).padding(.vertical, 10)
         .background(.ultraThinMaterial)
@@ -123,6 +125,7 @@ struct ActivityCommentsSheet: View {
             let comment = try await clubService.postComment(activityId: activity.id, text: text)
             comments.append(comment)
             newText = ""
+            Haptics.impact(.light)
             onCommentPosted()
         } catch ClubServiceError.badResponse(422, _) {
             errorMessage = "Ce message n'est pas autorisé — reformule-le."

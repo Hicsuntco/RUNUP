@@ -109,7 +109,10 @@ struct RecapView: View {
                         }
                         .padding(.top, 10)
 
-                        Button("DONNER MON RESSENTI") { showDebrief = true }
+                        Button("DONNER MON RESSENTI") {
+                            Haptics.selection()
+                            showDebrief = true
+                        }
                             .buttonStyle(PrimaryButtonStyle())
                             .padding(.top, 6)
                     }

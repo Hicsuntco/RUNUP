@@ -17,6 +17,7 @@ struct SelectableChip: View {
                 .overlay(Capsule().stroke(selected ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
         }
         .buttonStyle(PressableStyle())
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 

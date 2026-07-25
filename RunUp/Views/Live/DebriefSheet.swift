@@ -34,7 +34,13 @@ struct DebriefSheet: View {
     }
 
     private var impactLines: [(String, String, String)] {
-        let nextStreak = appState.profile.streak + 1
+        // A second run validated the same day (a different device, or just a second session)
+        // doesn't get its own streak day — `applyDebrief`'s own gapDays == 0 branch already
+        // no-ops the increment in that case. `seanceDoneToday` is set by the very same call that
+        // sets `lastStreakDate`, so it's a reliable read of "did a debrief already land today?"
+        // taken here, before this tap's own debrief has run.
+        let alreadyCountedToday = appState.profile.seanceDoneToday
+        let nextStreak = alreadyCountedToday ? appState.profile.streak : appState.profile.streak + 1
         // Phrased as a tendency ("compte pour...") — the tier really moves on the WEEK's average
         // RPE at the boundary, so a flat promise ("relevée d'un palier") from one single tap
         // could contradict what actually happens after two harder sessions the same week.
@@ -103,6 +109,12 @@ struct DebriefSheet: View {
                 .padding(.top, 16)
 
                 Button("VALIDER & METTRE À JOUR") {
+                    // Blocks a double-tap (or reopening this sheet for a run already validated)
+                    // from crediting XP/streak/club-feed a second time for the same run —
+                    // `run.modelContext == nil` below only ever guarded the INSERT, not a second
+                    // run through the reward logic on a record already inserted.
+                    guard run.debriefedAt == nil else { dismiss(); return }
+                    run.debriefedAt = .now
                     // A GPS run is inserted by `endLiveRun` (it really happened, validated or
                     // not); a manual "FAIT" run reaches here NOT yet inserted, so a dismissed
                     // sheet leaves no phantom record — it only becomes real on this tap.

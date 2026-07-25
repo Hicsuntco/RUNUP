@@ -230,17 +230,17 @@ final class AppState {
         let session = profile.todaySession
         guard session.durationMinutes > 0 else { return }
         let elapsedSeconds = Double(session.durationMinutes * 60)
-        // A session without a real pace (HYROX "Fonctionnel", pace "—") has no distance to
-        // derive: the old `?? 300` fallback logged a 35-min station workout as a fake 7 km run
-        // at 5:00/km, inflating Stats and pumping phantom kilometers into the club challenge.
-        // Distance 0 is the honest record; kcal falls back to a time-based strength estimate.
-        let secPerKm = PaceModel.parseSecPerKm(session.pace)
-        let distanceKm = secPerKm.map { elapsedSeconds / $0 } ?? 0
+        // "FAIT" means she ran it without the app tracking it — there's no GPS behind this tap,
+        // so there's no real distance or pace to report, only the planned target. The old code
+        // derived a distance from elapsedSeconds / plannedPace, which fabricated a precise-looking
+        // "5.2 km @ 5:30/km" for a run that could have gone at any real pace at all, for every
+        // session with a pace target — not just the paceless HYROX case this comment used to
+        // describe. Distance 0 is the honest record; kcal falls back to a time-based estimate.
         let record = AdaptivePlanEngine.buildRunRecord(
             title: session.title,
             elapsedSeconds: elapsedSeconds,
-            distanceKm: distanceKm,
-            kcal: distanceKm > 0 ? distanceKm * 62 : Double(session.durationMinutes) * 7,
+            distanceKm: 0,
+            kcal: Double(session.durationMinutes) * 7,
             avgHeartRate: 0
         )
         // Deliberately NOT inserted into SwiftData here — `DebriefSheet` inserts it on VALIDER.

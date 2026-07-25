@@ -62,5 +62,6 @@ struct SelectableCard: View {
             .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(selected ? RUColor.rose.opacity(0.4) : RUColor.line, lineWidth: RUSpacing.hairline))
         }
         .buttonStyle(PressableStyle())
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }

@@ -167,6 +167,13 @@ struct SignInView: View {
             // any account existed) only ever gets a chance to reach the backend once signed in.
             // Not awaited — registering it isn't worth delaying the dismiss for.
             Task { await NotificationService.shared.sendPendingDeviceTokenIfSignedIn() }
+            // Same story for a photo picked before this account existed (`ProfileView.setAvatar`
+            // only syncs when already signed in) — this is its one other chance to reach the
+            // server, otherwise she'd show initials-only to every other club member indefinitely.
+            if let jpeg = appState.profile.avatarImageData {
+                let dataURI = "data:image/jpeg;base64,\(jpeg.base64EncodedString())"
+                Task { try? await appState.auth.updateAvatar(dataURI: dataURI) }
+            }
             dismiss()
         } catch AuthServiceError.badResponse(409, _) {
             errorMessage = "Un compte existe déjà avec cet email."

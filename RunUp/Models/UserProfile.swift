@@ -78,7 +78,10 @@ final class UserProfile {
     /// `ProfileView.setAvatar`), shown here and anywhere else an avatar appears (Home's header
     /// button, Club leaderboard/feed once signed in — see `AuthService.updateAvatar`). Nil falls
     /// back to the initial-letter gradient circle every avatar spot already used.
-    var avatarImageData: Data?
+    /// External storage — `UserProfile` is the app's hottest-written model (every debrief, every
+    /// goal edit rewrites it), and without this a several-hundred-KB JPEG blob would be
+    /// re-serialized on every one of those unrelated writes instead of living in its own file.
+    @Attribute(.externalStorage) var avatarImageData: Data?
     /// 0 = Monday ... 6 = Sunday.
     var runningDays: [Int]
     /// Which weekday carries the long run — chosen at onboarding
@@ -297,7 +300,11 @@ final class UserProfile {
     var readiness: Int {
         guard !recentRPESeverities.isEmpty else { return 80 }
         let avgSeverity = Double(recentRPESeverities.reduce(0, +)) / Double(recentRPESeverities.count)
-        let severityAdjustment = (1.5 - avgSeverity) * 12 // easier recent sessions → higher score
+        // A single debrief shouldn't be enough to swing all the way to "excellente" or "à
+        // surveiller" — confidence ramps in over the first 3 data points, so severity's pull on
+        // the score starts weak and only reaches full strength once there's a real trend behind it.
+        let confidence = min(1, Double(recentRPESeverities.count) / 3)
+        let severityAdjustment = (1.5 - avgSeverity) * 12 * confidence // easier recent sessions → higher score
         let streakPenalty = min(12, Double(max(0, streak - 3)) * 2) // fatigue past a 3-day run without rest
         let score = 82 + severityAdjustment - streakPenalty
         return Int(max(35, min(98, score)))

@@ -613,23 +613,37 @@ struct ClubView: View {
     private func toggleRsvp(_ event: ClubEvent) {
         Haptics.selection()
         Task {
-            guard let result = try? await clubService.toggleEventRsvp(eventId: event.id) else {
-                await MainActor.run { appState.toast("Impossible de répondre — réessaie.") }
-                return
-            }
-            await MainActor.run {
-                if let index = board.events?.firstIndex(where: { $0.id == event.id }) {
-                    board.events?[index].goingByMe = result.going
-                    board.events?[index].going = result.count
+            do {
+                let result = try await clubService.toggleEventRsvp(eventId: event.id)
+                await MainActor.run {
+                    if let index = board.events?.firstIndex(where: { $0.id == event.id }) {
+                        board.events?[index].goingByMe = result.going
+                        board.events?[index].going = result.count
+                    }
                 }
+            } catch ClubServiceError.badResponse(404, _) {
+                // The event was already cancelled/expired server-side — leaving it in the local
+                // list would just let her tap it again and fail identically every time.
+                await MainActor.run { board.events?.removeAll { $0.id == event.id } }
+            } catch {
+                await MainActor.run { appState.toast("Impossible de répondre — réessaie.") }
             }
         }
     }
 
     private func deleteEvent(_ event: ClubEvent) {
         Task {
-            try? await clubService.deleteEvent(eventId: event.id)
-            await MainActor.run { board.events?.removeAll { $0.id == event.id } }
+            do {
+                try await clubService.deleteEvent(eventId: event.id)
+                await MainActor.run { board.events?.removeAll { $0.id == event.id } }
+            } catch ClubServiceError.badResponse(404, _) {
+                // Already gone server-side — still fine to drop it locally.
+                await MainActor.run { board.events?.removeAll { $0.id == event.id } }
+            } catch {
+                // A real failure (network, 403 not-the-creator, ...) — keep it in the list rather
+                // than silently pretending the cancel worked when it didn't.
+                await MainActor.run { appState.toast("Impossible d'annuler la sortie — réessaie.") }
+            }
         }
     }
 
@@ -642,6 +656,11 @@ struct ClubView: View {
                 boardModeChip("Général (XP)", .general)
             }
             if boardMode == .week {
+                if (board.weekly ?? []).isEmpty && !isLoading {
+                    Text("Personne n'a encore couru cette semaine — lance-toi !")
+                        .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                        .frame(maxWidth: .infinity).padding(.vertical, 20)
+                }
                 VStack(spacing: 6) {
                     ForEach(board.weekly ?? []) { entry in
                         HStack(spacing: 12) {
@@ -755,6 +774,8 @@ struct ClubView: View {
                             .animation(.spring(response: 0.3, dampingFraction: 0.45), value: item.kudoedByMe)
                         }
                         .buttonStyle(PressableStyle())
+                        .accessibilityLabel(item.kudoedByMe ? "Retirer ton applaudissement" : "Applaudir cette séance")
+                        .accessibilityValue("\(item.kudos)")
 
                         Button(action: { commentsActivity = item }) {
                             HStack(spacing: 6) {
@@ -825,6 +846,11 @@ struct ClubView: View {
             feed = feedResult
             notifyNewKudos(in: feedResult)
             notifyNewComments(in: feedResult)
+        } else if errorMessage == nil {
+            // Board can still have loaded fine while this alone failed — without this, a failed
+            // feed fetch left `feed` empty with zero indication, so "Fil d'activité" read as a
+            // genuinely empty club instead of a failed load.
+            errorMessage = "Impossible de charger le fil d'activité — vérifie ta connexion."
         }
         isLoading = false
     }

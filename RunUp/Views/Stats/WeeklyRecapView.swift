@@ -140,6 +140,12 @@ struct WeeklyRecapView: View {
             .padding(.bottom, 40)
         }
         .background(RUColor.bg)
+        .onAppear {
+            // The one genuinely verified achievement moment on this screen (a real best week, or
+            // a real PR) — deserves a stronger confirmation than the plain page-open every other
+            // stats screen gets.
+            if isBestWeekEver || weekRecord != nil { Haptics.success() }
+        }
     }
 
     /// 2×2 grid of equally-weighted stats, each its own color — replaces the old single oversized

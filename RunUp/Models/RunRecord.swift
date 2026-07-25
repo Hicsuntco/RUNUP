@@ -27,6 +27,11 @@ final class RunRecord {
     /// re-importing skip activities already pulled in, instead of duplicating History on every
     /// sync.
     var stravaActivityId: Int? = nil
+    /// Set once, the moment `DebriefSheet`'s VALIDER actually runs for this record — the real
+    /// guard against crediting XP/streak/club-feed twice for the same run (a double-tap, or
+    /// reopening the debrief for an already-validated run). `run.modelContext == nil` alone only
+    /// ever protected the INSERT, not re-running the reward logic on an already-inserted record.
+    var debriefedAt: Date? = nil
 
     init(
         date: Date = .now,

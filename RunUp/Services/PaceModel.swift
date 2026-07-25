@@ -88,7 +88,7 @@ enum PaceModel {
            totalSeconds > 0 {
             return thresholdPace(fromPerformanceSeconds: totalSeconds, km: km)
         }
-        if let recent = profile.bestRecentPerf, let parsed = parseFreeformPerf(recent) {
+        if let recent = profile.bestRecentPerf, let parsed = parseFreeformPerf(recent), parsed.seconds > 0 {
             return thresholdPace(fromPerformanceSeconds: parsed.seconds, km: parsed.km)
         }
         switch profile.level {
@@ -102,9 +102,12 @@ enum PaceModel {
     /// widely-used race-time conversion), then treats that 10K pace as the threshold-pace anchor
     /// — a common approximation in recreational pace calculators.
     private static func thresholdPace(fromPerformanceSeconds seconds: Double, km: Double) -> Double {
-        guard km > 0 else { return 285 }
+        guard km > 0, seconds > 0 else { return 285 }
         let projected10k = seconds * pow(10.0 / km, 1.06)
-        return projected10k / 10.0
+        // Clamped to a plausible human range (≈2:30/km world-class down to ≈9:00/km walk-run) —
+        // a freeform "meilleure perf récente" entry (typos, a wildly mismatched distance/time
+        // pair) could otherwise project an absurd pace that then seeds every zone in the plan.
+        return min(540, max(150, projected10k / 10.0))
     }
 
     /// `chronoPresets` use "MM:SS" for 5K/10K but "H:MM" for semi/marathon (the presets

@@ -51,16 +51,25 @@ struct RingsView: View {
     private var displaySteps: Double { isToday ? p.stepsToday : historicalSteps }
     private var displayCalories: Double { isToday ? p.activeCaloriesToday : historicalCalories }
 
+    /// A real run on the selected date always wins over the guessed weekly pattern — otherwise a
+    /// run logged on what `isRunningDayForSelected` guesses was a rest day (the guess is only a
+    /// stable weekday pattern; the real plan for a past week isn't retained) would show that day
+    /// as "Repos" with no session goal counted at all, contradicting History showing a real run.
+    private var sessionDoneForSelected: Bool? {
+        if hasRunOnSelectedDate { return true }
+        return isRunningDayForSelected ? false : nil
+    }
+
     private var displayProgress: [Double] {
         if isToday { return p.dailyGoalsProgress }
         return UserProfile.dailyGoalsProgress(
-            sessionDone: isRunningDayForSelected ? hasRunOnSelectedDate : nil,
+            sessionDone: sessionDoneForSelected,
             steps: displaySteps, stepsGoal: p.stepsGoal,
             activeCalories: displayCalories, activeCaloriesGoal: p.activeCaloriesGoal
         )
     }
     private var displayDone: Int { displayProgress.filter { $0 >= 1 }.count }
-    private var displayTotal: Int { isRunningDayForSelected ? 3 : 2 }
+    private var displayTotal: Int { sessionDoneForSelected == nil ? 2 : 3 }
 
     /// [Séance, Calories actives, Pas] — same array `DailyGoalsBarsView` draws its bars in, so
     /// each row's legend dot always matches its bar's actual color.
@@ -161,6 +170,7 @@ struct RingsView: View {
                     .overlay(Circle().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
             }
             .buttonStyle(PressableStyle())
+            .accessibilityLabel("Jour précédent")
 
             Text(dayLabel)
                 .font(RUFont.sans(13, weight: .semibold))
@@ -179,6 +189,7 @@ struct RingsView: View {
             }
             .buttonStyle(PressableStyle())
             .disabled(isToday)
+            .accessibilityLabel("Jour suivant")
         }
     }
 
@@ -205,8 +216,8 @@ struct RingsView: View {
 
     private var seanceRow: some View {
         let color = goalColors[0]
-        let restDay = !isRunningDayForSelected
-        let done = isRunningDayForSelected && hasRunOnSelectedDate
+        let restDay = sessionDoneForSelected == nil
+        let done = sessionDoneForSelected == true
         return HStack(spacing: 12) {
             Circle().fill(color).frame(width: 10, height: 10).shadow(color: color.opacity(0.4), radius: 6)
             VStack(alignment: .leading, spacing: 8) {

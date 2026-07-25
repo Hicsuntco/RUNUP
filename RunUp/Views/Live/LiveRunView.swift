@@ -5,6 +5,24 @@ import UIKit
 /// Live run tracking — real MapKit + CoreLocation route, coach voice cues, and a GPS-instability
 /// banner driven by actual signal accuracy. Mirrors `LiveScreen` in screensA.jsx, with a real map
 /// in place of the prototype's stylized SVG route (see architecture decision).
+///
+/// Deliberately always-dark, unlike every other screen — not an oversight (checked: an audit
+/// flagged the flip between light-themed Home and this screen as looking like a bug). Every
+/// element here — the white numbers/text, the white pause button, the translucent-black STOP
+/// button — was chosen assuming a dark backdrop specifically for outdoor glanceability in direct
+/// sunlight, the same reasoning Nike Run Club/Strava's own live-tracking screens stay dark
+/// regardless of the rest of the app's theme. Re-theming the *background* alone (swap
+/// `Color(hex: 0x0A0A0E)` for `RUColor.bg`) without redesigning every element built against it —
+/// the white pause button and white metric text would both go invisible against a white
+/// background in light mode — would make this screen worse, not better. Same documented-exception
+/// treatment as `RUSpacing.radiusHero`.
+///
+/// This is also why `Color(hex: 0xFFD79A)`/`Color(hex: 0x0E0E14)` below pin `RUColor.amberText`/
+/// `.bg`'s *dark-mode* values literally instead of referencing those tokens — the tokens are
+/// theme-aware and would flip to their light-mode values (a dark brownish amber, a near-white bg)
+/// whenever she has the app's global appearance set to light, which would break contrast on a
+/// screen that stays visually dark regardless. Referencing the token here would be the bug, not
+/// the literal.
 struct LiveRunView: View {
     @Environment(AppState.self) private var appState
     @State private var cameraPosition: MapCameraPosition = .userLocation(fallback: .automatic)

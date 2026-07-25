@@ -113,10 +113,7 @@ struct ClubManagementView: View {
 
     private func memberRow(_ member: LeaderboardRow) -> some View {
         HStack(spacing: 12) {
-            Circle().fill(member.isMe ? RUColor.rose : RUColor.card2).frame(width: 36, height: 36)
-                // Fill is only the opaque rose accent for `isMe` — otherwise it's the faint
-                // RUColor.card2, so the initial needs to invert with the theme in that case too.
-                .overlay(Text(String(member.name.prefix(1))).displayStyle(13).foregroundColor(member.isMe ? .white : RUColor.textPrimary))
+            AvatarView(base64DataURI: member.avatarBase64, initial: String(member.name.prefix(1)), size: 36)
             Text(member.isMe ? "\(member.name) · toi" : member.name)
                 .font(RUFont.sans(13, weight: member.isMe ? .semibold : .regular))
                 .foregroundColor(RUColor.textPrimary)
@@ -170,8 +167,7 @@ struct ClubMemberProfileView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 14) {
-                Circle().fill(RUColor.rose).frame(width: 72, height: 72)
-                    .overlay(Text(String(member.name.prefix(1))).displayStyle(28).foregroundColor(.white))
+                AvatarView(base64DataURI: member.avatarBase64, initial: String(member.name.prefix(1)), size: 72)
                     .padding(.top, 20)
                 Text(member.name).font(RUFont.sans(18, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                 Text("Niveau \(level) · \(levelTitle)").font(RUFont.sans(12)).foregroundColor(RUColor.text2)

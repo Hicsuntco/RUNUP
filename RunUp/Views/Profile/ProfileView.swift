@@ -1,5 +1,7 @@
 import SwiftUI
 import SwiftData
+import PhotosUI
+import UIKit
 
 /// Profile & Settings — mirrors `ProfileScreen` in screensC.jsx. The coach needs no API key from
 /// the user (it's proxied through RunUp's own backend, see `Services/CoachService.swift`), so
@@ -17,6 +19,7 @@ struct ProfileView: View {
     private var profile: UserProfile { appState.profile }
 
     @State private var showMoreSettings = false
+    @State private var avatarPickerItem: PhotosPickerItem?
 
     var body: some View {
         ScrollView {
@@ -27,13 +30,38 @@ struct ProfileView: View {
                 }
 
                 HStack(spacing: 14) {
-                    Circle()
-                        .fill(LinearGradient(colors: [RUColor.rose, RUColor.violet], startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .frame(width: 60, height: 60)
-                        .overlay(Text(String(profile.name.prefix(1))).displayStyle(24).foregroundColor(.white))
+                    PhotosPicker(selection: $avatarPickerItem, matching: .images) {
+                        ZStack(alignment: .bottomTrailing) {
+                            AvatarView(imageData: profile.avatarImageData, initial: String(profile.name.prefix(1)), size: 60)
+                            // A small pencil badge is what actually tells her the avatar is
+                            // tappable — a plain circle with no affordance reads as decoration.
+                            Image(systemName: "pencil.circle.fill")
+                                .font(.system(size: 18))
+                                .foregroundColor(.white)
+                                .background(RUColor.rose, in: Circle())
+                                .offset(x: 3, y: 3)
+                        }
+                    }
+                    .buttonStyle(PressableStyle())
+                    .onChange(of: avatarPickerItem) { _, newItem in
+                        Task { await setAvatar(from: newItem) }
+                    }
+                    .contextMenu {
+                        if profile.avatarImageData != nil {
+                            Button("Supprimer la photo", role: .destructive) {
+                                Task { await removeAvatar() }
+                            }
+                        }
+                    }
+
                     VStack(alignment: .leading, spacing: 2) {
                         Text(profile.name).displayStyle(20).foregroundColor(RUColor.textPrimary)
-                        Text("Objectif · \(profile.goalDisplay)").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+                        // Only when a program/course-libre goal is actually current — recovery and
+                        // choice phases have no active goal, and showing the last program's
+                        // "Objectif · 20km · 1:45" there reads as if it were still being pursued.
+                        if profile.programPhase == .active || profile.programPhase == .freerun {
+                            Text("Objectif · \(profile.goalDisplay)").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+                        }
                     }
                 }
 
@@ -62,6 +90,33 @@ struct ProfileView: View {
 
     private func sectionTitle(_ text: String) -> some View {
         EyebrowLabel(text: text, color: RUColor.text3)
+    }
+
+    /// Resizes to a real thumbnail (240pt max side) before storing — the picker hands back full
+    /// camera-resolution photos (several MB), and this is stored locally in SwiftData AND,
+    /// base64-encoded, in the club backend's `users.avatar_data` column for every other member's
+    /// leaderboard/feed row — keeping it small keeps both cheap.
+    private func setAvatar(from item: PhotosPickerItem?) async {
+        guard let item, let data = try? await item.loadTransferable(type: Data.self),
+              let uiImage = UIImage(data: data)
+        else { return }
+        let resized = uiImage.resized(maxDimension: 240)
+        guard let jpeg = resized.jpegData(compressionQuality: 0.6) else { return }
+        await MainActor.run { profile.avatarImageData = jpeg }
+        // Only club members can ever see this, so only sync it when there's actually an account —
+        // it stays a purely local photo otherwise, same as every other profile field.
+        guard appState.auth.isSignedIn else { return }
+        let dataURI = "data:image/jpeg;base64,\(jpeg.base64EncodedString())"
+        try? await appState.auth.updateAvatar(dataURI: dataURI)
+    }
+
+    private func removeAvatar() async {
+        await MainActor.run {
+            profile.avatarImageData = nil
+            avatarPickerItem = nil
+        }
+        guard appState.auth.isSignedIn else { return }
+        try? await appState.auth.updateAvatar(dataURI: nil)
     }
 
     private var moreSettingsRow: some View {

@@ -25,14 +25,14 @@ struct HeaderView<Trailing: View>: View {
 /// in the app before this pass, so VoiceOver read every icon-only button as just "button".
 struct AvatarButton: View {
     var initial: String
+    /// Her real profile photo, if she's set one — `AvatarView` falls back to the initial-letter
+    /// circle when nil, same as every other avatar spot in the app.
+    var imageData: Data? = nil
     var action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            Circle()
-                .fill(RUColor.rose)
-                .frame(width: 36, height: 36)
-                .overlay(Text(initial.uppercased()).displayStyle(15).foregroundColor(.white))
+            AvatarView(imageData: imageData, initial: initial, size: 36, useGradient: false)
                 .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }

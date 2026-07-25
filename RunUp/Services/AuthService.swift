@@ -65,6 +65,20 @@ final class AuthService {
         return user
     }
 
+    /// Uploads (or clears, if `dataURI` is nil) her profile photo so other club members see it
+    /// too — a full data URI ("data:image/jpeg;base64,...."), already resized/compressed
+    /// client-side (see `ProfileView.setAvatar`). Local-only storage (`UserProfile.avatarImageData`)
+    /// covers the always-available case; this is purely additive for when Club is signed in.
+    func updateAvatar(dataURI: String?) async throws {
+        guard let token else { throw AuthServiceError.notSignedIn }
+        var request = URLRequest(url: Self.baseURL.appending(path: "api/account/avatar"))
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "content-type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: ["avatarDataURI": dataURI as Any])
+        let _: OkResponse = try await send(request)
+    }
+
     /// Deletes the account server-side (cascades to club membership/activities/kudos — see
     /// `api/account/delete.js`) then signs out locally. Required by App Store guideline
     /// 5.1.1(v): an app that offers account creation must offer in-app account deletion too.

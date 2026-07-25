@@ -74,6 +74,11 @@ final class UserProfile {
     /// claim "faite" on a day nothing was done, while the goals ring (reading the same stale data
     /// differently) said "Repos" at the same time.
     var freeRunSessionDoneDate: Date?
+    /// A real uploaded profile photo — compressed client-side before storage (see
+    /// `ProfileView.setAvatar`), shown here and anywhere else an avatar appears (Home's header
+    /// button, Club leaderboard/feed once signed in — see `AuthService.updateAvatar`). Nil falls
+    /// back to the initial-letter gradient circle every avatar spot already used.
+    var avatarImageData: Data?
     /// 0 = Monday ... 6 = Sunday.
     var runningDays: [Int]
     /// Which weekday carries the long run — chosen at onboarding

@@ -12,7 +12,7 @@ struct RecoveryView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 HeaderView(eyebrow: "Programme terminé 🏁", title: "Bravo \(profile.name)") {
-                    AvatarButton(initial: String(profile.name.prefix(1))) { appState.go(.profile) }
+                    AvatarButton(initial: String(profile.name.prefix(1)), imageData: profile.avatarImageData) { appState.go(.profile) }
                 }
 
                 VStack(spacing: 12) {

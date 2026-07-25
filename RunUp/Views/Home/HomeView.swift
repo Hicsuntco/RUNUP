@@ -46,7 +46,7 @@ struct HomeView: View {
                         }
                         .buttonStyle(PressableStyle())
                         .accessibilityLabel(unreadCount > 0 ? "Notifications, \(unreadCount) non lues" : "Notifications")
-                        AvatarButton(initial: String(profile.name.prefix(1))) { appState.go(.profile) }
+                        AvatarButton(initial: String(profile.name.prefix(1)), imageData: profile.avatarImageData) { appState.go(.profile) }
                     }
                 }
 

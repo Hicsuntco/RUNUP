@@ -56,7 +56,7 @@ struct TabBarView: View {
                 Image(systemName: icon)
                     .font(.system(size: 18, weight: on ? .semibold : .regular))
                     .foregroundColor(color)
-                Text(label)
+                Text(LocalizedStringKey(label))
                     .font(RUFont.sans(8, weight: .semibold))
                     .tracking(0.5)
                     .foregroundColor(color)
@@ -64,6 +64,11 @@ struct TabBarView: View {
             .frame(maxWidth: .infinity)
         }
         .buttonStyle(PressableStyle())
+        // The only persistent navigation chrome in the app, visible on every screen — without
+        // this, VoiceOver conveyed the active tab purely through color (the dot + icon/label
+        // tint), so a screen-reader user had no way to tell which of Prog/Coach/Stats/Club was
+        // currently selected.
+        .accessibilityAddTraits(on ? .isSelected : [])
     }
 
     private var runButton: some View {

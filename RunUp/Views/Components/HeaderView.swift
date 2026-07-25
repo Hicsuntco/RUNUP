@@ -10,7 +10,7 @@ struct HeaderView<Trailing: View>: View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 2) {
                 EyebrowLabel(text: eyebrow, color: RUColor.rose)
-                Text(title).displayStyle(24).foregroundColor(RUColor.textPrimary)
+                Text(LocalizedStringKey(title)).displayStyle(24).foregroundColor(RUColor.textPrimary)
             }
             Spacer()
             trailing
@@ -39,10 +39,10 @@ struct BackTitleHeaderView<Trailing: View>: View {
             if let eyebrow {
                 VStack(alignment: .leading, spacing: 1) {
                     EyebrowLabel(text: eyebrow, color: eyebrowColor)
-                    Text(title).displayStyle(titleSize).foregroundColor(RUColor.textPrimary)
+                    Text(LocalizedStringKey(title)).displayStyle(titleSize).foregroundColor(RUColor.textPrimary)
                 }
             } else {
-                Text(title).displayStyle(titleSize).foregroundColor(RUColor.textPrimary)
+                Text(LocalizedStringKey(title)).displayStyle(titleSize).foregroundColor(RUColor.textPrimary)
             }
             Spacer()
             trailing

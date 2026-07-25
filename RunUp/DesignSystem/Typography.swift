@@ -56,6 +56,15 @@ struct EyebrowLabel: View {
     var color: Color = RUColor.text2
 
     var body: some View {
-        Text(text).eyebrowStyle(color: color)
+        // `Text(text)` with a plain `String` never resolves through Localizable.xcstrings — only
+        // `Text(_ key: LocalizedStringKey)` does, and that overload only kicks in for a string
+        // literal passed directly at a `Text`/`Text`-taking-component call site. Since every call
+        // site here passes a literal into this `String`-typed `text` property first, the literal
+        // was being absorbed as a `String` before ever reaching a real `Text` init — wrapping in
+        // `LocalizedStringKey(text)` performs the same catalog lookup a literal argument would,
+        // for every caller, without needing to touch any of the ~75 call sites individually. A
+        // caller passing a genuinely dynamic, already-formatted string (not a catalog key) just
+        // falls through to the same verbatim rendering it had before — never worse, often fixed.
+        Text(LocalizedStringKey(text)).eyebrowStyle(color: color)
     }
 }

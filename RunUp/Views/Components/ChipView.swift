@@ -8,7 +8,7 @@ struct SelectableChip: View {
 
     var body: some View {
         Button(action: action) {
-            Text(label)
+            Text(LocalizedStringKey(label))
                 .font(RUFont.sans(13, weight: .semibold))
                 .foregroundColor(selected ? .white : RUColor.text2)
                 .padding(.horizontal, 15)
@@ -29,7 +29,7 @@ struct StatChip: View {
     var background: Color? = nil
 
     var body: some View {
-        Text(text)
+        Text(LocalizedStringKey(text))
             .font(RUFont.sans(10, weight: .bold))
             .foregroundColor(color)
             .padding(.horizontal, 9)
@@ -48,7 +48,7 @@ struct MetricColumn: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(value).displayStyle(valueSize).foregroundColor(valueColor)
-            Text(label)
+            Text(LocalizedStringKey(label))
                 .font(RUFont.sans(9, weight: .bold))
                 .tracking(1)
                 .textCase(.uppercase)

@@ -32,8 +32,17 @@ enum GPXExporter {
     /// callers hand this straight to `ShareLink(item:)`.
     static func fileURL(for run: RunRecord) -> URL? {
         guard !run.route.isEmpty else { return nil }
+        // Deterministic filename per run, so a temp file already on disk from a previous export
+        // (opening the same row's context menu twice, or re-exporting after backgrounding) is
+        // reused instead of rebuilding the XML string and rewriting it — this closure runs
+        // synchronously on the main thread right as the context menu opens, and for a long run
+        // (thousands of `<trkpt>` lines) that's a real, if brief, stall the naive every-time
+        // rewrite doesn't need to pay more than once.
         let filename = "RunUp-\(Int(run.date.timeIntervalSince1970)).gpx"
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+        if FileManager.default.fileExists(atPath: url.path) {
+            return url
+        }
         do {
             try build(run: run).write(to: url, atomically: true, encoding: .utf8)
             return url

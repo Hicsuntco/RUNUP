@@ -4,11 +4,15 @@ import SwiftData
 /// "Programme" home screen — mirrors `ProgScreen` in screensA.jsx.
 struct HomeView: View {
     @Environment(AppState.self) private var appState
-    @Query(sort: \AppNotification.timestamp, order: .reverse) private var notifications: [AppNotification]
+    // Scoped to unread only — this query exists solely to badge the bell icon with a count, but
+    // an unscoped `@Query` fetched every notification ever created (unbounded, grows for the
+    // app's whole lifetime) just to filter it back down to unread right after. NotificationsSheet
+    // has its own separate `@Query` for the full list it actually displays.
+    @Query(filter: #Predicate<AppNotification> { !$0.read }) private var unreadNotifications: [AppNotification]
 
     private var profile: UserProfile { appState.profile }
     private var isFreeRun: Bool { profile.programPhase == .freerun }
-    private var unreadCount: Int { notifications.filter { !$0.read }.count }
+    private var unreadCount: Int { unreadNotifications.count }
 
     var body: some View {
         Group {

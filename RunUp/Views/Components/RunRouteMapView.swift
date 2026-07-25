@@ -15,7 +15,7 @@ struct RunRouteMapView: View {
         route.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lng) }
     }
 
-    private var region: MKCoordinateRegion? {
+    private func region(for coordinates: [CLLocationCoordinate2D]) -> MKCoordinateRegion? {
         guard let first = coordinates.first else { return nil }
         var minLat = first.latitude, maxLat = first.latitude
         var minLng = first.longitude, maxLng = first.longitude
@@ -34,9 +34,14 @@ struct RunRouteMapView: View {
     }
 
     var body: some View {
-        if let region, coordinates.count > 1 {
+        // Computed once per body evaluation and reused for both the region scan and the polyline
+        // itself — `coordinates` used to be read 3 times per render (twice directly, once inside
+        // the old `region` computed property re-deriving it from scratch), each a full `.map`
+        // pass over the route. Shown in a scrolling history list, one row per completed run.
+        let coords = coordinates
+        if let region = region(for: coords), coords.count > 1 {
             Map(initialPosition: .region(region), interactionModes: []) {
-                MapPolyline(coordinates: coordinates)
+                MapPolyline(coordinates: coords)
                     .stroke(lineColor, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
             }
             .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))

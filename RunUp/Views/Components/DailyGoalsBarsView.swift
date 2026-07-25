@@ -29,6 +29,7 @@ struct DailyGoalsBarsView: View {
     /// `.animation(value:)` on the trimmed shape interpolates smoothly with no custom `Shape`
     /// needed (unlike the old bar geometry, which did need one).
     @State private var displayedProgress: [Double]
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(progress: [Double], size: CGFloat = 96, animateOnAppear: Bool = false) {
         self.progress = progress
@@ -81,7 +82,7 @@ struct DailyGoalsBarsView: View {
                         AngularGradient(gradient: Gradient(colors: [color.darkened(0.28), color]), center: .center, startAngle: .degrees(seg.gradientStartDegrees), endAngle: .degrees(seg.gradientEndDegrees)),
                         style: StrokeStyle(lineWidth: Self.strokeWidth, lineCap: .round)
                     )
-                    .animation(.easeOut(duration: 0.9), value: pct)
+                    .animation(reduceMotion ? nil : .easeOut(duration: 0.9), value: pct)
             }
         }
         // A circle's own trim starts at 3 o'clock; rotate so segment 0 starts at 12, going clockwise.

@@ -54,5 +54,12 @@ struct MetricColumn: View {
                 .textCase(.uppercase)
                 .foregroundColor(RUColor.text2)
         }
+        // Reused across Home, Live, Stats, and History — a single fix here covers every duration/
+        // pace/zone/metric pair in the app at once. Without this, VoiceOver read the value and its
+        // label as two disconnected stops ("8:32" ... several stops later ... "ALLURE"); the
+        // explicit label puts them in "name, value" order for clarity rather than relying on
+        // `.combine`'s default top-to-bottom concatenation (value first, unit-less, then label).
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text(LocalizedStringKey(label)) + Text(", ") + Text(value))
     }
 }

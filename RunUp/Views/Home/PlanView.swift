@@ -10,6 +10,12 @@ struct PlanView: View {
     private var profile: UserProfile { appState.profile }
 
     @State private var expandedWeek: Int?
+    /// Cached snapshot of `computeWeekSummaries()` — populated once in `.onAppear` and refreshed
+    /// only when the week actually advances (`.onChange(of: profile.weekNumber)`), instead of a
+    /// plain computed property that re-ran `AdaptivePlanEngine.generateWeekSessions` for every
+    /// week 1...weeksToShow on *any* local state change in this view — including just tapping a
+    /// week row to expand/collapse it (`expandedWeek` has nothing to do with what's generated).
+    @State private var weekSummaries: [WeekSummary] = []
 
     private struct WeekSummary: Identifiable {
         var id: Int { number }
@@ -31,7 +37,7 @@ struct PlanView: View {
         shape.totalWeeks ?? max(profile.weekNumber + 7, 8)
     }
 
-    private var weekSummaries: [WeekSummary] {
+    private func computeWeekSummaries() -> [WeekSummary] {
         (1...weeksToShow).map { number in
             let sessions = number == profile.weekNumber
                 ? profile.weekSessions
@@ -79,6 +85,10 @@ struct PlanView: View {
         }
         .onAppear {
             if expandedWeek == nil { expandedWeek = profile.weekNumber }
+            weekSummaries = computeWeekSummaries()
+        }
+        .onChange(of: profile.weekNumber) { _, _ in
+            weekSummaries = computeWeekSummaries()
         }
     }
 

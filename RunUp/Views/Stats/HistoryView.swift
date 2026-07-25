@@ -130,9 +130,17 @@ struct HistoryView: View {
                     .frame(width: 64, height: 64)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                    // Purely decorative for VoiceOver — the distance/time/pace it traces are
+                    // already read from the MetricColumns beside it, and an unlabeled thumbnail
+                    // otherwise reads as a bare, meaningless "Map" stop.
+                    .accessibilityHidden(true)
             }
         }
         .padding(16)
         .ruCard()
+        // The main screen for reviewing past training — without this, each run swiped through
+        // with VoiceOver was 8-9 disconnected stops (date, optional HR, title, then three
+        // separate value/label pairs) instead of one coherent "this run" element.
+        .accessibilityElement(children: .combine)
     }
 }

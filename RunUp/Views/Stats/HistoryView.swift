@@ -73,6 +73,7 @@ struct HistoryView: View {
                         AdaptivePlanEngine.undoTodaySessionCompletion(appState.profile)
                     }
                     modelContext.delete(run)
+                    Haptics.warning()
                 }
                 pendingDelete = nil
             }

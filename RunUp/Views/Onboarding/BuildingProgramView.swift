@@ -69,6 +69,7 @@ struct BuildingProgramView: View {
                     }
                     .padding(.vertical, 13)
                     .overlay(Divider().background(RUColor.line), alignment: .bottom)
+                    .animation(.easeOut(duration: 0.25), value: vm.buildProgress)
                 }
             }
             .padding(.top, 26)

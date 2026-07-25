@@ -84,6 +84,7 @@ struct AddRunSheet: View {
             kcal: Int((distance * 62).rounded())
         )
         modelContext.insert(run)
+        Haptics.success()
         dismiss()
     }
 

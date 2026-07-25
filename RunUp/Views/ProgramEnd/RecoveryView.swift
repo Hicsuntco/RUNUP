@@ -71,5 +71,6 @@ struct RecoveryView: View {
             .padding(.top, 8)
             .padding(.bottom, 130)
         }
+        .onAppear { Haptics.success() }
     }
 }

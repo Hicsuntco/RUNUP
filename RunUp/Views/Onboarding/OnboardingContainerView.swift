@@ -71,6 +71,7 @@ struct OnboardingContainerView: View {
         let profile = appState.profile
         let shape = AdaptivePlanEngine.ProgramShape.compute(goal: profile.goalId, raceDate: profile.raceDate, from: profile.programStartDate ?? .now)
         let message = shape.totalWeeks.map { "Ton programme de \($0) semaines est prêt" } ?? "Ton programme sur mesure est prêt"
+        Haptics.success()
         appState.toast(message)
         // `coachNotificationsEnabled` defaults to true, but the system permission itself was
         // never actually requested yet — do it once here so the daily reminder can work out of

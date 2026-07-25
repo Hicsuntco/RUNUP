@@ -12,6 +12,7 @@ struct MoreSettingsView: View {
     private var profile: UserProfile { appState.profile }
 
     @State private var showDeleteAccountConfirm = false
+    @State private var isDeletingAccount = false
 
     var body: some View {
         NavigationStack {
@@ -90,7 +91,7 @@ struct MoreSettingsView: View {
                 }
             }
         }
-        .ruCard(radius: 16)
+        .ruCard()
     }
 
     private func programRow(_ label: String, action: @escaping () -> Void) -> some View {
@@ -117,10 +118,10 @@ struct MoreSettingsView: View {
                 }
             }
             Text("Le coach adapte tes séances de fractionné/VMA en conséquence, chaque semaine.")
-                .font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+                .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
         }
         .padding(14)
-        .ruCard(radius: 16)
+        .ruCard()
     }
 
     /// Auto-pause at a stop (see `LiveRunViewModel.autoPause`) — on by default like Strava/Garmin,
@@ -156,7 +157,7 @@ struct MoreSettingsView: View {
             }
             .padding(14)
         }
-        .ruCard(radius: 16)
+        .ruCard()
     }
 
     /// Only shown when `profile.sex == "female"` — lets her set up cycle tracking after
@@ -223,7 +224,7 @@ struct MoreSettingsView: View {
                 .padding(.horizontal, 14).padding(.bottom, 14).padding(.top, 2)
             }
         }
-        .ruCard(radius: 16)
+        .ruCard()
     }
 
     private func cyclePhaseLabel(_ phase: UserProfile.CyclePhase) -> String {
@@ -270,7 +271,7 @@ struct MoreSettingsView: View {
             }
         }
         .padding(14)
-        .ruCard(radius: 16)
+        .ruCard()
     }
 
     /// Real account, tied to the Club backend (see `AuthService`) — includes account deletion,
@@ -291,12 +292,14 @@ struct MoreSettingsView: View {
                 HStack {
                     Text("Supprimer mon compte").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.rose)
                     Spacer()
+                    if isDeletingAccount { ProgressView().tint(RUColor.rose) }
                 }
                 .padding(.horizontal, 14).padding(.vertical, 13)
             }
             .buttonStyle(PressableStyle())
+            .disabled(isDeletingAccount)
         }
-        .ruCard(radius: 16)
+        .ruCard()
         .confirmationDialog("Supprimer définitivement ton compte ?", isPresented: $showDeleteAccountConfirm, titleVisibility: .visible) {
             Button("Supprimer", role: .destructive) { Task { await deleteAccount() } }
             Button("Annuler", role: .cancel) {}
@@ -306,6 +309,7 @@ struct MoreSettingsView: View {
     }
 
     private func deleteAccount() async {
+        isDeletingAccount = true
         do {
             try await appState.auth.deleteAccount()
             appState.toast("Compte supprimé")
@@ -313,5 +317,6 @@ struct MoreSettingsView: View {
         } catch {
             appState.toast("Impossible de supprimer le compte — réessaie.")
         }
+        isDeletingAccount = false
     }
 }

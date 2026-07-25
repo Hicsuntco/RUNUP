@@ -320,7 +320,7 @@ struct StatsView: View {
             }
         }
         .padding(16)
-        .ruHeroCard(radius: 20)
+        .ruHeroCard()
     }
 
     private func predictionTile(_ label: String, _ value: String, highlighted: Bool) -> some View {

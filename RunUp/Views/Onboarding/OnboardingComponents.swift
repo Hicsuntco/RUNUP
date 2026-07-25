@@ -8,7 +8,7 @@ struct ObScreen<Content: View>: View {
 
     var body: some View {
         VStack(spacing: 0) { content }
-            .padding(.horizontal, 22)
+            .padding(.horizontal, RUSpacing.pagePadding)
     }
 }
 
@@ -69,7 +69,7 @@ struct ObProgress: View {
                     .frame(height: 3)
             }
         }
-        .padding(.horizontal, 22)
+        .padding(.horizontal, RUSpacing.pagePadding)
         .padding(.top, 10)
     }
 }

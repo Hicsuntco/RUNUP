@@ -95,7 +95,7 @@ private struct ConnectRow: View {
                 }
                 Spacer()
                 if source != .apple {
-                    Text("Bientôt").font(RUFont.sans(11, weight: .semibold)).foregroundColor(RUColor.text3)
+                    Text("Bientôt").font(RUFont.sans(11, weight: .semibold)).foregroundColor(RUColor.text2)
                 } else if busy {
                     ProgressView().tint(RUColor.textPrimary)
                 } else if connected {

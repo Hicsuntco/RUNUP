@@ -8,16 +8,7 @@ struct NameStepView: View {
         ObScreen {
             VStack(alignment: .leading, spacing: 0) {
                 Spacer()
-                EyebrowLabel(text: "Pour commencer", color: RUColor.rose)
-                Text("C'EST QUOI\nTON PRÉNOM ?")
-                    .displayStyle(32)
-                    .foregroundColor(RUColor.textPrimary)
-                    .lineSpacing(-2)
-                    .padding(.top, 8)
-                Text("Ton coach va s'adresser à toi — autant se présenter.")
-                    .font(RUFont.sans(13))
-                    .foregroundColor(RUColor.text2)
-                    .padding(.top, 12)
+                ObTitle(eyebrow: "Pour commencer", title: "C'EST QUOI\nTON PRÉNOM ?", subtitle: "Ton coach va s'adresser à toi — autant se présenter.")
                 ObTextField(placeholder: "Prénom", text: $vm.name)
                     .padding(.top, 22)
                 Spacer()

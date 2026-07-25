@@ -70,6 +70,8 @@ struct ClubManagementView: View {
                 Button(challenge == nil ? "Créer" : "Changer") { showCreateChallenge = true }
                     .font(RUFont.sans(11.5, weight: .semibold))
                     .foregroundColor(RUColor.rose2)
+                    .padding(.vertical, 12)
+                    .contentShape(Rectangle())
             }
             if let challenge {
                 VStack(alignment: .leading, spacing: 6) {
@@ -94,6 +96,7 @@ struct ClubManagementView: View {
             Text("Code").font(RUFont.sans(11.5)).foregroundColor(RUColor.text3)
             Button(action: {
                 UIPasteboard.general.string = club.inviteCode
+                Haptics.impact(.light)
                 appState.toast("Code copié")
             }) {
                 Text(club.inviteCode).font(RUFont.mono(12.5, weight: .semibold)).foregroundColor(RUColor.text2).tracking(1.5)
@@ -231,10 +234,14 @@ struct ClubMemberProfileView: View {
                             bioError = nil
                         }
                         .font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.text3)
+                        .padding(.vertical, 12)
+                        .contentShape(Rectangle())
                         Spacer()
                         Button(isSavingBio ? "…" : "Enregistrer") { Task { await saveBio(onUpdateBio) } }
                             .font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.rose2)
                             .disabled(isSavingBio)
+                            .padding(.vertical, 12)
+                            .contentShape(Rectangle())
                     }
                 } else {
                     Button(action: { isEditingBio = true }) {
@@ -279,6 +286,7 @@ struct ClubMemberProfileView: View {
             try await onUpdateBio(bioText)
             savedBio = bioText.trimmingCharacters(in: .whitespacesAndNewlines)
             isEditingBio = false
+            Haptics.success()
         } catch ClubServiceError.badResponse(422, _) {
             bioError = "Ce texte n'est pas autorisé — reformule-le."
         } catch {
@@ -367,6 +375,7 @@ struct CreateChallengeSheet: View {
         errorMessage = nil
         do {
             try await onCreate(title.trimmingCharacters(in: .whitespaces), targetKm, endDate)
+            Haptics.success()
             dismiss()
         } catch ClubServiceError.badResponse(422, _) {
             errorMessage = "Ce nom n'est pas autorisé — choisis-en un autre."
@@ -439,6 +448,7 @@ struct CreateEventSheet: View {
         do {
             let trimmedLocation = location.trimmingCharacters(in: .whitespaces)
             try await onCreate(title.trimmingCharacters(in: .whitespaces), trimmedLocation.isEmpty ? nil : trimmedLocation, startsAt)
+            Haptics.success()
             dismiss()
         } catch ClubServiceError.badResponse(422, _) {
             errorMessage = "Ce texte n'est pas autorisé — reformule."

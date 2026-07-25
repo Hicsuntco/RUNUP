@@ -71,7 +71,10 @@ struct ClubView: View {
                     eventsCard
                     membershipRow
                     segmentedControl
-                    if tab == .board { boardContent } else { feedContent }
+                    Group {
+                        if tab == .board { boardContent } else { feedContent }
+                    }
+                    .transition(.opacity.combined(with: .move(edge: .top)))
                 }
 
                 if let errorMessage {
@@ -343,6 +346,8 @@ struct ClubView: View {
                 }
                 .font(RUFont.sans(11, weight: .semibold))
                 .foregroundColor(RUColor.text3)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
             }
             Spacer()
             // Confirmation + in-flight guard — one accidental tap used to leave the club
@@ -352,6 +357,8 @@ struct ClubView: View {
                 .font(RUFont.sans(11, weight: .semibold))
                 .foregroundColor(RUColor.text3)
                 .disabled(isLoading)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
                 .confirmationDialog("Quitter le club ?", isPresented: $showLeaveConfirm, titleVisibility: .visible) {
                     Button("Quitter", role: .destructive) { Task { await leaveClub() } }
                     Button("Annuler", role: .cancel) {}
@@ -386,7 +393,7 @@ struct ClubView: View {
                     // themes, so theme-aware text2 went dark-on-dark in light mode.
                     Text("\(info.xpIntoLevel) / \(info.xpForLevel) XP").font(RUFont.mono(10)).foregroundColor(.white.opacity(0.65))
                 }
-                LinearBar(fraction: Double(info.xpIntoLevel) / Double(info.xpForLevel), color: RUColor.violet, gradient: LinearGradient(colors: [RUColor.violet, RUColor.rose], startPoint: .leading, endPoint: .trailing))
+                LinearBar(fraction: Double(info.xpIntoLevel) / Double(info.xpForLevel), color: RUColor.violet, gradient: RUColor.violetRoseGradient)
             }
         }
         .padding(16)
@@ -451,7 +458,7 @@ struct ClubView: View {
 
     private func boardModeChip(_ label: String, _ value: BoardMode) -> some View {
         Button(action: {
-            boardMode = value
+            withAnimation(.easeInOut(duration: 0.2)) { boardMode = value }
             if value == .global && globalBoard == nil { Task { await loadGlobalBoard() } }
         }) {
             Text(label)
@@ -466,7 +473,7 @@ struct ClubView: View {
 
     private func segment(_ label: String, _ value: Tab) -> some View {
         Button(action: {
-            tab = value
+            withAnimation(.easeInOut(duration: 0.2)) { tab = value }
             if value == .feed && feed.isEmpty { Task { await loadFeed() } }
         }) {
             Text(label)
@@ -615,7 +622,7 @@ struct ClubView: View {
                                 .background(event.goingByMe ? RUColor.rose : RUColor.card, in: Capsule())
                                 .overlay(Capsule().stroke(event.goingByMe ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
                             Text("\(event.going) au départ")
-                                .font(RUFont.sans(9)).foregroundColor(RUColor.text3)
+                                .font(RUFont.sans(9)).foregroundColor(RUColor.text2)
                         }
                     }
                     .buttonStyle(PressableStyle())
@@ -719,6 +726,7 @@ struct ClubView: View {
                     }
                 }
             }
+            .transition(.opacity)
             if boardMode == .general {
             VStack(spacing: 6) {
                 ForEach(board.leaderboard) { entry in
@@ -750,9 +758,11 @@ struct ClubView: View {
                 }
             }
             }
+            .transition(.opacity)
             if boardMode == .global {
                 globalBoardContent
             }
+            .transition(.opacity)
 
             EyebrowLabel(text: "Derniers badges", color: RUColor.text3)
             HStack(spacing: 10) {

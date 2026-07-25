@@ -62,6 +62,7 @@ struct SignInView: View {
                 .font(RUFont.sans(12, weight: .semibold))
                 .foregroundColor(RUColor.text2)
                 .padding(.top, 4)
+                .buttonStyle(PressableStyle())
             }
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.bottom, 40)
@@ -195,7 +196,7 @@ private struct AuthFieldStyle: TextFieldStyle {
             .foregroundColor(RUColor.textPrimary)
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
-            .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
     }
 }

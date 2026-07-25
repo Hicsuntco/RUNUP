@@ -20,6 +20,7 @@ struct ProfileView: View {
 
     @State private var showMoreSettings = false
     @State private var avatarPickerItem: PhotosPickerItem?
+    @State private var isSavingAvatar = false
 
     var body: some View {
         ScrollView {
@@ -33,16 +34,23 @@ struct ProfileView: View {
                     PhotosPicker(selection: $avatarPickerItem, matching: .images) {
                         ZStack(alignment: .bottomTrailing) {
                             AvatarView(imageData: profile.avatarImageData, initial: String(profile.name.prefix(1)), size: 60)
-                            // A small pencil badge is what actually tells her the avatar is
-                            // tappable — a plain circle with no affordance reads as decoration.
-                            Image(systemName: "pencil.circle.fill")
-                                .font(.system(size: 18))
-                                .foregroundColor(.white)
-                                .background(RUColor.rose, in: Circle())
-                                .offset(x: 3, y: 3)
+                                .opacity(isSavingAvatar ? 0.5 : 1)
+                            if isSavingAvatar {
+                                ProgressView().tint(RUColor.textPrimary)
+                            } else {
+                                // A small pencil badge is what actually tells her the avatar is
+                                // tappable — a plain circle with no affordance reads as decoration.
+                                Image(systemName: "pencil.circle.fill")
+                                    .font(.system(size: 18))
+                                    .foregroundColor(.white)
+                                    .background(RUColor.rose, in: Circle())
+                                    .offset(x: 3, y: 3)
+                            }
                         }
                     }
                     .buttonStyle(PressableStyle())
+                    .disabled(isSavingAvatar)
+                    .accessibilityLabel("Changer la photo de profil")
                     .onChange(of: avatarPickerItem) { _, newItem in
                         Task { await setAvatar(from: newItem) }
                     }
@@ -97,6 +105,8 @@ struct ProfileView: View {
     /// base64-encoded, in the club backend's `users.avatar_data` column for every other member's
     /// leaderboard/feed row — keeping it small keeps both cheap.
     private func setAvatar(from item: PhotosPickerItem?) async {
+        isSavingAvatar = true
+        defer { isSavingAvatar = false }
         guard let item, let data = try? await item.loadTransferable(type: Data.self),
               let uiImage = UIImage(data: data)
         else { return }
@@ -107,7 +117,13 @@ struct ProfileView: View {
         // it stays a purely local photo otherwise, same as every other profile field.
         guard appState.auth.isSignedIn else { return }
         let dataURI = "data:image/jpeg;base64,\(jpeg.base64EncodedString())"
-        try? await appState.auth.updateAvatar(dataURI: dataURI)
+        do {
+            try await appState.auth.updateAvatar(dataURI: dataURI)
+        } catch {
+            // The local photo is already saved (see above) — only the club-visible copy failed to
+            // sync, worth telling her since it silently used to just never reach other members.
+            appState.toast("Photo enregistrée, mais pas encore visible du club — vérifie ta connexion.")
+        }
     }
 
     private func removeAvatar() async {
@@ -129,7 +145,7 @@ struct ProfileView: View {
             .padding(.horizontal, 14).padding(.vertical, 13)
         }
         .buttonStyle(PressableStyle())
-        .ruCard(radius: 16)
+        .ruCard()
     }
 
     // Apple Santé only — the Strava and Garmin rows are removed entirely until those
@@ -141,7 +157,7 @@ struct ProfileView: View {
         VStack(spacing: 0) {
             appleHealthRow
         }
-        .ruCard(radius: 16)
+        .ruCard()
     }
 
     private var appleHealthRow: some View {
@@ -217,11 +233,13 @@ struct ProfileView: View {
                         .frame(width: 46, height: 46)
                     }
                     .buttonStyle(PressableStyle())
+                    .accessibilityLabel(theme.name)
+                    .accessibilityAddTraits(profile.accentThemeID == theme.id ? .isSelected : [])
                 }
             }
         }
         .padding(14)
-        .ruCard(radius: 16)
+        .ruCard()
     }
 
     private func modeButton(_ label: String, isLight: Bool) -> some View {
@@ -292,7 +310,7 @@ struct ProfileView: View {
             }
             .padding(.horizontal, 14).padding(.vertical, 13)
         }
-        .ruCard(radius: 16)
+        .ruCard()
     }
 
     /// Both goals used to only ever be fixed defaults (`UserProfile.stepsGoal` = 6000,
@@ -330,7 +348,7 @@ struct ProfileView: View {
             }
             .padding(.horizontal, 14).padding(.vertical, 13)
         }
-        .ruCard(radius: 16)
+        .ruCard()
     }
 }
 

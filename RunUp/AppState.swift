@@ -24,6 +24,11 @@ final class AppState {
     var sessionDetailPresented = false
     var programSettingsPresented = false
     var notificationsPresented = false
+    /// The same "nouvel objectif" wizard `ChoiceView` presents at the end of a program — hoisted
+    /// here so Profil's "Refaire un programme" can open it directly too, without going through
+    /// recovery/choice first. Replaces the old "Refaire l'onboarding" action, which re-asked her
+    /// name/sexe/date de naissance/blessures — everything, not just the goal — to get a new plan.
+    var newGoalWizardPresented = false
     var manualDebriefPresented = false
 
     // Live run (ephemeral, survives navigating away from the Live screen)
@@ -248,10 +253,6 @@ final class AppState {
     func openSessionDetail() { sessionDetailPresented = true }
     func openProgramSettings() { programSettingsPresented = true }
     func openNotifications() { notificationsPresented = true }
-
-    func replayOnboarding() {
-        profile.onboarded = false
-    }
 
     func toast(_ message: String) {
         toastCenter.show(message)

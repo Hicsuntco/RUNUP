@@ -60,7 +60,10 @@ struct MoreSettingsView: View {
             Divider().background(RUColor.line)
             programRow("Modifier jours & objectif") { dismiss(); appState.openProgramSettings() }
             Divider().background(RUColor.line)
-            programRow("Refaire l'onboarding") { dismiss(); appState.replayOnboarding() }
+            // Opens the same wizard `ChoiceView` offers at the end of a program — only touches
+            // goal/distance/allure/jours, keeps everything else (nom, blessures, cycle...) as-is.
+            // The old "Refaire l'onboarding" re-asked all of it just to change the training plan.
+            programRow("Refaire un programme") { dismiss(); appState.newGoalWizardPresented = true }
             if profile.programPhase != .freerun {
                 Divider().background(RUColor.line)
                 // The direct route to `.freerun` — before this, the only way in was "Terminer le

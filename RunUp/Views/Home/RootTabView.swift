@@ -49,6 +49,12 @@ struct RootTabView: View {
             NotificationsSheet()
                 .runUpSheetStyle()
         }
+        // Presented from the ROOT, same reasoning as the debrief sheet above — "Refaire un
+        // programme" is reachable from Profil's "Plus de réglages" sheet, so this must be able to
+        // open on top of it, not nested one level inside where dismissing would fight it.
+        .fullScreenCover(isPresented: Binding(get: { appState.newGoalWizardPresented }, set: { appState.newGoalWizardPresented = $0 })) {
+            NewGoalWizardView()
+        }
         // Presented from the ROOT, not HomeView's session card — a debrief can be triggered while
         // she's on any tab (a run arriving from the Apple Watch, "Marquer comme faite" flows),
         // and a sheet anchored inside a view that isn't currently mounted simply never appears

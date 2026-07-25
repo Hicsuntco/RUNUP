@@ -5,7 +5,6 @@ import SwiftData
 struct HomeView: View {
     @Environment(AppState.self) private var appState
     @Query(sort: \AppNotification.timestamp, order: .reverse) private var notifications: [AppNotification]
-    @State private var showReplayConfirm = false
 
     private var profile: UserProfile { appState.profile }
     private var isFreeRun: Bool { profile.programPhase == .freerun }
@@ -51,24 +50,20 @@ struct HomeView: View {
                     }
                 }
 
-                Button(action: { showReplayConfirm = true }) {
+                // Opens the same "nouvel objectif" wizard as Profil/Plus de réglages and
+                // ChoiceView's end-of-program screen — only replaces goal/distance/allure/jours,
+                // nothing about her (nom, blessures, cycle...). No confirmation needed here: a
+                // new program restarting at semaine 1 is the expected, obvious outcome of asking
+                // for a new program, unlike the old "Refaire l'onboarding" which silently re-asked
+                // everything just to change the plan.
+                Button(action: { appState.newGoalWizardPresented = true }) {
                     HStack(spacing: 5) {
                         Image(systemName: "arrow.counterclockwise").font(.system(size: 11))
-                        Text("Revoir l'intro").font(RUFont.sans(10.5, weight: .semibold))
+                        Text("Refaire un programme").font(RUFont.sans(10.5, weight: .semibold))
                     }
                     .foregroundColor(RUColor.text3)
                 }
                 .buttonStyle(PressableStyle())
-                // Redoing the onboarding regenerates the program from week 1 — an innocent-looking
-                // link must not silently wipe a week-6 progression on a mistap.
-                .confirmationDialog(
-                    "Refaire l'onboarding ? Ton programme repartira de la semaine 1.",
-                    isPresented: $showReplayConfirm,
-                    titleVisibility: .visible
-                ) {
-                    Button("Refaire l'onboarding", role: .destructive) { appState.replayOnboarding() }
-                    Button("Annuler", role: .cancel) {}
-                }
 
                 programWeekCard
 

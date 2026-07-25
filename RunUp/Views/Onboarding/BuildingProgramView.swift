@@ -5,6 +5,7 @@ import SwiftUI
 struct BuildingProgramView: View {
     @Bindable var vm: OnboardingViewModel
     var onDone: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var buildSteps: [String] {
         let dayCount = vm.runningDays.count
@@ -80,7 +81,7 @@ struct BuildingProgramView: View {
                     }
                     .padding(.vertical, 13)
                     .overlay(Divider().background(RUColor.line), alignment: .bottom)
-                    .animation(.easeOut(duration: 0.25), value: vm.buildProgress)
+                    .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: vm.buildProgress)
                 }
             }
             .padding(.top, 26)
@@ -100,7 +101,7 @@ struct BuildingProgramView: View {
                         .transition(.opacity)
                 }
             }
-            .animation(.easeIn(duration: 0.25), value: vm.buildProgress)
+            .animation(reduceMotion ? nil : .easeIn(duration: 0.25), value: vm.buildProgress)
             .padding(.bottom, 24)
         }
         .onAppear(perform: runSequence)

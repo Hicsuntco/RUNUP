@@ -7,6 +7,7 @@ import UIKit
 struct CoachView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query(sort: \ChatMessage.timestamp) private var messages: [ChatMessage]
     @State private var vm: CoachViewModel?
     @State private var typingBounce = false
@@ -191,8 +192,8 @@ struct CoachView: View {
             HStack(spacing: 4) {
                 ForEach(0..<3, id: \.self) { i in
                     Circle().fill(RUColor.text2).frame(width: 6, height: 6)
-                        .offset(y: typingBounce ? -3 : 0)
-                        .animation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true).delay(Double(i) * 0.15), value: typingBounce)
+                        .offset(y: typingBounce && !reduceMotion ? -3 : 0)
+                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.5).repeatForever(autoreverses: true).delay(Double(i) * 0.15), value: typingBounce)
                 }
             }
             .padding(13)
@@ -200,6 +201,10 @@ struct CoachView: View {
             Spacer()
         }
         .onAppear { typingBounce = true }
+        // Otherwise silence while waiting for a reply — the bouncing dots carry no VoiceOver
+        // content at all.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Le coach écrit…")
     }
 
     private var inputBar: some View {

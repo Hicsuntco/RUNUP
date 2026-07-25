@@ -7,6 +7,7 @@ import SwiftData
 /// connection whatsoever to any real run.
 struct StatsView: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query(sort: \RunRecord.date, order: .reverse) private var runs: [RunRecord]
     @State private var chartRevealed = false
     /// Records/prédiction/charge start collapsed — 6 dense analytical cards stacked at once read
@@ -134,6 +135,17 @@ struct StatsView: View {
         runs.prefix(8).reversed().compactMap { PaceModel.parseSecPerKm($0.avgPace) }
     }
 
+    private var paceTrendAccessibilitySummary: String {
+        guard let first = recentPacesSecPerKm.first, let last = recentPacesSecPerKm.last,
+              let minPace = recentPacesSecPerKm.min(), let maxPace = recentPacesSecPerKm.max()
+        else { return "Pas encore assez de courses" }
+        let trend: String
+        if last < first - 2 { trend = "en amélioration" } // fewer seconds/km = faster
+        else if last > first + 2 { trend = "en baisse" }
+        else { trend = "stable" }
+        return "Allure \(trend), entre \(PaceModel.formatDuration(minPace)) et \(PaceModel.formatDuration(maxPace)) par kilomètre"
+    }
+
     private var recentAvgPace: Double? {
         let last5 = runs.prefix(5).compactMap { PaceModel.parseSecPerKm($0.avgPace) }
         guard !last5.isEmpty else { return nil }
@@ -189,6 +201,11 @@ struct StatsView: View {
                     }
                     .frame(height: 70)
                     .padding(.top, 6)
+                    // The trend shape itself carries zero VoiceOver content otherwise — the
+                    // min/max text below it (when shown) only covers the endpoints, not the
+                    // direction of change.
+                    .accessibilityLabel("Tendance d'allure")
+                    .accessibilityValue(paceTrendAccessibilitySummary)
 
                     if let minPace = recentPacesSecPerKm.min(), let maxPace = recentPacesSecPerKm.max(), minPace != maxPace {
                         HStack {
@@ -394,7 +411,11 @@ struct StatsView: View {
                             // Same grow-from-baseline reveal as WeeklyRecapView's volume chart.
                             .frame(height: chartRevealed ? max(4, bars[i] / maxBar * 70) : 4)
                             .frame(maxWidth: .infinity)
-                            .animation(.easeOut(duration: 0.5).delay(Double(i) * 0.04), value: chartRevealed)
+                            .animation(reduceMotion ? nil : .easeOut(duration: 0.5).delay(Double(i) * 0.04), value: chartRevealed)
+                            // No per-week value was ever exposed, and "this week" (the last bar)
+                            // was marked by color alone — VoiceOver had nothing beyond a silent bar.
+                            .accessibilityLabel(i == bars.count - 1 ? "Cette semaine" : "Il y a \(bars.count - 1 - i) semaine\(bars.count - 1 - i > 1 ? "s" : "")")
+                            .accessibilityValue("\(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), bars[i])) km")
                     }
                 }
                 .frame(height: 70, alignment: .bottom)

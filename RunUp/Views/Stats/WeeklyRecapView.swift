@@ -12,6 +12,7 @@ import SwiftData
 /// série) as before, no new data invented to match the mockup's own (different) stat set.
 struct WeeklyRecapView: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query(sort: \RunRecord.date, order: .reverse) private var allRuns: [RunRecord]
     @State private var chartRevealed = false
     private var profile: UserProfile { appState.profile }
@@ -203,7 +204,11 @@ struct WeeklyRecapView: View {
                         // not pre-drawn" treatment the Recap splits and the Home ring already get.
                         .frame(height: chartRevealed ? max(4, bars[i] / maxBar * 60) : 4)
                         .frame(maxWidth: .infinity)
-                        .animation(.easeOut(duration: 0.5).delay(Double(i) * 0.05), value: chartRevealed)
+                        .animation(reduceMotion ? nil : .easeOut(duration: 0.5).delay(Double(i) * 0.05), value: chartRevealed)
+                        // No per-day km value was exposed, and "today" (when this week includes
+                        // it) was marked by color alone.
+                        .accessibilityLabel(i == todayWeekdayIndex ? "\(DayStatus.fullNames[i]), aujourd'hui" : DayStatus.fullNames[i])
+                        .accessibilityValue("\(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), bars[i])) km")
                 }
             }
             .frame(height: 60, alignment: .bottom)

@@ -125,11 +125,17 @@ struct PlanView: View {
                     .font(RUFont.sans(10)).foregroundColor(RUColor.text2)
             }
             Spacer()
-            Text(isExpanded ? "▾" : badge).foregroundColor(isExpanded ? RUColor.rose2 : color).font(.system(size: 13))
+            Text(isExpanded ? "▾" : badge)
+                .foregroundColor(isExpanded ? RUColor.rose2 : color)
+                .font(.system(size: 13))
+                // Was read as the raw glyph description ("triangle down", "checkmark"...) instead
+                // of what it actually means out of visual context.
+                .accessibilityLabel(isExpanded ? "Réduire" : isRaceWeek ? "Semaine de course" : week.block == .affutage ? "Phase d'affûtage" : week.isDone ? "Semaine terminée" : "Développer")
         }
         .padding(13)
         .opacity(week.isDone && !week.isCurrent ? 0.6 : 1)
         .background(week.isCurrent ? RUColor.rose.opacity(0.08) : Color.clear)
+        .accessibilityElement(children: .combine)
     }
 
     private var completedCount: Int { profile.weekSessions.filter(\.completed).count }

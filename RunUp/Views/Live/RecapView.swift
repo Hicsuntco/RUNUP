@@ -7,6 +7,7 @@ import CoreLocation
 /// entry point to the adaptive-plan mechanic (submitting RPE recalculates the next session).
 struct RecapView: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query(sort: \RunRecord.date) private var allRuns: [RunRecord]
     @State private var showDebrief = false
     /// The "instagrammable" share card (route trace + Strava-style stacked stats on a fully
@@ -229,6 +230,9 @@ struct RecapView: View {
         return VStack(alignment: .leading, spacing: 8) {
             ElevationProfileView(route: run.route)
                 .frame(height: 80)
+                // The climb/descent shape itself carries no VoiceOver content — the min/max/gain
+                // numbers below it (which do) are combined into this card's own label instead.
+                .accessibilityHidden(true)
             HStack {
                 Text("\(Int(minAlt.rounded())) m").font(RUFont.mono(11)).foregroundColor(RUColor.text2)
                 Spacer()
@@ -239,6 +243,8 @@ struct RecapView: View {
         }
         .padding(14)
         .ruCard()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Profil d'élévation, de \(Int(minAlt.rounded())) à \(Int(maxAlt.rounded())) mètres, dénivelé positif \(run.elevationGainM) mètres")
     }
 
     private func heroHeader(_ run: RunRecord) -> some View {
@@ -307,7 +313,9 @@ struct RecapView: View {
         .ruCard(radius: 14)
         .opacity(splitsRevealed ? 1 : 0)
         .scaleEffect(splitsRevealed ? 1 : 0.92)
-        .animation(.spring(response: 0.4, dampingFraction: 0.8).delay(Double(index) * 0.05), value: splitsRevealed)
+        .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.8).delay(Double(index) * 0.05), value: splitsRevealed)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label), \(value)")
     }
 
     private func splitRow(index: Int, time: String, fraction: Double, isLast: Bool) -> some View {
@@ -322,14 +330,20 @@ struct RecapView: View {
                         // whole list appearing pre-drawn — same "revealed, not dumped" read as the
                         // Home ring's animate-on-appear fill, on the screen every run ends at.
                         .frame(width: geo.size.width * fraction * (splitsRevealed ? 1 : 0))
-                        .animation(.easeOut(duration: 0.5).delay(Double(index) * 0.04), value: splitsRevealed)
+                        .animation(reduceMotion ? nil : .easeOut(duration: 0.5).delay(Double(index) * 0.04), value: splitsRevealed)
                 }
             }
             .frame(height: 22)
+            .accessibilityHidden(true)
             // minWidth, not a fixed width — a plain "m:ss" fits 38pt at the default text size, but
             // larger Dynamic Type sizes need the row to grow rather than truncate the split time.
             Text(time).displayStyle(14).foregroundColor(isLast ? RUColor.rose2 : RUColor.textPrimary).frame(minWidth: 38, alignment: .trailing)
         }
+        // The bar itself carries no VoiceOver value and "last split" was color-only (no text/icon
+        // cue) — combined into one element with an explicit label/value so both survive.
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Split \(index + 1)\(isLast ? ", dernier" : "")")
+        .accessibilityValue(time)
     }
 
     /// Bar length relative to this run's own fastest/slowest split — was previously

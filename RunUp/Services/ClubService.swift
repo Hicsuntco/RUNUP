@@ -15,8 +15,11 @@ struct LeaderboardRow: Decodable, Identifiable, Hashable {
     var isMe: Bool
     /// Short, optional, self-authored status — editable only for `isMe` (see `ClubService.updateBio`).
     var bio: String?
-    /// Her real uploaded photo, if she's set one — `"data:image/jpeg;base64,...."`, decoded by
-    /// `AvatarView`. Nil falls back to the initial-letter circle every avatar spot already used.
+    /// A real Blob storage URL since the avatar migration — `AvatarView` fetches it directly.
+    /// Nil falls back to the initial-letter circle every avatar spot already used.
+    var avatarUrl: String?
+    /// Legacy fallback for an account that uploaded a photo before the Blob migration and hasn't
+    /// re-uploaded since — `"data:image/jpeg;base64,...."`, decoded by `AvatarView`.
     var avatarBase64: String?
     /// Real membership date (`club_members.joined_at`) — was tracked in the DB from day one but
     /// never surfaced anywhere in the UI until now.
@@ -33,6 +36,7 @@ struct LeaderboardRow: Decodable, Identifiable, Hashable {
 struct WeeklyRow: Decodable, Identifiable, Hashable {
     var id: String
     var name: String
+    var avatarUrl: String?
     var avatarBase64: String?
     var weekKm: Double
     var rank: Int
@@ -82,6 +86,7 @@ struct FeedItem: Decodable, Identifiable {
     var id: String
     var userId: String
     var name: String
+    var avatarUrl: String?
     var avatarBase64: String?
     var text: String
     var createdAt: Date
@@ -96,6 +101,7 @@ struct CommentItem: Decodable, Identifiable {
     var id: String
     var userId: String
     var name: String
+    var avatarUrl: String?
     var avatarBase64: String?
     var text: String
     var createdAt: Date

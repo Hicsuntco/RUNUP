@@ -22,11 +22,15 @@ CREATE TABLE IF NOT EXISTS users (
 -- way as everything else user-generated (lib/moderation.js's blocklist filter).
 ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT;
 
--- A real profile photo — a data URI ("data:image/jpeg;base64,...."), already resized/compressed
--- client-side to a small thumbnail before it ever reaches here (see api/account/avatar.js). Kept
--- directly in Postgres rather than a separate object-storage service — cheap at small-club scale
--- with the client-side size cap already in place.
+-- A real profile photo. `avatar_data` (legacy) held a full base64 data URI inline in Postgres —
+-- cheap at first, but it meant every leaderboard/feed/comments row that included an avatar was
+-- shipping a several-hundred-KB blob down the wire even when only a 40pt circle was ever drawn
+-- from it. `avatar_url` (current) points at a real object in Vercel Blob storage instead — rows
+-- carry a short URL, and the client fetches/caches the actual image itself, once, only where it's
+-- shown. `avatar_data` stays for any account that uploaded a photo before this migration; new and
+-- re-uploaded avatars always go through avatar_url (see api/account/avatar.js).
 ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_data TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 
 -- Real referral loop — every user gets a personal code (generated at signup, see
 -- api/auth/[action].js) to share; `referred_by` is set once, at signup, from whatever code (if

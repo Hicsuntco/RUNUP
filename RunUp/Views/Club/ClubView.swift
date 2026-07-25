@@ -716,7 +716,7 @@ struct ClubView: View {
                                 .displayStyle(15)
                                 .foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.text2)
                                 .frame(width: 20)
-                            AvatarView(base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28)
+                            AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28)
                             Text(entry.isMe ? "\(entry.name) · toi" : entry.name)
                                 .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
                                 .foregroundColor(RUColor.textPrimary)
@@ -739,7 +739,7 @@ struct ClubView: View {
                             .displayStyle(15)
                             .foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.text2)
                             .frame(width: 20)
-                        AvatarView(base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28)
+                        AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28)
                         Text(entry.isMe ? "\(entry.name) · toi" : entry.name)
                             .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
                             .foregroundColor(RUColor.textPrimary)
@@ -833,7 +833,7 @@ struct ClubView: View {
                                     .displayStyle(15)
                                     .foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.text2)
                                     .frame(width: 20)
-                                AvatarView(base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28)
+                                AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28)
                                 Text(entry.isMe ? "\(entry.name) · toi" : entry.name)
                                     .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
                                     .foregroundColor(RUColor.textPrimary)
@@ -861,7 +861,7 @@ struct ClubView: View {
             ForEach(Array(feed.enumerated()), id: \.element.id) { index, item in
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 10) {
-                        AvatarView(base64DataURI: item.avatarBase64, initial: String(item.name.prefix(1)), size: 34)
+                        AvatarView(urlString: item.avatarUrl, base64DataURI: item.avatarBase64, initial: String(item.name.prefix(1)), size: 34)
                         VStack(alignment: .leading, spacing: 2) {
                             (Text(item.name).fontWeight(.semibold) + Text(" \(item.text)"))
                                 .font(RUFont.sans(13))

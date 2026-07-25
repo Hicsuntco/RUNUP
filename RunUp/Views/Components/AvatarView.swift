@@ -2,12 +2,15 @@ import SwiftUI
 import UIKit
 
 /// Circular avatar — a real photo when one exists, else the initial-letter fallback every avatar
-/// spot in the app already used. Two ways in, exactly one per caller: `imageData` for the LOCAL
-/// case (`UserProfile.avatarImageData`, already-decoded `Data`), `base64DataURI` for the REMOTE
-/// case (what the club API returns for other members — `"data:image/jpeg;base64,...."`, decoded
-/// here rather than requiring every call site to repeat the same parsing).
+/// spot in the app already used. Three ways in, priority order when more than one is set:
+/// `imageData` for the LOCAL case (`UserProfile.avatarImageData`, already-decoded `Data`),
+/// `urlString` for the REMOTE case since the Vercel Blob migration (a real Blob URL — `AsyncImage`
+/// fetches and caches it, same as any other remote image, instead of every leaderboard/feed/
+/// comments row shipping the full photo inline), `base64DataURI` as a fallback for any account
+/// that uploaded a photo before that migration and hasn't re-uploaded since.
 struct AvatarView: View {
     var imageData: Data? = nil
+    var urlString: String? = nil
     var base64DataURI: String? = nil
     var initial: String
     var size: CGFloat
@@ -15,7 +18,7 @@ struct AvatarView: View {
     /// two-tone gradient (`ProfileView`'s big avatar, Club rows).
     var useGradient: Bool = true
 
-    private var resolvedImage: UIImage? {
+    private var localImage: UIImage? {
         if let imageData, let image = UIImage(data: imageData) { return image }
         if let base64DataURI,
            let commaIndex = base64DataURI.firstIndex(of: ","),
@@ -26,24 +29,42 @@ struct AvatarView: View {
         return nil
     }
 
+    private var remoteURL: URL? {
+        guard localImage == nil, let urlString, let url = URL(string: urlString) else { return nil }
+        return url
+    }
+
     var body: some View {
         ZStack {
-            if let resolvedImage {
-                Image(uiImage: resolvedImage)
+            if let localImage {
+                Image(uiImage: localImage)
                     .resizable()
                     .scaledToFill()
-            } else {
-                if useGradient {
-                    LinearGradient(colors: [RUColor.rose, RUColor.violet], startPoint: .topLeading, endPoint: .bottomTrailing)
-                } else {
-                    RUColor.rose
+            } else if let remoteURL {
+                AsyncImage(url: remoteURL) { phase in
+                    if let image = phase.image {
+                        image.resizable().scaledToFill()
+                    } else {
+                        fallback
+                    }
                 }
-                Text(initial.uppercased())
-                    .displayStyle(size * 0.4)
-                    .foregroundColor(.white)
+            } else {
+                fallback
             }
         }
         .frame(width: size, height: size)
         .clipShape(Circle())
+    }
+
+    @ViewBuilder
+    private var fallback: some View {
+        if useGradient {
+            LinearGradient(colors: [RUColor.rose, RUColor.violet], startPoint: .topLeading, endPoint: .bottomTrailing)
+        } else {
+            RUColor.rose
+        }
+        Text(initial.uppercased())
+            .displayStyle(size * 0.4)
+            .foregroundColor(.white)
     }
 }

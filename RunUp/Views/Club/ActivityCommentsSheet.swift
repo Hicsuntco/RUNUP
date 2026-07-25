@@ -62,7 +62,7 @@ struct ActivityCommentsSheet: View {
 
     private func commentRow(_ comment: CommentItem) -> some View {
         HStack(alignment: .top, spacing: 10) {
-            AvatarView(base64DataURI: comment.avatarBase64, initial: String(comment.name.prefix(1)), size: 28)
+            AvatarView(urlString: comment.avatarUrl, base64DataURI: comment.avatarBase64, initial: String(comment.name.prefix(1)), size: 28)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(comment.name).font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.textPrimary)

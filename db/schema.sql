@@ -38,6 +38,10 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code TEXT UNIQUE;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by UUID REFERENCES users(id);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_reward_granted BOOLEAN NOT NULL DEFAULT false;
 
+-- Opt-in to the global weekly leaderboard (across every club, not just her own) — off by default,
+-- a real explicit choice since it's a bigger visibility surface than the club-scoped leaderboard.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS global_leaderboard_opt_in BOOLEAN NOT NULL DEFAULT false;
+
 CREATE TABLE IF NOT EXISTS clubs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,

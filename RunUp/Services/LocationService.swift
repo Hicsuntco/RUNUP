@@ -23,6 +23,11 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     /// Horizontal accuracy above this (meters) is treated as an unstable fix.
     private let unstableAccuracyThreshold: CLLocationAccuracy = 30
     private var lastLocation: CLLocation?
+    /// True while GPS fixes still accumulate distance/route/elevation. Auto-pause (see
+    /// `LiveRunViewModel`) sets this false via `pauseAccumulation()` WITHOUT calling `stop()` —
+    /// it still needs live `currentSpeedMetersPerSecond` readings to notice her start running
+    /// again, which a full `stop()` (no more delegate callbacks at all) would make impossible.
+    private(set) var isAccumulating = true
 
     override init() {
         super.init()
@@ -52,6 +57,7 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     /// pause gap itself is never counted as distance — if she walked 200 m during the pause, the
     /// next fix starts a fresh segment instead of bridging from where she pressed pause.
     func resume() {
+        isAccumulating = true
         lastLocation = nil
         applyBackgroundUpdatesIfAuthorized()
         manager.startUpdatingLocation()
@@ -59,6 +65,14 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
 
     func stop() {
         manager.stopUpdatingLocation()
+    }
+
+    /// Auto-pause: keeps GPS delivery running (so speed readings stay live) but stops crediting
+    /// distance/route/elevation — `lastLocation` is dropped so the stationary gap itself is never
+    /// counted as distance once accumulation resumes, same reasoning as `resume()`.
+    func pauseAccumulation() {
+        isAccumulating = false
+        lastLocation = nil
     }
 
     /// Only valid once authorization is actually granted — setting the flag beforehand risks the
@@ -80,6 +94,11 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let newest = locations.last else { return }
         isSignalUnstable = newest.horizontalAccuracy > unstableAccuracyThreshold || newest.horizontalAccuracy < 0
+        // Always kept live, even while accumulation is paused — auto-pause's whole resume
+        // detection depends on seeing speed pick back up.
+        currentSpeedMetersPerSecond = max(0, newest.speed)
+
+        guard isAccumulating else { return }
 
         // All delivered fixes, not just the last — batched background delivery otherwise cuts
         // the corners off every curve and undercounts distance.
@@ -103,7 +122,6 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
                     }
                 }
             }
-            currentSpeedMetersPerSecond = max(0, loc.speed)
             lastLocation = loc
             route.append(loc.coordinate)
         }

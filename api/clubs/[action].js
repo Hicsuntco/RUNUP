@@ -49,7 +49,12 @@ module.exports = withErrorHandling(async function handler(req, res) {
 
 // Must match `ClubBadgeCatalog.all` keys on the client — anything else is silently dropped rather
 // than trusted, since a tampered client could otherwise write arbitrary junk keys here.
-const KNOWN_BADGES = new Set(['streak3', 'interval3', 'earlyRun', 'elevation300']);
+const KNOWN_BADGES = new Set([
+  'streak3', 'interval3', 'earlyRun', 'elevation300',
+  'firstRun', 'streak7', 'streak30', 'tenRuns', 'fiftyRuns',
+  'distance50', 'distance250', 'distance1000',
+  'halfMarathonDistance', 'marathonDistance', 'nightRun', 'weekendWarrior',
+]);
 
 function randomInviteCode() {
   // No 0/O/1/I — avoids ambiguity when a code is read aloud or typed by hand.

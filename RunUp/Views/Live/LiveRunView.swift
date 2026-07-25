@@ -74,7 +74,7 @@ struct LiveRunView: View {
                 HStack(spacing: 6) {
                     Circle().fill(RUColor.rose).frame(width: 6, height: 6)
                         .shadow(color: RUColor.rose, radius: 4)
-                    Text(vm?.isPaused == true ? "EN PAUSE" : "EN DIRECT")
+                    Text(vm?.isAutoPaused == true ? "PAUSE AUTO" : (vm?.isPaused == true ? "EN PAUSE" : "EN DIRECT"))
                         .font(RUFont.bebas(11)).tracking(2).foregroundColor(RUColor.rose2)
                 }
                 .padding(.horizontal, 12).padding(.vertical, 7)

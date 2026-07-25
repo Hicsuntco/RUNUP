@@ -106,6 +106,15 @@ struct RecapView: View {
                                 .disabled(true)
                                 .opacity(0.5)
                             }
+                            if let gpxURL = GPXExporter.fileURL(for: run) {
+                                ShareLink(item: gpxURL) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "arrow.down.doc")
+                                        Text("EXPORTER EN GPX")
+                                    }
+                                }
+                                .buttonStyle(SecondaryButtonStyle())
+                            }
                         }
                         .padding(.top, 10)
 
@@ -148,15 +157,22 @@ struct RecapView: View {
     private func heroHeader(_ run: RunRecord) -> some View {
         ZStack(alignment: .bottomLeading) {
             LinearGradient(colors: [RUColor.bg2, RUColor.bg], startPoint: .top, endPoint: .bottom)
-            Canvas { context, size in
-                var path = Path()
-                path.move(to: CGPoint(x: size.width * 0.1, y: size.height * 0.82))
-                path.addCurve(
-                    to: CGPoint(x: size.width * 0.9, y: size.height * 0.12),
-                    control1: CGPoint(x: size.width * 0.25, y: size.height * 0.35),
-                    control2: CGPoint(x: size.width * 0.55, y: size.height * 0.5)
-                )
-                context.stroke(path, with: .color(RUColor.rose), style: StrokeStyle(lineWidth: 4, lineCap: .round))
+            if !run.route.isEmpty {
+                RunRouteMapView(route: run.route)
+                    .opacity(0.85)
+            } else {
+                // No GPS behind this run (manual entry, no-GPS "Marquer comme faite") — a
+                // decorative shape rather than an empty map.
+                Canvas { context, size in
+                    var path = Path()
+                    path.move(to: CGPoint(x: size.width * 0.1, y: size.height * 0.82))
+                    path.addCurve(
+                        to: CGPoint(x: size.width * 0.9, y: size.height * 0.12),
+                        control1: CGPoint(x: size.width * 0.25, y: size.height * 0.35),
+                        control2: CGPoint(x: size.width * 0.55, y: size.height * 0.5)
+                    )
+                    context.stroke(path, with: .color(RUColor.rose), style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                }
             }
             LinearGradient(colors: [.clear, RUColor.bg], startPoint: .init(x: 0.5, y: 0.4), endPoint: .init(x: 0.5, y: 1))
             HStack {

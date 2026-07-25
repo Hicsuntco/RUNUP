@@ -481,18 +481,46 @@ struct ClubView: View {
     private var badges: [ClubBadge] {
         let intervalRuns = runs.filter { $0.title.localizedCaseInsensitiveContains("Fractionné") }.count
         let earlyRun = runs.contains { Calendar.current.component(.hour, from: $0.date) < 7 }
+        let nightRun = runs.contains { Calendar.current.component(.hour, from: $0.date) >= 21 }
         let totalElevation = runs.reduce(0) { $0 + $1.elevationGainM }
+        let totalDistance = runs.reduce(0) { $0 + $1.distanceKm }
+        let longestRun = runs.map(\.distanceKm).max() ?? 0
+        let weekendRuns = runs.filter { [1, 7].contains(Calendar.current.component(.weekday, from: $0.date)) }.count
         let earned: [String: Bool] = [
             "streak3": profile.streak >= 3,
             "interval3": intervalRuns >= 3,
             "earlyRun": earlyRun,
-            "elevation300": totalElevation >= 300
+            "elevation300": totalElevation >= 300,
+            "firstRun": !runs.isEmpty,
+            "streak7": profile.streak >= 7,
+            "streak30": profile.streak >= 30,
+            "tenRuns": runs.count >= 10,
+            "fiftyRuns": runs.count >= 50,
+            "distance50": totalDistance >= 50,
+            "distance250": totalDistance >= 250,
+            "distance1000": totalDistance >= 1000,
+            "halfMarathonDistance": longestRun >= 21,
+            "marathonDistance": longestRun >= 42,
+            "nightRun": nightRun,
+            "weekendWarrior": weekendRuns >= 10
         ]
         let progress: [String: String?] = [
             "streak3": "\(min(profile.streak, 3))/3 jours",
             "interval3": "\(min(intervalRuns, 3))/3 séances",
             "earlyRun": nil,
-            "elevation300": "\(min(Int(totalElevation), 300))/300 m"
+            "elevation300": "\(min(Int(totalElevation), 300))/300 m",
+            "firstRun": nil,
+            "streak7": "\(min(profile.streak, 7))/7 jours",
+            "streak30": "\(min(profile.streak, 30))/30 jours",
+            "tenRuns": "\(min(runs.count, 10))/10",
+            "fiftyRuns": "\(min(runs.count, 50))/50",
+            "distance50": "\(min(Int(totalDistance), 50))/50 km",
+            "distance250": "\(min(Int(totalDistance), 250))/250 km",
+            "distance1000": "\(min(Int(totalDistance), 1000))/1000 km",
+            "halfMarathonDistance": "\(String(format: "%.1f", min(longestRun, 21)))/21 km",
+            "marathonDistance": "\(String(format: "%.1f", min(longestRun, 42)))/42 km",
+            "nightRun": nil,
+            "weekendWarrior": "\(min(weekendRuns, 10))/10"
         ]
         return ClubBadgeCatalog.all.map { def in
             ClubBadge(

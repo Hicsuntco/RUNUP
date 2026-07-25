@@ -17,6 +17,9 @@ struct MoreSettingsView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
+                    sectionTitle("Course")
+                    runSettingsCard
+
                     sectionTitle("Programme")
                     programCard
 
@@ -115,6 +118,26 @@ struct MoreSettingsView: View {
             }
             Text("Le coach adapte tes séances de fractionné/VMA en conséquence, chaque semaine.")
                 .font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+        }
+        .padding(14)
+        .ruCard(radius: 16)
+    }
+
+    /// Auto-pause at a stop (see `LiveRunViewModel.autoPause`) — on by default like Strava/Garmin,
+    /// but a real opt-out for runners whose interval sessions include genuine short walk breaks
+    /// that shouldn't freeze the chrono.
+    private var runSettingsCard: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Pause automatique aux arrêts").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                Text("Met la course en pause si tu t'arrêtes, reprend toute seule.")
+                    .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+            }
+            Spacer()
+            Toggle("", isOn: Binding(get: { profile.autoPauseEnabled }, set: { profile.autoPauseEnabled = $0 }))
+                .labelsHidden()
+                .tint(RUColor.rose)
+                .accessibilityLabel("Pause automatique aux arrêts")
         }
         .padding(14)
         .ruCard(radius: 16)

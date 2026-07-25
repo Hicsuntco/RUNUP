@@ -38,6 +38,11 @@ struct HistoryView: View {
                         Button("Supprimer", role: .destructive) { pendingDelete = run }
                     }
                     .contextMenu {
+                        if let url = GPXExporter.fileURL(for: run) {
+                            ShareLink(item: url) {
+                                Label("Exporter en GPX", systemImage: "square.and.arrow.up")
+                            }
+                        }
                         Button("Supprimer", role: .destructive) { pendingDelete = run }
                     }
             }
@@ -104,22 +109,30 @@ struct HistoryView: View {
     }
 
     private func runCard(_ run: RunRecord) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text(run.date, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated).locale(Locale(identifier: "fr_FR")))
-                    .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
-                Spacer()
-                // A manually-logged run has no real heart-rate reading — 0 would just be a fake
-                // number dressed up as data, so the line is dropped entirely instead.
-                if run.avgHeartRate > 0 {
-                    Text("FC moy \(run.avgHeartRate)").font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text(run.date, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated).locale(Locale(identifier: "fr_FR")))
+                        .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                    Spacer()
+                    // A manually-logged run has no real heart-rate reading — 0 would just be a
+                    // fake number dressed up as data, so the line is dropped entirely instead.
+                    if run.avgHeartRate > 0 {
+                        Text("FC moy \(run.avgHeartRate)").font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+                    }
+                }
+                Text(run.title).font(RUFont.sans(15, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                HStack(spacing: 20) {
+                    MetricColumn(value: String(format: "%.1f", locale: Locale(identifier: "fr_FR"), run.distanceKm), label: "km", valueSize: 20)
+                    MetricColumn(value: PaceModel.formatDuration(Double(run.durationSeconds)), label: "temps", valueSize: 20)
+                    MetricColumn(value: run.avgPace, label: "allure moy", valueColor: RUColor.rose2, valueSize: 20)
                 }
             }
-            Text(run.title).font(RUFont.sans(15, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-            HStack(spacing: 20) {
-                MetricColumn(value: String(format: "%.1f", locale: Locale(identifier: "fr_FR"), run.distanceKm), label: "km", valueSize: 20)
-                MetricColumn(value: PaceModel.formatDuration(Double(run.durationSeconds)), label: "temps", valueSize: 20)
-                MetricColumn(value: run.avgPace, label: "allure moy", valueColor: RUColor.rose2, valueSize: 20)
+            if !run.route.isEmpty {
+                RunRouteMapView(route: run.route, lineWidth: 2.5)
+                    .frame(width: 64, height: 64)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
             }
         }
         .padding(16)

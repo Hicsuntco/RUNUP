@@ -265,6 +265,7 @@ struct ClubMemberProfileView: View {
                             .opacity(badge.earned ? 1 : 0.35)
                     }
                     .buttonStyle(PressableStyle())
+                    .accessibilityLabel("\(badge.name), \(badge.earned ? "débloqué" : "verrouillé")")
                 }
             }
         }

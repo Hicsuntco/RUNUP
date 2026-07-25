@@ -24,6 +24,21 @@ final class LiveRunViewModel {
 
     private(set) var elapsedSeconds: Double = 0
     private(set) var isPaused = false
+    /// True only when the CURRENT pause was system-detected (see `tick()`), not tapped manually —
+    /// distinguishes "resume automatically the moment she starts moving again" from a deliberate
+    /// manual pause, which should only ever end on an explicit tap.
+    private(set) var isAutoPaused = false
+    /// Consecutive ticks (seconds) below `autoPauseSpeedThreshold` while actively running — reset
+    /// the moment speed picks back up, or on any resume.
+    private var stationarySeconds: Double = 0
+    /// ~2.2 km/h — well under even a very slow walking pace, so normal jog-walk intervals or a
+    /// red light glance don't trigger it; only a genuine stop (red light, water fountain, tying a
+    /// shoelace) does, and only after it's held for `autoPauseDelaySeconds`.
+    private static let autoPauseSpeedThreshold: Double = 0.6
+    private static let autoPauseDelaySeconds: Double = 10
+    /// Deliberately higher than the pause threshold (hysteresis) — resuming right at the same
+    /// speed that triggered the pause would flicker pause/resume on every small fluctuation.
+    private static let autoResumeSpeedThreshold: Double = 1.3
     /// Nil until a real, recent (last 90s) HealthKit sample comes in — no Watch/HR strap paired
     /// or streaming means this genuinely has no live reading, which is different from "0 bpm" and
     /// shouldn't be displayed as a number at all. Was previously a fabricated sine-wave formula
@@ -135,7 +150,14 @@ final class LiveRunViewModel {
     }
 
     private func tick() {
-        guard !isPaused else { return }
+        guard !isPaused else {
+            // A manual pause (isAutoPaused == false) only ever ends on an explicit tap — this
+            // only watches for movement resuming while WE'RE the one who paused it.
+            if isAutoPaused, location.currentSpeedMetersPerSecond > Self.autoResumeSpeedThreshold {
+                resumeFromAutoPause()
+            }
+            return
+        }
         elapsedSeconds = max(0, Date().timeIntervalSince(startedAt) - accumulatedPauseSeconds)
         let currentKm = Int(distanceKm)
         if currentKm > lastSplitKm {
@@ -152,6 +174,16 @@ final class LiveRunViewModel {
             firedCueTimestamps.insert(threshold)
             showCue(message)
         }
+        if profile.autoPauseEnabled {
+            if location.currentSpeedMetersPerSecond < Self.autoPauseSpeedThreshold {
+                stationarySeconds += 1
+                if stationarySeconds >= Self.autoPauseDelaySeconds {
+                    autoPause()
+                }
+            } else {
+                stationarySeconds = 0
+            }
+        }
         // Every 5s, not every tick — ActivityKit updates are meant to be occasional, not a
         // per-second stream (the chrono ticks itself via `timerReference`; these pushes only
         // refresh distance/pace).
@@ -159,6 +191,33 @@ final class LiveRunViewModel {
             lastActivityPush = Date()
             updateLiveActivity()
         }
+    }
+
+    /// A genuine stop held for `autoPauseDelaySeconds` (red light, water fountain) — pauses the
+    /// same way a manual tap would (chrono/distance freeze) but keeps GPS running so `tick()` can
+    /// notice her moving again and resume on its own, matching what Strava/Garmin call
+    /// "auto pause".
+    private func autoPause() {
+        isAutoPaused = true
+        isPaused = true
+        pauseBeganAt = Date()
+        location.pauseAccumulation()
+        Haptics.impact(.light)
+        showCue("Pause automatique — reprends dès que tu es prête, ou continue à marcher pour repartir.")
+        updateLiveActivity()
+    }
+
+    private func resumeFromAutoPause() {
+        isPaused = false
+        isAutoPaused = false
+        stationarySeconds = 0
+        if let pauseBeganAt {
+            accumulatedPauseSeconds += Date().timeIntervalSince(pauseBeganAt)
+            self.pauseBeganAt = nil
+        }
+        location.resume()
+        Haptics.impact(.light)
+        updateLiveActivity()
     }
 
     /// Polls HealthKit for a genuinely recent heart-rate sample every 5s — separate from `tick()`
@@ -194,6 +253,8 @@ final class LiveRunViewModel {
     func togglePause() {
         isPaused.toggle()
         if isPaused {
+            // A deliberate tap — isAutoPaused stays false, so this only ever un-pauses on another
+            // explicit tap, never on movement alone.
             pauseBeganAt = Date()
             location.stop()
         } else {
@@ -201,6 +262,10 @@ final class LiveRunViewModel {
                 accumulatedPauseSeconds += Date().timeIntervalSince(pauseBeganAt)
                 self.pauseBeganAt = nil
             }
+            // Covers resuming a manual pause AND tapping resume while auto-paused — either way
+            // this is now a real, un-paused run.
+            isAutoPaused = false
+            stationarySeconds = 0
             // resume(), never start() — start() zeroes route/distance, which is exactly what used
             // to wipe a paused run back to 0,00 km at the traffic light.
             location.resume()

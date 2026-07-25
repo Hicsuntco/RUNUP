@@ -150,6 +150,10 @@ final class UserProfile {
     var onboarded: Bool
     var distanceUnit: String
     var coachNotificationsEnabled: Bool
+    /// Auto-pause at a stop (red light, water fountain) during a live run — on by default, like
+    /// Strava/Garmin, but some runners find it fights real short walk breaks in an interval
+    /// session, so it's a real opt-out, not just a hidden behavior.
+    var autoPauseEnabled: Bool = true
     /// Which `AccentTheme` swatch the user picked in Profil → Apparence — mirrored into
     /// `ThemeStore.shared` on load so `RUColor.rose`/`.rose2`/`.violet` reflect it everywhere.
     var accentThemeID: String = AccentTheme.defaultID

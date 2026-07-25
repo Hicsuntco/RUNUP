@@ -27,8 +27,6 @@ struct DeepDiveStepView: View {
                 case .restart: restartFields
                 default: healthFields
                 }
-
-                WellbeingFieldsView(vm: vm)
             }
             ObNext(disabled: !vm.canProceed(fromStep: 3), action: onNext)
         }

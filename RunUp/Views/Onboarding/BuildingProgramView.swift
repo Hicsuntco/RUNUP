@@ -15,8 +15,10 @@ struct BuildingProgramView: View {
         } else {
             closing = "Progression sécurisée"
         }
+        let firstName = vm.name.trimmingCharacters(in: .whitespaces)
+        let profileStep = firstName.isEmpty ? "Ton profil analysé" : "Profil de \(firstName) analysé"
         return [
-            "Ton profil analysé",
+            profileStep,
             "Ta forme de départ estimée",
             "Séances calées sur tes \(dayCount) jours",
             closing
@@ -41,11 +43,20 @@ struct BuildingProgramView: View {
                         .displayStyle(30)
                         .foregroundColor(vm.buildProgress == 4 ? RUColor.lime : RUColor.textPrimary)
                 }
-                Text("ON CONSTRUIT\nTON PROGRAMME")
-                    .displayStyle(28)
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(RUColor.textPrimary)
-                    .lineSpacing(-2)
+                VStack(spacing: 6) {
+                    // A generic "ON CONSTRUIT TON PROGRAMME" was the exact same reveal moment for
+                    // every runner regardless of what she'd just spent 7 steps answering — this
+                    // names who it's for, the same way the checklist below already names her race
+                    // distance and running-day count instead of generic placeholders.
+                    if !vm.name.trimmingCharacters(in: .whitespaces).isEmpty {
+                        EyebrowLabel(text: "Pour \(vm.name.trimmingCharacters(in: .whitespaces))", color: RUColor.rose)
+                    }
+                    Text("ON CONSTRUIT\nTON PROGRAMME")
+                        .displayStyle(28)
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(RUColor.textPrimary)
+                        .lineSpacing(-2)
+                }
             }
 
             VStack(spacing: 0) {

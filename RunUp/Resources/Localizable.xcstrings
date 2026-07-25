@@ -10208,6 +10208,134 @@
           }
         }
       }
+    },
+    "Étape 4 · un mot sur toi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 4 · a word about you"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 4 · una palabra sobre ti"
+          }
+        }
+      }
+    },
+    "AVANT DE CONTINUER": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BEFORE WE CONTINUE"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ANTES DE CONTINUAR"
+          }
+        }
+      }
+    },
+    "Pour un plan qui colle vraiment à ta réalité.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So the plan really fits your reality."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para que el plan se ajuste de verdad a tu realidad."
+          }
+        }
+      }
+    },
+    "Étape 5 · ton rythme": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 5 · your rhythm"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 5 · tu ritmo"
+          }
+        }
+      }
+    },
+    "Étape 6 · ton niveau": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 6 · your level"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 6 · tu nivel"
+          }
+        }
+      }
+    },
+    "Étape 7 · tes données": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 7 · your data"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 7 · tus datos"
+          }
+        }
+      }
+    },
+    "Profil de %@ analysé": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@'s profile analyzed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perfil de %@ analizado"
+          }
+        }
+      }
+    },
+    "Pour %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para %@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -61,8 +61,6 @@ struct HyroxDetailsStepView: View {
                 if let days = vm.daysUntilRace {
                     Text("J-\(days)").font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.rose2).padding(.top, 10)
                 }
-
-                WellbeingFieldsView(vm: vm)
             }
             ObNext(disabled: !vm.canProceed(fromStep: 3), action: onNext)
         }

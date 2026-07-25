@@ -7,7 +7,7 @@ struct LevelStepView: View {
     var body: some View {
         ObScreen {
             ScrollView {
-                ObTitle(eyebrow: "Étape 5 · ton niveau", title: "OÙ TU EN ES ?")
+                ObTitle(eyebrow: "Étape 6 · ton niveau", title: "OÙ TU EN ES ?")
                 VStack(spacing: 8) {
                     ForEach(ExperienceLevel.allCases, id: \.self) { level in
                         SelectableCard(selected: vm.levelTouched && vm.level == level, emoji: nil, title: level.title, subtitle: level.subtitle) {
@@ -18,7 +18,7 @@ struct LevelStepView: View {
                 }
                 .padding(.top, 20)
             }
-            ObNext(disabled: !vm.canProceed(fromStep: 5), action: onNext)
+            ObNext(disabled: !vm.canProceed(fromStep: 6), action: onNext)
         }
     }
 }

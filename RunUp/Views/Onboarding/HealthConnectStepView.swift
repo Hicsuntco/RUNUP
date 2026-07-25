@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Step 6 — data source connections. Apple Santé uses the real HealthKit authorization prompt;
+/// Step 7 — data source connections. Apple Santé uses the real HealthKit authorization prompt;
 /// Strava/Garmin are UI stubs per the brief ("peuvent rester des stubs à connecter pour une v1").
 struct HealthConnectStepView: View {
     @Environment(AppState.self) private var appState
@@ -11,7 +11,7 @@ struct HealthConnectStepView: View {
         ObScreen {
             Spacer()
             ObTitle(
-                eyebrow: "Étape 6 · tes données",
+                eyebrow: "Étape 7 · tes données",
                 title: "CONNECTE TA MONTRE",
                 subtitle: "Pour une forme du jour plus précise — FC, sommeil, sorties passées. Facultatif, tu peux le faire plus tard."
             )

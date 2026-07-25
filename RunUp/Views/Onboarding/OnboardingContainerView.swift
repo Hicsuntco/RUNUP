@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// Hosts the pre-onboarding welcome screen + the 8-step wizard. Mirrors the top-level
+/// Hosts the pre-onboarding welcome screen + the 9-step wizard. Mirrors the top-level
 /// `Onboarding` component in onboarding.jsx.
 struct OnboardingContainerView: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.scenePhase) private var scenePhase
     @State private var vm = OnboardingViewModel()
 
     var body: some View {
@@ -16,13 +17,13 @@ struct OnboardingContainerView: View {
             } else {
                 VStack(spacing: 0) {
                     Spacer().frame(height: 12)
-                    // Back navigation — the 8-step wizard used to be forward-only, so a mistyped
+                    // Back navigation — the wizard used to be forward-only, so a mistyped
                     // birthdate or a mis-picked goal could only be fixed by finishing onboarding
                     // and replaying the whole thing from Profil. Hidden on the first step (nothing
                     // to go back to) and the final "building" step (the program is generating).
                     HStack {
                         if vm.step > 0 && vm.step < OnboardingViewModel.totalSteps - 1 {
-                            BackChevronButton { vm.step -= 1 }
+                            BackChevronButton { vm.step -= 1; vm.saveDraft() }
                         } else {
                             Color.clear.frame(width: 44, height: 44)
                         }
@@ -39,6 +40,12 @@ struct OnboardingContainerView: View {
         .ignoresSafeArea()
         .animation(.easeInOut(duration: 0.25), value: vm.step)
         .animation(.easeInOut(duration: 0.3), value: vm.showWelcome)
+        // Belt-and-braces alongside the per-step saves in `advance()`/the back button: catches
+        // answers typed *within* a step (a name, a weight) that would otherwise be lost if she's
+        // interrupted — a call, the app switcher, a low-battery kill — before ever tapping Continuer.
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .background { vm.saveDraft() }
+        }
     }
 
     @ViewBuilder
@@ -55,18 +62,21 @@ struct OnboardingContainerView: View {
             } else {
                 DeepDiveStepView(vm: vm) { advance() }
             }
-        case 4: RunningDaysStepView(vm: vm) { advance() }
-        case 5: LevelStepView(vm: vm) { advance() }
-        case 6: HealthConnectStepView(vm: vm) { advance() }
+        case 4: WellbeingStepView(vm: vm) { advance() }
+        case 5: RunningDaysStepView(vm: vm) { advance() }
+        case 6: LevelStepView(vm: vm) { advance() }
+        case 7: HealthConnectStepView(vm: vm) { advance() }
         default: BuildingProgramView(vm: vm) { finish() }
         }
     }
 
     private func advance() {
         vm.step = min(vm.step + 1, OnboardingViewModel.totalSteps - 1)
+        vm.saveDraft()
     }
 
     private func finish() {
+        vm.clearDraft()
         AdaptivePlanEngine.applyOnboarding(vm.buildResult(), to: appState.profile)
         let profile = appState.profile
         let shape = AdaptivePlanEngine.ProgramShape.compute(goal: profile.goalId, raceDate: profile.raceDate, from: profile.programStartDate ?? .now)

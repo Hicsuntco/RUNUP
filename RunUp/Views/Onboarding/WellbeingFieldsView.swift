@@ -53,6 +53,7 @@ struct WellbeingFieldsView: View {
                         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                     }
                     .padding(.top, 4)
+                    .id("cycleFields")
                 }
             }
         }

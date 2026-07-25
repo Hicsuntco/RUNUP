@@ -7,7 +7,7 @@ struct RunningDaysStepView: View {
     var body: some View {
         ObScreen {
             ScrollView {
-                ObTitle(eyebrow: "Étape 4 · ton rythme", title: "TES JOURS DE COURSE", subtitle: "Le programme se cale dessus — tu pourras toujours bouger une séance.")
+                ObTitle(eyebrow: "Étape 5 · ton rythme", title: "TES JOURS DE COURSE", subtitle: "Le programme se cale dessus — tu pourras toujours bouger une séance.")
                 HStack(spacing: 7) {
                     ForEach(0..<7) { i in
                         let on = vm.runningDays.contains(i)
@@ -58,7 +58,7 @@ struct RunningDaysStepView: View {
                     .padding(.top, 10)
                 }
             }
-            ObNext(disabled: !vm.canProceed(fromStep: 4), action: onNext)
+            ObNext(disabled: !vm.canProceed(fromStep: 5), action: onNext)
         }
     }
 }

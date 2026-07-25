@@ -1,13 +1,18 @@
 import Foundation
 import Observation
 
-/// Drives the 8-step onboarding wizard. Mirrors the local state hooks in `Onboarding` (onboarding.jsx).
+/// Drives the 9-step onboarding wizard. Mirrors the local state hooks in `Onboarding` (onboarding.jsx),
+/// plus a step 4 (injury/cycle) split out of what used to be a combined step 3.
 @Observable
 final class OnboardingViewModel {
-    static let totalSteps = 8
+    static let totalSteps = 9
 
     var showWelcome = true
     var step = 0
+
+    init() {
+        loadDraft()
+    }
 
     // Step 0
     var name = ""
@@ -33,19 +38,19 @@ final class OnboardingViewModel {
     var lastRanRecency: String?
     var weeklyTimeBudget: String?
     var preferredTimeOfDay: String?
-    // Step 3 — shared across every branch (race included): injury is asked regardless of goal,
+    // Step 4 — shared across every branch (race included): injury is asked regardless of goal,
     // cycle tracking only ever offered when `sex == "female"`.
     var injuryArea: String?
     var cycleTrackingEnabled = false
     var lastPeriodStartDate: Date?
     var averageCycleLengthDays = 28
-    // Step 4
+    // Step 5
     var runningDays: Set<Int> = [1, 2, 4, 6]
     var preferredLongRunDay: Int?
     /// Set the moment she taps any day toggle — `runningDays` starts pre-filled with a plausible
     /// default so the screen isn't empty, but a plan built from that default without her ever
     /// touching it would be guessing at her real rhythm, not asking. Gates `canProceed(fromStep:
-    /// 4)` alongside the existing 2-day minimum.
+    /// 5)` alongside the existing 2-day minimum.
     var runningDaysTouched = false
 
     /// The day the long run actually lands on — falls back to the latest selected running day if
@@ -54,16 +59,16 @@ final class OnboardingViewModel {
         if let day = preferredLongRunDay, runningDays.contains(day) { return day }
         return runningDays.max()
     }
-    // Step 5
+    // Step 6
     var level: ExperienceLevel = .intermediaire
     /// Same reasoning as `runningDaysTouched` — `level` defaults to `.intermediaire` so a card is
     /// always shown as selected, but the plan's whole starting difficulty comes from this one
     /// answer and shouldn't ship on a default she never confirmed.
     var levelTouched = false
-    // Step 6
+    // Step 7
     var connected: Set<ConnectedSource> = []
     var connecting: ConnectedSource?
-    // Step 7
+    // Step 8
     var buildProgress = 0
 
     var isRace: Bool { goal == .race }
@@ -86,9 +91,13 @@ final class OnboardingViewModel {
         case 1: return birthdate != nil && sex != nil
         case 2: return goal != nil
         case 3: return isRace ? raceStepValid : (isHyrox ? hyroxStepValid : deepDiveValid)
-        case 4: return runningDays.count >= 2 && runningDaysTouched
-        case 5: return levelTouched
-        case 6: return true
+        // Injury/cycle fields are always optional — a real, known injury/blessure worth flagging
+        // is the exception, not the rule, so requiring an answer here would just add friction for
+        // the common case of "nothing to report."
+        case 4: return true
+        case 5: return runningDays.count >= 2 && runningDaysTouched
+        case 6: return levelTouched
+        case 7: return true
         default: return true
         }
     }
@@ -109,9 +118,6 @@ final class OnboardingViewModel {
         switch goal {
         case .weight: return !weightNow.isEmpty && !weightTarget.isEmpty && !height.isEmpty
         case .progress: return focusArea != nil
-        // Injury/cycle fields are shared across every branch and always optional — a real,
-        // known injury/blessure worth flagging is the exception, not the rule, so requiring an
-        // answer here would just add friction for the common case of "nothing to report."
         case .restart: return lastRanRecency != nil
         case .health: return weeklyTimeBudget != nil && preferredTimeOfDay != nil
         default: return true

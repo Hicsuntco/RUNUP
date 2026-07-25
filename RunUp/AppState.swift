@@ -29,14 +29,25 @@ final class AppState {
     /// recovery/choice first. Replaces the old "Refaire l'onboarding" action, which re-asked her
     /// name/sexe/date de naissance/blessures — everything, not just the goal — to get a new plan.
     var newGoalWizardPresented = false
-    var manualDebriefPresented = false
+    /// Runs waiting for their RPE debrief — a "FAIT" tap (`markTodaySessionDone`) or a run
+    /// delivered from the Watch (`WatchSessionService.handleCompletedRun`) appends here rather
+    /// than overwriting a single slot. Two runs finishing in quick succession (e.g. the Watch
+    /// queuing several while the phone was out of range, then delivering them together on
+    /// reconnect) used to silently drop the first one's RPE/streak/XP credit forever — the second
+    /// arrival just overwrote the one slot before its sheet was ever shown. `RootTabView` presents
+    /// `pendingDebriefs.first` and pops it once that debrief is dismissed, so a second arrival
+    /// while one is already showing queues behind it instead of replacing it.
+    var pendingDebriefs: [RunRecord] = []
 
     // Live run (ephemeral, survives navigating away from the Live screen)
     var liveRun: LiveRunViewModel?
     var isRunActive: Bool { liveRun != nil }
     /// The most recently completed run, shown on the Recap screen. Transient — not persisted
     /// on `UserProfile` itself, just a navigation hand-off (the `RunRecord` is already inserted
-    /// into `modelContext` and lives on independently via the History query).
+    /// into `modelContext` and lives on independently via the History query). Unrelated to
+    /// `pendingDebriefs` above — Recap embeds its own `DebriefSheet` inline for the live-GPS-run
+    /// flow, which can't race with the manual/Watch flow the way two Watch deliveries can race
+    /// each other.
     var lastRun: RunRecord?
 
     init(modelContext: ModelContext) {
@@ -243,8 +254,7 @@ final class AppState {
         // Deliberately NOT inserted into SwiftData here — `DebriefSheet` inserts it on VALIDER.
         // Inserting up front meant dismissing the debrief sheet without validating left a phantom
         // synthetic run in History/Stats for a session that was never actually confirmed done.
-        lastRun = record
-        manualDebriefPresented = true
+        pendingDebriefs.append(record)
     }
 
     func openSessionDetail() { sessionDetailPresented = true }

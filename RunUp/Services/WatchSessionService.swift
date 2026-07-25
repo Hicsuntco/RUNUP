@@ -98,9 +98,11 @@ final class WatchSessionService: NSObject {
         }
         // Inserted right away — like a GPS run, it really happened (DebriefSheet sees
         // `modelContext != nil` and won't re-insert). The debrief only adds the RPE on top.
+        // Queued rather than assigned to a single slot — two runs delivered together on
+        // reconnect (a real case: the Watch queues delivery through airplane mode/out-of-range)
+        // must not have the second silently overwrite the first's pending debrief.
         appState.modelContext.insert(record)
-        appState.lastRun = record
-        appState.manualDebriefPresented = true
+        appState.pendingDebriefs.append(record)
         let distance = String(format: "%.1f", locale: Locale(identifier: "fr_FR"), record.distanceKm)
         appState.notify(icon: "⌚", colorHex: 0xFF3B6B, title: "Course reçue de ta montre", text: "\(record.title) · \(distance) km — valide ton ressenti pour mettre à jour le programme.")
         appState.toast("Course reçue de ta montre ⌚")

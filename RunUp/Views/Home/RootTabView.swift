@@ -59,10 +59,16 @@ struct RootTabView: View {
         // she's on any tab (a run arriving from the Apple Watch, "Marquer comme faite" flows),
         // and a sheet anchored inside a view that isn't currently mounted simply never appears
         // (the RPE, streak and plan adaptation were then silently lost).
-        .sheet(isPresented: Binding(get: { appState.manualDebriefPresented }, set: { appState.manualDebriefPresented = $0 })) {
-            if let run = appState.lastRun {
-                DebriefSheet(run: run).runUpSheetStyle()
-            }
+        // `.sheet(item:)`, not `.sheet(isPresented:)` — keyed on the run itself so a second run
+        // arriving while this one is still showing (see `AppState.pendingDebriefs`) tears down and
+        // recreates `DebriefSheet`'s state instead of silently swapping its content underneath an
+        // already-picked RPE. Dismissing (swipe-down or VALIDER, both call `dismiss()`, which
+        // clears the binding) pops the front of the queue, presenting the next one if any.
+        .sheet(item: Binding(
+            get: { appState.pendingDebriefs.first },
+            set: { newValue in if newValue == nil, !appState.pendingDebriefs.isEmpty { appState.pendingDebriefs.removeFirst() } }
+        )) { run in
+            DebriefSheet(run: run).runUpSheetStyle()
         }
         // Tapping the weekly-recap local notification lands here rather than wherever the app
         // happened to be left open — `NotificationService` can't reach `AppState` directly (it's a

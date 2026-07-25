@@ -6,6 +6,7 @@ const { requireAuth } = require('../../lib/auth');
 const { withErrorHandling, isUuid } = require('../../lib/http');
 const { containsObjectionableContent } = require('../../lib/moderation');
 const { sendPushToUsers } = require('../../lib/apns');
+const { underDailyCap } = require('../../lib/rateLimit');
 
 module.exports = withErrorHandling(async function handler(req, res) {
   const userId = await requireAuth(req);
@@ -114,6 +115,11 @@ async function handleCreate(req, res, userId) {
 async function handleJoin(req, res, userId) {
   const { rows: already } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
   if (already.length > 0) return res.status(409).json({ error: 'already_in_club' });
+
+  // Invite codes are 6 chars from a 32-char alphabet (~1.07 billion combinations) — only safe
+  // against brute-forcing if guesses are actually throttled. 20/day is far beyond any real
+  // mistyped-code retry count.
+  if (!(await underDailyCap('join:' + userId, 20))) return res.status(429).json({ error: 'too_many_requests' });
 
   const { inviteCode } = req.body || {};
   if (!inviteCode) return res.status(400).json({ error: 'bad_request' });
@@ -322,6 +328,10 @@ async function handleCreateEvent(req, res, userId) {
   const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
   const clubId = memberRows[0]?.club_id;
   if (!clubId) return res.status(409).json({ error: 'not_in_club' });
+
+  // Every other member gets a real push per call — without a cap this is an easy way to flood
+  // the whole club's lock screens. 20/day is far beyond any real day of group-run proposals.
+  if (!(await underDailyCap('event:' + userId, 20))) return res.status(429).json({ error: 'too_many_requests' });
 
   const { rows: inserted } = await sql`
     INSERT INTO club_events (club_id, created_by, title, location, starts_at)

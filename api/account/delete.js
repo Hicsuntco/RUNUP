@@ -25,8 +25,10 @@ module.exports = withErrorHandling(async function handler(req, res) {
   } catch { /* deletion must not fail because Strava is unreachable */ }
 
   await sql`DELETE FROM users WHERE id = ${userId}`;
-  // coach_usage rows are keyed by string ("u:<id>"), not an FK — clean them up explicitly so no
-  // user-linked identifier survives deletion (guideline 5.1.1(v)).
-  await sql`DELETE FROM coach_usage WHERE key = ${'u:' + userId} OR key = ${'act:' + userId}`;
+  // coach_usage rows are keyed by string ("<prefix>:<id>"), not an FK — clean them up explicitly
+  // so no user-linked identifier survives deletion (guideline 5.1.1(v)). A suffix match instead of
+  // an exact prefix list so a future cap (a new "<prefix>:" key) can't silently be forgotten here
+  // the way "avatar:<id>" originally was.
+  await sql`DELETE FROM coach_usage WHERE key LIKE ${'%:' + userId}`;
   res.status(200).json({ ok: true });
 });

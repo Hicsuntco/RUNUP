@@ -42,6 +42,12 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'deleteEvent':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleDeleteEvent(req, res, userId);
+    case 'globalWeekly':
+      if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleGlobalWeekly(req, res, userId);
+    case 'setGlobalOptIn':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleSetGlobalOptIn(req, res, userId);
     default:
       return res.status(404).json({ error: 'not_found' });
   }
@@ -402,5 +408,42 @@ async function handleSyncBadges(req, res, userId) {
       ON CONFLICT DO NOTHING
     `)
   );
+  res.status(200).json({ ok: true });
+}
+
+// Real km run THIS week, across EVERY opted-in user on the platform — not scoped to a club, so
+// this is a bigger visibility surface than the club-scoped weekly board, which is why it's
+// opt-in (see `global_leaderboard_opt_in`) rather than on for everyone by default. The caller's
+// own block list still applies, same as the club leaderboard.
+async function handleGlobalWeekly(req, res, userId) {
+  const { rows } = await sql`
+    SELECT id, name, avatar_data, week_km, rank FROM (
+      SELECT u.id, u.name, u.avatar_data,
+             COALESCE(SUM(a.distance_km), 0) AS week_km,
+             RANK() OVER (ORDER BY COALESCE(SUM(a.distance_km), 0) DESC) AS rank
+      FROM users u
+      LEFT JOIN activities a ON a.user_id = u.id
+        AND a.type = 'run' AND a.distance_km IS NOT NULL
+        AND a.created_at >= date_trunc('week', now())
+      WHERE u.global_leaderboard_opt_in = true
+      GROUP BY u.id, u.name, u.avatar_data
+    ) ranked
+    WHERE id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+    ORDER BY rank ASC
+    LIMIT 100
+  `;
+  const { rows: meRows } = await sql`SELECT global_leaderboard_opt_in FROM users WHERE id = ${userId}`;
+  res.status(200).json({
+    optedIn: meRows[0]?.global_leaderboard_opt_in || false,
+    entries: rows.map((r) => ({
+      id: r.id, name: r.name, avatarBase64: r.avatar_data || null, weekKm: Number(r.week_km), rank: Number(r.rank), isMe: r.id === userId,
+    })),
+  });
+}
+
+async function handleSetGlobalOptIn(req, res, userId) {
+  const { optedIn } = req.body || {};
+  if (typeof optedIn !== 'boolean') return res.status(400).json({ error: 'bad_request' });
+  await sql`UPDATE users SET global_leaderboard_opt_in = ${optedIn} WHERE id = ${userId}`;
   res.status(200).json({ ok: true });
 }

@@ -31,10 +31,15 @@ struct ClubView: View {
     @State private var showCreateEvent = false
     /// My own feed activity pending delete confirmation (appui long → Supprimer).
     @State private var pendingDeleteActivity: FeedItem?
-    /// Which board the Classement tab shows — the fresh Monday-reset km race, or all-time XP.
+    /// Which board the Classement tab shows — the fresh Monday-reset km race, all-time XP, or the
+    /// opt-in global weekly board across every club.
     @State private var boardMode: BoardMode = .week
+    /// Nil until the global board has been fetched at least once (lazy — most people never tap
+    /// it) — distinct from `optedIn` inside it, which reflects HER OWN current opt-in state.
+    @State private var globalBoard: GlobalWeeklyBoard?
+    @State private var isLoadingGlobal = false
 
-    private enum BoardMode { case week, general }
+    private enum BoardMode { case week, general, global }
     /// Drives the feed rows' staggered entrance — flipped once the first feed load lands, after
     /// which each row's own per-index delay takes over (same pattern as `RecapView`'s splits).
     @State private var feedRevealed = false
@@ -445,7 +450,10 @@ struct ClubView: View {
     }
 
     private func boardModeChip(_ label: String, _ value: BoardMode) -> some View {
-        Button(action: { boardMode = value }) {
+        Button(action: {
+            boardMode = value
+            if value == .global && globalBoard == nil { Task { await loadGlobalBoard() } }
+        }) {
             Text(label)
                 .font(RUFont.sans(11, weight: .semibold))
                 .foregroundColor(boardMode == value ? RUColor.rose2 : RUColor.text2)
@@ -682,6 +690,7 @@ struct ClubView: View {
             HStack(spacing: 6) {
                 boardModeChip("Cette semaine", .week)
                 boardModeChip("Général (XP)", .general)
+                boardModeChip("Mondial", .global)
             }
             if boardMode == .week {
                 if (board.weekly ?? []).isEmpty && !isLoading {
@@ -741,6 +750,9 @@ struct ClubView: View {
                 }
             }
             }
+            if boardMode == .global {
+                globalBoardContent
+            }
 
             EyebrowLabel(text: "Derniers badges", color: RUColor.text3)
             HStack(spacing: 10) {
@@ -760,6 +772,66 @@ struct ClubView: View {
                         }
                     }
                     .buttonStyle(PressableStyle())
+                }
+            }
+        }
+    }
+
+    /// The opt-in global weekly board — every club's members compete on the SAME real km-this-
+    /// week race the club board already shows, just across the whole platform instead of one
+    /// club. Off by default (see `global_leaderboard_opt_in`): a real, explicit choice since
+    /// this exposes her name/photo/km to people outside her own club.
+    private var globalBoardContent: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Classement mondial").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                    Text("Visible par tout le monde, pas juste ton club.")
+                        .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                }
+                Spacer()
+                if let globalBoard {
+                    Toggle("", isOn: Binding(get: { globalBoard.optedIn }, set: { _ in toggleGlobalOptIn() }))
+                        .labelsHidden()
+                        .tint(RUColor.rose)
+                        .accessibilityLabel("Rejoindre le classement mondial")
+                }
+            }
+            .padding(14)
+            .ruCard()
+
+            if isLoadingGlobal && globalBoard == nil {
+                ProgressView().frame(maxWidth: .infinity).padding(.vertical, 20)
+            } else if let globalBoard {
+                if !globalBoard.optedIn {
+                    Text("Active le classement mondial pour voir où tu te situes parmi tous les coureurs RunUp cette semaine.")
+                        .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                        .frame(maxWidth: .infinity).padding(.vertical, 12)
+                } else if globalBoard.entries.isEmpty {
+                    Text("Personne n'a encore couru cette semaine — sois la première !")
+                        .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                        .frame(maxWidth: .infinity).padding(.vertical, 20)
+                } else {
+                    VStack(spacing: 6) {
+                        ForEach(globalBoard.entries) { entry in
+                            HStack(spacing: 12) {
+                                Text(entry.rank >= 1 && entry.rank <= 3 ? ["🥇", "🥈", "🥉"][entry.rank - 1] : "\(entry.rank)")
+                                    .displayStyle(15)
+                                    .foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.text2)
+                                    .frame(width: 20)
+                                AvatarView(base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28)
+                                Text(entry.isMe ? "\(entry.name) · toi" : entry.name)
+                                    .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
+                                    .foregroundColor(RUColor.textPrimary)
+                                Spacer()
+                                Text("\(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), entry.weekKm)) km")
+                                    .displayStyle(14).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
+                            }
+                            .padding(.horizontal, 13).padding(.vertical, 11)
+                            .background(entry.isMe ? RUColor.rose.opacity(0.1) : RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(entry.isMe ? RUColor.rose.opacity(0.28) : RUColor.line, lineWidth: RUSpacing.hairline))
+                        }
+                    }
                 }
             }
         }
@@ -890,6 +962,30 @@ struct ClubView: View {
             notifyNewComments(in: feed)
         } catch {
             errorMessage = "Impossible de charger le fil d'activité."
+        }
+    }
+
+    private func loadGlobalBoard() async {
+        isLoadingGlobal = true
+        globalBoard = try? await clubService.fetchGlobalWeekly()
+        isLoadingGlobal = false
+    }
+
+    private func toggleGlobalOptIn() {
+        guard let current = globalBoard?.optedIn else { return }
+        let next = !current
+        globalBoard?.optedIn = next
+        Haptics.selection()
+        Task {
+            do {
+                try await clubService.setGlobalLeaderboardOptIn(next)
+                await loadGlobalBoard()
+            } catch {
+                await MainActor.run {
+                    globalBoard?.optedIn = current
+                    appState.toast("Impossible de mettre à jour — réessaie.")
+                }
+            }
         }
     }
 

@@ -113,6 +113,14 @@ struct ClubJoinedResponse: Decodable {
     var name: String
 }
 
+/// Real km run this week across EVERY opted-in user on the platform — not scoped to her own
+/// club. `optedIn` reflects whether SHE is currently visible in it, since opting out still needs
+/// to fetch this once to show the right toggle state.
+struct GlobalWeeklyBoard: Decodable {
+    var optedIn: Bool
+    var entries: [WeeklyRow]
+}
+
 enum ClubServiceError: Error {
     case network(Error)
     case badResponse(Int, String)
@@ -128,6 +136,14 @@ struct ClubService {
 
     func fetchBoard() async throws -> ClubBoard {
         try await send(path: "api/clubs/mine", method: "GET")
+    }
+
+    func fetchGlobalWeekly() async throws -> GlobalWeeklyBoard {
+        try await send(path: "api/clubs/globalWeekly", method: "GET")
+    }
+
+    func setGlobalLeaderboardOptIn(_ optedIn: Bool) async throws {
+        let _: OkResponse = try await send(path: "api/clubs/setGlobalOptIn", method: "POST", body: ["optedIn": optedIn])
     }
 
     func createClub(name: String) async throws -> ClubCreatedResponse {

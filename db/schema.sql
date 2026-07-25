@@ -76,6 +76,10 @@ CREATE TABLE IF NOT EXISTS activities (
 ALTER TABLE activities ADD COLUMN IF NOT EXISTS distance_km NUMERIC;
 
 CREATE INDEX IF NOT EXISTS idx_activities_club_created ON activities(club_id, created_at DESC);
+-- The referral "isFirstActivity" check (api/activities/[action].js) runs a user_id-scoped query
+-- on EVERY activity creation, unindexed on that column before this — a full scan on the app's
+-- hottest write path once the table has real volume.
+CREATE INDEX IF NOT EXISTS idx_activities_user ON activities(user_id);
 
 CREATE TABLE IF NOT EXISTS activity_kudos (
   activity_id UUID NOT NULL REFERENCES activities(id) ON DELETE CASCADE,

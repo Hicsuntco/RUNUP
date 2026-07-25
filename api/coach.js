@@ -86,6 +86,13 @@ module.exports = withErrorHandling(async function handler(req, res) {
       res.status(429).json({ error: 'rate_limited' });
       return;
     }
+    // Opportunistic prune, not a cron job — coach_usage now backs four separate rate limiters
+    // (coach/login/activity-create/avatar) with no retention, so it grows one row per key per day
+    // forever. A ~0.5% chance per coach request (this endpoint's traffic is steady) keeps it
+    // bounded without needing new scheduling infra.
+    if (Math.random() < 0.005) {
+      sql`DELETE FROM coach_usage WHERE day < CURRENT_DATE - interval '30 days'`.catch(() => {});
+    }
   } catch (err) {
     console.error('coach rate limit unavailable:', err.message);
   }

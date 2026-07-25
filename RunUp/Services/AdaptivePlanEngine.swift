@@ -645,6 +645,10 @@ enum AdaptivePlanEngine {
         if let idx = profile.weekSessions.firstIndex(where: { $0.weekday == today }) {
             profile.weekSessions[idx].completed = true
         }
+        // Course libre's own completion flag — its `todaySession` template is independent of
+        // `weekSessions` (see `chooseFreeRun`), so this is the only reliable "she did today's
+        // free-run session" signal in that mode.
+        if profile.programPhase == .freerun { profile.freeRunSessionDoneDate = .now }
         let severity = 3 - rpe.rawValue // 0 = facile ... 3 = tropDur, same scale UserProfile.readiness reads
         profile.weekRPESum += severity
         profile.weekRPECount += 1

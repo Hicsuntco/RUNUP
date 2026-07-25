@@ -72,11 +72,14 @@ struct HomeView: View {
 
                 programWeekCard
 
-                readinessCard
+                // The 3-goal ring (séance/calories/pas — concrete, actionable) reads more
+                // meaningful at a glance than "forme du jour" (an abstract 0-100 score), so it
+                // leads; readiness moved to where this used to be.
+                ringsCard
 
                 sessionCard
 
-                ringsCard
+                readinessCard
 
                 if isFreeRun {
                     Text("Pas de plan fixe — le coach te propose de quoi garder la forme, jour après jour.")

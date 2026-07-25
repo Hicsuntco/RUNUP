@@ -66,6 +66,14 @@ final class UserProfile {
     /// advanced it). Now derived from this real date, same mechanism as `programStartDate` above.
     /// Optional for the same migrate-as-nil-and-self-heal reason.
     var recoveryStartedAt: Date?
+    /// Course libre's own "séance faite" tracking — set by `AdaptivePlanEngine.applyDebrief` when
+    /// `programPhase == .freerun`. Free-run's `todaySession` is a template picked independently
+    /// of `weekSessions` (see `chooseFreeRun`), so reading `weekSessions`-based `seanceDoneToday`/
+    /// `isRestDayToday` in that mode meant checking a plan that has nothing to do with what's
+    /// actually being offered — stale (or absent) `weekSessions` entries made the session card
+    /// claim "faite" on a day nothing was done, while the goals ring (reading the same stale data
+    /// differently) said "Repos" at the same time.
+    var freeRunSessionDoneDate: Date?
     /// 0 = Monday ... 6 = Sunday.
     var runningDays: [Int]
     /// Which weekday carries the long run — chosen at onboarding
@@ -204,7 +212,12 @@ final class UserProfile {
 
     /// True once today's planned session is done, or trivially true on a rest day (nothing was
     /// asked of you). Falls back to `false` if `weekSessions` hasn't been generated yet.
+    /// Course libre reads its own tracking instead — see `freeRunSessionDoneDate`.
     var seanceDoneToday: Bool {
+        if programPhase == .freerun {
+            guard let date = freeRunSessionDoneDate else { return false }
+            return Calendar.current.isDateInToday(date)
+        }
         guard let day = weekSessions.first(where: { $0.weekday == todayWeekdayIndex }) else { return false }
         guard let session = day.session, session.durationMinutes > 0 else { return true }
         return day.completed
@@ -214,8 +227,10 @@ final class UserProfile {
     /// trivially `true` on a rest day too (so the daily-goals bonus isn't blocked by a day off).
     /// UI reads this to show "Repos" instead of "Faite" — showing a run as "done" on a day nothing
     /// was ever planned reads as a bug (a gauge claiming a session happened with nothing in
-    /// History to back it).
+    /// History to back it). Course libre has no rest-day concept — a session is always on offer,
+    /// optional, every day — so this is always `false` there.
     var isRestDayToday: Bool {
+        if programPhase == .freerun { return false }
         guard let day = weekSessions.first(where: { $0.weekday == todayWeekdayIndex }) else { return false }
         guard let session = day.session else { return true }
         return session.durationMinutes == 0

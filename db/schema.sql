@@ -22,6 +22,12 @@ CREATE TABLE IF NOT EXISTS users (
 -- way as everything else user-generated (lib/moderation.js's blocklist filter).
 ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT;
 
+-- A real profile photo — a data URI ("data:image/jpeg;base64,...."), already resized/compressed
+-- client-side to a small thumbnail before it ever reaches here (see api/account/avatar.js). Kept
+-- directly in Postgres rather than a separate object-storage service — cheap at small-club scale
+-- with the client-side size cap already in place.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_data TEXT;
+
 -- Real referral loop — every user gets a personal code (generated at signup, see
 -- api/auth/[action].js) to share; `referred_by` is set once, at signup, from whatever code (if
 -- any) the new signup provided; `referral_reward_granted` flips once, the first time the referred

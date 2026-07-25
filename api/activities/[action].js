@@ -156,7 +156,7 @@ async function handleFeed(req, res, userId) {
   if (!clubId) return res.status(200).json({ items: [] });
 
   const { rows } = await sql`
-    SELECT a.id, a.text, a.created_at, u.name, u.id AS user_id,
+    SELECT a.id, a.text, a.created_at, u.name, u.id AS user_id, u.avatar_data,
            (SELECT COUNT(*)::int FROM activity_kudos k WHERE k.activity_id = a.id) AS kudos,
            EXISTS(SELECT 1 FROM activity_kudos k WHERE k.activity_id = a.id AND k.user_id = ${userId}) AS kudoed_by_me,
            (SELECT COUNT(*)::int FROM activity_comments c WHERE c.activity_id = a.id) AS comments_count
@@ -173,6 +173,7 @@ async function handleFeed(req, res, userId) {
       id: r.id,
       userId: r.user_id,
       name: r.name,
+      avatarBase64: r.avatar_data || null,
       text: r.text,
       createdAt: r.created_at,
       kudos: r.kudos,
@@ -239,7 +240,7 @@ async function handleCommentsList(req, res, userId) {
   if (activityRows[0]?.club_id !== clubId) return res.status(404).json({ error: 'not_found' });
 
   const { rows } = await sql`
-    SELECT c.id, c.text, c.created_at, u.id AS user_id, u.name
+    SELECT c.id, c.text, c.created_at, u.id AS user_id, u.name, u.avatar_data
     FROM activity_comments c
     JOIN users u ON u.id = c.user_id
     WHERE c.activity_id = ${activityId}
@@ -253,6 +254,7 @@ async function handleCommentsList(req, res, userId) {
       id: r.id,
       userId: r.user_id,
       name: r.name,
+      avatarBase64: r.avatar_data || null,
       text: r.text,
       createdAt: r.created_at,
     })),

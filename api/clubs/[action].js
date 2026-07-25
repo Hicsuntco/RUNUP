@@ -182,8 +182,8 @@ async function handleMine(req, res, userId) {
   // real array_agg over `user_badges`) instead of anything computed only from this device's own
   // local history.
   const { rows: leaderboard } = await sql`
-    SELECT id, name, xp_total, rank, bio, joined_at, activities_count, badge_keys FROM (
-      SELECT u.id, u.name, u.xp_total, u.bio, cm.joined_at,
+    SELECT id, name, xp_total, rank, bio, avatar_data, joined_at, activities_count, badge_keys FROM (
+      SELECT u.id, u.name, u.xp_total, u.bio, u.avatar_data, cm.joined_at,
              RANK() OVER (ORDER BY u.xp_total DESC) AS rank,
              (SELECT COUNT(*)::int FROM activities a WHERE a.user_id = u.id AND a.club_id = cm.club_id) AS activities_count,
              COALESCE((SELECT array_agg(ub.badge_key) FROM user_badges ub WHERE ub.user_id = u.id), ARRAY[]::text[]) AS badge_keys
@@ -219,7 +219,7 @@ async function handleMine(req, res, userId) {
   // same convention as the app's plan engine) — a fresh race every Monday, next to the all-time
   // XP board which a newcomer could otherwise never climb.
   const { rows: weekly } = await sql`
-    SELECT u.id, u.name, COALESCE(SUM(a.distance_km), 0) AS week_km
+    SELECT u.id, u.name, u.avatar_data, COALESCE(SUM(a.distance_km), 0) AS week_km
     FROM club_members cm
     JOIN users u ON u.id = cm.user_id
     LEFT JOIN activities a ON a.user_id = u.id AND a.club_id = cm.club_id
@@ -227,7 +227,7 @@ async function handleMine(req, res, userId) {
       AND a.created_at >= date_trunc('week', now())
     WHERE cm.club_id = ${clubId}
       AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
-    GROUP BY u.id, u.name
+    GROUP BY u.id, u.name, u.avatar_data
     ORDER BY week_km DESC, u.name ASC
     LIMIT 100
   `;
@@ -253,7 +253,7 @@ async function handleMine(req, res, userId) {
   } catch { /* table not migrated yet on this deploy — degrade to no events, not a 500 */ }
 
   const weeklyMapped = weekly.map((r, i) => ({
-    id: r.id, name: r.name, weekKm: Number(r.week_km), rank: i + 1, isMe: r.id === userId,
+    id: r.id, name: r.name, avatarBase64: r.avatar_data || null, weekKm: Number(r.week_km), rank: i + 1, isMe: r.id === userId,
   }));
 
   res.status(200).json({
@@ -261,6 +261,7 @@ async function handleMine(req, res, userId) {
     leaderboard: leaderboard.map((r) => ({
       id: r.id, name: r.name, xp: r.xp_total, rank: Number(r.rank), isMe: r.id === userId,
       bio: r.bio || null,
+      avatarBase64: r.avatar_data || null,
       joinedAt: r.joined_at,
       activitiesCount: r.activities_count,
       badgeKeys: r.badge_keys || [],

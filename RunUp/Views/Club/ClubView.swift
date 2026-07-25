@@ -949,7 +949,16 @@ struct ClubView: View {
         // `postClubActivity` (see ClubActivityOutbox.swift) — e.g. a run posted on a spotty
         // connection right before she opened Club to check the leaderboard.
         appState.retryPendingClubActivities()
-        isLoading = true
+        // A cached board/feed from a prior visit (see `AppState.cachedClubBoard`) renders
+        // immediately instead of blanking to the loading spinner on every single re-visit — the
+        // fetch below still runs to catch up, it just doesn't need to gate the UI this time.
+        if let cachedBoard = appState.cachedClubBoard {
+            board = cachedBoard
+            isLoading = false
+        }
+        if let cachedFeed = appState.cachedClubFeed {
+            feed = cachedFeed
+        }
         errorMessage = nil
         // These three requests used to run one after another (refreshMe → fetchBoard → feed),
         // each paying its own network/cold-start latency on top of the last — the real cause of
@@ -963,8 +972,12 @@ struct ClubView: View {
 
         if let boardResult {
             board = boardResult
+            appState.cachedClubBoard = boardResult
             syncBadgesIfNeeded()
-        } else {
+        } else if appState.cachedClubBoard == nil {
+            // Only surface the error when there's nothing already on screen to fall back to — a
+            // background refresh failing quietly behind still-valid cached content beats replacing
+            // it with an error banner over data that was fine a moment ago.
             errorMessage = "Impossible de charger le club — vérifie ta connexion."
         }
         // Piggyback a kudos check on every Club tab open, not just when switching to the
@@ -972,9 +985,10 @@ struct ClubView: View {
         // happens to tap into the feed specifically.
         if let feedResult {
             feed = feedResult
+            appState.cachedClubFeed = feedResult
             notifyNewKudos(in: feedResult)
             notifyNewComments(in: feedResult)
-        } else if errorMessage == nil {
+        } else if errorMessage == nil, appState.cachedClubFeed == nil {
             // Board can still have loaded fine while this alone failed — without this, a failed
             // feed fetch left `feed` empty with zero indication, so "Fil d'activité" read as a
             // genuinely empty club instead of a failed load.
@@ -1084,6 +1098,10 @@ struct ClubView: View {
             try await clubService.leaveClub()
             board = ClubBoard(club: nil, leaderboard: [])
             feed = []
+            // Without this, re-opening Club after leaving would briefly show the OLD club's cached
+            // board/feed (see AppState.cachedClubBoard) before the next fetch caught up.
+            appState.cachedClubBoard = nil
+            appState.cachedClubFeed = nil
             // Both dictionaries are keyed by activity UUIDs from the club she's leaving — none of
             // those ids can ever appear in a feed she can see again, so without this they'd just
             // accumulate permanently in UserProfile across every club she's ever cycled through.

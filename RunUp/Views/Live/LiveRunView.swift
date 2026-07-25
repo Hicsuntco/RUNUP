@@ -12,6 +12,7 @@ struct LiveRunView: View {
     /// A throttled snapshot of `vm.location.route`, rebuilt only every 5 new GPS fixes instead of
     /// every single one — see `mapLayer`'s `.onChange` for why.
     @State private var displayedRoute: [CLLocationCoordinate2D] = []
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var vm: LiveRunViewModel? { appState.liveRun }
 
@@ -22,7 +23,7 @@ struct LiveRunView: View {
                 topOverlay
                 if let text = topBannerText {
                     coachBubble(text)
-                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
                 }
                 Spacer()
             }
@@ -36,7 +37,7 @@ struct LiveRunView: View {
         }
         .background(Color(hex: 0x0A0A0E))
         .ignoresSafeArea()
-        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: topBannerText)
+        .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.85), value: topBannerText)
     }
 
     /// Voice coaching takes over the same banner scripted cues already use — a live "je
@@ -68,6 +69,10 @@ struct LiveRunView: View {
         .mapStyle(.standard(elevation: .flat))
         .mapControls { }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // Purely decorative for VoiceOver — distance/pace are already read from the metrics panel
+        // below, so an unlabeled interactive-looking "Map" element mixed into those stops adds
+        // nothing but confusion.
+        .accessibilityHidden(true)
         // MapKit has no way to append one point to an existing overlay here — each update hands
         // it a brand-new coordinate array to re-tessellate from scratch. Rebuilding on every
         // single GPS fix (`vm.location.route` grows roughly once/second) means the per-update
@@ -155,6 +160,8 @@ struct LiveRunView: View {
         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(RUColor.rose.opacity(0.25), lineWidth: RUSpacing.hairline))
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .padding(.top, 90)
+        // Speaker icon + "Coach · en direct" eyebrow + the coach line were three separate stops.
+        .accessibilityElement(children: .combine)
     }
 
     private var metricsPanel: some View {
@@ -267,6 +274,10 @@ struct LiveRunView: View {
             Text(label).font(RUFont.sans(8, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
         }
         .frame(maxWidth: .infinity)
+        // The screen most glanced at mid-run — was two separate stops ("8:32" then, later,
+        // "ALLURE") with no indication which number belonged to which label.
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label), \(value)")
     }
 }
 

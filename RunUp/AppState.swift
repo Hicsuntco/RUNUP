@@ -39,6 +39,16 @@ final class AppState {
     /// while one is already showing queues behind it instead of replacing it.
     var pendingDebriefs: [RunRecord] = []
 
+    /// The last board/feed `ClubView` successfully loaded — held here, not in `ClubView`'s own
+    /// `@State`, because `RootTabView` keys `currentScreen` on `.id(appState.screen)` and tears
+    /// down/recreates the whole view on every tab switch (see that file for why). Without this,
+    /// leaving Club and coming back always re-paid the full network round-trip and a blank
+    /// loading spinner before showing anything again, even seconds after the last visit — this
+    /// lets a re-visit render the last known state immediately while a fresh fetch still runs
+    /// underneath to catch up.
+    var cachedClubBoard: ClubBoard?
+    var cachedClubFeed: [FeedItem]?
+
     // Live run (ephemeral, survives navigating away from the Live screen)
     var liveRun: LiveRunViewModel?
     var isRunActive: Bool { liveRun != nil }

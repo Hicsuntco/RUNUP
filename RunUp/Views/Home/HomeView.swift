@@ -104,14 +104,20 @@ struct HomeView: View {
         let block = AdaptivePlanEngine.trainingBlock(forWeek: profile.weekNumber, shape: shape)
         return Button(action: { appState.go(.plan) }) {
             VStack(alignment: .leading, spacing: 12) {
-                if !isFreeRun {
-                    HStack {
-                        EyebrowLabel(text: profile.daysUntilRace.map { "Objectif · \(profile.goalDisplay) · J-\($0)" } ?? "Objectif · \(profile.goalDisplay)", color: RUColor.rose)
-                        Spacer()
-                        Text("→").foregroundColor(RUColor.rose2)
+                // Combined separately from `weekStrip` below — that already exposes one element
+                // per day (see `dayAccessibilityLabel`); flattening it into this same combine would
+                // undo that per-day granularity instead of adding to it.
+                Group {
+                    if !isFreeRun {
+                        HStack {
+                            EyebrowLabel(text: profile.daysUntilRace.map { "Objectif · \(profile.goalDisplay) · J-\($0)" } ?? "Objectif · \(profile.goalDisplay)", color: RUColor.rose)
+                            Spacer()
+                            Text("→").foregroundColor(RUColor.rose2)
+                        }
+                        Text("Semaine \(profile.weekNumber) · Bloc \(block.rawValue)").displayStyle(17).foregroundColor(RUColor.textPrimary)
                     }
-                    Text("Semaine \(profile.weekNumber) · Bloc \(block.rawValue)").displayStyle(17).foregroundColor(RUColor.textPrimary)
                 }
+                .accessibilityElement(children: .combine)
                 weekStrip
                 if !isFreeRun {
                     if let total = shape.totalWeeks {
@@ -165,9 +171,26 @@ struct HomeView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
+                // Each cell (weekday letter + a date number or checkmark, colored by state) was
+                // 2-3 separate disconnected VoiceOver stops with no indication of which day is
+                // today, done, or a rest day — that information lived only in color/border, never
+                // announced.
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(dayAccessibilityLabel(day))
                 .background(bg, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(border, lineWidth: RUSpacing.hairline))
             }
+        }
+    }
+
+    private func dayAccessibilityLabel(_ day: DayStatus) -> String {
+        let dayNumber = Calendar.current.component(.day, from: day.date)
+        let name = "\(DayStatus.fullNames[day.weekday]) \(dayNumber)"
+        switch day.state {
+        case .today: return "\(name), aujourd'hui"
+        case .done: return "\(name), séance faite"
+        case .rest: return "\(name), repos"
+        case .upcoming: return "\(name), à venir"
         }
     }
 
@@ -308,6 +331,10 @@ struct HomeView: View {
         .padding(.vertical, 7)
         .background(RUColor.card, in: Capsule())
         .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        // Was just "5" to VoiceOver with no context — the flame icon that gives it meaning
+        // visually carries no information for someone who can't see it.
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Série, \(profile.streak) jour\(profile.streak > 1 ? "s" : "")")
     }
 
     private func ringStat(value: String, unit: String, color: Color) -> some View {
@@ -315,6 +342,10 @@ struct HomeView: View {
             Text(value).displayStyle(16).foregroundColor(color)
             Text(unit).font(RUFont.sans(8)).foregroundColor(RUColor.text2)
         }
+        // Was two disconnected stops ("45" then, later, "/60 KCAL") — combined so a value and its
+        // unit/goal read as one thing.
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(value), \(unit)")
     }
 
     /// "Semaine 4/9" when the program has a real end (a race goal periodizes toward one), else

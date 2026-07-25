@@ -9,6 +9,9 @@ struct LiveRunView: View {
     @Environment(AppState.self) private var appState
     @State private var cameraPosition: MapCameraPosition = .userLocation(fallback: .automatic)
     @State private var showStopConfirm = false
+    /// A throttled snapshot of `vm.location.route`, rebuilt only every 5 new GPS fixes instead of
+    /// every single one — see `mapLayer`'s `.onChange` for why.
+    @State private var displayedRoute: [CLLocationCoordinate2D] = []
 
     private var vm: LiveRunViewModel? { appState.liveRun }
 
@@ -56,8 +59,8 @@ struct LiveRunView: View {
 
     private var mapLayer: some View {
         Map(position: $cameraPosition) {
-            if let vm, vm.location.route.count > 1 {
-                MapPolyline(coordinates: vm.location.route)
+            if displayedRoute.count > 1 {
+                MapPolyline(coordinates: displayedRoute)
                     .stroke(RUColor.rose, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
             }
             UserAnnotation()
@@ -65,6 +68,20 @@ struct LiveRunView: View {
         .mapStyle(.standard(elevation: .flat))
         .mapControls { }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // MapKit has no way to append one point to an existing overlay here — each update hands
+        // it a brand-new coordinate array to re-tessellate from scratch. Rebuilding on every
+        // single GPS fix (`vm.location.route` grows roughly once/second) means the per-update
+        // cost keeps climbing as a run goes on (thousands of points over 60-90 min), on the main
+        // thread, on the one screen where frame drops are most visible. Throttled to every 5 new
+        // fixes (~5s) instead — the user-location dot itself (`UserAnnotation`) still updates
+        // every tick since it isn't driven by this array.
+        .onChange(of: vm?.location.route.count ?? 0) { _, newCount in
+            let shouldUpdate = (displayedRoute.isEmpty && newCount > 1)
+                || newCount - displayedRoute.count >= 5
+                || newCount < displayedRoute.count
+            guard shouldUpdate else { return }
+            displayedRoute = vm?.location.route ?? []
+        }
     }
 
     private var topOverlay: some View {

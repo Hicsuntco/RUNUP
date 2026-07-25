@@ -29,18 +29,19 @@ struct AvatarView: View {
         return nil
     }
 
-    private var remoteURL: URL? {
-        guard localImage == nil, let urlString, let url = URL(string: urlString) else { return nil }
-        return url
-    }
-
     var body: some View {
+        // Evaluated once per render and reused for both branches below — `localImage` decodes a
+        // `UIImage` (and, for the base64 fallback, a `Data(base64Encoded:)` pass first), so reading
+        // it twice per body (once directly, once via the old `remoteURL` computed property) meant
+        // every avatar in the app — every Club leaderboard/feed/comments row, every screen header —
+        // paid for two full image decodes per render instead of one.
+        let img = localImage
         ZStack {
-            if let localImage {
-                Image(uiImage: localImage)
+            if let img {
+                Image(uiImage: img)
                     .resizable()
                     .scaledToFill()
-            } else if let remoteURL {
+            } else if let urlString, let remoteURL = URL(string: urlString) {
                 AsyncImage(url: remoteURL) { phase in
                     if let image = phase.image {
                         image.resizable().scaledToFill()

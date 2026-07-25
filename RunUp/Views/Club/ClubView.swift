@@ -1188,7 +1188,11 @@ private struct ReportTarget: Identifiable {
 /// `ClubView`) or from another member's synced `badgeKeys` (`ClubMemberProfileView`). Internal
 /// (not private) since both files construct one.
 struct ClubBadge: Identifiable {
-    let id = UUID()
+    // `key` is already unique per badge definition (`ClubBadgeCatalog.all`) — a fresh `UUID()`
+    // here meant every rebuild of `badges` (any body re-evaluation: a kudos tap, tab switch, RSVP)
+    // handed `ForEach` an entirely new identity for every tile, defeating diffing and triggering
+    // spurious re-animations even when nothing about the badges actually changed.
+    var id: String { key }
     var key: String
     var emoji: String
     var name: String

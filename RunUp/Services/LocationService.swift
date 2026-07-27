@@ -114,18 +114,21 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
             if let last = lastLocation {
                 let meters = loc.distance(from: last)
                 let dt = loc.timestamp.timeIntervalSince(last.timestamp)
-                // Re-acquired fix after signal loss (tunnel, dense blocks) arrives as one huge
-                // straight-line jump — an implied speed no runner reaches (12 m/s ≈ 1:23/km)
-                // means the gap wasn't run, so start a fresh segment instead of counting it.
-                if dt > 0, meters / dt <= 12 {
-                    distanceMeters += meters
-                    // Vertical accuracy is typically much worse than horizontal — negative means
-                    // invalid, and a loose 20m threshold keeps out the worst GPS altitude noise
-                    // without discarding every real fix.
-                    if loc.verticalAccuracy >= 0, loc.verticalAccuracy < 20 {
-                        let delta = loc.altitude - last.altitude
-                        if delta > 0 { elevationGainMeters += delta }
-                    }
+                // Re-acquired fix after signal loss (tunnel, dense blocks, tree canopy) arrives as
+                // one huge straight-line jump — an implied speed no runner reaches (12 m/s ≈
+                // 1:23/km) means the gap wasn't run, so start a fresh segment instead of counting
+                // it. This point is also skipped from `route`/`lastLocation` below — recording it
+                // anyway used to draw a spurious spike/tangle on the trace even though the distance
+                // math already knew not to trust it, and kept comparing the *next* fix against this
+                // same bad point instead of the last known-good one.
+                guard dt > 0, meters / dt <= 12 else { continue }
+                distanceMeters += meters
+                // Vertical accuracy is typically much worse than horizontal — negative means
+                // invalid, and a loose 20m threshold keeps out the worst GPS altitude noise
+                // without discarding every real fix.
+                if loc.verticalAccuracy >= 0, loc.verticalAccuracy < 20 {
+                    let delta = loc.altitude - last.altitude
+                    if delta > 0 { elevationGainMeters += delta }
                 }
             }
             lastLocation = loc

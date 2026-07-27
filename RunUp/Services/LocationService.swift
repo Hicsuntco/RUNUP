@@ -122,6 +122,18 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
                 // math already knew not to trust it, and kept comparing the *next* fix against this
                 // same bad point instead of the last known-good one.
                 guard dt > 0, meters / dt <= 12 else { continue }
+                // Degraded signal (tree canopy, urban canyon) doesn't just occasionally throw a
+                // huge implausible jump — far more often it makes a genuinely stationary or
+                // slow-moving runner's fix wander a few meters back and forth between updates.
+                // Each of those legs is individually far too small/slow to trip the checks above,
+                // but at ~1 fix/sec over a 25+ minute run, that jitter silently summed to a real,
+                // wrong +2 km on top of an actual 4 km run. A fix that moved less than the worse
+                // of the two accuracies isn't distinguishable from standing still, so it's
+                // dropped entirely — including from `lastLocation` below — rather than credited:
+                // real slow movement just keeps measuring against the same last trusted fix until
+                // it clears the floor, instead of losing a little distance on every noisy step.
+                let noiseFloor = max(loc.horizontalAccuracy, last.horizontalAccuracy, 8)
+                guard meters > noiseFloor else { continue }
                 distanceMeters += meters
                 // Vertical accuracy is typically much worse than horizontal — negative means
                 // invalid, and a loose 20m threshold keeps out the worst GPS altitude noise

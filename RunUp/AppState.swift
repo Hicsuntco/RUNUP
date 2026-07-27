@@ -73,6 +73,14 @@ final class AppState {
         }
         AdaptivePlanEngine.refreshProgramForCurrentDate(self.profile)
         AdaptivePlanEngine.resetDailyGoalsIfNewDay(self.profile)
+        // The scenePhase→active hook in RunUpApp only catches a real background/foreground
+        // transition — an app left open and awake (screen never locked, e.g. plugged in
+        // overnight) crosses midnight without ever backgrounding, so the week strip/weekNumber
+        // stayed frozen on the old day indefinitely until the next real relaunch. This fires the
+        // instant the system clock actually rolls over to a new calendar day, foreground or not.
+        NotificationCenter.default.addObserver(forName: .NSCalendarDayChanged, object: nil, queue: .main) { [weak self] _ in
+            self?.refreshProgramForCurrentDate()
+        }
         ThemeStore.shared.themeID = self.profile.accentThemeID
         ThemeStore.shared.isLightMode = self.profile.isLightMode
         NotificationService.shared.rescheduleDailyReminder(for: self.profile)

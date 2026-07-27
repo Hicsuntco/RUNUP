@@ -7121,18 +7121,18 @@
         }
       }
     },
-    "Coach IA · connaît ton programme": {
+    "Connaît ton programme": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "AI coach · knows your program"
+            "value": "Knows your program"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Coach IA · conoce tu programa"
+            "value": "Conoce tu programa"
           }
         }
       }

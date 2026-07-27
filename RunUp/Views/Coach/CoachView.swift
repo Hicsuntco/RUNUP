@@ -91,7 +91,7 @@ struct CoachView: View {
                 Text("Ton coach").displayStyle(19).foregroundColor(RUColor.textPrimary)
                 // Honest subtitle — the old green "en ligne" dot measured nothing (it was
                 // hardcoded, lit even in airplane mode).
-                Text("Coach IA · connaît ton programme")
+                Text("Connaît ton programme")
                     .font(RUFont.sans(10))
                     .foregroundColor(RUColor.text2)
             }

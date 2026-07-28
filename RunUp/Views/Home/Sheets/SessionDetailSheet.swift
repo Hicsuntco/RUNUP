@@ -133,13 +133,25 @@ struct SessionDetailSheet: View {
                     }
 
                     if let adj = session.adjustment {
-                        Text("💡 Le coach a ajusté cette semaine à \"\(adj)\" d'après ta forme la semaine dernière.")
-                            .font(RUFont.sans(12))
-                            .foregroundColor(RUColor.text2)
-                            .lineSpacing(3)
-                            .padding(13)
-                            .ruCard(radius: 16)
-                            .padding(.top, 16)
+                        // Two different mechanisms can set this same field (see `WorkoutSession.
+                        // adjustment`) — a week-boundary tier bump/ease from LAST week's average
+                        // RPE ("Niveau X"), or a same-day reactive lightening from TODAY's sleep/
+                        // yesterday's RPE (`AdaptivePlanEngine.applySameDayAdjustmentIfNeeded`,
+                        // always prefixed "Allégée"). Explaining the tier-change copy on a same-day
+                        // reason (or vice versa) would just be wrong about why this looks different.
+                        Group {
+                            if adj.hasPrefix("Allégée") {
+                                Text("💡 Cette séance a été allégée aujourd'hui d'après ta forme du jour — la semaine reprend son cours normal demain.")
+                            } else {
+                                Text("💡 Le coach a ajusté cette semaine à \"\(adj)\" d'après ta forme la semaine dernière.")
+                            }
+                        }
+                        .font(RUFont.sans(12))
+                        .foregroundColor(RUColor.text2)
+                        .lineSpacing(3)
+                        .padding(13)
+                        .ruCard(radius: 16)
+                        .padding(.top, 16)
                     }
 
                     if moved {

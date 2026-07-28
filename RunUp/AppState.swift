@@ -94,6 +94,12 @@ final class AppState {
         // a queued watch run (finished while the phone app was closed) is delivered right away.
         self.watchSession = WatchSessionService(appState: self)
         Task { await self.syncDailyGoalsFromHealthKit() }
+        // Cold launch never fires RootView's `onChange(of: scenePhase)` (there's no PRIOR phase to
+        // transition from), so `refreshProgramForCurrentDate()` — the only other call site — never
+        // runs on a fresh launch. Without this, same-day adjustment only ever kicked in once she'd
+        // backgrounded/foregrounded the app at least once, which for a lot of real days never
+        // happens at all.
+        Task { await self.checkSameDayAdjustment() }
         // A Live Activity left over from a killed/crashed app is an orphan by definition
         // (`liveRun` doesn't survive relaunch) — end it instead of leaving a frozen "in-progress"
         // run on the Lock Screen for hours.
@@ -127,6 +133,33 @@ final class AppState {
         NotificationService.shared.scheduleWeeklyRecapReminder(for: profile)
         if !profile.connectedSources.contains(.apple) { publishWidgetSnapshot() }
         Task { await syncDailyGoalsFromHealthKit() }
+        Task { await checkSameDayAdjustment() }
+    }
+
+    /// Same-day reactive lightening — a short night or yesterday's brutal RPE eases TODAY's
+    /// session instead of only ever showing up in next week's plan (see
+    /// `AdaptivePlanEngine.applySameDayAdjustmentIfNeeded`). Deliberately its own call, not folded
+    /// into `syncDailyGoalsFromHealthKit` below: the RPE half of the check needs no HealthKit
+    /// connection at all, and nesting it inside that HealthKit-gated function would have silently
+    /// denied it to anyone who's never connected Apple Santé. Sleep is read here (nil if not
+    /// connected) so the "already checked today" guard is only ever consumed once, with the real
+    /// sleep-aware answer — not consumed early by some other call site checking with `nil` before
+    /// a HealthKit-aware one gets a chance to run today.
+    @MainActor
+    private func checkSameDayAdjustment() async {
+        let today = Calendar.current.startOfDay(for: .now)
+        guard profile.lastSameDayAdjustmentCheckDay != today else { return }
+        let sleepHours = profile.connectedSources.contains(.apple) ? await healthKit.lastNightSleepHours() : nil
+        guard AdaptivePlanEngine.applySameDayAdjustmentIfNeeded(profile, sleepHours: sleepHours) else { return }
+        let reason = profile.todaySession.adjustment ?? "récupération"
+        notify(icon: "🌙", colorHex: 0x8A6CFF, title: "Séance allégée aujourd'hui", text: "\(profile.todaySession.title) · \(reason).")
+        if profile.coachNotificationsEnabled {
+            NotificationService.shared.postImmediateNotification(
+                title: "Séance allégée aujourd'hui",
+                body: "On lève un peu le pied sur « \(profile.todaySession.title) » — le programme s'ajuste à ta forme du jour."
+            )
+        }
+        publishWidgetSnapshot()
     }
 
     /// Mirrors today's goals/streak/theme into the shared App Group container and asks WidgetKit

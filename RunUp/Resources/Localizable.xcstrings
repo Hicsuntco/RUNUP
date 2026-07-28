@@ -11040,6 +11040,86 @@
           }
         }
       }
+    },
+    "Allégée · nuit courte + séance dure": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lightened · short night + tough session"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aligerada · noche corta + sesión dura"
+          }
+        }
+      }
+    },
+    "Allégée · nuit courte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lightened · short night"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aligerada · noche corta"
+          }
+        }
+      }
+    },
+    "Allégée · récupération": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lightened · recovery"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aligerada · recuperación"
+          }
+        }
+      }
+    },
+    "💡 Cette séance a été allégée aujourd'hui d'après ta forme du jour — la semaine reprend son cours normal demain.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "💡 This session was lightened today based on how you're doing — the week picks back up as planned tomorrow."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "💡 Esta sesión se ha aligerado hoy según tu estado — la semana retoma su curso normal mañana."
+          }
+        }
+      }
+    },
+    "Niveau %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Level %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nivel %@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

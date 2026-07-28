@@ -112,6 +112,11 @@ final class UserProfile {
     // Tracks the last day these were reset, so a day rollover can be detected and self-heals
     // like `programStartDate` for profiles that predate this field.
     var lastDailyResetDay: Date?
+    /// The one calendar day `AdaptivePlanEngine.applySameDayAdjustmentIfNeeded` has already
+    /// checked — guards against re-running (and re-easing an already-eased session, or fighting a
+    /// manual edit) on every single HealthKit sync of the same day. Nil for anyone who hasn't hit
+    /// that code path yet, same self-healing spirit as `lastDailyResetDay`.
+    var lastSameDayAdjustmentCheckDay: Date?
     /// Was "Renfo & mobilité" (strength/mobility minutes) — replaced because a *daily* strength
     /// target doesn't match real training guidance (2-3x/week, not every day), which made the
     /// goal honestly near-impossible rather than motivating. Active calories work for everyone

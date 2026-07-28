@@ -112,6 +112,42 @@ final class HealthKitService {
         }
     }
 
+    /// Total time actually asleep last night, in hours — the window runs from 6pm yesterday to
+    /// noon today, wide enough to catch any real bedtime (including a late one) without pulling
+    /// in the PREVIOUS night too. Feeds `AdaptivePlanEngine.applySameDayAdjustmentIfNeeded`: sleep
+    /// permission was already requested (see `readTypes`) for this from the start, but nothing
+    /// ever actually read it until now. Nil — not 0 — when Santé has no sleep data for that window
+    /// (no Watch/sleep tracking used, or she never actually slept with her phone/Watch nearby that
+    /// night), since 0 would read as "she didn't sleep at all" rather than "no data".
+    func lastNightSleepHours() async -> Double? {
+        guard let type = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else { return nil }
+        let cal = Calendar.current
+        guard let end = cal.date(bySettingHour: 12, minute: 0, second: 0, of: .now),
+              let todaySixPM = cal.date(bySettingHour: 18, minute: 0, second: 0, of: .now),
+              let start = cal.date(byAdding: .day, value: -1, to: todaySixPM)
+        else { return nil }
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
+        return await withCheckedContinuation { continuation in
+            let query = HKSampleQuery(sampleType: type, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, samples, _ in
+                guard let samples = samples as? [HKCategorySample], !samples.isEmpty else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let asleepValues: Set<Int> = [
+                    HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue,
+                    HKCategoryValueSleepAnalysis.asleepCore.rawValue,
+                    HKCategoryValueSleepAnalysis.asleepDeep.rawValue,
+                    HKCategoryValueSleepAnalysis.asleepREM.rawValue,
+                ]
+                let totalSeconds = samples
+                    .filter { asleepValues.contains($0.value) }
+                    .reduce(0.0) { $0 + $1.endDate.timeIntervalSince($1.startDate) }
+                continuation.resume(returning: totalSeconds > 0 ? totalSeconds / 3600 : nil)
+            }
+            store.execute(query)
+        }
+    }
+
     /// Saves a completed run as an HKWorkout.
     /// `duration` is the real moving time (pauses excluded) — passed separately from start/end
     /// because `end - start` includes every pause, and Santé would otherwise show a 30-min run

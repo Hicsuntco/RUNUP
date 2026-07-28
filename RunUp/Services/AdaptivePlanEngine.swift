@@ -677,6 +677,69 @@ enum AdaptivePlanEngine {
         return "Programme mis à jour · +120 XP"
     }
 
+    // MARK: Same-day adjustment
+
+    /// Same-day reactive lightening — everywhere else, the plan only ever changes at a WEEK
+    /// boundary (see `refreshProgramForCurrentDate`/`tierDelta`), so a short night before a hard
+    /// session, or a genuinely brutal RPE just yesterday, only ever showed up in *next* week's
+    /// plan — never on the one day it would actually have helped. Runs at most once per calendar
+    /// day (`lastSameDayAdjustmentCheckDay`), touches only TODAY's session (never the rest of the
+    /// week), and only ever eases — a good night's sleep simply isn't flagged, pushing harder
+    /// isn't this mechanism's job. Returns whether it actually changed anything, so the caller
+    /// (`AppState`) knows whether to say something about it.
+    @discardableResult
+    static func applySameDayAdjustmentIfNeeded(_ profile: UserProfile, sleepHours: Double?) -> Bool {
+        guard profile.programPhase == .active || profile.programPhase == .freerun else { return false }
+        let today = Calendar.current.startOfDay(for: .now)
+        guard profile.lastSameDayAdjustmentCheckDay != today else { return false }
+        profile.lastSameDayAdjustmentCheckDay = today
+
+        let weekday = currentWeekdayIndex()
+        guard let idx = profile.weekSessions.firstIndex(where: { $0.weekday == weekday }),
+              var session = profile.weekSessions[idx].session,
+              session.durationMinutes > 0, !profile.weekSessions[idx].completed
+        else { return false }
+
+        // A "trop dur" debrief logged yesterday is a clearer same-day signal than sleep alone —
+        // the two can compound (short night AFTER a brutal session is exactly when easing off
+        // matters most).
+        let feltTooHardYesterday = profile.recentRPESeverities.last == 3 && debriefedYesterday(profile)
+        let shortNight = sleepHours.map { $0 < 5.5 } ?? false
+        guard shortNight || feltTooHardYesterday else { return false }
+
+        let reason: String
+        if shortNight && feltTooHardYesterday {
+            reason = "Allégée · nuit courte + séance dure"
+        } else if shortNight {
+            reason = "Allégée · nuit courte"
+        } else {
+            reason = "Allégée · récupération"
+        }
+
+        // Speed/threshold work eases the most (drops to easy effort entirely — forcing VMA on
+        // five hours of sleep isn't training, it's risk) rather than just running the same
+        // structure shorter.
+        if session.isIntervalSession || session.zone.contains("3") || session.zone.contains("4") {
+            session.subtitle = "séance allégée aujourd'hui — allure confort, écoute-toi"
+            session.zone = "Z2"
+            session.durationMinutes = Int(Double(session.durationMinutes) * 0.7)
+        } else {
+            session.durationMinutes = Int(Double(session.durationMinutes) * 0.85)
+        }
+        session.adjustment = reason
+
+        profile.weekSessions[idx].session = session
+        profile.todaySession = session
+        return true
+    }
+
+    private static func debriefedYesterday(_ profile: UserProfile) -> Bool {
+        guard let last = profile.lastStreakDate else { return false }
+        let cal = Calendar.current
+        let daysSince = cal.dateComponents([.day], from: cal.startOfDay(for: last), to: cal.startOfDay(for: .now)).day ?? -1
+        return daysSince == 1
+    }
+
     /// Round, motivating streak lengths worth calling out — checked against `profile.streak`
     /// right after it increments in `applyDebrief`, so the bell (`AppState.notify`) gets a real
     /// entry on the days it means something instead of never firing at all outside the (rare)

@@ -270,3 +270,23 @@ CREATE TABLE IF NOT EXISTS coach_usage (
 -- UNIQUE constraint — only new, client-generated ids need to actually be unique.
 ALTER TABLE club_events ADD COLUMN IF NOT EXISTS client_id UUID UNIQUE;
 ALTER TABLE challenges ADD COLUMN IF NOT EXISTS client_id UUID UNIQUE;
+
+-- Real friends/follow graph — a lighter social option alongside the club, for someone who wants
+-- a feed of people she's chosen directly rather than the shared leaderboard/challenges/invite-
+-- code "esprit club". One-way by default (follow anyone, no confirmation, like Strava); `status`
+-- only ever starts as 'pending' when the followee has gone private (see `is_private` below), and
+-- flips to 'accepted' once they approve (api/friends/[action].js `respond`) — same distinction
+-- Instagram makes between a public and a private account.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_private BOOLEAN NOT NULL DEFAULT false;
+
+CREATE TABLE IF NOT EXISTS follows (
+  follower_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  followee_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'accepted', -- 'pending' | 'accepted'
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (follower_id, followee_id),
+  CHECK (follower_id != followee_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_follows_followee_status ON follows(followee_id, status);
+CREATE INDEX IF NOT EXISTS idx_follows_follower_status ON follows(follower_id, status);

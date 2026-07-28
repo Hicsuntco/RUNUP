@@ -865,78 +865,19 @@ struct ClubView: View {
                     .frame(maxWidth: .infinity).padding(.vertical, 20)
             }
             ForEach(Array(feed.enumerated()), id: \.element.id) { index, item in
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 10) {
-                        AvatarView(urlString: item.avatarUrl, base64DataURI: item.avatarBase64, initial: String(item.name.prefix(1)), size: 34)
-                        VStack(alignment: .leading, spacing: 2) {
-                            (Text(item.name).fontWeight(.semibold) + Text(" \(item.text)"))
-                                .font(RUFont.sans(13))
-                                .foregroundColor(RUColor.textPrimary)
-                            Text(item.createdAt.relativeDescription).font(RUFont.sans(10)).foregroundColor(RUColor.text3)
-                        }
-                        Spacer(minLength: 0)
-                    }
-                    HStack(spacing: 8) {
-                        Button(action: {
-                            Haptics.impact(.light)
-                            Task { await toggleKudos(item) }
-                        }) {
-                            HStack(spacing: 6) {
-                                Text("👏")
-                                Text("\(item.kudos)")
-                            }
-                            .font(RUFont.sans(11.5, weight: .semibold))
-                            .foregroundColor(item.kudoedByMe ? RUColor.rose2 : RUColor.text2)
-                            .padding(.horizontal, 12).padding(.vertical, 6)
-                            .background(item.kudoedByMe ? RUColor.rose.opacity(0.16) : RUColor.card2, in: Capsule())
-                            .overlay(Capsule().stroke(item.kudoedByMe ? RUColor.rose.opacity(0.35) : RUColor.line, lineWidth: RUSpacing.hairline))
-                            .scaleEffect(item.kudoedByMe ? 1.08 : 1.0)
-                            .animation(.spring(response: 0.3, dampingFraction: 0.45), value: item.kudoedByMe)
-                        }
-                        .buttonStyle(PressableStyle())
-                        .accessibilityLabel(item.kudoedByMe ? "Retirer ton applaudissement" : "Applaudir cette séance")
-                        .accessibilityValue("\(item.kudos)")
-
-                        Button(action: { commentsActivity = item }) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "bubble.left")
-                                Text("\(item.commentsCount)")
-                            }
-                            .font(RUFont.sans(11.5, weight: .semibold))
-                            .foregroundColor(RUColor.text2)
-                            .padding(.horizontal, 12).padding(.vertical, 6)
-                            .background(RUColor.card2, in: Capsule())
-                            .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
-                        }
-                        .buttonStyle(PressableStyle())
-                        // Mirrors the kudos button right next to it — was reading as just the bare
-                        // count with no indication it's a comment button or what tapping does.
-                        .accessibilityLabel("Voir les commentaires")
-                        .accessibilityValue("\(item.commentsCount)")
-                    }
-                }
-                .padding(13)
-                .ruCard()
-                // Rows fade/slide in one after the other on first load instead of the whole feed
-                // materializing at once — delay capped past the 8th row so a long feed doesn't
-                // keep animating below the fold.
-                .opacity(feedRevealed ? 1 : 0)
-                .offset(x: feedRevealed ? 0 : -14)
-                .animation(.easeOut(duration: 0.35).delay(Double(min(index, 8)) * 0.05), value: feedRevealed)
-                .contextMenu {
-                    if item.userId != auth.currentUser?.id {
-                        Button("Signaler cette activité") {
-                            reportTarget = ReportTarget(targetType: "activity", targetId: item.id, displayName: "l'activité de \(item.name)")
-                        }
-                        Button("Bloquer \(item.name)", role: .destructive) {
-                            pendingBlock = (item.userId, item.name)
-                        }
-                    } else {
-                        Button("Supprimer cette activité", role: .destructive) {
-                            pendingDeleteActivity = item
-                        }
-                    }
-                }
+                ActivityFeedRow(
+                    item: item,
+                    isMine: item.userId == auth.currentUser?.id,
+                    revealed: feedRevealed,
+                    index: index,
+                    onKudos: { Task { await toggleKudos(item) } },
+                    onComment: { commentsActivity = item },
+                    onReport: {
+                        reportTarget = ReportTarget(targetType: "activity", targetId: item.id, displayName: "l'activité de \(item.name)")
+                    },
+                    onBlock: { pendingBlock = (item.userId, item.name) },
+                    onDelete: { pendingDeleteActivity = item }
+                )
             }
         }
     }
@@ -1203,8 +1144,9 @@ struct ClubView: View {
 }
 
 /// Identifies what a report is about — a club, a user, or one activity — so the reason picker
-/// can post to `api/moderation/report` with the right target.
-private struct ReportTarget: Identifiable {
+/// can post to `api/moderation/report` with the right target. Internal (not private): `FriendsView`
+/// reuses this same type for its own report confirmationDialog.
+struct ReportTarget: Identifiable {
     let id = UUID()
     var targetType: String
     var targetId: String

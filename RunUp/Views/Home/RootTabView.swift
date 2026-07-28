@@ -89,7 +89,7 @@ struct RootTabView: View {
         case .recap: RecapView()
         case .coach: CoachView()
         case .stats: StatsView()
-        case .club: ClubView()
+        case .club: SocialView()
         case .race: RaceGoalView()
         case .profile: ProfileView()
         case .history: HistoryView()

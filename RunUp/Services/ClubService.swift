@@ -107,6 +107,30 @@ struct CommentItem: Decodable, Identifiable {
     var createdAt: Date
 }
 
+/// A real account found via search, or listed in a following/followers/requests list —
+/// `followStatus` reflects the CALLER's own relationship to this person (is SHE following them):
+/// nil (not following), "pending" (request sent, awaiting approval — only for a private account),
+/// or "accepted". Only meaningful on search results; the following/followers/incomingRequests
+/// lists are already scoped to one specific status by construction.
+struct PublicUser: Decodable, Identifiable, Hashable {
+    var id: String
+    var name: String
+    var avatarUrl: String?
+    var avatarBase64: String?
+    var isPrivate: Bool
+    var followStatus: String?
+}
+
+/// The caller's own follow graph, independent of any club — see `ClubService.fetchFriendsList`.
+struct FriendsList: Decodable {
+    var isPrivate: Bool
+    var following: [PublicUser]
+    var followers: [PublicUser]
+    /// Only ever non-empty when `isPrivate` is true — a public account auto-accepts, so nothing
+    /// waits for approval.
+    var incomingRequests: [PublicUser]
+}
+
 /// Returned by `createClub` — used by the caller to show the invite code to share.
 struct ClubCreatedResponse: Decodable {
     var id: String
@@ -281,6 +305,58 @@ struct ClubService {
         let _: OkResponse = try await send(path: "api/clubs/syncBadges", method: "POST", body: ["badgeKeys": badgeKeys])
     }
 
+    // MARK: Friends (a real follow graph, independent of any club)
+
+    /// Finds real accounts by name — 2+ characters, server-side, capped at 20 results. Each
+    /// result's `followStatus` reflects whether SHE already follows them, so the client can show
+    /// the right button state without a second round trip per row.
+    func searchUsers(query: String) async throws -> [PublicUser] {
+        let response: PublicUserListResponse = try await send(path: "api/friends/search", method: "GET", query: ["q": query])
+        return response.items
+    }
+
+    /// Follows a real account — instant ("accepted") unless they've gone private, in which case
+    /// the server returns "pending" and she'll sit in their incoming requests until approved.
+    @discardableResult
+    func followUser(userId: String) async throws -> String {
+        let response: FollowStatusResponse = try await send(path: "api/friends/follow", method: "POST", body: ["userId": userId])
+        return response.status
+    }
+
+    func unfollowUser(userId: String) async throws {
+        let _: OkResponse = try await send(path: "api/friends/unfollow", method: "POST", body: ["userId": userId])
+    }
+
+    /// Approves or declines an incoming follow request — only ever relevant while her account is
+    /// private (a public account auto-accepts, see `setPrivateAccount`).
+    func respondToFollowRequest(followerId: String, accept: Bool) async throws {
+        let _: OkResponse = try await send(path: "api/friends/respond", method: "POST", body: ["userId": followerId, "accept": accept])
+    }
+
+    /// Removes someone following HER without unfollowing them back the other way — same
+    /// distinction most social apps make between "unfollow" and "remove follower".
+    func removeFollower(userId: String) async throws {
+        let _: OkResponse = try await send(path: "api/friends/removeFollower", method: "POST", body: ["userId": userId])
+    }
+
+    func fetchFriendsList() async throws -> FriendsList {
+        try await send(path: "api/friends/list", method: "GET")
+    }
+
+    /// Same response shape as `fetchFeed` (the club feed) — both render through the same
+    /// `ActivityFeedRow`/kudos/comments plumbing, just sourced from the follow graph instead of
+    /// club membership.
+    func fetchFriendsFeed() async throws -> [FeedItem] {
+        let response: FeedResponse = try await send(path: "api/friends/feed", method: "GET")
+        return response.items
+    }
+
+    /// Toggles Instagram-style privacy: while private, a new follow needs her approval
+    /// (`respondToFollowRequest`) before it counts; existing accepted followers are unaffected.
+    func setPrivateAccount(_ isPrivate: Bool) async throws {
+        let _: OkResponse = try await send(path: "api/friends/setPrivate", method: "POST", body: ["isPrivate": isPrivate])
+    }
+
     // MARK: -
 
     private func send<T: Decodable>(path: String, method: String, body: [String: Any]? = nil, query: [String: String]? = nil) async throws -> T {
@@ -358,4 +434,12 @@ private struct OkResponse: Decodable {
 private struct BioResponse: Decodable {
     var ok: Bool
     var bio: String?
+}
+
+private struct PublicUserListResponse: Decodable {
+    var items: [PublicUser]
+}
+
+private struct FollowStatusResponse: Decodable {
+    var status: String
 }

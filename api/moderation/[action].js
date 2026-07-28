@@ -46,6 +46,15 @@ async function handleBlock(req, res, userId) {
     INSERT INTO blocks (blocker_id, blocked_id) VALUES (${userId}, ${blockedId})
     ON CONFLICT DO NOTHING
   `;
+  // A block severs any follow between the two, in either direction — staying "friends" with
+  // someone you've just blocked would defeat the point, and without this the follows table would
+  // keep a stale row that api/friends `list` would otherwise keep surfacing in her following/
+  // followers even though `canViewActivity` (lib/social.js) already hides their activity.
+  await sql`
+    DELETE FROM follows
+    WHERE (follower_id = ${userId} AND followee_id = ${blockedId})
+       OR (follower_id = ${blockedId} AND followee_id = ${userId})
+  `;
   res.status(200).json({ ok: true });
 }
 

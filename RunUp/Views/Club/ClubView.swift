@@ -694,6 +694,13 @@ struct ClubView: View {
         }
     }
 
+    /// Split out of what used to be one large `boardContent` body — three near-identical ~25-line
+    /// row blocks plus a triple `if`/`.transition()` chain in a single ViewBuilder expression was
+    /// enough to blow the type-checker's budget (`unable to type-check this expression in
+    /// reasonable time`, a real build failure on-device, not just a style nit). Breaking it into
+    /// these smaller pieces is exactly the fix Xcode's own error message suggests, and doubles as
+    /// the same `Group { if ... }` fix `HomeView.programWeekCard` already needed elsewhere in this
+    /// app: an `if` with no `else` can't take a modifier directly.
     private var boardContent: some View {
         VStack(alignment: .leading, spacing: 14) {
             // Two real races: km of THIS week (Monday reset — a newcomer can win her first week)
@@ -703,94 +710,114 @@ struct ClubView: View {
                 boardModeChip("Général (XP)", .general)
                 boardModeChip("Mondial", .global)
             }
-            if boardMode == .week {
-                if (board.weekly ?? []).isEmpty && !isLoading {
-                    Text("Personne n'a encore couru cette semaine — lance-toi !")
-                        .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
-                        .frame(maxWidth: .infinity).padding(.vertical, 20)
+            Group {
+                if boardMode == .week {
+                    weekBoardContent
+                } else if boardMode == .general {
+                    generalBoardContent
+                } else {
+                    globalBoardContent
                 }
-                VStack(spacing: 6) {
-                    ForEach(board.weekly ?? []) { entry in
-                        HStack(spacing: 12) {
-                            Text(entry.rank >= 1 && entry.rank <= 3 ? ["🥇", "🥈", "🥉"][entry.rank - 1] : "\(entry.rank)")
-                                .displayStyle(15)
-                                .foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.text2)
-                                .frame(width: 20)
-                            AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28)
-                            Text(entry.isMe ? "\(entry.name) · toi" : entry.name)
-                                .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
-                                .foregroundColor(RUColor.textPrimary)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.7)
-                            Spacer()
-                            Text("\(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), entry.weekKm)) km")
-                                .displayStyle(14).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
-                        }
-                        .padding(.horizontal, 13).padding(.vertical, 11)
-                        .background(entry.isMe ? RUColor.rose.opacity(0.1) : RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(entry.isMe ? RUColor.rose.opacity(0.28) : RUColor.line, lineWidth: RUSpacing.hairline))
-                    }
-                }
-            }
-            .transition(.opacity)
-            if boardMode == .general {
-            VStack(spacing: 6) {
-                ForEach(board.leaderboard) { entry in
-                    HStack(spacing: 12) {
-                        Text(entry.rank >= 1 && entry.rank <= 3 ? ["🥇", "🥈", "🥉"][entry.rank - 1] : "\(entry.rank)")
-                            .displayStyle(15)
-                            .foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.text2)
-                            .frame(width: 20)
-                        AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28)
-                        Text(entry.isMe ? "\(entry.name) · toi" : entry.name)
-                            .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
-                            .foregroundColor(RUColor.textPrimary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                        Spacer()
-                        Text("\(entry.xp)").displayStyle(15).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
-                    }
-                    .padding(.horizontal, 13).padding(.vertical, 11)
-                    .background(entry.isMe ? RUColor.rose.opacity(0.1) : RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(entry.isMe ? RUColor.rose.opacity(0.28) : RUColor.line, lineWidth: RUSpacing.hairline))
-                    .contextMenu {
-                        if !entry.isMe {
-                            Button("Signaler \(entry.name)") {
-                                reportTarget = ReportTarget(targetType: "user", targetId: entry.id, displayName: entry.name)
-                            }
-                            Button("Bloquer \(entry.name)", role: .destructive) {
-                                pendingBlock = (entry.id, entry.name)
-                            }
-                        }
-                    }
-                }
-            }
-            }
-            .transition(.opacity)
-            if boardMode == .global {
-                globalBoardContent
             }
             .transition(.opacity)
 
             EyebrowLabel(text: "Derniers badges", color: RUColor.text3)
-            HStack(spacing: 10) {
-                ForEach(badges) { badge in
-                    Button(action: { selectedBadge = badge }) {
-                        VStack(spacing: 5) {
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(badge.earned ? RUColor.card : RUColor.card2)
-                                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(badge.earned ? RUColor.rose.opacity(0.35) : RUColor.line, lineWidth: RUSpacing.hairline))
-                                .aspectRatio(1, contentMode: .fit)
-                                .overlay(Text(badge.emoji).font(.system(size: 26)))
-                                .opacity(badge.earned ? 1 : 0.35)
-                                // A real glow on earned tiles — opacity alone made locked vs.
-                                // earned read as "faded vs. normal" rather than "locked vs. won".
-                                .shadow(color: badge.earned ? RUColor.rose.opacity(0.3) : .clear, radius: 8, x: 0, y: 3)
-                            Text(badge.name).font(RUFont.sans(8, weight: .semibold)).foregroundColor(badge.earned ? RUColor.textPrimary : RUColor.text2)
-                        }
-                    }
-                    .buttonStyle(PressableStyle())
+            badgeStrip
+        }
+    }
+
+    private var weekBoardContent: some View {
+        Group {
+            if (board.weekly ?? []).isEmpty && !isLoading {
+                Text("Personne n'a encore couru cette semaine — lance-toi !")
+                    .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                    .frame(maxWidth: .infinity).padding(.vertical, 20)
+            }
+            VStack(spacing: 6) {
+                ForEach(board.weekly ?? []) { entry in
+                    weekRow(entry)
                 }
+            }
+        }
+    }
+
+    private func weekRow(_ entry: WeeklyRow) -> some View {
+        HStack(spacing: 12) {
+            Text(entry.rank >= 1 && entry.rank <= 3 ? ["🥇", "🥈", "🥉"][entry.rank - 1] : "\(entry.rank)")
+                .displayStyle(15)
+                .foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.text2)
+                .frame(width: 20)
+            AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28)
+            Text(entry.isMe ? "\(entry.name) · toi" : entry.name)
+                .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
+                .foregroundColor(RUColor.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            Spacer()
+            Text("\(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), entry.weekKm)) km")
+                .displayStyle(14).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
+        }
+        .padding(.horizontal, 13).padding(.vertical, 11)
+        .background(entry.isMe ? RUColor.rose.opacity(0.1) : RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(entry.isMe ? RUColor.rose.opacity(0.28) : RUColor.line, lineWidth: RUSpacing.hairline))
+    }
+
+    private var generalBoardContent: some View {
+        VStack(spacing: 6) {
+            ForEach(board.leaderboard) { entry in
+                generalRow(entry)
+            }
+        }
+    }
+
+    private func generalRow(_ entry: LeaderboardRow) -> some View {
+        HStack(spacing: 12) {
+            Text(entry.rank >= 1 && entry.rank <= 3 ? ["🥇", "🥈", "🥉"][entry.rank - 1] : "\(entry.rank)")
+                .displayStyle(15)
+                .foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.text2)
+                .frame(width: 20)
+            AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28)
+            Text(entry.isMe ? "\(entry.name) · toi" : entry.name)
+                .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
+                .foregroundColor(RUColor.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            Spacer()
+            Text("\(entry.xp)").displayStyle(15).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
+        }
+        .padding(.horizontal, 13).padding(.vertical, 11)
+        .background(entry.isMe ? RUColor.rose.opacity(0.1) : RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(entry.isMe ? RUColor.rose.opacity(0.28) : RUColor.line, lineWidth: RUSpacing.hairline))
+        .contextMenu {
+            if !entry.isMe {
+                Button("Signaler \(entry.name)") {
+                    reportTarget = ReportTarget(targetType: "user", targetId: entry.id, displayName: entry.name)
+                }
+                Button("Bloquer \(entry.name)", role: .destructive) {
+                    pendingBlock = (entry.id, entry.name)
+                }
+            }
+        }
+    }
+
+    private var badgeStrip: some View {
+        HStack(spacing: 10) {
+            ForEach(badges) { badge in
+                Button(action: { selectedBadge = badge }) {
+                    VStack(spacing: 5) {
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(badge.earned ? RUColor.card : RUColor.card2)
+                            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(badge.earned ? RUColor.rose.opacity(0.35) : RUColor.line, lineWidth: RUSpacing.hairline))
+                            .aspectRatio(1, contentMode: .fit)
+                            .overlay(Text(badge.emoji).font(.system(size: 26)))
+                            .opacity(badge.earned ? 1 : 0.35)
+                            // A real glow on earned tiles — opacity alone made locked vs.
+                            // earned read as "faded vs. normal" rather than "locked vs. won".
+                            .shadow(color: badge.earned ? RUColor.rose.opacity(0.3) : .clear, radius: 8, x: 0, y: 3)
+                        Text(badge.name).font(RUFont.sans(8, weight: .semibold)).foregroundColor(badge.earned ? RUColor.textPrimary : RUColor.text2)
+                    }
+                }
+                .buttonStyle(PressableStyle())
             }
         }
     }

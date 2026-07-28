@@ -172,12 +172,36 @@ struct SignInView: View {
                     .textInputAutocapitalization(.characters)
             }
 
+            // Was only checking non-empty — a malformed email or a too-short password round-
+            // tripped to the server before any error showed. Sign-in stays format-agnostic
+            // (an existing account may predate any length rule); only sign-up gates on it.
+            if !email.isEmpty && !isValidEmailFormat {
+                Text("Adresse email invalide.").font(RUFont.sans(11)).foregroundColor(RUColor.rose)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            if mode == .signUp && !password.isEmpty && password.count < 8 {
+                Text("8 caractères minimum.").font(RUFont.sans(11)).foregroundColor(RUColor.rose)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
             Button(mode == .signIn ? "SE CONNECTER" : "CRÉER MON COMPTE") {
                 submitEmailForm()
             }
-            .buttonStyle(PrimaryButtonStyle(isDisabled: email.trimmingCharacters(in: .whitespaces).isEmpty || password.isEmpty || (mode == .signUp && name.trimmingCharacters(in: .whitespaces).isEmpty)))
-            .disabled(email.trimmingCharacters(in: .whitespaces).isEmpty || password.isEmpty || (mode == .signUp && name.trimmingCharacters(in: .whitespaces).isEmpty))
+            .buttonStyle(PrimaryButtonStyle(isDisabled: !isEmailFormSubmittable))
+            .disabled(!isEmailFormSubmittable)
         }
+    }
+
+    private var isValidEmailFormat: Bool {
+        email.range(of: #"^\S+@\S+\.\S+$"#, options: .regularExpression) != nil
+    }
+
+    private var isEmailFormSubmittable: Bool {
+        guard isValidEmailFormat, !password.isEmpty else { return false }
+        if mode == .signUp {
+            return password.count >= 8 && !name.trimmingCharacters(in: .whitespaces).isEmpty
+        }
+        return true
     }
 
 

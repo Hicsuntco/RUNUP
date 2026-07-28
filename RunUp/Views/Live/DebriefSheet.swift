@@ -163,9 +163,22 @@ struct DebriefSheet: View {
                     if appState.shouldRequestReview(rpe: rpe) {
                         appState.recordReviewPromptShown()
                         requestReview()
+                        // `requestReview()` only hands the request to the window scene — presenting
+                        // it is async and risks getting silently dropped if this sheet dismisses and
+                        // navigates away in the same synchronous burst, which is exactly what used
+                        // to happen right here. Give it a beat to actually attach before tearing
+                        // down the presenting context.
+                        Task {
+                            try? await Task.sleep(for: .milliseconds(600))
+                            await MainActor.run {
+                                dismiss()
+                                appState.go(.rings)
+                            }
+                        }
+                    } else {
+                        dismiss()
+                        appState.go(.rings)
                     }
-                    dismiss()
-                    appState.go(.rings)
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 .padding(.top, 16)

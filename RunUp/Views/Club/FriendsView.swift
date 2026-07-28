@@ -20,6 +20,7 @@ struct FriendsView: View {
     @State private var query = ""
     @State private var searchResults: [PublicUser] = []
     @State private var isSearching = false
+    @State private var searchFailed = false
     @State private var searchTask: Task<Void, Never>?
 
     @State private var showSignIn = false
@@ -50,10 +51,10 @@ struct FriendsView: View {
                     } else if isLoading && feed.isEmpty {
                         loadingCard
                     } else {
-                        privacyRow
                         if !incomingRequests.isEmpty { requestsCard }
                         countsRow
                         feedSection
+                        privacyRow
                     }
                 }
 
@@ -179,12 +180,14 @@ struct FriendsView: View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass").font(.system(size: 13)).foregroundColor(RUColor.text3)
             TextField("", text: $query, prompt: Text("Pseudo, email ou nom…").foregroundColor(RUColor.text3))
-                .textInputAutocapitalization(.words)
+                .textInputAutocapitalization(.never)
                 .foregroundColor(RUColor.textPrimary)
                 .font(RUFont.sans(13))
             if isSearchingMode {
                 Button(action: { query = "" }) {
                     Image(systemName: "xmark.circle.fill").font(.system(size: 14)).foregroundColor(RUColor.text3)
+                        .frame(width: 30, height: 30)
+                        .contentShape(Rectangle())
                 }
             }
         }
@@ -197,6 +200,10 @@ struct FriendsView: View {
         VStack(spacing: 6) {
             if isSearching && searchResults.isEmpty {
                 ProgressView().frame(maxWidth: .infinity).padding(.vertical, 20)
+            } else if searchFailed {
+                Text("Recherche impossible — vérifie ta connexion.")
+                    .font(RUFont.sans(12)).foregroundColor(RUColor.rose)
+                    .frame(maxWidth: .infinity).padding(.vertical, 20)
             } else if searchResults.isEmpty {
                 Text("Personne ne porte ce nom.")
                     .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
@@ -291,12 +298,16 @@ struct FriendsView: View {
                     Button(action: { Task { await respond(user, accept: false) } }) {
                         Image(systemName: "xmark").font(.system(size: 11, weight: .bold)).foregroundColor(RUColor.text2)
                             .frame(width: 30, height: 30).background(RUColor.card2, in: Circle())
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(PressableStyle())
                     .accessibilityLabel("Refuser \(user.name)")
                     Button(action: { Task { await respond(user, accept: true) } }) {
                         Image(systemName: "checkmark").font(.system(size: 11, weight: .bold)).foregroundColor(.white)
                             .frame(width: 30, height: 30).background(RUColor.rose, in: Circle())
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(PressableStyle())
                     .accessibilityLabel("Accepter \(user.name)")
@@ -391,9 +402,11 @@ struct FriendsView: View {
         guard trimmed.count >= 2 else {
             searchResults = []
             isSearching = false
+            searchFailed = false
             return
         }
         isSearching = true
+        searchFailed = false
         searchTask = Task {
             try? await Task.sleep(for: .milliseconds(300))
             guard !Task.isCancelled else { return }
@@ -405,7 +418,11 @@ struct FriendsView: View {
                     isSearching = false
                 }
             } catch {
-                await MainActor.run { isSearching = false }
+                guard !Task.isCancelled else { return }
+                await MainActor.run {
+                    isSearching = false
+                    searchFailed = true
+                }
             }
         }
     }
@@ -570,7 +587,7 @@ private struct PeopleListSheet: View {
                             .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                         }
                         .padding(.horizontal, 13).padding(.vertical, 10)
-                        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
                 }
                 .padding(16)

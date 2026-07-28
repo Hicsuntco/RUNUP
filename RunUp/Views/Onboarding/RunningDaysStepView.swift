@@ -8,7 +8,10 @@ struct RunningDaysStepView: View {
         ObScreen {
             ScrollView {
                 ObTitle(eyebrow: "Étape 5 · ton rythme", title: "TES JOURS DE COURSE", subtitle: "Le programme se cale dessus — tu pourras toujours bouger une séance.")
-                HStack(spacing: 7) {
+                // spacing 5, not 7 — on the smallest currently-supported iPhone (375pt), 7 gaps
+                // of 7pt each pushed every square under the 44pt tap-target minimum; 5pt gaps
+                // clear it while still reading as a tight 7-day row.
+                HStack(spacing: 5) {
                     ForEach(0..<7) { i in
                         let on = vm.runningDays.contains(i)
                         Button(action: {
@@ -40,7 +43,7 @@ struct RunningDaysStepView: View {
                     EyebrowLabel(text: "Jour de ta sortie longue", color: RUColor.text3).padding(.top, 20)
                     Text("Le plan y calera toujours ta séance la plus longue de la semaine.")
                         .font(RUFont.sans(11)).foregroundColor(RUColor.text3).padding(.top, 2)
-                    HStack(spacing: 7) {
+                    HStack(spacing: 5) {
                         ForEach(vm.runningDays.sorted(), id: \.self) { i in
                             let on = vm.effectiveLongRunDay == i
                             Button(action: { vm.preferredLongRunDay = i }) {

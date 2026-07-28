@@ -60,6 +60,13 @@ struct RaceGoalView: View {
         ]
     }
 
+    /// Only `.race`/`.hyrox` have a real race day with a distance/chrono to pace against — for
+    /// `.progress`/`.restart`/`.weight`/`.health` this screen used to show a "JOURS" countdown to
+    /// nothing, a fabricated "ALLURE" from `PaceModel`'s generic threshold, and a full race-day
+    /// pacing table built on a hardcoded 10 km fallback (`?? 10` above) — all meaningless for a
+    /// goal with no actual race.
+    private var hasRealRaceDay: Bool { profile.goalId == .race || profile.goalId == .hyrox }
+
     private var goalTitle: String {
         profile.goalDisplay.contains("·") ? String(profile.goalDisplay.split(separator: "·").first ?? "").trimmingCharacters(in: .whitespaces) : profile.goalDisplay
     }
@@ -75,10 +82,18 @@ struct RaceGoalView: View {
                 BackTitleHeaderView(eyebrow: "Ton objectif", title: goalTitle, titleSize: 24) { appState.go(.profile) }
                 Text(dateLine).font(RUFont.sans(12)).foregroundColor(RUColor.text2).padding(.leading, 34)
 
-                HStack(spacing: 10) {
-                    tile(profile.daysUntilRace.map(String.init) ?? "—", "JOUR\((profile.daysUntilRace ?? 2) > 1 ? "S" : "")", highlighted: true)
-                    tile(goalTarget, "OBJECTIF", highlighted: false)
-                    tile(targetPaceLabel, "ALLURE", highlighted: false)
+                if hasRealRaceDay {
+                    HStack(spacing: 10) {
+                        tile(profile.daysUntilRace.map(String.init) ?? "—", "JOUR\((profile.daysUntilRace ?? 2) > 1 ? "S" : "")", highlighted: true)
+                        tile(goalTarget, "OBJECTIF", highlighted: false)
+                        tile(targetPaceLabel, "ALLURE", highlighted: false)
+                    }
+                } else {
+                    HStack(spacing: 10) {
+                        tile("\(profile.weekNumber)", "SEMAINE", highlighted: true)
+                        tile(goalTarget, "OBJECTIF", highlighted: false)
+                        tile("\(profile.streak)", "SÉRIE", highlighted: false)
+                    }
                 }
 
                 VStack(spacing: 10) {
@@ -110,7 +125,15 @@ struct RaceGoalView: View {
                 // continuous road-race distance — HYROX alternates running with functional
                 // stations, so it gets its own honest, structural strategy instead of a fake
                 // per-km split table over a format that isn't a straight run.
-                if profile.goalId == .hyrox {
+                if !hasRealRaceDay {
+                    VStack(alignment: .leading, spacing: 8) {
+                        EyebrowLabel(text: "Où tu en es", color: RUColor.text3)
+                        Text(LocalizedStringKey(progressSummary))
+                            .font(RUFont.sans(12)).foregroundColor(RUColor.text2).lineSpacing(3)
+                    }
+                    .padding(14)
+                    .ruCard()
+                } else if profile.goalId == .hyrox {
                     EyebrowLabel(text: "Stratégie · jour J", color: RUColor.text3)
                     VStack(spacing: 6) {
                         ForEach(hyroxStrategy.indices, id: \.self) { i in
@@ -162,6 +185,15 @@ struct RaceGoalView: View {
         return f
     }()
 
+    private var progressSummary: String {
+        switch profile.goalId {
+        case .weight: return "Pas de date fixe pour ce genre d'objectif — le programme ajuste ton volume semaine après semaine pour que la charge reste tenable dans la durée."
+        case .health: return "Pas de course à préparer ici — le coach cale un rythme régulier, adapté à ta forme du jour, pour construire l'habitude sur la durée."
+        case .restart: return "Reprise en douceur : le programme remonte le volume progressivement pour éviter la blessure, avant de repartir sur un rythme plus soutenu."
+        default: return "Objectif ouvert, sans date de fin fixe — le programme continue de progresser semaine après semaine selon ta forme."
+        }
+    }
+
     private var dateLine: String {
         guard let date = profile.raceDate else { return "Date à définir" }
         return Self.dateFormatter.string(from: date)
@@ -199,7 +231,10 @@ struct RaceGoalView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.45)
                 .padding(.horizontal, 6)
-            Text(label).font(RUFont.sans(8, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
+            // Was a bare `Text(label)` — never resolved through the String Catalog (pre-existing
+            // gap on JOURS/OBJECTIF/ALLURE too), fixed in passing since this function was already
+            // touched for the new SEMAINE/SÉRIE tiles.
+            Text(LocalizedStringKey(label)).font(RUFont.sans(8, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)

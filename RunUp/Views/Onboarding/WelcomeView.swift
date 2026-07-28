@@ -50,14 +50,6 @@ struct WelcomeView: View {
                             }
                         }
                         .padding(.top, 30)
-
-                        HStack(spacing: 8) {
-                            Text("★★★★★").foregroundColor(RUColor.lime)
-                            Text("Un programme qui progresse avec toi, semaine après semaine")
-                                .foregroundColor(RUColor.text3)
-                        }
-                        .font(RUFont.sans(11.5))
-                        .padding(.top, 28)
                         .padding(.bottom, 20)
                     }
                     .padding(.horizontal, 26)

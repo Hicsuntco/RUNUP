@@ -15,6 +15,7 @@ struct RecapView: View {
     /// `ImageRenderer` shortly after the recap appears — a share sheet needs a ready item to
     /// present, and rendering this small a view is fast enough that eager beats on-demand.
     @State private var shareImage: Image?
+    @State private var shareRenderFailed = false
     /// Drives the staggered split-bar reveal — flipped in `onAppear`, after which each bar's own
     /// per-index delay takes over.
     @State private var splitsRevealed = false
@@ -122,6 +123,16 @@ struct RecapView: View {
                                     shareImage
                                         .resizable()
                                         .scaledToFit()
+                                } else if shareRenderFailed {
+                                    // `ImageRenderer.uiImage` can come back nil under memory
+                                    // pressure — without this, the spinner below just spun
+                                    // forever and "PARTAGER MA COURSE" stayed disabled for good.
+                                    VStack(spacing: 8) {
+                                        Image(systemName: "exclamationmark.triangle").font(.system(size: 20)).foregroundColor(RUColor.text3)
+                                        Button("Réessayer") { renderShareCard(for: run) }
+                                            .font(RUFont.sans(12, weight: .semibold))
+                                            .foregroundColor(RUColor.rose2)
+                                    }
                                 } else {
                                     ProgressView().tint(RUColor.text2)
                                 }
@@ -296,7 +307,11 @@ struct RecapView: View {
         // `isOpaque` defaults to false, which is exactly what the card needs — anything left
         // unpainted in the view keeps its alpha in the rendered UIImage, so the PNG layers
         // cleanly over any photo.
-        guard let uiImage = renderer.uiImage else { return }
+        guard let uiImage = renderer.uiImage else {
+            shareRenderFailed = true
+            return
+        }
+        shareRenderFailed = false
         shareImage = Image(uiImage: uiImage)
     }
 

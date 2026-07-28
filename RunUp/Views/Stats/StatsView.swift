@@ -313,13 +313,32 @@ struct StatsView: View {
         PaceModel.projectedPace(fromSecPerKm: predictionReferenceSecPerKm, fromKm: predictionReferenceKm, toKm: targetKm) * targetKm
     }
 
+    /// A marathon-training runner never saw a marathon prediction here (the tile set was hardcoded
+    /// to 5K/10K/semi) — swaps in MARATHON for 5K once the actual goal distance is long enough
+    /// that a 5K prediction stops being the useful end of the set.
+    private var predictionDistances: [(String, Double)] {
+        if let km = profile.effectiveRaceDistanceKm, km >= 28 {
+            return [("10 KM", 10), ("SEMI", 21.0975), ("MARATHON", 42.195)]
+        }
+        return [("5 KM", 5), ("10 KM", 10), ("SEMI", 21.0975)]
+    }
+
+    /// Which tile gets the "highlighted" treatment — used to always be a hardcoded 10K regardless
+    /// of her actual goal; now it's whichever rendered distance is closest to it (falls back to
+    /// 10K, the middle tile, when there's no specific goal distance to match against).
+    private var highlightedPredictionIndex: Int {
+        guard let km = profile.effectiveRaceDistanceKm else { return 1 }
+        let dists = predictionDistances.map(\.1)
+        return dists.indices.min(by: { abs(dists[$0] - km) < abs(dists[$1] - km) }) ?? 1
+    }
+
     private var predictionCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             EyebrowLabel(text: "Prédiction de course", color: RUColor.rose2)
             HStack(spacing: 8) {
-                predictionTile("5 KM", PaceModel.formatDuration(predictedSeconds(forKm: 5)), highlighted: false)
-                predictionTile("10 KM", PaceModel.formatDuration(predictedSeconds(forKm: 10)), highlighted: true)
-                predictionTile("SEMI", PaceModel.formatDuration(predictedSeconds(forKm: 21.0975)), highlighted: false)
+                ForEach(predictionDistances.indices, id: \.self) { i in
+                    predictionTile(predictionDistances[i].0, PaceModel.formatDuration(predictedSeconds(forKm: predictionDistances[i].1)), highlighted: i == highlightedPredictionIndex)
+                }
             }
             if bestRecentPerformance == nil {
                 Text("Estimation basée sur ton profil — termine une course pour une prédiction plus précise.")
@@ -342,7 +361,11 @@ struct StatsView: View {
 
     private func predictionTile(_ label: String, _ value: String, highlighted: Bool) -> some View {
         VStack(spacing: 4) {
-            Text(label).font(RUFont.sans(8, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
+            // Was a bare `Text(label)` — a `String`-typed param never resolves through the String
+            // Catalog (only the `LocalizedStringKey` initializer does), so "5 KM"/"10 KM"/"SEMI"
+            // silently never localized despite the app having EN/ES translations. Pre-existing gap,
+            // fixed in passing since this function was already touched for the MARATHON tile.
+            Text(LocalizedStringKey(label)).font(RUFont.sans(8, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
             Text(value).displayStyle(22).foregroundColor(highlighted ? RUColor.rose2 : RUColor.textPrimary)
         }
         .frame(maxWidth: .infinity)
@@ -367,20 +390,19 @@ struct StatsView: View {
         }
     }
 
-    /// Acute (last 7 days) vs. chronic (last 28 days weekly average) training load — a standard,
-    /// real workload-ratio calculation (values around 0.8–1.3 are typically considered a "sweet
-    /// spot"; consistently above ~1.5 is a common overload signal) computed from actual run dates
-    /// instead of a fixed "1.1" shown regardless of anyone's real training.
+    /// Acute (this week) vs. chronic (last 4 weeks' average) training load — a standard, real
+    /// workload-ratio calculation (values around 0.8–1.3 are typically considered a "sweet spot";
+    /// consistently above ~1.5 is a common overload signal). Deliberately built from the SAME
+    /// Monday-anchored week buckets `weeklyDistances` plots as bars below it — a rolling
+    /// 7-day/28-day window anchored on `.now` disagreed with those calendar-week bars mid-week
+    /// (the printed ratio could visually contradict what the bars showed).
     private var acuteChronicRatio: Double? {
-        let cal = Calendar.current
-        guard let sevenDaysAgo = cal.date(byAdding: .day, value: -7, to: .now),
-              let twentyEightDaysAgo = cal.date(byAdding: .day, value: -28, to: .now)
-        else { return nil }
-        let last7 = runs.filter { $0.date >= sevenDaysAgo }.reduce(0) { $0 + $1.distanceKm }
-        let last28 = runs.filter { $0.date >= twentyEightDaysAgo }.reduce(0) { $0 + $1.distanceKm }
-        let chronicWeeklyAvg = last28 / 4
+        let bars = weeklyDistances
+        guard bars.count >= 4, let acute = bars.last else { return nil }
+        let last4 = bars.suffix(4)
+        let chronicWeeklyAvg = last4.reduce(0, +) / Double(last4.count)
         guard chronicWeeklyAvg > 0 else { return nil }
-        return last7 / chronicWeeklyAvg
+        return acute / chronicWeeklyAvg
     }
 
     private func loadZoneLabel(_ ratio: Double) -> String {

@@ -40,6 +40,15 @@ final class LiveRunViewModel {
     /// Deliberately higher than the pause threshold (hysteresis) — resuming right at the same
     /// speed that triggered the pause would flicker pause/resume on every small fluctuation.
     private static let autoResumeSpeedThreshold: Double = 1.3
+    /// Auto-pause relies entirely on `CLLocation.speed`, which stays ~0 with no real GPS
+    /// displacement (treadmill, indoor track, a bad urban-canyon fix) — without this, she'd have
+    /// to manually tap play every ~10s for the whole run since the auto-resume condition can
+    /// never fire. Tracks consecutive auto-pause cycles that gained no real distance; after a
+    /// few in a row this session's auto-pause turns itself off (her persisted setting is
+    /// untouched) so the run stops livelocking.
+    private var autoPauseCyclesWithNoDistance = 0
+    private var autoPauseCycleStartDistanceKm: Double = 0
+    private var runtimeAutoPauseDisabled = false
 
     /// Real-time pace-zone alerts: a rolling window (real distance covered over the last
     /// `paceWindowSeconds`) compared against the session's target pace — reacts to her CURRENT
@@ -224,7 +233,7 @@ final class LiveRunViewModel {
             advanceIntervalSegmentIfNeeded()
         }
         checkPaceAlert()
-        if profile.autoPauseEnabled {
+        if profile.autoPauseEnabled && !runtimeAutoPauseDisabled {
             if location.currentSpeedMetersPerSecond < Self.autoPauseSpeedThreshold {
                 stationarySeconds += 1
                 if stationarySeconds >= Self.autoPauseDelaySeconds {
@@ -326,12 +335,24 @@ final class LiveRunViewModel {
     /// notice her moving again and resume on its own, matching what Strava/Garmin call
     /// "auto pause".
     private func autoPause() {
+        if distanceKm - autoPauseCycleStartDistanceKm < 0.01 {
+            autoPauseCyclesWithNoDistance += 1
+        } else {
+            autoPauseCyclesWithNoDistance = 1
+        }
+        autoPauseCycleStartDistanceKm = distanceKm
+
         isAutoPaused = true
         isPaused = true
         pauseBeganAt = Date()
         location.pauseAccumulation()
         Haptics.impact(.light)
-        showCue("Pause automatique — reprends dès que tu es prête, ou continue à marcher pour repartir.")
+        if autoPauseCyclesWithNoDistance >= 3 {
+            runtimeAutoPauseDisabled = true
+            showCue("Pause auto désactivée pour cette course — le GPS ne détecte pas ton déplacement. Utilise le bouton pause toi-même.")
+        } else {
+            showCue("Pause automatique — reprends dès que tu es prête, ou continue à marcher pour repartir.")
+        }
         updateLiveActivity()
     }
 

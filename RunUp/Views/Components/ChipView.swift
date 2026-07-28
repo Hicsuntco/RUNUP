@@ -13,6 +13,7 @@ struct SelectableChip: View {
                 .foregroundColor(selected ? .white : RUColor.text2)
                 .padding(.horizontal, 15)
                 .padding(.vertical, 11)
+                .frame(minHeight: 44)
                 .background(selected ? RUColor.rose : RUColor.card, in: Capsule())
                 .overlay(Capsule().stroke(selected ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
                 .animation(.easeOut(duration: 0.15), value: selected)

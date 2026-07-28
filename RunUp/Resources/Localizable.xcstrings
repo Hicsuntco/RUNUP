@@ -11120,6 +11120,166 @@
           }
         }
       }
+    },
+    "Recherche impossible — vérifie ta connexion.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search failed — check your connection."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Búsqueda fallida — comprueba tu conexión."
+          }
+        }
+      }
+    },
+    "SEMAINE": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WEEK"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SEMANA"
+          }
+        }
+      }
+    },
+    "Où tu en es": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where you're at"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dónde estás"
+          }
+        }
+      }
+    },
+    "Pas de date fixe pour ce genre d'objectif — le programme ajuste ton volume semaine après semaine pour que la charge reste tenable dans la durée.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No fixed date for this kind of goal — the program adjusts your volume week after week to keep the load sustainable over time."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin fecha fija para este tipo de objetivo — el programa ajusta tu volumen semana tras semana para que la carga siga siendo sostenible en el tiempo."
+          }
+        }
+      }
+    },
+    "Pas de course à préparer ici — le coach cale un rythme régulier, adapté à ta forme du jour, pour construire l'habitude sur la durée.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No race to prep for here — the coach sets a steady rhythm, adapted to how you're feeling each day, to build the habit over time."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay carrera que preparar aquí — el coach fija un ritmo regular, adaptado a tu forma del día, para construir el hábito con el tiempo."
+          }
+        }
+      }
+    },
+    "Reprise en douceur : le programme remonte le volume progressivement pour éviter la blessure, avant de repartir sur un rythme plus soutenu.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Easy restart: the program ramps volume back up gradually to avoid injury, before returning to a more sustained rhythm."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reanudación suave: el programa aumenta el volumen progresivamente para evitar lesiones, antes de volver a un ritmo más sostenido."
+          }
+        }
+      }
+    },
+    "Objectif ouvert, sans date de fin fixe — le programme continue de progresser semaine après semaine selon ta forme.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open-ended goal, no fixed end date — the program keeps progressing week after week based on how you're feeling."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Objetivo abierto, sin fecha de fin fija — el programa sigue progresando semana tras semana según tu forma."
+          }
+        }
+      }
+    },
+    "Adresse email invalide.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid email address."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dirección de correo no válida."
+          }
+        }
+      }
+    },
+    "8 caractères minimum.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "8 characters minimum."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mínimo 8 caracteres."
+          }
+        }
+      }
+    },
+    "MARATHON": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MARATHON"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MARATÓN"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

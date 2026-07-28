@@ -152,6 +152,8 @@ struct CoachView: View {
                 Button("Réessayer") { retryLast() }
                     .font(RUFont.sans(11, weight: .bold))
                     .foregroundColor(RUColor.amber)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
                     .buttonStyle(PressableStyle())
             }
             .padding(12)
@@ -222,6 +224,7 @@ struct CoachView: View {
             .frame(width: 44, height: 44)
             .background(RUColor.rose, in: Circle())
             .buttonStyle(PressableStyle())
+            .opacity((vm?.draft ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.4 : 1)
             .disabled((vm?.draft ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             .accessibilityLabel("Envoyer")
         }
@@ -271,6 +274,7 @@ struct FlowChips: View {
                         .font(RUFont.sans(11, weight: .semibold))
                         .foregroundColor(RUColor.text2)
                         .padding(.horizontal, 11).padding(.vertical, 6)
+                        .frame(minHeight: 44)
                         .background(RUColor.card, in: Capsule())
                         .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                 }

@@ -54,20 +54,10 @@ struct HomeView: View {
                     }
                 }
 
-                // Opens the same "nouvel objectif" wizard as Profil/Plus de réglages and
-                // ChoiceView's end-of-program screen — only replaces goal/distance/allure/jours,
-                // nothing about her (nom, blessures, cycle...). No confirmation needed here: a
-                // new program restarting at semaine 1 is the expected, obvious outcome of asking
-                // for a new program, unlike the old "Refaire l'onboarding" which silently re-asked
-                // everything just to change the plan.
-                Button(action: { appState.newGoalWizardPresented = true }) {
-                    HStack(spacing: 5) {
-                        Image(systemName: "arrow.counterclockwise").font(.system(size: 11))
-                        Text("Refaire un programme").font(RUFont.sans(10.5, weight: .semibold))
-                    }
-                    .foregroundColor(RUColor.text3)
-                }
-                .buttonStyle(PressableStyle())
+                // The actionable "what do I do today" card leads the screen — it's the only card
+                // with real CTAs (FAIT/DÉMARRER), so it shouldn't require scrolling past two
+                // purely informational cards first.
+                sessionCard
 
                 programWeekCard
 
@@ -75,8 +65,6 @@ struct HomeView: View {
                 // meaningful at a glance than "forme du jour" (an abstract 0-100 score), so it
                 // leads; readiness moved to where this used to be.
                 ringsCard
-
-                sessionCard
 
                 readinessCard
 
@@ -88,6 +76,26 @@ struct HomeView: View {
                         .multilineTextAlignment(.center)
                         .padding(.top, 4)
                 }
+
+                // Opens the same "nouvel objectif" wizard as Profil/Plus de réglages and
+                // ChoiceView's end-of-program screen — only replaces goal/distance/allure/jours,
+                // nothing about her (nom, blessures, cycle...). No confirmation needed here: a
+                // new program restarting at semaine 1 is the expected, obvious outcome of asking
+                // for a new program, unlike the old "Refaire l'onboarding" which silently re-asked
+                // everything just to change the plan. Deliberately de-prioritized to the bottom
+                // of the screen — a rare, program-resetting action shouldn't sit above the actual
+                // plan content, and it's already reachable from Profil too.
+                Button(action: { appState.newGoalWizardPresented = true }) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "arrow.counterclockwise").font(.system(size: 11))
+                        Text("Refaire un programme").font(RUFont.sans(10.5, weight: .semibold))
+                    }
+                    .foregroundColor(RUColor.text3)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(PressableStyle())
+                .frame(maxWidth: .infinity)
             }
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.top, 8)
@@ -280,6 +288,12 @@ struct HomeView: View {
                     // record — logging it shouldn't require the full GPS flow.
                     Button(action: { appState.markTodaySessionDone() }) {
                         HStack { Image(systemName: "checkmark"); Text("FAIT") }
+                            // Matches DÉMARRER's PrimaryButtonStyle typography (bebas display
+                            // font) so the two read as one paired control, not two mismatched
+                            // buttons — the outline vs. filled chrome from SecondaryButtonStyle
+                            // is what should carry the "lower emphasis" signal, not the font.
+                            .font(RUFont.bebas(16))
+                            .tracking(1)
                     }
                     .buttonStyle(SecondaryButtonStyle())
 

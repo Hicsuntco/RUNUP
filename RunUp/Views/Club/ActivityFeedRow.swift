@@ -41,6 +41,7 @@ struct ActivityFeedRow: View {
                     .font(RUFont.sans(11.5, weight: .semibold))
                     .foregroundColor(item.kudoedByMe ? RUColor.rose2 : RUColor.text2)
                     .padding(.horizontal, 12).padding(.vertical, 6)
+                    .frame(minHeight: 44)
                     .background(item.kudoedByMe ? RUColor.rose.opacity(0.16) : RUColor.card2, in: Capsule())
                     .overlay(Capsule().stroke(item.kudoedByMe ? RUColor.rose.opacity(0.35) : RUColor.line, lineWidth: RUSpacing.hairline))
                     .scaleEffect(item.kudoedByMe ? 1.08 : 1.0)
@@ -58,6 +59,7 @@ struct ActivityFeedRow: View {
                     .font(RUFont.sans(11.5, weight: .semibold))
                     .foregroundColor(RUColor.text2)
                     .padding(.horizontal, 12).padding(.vertical, 6)
+                    .frame(minHeight: 44)
                     .background(RUColor.card2, in: Capsule())
                     .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                 }

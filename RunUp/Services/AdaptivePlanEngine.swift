@@ -79,16 +79,26 @@ enum AdaptivePlanEngine {
         // Confirmed runners start with more volume than beginners from week 1, instead of
         // everyone starting at the same tier regardless of declared level — level only used to
         // feed the coach's system prompt before this.
-        let tier = startingTier(for: result.level)
+        let tier = startingTier(for: result.level, goal: result.goal, lastRanRecency: result.lastRanRecency)
         profile.weekTier = tier
         beginWeek(weekNumber: 1, tier: tier, profile: profile)
     }
 
-    private static func startingTier(for level: ExperienceLevel) -> Int {
+    /// `lastRanRecency` (asked only for the `.restart` goal — "Ta dernière sortie remonte à…")
+    /// used to be collected and never read anywhere — a "confirmée" runner off for over a year
+    /// isn't at "confirmée" volume anymore, and this goal's whole promise is "Reprise en douceur".
+    private static func startingTier(for level: ExperienceLevel, goal: GoalType? = nil, lastRanRecency: String? = nil) -> Int {
+        let base: Int
         switch level {
-        case .debutante: return 1
-        case .intermediaire: return 2
-        case .confirmee: return 3
+        case .debutante: base = 1
+        case .intermediaire: base = 2
+        case .confirmee: base = 3
+        }
+        guard goal == .restart, let recency = lastRanRecency else { return base }
+        switch recency {
+        case "1y+": return 1
+        case "1y": return min(base, 2)
+        default: return base // "1m" / "6m" — recent enough that her declared level still holds.
         }
     }
 

@@ -258,22 +258,37 @@ struct ClubMemberProfileView: View {
         }
     }
 
+    /// Horizontally scrollable, not a plain `HStack` — same fix as `ClubView.badgeStrip`: the
+    /// badge catalog grew to 15+ entries and a bare `HStack` crushes each tile down to just a
+    /// few points wide. A fixed tile width lets a scroll view give each one its real size.
     private var badgesSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             EyebrowLabel(text: "Badges", color: RUColor.text3)
-            HStack(spacing: 10) {
-                ForEach(badges) { badge in
-                    Button(action: { selectedBadge = badge }) {
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(badge.earned ? RUColor.card : RUColor.card2)
-                            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
-                            .aspectRatio(1, contentMode: .fit)
-                            .overlay(Text(badge.emoji).font(.system(size: 22)))
-                            .opacity(badge.earned ? 1 : 0.35)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(badges) { badge in
+                        Button(action: { selectedBadge = badge }) {
+                            VStack(spacing: 5) {
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .fill(badge.earned ? RUColor.card : RUColor.card2)
+                                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                                    .aspectRatio(1, contentMode: .fit)
+                                    .overlay(Text(badge.emoji).font(.system(size: 22)))
+                                    .opacity(badge.earned ? 1 : 0.35)
+                                Text(badge.name)
+                                    .font(RUFont.sans(8, weight: .semibold))
+                                    .foregroundColor(badge.earned ? RUColor.textPrimary : RUColor.text2)
+                                    .multilineTextAlignment(.center)
+                                    .lineLimit(2)
+                                    .minimumScaleFactor(0.8)
+                            }
+                            .frame(width: 64)
+                        }
+                        .buttonStyle(PressableStyle())
+                        .accessibilityLabel("\(badge.name), \(badge.earned ? "débloqué" : "verrouillé")")
                     }
-                    .buttonStyle(PressableStyle())
-                    .accessibilityLabel("\(badge.name), \(badge.earned ? "débloqué" : "verrouillé")")
                 }
+                .padding(.vertical, 2)
             }
         }
         .padding(.top, 10)

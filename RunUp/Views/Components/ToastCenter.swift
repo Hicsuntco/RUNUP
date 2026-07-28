@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// App-wide toast pill (white bg / dark text, bottom-center, ~2.2s auto-dismiss).
+/// App-wide toast pill (bottom-center, ~2.2s auto-dismiss).
 @Observable
 final class ToastCenter {
     private(set) var message: String?
@@ -30,10 +30,17 @@ struct ToastHost: ViewModifier {
             if let message = toastCenter.message {
                 Text(message)
                     .font(RUFont.sans(13, weight: .semibold))
+                    // Hardcoded dark-on-light regardless of theme, deliberately — it's a
+                    // transient overlay that floats above arbitrary content in EITHER theme, and
+                    // `RUColor.bg` is pure white in light mode (`Colors.swift:13`), so a
+                    // theme-matched pill rendered a white toast on a white screen (see full-app
+                    // audit finding). A fixed high-contrast pill is the same pattern iOS's own
+                    // system toasts use.
                     .foregroundColor(.black)
                     .padding(.horizontal, 18)
                     .padding(.vertical, 12)
                     .background(.white, in: Capsule())
+                    .overlay(Capsule().stroke(Color.black.opacity(0.08), lineWidth: RUSpacing.hairline))
                     .shadow(color: .black.opacity(0.3), radius: 16, x: 0, y: 8)
                     .padding(.bottom, RUSpacing.tabBarBottomInset + RUSpacing.tabBarHeight + 14)
                     .transition(.move(edge: .bottom).combined(with: .opacity))

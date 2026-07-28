@@ -800,25 +800,39 @@ struct ClubView: View {
         }
     }
 
+    /// Horizontally scrollable, not a plain `HStack` — the badge catalog grew from 4 to 15+
+    /// entries and a bare `HStack` has to squeeze every tile to fit the screen width at once,
+    /// which crushed each tile down to just a few points wide and wrapped its label one letter
+    /// per line ("Séri / e de / 3 jour / s"). A fixed tile width lets a scroll view give each one
+    /// its real size instead, with the label capped at two lines for the handful of longer names.
     private var badgeStrip: some View {
-        HStack(spacing: 10) {
-            ForEach(badges) { badge in
-                Button(action: { selectedBadge = badge }) {
-                    VStack(spacing: 5) {
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(badge.earned ? RUColor.card : RUColor.card2)
-                            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(badge.earned ? RUColor.rose.opacity(0.35) : RUColor.line, lineWidth: RUSpacing.hairline))
-                            .aspectRatio(1, contentMode: .fit)
-                            .overlay(Text(badge.emoji).font(.system(size: 26)))
-                            .opacity(badge.earned ? 1 : 0.35)
-                            // A real glow on earned tiles — opacity alone made locked vs.
-                            // earned read as "faded vs. normal" rather than "locked vs. won".
-                            .shadow(color: badge.earned ? RUColor.rose.opacity(0.3) : .clear, radius: 8, x: 0, y: 3)
-                        Text(badge.name).font(RUFont.sans(8, weight: .semibold)).foregroundColor(badge.earned ? RUColor.textPrimary : RUColor.text2)
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 10) {
+                ForEach(badges) { badge in
+                    Button(action: { selectedBadge = badge }) {
+                        VStack(spacing: 5) {
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(badge.earned ? RUColor.card : RUColor.card2)
+                                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(badge.earned ? RUColor.rose.opacity(0.35) : RUColor.line, lineWidth: RUSpacing.hairline))
+                                .aspectRatio(1, contentMode: .fit)
+                                .overlay(Text(badge.emoji).font(.system(size: 26)))
+                                .opacity(badge.earned ? 1 : 0.35)
+                                // A real glow on earned tiles — opacity alone made locked vs.
+                                // earned read as "faded vs. normal" rather than "locked vs. won".
+                                .shadow(color: badge.earned ? RUColor.rose.opacity(0.3) : .clear, radius: 8, x: 0, y: 3)
+                            Text(badge.name)
+                                .font(RUFont.sans(8, weight: .semibold))
+                                .foregroundColor(badge.earned ? RUColor.textPrimary : RUColor.text2)
+                                .multilineTextAlignment(.center)
+                                .lineLimit(2)
+                                .minimumScaleFactor(0.8)
+                        }
+                        .frame(width: 64)
                     }
+                    .buttonStyle(PressableStyle())
                 }
-                .buttonStyle(PressableStyle())
             }
+            .padding(.vertical, 2)
         }
     }
 

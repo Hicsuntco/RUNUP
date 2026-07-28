@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// "Plus de réglages" — reached from `ProfileView`'s bottom row, same one-tap cost the main page
 /// already paid for by being long: Programme, Santé & blessures, Cycle, Parrainage, Compte are all
@@ -46,6 +47,9 @@ struct MoreSettingsView: View {
                         sectionTitle("Compte")
                         accountCard
                     }
+
+                    sectionTitle("Bêta")
+                    betaFeedbackCard
                 }
                 .padding(18)
             }
@@ -317,6 +321,43 @@ struct MoreSettingsView: View {
         } message: {
             Text("Ton club, ton classement et ton fil d'activité seront définitivement supprimés du serveur. Cette action est irréversible.")
         }
+    }
+
+    /// A `mailto:` link, not a custom feedback backend/dashboard — zero infrastructure to build
+    /// or maintain for a handful of beta testers, and it works with whatever mail app is actually
+    /// configured on their phone (unlike `MFMailComposeViewController`, which only fires if the
+    /// built-in Mail app itself has an account set up). Same address `ClubView`'s "nous contacter"
+    /// link already uses, so feedback and abuse reports land in the same inbox.
+    private var betaFeedbackCard: some View {
+        VStack(spacing: 0) {
+            Link(destination: feedbackMailURL) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Donner mon avis").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                        Text("Un bug, une idée, un truc qui t'a gênée — ça part par mail.")
+                            .font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
+                    }
+                    Spacer()
+                    Text("›").foregroundColor(RUColor.text2)
+                }
+                .padding(.horizontal, 14).padding(.vertical, 13)
+            }
+            .buttonStyle(PressableStyle())
+        }
+        .ruCard()
+    }
+
+    private var feedbackMailURL: URL {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
+        let system = UIDevice.current.systemVersion
+        let body = "\n\n\n---\nCe qui suit aide juste au diagnostic :\nVersion \(version) (\(build)) · iOS \(system)"
+        var components = URLComponents(string: "mailto:charlottegrudep@gmail.com")!
+        components.queryItems = [
+            URLQueryItem(name: "subject", value: "Feedback RunUp bêta"),
+            URLQueryItem(name: "body", value: body)
+        ]
+        return components.url!
     }
 
     /// Neither onboarding nor signup ever asked for a handle or a last name — "Mes amis" search

@@ -11280,6 +11280,54 @@
           }
         }
       }
+    },
+    "Bêta": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beta"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beta"
+          }
+        }
+      }
+    },
+    "Donner mon avis": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Give feedback"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dar mi opinión"
+          }
+        }
+      }
+    },
+    "Un bug, une idée, un truc qui t'a gênée — ça part par mail.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A bug, an idea, something that bugged you — it goes out by email."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un fallo, una idea, algo que te molestó — se envía por correo."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

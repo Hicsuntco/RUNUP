@@ -7,10 +7,8 @@ import UIKit
 struct CoachView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var modelContext
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query(sort: \ChatMessage.timestamp) private var messages: [ChatMessage]
     @State private var vm: CoachViewModel?
-    @State private var typingBounce = false
     @State private var showClearConfirm = false
 
     private let chips = ["Adapte ma semaine", "Je suis fatiguée", "Conseils nutrition", "Analyse ma dernière sortie"]
@@ -187,23 +185,18 @@ struct CoachView: View {
         }
     }
 
-    /// Was 3 static dots with no animation at all — every chat app's typing indicator pulses in
-    /// sequence, and this is the loading state for the AI reply, shown on every single message.
+    /// Was 3 static dots with no animation at all, then 3 bouncing dots — now RunUp's own "Tempo"
+    /// motif (see `TempoBarsView`) instead of the generic chat-app dot pattern every messaging
+    /// app already uses.
     private var typingIndicator: some View {
         HStack {
-            HStack(spacing: 4) {
-                ForEach(0..<3, id: \.self) { i in
-                    Circle().fill(RUColor.text2).frame(width: 6, height: 6)
-                        .offset(y: typingBounce && !reduceMotion ? -3 : 0)
-                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.5).repeatForever(autoreverses: true).delay(Double(i) * 0.15), value: typingBounce)
-                }
-            }
-            .padding(13)
-            .background(RUColor.card, in: BubbleShape(tailCorner: .topLeft))
+            TempoBarsView(barCount: 5, color: RUColor.rose2, amplitude: 1, thin: false)
+                .frame(width: 34, height: 15)
+                .padding(13)
+                .background(RUColor.card, in: BubbleShape(tailCorner: .topLeft))
             Spacer()
         }
-        .onAppear { typingBounce = true }
-        // Otherwise silence while waiting for a reply — the bouncing dots carry no VoiceOver
+        // Otherwise silence while waiting for a reply — the tempo bars carry no VoiceOver
         // content at all.
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Le coach écrit…")

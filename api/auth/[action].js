@@ -39,7 +39,7 @@ module.exports = withErrorHandling(async function handler(req, res) {
 // Sign in with Apple — verify the identity token against Apple's own public keys (never trust a
 // client-claimed user id) and upsert a user keyed on Apple's stable `sub`.
 async function handleApple(req, res) {
-  const { identityToken, name, referralCode } = req.body || {};
+  const { identityToken, name, lastName, referralCode } = req.body || {};
   if (!identityToken) return res.status(400).json({ error: 'bad_request' });
 
   let claims;
@@ -56,15 +56,19 @@ async function handleApple(req, res) {
     // app (every later sign-in omits it) — trust what the client passed this one time, fall back
     // to a generic name if Apple withheld even that, or if it fails the content filter (this
     // field isn't itself part of Apple's signed token, so a tampered client could still put
-    // anything in it).
+    // anything in it). Kept as two separate fields (not pre-joined client-side) so `last_name`
+    // is real, structured data for the "nom prénom" search in api/friends, not something that
+    // would need re-parsing back out of a single string later.
     const rawName = name && name.trim();
     const displayName = (rawName && !containsObjectionableContent(rawName)) ? rawName : 'Coureur';
+    const rawLastName = lastName && lastName.trim();
+    const cleanLastName = (rawLastName && !containsObjectionableContent(rawLastName)) ? rawLastName.slice(0, 60) : null;
     const referrerId = await resolveReferrerId(referralCode);
     const myReferralCode = await generateUniqueReferralCode();
     try {
       const { rows } = await sql`
-        INSERT INTO users (apple_sub, email, name, referral_code, referred_by)
-        VALUES (${claims.sub}, ${claims.email}, ${displayName}, ${myReferralCode}, ${referrerId})
+        INSERT INTO users (apple_sub, email, name, last_name, referral_code, referred_by)
+        VALUES (${claims.sub}, ${claims.email}, ${displayName}, ${cleanLastName}, ${myReferralCode}, ${referrerId})
         RETURNING id, name, xp_total, referral_code
       `;
       user = rows[0];
@@ -97,11 +101,14 @@ async function handleApple(req, res) {
 
 // Email + password sign-up. Passwords are never stored in plain text — only a bcrypt hash.
 async function handleSignup(req, res) {
-  const { email, password, name, referralCode } = req.body || {};
+  const { email, password, name, lastName, referralCode } = req.body || {};
   const cleanName = typeof name === 'string' ? name.trim().slice(0, 60) : '';
+  const cleanLastName = typeof lastName === 'string' && lastName.trim() ? lastName.trim().slice(0, 60) : null;
   if (!email || !password || !cleanName) return res.status(400).json({ error: 'bad_request' });
   if (password.length < 8 || password.length > 200) return res.status(400).json({ error: 'weak_password' });
-  if (containsObjectionableContent(cleanName)) return res.status(422).json({ error: 'objectionable_content' });
+  if (containsObjectionableContent(cleanName) || (cleanLastName && containsObjectionableContent(cleanLastName))) {
+    return res.status(422).json({ error: 'objectionable_content' });
+  }
 
   // Same reasoning as login's per-IP cap: every attempt burns a ~250ms cost-12 bcrypt hash, and
   // without a limit this is an unthrottled way to exhaust server resources, mass-create throwaway
@@ -120,8 +127,8 @@ async function handleSignup(req, res) {
   let user;
   try {
     const { rows } = await sql`
-      INSERT INTO users (email, password_hash, name, referral_code, referred_by)
-      VALUES (${normalizedEmail}, ${passwordHash}, ${cleanName}, ${myReferralCode}, ${referrerId})
+      INSERT INTO users (email, password_hash, name, last_name, referral_code, referred_by)
+      VALUES (${normalizedEmail}, ${passwordHash}, ${cleanName}, ${cleanLastName}, ${myReferralCode}, ${referrerId})
       RETURNING id, name, xp_total, referral_code
     `;
     user = rows[0];

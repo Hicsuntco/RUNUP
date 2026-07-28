@@ -290,3 +290,12 @@ CREATE TABLE IF NOT EXISTS follows (
 
 CREATE INDEX IF NOT EXISTS idx_follows_followee_status ON follows(followee_id, status);
 CREATE INDEX IF NOT EXISTS idx_follows_follower_status ON follows(follower_id, status);
+
+-- A first name alone (all onboarding/signup ever asked for) makes "search someone to follow" a
+-- coin flip once there's more than one Léo on the platform — these two fields let a real search
+-- disambiguate: a chosen, unique handle (api/account/profile.js), and a last name to search
+-- "nom prénom" the way a real person actually thinks of someone. Both nullable: nobody had either
+-- before this, and a username in particular is opt-in (see api/account/profile.js's validation).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_users_username_lower ON users (lower(username));

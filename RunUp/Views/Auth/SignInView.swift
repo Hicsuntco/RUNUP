@@ -18,55 +18,69 @@ struct SignInView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
 
+    /// Set right after a successful sign-in/sign-up when the account has no username yet — gates
+    /// the sheet on choosing one instead of dismissing straight away. Covers both a genuinely new
+    /// account AND an older one (Apple sign-in's one-tap flow can't tell the two apart client-side)
+    /// that simply never set one, so this is the one moment guaranteed to reach everyone at least
+    /// once, rather than relying on her finding the field in Réglages on her own.
+    @State private var showChooseUsername = false
+    @State private var usernameField = ""
+    @State private var isSavingUsername = false
+    @State private var usernameError: String?
+
     private enum Mode { case signIn, signUp }
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 18) {
-                VStack(spacing: 10) {
-                    AppMarkView(size: 56)
-                    Text("Connecte-toi").displayStyle(22).foregroundColor(RUColor.textPrimary)
-                    Text("Pour rejoindre un vrai club, avec un classement et un fil d'activité réels.")
-                        .font(RUFont.sans(12.5))
-                        .foregroundColor(RUColor.text2)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 20)
+            if showChooseUsername {
+                chooseUsernameView
+            } else {
+                VStack(spacing: 18) {
+                    VStack(spacing: 10) {
+                        AppMarkView(size: 56)
+                        Text("Connecte-toi").displayStyle(22).foregroundColor(RUColor.textPrimary)
+                        Text("Pour rejoindre un vrai club, avec un classement et un fil d'activité réels.")
+                            .font(RUFont.sans(12.5))
+                            .foregroundColor(RUColor.text2)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 20)
+                    }
+                    .padding(.top, 24)
+
+                    SignInWithAppleButton(.signIn, onRequest: configureAppleRequest, onCompletion: handleAppleCompletion)
+                        // Black-on-light / white-on-dark — a fixed .white button was invisible
+                        // against the near-white light-mode sheet.
+                        .signInWithAppleButtonStyle(RUColor.isLight ? .black : .white)
+                        .frame(height: 50)
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+                    HStack {
+                        Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
+                        Text("ou").font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+                        Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
+                    }
+
+                    emailForm
+
+                    if let errorMessage {
+                        Text(errorMessage)
+                            .font(RUFont.sans(12))
+                            .foregroundColor(RUColor.rose)
+                            .multilineTextAlignment(.center)
+                    }
+
+                    Button(mode == .signIn ? "Pas de compte ? Crée-en un" : "Déjà un compte ? Connecte-toi") {
+                        mode = mode == .signIn ? .signUp : .signIn
+                        errorMessage = nil
+                    }
+                    .font(RUFont.sans(12, weight: .semibold))
+                    .foregroundColor(RUColor.text2)
+                    .padding(.top, 4)
+                    .buttonStyle(PressableStyle())
                 }
-                .padding(.top, 24)
-
-                SignInWithAppleButton(.signIn, onRequest: configureAppleRequest, onCompletion: handleAppleCompletion)
-                    // Black-on-light / white-on-dark — a fixed .white button was invisible
-                    // against the near-white light-mode sheet.
-                    .signInWithAppleButtonStyle(RUColor.isLight ? .black : .white)
-                    .frame(height: 50)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-
-                HStack {
-                    Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
-                    Text("ou").font(RUFont.sans(11)).foregroundColor(RUColor.text3)
-                    Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
-                }
-
-                emailForm
-
-                if let errorMessage {
-                    Text(errorMessage)
-                        .font(RUFont.sans(12))
-                        .foregroundColor(RUColor.rose)
-                        .multilineTextAlignment(.center)
-                }
-
-                Button(mode == .signIn ? "Pas de compte ? Crée-en un" : "Déjà un compte ? Connecte-toi") {
-                    mode = mode == .signIn ? .signUp : .signIn
-                    errorMessage = nil
-                }
-                .font(RUFont.sans(12, weight: .semibold))
-                .foregroundColor(RUColor.text2)
-                .padding(.top, 4)
-                .buttonStyle(PressableStyle())
+                .padding(.horizontal, RUSpacing.pagePadding)
+                .padding(.bottom, 40)
             }
-            .padding(.horizontal, RUSpacing.pagePadding)
-            .padding(.bottom, 40)
         }
         .background(RUColor.bg)
         .disabled(isLoading)
@@ -82,6 +96,49 @@ struct SignInView: View {
             guard referralCode.isEmpty, let pending = ReferralLinkHandler.pendingCode else { return }
             referralCode = pending
             mode = .signUp
+        }
+    }
+
+    private var chooseUsernameView: some View {
+        VStack(spacing: 18) {
+            VStack(spacing: 10) {
+                AppMarkView(size: 56)
+                Text("Choisis ton pseudo").displayStyle(22).foregroundColor(RUColor.textPrimary)
+                Text("Pour que tes amis te retrouvent facilement dans la recherche.")
+                    .font(RUFont.sans(12.5))
+                    .foregroundColor(RUColor.text2)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 20)
+            }
+            .padding(.top, 24)
+
+            TextField("Pseudo", text: $usernameField)
+                .textFieldStyle(AuthFieldStyle())
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+
+            if let usernameError {
+                Text(usernameError)
+                    .font(RUFont.sans(12))
+                    .foregroundColor(RUColor.rose)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button(isSavingUsername ? "…" : "CONTINUER") { Task { await saveUsername() } }
+                .buttonStyle(PrimaryButtonStyle(isDisabled: !isValidUsernameFormat(usernameField) || isSavingUsername))
+                .disabled(!isValidUsernameFormat(usernameField) || isSavingUsername)
+
+            Button("Plus tard") { dismiss() }
+                .font(RUFont.sans(12, weight: .semibold))
+                .foregroundColor(RUColor.text2)
+                .buttonStyle(PressableStyle())
+                .disabled(isSavingUsername)
+        }
+        .padding(.horizontal, RUSpacing.pagePadding)
+        .padding(.bottom, 40)
+        .onAppear {
+            guard usernameField.isEmpty else { return }
+            usernameField = suggestedUsername()
         }
     }
 
@@ -191,7 +248,17 @@ struct SignInView: View {
                 let dataURI = "data:image/jpeg;base64,\(jpeg.base64EncodedString())"
                 Task { try? await appState.auth.updateAvatar(dataURI: dataURI) }
             }
-            dismiss()
+            // Gate on choosing a pseudo instead of dismissing straight away — a first name alone
+            // can't be searched reliably (see FriendsView), and this is the one moment guaranteed
+            // to reach every account at least once rather than hoping she finds the field in
+            // Réglages on her own. `currentUser` here already reflects the real server value (the
+            // auth response includes it directly), so this correctly skips anyone — new or
+            // returning — who already has one.
+            if appState.auth.currentUser?.username == nil {
+                showChooseUsername = true
+            } else {
+                dismiss()
+            }
         } catch AuthServiceError.badResponse(409, _) {
             errorMessage = "Un compte existe déjà avec cet email."
         } catch AuthServiceError.badResponse(401, _) {
@@ -202,6 +269,46 @@ struct SignInView: View {
             errorMessage = "Connexion impossible — vérifie ta connexion internet."
         }
         isLoading = false
+    }
+
+    /// Lowercase letters/digits/underscore only, 3-20 chars — mirrors the server's own check
+    /// (`api/friends/[action].js`'s `USERNAME_RE`) so a bad format never even reaches it.
+    private func isValidUsernameFormat(_ value: String) -> Bool {
+        let clean = value.trimmingCharacters(in: .whitespaces).lowercased()
+        guard clean.count >= 3, clean.count <= 20 else { return false }
+        return clean.allSatisfy { $0.isLowercase || $0.isNumber || $0 == "_" }
+    }
+
+    /// A starting point, not a final answer — her real name plus two random digits, so the field
+    /// never opens empty (which would just read as "type something" with no hint of the format).
+    /// She can freely overwrite it before tapping Continuer.
+    private func suggestedUsername() -> String {
+        let base = (appState.auth.currentUser?.name ?? name)
+            .folding(options: .diacriticInsensitive, locale: .current)
+            .lowercased()
+            .filter { $0.isLetter || $0.isNumber }
+            .prefix(15)
+        let suffix = Int.random(in: 10...99)
+        let candidate = "\(base)\(suffix)"
+        return candidate.count >= 3 ? candidate : "coureur\(suffix)"
+    }
+
+    private func saveUsername() async {
+        isSavingUsername = true
+        usernameError = nil
+        let clean = usernameField.trimmingCharacters(in: .whitespaces).lowercased()
+        do {
+            try await ClubService(auth: appState.auth).updateProfile(username: clean)
+            try? await appState.auth.refreshMe()
+            dismiss()
+        } catch ClubServiceError.badResponse(409, _) {
+            usernameError = "Ce pseudo est déjà pris."
+        } catch ClubServiceError.badResponse(400, _) {
+            usernameError = "Pseudo invalide — lettres minuscules, chiffres, underscore, 3 à 20 caractères."
+        } catch {
+            usernameError = "Impossible d'enregistrer — vérifie ta connexion."
+        }
+        isSavingUsername = false
     }
 }
 

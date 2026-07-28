@@ -10976,6 +10976,70 @@
           }
         }
       }
+    },
+    "Choisis ton pseudo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose your username"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige tu nombre de usuario"
+          }
+        }
+      }
+    },
+    "Pour que tes amis te retrouvent facilement dans la recherche.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So friends can find you easily in search."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para que tus amigos te encuentren fácilmente en la búsqueda."
+          }
+        }
+      }
+    },
+    "Pseudo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Username"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre de usuario"
+          }
+        }
+      }
+    },
+    "Plus tard": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Later"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más tarde"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

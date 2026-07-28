@@ -49,7 +49,7 @@ async function handleApple(req, res) {
     return res.status(401).json({ error: 'invalid_token' });
   }
 
-  const { rows: existing } = await sql`SELECT id, name, xp_total, referral_code FROM users WHERE apple_sub = ${claims.sub}`;
+  const { rows: existing } = await sql`SELECT id, name, last_name, username, xp_total, referral_code FROM users WHERE apple_sub = ${claims.sub}`;
   let user = existing[0];
   if (!user) {
     // Apple only sends a display name on the very first sign-in ever for this Apple ID on this
@@ -69,7 +69,7 @@ async function handleApple(req, res) {
       const { rows } = await sql`
         INSERT INTO users (apple_sub, email, name, last_name, referral_code, referred_by)
         VALUES (${claims.sub}, ${claims.email}, ${displayName}, ${cleanLastName}, ${myReferralCode}, ${referrerId})
-        RETURNING id, name, xp_total, referral_code
+        RETURNING id, name, last_name, username, xp_total, referral_code
       `;
       user = rows[0];
     } catch (e) {
@@ -80,7 +80,7 @@ async function handleApple(req, res) {
         const { rows } = await sql`
           UPDATE users SET apple_sub = ${claims.sub}
           WHERE email = ${claims.email} AND apple_sub IS NULL
-          RETURNING id, name, xp_total, referral_code
+          RETURNING id, name, last_name, username, xp_total, referral_code
         `;
         user = rows[0];
         if (!user) return res.status(409).json({ error: 'email_taken' });
@@ -96,7 +96,13 @@ async function handleApple(req, res) {
   }
 
   const token = await signSession(user.id);
-  res.status(200).json({ token, user: { id: user.id, name: user.name, xpTotal: user.xp_total, referralCode: user.referral_code } });
+  res.status(200).json({
+    token,
+    user: {
+      id: user.id, name: user.name, xpTotal: user.xp_total, referralCode: user.referral_code,
+      lastName: user.last_name || null, username: user.username || null,
+    },
+  });
 }
 
 // Email + password sign-up. Passwords are never stored in plain text — only a bcrypt hash.
@@ -129,7 +135,7 @@ async function handleSignup(req, res) {
     const { rows } = await sql`
       INSERT INTO users (email, password_hash, name, last_name, referral_code, referred_by)
       VALUES (${normalizedEmail}, ${passwordHash}, ${cleanName}, ${cleanLastName}, ${myReferralCode}, ${referrerId})
-      RETURNING id, name, xp_total, referral_code
+      RETURNING id, name, last_name, username, xp_total, referral_code
     `;
     user = rows[0];
   } catch (e) {
@@ -142,7 +148,13 @@ async function handleSignup(req, res) {
   }
 
   const token = await signSession(user.id);
-  res.status(201).json({ token, user: { id: user.id, name: user.name, xpTotal: user.xp_total, referralCode: user.referral_code } });
+  res.status(201).json({
+    token,
+    user: {
+      id: user.id, name: user.name, xpTotal: user.xp_total, referralCode: user.referral_code,
+      lastName: user.last_name || null, username: user.username || null,
+    },
+  });
 }
 
 async function handleLogin(req, res) {
@@ -163,7 +175,7 @@ async function handleLogin(req, res) {
   } catch { /* counter must never take login down with it */ }
 
   const normalizedEmail = String(email).trim().toLowerCase();
-  const { rows } = await sql`SELECT id, name, xp_total, password_hash, referral_code FROM users WHERE email = ${normalizedEmail}`;
+  const { rows } = await sql`SELECT id, name, last_name, username, xp_total, password_hash, referral_code FROM users WHERE email = ${normalizedEmail}`;
   const user = rows[0];
   // Same "invalid_credentials" whether the email doesn't exist or the password's wrong — doesn't
   // confirm to a caller which emails have an account.
@@ -178,5 +190,11 @@ async function handleLogin(req, res) {
   }
 
   const token = await signSession(user.id);
-  res.status(200).json({ token, user: { id: user.id, name: user.name, xpTotal: user.xp_total, referralCode: user.referral_code } });
+  res.status(200).json({
+    token,
+    user: {
+      id: user.id, name: user.name, xpTotal: user.xp_total, referralCode: user.referral_code,
+      lastName: user.last_name || null, username: user.username || null,
+    },
+  });
 }

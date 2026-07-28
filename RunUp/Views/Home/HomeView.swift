@@ -276,21 +276,9 @@ struct HomeView: View {
                     .font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.lime)
                     .padding(.top, 14)
             } else {
-                // "Tempo" direction — one hero number carries the card instead of three
-                // same-size stats competing for attention; the light forward lean (a 6° shear,
-                // not a rotation) is what reads as motion rather than just "big text tilted".
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(session.pace).font(RUFont.bebas(52)).foregroundColor(RUColor.textPrimary)
-                    Text("/KM").font(RUFont.bebas(17)).foregroundColor(RUColor.rose).padding(.bottom, 5)
-                }
-                .transformEffect(CGAffineTransform(a: 1, b: 0, c: -0.11, d: 1, tx: 0, ty: 0))
-                .padding(.top, 12)
-
-                // Allure dropped from this row — the hero number above it now carries that value;
-                // repeating it here was the exact "séance stat duplicates the card" pattern flagged
-                // in the full-app audit.
                 HStack(spacing: 16) {
                     MetricColumn(value: "\(session.durationMinutes)′", label: "Durée")
+                    MetricColumn(value: session.pace, label: "Allure")
                     MetricColumn(value: session.zone, label: "Zone", valueColor: RUColor.rose2)
                 }
                 .padding(.top, 14)

@@ -22,11 +22,15 @@ CREATE TABLE IF NOT EXISTS users (
 -- way as everything else user-generated (lib/moderation.js's blocklist filter).
 ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT;
 
--- A real profile photo — a data URI ("data:image/jpeg;base64,...."), already resized/compressed
--- client-side to a small thumbnail before it ever reaches here (see api/account/avatar.js). Kept
--- directly in Postgres rather than a separate object-storage service — cheap at small-club scale
--- with the client-side size cap already in place.
+-- A real profile photo. `avatar_data` (legacy) held a full base64 data URI inline in Postgres —
+-- cheap at first, but it meant every leaderboard/feed/comments row that included an avatar was
+-- shipping a several-hundred-KB blob down the wire even when only a 40pt circle was ever drawn
+-- from it. `avatar_url` (current) points at a real object in Vercel Blob storage instead — rows
+-- carry a short URL, and the client fetches/caches the actual image itself, once, only where it's
+-- shown. `avatar_data` stays for any account that uploaded a photo before this migration; new and
+-- re-uploaded avatars always go through avatar_url (see api/account/avatar.js).
 ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_data TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 
 -- Real referral loop — every user gets a personal code (generated at signup, see
 -- api/auth/[action].js) to share; `referred_by` is set once, at signup, from whatever code (if
@@ -257,3 +261,32 @@ CREATE TABLE IF NOT EXISTS coach_usage (
   count INTEGER NOT NULL DEFAULT 1,
   PRIMARY KEY (key, day)
 );
+
+-- Idempotency keys, same pattern as activities.client_id above — createEvent/createChallenge had
+-- no protection beyond a client-side isSaving flag, so a request that timed out client-side after
+-- the server already processed it (then retried, by the user re-tapping after seeing a spinner
+-- hang) could insert a duplicate row and re-notify the whole club a second time. Nullable: existing
+-- rows predate this and stay NULL, which is fine since Postgres allows any number of NULLs under a
+-- UNIQUE constraint — only new, client-generated ids need to actually be unique.
+ALTER TABLE club_events ADD COLUMN IF NOT EXISTS client_id UUID UNIQUE;
+ALTER TABLE challenges ADD COLUMN IF NOT EXISTS client_id UUID UNIQUE;
+
+-- Real friends/follow graph — a lighter social option alongside the club, for someone who wants
+-- a feed of people she's chosen directly rather than the shared leaderboard/challenges/invite-
+-- code "esprit club". One-way by default (follow anyone, no confirmation, like Strava); `status`
+-- only ever starts as 'pending' when the followee has gone private (see `is_private` below), and
+-- flips to 'accepted' once they approve (api/friends/[action].js `respond`) — same distinction
+-- Instagram makes between a public and a private account.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_private BOOLEAN NOT NULL DEFAULT false;
+
+CREATE TABLE IF NOT EXISTS follows (
+  follower_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  followee_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'accepted', -- 'pending' | 'accepted'
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (follower_id, followee_id),
+  CHECK (follower_id != followee_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_follows_followee_status ON follows(followee_id, status);
+CREATE INDEX IF NOT EXISTS idx_follows_follower_status ON follows(follower_id, status);

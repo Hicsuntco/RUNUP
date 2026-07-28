@@ -7,6 +7,7 @@ const { withErrorHandling, isUuid } = require('../../lib/http');
 const { sendPushToUser, sendPushToUsers } = require('../../lib/apns');
 const { containsObjectionableContent } = require('../../lib/moderation');
 const { underDailyCap } = require('../../lib/rateLimit');
+const { canViewActivity } = require('../../lib/social');
 
 const ALLOWED_TYPES = new Set(['run', 'strength', 'badge']);
 const REFERRAL_REWARD_XP = 100;
@@ -140,20 +141,6 @@ async function grantReferralRewardIfNeeded(userId) {
   });
 }
 
-// Used by kudos/comments to reject the write entirely (not just skip the push) when either side
-// has blocked the other — without this, a blocked user could still comment/kudos every one of the
-// target's posts and land a real push on their lock screen, the exact contact the block feature
-// exists to prevent. Checked both directions since either party may have initiated the block.
-async function isBlockedEitherWay(userA, userB) {
-  const { rows } = await sql`
-    SELECT 1 FROM blocks
-    WHERE (blocker_id = ${userA} AND blocked_id = ${userB})
-       OR (blocker_id = ${userB} AND blocked_id = ${userA})
-    LIMIT 1
-  `;
-  return rows.length > 0;
-}
-
 // Every other member of the poster's club, except anyone who's blocked the poster (mirrors the
 // feed's own visibility rule — someone you've blocked shouldn't be able to reach you by posting).
 async function notifyClubOfNewActivity(clubId, posterId, text) {
@@ -211,14 +198,14 @@ async function handleKudos(req, res, userId) {
   // 300/day is far beyond any real usage (toggling kudos on every post in an active club feed).
   if (!(await underDailyCap('kudos:' + userId, 300))) return res.status(429).json({ error: 'too_many_requests' });
 
-  // Scoped to the caller's own club, like the comments handlers always were — without this,
-  // anyone holding an activity UUID could kudos (and push-notify) across club boundaries.
-  const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
-  const clubId = memberRows[0]?.club_id;
+  // Reachable through EITHER relationship now — clubmates (as before) or a follow (friends feed)
+  // — `canViewActivity` covers both plus the block check, so anyone holding an activity UUID they
+  // have no real relationship to still 404s the same way a cross-club id always did.
   const { rows: activityRows } = await sql`SELECT user_id, text, club_id FROM activities WHERE id = ${activityId}`;
   const activity = activityRows[0];
-  if (!activity || !clubId || activity.club_id !== clubId) return res.status(404).json({ error: 'not_found' });
-  if (await isBlockedEitherWay(userId, activity.user_id)) return res.status(404).json({ error: 'not_found' });
+  if (!activity || !(await canViewActivity(userId, activity.user_id, activity.club_id))) {
+    return res.status(404).json({ error: 'not_found' });
+  }
 
   const { rows: existing } = await sql`
     SELECT 1 FROM activity_kudos WHERE activity_id = ${activityId} AND user_id = ${userId}
@@ -239,28 +226,32 @@ async function handleKudos(req, res, userId) {
   // response — Vercel may freeze the function once the response is sent.
   if (activity.user_id !== userId) {
     const { rows: kudoer } = await sql`SELECT name FROM users WHERE id = ${userId}`;
+    let pushTitle = 'Amis';
+    if (activity.club_id) {
+      const { rows: memberRows } = await sql`SELECT 1 FROM club_members WHERE user_id = ${userId} AND club_id = ${activity.club_id}`;
+      if (memberRows.length > 0) pushTitle = 'Le Club';
+    }
     await sendPushToUser(sql, activity.user_id, {
-      title: 'Le Club',
+      title: pushTitle,
       body: `${kudoer[0]?.name || 'Quelqu’un'} a applaudi : ${activity.text}`,
     });
   }
   res.status(200).json({ kudoed: true });
 }
 
-// Lists real comments on one activity, oldest first (a conversation reads top-down) — scoped to
-// the caller's own club (an activity from another club, or one that's since had its club_id
-// cleared, 404s rather than leaking it) and filtered the same way the feed already is: no
-// comments from anyone the caller has blocked.
+// Lists real comments on one activity, oldest first (a conversation reads top-down) — reachable
+// through either relationship (clubmates or a follow, see `canViewActivity`; an activity neither
+// applies to, or one whose club_id has since been cleared, 404s rather than leaking it) and
+// filtered the same way the feed already is: no comments from anyone the caller has blocked.
 async function handleCommentsList(req, res, userId) {
   const { activityId } = req.query || {};
   if (!isUuid(activityId)) return res.status(400).json({ error: 'bad_request' });
 
-  const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
-  const clubId = memberRows[0]?.club_id;
-  if (!clubId) return res.status(200).json({ items: [] });
-
-  const { rows: activityRows } = await sql`SELECT club_id FROM activities WHERE id = ${activityId}`;
-  if (activityRows[0]?.club_id !== clubId) return res.status(404).json({ error: 'not_found' });
+  const { rows: activityRows } = await sql`SELECT user_id, club_id FROM activities WHERE id = ${activityId}`;
+  const activity = activityRows[0];
+  if (!activity || !(await canViewActivity(userId, activity.user_id, activity.club_id))) {
+    return res.status(404).json({ error: 'not_found' });
+  }
 
   const { rows } = await sql`
     SELECT c.id, c.text, c.created_at, u.id AS user_id, u.name, u.avatar_data, u.avatar_url
@@ -296,14 +287,11 @@ async function handleCommentCreate(req, res, userId) {
   // flood a target (or the whole club feed) with pushes.
   if (!(await underDailyCap('comment:' + userId, 100))) return res.status(429).json({ error: 'too_many_requests' });
 
-  const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
-  const clubId = memberRows[0]?.club_id;
-  if (!clubId) return res.status(409).json({ error: 'not_in_club' });
-
   const { rows: activityRows } = await sql`SELECT club_id, user_id, text FROM activities WHERE id = ${activityId}`;
   const activity = activityRows[0];
-  if (!activity || activity.club_id !== clubId) return res.status(404).json({ error: 'not_found' });
-  if (await isBlockedEitherWay(userId, activity.user_id)) return res.status(404).json({ error: 'not_found' });
+  if (!activity || !(await canViewActivity(userId, activity.user_id, activity.club_id))) {
+    return res.status(404).json({ error: 'not_found' });
+  }
 
   const { rows: inserted } = await sql`
     INSERT INTO activity_comments (activity_id, user_id, text)
@@ -313,10 +301,17 @@ async function handleCommentCreate(req, res, userId) {
   const { rows: me } = await sql`SELECT name FROM users WHERE id = ${userId}`;
   const commenterName = me[0]?.name || 'Toi';
 
-  // Push before the response — Vercel may freeze the function once the response is sent.
+  // Push before the response — Vercel may freeze the function once the response is sent. Title
+  // reflects which relationship actually granted access, not just whether the activity has a
+  // club_id at all (the commenter could be a follower with no club, or a club-mate).
   if (activity.user_id !== userId) {
+    let pushTitle = 'Amis';
+    if (activity.club_id) {
+      const { rows: memberRows } = await sql`SELECT 1 FROM club_members WHERE user_id = ${userId} AND club_id = ${activity.club_id}`;
+      if (memberRows.length > 0) pushTitle = 'Le Club';
+    }
     await sendPushToUser(sql, activity.user_id, {
-      title: 'Le Club',
+      title: pushTitle,
       body: `${commenterName} a commenté : ${activity.text}`,
     });
   }

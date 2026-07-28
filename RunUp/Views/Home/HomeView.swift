@@ -239,56 +239,61 @@ struct HomeView: View {
         .ruHeroCard(radius: 20)
     }
 
+    /// Was one big `Button` wrapping the FAIT/DÉMARRER buttons INSIDE it — nested SwiftUI buttons
+    /// have unreliable hit-testing (the outer button can swallow or fight taps meant for the
+    /// inner ones), which is almost certainly why the FAIT/DÉMARRER row felt inconsistent to tap.
+    /// A plain `VStack` with `.onTapGesture` for "open the detail sheet" opens exactly the same
+    /// way, but SwiftUI correctly gives priority to the real `Button`s nested inside a tap-gesture
+    /// container (unlike inside an actual `Button`), so FAIT/DÉMARRER get their own reliable taps.
     private var sessionCard: some View {
         let session = profile.todaySession
         let isRestDay = session.durationMinutes == 0
-        return Button(action: { appState.openSessionDetail() }) {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack {
-                    EyebrowLabel(text: isRestDay ? "Aujourd'hui" : "Séance clé", color: RUColor.rose)
-                    Spacer()
-                    if let adj = session.adjustment {
-                        StatChip(text: adj, color: RUColor.rose2)
-                    }
-                }
-                Text(session.title).displayStyle(23).foregroundColor(RUColor.textPrimary).padding(.top, 6)
-                Text(session.subtitle).font(RUFont.sans(11)).foregroundColor(RUColor.text2).padding(.top, 4)
-
-                if isRestDay {
-                    Text("Pas de séance prévue — profite-en pour récupérer.")
-                        .font(RUFont.sans(11)).foregroundColor(RUColor.text3)
-                        .padding(.top, 14)
-                } else if profile.seanceDoneToday {
-                    Text("Séance faite aujourd'hui ✓")
-                        .font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.lime)
-                        .padding(.top, 14)
-                } else {
-                    HStack(spacing: 16) {
-                        MetricColumn(value: "\(session.durationMinutes)′", label: "Durée")
-                        MetricColumn(value: session.pace, label: "Allure")
-                        MetricColumn(value: session.zone, label: "Zone", valueColor: RUColor.rose2)
-                    }
-                    .padding(.top, 14)
-
-                    HStack(spacing: 8) {
-                        // For a strength session, a treadmill run, or just forgetting to hit
-                        // record — logging it shouldn't require the full GPS flow.
-                        Button(action: { appState.markTodaySessionDone() }) {
-                            HStack { Image(systemName: "checkmark"); Text("FAIT") }
-                        }
-                        .buttonStyle(SecondaryButtonStyle())
-
-                        Button(action: { appState.startRun() }) {
-                            HStack { Image(systemName: "play.fill"); Text("DÉMARRER") }
-                        }
-                        .buttonStyle(PrimaryButtonStyle())
-                    }
-                    .padding(.top, 15)
+        return VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                EyebrowLabel(text: isRestDay ? "Aujourd'hui" : "Séance clé", color: RUColor.rose)
+                Spacer()
+                if let adj = session.adjustment {
+                    StatChip(text: adj, color: RUColor.rose2)
                 }
             }
-            .padding(16)
+            Text(session.title).displayStyle(23).foregroundColor(RUColor.textPrimary).padding(.top, 6)
+            Text(session.subtitle).font(RUFont.sans(11)).foregroundColor(RUColor.text2).padding(.top, 4)
+
+            if isRestDay {
+                Text("Pas de séance prévue — profite-en pour récupérer.")
+                    .font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+                    .padding(.top, 14)
+            } else if profile.seanceDoneToday {
+                Text("Séance faite aujourd'hui ✓")
+                    .font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.lime)
+                    .padding(.top, 14)
+            } else {
+                HStack(spacing: 16) {
+                    MetricColumn(value: "\(session.durationMinutes)′", label: "Durée")
+                    MetricColumn(value: session.pace, label: "Allure")
+                    MetricColumn(value: session.zone, label: "Zone", valueColor: RUColor.rose2)
+                }
+                .padding(.top, 14)
+
+                HStack(spacing: 8) {
+                    // For a strength session, a treadmill run, or just forgetting to hit
+                    // record — logging it shouldn't require the full GPS flow.
+                    Button(action: { appState.markTodaySessionDone() }) {
+                        HStack { Image(systemName: "checkmark"); Text("FAIT") }
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+
+                    Button(action: { appState.startRun() }) {
+                        HStack { Image(systemName: "play.fill"); Text("DÉMARRER") }
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                }
+                .padding(.top, 15)
+            }
         }
-        .buttonStyle(PressableStyle())
+        .padding(16)
+        .contentShape(Rectangle())
+        .onTapGesture { appState.openSessionDetail() }
         .ruCard()
         // The manual-debrief sheet presents from RootTabView now — anchored here it could only
         // ever appear while this specific card was mounted on screen.

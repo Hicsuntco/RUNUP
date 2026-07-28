@@ -258,7 +258,7 @@ struct FriendsView: View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Compte privé").font(RUFont.sans(13, weight: .medium)).foregroundColor(RUColor.textPrimary)
-                Text(isPrivate ? "Une demande de ta part doit être acceptée avant qu'on te suive." : "Tout le monde peut te suivre sans validation.")
+                Text(isPrivate ? "Une demande devra être acceptée avant qu'on puisse te suivre." : "Tout le monde peut te suivre sans validation.")
                     .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
             }
             Spacer()

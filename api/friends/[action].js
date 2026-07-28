@@ -1,12 +1,13 @@
 // Real friends/follow graph, independent of clubs — search | follow | unfollow | respond |
-// removeFollower | list | feed | setPrivate. Consolidated into one dynamic route, same pattern
-// as api/clubs/[action].js and api/activities/[action].js.
+// removeFollower | list | feed | setPrivate | updateProfile. Consolidated into one dynamic
+// route, same pattern as api/clubs/[action].js and api/activities/[action].js.
 const { sql } = require('../../lib/db');
 const { requireAuth } = require('../../lib/auth');
 const { withErrorHandling, isUuid } = require('../../lib/http');
 const { sendPushToUser } = require('../../lib/apns');
 const { isBlockedEitherWay } = require('../../lib/social');
 const { underDailyCap } = require('../../lib/rateLimit');
+const { containsObjectionableContent } = require('../../lib/moderation');
 
 module.exports = withErrorHandling(async function handler(req, res) {
   const userId = await requireAuth(req);
@@ -37,6 +38,9 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'setPrivate':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleSetPrivate(req, res, userId);
+    case 'updateProfile':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleUpdateProfile(req, res, userId);
     default:
       return res.status(404).json({ error: 'not_found' });
   }
@@ -46,6 +50,8 @@ function mapUser(row) {
   return {
     id: row.id,
     name: row.name,
+    lastName: row.last_name || null,
+    username: row.username || null,
     avatarBase64: row.avatar_data || null,
     avatarUrl: row.avatar_url || null,
     isPrivate: row.is_private,
@@ -53,25 +59,92 @@ function mapUser(row) {
   };
 }
 
-// Finds real accounts by name to follow — excludes herself and anyone blocked either way.
-// `followStatus` (from the CALLER's point of view — is *she* already following this result) lets
-// the client show the right button state (Suivre / Demande envoyée / Abonnée) without a second
-// round trip per row.
+const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
+
+// Finds real accounts to follow — a first name alone can't disambiguate ("which Léo?"), so this
+// tries three things depending on what looks like was typed:
+//   - contains "@": an EXACT (never partial) email match — an email is never substring-searchable,
+//     so this can't be used to harvest the directory the way name/username search could.
+//   - otherwise: a username prefix match (an explicit, chosen handle — the only fully reliable
+//     way to find one specific person) OR a fuzzy "prénom nom" match against name + last_name.
+// Excludes herself and anyone blocked either way. `followStatus` (from the CALLER's point of
+// view — is *she* already following this result) lets the client show the right button state
+// (Suivre / Demande envoyée / Abonné·e) without a second round trip per row.
 async function handleSearch(req, res, userId) {
-  const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 50) : '';
-  if (q.length < 2) return res.status(200).json({ items: [] });
-  const { rows } = await sql`
-    SELECT u.id, u.name, u.avatar_data, u.avatar_url, u.is_private, f.status AS follow_status
-    FROM users u
-    LEFT JOIN follows f ON f.follower_id = ${userId} AND f.followee_id = u.id
-    WHERE u.id != ${userId}
-      AND u.name ILIKE ${'%' + q + '%'}
-      AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
-      AND u.id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
-    ORDER BY u.name ASC
-    LIMIT 20
-  `;
+  const raw = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 60) : '';
+  if (raw.length < 2) return res.status(200).json({ items: [] });
+
+  let rows;
+  if (raw.includes('@')) {
+    ({ rows } = await sql`
+      SELECT u.id, u.name, u.last_name, u.username, u.avatar_data, u.avatar_url, u.is_private, f.status AS follow_status
+      FROM users u
+      LEFT JOIN follows f ON f.follower_id = ${userId} AND f.followee_id = u.id
+      WHERE u.id != ${userId} AND lower(u.email) = lower(${raw})
+        AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+        AND u.id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
+      LIMIT 5
+    `);
+  } else {
+    const usernameQuery = raw.replace(/^@/, '');
+    ({ rows } = await sql`
+      SELECT u.id, u.name, u.last_name, u.username, u.avatar_data, u.avatar_url, u.is_private, f.status AS follow_status
+      FROM users u
+      LEFT JOIN follows f ON f.follower_id = ${userId} AND f.followee_id = u.id
+      WHERE u.id != ${userId}
+        AND (
+          lower(u.username) LIKE lower(${usernameQuery + '%'})
+          OR (u.name || ' ' || COALESCE(u.last_name, '')) ILIKE ${'%' + raw + '%'}
+        )
+        AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+        AND u.id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
+      ORDER BY u.name ASC
+      LIMIT 20
+    `);
+  }
   res.status(200).json({ items: rows.map(mapUser) });
+}
+
+// Sets the caller's own chosen handle and/or last name — both optional, either can be sent alone.
+// `username` is validated (lowercase letters/digits/underscore, 3-20 chars) and must be globally
+// unique (case-insensitively — see the DB's functional unique index); `lastName` gets the same
+// content filter as every other user-visible free-text field.
+async function handleUpdateProfile(req, res, userId) {
+  const { username, lastName } = req.body || {};
+  const updates = {};
+
+  if (username !== undefined) {
+    if (username === null || username === '') {
+      updates.username = null;
+    } else {
+      const cleanUsername = typeof username === 'string' ? username.trim().toLowerCase() : '';
+      if (!USERNAME_RE.test(cleanUsername)) return res.status(400).json({ error: 'bad_username' });
+      if (containsObjectionableContent(cleanUsername)) return res.status(422).json({ error: 'objectionable_content' });
+      updates.username = cleanUsername;
+    }
+  }
+  if (lastName !== undefined) {
+    if (lastName === null || lastName === '') {
+      updates.lastName = null;
+    } else {
+      const cleanLastName = typeof lastName === 'string' ? lastName.trim().slice(0, 60) : '';
+      if (!cleanLastName) return res.status(400).json({ error: 'bad_request' });
+      if (containsObjectionableContent(cleanLastName)) return res.status(422).json({ error: 'objectionable_content' });
+      updates.lastName = cleanLastName;
+    }
+  }
+  if (Object.keys(updates).length === 0) return res.status(400).json({ error: 'bad_request' });
+
+  try {
+    if ('username' in updates) await sql`UPDATE users SET username = ${updates.username} WHERE id = ${userId}`;
+    if ('lastName' in updates) await sql`UPDATE users SET last_name = ${updates.lastName} WHERE id = ${userId}`;
+  } catch (e) {
+    if (String(e.message).includes('uniq_users_username_lower')) {
+      return res.status(409).json({ error: 'username_taken' });
+    }
+    throw e;
+  }
+  res.status(200).json({ ok: true });
 }
 
 // Follows a real account — instant ('accepted') unless they've gone private, in which case it's
@@ -156,19 +229,19 @@ async function handleRemoveFollower(req, res, userId) {
 async function handleList(req, res, userId) {
   const { rows: meRows } = await sql`SELECT is_private FROM users WHERE id = ${userId}`;
   const { rows: following } = await sql`
-    SELECT u.id, u.name, u.avatar_data, u.avatar_url, u.is_private
+    SELECT u.id, u.name, u.last_name, u.username, u.avatar_data, u.avatar_url, u.is_private
     FROM follows f JOIN users u ON u.id = f.followee_id
     WHERE f.follower_id = ${userId} AND f.status = 'accepted'
     ORDER BY u.name ASC
   `;
   const { rows: followers } = await sql`
-    SELECT u.id, u.name, u.avatar_data, u.avatar_url, u.is_private
+    SELECT u.id, u.name, u.last_name, u.username, u.avatar_data, u.avatar_url, u.is_private
     FROM follows f JOIN users u ON u.id = f.follower_id
     WHERE f.followee_id = ${userId} AND f.status = 'accepted'
     ORDER BY u.name ASC
   `;
   const { rows: incoming } = await sql`
-    SELECT u.id, u.name, u.avatar_data, u.avatar_url, u.is_private
+    SELECT u.id, u.name, u.last_name, u.username, u.avatar_data, u.avatar_url, u.is_private
     FROM follows f JOIN users u ON u.id = f.follower_id
     WHERE f.followee_id = ${userId} AND f.status = 'pending'
     ORDER BY f.created_at ASC

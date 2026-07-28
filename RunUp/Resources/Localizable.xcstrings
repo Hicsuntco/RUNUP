@@ -10848,6 +10848,134 @@
           }
         }
       }
+    },
+    "Nom (facultatif)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last name (optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apellido (opcional)"
+          }
+        }
+      }
+    },
+    "Pseudo (facultatif)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Username (optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre de usuario (opcional)"
+          }
+        }
+      }
+    },
+    "Ce pseudo est déjà pris.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This username is already taken."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este nombre de usuario ya está en uso."
+          }
+        }
+      }
+    },
+    "Pseudo invalide — lettres minuscules, chiffres, underscore, 3 à 20 caractères.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid username — lowercase letters, digits, underscore, 3 to 20 characters."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre de usuario no válido — letras minúsculas, números, guion bajo, de 3 a 20 caracteres."
+          }
+        }
+      }
+    },
+    "Impossible d'enregistrer — vérifie ta connexion.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't save — check your connection."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo guardar — comprueba tu conexión."
+          }
+        }
+      }
+    },
+    "Aide tes amis à te retrouver dans la recherche.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Helps friends find you in search."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayuda a tus amigos a encontrarte en la búsqueda."
+          }
+        }
+      }
+    },
+    "Profil mis à jour": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profile updated"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perfil actualizado"
+          }
+        }
+      }
+    },
+    "Pseudo, email ou nom…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Username, email, or name…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usuario, correo o nombre…"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

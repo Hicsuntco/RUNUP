@@ -178,7 +178,7 @@ struct FriendsView: View {
     private var searchField: some View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass").font(.system(size: 13)).foregroundColor(RUColor.text3)
-            TextField("", text: $query, prompt: Text("Chercher un prénom…").foregroundColor(RUColor.text3))
+            TextField("", text: $query, prompt: Text("Pseudo, email ou nom…").foregroundColor(RUColor.text3))
                 .textInputAutocapitalization(.words)
                 .foregroundColor(RUColor.textPrimary)
                 .font(RUFont.sans(13))
@@ -227,13 +227,22 @@ struct FriendsView: View {
         .buttonStyle(PressableStyle())
     }
 
+    /// Full name (when she's set a last name) plus the "@pseudo" secondary line (when she's set
+    /// one) — either helps tell several people sharing a first name apart, which a bare first
+    /// name alone never could.
     private func personRow<Trailing: View>(_ user: PublicUser, @ViewBuilder trailing: () -> Trailing) -> some View {
         HStack(spacing: 12) {
             AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 34)
-            HStack(spacing: 4) {
-                Text(user.name).font(RUFont.sans(13, weight: .medium)).foregroundColor(RUColor.textPrimary).lineLimit(1)
-                if user.isPrivate {
-                    Image(systemName: "lock.fill").font(.system(size: 9)).foregroundColor(RUColor.text3)
+            VStack(alignment: .leading, spacing: 1) {
+                HStack(spacing: 4) {
+                    Text(user.lastName.map { "\(user.name) \($0)" } ?? user.name)
+                        .font(RUFont.sans(13, weight: .medium)).foregroundColor(RUColor.textPrimary).lineLimit(1)
+                    if user.isPrivate {
+                        Image(systemName: "lock.fill").font(.system(size: 9)).foregroundColor(RUColor.text3)
+                    }
+                }
+                if let username = user.username {
+                    Text("@\(username)").font(RUFont.mono(10.5)).foregroundColor(RUColor.text3)
                 }
             }
             Spacer(minLength: 8)
@@ -547,7 +556,8 @@ private struct PeopleListSheet: View {
                     ForEach(people) { user in
                         HStack(spacing: 12) {
                             AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 34)
-                            Text(user.name).font(RUFont.sans(13, weight: .medium)).foregroundColor(RUColor.textPrimary).lineLimit(1)
+                            Text(user.lastName.map { "\(user.name) \($0)" } ?? user.name)
+                                .font(RUFont.sans(13, weight: .medium)).foregroundColor(RUColor.textPrimary).lineLimit(1)
                             Spacer(minLength: 8)
                             Button(actionLabel) {
                                 people.removeAll { $0.id == user.id }

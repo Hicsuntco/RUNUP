@@ -13,6 +13,13 @@ struct AuthenticatedUser: Codable, Equatable {
     /// window before the very first sign-in response comes back, or for very old accounts on a
     /// backend that hasn't run the referral migration yet.
     var referralCode: String?
+    /// Nil until she sets one (`ClubService.updateProfile`) or Apple provided it at first sign-in
+    /// — neither signup nor onboarding asks for it. Exists so "Mes amis" search can disambiguate
+    /// "which Léo?" without relying on first name alone (see `api/friends/[action].js` search).
+    var lastName: String?
+    /// A chosen, unique handle — nil until she sets one. The only fully reliable way to find one
+    /// specific person by search, same reasoning as `lastName`.
+    var username: String?
 }
 
 enum AuthServiceError: Error {
@@ -39,12 +46,15 @@ final class AuthService {
 
     var isSignedIn: Bool { token != nil }
 
-    func signInWithApple(identityToken: String, name: String?, referralCode: String? = nil) async throws {
-        try await authenticate(path: "api/auth/apple", body: ["identityToken": identityToken, "name": name ?? "", "referralCode": referralCode ?? ""])
+    /// `lastName` is sent separately from `name` (not pre-joined) so the server can store it as
+    /// real, structured `last_name` — Apple only ever provides both on this account's very first
+    /// sign-in, so this is the one chance to capture it at all.
+    func signInWithApple(identityToken: String, name: String?, lastName: String? = nil, referralCode: String? = nil) async throws {
+        try await authenticate(path: "api/auth/apple", body: ["identityToken": identityToken, "name": name ?? "", "lastName": lastName ?? "", "referralCode": referralCode ?? ""])
     }
 
-    func signUp(email: String, password: String, name: String, referralCode: String? = nil) async throws {
-        try await authenticate(path: "api/auth/signup", body: ["email": email, "password": password, "name": name, "referralCode": referralCode ?? ""])
+    func signUp(email: String, password: String, name: String, lastName: String? = nil, referralCode: String? = nil) async throws {
+        try await authenticate(path: "api/auth/signup", body: ["email": email, "password": password, "name": name, "lastName": lastName ?? "", "referralCode": referralCode ?? ""])
     }
 
     func logIn(email: String, password: String) async throws {
@@ -60,7 +70,10 @@ final class AuthService {
         var request = URLRequest(url: Self.baseURL.appending(path: "api/me"))
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         let decoded: MeResponse = try await send(request)
-        let user = AuthenticatedUser(id: decoded.id, name: decoded.name, xpTotal: decoded.xpTotal, referralCode: decoded.referralCode)
+        let user = AuthenticatedUser(
+            id: decoded.id, name: decoded.name, xpTotal: decoded.xpTotal, referralCode: decoded.referralCode,
+            lastName: decoded.lastName, username: decoded.username
+        )
         currentUser = user
         return user
     }
@@ -143,6 +156,8 @@ private struct MeResponse: Decodable {
     var xpTotal: Int
     var referralCode: String?
     var clubId: String?
+    var lastName: String?
+    var username: String?
 }
 
 private struct OkResponse: Decodable {

@@ -115,6 +115,12 @@ struct CommentItem: Decodable, Identifiable {
 struct PublicUser: Decodable, Identifiable, Hashable {
     var id: String
     var name: String
+    /// Nil unless she's set it — lets a search result show "Charlotte Grudé" instead of just
+    /// "Charlotte" to help pick the right person among several matches.
+    var lastName: String?
+    /// Nil unless she's chosen one — shown as "@pseudo" under the name in search results, the
+    /// only fully unambiguous identifier a result can carry.
+    var username: String?
     var avatarUrl: String?
     var avatarBase64: String?
     var isPrivate: Bool
@@ -355,6 +361,17 @@ struct ClubService {
     /// (`respondToFollowRequest`) before it counts; existing accepted followers are unaffected.
     func setPrivateAccount(_ isPrivate: Bool) async throws {
         let _: OkResponse = try await send(path: "api/friends/setPrivate", method: "POST", body: ["isPrivate": isPrivate])
+    }
+
+    /// Sets her chosen handle and/or last name — either can be sent alone (the other stays
+    /// unchanged), and either can be cleared by passing an empty string. Throws
+    /// `ClubServiceError.badResponse(409, _)` if the username is already taken by someone else,
+    /// `(400, _)` if it fails the format check (lowercase letters/digits/underscore, 3-20 chars).
+    func updateProfile(username: String? = nil, lastName: String? = nil) async throws {
+        var body: [String: Any] = [:]
+        if let username { body["username"] = username }
+        if let lastName { body["lastName"] = lastName }
+        let _: OkResponse = try await send(path: "api/friends/updateProfile", method: "POST", body: body)
     }
 
     // MARK: -

@@ -11,6 +11,7 @@ struct SignInView: View {
 
     @State private var mode: Mode = .signIn
     @State private var name = ""
+    @State private var lastName = ""
     @State private var email = ""
     @State private var password = ""
     @State private var referralCode = ""
@@ -87,9 +88,17 @@ struct SignInView: View {
     private var emailForm: some View {
         VStack(spacing: 10) {
             if mode == .signUp {
-                TextField("Prénom", text: $name)
-                    .textFieldStyle(AuthFieldStyle())
-                    .textContentType(.givenName)
+                HStack(spacing: 10) {
+                    TextField("Prénom", text: $name)
+                        .textFieldStyle(AuthFieldStyle())
+                        .textContentType(.givenName)
+                    // Optional — not required to create an account, but without it "Mes amis"
+                    // can't search "nom prénom" and a first name alone can't disambiguate
+                    // several people sharing a common one.
+                    TextField("Nom (facultatif)", text: $lastName)
+                        .textFieldStyle(AuthFieldStyle())
+                        .textContentType(.familyName)
+                }
             }
             TextField("Email", text: $email)
                 .textFieldStyle(AuthFieldStyle())
@@ -128,12 +137,14 @@ struct SignInView: View {
                 errorMessage = "Connexion Apple impossible."
                 return
             }
-            // Apple only sends `fullName` the very first time this Apple ID signs into this app.
-            let name = [credential.fullName?.givenName, credential.fullName?.familyName]
-                .compactMap { $0 }
-                .joined(separator: " ")
+            // Apple only sends `fullName` the very first time this Apple ID signs into this app —
+            // given/family name are sent as two separate fields (not pre-joined) so the server can
+            // store a real, structured `last_name` for "Mes amis" search, this being the one
+            // chance to ever capture it.
+            let givenName = credential.fullName?.givenName
+            let familyName = credential.fullName?.familyName
             let trimmedReferral = referralCode.trimmingCharacters(in: .whitespaces)
-            Task { await runAuth { try await appState.auth.signInWithApple(identityToken: identityToken, name: name.isEmpty ? nil : name, referralCode: trimmedReferral.isEmpty ? nil : trimmedReferral) } }
+            Task { await runAuth { try await appState.auth.signInWithApple(identityToken: identityToken, name: givenName, lastName: familyName, referralCode: trimmedReferral.isEmpty ? nil : trimmedReferral) } }
         case .failure:
             errorMessage = "Connexion Apple annulée ou impossible."
         }
@@ -147,7 +158,12 @@ struct SignInView: View {
                     try await appState.auth.logIn(email: trimmedEmail, password: password)
                 } else {
                     let trimmedReferral = referralCode.trimmingCharacters(in: .whitespaces)
-                    try await appState.auth.signUp(email: trimmedEmail, password: password, name: name.trimmingCharacters(in: .whitespaces), referralCode: trimmedReferral.isEmpty ? nil : trimmedReferral)
+                    let trimmedLastName = lastName.trimmingCharacters(in: .whitespaces)
+                    try await appState.auth.signUp(
+                        email: trimmedEmail, password: password, name: name.trimmingCharacters(in: .whitespaces),
+                        lastName: trimmedLastName.isEmpty ? nil : trimmedLastName,
+                        referralCode: trimmedReferral.isEmpty ? nil : trimmedReferral
+                    )
                 }
             }
         }

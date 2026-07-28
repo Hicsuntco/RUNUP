@@ -10,9 +10,14 @@ struct MoreSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(AppState.self) private var appState
     private var profile: UserProfile { appState.profile }
+    private var clubService: ClubService { ClubService(auth: appState.auth) }
 
     @State private var showDeleteAccountConfirm = false
     @State private var isDeletingAccount = false
+    @State private var usernameText = ""
+    @State private var lastNameText = ""
+    @State private var isSavingIdentity = false
+    @State private var identityError: String?
 
     var body: some View {
         NavigationStack {
@@ -49,6 +54,10 @@ struct MoreSettingsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Fermer") { dismiss() } }
+            }
+            .onAppear {
+                usernameText = appState.auth.currentUser?.username ?? ""
+                lastNameText = appState.auth.currentUser?.lastName ?? ""
             }
         }
         .preferredColorScheme(RUColor.colorScheme)
@@ -286,6 +295,8 @@ struct MoreSettingsView: View {
                 .padding(.horizontal, 14).padding(.vertical, 13)
                 Divider().background(RUColor.line)
             }
+            identityEditor
+            Divider().background(RUColor.line)
             programRow("Se déconnecter") { appState.auth.signOut(); dismiss() }
             Divider().background(RUColor.line)
             Button(action: { showDeleteAccountConfirm = true }) {
@@ -306,6 +317,65 @@ struct MoreSettingsView: View {
         } message: {
             Text("Ton club, ton classement et ton fil d'activité seront définitivement supprimés du serveur. Cette action est irréversible.")
         }
+    }
+
+    /// Neither onboarding nor signup ever asked for a handle or a last name — "Mes amis" search
+    /// can't reliably find "Léo" among several without one. Both optional, saved together with a
+    /// single tap; a taken username surfaces inline rather than a generic failure toast.
+    private var identityEditor: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            TextField("Pseudo (facultatif)", text: $usernameText)
+                .textFieldStyle(.plain)
+                .font(RUFont.sans(13.5))
+                .foregroundColor(RUColor.textPrimary)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .padding(.horizontal, 12).padding(.vertical, 9)
+                .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            TextField("Nom (facultatif)", text: $lastNameText)
+                .textFieldStyle(.plain)
+                .font(RUFont.sans(13.5))
+                .foregroundColor(RUColor.textPrimary)
+                .padding(.horizontal, 12).padding(.vertical, 9)
+                .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            if let identityError {
+                Text(identityError).font(RUFont.sans(11)).foregroundColor(RUColor.rose)
+            }
+            HStack {
+                Text("Aide tes amis à te retrouver dans la recherche.")
+                    .font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
+                Spacer()
+                Button(isSavingIdentity ? "…" : "Enregistrer") { Task { await saveIdentity() } }
+                    .font(RUFont.sans(11.5, weight: .semibold))
+                    .foregroundColor(RUColor.rose2)
+                    .disabled(isSavingIdentity)
+            }
+        }
+        .padding(.horizontal, 14).padding(.vertical, 13)
+    }
+
+    private func saveIdentity() async {
+        isSavingIdentity = true
+        identityError = nil
+        do {
+            try await clubService.updateProfile(
+                username: usernameText.trimmingCharacters(in: .whitespaces),
+                lastName: lastNameText.trimmingCharacters(in: .whitespaces)
+            )
+            // Refreshes `currentUser` so the change is reflected immediately — search results and
+            // future signup/profile screens all read from there, not from this sheet's own state.
+            try? await appState.auth.refreshMe()
+            appState.toast("Profil mis à jour")
+        } catch ClubServiceError.badResponse(409, _) {
+            identityError = "Ce pseudo est déjà pris."
+        } catch ClubServiceError.badResponse(400, _) {
+            identityError = "Pseudo invalide — lettres minuscules, chiffres, underscore, 3 à 20 caractères."
+        } catch ClubServiceError.badResponse(422, _) {
+            identityError = "Ce nom n'est pas autorisé — choisis-en un autre."
+        } catch {
+            identityError = "Impossible d'enregistrer — vérifie ta connexion."
+        }
+        isSavingIdentity = false
     }
 
     private func deleteAccount() async {

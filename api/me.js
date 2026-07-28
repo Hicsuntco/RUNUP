@@ -11,7 +11,7 @@ module.exports = withErrorHandling(async function handler(req, res) {
   if (!userId) return res.status(401).json({ error: 'unauthorized' });
 
   const { rows } = await sql`
-    SELECT u.id, u.name, u.xp_total, u.referral_code, cm.club_id
+    SELECT u.id, u.name, u.last_name, u.username, u.xp_total, u.referral_code, cm.club_id
     FROM users u
     LEFT JOIN club_members cm ON cm.user_id = u.id
     WHERE u.id = ${userId}
@@ -27,5 +27,13 @@ module.exports = withErrorHandling(async function handler(req, res) {
     if (row.referral_code) await sql`UPDATE users SET referral_code = ${row.referral_code} WHERE id = ${row.id}`;
   }
 
-  res.status(200).json({ id: row.id, name: row.name, xpTotal: row.xp_total, referralCode: row.referral_code, clubId: row.club_id || null });
+  res.status(200).json({
+    id: row.id,
+    name: row.name,
+    lastName: row.last_name || null,
+    username: row.username || null,
+    xpTotal: row.xp_total,
+    referralCode: row.referral_code,
+    clubId: row.club_id || null,
+  });
 });

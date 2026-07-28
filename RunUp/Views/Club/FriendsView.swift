@@ -51,10 +51,10 @@ struct FriendsView: View {
                     } else if isLoading && feed.isEmpty {
                         loadingCard
                     } else {
+                        privacyRow
                         if !incomingRequests.isEmpty { requestsCard }
                         countsRow
                         feedSection
-                        privacyRow
                     }
                 }
 

@@ -192,7 +192,10 @@ struct SessionDetailSheet: View {
                 }
             }
             .padding(.horizontal, 18)
-            .padding(.bottom, 24)
+            // Was 24 — the CTA row sat flush against the sheet's rounded bottom corner with no
+            // real breathing room, reading as if the content had been cut off rather than
+            // ending on purpose.
+            .padding(.bottom, 44)
         }
     }
 }

@@ -15,7 +15,23 @@ struct StatsView: View {
     /// semaine, allure récente) stay always visible; the deeper analysis is a tap away instead of
     /// scroll-past-and-ignore.
     @State private var showDeepAnalysis = false
+    @State private var selectedRange: StatsRange = .month
     private var profile: UserProfile { appState.profile }
+
+    /// Windows for the pace-trend chart — was hardcoded to "last 8 runs" regardless of how far
+    /// back that actually reached (could be 2 weeks or 6 months depending how often she runs).
+    private enum StatsRange: String, CaseIterable, Identifiable {
+        case week = "7J", month = "4S", quarter = "3M", year = "1A"
+        var id: Self { self }
+        var days: Int {
+            switch self {
+            case .week: return 7
+            case .month: return 28
+            case .quarter: return 90
+            case .year: return 365
+            }
+        }
+    }
 
     var body: some View {
         ScrollView {
@@ -131,8 +147,23 @@ struct StatsView: View {
 
     // MARK: Pace trend — was a fixed "VO2max 52.4" that never actually moved
 
+    /// Runs inside `selectedRange`, oldest first — chart reads left-to-right as time moving
+    /// forward, same order the fixed "last 8 runs" version always used.
+    private var chartRuns: [RunRecord] {
+        guard let cutoff = Calendar.current.date(byAdding: .day, value: -selectedRange.days, to: .now) else { return [] }
+        return runs.filter { $0.date >= cutoff }.sorted { $0.date < $1.date }
+    }
+
     private var recentPacesSecPerKm: [Double] {
-        runs.prefix(8).reversed().compactMap { PaceModel.parseSecPerKm($0.avgPace) }
+        chartRuns.compactMap { PaceModel.parseSecPerKm($0.avgPace) }
+    }
+
+    /// Index of the chart point that's her all-time best pace (same ≥1 km floor `bestPaceSecPerKm`
+    /// already uses below) — nil when that run isn't inside the currently selected window, so an
+    /// old PR from a year ago doesn't get flagged on a "7 jours" chart that never plots it.
+    private var recordPointIndex: Int? {
+        guard let best = bestPaceSecPerKm else { return nil }
+        return recentPacesSecPerKm.firstIndex(where: { abs($0 - best) < 0.01 })
     }
 
     private var paceTrendAccessibilitySummary: String {
@@ -158,9 +189,34 @@ struct StatsView: View {
         return previous5.reduce(0, +) / Double(previous5.count)
     }
 
+    private var rangePicker: some View {
+        HStack(spacing: 3) {
+            ForEach(StatsRange.allCases) { range in
+                Button(action: {
+                    Haptics.selection()
+                    selectedRange = range
+                }) {
+                    Text(LocalizedStringKey(range.rawValue))
+                        .font(RUFont.mono(10, weight: .medium))
+                        .foregroundColor(selectedRange == range ? .white : RUColor.text2)
+                        .padding(.horizontal, 9).padding(.vertical, 5)
+                        .background(selectedRange == range ? RUColor.rose : Color.clear, in: Capsule())
+                }
+                .buttonStyle(PressableStyle())
+                .accessibilityAddTraits(selectedRange == range ? .isSelected : [])
+            }
+        }
+        .padding(2)
+        .background(RUColor.card2, in: Capsule())
+    }
+
     private var paceCard: some View {
         VStack(alignment: .leading, spacing: 6) {
-            EyebrowLabel(text: "Allure moyenne récente")
+            HStack {
+                EyebrowLabel(text: "Allure moyenne récente")
+                Spacer()
+                rangePicker
+            }
             if let recentAvgPace {
                 HStack(alignment: .lastTextBaseline, spacing: 6) {
                     Text(PaceModel.formatDuration(recentAvgPace)).displayStyle(44).foregroundColor(RUColor.textPrimary)
@@ -186,18 +242,34 @@ struct StatsView: View {
                         var fill = Path()
                         fill.move(to: CGPoint(x: 0, y: size.height))
                         var lastPoint = CGPoint.zero
+                        var pointPositions: [CGPoint] = []
                         for (i, p) in points.enumerated() {
                             let t = CGFloat((p - minPace) / range) // 0 = fastest ... 1 = slowest
                             let point = CGPoint(x: CGFloat(i) * stepX, y: size.height * (0.15 + 0.7 * t))
                             if i == 0 { line.move(to: point) } else { line.addLine(to: point) }
                             fill.addLine(to: point)
                             lastPoint = point
+                            pointPositions.append(point)
                         }
                         fill.addLine(to: CGPoint(x: size.width, y: size.height))
                         fill.closeSubpath()
                         context.fill(fill, with: .linearGradient(Gradient(colors: [RUColor.rose.opacity(0.35), .clear]), startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
                         context.stroke(line, with: .color(RUColor.rose), lineWidth: 2.5)
                         context.fill(Path(ellipseIn: CGRect(x: lastPoint.x - 3.5, y: lastPoint.y - 3.5, width: 7, height: 7)), with: .color(RUColor.rose))
+
+                        // Her all-time best pace, marked right on the trend line instead of only
+                        // living in a separate "records" card further down — was invisible here
+                        // even when the exact point plotted WAS the record.
+                        if let recordIndex = recordPointIndex, recordIndex < pointPositions.count {
+                            let p = pointPositions[recordIndex]
+                            context.fill(Path(ellipseIn: CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8)), with: .color(RUColor.lime))
+                            context.fill(Path(ellipseIn: CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8)).strokedPath(StrokeStyle(lineWidth: 1.5)), with: .color(RUColor.bg))
+                            let labelY = max(9, p.y - 14)
+                            context.draw(
+                                Text("RECORD").font(RUFont.sans(7, weight: .bold)).foregroundColor(RUColor.lime),
+                                at: CGPoint(x: min(max(p.x, 22), size.width - 22), y: labelY)
+                            )
+                        }
                     }
                     .frame(height: 70)
                     .padding(.top, 6)
@@ -216,6 +288,10 @@ struct StatsView: View {
                         .font(RUFont.sans(10)).foregroundColor(RUColor.text3)
                         .padding(.top, 4)
                     }
+                } else {
+                    Text("Pas assez de courses sur cette période — essaie une fenêtre plus large.")
+                        .font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+                        .padding(.top, 6)
                 }
             } else {
                 Text("Termine quelques courses pour voir ton allure évoluer ici.")

@@ -11424,6 +11424,22 @@
           }
         }
       }
+    },
+    "Prochaine séance": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next session"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Próxima sesión"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

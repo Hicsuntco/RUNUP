@@ -80,6 +80,10 @@ struct HomeView: View {
 
                 sessionCard
 
+                if !isFreeRun, let next = nextUpcomingSession {
+                    nextSessionCard(next)
+                }
+
                 readinessCard
 
                 if isFreeRun {
@@ -305,6 +309,47 @@ struct HomeView: View {
         .ruCard()
         // The manual-debrief sheet presents from RootTabView now — anchored here it could only
         // ever appear while this specific card was mounted on screen.
+    }
+
+    /// Soonest non-rest day still ahead of today WITHIN this week's already-generated
+    /// `weekSessions` — deliberately doesn't guess into next week (not generated yet, see
+    /// `AdaptivePlanEngine.beginWeek`), so this is real, not a fabricated preview. Nil on the
+    /// last running day of the week (nothing left to look ahead to), which just hides the card.
+    private var nextUpcomingSession: (dayLabel: String, session: WorkoutSession)? {
+        let todayIdx = (Calendar.current.component(.weekday, from: .now) + 5) % 7
+        let upcoming = profile.weekSessions
+            .filter { $0.weekday > todayIdx }
+            .compactMap { day -> (Int, WorkoutSession)? in
+                guard let session = day.session, session.durationMinutes > 0 else { return nil }
+                return (day.weekday, session)
+            }
+            .min(by: { $0.0 < $1.0 })
+        guard let upcoming else { return nil }
+        return (DayStatus.fullNames[upcoming.0], upcoming.1)
+    }
+
+    /// A glanceable look-ahead — today's card answers "what do I do now", this answers "what's
+    /// coming" without needing to open the full week plan. Opens `.plan` on tap, same destination
+    /// `programWeekCard` already uses, rather than building a second detail view for a session
+    /// that isn't today's (`SessionDetailSheet` is built around `profile.todaySession` specifically).
+    private func nextSessionCard(_ next: (dayLabel: String, session: WorkoutSession)) -> some View {
+        Button(action: { appState.go(.plan) }) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 3) {
+                    EyebrowLabel(text: "Prochaine séance", color: RUColor.text3)
+                    HStack(spacing: 6) {
+                        Text(next.session.title).font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                        Text("·").foregroundColor(RUColor.text3)
+                        Text(next.dayLabel).font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+                    }
+                }
+                Spacer(minLength: 8)
+                Text("›").font(RUFont.sans(15, weight: .semibold)).foregroundColor(RUColor.text3)
+            }
+            .padding(14)
+        }
+        .buttonStyle(PressableStyle())
+        .ruCard()
     }
 
     private var ringsCard: some View {

@@ -809,17 +809,18 @@ struct ClubView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
                 ForEach(badges) { badge in
+                    let color = ClubBadgeCatalog.color(for: badge.key)
                     Button(action: { selectedBadge = badge }) {
                         VStack(spacing: 5) {
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(badge.earned ? RUColor.card : RUColor.card2)
-                                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(badge.earned ? RUColor.rose.opacity(0.35) : RUColor.line, lineWidth: RUSpacing.hairline))
+                            HexagonBadgeShape()
+                                .fill(badge.earned ? color.opacity(0.22) : RUColor.card2)
+                                .overlay(HexagonBadgeShape().stroke(badge.earned ? color.opacity(0.7) : RUColor.line, lineWidth: RUSpacing.hairline))
                                 .aspectRatio(1, contentMode: .fit)
                                 .overlay(Text(badge.emoji).font(.system(size: 26)))
                                 .opacity(badge.earned ? 1 : 0.35)
                                 // A real glow on earned tiles — opacity alone made locked vs.
                                 // earned read as "faded vs. normal" rather than "locked vs. won".
-                                .shadow(color: badge.earned ? RUColor.rose.opacity(0.3) : .clear, radius: 8, x: 0, y: 3)
+                                .shadow(color: badge.earned ? color.opacity(0.35) : .clear, radius: 8, x: 0, y: 3)
                             Text(badge.name)
                                 .font(RUFont.sans(8, weight: .semibold))
                                 .foregroundColor(badge.earned ? RUColor.textPrimary : RUColor.text2)
@@ -1221,10 +1222,11 @@ struct BadgeDetailView: View {
     var badge: ClubBadge
 
     var body: some View {
+        let color = ClubBadgeCatalog.color(for: badge.key)
         VStack(spacing: 14) {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(badge.earned ? RUColor.card : RUColor.card2)
-                .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+            HexagonBadgeShape()
+                .fill(badge.earned ? color.opacity(0.22) : RUColor.card2)
+                .overlay(HexagonBadgeShape().stroke(badge.earned ? color.opacity(0.7) : RUColor.line, lineWidth: RUSpacing.hairline))
                 .frame(width: 76, height: 76)
                 .overlay(Text(badge.emoji).font(.system(size: 34)))
                 .opacity(badge.earned ? 1 : 0.4)

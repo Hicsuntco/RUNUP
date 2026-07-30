@@ -61,7 +61,7 @@ struct TabBarView: View {
                     .tracking(0.5)
                     .foregroundColor(color)
             }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, minHeight: 44)
         }
         .buttonStyle(PressableStyle())
         // The only persistent navigation chrome in the app, visible on every screen — without
@@ -106,6 +106,7 @@ struct RunInProgressPill: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 9)
+            .frame(minHeight: 44)
             .background(RUColor.rose, in: Capsule())
             .shadow(color: RUColor.rose.opacity(0.5), radius: 20, x: 0, y: 10)
         }

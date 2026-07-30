@@ -43,10 +43,29 @@ struct WellbeingFieldsView: View {
                         HStack {
                             Text("Durée moyenne du cycle").font(RUFont.sans(13)).foregroundColor(RUColor.textPrimary)
                             Spacer()
-                            Stepper("\(vm.averageCycleLengthDays) jours", value: $vm.averageCycleLengthDays, in: 21...35)
-                                .fixedSize()
-                                .tint(RUColor.rose)
-                                .foregroundColor(RUColor.textPrimary)
+                            // A native `Stepper`'s +/- segments render at a fixed ~29pt tall
+                            // regardless of surrounding padding — no way to grow that from the
+                            // outside, so this is two custom 44×44 buttons instead.
+                            HStack(spacing: 4) {
+                                Button(action: { vm.averageCycleLengthDays = max(21, vm.averageCycleLengthDays - 1) }) {
+                                    Image(systemName: "minus").font(.system(size: 12, weight: .bold))
+                                        .frame(width: 44, height: 44)
+                                        .contentShape(Rectangle())
+                                }
+                                .disabled(vm.averageCycleLengthDays <= 21)
+
+                                Text("\(vm.averageCycleLengthDays) jours")
+                                    .font(RUFont.sans(13, weight: .semibold))
+                                    .frame(minWidth: 56)
+
+                                Button(action: { vm.averageCycleLengthDays = min(35, vm.averageCycleLengthDays + 1) }) {
+                                    Image(systemName: "plus").font(.system(size: 12, weight: .bold))
+                                        .frame(width: 44, height: 44)
+                                        .contentShape(Rectangle())
+                                }
+                                .disabled(vm.averageCycleLengthDays >= 35)
+                            }
+                            .foregroundColor(RUColor.rose)
                         }
                         .padding(13)
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))

@@ -347,6 +347,7 @@ struct ClubView: View {
                 .font(RUFont.sans(11, weight: .semibold))
                 .foregroundColor(RUColor.text3)
                 .padding(.vertical, 12)
+                .frame(minHeight: 44)
                 .contentShape(Rectangle())
             }
             Spacer()
@@ -358,6 +359,7 @@ struct ClubView: View {
                 .foregroundColor(RUColor.text3)
                 .disabled(isLoading)
                 .padding(.vertical, 12)
+                .frame(minHeight: 44)
                 .contentShape(Rectangle())
                 .confirmationDialog("Quitter le club ?", isPresented: $showLeaveConfirm, titleVisibility: .visible) {
                     Button("Quitter", role: .destructive) { Task { await leaveClub() } }
@@ -469,6 +471,7 @@ struct ClubView: View {
                 .font(RUFont.sans(11, weight: .semibold))
                 .foregroundColor(boardMode == value ? RUColor.rose2 : RUColor.text2)
                 .padding(.horizontal, 11).padding(.vertical, 6)
+                .frame(minHeight: 44)
                 .background(boardMode == value ? RUColor.rose.opacity(0.12) : RUColor.card2, in: Capsule())
                 .overlay(Capsule().stroke(boardMode == value ? RUColor.rose.opacity(0.4) : RUColor.line, lineWidth: RUSpacing.hairline))
         }
@@ -486,7 +489,7 @@ struct ClubView: View {
                 // accent fill below); unselected sits on the plain page/card surface and needs to
                 // invert with the theme.
                 .foregroundColor(tab == value ? .white : RUColor.textPrimary)
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, minHeight: 44)
                 .padding(.vertical, 9)
                 .background(tab == value ? RUColor.rose : .clear, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
         }
@@ -595,6 +598,9 @@ struct ClubView: View {
                         Text("Proposer").font(RUFont.sans(11, weight: .semibold))
                     }
                     .foregroundColor(RUColor.rose2)
+                    .padding(8)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(PressableStyle())
             }
@@ -829,6 +835,10 @@ struct ClubView: View {
                                 .minimumScaleFactor(0.8)
                         }
                         .frame(width: 64)
+                        // SwiftUI hit-tests a filled Shape against its actual path, not its
+                        // bounding box — the hexagon's cut corners silently became dead zones
+                        // without this, unlike the square tile it replaced.
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(PressableStyle())
                 }

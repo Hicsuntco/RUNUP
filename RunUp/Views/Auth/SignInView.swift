@@ -75,7 +75,8 @@ struct SignInView: View {
                     }
                     .font(RUFont.sans(12, weight: .semibold))
                     .foregroundColor(RUColor.text2)
-                    .padding(.top, 4)
+                    .padding(.vertical, 12)
+                    .contentShape(Rectangle())
                     .buttonStyle(PressableStyle())
                 }
                 .padding(.horizontal, RUSpacing.pagePadding)
@@ -131,6 +132,8 @@ struct SignInView: View {
             Button("Plus tard") { dismiss() }
                 .font(RUFont.sans(12, weight: .semibold))
                 .foregroundColor(RUColor.text2)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
                 .buttonStyle(PressableStyle())
                 .disabled(isSavingUsername)
         }

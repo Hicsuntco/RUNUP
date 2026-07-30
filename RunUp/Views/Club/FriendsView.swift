@@ -186,7 +186,7 @@ struct FriendsView: View {
             if isSearchingMode {
                 Button(action: { query = "" }) {
                     Image(systemName: "xmark.circle.fill").font(.system(size: 14)).foregroundColor(RUColor.text3)
-                        .frame(width: 30, height: 30)
+                        .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }
             }
@@ -228,6 +228,7 @@ struct FriendsView: View {
                 .font(RUFont.sans(11.5, weight: .bold))
                 .foregroundColor(isActive ? RUColor.textPrimary : .white)
                 .padding(.horizontal, 13).padding(.vertical, 7)
+                .frame(minHeight: 44)
                 .background(isActive ? RUColor.card2 : RUColor.rose, in: Capsule())
                 .overlay(Capsule().stroke(isActive ? RUColor.line : Color.clear, lineWidth: RUSpacing.hairline))
         }
@@ -583,6 +584,7 @@ private struct PeopleListSheet: View {
                             .font(RUFont.sans(11, weight: .semibold))
                             .foregroundColor(RUColor.text2)
                             .padding(.horizontal, 11).padding(.vertical, 6)
+                            .frame(minHeight: 44)
                             .background(RUColor.card2, in: Capsule())
                             .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                         }

@@ -13,7 +13,10 @@ struct ProgramSettingsSheet: View {
                 Text("Modifier mon programme").displayStyle(22).foregroundColor(RUColor.textPrimary).padding(.top, 8)
 
                 EyebrowLabel(text: "Jours de course", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
-                HStack(spacing: 7) {
+                // spacing 5, not 7 — same fix as onboarding's RunningDaysStepView: on the
+                // smallest currently-supported iPhone (375pt), 7 gaps of 7pt each pushed every
+                // square under the 44pt tap-target minimum.
+                HStack(spacing: 5) {
                     ForEach(0..<7) { i in
                         let on = days.contains(i)
                         Button(action: { if on { days.remove(i) } else { days.insert(i) } }) {

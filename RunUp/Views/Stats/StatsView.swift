@@ -44,6 +44,7 @@ struct StatsView: View {
                         }
                         .foregroundColor(RUColor.text2)
                         .padding(.horizontal, 12).padding(.vertical, 8)
+                        .frame(minHeight: 44)
                         .background(RUColor.card, in: Capsule())
                         .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                     }
@@ -201,6 +202,7 @@ struct StatsView: View {
                         .foregroundColor(selectedRange == range ? .white : RUColor.text2)
                         .padding(.horizontal, 9).padding(.vertical, 5)
                         .background(selectedRange == range ? RUColor.rose : Color.clear, in: Capsule())
+                        .frame(minWidth: 44, minHeight: 44)
                 }
                 .buttonStyle(PressableStyle())
                 .accessibilityAddTraits(selectedRange == range ? .isSelected : [])
@@ -320,6 +322,7 @@ struct StatsView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 13)
+            .frame(minHeight: 44)
             .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
         }

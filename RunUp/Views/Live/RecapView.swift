@@ -132,6 +132,9 @@ struct RecapView: View {
                                         Button("Réessayer") { renderShareCard(for: run) }
                                             .font(RUFont.sans(12, weight: .semibold))
                                             .foregroundColor(RUColor.rose2)
+                                            .padding(.horizontal, 4)
+                                            .frame(minHeight: 44)
+                                            .contentShape(Rectangle())
                                     }
                                 } else {
                                     ProgressView().tint(RUColor.text2)

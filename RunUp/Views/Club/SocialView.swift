@@ -68,7 +68,7 @@ struct SocialView: View {
                 }
             }
             .foregroundColor(mode == value ? .white : RUColor.textPrimary)
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, minHeight: 44)
             .padding(.vertical, 9)
             .background(mode == value ? RUColor.rose : .clear, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
         }

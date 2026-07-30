@@ -71,6 +71,7 @@ struct ClubManagementView: View {
                     .font(RUFont.sans(11.5, weight: .semibold))
                     .foregroundColor(RUColor.rose2)
                     .padding(.vertical, 12)
+                    .frame(minHeight: 44)
                     .contentShape(Rectangle())
             }
             if let challenge {
@@ -235,12 +236,14 @@ struct ClubMemberProfileView: View {
                         }
                         .font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.text3)
                         .padding(.vertical, 12)
+                        .frame(minHeight: 44)
                         .contentShape(Rectangle())
                         Spacer()
                         Button(isSavingBio ? "…" : "Enregistrer") { Task { await saveBio(onUpdateBio) } }
                             .font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.rose2)
                             .disabled(isSavingBio)
                             .padding(.vertical, 12)
+                            .frame(minHeight: 44)
                             .contentShape(Rectangle())
                     }
                 } else {
@@ -284,6 +287,10 @@ struct ClubMemberProfileView: View {
                                     .minimumScaleFactor(0.8)
                             }
                             .frame(width: 64)
+                            // See matching comment in ClubView.badgeStrip — a filled hexagon Shape
+                            // hit-tests against its own path, so the cut corners are dead zones
+                            // without this.
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(PressableStyle())
                         .accessibilityLabel("\(badge.name), \(badge.earned ? "débloqué" : "verrouillé")")

@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import StoreKit
 
 /// RPE debrief bottom sheet — submitting this is the core adaptive-plan mechanic. Mirrors the
@@ -7,6 +8,8 @@ struct DebriefSheet: View {
     @Environment(AppState.self) private var appState
     @Environment(\.dismiss) private var dismiss
     @Environment(\.requestReview) private var requestReview
+    @Query(filter: #Predicate<Shoe> { $0.retiredAt == nil }) private var activeShoes: [Shoe]
+    @Query private var runs: [RunRecord]
     var run: RunRecord
     @State private var rpe: RPE = .justeBien
 
@@ -124,6 +127,22 @@ struct DebriefSheet: View {
                     // sheet leaves no phantom record — it only becomes real on this tap.
                     if run.modelContext == nil {
                         appState.modelContext.insert(run)
+                    }
+                    // Auto-attaches whichever pair is set as default in `ShoesView` — asking her
+                    // to pick a shoe on every single run here would clutter the one screen that
+                    // matters most (the RPE debrief); a wrong pick is a rare enough edge case to
+                    // just fix from History/ShoesView instead of designing a picker into this flow.
+                    if let shoeID = appState.profile.defaultShoeID, let shoe = activeShoes.first(where: { $0.id == shoeID }) {
+                        run.shoeID = shoeID
+                        // `runs` may or may not already include this exact run (GPS runs are
+                        // inserted earlier by `endLiveRun`, manual ones aren't yet) — excluding it
+                        // by identity and adding `run.distanceKm` back by hand sidesteps that
+                        // instead of risking a double count.
+                        let kmBefore = shoe.totalKm(runs: runs.filter { $0 !== run })
+                        let kmAfter = kmBefore + run.distanceKm
+                        if kmBefore < shoe.alertThresholdKm, kmAfter >= shoe.alertThresholdKm {
+                            appState.notify(icon: "👟", colorHex: 0xFFB03D, title: "\(shoe.name) en fin de vie", text: "Cette paire dépasse \(Int(shoe.alertThresholdKm)) km — pense à la changer bientôt.")
+                        }
                     }
                     AdaptivePlanEngine.applyDebrief(rpe: rpe, run: run, profile: appState.profile)
                     let distance = String(format: "%.1f", locale: Locale(identifier: "fr_FR"), run.distanceKm)

@@ -11440,6 +11440,358 @@
           }
         }
       }
+    },
+    "Matériel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gear"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Material"
+          }
+        }
+      }
+    },
+    "Mes chaussures": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My shoes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mis zapatillas"
+          }
+        }
+      }
+    },
+    "Ajouter une paire": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a pair"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir un par"
+          }
+        }
+      }
+    },
+    "Ajoute une paire pour suivre son usure — chaque course lui est attribuée automatiquement une fois que c'est ta paire par défaut.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a pair to track its wear — every run is attributed to it automatically once it's your default pair."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añade un par para seguir su desgaste — cada carrera se le atribuye automáticamente una vez que es tu par por defecto."
+          }
+        }
+      }
+    },
+    "Retirées": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retired"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retiradas"
+          }
+        }
+      }
+    },
+    "Retirer cette paire ?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retire this pair?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Retirar este par?"
+          }
+        }
+      }
+    },
+    "Elle reste dans ton historique, mais ne sera plus proposée par défaut sur tes prochaines courses.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It stays in your history, but won't be suggested by default on your next runs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se queda en tu historial, pero ya no se propondrá por defecto en tus próximas carreras."
+          }
+        }
+      }
+    },
+    "Supprimer cette paire ?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this pair?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar este par?"
+          }
+        }
+      }
+    },
+    "Les courses déjà enregistrées avec cette paire garderont leurs autres données, juste sans chaussure associée.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Runs already logged with this pair keep their other data, just without a shoe attached."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las carreras ya registradas con este par conservarán sus otros datos, solo sin zapatilla asociada."
+          }
+        }
+      }
+    },
+    "Définir par défaut": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set as default"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Definir por defecto"
+          }
+        }
+      }
+    },
+    "Retirer cette paire": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retire this pair"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirar este par"
+          }
+        }
+      }
+    },
+    "À remplacer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time to replace"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay que cambiarlas"
+          }
+        }
+      }
+    },
+    "Bientôt en fin de vie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nearing end of life"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca del final de su vida"
+          }
+        }
+      }
+    },
+    "Nom de la paire": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pair name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre del par"
+          }
+        }
+      }
+    },
+    "Déjà parcourus (facultatif)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already worn (optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya recorridos (opcional)"
+          }
+        }
+      }
+    },
+    "Si cette paire n'est pas neuve, indique les km déjà dessus.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If this pair isn't new, enter the km already on it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si este par no es nuevo, indica los km que ya tiene."
+          }
+        }
+      }
+    },
+    "Nouvelle paire": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New pair"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuevo par"
+          }
+        }
+      }
+    },
+    "Aucun parcours GPS enregistré pour l'instant — la carte se remplit après ta première course trackée.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No GPS route recorded yet — the map fills in after your first tracked run."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía no hay ninguna ruta GPS registrada — el mapa se rellena después de tu primera carrera con seguimiento."
+          }
+        }
+      }
+    },
+    "Mes routes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My routes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mis rutas"
+          }
+        }
+      }
+    },
+    "Paire par défaut": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default pair"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Par por defecto"
+          }
+        }
+      }
+    },
+    "Appuie pour la définir par défaut": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap to set as default"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toca para definirlo por defecto"
+          }
+        }
+      }
+    },
+    "Retirée": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retired"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirada"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

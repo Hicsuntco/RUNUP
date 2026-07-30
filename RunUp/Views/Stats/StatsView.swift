@@ -52,6 +52,7 @@ struct StatsView: View {
                 }
 
                 summaryCard
+                heatmapCard
                 weekCard
                 paceCard
 
@@ -88,6 +89,33 @@ struct StatsView: View {
             MetricColumn(value: "\(profile.streak)", label: "jour\(profile.streak > 1 ? "s" : "") de suite", valueColor: profile.streak > 0 ? RUColor.lime : RUColor.textPrimary, valueSize: 22)
         }
         .padding(16)
+        .ruCard()
+    }
+
+    // MARK: Heatmap — every GPS route overlaid on one map, a purely personal "where have I
+    // already run" view rather than anything competitive.
+
+    private var routedRunsCount: Int { runs.filter { $0.route.count > 1 }.count }
+
+    private var heatmapCard: some View {
+        Button(action: { appState.go(.heatmap) }) {
+            HStack(spacing: 14) {
+                Image(systemName: "map")
+                    .font(.system(size: 18))
+                    .foregroundColor(RUColor.rose)
+                    .frame(width: 44, height: 44)
+                    .background(RUColor.rose.opacity(0.12), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Mes routes").font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                    Text(routedRunsCount > 0 ? "\(routedRunsCount) parcours trackés sur la carte" : "Se remplit dès ta première course trackée")
+                        .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                }
+                Spacer(minLength: 0)
+                Text("›").foregroundColor(RUColor.text2)
+            }
+            .padding(14)
+        }
+        .buttonStyle(PressableStyle())
         .ruCard()
     }
 

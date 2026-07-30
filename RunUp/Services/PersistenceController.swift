@@ -6,7 +6,8 @@ enum PersistenceController {
         UserProfile.self,
         RunRecord.self,
         ChatMessage.self,
-        AppNotification.self
+        AppNotification.self,
+        Shoe.self
     ])
 
     static func makeContainer() -> ModelContainer {

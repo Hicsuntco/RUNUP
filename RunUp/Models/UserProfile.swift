@@ -147,6 +147,10 @@ final class UserProfile {
     /// scale the weekly tier adaptation already uses) — feeds the real `readiness` score below.
     /// Capped and updated in `AdaptivePlanEngine.applyDebrief`.
     var recentRPESeverities: [Int] = []
+    /// The pair auto-attached to every new run (GPS or "FAIT") so tracking wear doesn't require
+    /// picking a shoe on every single run — `ShoesView` is where this actually gets set. `nil`
+    /// until she's added at least one pair, or after her only/default pair is retired.
+    var defaultShoeID: UUID? = nil
 
     // MARK: Meta
     /// No paid tier ships in this version — everyone gets full access. Kept as a field (rather

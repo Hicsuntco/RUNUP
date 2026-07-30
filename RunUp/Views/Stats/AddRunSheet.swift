@@ -11,11 +11,13 @@ struct AddRunSheet: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(AppState.self) private var appState
     @Query(sort: \RunRecord.date) private var runs: [RunRecord]
+    @Query(filter: #Predicate<Shoe> { $0.retiredAt == nil }) private var activeShoes: [Shoe]
 
     @State private var date = Date.now
     @State private var title = Self.titles[0]
     @State private var distanceText = ""
     @State private var durationMinutesText = ""
+    @State private var selectedShoeID: UUID?
 
     private static let titles = ["Footing", "Sortie longue", "Fractionné", "Tempo run", "Autre"]
 
@@ -52,6 +54,20 @@ struct AddRunSheet: View {
                         numField(label: "Distance", value: $distanceText, unit: "km", placeholder: "8,2")
                         numField(label: "Durée", value: $durationMinutesText, unit: "min", placeholder: "45")
                     }
+
+                    // Only shown once she's actually added a pair — no point cluttering this form
+                    // with a picker for a feature she isn't using.
+                    if !activeShoes.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            EyebrowLabel(text: "Chaussures", color: RUColor.text3)
+                            ChipFlowLayout {
+                                SelectableChip(label: "Aucune", selected: selectedShoeID == nil) { selectedShoeID = nil }
+                                ForEach(activeShoes) { shoe in
+                                    SelectableChip(label: shoe.name, selected: selectedShoeID == shoe.id) { selectedShoeID = shoe.id }
+                                }
+                            }
+                        }
+                    }
                 }
                 .padding(18)
             }
@@ -68,6 +84,7 @@ struct AddRunSheet: View {
             }
         }
         .preferredColorScheme(RUColor.colorScheme)
+        .onAppear { selectedShoeID = appState.profile.defaultShoeID }
     }
 
     private func save() {
@@ -86,6 +103,7 @@ struct AddRunSheet: View {
             // than showing 0 kcal for a real run.
             kcal: Int((distance * 62).rounded())
         )
+        run.shoeID = selectedShoeID
         modelContext.insert(run)
         // `runs` won't reflect the insert until the next @Query update cycle, so the current
         // set is computed by hand rather than read back immediately — same pattern as HistoryView's delete.

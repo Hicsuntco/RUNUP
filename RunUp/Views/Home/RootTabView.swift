@@ -93,6 +93,8 @@ struct RootTabView: View {
         case .profile: ProfileView()
         case .history: HistoryView()
         case .weeklyRecap: WeeklyRecapView()
+        case .shoes: ShoesView()
+        case .heatmap: HeatmapView()
         }
     }
 }

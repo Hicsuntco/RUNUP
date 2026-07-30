@@ -26,6 +26,7 @@ struct MoreSettingsView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     sectionTitle("Course")
                     runSettingsCard
+                    shoesCard
 
                     sectionTitle("Programme")
                     programCard
@@ -169,6 +170,13 @@ struct MoreSettingsView: View {
                     .accessibilityLabel("Alertes vocales d'allure")
             }
             .padding(14)
+        }
+        .ruCard()
+    }
+
+    private var shoesCard: some View {
+        VStack(spacing: 0) {
+            programRow("Mes chaussures") { dismiss(); appState.go(.shoes) }
         }
         .ruCard()
     }

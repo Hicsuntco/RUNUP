@@ -33,6 +33,10 @@ final class RunRecord {
     /// re-importing skip activities already pulled in, instead of duplicating History on every
     /// sync.
     var stravaActivityId: Int? = nil
+    /// Which `Shoe` this run was logged in, if any — a plain field (not a `@Relationship`) so
+    /// deleting a `Shoe` never cascades onto real run history; `Shoe.totalKm` just stops counting
+    /// a run whose shoe no longer exists.
+    var shoeID: UUID? = nil
     /// Set once, the moment `DebriefSheet`'s VALIDER actually runs for this record — the real
     /// guard against crediting XP/streak/club-feed twice for the same run (a double-tap, or
     /// reopening the debrief for an already-validated run). `run.modelContext == nil` alone only

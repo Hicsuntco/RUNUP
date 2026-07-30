@@ -138,6 +138,10 @@ enum AdaptivePlanEngine {
             }
             return
         }
+        if profile.programPhase == .freerun {
+            refreshFreeRunWeekStrip(profile)
+            return
+        }
         guard profile.programPhase == .active else { return }
 
         // Backfill for any profile that never had a real week plan generated — migrated from a
@@ -205,6 +209,26 @@ enum AdaptivePlanEngine {
                 return d
             }
             profile.todaySession = profile.weekSessions.first(where: { $0.weekday == today })?.session ?? restSession
+        }
+    }
+
+    /// Course libre has no weekly plan to regenerate (`chooseFreeRun` never touches `weekStrip`
+    /// at all), but the day strip on Home still needs to track the real calendar — without this,
+    /// it stayed frozen at whatever week/day it was built for right up until she entered free-run
+    /// mode, and "aujourd'hui" silently drifted to the wrong day as real days passed.
+    private static func refreshFreeRunWeekStrip(_ profile: UserProfile) {
+        let today = currentWeekdayIndex()
+        let cal = mondayCalendar
+        // Already tracking the real day — skip the reassignment so this doesn't re-animate the
+        // strip on every single foreground/launch, only when the day has actually changed.
+        if let current = profile.weekStrip.first(where: { $0.state == .today }), cal.isDateInToday(current.date) {
+            return
+        }
+        let startOfThisWeek = cal.dateInterval(of: .weekOfYear, for: .now)?.start ?? .now
+        profile.weekStrip = (0..<7).map { i in
+            let date = cal.date(byAdding: .day, value: i, to: startOfThisWeek) ?? .now
+            let state: DayStatus.State = i == today ? .today : (i < today ? .rest : .upcoming)
+            return DayStatus(weekday: i, letter: DayStatus.letters[i], state: state, date: date)
         }
     }
 
@@ -852,6 +876,9 @@ enum AdaptivePlanEngine {
         // set, `seanceDoneToday` would read true from the moment she lands back on Home, the
         // exact false "séance faite" bug this field was added to fix in the first place.
         profile.freeRunSessionDoneDate = nil
+        // Otherwise the strip keeps showing whatever week/day it last held from the program she's
+        // leaving, until the next natural `refreshProgramForCurrentDate` call catches up.
+        refreshFreeRunWeekStrip(profile)
     }
 
     struct NewGoalResult {

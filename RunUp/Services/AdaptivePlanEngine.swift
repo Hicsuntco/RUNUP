@@ -711,6 +711,34 @@ enum AdaptivePlanEngine {
         return "Programme mis à jour · +120 XP"
     }
 
+    /// `streak` only ever increments in `applyDebrief` above — deleting a `RunRecord` from
+    /// History never touched it, so a streak built partly on a run she then deleted stayed
+    /// stuck at its old (now-wrong) count forever. Recomputes it honestly from whatever run
+    /// dates actually remain, using the same "gap of ≤3 days doesn't break the chain" rule
+    /// `applyDebrief` uses (real rest days shouldn't zero out a streak).
+    static func recomputeStreakAfterDeletion(profile: UserProfile, remainingRuns: [RunRecord]) {
+        let cal = Calendar.current
+        let days = Set(remainingRuns.map { cal.startOfDay(for: $0.date) }).sorted(by: >)
+        guard let mostRecent = days.first else {
+            profile.streak = 0
+            profile.lastStreakDate = nil
+            return
+        }
+        var streak = 1
+        var cursor = mostRecent
+        for day in days.dropFirst() {
+            let gap = cal.dateComponents([.day], from: day, to: cursor).day ?? 0
+            guard gap <= 3 else { break }
+            streak += 1
+            cursor = day
+        }
+        // A chain that stopped more than 3 days ago is over, even though it existed once —
+        // matches `applyDebrief`'s own "gap > 3 restarts at 1" rule.
+        let gapToToday = cal.dateComponents([.day], from: mostRecent, to: cal.startOfDay(for: .now)).day ?? 0
+        profile.streak = gapToToday <= 3 ? streak : 0
+        profile.lastStreakDate = gapToToday <= 3 ? mostRecent : nil
+    }
+
     // MARK: Same-day adjustment
 
     /// Same-day reactive lightening — everywhere else, the plan only ever changes at a WEEK

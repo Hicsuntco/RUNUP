@@ -76,6 +76,9 @@ struct HistoryView: View {
                     if Calendar.current.isDateInToday(run.date) && !otherRunToday {
                         AdaptivePlanEngine.undoTodaySessionCompletion(appState.profile)
                     }
+                    // `runs` won't reflect the deletion until the next @Query update cycle, so
+                    // the remaining set is computed by hand rather than read back immediately.
+                    AdaptivePlanEngine.recomputeStreakAfterDeletion(profile: appState.profile, remainingRuns: runs.filter { $0 !== run })
                     modelContext.delete(run)
                     Haptics.warning()
                 }

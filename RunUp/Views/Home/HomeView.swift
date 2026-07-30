@@ -73,14 +73,9 @@ struct HomeView: View {
 
                 programWeekCard
 
-                // The 3-goal ring (séance/calories/pas — concrete, actionable) reads more
-                // meaningful at a glance than "forme du jour" (an abstract 0-100 score), so it
-                // leads; readiness moved to where this used to be.
                 ringsCard
 
                 sessionCard
-
-                readinessCard
 
                 if isFreeRun {
                     Text("Pas de plan fixe — le coach te propose de quoi garder la forme, jour après jour.")
@@ -194,51 +189,6 @@ struct HomeView: View {
         case .rest: return "\(name), repos"
         case .upcoming: return "\(name), à venir"
         }
-    }
-
-    private var readinessMessage: String {
-        guard profile.hasReadinessData else {
-            return "S'affine après ta première séance débriefée."
-        }
-        switch profile.readiness {
-        // Was "→ séance relevée d'un palier aujourd'hui" — the plan only ever re-adjusts at the
-        // WEEK boundary (see AdaptivePlanEngine.tierDelta), never same-day, so that line promised
-        // an intensity bump that wasn't actually happening. Reworded as a suggestion for today,
-        // not a claim about what the engine already did.
-        case 85...: return "Bien récupérée → tu peux pousser un peu aujourd'hui si tu le sens."
-        case 65..<85: return "Forme correcte → séance du jour comme prévu."
-        case 50..<65: return "Un peu de fatigue → écoute-toi sur l'intensité aujourd'hui."
-        default: return "Fatigue accumulée → pense à une séance plus légère ou à du repos."
-        }
-    }
-
-    private var readinessCard: some View {
-        Button(action: { appState.go(.readiness) }) {
-            HStack(spacing: 14) {
-                if profile.hasReadinessData {
-                    RingView(pct: Double(profile.readiness), color: RUColor.lime, size: 64) {
-                        Text("\(profile.readiness)").displayStyle(20).foregroundColor(RUColor.lime)
-                    }
-                } else {
-                    // An empty, un-filled ring rather than the near-full default `readiness`
-                    // (80) — nothing's actually been measured yet, so nothing should look "full".
-                    RingView(pct: 0, color: RUColor.text3, size: 64) {
-                        Text("–").displayStyle(20).foregroundColor(RUColor.text3)
-                    }
-                }
-                VStack(alignment: .leading, spacing: 5) {
-                    EyebrowLabel(text: profile.hasReadinessData ? "Forme du jour · \(profile.readinessLabel)" : "Forme du jour · pas encore de données")
-                    Text(readinessMessage)
-                        .font(RUFont.sans(12))
-                        .foregroundColor(RUColor.textPrimary.opacity(0.7))
-                        .lineSpacing(2)
-                }
-                Spacer(minLength: 0)
-            }
-            .padding(16)
-        }
-        .buttonStyle(PressableStyle())
-        .ruHeroCard(radius: 20)
     }
 
     /// Was one big `Button` wrapping the FAIT/DÉMARRER buttons INSIDE it — nested SwiftUI buttons

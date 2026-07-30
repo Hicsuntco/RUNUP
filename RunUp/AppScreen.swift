@@ -5,7 +5,6 @@ enum AppScreen: String, Hashable {
     case home = "prog"
     case plan
     case rings
-    case readiness
     case live
     case recap
     case coach

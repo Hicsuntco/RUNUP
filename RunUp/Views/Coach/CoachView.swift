@@ -67,8 +67,7 @@ struct CoachView: View {
 
     /// The zero-message welcome bubble used to always claim "Ta forme est au top" regardless of
     /// the real `readiness` score (even a low one) and regardless of whether any real data backed
-    /// it at all — mirrors the honest, `hasReadinessData`-gated copy `HomeView.readinessMessage`
-    /// already uses.
+    /// it at all — gated on `hasReadinessData` so it's honest instead.
     private var welcomeMessage: String {
         let sessionPart = "J'ai relevé ta séance à \(profile.todaySession.title)."
         guard profile.hasReadinessData else {

@@ -7,8 +7,15 @@ import CoreLocation
 /// entry point to the adaptive-plan mechanic (submitting RPE recalculates the next session).
 struct RecapView: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query(sort: \RunRecord.date) private var allRuns: [RunRecord]
+    /// Set when opened from History to browse an old run — nil for the normal just-finished
+    /// flow, which reads `appState.lastRun` instead. RPE debriefing only ever applies to the
+    /// CURRENT week's difficulty tier (see `DebriefSheet`/`AdaptivePlanEngine.tierDelta`), so
+    /// re-debriefing an old run from a past week would silently corrupt this week's adaptation —
+    /// the "DONNER MON RESSENTI" CTA is hidden whenever this is set.
+    var historicalRun: RunRecord? = nil
     @State private var showDebrief = false
     /// The "instagrammable" share card (route trace + Strava-style stacked stats on a fully
     /// transparent background — see `RunShareCardView`), rendered off-screen once via
@@ -22,7 +29,15 @@ struct RecapView: View {
     /// Text-color style for the share card — re-rendered on the spot when a chip is tapped.
     @State private var shareTextColor: ShareCardTextColor = .blanc
 
-    private var run: RunRecord? { appState.lastRun }
+    private var run: RunRecord? { historicalRun ?? appState.lastRun }
+    private var isHistorical: Bool { historicalRun != nil }
+
+    /// Closes back to wherever this was opened from — a sheet over History just dismisses,
+    /// while the just-finished flow (presented via `appState.go(.recap)`, not a sheet) has
+    /// nothing to dismiss and needs the tab switched back to Home instead.
+    private func closeRecap() {
+        if isHistorical { dismiss() } else { appState.go(.home) }
+    }
 
     /// A genuine personal record vs every OTHER real run on file — pace (2 km+ runs only, same
     /// honest floor `StatsView.bestRecentPerformance` uses so a short jog can't "beat" a real
@@ -187,12 +202,14 @@ struct RecapView: View {
                         }
                         .padding(.top, 10)
 
-                        Button("DONNER MON RESSENTI") {
-                            Haptics.selection()
-                            showDebrief = true
+                        if !isHistorical {
+                            Button("DONNER MON RESSENTI") {
+                                Haptics.selection()
+                                showDebrief = true
+                            }
+                                .buttonStyle(PrimaryButtonStyle())
+                                .padding(.top, 6)
                         }
-                            .buttonStyle(PrimaryButtonStyle())
-                            .padding(.top, 6)
                     }
                     .padding(.horizontal, RUSpacing.pagePadding)
                     .padding(.top, 16)
@@ -220,7 +237,7 @@ struct RecapView: View {
                 }
             }
         } else {
-            Color.clear.onAppear { appState.go(.home) }
+            Color.clear.onAppear { closeRecap() }
         }
     }
 
@@ -283,7 +300,7 @@ struct RecapView: View {
             }
             LinearGradient(colors: [.clear, RUColor.bg], startPoint: .init(x: 0.5, y: 0.4), endPoint: .init(x: 0.5, y: 1))
             HStack {
-                FrostedBackButton { appState.go(.home) }
+                FrostedBackButton { closeRecap() }
                 Spacer()
             }
             .padding(.horizontal, 16)

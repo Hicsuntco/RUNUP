@@ -9,6 +9,7 @@ struct HistoryView: View {
     @Query(sort: \RunRecord.date, order: .reverse) private var runs: [RunRecord]
     @State private var showAddRun = false
     @State private var pendingDelete: RunRecord?
+    @State private var selectedRun: RunRecord?
 
     var body: some View {
         // A plain ScrollView/VStack can't do real swipe-to-delete — .swipeActions only works on
@@ -31,6 +32,8 @@ struct HistoryView: View {
 
             ForEach(runs) { run in
                 runCard(run)
+                    .contentShape(Rectangle())
+                    .onTapGesture { selectedRun = run }
                     .listRowInsets(EdgeInsets(top: 4, leading: RUSpacing.pagePadding, bottom: 4, trailing: RUSpacing.pagePadding))
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
@@ -56,6 +59,7 @@ struct HistoryView: View {
         .scrollContentBackground(.hidden)
         .background(RUColor.bg)
         .sheet(isPresented: $showAddRun) { AddRunSheet() }
+        .sheet(item: $selectedRun) { run in RecapView(historicalRun: run) }
         .alert(
             "Supprimer cette course ?",
             isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } })

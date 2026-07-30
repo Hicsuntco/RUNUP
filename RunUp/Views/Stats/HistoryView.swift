@@ -78,7 +78,7 @@ struct HistoryView: View {
                     }
                     // `runs` won't reflect the deletion until the next @Query update cycle, so
                     // the remaining set is computed by hand rather than read back immediately.
-                    AdaptivePlanEngine.recomputeStreakAfterDeletion(profile: appState.profile, remainingRuns: runs.filter { $0 !== run })
+                    AdaptivePlanEngine.recomputeStreak(profile: appState.profile, currentRuns: runs.filter { $0 !== run })
                     modelContext.delete(run)
                     Haptics.warning()
                 }

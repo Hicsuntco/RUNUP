@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import UIKit
 
 /// Manual run entry — History used to be strictly read-only (whatever the Live Run flow
@@ -8,6 +9,8 @@ import UIKit
 struct AddRunSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(AppState.self) private var appState
+    @Query(sort: \RunRecord.date) private var runs: [RunRecord]
 
     @State private var date = Date.now
     @State private var title = Self.titles[0]
@@ -84,6 +87,9 @@ struct AddRunSheet: View {
             kcal: Int((distance * 62).rounded())
         )
         modelContext.insert(run)
+        // `runs` won't reflect the insert until the next @Query update cycle, so the current
+        // set is computed by hand rather than read back immediately — same pattern as HistoryView's delete.
+        AdaptivePlanEngine.recomputeStreak(profile: appState.profile, currentRuns: runs + [run])
         Haptics.success()
         dismiss()
     }

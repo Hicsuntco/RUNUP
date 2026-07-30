@@ -711,14 +711,15 @@ enum AdaptivePlanEngine {
         return "Programme mis à jour · +120 XP"
     }
 
-    /// `streak` only ever increments in `applyDebrief` above — deleting a `RunRecord` from
-    /// History never touched it, so a streak built partly on a run she then deleted stayed
-    /// stuck at its old (now-wrong) count forever. Recomputes it honestly from whatever run
-    /// dates actually remain, using the same "gap of ≤3 days doesn't break the chain" rule
-    /// `applyDebrief` uses (real rest days shouldn't zero out a streak).
-    static func recomputeStreakAfterDeletion(profile: UserProfile, remainingRuns: [RunRecord]) {
+    /// `streak` only ever increments in `applyDebrief` above — neither deleting a `RunRecord`
+    /// from History nor manually backfilling one via `AddRunSheet` touched it, so it could go
+    /// stale in either direction (stuck too high after a deletion, or missing a day she just
+    /// logged after the fact). Recomputes it honestly from whichever run dates actually exist,
+    /// using the same "gap of ≤3 days doesn't break the chain" rule `applyDebrief` uses (real
+    /// rest days shouldn't zero out a streak). Call after any History edit — add or delete.
+    static func recomputeStreak(profile: UserProfile, currentRuns: [RunRecord]) {
         let cal = Calendar.current
-        let days = Set(remainingRuns.map { cal.startOfDay(for: $0.date) }).sorted(by: >)
+        let days = Set(currentRuns.map { cal.startOfDay(for: $0.date) }).sorted(by: >)
         guard let mostRecent = days.first else {
             profile.streak = 0
             profile.lastStreakDate = nil

@@ -9,6 +9,7 @@ struct HomeView: View {
     // app's whole lifetime) just to filter it back down to unread right after. NotificationsSheet
     // has its own separate `@Query` for the full list it actually displays.
     @Query(filter: #Predicate<AppNotification> { !$0.read }) private var unreadNotifications: [AppNotification]
+    @Query(sort: \RunRecord.date, order: .reverse) private var runs: [RunRecord]
 
     private var profile: UserProfile { appState.profile }
     private var isFreeRun: Bool { profile.programPhase == .freerun }
@@ -76,6 +77,8 @@ struct HomeView: View {
                 ringsCard
 
                 sessionCard
+
+                weeklyDistanceCard
 
                 if isFreeRun {
                     Text("Pas de plan fixe — le coach te propose de quoi garder la forme, jour après jour.")
@@ -255,6 +258,58 @@ struct HomeView: View {
         .ruCard()
         // The manual-debrief sheet presents from RootTabView now — anchored here it could only
         // ever appear while this specific card was mounted on screen.
+    }
+
+    /// Replaces the old "forme du jour" readiness ring — that score barely moved week to week and
+    /// wasn't tied to anything she could act on. Total km run this week, compared against last
+    /// week, is the number every runner already watches and tries to beat — real, concrete, and
+    /// it visibly changes after every run instead of drifting inside a narrow band.
+    private func weeklyKm(weeksAgo: Int) -> Double {
+        let cal = Calendar.current
+        let thisWeekStart = AdaptivePlanEngine.currentWeekRange().lowerBound
+        guard let weekStart = cal.date(byAdding: .weekOfYear, value: -weeksAgo, to: thisWeekStart) else { return 0 }
+        let range = AdaptivePlanEngine.currentWeekRange(from: weekStart)
+        return runs.filter { range.contains($0.date) }.reduce(0) { $0 + $1.distanceKm }
+    }
+
+    private var weeklyDistanceCard: some View {
+        let thisWeek = weeklyKm(weeksAgo: 0)
+        let lastWeek = weeklyKm(weeksAgo: 1)
+        let delta = thisWeek - lastWeek
+        return Button(action: { appState.go(.stats) }) {
+            HStack(spacing: 14) {
+                VStack(alignment: .leading, spacing: 5) {
+                    EyebrowLabel(text: "Cette semaine", color: RUColor.cyan)
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), thisWeek)).displayStyle(26).foregroundColor(RUColor.textPrimary)
+                        Text("km").font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.text2)
+                    }
+                    Text(weeklyComparisonText(delta: delta, lastWeek: lastWeek))
+                        .font(RUFont.sans(12))
+                        .foregroundColor(weeklyComparisonColor(delta: delta, lastWeek: lastWeek))
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundColor(RUColor.text3)
+            }
+            .padding(16)
+        }
+        .buttonStyle(PressableStyle())
+        .ruCard()
+    }
+
+    private func weeklyComparisonText(delta: Double, lastWeek: Double) -> String {
+        guard lastWeek > 0 else {
+            return "Semaine dernière : pas de course enregistrée."
+        }
+        let deltaText = String(format: "%.1f", locale: Locale(identifier: "fr_FR"), abs(delta))
+        if delta > 0.05 { return "+\(deltaText) km vs la semaine dernière" }
+        if delta < -0.05 { return "-\(deltaText) km vs la semaine dernière" }
+        return "Comme la semaine dernière"
+    }
+
+    private func weeklyComparisonColor(delta: Double, lastWeek: Double) -> Color {
+        guard lastWeek > 0, delta > 0.05 else { return RUColor.text2 }
+        return RUColor.lime
     }
 
     private var ringsCard: some View {

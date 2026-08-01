@@ -21,8 +21,12 @@ struct PrimaryButtonStyle: ButtonStyle {
             .font(RUFont.bebas(16))
             .tracking(1)
             .foregroundColor(.white)
-            .frame(maxWidth: .infinity, minHeight: 44)
+            // Padding first, `minHeight` second — the padding contributes to the natural size so
+            // it only pads out to 44pt when needed, instead of stacking 24pt of padding on top of
+            // an already-enforced 44pt frame (the order this had right after the tap-target fix,
+            // which made every primary CTA ~68pt tall instead of the intended ~44-46pt).
             .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, minHeight: 44)
             .background(fill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             .shadow(color: RUColor.rose.opacity(isDisabled ? 0 : 0.3), radius: 16, x: 0, y: 4)
             .opacity(isDisabled ? 0.35 : (configuration.isPressed ? 0.85 : 1))

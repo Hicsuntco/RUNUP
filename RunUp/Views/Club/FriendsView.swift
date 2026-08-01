@@ -228,7 +228,6 @@ struct FriendsView: View {
                 .font(RUFont.sans(11.5, weight: .bold))
                 .foregroundColor(isActive ? RUColor.textPrimary : .white)
                 .padding(.horizontal, 13).padding(.vertical, 7)
-                .frame(minHeight: 44)
                 .background(isActive ? RUColor.card2 : RUColor.rose, in: Capsule())
                 .overlay(Capsule().stroke(isActive ? RUColor.line : Color.clear, lineWidth: RUSpacing.hairline))
         }

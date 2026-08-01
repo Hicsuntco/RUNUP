@@ -68,11 +68,10 @@ struct SocialView: View {
                 }
             }
             .foregroundColor(mode == value ? .white : RUColor.textPrimary)
-            // Padding before minHeight — same fix as `PrimaryButtonStyle`: the previous order
-            // stacked 18pt of padding on top of an already-enforced 44pt frame instead of
-            // contributing to it, making this segment ~62pt tall instead of ~44.
+            // Back to its original compact size, no enforced 44pt minimum — too big for her taste
+            // once the tap-target audit forced it up from its natural ~34pt.
             .padding(.vertical, 9)
-            .frame(maxWidth: .infinity, minHeight: 44)
+            .frame(maxWidth: .infinity)
             .background(mode == value ? RUColor.rose : .clear, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
         }
         .buttonStyle(PressableStyle())

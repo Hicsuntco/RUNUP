@@ -489,11 +489,10 @@ struct ClubView: View {
                 // accent fill below); unselected sits on the plain page/card surface and needs to
                 // invert with the theme.
                 .foregroundColor(tab == value ? .white : RUColor.textPrimary)
-                // Padding before minHeight — same fix as `PrimaryButtonStyle` (see SocialView's
-                // identical segment control): avoids stacking padding on top of an already-
-                // enforced 44pt frame.
+                // Back to its original compact size, no enforced 44pt minimum — she found the
+                // audit's forced-44pt height on this pill too big and asked for it back.
                 .padding(.vertical, 9)
-                .frame(maxWidth: .infinity, minHeight: 44)
+                .frame(maxWidth: .infinity)
                 .background(tab == value ? RUColor.rose : .clear, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
         }
         .buttonStyle(PressableStyle())

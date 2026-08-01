@@ -237,7 +237,6 @@ struct StatsView: View {
                                 : AnyShapeStyle(Color.clear),
                             in: Capsule()
                         )
-                        .frame(minWidth: 44, minHeight: 44)
                         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: selectedRange)
                 }
                 .buttonStyle(PressableStyle())

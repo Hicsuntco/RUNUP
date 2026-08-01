@@ -229,8 +229,16 @@ struct StatsView: View {
                         .font(RUFont.mono(10, weight: .medium))
                         .foregroundColor(selectedRange == range ? .white : RUColor.text2)
                         .padding(.horizontal, 9).padding(.vertical, 5)
-                        .background(selectedRange == range ? RUColor.rose : Color.clear, in: Capsule())
+                        // Same gradient fill as `SelectableChip` — a flat rose square inside this
+                        // pill read flat/dated next to it.
+                        .background(
+                            selectedRange == range
+                                ? AnyShapeStyle(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom))
+                                : AnyShapeStyle(Color.clear),
+                            in: Capsule()
+                        )
                         .frame(minWidth: 44, minHeight: 44)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: selectedRange)
                 }
                 .buttonStyle(PressableStyle())
                 .accessibilityAddTraits(selectedRange == range ? .isSelected : [])

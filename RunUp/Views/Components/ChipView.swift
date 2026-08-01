@@ -1,6 +1,8 @@
 import SwiftUI
 
-/// Selectable pill chip used throughout onboarding deep-dive steps and quick filters.
+/// Selectable pill chip used throughout onboarding deep-dive steps and quick filters (gender,
+/// injuries, level, goal, race details...). One shared component, so a single visual pass here
+/// covers every picker in the app at once instead of a dozen near-identical ones drifting apart.
 struct SelectableChip: View {
     var label: String
     var selected: Bool
@@ -8,15 +10,32 @@ struct SelectableChip: View {
 
     var body: some View {
         Button(action: action) {
-            Text(LocalizedStringKey(label))
-                .font(RUFont.sans(13, weight: .semibold))
-                .foregroundColor(selected ? .white : RUColor.text2)
-                .padding(.horizontal, 15)
-                .padding(.vertical, 11)
-                .frame(minHeight: 44)
-                .background(selected ? RUColor.rose : RUColor.card, in: Capsule())
-                .overlay(Capsule().stroke(selected ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
-                .animation(.easeOut(duration: 0.15), value: selected)
+            HStack(spacing: 5) {
+                if selected {
+                    // A small affordance beyond color alone — the flat rose fill used to be the
+                    // only signal a chip was picked, easy to miss at a glance across a whole row.
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 10, weight: .bold))
+                        .transition(.scale.combined(with: .opacity))
+                }
+                Text(LocalizedStringKey(label))
+                    .font(RUFont.sans(13, weight: .semibold))
+            }
+            .foregroundColor(selected ? .white : RUColor.text2)
+            .padding(.horizontal, 15)
+            .padding(.vertical, 11)
+            .frame(minHeight: 44)
+            // A flat solid fill read flat/dated — the same rose2→rose gradient the RUN button
+            // already uses gives selection real depth without introducing a new accent.
+            .background(
+                selected
+                    ? AnyShapeStyle(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom))
+                    : AnyShapeStyle(RUColor.card),
+                in: Capsule()
+            )
+            .overlay(Capsule().stroke(selected ? Color.clear : RUColor.line, lineWidth: RUSpacing.hairline))
+            .shadow(color: RUColor.rose.opacity(selected ? 0.3 : 0), radius: 10, x: 0, y: 4)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: selected)
         }
         .buttonStyle(PressableStyle())
         .accessibilityAddTraits(selected ? .isSelected : [])

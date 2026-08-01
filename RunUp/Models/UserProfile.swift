@@ -151,9 +151,6 @@ final class UserProfile {
     /// picking a shoe on every single run — `ShoesView` is where this actually gets set. `nil`
     /// until she's added at least one pair, or after her only/default pair is retired.
     var defaultShoeID: UUID? = nil
-    /// `FrenchDepartement.slug` for the "Courses officielles" card's calendar link — remembered
-    /// so she only has to pick it once, not on every visit to Club.
-    var homeDepartementSlug: String? = nil
 
     // MARK: Meta
     /// No paid tier ships in this version — everyone gets full access. Kept as a field (rather

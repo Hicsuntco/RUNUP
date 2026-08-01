@@ -55,11 +55,6 @@ struct ClubView: View {
             VStack(alignment: .leading, spacing: 10) {
                 header
 
-                // Independent of club membership/sign-in — finding a real race to run isn't a
-                // club feature, it's just co-located here per her request, so it shows regardless
-                // of which branch below fires.
-                OfficialRacesCard()
-
                 if !auth.isSignedIn {
                     signInPrompt
                 } else if isLoading && board.club == nil {

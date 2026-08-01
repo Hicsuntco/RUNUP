@@ -36,8 +36,8 @@ targets:
           - fr
           - en
           - es
-        CFBundleShortVersionString: "2.4"
-        CFBundleVersion: "14"
+        CFBundleShortVersionString: "2.3"
+        CFBundleVersion: "13"
         # Synthesized launch storyboard (no custom .storyboard file) — a plain color is all it
         # can show (the real animated wordmark only runs once app code is live, see
         # `SplashView`), but this stops the default white flash before that even appears.
@@ -152,8 +152,8 @@ targets:
         CFBundleDisplayName: RunUp
         # App Store validation requires an extension's version to match its host app's — keep
         # these two in step with `RunUp`'s `CFBundleShortVersionString`/`CFBundleVersion` above.
-        CFBundleShortVersionString: "2.4"
-        CFBundleVersion: "14"
+        CFBundleShortVersionString: "2.3"
+        CFBundleVersion: "13"
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
         # Only the 2 families this widget's redesign actually uses (Bebas Neue for the streak/ring
@@ -200,8 +200,8 @@ targets:
       properties:
         CFBundleDisplayName: RunUp
         # Must track the iOS app's version pair exactly — App Store validation requires it.
-        CFBundleShortVersionString: "2.4"
-        CFBundleVersion: "14"
+        CFBundleShortVersionString: "2.3"
+        CFBundleVersion: "13"
         WKApplication: true
         WKCompanionAppBundleIdentifier: com.hicsuntco.runup
         # Without the workout-processing background mode, watchOS suspends the app seconds after

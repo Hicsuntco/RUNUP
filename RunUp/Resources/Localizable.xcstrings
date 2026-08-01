@@ -11792,6 +11792,102 @@
           }
         }
       }
+    },
+    "Courses officielles": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Official races"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carreras oficiales"
+          }
+        }
+      }
+    },
+    "Choisir un département": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a département"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir un departamento"
+          }
+        }
+      }
+    },
+    "VOIR LE CALENDRIER": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VIEW CALENDAR"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VER CALENDARIO"
+          }
+        }
+      }
+    },
+    "Ton département": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your département"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu departamento"
+          }
+        }
+      }
+    },
+    "Département ou numéro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Département or number"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Departamento o número"
+          }
+        }
+      }
+    },
+    "Choisis un département pour voir les courses officielles à venir près de chez toi.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a département to see official upcoming races near you."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un departamento para ver las carreras oficiales próximas cerca de ti."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

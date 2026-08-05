@@ -11888,6 +11888,22 @@
           }
         }
       }
+    },
+    "Informations générales": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General information"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Información general"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

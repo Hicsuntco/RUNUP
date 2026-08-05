@@ -74,14 +74,14 @@ struct MoreSettingsView: View {
 
     private var programCard: some View {
         VStack(spacing: 0) {
-            programRow("Voir mon objectif") { dismiss(); appState.go(.race) }
+            programRow("flag.checkered", "Voir mon objectif") { dismiss(); appState.go(.race) }
             Divider().background(RUColor.line)
-            programRow("Modifier jours & objectif") { dismiss(); appState.openProgramSettings() }
+            programRow("slider.horizontal.3", "Modifier jours & objectif") { dismiss(); appState.openProgramSettings() }
             Divider().background(RUColor.line)
             // Opens the same wizard `ChoiceView` offers at the end of a program — only touches
             // goal/distance/allure/jours, keeps everything else (nom, blessures, cycle...) as-is.
             // The old "Refaire l'onboarding" re-asked all of it just to change the training plan.
-            programRow("Refaire un programme") { dismiss(); appState.newGoalWizardPresented = true }
+            programRow("arrow.counterclockwise", "Refaire un programme") { dismiss(); appState.newGoalWizardPresented = true }
             if profile.programPhase != .freerun {
                 Divider().background(RUColor.line)
                 // The direct route to `.freerun` — before this, the only way in was "Terminer le
@@ -90,7 +90,7 @@ struct MoreSettingsView: View {
                 // run casually for a while, when what's actually wanted (course libre: suggested
                 // sessions with no pace/distance target, just maintien/progression) already
                 // exists — it just needed a way in that doesn't run through recovery first.
-                programRow("Passer en mode course libre") {
+                programRow("figure.run", "Passer en mode course libre") {
                     AdaptivePlanEngine.chooseFreeRun(profile)
                     appState.toast("Mode course libre activé — suggestions sans objectif de perf")
                     dismiss()
@@ -98,7 +98,7 @@ struct MoreSettingsView: View {
             }
             if profile.programPhase == .active {
                 Divider().background(RUColor.line)
-                programRow("Terminer le programme") {
+                programRow("checkmark.seal", "Terminer le programme") {
                     AdaptivePlanEngine.endProgram(profile)
                     appState.toast("Programme terminé · récupération en cours")
                     dismiss()
@@ -108,9 +108,10 @@ struct MoreSettingsView: View {
         .ruCard()
     }
 
-    private func programRow(_ label: String, action: @escaping () -> Void) -> some View {
+    private func programRow(_ icon: String, _ label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack {
+            HStack(spacing: 12) {
+                rowIcon(icon)
                 Text(label).font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
                 Text("›").foregroundColor(RUColor.text2)
@@ -118,6 +119,15 @@ struct MoreSettingsView: View {
             .padding(.horizontal, 14).padding(.vertical, 13)
         }
         .buttonStyle(PressableStyle())
+    }
+
+    /// Small leading glyph on every settings row — every card here used to be label-plus-control
+    /// with nothing to distinguish one row from the next at a glance except the text itself.
+    private func rowIcon(_ systemName: String, color: Color = RUColor.rose2) -> some View {
+        Image(systemName: systemName)
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundColor(color)
+            .frame(width: 22)
     }
 
     /// Injury used to only ever be askable once, during onboarding — with no way back to it, a
@@ -144,6 +154,7 @@ struct MoreSettingsView: View {
     private var runSettingsCard: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
+                rowIcon("pause.circle")
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Pause automatique aux arrêts").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
                     Text("Met la course en pause si tu t'arrêtes, reprend toute seule.")
@@ -158,6 +169,7 @@ struct MoreSettingsView: View {
             .padding(14)
             Divider().background(RUColor.line)
             HStack {
+                rowIcon("speaker.wave.2")
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Alertes vocales d'allure").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
                     Text("Prévient à voix haute si tu t'écartes de ton allure cible.")
@@ -176,7 +188,7 @@ struct MoreSettingsView: View {
 
     private var shoesCard: some View {
         VStack(spacing: 0) {
-            programRow("Mes chaussures") { dismiss(); appState.go(.shoes) }
+            programRow("shoeprints.fill", "Mes chaussures") { dismiss(); appState.go(.shoes) }
         }
         .ruCard()
     }
@@ -189,6 +201,7 @@ struct MoreSettingsView: View {
     private var cycleCard: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
+                rowIcon("drop.fill")
                 Text("Suivi du cycle").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
                 Toggle("", isOn: Binding(
@@ -301,6 +314,7 @@ struct MoreSettingsView: View {
         VStack(spacing: 0) {
             if let user = appState.auth.currentUser {
                 HStack {
+                    rowIcon("person.crop.circle")
                     Text("Connectée en tant que \(user.name)").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
                     Spacer()
                 }
@@ -309,10 +323,11 @@ struct MoreSettingsView: View {
             }
             identityEditor
             Divider().background(RUColor.line)
-            programRow("Se déconnecter") { appState.auth.signOut(); dismiss() }
+            programRow("arrow.right.square", "Se déconnecter") { appState.auth.signOut(); dismiss() }
             Divider().background(RUColor.line)
             Button(action: { showDeleteAccountConfirm = true }) {
-                HStack {
+                HStack(spacing: 12) {
+                    rowIcon("trash", color: RUColor.rose)
                     Text("Supprimer mon compte").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.rose)
                     Spacer()
                     if isDeletingAccount { ProgressView().tint(RUColor.rose) }
@@ -340,6 +355,7 @@ struct MoreSettingsView: View {
         VStack(spacing: 0) {
             Link(destination: feedbackMailURL) {
                 HStack {
+                    rowIcon("envelope")
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Donner mon avis").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
                         Text("Un bug, une idée, un truc qui t'a gênée — ça part par mail.")

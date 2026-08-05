@@ -6,6 +6,10 @@ import UIKit
 /// produced), with no way to log a run that wasn't GPS-tracked or to fix a mistake. This writes a
 /// real `RunRecord` via the same model everything else (`HistoryView`, `StatsView`) already
 /// `@Query`s, so a manually-added run shows up everywhere automatically.
+///
+/// Laid out as one grouped list of icon + label + trailing-value rows (same shape
+/// `MoreSettingsView` uses) rather than a stack of separate labelled cards — a single native-
+/// feeling form instead of several small ones.
 struct AddRunSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
@@ -28,45 +32,34 @@ struct AddRunSheet: View {
         Double(durationMinutesText.replacingOccurrences(of: ",", with: "."))
     }
     private var isValid: Bool { (distance ?? 0) > 0 && (durationMinutes ?? 0) > 0 }
+    private var selectedShoeName: String {
+        activeShoes.first { $0.id == selectedShoeID }?.name ?? "Aucune"
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        EyebrowLabel(text: "Date", color: RUColor.text3)
-                        DatePicker("", selection: $date, in: ...Date.now, displayedComponents: .date)
-                            .datePickerStyle(.compact)
-                            .labelsHidden()
-                            .colorScheme(RUColor.colorScheme)
+                    EyebrowLabel(text: "Informations générales", color: RUColor.text3)
+                    VStack(spacing: 0) {
+                        dateRow
+                        Divider().background(RUColor.line)
+                        typeRow
+                        Divider().background(RUColor.line)
+                        numRow(icon: "ruler", label: "Distance", value: $distanceText, unit: "km", placeholder: "8,2")
+                        Divider().background(RUColor.line)
+                        numRow(icon: "clock", label: "Durée", value: $durationMinutesText, unit: "min", placeholder: "45")
                     }
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        EyebrowLabel(text: "Type de séance", color: RUColor.text3)
-                        ChipFlowLayout {
-                            ForEach(Self.titles, id: \.self) { t in
-                                SelectableChip(label: t, selected: title == t) { title = t }
-                            }
-                        }
-                    }
-
-                    HStack(spacing: 10) {
-                        numField(label: "Distance", value: $distanceText, unit: "km", placeholder: "8,2")
-                        numField(label: "Durée", value: $durationMinutesText, unit: "min", placeholder: "45")
-                    }
+                    .ruCard()
 
                     // Only shown once she's actually added a pair — no point cluttering this form
                     // with a picker for a feature she isn't using.
                     if !activeShoes.isEmpty {
-                        VStack(alignment: .leading, spacing: 8) {
-                            EyebrowLabel(text: "Chaussures", color: RUColor.text3)
-                            ChipFlowLayout {
-                                SelectableChip(label: "Aucune", selected: selectedShoeID == nil) { selectedShoeID = nil }
-                                ForEach(activeShoes) { shoe in
-                                    SelectableChip(label: shoe.name, selected: selectedShoeID == shoe.id) { selectedShoeID = shoe.id }
-                                }
-                            }
+                        EyebrowLabel(text: "Chaussures", color: RUColor.text3)
+                        VStack(spacing: 0) {
+                            shoeRow
                         }
+                        .ruCard()
                     }
                 }
                 .padding(18)
@@ -112,27 +105,95 @@ struct AddRunSheet: View {
         dismiss()
     }
 
-    private func numField(label: String, value: Binding<String>, unit: String, placeholder: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            EyebrowLabel(text: label, color: RUColor.text3)
-            HStack {
-                TextField("", text: value, prompt: Text(placeholder).foregroundColor(RUColor.text3))
-                    .keyboardType(.decimalPad)
-                    .foregroundColor(RUColor.textPrimary)
-                    .toolbar {
-                        ToolbarItemGroup(placement: .keyboard) {
-                            Spacer()
-                            Button("Terminé") {
-                                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                            }
+    /// Small leading glyph on every row — same treatment `MoreSettingsView` uses so a manual
+    /// entry form and a settings form read as the same design language.
+    private func rowIcon(_ systemName: String) -> some View {
+        Image(systemName: systemName)
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundColor(RUColor.rose2)
+            .frame(width: 22)
+    }
+
+    private var dateRow: some View {
+        HStack {
+            rowIcon("calendar")
+            Text("Date").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+            Spacer()
+            DatePicker("", selection: $date, in: ...Date.now, displayedComponents: .date)
+                .datePickerStyle(.compact)
+                .labelsHidden()
+                .colorScheme(RUColor.colorScheme)
+        }
+        .padding(.horizontal, 14)
+        .frame(minHeight: 48)
+    }
+
+    private var typeRow: some View {
+        HStack {
+            rowIcon("list.bullet")
+            Text("Type de séance").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+            Spacer()
+            Menu {
+                ForEach(Self.titles, id: \.self) { t in
+                    Button(t) { title = t }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Text(LocalizedStringKey(title))
+                    Image(systemName: "chevron.up.chevron.down").font(.system(size: 10, weight: .semibold))
+                }
+                .font(RUFont.sans(13.5, weight: .medium))
+                .foregroundColor(RUColor.text2)
+            }
+        }
+        .padding(.horizontal, 14)
+        .frame(minHeight: 48)
+    }
+
+    private var shoeRow: some View {
+        HStack {
+            rowIcon("shoeprints.fill")
+            Text("Chaussures").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+            Spacer()
+            Menu {
+                Button("Aucune") { selectedShoeID = nil }
+                ForEach(activeShoes) { shoe in
+                    Button(shoe.name) { selectedShoeID = shoe.id }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Text(selectedShoeName)
+                    Image(systemName: "chevron.up.chevron.down").font(.system(size: 10, weight: .semibold))
+                }
+                .font(RUFont.sans(13.5, weight: .medium))
+                .foregroundColor(RUColor.text2)
+            }
+        }
+        .padding(.horizontal, 14)
+        .frame(minHeight: 48)
+    }
+
+    private func numRow(icon: String, label: String, value: Binding<String>, unit: String, placeholder: String) -> some View {
+        HStack {
+            rowIcon(icon)
+            Text(LocalizedStringKey(label)).font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+            Spacer()
+            TextField("", text: value, prompt: Text(placeholder).foregroundColor(RUColor.text3))
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.trailing)
+                .foregroundColor(RUColor.textPrimary)
+                .frame(width: 60)
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Terminé") {
+                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                         }
                     }
-                Text(unit).font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.text2)
-            }
-            .padding(13)
-            .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                }
+            Text(unit).font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.text2)
         }
-        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 14)
+        .frame(minHeight: 48)
     }
 }

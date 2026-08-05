@@ -25,4 +25,9 @@ struct RunActivityAttributes: ActivityAttributes {
     /// Fixed for the run's whole lifetime, set once at `Activity.request(attributes:)` — unlike
     /// `ContentState`, this never updates mid-run.
     var sessionTitle: String
+    /// `WorkoutSession.durationMinutes` at the moment the run started — real planned data (unlike
+    /// distance, which no `WorkoutSession` actually tracks), so the Lock Screen's progress bar
+    /// shows genuine "how far into the session" rather than a fabricated distance target. 0 for a
+    /// rest-day/free-run session with no real plan behind it; the widget hides the bar then.
+    var plannedDurationMinutes: Int = 0
 }

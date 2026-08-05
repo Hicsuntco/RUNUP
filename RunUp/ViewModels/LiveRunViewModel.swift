@@ -424,7 +424,7 @@ final class LiveRunViewModel {
 
     private func startLiveActivity() {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
-        let attributes = RunActivityAttributes(sessionTitle: profile.todaySession.title)
+        let attributes = RunActivityAttributes(sessionTitle: profile.todaySession.title, plannedDurationMinutes: profile.todaySession.durationMinutes)
         let state = RunActivityAttributes.ContentState(distanceKm: 0, elapsedSeconds: 0, paceLabel: "--:--", isPaused: false, timerReference: Date())
         liveActivity = try? Activity.request(attributes: attributes, content: ActivityContent(state: state, staleDate: .now + 60), pushType: nil)
     }

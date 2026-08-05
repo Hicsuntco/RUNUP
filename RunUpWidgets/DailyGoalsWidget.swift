@@ -51,13 +51,13 @@ struct DailyGoalsProvider: TimelineProvider {
     }
 }
 
-/// Fourth pass on the visual design — the previous layout buried a 56pt ring under three lines of
-/// small text, which read as timid next to Apple Fitness's own widget (whose entire design is
-/// "the rings ARE the widget"). This pass makes the ring the hero: it nearly fills the small
-/// size and anchors the medium one, with the done-count set inside it in the display face, and
-/// the per-goal detail demoted to compact bars beside it. Also fixes a silent font fallback: the
-/// old body used "DMSans-Medium", which was never registered in this target's UIAppFonts (only
-/// Bold/SemiBold are) — it rendered as plain system font, part of why the widget felt generic.
+/// Fifth pass on the visual design. The previous (fourth) pass made a ring the hero — refined, but
+/// still a soft gradient card with corner glows, closer to the app's own energetic in-app cards
+/// than the flat, high-contrast "scoreboard" look she wants for the Home Screen specifically (real
+/// references: solid black tiles, oversized flat numbers, tiny tracked-caps labels, zero
+/// gradients/glow anywhere). This pass drops the ring, the gradient background, and both radial
+/// glows in favor of a flat fill and huge Bebas Neue numerals — same real data as before
+/// (`DailyGoalsSnapshot`), just presented the way the reference does.
 struct DailyGoalsWidgetView: View {
     @Environment(\.widgetFamily) private var family
     let snapshot: DailyGoalsSnapshot
@@ -74,20 +74,17 @@ struct DailyGoalsWidgetView: View {
     }()
 
     private var isLight: Bool { snapshot.isLightMode }
+    /// [rose2, rose, violet] — whichever accent she actually picked in-app, never a fixed color,
+    /// so the widget always matches. `rose` (index 1) is the one flat hero color this design
+    /// spends everywhere else stays neutral white/gray.
     private var colors: [Color] { WidgetAccentPalette.ringColors(themeID: snapshot.accentThemeID, isLight: isLight) }
-    /// The ring's "rose" swatch — used for accents and glows so both always match whatever accent
-    /// she actually picked, not a fixed brand color.
     private var roseColor: Color { colors[1] }
-    private var violetColor: Color { colors[2] }
 
-    private var bgGradient: LinearGradient {
-        LinearGradient(
-            colors: isLight ? [Color(hex: 0xFAFAFC), .white] : [Color(hex: 0x191922), Color(hex: 0x0E0E14)],
-            startPoint: .topLeading, endPoint: .bottomTrailing
-        )
-    }
+    /// Flat, not a gradient — the whole point of this pass. Pure white in light mode, pure black
+    /// in dark, same "no gradient anywhere" rule the in-app light-mode pass applies too.
+    private var bg: Color { isLight ? .white : .black }
     private var textPrimary: Color { isLight ? Color(hex: 0x15151C) : .white }
-    private var text2: Color { isLight ? .black.opacity(0.5) : .white.opacity(0.5) }
+    private var text2: Color { isLight ? .black.opacity(0.45) : .white.opacity(0.4) }
     private var flameColor: Color { snapshot.streak > 0 ? Color(hex: 0xFFB03D) : text2 }
 
     /// French-style thousands grouping ("2 400", not "2400") for the steps count.
@@ -109,130 +106,86 @@ struct DailyGoalsWidgetView: View {
             default: smallBody
             }
         }
-        .containerBackground(for: .widget) {
-            ZStack {
-                bgGradient
-                // Dual corner glows (rose top-left, violet bottom-right) — the same two-tone
-                // atmosphere the app's own hero cards carry, instead of a single washed corner.
-                RadialGradient(colors: [roseColor.opacity(isLight ? 0.14 : 0.30), .clear], center: .topLeading, startRadius: 0, endRadius: 150)
-                RadialGradient(colors: [violetColor.opacity(isLight ? 0.10 : 0.22), .clear], center: .bottomTrailing, startRadius: 0, endRadius: 150)
-                // Ghost arc bleeding off the top-right corner — pure depth, no data. The flat
-                // gradient alone read as empty around the content.
-                Circle()
-                    .stroke((isLight ? Color.black : Color.white).opacity(0.035), lineWidth: 13)
-                    .frame(width: 170, height: 170)
-                    .offset(x: 105, y: -75)
-            }
-        }
+        .containerBackground(for: .widget) { bg }
     }
 
-    /// Small: the ring IS the widget — count inside, streak as a corner badge, nothing else.
-    /// Sized from the real available space (iOS 17 content margins vary per device) — the old
-    /// fixed 116pt ring drew a ~130pt visual extent (centered stroke overshoots the frame) and
-    /// clipped its outer arcs on smaller widgets.
+    /// Small: one huge flat number ("2/3 BOUCLÉS"), two compact sub-stats below, streak as a
+    /// corner badge — no ring, no card chrome, just numbers on flat black/white.
     private var smallBody: some View {
-        GeometryReader { geo in
-            let side = min(geo.size.width, geo.size.height)
-            centerCountRing(size: max(80, side - 14), countSize: 32)
-                .frame(width: geo.size.width, height: geo.size.height)
+        VStack(spacing: 3) {
+            Spacer(minLength: 0)
+            Text("\(snapshot.dailyGoalsDone)/\(snapshot.dailyGoalsTotal)")
+                .font(.custom("BebasNeue-Regular", size: 46))
+                .foregroundColor(roseColor)
+            Text("BOUCLÉS")
+                .font(.custom("DMSans-Bold", size: 9))
+                .tracking(1.6)
+                .foregroundColor(text2)
+            Spacer(minLength: 0)
+            HStack {
+                subStat(label: "PAS", value: snapshot.stepsRemaining > 0 ? "-\(grouped(snapshot.stepsRemaining))" : "✓")
+                Spacer()
+                subStat(label: "KCAL", value: snapshot.activeCaloriesRemaining > 0 ? "-\(grouped(snapshot.activeCaloriesRemaining))" : "✓", trailing: true)
+            }
         }
+        .padding(16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .overlay(alignment: .topTrailing) {
             if snapshot.streak > 0 { streakBadge }
         }
     }
 
-    private var mediumBody: some View {
-        HStack(spacing: 15) {
-            centerCountRing(size: 104, countSize: 32)
-            VStack(alignment: .leading, spacing: 8) {
-                // Header: eyebrow + streak — anchors the panel the way the app's own cards open
-                // with an eyebrow, instead of dropping straight into bars.
-                HStack(alignment: .center) {
-                    Text("AUJOURD'HUI")
-                        .font(.custom("DMSans-Bold", size: 8.5))
-                        .tracking(1.8)
-                        .foregroundColor(roseColor)
-                    Spacer(minLength: 0)
-                    HStack(spacing: 3) {
-                        Image(systemName: "flame.fill").font(.system(size: 10))
-                        Text("\(snapshot.streak)").font(.custom("BebasNeue-Regular", size: 15))
-                    }
-                    .foregroundColor(flameColor)
-                }
-                goalBar(index: 0, label: "SÉANCE", trailing: snapshot.isRestDay ? "Repos" : (snapshot.progress[safe: 0] ?? 0 >= 1 ? nil : "À faire"))
-                goalBar(index: 1, label: "KCAL", trailing: snapshot.activeCaloriesRemaining > 0 ? "-\(grouped(snapshot.activeCaloriesRemaining))" : nil)
-                goalBar(index: 2, label: "PAS", trailing: snapshot.stepsRemaining > 0 ? "-\(grouped(snapshot.stepsRemaining))" : nil)
-                HStack(spacing: 8) {
-                    weekDots
-                    Spacer(minLength: 0)
-                    Text(Self.footerDateFormatter.string(from: entryDate).uppercased())
-                        .font(.custom("DMSans-SemiBold", size: 7))
-                        .tracking(0.8)
-                        .foregroundColor(text2.opacity(0.7))
-                }
-                .padding(.top, 1)
-            }
+    private func subStat(label: String, value: String, trailing: Bool = false) -> some View {
+        VStack(alignment: trailing ? .trailing : .leading, spacing: 1) {
+            Text(value).font(.custom("DMSans-Bold", size: 11)).foregroundColor(textPrimary)
+            Text(label).font(.custom("DMSans-Bold", size: 6.5)).tracking(0.8).foregroundColor(text2)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    /// The ring with the "2/3" count set inside it — one glance, one number, same read as the
-    /// app's own RingsView hero.
-    private func centerCountRing(size: CGFloat, countSize: CGFloat) -> some View {
-        ZStack {
-            WidgetRingView(progress: snapshot.progress, colors: colors, size: size, isLight: isLight)
-                .shadow(color: .black.opacity(isLight ? 0.14 : 0.4), radius: size / 10.5, x: 0, y: size / 21)
-            VStack(spacing: -2) {
+    /// Medium: the same flat hero number leads, a 2x2 grid of real stats underneath (séance/kcal/
+    /// pas/série — everything `DailyGoalsSnapshot` actually carries, nothing invented), week dots
+    /// and the date along the bottom.
+    private var mediumBody: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .lastTextBaseline, spacing: 6) {
                 Text("\(snapshot.dailyGoalsDone)/\(snapshot.dailyGoalsTotal)")
-                    .font(.custom("BebasNeue-Regular", size: countSize))
-                    .foregroundColor(textPrimary)
+                    .font(.custom("BebasNeue-Regular", size: 30))
+                    .foregroundColor(roseColor)
                 Text("BOUCLÉS")
-                    .font(.custom("DMSans-Bold", size: 6.5))
+                    .font(.custom("DMSans-Bold", size: 8.5))
                     .tracking(1.2)
                     .foregroundColor(text2)
+                Spacer(minLength: 0)
+                Text(Self.footerDateFormatter.string(from: entryDate).uppercased())
+                    .font(.custom("DMSans-SemiBold", size: 7.5))
+                    .tracking(0.6)
+                    .foregroundColor(text2)
             }
+            LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)], spacing: 10) {
+                gridCell(
+                    value: snapshot.isRestDay ? "Repos" : ((snapshot.progress[safe: 0] ?? 0) >= 1 ? "✓" : "À faire"),
+                    label: "SÉANCE"
+                )
+                gridCell(value: "\(snapshot.streak)", label: "SÉRIE", valueColor: flameColor)
+                gridCell(value: snapshot.activeCaloriesRemaining > 0 ? "-\(grouped(snapshot.activeCaloriesRemaining))" : "✓", label: "KCAL")
+                gridCell(value: snapshot.stepsRemaining > 0 ? "-\(grouped(snapshot.stepsRemaining))" : "✓", label: "PAS")
+            }
+            Spacer(minLength: 0)
+            weekDots
         }
+        .padding(16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    /// One compact goal row: label, a gradient-filled bar in the goal's own ring color (same
-    /// darkened→full sweep as the ring's own segments), and what's left — or a checkmark — on the
-    /// trailing edge in the display face. `trailing: nil` means the goal is done.
-    private func goalBar(index: Int, label: String, trailing: String?) -> some View {
-        let pct = max(0, min(1, snapshot.progress[safe: index] ?? 0))
-        let color = colors[safe: index] ?? roseColor
-        return HStack(spacing: 8) {
-            Text(label)
-                .font(.custom("DMSans-Bold", size: 8))
-                .tracking(0.8)
-                .foregroundColor(text2)
-                .frame(width: 44, alignment: .leading)
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(color.opacity(isLight ? 0.22 : 0.18))
-                    Capsule()
-                        .fill(LinearGradient(colors: [color.darkened(0.28), color], startPoint: .leading, endPoint: .trailing))
-                        .frame(width: geo.size.width * pct)
-                }
-            }
-            .frame(height: 5.5)
-            Group {
-                if let trailing {
-                    Text(trailing)
-                        .font(trailing == "À faire" ? .custom("DMSans-Bold", size: 8) : .custom("BebasNeue-Regular", size: 12))
-                        .foregroundColor(trailing == "À faire" ? text2 : textPrimary.opacity(0.92))
-                } else {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundColor(color)
-                }
-            }
-            .frame(minWidth: 37, alignment: .trailing)
+    private func gridCell(value: String, label: String, valueColor: Color? = nil) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(value).font(.custom("DMSans-Bold", size: 13)).foregroundColor(valueColor ?? textPrimary)
+            Text(label).font(.custom("DMSans-Bold", size: 7)).tracking(0.8).foregroundColor(text2)
         }
     }
 
     /// The week at a glance, compressed to 7 dots (done = filled rose, today = an open rose ring,
-    /// rest = faint) — the previous lettered 15pt-circle row ate a third of the widget for
-    /// information that only needs a hint.
+    /// rest = faint) — a hint, not a full lettered row.
     private var weekDots: some View {
         HStack(spacing: 4.5) {
             ForEach(Array(snapshot.weekStrip.enumerated()), id: \.offset) { _, day in
@@ -240,7 +193,7 @@ struct DailyGoalsWidgetView: View {
                     Circle().stroke(roseColor, lineWidth: 1.2).frame(width: 5, height: 5)
                 } else {
                     Circle()
-                        .fill(day.isDone ? roseColor : text2.opacity(0.25))
+                        .fill(day.isDone ? roseColor : text2.opacity(0.4))
                         .frame(width: 5.5, height: 5.5)
                 }
             }

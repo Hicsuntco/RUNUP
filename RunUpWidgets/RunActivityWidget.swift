@@ -8,9 +8,14 @@ import SwiftUI
 /// live `ThemeStore`/accent color anyway — fixed dark + the app's rose brand color, same as
 /// `RunShareCardView`'s deliberately-fixed palette for a similar reason (a system surface outside
 /// her in-app theme choice).
+///
+/// Lock Screen redone flat and high-contrast to match `DailyGoalsWidget`'s pass: true black, no
+/// gradient, the real brand fonts instead of the system rounded design, and a progress bar toward
+/// the session's *planned duration* — the one real "how far in am I" number a `WorkoutSession`
+/// actually tracks (there's no distance target to show honestly; sessions are duration-based).
 struct RunActivityWidget: Widget {
     private static let accent = Color(hex: 0xFF0F5B)
-    private static let bg = Color(hex: 0x0E0E14)
+    private static let bg = Color.black
 
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: RunActivityAttributes.self) { context in
@@ -20,24 +25,24 @@ struct RunActivityWidget: Widget {
                 DynamicIslandExpandedRegion(.leading) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(String(format: "%.2f", locale: Locale(identifier: "fr_FR"), context.state.distanceKm))
-                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .font(.custom("BebasNeue-Regular", size: 24))
                             .foregroundColor(.white)
-                        Text("KM").font(.system(size: 9, weight: .bold, design: .rounded)).foregroundColor(.white.opacity(0.5))
+                        Text("KM").font(.custom("DMSans-Bold", size: 9)).tracking(1).foregroundColor(.white.opacity(0.5))
                     }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     VStack(alignment: .trailing, spacing: 2) {
-                        Text(context.state.paceLabel).font(.system(size: 16, weight: .semibold, design: .rounded)).foregroundColor(.white)
-                        Text("/KM").font(.system(size: 9, weight: .bold, design: .rounded)).foregroundColor(.white.opacity(0.5))
+                        Text(context.state.paceLabel).font(.custom("BebasNeue-Regular", size: 18)).foregroundColor(.white)
+                        Text("/KM").font(.custom("DMSans-Bold", size: 9)).tracking(1).foregroundColor(.white.opacity(0.5))
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     HStack(spacing: 6) {
                         Image(systemName: statusIcon(context.state))
-                        Text(context.attributes.sessionTitle).font(.system(size: 12, weight: .medium, design: .rounded)).lineLimit(1).minimumScaleFactor(0.7)
+                        Text(context.attributes.sessionTitle).font(.custom("DMSans-SemiBold", size: 12)).lineLimit(1).minimumScaleFactor(0.7)
                         Spacer()
                         elapsedText(context.state)
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .font(.custom("DMSans-Bold", size: 13))
                             .monospacedDigit()
                     }
                     .foregroundColor(.white.opacity(0.85))
@@ -46,7 +51,7 @@ struct RunActivityWidget: Widget {
                 Image(systemName: "figure.run").foregroundColor(Self.accent)
             } compactTrailing: {
                 elapsedText(context.state)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(.custom("DMSans-Bold", size: 13))
                     .monospacedDigit()
                     .foregroundColor(.white)
                     .frame(maxWidth: 52)
@@ -58,28 +63,72 @@ struct RunActivityWidget: Widget {
     }
 
     private func lockScreenView(context: ActivityViewContext<RunActivityAttributes>) -> some View {
-        HStack(spacing: 16) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(context.attributes.sessionTitle)
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundColor(.white.opacity(0.6))
-                    .lineLimit(1)
-                Text(String(format: "%.2f km", locale: Locale(identifier: "fr_FR"), context.state.distanceKm))
-                    .font(.system(size: 26, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("RUN")
+                    .font(.custom("BebasNeue-Regular", size: 17))
+                    .tracking(1)
+                    .foregroundColor(Self.accent)
+                Spacer()
+                HStack(spacing: 6) {
+                    Text(context.attributes.sessionTitle)
+                        .font(.custom("DMSans-SemiBold", size: 11))
+                        .foregroundColor(.white.opacity(0.55))
+                        .lineLimit(1)
+                    statusBadge(context.state)
+                }
             }
-            Spacer(minLength: 8)
-            VStack(alignment: .trailing, spacing: 2) {
-                Text("\(context.state.paceLabel)/km").font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundColor(.white)
-                elapsedText(context.state)
-                    .font(.system(size: 13, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundColor(.white.opacity(0.6))
+
+            HStack {
+                metric(value: String(format: "%.2f", locale: Locale(identifier: "fr_FR"), context.state.distanceKm), label: "KM")
+                Spacer(minLength: 8)
+                metric(value: context.state.paceLabel, label: "ALLURE")
+                Spacer(minLength: 8)
+                VStack(alignment: .trailing, spacing: 1) {
+                    elapsedText(context.state)
+                        .font(.custom("BebasNeue-Regular", size: 26))
+                        .foregroundColor(.white)
+                    Text("TEMPS").font(.custom("DMSans-Bold", size: 8.5)).tracking(1).foregroundColor(.white.opacity(0.4))
+                }
+            }
+
+            if context.attributes.plannedDurationMinutes > 0 {
+                let plannedSeconds = Double(context.attributes.plannedDurationMinutes * 60)
+                let fraction = max(0, min(1, context.state.elapsedSeconds / plannedSeconds))
+                VStack(alignment: .leading, spacing: 5) {
+                    HStack {
+                        Text("SÉANCE").font(.custom("DMSans-Bold", size: 8.5)).tracking(1).foregroundColor(.white.opacity(0.4))
+                        Spacer()
+                        Text("\(context.attributes.plannedDurationMinutes) MIN PRÉVUES").font(.custom("DMSans-Bold", size: 8.5)).tracking(0.6).foregroundColor(.white.opacity(0.4))
+                    }
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Color.white.opacity(0.12))
+                            Capsule().fill(Self.accent).frame(width: geo.size.width * fraction)
+                        }
+                    }
+                    .frame(height: 5)
+                }
             }
         }
         .padding(16)
         .activityBackgroundTint(Self.bg)
         .activitySystemActionForegroundColor(.white)
+    }
+
+    private func metric(value: String, label: String) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(value)
+                .font(.custom("BebasNeue-Regular", size: 26))
+                .foregroundColor(.white)
+            Text(label).font(.custom("DMSans-Bold", size: 8.5)).tracking(1).foregroundColor(.white.opacity(0.4))
+        }
+    }
+
+    private func statusBadge(_ state: RunActivityAttributes.ContentState) -> some View {
+        Image(systemName: statusIcon(state))
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundColor(state.isPaused ? .white.opacity(0.5) : Self.accent)
     }
 
     private func statusIcon(_ state: RunActivityAttributes.ContentState) -> String {

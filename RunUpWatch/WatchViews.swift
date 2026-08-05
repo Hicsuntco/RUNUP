@@ -4,7 +4,9 @@ import SwiftUI
 // shared target source), and the watch only needs this handful of values. Same Midnight Rose
 // palette as the phone, via the shared Color(hex:).
 private enum WTheme {
-    static let bg = Color(hex: 0x0E0E14)
+    // True flat black, not the near-black `0x0E0E14` this used to be — matches the flat, no-
+    // gradient "scoreboard" treatment the widgets and Live Activity moved to.
+    static let bg = Color.black
     static let card = Color(hex: 0x191922)
     static let rose = Color(hex: 0xFF3D7F)
     static let violet = Color(hex: 0x8A5CFF)
@@ -168,21 +170,22 @@ struct WatchRunView: View {
         .background(WTheme.bg)
     }
 
+    // No card fill behind these — flat numbers directly on black, same "scoreboard" treatment
+    // the widgets and Live Activity moved to, instead of each stat boxed in its own tile.
     private func metric(value: String, unit: String, accent: Color = .white) -> some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 1) {
             Text(value)
-                .font(WTheme.bebas(21))
+                .font(WTheme.bebas(22))
                 .foregroundStyle(accent)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
             Text(unit)
                 .font(WTheme.sansBold(8.5))
-                .tracking(0.8)
+                .tracking(1)
                 .foregroundStyle(WTheme.text3)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 6)
-        .background(WTheme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .padding(.vertical, 4)
     }
 }
 
@@ -233,20 +236,21 @@ struct WatchSummaryView: View {
         .background(WTheme.bg)
     }
 
+    // No card fill behind these — flat numbers directly on black, same "scoreboard" treatment
+    // the widgets and Live Activity moved to, instead of each stat boxed in its own tile.
     private func metric(value: String, unit: String, accent: Color = .white) -> some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 1) {
             Text(value)
-                .font(WTheme.bebas(21))
+                .font(WTheme.bebas(22))
                 .foregroundStyle(accent)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
             Text(unit)
                 .font(WTheme.sansBold(8.5))
-                .tracking(0.8)
+                .tracking(1)
                 .foregroundStyle(WTheme.text3)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 6)
-        .background(WTheme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .padding(.vertical, 4)
     }
 }

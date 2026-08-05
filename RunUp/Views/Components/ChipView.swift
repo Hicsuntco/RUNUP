@@ -34,7 +34,7 @@ struct SelectableChip: View {
                 in: Capsule()
             )
             .overlay(Capsule().stroke(selected ? Color.clear : RUColor.line, lineWidth: RUSpacing.hairline))
-            .shadow(color: RUColor.rose.opacity(selected ? 0.3 : 0), radius: 10, x: 0, y: 4)
+            .shadow(color: RUColor.rose.opacity(selected && !RUColor.isLight ? 0.3 : 0), radius: 10, x: 0, y: 4)
             .animation(.spring(response: 0.3, dampingFraction: 0.7), value: selected)
         }
         .buttonStyle(PressableStyle())

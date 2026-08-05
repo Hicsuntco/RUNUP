@@ -14,7 +14,16 @@ struct PressableStyle: ButtonStyle {
 /// Full-width primary CTA — Bebas Neue label, rose fill, rose glow shadow. Class `.b.btn-rose`.
 struct PrimaryButtonStyle: ButtonStyle {
     var isDisabled: Bool = false
-    var fill: AnyShapeStyle = AnyShapeStyle(RUColor.rose)
+    var fill: AnyShapeStyle? = nil
+
+    /// Light mode gets a quiet rose2→rose gradient instead of a flat fill — one of the few
+    /// "signature" accent moments left once the glow shadow below is gone, so it needs to carry a
+    /// little more richness on its own. Dark mode keeps the flat fill it already had.
+    private var resolvedFill: AnyShapeStyle {
+        fill ?? (RUColor.isLight
+            ? AnyShapeStyle(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom))
+            : AnyShapeStyle(RUColor.rose))
+    }
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -27,8 +36,11 @@ struct PrimaryButtonStyle: ButtonStyle {
             // which made every primary CTA ~68pt tall instead of the intended ~44-46pt).
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity, minHeight: 44)
-            .background(fill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .shadow(color: RUColor.rose.opacity(isDisabled ? 0 : 0.3), radius: 16, x: 0, y: 4)
+            .background(resolvedFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            // The glow was a big part of what read as "gamified" rather than "premium digital" —
+            // light mode drops it to nothing (the card shadow language handles elevation there
+            // instead); dark mode's energetic glow is untouched.
+            .shadow(color: RUColor.rose.opacity(RUColor.isLight || isDisabled ? 0 : 0.3), radius: 16, x: 0, y: 4)
             .opacity(isDisabled ? 0.35 : (configuration.isPressed ? 0.85 : 1))
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
             .animation(.easeOut(duration: 0.12), value: configuration.isPressed)

@@ -63,7 +63,11 @@ enum RUColor {
     }
 
     static var heroGradient: LinearGradient {
-        LinearGradient(colors: [isLight ? Color(hex: 0xF7D2E4) : Color(hex: 0x20101C), bg], startPoint: .top, endPoint: .bottom)
+        // Light mode used to wash hero cards in pale pink — soft, but it's part of what read as
+        // "gamified fitness app" rather than the neutral, premium register the light theme is
+        // meant to carry now. A barely-there cool-gray wash instead, dark mode's own pink-black
+        // tint (its energetic register is a deliberate, separate choice) is untouched.
+        LinearGradient(colors: [isLight ? Color(hex: 0xF6F6F9) : Color(hex: 0x20101C), bg], startPoint: .top, endPoint: .bottom)
     }
 
     static var violetRoseGradient: LinearGradient {

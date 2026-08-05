@@ -6,8 +6,14 @@ import SwiftUI
 /// - Monospace ("DM Mono", class `.m`): timestamps, XP counters, precise numeric readouts.
 /// - Eyebrow (class `.eye`): 9px, 3px tracking, uppercase, weight 700, used above section titles.
 enum RUFont {
+    /// Bebas Neue's condensed poster caps read energetic/gamified — right for the app's dark
+    /// mode, but it's the single biggest reason light mode didn't read as the sober, premium,
+    /// "digital coach" register she wants competing with Runna. Every `displayStyle()`/`.bebas()`
+    /// call site (hundreds of them) switches automatically in light mode to a heavy system sans
+    /// instead — no other file needs to change. Dark mode is untouched on purpose: two deliberate
+    /// moods, not one compromise.
     static func bebas(_ size: CGFloat) -> Font {
-        .custom("BebasNeue-Regular", size: size)
+        RUColor.isLight ? .system(size: size, weight: .heavy, design: .default) : .custom("BebasNeue-Regular", size: size)
     }
 
     static func mono(_ size: CGFloat, weight: DMWeight = .regular) -> Font {

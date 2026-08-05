@@ -113,7 +113,7 @@ struct LiveRunView: View {
                 FrostedBackButton { appState.go(.home) }
                 HStack(spacing: 6) {
                     Circle().fill(RUColor.rose).frame(width: 6, height: 6)
-                        .shadow(color: RUColor.rose, radius: 4)
+                        .shadow(color: RUColor.rose.opacity(RUColor.isLight ? 0 : 1), radius: 4)
                     Text(vm?.isAutoPaused == true ? "PAUSE AUTO" : (vm?.isPaused == true ? "EN PAUSE" : "EN DIRECT"))
                         .font(RUFont.bebas(11)).tracking(2).foregroundColor(RUColor.rose2)
                 }

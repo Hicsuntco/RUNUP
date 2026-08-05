@@ -78,7 +78,7 @@ struct TabBarView: View {
                     .fill(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom))
                     .frame(width: 50, height: 50)
                     .overlay(Image(systemName: "play.fill").foregroundColor(.white).font(.system(size: 16)))
-                    .shadow(color: RUColor.rose.opacity(0.55), radius: 14, x: 0, y: 6)
+                    .shadow(color: RUColor.rose.opacity(RUColor.isLight ? 0 : 0.55), radius: 14, x: 0, y: 6)
                 Text("RUN")
                     .font(RUFont.sans(8, weight: .bold))
                     .tracking(1)
@@ -108,7 +108,7 @@ struct RunInProgressPill: View {
             .padding(.vertical, 9)
             .frame(minHeight: 44)
             .background(RUColor.rose, in: Capsule())
-            .shadow(color: RUColor.rose.opacity(0.5), radius: 20, x: 0, y: 10)
+            .shadow(color: RUColor.rose.opacity(RUColor.isLight ? 0 : 0.5), radius: 20, x: 0, y: 10)
         }
         .buttonStyle(PressableStyle())
     }

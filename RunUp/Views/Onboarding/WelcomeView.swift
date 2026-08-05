@@ -12,7 +12,7 @@ struct WelcomeView: View {
 
     var body: some View {
         ZStack {
-            RadialGradient(colors: [RUColor.rose.opacity(0.22), .clear], center: .top, startRadius: 0, endRadius: 420)
+            RadialGradient(colors: [RUColor.rose.opacity(RUColor.isLight ? 0 : 0.22), .clear], center: .top, startRadius: 0, endRadius: 420)
             RUColor.bg.opacity(0.001)
 
             VStack(spacing: 0) {
@@ -20,7 +20,7 @@ struct WelcomeView: View {
                     VStack(alignment: .leading, spacing: 0) {
                         Spacer(minLength: 60)
                         AppMarkView(size: 88, radius: 26)
-                            .shadow(color: RUColor.rose.opacity(0.4), radius: 30, x: 0, y: 16)
+                            .shadow(color: RUColor.rose.opacity(RUColor.isLight ? 0 : 0.4), radius: 30, x: 0, y: 16)
 
                         Text("COURS COMME\nSI TU AVAIS\nUN COACH")
                             .displayStyle(42)

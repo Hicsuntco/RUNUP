@@ -14,6 +14,8 @@ private enum WTheme {
     static let text2 = Color.white.opacity(0.62)
     static let text3 = Color.white.opacity(0.38)
 
+    static let roseVioletGradient = LinearGradient(colors: [rose, violet], startPoint: .topLeading, endPoint: .bottomTrailing)
+
     static func bebas(_ size: CGFloat) -> Font { .custom("BebasNeue-Regular", size: size) }
     static func sansBold(_ size: CGFloat) -> Font { .custom("DMSans-Bold", size: size) }
     static func sansSemibold(_ size: CGFloat) -> Font { .custom("DMSans-SemiBold", size: size) }
@@ -25,61 +27,70 @@ private enum WTheme {
 
 /// Idle screen: today's session as pushed by the phone (title + target pace + duration), or a
 /// "course libre" framing when the phone hasn't synced anything yet — never a fake placeholder
-/// session.
+/// session. The COURIR button is a full circle (not a pill) with a dashed gradient ring around
+/// it, echoing the same rose→violet ring language used for real progress on the run/summary
+/// screens — here purely decorative since there's nothing to track yet.
 struct WatchStartView: View {
     @Environment(WatchWorkoutManager.self) private var workout
 
     private var connectivity: WatchConnectivityManager { .shared }
 
+    private var subtitleText: String {
+        switch (connectivity.sessionPace, connectivity.sessionDurationMinutes) {
+        case let (pace?, minutes?): return "\(pace) /km · \(minutes) min"
+        case let (pace?, nil): return "\(pace) /km"
+        case let (nil, minutes?): return "\(minutes) min"
+        case (nil, nil): return ""
+        }
+    }
+
     var body: some View {
         ScrollView {
-            VStack(spacing: 10) {
+            VStack(spacing: 8) {
                 Text("AUJOURD'HUI")
                     .font(WTheme.sansBold(11))
                     .tracking(1.2)
                     .foregroundStyle(WTheme.rose)
 
                 Text(connectivity.sessionTitle ?? "Course libre")
-                    .font(WTheme.bebas(24))
+                    .font(WTheme.bebas(21))
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
-                    .lineLimit(3)
+                    .lineLimit(2)
                     .minimumScaleFactor(0.7)
 
-                if connectivity.sessionPace != nil || connectivity.sessionDurationMinutes != nil {
-                    HStack(spacing: 6) {
-                        if let pace = connectivity.sessionPace {
-                            sessionChip(pace + " /km")
+                ZStack {
+                    Circle()
+                        .strokeBorder(WTheme.roseVioletGradient, style: StrokeStyle(lineWidth: 2, dash: [4, 5]))
+                        .opacity(0.55)
+                        .frame(width: 118, height: 118)
+
+                    Button(action: { workout.start() }) {
+                        Group {
+                            if workout.state == .starting {
+                                ProgressView().tint(.white)
+                            } else {
+                                Text("COURIR").font(WTheme.bebas(16)).foregroundStyle(.white)
+                            }
                         }
-                        if let minutes = connectivity.sessionDurationMinutes {
-                            sessionChip("\(minutes) min")
-                        }
+                        .frame(width: 92, height: 92)
+                        .background(WTheme.roseVioletGradient, in: Circle())
                     }
+                    .buttonStyle(.plain)
+                    .disabled(workout.state == .starting)
+                }
+                .padding(.vertical, 2)
+
+                if !subtitleText.isEmpty {
+                    Text(subtitleText)
+                        .font(WTheme.sansBold(11))
+                        .foregroundStyle(.white.opacity(0.45))
                 } else {
                     Text("Cours à ta sensation — ta séance arrive de l'iPhone.")
                         .font(WTheme.sansSemibold(11))
                         .foregroundStyle(WTheme.text2)
                         .multilineTextAlignment(.center)
                 }
-
-                Button(action: { workout.start() }) {
-                    Group {
-                        if workout.state == .starting {
-                            ProgressView().tint(.white)
-                        } else {
-                            Text("COURIR").font(WTheme.bebas(22)).foregroundStyle(.white)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
-                    .background(
-                        LinearGradient(colors: [WTheme.rose, WTheme.violet], startPoint: .leading, endPoint: .trailing),
-                        in: Capsule()
-                    )
-                }
-                .buttonStyle(.plain)
-                .disabled(workout.state == .starting)
-                .padding(.top, 4)
 
                 if let message = workout.errorMessage {
                     Text(message)
@@ -88,30 +99,33 @@ struct WatchStartView: View {
                         .multilineTextAlignment(.center)
                 }
             }
-            .padding(.horizontal, 4)
+            .padding(.horizontal, 6)
+            .frame(maxWidth: .infinity)
         }
         .background(WTheme.bg)
-    }
-
-    private func sessionChip(_ label: String) -> some View {
-        Text(label)
-            .font(WTheme.sansBold(11))
-            .foregroundStyle(.white)
-            .padding(.horizontal, 9)
-            .padding(.vertical, 4)
-            .background(WTheme.card, in: Capsule())
     }
 }
 
 // MARK: - Live run
 
-/// The in-run screen: elapsed time as the hero, then the four live metrics. Heart rate shows "--"
-/// until a real wrist sample lands (honest-data policy — same as the iPhone live screen).
+/// The in-run screen: elapsed time as the hero inside a progress ring, then the four live
+/// metrics. Heart rate shows "--" until a real wrist sample lands (honest-data policy — same as
+/// the iPhone live screen).
 struct WatchRunView: View {
     @Environment(WatchWorkoutManager.self) private var workout
 
+    private var connectivity: WatchConnectivityManager { .shared }
+
     private var distanceLabel: String {
         String(format: "%.2f", locale: WTheme.fr, workout.distanceMeters / 1000)
+    }
+
+    /// Elapsed vs. the session's planned duration — nil (ring hidden) for a free run with no
+    /// real target synced from the phone, same "no fabricated progress" policy as the Live
+    /// Activity's own duration bar.
+    private var progressFraction: Double? {
+        guard let minutes = connectivity.sessionDurationMinutes, minutes > 0 else { return nil }
+        return max(0, min(1, workout.elapsedSeconds / Double(minutes * 60)))
     }
 
     var body: some View {
@@ -126,19 +140,33 @@ struct WatchRunView: View {
                     .foregroundStyle(workout.state == .paused ? WTheme.text3 : WTheme.lime)
             }
 
-            Text(workout.elapsedLabel)
-                .font(WTheme.bebas(46))
-                .foregroundStyle(.white)
-                .minimumScaleFactor(0.6)
-                .lineLimit(1)
-                .contentTransition(.numericText())
+            ZStack {
+                if let fraction = progressFraction {
+                    Circle().stroke(Color.white.opacity(0.08), lineWidth: 5)
+                    Circle()
+                        .trim(from: 0, to: fraction)
+                        .stroke(
+                            workout.state == .paused ? AnyShapeStyle(Color.white.opacity(0.28)) : AnyShapeStyle(WTheme.roseVioletGradient),
+                            style: StrokeStyle(lineWidth: 5, lineCap: .round, dash: workout.state == .paused ? [5, 6] : [])
+                        )
+                        .rotationEffect(.degrees(-90))
+                }
+
+                Text(workout.elapsedLabel)
+                    .font(WTheme.bebas(38))
+                    .foregroundStyle(workout.state == .paused ? .white.opacity(0.5) : .white)
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
+                    .contentTransition(.numericText())
+            }
+            .frame(width: 118, height: 118)
 
             HStack(spacing: 5) {
                 metric(value: distanceLabel, unit: "KM")
-                metric(value: workout.paceLabel, unit: "/KM")
+                metric(value: workout.paceLabel, unit: "/KM", accent: WTheme.rose)
             }
             HStack(spacing: 5) {
-                metric(value: workout.heartRate.map(String.init) ?? "--", unit: "BPM", accent: WTheme.rose)
+                metric(value: workout.heartRate.map(String.init) ?? "--", unit: "BPM", accent: WTheme.violet)
                 metric(value: "\(Int(workout.activeCalories.rounded()))", unit: "KCAL")
             }
 
@@ -191,8 +219,10 @@ struct WatchRunView: View {
 
 // MARK: - Summary
 
-/// Post-run screen: the final numbers, and where the story continues — the phone received the run
-/// (queued transfer, arrives even if the iPhone is out of reach right now) and builds the debrief.
+/// Post-run screen: one hero number (distance) inside a completed gradient ring, then the
+/// secondary numbers as a compact row — and where the story continues, since the phone received
+/// the run (queued transfer, arrives even if the iPhone is out of reach right now) and builds the
+/// debrief.
 struct WatchSummaryView: View {
     @Environment(WatchWorkoutManager.self) private var workout
 
@@ -203,17 +233,35 @@ struct WatchSummaryView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 8) {
-                Text("TERMINÉ 🎉")
-                    .font(WTheme.bebas(26))
-                    .foregroundStyle(.white)
+                Text("✓ TERMINÉ")
+                    .font(WTheme.sansBold(10.5))
+                    .tracking(1)
+                    .foregroundStyle(WTheme.lime)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 3)
+                    .background(WTheme.lime.opacity(0.12), in: Capsule())
 
-                HStack(spacing: 5) {
-                    metric(value: distanceLabel, unit: "KM")
-                    metric(value: workout.elapsedLabel, unit: "TEMPS")
+                ZStack {
+                    Circle()
+                        .stroke(WTheme.roseVioletGradient, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+
+                    VStack(spacing: 0) {
+                        Text(distanceLabel)
+                            .font(WTheme.bebas(34))
+                            .foregroundStyle(.white)
+                        Text("KM")
+                            .font(WTheme.sansBold(9.5))
+                            .tracking(1)
+                            .foregroundStyle(.white.opacity(0.4))
+                    }
                 }
-                HStack(spacing: 5) {
-                    metric(value: workout.paceLabel, unit: "/KM")
-                    metric(value: workout.avgHeartRate.map(String.init) ?? "--", unit: "BPM MOY", accent: WTheme.rose)
+                .frame(width: 108, height: 108)
+                .padding(.vertical, 2)
+
+                HStack(spacing: 14) {
+                    metric(value: workout.elapsedLabel, unit: "TEMPS")
+                    metric(value: workout.paceLabel, unit: "/KM", accent: WTheme.rose)
+                    metric(value: workout.avgHeartRate.map(String.init) ?? "--", unit: "BPM MOY", accent: WTheme.violet)
                 }
 
                 Text("Ton bilan t'attend sur l'iPhone 📱")
@@ -236,21 +284,17 @@ struct WatchSummaryView: View {
         .background(WTheme.bg)
     }
 
-    // No card fill behind these — flat numbers directly on black, same "scoreboard" treatment
-    // the widgets and Live Activity moved to, instead of each stat boxed in its own tile.
     private func metric(value: String, unit: String, accent: Color = .white) -> some View {
         VStack(spacing: 1) {
             Text(value)
-                .font(WTheme.bebas(22))
+                .font(WTheme.bebas(18))
                 .foregroundStyle(accent)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
             Text(unit)
-                .font(WTheme.sansBold(8.5))
+                .font(WTheme.sansBold(7.5))
                 .tracking(1)
                 .foregroundStyle(WTheme.text3)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 4)
     }
 }

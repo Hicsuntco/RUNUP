@@ -27,6 +27,10 @@ struct ClubView: View {
     @State private var showManagement = false
     @State private var commentsActivity: FeedItem?
     @State private var selectedBadge: ClubBadge?
+    /// Set only when `syncBadgesIfNeeded` finds a key `badges` reports earned that isn't yet in
+    /// `profile.seenBadgeKeys` — i.e. genuinely just crossed the threshold this load, not merely
+    /// "earned at some point before this feature existed." Drives `BadgeUnlockedView`.
+    @State private var unlockedBadge: ClubBadge?
     @State private var showLeaveConfirm = false
     @State private var showCreateEvent = false
     /// My own feed activity pending delete confirmation (appui long → Supprimer).
@@ -185,6 +189,9 @@ struct ClubView: View {
             Button("Annuler", role: .cancel) {}
         } message: {
             Text("Elle disparaîtra du fil du club, avec ses applaudissements et commentaires. Tes XP restent acquis.")
+        }
+        .fullScreenCover(item: $unlockedBadge) { badge in
+            BadgeUnlockedView(badge: badge, onDismiss: { unlockedBadge = nil })
         }
     }
 
@@ -755,7 +762,7 @@ struct ClubView: View {
                 .displayStyle(15)
                 .foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.text2)
                 .frame(width: 20)
-            AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28)
+            AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28, seed: entry.isMe ? nil : entry.id)
             Text(entry.isMe ? "\(entry.name) · toi" : entry.name)
                 .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
                 .foregroundColor(RUColor.textPrimary)
@@ -784,7 +791,7 @@ struct ClubView: View {
                 .displayStyle(15)
                 .foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.text2)
                 .frame(width: 20)
-            AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28)
+            AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28, seed: entry.isMe ? nil : entry.id)
             Text(entry.isMe ? "\(entry.name) · toi" : entry.name)
                 .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
                 .foregroundColor(RUColor.textPrimary)
@@ -891,7 +898,7 @@ struct ClubView: View {
                                     .displayStyle(15)
                                     .foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.text2)
                                     .frame(width: 20)
-                                AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28)
+                                AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28, seed: entry.isMe ? nil : entry.id)
                                 Text(entry.isMe ? "\(entry.name) · toi" : entry.name)
                                     .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
                                     .foregroundColor(RUColor.textPrimary)
@@ -1166,11 +1173,34 @@ struct ClubView: View {
     /// Syncs whichever of `badges` are currently earned up to the server — harmless to call every
     /// time the board loads (the server upserts with `ON CONFLICT DO NOTHING`), and it's what
     /// makes an achievement earned on this device show up on this member's profile for everyone
-    /// else in the club, not just locally.
+    /// else in the club, not just locally. Also the one place that can tell a badge crossing its
+    /// threshold JUST NOW apart from one that's simply been sitting earned since before
+    /// `seenBadgeKeys` existed — see `BadgeUnlockedView`.
     private func syncBadgesIfNeeded() {
-        let earnedKeys = badges.filter { $0.earned }.map { $0.key }
-        guard !earnedKeys.isEmpty else { return }
+        let earned = badges.filter { $0.earned }
+        guard !earned.isEmpty else { return }
+        let earnedKeys = earned.map { $0.key }
         Task { try? await clubService.syncBadges(earnedKeys) }
+
+        // First-ever pass on this device: seed `seenBadgeKeys` with whatever's already earned
+        // silently, no celebration — otherwise every pre-existing badge reads as "just unlocked!"
+        // the moment this feature first ships to someone who's been running for months.
+        guard profile.didBackfillSeenBadges else {
+            profile.seenBadgeKeys = earnedKeys
+            profile.didBackfillSeenBadges = true
+            return
+        }
+
+        let seen = Set(profile.seenBadgeKeys)
+        let newlyEarned = earned.filter { !seen.contains($0.key) }
+        guard !newlyEarned.isEmpty else { return }
+        // Mark every genuinely-new key seen up front (not just the one shown) — a batch of several
+        // badges crossed at once (e.g. right after importing old runs) celebrates one, not a stack
+        // of full-screen covers queued behind it, but none of the others should re-trigger later.
+        profile.seenBadgeKeys.append(contentsOf: newlyEarned.map { $0.key })
+        if unlockedBadge == nil {
+            unlockedBadge = newlyEarned.first
+        }
     }
 
     private func submitReport(_ target: ReportTarget, reason: String) async {

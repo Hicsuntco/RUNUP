@@ -187,6 +187,19 @@ final class UserProfile {
     /// meaningful milestones, never on a fixed schedule or every single run.
     var completedDebriefsCount: Int = 0
     var lastReviewPromptDate: Date? = nil
+    /// Every `ClubBadgeCatalog` key already shown as a full-screen unlock celebration (see
+    /// `BadgeUnlockedView`) — same idea as `kudosSeenCounts`, a persisted "already surfaced" set so
+    /// `ClubView` can tell a newly-crossed threshold apart from a badge that's simply been earned
+    /// since before this feature existed, and never re-celebrate the same badge on a later launch.
+    var seenBadgeKeys: [String] = []
+    /// False until `ClubView` has run its FIRST badge-diff pass on this device. That first pass
+    /// backfills `seenBadgeKeys` with every badge already earned WITHOUT celebrating any of them —
+    /// without this flag, every existing player with a streak/distance badge from months ago would
+    /// get a false "just unlocked!" full-screen cover the moment they first open Club after this
+    /// feature ships (an empty `seenBadgeKeys` on that first pass looks identical to a genuinely
+    /// brand-new profile that hasn't earned anything yet, so the two cases can't be told apart
+    /// without a separate marker).
+    var didBackfillSeenBadges: Bool = false
 
     init(name: String = "") {
         self.name = name

@@ -239,7 +239,7 @@ struct FriendsView: View {
     /// name alone never could.
     private func personRow<Trailing: View>(_ user: PublicUser, @ViewBuilder trailing: () -> Trailing) -> some View {
         HStack(spacing: 12) {
-            AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 34)
+            AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 34, seed: user.id)
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 4) {
                     Text(user.lastName.map { "\(user.name) \($0)" } ?? user.name)
@@ -292,7 +292,7 @@ struct FriendsView: View {
             EyebrowLabel(text: "Demandes en attente", color: RUColor.rose2)
             ForEach(incomingRequests) { user in
                 HStack(spacing: 12) {
-                    AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 32)
+                    AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 32, seed: user.id)
                     Text(user.name).font(RUFont.sans(13, weight: .medium)).foregroundColor(RUColor.textPrimary).lineLimit(1)
                     Spacer(minLength: 8)
                     Button(action: { Task { await respond(user, accept: false) } }) {
@@ -572,7 +572,7 @@ private struct PeopleListSheet: View {
                     }
                     ForEach(people) { user in
                         HStack(spacing: 12) {
-                            AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 34)
+                            AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 34, seed: user.id)
                             Text(user.lastName.map { "\(user.name) \($0)" } ?? user.name)
                                 .font(RUFont.sans(13, weight: .medium)).foregroundColor(RUColor.textPrimary).lineLimit(1)
                             Spacer(minLength: 8)

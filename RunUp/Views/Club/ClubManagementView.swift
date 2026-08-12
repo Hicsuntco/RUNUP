@@ -117,7 +117,7 @@ struct ClubManagementView: View {
 
     private func memberRow(_ member: LeaderboardRow) -> some View {
         HStack(spacing: 12) {
-            AvatarView(urlString: member.avatarUrl, base64DataURI: member.avatarBase64, initial: String(member.name.prefix(1)), size: 36)
+            AvatarView(urlString: member.avatarUrl, base64DataURI: member.avatarBase64, initial: String(member.name.prefix(1)), size: 36, seed: member.isMe ? nil : member.id)
             Text(member.isMe ? "\(member.name) · toi" : member.name)
                 .font(RUFont.sans(13, weight: member.isMe ? .semibold : .regular))
                 .foregroundColor(RUColor.textPrimary)
@@ -171,7 +171,7 @@ struct ClubMemberProfileView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 14) {
-                AvatarView(urlString: member.avatarUrl, base64DataURI: member.avatarBase64, initial: String(member.name.prefix(1)), size: 72)
+                AvatarView(urlString: member.avatarUrl, base64DataURI: member.avatarBase64, initial: String(member.name.prefix(1)), size: 72, seed: member.isMe ? nil : member.id)
                     .padding(.top, 20)
                 Text(member.name).font(RUFont.sans(18, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                 Text("Niveau \(level) · \(levelTitle)").font(RUFont.sans(12)).foregroundColor(RUColor.text2)

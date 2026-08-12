@@ -20,7 +20,7 @@ struct ActivityFeedRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
-                AvatarView(urlString: item.avatarUrl, base64DataURI: item.avatarBase64, initial: String(item.name.prefix(1)), size: 34)
+                AvatarView(urlString: item.avatarUrl, base64DataURI: item.avatarBase64, initial: String(item.name.prefix(1)), size: 34, seed: isMine ? nil : item.userId)
                 VStack(alignment: .leading, spacing: 2) {
                     (Text(item.name).fontWeight(.semibold) + Text(" \(item.text)"))
                         .font(RUFont.sans(13))

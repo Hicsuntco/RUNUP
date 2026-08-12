@@ -276,6 +276,21 @@ final class UserProfile {
         return session.durationMinutes == 0
     }
 
+    /// Sum of every planned session's distance this week (`durationMinutes / pace`, same
+    /// conversion `PaceModel` already uses elsewhere) — `weekSessions` only ever holds the CURRENT
+    /// week's plan, so this is always "this week's real target," not a stale or hypothetical
+    /// number. Feeds the Club "% objectif" leaderboard mode: synced up so a mixed-level club can
+    /// rank by how close each member is to THEIR OWN plan, not raw km, which flattens a beginner's
+    /// 15 km week and a marathoner's 60 km week onto the same scale. 0 for course libre (no fixed
+    /// weekly plan to measure against) or before `weekSessions` has ever been generated.
+    var plannedWeeklyKm: Double {
+        guard programPhase != .freerun else { return 0 }
+        return weekSessions.reduce(0) { total, day in
+            guard let session = day.session, let secPerKm = PaceModel.parseSecPerKm(session.pace), secPerKm > 0 else { return total }
+            return total + Double(session.durationMinutes * 60) / secPerKm
+        }
+    }
+
     /// [Séance du jour, Calories actives, Pas] as 0...1 fractions, in that order — feeds
     /// `DailyGoalsBarsView`. On a rest day there's no real "séance" goal to close, so that slot
     /// stays at 0 rather than the trivially-true `seanceDoneToday` — a gauge showing full for a

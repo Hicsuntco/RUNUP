@@ -41,6 +41,13 @@ struct WeeklyRow: Decodable, Identifiable, Hashable {
     var weekKm: Double
     var rank: Int
     var isMe: Bool
+    /// This member's own client-computed weekly plan (see `UserProfile.plannedWeeklyKm`, synced
+    /// via `syncWeeklyTarget`) — nil for anyone who hasn't opened Club since this shipped, or
+    /// whose program has no fixed weekly target (course libre).
+    var targetKm: Double?
+    /// `round(weekKm / targetKm * 100)`, server-computed — nil whenever `targetKm` is nil so the
+    /// UI can fall back to raw km for that one row instead of a misleading "0%".
+    var pctOfTarget: Int?
 }
 
 /// Club-wide pulse for the current week — total km + how many members actually ran.
@@ -309,6 +316,14 @@ struct ClubService {
     /// server-side).
     func syncBadges(_ badgeKeys: [String]) async throws {
         let _: OkResponse = try await send(path: "api/clubs/syncBadges", method: "POST", body: ["badgeKeys": badgeKeys])
+    }
+
+    /// Pushes up this device's own computed `UserProfile.plannedWeeklyKm` — the one number only
+    /// the client can compute (real program/session data), feeding the "% objectif" weekly
+    /// leaderboard mode server-side. Fire-and-forget, same as `syncBadges`: harmless to call with
+    /// the same value repeatedly.
+    func syncWeeklyTarget(_ targetKm: Double) async throws {
+        let _: OkResponse = try await send(path: "api/clubs/syncWeeklyTarget", method: "POST", body: ["targetKm": targetKm])
     }
 
     // MARK: Friends (a real follow graph, independent of any club)

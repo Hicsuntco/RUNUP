@@ -44,6 +44,17 @@ struct ClubView: View {
     @State private var isLoadingGlobal = false
 
     private enum BoardMode { case week, general, global }
+    /// Only meaningful within `BoardMode.week` — raw km (server-ranked) vs. each member's own %
+    /// of their real weekly plan (`WeeklyRow.pctOfTarget`, client-ranked — see `weekBoardContent`).
+    /// The whole reason this mode exists: a mixed-level club (a beginner on 15 km/week next to a
+    /// marathoner on 60) stays motivating for everyone, not just whoever runs the most raw distance.
+    @State private var weeklyDisplayMode: WeeklyDisplayMode = .km
+    // Same `CaseIterable, Identifiable` shape as `StatsView.StatsRange` — lets the picker below use
+    // `ForEach(WeeklyDisplayMode.allCases)` directly instead of a hand-rolled `id:` keypath.
+    private enum WeeklyDisplayMode: CaseIterable, Identifiable, Equatable {
+        case km, pctObjectif
+        var id: Self { self }
+    }
     /// Drives the feed rows' staggered entrance — flipped once the first feed load lands, after
     /// which each row's own per-index delay takes over (same pattern as `RecapView`'s splits).
     @State private var feedRevealed = false
@@ -741,24 +752,79 @@ struct ClubView: View {
         }
     }
 
+    /// Ranked by raw `weekKm` (the server's own order) in `.km` mode; re-ranked client-side by
+    /// `pctOfTarget` in `.pctObjectif` mode — the server always orders by km since that's the one
+    /// true race everyone shares, but "closest to YOUR OWN plan" is a different ranking entirely
+    /// (a beginner at 110% of her plan legitimately outranks a marathoner at 70% of his, even
+    /// though his raw km is much higher). Rows with no `pctOfTarget` (hasn't opened Club since
+    /// this shipped, or course libre) sort to the bottom rather than being dropped — still visible,
+    /// just falls back to a plain km display for that one row.
+    private var rankedWeekly: [WeeklyRow] {
+        let rows = board.weekly ?? []
+        guard weeklyDisplayMode == .pctObjectif else { return rows }
+        return rows.sorted { a, b in
+            switch (a.pctOfTarget, b.pctOfTarget) {
+            case let (pa?, pb?): return pa > pb
+            case (nil, nil): return a.weekKm > b.weekKm
+            case (nil, _): return false
+            case (_, nil): return true
+            }
+        }
+    }
+
     private var weekBoardContent: some View {
         Group {
             if (board.weekly ?? []).isEmpty && !isLoading {
                 Text("Personne n'a encore couru cette semaine — lance-toi !")
                     .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
                     .frame(maxWidth: .infinity).padding(.vertical, 20)
-            }
-            VStack(spacing: 6) {
-                ForEach(board.weekly ?? []) { entry in
-                    weekRow(entry)
+            } else {
+                HStack {
+                    Spacer()
+                    weeklyDisplayModePicker
+                }
+                .padding(.bottom, 2)
+                VStack(spacing: 6) {
+                    ForEach(Array(rankedWeekly.enumerated()), id: \.element.id) { index, entry in
+                        weekRow(entry, displayRank: index + 1)
+                    }
                 }
             }
         }
     }
 
-    private func weekRow(_ entry: WeeklyRow) -> some View {
+    /// Same pill-in-capsule idiom as `StatsView.rangePicker` — Km vs. "% objectif" for the weekly
+    /// board only (the all-time XP/global boards have no personal target to compare against).
+    private var weeklyDisplayModePicker: some View {
+        HStack(spacing: 3) {
+            ForEach(WeeklyDisplayMode.allCases) { mode in
+                Button(action: {
+                    Haptics.selection()
+                    weeklyDisplayMode = mode
+                }) {
+                    Text(mode == .km ? "Km" : "% objectif")
+                        .font(RUFont.mono(10, weight: .medium))
+                        .foregroundColor(weeklyDisplayMode == mode ? .white : RUColor.text2)
+                        .padding(.horizontal, 9).padding(.vertical, 5)
+                        .background(
+                            weeklyDisplayMode == mode
+                                ? AnyShapeStyle(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom))
+                                : AnyShapeStyle(Color.clear),
+                            in: Capsule()
+                        )
+                        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: weeklyDisplayMode)
+                }
+                .buttonStyle(PressableStyle())
+                .accessibilityAddTraits(weeklyDisplayMode == mode ? .isSelected : [])
+            }
+        }
+        .padding(2)
+        .background(RUColor.card2, in: Capsule())
+    }
+
+    private func weekRow(_ entry: WeeklyRow, displayRank: Int) -> some View {
         HStack(spacing: 12) {
-            Text(entry.rank >= 1 && entry.rank <= 3 ? ["🥇", "🥈", "🥉"][entry.rank - 1] : "\(entry.rank)")
+            Text(displayRank >= 1 && displayRank <= 3 ? ["🥇", "🥈", "🥉"][displayRank - 1] : "\(displayRank)")
                 .displayStyle(15)
                 .foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.text2)
                 .frame(width: 20)
@@ -769,12 +835,38 @@ struct ClubView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
             Spacer()
-            Text("\(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), entry.weekKm)) km")
-                .displayStyle(14).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
+            if weeklyDisplayMode == .pctObjectif, let pct = entry.pctOfTarget {
+                weeklyPctBadge(pct: pct, isMe: entry.isMe)
+            } else {
+                Text("\(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), entry.weekKm)) km")
+                    .displayStyle(14).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
+            }
         }
         .padding(.horizontal, 13).padding(.vertical, 11)
         .background(entry.isMe ? RUColor.rose.opacity(0.1) : RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(entry.isMe ? RUColor.rose.opacity(0.28) : RUColor.line, lineWidth: RUSpacing.hairline))
+    }
+
+    /// A compact progress ring + percentage, replacing the raw-km number in "% objectif" mode —
+    /// lime past 100% of plan (she's beaten her own target), rose otherwise. The ring itself is
+    /// visually capped at a full circle past 100% (going further doesn't need to overflow the
+    /// shape to read as "done and then some" — the number next to it already says 114%).
+    private func weeklyPctBadge(pct: Int, isMe: Bool) -> some View {
+        let fraction = min(Double(pct) / 100, 1)
+        let color = pct >= 100 ? RUColor.lime : (isMe ? RUColor.rose2 : RUColor.textPrimary)
+        return HStack(spacing: 6) {
+            ZStack {
+                Circle().stroke(RUColor.line, lineWidth: 3)
+                Circle()
+                    .trim(from: 0, to: fraction)
+                    .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+            }
+            .frame(width: 20, height: 20)
+            Text("\(pct)%").displayStyle(14).foregroundColor(color)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(pct) pour cent de l'objectif de la semaine")
     }
 
     private var generalBoardContent: some View {
@@ -976,6 +1068,7 @@ struct ClubView: View {
             board = boardResult
             appState.cachedClubBoard = boardResult
             syncBadgesIfNeeded()
+            syncWeeklyTargetIfNeeded()
         } else if appState.cachedClubBoard == nil {
             // Only surface the error when there's nothing already on screen to fall back to — a
             // background refresh failing quietly behind still-valid cached content beats replacing
@@ -1201,6 +1294,14 @@ struct ClubView: View {
         if unlockedBadge == nil {
             unlockedBadge = newlyEarned.first
         }
+    }
+
+    /// Keeps the server's copy of `plannedWeeklyKm` fresh so the "% objectif" leaderboard mode
+    /// reflects THIS week's real plan, not a stale one from whenever she last opened Club. Cheap
+    /// and safe to call on every load — same fire-and-forget spirit as `syncBadgesIfNeeded`.
+    private func syncWeeklyTargetIfNeeded() {
+        let target = profile.plannedWeeklyKm
+        Task { try? await clubService.syncWeeklyTarget(target) }
     }
 
     private func submitReport(_ target: ReportTarget, reason: String) async {

@@ -299,3 +299,12 @@ CREATE INDEX IF NOT EXISTS idx_follows_follower_status ON follows(follower_id, s
 ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS uniq_users_username_lower ON users (lower(username));
+
+-- The client's own computed "this week's planned km" (sum of the current week's session
+-- durations/paces — see `UserProfile.plannedWeeklyKm`), pushed up via api/clubs/syncWeeklyTarget
+-- whenever Club loads. Lets the weekly leaderboard rank by % of each member's OWN plan instead of
+-- raw km, so a mixed-level club stays motivating for a beginner on a 15 km week next to a
+-- marathoner on a 60 km week. Nullable + no default: NULL (not 0) for any member who hasn't
+-- opened Club since this shipped, so the leaderboard can tell "no target on record" apart from "a
+-- genuine 0 km week" and fall back to km-only ranking for that member instead of dividing by zero.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_target_km NUMERIC;

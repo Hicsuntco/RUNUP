@@ -21,6 +21,11 @@ final class AppState {
     /// real "still syncing" banner instead of a run's XP/feed entry silently never arriving with
     /// no visible sign anything went wrong.
     var pendingActivityCount: Int = 0
+    /// Consumed once by `SocialView.onAppear` then reset — lets `ProfileView`'s "Amis" card land
+    /// directly on the Friends segment instead of `SocialView`'s own default ("Mon club"), without
+    /// giving `mode` a second, competing source of truth (`@AppStorage`/a `UserProfile` field)
+    /// for what's a one-shot navigation intent, not a real persisted preference.
+    var openFriendsTabOnNextVisit = false
     /// Phone↔watch bridge — receives runs finished on the wrist, mirrors today's session out.
     /// Optional only because it needs `self` (created at the end of `init`); never nil after.
     @ObservationIgnored private(set) var watchSession: WatchSessionService?

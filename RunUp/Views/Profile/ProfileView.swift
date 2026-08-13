@@ -3,98 +3,146 @@ import SwiftData
 import PhotosUI
 import UIKit
 
-/// Profile & Settings — mirrors `ProfileScreen` in screensC.jsx. The coach needs no API key from
-/// the user (it's proxied through RunUp's own backend, see `Services/CoachService.swift`), so
-/// there's no key-entry section here.
-///
-/// Only the 4 sections she's likely to actually touch often (Sources de données, Apparence,
-/// Préférences, Objectifs quotidiens) stay directly on this page, fully expanded — a first attempt
-/// at cutting down the page's density collapsed every section behind a tap-to-expand accordion,
-/// but that added a second tap on top of whatever tap actually changes the setting, for things
-/// meant to be quick. Everything reached less often (Programme, Santé & blessures, Cycle,
-/// Parrainage, Compte) now lives one tap away on `MoreSettingsView`, the same cost a
-/// permanently-expanded section already had — nothing gets slower, the page just gets shorter.
+/// Profile tab — a real social hub (identity, real stats, a live preview into Amis and Running
+/// Club) rather than a settings page with her name pinned to the top of it. Every setting that
+/// used to live directly on this screen (data sources, appearance, notifications, daily goals)
+/// moved to `SettingsView`, reached one tap away via the gear icon — nothing here competes with
+/// the stats/social content for space anymore, same "one tap away, not gone" cost `MoreSettingsView`
+/// already paid for the settings reached even less often than these.
 struct ProfileView: View {
     @Environment(AppState.self) private var appState
+    @Query(sort: \RunRecord.date, order: .reverse) private var runs: [RunRecord]
     private var profile: UserProfile { appState.profile }
+    private var auth: AuthService { appState.auth }
+    private var clubService: ClubService { ClubService(auth: auth) }
 
-    @State private var showMoreSettings = false
+    @State private var showSettings = false
+    @State private var showSignIn = false
     @State private var avatarPickerItem: PhotosPickerItem?
     @State private var isSavingAvatar = false
 
+    @State private var isLoadingSocial = true
+    @State private var board: ClubBoard?
+    @State private var friendsList: FriendsList?
+    @State private var todaysFriendActivityCount = 0
+
+    private static let raceDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "fr_FR")
+        f.dateFormat = "d MMMM yyyy"
+        return f
+    }()
+
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                BackTitleHeaderView(title: "Profil & réglages") { appState.go(.home) }
+            VStack(alignment: .leading, spacing: 16) {
+                header
 
-                HStack(spacing: 14) {
-                    PhotosPicker(selection: $avatarPickerItem, matching: .images) {
-                        ZStack(alignment: .bottomTrailing) {
-                            AvatarView(imageData: profile.avatarImageData, initial: String(profile.name.prefix(1)), size: 60)
-                                .opacity(isSavingAvatar ? 0.5 : 1)
-                            if isSavingAvatar {
-                                ProgressView().tint(RUColor.textPrimary)
-                            } else {
-                                // A small pencil badge is what actually tells her the avatar is
-                                // tappable — a plain circle with no affordance reads as decoration.
-                                Image(systemName: "pencil.circle.fill")
-                                    .font(.system(size: 18))
-                                    .foregroundColor(.white)
-                                    .background(RUColor.rose, in: Circle())
-                                    .offset(x: 3, y: 3)
-                            }
-                        }
-                    }
-                    .buttonStyle(PressableStyle())
-                    .disabled(isSavingAvatar)
-                    .accessibilityLabel("Changer la photo de profil")
-                    .onChange(of: avatarPickerItem) { _, newItem in
-                        Task { await setAvatar(from: newItem) }
-                    }
-                    .contextMenu {
-                        if profile.avatarImageData != nil {
-                            Button("Supprimer la photo", role: .destructive) {
-                                Task { await removeAvatar() }
-                            }
-                        }
-                    }
+                statRow
 
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(profile.name).displayStyle(20).foregroundColor(RUColor.textPrimary)
-                        // Only when a program/course-libre goal is actually current — recovery and
-                        // choice phases have no active goal, and showing the last program's
-                        // "Objectif · 20km · 1:45" there reads as if it were still being pursued.
-                        if profile.programPhase == .active || profile.programPhase == .freerun {
-                            Text("Objectif · \(profile.goalDisplay)").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
-                        }
-                    }
+                if !auth.isSignedIn {
+                    signInPrompt
+                } else if isLoadingSocial {
+                    loadingSocialCard
+                } else {
+                    amisCard
+                    clubCard
                 }
-
-                sectionTitle("Sources de données")
-                dataSourcesCard
-
-                sectionTitle("Apparence")
-                appearanceCard
-
-                sectionTitle("Préférences")
-                preferencesCard
-
-                sectionTitle("Objectifs quotidiens")
-                dailyGoalsCard
-
-                moreSettingsRow
             }
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.top, 8)
             .padding(.bottom, 130)
         }
-        .sheet(isPresented: $showMoreSettings) {
-            MoreSettingsView()
+        .background(RUColor.bg)
+        .task { await loadSocialSummary() }
+        .refreshable { await loadSocialSummary() }
+        .onChange(of: auth.isSignedIn) { _, signedIn in
+            if signedIn { Task { await loadSocialSummary() } }
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
+        }
+        .sheet(isPresented: $showSignIn) {
+            SignInView()
         }
     }
 
-    private func sectionTitle(_ text: String) -> some View {
-        EyebrowLabel(text: text, color: RUColor.text3)
+    // MARK: - Header
+
+    private var header: some View {
+        HStack(alignment: .top) {
+            HStack(spacing: 11) {
+                avatarButton
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(profile.name).displayStyle(18).foregroundColor(RUColor.textPrimary)
+                    if let objectifText {
+                        HStack(spacing: 4) {
+                            Image(systemName: "target").font(.system(size: 9)).foregroundColor(RUColor.text3)
+                            Text(objectifText).font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.text2)
+                        }
+                    }
+                }
+            }
+            Spacer(minLength: 8)
+            Button(action: { showSettings = true }) {
+                Image(systemName: "gearshape.fill")
+                    .font(.system(size: 15))
+                    .foregroundColor(RUColor.textPrimary)
+                    .frame(width: 36, height: 36)
+                    .background(RUColor.card, in: Circle())
+                    .overlay(Circle().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(PressableStyle())
+            .accessibilityLabel("Réglages")
+        }
+    }
+
+    /// Only when a program/course-libre goal is actually current — recovery and choice phases
+    /// have no active goal, and showing the last program's objective there reads as if it were
+    /// still being pursued (same reasoning `HomeView.weekEyebrow` already applies).
+    private var objectifText: String? {
+        guard profile.programPhase == .active || profile.programPhase == .freerun else { return nil }
+        if let raceDate {
+            return "\(profile.goalDisplay) · \(Self.raceDateFormatter.string(from: raceDate))"
+        }
+        return profile.goalDisplay.isEmpty ? nil : profile.goalDisplay
+    }
+
+    private var raceDate: Date? { profile.raceDate }
+
+    private var avatarButton: some View {
+        PhotosPicker(selection: $avatarPickerItem, matching: .images) {
+            ZStack(alignment: .bottomTrailing) {
+                AvatarView(imageData: profile.avatarImageData, initial: String(profile.name.prefix(1)), size: 52)
+                    .opacity(isSavingAvatar ? 0.5 : 1)
+                if isSavingAvatar {
+                    ProgressView().tint(RUColor.textPrimary)
+                } else {
+                    // A small pencil badge is what actually tells her the avatar is
+                    // tappable — a plain circle with no affordance reads as decoration.
+                    Image(systemName: "pencil.circle.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(.white)
+                        .background(RUColor.rose, in: Circle())
+                        .offset(x: 2, y: 2)
+                }
+            }
+        }
+        .buttonStyle(PressableStyle())
+        .disabled(isSavingAvatar)
+        .accessibilityLabel("Changer la photo de profil")
+        .onChange(of: avatarPickerItem) { _, newItem in
+            Task { await setAvatar(from: newItem) }
+        }
+        .contextMenu {
+            if profile.avatarImageData != nil {
+                Button("Supprimer la photo", role: .destructive) {
+                    Task { await removeAvatar() }
+                }
+            }
+        }
     }
 
     /// Resizes to a real thumbnail (240pt max side) before storing — the picker hands back full
@@ -112,10 +160,10 @@ struct ProfileView: View {
         await MainActor.run { profile.avatarImageData = jpeg }
         // Only club members can ever see this, so only sync it when there's actually an account —
         // it stays a purely local photo otherwise, same as every other profile field.
-        guard appState.auth.isSignedIn else { return }
+        guard auth.isSignedIn else { return }
         let dataURI = "data:image/jpeg;base64,\(jpeg.base64EncodedString())"
         do {
-            try await appState.auth.updateAvatar(dataURI: dataURI)
+            try await auth.updateAvatar(dataURI: dataURI)
         } catch {
             // The local photo is already saved (see above) — only the club-visible copy failed to
             // sync, worth telling her since it silently used to just never reach other members.
@@ -128,9 +176,9 @@ struct ProfileView: View {
             profile.avatarImageData = nil
             avatarPickerItem = nil
         }
-        guard appState.auth.isSignedIn else { return }
+        guard auth.isSignedIn else { return }
         do {
-            try await appState.auth.updateAvatar(dataURI: nil)
+            try await auth.updateAvatar(dataURI: nil)
         } catch {
             // Mirrors setAvatar's error handling above — the local photo is already cleared, but
             // the server (and every other club member's leaderboard/feed/comments view) still
@@ -140,353 +188,179 @@ struct ProfileView: View {
         }
     }
 
-    private var moreSettingsRow: some View {
-        Button(action: { showMoreSettings = true }) {
-            HStack {
-                Text("Plus de réglages").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
-                Spacer()
-                Text("›").foregroundColor(RUColor.text2)
+    // MARK: - Real stats row
+
+    private var totalKm: Double { runs.reduce(0) { $0 + $1.distanceKm } }
+
+    /// Number of real, permanent badges earned — `profile.seenBadgeKeys` (see `ClubView`) already
+    /// tracks exactly this set (every earned key gets appended there the moment `ClubView` next
+    /// computes it, and a badge never un-earns), so this reads it directly instead of re-deriving
+    /// earned/locked state from `runs`/`profile.streak` a second time in a different file.
+    private var badgeCount: Int { profile.seenBadgeKeys.count }
+
+    private var statRow: some View {
+        HStack(spacing: 0) {
+            statCell(value: String(format: "%.0f", totalKm), label: "km")
+            statDivider
+            statCell(
+                value: "\(profile.streak)",
+                label: "sem. de suite",
+                valueColor: profile.streak > 0 ? RUColor.rose : RUColor.textPrimary,
+                icon: profile.streak > 0 ? "flame.fill" : nil
+            )
+            statDivider
+            statCell(value: "\(badgeCount)", label: badgeCount > 1 ? "badges" : "badge")
+        }
+        .padding(.vertical, 14)
+        .ruCard()
+    }
+
+    private var statDivider: some View {
+        Rectangle().fill(RUColor.line).frame(width: RUSpacing.hairline).padding(.vertical, 4)
+    }
+
+    private func statCell(value: String, label: String, valueColor: Color = RUColor.textPrimary, icon: String? = nil) -> some View {
+        VStack(spacing: 3) {
+            HStack(spacing: 3) {
+                if let icon {
+                    Image(systemName: icon).font(.system(size: 11)).foregroundColor(valueColor)
+                }
+                Text(value).displayStyle(20).foregroundColor(valueColor)
             }
-            .padding(.horizontal, 14).padding(.vertical, 13)
+            Text(label).font(RUFont.sans(9.5, weight: .semibold)).foregroundColor(RUColor.text2)
         }
-        .buttonStyle(PressableStyle())
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(value) \(label)")
+    }
+
+    // MARK: - Social preview cards
+
+    private var loadingSocialCard: some View {
+        VStack(spacing: 10) {
+            ProgressView().tint(RUColor.rose)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 28)
         .ruCard()
     }
 
-    // Apple Santé only — the Strava and Garmin rows are removed entirely until those
-    // integrations actually work (per the owner's call: no visible mention of a service that
-    // isn't functional yet). To reinstate: Strava gets `StravaConnectionRow(auth: appState.auth)`
-    // back (the OAuth code below is intact, it only needs server credentials), Garmin gets a
-    // `BrandLogoIcon`-based row once a real integration exists.
-    private var dataSourcesCard: some View {
-        VStack(spacing: 0) {
-            appleHealthRow
+    private var signInPrompt: some View {
+        VStack(spacing: 12) {
+            AppMarkView(size: 40)
+            Text("Ton profil prend vie à plusieurs").font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+            Text("Connecte-toi pour voir tes amis et ton club directement ici.")
+                .font(RUFont.sans(11.5)).foregroundColor(RUColor.text2).multilineTextAlignment(.center)
+            Button("SE CONNECTER") { showSignIn = true }
+                .buttonStyle(PrimaryButtonStyle())
+                .padding(.top, 4)
         }
+        .frame(maxWidth: .infinity)
+        .padding(20)
         .ruCard()
     }
 
-    private var appleHealthRow: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "apple.logo").font(.system(size: 16)).foregroundColor(RUColor.textPrimary)
-            Text(ConnectedSource.apple.title).font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
-            Spacer()
-            Toggle("", isOn: Binding(
-                get: { profile.connectedSources.contains(.apple) },
-                set: { on in
-                    if on {
-                        profile.connectedSources.append(.apple)
-                        // See HealthConnectStepView's identical toggle for why this can't just
-                        // swallow the error with `try?` — a genuine failure (HealthKit
-                        // unavailable) shouldn't silently leave "Apple Santé" marked connected.
-                        Task {
-                            do {
-                                try await appState.healthKit.requestAuthorization()
-                            } catch {
-                                await MainActor.run {
-                                    profile.connectedSources.removeAll { $0 == .apple }
-                                    appState.toast("Connexion à Apple Santé impossible, réessaie plus tard.")
-                                }
-                            }
-                        }
-                    } else {
-                        profile.connectedSources.removeAll { $0 == .apple }
+    private var amisCard: some View {
+        Button(action: {
+            appState.openFriendsTabOnNextVisit = true
+            appState.go(.club)
+        }) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle().fill(RUColor.violet.opacity(0.16))
+                        Image(systemName: "person.2.fill").font(.system(size: 16)).foregroundColor(RUColor.violet)
                     }
-                }
-            ))
-            .labelsHidden()
-            .tint(RUColor.rose)
-            .accessibilityLabel("Synchroniser avec Apple Santé")
-        }
-        .padding(.horizontal, 14).padding(.vertical, 13)
-    }
+                    .frame(width: 40, height: 40)
 
-    /// Nuancier — tap a swatch to re-theme the whole app (buttons, highlights, the logo mark)
-    /// with that accent. Persists to `profile.accentThemeID` and mirrors into `ThemeStore` so
-    /// every `RUColor.rose`/`.rose2`/`.violet` call site updates immediately, live. The mode row
-    /// above it (Sombre/Blanc) is the same mirror-into-`ThemeStore` mechanism, one level up —
-    /// dark/light instead of an accent hue, see `RUColor`'s theme-aware tokens.
-    private var appearanceCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Mode d'affichage").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
-                Spacer()
-                HStack(spacing: 4) {
-                    modeButton("Sombre", isLight: false)
-                    modeButton("Blanc", isLight: true)
-                }
-                .padding(3)
-                .background(RUColor.card2, in: Capsule())
-            }
-
-            Divider().background(RUColor.line)
-
-            Text("Couleur de l'app").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: 4), spacing: 16) {
-                ForEach(AccentTheme.all) { theme in
-                    Button(action: { selectAccent(theme) }) {
-                        ZStack {
-                            Circle()
-                                .fill(LinearGradient(colors: [theme.primary, theme.tail], startPoint: .topLeading, endPoint: .bottomTrailing))
-                                .frame(width: 40, height: 40)
-                            if profile.accentThemeID == theme.id {
-                                // Theme-aware — a white selection ring was invisible on the
-                                // near-white light-mode card.
-                                Circle().stroke(RUColor.textPrimary, lineWidth: 2.5).frame(width: 46, height: 46)
-                                Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)).foregroundColor(.white)
-                            }
-                        }
-                        .frame(width: 46, height: 46)
-                    }
-                    .buttonStyle(PressableStyle())
-                    .accessibilityLabel(theme.name)
-                    .accessibilityAddTraits(profile.accentThemeID == theme.id ? .isSelected : [])
-                }
-            }
-        }
-        .padding(14)
-        .ruCard()
-    }
-
-    private func modeButton(_ label: String, isLight: Bool) -> some View {
-        let selected = profile.isLightMode == isLight
-        return Button(action: { selectMode(isLight: isLight) }) {
-            Text(label)
-                .font(RUFont.sans(12, weight: .semibold))
-                .foregroundColor(selected ? .white : RUColor.text2)
-                .padding(.horizontal, 14).padding(.vertical, 6)
-                .background(selected ? RUColor.rose : .clear, in: Capsule())
-        }
-        .buttonStyle(PressableStyle())
-    }
-
-    private func selectMode(isLight: Bool) {
-        profile.isLightMode = isLight
-        ThemeStore.shared.isLightMode = isLight
-        appState.publishWidgetSnapshot()
-    }
-
-    private func selectAccent(_ theme: AccentTheme) {
-        profile.accentThemeID = theme.id
-        ThemeStore.shared.themeID = theme.id
-        appState.publishWidgetSnapshot()
-    }
-
-    // The "Unité de distance" km/mi toggle used to sit here — removed rather than left as dead
-    // state: `distanceUnit` was written and persisted but read by nothing, so picking "mi"
-    // visibly changed nothing anywhere in the app. Reinstate only alongside real unit conversion
-    // in every distance display.
-    private var preferencesCard: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text("Notifications du coach").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
-                Spacer()
-                Toggle("", isOn: Binding(
-                    get: { profile.coachNotificationsEnabled },
-                    set: { on in
-                        profile.coachNotificationsEnabled = on
-                        if on {
-                            Task {
-                                // The OS grant used to be ignored — if she'd denied the system
-                                // prompt, the toggle stayed ON while every scheduler silently
-                                // no-op'd (they all guard on real authorization). Reflect reality:
-                                // revert the toggle and point at Réglages instead.
-                                let granted = await NotificationService.shared.requestAuthorization()
-                                if granted {
-                                    NotificationService.shared.rescheduleDailyReminder(for: profile)
-                                    NotificationService.shared.rescheduleInactivityReminder(for: profile)
-                                    NotificationService.shared.scheduleWeeklyRecapReminder(for: profile)
-                                } else {
-                                    await MainActor.run {
-                                        profile.coachNotificationsEnabled = false
-                                        appState.toast("Notifications refusées côté iPhone — active-les dans Réglages > RunUp.")
-                                    }
-                                }
-                            }
-                        } else {
-                            NotificationService.shared.cancelDailyReminder()
-                            NotificationService.shared.cancelInactivityReminder()
-                            NotificationService.shared.cancelWeeklyRecapReminder()
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("Amis").font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                        if let friendsList {
+                            Text("\(friendsList.followers.count) abonnés · \(friendsList.following.count) abonnements")
+                                .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
                         }
                     }
-                ))
-                    .labelsHidden()
-                    .tint(RUColor.rose)
-                    .accessibilityLabel("Notifications du coach")
-            }
-            .padding(.horizontal, 14).padding(.vertical, 13)
-        }
-        .ruCard()
-    }
+                    Spacer(minLength: 0)
+                    Text("›").font(.system(size: 15, weight: .semibold)).foregroundColor(RUColor.text3)
+                }
 
-    /// Both goals used to only ever be fixed defaults (`UserProfile.stepsGoal` = 6000,
-    /// `activeCaloriesGoal` = 400) with no way to change them — the daily-goals bars on Home read
-    /// those values directly, so editing here immediately reshapes what counts as "done" today.
-    private var dailyGoalsCard: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text("Objectif de pas").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
-                Spacer()
-                Stepper(
-                    "\(Int(profile.stepsGoal)) pas",
-                    value: Binding(get: { profile.stepsGoal }, set: { profile.stepsGoal = $0 }),
-                    in: 2000...20000,
-                    step: 500
-                )
-                .fixedSize()
-                .tint(RUColor.rose)
-                .foregroundColor(RUColor.textPrimary)
-            }
-            .padding(.horizontal, 14).padding(.vertical, 13)
-            Divider().background(RUColor.line)
-            HStack {
-                Text("Objectif calories actives").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
-                Spacer()
-                Stepper(
-                    "\(Int(profile.activeCaloriesGoal)) kcal",
-                    value: Binding(get: { profile.activeCaloriesGoal }, set: { profile.activeCaloriesGoal = $0 }),
-                    in: 100...1000,
-                    step: 50
-                )
-                .fixedSize()
-                .tint(RUColor.rose)
-                .foregroundColor(RUColor.textPrimary)
-            }
-            .padding(.horizontal, 14).padding(.vertical, 13)
-        }
-        .ruCard()
-    }
-}
-
-/// Real Strava connect/disconnect + "import my history" — the only data source here backed by a
-/// real OAuth handshake (see `StravaService`) rather than a native framework (HealthKit) or a
-/// stub ("Bientôt"). A separate view (not inlined in `dataSourcesCard`) since it owns real
-/// async state — connection status, an in-flight import, its own error messages.
-private struct StravaConnectionRow: View {
-    var auth: AuthService
-
-    @Environment(\.modelContext) private var modelContext
-    @State private var isConnected = false
-    @State private var isLoading = false
-    @State private var isImporting = false
-    @State private var errorMessage: String?
-    @State private var importedCount: Int?
-
-    private var stravaService: StravaService { StravaService(auth: auth) }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 12) {
-                Text("🟠").font(.system(size: 17))
-                Text("Strava").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
-                Spacer()
-                if !auth.isSignedIn {
-                    Text("Nécessite un compte").font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
-                } else if isLoading {
-                    ProgressView().tint(RUColor.rose)
-                } else if isConnected {
-                    Button("Déconnecter") { Task { await disconnect() } }
-                        .font(RUFont.sans(11.5, weight: .semibold)).foregroundColor(RUColor.text3)
+                if let friendsList, !friendsList.following.isEmpty {
+                    HStack(spacing: 8) {
+                        HStack(spacing: -8) {
+                            ForEach(friendsList.following.prefix(3)) { user in
+                                AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 24, seed: user.id)
+                                    .overlay(Circle().stroke(RUColor.card, lineWidth: 2))
+                            }
+                        }
+                        Text(todaysFriendActivityCount > 0
+                             ? "\(todaysFriendActivityCount) nouvelle\(todaysFriendActivityCount > 1 ? "s" : "") activité\(todaysFriendActivityCount > 1 ? "s" : "") aujourd'hui"
+                             : "Rien de nouveau aujourd'hui")
+                            .font(RUFont.sans(10.5)).foregroundColor(RUColor.text2)
+                    }
                 } else {
-                    Button("Connecter") { Task { await connect() } }
-                        .font(RUFont.sans(11.5, weight: .semibold)).foregroundColor(RUColor.rose2)
+                    Text("Trouve des coureurs à suivre").font(RUFont.sans(10.5)).foregroundColor(RUColor.text2)
                 }
             }
+            .padding(14)
+        }
+        .buttonStyle(PressableStyle())
+        .ruCard()
+    }
 
-            if isConnected {
-                Button(action: { Task { await importHistory() } }) {
-                    HStack(spacing: 6) {
-                        if isImporting { ProgressView().tint(RUColor.text2) }
-                        Text(isImporting ? "Import en cours…" : "Importer mon historique Strava")
+    private var clubCard: some View {
+        Button(action: { appState.go(.club) }) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle().fill(RUColor.heroGradient)
+                        Image(systemName: "trophy.fill").font(.system(size: 15)).foregroundColor(RUColor.rose)
                     }
-                    .font(RUFont.sans(11.5, weight: .semibold))
-                    .foregroundColor(RUColor.text2)
+                    .frame(width: 40, height: 40)
+
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("Running Club").font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                        if let club = board?.club {
+                            Text("\(club.name) · \(club.memberCount) membres").font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                        } else {
+                            Text("Pas encore de club").font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                        }
+                    }
+                    Spacer(minLength: 0)
+                    Text("›").font(.system(size: 15, weight: .semibold)).foregroundColor(RUColor.text3)
                 }
-                .buttonStyle(PressableStyle())
-                .disabled(isImporting)
+
+                if let event = board?.events?.first {
+                    HStack(spacing: 4) {
+                        Image(systemName: "mappin.circle.fill").font(.system(size: 11)).foregroundColor(RUColor.rose)
+                        Text(event.title).font(RUFont.sans(11, weight: .bold)).foregroundColor(RUColor.rose)
+                        Text("— \(event.going) confirmé\(event.going > 1 ? "s" : "")").font(RUFont.sans(10.5)).foregroundColor(RUColor.text2)
+                    }
+                } else if board?.club == nil {
+                    Text("Rejoins ou crée un club pour courir à plusieurs").font(RUFont.sans(10.5)).foregroundColor(RUColor.text2)
+                }
             }
-
-            if let importedCount {
-                Text(importedCount == 0 ? "Rien de nouveau à importer." : "\(importedCount) course\(importedCount > 1 ? "s" : "") importée\(importedCount > 1 ? "s" : "").")
-                    .font(RUFont.sans(10.5)).foregroundColor(RUColor.lime)
-            }
-            if let errorMessage {
-                Text(errorMessage).font(RUFont.sans(10.5)).foregroundColor(RUColor.rose)
-            }
+            .padding(14)
         }
-        .padding(.horizontal, 14).padding(.vertical, 13)
-        .task {
-            if auth.isSignedIn { await refreshStatus() }
-        }
+        .buttonStyle(PressableStyle())
+        .ruCard()
     }
 
-    private func refreshStatus() async {
-        isConnected = (try? await stravaService.status()) ?? false
-    }
+    // MARK: - Data loading
 
-    private func connect() async {
-        isLoading = true
-        errorMessage = nil
-        do {
-            try await stravaService.connect()
-            isConnected = true
-        } catch StravaServiceError.notConfigured {
-            errorMessage = "Strava n'est pas encore configuré côté serveur."
-        } catch StravaServiceError.cancelled {
-            // Silently ignored — she just closed the Strava sheet without finishing.
-        } catch {
-            errorMessage = "Connexion à Strava impossible, réessaie."
-        }
-        isLoading = false
-    }
+    private func loadSocialSummary() async {
+        guard auth.isSignedIn else { isLoadingSocial = false; return }
+        isLoadingSocial = true
+        // Independent requests, fired concurrently — same reasoning as `ClubView.loadIfSignedIn`:
+        // none of these three depends on another's result, so the wait is the slowest single
+        // request instead of the sum of all three.
+        async let boardAttempt = try? await clubService.fetchBoard()
+        async let friendsListAttempt = try? await clubService.fetchFriendsList()
+        async let friendsFeedAttempt = try? await clubService.fetchFriendsFeed()
+        let (boardResult, friendsListResult, friendsFeedResult) = await (boardAttempt, friendsListAttempt, friendsFeedAttempt)
 
-    private func disconnect() async {
-        isLoading = true
-        errorMessage = nil
-        do {
-            try await stravaService.disconnect()
-            isConnected = false
-            importedCount = nil
-        } catch {
-            errorMessage = "Impossible de déconnecter Strava, réessaie."
-        }
-        isLoading = false
-    }
-
-    /// Inserts each Strava run as a local `RunRecord` — deduped against `stravaActivityId`s
-    /// already present, so importing again (to pick up newer Strava activity) never duplicates
-    /// History. No XP/club post for these: they're historical, not a session just completed.
-    private func importHistory() async {
-        isImporting = true
-        errorMessage = nil
-        do {
-            let runs = try await stravaService.importActivities()
-            let existingIds = existingStravaIds()
-            var newCount = 0
-            for run in runs where !existingIds.contains(run.stravaActivityId) {
-                let record = RunRecord(
-                    date: run.date,
-                    title: run.title,
-                    distanceKm: run.distanceKm,
-                    durationSeconds: run.durationSeconds,
-                    avgPace: AdaptivePlanEngine.fmt(run.distanceKm > 0 ? Double(run.durationSeconds) / run.distanceKm : 0),
-                    avgHeartRate: run.avgHeartRate,
-                    kcal: Int(run.distanceKm * 65),
-                    elevationGainM: run.elevationGainM,
-                    stravaActivityId: run.stravaActivityId
-                )
-                modelContext.insert(record)
-                newCount += 1
-            }
-            importedCount = newCount
-        } catch {
-            errorMessage = "Import Strava impossible, réessaie."
-        }
-        isImporting = false
-    }
-
-    private func existingStravaIds() -> Set<Int> {
-        let descriptor = FetchDescriptor<RunRecord>()
-        let existing = (try? modelContext.fetch(descriptor)) ?? []
-        return Set(existing.compactMap { $0.stravaActivityId })
+        board = boardResult
+        friendsList = friendsListResult
+        todaysFriendActivityCount = (friendsFeedResult ?? []).filter { Calendar.current.isDateInToday($0.createdAt) }.count
+        isLoadingSocial = false
     }
 }

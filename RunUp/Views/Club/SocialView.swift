@@ -33,6 +33,12 @@ struct SocialView: View {
         .onChange(of: mode) { _, newMode in
             if newMode == .club { Task { await refreshPendingRequestsCount() } }
         }
+        .onAppear {
+            if appState.openFriendsTabOnNextVisit {
+                mode = .friends
+                appState.openFriendsTabOnNextVisit = false
+            }
+        }
     }
 
     private func refreshPendingRequestsCount() async {

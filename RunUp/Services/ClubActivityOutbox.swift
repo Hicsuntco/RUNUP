@@ -52,6 +52,19 @@ private struct PendingClubActivity: Codable, Equatable {
             metrics = nil
         }
     }
+
+    /// Écrit explicitement, parce que `legacyDistanceKm` n'a pas de propriété stockée en face :
+    /// Swift ne peut donc pas synthétiser `encode(to:)` à partir de ces `CodingKeys`. Cette clé
+    /// est en LECTURE SEULE par construction — on relit les entrées de l'ancien format, on n'en
+    /// écrit plus jamais.
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(clientId, forKey: .clientId)
+        try c.encode(type, forKey: .type)
+        try c.encode(text, forKey: .text)
+        try c.encode(xpEarned, forKey: .xpEarned)
+        try c.encodeIfPresent(metrics, forKey: .metrics)
+    }
 }
 
 @MainActor

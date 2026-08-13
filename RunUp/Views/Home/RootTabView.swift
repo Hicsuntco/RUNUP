@@ -9,6 +9,15 @@ struct RootTabView: View {
         appState.screen != .live && appState.screen != .recap
     }
 
+    /// Quel onglet la barre affiche comme actif — ce n'est pas toujours l'écran courant. Depuis
+    /// que Profil est le 5e onglet, Club et Amis (`SocialView`) sont des destinations SOUS le
+    /// Profil, ouvertes par ses deux cartes. Sans cette translation, entrer dans son club
+    /// éteignait la barre entière : cinq onglets dont aucun sélectionné, alors qu'on est bien
+    /// quelque part.
+    private var tabSelection: AppScreen {
+        appState.screen == .club ? .profile : appState.screen
+    }
+
     var body: some View {
         ZStack(alignment: .bottom) {
             RUColor.bg.ignoresSafeArea()
@@ -26,7 +35,7 @@ struct RootTabView: View {
 
             if showBar {
                 TabBarView(
-                    selected: appState.screen,
+                    selected: tabSelection,
                     onSelect: { appState.go($0) },
                     onStartRun: {
                         if appState.isRunActive { appState.go(.live) } else { appState.startRun() }

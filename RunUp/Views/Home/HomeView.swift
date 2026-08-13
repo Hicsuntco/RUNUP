@@ -55,7 +55,14 @@ struct HomeView: View {
                         }
                         .buttonStyle(PressableStyle())
                         .accessibilityLabel(unreadCount > 0 ? "Notifications, \(unreadCount) non lues" : "Notifications")
-                        AvatarButton(initial: String(profile.name.prefix(1)), imageData: profile.avatarImageData) { appState.go(.profile) }
+                        // L'avatar est parti : le Profil est un onglet maintenant, ce bouton
+                        // était un second chemin vers la même destination, à côté d'une barre
+                        // d'onglets qui la montre en permanence. L'en-tête de la maquette est
+                        // d'ailleurs réduit à la date, au nom et à la pastille de série — elle
+                        // ne pose pas d'avatar ici, précisément pour cette raison.
+                        //
+                        // La cloche reste : les notifications n'ont pas d'onglet, et la maquette
+                        // ne les omet pas au sens d'une décision de les supprimer.
                     }
                 }
 

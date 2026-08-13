@@ -6,11 +6,19 @@ struct TabBarView: View {
     var onSelect: (AppScreen) -> Void
     var onStartRun: () -> Void
 
+    /// Le 5e onglet est PROFIL, pas Club — c'est ce que porte la maquette (`#i-profile` /
+    /// « Profil » dans son `.tabbar`), et c'est ce qui défait le dédoublement qu'on avait :
+    /// depuis que le Profil est un hub social (cartes Running Club et Amis), l'onglet Club menait
+    /// au MÊME couple de destinations par un second chemin. Deux hubs vers deux écrans
+    /// identiques, dont le plus soigné n'était pas celui qui avait l'onglet.
+    ///
+    /// Rien n'est retiré : Club et Amis restent atteignables par les deux cartes du Profil, qui
+    /// ouvrent `SocialView` sur le bon segment. Un seul chemin y mène désormais.
     private let items: [(AppScreen, String, String)] = [
         (.home, "Prog", "list.bullet"),
         (.coach, "Coach", "bubble.left.and.bubble.right"),
         (.stats, "Stats", "chart.bar"),
-        (.club, "Club", "person.2")
+        (.profile, "Profil", "person.crop.circle")
     ]
 
     var body: some View {
@@ -66,7 +74,7 @@ struct TabBarView: View {
         .buttonStyle(PressableStyle())
         // The only persistent navigation chrome in the app, visible on every screen — without
         // this, VoiceOver conveyed the active tab purely through color (the dot + icon/label
-        // tint), so a screen-reader user had no way to tell which of Prog/Coach/Stats/Club was
+        // tint), so a screen-reader user had no way to tell which of Prog/Coach/Stats/Profil was
         // currently selected.
         .accessibilityAddTraits(on ? .isSelected : [])
     }

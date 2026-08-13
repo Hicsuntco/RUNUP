@@ -93,6 +93,17 @@ final class Analytics: @unchecked Sendable {
         case coachMessageSent = "coach_message_sent"
         case clubCreated = "club_created"
         case clubJoined = "club_joined"
+        /// Quel écran est ouvert, avec `screen` = le `rawValue` d'`AppScreen`. Ajouté quand le
+        /// Profil a remplacé Club en 5e onglet : ce déplacement descend la couche sociale d'un
+        /// niveau, et sans cet événement on ne pouvait ni confirmer ni infirmer que ça lui coûte
+        /// de l'usage — les 12 événements existants disent ce qu'on FAIT dans l'app, aucun ne dit
+        /// où l'on va. Un changement de navigation qu'on ne sait pas mesurer se défend à
+        /// l'opinion, et c'est exactement ce qui s'est passé ici.
+        ///
+        /// Ne transporte QUE le nom de l'écran : pas d'identifiant de contenu, pas de durée, rien
+        /// qui reconstitue un parcours nominatif. Un compteur de fréquentation, pas un journal de
+        /// navigation.
+        case screenViewed = "screen_viewed"
     }
 
     private static let baseURL = URL(string: "https://runup-nu.vercel.app")!

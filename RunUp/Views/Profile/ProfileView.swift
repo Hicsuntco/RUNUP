@@ -274,7 +274,12 @@ struct ProfileView: View {
         VStack(spacing: 12) {
             AppMarkView(size: 40)
             Text("Ton profil prend vie à plusieurs").font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-            Text("Connecte-toi pour voir tes amis et ton club directement ici.")
+            // Cet écran est le SEUL accès au club et aux amis depuis que Profil est le 5e onglet :
+            // déconnectée, il n'existe plus aucun autre chemin vers eux. Il doit donc dire ce
+            // qu'il y a derrière, pas seulement qu'il faut se connecter — une porte, pas un mur.
+            // (Rien n'est perdu au passage : rejoindre un club, suivre quelqu'un ou applaudir une
+            // séance demande de toute façon un compte.)
+            Text("Ton classement de club, le fil de tes amis et les sorties de groupe t'attendent ici.")
                 .font(RUFont.sans(11.5)).foregroundColor(RUColor.text2).multilineTextAlignment(.center)
             Button("SE CONNECTER") { showSignIn = true }
                 .buttonStyle(PrimaryButtonStyle())
@@ -304,7 +309,14 @@ struct ProfileView: View {
             // 14% / blanc 8%) et `tint(_:over:)` rend une couleur opaque — mélanger dedans
             // donnerait un trait quasi noir en thème clair au lieu d'un filet.
             .overlay(shape.stroke(tint.opacity(0.3), lineWidth: RUSpacing.hairline))
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.16 : 0), radius: 16, x: 0, y: 5)
+            // Même ombre que `ruCard()`, et surtout pas plus. Cette carte portait encore
+            // l'ancienne (radius 16, y 5, 16 %), rescapée parce qu'elle est posée à la main ici
+            // plutôt que par le modificateur partagé : les deux seules cartes teintées de la page
+            // flottaient donc quatre fois plus haut que toutes les cartes neutres de l'app. La
+            // maquette fait l'inverse — une teinte se distingue par sa couleur, jamais par plus
+            // d'élévation.
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.04 : 0), radius: 1, x: 0, y: 1)
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.08 : 0), radius: 4, x: 0, y: 3)
     }
 
     /// `.social-card-arrow` — un chevron nu se perd dans une carte teintée ; dans une pastille

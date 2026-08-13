@@ -32,6 +32,16 @@ const KNOWN_EVENTS = new Set([
   'coach_message_sent',
   'club_created',
   'club_joined',
+  // Le seul événement à haute fréquence de la liste — un par changement d'écran, là où tous les
+  // autres marquent un moment rare. Il est admis parce qu'il répond à une question qu'aucun autre
+  // ne peut trancher : le Profil a remplacé Club en 5e onglet, la couche sociale est donc
+  // descendue d'un niveau, et rien ne disait si ça lui coûte de l'usage.
+  //
+  // Sa cadence est déjà bornée sans traitement particulier : `MAX_EVENTS_PER_BATCH` et
+  // `DAILY_BATCH_CAP` s'appliquent à lui comme aux autres. Sa prop unique (`screen`) est un
+  // `AppScreen.rawValue` — une quinzaine de valeurs possibles, donc agrégeable, sans identifiant
+  // de contenu ni durée.
+  'screen_viewed',
 ]);
 
 // A real day of heavy use is a few dozen events across a handful of flushes; the client also caps

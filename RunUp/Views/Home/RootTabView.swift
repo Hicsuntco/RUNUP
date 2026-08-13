@@ -46,6 +46,13 @@ struct RootTabView: View {
             }
         }
         .animation(.easeInOut(duration: 0.25), value: appState.screen)
+        // Un seul point d'émission pour toute l'app : chaque écran passe par ce `switch`, donc
+        // rien ne peut être oublié ni compté deux fois. `onChange` plutôt qu'un `onAppear` par
+        // écran, qui se serait redéclenché à chaque retour de feuille modale.
+        .onAppear { Analytics.shared.track(.screenViewed, ["screen": .string(appState.screen.rawValue)]) }
+        .onChange(of: appState.screen) { _, screen in
+            Analytics.shared.track(.screenViewed, ["screen": .string(screen.rawValue)])
+        }
         .sheet(isPresented: Binding(get: { appState.sessionDetailPresented }, set: { appState.sessionDetailPresented = $0 })) {
             SessionDetailSheet()
                 .runUpSheetStyle()

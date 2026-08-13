@@ -122,7 +122,10 @@ final class AppState {
         // Reflects whatever's still queued from a previous session that got killed before it
         // could retry — without this, `pendingActivityCount` would silently start at its `= 0`
         // default and stay there until the next successful post/retry touched it.
-        refreshPendingActivityCount()
+        // Hopped onto the main actor like the calls above rather than called directly: the outbox
+        // extension is `@MainActor` (it drives observable UI state) while `init` is not, and the
+        // count is only ever read by a view, so landing one runloop later is invisible.
+        Task { @MainActor in self.refreshPendingActivityCount() }
     }
 
     /// Re-checks the program week/phase against the real calendar date — call whenever the app

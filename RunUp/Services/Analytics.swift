@@ -234,8 +234,11 @@ final class Analytics: @unchecked Sendable {
         URLSession.shared.dataTask(with: request) { [weak self] _, response, _ in
             guard let self else { return }
             let status = (response as? HTTPURLResponse)?.statusCode ?? -1
-            queue.async { [self] in
-                isFlushing = false
+            // `self` is already strong here (unwrapped just above), so this inner hop needs no
+            // capture list — but it is still an escaping closure, so Swift requires every member
+            // access below to be spelled `self.`.
+            self.queue.async {
+                self.isFlushing = false
                 // Delivered, or refused in a way that retrying can't fix (a malformed batch, an
                 // event name this deploy doesn't know) — either way it must leave the buffer, or
                 // the client would retry the same rejected batch forever and block everything
@@ -247,10 +250,10 @@ final class Analytics: @unchecked Sendable {
                 // `min` guards the one race the serial queue doesn't cover: events appended during
                 // the request can push the buffer past `maxBufferedEvents` and trim it from the
                 // front, so the count in flight may no longer all be there.
-                buffer.removeFirst(min(batch.count, buffer.count))
-                persistBuffer()
+                self.buffer.removeFirst(min(batch.count, self.buffer.count))
+                self.persistBuffer()
                 // A buffer that was over `maxEventsPerBatch` still has more to send.
-                sendNextBatch()
+                self.sendNextBatch()
             }
         }.resume()
     }

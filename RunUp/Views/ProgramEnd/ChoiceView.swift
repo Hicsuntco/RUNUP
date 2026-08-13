@@ -18,7 +18,19 @@ struct ChoiceView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                HeaderView(eyebrow: "Récupération terminée", title: "Et maintenant ?") { EmptyView() }
+                // `.profile` is not a tab — the ONLY ways into it anywhere in the app are this
+                // avatar and the identical one on `HomeView`/`RecoveryView`, all three of which
+                // sit in the header of whatever `AppScreen.home` currently resolves to. This
+                // screen replaces `HomeView.mainContent` outright for the whole `.choice` phase
+                // (see `HomeView.body`'s switch), and it was the one of the three that had
+                // `EmptyView()` here instead — so for as long as a finished program sat waiting on
+                // this choice, Profil was unreachable from the entire app, and with it Réglages,
+                // Apparence, le compte, les chaussures and "Voir mon objectif". Not a styling
+                // omission: an actual dead end, in the exact phase where "je regarde mes stats et
+                // mon compte avant de repartir" is the most likely thing she'd want to do.
+                HeaderView(eyebrow: "Récupération terminée", title: "Et maintenant ?") {
+                    AvatarButton(initial: String(profile.name.prefix(1)), imageData: profile.avatarImageData) { appState.go(.profile) }
+                }
 
                 VStack(alignment: .leading, spacing: 10) {
                     EyebrowLabel(text: "Bilan de ton programme")

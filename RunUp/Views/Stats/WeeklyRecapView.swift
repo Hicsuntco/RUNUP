@@ -92,13 +92,19 @@ struct WeeklyRecapView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                HStack(spacing: 12) {
-                    BackChevronButton { appState.go(.stats) }
-                    VStack(alignment: .leading, spacing: 1) {
-                        EyebrowLabel(text: "Semaine \(profile.weekNumber) · \(weekDateRangeLabel)", color: RUColor.rose)
-                        Text(isBestWeekEver ? "Ta meilleure semaine 🔥" : "Bilan de la semaine")
-                            .displayStyle(24).foregroundColor(RUColor.textPrimary)
-                    }
+                // Was a hand-rolled copy of `BackTitleHeaderView` — the exact same
+                // `HStack(spacing: 12) { BackChevronButton; VStack(spacing: 1) { eyebrow; title } }`
+                // the component already renders, down to the 24pt title. Identical output (the
+                // component adds a trailing `Spacer()`, which changes nothing inside a leading-
+                // aligned VStack), and it picks up the catalog lookup the component does on its
+                // title for free — both strings below are already keys in Localizable.xcstrings,
+                // and a bare `Text(String)` never resolves through it (see `EyebrowLabel`).
+                BackTitleHeaderView(
+                    eyebrow: "Semaine \(profile.weekNumber) · \(weekDateRangeLabel)",
+                    title: isBestWeekEver ? "Ta meilleure semaine 🔥" : "Bilan de la semaine",
+                    titleSize: 24
+                ) {
+                    appState.go(.stats)
                 }
 
                 statsGrid

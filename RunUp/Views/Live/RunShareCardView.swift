@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 /// Text-color styles for the share card, picked on the recap screen before sharing — the photo
@@ -68,10 +69,20 @@ struct RunShareCardView: View {
         return f
     }()
 
-    /// Route points normalized into a 0...1 square, preserving aspect ratio (a route that's
-    /// mostly north-south — or east-west — keeps its real shape instead of being stretched to
-    /// fill a square canvas). Longitude isn't corrected for latitude compression: this is a
-    /// stylized trace for a share card, not a scaled map, same spirit as Strava's own.
+    /// Le tracé réel, normalisé dans un carré 0…1 — la MÊME forme que celle parcourue, pas une
+    /// interprétation.
+    ///
+    /// La longitude est corrigée de la compression méridienne (`× cos(latitude)`) avant toute
+    /// mise à l'échelle. Sans cette correction — c'était le cas, et c'était assumé comme un
+    /// « tracé stylisé » — un degré de longitude était traité comme un degré de latitude alors
+    /// qu'à Paris il ne vaut que 0,66 fois sa distance : une boucle est-ouest sortait ~52 % trop
+    /// large, un aller-retour rectiligne changeait d'inclinaison. La carte qu'on publie après une
+    /// course ne montrait donc pas le parcours couru, et c'est la seule chose qu'on lui demande.
+    ///
+    /// C'est une projection équirectangulaire centrée sur la course. Sur quelques kilomètres, la
+    /// différence avec ce que dessine MapKit (Mercator sphérique, utilisé par `RunRouteMapView`
+    /// dans l'Historique) est inférieure à l'épaisseur du trait — les deux représentations du même
+    /// parcours se superposent enfin.
     private var normalizedRoutePoints: [CGPoint] {
         guard run.route.count > 1 else { return [] }
         let lats = run.route.map(\.lat)
@@ -79,13 +90,23 @@ struct RunShareCardView: View {
         guard let minLat = lats.min(), let maxLat = lats.max(),
               let minLng = lngs.min(), let maxLng = lngs.max()
         else { return [] }
-        let latRange = maxLat - minLat
-        let lngRange = maxLng - minLng
-        let range = max(latRange, lngRange, 0.00001)
+
+        // Cosinus de la latitude médiane de la course : le facteur par lequel un degré de
+        // longitude rétrécit à cet endroit du globe. 1 à l'équateur, ~0,66 à Paris, ~0 aux pôles
+        // — d'où le plancher, qui n'a d'effet que sur une course à moins de 100 km d'un pôle.
+        let midLat = (minLat + maxLat) / 2
+        let lngScale = max(cos(midLat * .pi / 180), 0.000001)
+
+        // Étendues ramenées à une unité commune, donc comparables : à partir d'ici, x et y sont
+        // à la même échelle de distance et le rapport de forme est celui du terrain.
+        let width = (maxLng - minLng) * lngScale
+        let height = maxLat - minLat
+        let span = max(width, height, 0.00001)
+
         return run.route.map { point in
-            let x = (point.lng - minLng - (range - lngRange) / 2) / range
-            // Latitude increases northward; y increases downward on screen — flip it.
-            let y = 1 - (point.lat - minLat - (range - latRange) / 2) / range
+            let x = ((point.lng - minLng) * lngScale + (span - width) / 2) / span
+            // La latitude croît vers le nord, y croît vers le bas à l'écran — on retourne.
+            let y = 1 - ((point.lat - minLat) + (span - height) / 2) / span
             return CGPoint(x: x, y: y)
         }
     }
@@ -106,7 +127,12 @@ struct RunShareCardView: View {
             }
             if normalizedRoutePoints.count > 1 {
                 neonRouteTrace
-                    .frame(height: 160)
+                    // Carré, et non plus 160 pt de haut sur toute la largeur : le tracé ne peut
+                    // occuper qu'un carré sans se déformer, donc réserver un bandeau large
+                    // laissait de toute façon deux marges vides de part et d'autre. 200 pt tient
+                    // dans les 360 pt de la carte tout en gardant au tracé son rôle de visuel
+                    // principal.
+                    .frame(width: 200, height: 200)
                     .padding(.bottom, 8)
             }
 
@@ -174,8 +200,17 @@ struct RunShareCardView: View {
     private var neonRouteTrace: some View {
         Canvas { context, size in
             let inset: CGFloat = 20
+            // `normalizedRoutePoints` rend un CARRÉ unité : le parcours y est déjà centré et à
+            // son vrai rapport de forme. L'étaler séparément sur la largeur et la hauteur du
+            // canevas défaisait exactement ce travail — ce bloc fait ~360 pt de large pour 160 de
+            // haut, donc la forme repartait étirée d'un facteur 2,2 en plus de la déformation de
+            // longitude. On dessine donc dans le plus grand carré centré disponible : c'est la
+            // seule mise à l'échelle qui conserve la forme.
+            let side = max(min(size.width, size.height) - inset * 2, 1)
+            let originX = (size.width - side) / 2
+            let originY = (size.height - side) / 2
             let points = normalizedRoutePoints.map {
-                CGPoint(x: inset + $0.x * (size.width - inset * 2), y: inset + $0.y * (size.height - inset * 2))
+                CGPoint(x: originX + $0.x * side, y: originY + $0.y * side)
             }
             guard let first = points.first, let last = points.last else { return }
             var path = Path()

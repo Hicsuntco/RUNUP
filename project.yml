@@ -25,10 +25,23 @@ targets:
       - path: RunUp/Resources/Fonts
       - path: RunUp/Resources/Assets.xcassets
       - path: RunUp/Resources/Localizable.xcstrings
+    # Build settings that can't be committed with their real values (the coach's shared secret)
+    # come from here — a committed file of empty defaults that optionally includes the gitignored
+    # `Secrets.xcconfig` holding the actual values. See Config.xcconfig and IOS_SETUP.md
+    # § "Coach backend".
+    configFiles:
+      Debug: Config.xcconfig
+      Release: Config.xcconfig
     info:
       path: RunUp/Info.plist
       properties:
         CFBundleDisplayName: RunUp
+        # Shared app↔server secret for the coach proxy, substituted at build time from the
+        # RUNUP_APP_SECRET build setting (Config.xcconfig → Secrets.xcconfig) instead of living as
+        # a string literal in CoachService.swift, where it was committed in plain text. Read back
+        # at runtime by `CoachService.appSecret` — see the comment there on why an embedded secret
+        # is a deterrent against casual abuse, not a real boundary.
+        RUNUPAppSecret: "$(RUNUP_APP_SECRET)"
         # Declares real support for English/Spanish alongside the French source strings in
         # Localizable.xcstrings — lets App Store Connect list the app as localized in these
         # languages, and is what App Review checks against actual in-app coverage.
@@ -231,3 +244,23 @@ targets:
         # absence is exactly what the upload rejection (missing CFBundleIconName + "no icons found
         # for watch application") flagged.
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+
+  # First test target in the project. Scoped deliberately at the ONE place where a silent
+  # regression does real-world harm rather than chasing a coverage percentage: the plan engine
+  # decides what a real person is told to run, and the audit found four progression defects there
+  # (no deload weeks, a +115% long-run jump between blocks, an all-quality Spécifique block, an
+  # uncapped tier inflating the taper). These tests encode the safety invariants those fixes
+  # established, so a future refactor of the engine fails the build instead of quietly shipping an
+  # injury-risk plan again.
+  RunUpTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: RunUpTests
+    dependencies:
+      - target: RunUp
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.hicsuntco.runup.tests
+        GENERATE_INFOPLIST_FILE: YES

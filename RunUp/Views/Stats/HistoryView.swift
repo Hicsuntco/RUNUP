@@ -163,42 +163,94 @@ struct HistoryView: View {
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous).stroke(RUColor.amber.opacity(0.35), lineWidth: RUSpacing.hairline))
     }
 
+    /// La `.hist-row` de la maquette : vignette du parcours à GAUCHE, puis date / titre / trois
+    /// chiffres en ligne, dans une carte nettement plus basse (12 pt de marge et rayon compact au
+    /// lieu de 16 pt et rayon standard).
+    ///
+    /// L'ancienne composition empilait trois `MetricColumn` de 20 pt surmontées de leurs
+    /// libellés en capitales (« KM », « TEMPS », « ALLURE MOY ») : trois fois plus haut, pour des
+    /// libellés qui se répètent à l'identique sur chaque ligne d'une liste qui n'affiche que ça —
+    /// « 6,4 km · 27:53 · 4:21/km » se lit sans eux. La vignette passe à gauche : sur une liste,
+    /// c'est la colonne d'images qui donne le rythme de balayage, et à droite elle se retrouvait
+    /// décalée d'une ligne à l'autre selon la longueur du titre.
     private func runCard(_ run: RunRecord) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
+        HStack(spacing: 12) {
+            runThumbnail(run)
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 8) {
                     Text(run.date, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated).locale(Locale(identifier: "fr_FR")))
-                        .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
-                    Spacer()
+                        .font(RUFont.sans(10, weight: .semibold)).foregroundColor(RUColor.text3)
+                    Spacer(minLength: 0)
                     // A manually-logged run has no real heart-rate reading — 0 would just be a
                     // fake number dressed up as data, so the line is dropped entirely instead.
                     if run.avgHeartRate > 0 {
-                        Text("FC moy \(run.avgHeartRate)").font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+                        Text("FC moy \(run.avgHeartRate)").font(RUFont.sans(10)).foregroundColor(RUColor.text3)
                     }
                 }
-                Text(run.title).font(RUFont.sans(15, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                HStack(spacing: 20) {
-                    MetricColumn(value: String(format: "%.1f", locale: Locale(identifier: "fr_FR"), run.distanceKm), label: "km", valueSize: 20)
-                    MetricColumn(value: PaceModel.formatDuration(Double(run.durationSeconds)), label: "temps", valueSize: 20)
-                    MetricColumn(value: run.avgPace, label: "allure moy", valueColor: RUColor.rose2, valueSize: 20)
+                Text(run.title)
+                    .font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                    .lineLimit(1)
+                HStack(spacing: 12) {
+                    Text(String(format: "%.1f km", locale: Locale(identifier: "fr_FR"), run.distanceKm))
+                    Text(PaceModel.formatDuration(Double(run.durationSeconds)))
+                    // Seule l'allure reste colorée : c'est le chiffre que la maquette met en
+                    // accent sur cette ligne, et le seul des trois qui dise quelque chose de la
+                    // performance plutôt que du volume.
+                    Text(run.avgPace + "/km").foregroundColor(RUColor.rose2)
+                    Spacer(minLength: 0)
                 }
-            }
-            if !run.route.isEmpty {
-                RunRouteMapView(route: run.route, lineWidth: 2.5)
-                    .frame(width: 64, height: 64)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
-                    // Purely decorative for VoiceOver — the distance/time/pace it traces are
-                    // already read from the MetricColumns beside it, and an unlabeled thumbnail
-                    // otherwise reads as a bare, meaningless "Map" stop.
-                    .accessibilityHidden(true)
+                .font(RUFont.sans(11.5, weight: .semibold))
+                .foregroundColor(RUColor.text2)
+                .lineLimit(1)
+                .padding(.top, 1)
             }
         }
-        .padding(16)
-        .ruCard()
+        .padding(12)
+        .ruCard(radius: RUSpacing.radiusCompact)
         // The main screen for reviewing past training — without this, each run swiped through
         // with VoiceOver was 8-9 disconnected stops (date, optional HR, title, then three
-        // separate value/label pairs) instead of one coherent "this run" element.
+        // separate value/label pairs) instead of one coherent "this run" element. Les libellés
+        // « km / temps / allure » ayant disparu de l'écran, ils sont réinjectés ici : sans eux,
+        // VoiceOver lisait « 6,4 km, 27:53, 4:21/km » sans dire ce que sont les deux derniers.
         .accessibilityElement(children: .combine)
+        .accessibilityLabel(runAccessibilityLabel(run))
+    }
+
+    /// Une course saisie à la main (ou marquée faite sans GPS) n'a pas de tracé — on montre une
+    /// icône neutre sur fond de carte, jamais une courbe décorative qui ferait passer une absence
+    /// de données pour un parcours. La tuile reste là dans les deux cas : c'est elle qui aligne
+    /// toutes les lignes de la liste.
+    @ViewBuilder
+    private func runThumbnail(_ run: RunRecord) -> some View {
+        Group {
+            if run.route.count > 1 {
+                RunRouteMapView(route: run.route, lineWidth: 2.5)
+            } else {
+                Image(systemName: "figure.run")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(RUColor.text3)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(RUColor.card2)
+            }
+        }
+        .frame(width: 52, height: 52)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        // Purely decorative for VoiceOver — the distance/time/pace it traces are already read
+        // from the row's own label, and an unlabeled thumbnail otherwise reads as a bare,
+        // meaningless "Map" stop.
+        .accessibilityHidden(true)
+    }
+
+    private func runAccessibilityLabel(_ run: RunRecord) -> String {
+        var parts: [String] = [
+            run.date.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "fr_FR"))),
+            run.title,
+            "\(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), run.distanceKm)) kilomètres",
+            "durée \(PaceModel.formatDuration(Double(run.durationSeconds)))",
+            "allure moyenne \(run.avgPace) par kilomètre"
+        ]
+        if run.avgHeartRate > 0 { parts.append("fréquence cardiaque moyenne \(run.avgHeartRate)") }
+        return parts.joined(separator: ", ")
     }
 }

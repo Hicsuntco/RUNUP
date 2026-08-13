@@ -378,3 +378,21 @@ CREATE INDEX IF NOT EXISTS idx_events_user_created ON events(user_id, created_at
 -- backfilled honestly, and NULL says exactly that, where a fabricated `now()` would make every
 -- dormant account look active in the first retention query anyone runs.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ;
+
+-- Real per-run metrics on a posted activity. Until now `activities` carried only `distance_km`
+-- (added for challenge progress) plus a prose `text` — so the club/friends feed could show WHO ran
+-- and a sentence, but never the run itself. Every richer feed card design dies on that: duration,
+-- pace and elevation aren't styling, they're columns that didn't exist, and no amount of client
+-- work can render a number the API never sends.
+--
+-- All nullable, deliberately: 'strength' and 'badge' activities have no pace, and a run logged
+-- manually (AddRunSheet) or marked done without GPS has no elevation. NULL means "not applicable
+-- or not measured" and the client omits the metric rather than printing a fabricated 0 — the same
+-- rule that got a hardcoded VO2max removed from this app.
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS duration_seconds INTEGER;
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS avg_pace TEXT;
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS elevation_gain_m INTEGER;
+-- Set by the client only when it genuinely verified the run beat every prior real run (see
+-- `RecapView.recordKind`) — never inferred server-side, where the run history to compare against
+-- doesn't exist.
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS is_personal_record BOOLEAN NOT NULL DEFAULT false;

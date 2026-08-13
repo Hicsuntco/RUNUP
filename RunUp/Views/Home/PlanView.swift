@@ -142,7 +142,10 @@ struct PlanView: View {
     private var plannedCount: Int { profile.weekSessions.filter { ($0.session?.durationMinutes ?? 0) > 0 }.count }
 
     private func weekDayList(_ week: WeekSummary) -> some View {
-        VStack(spacing: 0) {
+        // 2 pt entre les lignes (au lieu de 0) : la ligne du jour porte maintenant un fond teinté
+        // (`.sesh.active` de la maquette), qui a besoin d'un filet d'air pour se lire comme une
+        // ligne détachée et pas comme un bloc collé à ses voisines.
+        VStack(spacing: 2) {
             if !week.isCurrent {
                 Text(week.isDone ? "Résumé type de cette semaine passée" : "Aperçu — s'ajustera selon ta forme de la semaine précédente")
                     .font(RUFont.sans(9.5, weight: .semibold)).foregroundColor(RUColor.text3)
@@ -171,9 +174,9 @@ struct PlanView: View {
         let session = day.session
         let isRest = session == nil || session?.durationMinutes == 0
         let isToday = state == .today
-        return HStack(spacing: 11) {
-            Text(letter).displayStyle(10).foregroundColor(RUColor.text2).frame(width: 30, alignment: .leading)
-            Circle().fill(isRest ? RUColor.text4 : RUColor.rose).opacity(day.completed ? 1 : 0.5).frame(width: 6, height: 6)
+        return HStack(spacing: 10) {
+            Text(letter).displayStyle(10).foregroundColor(RUColor.text2).frame(width: 26, alignment: .leading)
+            dayIcon(session: session, isRest: isRest, completed: day.completed, isToday: isToday)
             VStack(alignment: .leading, spacing: 1) {
                 Text(session?.title ?? "Repos")
                     .font(RUFont.sans(12.5, weight: isToday ? .semibold : .regular))
@@ -182,9 +185,6 @@ struct PlanView: View {
                     Text(subtitle).font(RUFont.sans(10)).foregroundColor(RUColor.text3).lineLimit(2)
                 }
             }
-            if isToday {
-                StatChip(text: "aujourd'hui", color: RUColor.rose2)
-            }
             Spacer(minLength: 8)
             if let session, !isRest {
                 VStack(alignment: .trailing, spacing: 1) {
@@ -192,11 +192,63 @@ struct PlanView: View {
                     Text("\(session.pace)/km").font(RUFont.mono(9)).foregroundColor(RUColor.text3)
                 }
             }
-            if day.completed {
-                Text("✓").foregroundColor(RUColor.rose).font(.system(size: 11))
-            }
         }
-        .padding(.vertical, 9).padding(.horizontal, 4)
+        .padding(.vertical, 9).padding(.horizontal, 10)
+        // `.sesh.active` de la maquette : la ligne du jour se détache par un fond très légèrement
+        // teinté + un liseré rose, au lieu d'une puce "aujourd'hui" posée au milieu de la ligne
+        // qui poussait le titre de la séance et décalait la colonne durée/allure d'un jour à
+        // l'autre. Teinte, pas aplat — l'accent reste un liseré et une icône.
+        .background(isToday ? RUColor.rose.opacity(0.07) : Color.clear, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 11, style: .continuous)
+                .stroke(isToday ? RUColor.rose.opacity(0.3) : Color.clear, lineWidth: RUSpacing.hairline)
+        )
+        .contentShape(Rectangle())
+        // La maquette déplie le détail de la séance du jour directement sous sa ligne
+        // (`.sesh-detail` : échauffement / corps de séance / retour au calme). L'app a déjà mieux
+        // que ça — `SessionDetailSheet` dérive cette structure par archétype (footing continu vs
+        // fractionné vs tempo, plus les formats HYROX) au lieu du même gabarit pour tout — donc on
+        // ouvre cette feuille plutôt que d'en dupliquer une version appauvrie ici. Seule la ligne
+        // d'aujourd'hui réagit : c'est la seule séance dont `todaySession` décrit vraiment le
+        // contenu.
+        .onTapGesture { if isToday { appState.openSessionDetail() } }
+        // Chaque ligne était 3 à 5 arrêts VoiceOver sans lien (jour, titre, sous-titre, durée,
+        // allure), et "aujourd'hui" / "faite" ne vivaient plus que dans la couleur depuis que la
+        // puce et le ✓ ont fusionné dans l'icône de type.
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(dayRowAccessibilityLabel(day: day, isToday: isToday, isRest: isRest))
+        .accessibilityAddTraits(isToday ? .isButton : [])
+    }
+
+    /// L'icône `.sesh-icon` de la maquette : une tuile qui annonce le TYPE du jour d'un coup
+    /// d'œil, là où il n'y avait qu'une pastille de 6 pt rose ou grise ne distinguant que
+    /// "course / repos". Le type vient de `WorkoutSession.isIntervalSession`, la seule
+    /// classification que le modèle expose réellement (déjà partagée par `SessionDetailSheet` et
+    /// l'écran Live) — aucune catégorie inventée au-delà de repos / endurance / fractionné.
+    private func dayIcon(session: WorkoutSession?, isRest: Bool, completed: Bool, isToday: Bool) -> some View {
+        let symbol: String
+        if completed { symbol = "checkmark" }
+        else if isRest { symbol = "moon.zzz.fill" }
+        else if session?.isIntervalSession == true { symbol = "bolt.fill" }
+        else { symbol = "figure.run" }
+
+        let tint: Color = completed || isToday ? RUColor.rose : isRest ? RUColor.text3 : RUColor.text2
+        return Image(systemName: symbol)
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundColor(tint)
+            .frame(width: 26, height: 26)
+            .background(isToday ? RUColor.rose.opacity(0.12) : RUColor.bg, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+    }
+
+    private func dayRowAccessibilityLabel(day: PlannedDay, isToday: Bool, isRest: Bool) -> String {
+        var parts: [String] = [isToday ? "\(DayStatus.fullNames[day.weekday]), aujourd'hui" : DayStatus.fullNames[day.weekday]]
+        parts.append(isRest ? "repos" : (day.session?.title ?? "repos"))
+        if let session = day.session, !isRest {
+            parts.append("\(session.durationMinutes) minutes, \(session.zone), allure \(session.pace) par kilomètre")
+        }
+        if day.completed { parts.append("séance faite") }
+        return parts.joined(separator: ", ")
     }
 
     private func paceMinutesPerKm(_ pace: String) -> Double? {

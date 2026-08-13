@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Design tokens — see design_handoff_runup_app/README.md § Design Tokens / Colors. Every token
 /// here is theme-aware (dark/light — see `ThemeStore.isLightMode`, set from Profil → Apparence),
@@ -57,6 +58,48 @@ enum RUColor {
     static var card: Color { isLight ? Color(hex: 0xF0F0F6) : Color.white.opacity(0.045) }
     static var card2: Color { isLight ? Color(hex: 0xE7E7EF) : Color.white.opacity(0.03) }
     static var line: Color { isLight ? Color.black.opacity(0.14) : Color.white.opacity(0.08) }
+
+    /// Mélange opaque de `color` dans `base`, exactement `color-mix(in srgb, color N%, base)` en CSS.
+    ///
+    /// La maquette n'utilise jamais une couleur d'accent translucide posée sur ce qui se trouve
+    /// derrière : elle calcule un aplat opaque (`background: color-mix(in srgb, var(--ru-rose) 12%,
+    /// var(--ru-bg))`). La différence est visible dès qu'une pastille se trouve SUR une carte —
+    /// `card` (#F0F0F6 en clair) n'est pas `bg` (#FFFFFF) : un `rose.opacity(0.12)` translucide se
+    /// teinte du gris de la carte, alors que le mélange sur `bg` reste plus clair que la carte et
+    /// se détache comme une découpe. La maquette mélange TOUJOURS sur `--ru-bg` pour les pastilles,
+    /// y compris celles posées sur une carte (`.follow-chip` vit dans `.suggest-card`) — d'où le
+    /// `over:` explicite plutôt qu'un `.opacity()` implicite.
+    ///
+    /// Calculé en sRGB non-prémultiplié, comme `color-mix(in srgb, …)`. Les tokens d'accent étant
+    /// des propriétés calculées lisant `ThemeStore`, appeler ce helper depuis un `body` enregistre
+    /// la dépendance d'observation comme n'importe quel autre token — le mélange se recalcule seul
+    /// au changement de thème ou d'accent.
+    static func tint(_ color: Color, _ amount: Double, over base: Color) -> Color {
+        var cr: CGFloat = 0, cg: CGFloat = 0, cb: CGFloat = 0, ca: CGFloat = 0
+        var br: CGFloat = 0, bg: CGFloat = 0, bb: CGFloat = 0, ba: CGFloat = 0
+        UIColor(color).getRed(&cr, green: &cg, blue: &cb, alpha: &ca)
+        UIColor(base).getRed(&br, green: &bg, blue: &bb, alpha: &ba)
+        let t = CGFloat(min(max(amount, 0), 1))
+        return Color(
+            red: Double(cr * t + br * (1 - t)),
+            green: Double(cg * t + bg * (1 - t)),
+            blue: Double(cb * t + bb * (1 - t))
+        )
+    }
+
+    /// L'équivalent du `--ru-gradient` de la maquette (`linear-gradient(135deg, rose2, rose)`) —
+    /// le dégradé d'accent « une seule famille », à ne pas confondre avec `brandGradient`
+    /// (rose → violet, deux familles).
+    ///
+    /// Ce couple `[rose2, rose]` était déjà recopié à l'identique dans `PrimaryButtonStyle` et
+    /// `SelectableChip` ; il est nommé ici pour que les deux ne puissent plus diverger. Les points
+    /// de départ/arrivée restent paramétrables parce que la maquette elle-même n'a pas une seule
+    /// direction : 135° (diagonale) sur les surfaces à peu près carrées, et le CTA plein largeur
+    /// garde volontairement sa version verticale (une diagonale sur un bouton large et bas se lit
+    /// comme un dégradé horizontal, pas comme la diagonale voulue).
+    static func accentGradient(from start: UnitPoint = .topLeading, to end: UnitPoint = .bottomTrailing) -> LinearGradient {
+        LinearGradient(colors: [rose2, rose], startPoint: start, endPoint: end)
+    }
 
     static var brandGradient: LinearGradient {
         LinearGradient(colors: [rose, violet], startPoint: .topLeading, endPoint: .bottomTrailing)

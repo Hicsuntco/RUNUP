@@ -152,14 +152,35 @@ extension Text {
     }
 
     /// Class `.eye` — eyebrow label above section/card titles.
-    func eyebrowStyle(color: Color = RUColor.text2) -> some View {
-        self.font(RUFont.sans(9, weight: .bold)).tracking(3).textCase(.uppercase).foregroundColor(color)
+    ///
+    /// Recalé sur le `.ru-eyebrow` de la maquette : `font-size: 8.5px; font-weight: 700;
+    /// letter-spacing: 0.18em; color: var(--ru-ink3)`.
+    ///
+    /// - Taille 9 → 10 : le gabarit téléphone de la maquette (268px pour ~393pt réels) donne un
+    ///   facteur ~1,25, calibré sur deux repères non ambigus — ses micro-libellés de métriques font
+    ///   7,5px là où l'app utilise `sans(9)`, et sa barre de progression d'onboarding fait 2,5px là
+    ///   où l'app utilise 3. 8,5 × 1,25 ≈ 10,6. L'app posait l'eyebrow et les micro-libellés à la
+    ///   MÊME taille (9) alors que la maquette hiérarchise les deux.
+    /// - Interlettrage 3 → 1,8 : 0,18em à 10pt vaut 1,8pt. L'ancien 3pt à 9pt valait 0,33em, soit
+    ///   presque le double de la maquette — c'est l'écart le plus net de toute la typographie
+    ///   partagée, et le plus visible (un eyebrow trop étiré se lit comme un titre de rubrique de
+    ///   presse, pas comme une étiquette discrète).
+    ///   Les deux changements se compensent en largeur : ~8,4pt par caractère avant, ~7,8pt après.
+    /// - Couleur par défaut `text2` → `text3` : la maquette réserve `--ru-ink2` à la prose
+    ///   secondaire (`.callout p`, `.insight-line`, `.alert-card .s8`) et emploie `--ru-ink3` pour
+    ///   TOUTES ses micro-étiquettes — eyebrows, libellés de métriques, horodatages. Les deux
+    ///   tokens se correspondent d'ailleurs exactement (`ink3` sombre = 32% blanc = `text3`).
+    ///   Sans effet sur les ~66 des 83 `EyebrowLabel` qui passent déjà une couleur explicite.
+    func eyebrowStyle(color: Color = RUColor.text3) -> some View {
+        self.font(RUFont.sans(10, weight: .bold)).tracking(1.8).textCase(.uppercase).foregroundColor(color)
     }
 }
 
 struct EyebrowLabel: View {
     var text: String
-    var color: Color = RUColor.text2
+    /// Voir `eyebrowStyle(color:)` : `text3`, pas `text2` — la maquette réserve `ink2` à la prose
+    /// secondaire et met toutes ses micro-étiquettes en `ink3`.
+    var color: Color = RUColor.text3
 
     var body: some View {
         // `Text(text)` with a plain `String` never resolves through Localizable.xcstrings — only

@@ -10,7 +10,7 @@ struct ClubView: View {
     @Environment(AppState.self) private var appState
     @Query(sort: \RunRecord.date, order: .reverse) private var runs: [RunRecord]
 
-    @State private var tab: Tab = .board
+    @State private var tab: Tab = .overview
     @State private var board = ClubBoard(club: nil, leaderboard: [])
     @State private var feed: [FeedItem] = []
     // Starts true (not false) so the very first render — before `.task` below has had a chance to
@@ -59,7 +59,20 @@ struct ClubView: View {
     /// which each row's own per-index delay takes over (same pattern as `RecapView`'s splits).
     @State private var feedRevealed = false
 
-    private enum Tab { case board, feed }
+    /// Trois destinations, pas un mur (`.club-tabs` dans la maquette).
+    ///
+    /// L'écran empilait auparavant, AU-DESSUS de son sélecteur à deux positions : la carte de
+    /// niveau, le pouls de la semaine, le défi, les sorties de groupe et la ligne d'adhésion. En
+    /// clair, il fallait faire défiler cinq blocs avant d'atteindre le classement — et exactement
+    /// les mêmes cinq avant d'atteindre le fil. Rien de tout cela n'était mauvais, c'était juste
+    /// toujours là, quelle que soit la raison pour laquelle on ouvrait l'écran.
+    ///
+    /// C'est le seul endroit où j'ai vraiment restructuré un écran qui marchait, et c'est parce
+    /// que le volume de contenu le justifie : ces cinq blocs représentent plus d'une hauteur
+    /// d'écran à eux seuls. Ils forment un ensemble cohérent — « où en est le club en ce moment »
+    /// — qui devient l'onglet Aperçu, pendant que Classement et Activité deviennent atteignables
+    /// en un seul geste depuis le haut de la page.
+    private enum Tab { case overview, board, feed }
 
     private var profile: UserProfile { appState.profile }
     private var auth: AuthService { appState.auth }
@@ -80,14 +93,13 @@ struct ClubView: View {
                 } else if board.club == nil {
                     clubSetupCard
                 } else {
-                    levelCard
-                    weekPulseCard
-                    challengeCard
-                    eventsCard
-                    membershipRow
-                    segmentedControl
+                    clubTabs
                     Group {
-                        if tab == .board { boardContent } else { feedContent }
+                        switch tab {
+                        case .overview: overviewContent
+                        case .board: boardContent
+                        case .feed: feedContent
+                        }
                     }
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
@@ -429,6 +441,17 @@ struct ClubView: View {
         max(0, Calendar.current.dateComponents([.day], from: .now, to: date).day ?? 0)
     }
 
+    /// « 312 / 500 km — 62 % ». Le pourcentage est celui que la barre juste au-dessus dessine
+    /// déjà : la maquette le met en toutes lettres, et c'est le chiffre qu'on cherche vraiment
+    /// (« on en est où »), là où deux nombres bruts obligent à faire la division de tête. Rien
+    /// d'inventé — c'est exactement `progressKm / targetKm`, tous deux calculés côté serveur.
+    private func challengeProgressText(_ challenge: ClubChallenge) -> String {
+        let base = "\(Int(challenge.progressKm)) / \(Int(challenge.targetKm)) km"
+        guard challenge.targetKm > 0 else { return base }
+        let pct = Int((challenge.progressKm / challenge.targetKm * 100).rounded())
+        return "\(base) — \(pct) %"
+    }
+
     /// Any member can set the club's challenge (see "Gestion du club") — this used to always show
     /// a fixed "100 km ce mois-ci" regardless of whether anyone had actually agreed to that goal.
     /// `progressKm` is a real sum computed server-side over every member's logged runs since the
@@ -445,7 +468,7 @@ struct ClubView: View {
                     Text(challenge.title).displayStyle(19).foregroundColor(RUColor.textPrimary)
                     LinearBar(fraction: challenge.targetKm > 0 ? min(1, challenge.progressKm / challenge.targetKm) : 0, color: RUColor.rose)
                     HStack {
-                        Text("\(Int(challenge.progressKm)) / \(Int(challenge.targetKm)) km").font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                        Text(challengeProgressText(challenge)).font(RUFont.sans(11)).foregroundColor(RUColor.text2)
                         Spacer()
                         Text("ensemble").font(RUFont.sans(11)).foregroundColor(RUColor.text2)
                     }
@@ -470,14 +493,70 @@ struct ClubView: View {
         }
     }
 
-    private var segmentedControl: some View {
-        HStack(spacing: 4) {
+    private var clubTabs: some View {
+        HStack(spacing: 2) {
+            segment("Aperçu", .overview)
             segment("Classement", .board)
-            segment("Fil d'activité", .feed)
+            segment("Activité", .feed)
         }
         .padding(3)
-        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(RUColor.bg2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+    }
+
+    /// Contenu de l'onglet Aperçu : « où en est le club en ce moment ». L'ordre suit celui de la
+    /// maquette — l'état collectif (niveau, pouls, défi) d'abord, puis ce qui appelle une action
+    /// (les sorties), puis qui est là. La ligne d'adhésion (signaler / quitter) descend en bas de
+    /// cet onglet : c'est de l'administration, elle n'a jamais eu à être au-dessus du classement.
+    private var overviewContent: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            levelCard
+            weekPulseCard
+            challengeCard
+            eventsCard
+            activeMembersRow
+            membershipRow
+        }
+    }
+
+    /// « Membres actifs cette semaine » — piles d'avatars de `.stack-avatars`.
+    ///
+    /// Données réelles uniquement : `board.weekly` est la liste, calculée côté serveur, de qui a
+    /// réellement couru depuis lundi. Le « +N » compte le reste de cette même liste, il n'est pas
+    /// dérivé du nombre total de membres du club (ce qui compterait comme « actifs » des gens qui
+    /// n'ont rien fait). L'onglet disparaît entièrement si personne n'a encore couru — la
+    /// maquette n'a jamais eu à montrer une semaine vide.
+    @ViewBuilder
+    private var activeMembersRow: some View {
+        let active = (board.weekly ?? []).filter { $0.weekKm > 0 }
+        if !active.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                EyebrowLabel(text: "Membres actifs cette semaine", color: RUColor.text3)
+                HStack(spacing: -8) {
+                    ForEach(active.prefix(6)) { member in
+                        AvatarView(
+                            urlString: member.avatarUrl,
+                            base64DataURI: member.avatarBase64,
+                            initial: String(member.name.prefix(1)),
+                            size: 30,
+                            seed: member.isMe ? nil : member.id
+                        )
+                        .overlay(Circle().stroke(RUColor.bg, lineWidth: 2))
+                    }
+                    if active.count > 6 {
+                        Text("+\(active.count - 6)")
+                            .font(RUFont.sans(10, weight: .bold))
+                            .foregroundColor(RUColor.text2)
+                            .frame(width: 30, height: 30)
+                            .background(RUColor.card2, in: Circle())
+                            .overlay(Circle().stroke(RUColor.bg, lineWidth: 2))
+                    }
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(active.count) membre\(active.count > 1 ? "s" : "") actif\(active.count > 1 ? "s" : "") cette semaine")
+            }
+            .padding(.top, 2)
+        }
     }
 
     private func boardModeChip(_ label: String, _ value: BoardMode) -> some View {
@@ -503,17 +582,23 @@ struct ClubView: View {
         }) {
             Text(label)
                 .font(RUFont.sans(12.5, weight: .semibold))
-                // White stays literal only when selected (background is the opaque RUColor.rose
-                // accent fill below); unselected sits on the plain page/card surface and needs to
-                // invert with the theme.
-                .foregroundColor(tab == value ? .white : RUColor.textPrimary)
+                // Pastille NEUTRE (surface de carte sur rail `bg2`), pas un aplat d'accent —
+                // deux raisons. D'abord la règle que la maquette applique partout : l'accent
+                // souligne, il ne remplit pas. Ensuite, et c'est décisif ici, `SocialView`
+                // affiche déjà juste au-dessus son propre sélecteur « Mon club / Mes amis » en
+                // aplat rose : deux barres roses empilées à 8 pt l'une de l'autre ne se
+                // hiérarchisent plus du tout. Accent pour le choix de destination principale,
+                // neutre pour la navigation interne à l'écran.
+                .foregroundColor(tab == value ? RUColor.textPrimary : RUColor.text3)
                 // Back to its original compact size, no enforced 44pt minimum — she found the
                 // audit's forced-44pt height on this pill too big and asked for it back.
                 .padding(.vertical, 9)
                 .frame(maxWidth: .infinity)
-                .background(tab == value ? RUColor.rose : .clear, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                .background(tab == value ? RUColor.card : .clear, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                .shadow(color: .black.opacity(tab == value && RUColor.isLight ? 0.08 : 0), radius: 3, x: 0, y: 1)
         }
         .buttonStyle(PressableStyle())
+        .accessibilityAddTraits(tab == value ? .isSelected : [])
     }
 
     /// "My" badges — the only place with real access to this device's local `RunRecord`/streak
@@ -605,6 +690,27 @@ struct ClubView: View {
         return f
     }()
 
+    private static let eventTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "fr_FR")
+        f.dateFormat = "HH:mm"
+        return f
+    }()
+
+    /// « CE SOIR · 18:00 » plutôt que « MER 13 AOÛT · 18:00 » quand la sortie est aujourd'hui.
+    ///
+    /// La maquette insiste sur ce point et elle a raison : une sortie de groupe est une chose à
+    /// laquelle on décide de se joindre MAINTENANT, et une date complète oblige à comparer
+    /// mentalement avec le jour qu'on est. Purement du formatage — la donnée reste `startsAt`.
+    private func eventDateLabel(_ date: Date) -> String {
+        let time = Self.eventTimeFormatter.string(from: date)
+        if Calendar.current.isDateInToday(date) {
+            return Calendar.current.component(.hour, from: date) >= 17 ? "CE SOIR · \(time)" : "AUJOURD'HUI · \(time)"
+        }
+        if Calendar.current.isDateInTomorrow(date) { return "DEMAIN · \(time)" }
+        return Self.eventDateFormatter.string(from: date).uppercased()
+    }
+
     /// Sorties de groupe — real proposed group runs with RSVP. The one feature that turns a
     /// leaderboard into an actual club: people running TOGETHER.
     private var eventsCard: some View {
@@ -631,7 +737,7 @@ struct ClubView: View {
             ForEach(board.events ?? []) { event in
                 HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(Self.eventDateFormatter.string(from: event.startsAt).uppercased())
+                        Text(eventDateLabel(event.startsAt))
                             .font(RUFont.sans(9, weight: .bold)).tracking(0.6).foregroundColor(RUColor.rose2)
                         Text(event.title).font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                         if let location = event.location, !location.isEmpty {
@@ -779,18 +885,44 @@ struct ClubView: View {
                     .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
                     .frame(maxWidth: .infinity).padding(.vertical, 20)
             } else {
+                // La bascule Km / % objectif était posée seule, alignée à droite, sans rien
+                // dire de ce qu'elle bascule. La maquette lui donne son titre de section sur la
+                // même ligne — c'est ce qui fait qu'on comprend « classement DE LA SEMAINE » et
+                // pas « classement tout court, avec un réglage mystérieux ».
                 HStack {
-                    Spacer()
+                    EyebrowLabel(text: "Classement de la semaine", color: RUColor.text3)
+                    Spacer(minLength: 8)
                     weeklyDisplayModePicker
                 }
                 .padding(.bottom, 2)
-                VStack(spacing: 6) {
-                    ForEach(Array(rankedWeekly.enumerated()), id: \.element.id) { index, entry in
-                        weekRow(entry, displayRank: index + 1)
-                    }
-                }
+                weekBoardRows
             }
         }
+    }
+
+    private var weekBoardRows: some View {
+        let rows = rankedWeekly
+        return VStack(spacing: 0) {
+            ForEach(Array(rows.enumerated()), id: \.element.id) { index, entry in
+                if index > 0 && !entry.isMe && !rows[index - 1].isMe {
+                    boardDivider
+                }
+                weekRow(entry, displayRank: index + 1)
+            }
+        }
+    }
+
+    /// Filet de séparation entre deux lignes de classement (`.lb-row`'s `border-top`).
+    ///
+    /// Les lignes étaient auparavant des cartes individuelles (fond `card2` + contour + rayon 14),
+    /// empilées avec 6 pt d'écart : douze membres donnaient douze cartes à contours, soit un
+    /// classement qui ressemblait à une liste de réglages. Un classement est une seule et même
+    /// liste ordonnée — un filet entre les lignes le dit, et ça permet d'en afficher nettement
+    /// plus par écran. La ligne « toi » garde, elle, son fond teinté : c'est le seul repère qui
+    /// doit sauter aux yeux, et il ressort beaucoup mieux maintenant qu'il est le seul fond de la
+    /// liste (le filet saute de part et d'autre pour ne pas venir couper ce bloc arrondi).
+    private var boardDivider: some View {
+        Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
     }
 
     /// Same pill-in-capsule idiom as `StatsView.rangePicker` — Km vs. "% objectif" for the weekly
@@ -807,8 +939,11 @@ struct ClubView: View {
                         .foregroundColor(weeklyDisplayMode == mode ? .white : RUColor.text2)
                         .padding(.horizontal, 9).padding(.vertical, 5)
                         .background(
+                            // Même dégradé d'accent que partout ailleurs, via le token partagé
+                            // (`--ru-gradient` de la maquette) plutôt qu'un couple recopié à la
+                            // main — c'est exactement ce que `RUColor.accentGradient` centralise.
                             weeklyDisplayMode == mode
-                                ? AnyShapeStyle(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom))
+                                ? AnyShapeStyle(RUColor.accentGradient(from: .top, to: .bottom))
                                 : AnyShapeStyle(Color.clear),
                             in: Capsule()
                         )
@@ -842,9 +977,14 @@ struct ClubView: View {
                     .displayStyle(14).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
             }
         }
-        .padding(.horizontal, 13).padding(.vertical, 11)
-        .background(entry.isMe ? RUColor.rose.opacity(0.1) : RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(entry.isMe ? RUColor.rose.opacity(0.28) : RUColor.line, lineWidth: RUSpacing.hairline))
+        // Même retrait horizontal pour TOUTES les lignes (et non un retrait plus grand pour la
+        // mienne, comme le fait la maquette avec sa marge négative) : ici les colonnes — rang,
+        // avatar, nom — doivent rester alignées d'une ligne à l'autre, sinon la ligne « toi » a
+        // l'air décalée par erreur. Le fond teinté suffit largement à la distinguer.
+        .padding(.horizontal, 8)
+        .padding(.vertical, 11)
+        .background(entry.isMe ? RUColor.rose.opacity(0.09) : Color.clear, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .contentShape(Rectangle())
     }
 
     /// A compact progress ring + percentage, replacing the raw-km number in "% objectif" mode —
@@ -870,8 +1010,12 @@ struct ClubView: View {
     }
 
     private var generalBoardContent: some View {
-        VStack(spacing: 6) {
-            ForEach(board.leaderboard) { entry in
+        let rows = board.leaderboard
+        return VStack(spacing: 0) {
+            ForEach(Array(rows.enumerated()), id: \.element.id) { index, entry in
+                if index > 0 && !entry.isMe && !rows[index - 1].isMe {
+                    boardDivider
+                }
                 generalRow(entry)
             }
         }
@@ -892,9 +1036,11 @@ struct ClubView: View {
             Spacer()
             Text("\(entry.xp)").displayStyle(15).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
         }
-        .padding(.horizontal, 13).padding(.vertical, 11)
-        .background(entry.isMe ? RUColor.rose.opacity(0.1) : RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(entry.isMe ? RUColor.rose.opacity(0.28) : RUColor.line, lineWidth: RUSpacing.hairline))
+        // Même chrome que `weekRow` ci-dessus (retrait uniforme, fond teinté pour « toi »).
+        .padding(.horizontal, 8)
+        .padding(.vertical, 11)
+        .background(entry.isMe ? RUColor.rose.opacity(0.09) : Color.clear, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .contentShape(Rectangle())
         .contextMenu {
             if !entry.isMe {
                 Button("Signaler \(entry.name)") {
@@ -983,8 +1129,12 @@ struct ClubView: View {
                         .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
                         .frame(maxWidth: .infinity).padding(.vertical, 20)
                 } else {
-                    VStack(spacing: 6) {
-                        ForEach(globalBoard.entries) { entry in
+                    let rows = globalBoard.entries
+                    VStack(spacing: 0) {
+                        ForEach(Array(rows.enumerated()), id: \.element.id) { index, entry in
+                            if index > 0 && !entry.isMe && !rows[index - 1].isMe {
+                                boardDivider
+                            }
                             HStack(spacing: 12) {
                                 Text(entry.rank >= 1 && entry.rank <= 3 ? ["🥇", "🥈", "🥉"][entry.rank - 1] : "\(entry.rank)")
                                     .displayStyle(15)
@@ -1000,9 +1150,9 @@ struct ClubView: View {
                                 Text("\(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), entry.weekKm)) km")
                                     .displayStyle(14).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
                             }
-                            .padding(.horizontal, 13).padding(.vertical, 11)
-                            .background(entry.isMe ? RUColor.rose.opacity(0.1) : RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(entry.isMe ? RUColor.rose.opacity(0.28) : RUColor.line, lineWidth: RUSpacing.hairline))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 11)
+                            .background(entry.isMe ? RUColor.rose.opacity(0.09) : Color.clear, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                         }
                     }
                 }

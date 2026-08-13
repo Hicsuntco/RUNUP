@@ -69,3 +69,29 @@ final class RunRecord {
         self.stravaActivityId = stravaActivityId
     }
 }
+
+extension RunRecord {
+    /// Est-ce que cette sortie bat quelque chose ? Deux records seulement, et exactement ceux que
+    /// l'écran Stats affiche déjà sous « Records personnels » : la plus longue distance, et la
+    /// meilleure allure moyenne (plancher de 1 km, sinon un sprint de 300 m battrait tout).
+    ///
+    /// Volontairement PAS un « PR » au sens chrono-sur-distance-officielle : l'app ne mesure pas
+    /// de temps de passage au 5 km ou au 10 km, donc l'annoncer serait inventer un record qui n'a
+    /// jamais été chronométré. `history` exclut la sortie elle-même — se comparer à soi-même
+    /// ferait de toute première course un record.
+    static func beatsPersonalRecord(_ run: RunRecord, history: [RunRecord]) -> Bool {
+        let others = history.filter { $0 !== run }
+        // Une première sortie n'est un record de rien : il n'y a rien à battre.
+        guard !others.isEmpty else { return false }
+
+        if run.distanceKm > 0.05, others.allSatisfy({ run.distanceKm > $0.distanceKm }) { return true }
+
+        guard run.distanceKm >= 1, let pace = PaceModel.parseSecPerKm(run.avgPace) else { return false }
+        let previousBest = others.compactMap { other -> Double? in
+            guard other.distanceKm >= 1 else { return nil }
+            return PaceModel.parseSecPerKm(other.avgPace)
+        }.min()
+        guard let previousBest else { return false }
+        return pace < previousBest
+    }
+}

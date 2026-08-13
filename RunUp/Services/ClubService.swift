@@ -89,6 +89,24 @@ struct ClubChallenge: Decodable, Identifiable {
     var endDate: Date
 }
 
+/// Ce qu'une sortie terminée a réellement mesuré, au moment de la poster. Tout est optionnel
+/// séparément : une séance de renfo n'a pas de distance, une sortie sans GPS n'a pas de dénivelé,
+/// un post de badge n'a rien du tout. `.none` est le cas normal pour tout ce qui n'est pas une
+/// course.
+struct ActivityMetrics: Codable, Equatable {
+    var distanceKm: Double?
+    var durationSeconds: Int?
+    /// Format « m:ss » — celui affiché sur l'écran de debrief, repris tel quel plutôt que
+    /// recalculé, pour que le fil montre exactement le chiffre qu'elle a vu.
+    var avgPace: String?
+    var elevationGainM: Int?
+    /// Renseigné par le client à partir de son propre historique (`RunRecord`), la seule source
+    /// qui connaisse ses sorties passées. Le serveur ne le recalcule pas.
+    var isPersonalRecord: Bool = false
+
+    static let none = ActivityMetrics()
+}
+
 struct FeedItem: Decodable, Identifiable {
     var id: String
     var userId: String
@@ -97,9 +115,66 @@ struct FeedItem: Decodable, Identifiable {
     var avatarBase64: String?
     var text: String
     var createdAt: Date
+    // Les métriques réelles de la sortie, chacune indépendamment absente. Un post `badge` n'est
+    // pas une course, une activité d'avant la migration n'a rien de mesuré, et une sortie saisie
+    // sans montre n'a ni dénivelé ni allure. `ActivityFeedRow` n'affiche que les colonnes
+    // présentes : pas de « 0 km » ni de « --:-- » qui feraient passer une absence de mesure pour
+    // une mesure.
+    var distanceKm: Double?
+    var durationSeconds: Int?
+    /// Déjà formatée « m:ss » côté serveur, telle qu'elle a été enregistrée à la fin de la sortie
+    /// — la recalculer ici depuis distance/durée donnerait une valeur légèrement différente de
+    /// celle que la coureuse a vue sur son écran de debrief.
+    var avgPace: String?
+    var elevationGainM: Int?
+    var isPersonalRecord: Bool
     var kudos: Int
     var kudoedByMe: Bool
     var commentsCount: Int
+
+    private enum CodingKeys: String, CodingKey {
+        case id, userId, name, avatarUrl, avatarBase64, text, createdAt
+        case distanceKm, durationSeconds, avgPace, elevationGainM, isPersonalRecord
+        case kudos, kudoedByMe, commentsCount
+    }
+
+    /// Décodage volontairement tolérant sur les seuls champs de métrique. Le déploiement du
+    /// backend et celui de l'app ne sont jamais simultanés : pendant la fenêtre où le serveur ne
+    /// renvoie pas encore ces clés, un `decode` strict sur `isPersonalRecord` ferait échouer le
+    /// décodage de TOUT le tableau et viderait le fil. Les champs historiques restent stricts —
+    /// un fil sans `id` ou sans `text` est une vraie anomalie, pas une transition.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        userId = try c.decode(String.self, forKey: .userId)
+        name = try c.decode(String.self, forKey: .name)
+        avatarUrl = try c.decodeIfPresent(String.self, forKey: .avatarUrl)
+        avatarBase64 = try c.decodeIfPresent(String.self, forKey: .avatarBase64)
+        text = try c.decode(String.self, forKey: .text)
+        createdAt = try c.decode(Date.self, forKey: .createdAt)
+        distanceKm = try c.decodeIfPresent(Double.self, forKey: .distanceKm)
+        durationSeconds = try c.decodeIfPresent(Int.self, forKey: .durationSeconds)
+        avgPace = try c.decodeIfPresent(String.self, forKey: .avgPace)
+        elevationGainM = try c.decodeIfPresent(Int.self, forKey: .elevationGainM)
+        isPersonalRecord = try c.decodeIfPresent(Bool.self, forKey: .isPersonalRecord) ?? false
+        kudos = try c.decode(Int.self, forKey: .kudos)
+        kudoedByMe = try c.decode(Bool.self, forKey: .kudoedByMe)
+        commentsCount = try c.decode(Int.self, forKey: .commentsCount)
+    }
+
+    /// Vrai dès qu'au moins une métrique existe — la ligne KM / ALLURE / D+ de la carte
+    /// n'apparaît que dans ce cas, et jamais pour un post de type « badge ».
+    var hasMetrics: Bool {
+        distanceKm != nil || durationSeconds != nil || avgPace != nil || elevationGainM != nil
+    }
+
+    /// « 48 min », « 1 h 12 » — la durée telle qu'on la dit, pas un chronomètre à la seconde.
+    var durationDisplay: String? {
+        guard let durationSeconds, durationSeconds > 0 else { return nil }
+        let minutes = durationSeconds / 60
+        if minutes < 60 { return "\(minutes) min" }
+        return "\(minutes / 60) h \(String(format: "%02d", minutes % 60))"
+    }
 }
 
 /// A real comment on a club-mate's activity — several per activity/user, unlike kudos (one toggle
@@ -269,11 +344,19 @@ struct ClubService {
     /// Posts one completed activity to the club feed and credits its XP to the account's real
     /// server-side total. `clientId` is a fresh UUID per call so a retried request (flaky
     /// network) never double-counts the XP or duplicates the feed entry — see
-    /// `api/activities/create.js`. `distanceKm` (run activities only) feeds real club-challenge
-    /// progress server-side.
-    func postActivity(clientId: UUID = UUID(), type: String, text: String, xpEarned: Int, distanceKm: Double? = nil) async throws {
+    /// `api/activities/create.js`. `metrics` (run activities only) feeds real club-challenge
+    /// progress server-side and the KM / ALLURE / D+ line on the feed card.
+    func postActivity(clientId: UUID = UUID(), type: String, text: String, xpEarned: Int, metrics: ActivityMetrics = .none) async throws {
         var body: [String: Any] = ["clientId": clientId.uuidString, "type": type, "text": text, "xpEarned": xpEarned]
-        if let distanceKm { body["distanceKm"] = distanceKm }
+        // Chaque métrique n'est envoyée que si elle a été réellement mesurée : une clé absente
+        // devient NULL en base, ce que le fil sait afficher comme « pas de donnée ». Envoyer 0
+        // ferait apparaître « 0 D+ » sur une sortie dont le dénivelé n'a simplement jamais été
+        // capté.
+        if let distanceKm = metrics.distanceKm { body["distanceKm"] = distanceKm }
+        if let durationSeconds = metrics.durationSeconds { body["durationSeconds"] = durationSeconds }
+        if let avgPace = metrics.avgPace { body["avgPace"] = avgPace }
+        if let elevationGainM = metrics.elevationGainM { body["elevationGainM"] = elevationGainM }
+        if metrics.isPersonalRecord { body["isPersonalRecord"] = true }
         let _: OkResponse = try await send(
             path: "api/activities/create",
             method: "POST",

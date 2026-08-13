@@ -45,15 +45,21 @@ struct FriendsView: View {
                 if !auth.isSignedIn {
                     signInPrompt
                 } else {
+                    // Ordre repris de l'écran "Amis" de la maquette : d'abord qui je suis dans ce
+                    // graphe (les compteurs), puis la recherche, puis LE CONTENU (le fil). Les
+                    // compteurs restent affichés pendant une recherche : ils font partie de
+                    // l'en-tête de l'écran, pas de son contenu.
+                    countsRow
                     searchField
                     if isSearchingMode {
                         searchResultsList
                     } else if isLoading && feed.isEmpty {
                         loadingCard
                     } else {
-                        privacyRow
+                        // Les demandes en attente passent avant le réglage "Compte privé" : ce
+                        // sont des actions qui attendent une réponse, pas un paramètre.
                         if !incomingRequests.isEmpty { requestsCard }
-                        countsRow
+                        privacyRow
                         feedSection
                     }
                 }
@@ -318,27 +324,51 @@ struct FriendsView: View {
         .ruCard()
     }
 
+    /// « 86 abonnés · 54 abonnements » sur une seule ligne, au lieu de deux grandes tuiles-cartes
+    /// pleine largeur.
+    ///
+    /// Deux nombres à un chiffre n'ont jamais eu besoin de deux cartes : elles mangeaient ~90 pt
+    /// de hauteur au-dessus du fil, c'est-à-dire au-dessus du seul contenu réel de l'écran. La
+    /// maquette les traite comme une ligne secondaire d'en-tête, et c'est le bon poids. Les deux
+    /// moitiés restent tapables (elles ouvrent les listes) avec une cible de 44 pt garantie par
+    /// `frame(minHeight:)` — c'est le fond de carte qui disparaît, pas l'interaction.
+    @ViewBuilder
     private var countsRow: some View {
-        HStack(spacing: 10) {
-            Button(action: { peopleSheet = .following }) {
-                countTile(value: following.count, label: "abonnements")
-            }
-            .buttonStyle(PressableStyle())
-            Button(action: { peopleSheet = .followers }) {
-                countTile(value: followers.count, label: "abonnés")
-            }
-            .buttonStyle(PressableStyle())
+        // Rien tant que le premier chargement n'a pas répondu : affichés d'emblée, les compteurs
+        // annonceraient « 0 abonné · 0 abonnements » à quelqu'un qui en a cinquante, le temps de
+        // l'aller-retour réseau.
+        if !(isLoading && followers.isEmpty && following.isEmpty) {
+            countsContent
         }
     }
 
-    private func countTile(value: Int, label: String) -> some View {
-        VStack(spacing: 2) {
-            Text("\(value)").displayStyle(20).foregroundColor(RUColor.textPrimary)
-            Text(label).font(RUFont.sans(10.5)).foregroundColor(RUColor.text2)
+    private var countsContent: some View {
+        HStack(spacing: 12) {
+            Button(action: { peopleSheet = .followers }) {
+                countLabel(value: followers.count, label: followers.count > 1 ? "abonnés" : "abonné")
+            }
+            .buttonStyle(PressableStyle())
+            .accessibilityLabel("\(followers.count) abonnés, voir la liste")
+
+            Text("·").font(RUFont.sans(12)).foregroundColor(RUColor.text4)
+
+            Button(action: { peopleSheet = .following }) {
+                countLabel(value: following.count, label: following.count > 1 ? "abonnements" : "abonnement")
+            }
+            .buttonStyle(PressableStyle())
+            .accessibilityLabel("\(following.count) abonnements, voir la liste")
+
+            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .ruCard()
+    }
+
+    private func countLabel(value: Int, label: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 4) {
+            Text("\(value)").displayStyle(17).foregroundColor(RUColor.textPrimary)
+            Text(label).font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.text3)
+        }
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
     }
 
     // MARK: Feed

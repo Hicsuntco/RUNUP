@@ -18,11 +18,26 @@ struct OnboardingProgressBar: View {
 }
 
 /// A single thin rounded fill bar — class `.bar`/`i`.
+///
+/// Correspondance maquette : `.barbg { height: 6px; border-radius: 999px; background:
+/// var(--ru-line); overflow: hidden }` + `.barfill { height: 100%; background: var(--ru-gradient);
+/// border-radius: 999px }`. Le fond `--ru-line` et la capsule correspondent déjà exactement.
+///
+/// À noter pour les call sites : la maquette remplit TOUJOURS ses barres de progression avec
+/// `--ru-gradient` (= `RUColor.accentGradient()`), jamais d'un aplat uni — c'est aussi l'une des
+/// trois surfaces que la v28 garde volontairement pleines (« les jauges de progression (barfill,
+/// day-bars) […] sont des indicateurs fonctionnels, pas des surfaces décoratives »). Le paramètre
+/// `color` reste néanmoins requis et sans dégradé par défaut : `PhaseProgressBar` ci-dessous et
+/// `RingsView` passent des couleurs SÉMANTIQUES (une par phase, lime pour un jour de repos), que
+/// forcer en dégradé de marque effacerait.
 struct LinearBar: View {
     var fraction: Double
     var color: Color
     var background: Color = RUColor.line
-    var height: CGFloat = 5
+    /// 6px dans la maquette (`.barbg`), soit ~7,5pt à son échelle ; 5 était nettement en dessous.
+    /// 6 est le pas mesuré vers cette valeur qui reste cohérent avec les quatre call sites qui
+    /// passent déjà une hauteur explicite (5, 6 et 8) plutôt que de tous les contredire.
+    var height: CGFloat = 6
     var gradient: LinearGradient? = nil
 
     var body: some View {

@@ -7,7 +7,7 @@ const { withErrorHandling, isUuid } = require('../../lib/http');
 const { sendPushToUser, sendPushToUsers } = require('../../lib/apns');
 const { containsObjectionableContent } = require('../../lib/moderation');
 const { underDailyCap } = require('../../lib/rateLimit');
-const { canViewActivity } = require('../../lib/social');
+const { canViewActivity, activityMetrics } = require('../../lib/social');
 
 const ALLOWED_TYPES = new Set(['run', 'strength', 'badge']);
 const REFERRAL_REWARD_XP = 100;
@@ -55,7 +55,7 @@ async function handleDelete(req, res, userId) {
 // user's club feed, and credits its XP to their real, server-side total — this is what makes the
 // leaderboard and feed genuinely backed by real actions instead of mock data.
 async function handleCreate(req, res, userId) {
-  const { clientId, type, text, xpEarned, distanceKm } = req.body || {};
+  const { clientId, type, text, xpEarned, distanceKm, durationSeconds, avgPace, elevationGainM, isPersonalRecord } = req.body || {};
   const cleanText = typeof text === 'string' ? text.trim().slice(0, 200) : '';
   if (!isUuid(clientId) || !ALLOWED_TYPES.has(type) || !cleanText || typeof xpEarned !== 'number') {
     return res.status(400).json({ error: 'bad_request' });
@@ -74,6 +74,27 @@ async function handleCreate(req, res, userId) {
   const distance = type === 'run' && Number.isFinite(distanceKm) && distanceKm > 0
     ? Math.min(distanceKm, 500)
     : null;
+
+  // The rest of the run's real metrics, so the feed can show the run itself and not just a
+  // sentence about it. Same shape of validation as `distance`: only for 'run', finite, positive,
+  // and capped — a tampered client must not be able to write a 10-hour "run" or a 40 000 m climb
+  // into a shared feed. NULL wherever it doesn't apply (strength/badge activities, a manually
+  // logged run with no GPS): the client omits a missing metric rather than printing a fake 0.
+  const duration = type === 'run' && Number.isFinite(durationSeconds) && durationSeconds > 0
+    ? Math.min(Math.round(durationSeconds), 86400)
+    : null;
+  // "M:SS" only — this is rendered straight into other people's feeds, so it is validated as a
+  // shape rather than trusted as free text.
+  const pace = type === 'run' && typeof avgPace === 'string' && /^\d{1,2}:[0-5]\d$/.test(avgPace)
+    ? avgPace
+    : null;
+  const elevation = type === 'run' && Number.isFinite(elevationGainM) && elevationGainM > 0
+    ? Math.min(Math.round(elevationGainM), 10000)
+    : null;
+  // Only ever what the client asserts after checking its own full run history — the server has no
+  // way to verify a personal record (it never receives past runs), so it stores the claim as-is
+  // and never infers one.
+  const personalRecord = type === 'run' && isPersonalRecord === true;
 
   // Per-user daily activity cap — each fresh clientId is otherwise a fresh XP award, so a
   // scripted loop with random UUIDs could farm unbounded xp_total onto the shared leaderboard.
@@ -102,8 +123,8 @@ async function handleCreate(req, res, userId) {
   // unique-constraint 500 instead of `duplicate: true`, and XP must only be credited when this
   // request is the one that actually inserted the row.
   const { rows: inserted } = await sql`
-    INSERT INTO activities (client_id, user_id, club_id, type, text, xp_earned, distance_km)
-    VALUES (${clientId}, ${userId}, ${clubId}, ${type}, ${cleanText}, ${xp}, ${distance})
+    INSERT INTO activities (client_id, user_id, club_id, type, text, xp_earned, distance_km, duration_seconds, avg_pace, elevation_gain_m, is_personal_record)
+    VALUES (${clientId}, ${userId}, ${clubId}, ${type}, ${cleanText}, ${xp}, ${distance}, ${duration}, ${pace}, ${elevation}, ${personalRecord})
     ON CONFLICT (client_id) DO NOTHING
     RETURNING id
   `;
@@ -161,6 +182,7 @@ async function handleFeed(req, res, userId) {
 
   const { rows } = await sql`
     SELECT a.id, a.text, a.created_at, u.name, u.id AS user_id, u.avatar_data, u.avatar_url,
+           a.distance_km, a.duration_seconds, a.avg_pace, a.elevation_gain_m, a.is_personal_record,
            (SELECT COUNT(*)::int FROM activity_kudos k WHERE k.activity_id = a.id) AS kudos,
            EXISTS(SELECT 1 FROM activity_kudos k WHERE k.activity_id = a.id AND k.user_id = ${userId}) AS kudoed_by_me,
            (SELECT COUNT(*)::int FROM activity_comments c WHERE c.activity_id = a.id) AS comments_count
@@ -181,6 +203,7 @@ async function handleFeed(req, res, userId) {
       avatarUrl: r.avatar_url || null,
       text: r.text,
       createdAt: r.created_at,
+      ...activityMetrics(r),
       kudos: r.kudos,
       kudoedByMe: r.kudoed_by_me,
       commentsCount: r.comments_count,

@@ -12,7 +12,46 @@ private struct PendingClubActivity: Codable, Equatable {
     var type: String
     var text: String
     var xpEarned: Int
-    var distanceKm: Double?
+    /// Optionnel *et* décodé avec un défaut : une file écrite par une version précédente de l'app
+    /// ne contient pas cette clé, et `JSONDecoder` fait échouer le tableau ENTIER sur une seule
+    /// entrée illisible (voir le `try?` du getter, qui retomberait alors sur `[]`). Autrement dit,
+    /// un champ non optionnel ici jetterait silencieusement les sorties en attente de quelqu'un
+    /// qui met l'app à jour avec le réseau coupé — exactement la perte que cette file existe pour
+    /// empêcher.
+    var metrics: ActivityMetrics?
+
+    init(clientId: UUID, type: String, text: String, xpEarned: Int, metrics: ActivityMetrics?) {
+        self.clientId = clientId
+        self.type = type
+        self.text = text
+        self.xpEarned = xpEarned
+        self.metrics = metrics
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case clientId, type, text, xpEarned, metrics
+        /// Le champ tel qu'il était écrit avant que les métriques soient regroupées. Une sortie
+        /// encore en file au moment de la mise à jour porte cette clé et pas `metrics`.
+        case legacyDistanceKm = "distanceKm"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        clientId = try c.decode(UUID.self, forKey: .clientId)
+        type = try c.decode(String.self, forKey: .type)
+        text = try c.decode(String.self, forKey: .text)
+        xpEarned = try c.decode(Int.self, forKey: .xpEarned)
+        if let stored = try c.decodeIfPresent(ActivityMetrics.self, forKey: .metrics) {
+            metrics = stored
+        } else if let legacy = try c.decodeIfPresent(Double.self, forKey: .legacyDistanceKm) {
+            // On ne relit QUE la distance : c'est la seule chose que l'ancienne entrée savait, et
+            // elle porte la progression du défi de club. Les autres métriques restent absentes,
+            // ce qui est exact — elles n'ont jamais été enregistrées pour cette sortie-là.
+            metrics = ActivityMetrics(distanceKm: legacy)
+        } else {
+            metrics = nil
+        }
+    }
 }
 
 @MainActor
@@ -35,9 +74,9 @@ extension AppState {
     /// (Club participation is optional; this must never block the flow it's called from). Queued
     /// to the local outbox *before* the network attempt, so a kill mid-request still leaves
     /// something to retry rather than a `try?` that discarded the payload the instant it failed.
-    func postClubActivity(type: String, text: String, xpEarned: Int, distanceKm: Double? = nil) {
+    func postClubActivity(type: String, text: String, xpEarned: Int, metrics: ActivityMetrics = .none) {
         guard auth.isSignedIn else { return }
-        let pending = PendingClubActivity(clientId: UUID(), type: type, text: text, xpEarned: xpEarned, distanceKm: distanceKm)
+        let pending = PendingClubActivity(clientId: UUID(), type: type, text: text, xpEarned: xpEarned, metrics: metrics)
         outbox.append(pending)
         pendingActivityCount = outbox.count
         Task { await attemptPost(pending) }
@@ -64,7 +103,7 @@ extension AppState {
     private func attemptPost(_ pending: PendingClubActivity) async {
         let service = ClubService(auth: auth)
         do {
-            try await service.postActivity(clientId: pending.clientId, type: pending.type, text: pending.text, xpEarned: pending.xpEarned, distanceKm: pending.distanceKm)
+            try await service.postActivity(clientId: pending.clientId, type: pending.type, text: pending.text, xpEarned: pending.xpEarned, metrics: pending.metrics ?? .none)
             outbox.removeAll { $0.clientId == pending.clientId }
             pendingActivityCount = outbox.count
         } catch {

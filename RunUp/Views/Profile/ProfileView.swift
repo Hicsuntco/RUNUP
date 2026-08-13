@@ -73,13 +73,23 @@ struct ProfileView: View {
         HStack(alignment: .top) {
             HStack(spacing: 11) {
                 avatarButton
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 5) {
                     Text(profile.name).displayStyle(18).foregroundColor(RUColor.textPrimary)
                     if let objectifText {
+                        // `.profil-obj-pill` de la maquette : l'objectif était une simple ligne de
+                        // texte gris de plus, indistincte du reste ; dans une capsule bordée il
+                        // devient une étiquette d'identité, au même titre que le nom.
                         HStack(spacing: 4) {
                             Image(systemName: "target").font(.system(size: 9)).foregroundColor(RUColor.text3)
-                            Text(objectifText).font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.text2)
+                            Text(objectifText)
+                                .font(RUFont.sans(10, weight: .semibold))
+                                .foregroundColor(RUColor.text2)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
                         }
+                        .padding(.horizontal, 9).padding(.vertical, 4)
+                        .background(RUColor.card, in: Capsule())
+                        .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                     }
                 }
             }
@@ -117,6 +127,15 @@ struct ProfileView: View {
             ZStack(alignment: .bottomTrailing) {
                 AvatarView(imageData: profile.avatarImageData, initial: String(profile.name.prefix(1)), size: 52)
                     .opacity(isSavingAvatar ? 0.5 : 1)
+                    // `.profil-avatar-ring` : un liseré dégradé, détaché de la photo par un
+                    // interstice, autour de MA photo uniquement. C'est le seul avatar « moi » de
+                    // l'app — partout ailleurs `AvatarView(seed:)` donne à chaque personne sa
+                    // propre couleur, ici c'est l'anneau qui joue ce rôle de marqueur d'identité.
+                    // `strokeBorder` (et non `stroke`) pour que le trait soit tracé À L'INTÉRIEUR
+                    // du cercle : le diamètre visible reste exactement celui du cadre, sans
+                    // déborder d'un demi-trait sur la mise en page ni sur le crayon d'édition.
+                    .padding(3)
+                    .overlay(Circle().strokeBorder(RUColor.accentGradient(), lineWidth: 2))
                 if isSavingAvatar {
                     ProgressView().tint(RUColor.textPrimary)
                 } else {
@@ -198,38 +217,44 @@ struct ProfileView: View {
     /// earned/locked state from `runs`/`profile.streak` a second time in a different file.
     private var badgeCount: Int { profile.seenBadgeKeys.count }
 
+    /// `.profil-stat-row` de la maquette : trois chiffres posés à même la page, alignés sur leur
+    /// ligne de base, PAS une carte à trois colonnes séparées par des filets.
+    ///
+    /// C'est un vrai changement de hiérarchie, pas un détail : cet écran a trois blocs (identité,
+    /// chiffres, social) et la version en carte donnait aux chiffres le même poids visuel qu'aux
+    /// deux cartes Amis / Running Club en dessous — trois cartes empilées, aucune priorité. En
+    /// ligne nue, les chiffres deviennent le prolongement de l'en-tête (« qui je suis, où j'en
+    /// suis ») et les seules vraies cartes de la page sont les deux destinations tapables.
     private var statRow: some View {
-        HStack(spacing: 0) {
+        HStack(alignment: .firstTextBaseline, spacing: 18) {
             statCell(value: String(format: "%.0f", totalKm), label: "km")
-            statDivider
             statCell(
                 value: "\(profile.streak)",
                 label: "sem. de suite",
                 valueColor: profile.streak > 0 ? RUColor.rose : RUColor.textPrimary,
                 icon: profile.streak > 0 ? "flame.fill" : nil
             )
-            statDivider
             statCell(value: "\(badgeCount)", label: badgeCount > 1 ? "badges" : "badge")
+            Spacer(minLength: 0)
         }
-        .padding(.vertical, 14)
-        .ruCard()
-    }
-
-    private var statDivider: some View {
-        Rectangle().fill(RUColor.line).frame(width: RUSpacing.hairline).padding(.vertical, 4)
+        .padding(.horizontal, 2)
     }
 
     private func statCell(value: String, label: String, valueColor: Color = RUColor.textPrimary, icon: String? = nil) -> some View {
-        VStack(spacing: 3) {
+        HStack(alignment: .firstTextBaseline, spacing: 4) {
+            // La flamme est groupée avec le chiffre dans un HStack imbriqué, centré, plutôt que
+            // posée directement dans la rangée alignée sur la ligne de base : une image n'a pas de
+            // ligne de base typographique, et l'aligner comme du texte la fait flotter. Le HStack
+            // imbriqué, lui, expose la ligne de base de son propre Text — la rangée extérieure
+            // s'aligne donc bien sur le chiffre.
             HStack(spacing: 3) {
                 if let icon {
                     Image(systemName: icon).font(.system(size: 11)).foregroundColor(valueColor)
                 }
-                Text(value).displayStyle(20).foregroundColor(valueColor)
+                Text(value).displayStyle(19).foregroundColor(valueColor)
             }
-            Text(label).font(RUFont.sans(9.5, weight: .semibold)).foregroundColor(RUColor.text2)
+            Text(label).font(RUFont.sans(9.5, weight: .semibold)).foregroundColor(RUColor.text3)
         }
-        .frame(maxWidth: .infinity)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(value) \(label)")
     }
@@ -260,89 +285,145 @@ struct ProfileView: View {
         .ruCard()
     }
 
+    /// Fond de `.social-card` : la carte standard, LAVÉE d'une pointe de sa couleur (7 %) et
+    /// bordée de cette même couleur (22 %). C'est volontairement une teinte, pas un aplat — la
+    /// règle que suit la maquette d'un bout à l'autre est « accent, pas remplissage » : deux
+    /// grosses cartes en aplat rose/violet feraient hurler une page qui, autrement, est neutre.
+    /// Ce qui change vraiment, c'est que les deux destinations cessent d'être deux cartes grises
+    /// identiques et deviennent deux endroits distincts et reconnaissables.
+    private func socialCard<Content: View>(tint: Color, @ViewBuilder content: () -> Content) -> some View {
+        let shape = RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous)
+        return content()
+            .padding(15)
+            // Mélange OPAQUE dans `card` (`RUColor.tint`), pas un `tint.opacity(0.07)` translucide
+            // posé par-dessus : c'est la règle du fichier de tokens, et ici elle compte vraiment —
+            // en thème sombre `card` est lui-même une translucidité blanche, empiler deux couches
+            // translucides y donnerait une carte plus claire que toutes les autres de la page.
+            .background(shape.fill(RUColor.tint(tint, 0.07, over: RUColor.card)))
+            // Le contour, lui, reste translucide : `RUColor.line` est une couleur à alpha (noir
+            // 14% / blanc 8%) et `tint(_:over:)` rend une couleur opaque — mélanger dedans
+            // donnerait un trait quasi noir en thème clair au lieu d'un filet.
+            .overlay(shape.stroke(tint.opacity(0.3), lineWidth: RUSpacing.hairline))
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.16 : 0), radius: 16, x: 0, y: 5)
+    }
+
+    /// `.social-card-arrow` — un chevron nu se perd dans une carte teintée ; dans une pastille
+    /// ronde de la couleur de la page, il redevient le bouton « ça s'ouvre » qu'il est censé être.
+    private var cardArrow: some View {
+        Image(systemName: "chevron.right")
+            .font(.system(size: 11, weight: .bold))
+            .foregroundColor(RUColor.text2)
+            .frame(width: 26, height: 26)
+            .background(RUColor.bg, in: Circle())
+    }
+
+    /// Filet de `.social-card-teaser` : sépare l'en-tête de la carte (qui/quoi) de son aperçu de
+    /// contenu (qui court, quand). Sans lui les deux lignes se lisaient comme un seul pavé.
+    private var teaserDivider: some View {
+        Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
+    }
+
     private var amisCard: some View {
         Button(action: {
             appState.openFriendsTabOnNextVisit = true
             appState.go(.club)
         }) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 12) {
-                    ZStack {
-                        Circle().fill(RUColor.violet.opacity(0.16))
-                        Image(systemName: "person.2.fill").font(.system(size: 16)).foregroundColor(RUColor.violet)
-                    }
-                    .frame(width: 40, height: 40)
-
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("Amis").font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                        if let friendsList {
-                            Text("\(friendsList.followers.count) abonnés · \(friendsList.following.count) abonnements")
-                                .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+            socialCard(tint: RUColor.violet) {
+                VStack(alignment: .leading, spacing: 11) {
+                    HStack(spacing: 12) {
+                        ZStack {
+                            Circle().fill(RUColor.violet.opacity(0.16))
+                            Image(systemName: "person.2.fill").font(.system(size: 16)).foregroundColor(RUColor.violet)
                         }
-                    }
-                    Spacer(minLength: 0)
-                    Text("›").font(.system(size: 15, weight: .semibold)).foregroundColor(RUColor.text3)
-                }
+                        .frame(width: 40, height: 40)
 
-                if let friendsList, !friendsList.following.isEmpty {
-                    HStack(spacing: 8) {
-                        HStack(spacing: -8) {
-                            ForEach(friendsList.following.prefix(3)) { user in
-                                AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 24, seed: user.id)
-                                    .overlay(Circle().stroke(RUColor.card, lineWidth: 2))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Amis").font(RUFont.sans(15, weight: .bold)).foregroundColor(RUColor.textPrimary)
+                            if let friendsList {
+                                Text("\(friendsList.followers.count) abonnés · \(friendsList.following.count) abonnements")
+                                    .font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
                             }
                         }
-                        Text(todaysFriendActivityCount > 0
-                             ? "\(todaysFriendActivityCount) nouvelle\(todaysFriendActivityCount > 1 ? "s" : "") activité\(todaysFriendActivityCount > 1 ? "s" : "") aujourd'hui"
-                             : "Rien de nouveau aujourd'hui")
-                            .font(RUFont.sans(10.5)).foregroundColor(RUColor.text2)
+                        Spacer(minLength: 0)
+                        cardArrow
                     }
-                } else {
-                    Text("Trouve des coureurs à suivre").font(RUFont.sans(10.5)).foregroundColor(RUColor.text2)
+
+                    teaserDivider
+
+                    if let friendsList, !friendsList.following.isEmpty {
+                        HStack(spacing: 8) {
+                            HStack(spacing: -7) {
+                                ForEach(friendsList.following.prefix(3)) { user in
+                                    AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 22, seed: user.id)
+                                        .overlay(Circle().stroke(RUColor.bg, lineWidth: 2))
+                                }
+                            }
+                            Text(todaysFriendActivityCount > 0
+                                 ? "\(todaysFriendActivityCount) nouvelle\(todaysFriendActivityCount > 1 ? "s" : "") activité\(todaysFriendActivityCount > 1 ? "s" : "") aujourd'hui"
+                                 : "Rien de nouveau aujourd'hui")
+                                .font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.text2)
+                        }
+                    } else {
+                        Text("Trouve des coureurs à suivre").font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.text2)
+                    }
                 }
             }
-            .padding(14)
         }
         .buttonStyle(PressableStyle())
-        .ruCard()
     }
 
     private var clubCard: some View {
         Button(action: { appState.go(.club) }) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 12) {
-                    ZStack {
-                        Circle().fill(RUColor.heroGradient)
-                        Image(systemName: "trophy.fill").font(.system(size: 15)).foregroundColor(RUColor.rose)
-                    }
-                    .frame(width: 40, height: 40)
-
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("Running Club").font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                        if let club = board?.club {
-                            Text("\(club.name) · \(club.memberCount) membres").font(RUFont.sans(11)).foregroundColor(RUColor.text2)
-                        } else {
-                            Text("Pas encore de club").font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+            socialCard(tint: RUColor.rose) {
+                VStack(alignment: .leading, spacing: 11) {
+                    HStack(spacing: 12) {
+                        ZStack {
+                            // Seul vrai aplat de la page, et il fait 40 pt : la pastille du club
+                            // porte le dégradé de marque avec un trophée blanc, là où Amis porte
+                            // une simple teinte violette. C'est ce qui distingue les deux cartes
+                            // au premier coup d'œil sans colorer la moitié de l'écran.
+                            Circle().fill(RUColor.accentGradient())
+                            Image(systemName: "trophy.fill").font(.system(size: 15)).foregroundColor(.white)
                         }
-                    }
-                    Spacer(minLength: 0)
-                    Text("›").font(.system(size: 15, weight: .semibold)).foregroundColor(RUColor.text3)
-                }
+                        .frame(width: 40, height: 40)
 
-                if let event = board?.events?.first {
-                    HStack(spacing: 4) {
-                        Image(systemName: "mappin.circle.fill").font(.system(size: 11)).foregroundColor(RUColor.rose)
-                        Text(event.title).font(RUFont.sans(11, weight: .bold)).foregroundColor(RUColor.rose)
-                        Text("— \(event.going) confirmé\(event.going > 1 ? "s" : "")").font(RUFont.sans(10.5)).foregroundColor(RUColor.text2)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Running Club").font(RUFont.sans(15, weight: .bold)).foregroundColor(RUColor.textPrimary)
+                            if let club = board?.club {
+                                Text("\(club.name) · \(club.memberCount) membre\(club.memberCount > 1 ? "s" : "")")
+                                    .font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
+                            } else {
+                                Text("Tu n'en as pas encore rejoint").font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
+                            }
+                        }
+                        Spacer(minLength: 0)
+                        cardArrow
                     }
-                } else if board?.club == nil {
-                    Text("Rejoins ou crée un club pour courir à plusieurs").font(RUFont.sans(10.5)).foregroundColor(RUColor.text2)
+
+                    teaserDivider
+
+                    if let event = board?.events?.first {
+                        HStack(spacing: 4) {
+                            Image(systemName: "mappin.circle.fill").font(.system(size: 11)).foregroundColor(RUColor.rose)
+                            Text(event.title).font(RUFont.sans(10.5, weight: .bold)).foregroundColor(RUColor.rose).lineLimit(1)
+                            Text("— \(event.going) confirmé\(event.going > 1 ? "s" : "")").font(RUFont.sans(10.5)).foregroundColor(RUColor.text2)
+                        }
+                    } else if board?.club == nil {
+                        // La maquette propose ici un aperçu de « 2 clubs près de toi » à
+                        // rejoindre. Non repris : un club de cette app se rejoint UNIQUEMENT par
+                        // code d'invitation (`ClubService.joinClub`) — il n'existe ni annuaire
+                        // public, ni géolocalisation de clubs, ni notion de club « proche » dans
+                        // le schéma. La carte dit donc ce qui est réellement faisable.
+                        Text("Rejoins un club avec un code d'invitation, ou crée le tien")
+                            .font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.text2)
+                    } else {
+                        Text("Aucune sortie prévue pour l'instant")
+                            .font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.text3)
+                    }
                 }
             }
-            .padding(14)
         }
         .buttonStyle(PressableStyle())
-        .ruCard()
     }
 
     // MARK: - Data loading

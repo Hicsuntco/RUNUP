@@ -51,12 +51,16 @@ struct StatsView: View {
                     .buttonStyle(PressableStyle())
                 }
 
+                // Ordre repris de la maquette "Stats" : les totaux, puis les deux cartes de
+                // tendance, puis seulement les deux raccourcis de navigation, réduits à une paire
+                // compacte en bas de page. Avant, "Mes routes" — une simple destination —
+                // s'intercalait pleine largeur entre les totaux et la semaine, coupant l'écran
+                // d'analyse en deux avec un lien.
                 summaryCard
-                heatmapCard
                 weekCard
                 paceCard
 
-                deepAnalysisToggle
+                quickLinksRow
                 if showDeepAnalysis {
                     recordsCard
                         .transition(.opacity.combined(with: .move(edge: .top)))
@@ -78,45 +82,127 @@ struct StatsView: View {
     private var totalDistanceKm: Double { runs.reduce(0) { $0 + $1.distanceKm } }
     private var totalDurationSeconds: Int { runs.reduce(0) { $0 + $1.durationSeconds } }
 
+    /// La `.stat-summary-row` de la maquette : quatre cellules centrées dans UNE carte, séparées
+    /// par des filets verticaux, chacune coiffée d'une icône. Avant, c'était quatre
+    /// `MetricColumn` alignées à gauche et écartées par des `Spacer()` — donc quatre colonnes de
+    /// largeurs inégales, sans rien pour dire où finit l'une et où commence la suivante, et dont
+    /// les libellés (« km total », « temps total ») portaient seuls tout le travail de lecture.
+    /// Mêmes quatre chiffres réels, rien de nouveau : total, nombre de sorties, temps cumulé,
+    /// série en cours.
     private var summaryCard: some View {
-        HStack {
-            MetricColumn(value: String(format: "%.0f", totalDistanceKm), label: "km total", valueSize: 22)
-            Spacer()
-            MetricColumn(value: "\(runs.count)", label: "sortie\(runs.count > 1 ? "s" : "")", valueSize: 22)
-            Spacer()
-            MetricColumn(value: PaceModel.formatTotalDuration(totalDurationSeconds), label: "temps total", valueSize: 22)
-            Spacer()
-            MetricColumn(value: "\(profile.streak)", label: "jour\(profile.streak > 1 ? "s" : "") de suite", valueColor: profile.streak > 0 ? RUColor.lime : RUColor.textPrimary, valueSize: 22)
+        HStack(spacing: 0) {
+            summaryCell(icon: "ruler", value: String(format: "%.0f", totalDistanceKm), label: "km")
+            summaryDivider
+            summaryCell(icon: "figure.run", value: "\(runs.count)", label: "sortie\(runs.count > 1 ? "s" : "")")
+            summaryDivider
+            summaryCell(icon: "clock", value: PaceModel.formatTotalDuration(totalDurationSeconds), label: "temps")
+            summaryDivider
+            summaryCell(
+                icon: "flame.fill",
+                value: "\(profile.streak)",
+                label: "j. de suite",
+                tint: profile.streak > 0 ? RUColor.lime : nil
+            )
         }
-        .padding(16)
+        .padding(.vertical, 14)
         .ruCard()
     }
 
-    // MARK: Heatmap — every GPS route overlaid on one map, a purely personal "where have I
-    // already run" view rather than anything competitive.
+    private var summaryDivider: some View {
+        Rectangle().fill(RUColor.line).frame(width: RUSpacing.hairline, height: 46)
+    }
+
+    private func summaryCell(icon: String, value: String, label: String, tint: Color? = nil) -> some View {
+        VStack(spacing: 5) {
+            Image(systemName: icon)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(tint ?? RUColor.text3)
+            Text(value).displayStyle(20).foregroundColor(tint ?? RUColor.textPrimary)
+                .lineLimit(1).minimumScaleFactor(0.55)
+            Text(LocalizedStringKey(label))
+                .font(RUFont.sans(8, weight: .bold)).tracking(0.8).textCase(.uppercase)
+                .foregroundColor(RUColor.text3)
+                .lineLimit(1).minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 3)
+        // Même raison que `MetricColumn` (que cette cellule remplace ici) : sans ça l'icône, la
+        // valeur et le libellé sont trois arrêts VoiceOver décorrélés.
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text(LocalizedStringKey(label)) + Text(", ") + Text(value))
+    }
+
+    // MARK: Quick links — the two navigation affordances of the screen (heatmap: every GPS route
+    // overlaid on one map, a purely personal "where have I already run" view rather than anything
+    // competitive; and the deep-analysis disclosure).
 
     private var routedRunsCount: Int { runs.filter { $0.route.count > 1 }.count }
 
-    private var heatmapCard: some View {
-        Button(action: { appState.go(.heatmap) }) {
-            HStack(spacing: 14) {
-                Image(systemName: "map")
-                    .font(.system(size: 18))
-                    .foregroundColor(RUColor.rose)
-                    .frame(width: 44, height: 44)
-                    .background(RUColor.rose.opacity(0.12), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Mes routes").font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                    Text(routedRunsCount > 0 ? "\(routedRunsCount) parcours trackés sur la carte" : "Se remplit dès ta première course trackée")
-                        .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
-                }
-                Spacer(minLength: 0)
-                Text("›").foregroundColor(RUColor.text2)
+    /// Les `.stat-quicklinks` de la maquette : les deux seuls éléments de cet écran qui ne sont
+    /// pas de l'analyse mais de la navigation (la carte des routes, et le dépliage de l'analyse
+    /// approfondie), réunis en une paire de tuiles compactes côte à côte en bas de page. Chacun
+    /// occupait avant toute la largeur — deux bandes pleine largeur au milieu d'un écran de
+    /// cartes de données, pour ce qui n'est qu'« aller ailleurs » et « en voir plus ».
+    private var quickLinksRow: some View {
+        HStack(spacing: 10) {
+            Button(action: { appState.go(.heatmap) }) {
+                quickLinkBody(
+                    icon: "map",
+                    title: "Mes routes",
+                    subtitle: routedRunsCount > 0 ? "\(routedRunsCount) parcours trackés" : "Dès ta 1re course trackée",
+                    accessorySymbol: "chevron.right"
+                )
             }
-            .padding(14)
+            .buttonStyle(PressableStyle())
+            .ruCard(radius: RUSpacing.radiusCompact)
+
+            Button(action: {
+                Haptics.selection()
+                withAnimation(.easeInOut(duration: 0.25)) { showDeepAnalysis.toggle() }
+            }) {
+                quickLinkBody(
+                    icon: "chart.line.uptrend.xyaxis",
+                    title: "Analyse approfondie",
+                    subtitle: "Records, charge, prédiction",
+                    accessorySymbol: "chevron.down",
+                    accessoryRotation: showDeepAnalysis ? 180 : 0
+                )
+            }
+            .buttonStyle(PressableStyle())
+            .ruCard(radius: RUSpacing.radiusCompact)
+            .accessibilityLabel(showDeepAnalysis ? "Masquer l'analyse approfondie" : "Voir l'analyse approfondie")
         }
-        .buttonStyle(PressableStyle())
-        .ruCard()
+    }
+
+    /// Les deux tuiles gardent le même gabarit — icône d'accent en haut à gauche, affordance en
+    /// haut à droite, titre + sous-titre en bas — pour qu'elles se lisent comme une paire. Les
+    /// deux textes sont bornés à une ligne : c'est ce qui garantit que les deux tuiles font
+    /// exactement la même hauteur, quel que soit le nombre de parcours trackés.
+    private func quickLinkBody(icon: String, title: String, subtitle: String, accessorySymbol: String, accessoryRotation: Double = 0) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Image(systemName: icon)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(RUColor.rose)
+                Spacer(minLength: 4)
+                Image(systemName: accessorySymbol)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(RUColor.text3)
+                    .rotationEffect(.degrees(accessoryRotation))
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(LocalizedStringKey(title))
+                    .font(RUFont.sans(12.5, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                    .lineLimit(1).minimumScaleFactor(0.75)
+                Text(subtitle)
+                    .font(RUFont.sans(9.5)).foregroundColor(RUColor.text3)
+                    .lineLimit(1).minimumScaleFactor(0.7)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
     }
 
     // MARK: This week — recency + consistency against the actual plan, missing before this: the
@@ -258,6 +344,11 @@ struct StatsView: View {
                 HStack(alignment: .lastTextBaseline, spacing: 6) {
                     Text(PaceModel.formatDuration(recentAvgPace)).displayStyle(44).foregroundColor(RUColor.textPrimary)
                     Text("/km").font(RUFont.sans(14)).foregroundColor(RUColor.text2)
+                    // Poussé au bord droit (le `margin-left:auto` de la maquette) : collé au
+                    // "/km", le delta se lisait comme une deuxième unité accrochée au chiffre
+                    // héros ; à l'opposé de la ligne, il se lit comme ce qu'il est — une
+                    // comparaison, en vis-à-vis de l'allure qu'elle commente.
+                    Spacer(minLength: 8)
                     if let previousAvgPace {
                         let deltaSeconds = previousAvgPace - recentAvgPace // positive = faster now
                         StatChip(
@@ -338,30 +429,6 @@ struct StatsView: View {
         }
         .padding(16)
         .ruCard()
-    }
-
-    private var deepAnalysisToggle: some View {
-        Button(action: {
-            Haptics.selection()
-            withAnimation(.easeInOut(duration: 0.25)) { showDeepAnalysis.toggle() }
-        }) {
-            HStack {
-                Text(showDeepAnalysis ? "Masquer l'analyse approfondie" : "Voir l'analyse approfondie")
-                    .font(RUFont.sans(12.5, weight: .semibold))
-                    .foregroundColor(RUColor.text2)
-                Spacer()
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundColor(RUColor.text3)
-                    .rotationEffect(.degrees(showDeepAnalysis ? 180 : 0))
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 13)
-            .frame(minHeight: 44)
-            .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
-        }
-        .buttonStyle(PressableStyle())
     }
 
     // MARK: Personal records — real bests pulled from history, not shown anywhere before this

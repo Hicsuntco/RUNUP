@@ -5,7 +5,7 @@ const { sql } = require('../../lib/db');
 const { requireAuth } = require('../../lib/auth');
 const { withErrorHandling, isUuid } = require('../../lib/http');
 const { sendPushToUser } = require('../../lib/apns');
-const { isBlockedEitherWay } = require('../../lib/social');
+const { isBlockedEitherWay, activityMetrics } = require('../../lib/social');
 const { underDailyCap } = require('../../lib/rateLimit');
 const { containsObjectionableContent } = require('../../lib/moderation');
 
@@ -270,6 +270,7 @@ async function handleList(req, res, userId) {
 async function handleFeed(req, res, userId) {
   const { rows } = await sql`
     SELECT a.id, a.text, a.created_at, u.name, u.id AS user_id, u.avatar_data, u.avatar_url,
+           a.distance_km, a.duration_seconds, a.avg_pace, a.elevation_gain_m, a.is_personal_record,
            (SELECT COUNT(*)::int FROM activity_kudos k WHERE k.activity_id = a.id) AS kudos,
            EXISTS(SELECT 1 FROM activity_kudos k WHERE k.activity_id = a.id AND k.user_id = ${userId}) AS kudoed_by_me,
            (SELECT COUNT(*)::int FROM activity_comments c WHERE c.activity_id = a.id) AS comments_count
@@ -289,6 +290,7 @@ async function handleFeed(req, res, userId) {
       avatarUrl: r.avatar_url || null,
       text: r.text,
       createdAt: r.created_at,
+      ...activityMetrics(r),
       kudos: r.kudos,
       kudoedByMe: r.kudoed_by_me,
       commentsCount: r.comments_count,

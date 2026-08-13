@@ -205,7 +205,16 @@ struct WeeklyRecapView: View {
             HStack(alignment: .bottom, spacing: 6) {
                 ForEach(bars.indices, id: \.self) { i in
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(i == todayWeekdayIndex ? RUColor.rose : RUColor.line)
+                        // Dégradé rose2 → rose sur la barre du jour (comme `.db.today .b2` dans
+                        // la maquette), au lieu d'un aplat : c'est le même dégradé que le bouton
+                        // RUN et le sélecteur de période des Stats, donc la barre "aujourd'hui"
+                        // se rattache au vocabulaire d'accent de l'app plutôt qu'à une couleur
+                        // plate isolée.
+                        .fill(
+                            i == todayWeekdayIndex
+                                ? AnyShapeStyle(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom))
+                                : AnyShapeStyle(RUColor.line)
+                        )
                         // Bars grow up from the baseline day-by-day on appear — same "revealed,
                         // not pre-drawn" treatment the Recap splits and the Home ring already get.
                         .frame(height: chartRevealed ? max(4, bars[i] / maxBar * 60) : 4)
@@ -229,21 +238,35 @@ struct WeeklyRecapView: View {
         .ruCard()
     }
 
+    /// La `.pr-banner` de la maquette : médaillon circulaire teinté avec un trophée, titre en
+    /// gras, valeur en sous-titre. L'emoji 🏅 rendait la seule vraie récompense de l'écran plus
+    /// petite et moins nette que n'importe quelle icône de l'app (un emoji ne suit ni le poids ni
+    /// la couleur d'accent, et son rendu change d'une version d'iOS à l'autre) ; le médaillon lui
+    /// donne la présence d'une banderole. Teinte rose comme la maquette — c'est l'accent de
+    /// l'app, et le violet servait ici sans raison particulière.
     private func recordCard(_ record: (label: String, value: String)) -> some View {
         HStack(spacing: 12) {
-            Text("🏅").font(.system(size: 22))
+            Image(systemName: "trophy.fill")
+                .font(.system(size: 17, weight: .medium))
+                .foregroundColor(RUColor.rose)
+                .frame(width: 38, height: 38)
+                .background(RUColor.rose.opacity(0.18), in: Circle())
             VStack(alignment: .leading, spacing: 2) {
-                Text(record.label).font(RUFont.sans(12, weight: .bold)).foregroundColor(RUColor.textPrimary)
+                Text(record.label).font(RUFont.sans(12.5, weight: .bold)).foregroundColor(RUColor.textPrimary)
                 // No "+120 XP" suffix — no record-specific XP is ever granted (the 120 is the
                 // ordinary per-debrief award), so the label promised a bonus that doesn't exist.
-                Text(record.value).foregroundColor(RUColor.violet).fontWeight(.bold)
-                    .font(RUFont.sans(12))
+                Text(record.value)
+                    .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
             }
             Spacer(minLength: 0)
         }
-        .padding(14)
-        .background(RUColor.violet.opacity(0.12), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.violet.opacity(0.3), lineWidth: RUSpacing.hairline))
+        .padding(.horizontal, 14).padding(.vertical, 12)
+        .background(RUColor.rose.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.rose.opacity(0.26), lineWidth: RUSpacing.hairline))
+        // Le trophée et le fond teinté sont décoratifs ; sans regroupement, VoiceOver lit le
+        // libellé et sa valeur comme deux arrêts, sans dire qu'il s'agit d'un record.
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(record.label), \(record.value)")
     }
 
     private func runRow(_ run: RunRecord) -> some View {

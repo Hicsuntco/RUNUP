@@ -29,7 +29,11 @@ struct HomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 HeaderView(
-                    eyebrow: isFreeRun ? "Mode course libre" : weekEyebrow,
+                    // La date du jour, pas "Semaine 4/9" : la carte programme juste en dessous
+                    // affiche déjà la semaine ET le bloc, donc l'eyebrow ne faisait que répéter
+                    // l'information la plus proche à l'écran. Une date ancre le "Salut Camille"
+                    // dans le vrai jour, comme la maquette (`.greet` au-dessus de `.greet-name`).
+                    eyebrow: isFreeRun ? "Mode course libre" : todayDateEyebrow,
                     title: "Salut \(profile.name)"
                 ) {
                     HStack(spacing: 8) {
@@ -55,30 +59,17 @@ struct HomeView: View {
                     }
                 }
 
-                // Opens the same "nouvel objectif" wizard as Profil/Plus de réglages and
-                // ChoiceView's end-of-program screen — only replaces goal/distance/allure/jours,
-                // nothing about her (nom, blessures, cycle...). No confirmation needed here: a
-                // new program restarting at semaine 1 is the expected, obvious outcome of asking
-                // for a new program, unlike the old "Refaire l'onboarding" which silently re-asked
-                // everything just to change the plan.
-                Button(action: { appState.newGoalWizardPresented = true }) {
-                    HStack(spacing: 5) {
-                        Image(systemName: "arrow.counterclockwise").font(.system(size: 11))
-                        Text("Refaire un programme").font(RUFont.sans(10.5, weight: .semibold))
-                    }
-                    .foregroundColor(RUColor.text3)
-                    .frame(minHeight: 44)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(PressableStyle())
-
-                programWeekCard
-
+                // Ordre repris de la maquette "Accueil" : les objectifs du jour (l'anneau), puis
+                // la bande de chiffres repères, puis la séance — la séance reste l'ancre visuelle
+                // de l'écran, et tout ce qui est "plan / programme" passe après elle au lieu de
+                // s'intercaler entre l'en-tête et elle.
                 ringsCard
+
+                quickStatsRow
 
                 sessionCard
 
-                weeklyDistanceCard
+                programWeekCard
 
                 if isFreeRun {
                     Text("Pas de plan fixe — le coach te propose de quoi garder la forme, jour après jour.")
@@ -88,6 +79,25 @@ struct HomeView: View {
                         .multilineTextAlignment(.center)
                         .padding(.top, 4)
                 }
+
+                // Descendu tout en bas : c'est une action de maintenance, rare et à moitié
+                // destructive (le programme repart à la semaine 1), qui occupait jusqu'ici la
+                // deuxième place de l'écran ouvert tous les jours. La maquette n'a rien de tel
+                // en haut — elle enchaîne directement anneau → chiffres → séance.
+                // Ouvre le même assistant "nouvel objectif" que Profil/Plus de réglages et que
+                // l'écran de fin de programme (ChoiceView) — il ne remplace que
+                // objectif/distance/allure/jours, rien de personnel (nom, blessures, cycle...).
+                Button(action: { appState.newGoalWizardPresented = true }) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "arrow.counterclockwise").font(.system(size: 11))
+                        Text("Refaire un programme").font(RUFont.sans(10.5, weight: .semibold))
+                    }
+                    .foregroundColor(RUColor.text3)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(PressableStyle())
+                .padding(.top, 4)
             }
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.top, 8)
@@ -110,11 +120,16 @@ struct HomeView: View {
                 Group {
                     if !isFreeRun {
                         HStack {
-                            EyebrowLabel(text: profile.daysUntilRace.map { "Objectif · \(profile.goalDisplay) · J-\($0)" } ?? "Objectif · \(profile.goalDisplay)", color: RUColor.rose)
+                            // L'objectif et le J-x vivent maintenant dans `quickStatsRow`, plus
+                            // haut : les répéter ici en eyebrow revenait à afficher deux fois la
+                            // même ligne à deux cartes d'écart. Le titre récupère en échange le
+                            // total de semaines (`weekEyebrow`), qui n'était visible nulle part
+                            // sur cette carte alors que c'est ce qui situe la semaine en cours.
+                            EyebrowLabel(text: "Ton programme", color: RUColor.rose)
                             Spacer()
                             Text("→").foregroundColor(RUColor.rose2)
                         }
-                        Text("Semaine \(profile.weekNumber) · Bloc \(block.rawValue)").displayStyle(17).foregroundColor(RUColor.textPrimary)
+                        Text("\(weekEyebrow) · Bloc \(block.rawValue)").displayStyle(17).foregroundColor(RUColor.textPrimary)
                     }
                 }
                 .accessibilityElement(children: .combine)
@@ -205,13 +220,13 @@ struct HomeView: View {
         let isRestDay = session.durationMinutes == 0
         return VStack(alignment: .leading, spacing: 0) {
             HStack {
-                EyebrowLabel(text: isRestDay ? "Aujourd'hui" : "Séance clé", color: RUColor.rose)
+                sessionTag(isRestDay)
                 Spacer()
                 if let adj = session.adjustment {
                     StatChip(text: adj, color: RUColor.rose2)
                 }
             }
-            Text(session.title).displayStyle(23).foregroundColor(RUColor.textPrimary).padding(.top, 6)
+            Text(session.title).displayStyle(23).foregroundColor(RUColor.textPrimary).padding(.top, 8)
             Text(session.subtitle).font(RUFont.sans(11)).foregroundColor(RUColor.text2).padding(.top, 4)
 
             if isRestDay {
@@ -272,29 +287,103 @@ struct HomeView: View {
         return runs.filter { range.contains($0.date) }.reduce(0) { $0 + $1.distanceKm }
     }
 
-    private var weeklyDistanceCard: some View {
+    /// La bande `.simplestats` de la maquette : deux ou trois chiffres repères séparés par des
+    /// filets, posés à même la page (pas de carte) entre l'anneau et la séance.
+    ///
+    /// Remplace l'ancienne carte pleine largeur "Cette semaine · N km", qui dépensait une carte
+    /// entière pour un seul chiffre. Rien d'inventé : le km de la semaine et la comparaison avec
+    /// la semaine dernière sont les mêmes calculs qu'avant (`weeklyKm`), l'objectif hebdo affiché
+    /// en dénominateur est `plannedWeeklyKm` (le vrai plan de la semaine, 0 en course libre — le
+    /// dénominateur disparaît alors au lieu d'être inventé), et le J-x / l'objectif ne sont pas
+    /// nouveaux non plus : ils étaient jusqu'ici enterrés dans l'eyebrow de la carte programme.
+    /// Reste tapable vers les Stats, comme la carte qu'elle remplace.
+    private var quickStatsRow: some View {
         let thisWeek = weeklyKm(weeksAgo: 0)
         let lastWeek = weeklyKm(weeksAgo: 1)
         let delta = thisWeek - lastWeek
+        let planned = profile.plannedWeeklyKm
         return Button(action: { appState.go(.stats) }) {
-            HStack(spacing: 14) {
-                VStack(alignment: .leading, spacing: 5) {
-                    EyebrowLabel(text: "Cette semaine", color: RUColor.cyan)
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), thisWeek)).displayStyle(26).foregroundColor(RUColor.textPrimary)
-                        Text("km").font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.text2)
+            VStack(spacing: 10) {
+                HStack(spacing: 0) {
+                    quickStat(
+                        value: String(format: "%.1f", locale: Locale(identifier: "fr_FR"), thisWeek),
+                        suffix: planned > 0 ? "/\(Int(planned.rounded()))" : nil,
+                        label: "km sem."
+                    )
+                    if let days = profile.daysUntilRace {
+                        quickStatDivider
+                        quickStat(value: "J-\(days)", suffix: nil, label: "avant course")
                     }
-                    Text(weeklyComparisonText(delta: delta, lastWeek: lastWeek))
-                        .font(RUFont.sans(12))
-                        .foregroundColor(weeklyComparisonColor(delta: delta, lastWeek: lastWeek))
+                    if !isFreeRun {
+                        quickStatDivider
+                        quickStat(value: profile.goalDisplay, suffix: nil, label: "objectif")
+                    }
                 }
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundColor(RUColor.text3)
+                HStack(spacing: 6) {
+                    Text(weeklyComparisonText(delta: delta, lastWeek: lastWeek))
+                        .font(RUFont.sans(11))
+                        .foregroundColor(weeklyComparisonColor(delta: delta, lastWeek: lastWeek))
+                        .multilineTextAlignment(.leading)
+                    Spacer(minLength: 0)
+                    Text("Mes stats").font(RUFont.sans(11, weight: .semibold)).foregroundColor(RUColor.text3)
+                    Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundColor(RUColor.text3)
+                }
             }
-            .padding(16)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())
-        .ruCard()
+    }
+
+    private var quickStatDivider: some View {
+        Rectangle().fill(RUColor.line).frame(width: RUSpacing.hairline, height: 34)
+    }
+
+    private func quickStat(value: String, suffix: String?, label: String) -> some View {
+        VStack(spacing: 2) {
+            HStack(alignment: .lastTextBaseline, spacing: 1) {
+                Text(value).displayStyle(21).foregroundColor(RUColor.textPrimary)
+                if let suffix {
+                    Text(suffix).font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.text3)
+                }
+            }
+            .lineLimit(1)
+            // `goalDisplay` peut être long ("Semi-marathon") là où les deux autres colonnes
+            // tiennent en 4 caractères — on rétrécit plutôt que de tronquer, les trois colonnes
+            // se partageant une largeur fixe.
+            .minimumScaleFactor(0.6)
+            Text(LocalizedStringKey(label))
+                .font(RUFont.sans(8.5, weight: .bold)).tracking(0.8).textCase(.uppercase)
+                .foregroundColor(RUColor.text3)
+                .lineLimit(1).minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity)
+        // Sans ça, VoiceOver lit la valeur et son libellé comme deux arrêts sans lien — même
+        // traitement que `MetricColumn`, dont cette colonne est la variante centrée.
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text(LocalizedStringKey(label)) + Text(", ") + Text(value + (suffix ?? "")))
+    }
+
+    /// La pastille dégradée `.session-card .tag` de la maquette, à la place de l'eyebrow rose
+    /// discret : c'est le seul endroit de l'écran où la maquette remplit vraiment avec l'accent,
+    /// et ça fait de la carte séance l'ancre visuelle de la page. Un jour de repos garde une
+    /// pastille neutre — il n'y a rien à mettre en avant.
+    private func sessionTag(_ isRestDay: Bool) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: isRestDay ? "moon.zzz.fill" : "bolt.fill").font(.system(size: 9, weight: .bold))
+            Text(LocalizedStringKey(isRestDay ? "Aujourd'hui" : "Séance du jour"))
+                .font(RUFont.sans(9, weight: .bold)).tracking(1).textCase(.uppercase)
+        }
+        .foregroundColor(isRestDay ? RUColor.text2 : .white)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(
+            isRestDay
+                ? AnyShapeStyle(RUColor.card2)
+                : AnyShapeStyle(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom)),
+            in: Capsule()
+        )
+        .overlay(Capsule().stroke(isRestDay ? RUColor.line : Color.clear, lineWidth: RUSpacing.hairline))
     }
 
     private func weeklyComparisonText(delta: Double, lastWeek: Double) -> String {
@@ -312,6 +401,12 @@ struct HomeView: View {
         return RUColor.lime
     }
 
+    /// Légende verticale `.ring-legend` de la maquette (pastille · nom de l'objectif · valeur
+    /// alignée à droite) à la place de la rangée horizontale de trois valeurs : les trois
+    /// objectifs y étaient serrés côte à côte et surtout désignés par leur unité ("séance",
+    /// "/400 KCAL", "/6000 PAS") plutôt que par leur nom, ce qui obligeait à décoder la couleur
+    /// de l'anneau pour savoir de quel objectif on parle. Une ligne par objectif, nommée, laisse
+    /// aussi la valeur respirer au lieu d'être tronquée.
     private var ringsCard: some View {
         let p = profile
         // Same array `DailyGoalsBarsView` draws its bars in, so each stat's color always matches
@@ -319,21 +414,45 @@ struct HomeView: View {
         let goalColors = DailyGoalsBarsView.fillColors
         return Button(action: { appState.go(.rings) }) {
             HStack(spacing: 16) {
-                DailyGoalsBarsView(progress: p.dailyGoalsProgress, size: 72)
-                VStack(alignment: .leading, spacing: 8) {
+                // Un cran plus grand que les 72 pt d'avant : la maquette donne à l'anneau presque
+                // la moitié de la largeur du contenu. On ne va pas jusque-là (ce serait dépasser
+                // l'anneau héros de l'écran "Ta journée", qui doit rester le plus grand), mais
+                // 96 pt lui rend le poids d'élément principal de la carte.
+                DailyGoalsBarsView(progress: p.dailyGoalsProgress, size: 96)
+                VStack(alignment: .leading, spacing: 9) {
                     EyebrowLabel(text: "Tes objectifs · \(p.dailyGoalsDone)/\(p.dailyGoalsTotal) bouclés")
-                    HStack(spacing: 14) {
-                        ringStat(value: p.isRestDayToday ? "Repos" : (p.seanceDoneToday ? "Faite" : "À faire"), unit: "séance", color: goalColors[0])
-                        ringStat(value: "\(Int(p.activeCaloriesToday))", unit: "/\(Int(p.activeCaloriesGoal)) KCAL", color: goalColors[1])
-                        ringStat(value: "\(Int(p.stepsToday))", unit: "/\(Int(p.stepsGoal)) PAS", color: goalColors[2])
-                    }
+                    ringLegendRow(
+                        name: "Séance du jour",
+                        value: p.isRestDayToday ? "Repos" : (p.seanceDoneToday ? "Faite" : "À faire"),
+                        color: goalColors[0]
+                    )
+                    ringLegendRow(name: "Calories actives", value: "\(Int(p.activeCaloriesToday))/\(Int(p.activeCaloriesGoal))", color: goalColors[1])
+                    ringLegendRow(name: "Pas", value: "\(Int(p.stepsToday))/\(Int(p.stepsGoal))", color: goalColors[2])
                 }
-                Spacer(minLength: 0)
             }
             .padding(16)
         }
         .buttonStyle(PressableStyle())
         .ruCard()
+    }
+
+    private func ringLegendRow(name: String, value: String, color: Color) -> some View {
+        HStack(spacing: 8) {
+            Circle().fill(color).frame(width: 7, height: 7)
+            Text(LocalizedStringKey(name))
+                .font(RUFont.sans(12, weight: .semibold))
+                .foregroundColor(RUColor.textPrimary)
+                .lineLimit(1).minimumScaleFactor(0.75)
+            Spacer(minLength: 6)
+            Text(value)
+                .font(RUFont.sans(11, weight: .medium))
+                .foregroundColor(RUColor.text3)
+                .lineLimit(1)
+        }
+        // Sinon VoiceOver lit la pastille, le nom et la valeur comme trois arrêts distincts —
+        // et la pastille, seule porteuse de la correspondance avec l'anneau, ne dit rien du tout.
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text(LocalizedStringKey(name)) + Text(", ") + Text(value))
     }
 
     /// `profile.streak` was already tracked (`AdaptivePlanEngine.applyDebrief`) and shown deep in
@@ -355,15 +474,10 @@ struct HomeView: View {
         .accessibilityLabel("Série, \(profile.streak) jour\(profile.streak > 1 ? "s" : "")")
     }
 
-    private func ringStat(value: String, unit: String, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 1) {
-            Text(value).displayStyle(16).foregroundColor(color)
-            Text(unit).font(RUFont.sans(8)).foregroundColor(RUColor.text2)
-        }
-        // Was two disconnected stops ("45" then, later, "/60 KCAL") — combined so a value and its
-        // unit/goal read as one thing.
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(value), \(unit)")
+    /// La date du jour, en toutes lettres — `EyebrowLabel` la passe en capitales comme tous les
+    /// eyebrows de l'app.
+    private var todayDateEyebrow: String {
+        Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "fr_FR")))
     }
 
     /// "Semaine 4/9" when the program has a real end (a race goal periodizes toward one), else

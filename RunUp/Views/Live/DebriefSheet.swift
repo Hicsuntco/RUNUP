@@ -151,7 +151,20 @@ struct DebriefSheet: View {
                     let feedText = run.distanceKm > 0.05
                         ? "a couru \(distance) km · \(run.title)"
                         : "a fait sa séance · \(run.title)"
-                    appState.postClubActivity(type: "run", text: feedText, xpEarned: 120, distanceKm: run.distanceKm)
+                    // Les vraies mesures de la sortie partent avec le post : c'est ce qui permet à
+                    // la carte du fil d'afficher KM / ALLURE / TEMPS au lieu d'une seule phrase.
+                    // Chaque champ n'est joint que s'il a été réellement mesuré — une séance sans
+                    // GPS n'envoie ni distance, ni allure, ni dénivelé, et sa carte n'affichera
+                    // simplement pas ces colonnes.
+                    let hasDistance = run.distanceKm > 0.05
+                    let metrics = ActivityMetrics(
+                        distanceKm: hasDistance ? run.distanceKm : nil,
+                        durationSeconds: run.durationSeconds > 0 ? run.durationSeconds : nil,
+                        avgPace: hasDistance && PaceModel.parseSecPerKm(run.avgPace) != nil ? run.avgPace : nil,
+                        elevationGainM: run.elevationGainM > 0 ? run.elevationGainM : nil,
+                        isPersonalRecord: RunRecord.beatsPersonalRecord(run, history: runs)
+                    )
+                    appState.postClubActivity(type: "run", text: feedText, xpEarned: 120, metrics: metrics)
                     // Deliberately here rather than in `AppState.endLiveRun` — this tap is where a
                     // run actually becomes real on every path into it (GPS, "FAIT", a run handed
                     // back by the Watch), and it's the tap that credits XP/streak/plan adaptation.

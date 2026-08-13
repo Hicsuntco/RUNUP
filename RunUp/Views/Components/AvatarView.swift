@@ -86,22 +86,76 @@ struct AvatarView: View {
         .clipShape(Circle())
     }
 
+    /// Le « mesh » de la maquette : deux dégradés radiaux d'une SEULE famille d'accent (son ton
+    /// clair en haut à gauche, son ton primaire en bas à droite) posés sur un aplat de ce même
+    /// primaire — `radial-gradient(circle at 28% 25%, LIGHT, transparent 58%),
+    /// radial-gradient(circle at 78% 78%, PRIMARY, transparent 62%), PRIMARY`.
+    ///
+    /// Les 8 couples de hex codés en dur dans la maquette (`.avatar.p-ines` … `.p-anais`) sont
+    /// exactement les `light`/`primary` des 8 `AccentTheme.all` : #8AB8FF/#3D8BFF = Bleu,
+    /// #FFD08A/#FFB03D = Ambre, #C2B0FF/#7C5CFF = Violet, etc. Rien à transcrire, donc — juste la
+    /// bonne paire à prendre dans le thème déjà choisi par `personalTheme`.
+    ///
+    /// Ce que cela corrige : l'app dégradait `primary → tail`, soit DEUX familles d'accent
+    /// différentes (Bleu #3D8BFF → Violet #7C5CFF), ce qui donne un avatar bicolore. La maquette
+    /// reste dans une seule famille avec un simple point de lumière décentré — c'est ce qui, selon
+    /// sa propre note de v25, « approche le velouté d'une photo » plutôt qu'un rond bicolore.
+    ///
+    /// Rayons : en CSS un `circle` sans mot-clé de taille vaut `farthest-corner`. Depuis 28%/25%
+    /// le coin le plus lointain est à ~1,04 × côté, donc 58% ≈ 0,60 ; depuis 78%/78% il est à
+    /// ~1,10 × côté, donc 62% ≈ 0,68. Ordre de superposition inversé par rapport au CSS, où le
+    /// PREMIER dégradé listé est celui du dessus.
+    @ViewBuilder
+    private func mesh(for theme: AccentTheme) -> some View {
+        ZStack {
+            theme.primary
+            RadialGradient(
+                colors: [theme.primary, theme.primary.opacity(0)],
+                center: UnitPoint(x: 0.78, y: 0.78),
+                startRadius: 0,
+                endRadius: size * 0.68
+            )
+            RadialGradient(
+                colors: [theme.light, theme.light.opacity(0)],
+                center: UnitPoint(x: 0.28, y: 0.25),
+                startRadius: 0,
+                endRadius: size * 0.60
+            )
+        }
+    }
+
     @ViewBuilder
     private var fallback: some View {
         if let theme = personalTheme {
-            LinearGradient(colors: [theme.primary, theme.tail], startPoint: .topLeading, endPoint: .bottomTrailing)
+            mesh(for: theme)
             Text(initial.uppercased())
                 .displayStyle(size * 0.4)
+                // Inchangé, et vérifié plutôt que supposé : la règle de luminance ci-dessus
+                // reproduit exactement les 8 choix codés en dur par la maquette — encre sombre
+                // sur Cyan/Ambre/Lime, blanc sur les cinq autres.
                 .foregroundColor(initialColor(for: theme))
         } else {
+            // Cas « moi » (pas de `seed`). La maquette n'a aucun avatar en aplat d'accent plein :
+            // même l'avatar du profil de l'utilisatrice y porte un mesh (`class="avatar
+            // p-camille"` dans l'en-tête de Profil). Les deux branches reprennent donc les deux
+            // traitements réels du fichier, avec l'accent courant en guise de « sa » famille —
+            // sans qu'aucun call site n'ait à changer.
             if useGradient {
-                LinearGradient(colors: [RUColor.rose, RUColor.violet], startPoint: .topLeading, endPoint: .bottomTrailing)
+                mesh(for: AccentTheme.current)
+                Text(initial.uppercased())
+                    .displayStyle(size * 0.4)
+                    .foregroundColor(initialColor(for: AccentTheme.current))
             } else {
-                RUColor.rose
+                // Le `.avatar` nu de la maquette : `background: color-mix(in srgb, var(--ru-violet)
+                // 16%, var(--ru-bg)); color: var(--ru-violet)`. Une teinte pâle et des initiales
+                // colorées — pas l'aplat `RUColor.rose` plein qu'il y avait ici, qui était le seul
+                // avatar de l'app à enfreindre la règle « accent, pas aplat » (et que la maquette
+                // a justement retiré en v4 : « avatars en aplat pâle + initiales colorées »).
+                RUColor.tint(RUColor.violet, 0.16, over: RUColor.bg)
+                Text(initial.uppercased())
+                    .displayStyle(size * 0.4)
+                    .foregroundColor(RUColor.violet)
             }
-            Text(initial.uppercased())
-                .displayStyle(size * 0.4)
-                .foregroundColor(.white)
         }
     }
 }

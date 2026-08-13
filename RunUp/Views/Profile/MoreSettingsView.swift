@@ -282,30 +282,11 @@ struct MoreSettingsView: View {
     /// A real, personal referral code (see `api/auth/[action].js`) — sharing it and having the
     /// friend actually log a first activity rewards both accounts +100 XP (see
     /// `api/activities/[action].js`'s `grantReferralRewardIfNeeded`), not just for installing.
+    /// La section porte déjà le titre « Parraine un ami », d'où l'absence de titre dans la carte.
+    /// Le contenu vit maintenant dans `ReferralInviteCard`, partagé avec le fil d'amis vide —
+    /// c'est là que l'invitation compte vraiment, ici elle n'est qu'un rappel.
     private func referralCard(code: String) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Invite un ami avec ton code — vous gagnez tous les deux +100 XP dès sa première séance.")
-                .font(RUFont.sans(12.5)).foregroundColor(RUColor.text2).lineSpacing(2)
-            HStack(spacing: 10) {
-                Text(code)
-                    .font(RUFont.mono(18, weight: .semibold))
-                    .foregroundColor(RUColor.textPrimary)
-                    .tracking(2)
-                    .padding(.horizontal, 16).padding(.vertical, 10)
-                    .ruCard(radius: 12, fill: RUColor.card2)
-                Spacer()
-                ShareLink(item: "Rejoins-moi sur RunUp, mon appli de coaching running — utilise mon code \(code) à l'inscription : https://runup-nu.vercel.app") {
-                    HStack(spacing: 6) {
-                        Image(systemName: "square.and.arrow.up")
-                        Text("Partager")
-                    }
-                    .font(RUFont.sans(12.5, weight: .semibold))
-                }
-                .buttonStyle(SecondaryButtonStyle())
-            }
-        }
-        .padding(14)
-        .ruCard()
+        ReferralInviteCard(code: code)
     }
 
     /// Real account, tied to the Club backend (see `AuthService`) — includes account deletion,

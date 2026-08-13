@@ -377,11 +377,30 @@ struct FriendsView: View {
         VStack(alignment: .leading, spacing: 8) {
             EyebrowLabel(text: "Fil d'activité", color: RUColor.rose)
             if feed.isEmpty && !isLoading {
-                Text(following.isEmpty
-                    ? "Suis quelqu'un pour voir ses séances ici."
-                    : "Personne n'a encore rien posté — reviens plus tard.")
-                    .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
-                    .frame(maxWidth: .infinity).padding(.vertical, 20)
+                if following.isEmpty {
+                    // « Suis quelqu'un pour voir ses séances ici » était une phrase sans issue :
+                    // elle décrivait le manque et renvoyait implicitement au champ de recherche
+                    // au-dessus — or on ne cherche pas par leur nom des gens dont on ignore
+                    // s'ils ont l'app. C'est l'état de TOUT nouveau compte, et donc l'endroit où
+                    // l'invitation par code a le plus de sens : elle vivait jusqu'ici dans
+                    // « Plus de réglages », derrière la molette du Profil.
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Personne à suivre pour l'instant")
+                            .font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                        Text("Cherche quelqu'un par son nom ou son pseudo juste au-dessus — ou invite ceux avec qui tu cours déjà.")
+                            .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                            .fixedSize(horizontal: false, vertical: true)
+                        if let code = auth.currentUser?.referralCode {
+                            ReferralInviteCard(code: code)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 6)
+                } else {
+                    Text("Personne n'a encore rien posté — reviens plus tard.")
+                        .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                        .frame(maxWidth: .infinity).padding(.vertical, 20)
+                }
             }
             ForEach(Array(feed.enumerated()), id: \.element.id) { index, item in
                 ActivityFeedRow(

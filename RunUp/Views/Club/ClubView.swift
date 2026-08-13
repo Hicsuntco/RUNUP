@@ -1163,9 +1163,48 @@ struct ClubView: View {
     private var feedContent: some View {
         VStack(spacing: 8) {
             if feed.isEmpty && !isLoading {
-                Text("Personne n'a encore rien posté — sois la première !")
-                    .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
-                    .frame(maxWidth: .infinity).padding(.vertical, 20)
+                // Un fil vide a deux causes très différentes, et un seul message les traitait
+                // toutes les deux. Seule dans son club, « sois la première » demande de poster
+                // pour un public qui n'existe pas — ce qu'il faut, c'est des membres, et le code
+                // d'invitation était rangé deux écrans plus loin, dans Gestion du club. À
+                // plusieurs, la phrase d'origine est juste : il n'y a qu'à courir.
+                if let club = board.club, club.memberCount <= 1 {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Tu es seule dans \(club.name)")
+                            .font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                        Text("Un club prend vie à plusieurs — classement, défis, sorties de groupe. Partage le code, ceux qui l'ont te rejoignent directement.")
+                            .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                            .fixedSize(horizontal: false, vertical: true)
+                        HStack(spacing: 10) {
+                            Text(club.inviteCode)
+                                .font(RUFont.mono(18, weight: .semibold))
+                                .foregroundColor(RUColor.textPrimary)
+                                .tracking(2)
+                                .padding(.horizontal, 16).padding(.vertical, 10)
+                                .ruCard(radius: 12, fill: RUColor.card2)
+                                // Épelé, sinon VoiceOver lit un code alphanumérique comme un mot
+                                // et il devient impossible à recopier.
+                                .accessibilityLabel("Code d'invitation du club")
+                                .accessibilityValue(club.inviteCode.map { String($0) }.joined(separator: " "))
+                            Spacer(minLength: 0)
+                            ShareLink(item: "Rejoins mon club \(club.name) sur RunUp avec le code \(club.inviteCode) : https://runup-nu.vercel.app") {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "square.and.arrow.up")
+                                    Text("Partager")
+                                }
+                                .font(RUFont.sans(12.5, weight: .semibold))
+                            }
+                            .buttonStyle(SecondaryButtonStyle())
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(14)
+                    .ruCard()
+                } else {
+                    Text("Personne n'a encore rien posté — sois la première !")
+                        .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                        .frame(maxWidth: .infinity).padding(.vertical, 20)
+                }
             }
             ForEach(Array(feed.enumerated()), id: \.element.id) { index, item in
                 ActivityFeedRow(

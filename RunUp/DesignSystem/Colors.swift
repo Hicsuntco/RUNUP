@@ -101,16 +101,30 @@ enum RUColor {
     /// des propriétés calculées lisant `ThemeStore`, appeler ce helper depuis un `body` enregistre
     /// la dépendance d'observation comme n'importe quel autre token — le mélange se recalcule seul
     /// au changement de thème ou d'accent.
+    /// Aplatit une couleur éventuellement translucide sur `bg` (opaque dans les deux thèmes),
+    /// pour obtenir la couleur qu'elle DONNE À VOIR plutôt que celle qu'elle déclare.
+    ///
+    /// Sans ça, `tint(_:_:over:)` lisait `card` en thème sombre — `Color.white.opacity(0.045)` —
+    /// comme du BLANC PUR, parce que `getRed` rend les composantes non prémultipliées et que le
+    /// mélange jetait l'alpha. Les deux cartes teintées du Profil, mélangées « sur card »,
+    /// sortaient donc quasi blanches en mode sombre, avec du texte blanc dessus : illisibles.
+    private static func flattened(_ color: Color) -> (r: CGFloat, g: CGFloat, b: CGFloat) {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        UIColor(color).getRed(&r, green: &g, blue: &b, alpha: &a)
+        guard a < 1 else { return (r, g, b) }
+        var pr: CGFloat = 0, pg: CGFloat = 0, pb: CGFloat = 0, pa: CGFloat = 0
+        UIColor(bg).getRed(&pr, green: &pg, blue: &pb, alpha: &pa)
+        return (r * a + pr * (1 - a), g * a + pg * (1 - a), b * a + pb * (1 - a))
+    }
+
     static func tint(_ color: Color, _ amount: Double, over base: Color) -> Color {
-        var cr: CGFloat = 0, cg: CGFloat = 0, cb: CGFloat = 0, ca: CGFloat = 0
-        var br: CGFloat = 0, bg: CGFloat = 0, bb: CGFloat = 0, ba: CGFloat = 0
-        UIColor(color).getRed(&cr, green: &cg, blue: &cb, alpha: &ca)
-        UIColor(base).getRed(&br, green: &bg, blue: &bb, alpha: &ba)
+        let c = flattened(color)
+        let b = flattened(base)
         let t = CGFloat(min(max(amount, 0), 1))
         return Color(
-            red: Double(cr * t + br * (1 - t)),
-            green: Double(cg * t + bg * (1 - t)),
-            blue: Double(cb * t + bb * (1 - t))
+            red: Double(c.r * t + b.r * (1 - t)),
+            green: Double(c.g * t + b.g * (1 - t)),
+            blue: Double(c.b * t + b.b * (1 - t))
         )
     }
 

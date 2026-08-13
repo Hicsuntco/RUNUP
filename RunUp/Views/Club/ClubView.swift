@@ -1152,6 +1152,9 @@ struct ClubView: View {
         errorMessage = nil
         do {
             _ = try await clubService.createClub(name: newClubName.trimmingCharacters(in: .whitespaces))
+            // Inside the `do`, after the call succeeded — an attempt that 422'd on the name, or
+            // never left the device, is not a club created.
+            Analytics.shared.track(.clubCreated)
             newClubName = ""
             board = try await clubService.fetchBoard()
         } catch ClubServiceError.badResponse(422, _) {
@@ -1176,6 +1179,10 @@ struct ClubView: View {
         errorMessage = nil
         do {
             _ = try await clubService.joinClub(inviteCode: joinCode.trimmingCharacters(in: .whitespaces))
+            // Same placement rule as `createClub` — a mistyped invite code (404) isn't a join.
+            // Created vs joined are tracked apart on purpose: they're the two halves of the
+            // referral loop, and one growing without the other means the loop isn't closing.
+            Analytics.shared.track(.clubJoined)
             joinCode = ""
             board = try await clubService.fetchBoard()
         } catch ClubServiceError.badResponse(404, _) {

@@ -152,6 +152,21 @@ struct DebriefSheet: View {
                         ? "a couru \(distance) km · \(run.title)"
                         : "a fait sa séance · \(run.title)"
                     appState.postClubActivity(type: "run", text: feedText, xpEarned: 120, distanceKm: run.distanceKm)
+                    // Deliberately here rather than in `AppState.endLiveRun` — this tap is where a
+                    // run actually becomes real on every path into it (GPS, "FAIT", a run handed
+                    // back by the Watch), and it's the tap that credits XP/streak/plan adaptation.
+                    // Anything earlier would count a stopped-but-never-validated run as completed,
+                    // and would miss the two non-GPS paths entirely.
+                    Analytics.shared.trackOnce(.firstRunCompleted)
+                    Analytics.shared.track(.runCompleted, [
+                        "distance_km": .double((run.distanceKm * 10).rounded() / 10),
+                        "duration_min": .int(run.durationSeconds / 60),
+                        // `RPE`'s own raw value, which is ordinal by construction (0 = trop dur →
+                        // 3 = facile) — an average over it is meaningful, where the French display
+                        // label would have been both unaverageable and free to change with copy.
+                        "rpe": .int(rpe.rawValue),
+                        "streak": .int(appState.profile.streak),
+                    ])
                     // Every completed session earns its own bell entry — before this, the only
                     // notify() call sites were the rare same-day 3-goals bonus, a club kudos/
                     // comment, or a weekly plan update, so a solo runner who just isn't hitting

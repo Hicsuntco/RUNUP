@@ -1,6 +1,6 @@
 # Politique de confidentialité — RUNUP
 
-**Dernière mise à jour : 15 juillet 2026**
+**Dernière mise à jour : 13 août 2026**
 
 Cette politique explique quelles données l'application RUNUP collecte, comment elles sont utilisées, et avec qui elles sont partagées.
 
@@ -44,8 +44,13 @@ Ces données Club **sont stockées sur notre serveur** (contrairement au reste d
 ### Modération du Club
 Le nom d'un club et ton prénom sont filtrés automatiquement pour bloquer les contenus manifestement injurieux. Depuis Le Club, tu peux à tout moment **signaler** un club, une personne ou une activité (Profil du club/classement/fil → appui long → "Signaler"), ou **bloquer** quelqu'un pour ne plus voir son score ni ses activités (sans avoir à quitter le club). Les signalements sont conservés (qui signale, quoi, pourquoi) le temps qu'on les traite. Un lien "Signaler un problème ou nous contacter" est aussi visible directement dans Le Club.
 
+### Statistiques d'usage
+Pour savoir où l'application est confuse ou cassée (par exemple à quelle étape de l'inscription les gens abandonnent), RUNUP enregistre une courte liste d'événements d'usage sur notre propre serveur : ouverture de l'app, étapes de l'inscription vues et validées, course démarrée et course terminée, message envoyé au coach, club créé ou rejoint. Chaque événement est accompagné de quelques informations techniques sur l'action elle-même (numéro d'étape, distance et durée arrondies d'une course, ressenti indiqué) — **jamais le contenu de ce que tu écris**, en particulier jamais tes messages au coach.
+
+Ces événements sont rattachés à un identifiant aléatoire généré par l'application sur ton appareil, qui n'est lié à aucune donnée personnelle et change si tu réinstalles l'application. Si tu es connectée au Club, ils sont aussi rattachés à ton compte. Ils sont conservés au maximum 400 jours, puis supprimés automatiquement.
+
 ### Aucune collecte publicitaire
-RUNUP ne contient aucun SDK publicitaire, aucun traceur tiers, et ne vend aucune donnée.
+RUNUP ne contient aucun SDK publicitaire, aucun traceur tiers, aucun outil d'analyse tiers, et ne vend aucune donnée. Les statistiques d'usage décrites ci-dessus sont enregistrées par notre propre serveur, pour nous seuls, et ne sont partagées avec personne.
 
 ## Où sont stockées tes données
 
@@ -53,7 +58,7 @@ Ton profil, ton historique de courses et tes messages au coach restent **localem
 
 Si tu te connectes pour utiliser le Club, ton compte (identifiant de connexion, prénom, XP, appartenance à un club, activités postées, kudos — voir "Compte Le Club" ci-dessus) est stocké sur notre serveur (hébergé chez Vercel, base de données Neon), tant que tu ne le supprimes pas.
 
-La seule autre donnée qui quitte ton appareil est celle envoyée à notre serveur pour faire fonctionner le coach conversationnel (voir ci-dessus), et les données Apple Santé que tu choisis explicitement de synchroniser.
+Les seules autres données qui quittent ton appareil sont celles envoyées à notre serveur pour faire fonctionner le coach conversationnel (voir ci-dessus), les statistiques d'usage décrites ci-dessus, et les données Apple Santé que tu choisis explicitement de synchroniser.
 
 ## Tes droits
 

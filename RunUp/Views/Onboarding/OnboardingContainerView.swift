@@ -13,7 +13,13 @@ struct OnboardingContainerView: View {
             RUColor.bg
 
             if vm.showWelcome {
-                WelcomeView(onStart: { vm.showWelcome = false })
+                // The top of the funnel every other onboarding number is a percentage of — the app
+                // has no other way to tell "opened it and never started" apart from "started and
+                // dropped at step 3", which are two completely different problems.
+                WelcomeView(onStart: {
+                    vm.showWelcome = false
+                    Analytics.shared.track(.onboardingStarted)
+                })
             } else {
                 VStack(spacing: 0) {
                     Spacer().frame(height: 12)
@@ -34,6 +40,11 @@ struct OnboardingContainerView: View {
                     currentStep
                         .id(vm.step)
                         .transition(.opacity)
+                        // `.id(vm.step)` already gives each step its own identity, so this fires
+                        // exactly once per step entered — including a step re-entered via the back
+                        // chevron, which is itself worth seeing (a step people go back to is a step
+                        // that asked the question badly).
+                        .onAppear { Analytics.shared.track(.onboardingStepViewed, stepProps()) }
                 }
             }
         }
@@ -71,11 +82,46 @@ struct OnboardingContainerView: View {
     }
 
     private func advance() {
+        // Recorded BEFORE the index moves, so the event names the step that was actually answered.
+        // Paired with `onboarding_step_viewed`, viewed-minus-completed per step is the drop-off
+        // curve — the one number that says which question is losing people.
+        Analytics.shared.track(.onboardingStepCompleted, stepProps())
         vm.step = min(vm.step + 1, OnboardingViewModel.totalSteps - 1)
         vm.saveDraft()
     }
 
+    /// `step` (the index, for ordering a funnel chart) plus `name` (stable, for reading it) —
+    /// the index alone would silently re-point at a different question the day a step is inserted.
+    private func stepProps() -> [String: AnalyticsValue] {
+        ["step": .int(vm.step), "name": .string(stepName(vm.step))]
+    }
+
+    /// Mirrors the `currentStep` switch above, including its branch at step 3 (the deep-dive
+    /// question differs by goal, and lumping the three together would hide a drop-off specific to
+    /// one of them).
+    private func stepName(_ step: Int) -> String {
+        switch step {
+        case 0: return "name"
+        case 1: return "birthdate"
+        case 2: return "goal"
+        case 3: return vm.isRace ? "race_details" : (vm.isHyrox ? "hyrox_details" : "deep_dive")
+        case 4: return "wellbeing"
+        case 5: return "running_days"
+        case 6: return "level"
+        case 7: return "health_connect"
+        default: return "building_program"
+        }
+    }
+
     private func finish() {
+        // The bottom of the funnel: a real, generated program. Carries the three answers that
+        // shape every plan the engine builds, so a drop-off (or a retention gap) can be read
+        // against the goal/level/rhythm it belongs to instead of as one undifferentiated number.
+        Analytics.shared.track(.onboardingFinished, [
+            "goal": .string(vm.goal?.rawValue ?? "unknown"),
+            "level": .string(vm.level.rawValue),
+            "running_days": .int(vm.runningDays.count),
+        ])
         vm.clearDraft()
         AdaptivePlanEngine.applyOnboarding(vm.buildResult(), to: appState.profile)
         let profile = appState.profile

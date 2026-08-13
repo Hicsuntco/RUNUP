@@ -2,6 +2,24 @@
 
 Contenu prêt à copier-coller dans App Store Connect (App Information / Fiche de l'app).
 
+L'app est livrée avec trois localisations réelles (`CFBundleLocalizations: fr, en, es` dans
+project.yml, adossées à 744 clés traduites dans `RunUp/Resources/Localizable.xcstrings`) — la fiche
+doit donc exister dans les trois, sinon App Store Connect n'expose l'app qu'en français et les
+recherches anglophones/hispanophones ne la trouvent jamais. Chaque locale a sa propre section
+ci-dessous ; les sections communes (catégorie, âge, URLs, copyright) ne se saisissent qu'une fois.
+
+> **Règle de rédaction** : rien ici ne doit décrire une fonctionnalité que le code n'implémente pas
+> réellement. Une promesse non tenue dans la fiche est un motif de rejet (App Review Guideline 2.3
+> — "Accurate Metadata"), et c'est exactement ce qui s'était glissé dans la version précédente de ce
+> fichier (un VO2max estimé, retiré du code depuis — voir le commentaire en tête de
+> `RunUp/Views/Stats/StatsView.swift` — un verrouillage d'écran qui n'existe plus, et un programme
+> annoncé fixe à 9 semaines quand `AdaptivePlanEngine.ProgramShape` en calcule 4 à 20 selon la date
+> de course, ou aucun terme du tout pour les objectifs sans date).
+
+---
+
+# 🇫🇷 Français (langue principale)
+
 ## Nom de l'app (30 caractères max)
 ```
 RUNUP : Coach de Course
@@ -22,33 +40,173 @@ Un programme qui s'adapte après chaque sortie, un vrai coach qui te connaît, e
 RUNUP construit ton programme de course sur mesure, l'ajuste après chaque sortie selon ta forme et ton ressenti, et te pousse juste ce qu'il faut — jamais plus, jamais moins.
 
 UN VRAI COACH, PAS UN CHATBOT
-Un vrai coach personnel qui connaît ton objectif, ton historique et ta forme du jour. Pose-lui une question avant ta séance, demande un conseil nutrition, ou fais-toi rassurer après une sortie difficile.
+Un vrai coach personnel qui connaît ton objectif, ton historique et ta forme du jour. Pose-lui une question avant ta séance, demande un conseil nutrition, ou fais-toi rassurer après une sortie difficile. Pendant l'effort, tu peux même lui parler : tu appuies, tu poses ta question à voix haute, il te répond dans les écouteurs.
 
 UN PROGRAMME QUI VIT AVEC TOI
-Après chaque course, donne ton ressenti (RPE) — le programme adapte immédiatement la difficulté de tes prochaines séances. Base, spécifique, affûtage : un vrai plan de 9 semaines construit autour de ton objectif (course, progression, perte de poids, reprise en douceur, ou juste rester en forme).
+Après chaque course, donne ton ressenti (RPE) — le programme ajuste la difficulté des semaines suivantes. Base, spécifique, affûtage : un vrai plan périodisé calé sur la date de ta course, de 4 à 20 semaines selon le temps qu'il te reste. Sans date de course (progresser, perdre du poids, reprendre en douceur, rester en forme), il tourne en continu avec ses semaines de décharge. Nuit trop courte ou séance de la veille trop dure ? La séance du jour s'allège d'elle-même.
 
 TES OBJECTIFS DU JOUR, EN UN COUP D'ŒIL
-Bouger, rester actif, courir — trois objectifs simples à boucler chaque jour, synchronisés avec Apple Santé.
+Ta séance, tes calories actives, tes pas — trois objectifs simples à boucler chaque jour, synchronisés avec Apple Santé.
 
 SUIVI DE COURSE EN DIRECT
-Carte en temps réel, allure, fréquence cardiaque, calories, et coach vocal qui t'accompagne pendant l'effort — avec verrouillage d'écran pour éviter les appuis accidentels.
+Carte et tracé en temps réel, allure, fréquence cardiaque, calories. Chaque sortie part dans Apple Santé, s'exporte en GPX, et se partage en carte visuelle avec ton tracé.
+
+APPLE WATCH
+Lance ta course depuis ta montre, sans emporter ton iPhone : fréquence cardiaque au poignet, distance et calories en direct. Ta séance du jour est poussée sur la montre, et chaque course terminée au poignet revient sur le téléphone avec son bilan et son adaptation de programme.
+
+WIDGETS ET ÉCRAN VERROUILLÉ
+Un widget sur l'écran d'accueil pour tes objectifs du jour et ta série en cours. Pendant une course, l'activité en direct s'affiche sur l'écran verrouillé et dans la Dynamic Island.
 
 STATS QUI COMPTENT VRAIMENT
-VO2max estimé, prédictions de temps de course, analyse de charge d'entraînement sur plusieurs semaines.
+Tendance d'allure, records personnels, prédictions de temps sur 5 km, 10 km, semi et marathon, charge d'entraînement sur 8 semaines, carte de tous tes parcours, et suivi d'usure de tes chaussures.
 
 CLUB & COMMUNAUTÉ
-Classement, défis mensuels, fil d'activité entre coureuses et coureurs.
+Classement de la semaine et classement général, défis de club, sorties de groupe, fil d'activité et badges. Et si tu préfères suivre quelques personnes plutôt qu'un club entier, un fil d'amis fait exactement ça.
 
 FIN DE PROGRAMME, PAS FIN DE L'HISTOIRE
-À la fin de tes 9 semaines : récupération encadrée, puis nouvel objectif ou mode course libre sans plan fixe.
+À la fin de ton programme : récupération encadrée, puis nouvel objectif ou mode course libre sans plan fixe.
 
-Nécessite iOS 17 ou version ultérieure. La connexion à Apple Santé est optionnelle mais recommandée pour une forme du jour plus précise.
+Nécessite iOS 17 ou version ultérieure. La connexion à Apple Santé est optionnelle mais recommandée pour une forme du jour plus précise. Le Club demande un compte ; tout le reste de l'app fonctionne sans.
 ```
 
 ## Mots-clés (100 caractères max, séparés par des virgules sans espace)
 ```
-course,running,coach,entrainement,fractionné,cardio,santé,marathon,10km,semi,vma,plan,coureuse
+running,entrainement,fractionné,cardio,marathon,semi,10km,trail,vma,jogging,footing,allure
 ```
+
+Aucun de ces mots n'apparaît dans le nom ni dans le sous-titre : Apple indexe déjà tous les mots du
+titre et du sous-titre, et les répéter ici ne fait que consommer des caractères sans ajouter une
+seule requête. C'est ce que faisait l'ancienne liste — `course`, `coach` et `coureuse` (même racine
+que `course`) y étaient tous déjà couverts par « RUNUP : Coach de Course » / « Ton coach personnel
+de course ». Les 33 caractères récupérés servent maintenant à des termes réellement nouveaux
+(`trail`, `jogging`, `footing`, `allure`). Séparateur : virgule seule, sans espace — un espace
+après la virgule compte dans les 100 caractères et n'apporte rien.
+
+---
+
+# 🇬🇧 English
+
+## App name (30 characters max)
+```
+RUNUP: Running Coach
+```
+
+## Subtitle (30 characters max)
+```
+A plan that adapts to you
+```
+
+## Promotional text (170 characters max)
+```
+A plan that rewrites itself after every run, a real coach who knows your history, and today's goals at a glance. Run like you have a coach.
+```
+
+## Description (4000 characters max)
+```
+RUNUP builds your running plan around your goal, reshapes it after every run based on how you actually felt, and pushes you exactly as much as it should — never more, never less.
+
+A REAL COACH, NOT A CHATBOT
+A personal coach who knows your goal, your history and how today is going. Ask a question before a session, get nutrition advice, or talk it through after a run that hurt. Mid-run you can even talk to it: press, ask out loud, hear the answer in your headphones.
+
+A PLAN THAT LIVES WITH YOU
+After every run, rate how hard it felt (RPE) — the plan adjusts the difficulty of the weeks ahead. Base, specific, taper: a genuinely periodised plan built around your race date, 4 to 20 weeks depending on how long you have. With no race date (getting faster, losing weight, easing back in, staying fit), it runs continuously with built-in cutback weeks. Short night, or yesterday's session too brutal? Today's session eases off on its own.
+
+TODAY'S GOALS, AT A GLANCE
+Your session, your active calories, your steps — three simple goals to close each day, synced with Apple Health.
+
+LIVE RUN TRACKING
+Real-time map and route, pace, heart rate, calories. Every run is saved to Apple Health, exports as GPX, and shares as a card with your route on it.
+
+APPLE WATCH
+Start a run from your watch and leave your iPhone at home: wrist heart rate, live distance and calories. Today's session is pushed to the watch, and every run you finish on your wrist comes back to the phone with its debrief and its plan adjustment.
+
+WIDGETS AND LOCK SCREEN
+A Home Screen widget for today's goals and your current streak. During a run, the live activity shows up on the Lock Screen and in the Dynamic Island.
+
+STATS THAT ACTUALLY MEAN SOMETHING
+Pace trend, personal records, finish-time predictions for 5K, 10K, half and marathon, eight weeks of training load, a map of every route you've run, and shoe mileage tracking.
+
+CLUB & COMMUNITY
+Weekly and all-time leaderboards, club challenges, group runs, an activity feed and badges. And if you'd rather follow a handful of people than a whole club, a friends feed does exactly that.
+
+THE END OF A PLAN ISN'T THE END
+When your plan finishes: a guided recovery block, then a new goal or free-run mode with no fixed plan at all.
+
+Requires iOS 17 or later. Connecting Apple Health is optional but recommended for a more accurate daily readiness score. The Club needs an account; everything else works without one.
+```
+
+## Keywords (100 characters max, comma-separated, no spaces)
+```
+run,5k,10k,half,marathon,pace,tracker,gps,interval,cardio,jog,fitness,workout,race,training
+```
+
+None of these repeats a word from the name or subtitle — Apple already indexes every word in both,
+so repeating them here spends characters and buys nothing.
+
+---
+
+# 🇪🇸 Español
+
+## Nombre de la app (30 caracteres máx.)
+```
+RUNUP: Entrenador Running
+```
+
+## Subtítulo (30 caracteres máx.)
+```
+Un plan que se adapta a ti
+```
+
+## Texto promocional (170 caracteres máx.)
+```
+Un plan que se reescribe después de cada salida, un entrenador de verdad que te conoce y tus objetivos del día de un vistazo. Corre como si tuvieras entrenador.
+```
+
+## Descripción (4000 caracteres máx.)
+```
+RUNUP construye tu plan a partir de tu objetivo, lo reajusta después de cada salida según cómo te sentiste de verdad, y te exige justo lo que toca — ni más, ni menos.
+
+UN ENTRENADOR DE VERDAD, NO UN CHATBOT
+Un entrenador personal que conoce tu objetivo, tu historial y cómo llevas el día. Pregúntale antes de la sesión, pídele consejo de nutrición, o desahógate después de una salida dura. Mientras corres puedes incluso hablarle: pulsas, preguntas en voz alta y te responde en los auriculares.
+
+UN PLAN QUE VIVE CONTIGO
+Después de cada salida, valora lo dura que te resultó (RPE) — el plan ajusta la dificultad de las semanas siguientes. Base, específico, puesta a punto: un plan realmente periodizado alrededor de la fecha de tu carrera, de 4 a 20 semanas según el tiempo que te quede. Sin fecha de carrera (progresar, perder peso, volver poco a poco, mantenerte en forma), sigue de forma continua con sus semanas de descarga. ¿Mala noche, o sesión de ayer demasiado dura? La sesión de hoy se aligera sola.
+
+TUS OBJETIVOS DEL DÍA, DE UN VISTAZO
+Tu sesión, tus calorías activas, tus pasos — tres objetivos sencillos que cerrar cada día, sincronizados con Apple Salud.
+
+SEGUIMIENTO EN DIRECTO
+Mapa y recorrido en tiempo real, ritmo, frecuencia cardíaca y calorías. Cada salida se guarda en Apple Salud, se exporta en GPX y se comparte como tarjeta con tu recorrido.
+
+APPLE WATCH
+Empieza a correr desde el reloj y deja el iPhone en casa: frecuencia cardíaca en la muñeca, distancia y calorías en directo. Tu sesión del día se envía al reloj, y cada carrera que termines en la muñeca vuelve al teléfono con su balance y su ajuste de plan.
+
+WIDGETS Y PANTALLA BLOQUEADA
+Un widget en la pantalla de inicio con tus objetivos del día y tu racha. Mientras corres, la actividad en directo aparece en la pantalla bloqueada y en la Dynamic Island.
+
+ESTADÍSTICAS QUE SIRVEN PARA ALGO
+Tendencia de ritmo, récords personales, predicciones de tiempo en 5 km, 10 km, media y maratón, ocho semanas de carga de entrenamiento, un mapa con todos tus recorridos y control del desgaste de tus zapatillas.
+
+CLUB Y COMUNIDAD
+Clasificación semanal y general, retos de club, quedadas para correr, muro de actividad e insignias. Y si prefieres seguir a unas pocas personas en vez de a un club entero, hay un muro de amigos que hace justo eso.
+
+QUE ACABE EL PLAN NO ES EL FINAL
+Al terminar tu plan: un bloque de recuperación guiado y, después, un nuevo objetivo o modo carrera libre sin plan fijo.
+
+Requiere iOS 17 o posterior. Conectar Apple Salud es opcional, pero recomendable para una forma del día más precisa. El Club necesita una cuenta; todo lo demás funciona sin ella.
+```
+
+## Palabras clave (100 caracteres máx., separadas por comas sin espacios)
+```
+correr,maraton,10k,media,ritmo,entrenamiento,cardio,gps,series,fondo,trote,carrera,fitness
+```
+
+Ninguna repite una palabra del nombre ni del subtítulo: Apple ya indexa todas las palabras de
+ambos, así que repetirlas aquí gasta caracteres sin aportar ninguna búsqueda nueva.
+
+---
+
+# Sections communes (à saisir une seule fois)
 
 ## Catégorie
 - Principale : **Santé et forme physique** (Health & Fitness)
@@ -56,6 +214,14 @@ course,running,coach,entrainement,fractionné,cardio,santé,marathon,10km,semi,v
 
 ## Classification d'âge
 Aucun contenu sensible (pas de violence, contenu adulte, jeu d'argent...) → typiquement **4+**. À confirmer via le questionnaire App Store Connect.
+
+## Confidentialité (App Privacy)
+L'app collecte des événements d'usage first-party (voir `api/events.js` et
+`RunUp/Services/Analytics.swift`) : à déclarer en **Analytics / Product Interaction**, avec
+**"Data Not Linked to You"** pour les événements pré-inscription (identifiant anonyme uniquement) et
+**"Data Linked to You"** dès qu'un compte Club existe. Répondre **non** à "Tracking" : aucun SDK
+tiers, aucun IDFA, aucun partage avec un courtier de données — donc pas d'App Tracking Transparency
+à afficher.
 
 ## URLs requises
 - **URL de support** : `mailto:charlottegrudep@gmail.com`

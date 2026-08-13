@@ -236,6 +236,11 @@ struct CoachView: View {
     }
 
     private func send(_ text: String) {
+        // Only the fact that a message was sent, and how deep into the conversation it was — never
+        // the message itself. The coach is the one place in this app where what she types is
+        // genuinely private (PRIVACY_POLICY.md promises those messages are never stored on our
+        // server, only relayed), and an event's `props` bag is a stored Postgres column.
+        Analytics.shared.track(.coachMessageSent, ["thread_length": .int(messages.count)])
         vm?.send(text, history: messages)
     }
 

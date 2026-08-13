@@ -41,6 +41,12 @@ private struct RootView: View {
     /// doesn't recreate it on background/foreground), so this never re-shows the splash just from
     /// backgrounding the app, only from a real relaunch.
     @State private var showSplash = true
+    /// Raised once, after the splash, when the on-disk SwiftData store refused to open and
+    /// `PersistenceController` fell back to a throwaway in-memory one (see `StoreState` there).
+    /// Deliberately an alert rather than an `appState.toast` — the toast auto-dismisses in 2.2s
+    /// and would be covered by the splash anyway, and "nothing you do right now is being saved"
+    /// isn't a message she can afford to blink and miss.
+    @State private var storeFailureAlertPresented = false
 
     var body: some View {
         ZStack {
@@ -50,18 +56,35 @@ private struct RootView: View {
                     .environment(appState)
             }
             if showSplash {
-                SplashView(onFinished: { showSplash = false })
+                SplashView(onFinished: {
+                    showSplash = false
+                    storeFailureAlertPresented = PersistenceController.isUsingFallbackStore
+                })
             }
+        }
+        .alert("Tes données n'ont pas pu être ouvertes", isPresented: $storeFailureAlertPresented) {
+            Button("Continuer", role: .cancel) {}
+        } message: {
+            // Says the two things that actually matter, in that order: nothing is being saved this
+            // session, and nothing has been lost. The old "delete the store and carry on" behaviour
+            // would have made the second half a lie.
+            Text("L'app fonctionne, mais rien de cette session ne sera enregistré. Tes courses, ton programme et tes messages sont toujours sur ton téléphone — ils n'ont pas été supprimés — et devraient réapparaître après une mise à jour de l'app.")
         }
         .onAppear {
             if appState == nil {
                 appState = AppState(modelContext: modelContext)
             }
+            // Cold launch never fires the `scenePhase` handler below (there's no previous phase to
+            // transition from), so this is the only place a launch-time open is counted.
+            Analytics.shared.trackAppOpenedIfNewSession()
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
                 appState?.refreshProgramForCurrentDate()
                 appState?.retryPendingClubActivities()
+                // Debounced to one per real session inside `Analytics` — glancing at a
+                // notification and coming back is not a second visit.
+                Analytics.shared.trackAppOpenedIfNewSession()
             }
         }
         .onOpenURL { url in

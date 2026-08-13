@@ -271,6 +271,12 @@ final class AppState {
         let vm = LiveRunViewModel(profile: profile, healthKit: healthKit)
         liveRun = vm
         vm.start()
+        // Placed after the guard above, so a tap on an already-running session (the tab bar's
+        // resume pill) doesn't count as a second run started. `trackOnce` is what makes the first
+        // one the activation metric — an install that never reaches this line is an install that
+        // never became a runner, and nothing else in the app could tell us that.
+        Analytics.shared.trackOnce(.firstRunStarted)
+        Analytics.shared.track(.runStarted, ["session": .string(profile.todaySession.title)])
         screen = .live
     }
 

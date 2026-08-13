@@ -357,6 +357,20 @@ struct ProfileView: View {
                             }
                         }
                         Spacer(minLength: 0)
+                        // Les demandes en attente étaient signalées sur le segment « Mes amis »
+                        // du sélecteur de `SocialView`, qui vient de disparaître. Sans ce
+                        // report, un compte privé pouvait garder des demandes sans réponse
+                        // indéfiniment — c'est justement la raison d'être de ce compteur, et il
+                        // est mieux ici : sur l'écran ouvert par l'onglet, pas sur une barre
+                        // qu'il fallait déjà avoir atteinte.
+                        if let friendsList, !friendsList.incomingRequests.isEmpty {
+                            Text("\(friendsList.incomingRequests.count)")
+                                .font(RUFont.sans(10, weight: .bold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 6).padding(.vertical, 2)
+                                .background(RUColor.rose, in: Capsule())
+                                .accessibilityLabel("\(friendsList.incomingRequests.count) demande\(friendsList.incomingRequests.count > 1 ? "s" : "") en attente")
+                        }
                         cardArrow
                     }
 

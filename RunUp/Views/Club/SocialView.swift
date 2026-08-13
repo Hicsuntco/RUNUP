@@ -1,26 +1,23 @@
 import SwiftUI
 
-/// Top of the social tab — lets her choose "esprit club" (shared leaderboard/challenges/invite
-/// code, `ClubView`) or a lighter, club-independent follow feed (`FriendsView`), and switch
-/// between the two freely: a follow relationship is completely separate from club membership, so
-/// both stay fully usable regardless of which one she has. Local-only choice (not persisted) —
-/// same as `ClubView`'s own `boardMode`, cheap enough to just default back to "Club" on next
-/// launch rather than needing a `UserProfile` field for it.
+/// Le conteneur des deux écrans sociaux — `ClubView` (esprit club : classement partagé, défis,
+/// code d'invitation) et `FriendsView` (un fil d'abonnements, indépendant de toute appartenance à
+/// un club). Lequel s'affiche est décidé en amont, par la carte du Profil sur laquelle on a tapé.
+///
+/// Cet écran portait jusqu'ici un sélecteur « Mon club / Mes amis » en haut. Il a disparu pour
+/// deux raisons : depuis que le Profil est le 5e onglet, on n'arrive plus ici que par l'une de ses
+/// deux cartes — le choix est donc déjà fait, et le reproposer juste au-dessus de l'écran choisi
+/// n'ajoutait rien ; et il n'existait aucun chemin de retour vers le Profil, la barre d'onglets y
+/// ramenait sans que rien ne le dise.
 struct SocialView: View {
     @Environment(AppState.self) private var appState
     @State private var mode: Mode = .club
-    // Unlike kudos/comments (`ClubView.notifyNewKudos`/`notifyNewComments`), incoming follow
-    // requests had no badge at all — a private account could sit with unanswered requests
-    // indefinitely unless she happened to tap "Mes amis". Fetched independently of which segment
-    // is active, since the whole point is surfacing it before she'd otherwise go looking.
-    @State private var pendingRequestsCount = 0
 
     private enum Mode { case club, friends }
-    private var clubService: ClubService { ClubService(auth: appState.auth) }
 
     var body: some View {
         VStack(spacing: 0) {
-            modeSwitch
+            backToProfile
                 .padding(.horizontal, RUSpacing.pagePadding)
                 .padding(.top, 8)
 
@@ -29,10 +26,6 @@ struct SocialView: View {
             }
         }
         .background(RUColor.bg)
-        .task { await refreshPendingRequestsCount() }
-        .onChange(of: mode) { _, newMode in
-            if newMode == .club { Task { await refreshPendingRequestsCount() } }
-        }
         .onAppear {
             if appState.openFriendsTabOnNextVisit {
                 mode = .friends
@@ -41,47 +34,22 @@ struct SocialView: View {
         }
     }
 
-    private func refreshPendingRequestsCount() async {
-        guard appState.auth.isSignedIn else { return }
-        if let list = try? await clubService.fetchFriendsList() {
-            pendingRequestsCount = list.incomingRequests.count
-        }
-    }
-
-    private var modeSwitch: some View {
-        HStack(spacing: 4) {
-            segment("Mon club", .club)
-            segment("Mes amis", .friends, badgeCount: pendingRequestsCount)
-        }
-        .padding(3)
-        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
-    }
-
-    private func segment(_ label: String, _ value: Mode, badgeCount: Int = 0) -> some View {
-        Button(action: { withAnimation(.easeInOut(duration: 0.2)) { mode = value } }) {
-            HStack(spacing: 5) {
-                Text(label)
-                    .font(RUFont.sans(12.5, weight: .semibold))
-                if badgeCount > 0 {
-                    // Selected segment's own background is already RUColor.rose — a rose badge
-                    // on top of it would be invisible, so the badge inverts when selected.
-                    Text("\(badgeCount)")
-                        .font(RUFont.sans(9.5, weight: .bold))
-                        .foregroundColor(mode == value ? RUColor.rose : .white)
-                        .padding(.horizontal, 5).padding(.vertical, 1.5)
-                        .background(mode == value ? Color.white : RUColor.rose, in: Capsule())
-                }
+    /// Le compteur de demandes d'abonnement en attente vivait sur le segment « Mes amis » de ce
+    /// sélecteur. Il n'est pas perdu : il est reporté sur la carte Amis du Profil (voir
+    /// `ProfileView.amisCard`), donc sur l'écran qu'ouvre directement l'onglet — visible plus tôt
+    /// qu'avant, et non plus sur une barre qu'il fallait déjà avoir atteinte.
+    private var backToProfile: some View {
+        Button(action: { appState.go(.profile) }) {
+            HStack(spacing: 6) {
+                Image(systemName: "chevron.left").font(.system(size: 12, weight: .bold))
+                Text("Profil").font(RUFont.sans(13, weight: .semibold))
             }
-            .foregroundColor(mode == value ? .white : RUColor.textPrimary)
-            // Back to its original compact size, no enforced 44pt minimum — too big for her taste
-            // once the tap-target audit forced it up from its natural ~34pt.
-            .padding(.vertical, 9)
-            .frame(maxWidth: .infinity)
-            .background(mode == value ? RUColor.rose : .clear, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+            .foregroundColor(RUColor.text2)
+            .frame(minHeight: 44)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())
-        .accessibilityAddTraits(mode == value ? .isSelected : [])
-        .accessibilityLabel(badgeCount > 0 ? "\(label), \(badgeCount) demandes en attente" : label)
+        .accessibilityLabel("Retour au profil")
     }
 }

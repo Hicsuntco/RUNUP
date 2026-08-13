@@ -185,9 +185,9 @@ enum AdaptivePlanEngine {
             // UP after a month of detraining — a gap steps the tier DOWN one instead.
             let gapWeeks = newWeekNumber - profile.weekNumber
             if gapWeeks == 1 {
-                profile.weekTier = max(1, profile.weekTier + tierDelta(sum: profile.weekRPESum, count: profile.weekRPECount))
+                profile.weekTier = clampTier(profile.weekTier + tierDelta(sum: profile.weekRPESum, count: profile.weekRPECount))
             } else if gapWeeks > 1 {
-                profile.weekTier = max(1, profile.weekTier - 1)
+                profile.weekTier = clampTier(profile.weekTier - 1)
             }
             beginWeek(weekNumber: newWeekNumber, tier: profile.weekTier, profile: profile)
         } else {
@@ -308,6 +308,18 @@ enum AdaptivePlanEngine {
         }
     }
 
+    /// Highest tier the adaptation ladder can reach. Each tier adds 4 min to every session, so an
+    /// unbounded accumulator (the previous behavior: floor of 1, no ceiling) let a consistently
+    /// "facile" self-assessment inflate every session indefinitely week after week — a 30 min
+    /// footing became an hour with nothing in the model to stop it. Six tiers is +20 min on a
+    /// session, which is already the top of what an adaptive nudge should do on its own; genuine
+    /// progression past that belongs to a new program, not to a runaway counter.
+    private static let maxTier = 6
+
+    private static func clampTier(_ tier: Int) -> Int {
+        min(max(tier, 1), maxTier)
+    }
+
     /// Tier change to apply at a week boundary, from the previous week's average RPE severity
     /// (`3 - RPE.rawValue`, so 0 = facile, 3 = tropDur). No runs logged → no change.
     private static func tierDelta(sum: Int, count: Int) -> Int {
@@ -360,8 +372,9 @@ enum AdaptivePlanEngine {
         }
     }
 
-    /// The named blocks a program moves through. `.deload` only appears in the open-ended
-    /// (non-race) cycle — every 4th week backs off instead of piling on volume indefinitely.
+    /// The named blocks a program moves through. `.deload` is a planned cutback week — every 4th
+    /// week backs off instead of piling on volume indefinitely, in both the open-ended cycle and
+    /// inside a fixed-length race/HYROX build (see `trainingBlock`).
     enum TrainingBlock: String {
         case base = "Base", specifique = "Spécifique", affutage = "Affûtage", deload = "Récup"
     }
@@ -371,9 +384,49 @@ enum AdaptivePlanEngine {
             return week % 4 == 0 ? .deload : .base
         }
         if week > total { return .affutage } // shouldn't happen (refreshProgramForCurrentDate ends the program first), but never crash on it
+        // A cutback week every 4th week inside Base/Spécifique. Race and HYROX plans used to run
+        // 8-10 straight weeks of accumulating load with no planned recovery until the final taper —
+        // the classic overuse-injury pattern. Every real coach schedules a lighter week roughly 1
+        // in 3-4; the open-ended cycle above already did, and the fixed-length plans that carry the
+        // highest volume and intensity of any goal were precisely the ones missing it.
+        // Never inside Affûtage: that block already sheds load by construction, and stacking a
+        // second deload on it would flatten the sharpening the taper exists to produce.
+        let isBuildBlock = week <= shape.baseWeeks + shape.specificWeeks
+        if isBuildBlock && week % 4 == 0 { return .deload }
         if week <= shape.baseWeeks { return .base }
         if week <= shape.baseWeeks + shape.specificWeeks { return .specifique }
         return .affutage
+    }
+
+    /// Ramps the long run toward a block's target instead of jumping straight to it on the block's
+    /// first week. `longRunKm` used to be a flat per-block constant: a marathon plan sat at 14 km
+    /// every Base week, then asked for 30 km on the very first Spécifique week — a +115% jump in a
+    /// single week, far outside the ~10%/week rule of thumb and a real stress-fracture /
+    /// tendinopathy risk. Cutback weeks come from `.deload` (see `trainingBlock`), so this only has
+    /// to stay monotonic between them.
+    private static func rampedLongRunKm(start: Double, target: Double, weekInBlock: Int, blockWeeks: Int) -> Double {
+        guard blockWeeks > 1, target > start else { return target }
+        // Never imply more than +10%/week compounded, even when that lands the block below its
+        // nominal target — finishing a block safely under-distance beats an overuse injury.
+        let safeTarget = min(target, start * pow(1.10, Double(blockWeeks - 1)))
+        let progress = Double(max(0, min(weekInBlock, blockWeeks - 1))) / Double(blockWeeks - 1)
+        return start + (safeTarget - start) * progress
+    }
+
+    /// How many BUILD weeks (deloads excluded) precede `week` inside its own block, and how many
+    /// the block contains in total — the ramp indexes on these rather than on the raw week offset.
+    /// A cutback week must not consume a step of the progression: if it did, the week after a
+    /// deload would resume ~16% above the last real build week instead of continuing where the
+    /// build actually left off, quietly re-introducing the >10%/week jumps this ramp exists to
+    /// prevent. Mirrors `trainingBlock`'s own `% 4` rule so the two can't drift apart.
+    private static func buildWeekPosition(week: Int, blockFirstWeek: Int, blockLastWeek: Int) -> (index: Int, count: Int) {
+        var index = 0
+        var count = 0
+        for w in blockFirstWeek...max(blockFirstWeek, blockLastWeek) where w % 4 != 0 {
+            if w < week { index += 1 }
+            count += 1
+        }
+        return (index, max(count, 1))
     }
 
     private enum SessionRole { case easy, speed, longRun }
@@ -395,7 +448,10 @@ enum AdaptivePlanEngine {
         profile.effectiveRaceDistanceKm ?? 10
     }
 
-    private static func archetypes(for block: TrainingBlock, profile: UserProfile) -> [SessionArchetype] {
+    /// `weekNumber`/`shape` drive the week-over-week long-run ramp (see `rampedLongRunKm`) — before
+    /// this, archetypes were a pure function of the block alone, which is exactly why the long run
+    /// was a flat plateau inside a block and a cliff between two blocks.
+    private static func archetypes(for block: TrainingBlock, profile: UserProfile, weekNumber: Int, shape: ProgramShape) -> [SessionArchetype] {
         let zones = PaceModel.zones(for: profile)
         let raceKm = referenceRaceKm(profile)
 
@@ -403,20 +459,45 @@ enum AdaptivePlanEngine {
             max(20, Int((km * zones.easySecPerKm / 60).rounded()))
         }
 
+        // The two block targets, and the floor the whole build ramps up from. `baseTarget` is also
+        // the Spécifique block's starting point, so the two blocks join continuously instead of
+        // stepping.
+        let baseTarget = min(raceKm * 0.55, 14)
+        let specTarget = min(raceKm * 0.8, 30)
+        let baseStart = max(5, baseTarget * 0.6)
+
         let base: [SessionArchetype]
         switch block {
         case .base:
-            let longRunKm = min(raceKm * 0.55, 14)
+            let pos = buildWeekPosition(week: weekNumber, blockFirstWeek: 1, blockLastWeek: max(shape.baseWeeks, 1))
+            let longRunKm = rampedLongRunKm(
+                start: baseStart, target: baseTarget,
+                weekInBlock: pos.index, blockWeeks: pos.count
+            )
             base = [
                 SessionArchetype(role: .easy, title: "Footing tranquille", subtitle: "installe l'endurance de fond, allure confort", pace: zones.easy, zone: "Z2", baseDuration: 30),
                 SessionArchetype(role: .speed, title: "Fractionné léger 5 × 500 m", subtitle: "récup 300 m · garde le tonus sans se cramer", pace: zones.threshold, zone: "Z3", baseDuration: 32),
                 SessionArchetype(role: .longRun, title: "Sortie longue", subtitle: "allonge progressivement la distance", pace: zones.easy, zone: "Z2", baseDuration: longRunDuration(longRunKm))
             ]
         case .specifique:
-            let longRunKm = min(raceKm * 0.8, 30)
+            let pos = buildWeekPosition(
+                week: weekNumber,
+                blockFirstWeek: shape.baseWeeks + 1,
+                blockLastWeek: shape.baseWeeks + max(shape.specificWeeks, 1)
+            )
+            let longRunKm = rampedLongRunKm(
+                start: baseTarget, target: specTarget,
+                weekInBlock: pos.index, blockWeeks: pos.count
+            )
             base = [
                 SessionArchetype(role: .speed, title: "Fractionné VMA 6 × 800 m", subtitle: "récup 400 m · travaille la vitesse", pace: zones.interval, zone: "Z4", baseDuration: 40),
                 SessionArchetype(role: .speed, title: "Tempo run", subtitle: "allure seuil soutenue", pace: zones.threshold, zone: "Z3", baseDuration: 35),
+                // Endurance fondamentale, added because the Spécifique block used to contain ONLY
+                // quality work outside the long run: with 4-5 running days the week generated 3-4
+                // hard sessions and not a single easy run, the inverse of the ~80/20 polarized
+                // model every modern endurance periodization is built on. `generateWeekSessions`
+                // additionally caps quality at 2/week, which this archetype absorbs.
+                SessionArchetype(role: .easy, title: "Footing endurance", subtitle: "allure facile — le socle aérobie, pas une séance au rabais", pace: zones.easy, zone: "Z2", baseDuration: 35),
                 SessionArchetype(role: .longRun, title: "Sortie longue", subtitle: "bloc spécifique, un peu d'allure course", pace: zones.marathon, zone: "Z2-3", baseDuration: longRunDuration(longRunKm))
             ]
         case .affutage:
@@ -427,10 +508,27 @@ enum AdaptivePlanEngine {
                 SessionArchetype(role: .longRun, title: "Sortie courte", subtitle: "décharge avant l'objectif", pace: zones.easy, zone: "Z2", baseDuration: longRunDuration(longRunKm))
             ]
         case .deload:
+            // A cutback is ~65% of the load actually being carried right now, not a flat distance.
+            // The old fixed `min(raceKm * 0.4, 8)` meant a marathoner mid-Spécifique dropped from a
+            // 20 km long run to 8 km — far past a cutback and into detraining, then had to climb
+            // all the way back the following week. Reconstructing the ramp for this week's block
+            // keeps the cutback proportional wherever it lands in the build.
+            let carriedKm: Double
+            if weekNumber <= shape.baseWeeks {
+                let pos = buildWeekPosition(week: weekNumber, blockFirstWeek: 1, blockLastWeek: max(shape.baseWeeks, 1))
+                carriedKm = rampedLongRunKm(start: baseStart, target: baseTarget, weekInBlock: pos.index, blockWeeks: pos.count)
+            } else if weekNumber <= shape.baseWeeks + shape.specificWeeks {
+                let pos = buildWeekPosition(week: weekNumber, blockFirstWeek: shape.baseWeeks + 1, blockLastWeek: shape.baseWeeks + max(shape.specificWeeks, 1))
+                carriedKm = rampedLongRunKm(start: baseTarget, target: specTarget, weekInBlock: pos.index, blockWeeks: pos.count)
+            } else {
+                // Open-ended goals have no block boundaries to reconstruct — keep the original
+                // modest reference rather than inventing a ramp that doesn't exist for them.
+                carriedKm = min(raceKm * 0.4, 8)
+            }
             base = [
                 SessionArchetype(role: .easy, title: "Footing récup", subtitle: "coupe le volume, écoute tes jambes", pace: zones.easy, zone: "Z1-2", baseDuration: 22),
                 SessionArchetype(role: .speed, title: "Footing tonique", subtitle: "quelques accélérations libres, sans chrono", pace: zones.threshold, zone: "Z2-3", baseDuration: 28),
-                SessionArchetype(role: .longRun, title: "Sortie longue allégée", subtitle: "aucune pression de distance cette semaine", pace: zones.easy, zone: "Z2", baseDuration: longRunDuration(min(raceKm * 0.4, 8)))
+                SessionArchetype(role: .longRun, title: "Sortie longue allégée", subtitle: "aucune pression de distance cette semaine", pace: zones.easy, zone: "Z2", baseDuration: longRunDuration(max(5, carriedKm * 0.65)))
             ]
         }
 
@@ -559,34 +657,61 @@ enum AdaptivePlanEngine {
     static func generateWeekSessions(weekNumber: Int, tier: Int, profile: UserProfile) -> [PlannedDay] {
         let shape = ProgramShape.compute(goal: profile.goalId, raceDate: profile.raceDate, from: profile.programStartDate ?? .now)
         let block = trainingBlock(forWeek: weekNumber, shape: shape)
-        let templates = profile.goalId == .hyrox ? hyroxArchetypes(for: block, profile: profile) : archetypes(for: block, profile: profile)
+        let templates = profile.goalId == .hyrox
+            ? hyroxArchetypes(for: block, profile: profile)
+            : archetypes(for: block, profile: profile, weekNumber: weekNumber, shape: shape)
         let sortedRunDays = profile.runningDays.sorted()
 
         let longRunDay = profile.preferredLongRunDay.flatMap { sortedRunDays.contains($0) ? $0 : nil } ?? sortedRunDays.max()
         let longTemplate = templates.first { $0.role == .longRun }
         let otherTemplates = templates.filter { $0.role != .longRun }
+        // The fallback when the weekly quality budget is spent. Prefers a real `.easy` archetype
+        // from the block; blocks that genuinely have none (HYROX technique work) fall back to
+        // whatever is available rather than inventing a session that doesn't belong to the block.
+        let easyTemplate = otherTemplates.first { $0.role == .easy }
+
+        // Hard ceiling of 2 quality sessions per week, long run excluded. The old positional
+        // cycling produced one hard session per available day — 3-4 a week for someone running
+        // 4-5 days — which is a known overtraining/injury driver regardless of how good each
+        // individual session is. The long run keeps its own role and is never counted here.
+        let maxQualityPerWeek = 2
+        var qualityUsed = 0
 
         var otherIndex = 0
         return (0..<7).map { weekday in
             guard sortedRunDays.contains(weekday) else { return PlannedDay(weekday: weekday, session: nil) }
 
-            let archetype: SessionArchetype
+            var archetype: SessionArchetype
             if weekday == longRunDay, let longTemplate {
                 archetype = longTemplate
             } else if !otherTemplates.isEmpty {
                 archetype = otherTemplates[otherIndex % otherTemplates.count]
                 otherIndex += 1
+                if archetype.role == .speed {
+                    if qualityUsed >= maxQualityPerWeek, let easyTemplate {
+                        archetype = easyTemplate
+                    } else {
+                        qualityUsed += 1
+                    }
+                }
             } else {
                 archetype = templates[0]
             }
 
+            // Taper deliberately ignores `tier`. Tier is an accumulator built up over Base and
+            // Spécifique, and letting it keep inflating durations here would add 20-30 min to
+            // sessions whose entire purpose is to SHED load before race day — the opposite of what
+            // a taper is for.
+            let isTaper = block == .affutage
+            let duration = isTaper ? archetype.baseDuration : archetype.baseDuration + (tier - 1) * 4
+
             let session = WorkoutSession(
                 title: archetype.title,
                 subtitle: archetype.subtitle,
-                durationMinutes: archetype.baseDuration + (tier - 1) * 4,
+                durationMinutes: duration,
                 pace: archetype.pace,
                 zone: archetype.zone,
-                adjustment: tier > 1 ? "Niveau \(tier)" : nil
+                adjustment: (tier > 1 && !isTaper) ? "Niveau \(tier)" : nil
             )
             return PlannedDay(weekday: weekday, session: session)
         }

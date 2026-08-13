@@ -29,7 +29,11 @@ enum PaceModel {
             easy: format(thresholdSecPerKm * 1.20),
             marathon: format(thresholdSecPerKm * 1.08),
             threshold: format(thresholdSecPerKm * 1.0),
-            interval: format(thresholdSecPerKm * 0.92),
+            // 13% faster than threshold, not the previous 8%. vVO2max — what "VMA" actually means —
+            // sits around 3-5K race pace, typically 12-18% faster than a threshold/10K pace. At 8%
+            // the "Fractionné VMA" session was effectively a second tempo run at threshold effort
+            // and never delivered the aerobic-power stimulus the session exists to produce.
+            interval: format(thresholdSecPerKm * 0.87),
             easySecPerKm: thresholdSecPerKm * 1.20,
             thresholdSecPerKm: thresholdSecPerKm
         )

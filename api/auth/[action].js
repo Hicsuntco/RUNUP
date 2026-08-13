@@ -1,9 +1,10 @@
-// Consolidated into one dynamic route ([action] = apple | signup | login) instead of 3 separate
-// files — Vercel's Hobby plan caps a deployment at 12 serverless functions, and 3 files here plus
-// the rest of the backend went over that. Behavior is unchanged: /api/auth/apple, /api/auth/signup,
-// /api/auth/login still work exactly as before.
+// Consolidated into one dynamic route ([action] = apple | signup | login | signout) instead of
+// separate files — Vercel's Hobby plan caps a deployment at 12 serverless functions, and 3 files
+// here plus the rest of the backend went over that (which is also why `signout` is an action here
+// rather than its own api/auth/signout.js: the project is already at that cap). Behavior is
+// unchanged: /api/auth/apple, /api/auth/signup, /api/auth/login still work exactly as before.
 const { sql } = require('../../lib/db');
-const { verifyAppleIdentityToken, signSession, bcrypt } = require('../../lib/auth');
+const { verifyAppleIdentityToken, signSession, verifiedSessionClaims, bcrypt } = require('../../lib/auth');
 const { withErrorHandling } = require('../../lib/http');
 const { containsObjectionableContent } = require('../../lib/moderation');
 // Real referral loop (see db/schema.sql) — every new account gets its own shareable code;
@@ -31,6 +32,8 @@ module.exports = withErrorHandling(async function handler(req, res) {
       return handleSignup(req, res);
     case 'login':
       return handleLogin(req, res);
+    case 'signout':
+      return handleSignout(req, res);
     default:
       return res.status(404).json({ error: 'not_found' });
   }
@@ -197,4 +200,38 @@ async function handleLogin(req, res) {
       lastName: user.last_name || null, username: user.username || null,
     },
   });
+}
+
+// A real sign-out. Dropping the token from the Keychain (what `AuthService.signOut()` does on the
+// device) never invalidated anything server-side — a copy captured from a shared device, a backup,
+// or an intercepted request stayed valid until it expired on its own. This files the caller's own
+// token id in `revoked_tokens`, which `requireAuth` then refuses on every later request. Scoped to
+// the token that made this call: her other devices stay signed in.
+async function handleSignout(req, res) {
+  const claims = await verifiedSessionClaims(req);
+  if (!claims) return res.status(401).json({ error: 'unauthorized' });
+
+  // Issued before tokens carried a `jti` (see lib/auth.js) — nothing names it, so there's nothing
+  // to store. Not an error: the client still signs out locally, and her next sign-in issues a
+  // token that IS revocable.
+  if (!claims.jti) return res.status(200).json({ ok: true, revoked: false });
+
+  // Mirrors the token's own `exp` so the row can be pruned once the token is dead anyway. A token
+  // with no `exp` at all (never issued by `signSession`, but `jwtVerify` accepts one) is kept for
+  // a full lifetime instead of being written already-expired and pruned on the next sweep.
+  const expSeconds = typeof claims.exp === 'number' ? claims.exp : Math.floor(Date.now() / 1000) + 30 * 24 * 3600;
+  await sql`
+    INSERT INTO revoked_tokens (jti, user_id, expires_at)
+    VALUES (${claims.jti}, ${claims.sub}, ${new Date(expSeconds * 1000).toISOString()})
+    ON CONFLICT (jti) DO NOTHING
+  `;
+
+  // Opportunistic prune, same reasoning as api/coach.js's coach_usage cleanup — no cron job exists
+  // in this project, and a row whose token has already expired is dead weight (signature
+  // verification refuses that token before the revocation check is ever reached).
+  if (Math.random() < 0.05) {
+    sql`DELETE FROM revoked_tokens WHERE expires_at < now()`.catch(() => {});
+  }
+
+  res.status(200).json({ ok: true, revoked: true });
 }

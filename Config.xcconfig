@@ -1,0 +1,18 @@
+// Build settings that must never be committed with their real values — wired into the RunUp
+// target through `configFiles` in project.yml, and surfaced to the app through Info.plist keys
+// (see IOS_SETUP.md § "Coach backend").
+//
+// The real values live in `Secrets.xcconfig`, next to this file, which is gitignored. The
+// optional include form (`#include?`) is what lets a fresh checkout still generate and build
+// without it: the defaults below stay in place, and only the features backed by a secret fail —
+// the coach endpoint answers 401 with an empty secret, which is the intended loud failure rather
+// than a silent one.
+//
+// Order matters: the include comes last so a value defined in Secrets.xcconfig overrides the
+// empty default above it.
+
+// Shared app↔server secret for the coach proxy (`api/coach.js` checks it against its own
+// RUNUP_APP_SECRET env var — the two must be identical). Not a per-user credential.
+RUNUP_APP_SECRET =
+
+#include? "Secrets.xcconfig"

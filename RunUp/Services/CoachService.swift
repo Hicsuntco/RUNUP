@@ -14,7 +14,28 @@ enum CoachService {
     private static let endpoint = URL(string: "https://runup-nu.vercel.app/api/coach")!
     /// Shared secret between the app and `api/coach.js` — not a per-user credential, just a
     /// deterrent against random callers hitting the endpoint and spending the real Anthropic key.
-    private static let appSecret = "b8556afa2e3e90aa8df107136a4fffa4d2d64dfa3f473df2"
+    ///
+    /// Read from the app's Info.plist key `RUNUPAppSecret`, which Xcode fills at build time from
+    /// the `RUNUP_APP_SECRET` build setting (see `project.yml` → `configFiles`, `Config.xcconfig`
+    /// at the repo root, and `Secrets.xcconfig`, which is gitignored and holds the real value on
+    /// her machine — IOS_SETUP.md § "Coach backend"). It used to be a string literal right here,
+    /// which meant the live production secret sat in the repo — and in its history — readable by
+    /// anyone who ever gets a copy of the source. A build without `Secrets.xcconfig` gets an empty
+    /// string here and the coach endpoint answers 401, which is the intended loud failure.
+    ///
+    /// This is NOT a real security boundary, and moving it out of source doesn't make it one: any
+    /// static secret shipped inside the app is extractable from the IPA (`strings` on the binary,
+    /// or just reading Info.plist out of the bundle) by anyone who downloads it from the App
+    /// Store. What this buys is narrower — the secret is no longer committed, and rotating it is a
+    /// config change, not a code change. The only real fix is proving the caller is a genuine,
+    /// unmodified copy of this app rather than knowing a shared string: App Attest / DeviceCheck,
+    /// where the app produces a per-request assertion Apple's servers vouch for and `api/coach.js`
+    /// verifies. Deliberately not done here (it needs a server-side attestation flow, key
+    /// generation + challenge round trip, and a fallback for the Simulator, which has no App
+    /// Attest support).
+    /// TODO(security): replace the `x-runup-secret` header with a DCAppAttestService assertion
+    /// verified server-side in `api/coach.js`, and drop this shared secret entirely once shipped.
+    private static let appSecret = Bundle.main.infoDictionary?["RUNUPAppSecret"] as? String ?? ""
     private static let raceDateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "fr_FR")

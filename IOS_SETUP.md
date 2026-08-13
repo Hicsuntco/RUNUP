@@ -37,11 +37,33 @@ est le seul point d'appel réseau côté app.
    - `ANTHROPIC_API_KEY` — une vraie clé API Anthropic (console.anthropic.com), avec un plafond de
      dépense configuré côté Anthropic — c'est le vrai garde-fou contre une facture qui explose,
      pas la fonction elle-même.
-   - `RUNUP_APP_SECRET` — doit être identique à la constante `appSecret` dans
-     `RunUp/Services/CoachService.swift` (secret partagé app↔serveur, pas un identifiant
-     utilisateur — juste un frein contre un appel externe au hasard sur cette URL).
+   - `RUNUP_APP_SECRET` — doit être identique à `RUNUP_APP_SECRET` dans `Secrets.xcconfig` côté
+     app (voir juste en dessous) — secret partagé app↔serveur, pas un identifiant utilisateur —
+     juste un frein contre un appel externe au hasard sur cette URL.
 3. Redéploie, puis vérifie que `RunUp/Services/CoachService.swift`'s `endpoint` pointe bien vers
    l'URL Vercel réelle du projet (`https://<projet>.vercel.app/api/coach`).
+
+**Côté app — `Secrets.xcconfig` (une fois, sur ta machine) :**
+
+Ce secret n'est **plus** écrit en dur dans `CoachService.swift` : il était committé en clair dans
+le repo (et il reste dans l'historique git — voir plus bas). L'app le lit maintenant dans son
+Info.plist (`RUNUPAppSecret`), rempli au build depuis le réglage `RUNUP_APP_SECRET`.
+
+1. À la racine du repo, crée un fichier **`Secrets.xcconfig`** (déjà dans `.gitignore`, il ne sera
+   jamais committé) contenant une seule ligne :
+   ```
+   RUNUP_APP_SECRET = <le secret, la même chaîne que la variable Vercel>
+   ```
+   Génère-en un nouveau avec `openssl rand -hex 24` : l'ancien secret ayant été committé, il doit
+   être considéré comme compromis et **remplacé des deux côtés** (ici et dans les variables
+   d'environnement Vercel), pas réutilisé.
+2. `xcodegen generate` puis rebuild — `Config.xcconfig` (committé, valeurs vides par défaut)
+   inclut `Secrets.xcconfig` s'il existe. Sans ce fichier, l'app compile quand même mais envoie un
+   secret vide et le coach répond 401.
+
+Important : un secret embarqué dans l'app reste extractible de l'IPA par n'importe qui, quel que
+soit l'endroit où il est rangé — c'est un frein contre un appel au hasard, pas une vraie barrière.
+La vraie réponse est App Attest / DeviceCheck (voir le `TODO(security)` dans `CoachService.swift`).
 
 `api/coach.js` force son propre `model`/`max_tokens` côté serveur (ignore ce que le client envoie)
 et ne journalise jamais le contenu des messages — seule protection de contenu réellement fiable

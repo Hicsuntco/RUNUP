@@ -74,6 +74,14 @@ async function handleSearch(req, res, userId) {
   const raw = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 60) : '';
   if (raw.length < 2) return res.status(200).json({ items: [] });
 
+  // Same daily cap every write path in this file uses. Search is a read, but it's the one endpoint
+  // that walks the whole user directory (the ILIKE branch below), so it's what a script would
+  // hammer to enumerate accounts one prefix at a time — and each call is an unindexed scan of
+  // `users`. 300/day is far past any real use: the client searches as she types, so looking
+  // someone up costs a handful of requests. Counted after the <2 char guard so keystrokes that
+  // never reach the database don't burn the quota.
+  if (!(await underDailyCap('search:' + userId, 300))) return res.status(429).json({ error: 'too_many_requests' });
+
   let rows;
   if (raw.includes('@')) {
     ({ rows } = await sql`

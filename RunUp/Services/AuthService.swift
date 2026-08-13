@@ -107,13 +107,27 @@ final class AuthService {
     func signOut() {
         // Fire-and-forget with the token captured NOW (the Keychain entry is deleted below,
         // before the Task necessarily runs) — the device must stop receiving this account's
-        // pushes once she signs out.
+        // pushes once she signs out, and the token itself must stop working server-side.
         if let authToken = token {
             Task { await NotificationService.shared.unregisterDeviceToken(authToken: authToken) }
+            Task { await Self.revokeSession(authToken: authToken) }
         }
         token = nil
         currentUser = nil
         KeychainService.deleteToken()
+    }
+
+    /// Revokes the session token server-side (`api/auth/signout` files its `jti` in
+    /// `revoked_tokens`). Deleting the local copy above was never enough on its own: the token
+    /// stayed valid for its full lifetime, so any copy of it that survived elsewhere (a shared
+    /// device, a device backup) kept full access to the account. Same token-passed-in reasoning as
+    /// `unregisterDeviceToken`. Failure is silent on purpose — signing out must always work
+    /// locally, offline included; the token then just expires on its own.
+    private static func revokeSession(authToken: String) async {
+        var request = URLRequest(url: baseURL.appending(path: "api/auth/signout"))
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+        _ = try? await URLSession.shared.data(for: request)
     }
 
     // MARK: -

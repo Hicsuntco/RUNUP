@@ -48,11 +48,15 @@ struct DailyGoalsBarsView: View {
     /// a heavy lift shadow, and next to the widget the thick version read muddy (owner compared
     /// them side by side and preferred the widget's ring); both surfaces now render identically.
     private static let strokeWidth: CGFloat = 12
-    /// A touch more visible than the original 0.16 — a saturated color at low opacity over a
-    /// near-white background washes out more than the same opacity over near-black, so light mode
-    /// needs its own (still lighter-touch-than-dark) value to read as a clear track rather than
-    /// barely-there.
-    private static let lightTrackOpacity = 0.36
+    /// La piste doit dire « objectif pas encore atteint », donc rester nettement en dessous du
+    /// remplissage. Elle était à 0,36 en clair, calibrée quand l'anneau faisait 72 pt : à 96 pt,
+    /// une journée à 0/3 dessinait un anneau rose et lavande PLEIN, qui contredisait sa propre
+    /// légende « 0/2 bouclés ». Un anneau vide doit se lire vide — c'est la seule chose que cet
+    /// écran a à dire quand rien n'est fait.
+    ///
+    /// Le clair reste un peu au-dessus du sombre : une couleur saturée à faible opacité se dilue
+    /// davantage sur du blanc que sur du noir.
+    private static let lightTrackOpacity = 0.15
     private static let darkTrackOpacity = 0.20
 
     var body: some View {

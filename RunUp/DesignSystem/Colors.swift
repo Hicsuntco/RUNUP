@@ -11,8 +11,26 @@ enum RUColor {
     /// presentations can't drift out of sync with the tokens above.
     static var colorScheme: ColorScheme { isLight ? .light : .dark }
 
-    static var bg: Color { isLight ? Color(hex: 0xFFFFFF) : Color(hex: 0x0E0E14) }
-    static var bg2: Color { isLight ? Color(hex: 0xF2F2F6) : Color(hex: 0x15151E) }
+    // Thème clair : le fond de page est un gris doux et les cartes sont BLANCHES — l'inverse de
+    // ce que l'app faisait, et l'inverse de ce que la maquette déclare.
+    //
+    // Pourquoi contredire la maquette ici : ses valeurs claires (`--ru-bg: #FFFFFF`,
+    // `--ru-card: #F0F0F6`) ont été transcrites DEPUIS ces tokens, elle les a donc hérités et ne
+    // peut pas les arbitrer — et ses 29 écrans n'ont jamais été regardés qu'en sombre. En sombre
+    // le couple fonctionne : une carte est du blanc à 4,5 % sur un fond quasi noir, elle se
+    // détache par sa clarté. Transposé en clair, il donnait une carte grise sur du blanc, 6 %
+    // d'écart, que seule une ombre marquée rendait lisible — l'ombre que le portage de la
+    // maquette a justement divisée par quatre. D'où des cartes délavées, qui flottent sans se
+    // poser.
+    //
+    // Inverser le rapport produit en clair ce que le sombre obtient déjà, par la même logique :
+    // la carte est la surface CLAIRE, le fond recule. Le filet et l'ombre redeviennent des
+    // finitions au lieu de porter seuls la séparation.
+    static var bg: Color { isLight ? Color(hex: 0xF4F4F8) : Color(hex: 0x0E0E14) }
+    /// Un cran plus ENFONCÉ que `bg` en clair, un cran plus haut en sombre — dans les deux cas
+    /// « la rainure dans laquelle une pastille `card` vient se poser » (rail des sélecteurs
+    /// segmentés). C'est la relation qui compte, pas la direction.
+    static var bg2: Color { isLight ? Color(hex: 0xE9E9F0) : Color(hex: 0x15151E) }
 
     // Theme-aware — follow the user's chosen accent (Profil → Apparence → Couleur de l'app, see
     // `AccentTheme`/`ThemeStore`).
@@ -55,9 +73,18 @@ enum RUColor {
     /// wash to register; the same trick barely shows on white. A real (if still soft) off-white
     /// fill instead, matching the energy the "Midnight Rose" reference has via its own high-
     /// contrast dark cards.
-    static var card: Color { isLight ? Color(hex: 0xF0F0F6) : Color.white.opacity(0.045) }
-    static var card2: Color { isLight ? Color(hex: 0xE7E7EF) : Color.white.opacity(0.03) }
+    static var card: Color { isLight ? Color(hex: 0xFFFFFF) : Color.white.opacity(0.045) }
+    /// Sous-surface DANS une carte (ligne de classement, tuile de jour) : elle doit reculer par
+    /// rapport à `card`, donc gris pâle sur une carte devenue blanche.
+    static var card2: Color { isLight ? Color(hex: 0xF1F1F6) : Color.white.opacity(0.03) }
     static var line: Color { isLight ? Color.black.opacity(0.14) : Color.white.opacity(0.08) }
+
+    /// Le contour d'une CARTE, distinct de `line`. Une carte blanche posée sur un fond gris est
+    /// déjà séparée par le fond : lui garder le filet de `line` (noir à 14 %) sur 1 pt la
+    /// redessinerait au trait, et l'écran redeviendrait une grille de rectangles cerclés. `line`
+    /// reste inchangé partout où il sépare vraiment — filets entre colonnes de chiffres, lignes
+    /// de liste, pistes de barres de progression.
+    static var cardBorder: Color { isLight ? Color.black.opacity(0.06) : Color.white.opacity(0.08) }
 
     /// Mélange opaque de `color` dans `base`, exactement `color-mix(in srgb, color N%, base)` en CSS.
     ///
@@ -110,7 +137,17 @@ enum RUColor {
         // "gamified fitness app" rather than the neutral, premium register the light theme is
         // meant to carry now. A barely-there cool-gray wash instead, dark mode's own pink-black
         // tint (its energetic register is a deliberate, separate choice) is untouched.
-        LinearGradient(colors: [isLight ? Color(hex: 0xF6F6F9) : Color(hex: 0x20101C), bg], startPoint: .top, endPoint: .bottom)
+        // Le dégradé clair descendait vers `bg`. Tant que `bg` était blanc, il rendait une carte
+        // à peine grisée sur du blanc ; depuis que le fond de page est gris et les cartes
+        // blanches, il aurait fini exactement de la couleur de la page — une carte hero
+        // parfaitement invisible. En clair il descend donc vers `card`, la surface à laquelle
+        // elle appartient. Le sombre garde son ancrage sur `bg` : c'est là que sa teinte
+        // rose-noir doit se fondre.
+        LinearGradient(
+            colors: [isLight ? Color(hex: 0xFBF8FB) : Color(hex: 0x20101C), isLight ? card : bg],
+            startPoint: .top,
+            endPoint: .bottom
+        )
     }
 
     static var violetRoseGradient: LinearGradient {

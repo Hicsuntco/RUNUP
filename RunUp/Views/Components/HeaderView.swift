@@ -69,7 +69,13 @@ struct AvatarButton: View {
 
     var body: some View {
         Button(action: action) {
-            AvatarView(imageData: imageData, initial: initial, size: 36, useGradient: false)
+            // `useGradient: false` donnait, depuis le passage au dégradé maillé, une pastille
+            // lavande très pâle : sur un fond clair, le marqueur de sa propre identité devenait
+            // l'élément le plus faible de l'en-tête, plus discret que la cloche à côté. La
+            // maquette rend « moi » avec le même dégradé partout où on la voit (`class="avatar
+            // p-camille"` jusque dans l'en-tête du Profil) — c'est aussi ce que fait déjà
+            // `ProfileView`, donc les deux surfaces qui montrent son avatar concordent enfin.
+            AvatarView(imageData: imageData, initial: initial, size: 36, useGradient: true)
                 .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }

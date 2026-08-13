@@ -120,12 +120,15 @@ struct HomeView: View {
                 Group {
                     if !isFreeRun {
                         HStack {
-                            // L'objectif et le J-x vivent maintenant dans `quickStatsRow`, plus
-                            // haut : les répéter ici en eyebrow revenait à afficher deux fois la
-                            // même ligne à deux cartes d'écart. Le titre récupère en échange le
-                            // total de semaines (`weekEyebrow`), qui n'était visible nulle part
-                            // sur cette carte alors que c'est ce qui situe la semaine en cours.
-                            EyebrowLabel(text: "Ton programme", color: RUColor.rose)
+                            // L'objectif revient ici. Il était passé dans `quickStatsRow`, mais
+                            // « 20KM · 1:45 » n'est pas UN chiffre : c'est une distance et un
+                            // temps collés, trois fois plus large que le « J-58 » d'à côté. Dans
+                            // une bande de chiffres séparés par des filets, ça donnait trois
+                            // colonnes de largeurs incomparables et des filets posés au hasard.
+                            // Sa place est en eyebrow de la carte qui parle du programme — c'est
+                            // là qu'il était, et c'était juste. Le J-x, lui, EST un chiffre court
+                            // et reste dans la bande.
+                            EyebrowLabel(text: "Ton programme · \(profile.goalDisplay)", color: RUColor.rose)
                             Spacer()
                             Text("→").foregroundColor(RUColor.rose2)
                         }
@@ -226,18 +229,31 @@ struct HomeView: View {
                     StatChip(text: adj, color: RUColor.rose2)
                 }
             }
-            Text(session.title).displayStyle(23).foregroundColor(RUColor.textPrimary).padding(.top, 8)
-            Text(session.subtitle).font(RUFont.sans(11)).foregroundColor(RUColor.text2).padding(.top, 4)
+            // Un jour de repos, cette carte n'a rien à faire faire : ni durée, ni allure, ni
+            // boutons. Elle gardait pourtant le corps de 23 pt des jours de séance, ce qui
+            // faisait de « REPOS » le bloc le plus lourd de l'écran — la hiérarchie disait
+            // l'inverse de l'information. Le titre recule d'un cran et la carte se contente
+            // d'une ligne, pour que le regard aille à l'anneau et aux chiffres de la semaine,
+            // qui eux ont quelque chose à dire ce jour-là.
+            Text(session.title)
+                .displayStyle(isRestDay ? 18 : 23)
+                .foregroundColor(isRestDay ? RUColor.text2 : RUColor.textPrimary)
+                .padding(.top, 8)
 
             if isRestDay {
-                Text("Pas de séance prévue — profite-en pour récupérer.")
+                // Le sous-titre du modèle et la phrase d'explication disaient déjà la même
+                // chose deux fois de suite (« Jour de repos — laisse ton corps récupérer », puis
+                // « Pas de séance prévue — profite-en pour récupérer »). Une seule suffit.
+                Text(session.subtitle)
                     .font(RUFont.sans(11)).foregroundColor(RUColor.text3)
-                    .padding(.top, 14)
+                    .padding(.top, 4)
             } else if profile.seanceDoneToday {
+                Text(session.subtitle).font(RUFont.sans(11)).foregroundColor(RUColor.text2).padding(.top, 4)
                 Text("Séance faite aujourd'hui ✓")
                     .font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.lime)
                     .padding(.top, 14)
             } else {
+                Text(session.subtitle).font(RUFont.sans(11)).foregroundColor(RUColor.text2).padding(.top, 4)
                 HStack(spacing: 16) {
                     MetricColumn(value: "\(session.durationMinutes)′", label: "Durée")
                     MetricColumn(value: session.pace, label: "Allure")
@@ -303,7 +319,14 @@ struct HomeView: View {
         let delta = thisWeek - lastWeek
         let planned = profile.plannedWeeklyKm
         return Button(action: { appState.go(.stats) }) {
+            // Encadrée par deux filets pleine largeur. Sans eux, la bande de chiffres ET la ligne
+            // « semaine dernière / Mes stats » flottaient toutes deux à même la page, sans rien
+            // pour dire qu'elles forment un bloc ni où il s'arrête : ça se lisait comme un trou
+            // entre deux cartes, pas comme une intention. Des filets plutôt qu'une carte, parce
+            // qu'une quatrième carte identique empilée aurait ramené l'écran à une pile de boîtes
+            // interchangeables — c'est justement ce que le passage à une bande devait défaire.
             VStack(spacing: 10) {
+                Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
                 HStack(spacing: 0) {
                     quickStat(
                         value: String(format: "%.1f", locale: Locale(identifier: "fr_FR"), thisWeek),
@@ -313,10 +336,6 @@ struct HomeView: View {
                     if let days = profile.daysUntilRace {
                         quickStatDivider
                         quickStat(value: "J-\(days)", suffix: nil, label: "avant course")
-                    }
-                    if !isFreeRun {
-                        quickStatDivider
-                        quickStat(value: profile.goalDisplay, suffix: nil, label: "objectif")
                     }
                 }
                 HStack(spacing: 6) {
@@ -328,6 +347,7 @@ struct HomeView: View {
                     Text("Mes stats").font(RUFont.sans(11, weight: .semibold)).foregroundColor(RUColor.text3)
                     Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundColor(RUColor.text3)
                 }
+                Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
             }
             .frame(minHeight: 44)
             .contentShape(Rectangle())
@@ -348,9 +368,8 @@ struct HomeView: View {
                 }
             }
             .lineLimit(1)
-            // `goalDisplay` peut être long ("Semi-marathon") là où les deux autres colonnes
-            // tiennent en 4 caractères — on rétrécit plutôt que de tronquer, les trois colonnes
-            // se partageant une largeur fixe.
+            // Les colonnes se partagent la largeur à parts égales (`maxWidth: .infinity`) : on
+            // rétrécit plutôt que de tronquer si un chiffre déborde le sien.
             .minimumScaleFactor(0.6)
             Text(LocalizedStringKey(label))
                 .font(RUFont.sans(8.5, weight: .bold)).tracking(0.8).textCase(.uppercase)

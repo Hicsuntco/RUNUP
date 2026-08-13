@@ -10,7 +10,7 @@ struct CardBackground: ViewModifier {
             .background(fill, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .stroke(RUColor.line, lineWidth: RUSpacing.hairline)
+                    .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline)
             )
             // Deux couches serrées plutôt qu'une grande ombre diffuse — report direct de la
             // maquette (`0 1px 2px rgba(0,0,0,.04), 0 3px 8px -5px rgba(0,0,0,.08)`, l'ombre

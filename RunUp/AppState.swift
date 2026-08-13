@@ -15,6 +15,12 @@ final class AppState {
 
     var profile: UserProfile
     var screen: AppScreen = .home
+    /// Real activities queued in `ClubActivityOutbox` waiting to reach the server (a spotty
+    /// connection at the exact moment a run finished, or the server briefly unreachable) — kept in
+    /// sync by `ClubActivityOutbox` itself on every enqueue/success/retry so History can show a
+    /// real "still syncing" banner instead of a run's XP/feed entry silently never arriving with
+    /// no visible sign anything went wrong.
+    var pendingActivityCount: Int = 0
     /// Phone↔watch bridge — receives runs finished on the wrist, mirrors today's session out.
     /// Optional only because it needs `self` (created at the end of `init`); never nil after.
     @ObservationIgnored private(set) var watchSession: WatchSessionService?
@@ -108,6 +114,10 @@ final class AppState {
                 await activity.end(nil, dismissalPolicy: .immediate)
             }
         }
+        // Reflects whatever's still queued from a previous session that got killed before it
+        // could retry — without this, `pendingActivityCount` would silently start at its `= 0`
+        // default and stay there until the next successful post/retry touched it.
+        refreshPendingActivityCount()
     }
 
     /// Re-checks the program week/phase against the real calendar date — call whenever the app

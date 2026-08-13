@@ -39,6 +39,7 @@ extension AppState {
         guard auth.isSignedIn else { return }
         let pending = PendingClubActivity(clientId: UUID(), type: type, text: text, xpEarned: xpEarned, distanceKm: distanceKm)
         outbox.append(pending)
+        pendingActivityCount = outbox.count
         Task { await attemptPost(pending) }
     }
 
@@ -51,11 +52,21 @@ extension AppState {
         }
     }
 
+    /// Syncs the observable count from the real outbox — called on every enqueue/success above,
+    /// and once at app launch (`AppState.init`) to reflect whatever a killed previous session left
+    /// behind. `outbox` itself stays a plain `UserDefaults`-backed computed property (not
+    /// `@Observable`-tracked, since it lives in this extension rather than the class body), so
+    /// nothing updates the History banner without this explicit nudge.
+    func refreshPendingActivityCount() {
+        pendingActivityCount = outbox.count
+    }
+
     private func attemptPost(_ pending: PendingClubActivity) async {
         let service = ClubService(auth: auth)
         do {
             try await service.postActivity(clientId: pending.clientId, type: pending.type, text: pending.text, xpEarned: pending.xpEarned, distanceKm: pending.distanceKm)
             outbox.removeAll { $0.clientId == pending.clientId }
+            pendingActivityCount = outbox.count
         } catch {
             // Left in the outbox — picked up again next time `retryPendingClubActivities()` runs.
         }

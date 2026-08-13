@@ -21,6 +21,15 @@ struct HistoryView: View {
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
 
+            if appState.pendingActivityCount > 0 {
+                pendingSyncBanner
+                    .padding(.horizontal, RUSpacing.pagePadding)
+                    .padding(.bottom, 6)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+            }
+
             if runs.isEmpty {
                 Text("Aucune course pour l'instant — termine une sortie ou ajoutes-en une manuellement.")
                     .font(RUFont.sans(12)).foregroundColor(RUColor.text2)
@@ -110,6 +119,48 @@ struct HistoryView: View {
         .padding(.horizontal, RUSpacing.pagePadding)
         .padding(.top, 8)
         .padding(.bottom, 8)
+    }
+
+    /// Surfaces `ClubActivityOutbox`'s real queue — before this, a run that failed to reach the
+    /// server (spotty connection right when it finished) silently never got its XP/feed entry
+    /// synced, with no visible sign anything was wrong; the outbox already retried opportunistically
+    /// in the background, but nothing ever told her that, or let her force it. Doesn't call out
+    /// which specific run is affected (the outbox tracks payloads, not a link back to a
+    /// `RunRecord`) — a single "N en attente" banner is the honest scope of what's knowable here.
+    private var pendingSyncBanner: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 15))
+                .foregroundColor(RUColor.amberText)
+                .frame(width: 30, height: 30)
+                .background(RUColor.amber.opacity(0.16), in: Circle())
+            VStack(alignment: .leading, spacing: 3) {
+                Text(appState.pendingActivityCount == 1 ? "1 course pas encore synchronisée" : "\(appState.pendingActivityCount) courses pas encore synchronisées")
+                    .font(RUFont.sans(12.5, weight: .semibold))
+                    .foregroundColor(RUColor.textPrimary)
+                Text("Elles restent sur ton téléphone, rien n'est perdu — nouvelle tentative automatique bientôt.")
+                    .font(RUFont.sans(10.5))
+                    .foregroundColor(RUColor.text2)
+                Button(action: {
+                    Haptics.selection()
+                    appState.retryPendingClubActivities()
+                }) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "arrow.triangle.2.circlepath").font(.system(size: 10, weight: .semibold))
+                        Text("Réessayer maintenant")
+                    }
+                    .font(RUFont.sans(11, weight: .semibold))
+                    .foregroundColor(RUColor.rose)
+                    .frame(minHeight: 30)
+                }
+                .buttonStyle(PressableStyle())
+                .padding(.top, 2)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .background(RUColor.amber.opacity(0.1), in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous).stroke(RUColor.amber.opacity(0.35), lineWidth: RUSpacing.hairline))
     }
 
     private func runCard(_ run: RunRecord) -> some View {

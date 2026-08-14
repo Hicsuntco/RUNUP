@@ -410,7 +410,9 @@ struct MoreSettingsView: View {
             )
             // Refreshes `currentUser` so the change is reflected immediately — search results and
             // future signup/profile screens all read from there, not from this sheet's own state.
-            try? await appState.auth.refreshMe()
+            // `_ =` explicite : `refreshMe()` renvoie l'utilisateur rafraîchi, dont on n'a pas
+            // besoin ici — c'est l'effet de bord sur `currentUser` qui nous intéresse.
+            _ = try? await appState.auth.refreshMe()
             appState.toast("Profil mis à jour")
         } catch ClubServiceError.badResponse(409, _) {
             identityError = "Ce pseudo est déjà pris."

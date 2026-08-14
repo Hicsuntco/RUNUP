@@ -161,12 +161,16 @@ final class LiveRunViewModel {
         self.profile = profile
         self.healthKit = healthKit
         let name = profile.name
-        let targetPace = session.pace
+        // Une constante locale, PAS `self.session` : dans un initialiseur, lire une propriété de
+        // `self` avant que toutes les propriétés stockées ne soient posées est interdit — et `cues`
+        // ne l'est pas encore. La séance est affectée à `self.session` en fin d'`init`.
+        let todaySession = profile.todaySession
+        let targetPace = todaySession.pace
         // Cues match what the session actually is — the old fixed set said "Premier 800 : vise X"
         // on continuous footings (no 800s exist there) and claimed "FC bien maîtrisée" with no
         // real heart-rate reading behind it, the exact kind of fabricated claim the rest of the
         // app already scrubbed out.
-        if session.isIntervalSession {
+        if todaySession.isIntervalSession {
             cues = [
                 (6, "C'est parti \(name). Échauffement tranquille, reste en Z2."),
                 (120, "Fin d'échauffement. Première répétition : vise \(targetPace), foulée relâchée."),
@@ -183,6 +187,10 @@ final class LiveRunViewModel {
                 (1080, "Dernière partie — finis proprement, sans t'arracher 🔥")
             ]
         }
+        // Les consignes vocales ci-dessus viennent d'être construites à partir de cette séance :
+        // la figer ici garantit qu'elles décrivent bien la course qui va démarrer, même si le
+        // modèle est créé un instant avant `start()`.
+        self.session = todaySession
     }
 
     func start() {

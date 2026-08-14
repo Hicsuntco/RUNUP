@@ -284,4 +284,81 @@ final class AdaptivePlanEngineSafetyTests: XCTestCase {
             XCTAssertGreaterThan(slower, faster, "Les zones d'allure doivent aller du plus lent au plus rapide")
         }
     }
+
+    // MARK: - Courses proches : le plan ne doit jamais dépasser la ligne d'arrivée
+
+    /// Le plancher `max(4, weeksUntilRace)` n'écourtait pas un plan trop court, il l'ALLONGEAIT.
+    /// Pour une course dans deux semaines il produisait quatre semaines : la course tombait en
+    /// semaine 2, donc en bloc « Base » — une sortie longue trois jours avant un marathon — et
+    /// l'affûtage était planifié deux semaines APRÈS la ligne d'arrivée.
+    ///
+    /// C'est le cas d'usage le plus fréquent d'un téléchargement d'app de running : on s'inscrit
+    /// à une course, puis on cherche une app.
+    @MainActor
+    func testShortNoticePlanEndsOnRaceWeekAndIsAllTaper() {
+        // 1 et 2 seulement : à 0 la date de course égale le départ, ce qui n'est pas une course
+        // proche mais une absence de date exploitable (couvert par le test suivant) ; à 3 on
+        // atteint quatre semaines de plan, donc un vrai bloc de construction réapparaît.
+        for weeksAway in 1...2 {
+            let profile = makeProfile(goal: .race, distance: .marathon, weeksUntilRace: weeksAway)
+            let s = shape(for: profile)
+
+            XCTAssertEqual(
+                s.totalWeeks, weeksAway + 1,
+                "Un plan pour une course dans \(weeksAway) semaine(s) doit se terminer la semaine de la course"
+            )
+            XCTAssertEqual(s.baseWeeks, 0, "Rien à construire à cette échéance")
+            XCTAssertEqual(s.specificWeeks, 0, "Rien à construire à cette échéance")
+            XCTAssertEqual(s.taperWeeks, s.totalWeeks, "Tout le plan doit être de l'affûtage")
+
+            // Et surtout : chaque semaine réellement générée est en affûtage, jamais en base.
+            for week in 1...(s.totalWeeks ?? 1) {
+                XCTAssertEqual(
+                    AdaptivePlanEngine.trainingBlock(forWeek: week, shape: s), .affutage,
+                    "Semaine \(week) d'un plan à \(weeksAway) semaine(s) doit être en affûtage"
+                )
+            }
+        }
+    }
+
+    /// Le seuil de quatre semaines ne doit pas créer de marche : les blocs couvrent toujours
+    /// exactement le plan, à toutes les échéances, et un vrai bloc de construction réapparaît
+    /// dès qu'il y a de quoi construire.
+    @MainActor
+    func testPlanBlocksAlwaysSumToTotalAcrossEveryHorizon() {
+        for weeksAway in 1...24 {
+            let profile = makeProfile(goal: .race, distance: .semi, weeksUntilRace: weeksAway)
+            let s = shape(for: profile)
+            guard let total = s.totalWeeks else {
+                XCTFail("Un objectif course avec une date future doit produire un plan de longueur finie")
+                continue
+            }
+            XCTAssertEqual(
+                s.baseWeeks + s.specificWeeks + s.taperWeeks, total,
+                "Les blocs doivent couvrir exactement le plan (course dans \(weeksAway) semaines)"
+            )
+            XCTAssertLessThanOrEqual(total, 20, "Un plan ne dépasse jamais 20 semaines")
+            XCTAssertGreaterThanOrEqual(s.taperWeeks, 1, "Il y a toujours au moins une semaine d'affûtage")
+            if total >= 4 {
+                XCTAssertGreaterThanOrEqual(s.baseWeeks, 1, "Au-delà de 4 semaines, il y a de quoi construire")
+            }
+        }
+    }
+
+    /// Une date de course déjà passée, ou égale au départ, ne périodise rien : le plan doit
+    /// retomber sur un plan OUVERT, pas sur un plan de longueur nulle ou négative.
+    @MainActor
+    func testPastOrSameDayRaceFallsBackToAnOpenEndedPlan() {
+        let profile = makeProfile(goal: .race, distance: .k10, weeksUntilRace: 1)
+        let start = profile.programStartDate ?? .now
+
+        for offsetDays in [-30, -1, 0] {
+            profile.raceDate = Calendar.current.date(byAdding: .day, value: offsetDays, to: start)
+            let s = shape(for: profile)
+            XCTAssertNil(
+                s.totalWeeks,
+                "Une course à J\(offsetDays) ne peut pas périodiser un plan — il doit rester ouvert"
+            )
+        }
+    }
 }

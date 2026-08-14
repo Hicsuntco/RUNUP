@@ -400,7 +400,26 @@ enum AdaptivePlanEngine {
             let startWeek = cal.dateInterval(of: .weekOfYear, for: startDate)?.start ?? startDate
             let raceWeek = cal.dateInterval(of: .weekOfYear, for: raceDate)?.start ?? raceDate
             let weeksUntilRace = (cal.dateComponents([.weekOfYear], from: startWeek, to: raceWeek).weekOfYear ?? 8) + 1
-            let total = max(4, min(20, weeksUntilRace))
+            let total = min(20, max(1, weeksUntilRace))
+
+            // Course à moins de quatre semaines : que de l'affûtage, sur la durée RÉELLE.
+            //
+            // Le plancher `max(4, …)` d'avant ne raccourcissait pas le plan, il l'ALLONGEAIT :
+            // une course dans dix jours donnait un programme de quatre semaines, la course tombant
+            // en semaine 2 — donc en bloc « Base », avec une sortie longue trois jours avant un
+            // marathon — et l'affûtage planifié en semaine 4, soit deux semaines APRÈS la ligne
+            // d'arrivée. La fin de programme, et le passage en récupération, arrivaient aussi
+            // deux semaines trop tard.
+            //
+            // Il n'y a rien à construire en moins d'un mois : le seul entraînement qui améliore
+            // encore une performance à cette échéance est celui qui n'entame pas la fraîcheur.
+            // On rend donc un plan entièrement en affûtage, qui se termine la semaine de la
+            // course. C'est le cas d'usage le plus fréquent d'un téléchargement d'app de running
+            // — on s'inscrit à une course, PUIS on cherche une app.
+            guard total >= 4 else {
+                return ProgramShape(totalWeeks: total, baseWeeks: 0, specificWeeks: 0, taperWeeks: total)
+            }
+
             let taper = max(1, Int((Double(total) * 0.15).rounded()))
             let specific = max(1, Int((Double(total) * 0.35).rounded()))
             let base = max(1, total - taper - specific)

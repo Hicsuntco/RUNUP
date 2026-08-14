@@ -44,10 +44,15 @@ struct DailyGoalsBarsView: View {
     static var fillColors: [Color] { [RUColor.rose2, RUColor.rose, RUColor.violet] }
 
     private static let canvasSize: CGFloat = 100
-    /// Same 12%-of-diameter stroke as `WidgetRingView` — the app used to draw a chunkier 20 with
-    /// a heavy lift shadow, and next to the widget the thick version read muddy (owner compared
-    /// them side by side and preferred the widget's ring); both surfaces now render identically.
-    private static let strokeWidth: CGFloat = 12
+    /// 15 % du diamètre. C'était 12 %, aligné sur le widget après une comparaison côte à côte —
+    /// mais cette comparaison datait d'un anneau de 72 pt sur l'accueil. À 96 pt, le même
+    /// POURCENTAGE donne un anneau visuellement plus grêle : la surface du disque croît au carré
+    /// du rayon là où le trait ne croît que linéairement, donc le trait occupe proportionnellement
+    /// moins de l'objet qu'on regarde. 15 % rend à l'anneau agrandi le corps qu'il avait à 72.
+    ///
+    /// Reste en dessous des 20 % d'origine, jugés « boueux » à l'époque, et le widget garde sa
+    /// propre valeur : il est vu à 40 pt dans une grille d'icônes, pas à 96 sur une carte.
+    private static let strokeWidth: CGFloat = 15
     /// La piste doit dire « objectif pas encore atteint », donc rester nettement en dessous du
     /// remplissage. Elle était à 0,36 en clair, calibrée quand l'anneau faisait 72 pt : à 96 pt,
     /// une journée à 0/3 dessinait un anneau rose et lavande PLEIN, qui contredisait sa propre
@@ -56,8 +61,12 @@ struct DailyGoalsBarsView: View {
     ///
     /// Le clair reste un peu au-dessus du sombre : une couleur saturée à faible opacité se dilue
     /// davantage sur du blanc que sur du noir.
-    private static let lightTrackOpacity = 0.15
-    private static let darkTrackOpacity = 0.20
+    /// J'avais descendu le clair à 0,15 pour qu'un anneau vide cesse de se lire comme plein. C'était
+    /// trop : à cette valeur la piste disparaît sur du blanc, et l'anneau ne se lit plus que par
+    /// ses arcs remplis — donc comme un trait fin et brisé au lieu d'un anneau. 0,26 garde la
+    /// distinction rempli / pas rempli tout en redonnant à l'anneau son corps.
+    private static let lightTrackOpacity = 0.26
+    private static let darkTrackOpacity = 0.22
 
     var body: some View {
         ZStack {

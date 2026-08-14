@@ -29,6 +29,35 @@ struct AccentTheme: Identifiable, Equatable {
     static var current: AccentTheme {
         all.first { $0.id == ThemeStore.shared.themeID } ?? all[0]
     }
+
+    /// Les valeurs claires que la maquette fixe À LA MAIN pour la palette de marque.
+    ///
+    /// Depuis que `darkened()` multiplie au lieu de soustraire, la dérivation retombe d'elle-même
+    /// sur les valeurs de la maquette pour `primary` (#E60E52) et `tail` (#7053E6). Le troisième,
+    /// `light` — le token `rose2` — ne suit aucune règle : la maquette y déclare `#F0356F`, une
+    /// version à la fois plus sombre ET plus saturée de `#FF4D7D`, choisie à l'œil. Aucune
+    /// formule ne la produit, donc elle est écrite ici.
+    ///
+    /// Seule la palette « rose » figure dans cette table : c'est la seule dont la maquette
+    /// définisse une déclinaison claire. Les sept autres suivent la règle multiplicative, qui
+    /// conserve leur teinte.
+    private static let mockupLightPalettes: [String: (primary: Color, light: Color, tail: Color)] = [
+        "rose": (Color(hex: 0xE60E52), Color(hex: 0xF0356F), Color(hex: 0x7053E6))
+    ]
+
+    /// L'accent principal sur fond clair — celui de la maquette si elle en fixe un, sinon la
+    /// version assombrie qui conserve la teinte.
+    var primaryOnLight: Color { Self.mockupLightPalettes[id]?.primary ?? primary.darkened(0.10) }
+    /// Le pendant de `light` sur fond clair (token `RUColor.rose2`).
+    ///
+    /// Le repli assombrit `primary` et non `light`, contrairement à ce que fait la maquette pour
+    /// la palette de marque. C'est délibéré et documenté dans `RUColor.rose2` : sur fond sombre
+    /// `light` est une teinte ÉCLAIRCIE, et plusieurs palettes (lime, ambre, cyan) l'ont si pâle
+    /// qu'assombrie de 14 % elle resterait illisible en texte sur du blanc. Le rose, lui, a sa
+    /// valeur exacte dans la table ci-dessus, donc il n'a pas besoin de ce repli.
+    var lightOnLight: Color { Self.mockupLightPalettes[id]?.light ?? primary.darkened(0.14) }
+    /// Le pendant de `tail` sur fond clair (token `RUColor.violet`).
+    var tailOnLight: Color { Self.mockupLightPalettes[id]?.tail ?? tail.darkened(0.10) }
 }
 
 /// Live holder for the chosen accent theme's id, read by `RUColor`'s theme-aware tokens from

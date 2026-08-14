@@ -45,13 +45,25 @@ targets:
         # at runtime by `CoachService.appSecret` — see the comment there on why an embedded secret
         # is a deterrent against casual abuse, not a real boundary.
         RUNUPAppSecret: "$(RUNUP_APP_SECRET)"
-        # Declares real support for English/Spanish alongside the French source strings in
-        # Localizable.xcstrings — lets App Store Connect list the app as localized in these
-        # languages, and is what App Review checks against actual in-app coverage.
+        # FRANÇAIS UNIQUEMENT — et c'est un constat, pas un renoncement.
+        #
+        # `Localizable.xcstrings` contient bien 752 clés traduites en anglais et en espagnol. Mais
+        # la couverture réelle s'arrête là où l'app cesse d'afficher des littéraux : 56 chaînes
+        # françaises sont COMPOSÉES À L'EXÉCUTION puis renvoyées comme de simples `String` — les
+        # titres et sous-titres de séance générés par le moteur de plan, les consignes vocales du
+        # coach, les libellés d'ajustement. Elles ne passent jamais par `LocalizedStringKey`, et
+        # les titres de séance sont en plus PERSISTÉS dans SwiftData au moment où le plan est
+        # créé. Les traduire n'est pas un travail de traduction, c'est une refonte du moteur pour
+        # qu'il émette des clés plutôt que de la prose, plus une migration des données stockées.
+        #
+        # Déclarer en/es donnait donc, sur un téléphone en anglais, un écran mi-anglais
+        # mi-français : le chrome traduit, le contenu du programme en français. Une seule langue
+        # déclarée garantit une seule langue affichée, sur tous les appareils.
+        #
+        # Réversible en trois lignes le jour où le moteur émettra des clés — le catalogue de
+        # traductions est conservé intact pour ça.
         CFBundleLocalizations:
           - fr
-          - en
-          - es
         CFBundleShortVersionString: "2.4"
         CFBundleVersion: "14"
         # Synthesized launch storyboard (no custom .storyboard file) — a plain color is all it

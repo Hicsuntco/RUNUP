@@ -39,14 +39,14 @@ enum RUColor {
     /// those swatches' `primary` are pale enough that white text on a `rose`-filled button, or
     /// `rose` used directly as text/icon color, reads weak on a white background. A lighter darken
     /// than `rose2`'s 0.14: this token still needs to look "vivid" as a fill, not muted like text.
-    static var rose: Color { isLight ? AccentTheme.current.primary.darkened(0.10) : AccentTheme.current.primary }
+    static var rose: Color { isLight ? AccentTheme.current.primaryOnLight : AccentTheme.current.primary }
     /// On a dark background this is a *lighter* tint (pops against near-black) — on a white
     /// background that same tint reads as too pale to use as text, so this darkens the base
     /// accent instead, to keep the same "accent, but for text" relationship in both directions.
-    static var rose2: Color { isLight ? AccentTheme.current.primary.darkened(0.14) : AccentTheme.current.light }
+    static var rose2: Color { isLight ? AccentTheme.current.lightOnLight : AccentTheme.current.light }
     /// Same reasoning as `rose` above — `violet` is `AccentTheme.current.tail`, and a couple of
     /// swatches' tails (lime → cyan, corail → amber) are similarly pale.
-    static var violet: Color { isLight ? AccentTheme.current.tail.darkened(0.10) : AccentTheme.current.tail }
+    static var violet: Color { isLight ? AccentTheme.current.tailOnLight : AccentTheme.current.tail }
 
     // Fixed semantic colors (readiness, coach, warnings) — meaning, not brand, so they don't
     // follow the accent theme. Deeper shades in light mode: the dark-mode values are tuned to pop

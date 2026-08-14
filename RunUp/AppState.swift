@@ -133,6 +133,61 @@ final class AppState {
         auth.onSignOut = { [weak self] in
             Task { @MainActor in self?.discardPendingClubActivities() }
         }
+        Task { @MainActor in self.recoverInterruptedRunIfNeeded() }
+    }
+
+    /// Récupère une course que l'app a perdue en étant tuée en plein effort.
+    ///
+    /// `LiveRunViewModel` écrit un instantané toutes les dix secondes ; `stop()` l'efface. Un
+    /// instantané encore présent au lancement signifie donc exactement une chose : une course a
+    /// commencé et ne s'est jamais terminée proprement. Avant, elle disparaissait sans laisser la
+    /// moindre trace — ni entrée d'historique, ni écriture dans Santé, ni message.
+    ///
+    /// On propose de l'ENREGISTRER, pas de la reprendre. Reprendre supposerait de décider ce qui
+    /// s'est passé entre la mort de l'app et sa réouverture — a-t-elle continué à courir, s'est
+    /// elle arrêtée, quand ? — et aucune de ces réponses n'est dans les données. Ce qui a été
+    /// mesuré jusqu'à la coupure, en revanche, est réel : c'est ça qu'on lui rend.
+    ///
+    /// Le chemin est celui, déjà éprouvé, d'une course reçue de la montre : insérer le relevé,
+    /// l'empiler dans `pendingDebriefs`, et laisser la feuille de debrief s'ouvrir depuis la
+    /// racine. Elle valide son ressenti et la course entre dans le programme comme n'importe
+    /// quelle autre.
+    @MainActor
+    private func recoverInterruptedRunIfNeeded() {
+        guard let snapshot = LiveRunSnapshotStore.loadRecoverable() else { return }
+        // Consommé tout de suite : quoi qu'il advienne ensuite, cette course ne doit pas être
+        // reproposée au prochain lancement.
+        LiveRunSnapshotStore.clear()
+
+        // Garde-fou contre un doublon : si un relevé couvre déjà ce départ, l'instantané est un
+        // reliquat (arrêt normal dont l'effacement n'a pas abouti) et non une course perdue.
+        let descriptor = FetchDescriptor<RunRecord>()
+        if let existing = try? modelContext.fetch(descriptor),
+           existing.contains(where: { abs($0.date.timeIntervalSince(snapshot.startedAt)) < 300 }) {
+            return
+        }
+
+        let record = AdaptivePlanEngine.buildRunRecord(
+            title: snapshot.sessionTitle,
+            elapsedSeconds: snapshot.elapsedSeconds,
+            distanceKm: snapshot.distanceMeters / 1000,
+            kcal: 0,
+            avgHeartRate: 0,
+            elevationGainM: Int(snapshot.elevationGainMeters.rounded()),
+            realSplitSeconds: snapshot.splitSecondsPerKm,
+            route: snapshot.route
+        )
+        record.date = snapshot.startedAt
+        modelContext.insert(record)
+        pendingDebriefs.append(record)
+
+        let distance = String(format: "%.1f", locale: Locale(identifier: "fr_FR"), record.distanceKm)
+        notify(
+            icon: "🛟",
+            colorHex: 0x38E0D0,
+            title: "Course récupérée",
+            text: "L'app s'est fermée pendant ta sortie — \(distance) km avaient été enregistrés. Valide ton ressenti pour les garder."
+        )
     }
 
     /// Re-checks the program week/phase against the real calendar date — call whenever the app

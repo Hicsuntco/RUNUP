@@ -36,6 +36,8 @@ final class LiveRunViewModel {
     private var accumulatedPauseSeconds: Double = 0
     private var pauseBeganAt: Date?
     private var lastActivityPush = Date.distantPast
+    private var lastSnapshotWrite = Date.distantPast
+    private static let snapshotIntervalSeconds: Double = 10
 
     private(set) var elapsedSeconds: Double = 0
     private(set) var isPaused = false
@@ -237,6 +239,7 @@ final class LiveRunViewModel {
             // feedback (the voice cues cover the rest).
             Haptics.impact(.medium)
         }
+        persistSnapshotIfDue()
         let t = Int(elapsedSeconds)
         // Only for a continuous session (currentSegment stays nil the whole run) — a real
         // structure is narrated by `advanceIntervalSegmentIfNeeded()` below instead, with cues
@@ -498,7 +501,36 @@ final class LiveRunViewModel {
             }
         )
         endedAt = Date()
+        // La course a une fin explicite : l'instantané n'a plus rien à récupérer, et le laisser
+        // ferait proposer cette même course au prochain lancement.
+        LiveRunSnapshotStore.clear()
         return record
+    }
+
+    /// Écrit l'état courant sur disque, au plus une fois toutes les dix secondes.
+    ///
+    /// C'est le compromis qui compte ici : à dix secondes, une app tuée ne perd au pire que dix
+    /// secondes de course et quelques dizaines de mètres — négligeable au regard d'une sortie
+    /// entière — tandis qu'écrire à chaque seconde ferait une centaine d'écritures disque par
+    /// sortie courte, sur un chemin déjà tenu pour son coût en batterie.
+    private func persistSnapshotIfDue() {
+        guard Date().timeIntervalSince(lastSnapshotWrite) >= Self.snapshotIntervalSeconds else { return }
+        lastSnapshotWrite = Date()
+        LiveRunSnapshotStore.save(
+            LiveRunSnapshot(
+                startedAt: startedAt,
+                updatedAt: Date(),
+                accumulatedPauseSeconds: accumulatedPauseSeconds,
+                elapsedSeconds: elapsedSeconds,
+                distanceMeters: location.distanceMeters,
+                elevationGainMeters: location.elevationGainMeters,
+                splitSecondsPerKm: splitSecondsPerKm,
+                sessionTitle: session.title,
+                route: zip(location.route, location.routeAltitudes).map { coord, altitude in
+                    RunRecord.RoutePoint(lat: coord.latitude, lng: coord.longitude, altitude: altitude)
+                }
+            )
+        )
     }
 
     /// Writes the run to Apple Health — call only once the caller has actually decided to keep the

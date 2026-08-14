@@ -362,7 +362,15 @@ enum AdaptivePlanEngine {
     /// real calendar date rather than hardcoded — `Calendar.component(.weekday)` is Sunday-first
     /// (1...7), so this remaps it.
     static func currentWeekdayIndex() -> Int {
-        (Calendar.current.component(.weekday, from: .now) + 5) % 7
+        weekdayIndex(for: .now)
+    }
+
+    /// L'index lundi-first (0 = lundi) d'une date quelconque. Extrait de `currentWeekdayIndex`
+    /// parce qu'imputer une course au bon jour demande le jour de LA COURSE, pas celui du moment
+    /// où on la valide — les deux diffèrent sur une sortie à cheval sur minuit, et sur une course
+    /// reçue de la montre puis validée le lendemain.
+    static func weekdayIndex(for date: Date) -> Int {
+        (Calendar.current.component(.weekday, from: date) + 5) % 7
     }
 
     // MARK: Periodization
@@ -823,13 +831,21 @@ enum AdaptivePlanEngine {
     @discardableResult
     static func applyDebrief(rpe: RPE, run: RunRecord, profile: UserProfile) -> String {
         profile.runValue = min(profile.runGoal, ((profile.runValue + run.distanceKm) * 100).rounded() / 100)
-        let today = currentWeekdayIndex()
+        // La séance est imputée au jour de la COURSE, pas au jour où le debrief est validé.
+        //
+        // Les deux coïncident presque toujours, sauf précisément quand ça compte : une course
+        // partie à 23h50 et validée à 00h20 cochait le lundi et laissait la séance du dimanche
+        // « à faire » pour toujours. Même chose pour une course reçue de la montre et validée le
+        // lendemain matin. `run.date` est la seule date qui décrit ce qui s'est réellement passé.
+        let runDay = weekdayIndex(for: run.date)
         profile.weekStrip = profile.weekStrip.map { day in
             var d = day
-            if d.state == .today { d.state = .done }
+            // Le jour de la course, quel que soit son état actuel — la case a pu redevenir
+            // `.upcoming` ou `.rest` si la semaine a été régénérée entre le départ et la validation.
+            if d.weekday == runDay { d.state = .done }
             return d
         }
-        if let idx = profile.weekSessions.firstIndex(where: { $0.weekday == today }) {
+        if let idx = profile.weekSessions.firstIndex(where: { $0.weekday == runDay }) {
             profile.weekSessions[idx].completed = true
         }
         // Course libre's own completion flag — its `todaySession` template is independent of

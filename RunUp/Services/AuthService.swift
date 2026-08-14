@@ -38,6 +38,16 @@ final class AuthService {
     private(set) var currentUser: AuthenticatedUser?
     private(set) var token: String?
 
+    /// Appelé juste avant que la session ne soit effacée, sur les DEUX chemins de déconnexion
+    /// (le bouton des réglages et la suppression de compte, qui appelle `signOut()`). Posé par
+    /// `AppState.init` pour vider la file d'activités en attente : sans ça, les sorties d'un
+    /// compte survivaient à sa déconnexion et étaient publiées sous le compte suivant connecté
+    /// sur le même téléphone.
+    ///
+    /// Un rappel plutôt qu'un appel direct à `AppState` : ce service ne connaît pas l'état de
+    /// l'app et n'a aucune raison de le connaître.
+    var onSignOut: (() -> Void)?
+
     private static let baseURL = URL(string: "https://runup-nu.vercel.app")!
 
     init() {
@@ -112,6 +122,7 @@ final class AuthService {
             Task { await NotificationService.shared.unregisterDeviceToken(authToken: authToken) }
             Task { await Self.revokeSession(authToken: authToken) }
         }
+        onSignOut?()
         token = nil
         currentUser = nil
         KeychainService.deleteToken()

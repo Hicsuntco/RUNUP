@@ -15,6 +15,20 @@ final class LiveRunViewModel {
     /// and this date anchors both the wall-clock elapsed math and the HealthKit workout.
     private var startedAt = Date()
     private var endedAt = Date()
+
+    /// La séance en cours, FIGÉE au démarrage de la course.
+    ///
+    /// Le modèle relisait `profile.todaySession` à dix endroits — dont la construction du
+    /// `RunRecord` à l'arrêt et la machine à segments qui tourne à chaque seconde. Or
+    /// l'observateur `.NSCalendarDayChanged` régénère cette séance en plein milieu d'une course
+    /// à cheval sur minuit, et le passage dimanche → lundi régénère la semaine entière. Une
+    /// course partie à 23h50 se terminait donc sous le nom de la séance du LENDEMAIN — voire
+    /// « Repos » si le lendemain est un jour off — et un fractionné pouvait basculer en retour au
+    /// calme si la nouvelle séance déclarait moins de répétitions.
+    ///
+    /// Une copie de valeur suffit : `WorkoutSession` est une `struct`, donc ce qui est capturé ici
+    /// ne peut plus être modifié sous les pieds de la course.
+    private var session: WorkoutSession = AdaptivePlanEngine.restSession
     /// Wall-clock pause bookkeeping: elapsed = now - startedAt - accumulated pauses. The old
     /// `elapsedSeconds += 1` per `Task.sleep(1s)` iteration systematically undercounted (sleep is
     /// "at least 1s", plus scheduling gaps) — minutes of drift over a long run, corrupting pace
@@ -123,7 +137,7 @@ final class LiveRunViewModel {
     /// Chip text for the Live overlay — nil when there's no real structure to narrate, in which
     /// case the UI shows nothing rather than a guess.
     var segmentLabel: String? {
-        guard let currentSegment, let reps = profile.todaySession.intervalStructure?.reps else { return nil }
+        guard let currentSegment, let reps = session.intervalStructure?.reps else { return nil }
         switch currentSegment {
         case .warmup: return "ÉCHAUFFEMENT"
         case .rep(let n): return "RÉP. \(n)/\(reps)"
@@ -145,12 +159,12 @@ final class LiveRunViewModel {
         self.profile = profile
         self.healthKit = healthKit
         let name = profile.name
-        let targetPace = profile.todaySession.pace
+        let targetPace = session.pace
         // Cues match what the session actually is — the old fixed set said "Premier 800 : vise X"
         // on continuous footings (no 800s exist there) and claimed "FC bien maîtrisée" with no
         // real heart-rate reading behind it, the exact kind of fabricated claim the rest of the
         // app already scrubbed out.
-        if profile.todaySession.isIntervalSession {
+        if session.isIntervalSession {
             cues = [
                 (6, "C'est parti \(name). Échauffement tranquille, reste en Z2."),
                 (120, "Fin d'échauffement. Première répétition : vise \(targetPace), foulée relâchée."),
@@ -171,10 +185,14 @@ final class LiveRunViewModel {
 
     func start() {
         startedAt = Date()
+        // La séance est capturée ICI, une fois pour toutes : c'est le seul instant où
+        // `profile.todaySession` désigne à coup sûr la séance que la coureuse a sous les yeux.
+        // Tout ce qui la relirait plus tard lirait potentiellement celle du lendemain.
+        session = profile.todaySession
         // A real structure takes over segment-by-segment guidance from the flat scripted `cues`
         // above (see `tick()`) — only when the title actually parses into reps, so a session
         // still gets narrated even if it happens not to.
-        if profile.todaySession.intervalStructure != nil {
+        if session.intervalStructure != nil {
             currentSegment = .warmup
         }
         location.requestAuthorization()
@@ -257,7 +275,7 @@ final class LiveRunViewModel {
     /// progress, not a fixed schedule, so it stays accurate whether she runs the rep faster or
     /// slower than the archetype's target pace assumed.
     private func advanceIntervalSegmentIfNeeded() {
-        guard let structure = profile.todaySession.intervalStructure, let segment = currentSegment else { return }
+        guard let structure = session.intervalStructure, let segment = currentSegment else { return }
         switch segment {
         case .warmup:
             if elapsedSeconds - segmentStartElapsed >= Self.warmupSeconds {
@@ -281,7 +299,7 @@ final class LiveRunViewModel {
         segmentStartDistanceKm = distanceKm
         segmentStartElapsed = elapsedSeconds
         Haptics.impact(.medium)
-        let targetPace = profile.todaySession.pace
+        let targetPace = session.pace
         switch segment {
         case .warmup:
             break
@@ -319,7 +337,7 @@ final class LiveRunViewModel {
               isInTargetEffortSegment,
               elapsedSeconds - paceWindowStartElapsed >= Self.paceWindowSeconds,
               elapsedSeconds - lastPaceAlertAtElapsed >= Self.paceAlertCooldownSeconds,
-              let targetSecPerKm = PaceModel.parseSecPerKm(profile.todaySession.pace)
+              let targetSecPerKm = PaceModel.parseSecPerKm(session.pace)
         else { return }
         let windowDistanceKm = distanceKm - paceWindowStartDistanceKm
         guard windowDistanceKm > 0.05 else { return }
@@ -385,7 +403,7 @@ final class LiveRunViewModel {
     /// sent — not the profile-level context `CoachService.systemPrompt` already builds, since
     /// that has no idea a run is even in progress.
     private func liveVoiceContext() -> String {
-        let target = profile.todaySession.pace
+        let target = session.pace
         return "Distance parcourue jusqu'ici : \(String(format: "%.2f", locale: Locale(identifier: "fr_FR"), distanceKm)) km. Allure actuelle : \(paceLabel) /km (allure cible du jour : \(target) /km). Temps écoulé : \(PaceModel.formatDuration(elapsedSeconds))."
     }
 
@@ -424,7 +442,7 @@ final class LiveRunViewModel {
 
     private func startLiveActivity() {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
-        let attributes = RunActivityAttributes(sessionTitle: profile.todaySession.title, plannedDurationMinutes: profile.todaySession.durationMinutes)
+        let attributes = RunActivityAttributes(sessionTitle: session.title, plannedDurationMinutes: session.durationMinutes)
         let state = RunActivityAttributes.ContentState(distanceKm: 0, elapsedSeconds: 0, paceLabel: "--:--", isPaused: false, timerReference: Date())
         liveActivity = try? Activity.request(attributes: attributes, content: ActivityContent(state: state, staleDate: .now + 60), pushType: nil)
     }
@@ -466,7 +484,7 @@ final class LiveRunViewModel {
         voiceCoach?.stop()
         location.stop()
         let record = AdaptivePlanEngine.buildRunRecord(
-            title: profile.todaySession.title,
+            title: session.title,
             elapsedSeconds: elapsedSeconds,
             distanceKm: distanceKm,
             kcal: kcal,

@@ -19,17 +19,30 @@ private struct PendingClubActivity: Codable, Equatable {
     /// qui met l'app à jour avec le réseau coupé — exactement la perte que cette file existe pour
     /// empêcher.
     var metrics: ActivityMetrics?
+    /// À QUI appartient cette sortie. Sans ce champ, la file était une clé globale que la
+    /// déconnexion ne vidait pas et que le rejeu ne vérifiait que par « quelqu'un est connectée » :
+    /// terminer une course en mode avion, se déconnecter, puis connecter un autre compte sur le
+    /// même téléphone publiait la course de la première sur le fil de la seconde, XP compris.
+    ///
+    /// Optionnel pour la même raison que `metrics` : une file écrite avant ce champ n'en a pas, et
+    /// un champ obligatoire ici ferait échouer le décodage de TOUT le tableau — donc jetterait
+    /// silencieusement les sorties en attente de quelqu'un qui met l'app à jour hors ligne, la
+    /// perte exacte que cette file existe pour empêcher. Une entrée héritée est traitée comme
+    /// appartenant au compte courant : c'est le comportement d'avant, et le seul compte plausible
+    /// au moment où elle a été écrite.
+    var userId: String?
 
-    init(clientId: UUID, type: String, text: String, xpEarned: Int, metrics: ActivityMetrics?) {
+    init(clientId: UUID, type: String, text: String, xpEarned: Int, metrics: ActivityMetrics?, userId: String?) {
         self.clientId = clientId
         self.type = type
         self.text = text
         self.xpEarned = xpEarned
         self.metrics = metrics
+        self.userId = userId
     }
 
     private enum CodingKeys: String, CodingKey {
-        case clientId, type, text, xpEarned, metrics
+        case clientId, type, text, xpEarned, metrics, userId
         /// Le champ tel qu'il était écrit avant que les métriques soient regroupées. Une sortie
         /// encore en file au moment de la mise à jour porte cette clé et pas `metrics`.
         case legacyDistanceKm = "distanceKm"
@@ -51,6 +64,7 @@ private struct PendingClubActivity: Codable, Equatable {
         } else {
             metrics = nil
         }
+        userId = try c.decodeIfPresent(String.self, forKey: .userId)
     }
 
     /// Écrit explicitement, parce que `legacyDistanceKm` n'a pas de propriété stockée en face :
@@ -64,6 +78,16 @@ private struct PendingClubActivity: Codable, Equatable {
         try c.encode(text, forKey: .text)
         try c.encode(xpEarned, forKey: .xpEarned)
         try c.encodeIfPresent(metrics, forKey: .metrics)
+        try c.encodeIfPresent(userId, forKey: .userId)
+    }
+
+    /// Vrai si cette sortie peut être publiée sous le compte donné. Une entrée sans propriétaire
+    /// (écrite avant l'existence du champ) est acceptée : la refuser reviendrait à jeter des
+    /// sorties légitimes lors de la mise à jour, alors qu'aucun changement de compte n'a
+    /// forcément eu lieu.
+    func belongsTo(_ currentUserId: String?) -> Bool {
+        guard let userId else { return true }
+        return userId == currentUserId
     }
 }
 
@@ -89,7 +113,14 @@ extension AppState {
     /// something to retry rather than a `try?` that discarded the payload the instant it failed.
     func postClubActivity(type: String, text: String, xpEarned: Int, metrics: ActivityMetrics = .none) {
         guard auth.isSignedIn else { return }
-        let pending = PendingClubActivity(clientId: UUID(), type: type, text: text, xpEarned: xpEarned, metrics: metrics)
+        let pending = PendingClubActivity(
+            clientId: UUID(),
+            type: type,
+            text: text,
+            xpEarned: xpEarned,
+            metrics: metrics,
+            userId: auth.currentUser?.id
+        )
         outbox.append(pending)
         pendingActivityCount = outbox.count
         Task { await attemptPost(pending) }
@@ -99,9 +130,21 @@ extension AppState {
     /// from a prior failed attempt. Safe to call anytime, including with an empty outbox.
     func retryPendingClubActivities() {
         guard auth.isSignedIn else { return }
-        for pending in outbox {
+        // On ne rejoue QUE les sorties du compte actuellement connecté. Une entrée sans
+        // propriétaire vient d'une version antérieure au champ : elle est traitée comme
+        // appartenant au compte courant, ce qui est le comportement d'avant et le seul compte
+        // plausible au moment où elle a été écrite.
+        for pending in outbox where pending.belongsTo(auth.currentUser?.id) {
             Task { await attemptPost(pending) }
         }
+    }
+
+    /// Abandonne les sorties encore en file au moment d'une déconnexion. Elles ne seront jamais
+    /// publiables : le jeton qui les autorisait vient de disparaître, et les rejouer sous le
+    /// compte suivant les publierait sur le mauvais fil. À appeler depuis `AuthService.signOut()`.
+    func discardPendingClubActivities() {
+        outbox = []
+        pendingActivityCount = 0
     }
 
     /// Syncs the observable count from the real outbox — called on every enqueue/success above,

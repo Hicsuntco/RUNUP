@@ -126,6 +126,13 @@ final class AppState {
         // extension is `@MainActor` (it drives observable UI state) while `init` is not, and the
         // count is only ever read by a view, so landing one runloop later is invisible.
         Task { @MainActor in self.refreshPendingActivityCount() }
+        // Les sorties encore en file appartiennent au compte qui les a produites. À la
+        // déconnexion elles deviennent impubliables (leur jeton disparaît) et dangereuses (le
+        // compte suivant les publierait sous son nom), donc on les abandonne. Posé ici plutôt
+        // que dans `AuthService`, qui n'a pas à connaître l'état de l'app.
+        auth.onSignOut = { [weak self] in
+            Task { @MainActor in self?.discardPendingClubActivities() }
+        }
     }
 
     /// Re-checks the program week/phase against the real calendar date — call whenever the app

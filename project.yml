@@ -25,6 +25,9 @@ targets:
       - path: RunUp/Resources/Fonts
       - path: RunUp/Resources/Assets.xcassets
       - path: RunUp/Resources/Localizable.xcstrings
+      # Obligatoire depuis mai 2024 : sans ce fichier dans le bundle, App Store Connect refuse le
+      # binaire à l'ENVOI (ITMS-91053), avant même toute revue humaine.
+      - path: RunUp/Resources/PrivacyInfo.xcprivacy
     # Build settings that can't be committed with their real values (the coach's shared secret)
     # come from here — a committed file of empty defaults that optionally includes the gitignored
     # `Secrets.xcconfig` holding the actual values. See Config.xcconfig and IOS_SETUP.md
@@ -159,6 +162,9 @@ targets:
       - path: RunUp/Resources/Fonts
         excludes:
           - "*.md"
+      # L'extension est signée et livrée séparément de l'app : le manifeste de l'app ne la couvre
+      # pas, il lui faut le sien. Elle lit `DailyGoalsSnapshot` via UserDefaults du groupe partagé.
+      - path: RunUpWidgets/PrivacyInfo.xcprivacy
     info:
       path: RunUpWidgets/Info.plist
       properties:

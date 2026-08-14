@@ -555,8 +555,12 @@ struct FriendsView: View {
         do {
             try await clubService.toggleKudos(activityId: item.id)
         } catch {
-            feed[index].kudoedByMe = wasKudoed
-            feed[index].kudos += wasKudoed ? 1 : -1
+            // Index recherché à nouveau, jamais celui capturé avant l'`await` : le fil a pu
+            // rétrécir pendant la requête (suppression, blocage, rafraîchissement plus court), et
+            // écrire à l'ancien index terminait le processus. Même correctif que `ClubView`.
+            guard let current = feed.firstIndex(where: { $0.id == item.id }) else { return }
+            feed[current].kudoedByMe = wasKudoed
+            feed[current].kudos += wasKudoed ? 1 : -1
             appState.toast("Kudos non envoyé — vérifie ta connexion.")
         }
     }

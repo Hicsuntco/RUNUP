@@ -25,13 +25,33 @@ struct AddRunSheet: View {
 
     private static let titles = ["Footing", "Sortie longue", "Fractionné", "Tempo run", "Autre"]
 
+    /// Plafonds volontairement larges — le record du monde du 24 h est à ~320 km, et une sortie
+    /// ne dure pas plus d'une journée. Ils n'existent pas pour juger la performance mais pour
+    /// borner ce qui descend ensuite dans les records, la charge d'entraînement et le graphe
+    /// d'allure : une seule saisie à 5000 km les fausse durablement, sans moyen de comprendre
+    /// pourquoi.
+    private static let maxDistanceKm: Double = 500
+    private static let maxDurationMinutes: Double = 1440
+
+    /// `Double(_:)` accepte « 1e30 », « inf » et « nan » — pas seulement ce qu'un clavier
+    /// numérique produit, mais exactement ce qu'un collage produit. Sans le test de finitude,
+    /// `Int(seconds)` plus bas est un piège FATAL en Swift : convertir un flottant hors bornes en
+    /// entier ne renvoie pas une valeur écrêtée, ça termine le processus.
     private var distance: Double? {
-        Double(distanceText.replacingOccurrences(of: ",", with: "."))
+        guard let value = Double(distanceText.replacingOccurrences(of: ",", with: ".")),
+              value.isFinite else { return nil }
+        return value
     }
     private var durationMinutes: Double? {
-        Double(durationMinutesText.replacingOccurrences(of: ",", with: "."))
+        guard let value = Double(durationMinutesText.replacingOccurrences(of: ",", with: ".")),
+              value.isFinite else { return nil }
+        return value
     }
-    private var isValid: Bool { (distance ?? 0) > 0 && (durationMinutes ?? 0) > 0 }
+    private var isValid: Bool {
+        guard let distance, let durationMinutes else { return false }
+        return distance > 0 && distance <= Self.maxDistanceKm
+            && durationMinutes > 0 && durationMinutes <= Self.maxDurationMinutes
+    }
     private var selectedShoeName: String {
         activeShoes.first { $0.id == selectedShoeID }?.name ?? "Aucune"
     }
@@ -81,7 +101,10 @@ struct AddRunSheet: View {
     }
 
     private func save() {
-        guard let distance, let durationMinutes else { return }
+        // `isValid` garde déjà le bouton, mais on revérifie ici : c'est la seule barrière entre
+        // une valeur saisie et une conversion en entier qui termine le processus si elle déborde.
+        // Une garde en double sur ce chemin coûte une ligne.
+        guard isValid, let distance, let durationMinutes else { return }
         let seconds = durationMinutes * 60
         let secPerKm = seconds / distance
         let run = RunRecord(

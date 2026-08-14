@@ -219,15 +219,43 @@ enum AdaptivePlanEngine {
     private static func refreshFreeRunWeekStrip(_ profile: UserProfile) {
         let today = currentWeekdayIndex()
         let cal = mondayCalendar
-        // Already tracking the real day — skip the reassignment so this doesn't re-animate the
-        // strip on every single foreground/launch, only when the day has actually changed.
-        if let current = profile.weekStrip.first(where: { $0.state == .today }), cal.isDateInToday(current.date) {
+        let startOfThisWeek = cal.dateInterval(of: .weekOfYear, for: .now)?.start ?? .now
+
+        // Le garde-fou porte sur la DATE de la case du jour, pas sur son état.
+        //
+        // Il testait « existe-t-il encore une case `.today` ». Or `applyDebrief` transforme
+        // précisément cette case en `.done` : après une séance validée, plus aucune case n'est
+        // `.today`, le garde-fou tombait, et la reconstruction repartait au prochain retour au
+        // premier plan. Comme le `map` ci-dessous ne connaît que `.today`/`.rest`/`.upcoming`, la
+        // coche disparaissait — aucune séance validée en course libre ne survivait jamais.
+        if let currentDay = profile.weekStrip.first(where: { $0.weekday == today }),
+           cal.isDateInToday(currentDay.date) {
             return
         }
-        let startOfThisWeek = cal.dateInterval(of: .weekOfYear, for: .now)?.start ?? .now
+
+        // Les jours déjà faits sont préservés, comme le fait `applyProgramSettingsChange` — même
+        // règle : reconstruire la semaine ne doit jamais effacer ce qui a eu lieu.
+        //
+        // Mais UNIQUEMENT si la bande affichée est bien celle de la semaine en cours. Sans ce
+        // test, on tomberait dans le défaut symétrique : au passage au lundi, les coches de la
+        // semaine écoulée seraient recopiées sur la nouvelle, et la semaine démarrerait avec des
+        // séances déjà validées qui n'ont pas eu lieu.
+        let stripIsCurrentWeek = profile.weekStrip.contains {
+            cal.dateInterval(of: .weekOfYear, for: $0.date)?.start == startOfThisWeek
+        }
+        let doneDays = stripIsCurrentWeek
+            ? Set(profile.weekStrip.filter { $0.state == .done }.map(\.weekday))
+            : []
         profile.weekStrip = (0..<7).map { i in
             let date = cal.date(byAdding: .day, value: i, to: startOfThisWeek) ?? .now
-            let state: DayStatus.State = i == today ? .today : (i < today ? .rest : .upcoming)
+            let state: DayStatus.State
+            if doneDays.contains(i) {
+                state = .done
+            } else if i == today {
+                state = .today
+            } else {
+                state = i < today ? .rest : .upcoming
+            }
             return DayStatus(weekday: i, letter: DayStatus.letters[i], state: state, date: date)
         }
     }

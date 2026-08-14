@@ -1414,8 +1414,15 @@ struct ClubView: View {
         } catch {
             // Roll back on failure — the optimistic toggle above was wrong. With feedback: a clap
             // that silently un-claps itself just reads as a broken button.
-            feed[index].kudoedByMe = wasKudoed
-            feed[index].kudos += wasKudoed ? 1 : -1
+            //
+            // L'index est RECHERCHÉ À NOUVEAU, jamais celui capturé avant l'`await` : le fil a pu
+            // rétrécir pendant la requête (suppression d'une de ses propres activités, blocage
+            // d'un membre, rafraîchissement qui rend une liste plus courte), et écrire à l'ancien
+            // index terminait alors le processus. Si l'activité a disparu entre-temps, il n'y a
+            // plus rien à annuler — l'entrée n'est plus à l'écran.
+            guard let current = feed.firstIndex(where: { $0.id == item.id }) else { return }
+            feed[current].kudoedByMe = wasKudoed
+            feed[current].kudos += wasKudoed ? 1 : -1
             appState.toast("Kudos non envoyé — vérifie ta connexion.")
         }
     }

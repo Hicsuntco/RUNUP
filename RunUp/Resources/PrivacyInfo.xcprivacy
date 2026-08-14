@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Manifeste de confidentialité — OBLIGATOIRE depuis mai 2024. Sans lui, App Store Connect refuse
+  le binaire à l'envoi (ITMS-91053 : « Missing API declaration »), avant même toute revue humaine.
+
+  Deux sections, qui répondent à deux questions différentes :
+
+  · NSPrivacyAccessedAPITypes — pourquoi l'app appelle certaines API dites « à motif obligatoire ».
+    Ici une seule : UserDefaults, utilisée par sept fichiers (Analytics, ClubActivityOutbox,
+    NotificationService, ReferralLinkHandler, WatchSessionService, DailyGoalsSnapshot,
+    OnboardingDraftStore). Motif CA92.1 : accès aux seules données de CETTE app et de son groupe
+    d'app (l'extension widget lit `DailyGoalsSnapshot` par le groupe partagé), jamais aux
+    préférences d'une autre.
+
+  · NSPrivacyCollectedDataTypes — ce qui part réellement vers le serveur. Cette liste alimente le
+    rapport de confidentialité qu'Xcode génère et doit CONCORDER avec la fiche App Store Connect :
+    une divergence est un motif de rejet à part entière. Elle est donc écrite d'après ce que le
+    code envoie, pas d'après ce qu'on aimerait envoyer.
+
+  Ce qui n'est délibérément PAS déclaré, parce que ça ne quitte pas l'appareil :
+  · La localisation. Le tracé GPS n'est jamais transmis — aucune colonne de route n'existe côté
+    serveur. La distance et l'allure qui, elles, sont postées se déclarent en « Fitness », pas en
+    « Location » : ce sont des mesures d'exercice, pas des positions.
+  · Les données lues dans Apple Santé (pas, calories, sommeil, fréquence cardiaque). Vérifié corps
+    de requête par corps de requête : rien de ce qui vient de HealthKit ne part vers le serveur.
+
+  NSPrivacyTracking reste false et le domaine de suivi vide : aucun SDK tiers, aucun IDFA, aucune
+  mise en relation avec des données d'un autre éditeur.
+-->
+<plist version="1.0">
+<dict>
+  <key>NSPrivacyTracking</key>
+  <false/>
+
+  <key>NSPrivacyTrackingDomains</key>
+  <array/>
+
+  <key>NSPrivacyAccessedAPITypes</key>
+  <array>
+    <dict>
+      <key>NSPrivacyAccessedAPIType</key>
+      <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+      <key>NSPrivacyAccessedAPITypeReasons</key>
+      <array>
+        <string>CA92.1</string>
+      </array>
+    </dict>
+  </array>
+
+  <key>NSPrivacyCollectedDataTypes</key>
+  <array>
+    <!-- Compte email/mot de passe. L'identifiant Apple n'expose pas d'adresse relayée ici. -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeEmailAddress</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+      </array>
+    </dict>
+
+    <!-- Prénom, nom et pseudo : ce que voient les autres membres d'un club. -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeName</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+      </array>
+    </dict>
+
+    <!-- Photo de profil, stockée sur le CDN et servie aux membres du club. -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypePhotosorVideos</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+      </array>
+    </dict>
+
+    <!-- Distance, durée, allure, dénivelé et record d'une sortie postée au fil du club. -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeFitness</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+      </array>
+    </dict>
+
+    <!--
+      Santé. Déclaré parce que le contexte envoyé au coach conversationnel contient le poids, le
+      poids cible, la taille, la zone de blessure et la phase du cycle menstruel — voir
+      `CoachService.systemPrompt(for:)`. Rien ne vient d'Apple Santé : ce sont les réponses saisies
+      à l'onboarding.
+
+      TODO(privacy) : la phase du cycle relève de l'article 9 du RGPD (donnée sensible) et exige un
+      consentement EXPLICITE, distinct. Aujourd'hui elle part sans que le réglage correspondant ne
+      mentionne aucune transmission. Deux issues possibles, et c'est une décision produit : soit
+      recueillir ce consentement, soit cesser de l'inclure dans le prompt — auquel cas cette entrée
+      doit être retirée d'ici.
+    -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeHealth</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+      </array>
+    </dict>
+
+    <!-- Messages au coach, texte des activités, commentaires, bio, sorties de groupe. -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeOtherUserContent</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+      </array>
+    </dict>
+
+    <!-- Identifiant de compte. -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeUserID</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+      </array>
+    </dict>
+
+    <!--
+      Identifiant d'appareil : le jeton APNs, et l'identifiant anonyme de mesure d'audience.
+      Déclaré LIÉ, et c'est volontaire : `api/events.js` écrit l'identifiant anonyme et
+      l'identifiant de compte sur la même ligne, donc le lien existe réellement. Le déclarer
+      « non lié » serait faux tant que cette écriture perdure.
+    -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeDeviceID</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+        <string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
+      </array>
+    </dict>
+
+    <!-- Les douze événements de parcours (ouverture, étapes d'inscription, course, coach, club). -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeProductInteraction</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
+      </array>
+    </dict>
+  </array>
+</dict>
+</plist>

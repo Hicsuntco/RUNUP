@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Manifeste de l'extension widget. Chaque bundle livré en porte un : l'extension est signée et
+  envoyée séparément de l'app, donc le manifeste de l'app ne la couvre pas.
+
+  Elle n'appelle qu'une API à motif obligatoire — UserDefaults, via `DailyGoalsSnapshot`
+  (RunUp/Shared, compilé dans les deux cibles), qui lit l'instantané des objectifs du jour déposé
+  par l'app dans le groupe partagé `group.com.hicsuntco.runup`. Motif CA92.1 : données de cette
+  app et de son groupe uniquement.
+
+  Aucune collecte : le widget ne fait que LIRE un instantané local et le dessiner. Il n'a pas de
+  réseau, pas de compte, et n'envoie rien nulle part — d'où `NSPrivacyCollectedDataTypes` vide,
+  qui est une déclaration à part entière et non un oubli.
+-->
+<plist version="1.0">
+<dict>
+  <key>NSPrivacyTracking</key>
+  <false/>
+
+  <key>NSPrivacyTrackingDomains</key>
+  <array/>
+
+  <key>NSPrivacyCollectedDataTypes</key>
+  <array/>
+
+  <key>NSPrivacyAccessedAPITypes</key>
+  <array>
+    <dict>
+      <key>NSPrivacyAccessedAPIType</key>
+      <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+      <key>NSPrivacyAccessedAPITypeReasons</key>
+      <array>
+        <string>CA92.1</string>
+      </array>
+    </dict>
+  </array>
+</dict>
+</plist>

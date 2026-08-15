@@ -6,12 +6,12 @@ import Foundation
 /// callers (ViewModels) pass in a `UserProfile` to mutate and get back a toast string.
 enum AdaptivePlanEngine {
     static let freeRunTemplates: [WorkoutSession] = [
-        WorkoutSession(title: "Footing d'entretien", subtitle: "allure confort · reconnecte avec le plaisir de courir", durationMinutes: 35, pace: "5:40", zone: "Z2", adjustment: nil),
-        WorkoutSession(title: "Fractionné léger 5 × 500 m", subtitle: "récup 300 m · garde le tonus sans se cramer", durationMinutes: 32, pace: "4:35", zone: "Z3", adjustment: nil),
-        WorkoutSession(title: "Sortie découverte", subtitle: "change d'itinéraire, explore un nouveau parcours", durationMinutes: 45, pace: "5:30", zone: "Z2", adjustment: nil)
+        WorkoutSession(title: "Footing d'entretien", subtitle: "allure confort · reconnecte avec le plaisir de courir", durationMinutes: 35, pace: "5:40", zone: "Z2", adjustment: nil, kind: .freeRunMaintenance),
+        WorkoutSession(title: "Fractionné léger 5 × 500 m", subtitle: "récup 300 m · garde le tonus sans se cramer", durationMinutes: 32, pace: "4:35", zone: "Z3", adjustment: nil, kind: .freeRunLightIntervals, intervals: IntervalStructure(reps: 5, repMeters: 500, recoveryMeters: 300)),
+        WorkoutSession(title: "Sortie découverte", subtitle: "change d'itinéraire, explore un nouveau parcours", durationMinutes: 45, pace: "5:30", zone: "Z2", adjustment: nil, kind: .freeRunDiscovery)
     ]
 
-    static let restSession = WorkoutSession(title: "Repos", subtitle: "Jour de repos — laisse ton corps récupérer", durationMinutes: 0, pace: "—", zone: "—", adjustment: nil)
+    static let restSession = WorkoutSession(title: "Repos", subtitle: "Jour de repos — laisse ton corps récupérer", durationMinutes: 0, pace: "—", zone: "—", adjustment: nil, kind: .rest)
 
     // MARK: Onboarding → initial program
 
@@ -488,11 +488,19 @@ enum AdaptivePlanEngine {
 
     private struct SessionArchetype {
         var role: SessionRole
+        /// Le texte français, conservé pour être écrit dans `WorkoutSession.title` : les plans
+        /// déjà enregistrés n'ont pas de `kind`, et ce champ reste leur seul contenu lisible.
+        /// Pour tout plan généré désormais, c'est `kind` qui décide de ce qui s'affiche.
         var title: String
         var subtitle: String
         var pace: String
         var zone: String
         var baseDuration: Int
+        /// L'identité indépendante de la langue — voir `SessionKind`.
+        var kind: SessionKind
+        /// La structure en répétitions, quand l'archétype en a une. Elle était jusqu'ici déduite
+        /// du titre par expression régulière, donc perdue dès qu'on traduisait le titre.
+        var intervals: IntervalStructure? = nil
     }
 
     /// Reference distance (km) the long run scales toward — the user's real race distance when
@@ -530,9 +538,9 @@ enum AdaptivePlanEngine {
                 weekInBlock: pos.index, blockWeeks: pos.count
             )
             base = [
-                SessionArchetype(role: .easy, title: "Footing tranquille", subtitle: "installe l'endurance de fond, allure confort", pace: zones.easy, zone: "Z2", baseDuration: 30),
-                SessionArchetype(role: .speed, title: "Fractionné léger 5 × 500 m", subtitle: "récup 300 m · garde le tonus sans se cramer", pace: zones.threshold, zone: "Z3", baseDuration: 32),
-                SessionArchetype(role: .longRun, title: "Sortie longue", subtitle: "allonge progressivement la distance", pace: zones.easy, zone: "Z2", baseDuration: longRunDuration(longRunKm))
+                SessionArchetype(role: .easy, title: "Footing tranquille", subtitle: "installe l'endurance de fond, allure confort", pace: zones.easy, zone: "Z2", baseDuration: 30, kind: .easyFooting),
+                SessionArchetype(role: .speed, title: "Fractionné léger 5 × 500 m", subtitle: "récup 300 m · garde le tonus sans se cramer", pace: zones.threshold, zone: "Z3", baseDuration: 32, kind: .lightIntervals, intervals: IntervalStructure(reps: 5, repMeters: 500, recoveryMeters: 300)),
+                SessionArchetype(role: .longRun, title: "Sortie longue", subtitle: "allonge progressivement la distance", pace: zones.easy, zone: "Z2", baseDuration: longRunDuration(longRunKm, kind: .longRun))
             ]
         case .specifique:
             let pos = buildWeekPosition(
@@ -545,22 +553,22 @@ enum AdaptivePlanEngine {
                 weekInBlock: pos.index, blockWeeks: pos.count
             )
             base = [
-                SessionArchetype(role: .speed, title: "Fractionné VMA 6 × 800 m", subtitle: "récup 400 m · travaille la vitesse", pace: zones.interval, zone: "Z4", baseDuration: 40),
-                SessionArchetype(role: .speed, title: "Tempo run", subtitle: "allure seuil soutenue", pace: zones.threshold, zone: "Z3", baseDuration: 35),
+                SessionArchetype(role: .speed, title: "Fractionné VMA 6 × 800 m", subtitle: "récup 400 m · travaille la vitesse", pace: zones.interval, zone: "Z4", baseDuration: 40, kind: .vo2maxIntervals, intervals: IntervalStructure(reps: 6, repMeters: 800, recoveryMeters: 400)),
+                SessionArchetype(role: .speed, title: "Tempo run", subtitle: "allure seuil soutenue", pace: zones.threshold, zone: "Z3", baseDuration: 35, kind: .tempoRun),
                 // Endurance fondamentale, added because the Spécifique block used to contain ONLY
                 // quality work outside the long run: with 4-5 running days the week generated 3-4
                 // hard sessions and not a single easy run, the inverse of the ~80/20 polarized
                 // model every modern endurance periodization is built on. `generateWeekSessions`
                 // additionally caps quality at 2/week, which this archetype absorbs.
-                SessionArchetype(role: .easy, title: "Footing endurance", subtitle: "allure facile — le socle aérobie, pas une séance au rabais", pace: zones.easy, zone: "Z2", baseDuration: 35),
-                SessionArchetype(role: .longRun, title: "Sortie longue", subtitle: "bloc spécifique, un peu d'allure course", pace: zones.marathon, zone: "Z2-3", baseDuration: longRunDuration(longRunKm))
+                SessionArchetype(role: .easy, title: "Footing endurance", subtitle: "allure facile — le socle aérobie, pas une séance au rabais", pace: zones.easy, zone: "Z2", baseDuration: 35, kind: .enduranceFooting),
+                SessionArchetype(role: .longRun, title: "Sortie longue", subtitle: "bloc spécifique, un peu d'allure course", pace: zones.marathon, zone: "Z2-3", baseDuration: longRunDuration(longRunKm, kind: .specificLongRun))
             ]
         case .affutage:
             let longRunKm = max(6, raceKm * 0.35)
             base = [
-                SessionArchetype(role: .easy, title: "Footing d'entretien", subtitle: "relâché, garde les jambes fraîches", pace: zones.easy, zone: "Z2", baseDuration: 25),
-                SessionArchetype(role: .speed, title: "Rappel d'allure 3 × 1 km", subtitle: "à l'allure visée le jour J", pace: zones.marathon, zone: "Z3", baseDuration: 25),
-                SessionArchetype(role: .longRun, title: "Sortie courte", subtitle: "décharge avant l'objectif", pace: zones.easy, zone: "Z2", baseDuration: longRunDuration(longRunKm))
+                SessionArchetype(role: .easy, title: "Footing d'entretien", subtitle: "relâché, garde les jambes fraîches", pace: zones.easy, zone: "Z2", baseDuration: 25, kind: .maintenanceFooting),
+                SessionArchetype(role: .speed, title: "Rappel d'allure 3 × 1 km", subtitle: "à l'allure visée le jour J", pace: zones.marathon, zone: "Z3", baseDuration: 25, kind: .racePaceReminder, intervals: IntervalStructure(reps: 3, repMeters: 1000, recoveryMeters: nil)),
+                SessionArchetype(role: .longRun, title: "Sortie courte", subtitle: "décharge avant l'objectif", pace: zones.easy, zone: "Z2", baseDuration: longRunDuration(longRunKm, kind: .shortRun))
             ]
         case .deload:
             // A cutback is ~65% of the load actually being carried right now, not a flat distance.
@@ -581,9 +589,9 @@ enum AdaptivePlanEngine {
                 carriedKm = min(raceKm * 0.4, 8)
             }
             base = [
-                SessionArchetype(role: .easy, title: "Footing récup", subtitle: "coupe le volume, écoute tes jambes", pace: zones.easy, zone: "Z1-2", baseDuration: 22),
-                SessionArchetype(role: .speed, title: "Footing tonique", subtitle: "quelques accélérations libres, sans chrono", pace: zones.threshold, zone: "Z2-3", baseDuration: 28),
-                SessionArchetype(role: .longRun, title: "Sortie longue allégée", subtitle: "aucune pression de distance cette semaine", pace: zones.easy, zone: "Z2", baseDuration: longRunDuration(max(5, carriedKm * 0.65)))
+                SessionArchetype(role: .easy, title: "Footing récup", subtitle: "coupe le volume, écoute tes jambes", pace: zones.easy, zone: "Z1-2", baseDuration: 22, kind: .recoveryFooting),
+                SessionArchetype(role: .speed, title: "Footing tonique", subtitle: "quelques accélérations libres, sans chrono", pace: zones.threshold, zone: "Z2-3", baseDuration: 28, kind: .stridesFooting),
+                SessionArchetype(role: .longRun, title: "Sortie longue allégée", subtitle: "aucune pression de distance cette semaine", pace: zones.easy, zone: "Z2", baseDuration: longRunDuration(max(5, carriedKm * 0.65, kind: .easedLongRun)))
             ]
         }
 
@@ -605,27 +613,27 @@ enum AdaptivePlanEngine {
         switch block {
         case .base:
             base = [
-                SessionArchetype(role: .easy, title: "Footing base HYROX", subtitle: "endurance de fond — construit le volume de course du format", pace: zones.easy, zone: "Z2", baseDuration: 30),
-                SessionArchetype(role: .speed, title: "Fonctionnel HYROX · Technique", subtitle: "SkiErg, rameur, farmers carry, wall balls — travaille le geste, \(loadNote) légère", pace: "—", zone: "Technique", baseDuration: 35),
-                SessionArchetype(role: .longRun, title: "Course compromise 3 × 1 km", subtitle: "course + bloc fonctionnel entre chaque km — apprivoise la fatigue du format", pace: zones.easy, zone: "Z2-3", baseDuration: 40)
+                SessionArchetype(role: .easy, title: "Footing base HYROX", subtitle: "endurance de fond — construit le volume de course du format", pace: zones.easy, zone: "Z2", baseDuration: 30, kind: .hyroxBaseFooting),
+                SessionArchetype(role: .speed, title: "Fonctionnel HYROX · Technique", subtitle: "SkiErg, rameur, farmers carry, wall balls — travaille le geste, \(loadNote) légère", pace: "—", zone: "Technique", baseDuration: 35, kind: division == .pro ? .hyroxTechniquePro : .hyroxTechnique),
+                SessionArchetype(role: .longRun, title: "Course compromise 3 × 1 km", subtitle: "course + bloc fonctionnel entre chaque km — apprivoise la fatigue du format", pace: zones.easy, zone: "Z2-3", baseDuration: 40, kind: .hyroxCompromisedRun3, intervals: IntervalStructure(reps: 3, repMeters: 1000, recoveryMeters: nil))
             ]
         case .specifique:
             base = [
-                SessionArchetype(role: .speed, title: "Fonctionnel HYROX · Circuit intense", subtitle: "stations enchaînées à intensité course, sous fatigue, \(loadNote)", pace: "—", zone: "Z3-4", baseDuration: 40),
-                SessionArchetype(role: .speed, title: "Tempo course + sled", subtitle: "allure seuil entrecoupée de sled push/pull", pace: zones.threshold, zone: "Z3", baseDuration: 35),
-                SessionArchetype(role: .longRun, title: "Course compromise 6 × 1 km", subtitle: "simulation partielle : course + fonctionnel enchaînés, rythme course visé", pace: zones.marathon, zone: "Z3", baseDuration: 55)
+                SessionArchetype(role: .speed, title: "Fonctionnel HYROX · Circuit intense", subtitle: "stations enchaînées à intensité course, sous fatigue, \(loadNote)", pace: "—", zone: "Z3-4", baseDuration: 40, kind: division == .pro ? .hyroxIntenseCircuitPro : .hyroxIntenseCircuit),
+                SessionArchetype(role: .speed, title: "Tempo course + sled", subtitle: "allure seuil entrecoupée de sled push/pull", pace: zones.threshold, zone: "Z3", baseDuration: 35, kind: .hyroxTempoSled),
+                SessionArchetype(role: .longRun, title: "Course compromise 6 × 1 km", subtitle: "simulation partielle : course + fonctionnel enchaînés, rythme course visé", pace: zones.marathon, zone: "Z3", baseDuration: 55, kind: .hyroxCompromisedRun6, intervals: IntervalStructure(reps: 6, repMeters: 1000, recoveryMeters: nil))
             ]
         case .affutage:
             base = [
-                SessionArchetype(role: .easy, title: "Footing d'entretien", subtitle: "relâché, garde les jambes et les bras frais", pace: zones.easy, zone: "Z2", baseDuration: 25),
-                SessionArchetype(role: .speed, title: "Rappel technique stations", subtitle: "gestes affûtés, charge légère, aucune fatigue à accumuler", pace: "—", zone: "Technique", baseDuration: 25),
-                SessionArchetype(role: .longRun, title: "Simulation HYROX allégée", subtitle: "format complet à intensité réduite — dernière répétition avant le jour J", pace: zones.marathon, zone: "Z2-3", baseDuration: 45)
+                SessionArchetype(role: .easy, title: "Footing d'entretien", subtitle: "relâché, garde les jambes et les bras frais", pace: zones.easy, zone: "Z2", baseDuration: 25, kind: .hyroxMaintenanceFooting),
+                SessionArchetype(role: .speed, title: "Rappel technique stations", subtitle: "gestes affûtés, charge légère, aucune fatigue à accumuler", pace: "—", zone: "Technique", baseDuration: 25, kind: .hyroxStationsReminder),
+                SessionArchetype(role: .longRun, title: "Simulation HYROX allégée", subtitle: "format complet à intensité réduite — dernière répétition avant le jour J", pace: zones.marathon, zone: "Z2-3", baseDuration: 45, kind: .hyroxLightSimulation)
             ]
         case .deload:
             base = [
-                SessionArchetype(role: .easy, title: "Footing récup", subtitle: "coupe le volume, écoute ton corps", pace: zones.easy, zone: "Z1-2", baseDuration: 22),
-                SessionArchetype(role: .speed, title: "Fonctionnel léger", subtitle: "mobilité et gestes techniques, sans charge", pace: "—", zone: "Récup", baseDuration: 25),
-                SessionArchetype(role: .longRun, title: "Course compromise légère 2 × 1 km", subtitle: "aucune pression de chrono cette semaine", pace: zones.easy, zone: "Z2", baseDuration: 30)
+                SessionArchetype(role: .easy, title: "Footing récup", subtitle: "coupe le volume, écoute ton corps", pace: zones.easy, zone: "Z1-2", baseDuration: 22, kind: .hyroxRecoveryFooting),
+                SessionArchetype(role: .speed, title: "Fonctionnel léger", subtitle: "mobilité et gestes techniques, sans charge", pace: "—", zone: "Récup", baseDuration: 25, kind: .hyroxLightFunctional),
+                SessionArchetype(role: .longRun, title: "Course compromise légère 2 × 1 km", subtitle: "aucune pression de chrono cette semaine", pace: zones.easy, zone: "Z2", baseDuration: 30, kind: .hyroxCompromisedRunLight2, intervals: IntervalStructure(reps: 2, repMeters: 1000, recoveryMeters: nil))
             ]
         }
 
@@ -766,7 +774,9 @@ enum AdaptivePlanEngine {
                 durationMinutes: duration,
                 pace: archetype.pace,
                 zone: archetype.zone,
-                adjustment: (tier > 1 && !isTaper) ? "Niveau \(tier)" : nil
+                adjustment: (tier > 1 && !isTaper) ? "Niveau \(tier)" : nil,
+                kind: archetype.kind,
+                intervals: archetype.intervals
             )
             return PlannedDay(weekday: weekday, session: session)
         }

@@ -178,10 +178,10 @@ struct PlanView: View {
             Text(letter).displayStyle(10).foregroundColor(RUColor.text2).frame(width: 26, alignment: .leading)
             dayIcon(session: session, isRest: isRest, completed: day.completed, isToday: isToday)
             VStack(alignment: .leading, spacing: 1) {
-                Text(session?.title ?? "Repos")
+                Text(session?.displayTitle ?? "Repos")
                     .font(RUFont.sans(12.5, weight: isToday ? .semibold : .regular))
                     .foregroundColor(isRest ? RUColor.text3 : RUColor.textPrimary)
-                if let subtitle = session?.subtitle, !isRest {
+                if let subtitle = session?.displaySubtitle, !isRest {
                     Text(subtitle).font(RUFont.sans(10)).foregroundColor(RUColor.text3).lineLimit(2)
                 }
             }
@@ -243,7 +243,7 @@ struct PlanView: View {
 
     private func dayRowAccessibilityLabel(day: PlannedDay, isToday: Bool, isRest: Bool) -> String {
         var parts: [String] = [isToday ? "\(DayStatus.fullNames[day.weekday]), aujourd'hui" : DayStatus.fullNames[day.weekday]]
-        parts.append(isRest ? "repos" : (day.session?.title ?? "repos"))
+        parts.append(isRest ? "repos" : (day.session?.displayTitle ?? "repos"))
         if let session = day.session, !isRest {
             parts.append("\(session.durationMinutes) minutes, \(session.zone), allure \(session.pace) par kilomètre")
         }

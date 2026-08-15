@@ -69,7 +69,7 @@ struct CoachView: View {
     /// the real `readiness` score (even a low one) and regardless of whether any real data backed
     /// it at all — gated on `hasReadinessData` so it's honest instead.
     private var welcomeMessage: String {
-        let sessionPart = "J'ai relevé ta séance à \(profile.todaySession.title)."
+        let sessionPart = "J'ai relevé ta séance à \(profile.todaySession.displayTitle)."
         guard profile.hasReadinessData else {
             return "Salut \(profile.name) 👋 \(sessionPart) Une question avant de te lancer ?"
         }

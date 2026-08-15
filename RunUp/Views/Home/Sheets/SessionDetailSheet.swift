@@ -94,7 +94,7 @@ struct SessionDetailSheet: View {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
                         EyebrowLabel(text: isRestDay ? "Aujourd'hui" : "Séance clé", color: RUColor.rose)
-                        Text(session.title).displayStyle(26).foregroundColor(RUColor.textPrimary)
+                        Text(session.displayTitle).displayStyle(26).foregroundColor(RUColor.textPrimary)
                     }
                     Spacer()
                     if let adj = session.adjustment {
@@ -104,7 +104,7 @@ struct SessionDetailSheet: View {
                 .padding(.top, 8)
 
                 if isRestDay {
-                    Text(session.subtitle)
+                    Text(session.displaySubtitle)
                         .font(RUFont.sans(13)).foregroundColor(RUColor.text2).lineSpacing(3)
                         .padding(.top, 16)
                 } else {

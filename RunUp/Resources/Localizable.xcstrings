@@ -12032,6 +12032,1478 @@
           }
         }
       }
+    },
+    "session.easy_footing.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Footing tranquille"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Easy run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rodaje suave"
+          }
+        }
+      }
+    },
+    "session.easy_footing.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "installe l'endurance de fond, allure confort"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "builds base endurance, comfortable pace"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "construye la resistencia de base, ritmo cómodo"
+          }
+        }
+      }
+    },
+    "session.light_intervals.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fractionné léger 5 × 500 m"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light intervals 5 × 500 m"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Series ligeras 5 × 500 m"
+          }
+        }
+      }
+    },
+    "session.light_intervals.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "récup 300 m · garde le tonus sans se cramer"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "300 m recovery · stay sharp without burning out"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "300 m de recuperación · mantén el tono sin quemarte"
+          }
+        }
+      }
+    },
+    "session.long_run.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sortie longue"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Long run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tirada larga"
+          }
+        }
+      }
+    },
+    "session.long_run.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "allonge progressivement la distance"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "builds distance gradually"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "aumenta la distancia progresivamente"
+          }
+        }
+      }
+    },
+    "session.vo2max_intervals.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fractionné VMA 6 × 800 m"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VO2max intervals 6 × 800 m"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Series VO2máx 6 × 800 m"
+          }
+        }
+      }
+    },
+    "session.vo2max_intervals.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "récup 400 m · travaille la vitesse"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "400 m recovery · works on speed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "400 m de recuperación · trabaja la velocidad"
+          }
+        }
+      }
+    },
+    "session.tempo_run.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tempo run"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tempo run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tempo"
+          }
+        }
+      }
+    },
+    "session.tempo_run.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "allure seuil soutenue"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sustained threshold pace"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ritmo umbral sostenido"
+          }
+        }
+      }
+    },
+    "session.endurance_footing.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Footing endurance"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Endurance run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rodaje de resistencia"
+          }
+        }
+      }
+    },
+    "session.endurance_footing.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "allure facile — le socle aérobie, pas une séance au rabais"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "easy pace — the aerobic base, not a lesser session"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ritmo fácil — la base aeróbica, no una sesión menor"
+          }
+        }
+      }
+    },
+    "session.specific_long_run.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sortie longue"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Long run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tirada larga"
+          }
+        }
+      }
+    },
+    "session.specific_long_run.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bloc spécifique, un peu d'allure course"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "specific block, some race pace"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bloque específico, algo de ritmo de carrera"
+          }
+        }
+      }
+    },
+    "session.maintenance_footing.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Footing d'entretien"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maintenance run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rodaje de mantenimiento"
+          }
+        }
+      }
+    },
+    "session.maintenance_footing.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "relâché, garde les jambes fraîches"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "relaxed, keeps the legs fresh"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "suelto, mantiene las piernas frescas"
+          }
+        }
+      }
+    },
+    "session.race_pace_reminder.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rappel d'allure 3 × 1 km"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Race-pace reminder 3 × 1 km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordatorio de ritmo 3 × 1 km"
+          }
+        }
+      }
+    },
+    "session.race_pace_reminder.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "à l'allure visée le jour J"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "at your target race-day pace"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "al ritmo objetivo del día de la carrera"
+          }
+        }
+      }
+    },
+    "session.short_run.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sortie courte"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Short run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tirada corta"
+          }
+        }
+      }
+    },
+    "session.short_run.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "décharge avant l'objectif"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cutback before the goal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "descarga antes del objetivo"
+          }
+        }
+      }
+    },
+    "session.recovery_footing.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Footing récup"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recovery run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rodaje de recuperación"
+          }
+        }
+      }
+    },
+    "session.recovery_footing.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "coupe le volume, écoute tes jambes"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cuts the volume, listen to your legs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "reduce el volumen, escucha tus piernas"
+          }
+        }
+      }
+    },
+    "session.strides_footing.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Footing tonique"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strides run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rodaje con progresivos"
+          }
+        }
+      }
+    },
+    "session.strides_footing.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "quelques accélérations libres, sans chrono"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a few free strides, no stopwatch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "algunos progresivos libres, sin cronómetro"
+          }
+        }
+      }
+    },
+    "session.eased_long_run.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sortie longue allégée"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Easier long run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tirada larga aligerada"
+          }
+        }
+      }
+    },
+    "session.eased_long_run.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "aucune pression de distance cette semaine"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no distance pressure this week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sin presión de distancia esta semana"
+          }
+        }
+      }
+    },
+    "session.hyrox_base_footing.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Footing base HYROX"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HYROX base run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rodaje base HYROX"
+          }
+        }
+      }
+    },
+    "session.hyrox_base_footing.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "endurance de fond — construit le volume de course du format"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "base endurance — builds the format's running volume"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "resistencia de base — construye el volumen de carrera del formato"
+          }
+        }
+      }
+    },
+    "session.hyrox_technique.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fonctionnel HYROX · Technique"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HYROX functional · Technique"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funcional HYROX · Técnica"
+          }
+        }
+      }
+    },
+    "session.hyrox_technique.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SkiErg, rameur, farmers carry, wall balls — travaille le geste, charge standard légère"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SkiErg, rower, farmer's carry, wall balls — work the movement, light standard load"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SkiErg, remo, farmer's carry, wall balls — trabaja el gesto, carga estándar ligera"
+          }
+        }
+      }
+    },
+    "session.hyrox_technique_pro.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fonctionnel HYROX · Technique"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HYROX functional · Technique"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funcional HYROX · Técnica"
+          }
+        }
+      }
+    },
+    "session.hyrox_technique_pro.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SkiErg, rameur, farmers carry, wall balls — travaille le geste, charge renforcée légère"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SkiErg, rower, farmer's carry, wall balls — work the movement, light pro load"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SkiErg, remo, farmer's carry, wall balls — trabaja el gesto, carga pro ligera"
+          }
+        }
+      }
+    },
+    "session.hyrox_compromised_run_3.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Course compromise 3 × 1 km"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compromised run 3 × 1 km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carrera comprometida 3 × 1 km"
+          }
+        }
+      }
+    },
+    "session.hyrox_compromised_run_3.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "course + bloc fonctionnel entre chaque km — apprivoise la fatigue du format"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "run + functional block between each km — get used to the format's fatigue"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "carrera + bloque funcional entre cada km — acostúmbrate a la fatiga del formato"
+          }
+        }
+      }
+    },
+    "session.hyrox_intense_circuit.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fonctionnel HYROX · Circuit intense"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HYROX functional · Hard circuit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funcional HYROX · Circuito intenso"
+          }
+        }
+      }
+    },
+    "session.hyrox_intense_circuit.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "stations enchaînées à intensité course, sous fatigue, charge standard"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "stations back to back at race intensity, under fatigue, standard load"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "estaciones encadenadas a intensidad de carrera, bajo fatiga, carga estándar"
+          }
+        }
+      }
+    },
+    "session.hyrox_intense_circuit_pro.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fonctionnel HYROX · Circuit intense"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HYROX functional · Hard circuit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funcional HYROX · Circuito intenso"
+          }
+        }
+      }
+    },
+    "session.hyrox_intense_circuit_pro.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "stations enchaînées à intensité course, sous fatigue, charge renforcée"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "stations back to back at race intensity, under fatigue, pro load"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "estaciones encadenadas a intensidad de carrera, bajo fatiga, carga pro"
+          }
+        }
+      }
+    },
+    "session.hyrox_tempo_sled.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tempo course + sled"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tempo run + sled"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tempo + trineo"
+          }
+        }
+      }
+    },
+    "session.hyrox_tempo_sled.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "allure seuil entrecoupée de sled push/pull"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "threshold pace broken up by sled push/pull"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ritmo umbral intercalado con sled push/pull"
+          }
+        }
+      }
+    },
+    "session.hyrox_compromised_run_6.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Course compromise 6 × 1 km"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compromised run 6 × 1 km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carrera comprometida 6 × 1 km"
+          }
+        }
+      }
+    },
+    "session.hyrox_compromised_run_6.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "simulation partielle : course + fonctionnel enchaînés, rythme course visé"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "partial simulation: run + functional back to back, at target race rhythm"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "simulación parcial: carrera + funcional encadenados, al ritmo de carrera objetivo"
+          }
+        }
+      }
+    },
+    "session.hyrox_maintenance_footing.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Footing d'entretien"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maintenance run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rodaje de mantenimiento"
+          }
+        }
+      }
+    },
+    "session.hyrox_maintenance_footing.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "relâché, garde les jambes et les bras frais"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "relaxed, keeps legs and arms fresh"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "suelto, mantiene piernas y brazos frescos"
+          }
+        }
+      }
+    },
+    "session.hyrox_stations_reminder.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rappel technique stations"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Station technique reminder"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordatorio técnico de estaciones"
+          }
+        }
+      }
+    },
+    "session.hyrox_stations_reminder.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gestes affûtés, charge légère, aucune fatigue à accumuler"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sharp movements, light load, no fatigue to accumulate"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gestos afinados, carga ligera, sin acumular fatiga"
+          }
+        }
+      }
+    },
+    "session.hyrox_light_simulation.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simulation HYROX allégée"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lighter HYROX simulation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simulación HYROX aligerada"
+          }
+        }
+      }
+    },
+    "session.hyrox_light_simulation.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "format complet à intensité réduite — dernière répétition avant le jour J"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "full format at reduced intensity — last rehearsal before race day"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "formato completo a intensidad reducida — último ensayo antes del día de la carrera"
+          }
+        }
+      }
+    },
+    "session.hyrox_recovery_footing.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Footing récup"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recovery run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rodaje de recuperación"
+          }
+        }
+      }
+    },
+    "session.hyrox_recovery_footing.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "coupe le volume, écoute ton corps"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cuts the volume, listen to your body"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "reduce el volumen, escucha tu cuerpo"
+          }
+        }
+      }
+    },
+    "session.hyrox_light_functional.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fonctionnel léger"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light functional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funcional ligero"
+          }
+        }
+      }
+    },
+    "session.hyrox_light_functional.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mobilité et gestes techniques, sans charge"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mobility and technical movements, no load"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "movilidad y gestos técnicos, sin carga"
+          }
+        }
+      }
+    },
+    "session.hyrox_compromised_run_light_2.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Course compromise légère 2 × 1 km"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light compromised run 2 × 1 km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carrera comprometida ligera 2 × 1 km"
+          }
+        }
+      }
+    },
+    "session.hyrox_compromised_run_light_2.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "aucune pression de chrono cette semaine"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no clock pressure this week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sin presión de crono esta semana"
+          }
+        }
+      }
+    },
+    "session.rest.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repos"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rest"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descanso"
+          }
+        }
+      }
+    },
+    "session.rest.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jour de repos — laisse ton corps récupérer"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rest day — let your body recover"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Día de descanso — deja que tu cuerpo se recupere"
+          }
+        }
+      }
+    },
+    "session.comeback.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Footing de reprise"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comeback run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rodaje de vuelta"
+          }
+        }
+      }
+    },
+    "session.comeback.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on repart en douceur sur de nouvelles bases"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "easing back in on fresh foundations"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "volvemos con calma sobre bases nuevas"
+          }
+        }
+      }
+    },
+    "session.free_run_maintenance.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Footing d'entretien"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maintenance run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rodaje de mantenimiento"
+          }
+        }
+      }
+    },
+    "session.free_run_maintenance.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "allure confort · reconnecte avec le plaisir de courir"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "comfortable pace · reconnect with the joy of running"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ritmo cómodo · reconecta con el placer de correr"
+          }
+        }
+      }
+    },
+    "session.free_run_light_intervals.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fractionné léger 5 × 500 m"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light intervals 5 × 500 m"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Series ligeras 5 × 500 m"
+          }
+        }
+      }
+    },
+    "session.free_run_light_intervals.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "récup 300 m · garde le tonus sans se cramer"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "300 m recovery · stay sharp without burning out"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "300 m de recuperación · mantén el tono sin quemarte"
+          }
+        }
+      }
+    },
+    "session.free_run_discovery.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sortie découverte"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discovery run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tirada de descubrimiento"
+          }
+        }
+      }
+    },
+    "session.free_run_discovery.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "change d'itinéraire, explore un nouveau parcours"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "change your route, explore somewhere new"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cambia de ruta, explora un recorrido nuevo"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

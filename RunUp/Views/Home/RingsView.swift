@@ -79,7 +79,7 @@ struct RingsView: View {
     /// Only ever shown for today — nudging her about an already-past day makes no sense.
     private var coachNudge: String? {
         if !p.seanceDoneToday, p.todaySession.durationMinutes > 0 {
-            return "Ta séance du jour t'attend : \(p.todaySession.title) (\(p.todaySession.durationMinutes)′)."
+            return "Ta séance du jour t'attend : \(p.todaySession.displayTitle) (\(p.todaySession.durationMinutes)′)."
         }
         if p.activeCaloriesToday < p.activeCaloriesGoal {
             return "Encore \(remainingActiveCalories) kcal actives pour boucler l'objectif du jour."

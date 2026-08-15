@@ -453,7 +453,7 @@ final class LiveRunViewModel {
 
     private func startLiveActivity() {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
-        let attributes = RunActivityAttributes(sessionTitle: session.title, plannedDurationMinutes: session.durationMinutes)
+        let attributes = RunActivityAttributes(sessionTitle: session.displayTitle, plannedDurationMinutes: session.durationMinutes)
         let state = RunActivityAttributes.ContentState(distanceKm: 0, elapsedSeconds: 0, paceLabel: "--:--", isPaused: false, timerReference: Date())
         liveActivity = try? Activity.request(attributes: attributes, content: ActivityContent(state: state, staleDate: .now + 60), pushType: nil)
     }
@@ -495,7 +495,7 @@ final class LiveRunViewModel {
         voiceCoach?.stop()
         location.stop()
         let record = AdaptivePlanEngine.buildRunRecord(
-            title: session.title,
+            title: session.displayTitle,
             elapsedSeconds: elapsedSeconds,
             distanceKm: distanceKm,
             kcal: kcal,
@@ -533,7 +533,7 @@ final class LiveRunViewModel {
                 distanceMeters: location.distanceMeters,
                 elevationGainMeters: location.elevationGainMeters,
                 splitSecondsPerKm: splitSecondsPerKm,
-                sessionTitle: session.title,
+                sessionTitle: session.displayTitle,
                 route: zip(location.route, location.routeAltitudes).map { coord, altitude in
                     RunRecord.RoutePoint(lat: coord.latitude, lng: coord.longitude, altitude: altitude)
                 }

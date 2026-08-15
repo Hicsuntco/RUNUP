@@ -242,7 +242,7 @@ struct HomeView: View {
             // l'inverse de l'information. Le titre recule d'un cran et la carte se contente
             // d'une ligne, pour que le regard aille à l'anneau et aux chiffres de la semaine,
             // qui eux ont quelque chose à dire ce jour-là.
-            Text(session.title)
+            Text(session.displayTitle)
                 .displayStyle(isRestDay ? 18 : 23)
                 .foregroundColor(isRestDay ? RUColor.text2 : RUColor.textPrimary)
                 .padding(.top, 8)
@@ -251,16 +251,16 @@ struct HomeView: View {
                 // Le sous-titre du modèle et la phrase d'explication disaient déjà la même
                 // chose deux fois de suite (« Jour de repos — laisse ton corps récupérer », puis
                 // « Pas de séance prévue — profite-en pour récupérer »). Une seule suffit.
-                Text(session.subtitle)
+                Text(session.displaySubtitle)
                     .font(RUFont.sans(11)).foregroundColor(RUColor.text3)
                     .padding(.top, 4)
             } else if profile.seanceDoneToday {
-                Text(session.subtitle).font(RUFont.sans(11)).foregroundColor(RUColor.text2).padding(.top, 4)
+                Text(session.displaySubtitle).font(RUFont.sans(11)).foregroundColor(RUColor.text2).padding(.top, 4)
                 Text("Séance faite aujourd'hui ✓")
                     .font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.lime)
                     .padding(.top, 14)
             } else {
-                Text(session.subtitle).font(RUFont.sans(11)).foregroundColor(RUColor.text2).padding(.top, 4)
+                Text(session.displaySubtitle).font(RUFont.sans(11)).foregroundColor(RUColor.text2).padding(.top, 4)
                 HStack(spacing: 16) {
                     MetricColumn(value: "\(session.durationMinutes)′", label: "Durée")
                     MetricColumn(value: session.pace, label: "Allure")

@@ -42,7 +42,11 @@ struct NotificationsSheet: View {
                             Spacer(minLength: 0)
                         }
                         .padding(13)
-                        .ruCard(radius: 16, fill: RUColor.card2)
+                        // `card` et non `card2` : posée à même le fond de la feuille, cette carte est une
+                        // CARTE, pas une sous-surface. Depuis l'inversion du thème clair, `card2`
+                        // (#F1F1F6) sur `bg` (#F4F4F8) donne 1,03:1 — la même couleur à l'œil, donc
+                        // plus aucune carte, juste une colonne de textes flottants.
+                        .ruCard(radius: 16)
                     }
                 }
             }

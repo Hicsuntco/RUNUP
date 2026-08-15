@@ -85,7 +85,7 @@ struct TabBarView: View {
                 Circle()
                     .fill(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom))
                     .frame(width: 50, height: 50)
-                    .overlay(Image(systemName: "play.fill").foregroundColor(.white).font(.system(size: 16)))
+                    .overlay(Image(systemName: "play.fill").foregroundColor(RUColor.onRose).font(.system(size: 16)))
                     .shadow(color: RUColor.rose.opacity(RUColor.isLight ? 0 : 0.55), radius: 14, x: 0, y: 6)
                 Text("RUN")
                     .font(RUFont.sans(8, weight: .bold))
@@ -106,11 +106,11 @@ struct RunInProgressPill: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                Circle().fill(.white).frame(width: 7, height: 7)
+                Circle().fill(RUColor.onRose).frame(width: 7, height: 7)
                 Text("RUN EN COURS · \(elapsed)")
                     .font(RUFont.bebas(12))
                     .tracking(1)
-                    .foregroundColor(.white)
+                    .foregroundColor(RUColor.onRose)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 9)

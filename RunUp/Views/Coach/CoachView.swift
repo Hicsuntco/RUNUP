@@ -165,7 +165,7 @@ struct CoachView: View {
                 Spacer(minLength: 40)
                 Text(message.text)
                     .font(RUFont.sans(13))
-                    .foregroundColor(.white)
+                    .foregroundColor(RUColor.onRose)
                     .lineSpacing(2)
                     .padding(12)
                     .background(RUColor.rose, in: BubbleShape(tailCorner: .topRight))
@@ -218,7 +218,7 @@ struct CoachView: View {
                 .submitLabel(.send)
                 .onSubmit { send(vm?.draft ?? "") }
             Button(action: { send(vm?.draft ?? "") }) {
-                Image(systemName: "arrow.up").foregroundColor(.white).font(.system(size: 14, weight: .bold))
+                Image(systemName: "arrow.up").foregroundColor(RUColor.onRose).font(.system(size: 14, weight: .bold))
             }
             .frame(width: 44, height: 44)
             .background(RUColor.rose, in: Circle())

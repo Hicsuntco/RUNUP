@@ -32,7 +32,10 @@ struct PrimaryButtonStyle: ButtonStyle {
         configuration.label
             .font(RUFont.bebas(16))
             .tracking(1)
-            .foregroundColor(.white)
+            // Encre décidée par la luminance de l'accent, pas un blanc en dur : sur les
+            // palettes pâles du nuancier (Lime, Cyan, Ambre) le libellé blanc tombait à
+            // 1,49:1 sur son propre bouton.
+            .foregroundColor(RUColor.onRose)
             // Padding first, `minHeight` second — the padding contributes to the natural size so
             // it only pads out to 44pt when needed, instead of stacking 24pt of padding on top of
             // an already-enforced 44pt frame (the order this had right after the tap-target fix,

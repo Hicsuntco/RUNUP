@@ -310,7 +310,7 @@ struct FriendsView: View {
                     .buttonStyle(PressableStyle())
                     .accessibilityLabel("Refuser \(user.name)")
                     Button(action: { Task { await respond(user, accept: true) } }) {
-                        Image(systemName: "checkmark").font(.system(size: 11, weight: .bold)).foregroundColor(.white)
+                        Image(systemName: "checkmark").font(.system(size: 11, weight: .bold)).foregroundColor(RUColor.onRose)
                             .frame(width: 30, height: 30).background(RUColor.rose, in: Circle())
                             .frame(width: 44, height: 44)
                             .contentShape(Rectangle())
@@ -374,7 +374,9 @@ struct FriendsView: View {
     // MARK: Feed
 
     private var feedSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        // `LazyVStack` : même raison que le fil du club — 50 lignes construites d'un coup,
+        // avatars compris, dont l'écrasante majorité hors écran.
+        LazyVStack(alignment: .leading, spacing: 8) {
             EyebrowLabel(text: "Fil d'activité", color: RUColor.rose)
             if feed.isEmpty && !isLoading {
                 if following.isEmpty {

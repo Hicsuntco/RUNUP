@@ -11,6 +11,12 @@ final class ToastCenter {
         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
             self.message = message
         }
+        // Un texte non focalisable qui apparaît puis disparaît n'est JAMAIS lu par VoiceOver.
+        // Les 39 messages de l'app passaient donc entièrement à la trappe, y compris ceux qui
+        // n'ont aucun autre canal : « Kudos non envoyé », « Impossible de suivre cette
+        // personne », « Connexion à Apple Santé impossible ». On tapait un bouton, rien ne se
+        // passait, et rien ne disait pourquoi.
+        AccessibilityNotification.Announcement(message).post()
         dismissTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(2.2))
             guard !Task.isCancelled else { return }

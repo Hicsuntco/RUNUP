@@ -104,7 +104,11 @@ struct PlanView: View {
                 weekDayList(week)
             }
         }
-        .background(week.isCurrent ? RUColor.card : RUColor.card2, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        // Toutes les semaines sur `card`. Avec `card2` pour les semaines non courantes, leur
+        // fond disparaissait sur la page (1,03:1) et il ne restait que le trait : un plan de
+        // 9 à 16 semaines devenait 8 à 15 boîtes vides sous une seule carte pleine. La semaine
+        // en cours se distingue déjà par son liseré rose et sa teinte d'en-tête.
+        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(week.isCurrent ? RUColor.rose.opacity(0.3) : RUColor.line, lineWidth: RUSpacing.hairline))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }

@@ -146,7 +146,9 @@ struct SettingsView: View {
                                 // Theme-aware — a white selection ring was invisible on the
                                 // near-white light-mode card.
                                 Circle().stroke(RUColor.textPrimary, lineWidth: 2.5).frame(width: 46, height: 46)
-                                Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)).foregroundColor(.white)
+                                // Sur la pastille de CETTE palette, pas sur l'accent courant : la grille montre
+                                // les huit, et la coche doit rester lisible sur Lime comme sur Violet.
+                                Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)).foregroundColor(RUColor.onAccent(theme.primary))
                             }
                         }
                         .frame(width: 46, height: 46)

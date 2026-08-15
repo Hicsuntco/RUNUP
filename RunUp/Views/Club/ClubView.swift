@@ -1161,7 +1161,10 @@ struct ClubView: View {
     }
 
     private var feedContent: some View {
-        VStack(spacing: 8) {
+        // `LazyVStack` : le serveur renvoie 50 activités, et un `VStack` les construisait TOUTES
+        // à l'ouverture de l'onglet — avatars décodés, deux passes d'ombre par carte, et
+        // l'animation de révélation qui tournait sur ~45 lignes hors écran.
+        LazyVStack(spacing: 8) {
             if feed.isEmpty && !isLoading {
                 // Un fil vide a deux causes très différentes, et un seul message les traitait
                 // toutes les deux. Seule dans son club, « sois la première » demande de poster

@@ -48,6 +48,28 @@ enum RUColor {
     /// swatches' tails (lime → cyan, corail → amber) are similarly pale.
     static var violet: Color { isLight ? AccentTheme.current.tailOnLight : AccentTheme.current.tail }
 
+    /// L'encre à poser SUR un aplat d'accent — blanche, ou sombre quand l'accent est trop clair
+    /// pour porter du blanc.
+    ///
+    /// Le blanc était écrit en dur sur une quinzaine de surfaces (bouton principal, bulle de chat,
+    /// pastilles, jours faits, onglet actif). Sur les palettes pâles du nuancier, ça donnait un
+    /// libellé blanc sur fond pastel : « DÉMARRER » à **1,49:1** en Lime, 1,77 en Cyan, 1,82 en
+    /// Ambre — trois palettes sur huit rendaient le bouton principal de l'app quasi illisible,
+    /// présentées comme un simple choix esthétique.
+    ///
+    /// La règle existait déjà, seule, dans `AvatarView` : décider par la luminance plutôt que de
+    /// coder en dur quelles palettes font exception. Elle vit ici désormais, pour que tous les
+    /// aplats d'accent la partagent.
+    static func onAccent(_ accent: Color) -> Color {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        UIColor(accent).getRed(&r, green: &g, blue: &b, alpha: &a)
+        let luminance = 0.299 * r + 0.587 * g + 0.114 * b
+        return luminance > 0.6 ? Color(hex: 0x15151C) : .white
+    }
+
+    /// Le cas courant : l'encre sur un aplat de `rose`, l'accent principal.
+    static var onRose: Color { onAccent(rose) }
+
     // Fixed semantic colors (readiness, coach, warnings) — meaning, not brand, so they don't
     // follow the accent theme. Deeper shades in light mode: the dark-mode values are tuned to pop
     // against near-black and would read as barely-visible text on white.
@@ -60,12 +82,19 @@ enum RUColor {
     static var amberText: Color { isLight ? Color(hex: 0x8A5A00) : Color(hex: 0xFFD79A) }
 
     static var textPrimary: Color { isLight ? Color(hex: 0x15151C) : Color.white }
-    static var text2: Color { isLight ? Color.black.opacity(0.55) : Color.white.opacity(0.5) }
-    /// Light-mode value was 0.38 — roughly a 2.7:1 contrast ratio against `bg`'s white, well under
-    /// WCAG's 4.5:1 for normal text, even though this token is read as real caption/timestamp text
-    /// (not purely decorative) all over the app. 0.5 brings that to ~4:1 while staying visibly
-    /// lighter than `text2`'s 0.55, preserving the two tokens' hierarchy.
-    static var text3: Color { isLight ? Color.black.opacity(0.5) : Color.white.opacity(0.32) }
+    static var text2: Color { isLight ? Color.black.opacity(0.72) : Color.white.opacity(0.68) }
+    /// `text3` échouait au contraste dans LES DEUX thèmes — et le sombre, qui est le thème par
+    /// défaut, était le pire des deux : 2,85:1 sur le fond de page contre 3,90 en clair, pour un
+    /// seuil de 4,5. Le sombre passait même sous le seuil « gros texte » de 3:1.
+    ///
+    /// Ce n'est pas un jeton décoratif : c'est celui de 150 appels — tous les eyebrows, tous les
+    /// libellés de métriques, tous les horodatages. Une passe précédente avait posé le diagnostic
+    /// et n'avait relevé que la branche claire, à 0,5, ce qui ne suffisait pas non plus.
+    ///
+    /// Mesuré : clair 6,0–6,2:1, sombre 5,5–5,7:1 sur `bg`/`card`/`card2`. `text2` monte en
+    /// parallèle (8,6–9,2:1) — sans quoi `text3` serait devenu PLUS foncé que lui et la hiérarchie
+    /// des deux jetons se serait inversée.
+    static var text3: Color { isLight ? Color.black.opacity(0.62) : Color.white.opacity(0.52) }
     static var text4: Color { isLight ? Color.black.opacity(0.22) : Color.white.opacity(0.2) }
 
     /// A near-invisible opacity-on-white (was 0.035) reads as almost no card at all — dark mode's

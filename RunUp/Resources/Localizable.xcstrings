@@ -3186,70 +3186,75 @@
       }
     },
     "C'est parti %@. Échauffement tranquille, reste en Z2.": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Let's go %@. Easy warmup, stay in Z2."
+            "value": "Here we go %@. Easy warm-up, stay in Z2."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vamos %@. Calentamiento tranquilo, mantente en Z2."
+            "value": "Vamos allá %@. Calentamiento suave, quédate en Z2."
           }
         }
       }
     },
     "Fin d'échauffement. Première répétition : vise %@, foulée relâchée.": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warmup done. First rep: aim for %@, relaxed stride."
+            "value": "Warm-up done. First rep: aim for %@, relaxed stride."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fin del calentamiento. Primera repetición: apunta a %@, zancada relajada."
+            "value": "Fin del calentamiento. Primera serie: apunta a %@, zancada suelta."
           }
         }
       }
     },
     "Tiens ton allure sur chaque répétition, récupère bien entre les blocs 👊": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hold your pace on every rep, recover well between blocks 👊"
+            "value": "Hold your pace on every rep, recover properly between blocks 👊"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mantén tu ritmo en cada repetición, recupera bien entre bloques 👊"
+            "value": "Mantén el ritmo en cada serie, recupera bien entre bloques 👊"
           }
         }
       }
     },
     "Mi-séance, tu gères. Garde ta cadence sur les prochaines répétitions.": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Halfway through, you've got this. Keep your cadence on the next reps."
+            "value": "Halfway, you've got this. Keep your cadence on the next reps."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mitad de la sesión, lo tienes controlado. Mantén tu cadencia en las próximas repeticiones."
+            "value": "Mitad de sesión, lo llevas bien. Mantén la cadencia en las próximas series."
           }
         }
       }
     },
     "Dernier bloc, c'est le moment — lâche tout dessus 🔥": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3260,28 +3265,30 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Último bloque, es el momento — dalo todo 🔥"
+            "value": "Último bloque, es el momento — déjalo todo 🔥"
           }
         }
       }
     },
     "C'est parti %@. Départ tranquille, laisse le corps se mettre en route.": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Let's go %@. Easy start, let your body ease in."
+            "value": "Here we go %@. Easy start, let your body get going."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vamos %@. Salida tranquila, deja que el cuerpo se ponga en marcha."
+            "value": "Vamos allá %@. Salida tranquila, deja que el cuerpo se ponga en marcha."
           }
         }
       }
     },
     "Trouve ton rythme de croisière : vise %@, foulée relâchée.": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3292,55 +3299,58 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Encuentra tu ritmo de crucero: apunta a %@, zancada relajada."
+            "value": "Encuentra tu ritmo de crucero: apunta a %@, zancada suelta."
           }
         }
       }
     },
     "Beau rythme, reste régulière — c'est la constance qui paie 👊": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nice rhythm, stay steady — consistency is what pays off 👊"
+            "value": "Good rhythm, stay steady — consistency is what pays 👊"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Buen ritmo, mantente constante — la constancia es lo que da resultado 👊"
+            "value": "Buen ritmo, mantente constante — la constancia es lo que paga 👊"
           }
         }
       }
     },
     "Mi-séance, tu gères parfaitement. Garde ta cadence.": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Halfway through, you're handling it perfectly. Keep your cadence."
+            "value": "Halfway, you're doing great. Keep your cadence."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mitad de la sesión, lo llevas perfecto. Mantén tu cadencia."
+            "value": "Mitad de sesión, lo estás haciendo genial. Mantén la cadencia."
           }
         }
       }
     },
     "Dernière partie — finis proprement, sans t'arracher 🔥": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Last stretch — finish clean, without blowing up 🔥"
+            "value": "Final stretch — finish cleanly, without wrecking yourself 🔥"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Último tramo — termina limpio, sin forzar 🔥"
+            "value": "Última parte — termina limpio, sin destrozarte 🔥"
           }
         }
       }
@@ -13501,6 +13511,227 @@
           "stringUnit": {
             "state": "translated",
             "value": "cambia de ruta, explora un recorrido nuevo"
+          }
+        }
+      }
+    },
+    "Préparer une course": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Train for a race"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparar una carrera"
+          }
+        }
+      }
+    },
+    "Progresser": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get faster"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Progresar"
+          }
+        }
+      }
+    },
+    "(Re)commencer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(Re)start"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(Re)empezar"
+          }
+        }
+      }
+    },
+    "Perdre du poids": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lose weight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perder peso"
+          }
+        }
+      }
+    },
+    "Rester en forme": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stay fit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantenerse en forma"
+          }
+        }
+      }
+    },
+    "Préparer un HYROX": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Train for a HYROX"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparar un HYROX"
+          }
+        }
+      }
+    },
+    "Un dossard en vue — on construit le plan pour le jour J": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A race number in sight — we build the plan for race day"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un dorsal a la vista — construimos el plan para el día de la carrera"
+          }
+        }
+      }
+    },
+    "Courir plus vite ou plus longtemps, sans course précise": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run faster or longer, with no particular race"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correr más rápido o más lejos, sin una carrera concreta"
+          }
+        }
+      }
+    },
+    "Reprendre en douceur, sans se blesser": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ease back in without getting injured"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver con calma, sin lesionarse"
+          }
+        }
+      }
+    },
+    "Un programme qui allie course et rééquilibrage alimentaire": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A plan combining running and a rebalanced diet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un plan que combina carrera y reequilibrio alimentario"
+          }
+        }
+      }
+    },
+    "Une routine régulière qui tient dans ta semaine": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A steady routine that fits into your week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una rutina constante que cabe en tu semana"
+          }
+        }
+      }
+    },
+    "8 × 1 km de course + stations fonctionnelles — un vrai plan hybride": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "8 × 1 km of running + functional stations — a genuine hybrid plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "8 × 1 km de carrera + estaciones funcionales — un plan híbrido de verdad"
+          }
+        }
+      }
+    },
+    "Niveau %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Level %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nivel %lld"
           }
         }
       }

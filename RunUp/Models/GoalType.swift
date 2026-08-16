@@ -6,25 +6,29 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    /// `String(localized:)` et non un littéral nu : ces libellés sont composés au niveau du
+    /// MODÈLE, donc rendus comme de simples `String` que SwiftUI ne localise pas tout seul —
+    /// contrairement à un `Text("…")` écrit dans une vue. Ils apparaissent sur l'onboarding, le
+    /// profil, l'écran objectif et le plan : c'est le libellé le plus vu de l'app.
     var title: String {
         switch self {
-        case .race: return "Préparer une course"
-        case .progress: return "Progresser"
-        case .restart: return "(Re)commencer"
-        case .weight: return "Perdre du poids"
-        case .health: return "Rester en forme"
-        case .hyrox: return "Préparer un HYROX"
+        case .race: return String(localized: "Préparer une course")
+        case .progress: return String(localized: "Progresser")
+        case .restart: return String(localized: "(Re)commencer")
+        case .weight: return String(localized: "Perdre du poids")
+        case .health: return String(localized: "Rester en forme")
+        case .hyrox: return String(localized: "Préparer un HYROX")
         }
     }
 
     var subtitle: String {
         switch self {
-        case .race: return "Un dossard en vue — on construit le plan pour le jour J"
-        case .progress: return "Courir plus vite ou plus longtemps, sans course précise"
-        case .restart: return "Reprendre en douceur, sans se blesser"
-        case .weight: return "Un programme qui allie course et rééquilibrage alimentaire"
-        case .health: return "Une routine régulière qui tient dans ta semaine"
-        case .hyrox: return "8 × 1 km de course + stations fonctionnelles — un vrai plan hybride"
+        case .race: return String(localized: "Un dossard en vue — on construit le plan pour le jour J")
+        case .progress: return String(localized: "Courir plus vite ou plus longtemps, sans course précise")
+        case .restart: return String(localized: "Reprendre en douceur, sans se blesser")
+        case .weight: return String(localized: "Un programme qui allie course et rééquilibrage alimentaire")
+        case .health: return String(localized: "Une routine régulière qui tient dans ta semaine")
+        case .hyrox: return String(localized: "8 × 1 km de course + stations fonctionnelles — un vrai plan hybride")
         }
     }
 

@@ -774,7 +774,7 @@ enum AdaptivePlanEngine {
                 durationMinutes: duration,
                 pace: archetype.pace,
                 zone: archetype.zone,
-                adjustment: (tier > 1 && !isTaper) ? "Niveau \(tier)" : nil,
+                adjustment: (tier > 1 && !isTaper) ? String(localized: "Niveau \(tier)") : nil,
                 kind: archetype.kind,
                 intervals: archetype.intervals
             )

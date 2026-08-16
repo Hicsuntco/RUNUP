@@ -172,19 +172,19 @@ final class LiveRunViewModel {
         // app already scrubbed out.
         if todaySession.isIntervalSession {
             cues = [
-                (6, "C'est parti \(name). Échauffement tranquille, reste en Z2."),
-                (120, "Fin d'échauffement. Première répétition : vise \(targetPace), foulée relâchée."),
-                (360, "Tiens ton allure sur chaque répétition, récupère bien entre les blocs 👊"),
-                (720, "Mi-séance, tu gères. Garde ta cadence sur les prochaines répétitions."),
-                (1080, "Dernier bloc, c'est le moment — lâche tout dessus 🔥")
+                (6, String(localized: "C'est parti \(name). Échauffement tranquille, reste en Z2.")),
+                (120, String(localized: "Fin d'échauffement. Première répétition : vise \(targetPace), foulée relâchée.")),
+                (360, String(localized: "Tiens ton allure sur chaque répétition, récupère bien entre les blocs 👊")),
+                (720, String(localized: "Mi-séance, tu gères. Garde ta cadence sur les prochaines répétitions.")),
+                (1080, String(localized: "Dernier bloc, c'est le moment — lâche tout dessus 🔥"))
             ]
         } else {
             cues = [
-                (6, "C'est parti \(name). Départ tranquille, laisse le corps se mettre en route."),
-                (120, "Trouve ton rythme de croisière : vise \(targetPace), foulée relâchée."),
-                (360, "Beau rythme, reste régulière — c'est la constance qui paie 👊"),
-                (720, "Mi-séance, tu gères parfaitement. Garde ta cadence."),
-                (1080, "Dernière partie — finis proprement, sans t'arracher 🔥")
+                (6, String(localized: "C'est parti \(name). Départ tranquille, laisse le corps se mettre en route.")),
+                (120, String(localized: "Trouve ton rythme de croisière : vise \(targetPace), foulée relâchée.")),
+                (360, String(localized: "Beau rythme, reste régulière — c'est la constance qui paie 👊")),
+                (720, String(localized: "Mi-séance, tu gères parfaitement. Garde ta cadence.")),
+                (1080, String(localized: "Dernière partie — finis proprement, sans t'arracher 🔥"))
             ]
         }
         // Les consignes vocales ci-dessus viennent d'être construites à partir de cette séance :

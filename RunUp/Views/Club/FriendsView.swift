@@ -84,9 +84,11 @@ struct FriendsView: View {
         .sheet(isPresented: $showSignIn) { SignInView() }
         .sheet(item: $peopleSheet) { kind in
             PeopleListSheet(
-                title: kind == .following ? "Abonnements" : "Abonnés",
+                // `PeopleListSheet` reçoit des `String` (titre de navigation, libellé de bouton) :
+                // sans `String(localized:)` ils ne passeraient jamais par le catalogue.
+                title: kind == .following ? String(localized: "Abonnements") : String(localized: "Abonnés"),
                 people: kind == .following ? following : followers,
-                actionLabel: kind == .following ? "Ne plus suivre" : "Retirer",
+                actionLabel: kind == .following ? String(localized: "Ne plus suivre") : String(localized: "Retirer"),
                 onAction: { user in
                     Task {
                         if kind == .following { await unfollow(user) } else { await removeFollower(user) }
@@ -105,7 +107,7 @@ struct FriendsView: View {
                     commentsActivity = nil
                     Task {
                         try? await Task.sleep(for: .milliseconds(400))
-                        reportTarget = ReportTarget(targetType: "comment", targetId: comment.id, displayName: "le commentaire de \(comment.name)")
+                        reportTarget = ReportTarget(targetType: "comment", targetId: comment.id, displayName: String(localized: "le commentaire de \(comment.name)"))
                     }
                 },
                 onBlock: { comment in
@@ -225,9 +227,9 @@ struct FriendsView: View {
         let label: String
         let isActive: Bool
         switch user.followStatus {
-        case "accepted": label = "Abonné·e"; isActive = true
-        case "pending": label = "Demande envoyée"; isActive = true
-        default: label = "Suivre"; isActive = false
+        case "accepted": label = String(localized: "Abonné·e"); isActive = true
+        case "pending": label = String(localized: "Demande envoyée"); isActive = true
+        default: label = String(localized: "Suivre"); isActive = false
         }
         return Button(action: { Task { await toggleFollow(user) } }) {
             Text(label)
@@ -345,7 +347,7 @@ struct FriendsView: View {
     private var countsContent: some View {
         HStack(spacing: 12) {
             Button(action: { peopleSheet = .followers }) {
-                countLabel(value: followers.count, label: followers.count > 1 ? "abonnés" : "abonné")
+                countLabel(value: followers.count, label: followers.count > 1 ? String(localized: "abonnés") : String(localized: "abonné"))
             }
             .buttonStyle(PressableStyle())
             .accessibilityLabel("\(followers.count) abonnés, voir la liste")
@@ -353,7 +355,7 @@ struct FriendsView: View {
             Text("·").font(RUFont.sans(12)).foregroundColor(RUColor.text4)
 
             Button(action: { peopleSheet = .following }) {
-                countLabel(value: following.count, label: following.count > 1 ? "abonnements" : "abonnement")
+                countLabel(value: following.count, label: following.count > 1 ? String(localized: "abonnements") : String(localized: "abonnement"))
             }
             .buttonStyle(PressableStyle())
             .accessibilityLabel("\(following.count) abonnements, voir la liste")
@@ -413,7 +415,7 @@ struct FriendsView: View {
                     onKudos: { Task { await toggleKudos(item) } },
                     onComment: { commentsActivity = item },
                     onReport: {
-                        reportTarget = ReportTarget(targetType: "activity", targetId: item.id, displayName: "l'activité de \(item.name)")
+                        reportTarget = ReportTarget(targetType: "activity", targetId: item.id, displayName: String(localized: "l'activité de \(item.name)"))
                     },
                     onBlock: { pendingBlock = (item.userId, item.name) },
                     onDelete: { pendingDeleteActivity = item }
@@ -437,12 +439,12 @@ struct FriendsView: View {
             followers = listResult.followers
             incomingRequests = listResult.incomingRequests
         } else {
-            errorMessage = "Impossible de charger tes amis — vérifie ta connexion."
+            errorMessage = String(localized: "Impossible de charger tes amis — vérifie ta connexion.")
         }
         if let feedResult {
             feed = feedResult
         } else if errorMessage == nil {
-            errorMessage = "Impossible de charger le fil d'activité — vérifie ta connexion."
+            errorMessage = String(localized: "Impossible de charger le fil d'activité — vérifie ta connexion.")
         }
         isLoading = false
     }
@@ -485,14 +487,14 @@ struct FriendsView: View {
                 let status = try await clubService.followUser(userId: user.id)
                 await MainActor.run { updateSearchStatus(user.id, status: status) }
             } catch {
-                await MainActor.run { appState.toast("Impossible de suivre cette personne — réessaie.") }
+                await MainActor.run { appState.toast(String(localized: "Impossible de suivre cette personne — réessaie.")) }
             }
         } else {
             do {
                 try await clubService.unfollowUser(userId: user.id)
                 await MainActor.run { updateSearchStatus(user.id, status: nil) }
             } catch {
-                await MainActor.run { appState.toast("Impossible de mettre à jour — réessaie.") }
+                await MainActor.run { appState.toast(String(localized: "Impossible de mettre à jour — réessaie.")) }
             }
         }
     }
@@ -507,7 +509,7 @@ struct FriendsView: View {
             try await clubService.unfollowUser(userId: user.id)
             await MainActor.run { following.removeAll { $0.id == user.id } }
         } catch {
-            await MainActor.run { appState.toast("Impossible de mettre à jour — réessaie.") }
+            await MainActor.run { appState.toast(String(localized: "Impossible de mettre à jour — réessaie.")) }
         }
     }
 
@@ -516,7 +518,7 @@ struct FriendsView: View {
             try await clubService.removeFollower(userId: user.id)
             await MainActor.run { followers.removeAll { $0.id == user.id } }
         } catch {
-            await MainActor.run { appState.toast("Impossible de mettre à jour — réessaie.") }
+            await MainActor.run { appState.toast(String(localized: "Impossible de mettre à jour — réessaie.")) }
         }
     }
 
@@ -529,7 +531,7 @@ struct FriendsView: View {
                 if accept { followers.append(user) }
             }
         } catch {
-            await MainActor.run { appState.toast("Impossible de répondre — réessaie.") }
+            await MainActor.run { appState.toast(String(localized: "Impossible de répondre — réessaie.")) }
         }
     }
 
@@ -543,7 +545,7 @@ struct FriendsView: View {
             } catch {
                 await MainActor.run {
                     isPrivate = !next
-                    appState.toast("Impossible de mettre à jour — réessaie.")
+                    appState.toast(String(localized: "Impossible de mettre à jour — réessaie."))
                 }
             }
         }
@@ -563,7 +565,7 @@ struct FriendsView: View {
             guard let current = feed.firstIndex(where: { $0.id == item.id }) else { return }
             feed[current].kudoedByMe = wasKudoed
             feed[current].kudos += wasKudoed ? 1 : -1
-            appState.toast("Kudos non envoyé — vérifie ta connexion.")
+            appState.toast(String(localized: "Kudos non envoyé — vérifie ta connexion."))
         }
     }
 
@@ -577,19 +579,19 @@ struct FriendsView: View {
             try await clubService.deleteActivity(activityId: item.id)
             await MainActor.run {
                 feed.removeAll { $0.id == item.id }
-                appState.toast("Activité supprimée.")
+                appState.toast(String(localized: "Activité supprimée."))
             }
         } catch {
-            await MainActor.run { appState.toast("Suppression impossible — réessaie.") }
+            await MainActor.run { appState.toast(String(localized: "Suppression impossible — réessaie.")) }
         }
     }
 
     private func submitReport(_ target: ReportTarget, reason: String) async {
         do {
             try await clubService.report(targetType: target.targetType, targetId: target.targetId, reason: reason)
-            appState.toast("Signalement envoyé — merci")
+            appState.toast(String(localized: "Signalement envoyé — merci"))
         } catch {
-            appState.toast("Impossible d'envoyer le signalement, réessaie.")
+            appState.toast(String(localized: "Impossible d'envoyer le signalement, réessaie."))
         }
     }
 
@@ -601,7 +603,7 @@ struct FriendsView: View {
             incomingRequests.removeAll { $0.id == userId }
             feed.removeAll { $0.userId == userId }
         } catch {
-            errorMessage = "Impossible de bloquer cette personne."
+            errorMessage = String(localized: "Impossible de bloquer cette personne.")
         }
     }
 }

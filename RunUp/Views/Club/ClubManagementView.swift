@@ -28,7 +28,9 @@ struct ClubManagementView: View {
                     challengeSection
 
                     VStack(alignment: .leading, spacing: 10) {
-                        EyebrowLabel(text: "\(members.count) membre\(members.count > 1 ? "s" : "")", color: RUColor.text3)
+                        EyebrowLabel(text: members.count > 1
+                            ? String(localized: "\(members.count) membres")
+                            : String(localized: "\(members.count) membre"), color: RUColor.text3)
                         VStack(spacing: 6) {
                             ForEach(members) { member in
                                 NavigationLink(value: member) {
@@ -98,13 +100,13 @@ struct ClubManagementView: View {
             Button(action: {
                 UIPasteboard.general.string = club.inviteCode
                 Haptics.impact(.light)
-                appState.toast("Code copié")
+                appState.toast(String(localized: "Code copié"))
             }) {
                 Text(club.inviteCode).font(RUFont.mono(12.5, weight: .semibold)).foregroundColor(RUColor.text2).tracking(1.5)
             }
             .buttonStyle(PressableStyle())
             Spacer()
-            ShareLink(item: "Rejoins mon club sur RunUp avec le code \(club.inviteCode) !") {
+            ShareLink(item: String(localized: "Rejoins mon club sur RunUp avec le code \(club.inviteCode) !")) {
                 Image(systemName: "square.and.arrow.up").font(.system(size: 12, weight: .medium)).foregroundColor(RUColor.text3)
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
@@ -118,7 +120,7 @@ struct ClubManagementView: View {
     private func memberRow(_ member: LeaderboardRow) -> some View {
         HStack(spacing: 12) {
             AvatarView(urlString: member.avatarUrl, base64DataURI: member.avatarBase64, initial: String(member.name.prefix(1)), size: 36, seed: member.isMe ? nil : member.id)
-            Text(member.isMe ? "\(member.name) · toi" : member.name)
+            Text(member.isMe ? String(localized: "\(member.name) · toi") : member.name)
                 .font(RUFont.sans(13, weight: member.isMe ? .semibold : .regular))
                 .foregroundColor(RUColor.textPrimary)
             Spacer()
@@ -148,14 +150,25 @@ struct ClubMemberProfileView: View {
     @State private var bioError: String?
     @State private var selectedBadge: ClubBadge?
 
-    private static let levelTitles = ["Premiers pas", "Foulée légère", "Rythme trouvé", "Foulée d'or", "Vitesse de croisière", "Endurance de fer", "Élite locale"]
+    // `String(localized:)` et non des littéraux nus : ces titres sont composés dans `Text("Niveau
+    // \(level) · \(levelTitle)")` en tant qu'argument, ils n'atteignent donc jamais un
+    // `LocalizedStringKey` par eux-mêmes.
+    private static let levelTitles = [
+        String(localized: "Premiers pas"),
+        String(localized: "Foulée légère"),
+        String(localized: "Rythme trouvé"),
+        String(localized: "Foulée d'or"),
+        String(localized: "Vitesse de croisière"),
+        String(localized: "Endurance de fer"),
+        String(localized: "Élite locale")
+    ]
     private var level: Int { member.xp / 250 + 1 }
     // Clamped like ClubView.levelInfo — the old `%` wrapped a level-8 member back to "Premiers pas".
     private var levelTitle: String { Self.levelTitles[min(max(level - 1, 0), Self.levelTitles.count - 1)] }
 
     private static let joinedFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "fr_FR")
+        f.locale = Locale.current
         f.dateFormat = "MMMM yyyy"
         return f
     }()
@@ -293,7 +306,9 @@ struct ClubMemberProfileView: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(PressableStyle())
-                        .accessibilityLabel("\(badge.name), \(badge.earned ? "débloqué" : "verrouillé")")
+                        .accessibilityLabel(badge.earned
+                                            ? String(localized: "\(badge.name), débloqué")
+                                            : String(localized: "\(badge.name), verrouillé"))
                     }
                 }
                 .padding(.vertical, 2)
@@ -311,9 +326,9 @@ struct ClubMemberProfileView: View {
             isEditingBio = false
             Haptics.success()
         } catch ClubServiceError.badResponse(422, _) {
-            bioError = "Ce texte n'est pas autorisé — reformule-le."
+            bioError = String(localized: "Ce texte n'est pas autorisé — reformule-le.")
         } catch {
-            bioError = "Impossible d'enregistrer, réessaie."
+            bioError = String(localized: "Impossible d'enregistrer, réessaie.")
         }
         isSavingBio = false
     }
@@ -340,7 +355,7 @@ struct CreateChallengeSheet: View {
                 VStack(alignment: .leading, spacing: 18) {
                     VStack(alignment: .leading, spacing: 8) {
                         EyebrowLabel(text: "Nom du défi", color: RUColor.text3)
-                        ObTextField(placeholder: "Ex. 200 km avant l'été", text: $title)
+                        ObTextField(placeholder: String(localized: "Ex. 200 km avant l'été"), text: $title)
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
@@ -401,9 +416,9 @@ struct CreateChallengeSheet: View {
             Haptics.success()
             dismiss()
         } catch ClubServiceError.badResponse(422, _) {
-            errorMessage = "Ce nom n'est pas autorisé — choisis-en un autre."
+            errorMessage = String(localized: "Ce nom n'est pas autorisé — choisis-en un autre.")
         } catch {
-            errorMessage = "Impossible de créer le défi, réessaie."
+            errorMessage = String(localized: "Impossible de créer le défi, réessaie.")
         }
         isSaving = false
     }
@@ -429,12 +444,12 @@ struct CreateEventSheet: View {
                 VStack(alignment: .leading, spacing: 18) {
                     VStack(alignment: .leading, spacing: 8) {
                         EyebrowLabel(text: "Quelle sortie ?", color: RUColor.text3)
-                        ObTextField(placeholder: "Ex. Sortie longue tranquille 10 km", text: $title)
+                        ObTextField(placeholder: String(localized: "Ex. Sortie longue tranquille 10 km"), text: $title)
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
                         EyebrowLabel(text: "Point de rendez-vous (facultatif)", color: RUColor.text3)
-                        ObTextField(placeholder: "Ex. Entrée du parc de la Tête d'Or", text: $location)
+                        ObTextField(placeholder: String(localized: "Ex. Entrée du parc de la Tête d'Or"), text: $location)
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
@@ -474,9 +489,9 @@ struct CreateEventSheet: View {
             Haptics.success()
             dismiss()
         } catch ClubServiceError.badResponse(422, _) {
-            errorMessage = "Ce texte n'est pas autorisé — reformule."
+            errorMessage = String(localized: "Ce texte n'est pas autorisé — reformule.")
         } catch {
-            errorMessage = "Impossible de proposer la sortie, réessaie."
+            errorMessage = String(localized: "Impossible de proposer la sortie, réessaie.")
         }
         isSaving = false
     }

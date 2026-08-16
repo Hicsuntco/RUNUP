@@ -9,9 +9,9 @@ enum ShareCardTextColor: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .blanc: return "Blanc"
-        case .noir: return "Noir"
-        case .runup: return "RunUp"
+        case .blanc: return String(localized: "Blanc")
+        case .noir: return String(localized: "Noir")
+        case .runup: return "RunUp" // nom de marque
         }
     }
 }
@@ -64,7 +64,7 @@ struct RunShareCardView: View {
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "fr_FR")
+        f.locale = Locale.current
         f.dateFormat = "d MMMM yyyy"
         return f
     }()
@@ -137,9 +137,10 @@ struct RunShareCardView: View {
             }
 
             VStack(spacing: 16) {
-                statBlock("DISTANCE", String(format: "%.2f km", locale: Locale(identifier: "fr_FR"), run.distanceKm), valueSize: 58)
-                statBlock("ALLURE", "\(run.avgPace) /km", valueSize: 40)
-                statBlock("TEMPS", PaceModel.formatDuration(Double(run.durationSeconds)), valueSize: 40)
+                // `statBlock` rend son libellé par un `Text(String)` nu.
+                statBlock(String(localized: "DISTANCE"), String(format: "%.2f km", locale: Locale.current, run.distanceKm), valueSize: 58)
+                statBlock(String(localized: "ALLURE"), "\(run.avgPace) /km", valueSize: 40)
+                statBlock(String(localized: "TEMPS"), PaceModel.formatDuration(Double(run.durationSeconds)), valueSize: 40)
             }
 
             VStack(spacing: 5) {

@@ -157,7 +157,7 @@ struct ActivityFeedRow: View {
     private var metrics: [Metric] {
         var result: [Metric] = []
         if let distanceKm = item.distanceKm {
-            result.append(Metric(value: String(format: "%.1f", locale: Locale(identifier: "fr_FR"), distanceKm), label: "km"))
+            result.append(Metric(value: String(format: "%.1f", locale: Locale.current, distanceKm), label: "km"))
         }
         // L'allure est la seule colonne accentuée — c'est le chiffre qu'on compare, dans la
         // maquette comme dans la conversation d'un club.

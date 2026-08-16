@@ -5,9 +5,10 @@ struct GoalStepView: View {
     var onNext: () -> Void
 
     var body: some View {
-        ObScreen {
+        let who = vm.name.isEmpty ? String(localized: "toi") : vm.name
+        return ObScreen {
             ScrollView {
-                ObTitle(eyebrow: "Étape 2 · \(vm.name.isEmpty ? "toi" : vm.name)", title: "POURQUOI TU COURS ?", subtitle: "C'est la base de tout ton programme.")
+                ObTitle(eyebrow: String(localized: "Étape 2 · \(who)"), title: "POURQUOI TU COURS ?", subtitle: "C'est la base de tout ton programme.")
                 VStack(spacing: 8) {
                     ForEach(GoalType.allCases) { goal in
                         SelectableCard(

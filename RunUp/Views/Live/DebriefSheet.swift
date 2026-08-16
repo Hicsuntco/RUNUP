@@ -25,15 +25,15 @@ struct DebriefSheet: View {
     private var insightMessage: String {
         let paces = run.splits.compactMap(PaceModel.parseSecPerKm)
         guard paces.count > 1, let minPace = paces.min(), let maxPace = paces.max(), maxPace > minPace else {
-            return "Séance enregistrée 💪 Bien joué."
+            return String(localized: "Séance enregistrée 💪 Bien joué.")
         }
         if paces.last == minPace {
-            return "Séance solide 💪 Ton dernier kilomètre était ton plus rapide — tu avais encore du jus."
+            return String(localized: "Séance solide 💪 Ton dernier kilomètre était ton plus rapide — tu avais encore du jus.")
         }
         if paces.first == minPace {
-            return "Séance solide 💪 Tu es partie fort et tu as tenu jusqu'au bout."
+            return String(localized: "Séance solide 💪 Tu es partie fort et tu as tenu jusqu'au bout.")
         }
-        return "Séance solide 💪 Allure plutôt régulière du début à la fin."
+        return String(localized: "Séance solide 💪 Allure plutôt régulière du début à la fin.")
     }
 
     private var impactLines: [(String, String, String)] {
@@ -47,20 +47,22 @@ struct DebriefSheet: View {
         // Phrased as a tendency ("compte pour...") — the tier really moves on the WEEK's average
         // RPE at the boundary, so a flat promise ("relevée d'un palier") from one single tap
         // could contradict what actually happens after two harder sessions the same week.
+        let nextWeekLabel = String(localized: "Semaine prochaine : ")
+        let streakLine = ("🔥", String(localized: "Série en cours : "), String(localized: "jour \(nextStreak)"))
         switch rpe {
         case .facile, .justeBien:
-            return [("📈", "Semaine prochaine : ", "compte pour relever l'intensité"), ("🔥", "Série en cours : ", "jour \(nextStreak)")]
+            return [("📈", nextWeekLabel, String(localized: "compte pour relever l'intensité")), streakLine]
         case .dur:
-            return [("👍", "Semaine prochaine : ", "compte pour garder ce niveau"), ("🔥", "Série en cours : ", "jour \(nextStreak)")]
+            return [("👍", nextWeekLabel, String(localized: "compte pour garder ce niveau")), streakLine]
         case .tropDur:
-            return [("🧘", "Semaine prochaine : ", "compte pour alléger la charge"), ("🔥", "Série en cours : ", "jour \(nextStreak)")]
+            return [("🧘", nextWeekLabel, String(localized: "compte pour alléger la charge")), streakLine]
         }
     }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                EyebrowLabel(text: "Bilan · \(run.title)", color: RUColor.rose).padding(.top, 8)
+                EyebrowLabel(text: String(localized: "Bilan · \(run.title)"), color: RUColor.rose).padding(.top, 8)
                 Text("Comment tu te sens ?").displayStyle(24).foregroundColor(RUColor.textPrimary).padding(.top, 4)
 
                 HStack(alignment: .top, spacing: 10) {
@@ -141,16 +143,16 @@ struct DebriefSheet: View {
                         let kmBefore = shoe.totalKm(runs: runs.filter { $0 !== run })
                         let kmAfter = kmBefore + run.distanceKm
                         if kmBefore < shoe.alertThresholdKm, kmAfter >= shoe.alertThresholdKm {
-                            appState.notify(icon: "👟", colorHex: 0xFFB03D, title: "\(shoe.name) en fin de vie", text: "Cette paire dépasse \(Int(shoe.alertThresholdKm)) km — pense à la changer bientôt.")
+                            appState.notify(icon: "👟", colorHex: 0xFFB03D, title: String(localized: "\(shoe.name) en fin de vie"), text: String(localized: "Cette paire dépasse \(Int(shoe.alertThresholdKm)) km — pense à la changer bientôt."))
                         }
                     }
                     AdaptivePlanEngine.applyDebrief(rpe: rpe, run: run, profile: appState.profile)
-                    let distance = String(format: "%.1f", locale: Locale(identifier: "fr_FR"), run.distanceKm)
+                    let distance = String(format: "%.1f", locale: Locale.current, run.distanceKm)
                     // A distance-less séance (HYROX/renfo logged without GPS) shouldn't read
                     // "a couru 0,0 km" in the club feed.
                     let feedText = run.distanceKm > 0.05
-                        ? "a couru \(distance) km · \(run.title)"
-                        : "a fait sa séance · \(run.title)"
+                        ? String(localized: "a couru \(distance) km · \(run.title)")
+                        : String(localized: "a fait sa séance · \(run.title)")
                     // Les vraies mesures de la sortie partent avec le post : c'est ce qui permet à
                     // la carte du fil d'afficher KM / ALLURE / TEMPS au lieu d'une seule phrase.
                     // Chaque champ n'est joint que s'il a été réellement mesuré — une séance sans
@@ -184,7 +186,7 @@ struct DebriefSheet: View {
                     // notify() call sites were the rare same-day 3-goals bonus, a club kudos/
                     // comment, or a weekly plan update, so a solo runner who just isn't hitting
                     // that exact daily combo would never see anything land in the bell at all.
-                    appState.notify(icon: "✅", colorHex: 0xC9FF3B, title: "Séance terminée", text: run.distanceKm > 0.05 ? "\(run.title) · \(distance) km · +120 XP" : "\(run.title) · +120 XP")
+                    appState.notify(icon: "✅", colorHex: 0xC9FF3B, title: String(localized: "Séance terminée"), text: run.distanceKm > 0.05 ? "\(run.title) · \(distance) km · +120 XP" : "\(run.title) · +120 XP")
                     // This single tap awards XP, updates the streak, and possibly a daily-goals
                     // bonus — the app's core adaptive-plan mechanic — but had zero haptic feedback,
                     // the same as tapping a settings toggle. A success tap here, and a stronger one
@@ -192,19 +194,19 @@ struct DebriefSheet: View {
                     Haptics.success()
                     let streak = appState.profile.streak
                     if AdaptivePlanEngine.streakMilestones.contains(streak) {
-                        appState.notify(icon: "🔥", colorHex: 0xFF6B4A, title: "Série de \(streak) jours", text: "Tu enchaînes les séances sans lâcher — continue comme ça !")
+                        appState.notify(icon: "🔥", colorHex: 0xFF6B4A, title: String(localized: "Série de \(streak) jours"), text: String(localized: "Tu enchaînes les séances sans lâcher — continue comme ça !"))
                         Haptics.impact(.heavy)
                     }
                     if AdaptivePlanEngine.checkDailyGoalsBonus(appState.profile) {
-                        appState.postClubActivity(type: "badge", text: "a bouclé ses 3 objectifs du jour", xpEarned: 120)
-                        appState.notify(icon: "🎉", colorHex: 0xC9FF3B, title: "Journée bouclée", text: "Tes 3 objectifs du jour sont faits — +120 XP.")
-                        NotificationService.shared.postImmediateNotification(title: "Journée bouclée 🎉", body: "Tes 3 objectifs du jour sont faits — +120 XP.")
+                        appState.postClubActivity(type: "badge", text: String(localized: "a bouclé ses 3 objectifs du jour"), xpEarned: 120)
+                        appState.notify(icon: "🎉", colorHex: 0xC9FF3B, title: String(localized: "Journée bouclée"), text: String(localized: "Tes 3 objectifs du jour sont faits — +120 XP."))
+                        NotificationService.shared.postImmediateNotification(title: String(localized: "Journée bouclée 🎉"), body: String(localized: "Tes 3 objectifs du jour sont faits — +120 XP."))
                         Haptics.impact(.heavy)
                     }
                     // Today's session is done — an evening reminder for it would be stale now.
                     NotificationService.shared.rescheduleDailyReminder(for: appState.profile)
                     appState.publishWidgetSnapshot()
-                    appState.toast("Programme mis à jour · +120 XP 🔥")
+                    appState.toast(String(localized: "Programme mis à jour · +120 XP 🔥"))
                     // Ask for a rating right after a run that felt good, not on a fixed schedule —
                     // `shouldRequestReview` also caps this to real milestones and a 90-day cooldown.
                     if appState.shouldRequestReview(rpe: rpe) {

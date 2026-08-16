@@ -55,7 +55,7 @@ struct PlanView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                BackTitleHeaderView(eyebrow: "Ton programme · \(profile.goalDisplay)", title: "Le plan complet") {
+                BackTitleHeaderView(eyebrow: String(localized: "Ton programme · \(profile.goalDisplay)"), title: "Le plan complet") {
                     appState.go(.home)
                 }
 
@@ -123,9 +123,15 @@ struct PlanView: View {
                 .background(week.isCurrent ? RUColor.rose : RUColor.card, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).stroke(RUColor.line, lineWidth: week.isCurrent ? 0 : RUSpacing.hairline))
             VStack(alignment: .leading, spacing: 1) {
-                Text("Semaine \(week.number) · \(week.block.rawValue)\(week.isCurrent ? " · en cours" : "")")
+                // Deux phrases entières plutôt qu'un suffixe français recollé dans l'interpolation :
+                // un fragment collé de l'extérieur ne passe jamais par le catalogue.
+                Text(week.isCurrent
+                     ? String(localized: "Semaine \(week.number) · \(week.block.label) · en cours")
+                     : String(localized: "Semaine \(week.number) · \(week.block.label)"))
                     .font(RUFont.sans(13, weight: week.isCurrent ? .semibold : .medium)).foregroundColor(RUColor.textPrimary)
-                Text("~\(week.estimatedKm) km" + (week.isCurrent ? " · \(completedCount)/\(plannedCount) séances faites" : ""))
+                Text(week.isCurrent
+                     ? String(localized: "~\(week.estimatedKm) km · \(completedCount)/\(plannedCount) séances faites")
+                     : String(localized: "~\(week.estimatedKm) km"))
                     .font(RUFont.sans(10)).foregroundColor(RUColor.text2)
             }
             Spacer()
@@ -134,7 +140,11 @@ struct PlanView: View {
                 .font(.system(size: 13))
                 // Was read as the raw glyph description ("triangle down", "checkmark"...) instead
                 // of what it actually means out of visual context.
-                .accessibilityLabel(isExpanded ? "Réduire" : isRaceWeek ? "Semaine de course" : week.block == .affutage ? "Phase d'affûtage" : week.isDone ? "Semaine terminée" : "Développer")
+                .accessibilityLabel(isExpanded ? String(localized: "Réduire")
+                                    : isRaceWeek ? String(localized: "Semaine de course")
+                                    : week.block == .affutage ? String(localized: "Phase d'affûtage")
+                                    : week.isDone ? String(localized: "Semaine terminée")
+                                    : String(localized: "Développer"))
         }
         .padding(13)
         .opacity(week.isDone && !week.isCurrent ? 0.6 : 1)
@@ -162,7 +172,13 @@ struct PlanView: View {
         .padding(.horizontal, 12).padding(.bottom, 12).padding(.top, 6)
     }
 
-    private static let dayLetters = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
+    /// Rendues par un `Text(String)` nu (elles transitent par un tuple), donc localisées ici :
+    /// une abréviation de jour n'est pas la même dans les trois langues.
+    private static let dayLetters = [
+        String(localized: "Lun"), String(localized: "Mar"), String(localized: "Mer"),
+        String(localized: "Jeu"), String(localized: "Ven"), String(localized: "Sam"),
+        String(localized: "Dim")
+    ]
 
     private func dayList(for week: WeekSummary) -> [(String, PlannedDay, DayStatus.State?)] {
         if week.isCurrent {
@@ -182,7 +198,7 @@ struct PlanView: View {
             Text(letter).displayStyle(10).foregroundColor(RUColor.text2).frame(width: 26, alignment: .leading)
             dayIcon(session: session, isRest: isRest, completed: day.completed, isToday: isToday)
             VStack(alignment: .leading, spacing: 1) {
-                Text(session?.displayTitle ?? "Repos")
+                Text(session?.displayTitle ?? String(localized: "Repos"))
                     .font(RUFont.sans(12.5, weight: isToday ? .semibold : .regular))
                     .foregroundColor(isRest ? RUColor.text3 : RUColor.textPrimary)
                 if let subtitle = session?.displaySubtitle, !isRest {
@@ -246,12 +262,12 @@ struct PlanView: View {
     }
 
     private func dayRowAccessibilityLabel(day: PlannedDay, isToday: Bool, isRest: Bool) -> String {
-        var parts: [String] = [isToday ? "\(DayStatus.fullNames[day.weekday]), aujourd'hui" : DayStatus.fullNames[day.weekday]]
-        parts.append(isRest ? "repos" : (day.session?.displayTitle ?? "repos"))
+        var parts: [String] = [isToday ? String(localized: "\(DayStatus.fullNames[day.weekday]), aujourd'hui") : DayStatus.fullNames[day.weekday]]
+        parts.append(isRest ? String(localized: "repos") : (day.session?.displayTitle ?? String(localized: "repos")))
         if let session = day.session, !isRest {
-            parts.append("\(session.durationMinutes) minutes, \(session.zone), allure \(session.pace) par kilomètre")
+            parts.append(String(localized: "\(session.durationMinutes) minutes, \(session.zone), allure \(session.pace) par kilomètre"))
         }
-        if day.completed { parts.append("séance faite") }
+        if day.completed { parts.append(String(localized: "séance faite")) }
         return parts.joined(separator: ", ")
     }
 

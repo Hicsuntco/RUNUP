@@ -36,8 +36,10 @@ struct ChoiceView: View {
                     EyebrowLabel(text: "Bilan de ton programme")
                     HStack(spacing: 20) {
                         MetricColumn(value: "\(totalKm)", label: "km parcourus")
-                        MetricColumn(value: "\(profile.weekNumber)", label: "semaine\(profile.weekNumber > 1 ? "s" : "")")
-                        MetricColumn(value: "\(profile.streak)", label: "jour\(profile.streak > 1 ? "s" : "") de série", valueColor: RUColor.rose2)
+                        // Deux clés entières plutôt qu'un « s » recollé : le pluriel ne se fabrique
+                        // pas de la même façon dans les trois langues.
+                        MetricColumn(value: "\(profile.weekNumber)", label: profile.weekNumber > 1 ? String(localized: "semaines") : String(localized: "semaine"))
+                        MetricColumn(value: "\(profile.streak)", label: profile.streak > 1 ? String(localized: "jours de série") : String(localized: "jour de série"), valueColor: RUColor.rose2)
                     }
                 }
                 .padding(16)
@@ -61,7 +63,7 @@ struct ChoiceView: View {
 
                 Button(action: {
                     AdaptivePlanEngine.chooseFreeRun(profile)
-                    appState.toast("Mode course libre activé")
+                    appState.toast(String(localized: "Mode course libre activé"))
                     appState.go(.home)
                 }) {
                     HStack(spacing: 14) {

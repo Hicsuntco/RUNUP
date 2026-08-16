@@ -11,17 +11,18 @@ struct BuildingProgramView: View {
         let dayCount = vm.runningDays.count
         let closing: String
         if vm.isRace {
-            let label = vm.distance == .other ? (vm.customDistance.isEmpty ? "ta course" : vm.customDistance) : (vm.distance?.label ?? "ta course")
-            closing = "Objectif \(label) sécurisé"
+            let fallback = String(localized: "ta course")
+            let label = vm.distance == .other ? (vm.customDistance.isEmpty ? fallback : vm.customDistance) : (vm.distance?.label ?? fallback)
+            closing = String(localized: "Objectif \(label) sécurisé")
         } else {
-            closing = "Progression sécurisée"
+            closing = String(localized: "Progression sécurisée")
         }
         let firstName = vm.name.trimmingCharacters(in: .whitespaces)
-        let profileStep = firstName.isEmpty ? "Ton profil analysé" : "Profil de \(firstName) analysé"
+        let profileStep = firstName.isEmpty ? String(localized: "Ton profil analysé") : String(localized: "Profil de \(firstName) analysé")
         return [
             profileStep,
-            "Ta forme de départ estimée",
-            "Séances calées sur tes \(dayCount) jours",
+            String(localized: "Ta forme de départ estimée"),
+            String(localized: "Séances calées sur tes \(dayCount) jours"),
             closing
         ]
     }
@@ -31,8 +32,8 @@ struct BuildingProgramView: View {
     /// actually about to be built.
     private var buildingLabel: String {
         let shape = AdaptivePlanEngine.ProgramShape.compute(goal: vm.goal ?? .health, raceDate: vm.raceDate, from: .now)
-        if let total = shape.totalWeeks { return "\(total) semaines en préparation…" }
-        return "Programme sur mesure en préparation…"
+        if let total = shape.totalWeeks { return String(localized: "\(total) semaines en préparation…") }
+        return String(localized: "Programme sur mesure en préparation…")
     }
 
     var body: some View {
@@ -50,7 +51,7 @@ struct BuildingProgramView: View {
                     // names who it's for, the same way the checklist below already names her race
                     // distance and running-day count instead of generic placeholders.
                     if !vm.name.trimmingCharacters(in: .whitespaces).isEmpty {
-                        EyebrowLabel(text: "Pour \(vm.name.trimmingCharacters(in: .whitespaces))", color: RUColor.rose)
+                        EyebrowLabel(text: String(localized: "Pour \(vm.name.trimmingCharacters(in: .whitespaces))"), color: RUColor.rose)
                     }
                     Text("ON CONSTRUIT\nTON PROGRAMME")
                         .displayStyle(28)
@@ -87,7 +88,7 @@ struct BuildingProgramView: View {
             .padding(.top, 26)
             Spacer()
             VStack(spacing: 4) {
-                Text(vm.buildProgress == 4 ? "Prêt !" : buildingLabel)
+                Text(vm.buildProgress == 4 ? String(localized: "Prêt !") : buildingLabel)
                     .font(RUFont.sans(11))
                     .foregroundColor(RUColor.text3)
                 // Shown right before the system notification permission prompt fires (see

@@ -5,10 +5,11 @@ struct BirthdateStepView: View {
     var onNext: () -> Void
 
     var body: some View {
-        ObScreen {
+        let who = vm.name.isEmpty ? String(localized: "toi") : vm.name
+        return ObScreen {
             ScrollView {
                 ObTitle(
-                    eyebrow: "Étape 1 · \(vm.name.isEmpty ? "toi" : vm.name)",
+                    eyebrow: String(localized: "Étape 1 · \(who)"),
                     title: "TA DATE DE NAISSANCE ?",
                     subtitle: "Ça aide ton coach à mieux te connaître."
                 )

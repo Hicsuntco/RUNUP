@@ -10,7 +10,7 @@ struct BadgeShareCardView: View {
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "fr_FR")
+        f.locale = Locale.current
         f.dateFormat = "d MMMM yyyy"
         return f
     }()

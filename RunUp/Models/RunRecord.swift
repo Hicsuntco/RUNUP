@@ -28,6 +28,19 @@ final class RunRecord {
     var kcal: Int
     var elevationGainM: Int
     var splits: [String]
+    /// Le type de séance que cette course a exécutée, indépendant de la langue.
+    ///
+    /// `title` est désormais le texte AFFICHÉ au moment de la course — donc traduit. C'est le bon
+    /// choix pour l'historique (une course passée garde le libellé qu'elle a montré), mais ça
+    /// casse tout ce qui LIT ce titre pour en déduire quelque chose : le badge « fractionné » du
+    /// club comptait les courses dont le titre contient le mot « Fractionné », et ne se serait
+    /// plus jamais débloqué en anglais ni en espagnol.
+    ///
+    /// C'est exactement l'erreur que le passage à `SessionKind` devait supprimer, reproduite un
+    /// cran plus loin. Optionnel : les courses enregistrées avant ce champ valent nil, et le
+    /// comptage retombe sur l'ancienne recherche de texte — qui reste juste pour elles, puisque
+    /// leur titre, lui, est resté français.
+    var sessionKind: SessionKind? = nil
     var route: [RoutePoint] = []
     /// Non-nil only for a run imported from Strava (see `StravaService.importActivities`) — lets
     /// re-importing skip activities already pulled in, instead of duplicating History on every

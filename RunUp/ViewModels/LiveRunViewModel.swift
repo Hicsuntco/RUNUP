@@ -415,7 +415,7 @@ final class LiveRunViewModel {
     /// that has no idea a run is even in progress.
     private func liveVoiceContext() -> String {
         let target = session.pace
-        return "Distance parcourue jusqu'ici : \(String(format: "%.2f", locale: Locale(identifier: "fr_FR"), distanceKm)) km. Allure actuelle : \(paceLabel) /km (allure cible du jour : \(target) /km). Temps écoulé : \(PaceModel.formatDuration(elapsedSeconds))."
+        return "Distance parcourue jusqu'ici : \(String(format: "%.2f", locale: Locale.current, distanceKm)) km. Allure actuelle : \(paceLabel) /km (allure cible du jour : \(target) /km). Temps écoulé : \(PaceModel.formatDuration(elapsedSeconds))."
     }
 
     private func showCue(_ message: String) {
@@ -508,6 +508,10 @@ final class LiveRunViewModel {
                 RunRecord.RoutePoint(lat: coord.latitude, lng: coord.longitude, altitude: altitude)
             }
         )
+        // Le type de séance suit la course dans son relevé : `title` est du texte affiché, donc
+        // traduit, et tout ce qui voudrait en déduire quelque chose (le badge fractionné du club)
+        // doit lire ce champ-ci.
+        record.sessionKind = session.kind
         endedAt = Date()
         // La course a une fin explicite : l'instantané n'a plus rien à récupérer, et le laisser
         // ferait proposer cette même course au prochain lancement.
@@ -534,6 +538,7 @@ final class LiveRunViewModel {
                 elevationGainMeters: location.elevationGainMeters,
                 splitSecondsPerKm: splitSecondsPerKm,
                 sessionTitle: session.displayTitle,
+                sessionKind: session.kind,
                 route: zip(location.route, location.routeAltitudes).map { coord, altitude in
                     RunRecord.RoutePoint(lat: coord.latitude, lng: coord.longitude, altitude: altitude)
                 }

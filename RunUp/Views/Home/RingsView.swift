@@ -24,13 +24,13 @@ struct RingsView: View {
 
     private static let dayFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "fr_FR")
+        f.locale = Locale.current
         f.dateFormat = "EEEE d MMMM"
         return f
     }()
 
     private var dayLabel: String {
-        isToday ? "Aujourd'hui" : Self.dayFormatter.string(from: selectedDate).capitalized
+        isToday ? String(localized: "Aujourd'hui") : Self.dayFormatter.string(from: selectedDate).capitalized
     }
 
     private var selectedWeekday: Int { (Calendar.current.component(.weekday, from: selectedDate) + 5) % 7 }
@@ -79,13 +79,13 @@ struct RingsView: View {
     /// Only ever shown for today — nudging her about an already-past day makes no sense.
     private var coachNudge: String? {
         if !p.seanceDoneToday, p.todaySession.durationMinutes > 0 {
-            return "Ta séance du jour t'attend : \(p.todaySession.displayTitle) (\(p.todaySession.durationMinutes)′)."
+            return String(localized: "Ta séance du jour t'attend : \(p.todaySession.displayTitle) (\(p.todaySession.durationMinutes)′).")
         }
         if p.activeCaloriesToday < p.activeCaloriesGoal {
-            return "Encore \(remainingActiveCalories) kcal actives pour boucler l'objectif du jour."
+            return String(localized: "Encore \(remainingActiveCalories) kcal actives pour boucler l'objectif du jour.")
         }
         if p.stepsToday < p.stepsGoal {
-            return "Encore \(remainingSteps) pas pour boucler ton objectif — une petite marche ?"
+            return String(localized: "Encore \(remainingSteps) pas pour boucler ton objectif — une petite marche ?")
         }
         return nil
     }
@@ -119,8 +119,10 @@ struct RingsView: View {
 
                 VStack(spacing: 9) {
                     seanceRow
-                    ringRow(name: "Calories actives", color: goalColors[1], value: displayCalories, goal: p.activeCaloriesGoal, unit: "kcal")
-                    ringRow(name: "Pas", color: goalColors[2], value: displaySteps, goal: p.stepsGoal, unit: "pas")
+                    // `ringRow` rend `name`/`unit` par des `Text(String)` nus : les littéraux ne
+                    // passeraient pas par le catalogue sans ça. « kcal » reste un symbole d'unité.
+                    ringRow(name: String(localized: "Calories actives"), color: goalColors[1], value: displayCalories, goal: p.activeCaloriesGoal, unit: "kcal")
+                    ringRow(name: String(localized: "Pas"), color: goalColors[2], value: displaySteps, goal: p.stepsGoal, unit: String(localized: "pas"))
                 }
 
                 if isToday {
@@ -261,6 +263,6 @@ struct RingsView: View {
     }
 
     private func formattedValue(_ v: Double) -> String {
-        v == v.rounded() ? "\(Int(v))" : String(format: "%.1f", locale: Locale(identifier: "fr_FR"), v)
+        v == v.rounded() ? "\(Int(v))" : String(format: "%.1f", locale: Locale.current, v)
     }
 }

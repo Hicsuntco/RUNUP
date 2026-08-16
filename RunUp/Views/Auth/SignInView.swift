@@ -218,7 +218,7 @@ struct SignInView: View {
             guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
                   let tokenData = credential.identityToken,
                   let identityToken = String(data: tokenData, encoding: .utf8) else {
-                errorMessage = "Connexion Apple impossible."
+                errorMessage = String(localized: "Connexion Apple impossible.")
                 return
             }
             // Apple only sends `fullName` the very first time this Apple ID signs into this app —
@@ -230,7 +230,7 @@ struct SignInView: View {
             let trimmedReferral = referralCode.trimmingCharacters(in: .whitespaces)
             Task { await runAuth { try await appState.auth.signInWithApple(identityToken: identityToken, name: givenName, lastName: familyName, referralCode: trimmedReferral.isEmpty ? nil : trimmedReferral) } }
         case .failure:
-            errorMessage = "Connexion Apple annulée ou impossible."
+            errorMessage = String(localized: "Connexion Apple annulée ou impossible.")
         }
     }
 
@@ -287,13 +287,13 @@ struct SignInView: View {
                 dismiss()
             }
         } catch AuthServiceError.badResponse(409, _) {
-            errorMessage = "Un compte existe déjà avec cet email."
+            errorMessage = String(localized: "Un compte existe déjà avec cet email.")
         } catch AuthServiceError.badResponse(401, _) {
-            errorMessage = "Email ou mot de passe incorrect."
+            errorMessage = String(localized: "Email ou mot de passe incorrect.")
         } catch AuthServiceError.badResponse(422, _) {
-            errorMessage = "Ce prénom n'est pas autorisé — choisis-en un autre."
+            errorMessage = String(localized: "Ce prénom n'est pas autorisé — choisis-en un autre.")
         } catch {
-            errorMessage = "Connexion impossible — vérifie ta connexion internet."
+            errorMessage = String(localized: "Connexion impossible — vérifie ta connexion internet.")
         }
         isLoading = false
     }
@@ -329,11 +329,11 @@ struct SignInView: View {
             try? await appState.auth.refreshMe()
             dismiss()
         } catch ClubServiceError.badResponse(409, _) {
-            usernameError = "Ce pseudo est déjà pris."
+            usernameError = String(localized: "Ce pseudo est déjà pris.")
         } catch ClubServiceError.badResponse(400, _) {
-            usernameError = "Pseudo invalide — lettres minuscules, chiffres, underscore, 3 à 20 caractères."
+            usernameError = String(localized: "Pseudo invalide — lettres minuscules, chiffres, underscore, 3 à 20 caractères.")
         } catch {
-            usernameError = "Impossible d'enregistrer — vérifie ta connexion."
+            usernameError = String(localized: "Impossible d'enregistrer — vérifie ta connexion.")
         }
         isSavingUsername = false
     }

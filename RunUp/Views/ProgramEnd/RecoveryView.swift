@@ -11,7 +11,7 @@ struct RecoveryView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                HeaderView(eyebrow: "Programme terminé 🏁", title: "Bravo \(profile.name)") {
+                HeaderView(eyebrow: "Programme terminé 🏁", title: String(localized: "Bravo \(profile.name)")) {
                     AvatarButton(initial: String(profile.name.prefix(1)), imageData: profile.avatarImageData) { appState.go(.profile) }
                 }
 

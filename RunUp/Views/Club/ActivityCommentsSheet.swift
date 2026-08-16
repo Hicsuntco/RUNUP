@@ -111,7 +111,7 @@ struct ActivityCommentsSheet: View {
         do {
             comments = try await clubService.fetchComments(activityId: activity.id)
         } catch {
-            errorMessage = "Impossible de charger les commentaires."
+            errorMessage = String(localized: "Impossible de charger les commentaires.")
         }
         isLoading = false
     }
@@ -128,9 +128,9 @@ struct ActivityCommentsSheet: View {
             Haptics.impact(.light)
             onCommentPosted()
         } catch ClubServiceError.badResponse(422, _) {
-            errorMessage = "Ce message n'est pas autorisé — reformule-le."
+            errorMessage = String(localized: "Ce message n'est pas autorisé — reformule-le.")
         } catch {
-            errorMessage = "Impossible d'envoyer, réessaie."
+            errorMessage = String(localized: "Impossible d'envoyer, réessaie.")
         }
         isSending = false
     }

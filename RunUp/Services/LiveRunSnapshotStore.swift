@@ -17,6 +17,9 @@ struct LiveRunSnapshot: Codable {
     var elevationGainMeters: Double
     var splitSecondsPerKm: [Double]
     var sessionTitle: String
+    /// Optionnel : un instantané écrit avant ce champ le décode à nil, et la course récupérée
+    /// vaut alors ce que valaient toutes les courses avant `SessionKind`.
+    var sessionKind: SessionKind?
     var route: [RunRecord.RoutePoint]
 }
 

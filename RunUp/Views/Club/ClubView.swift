@@ -150,7 +150,7 @@ struct ClubView: View {
                     commentsActivity = nil
                     Task {
                         try? await Task.sleep(for: .milliseconds(400))
-                        reportTarget = ReportTarget(targetType: "comment", targetId: comment.id, displayName: "le commentaire de \(comment.name)")
+                        reportTarget = ReportTarget(targetType: "comment", targetId: comment.id, displayName: String(localized: "le commentaire de \(comment.name)"))
                     }
                 },
                 onBlock: { comment in
@@ -223,10 +223,10 @@ struct ClubView: View {
             try await clubService.deleteActivity(activityId: item.id)
             await MainActor.run {
                 feed.removeAll { $0.id == item.id }
-                appState.toast("Activité supprimée du fil.")
+                appState.toast(String(localized: "Activité supprimée du fil."))
             }
         } catch {
-            await MainActor.run { appState.toast("Suppression impossible — réessaie.") }
+            await MainActor.run { appState.toast(String(localized: "Suppression impossible — réessaie.")) }
         }
     }
 
@@ -255,7 +255,9 @@ struct ClubView: View {
             }
             Spacer()
             if let club = board.club {
-                StatChip(text: "\(club.memberCount) membre\(club.memberCount > 1 ? "s" : "")", color: RUColor.text2, background: RUColor.card)
+                StatChip(text: club.memberCount > 1
+                    ? String(localized: "\(club.memberCount) membres")
+                    : String(localized: "\(club.memberCount) membre"), color: RUColor.text2, background: RUColor.card)
             }
         }
         .padding(.vertical, 2)
@@ -372,7 +374,7 @@ struct ClubView: View {
         HStack {
             if let club = board.club {
                 Button("Signaler ce club") {
-                    reportTarget = ReportTarget(targetType: "club", targetId: club.id, displayName: "le club \(club.name)")
+                    reportTarget = ReportTarget(targetType: "club", targetId: club.id, displayName: String(localized: "le club \(club.name)"))
                 }
                 .font(RUFont.sans(11, weight: .semibold))
                 .foregroundColor(RUColor.text3)
@@ -403,7 +405,17 @@ struct ClubView: View {
     // MARK: Signed in, in a club
 
     private var levelInfo: (level: Int, title: String, xpIntoLevel: Int, xpForLevel: Int) {
-        let titles = ["Premiers pas", "Foulée légère", "Rythme trouvé", "Foulée d'or", "Vitesse de croisière", "Endurance de fer", "Élite locale"]
+        // Composés dans `Text("Niveau \(level) · \(title)")` en tant qu'argument : ils n'atteignent
+        // jamais un `LocalizedStringKey` par eux-mêmes, d'où `String(localized:)`.
+        let titles = [
+            String(localized: "Premiers pas"),
+            String(localized: "Foulée légère"),
+            String(localized: "Rythme trouvé"),
+            String(localized: "Foulée d'or"),
+            String(localized: "Vitesse de croisière"),
+            String(localized: "Endurance de fer"),
+            String(localized: "Élite locale")
+        ]
         let xp = auth.currentUser?.xpTotal ?? 0
         let xpPerLevel = 250
         let level = xp / xpPerLevel + 1
@@ -446,7 +458,7 @@ struct ClubView: View {
     /// (« on en est où »), là où deux nombres bruts obligent à faire la division de tête. Rien
     /// d'inventé — c'est exactement `progressKm / targetKm`, tous deux calculés côté serveur.
     private func challengeProgressText(_ challenge: ClubChallenge) -> String {
-        let base = "\(Int(challenge.progressKm)) / \(Int(challenge.targetKm)) km"
+        let base = String(localized: "\(Int(challenge.progressKm)) / \(Int(challenge.targetKm)) km")
         guard challenge.targetKm > 0 else { return base }
         let pct = Int((challenge.progressKm / challenge.targetKm * 100).rounded())
         return "\(base) — \(pct) %"
@@ -463,7 +475,7 @@ struct ClubView: View {
                     HStack {
                         EyebrowLabel(text: "Défi du club", color: RUColor.rose2)
                         Spacer()
-                        StatChip(text: "J-\(daysLeft(until: challenge.endDate))", color: RUColor.rose2)
+                        StatChip(text: String(localized: "J-\(daysLeft(until: challenge.endDate))"), color: RUColor.rose2)
                     }
                     Text(challenge.title).displayStyle(19).foregroundColor(RUColor.textPrimary)
                     LinearBar(fraction: challenge.targetKm > 0 ? min(1, challenge.progressKm / challenge.targetKm) : 0, color: RUColor.rose)
@@ -495,9 +507,11 @@ struct ClubView: View {
 
     private var clubTabs: some View {
         HStack(spacing: 2) {
-            segment("Aperçu", .overview)
-            segment("Classement", .board)
-            segment("Activité", .feed)
+            // `segment` reçoit un `String` (et non un littéral posé directement dans un `Text`) :
+            // sans `String(localized:)` ces libellés ne passeraient jamais par le catalogue.
+            segment(String(localized: "Aperçu"), .overview)
+            segment(String(localized: "Classement"), .board)
+            segment(String(localized: "Activité"), .feed)
         }
         .padding(3)
         .background(RUColor.bg2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -553,7 +567,9 @@ struct ClubView: View {
                     }
                 }
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel("\(active.count) membre\(active.count > 1 ? "s" : "") actif\(active.count > 1 ? "s" : "") cette semaine")
+                .accessibilityLabel(active.count > 1
+                    ? String(localized: "\(active.count) membres actifs cette semaine")
+                    : String(localized: "\(active.count) membre actif cette semaine"))
             }
             .padding(.top, 2)
         }
@@ -606,7 +622,15 @@ struct ClubView: View {
     /// keys get synced to the server (see `syncBadgesIfNeeded`), which is what makes them show up
     /// on this profile for other club members too — see `ClubBadgeCatalog`.
     private var badges: [ClubBadge] {
-        let intervalRuns = runs.filter { $0.title.localizedCaseInsensitiveContains("Fractionné") }.count
+        // Compté sur `sessionKind`, pas sur le titre : depuis que `RunRecord.title` porte le texte
+        // AFFICHÉ (donc traduit), chercher le mot « Fractionné » dedans ne trouverait plus rien en
+        // anglais ni en espagnol, et ce badge ne se débloquerait jamais. Les courses antérieures
+        // au champ n'ont pas de `kind` — pour elles seulement on garde la recherche de texte, qui
+        // reste exacte puisque leur titre, lui, est resté français.
+        let intervalRuns = runs.filter { run in
+            if let kind = run.sessionKind { return kind.isIntervalWorkout }
+            return run.title.localizedCaseInsensitiveContains("Fractionné")
+        }.count
         let earlyRun = runs.contains { Calendar.current.component(.hour, from: $0.date) < 7 }
         let nightRun = runs.contains { Calendar.current.component(.hour, from: $0.date) >= 21 }
         let totalElevation = runs.reduce(0) { $0 + $1.elevationGainM }
@@ -632,13 +656,15 @@ struct ClubView: View {
             "weekendWarrior": weekendRuns >= 10
         ]
         let progress: [String: String?] = [
-            "streak3": "\(min(profile.streak, 3))/3 jours",
-            "interval3": "\(min(intervalRuns, 3))/3 séances",
+            // Seules les lignes qui portent un mot français passent par le catalogue — les autres
+            // ne sont que des chiffres et des unités identiques dans les trois langues.
+            "streak3": String(localized: "\(min(profile.streak, 3))/3 jours"),
+            "interval3": String(localized: "\(min(intervalRuns, 3))/3 séances"),
             "earlyRun": nil,
             "elevation300": "\(min(Int(totalElevation), 300))/300 m",
             "firstRun": nil,
-            "streak7": "\(min(profile.streak, 7))/7 jours",
-            "streak30": "\(min(profile.streak, 30))/30 jours",
+            "streak7": String(localized: "\(min(profile.streak, 7))/7 jours"),
+            "streak30": String(localized: "\(min(profile.streak, 30))/30 jours"),
             "tenRuns": "\(min(runs.count, 10))/10",
             "fiftyRuns": "\(min(runs.count, 50))/50",
             "distance50": "\(min(Int(totalDistance), 50))/50 km",
@@ -663,7 +689,7 @@ struct ClubView: View {
     /// individual rankings.
     private var weekPulseCard: some View {
         let stats = board.weekStats
-        let km = String(format: "%.1f", locale: Locale(identifier: "fr_FR"), stats?.totalKm ?? 0)
+        let km = String(format: "%.1f", locale: Locale.current, stats?.totalKm ?? 0)
         return HStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 2) {
                 EyebrowLabel(text: "Le club cette semaine", color: RUColor.rose)
@@ -685,14 +711,14 @@ struct ClubView: View {
 
     private static let eventDateFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "fr_FR")
+        f.locale = Locale.current
         f.dateFormat = "EEE d MMM · HH:mm"
         return f
     }()
 
     private static let eventTimeFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "fr_FR")
+        f.locale = Locale.current
         f.dateFormat = "HH:mm"
         return f
     }()
@@ -705,9 +731,11 @@ struct ClubView: View {
     private func eventDateLabel(_ date: Date) -> String {
         let time = Self.eventTimeFormatter.string(from: date)
         if Calendar.current.isDateInToday(date) {
-            return Calendar.current.component(.hour, from: date) >= 17 ? "CE SOIR · \(time)" : "AUJOURD'HUI · \(time)"
+            return Calendar.current.component(.hour, from: date) >= 17
+                ? String(localized: "CE SOIR · \(time)")
+                : String(localized: "AUJOURD'HUI · \(time)")
         }
-        if Calendar.current.isDateInTomorrow(date) { return "DEMAIN · \(time)" }
+        if Calendar.current.isDateInTomorrow(date) { return String(localized: "DEMAIN · \(time)") }
         return Self.eventDateFormatter.string(from: date).uppercased()
     }
 
@@ -805,7 +833,7 @@ struct ClubView: View {
                 // list would just let her tap it again and fail identically every time.
                 await MainActor.run { board.events?.removeAll { $0.id == event.id } }
             } catch {
-                await MainActor.run { appState.toast("Impossible de répondre — réessaie.") }
+                await MainActor.run { appState.toast(String(localized: "Impossible de répondre — réessaie.")) }
             }
         }
     }
@@ -821,7 +849,7 @@ struct ClubView: View {
             } catch {
                 // A real failure (network, 403 not-the-creator, ...) — keep it in the list rather
                 // than silently pretending the cancel worked when it didn't.
-                await MainActor.run { appState.toast("Impossible d'annuler la sortie — réessaie.") }
+                await MainActor.run { appState.toast(String(localized: "Impossible d'annuler la sortie — réessaie.")) }
             }
         }
     }
@@ -838,9 +866,9 @@ struct ClubView: View {
             // Two real races: km of THIS week (Monday reset — a newcomer can win her first week)
             // and the all-time XP board.
             HStack(spacing: 6) {
-                boardModeChip("Cette semaine", .week)
-                boardModeChip("Général (XP)", .general)
-                boardModeChip("Mondial", .global)
+                boardModeChip(String(localized: "Cette semaine"), .week)
+                boardModeChip(String(localized: "Général (XP)"), .general)
+                boardModeChip(String(localized: "Mondial"), .global)
             }
             Group {
                 if boardMode == .week {
@@ -964,7 +992,7 @@ struct ClubView: View {
                 .foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.text2)
                 .frame(width: 20)
             AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28, seed: entry.isMe ? nil : entry.id)
-            Text(entry.isMe ? "\(entry.name) · toi" : entry.name)
+            Text(entry.isMe ? String(localized: "\(entry.name) · toi") : entry.name)
                 .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
                 .foregroundColor(RUColor.textPrimary)
                 .lineLimit(1)
@@ -973,7 +1001,7 @@ struct ClubView: View {
             if weeklyDisplayMode == .pctObjectif, let pct = entry.pctOfTarget {
                 weeklyPctBadge(pct: pct, isMe: entry.isMe)
             } else {
-                Text("\(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), entry.weekKm)) km")
+                Text("\(String(format: "%.1f", locale: Locale.current, entry.weekKm)) km")
                     .displayStyle(14).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
             }
         }
@@ -1028,7 +1056,7 @@ struct ClubView: View {
                 .foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.text2)
                 .frame(width: 20)
             AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28, seed: entry.isMe ? nil : entry.id)
-            Text(entry.isMe ? "\(entry.name) · toi" : entry.name)
+            Text(entry.isMe ? String(localized: "\(entry.name) · toi") : entry.name)
                 .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
                 .foregroundColor(RUColor.textPrimary)
                 .lineLimit(1)
@@ -1141,13 +1169,13 @@ struct ClubView: View {
                                     .foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.text2)
                                     .frame(width: 20)
                                 AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28, seed: entry.isMe ? nil : entry.id)
-                                Text(entry.isMe ? "\(entry.name) · toi" : entry.name)
+                                Text(entry.isMe ? String(localized: "\(entry.name) · toi") : entry.name)
                                     .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
                                     .foregroundColor(RUColor.textPrimary)
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.7)
                                 Spacer()
-                                Text("\(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), entry.weekKm)) km")
+                                Text("\(String(format: "%.1f", locale: Locale.current, entry.weekKm)) km")
                                     .displayStyle(14).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
                             }
                             .padding(.horizontal, 8)
@@ -1190,7 +1218,7 @@ struct ClubView: View {
                                 .accessibilityLabel("Code d'invitation du club")
                                 .accessibilityValue(club.inviteCode.map { String($0) }.joined(separator: " "))
                             Spacer(minLength: 0)
-                            ShareLink(item: "Rejoins mon club \(club.name) sur RunUp avec le code \(club.inviteCode) : https://runup-nu.vercel.app") {
+                            ShareLink(item: String(localized: "Rejoins mon club \(club.name) sur RunUp avec le code \(club.inviteCode) : https://runup-nu.vercel.app")) {
                                 HStack(spacing: 6) {
                                     Image(systemName: "square.and.arrow.up")
                                     Text("Partager")
@@ -1218,7 +1246,7 @@ struct ClubView: View {
                     onKudos: { Task { await toggleKudos(item) } },
                     onComment: { commentsActivity = item },
                     onReport: {
-                        reportTarget = ReportTarget(targetType: "activity", targetId: item.id, displayName: "l'activité de \(item.name)")
+                        reportTarget = ReportTarget(targetType: "activity", targetId: item.id, displayName: String(localized: "l'activité de \(item.name)"))
                     },
                     onBlock: { pendingBlock = (item.userId, item.name) },
                     onDelete: { pendingDeleteActivity = item }
@@ -1265,7 +1293,7 @@ struct ClubView: View {
             // Only surface the error when there's nothing already on screen to fall back to — a
             // background refresh failing quietly behind still-valid cached content beats replacing
             // it with an error banner over data that was fine a moment ago.
-            errorMessage = "Impossible de charger le club — vérifie ta connexion."
+            errorMessage = String(localized: "Impossible de charger le club — vérifie ta connexion.")
         }
         // Piggyback a kudos check on every Club tab open, not just when switching to the
         // "Fil d'activité" segment — otherwise a new kudos notification only ever surfaces if she
@@ -1279,7 +1307,7 @@ struct ClubView: View {
             // Board can still have loaded fine while this alone failed — without this, a failed
             // feed fetch left `feed` empty with zero indication, so "Fil d'activité" read as a
             // genuinely empty club instead of a failed load.
-            errorMessage = "Impossible de charger le fil d'activité — vérifie ta connexion."
+            errorMessage = String(localized: "Impossible de charger le fil d'activité — vérifie ta connexion.")
         }
         isLoading = false
     }
@@ -1290,7 +1318,7 @@ struct ClubView: View {
             notifyNewKudos(in: feed)
             notifyNewComments(in: feed)
         } catch {
-            errorMessage = "Impossible de charger le fil d'activité."
+            errorMessage = String(localized: "Impossible de charger le fil d'activité.")
         }
     }
 
@@ -1312,7 +1340,7 @@ struct ClubView: View {
             } catch {
                 await MainActor.run {
                     globalBoard?.optedIn = current
-                    appState.toast("Impossible de mettre à jour — réessaie.")
+                    appState.toast(String(localized: "Impossible de mettre à jour — réessaie."))
                 }
             }
         }
@@ -1331,8 +1359,10 @@ struct ClubView: View {
                 let gained = item.kudos - seen
                 appState.notify(
                     icon: "👏", colorHex: 0xFF3B6B,
-                    title: "Nouveaux encouragements",
-                    text: gained == 1 ? "Quelqu'un a applaudi ta séance." : "\(gained) personnes ont applaudi ta séance."
+                    title: String(localized: "Nouveaux encouragements"),
+                    text: gained == 1
+                        ? String(localized: "Quelqu'un a applaudi ta séance.")
+                        : String(localized: "\(gained) personnes ont applaudi ta séance.")
                 )
             }
             profile.kudosSeenCounts[item.id] = item.kudos
@@ -1350,9 +1380,9 @@ struct ClubView: View {
             newClubName = ""
             board = try await clubService.fetchBoard()
         } catch ClubServiceError.badResponse(422, _) {
-            errorMessage = "Ce nom n'est pas autorisé — choisis-en un autre."
+            errorMessage = String(localized: "Ce nom n'est pas autorisé — choisis-en un autre.")
         } catch {
-            errorMessage = "Impossible de créer le club."
+            errorMessage = String(localized: "Impossible de créer le club.")
         }
         isLoading = false
     }
@@ -1378,9 +1408,9 @@ struct ClubView: View {
             joinCode = ""
             board = try await clubService.fetchBoard()
         } catch ClubServiceError.badResponse(404, _) {
-            errorMessage = "Code d'invitation introuvable."
+            errorMessage = String(localized: "Code d'invitation introuvable.")
         } catch {
-            errorMessage = "Impossible de rejoindre ce club."
+            errorMessage = String(localized: "Impossible de rejoindre ce club.")
         }
         isLoading = false
     }
@@ -1402,7 +1432,7 @@ struct ClubView: View {
             profile.kudosSeenCounts.removeAll()
             profile.commentsSeenCounts.removeAll()
         } catch {
-            errorMessage = "Impossible de quitter le club."
+            errorMessage = String(localized: "Impossible de quitter le club.")
         }
         isLoading = false
     }
@@ -1426,7 +1456,7 @@ struct ClubView: View {
             guard let current = feed.firstIndex(where: { $0.id == item.id }) else { return }
             feed[current].kudoedByMe = wasKudoed
             feed[current].kudos += wasKudoed ? 1 : -1
-            appState.toast("Kudos non envoyé — vérifie ta connexion.")
+            appState.toast(String(localized: "Kudos non envoyé — vérifie ta connexion."))
         }
     }
 
@@ -1452,8 +1482,10 @@ struct ClubView: View {
                 let gained = item.commentsCount - seen
                 appState.notify(
                     icon: "💬", colorHex: 0xFF3B6B,
-                    title: "Nouveaux commentaires",
-                    text: gained == 1 ? "Quelqu'un a commenté ta séance." : "\(gained) personnes ont commenté ta séance."
+                    title: String(localized: "Nouveaux commentaires"),
+                    text: gained == 1
+                        ? String(localized: "Quelqu'un a commenté ta séance.")
+                        : String(localized: "\(gained) personnes ont commenté ta séance.")
                 )
             }
             profile.commentsSeenCounts[item.id] = item.commentsCount
@@ -1513,9 +1545,9 @@ struct ClubView: View {
     private func submitReport(_ target: ReportTarget, reason: String) async {
         do {
             try await clubService.report(targetType: target.targetType, targetId: target.targetId, reason: reason)
-            appState.toast("Signalement envoyé — merci")
+            appState.toast(String(localized: "Signalement envoyé — merci"))
         } catch {
-            appState.toast("Impossible d'envoyer le signalement, réessaie.")
+            appState.toast(String(localized: "Impossible d'envoyer le signalement, réessaie."))
         }
     }
 
@@ -1529,7 +1561,7 @@ struct ClubView: View {
             async let feedAttempt = clubService.fetchFeed()
             (board, feed) = try await (boardAttempt, feedAttempt)
         } catch {
-            errorMessage = "Impossible de bloquer cette personne."
+            errorMessage = String(localized: "Impossible de bloquer cette personne.")
         }
     }
 }
@@ -1611,7 +1643,7 @@ extension Date {
     /// call. Safe as a plain static: everything touching it runs on the main actor.
     private static let relativeFormatter: RelativeDateTimeFormatter = {
         let formatter = RelativeDateTimeFormatter()
-        formatter.locale = Locale(identifier: "fr_FR")
+        formatter.locale = Locale.current
         formatter.unitsStyle = .short
         return formatter
     }()

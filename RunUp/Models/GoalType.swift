@@ -74,8 +74,8 @@ enum HyroxDivision: String, Codable, CaseIterable, Identifiable {
 
     var subtitle: String {
         switch self {
-        case .open: return "Charges standard — le format le plus couru"
-        case .pro: return "Charges renforcées — pour un niveau confirmé"
+        case .open: return String(localized: "Charges standard — le format le plus couru")
+        case .pro: return String(localized: "Charges renforcées — pour un niveau confirmé")
         }
     }
 }
@@ -87,17 +87,17 @@ enum ExperienceLevel: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .debutante: return "Débutante"
-        case .intermediaire: return "Intermédiaire"
-        case .confirmee: return "Confirmée"
+        case .debutante: return String(localized: "Débutante")
+        case .intermediaire: return String(localized: "Intermédiaire")
+        case .confirmee: return String(localized: "Confirmée")
         }
     }
 
     var subtitle: String {
         switch self {
-        case .debutante: return "Je cours depuis moins de 6 mois"
-        case .intermediaire: return "Je cours 2-3 fois par semaine"
-        case .confirmee: return "Je m'entraîne sérieusement depuis des années"
+        case .debutante: return String(localized: "Je cours depuis moins de 6 mois")
+        case .intermediaire: return String(localized: "Je cours 2-3 fois par semaine")
+        case .confirmee: return String(localized: "Je m'entraîne sérieusement depuis des années")
         }
     }
 }
@@ -111,9 +111,9 @@ enum RaceDistance: String, Codable, CaseIterable, Identifiable {
         switch self {
         case .k5: return "5 km"
         case .k10: return "10 km"
-        case .semi: return "Semi"
-        case .marathon: return "Marathon"
-        case .other: return "Autre distance"
+        case .semi: return String(localized: "Semi")
+        case .marathon: return String(localized: "Marathon")
+        case .other: return String(localized: "Autre distance")
         }
     }
 
@@ -150,7 +150,7 @@ enum ConnectedSource: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .apple: return "Apple Santé"
+        case .apple: return String(localized: "Apple Santé")
         case .strava: return "Strava"
         case .garmin: return "Garmin Connect"
         }
@@ -158,9 +158,9 @@ enum ConnectedSource: String, Codable, CaseIterable, Identifiable {
 
     var subtitle: String {
         switch self {
-        case .apple: return "FC, sommeil, course"
-        case .strava: return "Historique & segments"
-        case .garmin: return "Montre & données avancées"
+        case .apple: return String(localized: "FC, sommeil, course")
+        case .strava: return String(localized: "Historique & segments")
+        case .garmin: return String(localized: "Montre & données avancées")
         }
     }
 
@@ -189,10 +189,10 @@ enum RPE: Int, Codable, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .tropDur: return "Trop dur"
-        case .dur: return "Dur"
-        case .justeBien: return "Juste bien"
-        case .facile: return "Facile"
+        case .tropDur: return String(localized: "Trop dur")
+        case .dur: return String(localized: "Dur")
+        case .justeBien: return String(localized: "Juste bien")
+        case .facile: return String(localized: "Facile")
         }
     }
 }

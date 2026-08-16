@@ -30,7 +30,7 @@ struct HeatmapView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            BackTitleHeaderView(eyebrow: "\(runsWithRoute.count) parcours trackés", title: "Mes routes") {
+            BackTitleHeaderView(eyebrow: String(localized: "\(runsWithRoute.count) parcours trackés"), title: "Mes routes") {
                 appState.go(.stats)
             }
             .padding(.horizontal, RUSpacing.pagePadding)

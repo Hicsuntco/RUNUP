@@ -40,7 +40,11 @@ struct ObNext: View {
 
     var body: some View {
         Button(action: action) {
-            Text(label)
+            // `LocalizedStringKey(label)`, pas `Text(label)` : le libellé arrive ici sous forme de
+            // `String`, donc déjà absorbé comme texte brut avant d'atteindre un `Text` — même
+            // raison que `EyebrowLabel`/`SelectableChip`. Un libellé réellement dynamique retombe
+            // sur le rendu verbatim qu'il avait déjà.
+            Text(LocalizedStringKey(label))
         }
         .buttonStyle(PrimaryButtonStyle(isDisabled: disabled))
         .disabled(disabled)
@@ -81,7 +85,7 @@ struct ObTextField: View {
     var keyboard: UIKeyboardType = .default
 
     var body: some View {
-        TextField("", text: $text, prompt: Text(placeholder).foregroundColor(RUColor.text3))
+        TextField("", text: $text, prompt: Text(LocalizedStringKey(placeholder)).foregroundColor(RUColor.text3))
             .keyboardType(keyboard)
             .font(RUFont.sans(16))
             .foregroundColor(RUColor.textPrimary)

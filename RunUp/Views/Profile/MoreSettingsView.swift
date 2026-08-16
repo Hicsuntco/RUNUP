@@ -74,14 +74,16 @@ struct MoreSettingsView: View {
 
     private var programCard: some View {
         VStack(spacing: 0) {
-            programRow("flag.checkered", "Voir mon objectif") { dismiss(); appState.go(.race) }
+            // `programRow` reçoit un `String` (et non un littéral posé dans un `Text`) : sans
+            // `String(localized:)` ces libellés ne passeraient jamais par le catalogue.
+            programRow("flag.checkered", String(localized: "Voir mon objectif")) { dismiss(); appState.go(.race) }
             Divider().background(RUColor.line)
-            programRow("slider.horizontal.3", "Modifier jours & objectif") { dismiss(); appState.openProgramSettings() }
+            programRow("slider.horizontal.3", String(localized: "Modifier jours & objectif")) { dismiss(); appState.openProgramSettings() }
             Divider().background(RUColor.line)
             // Opens the same wizard `ChoiceView` offers at the end of a program — only touches
             // goal/distance/allure/jours, keeps everything else (nom, blessures, cycle...) as-is.
             // The old "Refaire l'onboarding" re-asked all of it just to change the training plan.
-            programRow("arrow.counterclockwise", "Refaire un programme") { dismiss(); appState.newGoalWizardPresented = true }
+            programRow("arrow.counterclockwise", String(localized: "Refaire un programme")) { dismiss(); appState.newGoalWizardPresented = true }
             if profile.programPhase != .freerun {
                 Divider().background(RUColor.line)
                 // The direct route to `.freerun` — before this, the only way in was "Terminer le
@@ -90,17 +92,17 @@ struct MoreSettingsView: View {
                 // run casually for a while, when what's actually wanted (course libre: suggested
                 // sessions with no pace/distance target, just maintien/progression) already
                 // exists — it just needed a way in that doesn't run through recovery first.
-                programRow("figure.run", "Passer en mode course libre") {
+                programRow("figure.run", String(localized: "Passer en mode course libre")) {
                     AdaptivePlanEngine.chooseFreeRun(profile)
-                    appState.toast("Mode course libre activé — suggestions sans objectif de perf")
+                    appState.toast(String(localized: "Mode course libre activé — suggestions sans objectif de perf"))
                     dismiss()
                 }
             }
             if profile.programPhase == .active {
                 Divider().background(RUColor.line)
-                programRow("checkmark.seal", "Terminer le programme") {
+                programRow("checkmark.seal", String(localized: "Terminer le programme")) {
                     AdaptivePlanEngine.endProgram(profile)
-                    appState.toast("Programme terminé · récupération en cours")
+                    appState.toast(String(localized: "Programme terminé · récupération en cours"))
                     dismiss()
                 }
             }
@@ -188,7 +190,7 @@ struct MoreSettingsView: View {
 
     private var shoesCard: some View {
         VStack(spacing: 0) {
-            programRow("shoeprints.fill", "Mes chaussures") { dismiss(); appState.go(.shoes) }
+            programRow("shoeprints.fill", String(localized: "Mes chaussures")) { dismiss(); appState.go(.shoes) }
         }
         .ruCard()
     }
@@ -263,10 +265,12 @@ struct MoreSettingsView: View {
 
     private func cyclePhaseLabel(_ phase: UserProfile.CyclePhase) -> String {
         switch phase {
-        case .menstrual: return "menstruelle"
-        case .follicular: return "folliculaire"
-        case .ovulation: return "ovulatoire"
-        case .luteal: return "lutéale"
+        // Composé dans `Text("Phase actuelle estimée : \(…)")` en tant qu'argument — il faut donc
+        // que la valeur soit déjà traduite en sortant d'ici.
+        case .menstrual: return String(localized: "menstruelle")
+        case .follicular: return String(localized: "folliculaire")
+        case .ovulation: return String(localized: "ovulatoire")
+        case .luteal: return String(localized: "lutéale")
         }
     }
 
@@ -304,7 +308,7 @@ struct MoreSettingsView: View {
             }
             identityEditor
             Divider().background(RUColor.line)
-            programRow("arrow.right.square", "Se déconnecter") { appState.auth.signOut(); dismiss() }
+            programRow("arrow.right.square", String(localized: "Se déconnecter")) { appState.auth.signOut(); dismiss() }
             Divider().background(RUColor.line)
             Button(action: { showDeleteAccountConfirm = true }) {
                 HStack(spacing: 12) {
@@ -356,7 +360,7 @@ struct MoreSettingsView: View {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
         let system = UIDevice.current.systemVersion
-        let body = "\n\n\n---\nCe qui suit aide juste au diagnostic :\nVersion \(version) (\(build)) · iOS \(system)"
+        let body = String(localized: "\n\n\n---\nCe qui suit aide juste au diagnostic :\nVersion \(version) (\(build)) · iOS \(system)")
         var components = URLComponents(string: "mailto:charlottegrudep@gmail.com")!
         components.queryItems = [
             URLQueryItem(name: "subject", value: "Feedback RunUp bêta"),
@@ -413,15 +417,15 @@ struct MoreSettingsView: View {
             // `_ =` explicite : `refreshMe()` renvoie l'utilisateur rafraîchi, dont on n'a pas
             // besoin ici — c'est l'effet de bord sur `currentUser` qui nous intéresse.
             _ = try? await appState.auth.refreshMe()
-            appState.toast("Profil mis à jour")
+            appState.toast(String(localized: "Profil mis à jour"))
         } catch ClubServiceError.badResponse(409, _) {
-            identityError = "Ce pseudo est déjà pris."
+            identityError = String(localized: "Ce pseudo est déjà pris.")
         } catch ClubServiceError.badResponse(400, _) {
-            identityError = "Pseudo invalide — lettres minuscules, chiffres, underscore, 3 à 20 caractères."
+            identityError = String(localized: "Pseudo invalide — lettres minuscules, chiffres, underscore, 3 à 20 caractères.")
         } catch ClubServiceError.badResponse(422, _) {
-            identityError = "Ce nom n'est pas autorisé — choisis-en un autre."
+            identityError = String(localized: "Ce nom n'est pas autorisé — choisis-en un autre.")
         } catch {
-            identityError = "Impossible d'enregistrer — vérifie ta connexion."
+            identityError = String(localized: "Impossible d'enregistrer — vérifie ta connexion.")
         }
         isSavingIdentity = false
     }
@@ -430,10 +434,10 @@ struct MoreSettingsView: View {
         isDeletingAccount = true
         do {
             try await appState.auth.deleteAccount()
-            appState.toast("Compte supprimé")
+            appState.toast(String(localized: "Compte supprimé"))
             dismiss()
         } catch {
-            appState.toast("Impossible de supprimer le compte — réessaie.")
+            appState.toast(String(localized: "Impossible de supprimer le compte — réessaie."))
         }
         isDeletingAccount = false
     }

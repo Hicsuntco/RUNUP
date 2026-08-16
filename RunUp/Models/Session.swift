@@ -202,10 +202,22 @@ struct DayStatus: Codable, Equatable, Identifiable {
     /// crash on launch.
     var date: Date = .now
 
-    static let letters = ["L", "M", "M", "J", "V", "S", "D"]
+    /// Dérivées des noms complets, et non écrites en dur : « L M M J V S D » n'est juste qu'en
+    /// français et en espagnol. L'initiale du nom traduit donne la bonne lettre dans chaque
+    /// langue (M T W T F S S en anglais) sans avoir à maintenir une seconde liste — et sans clé
+    /// de catalogue ambiguë, deux jours partageant la même initiale.
+    static let letters = DayStatus.fullNames.map { String($0.prefix(1)).uppercased() }
     /// Mardi/Mercredi share the same letter — VoiceOver needs the real name behind a day button,
     /// not just its ambiguous glyph.
-    static let fullNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+    static let fullNames = [
+        String(localized: "Lundi"),
+        String(localized: "Mardi"),
+        String(localized: "Mercredi"),
+        String(localized: "Jeudi"),
+        String(localized: "Vendredi"),
+        String(localized: "Samedi"),
+        String(localized: "Dimanche"),
+    ]
 
     private enum CodingKeys: String, CodingKey { case weekday, letter, state, date }
 

@@ -4,10 +4,12 @@ import SwiftUI
 struct WelcomeView: View {
     var onStart: () -> Void
 
+    // Composés en `String` (un tuple, pas un `Text` littéral) : SwiftUI ne les localiserait pas
+    // tout seul, d'où le `String(localized:)` explicite sur chaque libellé.
     private let valueProps: [(icon: String, title: String, desc: String)] = [
-        ("bolt.fill", "Un plan qui vit avec toi", "Pas un PDF figé — il s'ajuste chaque semaine selon ta forme et ton ressenti, jamais séance par séance : tu peux toujours anticiper ce qui t'attend."),
-        ("circle.circle", "Tes objectifs du jour, en un coup d'œil", "Ta séance, tes calories actives, tes pas — trois objectifs simples à boucler chaque jour."),
-        ("bubble.left.fill", "Un vrai coach, disponible à tout moment", "Il connaît ton objectif, ton historique, et te répond comme un humain le ferait.")
+        ("bolt.fill", String(localized: "Un plan qui vit avec toi"), String(localized: "Pas un PDF figé — il s'ajuste chaque semaine selon ta forme et ton ressenti, jamais séance par séance : tu peux toujours anticiper ce qui t'attend.")),
+        ("circle.circle", String(localized: "Tes objectifs du jour, en un coup d'œil"), String(localized: "Ta séance, tes calories actives, tes pas — trois objectifs simples à boucler chaque jour.")),
+        ("bubble.left.fill", String(localized: "Un vrai coach, disponible à tout moment"), String(localized: "Il connaît ton objectif, ton historique, et te répond comme un humain le ferait."))
     ]
 
     var body: some View {

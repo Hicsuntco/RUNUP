@@ -172,7 +172,7 @@ private struct AddShoeSheet: View {
                 VStack(alignment: .leading, spacing: 20) {
                     VStack(alignment: .leading, spacing: 8) {
                         EyebrowLabel(text: "Nom de la paire", color: RUColor.text3)
-                        ObTextField(placeholder: "Ex. Pegasus 41", text: $name)
+                        ObTextField(placeholder: String(localized: "Ex. Pegasus 41"), text: $name)
                     }
                     VStack(alignment: .leading, spacing: 8) {
                         EyebrowLabel(text: "Déjà parcourus (facultatif)", color: RUColor.text3)

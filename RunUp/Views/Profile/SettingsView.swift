@@ -20,6 +20,8 @@ struct SettingsView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
+                    // `sectionTitle` passe par `EyebrowLabel`, qui refait un `LocalizedStringKey`
+                    // à partir de son `String` — ces littéraux-là n'ont donc rien à envelopper.
                     sectionTitle("Sources de données")
                     dataSourcesCard
 
@@ -98,7 +100,7 @@ struct SettingsView: View {
                             } catch {
                                 await MainActor.run {
                                     profile.connectedSources.removeAll { $0 == .apple }
-                                    appState.toast("Connexion à Apple Santé impossible, réessaie plus tard.")
+                                    appState.toast(String(localized: "Connexion à Apple Santé impossible, réessaie plus tard."))
                                 }
                             }
                         }
@@ -125,8 +127,9 @@ struct SettingsView: View {
                 Text("Mode d'affichage").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
                 HStack(spacing: 4) {
-                    modeButton("Sombre", isLight: false)
-                    modeButton("Blanc", isLight: true)
+                    // `modeButton` reçoit un `String`, d'où `String(localized:)`.
+                    modeButton(String(localized: "Sombre"), isLight: false)
+                    modeButton(String(localized: "Blanc"), isLight: true)
                 }
                 .padding(3)
                 .background(RUColor.card2, in: Capsule())
@@ -214,7 +217,7 @@ struct SettingsView: View {
                                 } else {
                                     await MainActor.run {
                                         profile.coachNotificationsEnabled = false
-                                        appState.toast("Notifications refusées côté iPhone — active-les dans Réglages > RunUp.")
+                                        appState.toast(String(localized: "Notifications refusées côté iPhone — active-les dans Réglages > RunUp."))
                                     }
                                 }
                             }
@@ -346,11 +349,11 @@ private struct StravaConnectionRow: View {
             try await stravaService.connect()
             isConnected = true
         } catch StravaServiceError.notConfigured {
-            errorMessage = "Strava n'est pas encore configuré côté serveur."
+            errorMessage = String(localized: "Strava n'est pas encore configuré côté serveur.")
         } catch StravaServiceError.cancelled {
             // Silently ignored — she just closed the Strava sheet without finishing.
         } catch {
-            errorMessage = "Connexion à Strava impossible, réessaie."
+            errorMessage = String(localized: "Connexion à Strava impossible, réessaie.")
         }
         isLoading = false
     }
@@ -363,7 +366,7 @@ private struct StravaConnectionRow: View {
             isConnected = false
             importedCount = nil
         } catch {
-            errorMessage = "Impossible de déconnecter Strava, réessaie."
+            errorMessage = String(localized: "Impossible de déconnecter Strava, réessaie.")
         }
         isLoading = false
     }
@@ -395,7 +398,7 @@ private struct StravaConnectionRow: View {
             }
             importedCount = newCount
         } catch {
-            errorMessage = "Import Strava impossible, réessaie."
+            errorMessage = String(localized: "Import Strava impossible, réessaie.")
         }
         isImporting = false
     }

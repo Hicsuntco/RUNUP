@@ -100,7 +100,7 @@ struct HistoryView: View {
     }
 
     private var header: some View {
-        BackTitleHeaderView(eyebrow: "\(runs.count) sortie\(runs.count > 1 ? "s" : "")", title: "Historique") {
+        BackTitleHeaderView(eyebrow: String(localized: "\(runs.count) sortie\(runs.count > 1 ? "s" : "")"), title: "Historique") {
             appState.go(.stats)
         } trailing: {
             Button(action: { showAddRun = true }) {
@@ -135,7 +135,9 @@ struct HistoryView: View {
                 .frame(width: 30, height: 30)
                 .background(RUColor.amber.opacity(0.16), in: Circle())
             VStack(alignment: .leading, spacing: 3) {
-                Text(appState.pendingActivityCount == 1 ? "1 course pas encore synchronisée" : "\(appState.pendingActivityCount) courses pas encore synchronisées")
+                Text(appState.pendingActivityCount == 1
+                     ? String(localized: "1 course pas encore synchronisée")
+                     : String(localized: "\(appState.pendingActivityCount) courses pas encore synchronisées"))
                     .font(RUFont.sans(12.5, weight: .semibold))
                     .foregroundColor(RUColor.textPrimary)
                 Text("Elles restent sur ton téléphone, rien n'est perdu — nouvelle tentative automatique bientôt.")
@@ -178,7 +180,7 @@ struct HistoryView: View {
             runThumbnail(run)
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 8) {
-                    Text(run.date, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated).locale(Locale(identifier: "fr_FR")))
+                    Text(run.date, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated).locale(Locale.current))
                         .font(RUFont.sans(10, weight: .semibold)).foregroundColor(RUColor.text3)
                     Spacer(minLength: 0)
                     // A manually-logged run has no real heart-rate reading — 0 would just be a
@@ -191,7 +193,7 @@ struct HistoryView: View {
                     .font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                     .lineLimit(1)
                 HStack(spacing: 12) {
-                    Text(String(format: "%.1f km", locale: Locale(identifier: "fr_FR"), run.distanceKm))
+                    Text(String(format: "%.1f km", locale: Locale.current, run.distanceKm))
                     Text(PaceModel.formatDuration(Double(run.durationSeconds)))
                     // Seule l'allure reste colorée : c'est le chiffre que la maquette met en
                     // accent sur cette ligne, et le seul des trois qui dise quelque chose de la
@@ -244,13 +246,13 @@ struct HistoryView: View {
 
     private func runAccessibilityLabel(_ run: RunRecord) -> String {
         var parts: [String] = [
-            run.date.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "fr_FR"))),
+            run.date.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale.current)),
             run.title,
-            "\(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), run.distanceKm)) kilomètres",
-            "durée \(PaceModel.formatDuration(Double(run.durationSeconds)))",
-            "allure moyenne \(run.avgPace) par kilomètre"
+            String(localized: "\(String(format: "%.1f", locale: Locale.current, run.distanceKm)) kilomètres"),
+            String(localized: "durée \(PaceModel.formatDuration(Double(run.durationSeconds)))"),
+            String(localized: "allure moyenne \(run.avgPace) par kilomètre")
         ]
-        if run.avgHeartRate > 0 { parts.append("fréquence cardiaque moyenne \(run.avgHeartRate)") }
+        if run.avgHeartRate > 0 { parts.append(String(localized: "fréquence cardiaque moyenne \(run.avgHeartRate)")) }
         return parts.joined(separator: ", ")
     }
 }

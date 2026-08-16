@@ -85,7 +85,7 @@ final class WatchSessionService: NSObject {
         guard elapsedSeconds >= 60, distanceKm >= 0.1 else { return }
 
         let record = AdaptivePlanEngine.buildRunRecord(
-            title: userInfo["title"] as? String ?? "Course libre",
+            title: userInfo["title"] as? String ?? String(localized: "Course libre"),
             elapsedSeconds: elapsedSeconds,
             distanceKm: distanceKm,
             kcal: kcal,
@@ -103,9 +103,9 @@ final class WatchSessionService: NSObject {
         // must not have the second silently overwrite the first's pending debrief.
         appState.modelContext.insert(record)
         appState.pendingDebriefs.append(record)
-        let distance = String(format: "%.1f", locale: Locale(identifier: "fr_FR"), record.distanceKm)
-        appState.notify(icon: "⌚", colorHex: 0xFF3B6B, title: "Course reçue de ta montre", text: "\(record.title) · \(distance) km — valide ton ressenti pour mettre à jour le programme.")
-        appState.toast("Course reçue de ta montre ⌚")
+        let distance = String(format: "%.1f", locale: Locale.current, record.distanceKm)
+        appState.notify(icon: "⌚", colorHex: 0xFF3B6B, title: String(localized: "Course reçue de ta montre"), text: String(localized: "\(record.title) · \(distance) km — valide ton ressenti pour mettre à jour le programme."))
+        appState.toast(String(localized: "Course reçue de ta montre ⌚"))
     }
 }
 

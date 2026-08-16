@@ -93,12 +93,15 @@ struct RecapView: View {
 
                     VStack(alignment: .leading, spacing: 8) {
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                            statTile(String(format: "%.2f", locale: Locale(identifier: "fr_FR"), run.distanceKm), "KM", index: 0)
-                            statTile(PaceModel.formatDuration(Double(run.durationSeconds)), "TEMPS", index: 1)
-                            statTile(run.avgPace, "ALLURE MOY", index: 2)
+                            // `statTile` rend son libellé par un `Text(String)` nu — d'où les
+                            // `String(localized:)`. « KM », « KCAL » et « D+ (m) » sont des
+                            // symboles d'unité et restent tels quels.
+                            statTile(String(format: "%.2f", locale: Locale.current, run.distanceKm), "KM", index: 0)
+                            statTile(PaceModel.formatDuration(Double(run.durationSeconds)), String(localized: "TEMPS"), index: 1)
+                            statTile(run.avgPace, String(localized: "ALLURE MOY"), index: 2)
                         }
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                            statTile(run.avgHeartRate > 0 ? "\(run.avgHeartRate)" : "—", "FC MOY", RUColor.rose, index: 3)
+                            statTile(run.avgHeartRate > 0 ? "\(run.avgHeartRate)" : "—", String(localized: "FC MOY"), RUColor.rose, index: 3)
                             statTile("\(run.kcal)", "KCAL", RUColor.cyan, index: 4)
                             statTile(run.elevationGainM > 0 ? "+\(run.elevationGainM)" : "—", "D+ (m)", RUColor.lime, index: 5)
                         }
@@ -275,7 +278,7 @@ struct RecapView: View {
         .padding(14)
         .ruCard()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Profil d'élévation, de \(Int(minAlt.rounded())) à \(Int(maxAlt.rounded())) mètres, dénivelé positif \(run.elevationGainM) mètres")
+        .accessibilityLabel(String(localized: "Profil d'élévation, de \(Int(minAlt.rounded())) à \(Int(maxAlt.rounded())) mètres, dénivelé positif \(run.elevationGainM) mètres"))
     }
 
     private func heroHeader(_ run: RunRecord) -> some View {
@@ -377,7 +380,9 @@ struct RecapView: View {
         // The bar itself carries no VoiceOver value and "last split" was color-only (no text/icon
         // cue) — combined into one element with an explicit label/value so both survive.
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Split \(index + 1)\(isLast ? ", dernier" : "")")
+        .accessibilityLabel(isLast
+            ? String(localized: "Split \(index + 1), dernier")
+            : String(localized: "Split \(index + 1)"))
         .accessibilityValue(time)
     }
 

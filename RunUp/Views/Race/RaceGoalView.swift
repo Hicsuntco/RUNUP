@@ -39,13 +39,13 @@ struct RaceGoalView: View {
         func rangeLabel(_ a: Int, _ b: Int) -> String { a == b ? "\(a) km" : "\(a)-\(b) km" }
 
         var plan: [(String, String, String)] = [
-            (rangeLabel(1, startEnd), "Départ contrôlé", PaceModel.formatDuration(base + 8)),
-            (rangeLabel(startEnd + 1, cruiseEnd), "Rythme cible", PaceModel.formatDuration(base))
+            (rangeLabel(1, startEnd), String(localized: "Départ contrôlé"), PaceModel.formatDuration(base + 8)),
+            (rangeLabel(startEnd + 1, cruiseEnd), String(localized: "Rythme cible"), PaceModel.formatDuration(base))
         ]
         if cruiseEnd + 1 < totalKm {
-            plan.append((rangeLabel(cruiseEnd + 1, totalKm - 1), "Relance", PaceModel.formatDuration(max(60, base - 5))))
+            plan.append((rangeLabel(cruiseEnd + 1, totalKm - 1), String(localized: "Relance"), PaceModel.formatDuration(max(60, base - 5))))
         }
-        plan.append((rangeLabel(totalKm, totalKm), "Sprint final", PaceModel.formatDuration(max(60, base - 20))))
+        plan.append((rangeLabel(totalKm, totalKm), String(localized: "Sprint final"), PaceModel.formatDuration(max(60, base - 20))))
         return plan
     }
 
@@ -54,9 +54,9 @@ struct RaceGoalView: View {
     /// result: running under accumulated station fatigue, not raw running speed alone.
     private var hyroxStrategy: [(String, String)] {
         [
-            ("Segments course (8 × 1 km)", "vise \(targetPaceLabel) /km sur chaque segment, même sous fatigue — pas l'allure d'un 8 km isolé"),
-            ("Stations", "technique avant vitesse — un geste propre coûte moins cher qu'un geste rapide et cassé"),
-            ("Gestion globale", "les 4 premiers km + stations posent le rythme, les 4 derniers décident du chrono")
+            (String(localized: "Segments course (8 × 1 km)"), String(localized: "vise \(targetPaceLabel) /km sur chaque segment, même sous fatigue — pas l'allure d'un 8 km isolé")),
+            (String(localized: "Stations"), String(localized: "technique avant vitesse — un geste propre coûte moins cher qu'un geste rapide et cassé")),
+            (String(localized: "Gestion globale"), String(localized: "les 4 premiers km + stations posent le rythme, les 4 derniers décident du chrono"))
         ]
     }
 
@@ -84,7 +84,7 @@ struct RaceGoalView: View {
 
                 if hasRealRaceDay {
                     HStack(spacing: 10) {
-                        tile(profile.daysUntilRace.map(String.init) ?? "—", "JOUR\((profile.daysUntilRace ?? 2) > 1 ? "S" : "")", highlighted: true)
+                        tile(profile.daysUntilRace.map(String.init) ?? "—", String(localized: "JOUR\((profile.daysUntilRace ?? 2) > 1 ? "S" : "")"), highlighted: true)
                         tile(goalTarget, "OBJECTIF", highlighted: false)
                         tile(targetPaceLabel, "ALLURE", highlighted: false)
                     }
@@ -101,17 +101,17 @@ struct RaceGoalView: View {
                         EyebrowLabel(text: "Préparation")
                         Spacer()
                         if let total = shape.totalWeeks {
-                            StatChip(text: "Semaine \(min(profile.weekNumber, total))/\(total)", color: RUColor.lime)
+                            StatChip(text: String(localized: "Semaine \(min(profile.weekNumber, total))/\(total)"), color: RUColor.lime)
                         }
                     }
                     if let total = shape.totalWeeks {
                         LinearBar(fraction: min(1, Double(profile.weekNumber) / Double(total)), color: RUColor.rose, height: 8, gradient: LinearGradient(colors: [RUColor.rose, RUColor.lime], startPoint: .leading, endPoint: .trailing))
                         HStack {
-                            phaseLabel("Base", state: phaseState(endWeek: shape.baseWeeks))
+                            phaseLabel(String(localized: "Base"), state: phaseState(endWeek: shape.baseWeeks))
                             Spacer()
-                            phaseLabel("Spécifique", state: phaseState(endWeek: shape.baseWeeks + shape.specificWeeks))
+                            phaseLabel(String(localized: "Spécifique"), state: phaseState(endWeek: shape.baseWeeks + shape.specificWeeks))
                             Spacer()
-                            phaseLabel("Affûtage", state: phaseState(endWeek: total))
+                            phaseLabel(String(localized: "Affûtage"), state: phaseState(endWeek: total))
                         }
                     } else {
                         Text("Programme ouvert, sans date de fin fixe.")
@@ -180,7 +180,7 @@ struct RaceGoalView: View {
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "fr_FR")
+        f.locale = Locale.current
         f.dateFormat = "EEEE d MMMM"
         return f
     }()
@@ -195,7 +195,7 @@ struct RaceGoalView: View {
     }
 
     private var dateLine: String {
-        guard let date = profile.raceDate else { return "Date à définir" }
+        guard let date = profile.raceDate else { return String(localized: "Date à définir") }
         return Self.dateFormatter.string(from: date)
     }
 

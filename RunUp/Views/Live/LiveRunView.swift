@@ -67,7 +67,7 @@ struct LiveRunView: View {
             // leave the tap doing literally nothing visible.
             if vc.state == .idle, let error = vc.lastError { return "⚠️ \(error)" }
             switch vc.state {
-            case .listening: return vc.partialTranscript.isEmpty ? "Je t'écoute…" : vc.partialTranscript
+            case .listening: return vc.partialTranscript.isEmpty ? String(localized: "Je t'écoute…") : vc.partialTranscript
             case .thinking: return "…"
             case .speaking: return vc.lastReply
             case .idle: break
@@ -186,16 +186,18 @@ struct LiveRunView: View {
         VStack(spacing: 14) {
             VStack(spacing: 4) {
                 Text(PaceModel.formatDuration(vm?.elapsedSeconds ?? 0)).displayStyle(64).foregroundColor(.white)
-                EyebrowLabel(text: "Temps · \(String(format: "%.2f", locale: Locale(identifier: "fr_FR"), vm?.distanceKm ?? 0)) km")
+                EyebrowLabel(text: String(localized: "Temps · \(String(format: "%.2f", locale: Locale.current, vm?.distanceKm ?? 0)) km"))
             }
 
             HStack(spacing: 10) {
-                liveMetric(vm?.paceLabel ?? "--:--", "ALLURE", RUColor.rose2)
+                // `liveMetric` rend son libellé par un `Text(String)` nu — d'où le
+                // `String(localized:)` explicite ici. « KCAL » est un symbole, il ne bouge pas.
+                liveMetric(vm?.paceLabel ?? "--:--", String(localized: "ALLURE"), RUColor.rose2)
                 // No live sensor stream means no real reading — "--" rather than a fabricated
                 // number (was a fake sine-wave formula dressed up as a live measurement).
                 liveMetric(
                     vm?.heartRate.map { "\($0)" } ?? "--",
-                    "FC · \(appState.profile.todaySession.zone)",
+                    String(localized: "FC · \(appState.profile.todaySession.zone)"),
                     RUColor.rose
                 )
                 liveMetric("\(Int(vm?.kcal ?? 0))", "KCAL", RUColor.cyan)

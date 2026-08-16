@@ -51,7 +51,7 @@ struct WeeklyRecapView: View {
     private var weekDateRangeLabel: String {
         let start = weekRange.lowerBound
         let end = Calendar.current.date(byAdding: .day, value: 6, to: start) ?? start
-        return "\(start.formatted(.dateTime.day().locale(Locale(identifier: "fr_FR"))))-\(end.formatted(.dateTime.day().month(.wide).locale(Locale(identifier: "fr_FR"))))"
+        return "\(start.formatted(.dateTime.day().locale(Locale.current)))-\(end.formatted(.dateTime.day().month(.wide).locale(Locale.current)))"
     }
 
     /// A real, just-broken personal best inside this week's runs specifically (checked against
@@ -65,11 +65,11 @@ struct WeeklyRecapView: View {
             .compactMap { run -> (RunRecord, Double)? in PaceModel.parseSecPerKm(run.avgPace).map { (run, $0) } }
             .min(by: { $0.1 < $1.1 })
         if let priorBestPace, let (run, pace) = thisWeekBestPaceRun, pace < priorBestPace {
-            return ("Nouveau record d'allure", "\(PaceModel.formatDuration(pace))/km sur \(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), run.distanceKm)) km")
+            return (String(localized: "Nouveau record d'allure"), String(localized: "\(PaceModel.formatDuration(pace))/km sur \(String(format: "%.1f", locale: Locale.current, run.distanceKm)) km"))
         }
         let priorBestDistance = priorRuns.map(\.distanceKm).max() ?? 0
         if let longest = weekRuns.max(by: { $0.distanceKm < $1.distanceKm }), longest.distanceKm > priorBestDistance {
-            return ("Nouveau record de distance", String(format: "%.1f km", locale: Locale(identifier: "fr_FR"), longest.distanceKm))
+            return (String(localized: "Nouveau record de distance"), String(format: "%.1f km", locale: Locale.current, longest.distanceKm))
         }
         return nil
     }
@@ -100,7 +100,7 @@ struct WeeklyRecapView: View {
                 // title for free — both strings below are already keys in Localizable.xcstrings,
                 // and a bare `Text(String)` never resolves through it (see `EyebrowLabel`).
                 BackTitleHeaderView(
-                    eyebrow: "Semaine \(profile.weekNumber) · \(weekDateRangeLabel)",
+                    eyebrow: String(localized: "Semaine \(profile.weekNumber) · \(weekDateRangeLabel)"),
                     title: isBestWeekEver ? "Ta meilleure semaine 🔥" : "Bilan de la semaine",
                     titleSize: 24
                 ) {
@@ -162,14 +162,14 @@ struct WeeklyRecapView: View {
         let deltaKm = totalKm - lastWeekKm
         return VStack(spacing: 10) {
             HStack(spacing: 10) {
-                statTile(value: String(format: "%.1f", locale: Locale(identifier: "fr_FR"), totalKm), unit: "km", label: "PARCOURUS", color: RUColor.rose,
-                         chip: lastWeekKm > 0 ? (deltaKm >= 0 ? "▲ \(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), deltaKm))" : "▼ \(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), -deltaKm))") : nil,
+                statTile(value: String(format: "%.1f", locale: Locale.current, totalKm), unit: "km", label: String(localized: "PARCOURUS"), color: RUColor.rose,
+                         chip: lastWeekKm > 0 ? (deltaKm >= 0 ? "▲ \(String(format: "%.1f", locale: Locale.current, deltaKm))" : "▼ \(String(format: "%.1f", locale: Locale.current, -deltaKm))") : nil,
                          chipColor: deltaKm >= 0 ? RUColor.lime : RUColor.amber)
-                statTile(value: "\(weekRuns.count)", unit: nil, label: "SÉANCES", color: RUColor.lime, chip: nil, chipColor: RUColor.lime)
+                statTile(value: "\(weekRuns.count)", unit: nil, label: String(localized: "SÉANCES"), color: RUColor.lime, chip: nil, chipColor: RUColor.lime)
             }
             HStack(spacing: 10) {
-                statTile(value: PaceModel.formatTotalDuration(totalDurationSeconds), unit: nil, label: "TEMPS ACTIF", color: RUColor.cyan, chip: nil, chipColor: RUColor.cyan)
-                statTile(value: "\(profile.streak)", unit: "j", label: "SÉRIE", color: RUColor.amber, chip: nil, chipColor: RUColor.amber)
+                statTile(value: PaceModel.formatTotalDuration(totalDurationSeconds), unit: nil, label: String(localized: "TEMPS ACTIF"), color: RUColor.cyan, chip: nil, chipColor: RUColor.cyan)
+                statTile(value: "\(profile.streak)", unit: String(localized: "j"), label: String(localized: "SÉRIE"), color: RUColor.amber, chip: nil, chipColor: RUColor.amber)
             }
         }
     }
@@ -222,8 +222,8 @@ struct WeeklyRecapView: View {
                         .animation(reduceMotion ? nil : .easeOut(duration: 0.5).delay(Double(i) * 0.05), value: chartRevealed)
                         // No per-day km value was exposed, and "today" (when this week includes
                         // it) was marked by color alone.
-                        .accessibilityLabel(i == todayWeekdayIndex ? "\(DayStatus.fullNames[i]), aujourd'hui" : DayStatus.fullNames[i])
-                        .accessibilityValue("\(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), bars[i])) km")
+                        .accessibilityLabel(i == todayWeekdayIndex ? String(localized: "\(DayStatus.fullNames[i]), aujourd'hui") : DayStatus.fullNames[i])
+                        .accessibilityValue("\(String(format: "%.1f", locale: Locale.current, bars[i])) km")
                 }
             }
             .frame(height: 60, alignment: .bottom)
@@ -273,10 +273,10 @@ struct WeeklyRecapView: View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(run.title).font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                Text(run.date.formatted(.dateTime.weekday(.wide).day().month().locale(Locale(identifier: "fr_FR")))).font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
+                Text(run.date.formatted(.dateTime.weekday(.wide).day().month().locale(Locale.current))).font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
             }
             Spacer()
-            Text(String(format: "%.2f km", locale: Locale(identifier: "fr_FR"), run.distanceKm)).font(RUFont.mono(12)).foregroundColor(RUColor.text2)
+            Text(String(format: "%.2f km", locale: Locale.current, run.distanceKm)).font(RUFont.mono(12)).foregroundColor(RUColor.text2)
             Text(run.avgPace + "/km").font(RUFont.mono(12)).foregroundColor(RUColor.text2)
         }
         .padding(14)

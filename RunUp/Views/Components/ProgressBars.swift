@@ -96,7 +96,10 @@ struct PhaseProgressBar: View {
             if showLabels {
                 HStack(spacing: gap) {
                     ForEach(phases) { phase in
-                        Text(phase.name)
+                        // Même écueil que `EyebrowLabel` : un `String` passé à `Text` ne traverse
+                        // jamais le catalogue, donc « Base / Spécifique / Affûtage » restaient en
+                        // français alors que les trois clés y sont déjà.
+                        Text(LocalizedStringKey(phase.name))
                             .font(RUFont.sans(8, weight: .bold))
                             .tracking(1)
                             .textCase(.uppercase)

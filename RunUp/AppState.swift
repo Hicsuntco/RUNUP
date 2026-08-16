@@ -178,15 +178,16 @@ final class AppState {
             route: snapshot.route
         )
         record.date = snapshot.startedAt
+        record.sessionKind = snapshot.sessionKind
         modelContext.insert(record)
         pendingDebriefs.append(record)
 
-        let distance = String(format: "%.1f", locale: Locale(identifier: "fr_FR"), record.distanceKm)
+        let distance = String(format: "%.1f", locale: Locale.current, record.distanceKm)
         notify(
             icon: "🛟",
             colorHex: 0x38E0D0,
-            title: "Course récupérée",
-            text: "L'app s'est fermée pendant ta sortie — \(distance) km avaient été enregistrés. Valide ton ressenti pour les garder."
+            title: String(localized: "Course récupérée"),
+            text: String(localized: "L'app s'est fermée pendant ta sortie — \(distance) km avaient été enregistrés. Valide ton ressenti pour les garder.")
         )
     }
 
@@ -198,8 +199,8 @@ final class AppState {
         AdaptivePlanEngine.refreshProgramForCurrentDate(profile)
         AdaptivePlanEngine.resetDailyGoalsIfNewDay(profile)
         if profile.weekNumber != previousWeek {
-            let title = "Nouvelle semaine"
-            let text = "Semaine \(profile.weekNumber) prête, ajustée d'après ta forme de la semaine passée."
+            let title = String(localized: "Nouvelle semaine")
+            let text = String(localized: "Semaine \(profile.weekNumber) prête, ajustée d'après ta forme de la semaine passée.")
             notify(icon: "mark", colorHex: 0xFF3B6B, title: title, text: text, coachOnly: true)
             // `notify` above already no-ops the bell entry when this toggle is off (`coachOnly:
             // true`) — mirror that here so the real notification doesn't fire when the in-app one
@@ -231,12 +232,16 @@ final class AppState {
         guard profile.lastSameDayAdjustmentCheckDay != today else { return }
         let sleepHours = profile.connectedSources.contains(.apple) ? await healthKit.lastNightSleepHours() : nil
         guard AdaptivePlanEngine.applySameDayAdjustmentIfNeeded(profile, sleepHours: sleepHours) else { return }
-        let reason = profile.todaySession.adjustment ?? "récupération"
-        notify(icon: "🌙", colorHex: 0x8A6CFF, title: "Séance allégée aujourd'hui", text: "\(profile.todaySession.title) · \(reason).")
+        let reason = profile.todaySession.adjustment ?? String(localized: "récupération")
+        // `displayTitle`, pas `title` : `title` reste le libellé français interne (voir
+        // `WorkoutSession`) — l'afficher tel quel remettait du français dans une notification
+        // par ailleurs traduite.
+        let sessionName = profile.todaySession.displayTitle
+        notify(icon: "🌙", colorHex: 0x8A6CFF, title: String(localized: "Séance allégée aujourd'hui"), text: "\(sessionName) · \(reason).")
         if profile.coachNotificationsEnabled {
             NotificationService.shared.postImmediateNotification(
-                title: "Séance allégée aujourd'hui",
-                body: "On lève un peu le pied sur « \(profile.todaySession.title) » — le programme s'ajuste à ta forme du jour."
+                title: String(localized: "Séance allégée aujourd'hui"),
+                body: String(localized: "On lève un peu le pied sur « \(sessionName) » — le programme s'ajuste à ta forme du jour.")
             )
         }
         publishWidgetSnapshot()
@@ -296,10 +301,10 @@ final class AppState {
         profile.stepsToday = await steps
         profile.activeCaloriesToday = await calories
         if AdaptivePlanEngine.checkDailyGoalsBonus(profile) {
-            postClubActivity(type: "badge", text: "a bouclé ses 3 objectifs du jour", xpEarned: 120)
-            notify(icon: "🎉", colorHex: 0xC9FF3B, title: "Journée bouclée", text: "Tes 3 objectifs du jour sont faits — +120 XP.")
-            NotificationService.shared.postImmediateNotification(title: "Journée bouclée 🎉", body: "Tes 3 objectifs du jour sont faits — +120 XP.")
-            toast("Journée bouclée · +120 XP 🎉")
+            postClubActivity(type: "badge", text: String(localized: "a bouclé ses 3 objectifs du jour"), xpEarned: 120)
+            notify(icon: "🎉", colorHex: 0xC9FF3B, title: String(localized: "Journée bouclée"), text: String(localized: "Tes 3 objectifs du jour sont faits — +120 XP."))
+            NotificationService.shared.postImmediateNotification(title: String(localized: "Journée bouclée 🎉"), body: String(localized: "Tes 3 objectifs du jour sont faits — +120 XP."))
+            toast(String(localized: "Journée bouclée · +120 XP 🎉"))
         }
         // The sole publish for this event when HealthKit is connected — `init`/
         // `refreshProgramForCurrentDate` skip their own synchronous publish in that case so this
@@ -354,7 +359,7 @@ final class AppState {
         // and (since the HealthKit write only fires below, after this guard) it won't create a
         // phantom workout in Apple Health either.
         guard record.distanceKm >= 0.1 || record.durationSeconds >= 120 else {
-            toast("Course trop courte — rien n'a été enregistré.")
+            toast(String(localized: "Course trop courte — rien n'a été enregistré."))
             screen = .home
             return nil
         }

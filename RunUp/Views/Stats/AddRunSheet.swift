@@ -53,7 +53,7 @@ struct AddRunSheet: View {
             && durationMinutes > 0 && durationMinutes <= Self.maxDurationMinutes
     }
     private var selectedShoeName: String {
-        activeShoes.first { $0.id == selectedShoeID }?.name ?? "Aucune"
+        activeShoes.first { $0.id == selectedShoeID }?.name ?? String(localized: "Aucune")
     }
 
     var body: some View {
@@ -158,7 +158,10 @@ struct AddRunSheet: View {
             Spacer()
             Menu {
                 ForEach(Self.titles, id: \.self) { t in
-                    Button(t) { title = t }
+                    // `Button(t)` avec un `String` ne passe jamais par le catalogue (seul
+                    // l'initialiseur `LocalizedStringKey` le fait) : le menu restait en français
+                    // alors que la ligne repliée juste en dessous, elle, se traduisait.
+                    Button(LocalizedStringKey(t)) { title = t }
                 }
             } label: {
                 HStack(spacing: 4) {

@@ -93,7 +93,7 @@ struct StatsView: View {
         HStack(spacing: 0) {
             summaryCell(icon: "ruler", value: String(format: "%.0f", totalDistanceKm), label: "km")
             summaryDivider
-            summaryCell(icon: "figure.run", value: "\(runs.count)", label: "sortie\(runs.count > 1 ? "s" : "")")
+            summaryCell(icon: "figure.run", value: "\(runs.count)", label: String(localized: "sortie\(runs.count > 1 ? "s" : "")"))
             summaryDivider
             summaryCell(icon: "clock", value: PaceModel.formatTotalDuration(totalDurationSeconds), label: "temps")
             summaryDivider
@@ -149,7 +149,9 @@ struct StatsView: View {
                 quickLinkBody(
                     icon: "map",
                     title: "Mes routes",
-                    subtitle: routedRunsCount > 0 ? "\(routedRunsCount) parcours trackés" : "Dès ta 1re course trackée",
+                    subtitle: routedRunsCount > 0
+                        ? String(localized: "\(routedRunsCount) parcours trackés")
+                        : String(localized: "Dès ta 1re course trackée"),
                     accessorySymbol: "chevron.right"
                 )
             }
@@ -163,14 +165,16 @@ struct StatsView: View {
                 quickLinkBody(
                     icon: "chart.line.uptrend.xyaxis",
                     title: "Analyse approfondie",
-                    subtitle: "Records, charge, prédiction",
+                    subtitle: String(localized: "Records, charge, prédiction"),
                     accessorySymbol: "chevron.down",
                     accessoryRotation: showDeepAnalysis ? 180 : 0
                 )
             }
             .buttonStyle(PressableStyle())
             .ruCard(radius: RUSpacing.radiusCompact)
-            .accessibilityLabel(showDeepAnalysis ? "Masquer l'analyse approfondie" : "Voir l'analyse approfondie")
+            .accessibilityLabel(showDeepAnalysis
+                ? String(localized: "Masquer l'analyse approfondie")
+                : String(localized: "Voir l'analyse approfondie"))
         }
     }
 
@@ -236,14 +240,14 @@ struct StatsView: View {
                     if lastWeekKm > 0 {
                         let deltaKm = thisWeekKm - lastWeekKm
                         StatChip(
-                            text: deltaKm >= 0 ? "▲ +\(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), deltaKm)) km" : "▼ \(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), -deltaKm)) km",
+                            text: deltaKm >= 0 ? "▲ +\(String(format: "%.1f", locale: Locale.current, deltaKm)) km" : "▼ \(String(format: "%.1f", locale: Locale.current, -deltaKm)) km",
                             color: deltaKm >= 0 ? RUColor.lime : RUColor.amber
                         )
                     }
                     Text("›").font(RUFont.sans(15, weight: .semibold)).foregroundColor(RUColor.text3)
                 }
                 HStack(spacing: 24) {
-                    MetricColumn(value: String(format: "%.1f", locale: Locale(identifier: "fr_FR"), thisWeekKm), label: "km", valueSize: 24)
+                    MetricColumn(value: String(format: "%.1f", locale: Locale.current, thisWeekKm), label: "km", valueSize: 24)
                     if !profile.runningDays.isEmpty {
                         MetricColumn(
                             value: "\(thisWeekRuns.count)/\(profile.runningDays.count)",
@@ -284,12 +288,12 @@ struct StatsView: View {
     private var paceTrendAccessibilitySummary: String {
         guard let first = recentPacesSecPerKm.first, let last = recentPacesSecPerKm.last,
               let minPace = recentPacesSecPerKm.min(), let maxPace = recentPacesSecPerKm.max()
-        else { return "Pas encore assez de courses" }
+        else { return String(localized: "Pas encore assez de courses") }
         let trend: String
-        if last < first - 2 { trend = "en amélioration" } // fewer seconds/km = faster
-        else if last > first + 2 { trend = "en baisse" }
-        else { trend = "stable" }
-        return "Allure \(trend), entre \(PaceModel.formatDuration(minPace)) et \(PaceModel.formatDuration(maxPace)) par kilomètre"
+        if last < first - 2 { trend = String(localized: "en amélioration") } // fewer seconds/km = faster
+        else if last > first + 2 { trend = String(localized: "en baisse") }
+        else { trend = String(localized: "stable") }
+        return String(localized: "Allure \(trend), entre \(PaceModel.formatDuration(minPace)) et \(PaceModel.formatDuration(maxPace)) par kilomètre")
     }
 
     private var recentAvgPace: Double? {
@@ -357,7 +361,10 @@ struct StatsView: View {
                         )
                     }
                 }
-                Text(runs.count == 1 ? "Sur ta dernière course" : "Sur tes \(min(5, runs.count)) dernières courses").font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                Text(runs.count == 1
+                     ? String(localized: "Sur ta dernière course")
+                     : String(localized: "Sur tes \(min(5, runs.count)) dernières courses"))
+                    .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
 
                 if recentPacesSecPerKm.count >= 2 {
                     Canvas { context, size in
@@ -462,7 +469,7 @@ struct StatsView: View {
                     .font(RUFont.sans(12)).foregroundColor(RUColor.text2)
             } else {
                 HStack(spacing: 8) {
-                    predictionTile("PLUS LONGUE", longestRun.map { String(format: "%.1f km", locale: Locale(identifier: "fr_FR"), $0.distanceKm) } ?? "—", highlighted: false)
+                    predictionTile("PLUS LONGUE", longestRun.map { String(format: "%.1f km", locale: Locale.current, $0.distanceKm) } ?? "—", highlighted: false)
                     predictionTile("MEILLEURE ALLURE", bestPaceSecPerKm.map { "\(PaceModel.formatDuration($0))/km" } ?? "—", highlighted: false)
                     predictionTile("MEILLEURE SEM.", bestWeekKm > 0 ? String(format: "%.0f km", bestWeekKm) : "—", highlighted: false)
                 }
@@ -531,7 +538,9 @@ struct StatsView: View {
                 let deltaSeconds = targetSeconds - predictedSeconds(forKm: raceKm)
                 Text("Objectif \(profile.goalDisplay) → ")
                     .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
-                    + Text(deltaSeconds >= 0 ? "en avance de \(Int(deltaSeconds))″" : "\(Int(-deltaSeconds))″ à gagner")
+                    + Text(deltaSeconds >= 0
+                           ? String(localized: "en avance de \(Int(deltaSeconds))″")
+                           : String(localized: "\(Int(-deltaSeconds))″ à gagner"))
                         .font(RUFont.sans(11, weight: .bold)).foregroundColor(deltaSeconds >= 0 ? RUColor.lime : RUColor.amber)
                     + Text(" sur ton objectif.").font(RUFont.sans(11)).foregroundColor(RUColor.text2)
             }
@@ -587,9 +596,9 @@ struct StatsView: View {
     }
 
     private func loadZoneLabel(_ ratio: Double) -> String {
-        if ratio > 1.5 { return "Charge élevée" }
-        if ratio < 0.8 { return "Charge faible" }
-        return "Zone optimale"
+        if ratio > 1.5 { return String(localized: "Charge élevée") }
+        if ratio < 0.8 { return String(localized: "Charge faible") }
+        return String(localized: "Zone optimale")
     }
 
     private var loadCard: some View {
@@ -617,8 +626,10 @@ struct StatsView: View {
                             .animation(reduceMotion ? nil : .easeOut(duration: 0.5).delay(Double(i) * 0.04), value: chartRevealed)
                             // No per-week value was ever exposed, and "this week" (the last bar)
                             // was marked by color alone — VoiceOver had nothing beyond a silent bar.
-                            .accessibilityLabel(i == bars.count - 1 ? "Cette semaine" : "Il y a \(bars.count - 1 - i) semaine\(bars.count - 1 - i > 1 ? "s" : "")")
-                            .accessibilityValue("\(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), bars[i])) km")
+                            .accessibilityLabel(i == bars.count - 1
+                                ? String(localized: "Cette semaine")
+                                : String(localized: "Il y a \(bars.count - 1 - i) semaine\(bars.count - 1 - i > 1 ? "s" : "")"))
+                            .accessibilityValue("\(String(format: "%.1f", locale: Locale.current, bars[i])) km")
                     }
                 }
                 .frame(height: 70, alignment: .bottom)
@@ -627,7 +638,7 @@ struct StatsView: View {
                     Text("S-7").font(RUFont.sans(10)).foregroundColor(RUColor.text3)
                     Spacer()
                     if let ratio = acuteChronicRatio {
-                        Text("ratio charge \(String(format: "%.1f", locale: Locale(identifier: "fr_FR"), ratio))").font(RUFont.sans(10)).foregroundColor(RUColor.text3)
+                        Text("ratio charge \(String(format: "%.1f", locale: Locale.current, ratio))").font(RUFont.sans(10)).foregroundColor(RUColor.text3)
                     }
                     Spacer()
                     Text("Cette sem.").font(RUFont.sans(10)).foregroundColor(RUColor.text3)

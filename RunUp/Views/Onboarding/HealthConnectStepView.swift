@@ -55,7 +55,7 @@ struct HealthConnectStepView: View {
                 // `try?` swallowing it and marking `.apple` connected regardless of outcome.
                 await MainActor.run {
                     vm.connecting = nil
-                    appState.toast("Connexion à Apple Santé impossible, réessaie plus tard.")
+                    appState.toast(String(localized: "Connexion à Apple Santé impossible, réessaie plus tard."))
                 }
             }
         }

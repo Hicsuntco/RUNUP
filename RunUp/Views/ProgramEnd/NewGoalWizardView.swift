@@ -144,7 +144,7 @@ struct NewGoalWizardView: View {
                 AdaptivePlanEngine.startNewProgram(result, profile: appState.profile)
                 NotificationService.shared.rescheduleDailyReminder(for: appState.profile)
                 Haptics.success()
-                appState.toast("Ton nouveau programme est prêt")
+                appState.toast(String(localized: "Ton nouveau programme est prêt"))
                 dismiss()
                 appState.go(.home)
             }

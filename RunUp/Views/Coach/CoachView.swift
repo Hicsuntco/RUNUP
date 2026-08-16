@@ -13,7 +13,15 @@ struct CoachView: View {
     @State private var typingBounce = false
     @State private var showClearConfirm = false
 
-    private let chips = ["Adapte ma semaine", "Je suis fatiguée", "Conseils nutrition", "Analyse ma dernière sortie"]
+    /// `FlowChips` rend chaque puce par un `Text(String)` nu, et la puce tapée part telle quelle au
+    /// coach comme message : elle doit donc être dans la langue de l'utilisatrice, pas juste
+    /// affichée traduite.
+    private let chips = [
+        String(localized: "Adapte ma semaine"),
+        String(localized: "Je suis fatiguée"),
+        String(localized: "Conseils nutrition"),
+        String(localized: "Analyse ma dernière sortie")
+    ]
 
     private var profile: UserProfile { appState.profile }
 
@@ -69,18 +77,18 @@ struct CoachView: View {
     /// the real `readiness` score (even a low one) and regardless of whether any real data backed
     /// it at all — gated on `hasReadinessData` so it's honest instead.
     private var welcomeMessage: String {
-        let sessionPart = "J'ai relevé ta séance à \(profile.todaySession.displayTitle)."
+        let sessionPart = String(localized: "J'ai relevé ta séance à \(profile.todaySession.displayTitle).")
         guard profile.hasReadinessData else {
-            return "Salut \(profile.name) 👋 \(sessionPart) Une question avant de te lancer ?"
+            return String(localized: "Salut \(profile.name) 👋 \(sessionPart) Une question avant de te lancer ?")
         }
         let formPart: String
         switch profile.readiness {
-        case 85...: formPart = "Ta forme est au top aujourd'hui (\(profile.readiness)/100)."
-        case 65..<85: formPart = "Ta forme est correcte aujourd'hui (\(profile.readiness)/100)."
-        case 50..<65: formPart = "Un peu de fatigue aujourd'hui (\(profile.readiness)/100)."
-        default: formPart = "Fatigue accumulée aujourd'hui (\(profile.readiness)/100)."
+        case 85...: formPart = String(localized: "Ta forme est au top aujourd'hui (\(profile.readiness)/100).")
+        case 65..<85: formPart = String(localized: "Ta forme est correcte aujourd'hui (\(profile.readiness)/100).")
+        case 50..<65: formPart = String(localized: "Un peu de fatigue aujourd'hui (\(profile.readiness)/100).")
+        default: formPart = String(localized: "Fatigue accumulée aujourd'hui (\(profile.readiness)/100).")
         }
-        return "Salut \(profile.name) 👋 \(formPart) \(sessionPart) Une question avant de te lancer ?"
+        return String(localized: "Salut \(profile.name) 👋 \(formPart) \(sessionPart) Une question avant de te lancer ?")
     }
 
     private var header: some View {
@@ -123,15 +131,15 @@ struct CoachView: View {
 
     private static let separatorFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "fr_FR")
+        f.locale = Locale.current
         f.dateFormat = "EEEE d MMMM"
         return f
     }()
 
     private func daySeparator(_ date: Date) -> some View {
         let label: String
-        if Calendar.current.isDateInToday(date) { label = "Aujourd'hui" }
-        else if Calendar.current.isDateInYesterday(date) { label = "Hier" }
+        if Calendar.current.isDateInToday(date) { label = String(localized: "Aujourd'hui") }
+        else if Calendar.current.isDateInYesterday(date) { label = String(localized: "Hier") }
         else { label = Self.separatorFormatter.string(from: date) }
         return Text(label.uppercased())
             .font(RUFont.sans(9, weight: .bold)).tracking(1.2)

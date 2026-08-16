@@ -28,7 +28,7 @@ struct ProfileView: View {
 
     private static let raceDateFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "fr_FR")
+        f.locale = Locale.current
         f.dateFormat = "d MMMM yyyy"
         return f
     }()
@@ -186,7 +186,7 @@ struct ProfileView: View {
         } catch {
             // The local photo is already saved (see above) — only the club-visible copy failed to
             // sync, worth telling her since it silently used to just never reach other members.
-            appState.toast("Photo enregistrée, mais pas encore visible du club — vérifie ta connexion.")
+            appState.toast(String(localized: "Photo enregistrée, mais pas encore visible du club — vérifie ta connexion."))
         }
     }
 
@@ -203,7 +203,7 @@ struct ProfileView: View {
             // the server (and every other club member's leaderboard/feed/comments view) still
             // shows the old one until this actually lands, and without this she'd have no signal
             // that the removal didn't take.
-            appState.toast("Photo supprimée localement, mais toujours visible du club — vérifie ta connexion.")
+            appState.toast(String(localized: "Photo supprimée localement, mais toujours visible du club — vérifie ta connexion."))
         }
     }
 
@@ -227,14 +227,16 @@ struct ProfileView: View {
     /// suis ») et les seules vraies cartes de la page sont les deux destinations tapables.
     private var statRow: some View {
         HStack(alignment: .firstTextBaseline, spacing: 18) {
-            statCell(value: String(format: "%.0f", totalKm), label: "km")
+            // `statCell` reçoit un `String` : sans `String(localized:)` ces libellés n'atteindraient
+            // jamais le catalogue.
+            statCell(value: String(format: "%.0f", totalKm), label: String(localized: "km"))
             statCell(
                 value: "\(profile.streak)",
-                label: "sem. de suite",
+                label: String(localized: "sem. de suite"),
                 valueColor: profile.streak > 0 ? RUColor.rose : RUColor.textPrimary,
                 icon: profile.streak > 0 ? "flame.fill" : nil
             )
-            statCell(value: "\(badgeCount)", label: badgeCount > 1 ? "badges" : "badge")
+            statCell(value: "\(badgeCount)", label: badgeCount > 1 ? String(localized: "badges") : String(localized: "badge"))
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 2)
@@ -369,7 +371,9 @@ struct ProfileView: View {
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 6).padding(.vertical, 2)
                                 .background(RUColor.rose, in: Capsule())
-                                .accessibilityLabel("\(friendsList.incomingRequests.count) demande\(friendsList.incomingRequests.count > 1 ? "s" : "") en attente")
+                                .accessibilityLabel(friendsList.incomingRequests.count > 1
+                                    ? String(localized: "\(friendsList.incomingRequests.count) demandes en attente")
+                                    : String(localized: "\(friendsList.incomingRequests.count) demande en attente"))
                         }
                         cardArrow
                     }
@@ -385,7 +389,9 @@ struct ProfileView: View {
                                 }
                             }
                             Text(todaysFriendActivityCount > 0
-                                 ? "\(todaysFriendActivityCount) nouvelle\(todaysFriendActivityCount > 1 ? "s" : "") activité\(todaysFriendActivityCount > 1 ? "s" : "") aujourd'hui"
+                                 ? (todaysFriendActivityCount > 1
+                                    ? String(localized: "\(todaysFriendActivityCount) nouvelles activités aujourd'hui")
+                                    : String(localized: "\(todaysFriendActivityCount) nouvelle activité aujourd'hui"))
                                  : "Rien de nouveau aujourd'hui")
                                 .font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.text2)
                         }
@@ -416,7 +422,9 @@ struct ProfileView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Running Club").font(RUFont.sans(15, weight: .bold)).foregroundColor(RUColor.textPrimary)
                             if let club = board?.club {
-                                Text("\(club.name) · \(club.memberCount) membre\(club.memberCount > 1 ? "s" : "")")
+                                Text(club.memberCount > 1
+                                     ? String(localized: "\(club.name) · \(club.memberCount) membres")
+                                     : String(localized: "\(club.name) · \(club.memberCount) membre"))
                                     .font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
                             } else {
                                 Text("Tu n'en as pas encore rejoint").font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
@@ -432,7 +440,9 @@ struct ProfileView: View {
                         HStack(spacing: 4) {
                             Image(systemName: "mappin.circle.fill").font(.system(size: 11)).foregroundColor(RUColor.rose)
                             Text(event.title).font(RUFont.sans(10.5, weight: .bold)).foregroundColor(RUColor.rose).lineLimit(1)
-                            Text("— \(event.going) confirmé\(event.going > 1 ? "s" : "")").font(RUFont.sans(10.5)).foregroundColor(RUColor.text2)
+                            Text(event.going > 1
+                                 ? String(localized: "— \(event.going) confirmés")
+                                 : String(localized: "— \(event.going) confirmé")).font(RUFont.sans(10.5)).foregroundColor(RUColor.text2)
                         }
                     } else if board?.club == nil {
                         // La maquette propose ici un aperçu de « 2 clubs près de toi » à

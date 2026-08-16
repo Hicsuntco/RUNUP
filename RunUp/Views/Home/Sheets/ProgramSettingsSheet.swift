@@ -51,7 +51,7 @@ struct ProgramSettingsSheet: View {
                     // instead of silently waiting for the next week boundary.
                     AdaptivePlanEngine.applyProgramSettingsChange(appState.profile)
                     appState.publishWidgetSnapshot()
-                    appState.toast("Programme mis à jour")
+                    appState.toast(String(localized: "Programme mis à jour"))
                     dismiss()
                 }
                 .buttonStyle(PrimaryButtonStyle(isDisabled: days.count < 2))

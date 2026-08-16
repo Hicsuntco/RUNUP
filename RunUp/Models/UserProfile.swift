@@ -221,7 +221,7 @@ final class UserProfile {
         self.weeklyTimeBudget = nil
         self.preferredTimeOfDay = nil
         self.hyroxDivision = nil
-        self.goalDisplay = "Rester en forme"
+        self.goalDisplay = String(localized: "Rester en forme")
         self.weekNumber = 1
         self.programStartDate = .now
         self.programPhase = .active
@@ -361,10 +361,10 @@ final class UserProfile {
     /// "excellente" regardless of the actual score.
     var readinessLabel: String {
         switch readiness {
-        case 85...: return "excellente"
-        case 65..<85: return "bonne"
-        case 50..<65: return "correcte"
-        default: return "à surveiller"
+        case 85...: return String(localized: "excellente")
+        case 65..<85: return String(localized: "bonne")
+        case 50..<65: return String(localized: "correcte")
+        default: return String(localized: "à surveiller")
         }
     }
 
@@ -375,7 +375,7 @@ final class UserProfile {
 
     var raceDistanceLabel: String {
         guard let raceDistance else { return "" }
-        return raceDistance == .other ? (raceDistanceCustom?.isEmpty == false ? raceDistanceCustom! : "Ta course") : raceDistance.label
+        return raceDistance == .other ? (raceDistanceCustom?.isEmpty == false ? raceDistanceCustom! : String(localized: "Ta course")) : raceDistance.label
     }
 
     /// Real numeric race distance in km — a preset's fixed value, or a best-effort parse of the

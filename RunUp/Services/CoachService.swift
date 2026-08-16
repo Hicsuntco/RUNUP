@@ -38,7 +38,7 @@ enum CoachService {
     private static let appSecret = Bundle.main.infoDictionary?["RUNUPAppSecret"] as? String ?? ""
     private static let raceDateFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "fr_FR")
+        f.locale = Locale.current
         f.dateFormat = "d MMMM"
         return f
     }()

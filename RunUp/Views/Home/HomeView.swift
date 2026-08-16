@@ -33,8 +33,8 @@ struct HomeView: View {
                     // affiche déjà la semaine ET le bloc, donc l'eyebrow ne faisait que répéter
                     // l'information la plus proche à l'écran. Une date ancre le "Salut Camille"
                     // dans le vrai jour, comme la maquette (`.greet` au-dessus de `.greet-name`).
-                    eyebrow: isFreeRun ? "Mode course libre" : todayDateEyebrow,
-                    title: "Salut \(profile.name)"
+                    eyebrow: isFreeRun ? String(localized: "Mode course libre") : todayDateEyebrow,
+                    title: String(localized: "Salut \(profile.name)")
                 ) {
                     HStack(spacing: 8) {
                         streakChip
@@ -54,7 +54,9 @@ struct HomeView: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(PressableStyle())
-                        .accessibilityLabel(unreadCount > 0 ? "Notifications, \(unreadCount) non lues" : "Notifications")
+                        .accessibilityLabel(unreadCount > 0
+                            ? String(localized: "Notifications, \(unreadCount) non lues")
+                            : String(localized: "Notifications"))
                         // L'avatar est parti : le Profil est un onglet maintenant, ce bouton
                         // était un second chemin vers la même destination, à côté d'une barre
                         // d'onglets qui la montre en permanence. L'en-tête de la maquette est
@@ -135,11 +137,11 @@ struct HomeView: View {
                             // Sa place est en eyebrow de la carte qui parle du programme — c'est
                             // là qu'il était, et c'était juste. Le J-x, lui, EST un chiffre court
                             // et reste dans la bande.
-                            EyebrowLabel(text: "Ton programme · \(profile.goalDisplay)", color: RUColor.rose)
+                            EyebrowLabel(text: String(localized: "Ton programme · \(profile.goalDisplay)"), color: RUColor.rose)
                             Spacer()
                             Text("→").foregroundColor(RUColor.rose2)
                         }
-                        Text("\(weekEyebrow) · Bloc \(block.rawValue)").displayStyle(17).foregroundColor(RUColor.textPrimary)
+                        Text("\(weekEyebrow) · Bloc \(block.label)").displayStyle(17).foregroundColor(RUColor.textPrimary)
                     }
                 }
                 .accessibilityElement(children: .combine)
@@ -212,10 +214,10 @@ struct HomeView: View {
         let dayNumber = Calendar.current.component(.day, from: day.date)
         let name = "\(DayStatus.fullNames[day.weekday]) \(dayNumber)"
         switch day.state {
-        case .today: return "\(name), aujourd'hui"
-        case .done: return "\(name), séance faite"
-        case .rest: return "\(name), repos"
-        case .upcoming: return "\(name), à venir"
+        case .today: return String(localized: "\(name), aujourd'hui")
+        case .done: return String(localized: "\(name), séance faite")
+        case .rest: return String(localized: "\(name), repos")
+        case .upcoming: return String(localized: "\(name), à venir")
         }
     }
 
@@ -336,13 +338,13 @@ struct HomeView: View {
                 Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
                 HStack(spacing: 0) {
                     quickStat(
-                        value: String(format: "%.1f", locale: Locale(identifier: "fr_FR"), thisWeek),
+                        value: String(format: "%.1f", locale: Locale.current, thisWeek),
                         suffix: planned > 0 ? "/\(Int(planned.rounded()))" : nil,
                         label: "km sem."
                     )
                     if let days = profile.daysUntilRace {
                         quickStatDivider
-                        quickStat(value: "J-\(days)", suffix: nil, label: "avant course")
+                        quickStat(value: String(localized: "J-\(days)"), suffix: nil, label: "avant course")
                     }
                 }
                 HStack(spacing: 6) {
@@ -414,12 +416,12 @@ struct HomeView: View {
 
     private func weeklyComparisonText(delta: Double, lastWeek: Double) -> String {
         guard lastWeek > 0 else {
-            return "Semaine dernière : pas de course enregistrée."
+            return String(localized: "Semaine dernière : pas de course enregistrée.")
         }
-        let deltaText = String(format: "%.1f", locale: Locale(identifier: "fr_FR"), abs(delta))
-        if delta > 0.05 { return "+\(deltaText) km vs la semaine dernière" }
-        if delta < -0.05 { return "-\(deltaText) km vs la semaine dernière" }
-        return "Comme la semaine dernière"
+        let deltaText = String(format: "%.1f", locale: Locale.current, abs(delta))
+        if delta > 0.05 { return String(localized: "+\(deltaText) km vs la semaine dernière") }
+        if delta < -0.05 { return String(localized: "-\(deltaText) km vs la semaine dernière") }
+        return String(localized: "Comme la semaine dernière")
     }
 
     private func weeklyComparisonColor(delta: Double, lastWeek: Double) -> Color {
@@ -446,10 +448,12 @@ struct HomeView: View {
                 // 96 pt lui rend le poids d'élément principal de la carte.
                 DailyGoalsBarsView(progress: p.dailyGoalsProgress, size: 96)
                 VStack(alignment: .leading, spacing: 9) {
-                    EyebrowLabel(text: "Tes objectifs · \(p.dailyGoalsDone)/\(p.dailyGoalsTotal) bouclés")
+                    EyebrowLabel(text: String(localized: "Tes objectifs · \(p.dailyGoalsDone)/\(p.dailyGoalsTotal) bouclés"))
                     ringLegendRow(
                         name: "Séance du jour",
-                        value: p.isRestDayToday ? "Repos" : (p.seanceDoneToday ? "Faite" : "À faire"),
+                        value: p.isRestDayToday
+                            ? String(localized: "Repos")
+                            : (p.seanceDoneToday ? String(localized: "Faite") : String(localized: "À faire")),
                         color: goalColors[0]
                     )
                     ringLegendRow(name: "Calories actives", value: "\(Int(p.activeCaloriesToday))/\(Int(p.activeCaloriesGoal))", color: goalColors[1])
@@ -497,13 +501,17 @@ struct HomeView: View {
         // Was just "5" to VoiceOver with no context — the flame icon that gives it meaning
         // visually carries no information for someone who can't see it.
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Série, \(profile.streak) jour\(profile.streak > 1 ? "s" : "")")
+        // Deux clés entières plutôt qu'un « jour\(s) » recollé : le pluriel ne se fabrique pas en
+        // ajoutant un « s » dans les autres langues.
+        .accessibilityLabel(profile.streak > 1
+            ? String(localized: "Série, \(profile.streak) jours")
+            : String(localized: "Série, \(profile.streak) jour"))
     }
 
     /// La date du jour, en toutes lettres — `EyebrowLabel` la passe en capitales comme tous les
     /// eyebrows de l'app.
     private var todayDateEyebrow: String {
-        Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "fr_FR")))
+        Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale.current))
     }
 
     /// "Semaine 4/9" when the program has a real end (a race goal periodizes toward one), else
@@ -511,9 +519,9 @@ struct HomeView: View {
     /// open-ended goals (progress/weight/restart/health) that genuinely don't have one.
     private var weekEyebrow: String {
         if let total = planShape.totalWeeks {
-            return "Semaine \(profile.weekNumber)/\(total)"
+            return String(localized: "Semaine \(profile.weekNumber)/\(total)")
         }
-        return "Semaine \(profile.weekNumber)"
+        return String(localized: "Semaine \(profile.weekNumber)")
     }
 
     private var planShape: AdaptivePlanEngine.ProgramShape {

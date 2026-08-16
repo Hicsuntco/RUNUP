@@ -15,9 +15,12 @@ struct SessionDetailSheet: View {
     /// session used to show the same "warmup + N×800m + cooldown" regardless of which of these it
     /// actually was.
     private var steps: [(String, String, Color)] {
+        // `session.title` reste EN FRANÇAIS en permanence : c'est l'identifiant interne d'archétype
+        // sur lequel les tests ci-dessous classent la séance. Seul l'affichage passe par
+        // `displayTitle`. Ne pas localiser ni toucher à cette classification.
         let title = session.title.lowercased()
-        let warmup = ("Échauffement", "10-15′ · Z2 · footing relâché", RUColor.cyan)
-        let cooldown = ("Retour au calme", "5-10′ · Z1 · marche + étirements", RUColor.lime)
+        let warmup = (String(localized: "Échauffement"), String(localized: "10-15′ · Z2 · footing relâché"), RUColor.cyan)
+        let cooldown = (String(localized: "Retour au calme"), String(localized: "5-10′ · Z1 · marche + étirements"), RUColor.lime)
 
         // HYROX sessions are structurally different from a running-only week — a "compromised
         // running" block or a functional circuit isn't a warmup/interval/cooldown shape at all,
@@ -30,20 +33,20 @@ struct SessionDetailSheet: View {
         if session.isIntervalSession {
             return [
                 warmup,
-                (intervalDescription, "\(session.pace) /km · \(session.zone) · récupération entre chaque", RUColor.rose),
+                (intervalDescription, String(localized: "\(session.pace) /km · \(session.zone) · récupération entre chaque"), RUColor.rose),
                 cooldown
             ]
         }
         if title.contains("tempo") {
             return [
                 warmup,
-                ("Bloc tempo", "\(max(10, session.durationMinutes - 20))′ · \(session.pace) /km · \(session.zone) · effort soutenu et continu", RUColor.rose),
+                (String(localized: "Bloc tempo"), String(localized: "\(max(10, session.durationMinutes - 20))′ · \(session.pace) /km · \(session.zone) · effort soutenu et continu"), RUColor.rose),
                 cooldown
             ]
         }
         // Footing / sortie longue / sortie courte / découverte / récup — the whole run is the
         // target effort, not a warmup building up to something else.
-        return [("Course continue", "\(session.durationMinutes)′ · \(session.pace) /km · \(session.zone)", RUColor.rose)]
+        return [(String(localized: "Course continue"), "\(session.durationMinutes)′ · \(session.pace) /km · \(session.zone)", RUColor.rose)]
     }
 
     /// HYROX-specific breakdown — "Course compromise" alternates running with functional work
@@ -54,36 +57,38 @@ struct SessionDetailSheet: View {
         if title.contains("compromise") {
             return [
                 warmup,
-                ("\(intervalDescription) + fonctionnel", "\(session.pace) /km entre les blocs · \(session.zone) · enchaîne course et mouvement, sans repos complet", RUColor.rose),
+                (String(localized: "\(intervalDescription) + fonctionnel"), String(localized: "\(session.pace) /km entre les blocs · \(session.zone) · enchaîne course et mouvement, sans repos complet"), RUColor.rose),
                 cooldown
             ]
         }
         if title.contains("simulation") {
             return [
                 warmup,
-                ("8 × 1 km + 8 stations", "format complet HYROX · \(session.zone) · gère l'effort sur l'ensemble, pas juste la course", RUColor.rose),
+                (String(localized: "8 × 1 km + 8 stations"), String(localized: "format complet HYROX · \(session.zone) · gère l'effort sur l'ensemble, pas juste la course"), RUColor.rose),
                 cooldown
             ]
         }
         if title.contains("tempo") {
             return [
                 warmup,
-                ("Tempo + sled", "\(max(10, session.durationMinutes - 20))′ · \(session.pace) /km · \(session.zone) · allure seuil entrecoupée de sled push/pull", RUColor.rose),
+                (String(localized: "Tempo + sled"), String(localized: "\(max(10, session.durationMinutes - 20))′ · \(session.pace) /km · \(session.zone) · allure seuil entrecoupée de sled push/pull"), RUColor.rose),
                 cooldown
             ]
         }
         // "Fonctionnel HYROX" / "Rappel technique stations" — a standalone circuit, no running
         // warmup/cooldown shape fits (the circuit itself includes the movement prep).
-        return [("Circuit fonctionnel", "\(session.durationMinutes)′ · \(session.zone) · stations enchaînées, technique avant charge", RUColor.rose)]
+        return [(String(localized: "Circuit fonctionnel"), String(localized: "\(session.durationMinutes)′ · \(session.zone) · stations enchaînées, technique avant charge"), RUColor.rose)]
     }
 
     /// Pulls the exact "N × distance" straight from the archetype's own title (e.g. "5 × 500 m",
     /// "6 × 800 m", "3 × 1 km") instead of assuming every interval session is 800m repeats.
     private var intervalDescription: String {
+        // L'expression régulière porte sur le titre français interne : ne pas y toucher. Seul le
+        // repli, qui est du texte affiché, passe par le catalogue.
         if let range = session.title.range(of: #"\d+\s*×\s*\d+\s?(m|km)"#, options: .regularExpression) {
             return String(session.title[range])
         }
-        return "Fractionné"
+        return String(localized: "Fractionné")
     }
 
     private var isRestDay: Bool { session.durationMinutes == 0 }
@@ -172,9 +177,9 @@ struct SessionDetailSheet: View {
                                 if AdaptivePlanEngine.moveTodaySessionToTomorrow(appState.profile) {
                                     moved = true
                                     appState.publishWidgetSnapshot()
-                                    appState.toast("Séance déplacée à demain")
+                                    appState.toast(String(localized: "Séance déplacée à demain"))
                                 } else {
-                                    appState.toast("Impossible de déplacer cette séance — dernier jour de la semaine.")
+                                    appState.toast(String(localized: "Impossible de déplacer cette séance — dernier jour de la semaine."))
                                 }
                             }
                             .buttonStyle(SecondaryButtonStyle())

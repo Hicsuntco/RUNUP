@@ -432,6 +432,18 @@ enum AdaptivePlanEngine {
     /// inside a fixed-length race/HYROX build (see `trainingBlock`).
     enum TrainingBlock: String {
         case base = "Base", specifique = "Spécifique", affutage = "Affûtage", deload = "Récup"
+
+        /// Le nom À AFFICHER. `rawValue` reste français et sert d'identifiant persisté ; il était
+        /// interpolé tel quel dans des phrases par ailleurs traduites (« Semaine 3 · Base »), donc
+        /// le nom du bloc serait resté français au milieu d'une phrase anglaise.
+        var label: String {
+            switch self {
+            case .base: return String(localized: "Base")
+            case .specifique: return String(localized: "Spécifique")
+            case .affutage: return String(localized: "Affûtage")
+            case .deload: return String(localized: "Récup")
+            }
+        }
     }
 
     static func trainingBlock(forWeek week: Int, shape: ProgramShape) -> TrainingBlock {

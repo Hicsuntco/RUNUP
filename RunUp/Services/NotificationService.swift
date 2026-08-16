@@ -104,7 +104,11 @@ final class NotificationService: NSObject {
             guard settings.authorizationStatus == .authorized else { return }
             let content = UNMutableNotificationContent()
             content.title = String(localized: "Séance du jour")
-            content.body = String(localized: "\(session.title) t'attend — \(session.durationMinutes)′ à \(session.pace)/km.")
+            // `displayTitle` et non `title` : `title` est le libellé français interne d'une
+            // séance (voir `WorkoutSession`), il ne doit jamais partir tel quel dans une
+            // notification.
+            let sessionName = session.displayTitle
+            content.body = String(localized: "\(sessionName) t'attend — \(session.durationMinutes)′ à \(session.pace)/km.")
             content.sound = .default
 
             let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)

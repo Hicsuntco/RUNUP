@@ -126,7 +126,7 @@ struct OnboardingContainerView: View {
         AdaptivePlanEngine.applyOnboarding(vm.buildResult(), to: appState.profile)
         let profile = appState.profile
         let shape = AdaptivePlanEngine.ProgramShape.compute(goal: profile.goalId, raceDate: profile.raceDate, from: profile.programStartDate ?? .now)
-        let message = shape.totalWeeks.map { "Ton programme de \($0) semaines est prêt" } ?? "Ton programme sur mesure est prêt"
+        let message = shape.totalWeeks.map { String(localized: "Ton programme de \($0) semaines est prêt") } ?? String(localized: "Ton programme sur mesure est prêt")
         Haptics.success()
         appState.toast(message)
         // `coachNotificationsEnabled` defaults to true, but the system permission itself was

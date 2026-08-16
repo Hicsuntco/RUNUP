@@ -69,46 +69,13 @@ struct RunShareCardView: View {
         return f
     }()
 
-    /// Le tracé réel, normalisé dans un carré 0…1 — la MÊME forme que celle parcourue, pas une
-    /// interprétation.
+    /// Le tracé réel, normalisé dans un carré 0…1 — la MÊME forme que celle parcourue.
     ///
-    /// La longitude est corrigée de la compression méridienne (`× cos(latitude)`) avant toute
-    /// mise à l'échelle. Sans cette correction — c'était le cas, et c'était assumé comme un
-    /// « tracé stylisé » — un degré de longitude était traité comme un degré de latitude alors
-    /// qu'à Paris il ne vaut que 0,66 fois sa distance : une boucle est-ouest sortait ~52 % trop
-    /// large, un aller-retour rectiligne changeait d'inclinaison. La carte qu'on publie après une
-    /// course ne montrait donc pas le parcours couru, et c'est la seule chose qu'on lui demande.
-    ///
-    /// C'est une projection équirectangulaire centrée sur la course. Sur quelques kilomètres, la
-    /// différence avec ce que dessine MapKit (Mercator sphérique, utilisé par `RunRouteMapView`
-    /// dans l'Historique) est inférieure à l'épaisseur du trait — les deux représentations du même
-    /// parcours se superposent enfin.
+    /// La projection vit dans `RouteGeometry`, partagée avec la vignette de l'historique : le
+    /// même parcours doit avoir la même forme aux deux endroits, et une seule implémentation est
+    /// la seule façon de le garantir.
     private var normalizedRoutePoints: [CGPoint] {
-        guard run.route.count > 1 else { return [] }
-        let lats = run.route.map(\.lat)
-        let lngs = run.route.map(\.lng)
-        guard let minLat = lats.min(), let maxLat = lats.max(),
-              let minLng = lngs.min(), let maxLng = lngs.max()
-        else { return [] }
-
-        // Cosinus de la latitude médiane de la course : le facteur par lequel un degré de
-        // longitude rétrécit à cet endroit du globe. 1 à l'équateur, ~0,66 à Paris, ~0 aux pôles
-        // — d'où le plancher, qui n'a d'effet que sur une course à moins de 100 km d'un pôle.
-        let midLat = (minLat + maxLat) / 2
-        let lngScale = max(cos(midLat * .pi / 180), 0.000001)
-
-        // Étendues ramenées à une unité commune, donc comparables : à partir d'ici, x et y sont
-        // à la même échelle de distance et le rapport de forme est celui du terrain.
-        let width = (maxLng - minLng) * lngScale
-        let height = maxLat - minLat
-        let span = max(width, height, 0.00001)
-
-        return run.route.map { point in
-            let x = ((point.lng - minLng) * lngScale + (span - width) / 2) / span
-            // La latitude croît vers le nord, y croît vers le bas à l'écran — on retourne.
-            let y = 1 - ((point.lat - minLat) + (span - height) / 2) / span
-            return CGPoint(x: x, y: y)
-        }
+        RouteGeometry.normalized(run.route)
     }
 
     var body: some View {

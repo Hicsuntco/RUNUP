@@ -9,7 +9,25 @@ struct HomeView: View {
     // app's whole lifetime) just to filter it back down to unread right after. NotificationsSheet
     // has its own separate `@Query` for the full list it actually displays.
     @Query(filter: #Predicate<AppNotification> { !$0.read }) private var unreadNotifications: [AppNotification]
-    @Query(sort: \RunRecord.date, order: .reverse) private var runs: [RunRecord]
+    /// Borné aux trois dernières semaines, et c'est largement suffisant : `runs` ne sert QU'À
+    /// `weeklyKm`, qui somme cette semaine et la précédente. Sans cette borne, l'écran ouvert tous
+    /// les jours au lancement chargeait TOUT l'historique — chaque ligne portant son tracé GPS
+    /// sérialisé, soit des dizaines de mégaoctets après quelques centaines de courses — pour
+    /// produire deux additions hebdomadaires. Et il le rechargeait à chaque retour sur l'onglet,
+    /// puisque `RootTabView` recrée l'écran courant à chaque navigation.
+    ///
+    /// Trois semaines plutôt que deux : une marge qui absorbe les semaines à cheval sur un
+    /// changement de mois ou d'année sans jamais rogner la comparaison.
+    @Query private var runs: [RunRecord]
+
+    init() {
+        let cutoff = Calendar.current.date(byAdding: .weekOfYear, value: -3, to: .now) ?? .distantPast
+        _runs = Query(
+            filter: #Predicate<RunRecord> { $0.date >= cutoff },
+            sort: \RunRecord.date,
+            order: .reverse
+        )
+    }
 
     private var profile: UserProfile { appState.profile }
     private var isFreeRun: Bool { profile.programPhase == .freerun }

@@ -12,6 +12,13 @@ import Observation
 /// Deliberately tap-to-talk, not always-listening: a real wake-word pipeline needs a low-power
 /// always-on audio path that's a much bigger, riskier build (battery, false triggers, background
 /// audio review implications) — a single tap is reliable and still fully hands-free once tapped.
+///
+/// `@MainActor` : `state`, `partialTranscript`, `lastReply` et `lastError` sont lus par
+/// `LiveRunView` à chaque image. Ils étaient écrits depuis trois files différentes — celle de
+/// `SFSpeechRecognitionTask`, celle du délégué `AVSpeechSynthesizer`, et la `Task` de la requête
+/// réseau. Le code sautait déjà sur le fil principal à chaque fois, mais par discipline : rien ne
+/// l'imposait, et un seul oubli suffisait à créer une course de données invisible en débogage.
+@MainActor
 @Observable
 final class VoiceCoachController: NSObject {
     enum VoiceState: Equatable {
@@ -35,17 +42,19 @@ final class VoiceCoachController: NSObject {
     private func reportError(_ message: String) {
         errorClearTask?.cancel()
         lastError = message
+        // La `Task` hérite de l'isolation `@MainActor` de la méthode, d'où la disparition du
+        // `await MainActor.run` qui l'entourait.
         errorClearTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(6))
             guard !Task.isCancelled else { return }
-            await MainActor.run { self?.lastError = nil }
+            self?.lastError = nil
         }
     }
 
     /// Called by the mic button when the system permission request comes back denied — the
     /// controller can't know that itself (the view owns the request flow).
     func reportAuthorizationDenied() {
-        reportError("Micro non autorisé — active-le dans Réglages > RunUp.")
+        reportError(String(localized: "Micro non autorisé — active-le dans Réglages > RunUp."))
     }
 
     private let profile: UserProfile
@@ -92,11 +101,11 @@ final class VoiceCoachController: NSObject {
 
     private func startListening() {
         guard let speechRecognizer, speechRecognizer.isAvailable else {
-            reportError("Reconnaissance vocale indisponible sur cet appareil.")
+            reportError(String(localized: "Reconnaissance vocale indisponible sur cet appareil."))
             return
         }
         guard let recognitionRequest = try? configureAudioSession() else {
-            reportError("Micro indisponible — vérifie l'autorisation dans Réglages > RunUp.")
+            reportError(String(localized: "Micro indisponible — vérifie l'autorisation dans Réglages > RunUp."))
             return
         }
 
@@ -106,10 +115,13 @@ final class VoiceCoachController: NSObject {
         lastError = nil
         self.recognitionRequest = recognitionRequest
 
-        recognitionTask = speechRecognizer.recognitionTask(with: recognitionRequest) { [weak self] result, _ in
+        // `@Sendable` explicite : le moteur de reconnaissance rappelle depuis sa propre file. Sans
+        // l'annotation, cette fermeture — écrite dans une méthode `@MainActor` — serait implicitement
+        // isolée sur l'acteur principal, alors qu'elle est en réalité invoquée ailleurs.
+        recognitionTask = speechRecognizer.recognitionTask(with: recognitionRequest) { @Sendable [weak self] result, _ in
             guard let self, let result else { return }
-            // The recognizer calls back on its own private queue — this drives SwiftUI (the live
-            // transcript bubble), so hop to main like the synthesizer delegate already does.
+            // Le texte est extrait ICI (une `String` traverse sans risque), puis publié sur le fil
+            // principal : c'est lui qui alimente la bulle de transcription en direct.
             let text = result.bestTranscription.formattedString
             Task { @MainActor in self.partialTranscript = text }
         }
@@ -157,12 +169,10 @@ final class VoiceCoachController: NSObject {
                     liveContext: liveContextProvider(),
                     profile: profile
                 )
-                await MainActor.run { self.speak(reply) }
+                self.speak(reply)
             } catch {
-                await MainActor.run {
-                    self.state = .idle
-                    self.reportError("Le coach n'a pas pu répondre — vérifie ta connexion.")
-                }
+                self.state = .idle
+                self.reportError(String(localized: "Le coach n'a pas pu répondre — vérifie ta connexion."))
             }
         }
     }
@@ -208,12 +218,14 @@ final class VoiceCoachController: NSObject {
     }
 }
 
+// `nonisolated` : `AVSpeechSynthesizer` appelle son délégué depuis sa propre file audio, pas
+// depuis le fil principal — le saut est donc écrit là où il se produit.
 extension VoiceCoachController: AVSpeechSynthesizerDelegate {
-    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
         Task { @MainActor in self.state = .idle }
     }
 
-    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
         Task { @MainActor in self.state = .idle }
     }
 }

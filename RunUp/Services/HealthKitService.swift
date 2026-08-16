@@ -42,7 +42,12 @@ final class HealthKitService {
     /// healthkit.background-delivery entitlement). This is what keeps the Home Screen widget's
     /// "PAS -2 400" honest while she walks all day without opening the app: each delivery wakes
     /// the app briefly, the sync re-reads today's totals and republishes the widget snapshot.
-    func startObservingDailyGoals(onChange: @escaping () -> Void) {
+    ///
+    /// `@Sendable` sur `onChange` : HealthKit appelle cette fermeture depuis sa propre file, pas
+    /// depuis le fil principal. Sans l'annotation, l'appelant (`AppState`, isolé `@MainActor`)
+    /// fournissait une fermeture isolée sur l'acteur principal que HealthKit invoquait quand même
+    /// en arrière-plan — exactement le genre de saut d'isolation silencieux que Swift 6 refuse.
+    func startObservingDailyGoals(onChange: @escaping @Sendable () -> Void) {
         guard Self.isHealthDataAvailable, observerQueries.isEmpty else { return }
         let identifiers: [HKQuantityTypeIdentifier] = [.stepCount, .activeEnergyBurned]
         for identifier in identifiers {

@@ -6,6 +6,12 @@ import ActivityKit
 /// voice cues at scripted timestamps, and real GPS-instability detection. Ported from the
 /// `startRun`/timer logic in app.jsx, adapted to use real CoreLocation data instead of a
 /// simulated tick (see architecture decision to use MapKit for the Live Run screen).
+///
+/// `@MainActor` : ce modèle possède l'état que l'écran de course lit à chaque image, et il écrit
+/// des objets SwiftData (le `RunRecord` produit par `stop()`). Ses trois tâches de fond — le
+/// chrono à la seconde, le relevé de fréquence cardiaque, l'effacement des messages du coach —
+/// capturaient `self` dans du code concurrent sans qu'aucune isolation ne le garantisse.
+@MainActor
 @Observable
 final class LiveRunViewModel {
     let location = LocationService()
@@ -213,14 +219,20 @@ final class LiveRunViewModel {
             }
         }
         startLiveActivity()
+        // Les deux tâches héritent de l'isolation `@MainActor` : `tick()` et `pollHeartRate()`
+        // s'exécutent donc sur le fil principal sans `MainActor.run` explicite. `weak self` est
+        // relu à chaque tour plutôt que capturé fort pour la durée du sommeil, pour que le modèle
+        // puisse être libéré dès que l'écran disparaît.
         timerTask = Task { [weak self] in
-            while let self, !Task.isCancelled {
+            while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
-                await MainActor.run { self.tick() }
+                guard let self else { return }
+                self.tick()
             }
         }
         heartRatePollTask = Task { [weak self] in
-            while let self, !Task.isCancelled {
+            while !Task.isCancelled {
+                guard let self else { return }
                 await self.pollHeartRate()
                 try? await Task.sleep(for: .seconds(5))
             }
@@ -406,7 +418,7 @@ final class LiveRunViewModel {
     private func pollHeartRate() async {
         guard !isPaused else { return }
         if let bpm = await healthKit.latestHeartRate() {
-            await MainActor.run { self.heartRate = Int(bpm.rounded()) }
+            self.heartRate = Int(bpm.rounded())
         }
     }
 
@@ -424,7 +436,7 @@ final class LiveRunViewModel {
         coachCueClearTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(8))
             guard !Task.isCancelled else { return }
-            await MainActor.run { self?.coachCue = nil }
+            self?.coachCue = nil
         }
     }
 

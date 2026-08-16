@@ -17696,6 +17696,262 @@
           }
         }
       }
+    },
+    "Micro non autorisé — active-le dans Réglages > RunUp.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microphone access denied — turn it on in Settings > RunUp."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Micrófono no autorizado: actívalo en Ajustes > RunUp."
+          }
+        }
+      }
+    },
+    "Reconnaissance vocale indisponible sur cet appareil.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech recognition isn't available on this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El reconocimiento de voz no está disponible en este dispositivo."
+          }
+        }
+      }
+    },
+    "Micro indisponible — vérifie l'autorisation dans Réglages > RunUp.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microphone unavailable — check the permission in Settings > RunUp."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Micrófono no disponible: revisa el permiso en Ajustes > RunUp."
+          }
+        }
+      }
+    },
+    "Le coach n'a pas pu répondre — vérifie ta connexion.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The coach couldn't answer — check your connection."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El entrenador no pudo responder: revisa tu conexión."
+          }
+        }
+      }
+    },
+    "AUJOURD'HUI": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TODAY"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HOY"
+          }
+        }
+      }
+    },
+    "COURIR": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RUN"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CORRER"
+          }
+        }
+      }
+    },
+    "Cours à ta sensation — ta séance arrive de l'iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run by feel — your session is on its way from your iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corre a tu ritmo: tu sesión llega desde el iPhone."
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "Ton bilan t'attend sur l'iPhone 📱": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your debrief is waiting on your iPhone 📱"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu balance te espera en el iPhone 📱"
+          }
+        }
+      }
+    },
+    "✓ TERMINÉ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "✓ DONE"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "✓ HECHO"
+          }
+        }
+      }
+    },
+    "BPM MOY": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AVG BPM"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PPM MEDIA"
+          }
+        }
+      }
+    },
+    "EN COURS": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RUNNING"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EN CURSO"
+          }
+        }
+      }
+    },
+    "course libre": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "free run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "carrera libre"
+          }
+        }
+      }
+    },
+    "Impossible de démarrer — vérifie l'accès Santé dans Réglages.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't start — check Health access in Settings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo iniciar: revisa el acceso a Salud en Ajustes."
+          }
+        }
+      }
+    },
+    "La séance s'est interrompue — réessaie.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The workout was interrupted — try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La sesión se interrumpió: inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Connexion coupée — le coach n'a pas pu répondre. Réessaie dans un instant.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection lost — the coach couldn't answer. Try again in a moment."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conexión perdida: el entrenador no pudo responder. Inténtalo en un momento."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

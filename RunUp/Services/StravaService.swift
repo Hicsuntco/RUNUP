@@ -86,7 +86,11 @@ final class StravaService: NSObject {
     // MARK: -
 
     private func send<T: Decodable>(path: String, method: String, body: [String: Any]? = nil) async throws -> T {
-        guard let token = auth.token else { throw StravaServiceError.notSignedIn }
+        // `await` : `AuthService` est isolé sur l'acteur principal (il porte l'état de session
+        // observé par l'interface). Cette fonction, elle, est volontairement non isolée pour que
+        // la sérialisation et le réseau restent hors du fil principal — seule la lecture du jeton
+        // y saute, le temps d'un accès.
+        guard let token = await auth.token else { throw StravaServiceError.notSignedIn }
         var request = URLRequest(url: Self.baseURL.appending(path: path))
         request.httpMethod = method
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")

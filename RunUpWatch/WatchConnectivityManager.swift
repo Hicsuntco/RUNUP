@@ -9,6 +9,11 @@ import Observation
 /// - Outbound: a finished run goes up via `transferUserInfo` — queued delivery, so a run ended
 ///   in airplane mode / far from the phone still arrives once they reconnect. The phone side
 ///   (`WatchSessionService`) dedupes on `clientId`, so a retried transfer can't double-insert.
+///
+/// `@MainActor` : les trois propriétés ci-dessous sont lues par l'écran d'accueil de la montre.
+/// Elles étaient écrites depuis les callbacks `WCSessionDelegate`, qui arrivent sur une file
+/// système — d'où les `nonisolated` en bas et le décodage du contexte AVANT de traverser.
+@MainActor
 @Observable
 final class WatchConnectivityManager: NSObject {
     static let shared = WatchConnectivityManager()
@@ -32,40 +37,64 @@ final class WatchConnectivityManager: NSObject {
 
     func sendCompletedRun(startedAt: Date, elapsedSeconds: Double, distanceKm: Double, kcal: Double, avgHeartRate: Int) {
         guard WCSession.isSupported() else { return }
-        let payload: [String: Any] = [
+        var payload: [String: Any] = [
             "kind": "completedRun",
             // Idempotency key — same role as the club API's client_id: a re-queued transfer
             // (or a delegate double-fire) must not become two RunRecords on the phone.
             "clientId": UUID().uuidString,
             // The séance this run was actually run against — what the start screen displayed,
             // not whatever the phone's plan says at delivery time (could be days later).
-            "title": sessionTitle ?? "Course libre",
+            //
+            // Quand il n'y en a pas, la clé est OMISE plutôt que remplie avec « Course libre » :
+            // ce libellé finirait tel quel, en français, dans l'historique d'une utilisatrice
+            // anglophone. Le téléphone applique son propre repli traduit à la réception.
             "startedAt": startedAt.timeIntervalSince1970,
             "elapsedSeconds": elapsedSeconds,
             "distanceKm": distanceKm,
             "kcal": kcal,
             "avgHeartRate": avgHeartRate,
         ]
+        if let sessionTitle { payload["title"] = sessionTitle }
         WCSession.default.transferUserInfo(payload)
     }
 
-    private func readSessionContext(_ context: [String: Any]) {
-        Task { @MainActor in
-            self.sessionTitle = context["sessionTitle"] as? String
-            self.sessionPace = context["sessionPace"] as? String
-            self.sessionDurationMinutes = context["sessionDurationMinutes"] as? Int
-        }
+    private func apply(_ context: SessionContext) {
+        sessionTitle = context.title
+        sessionPace = context.pace
+        sessionDurationMinutes = context.durationMinutes
     }
 }
 
+// `nonisolated` : WatchConnectivity rappelle depuis sa propre file. Le dictionnaire `[String: Any]`
+// qu'elle fournit n'est pas `Sendable`, donc il est décodé ici, sur place, et seul le résultat —
+// trois valeurs simples dans une structure immuable — franchit la limite vers l'acteur principal.
 extension WatchConnectivityManager: WCSessionDelegate {
-    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
+    nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
         // The context the phone pushed while this app wasn't running is available right after
         // activation — read it so a cold launch still shows today's session.
-        readSessionContext(session.receivedApplicationContext)
+        let context = SessionContext(session.receivedApplicationContext)
+        Task { @MainActor in self.apply(context) }
     }
 
-    func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
-        readSessionContext(applicationContext)
+    nonisolated func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
+        let context = SessionContext(applicationContext)
+        Task { @MainActor in self.apply(context) }
+    }
+}
+
+/// La séance du jour telle que le téléphone la pousse, une fois extraite du `[String: Any]`.
+///
+/// Déclarée au niveau du fichier, et non imbriquée dans la classe : un type imbriqué dans une
+/// classe `@MainActor` en hérite l'isolation, ce qui rendrait son `init` inappelable depuis les
+/// callbacks `nonisolated` ci-dessus, qui sont précisément là où il sert.
+private struct SessionContext: Sendable {
+    var title: String?
+    var pace: String?
+    var durationMinutes: Int?
+
+    init(_ context: [String: Any]) {
+        title = context["sessionTitle"] as? String
+        pace = context["sessionPace"] as? String
+        durationMinutes = context["sessionDurationMinutes"] as? Int
     }
 }

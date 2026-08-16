@@ -29,10 +29,17 @@ enum AuthServiceError: Error {
 }
 
 /// Talks to RunUp's account backend — the same Vercel project as the coach proxy (see
-/// `api/auth/*.js`, `api/me.js`, `api/account/delete.js`). Holds the signed-in user + session
+/// `api/auth/*.js`, `api/me.js`, `api/account/[action].js`). Holds the signed-in user + session
 /// token (Keychain-backed, so it survives relaunches) so `ClubService` and `ClubView` can tell
 /// whether there's a real account behind the Club tab. Signing in is scoped to Club only — the
 /// rest of the app works fully offline, no account required.
+///
+/// `@MainActor` : `currentUser` et `token` sont observés par SwiftUI, et `onSignOut` ci-dessous
+/// est une fermeture fournie par `AppState` (lui-même isolé sur l'acteur principal). Sans cette
+/// annotation, `signOut()` pouvait appeler cette fermeture — donc muter l'état de l'app et son
+/// contexte SwiftData — depuis n'importe quel fil. Les `await URLSession` restent, eux, hors du
+/// fil principal ; seule la reprise après chaque `await` y revient.
+@MainActor
 @Observable
 final class AuthService {
     private(set) var currentUser: AuthenticatedUser?
@@ -103,7 +110,7 @@ final class AuthService {
     }
 
     /// Deletes the account server-side (cascades to club membership/activities/kudos — see
-    /// `api/account/delete.js`) then signs out locally. Required by App Store guideline
+    /// `api/account/[action].js`) then signs out locally. Required by App Store guideline
     /// 5.1.1(v): an app that offers account creation must offer in-app account deletion too.
     func deleteAccount() async throws {
         guard let token else { throw AuthServiceError.notSignedIn }

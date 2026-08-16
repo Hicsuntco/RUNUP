@@ -43,6 +43,19 @@ enum CoachService {
         return f
     }()
 
+    /// `@MainActor` sur le PROLOGUE seulement, et c'est tout l'intérêt.
+    ///
+    /// `profile` et les `ChatMessage` de `history` sont des objets SwiftData `@Model` : ils
+    /// appartiennent au `ModelContext` du fil principal et ne peuvent pas être lus ailleurs sans
+    /// risquer une lecture déchirée ou un plantage. Or cette fonction était `nonisolated async`,
+    /// donc `systemPrompt(for:)` et le `map` ci-dessous s'exécutaient sur l'exécuteur global —
+    /// exactement le défaut d'isolation relevé par l'audit.
+    ///
+    /// L'isoler ne remet PAS le réseau sur le fil principal : `performRequest` reste `nonisolated`,
+    /// et une fonction `async` non isolée appelée depuis l'acteur principal s'exécute sur
+    /// l'exécuteur global. Le fil principal ne fait donc que ce qu'il est seul à pouvoir faire —
+    /// lire les modèles et construire deux chaînes — puis rend la main.
+    @MainActor
     static func send(history: [ChatMessage], profile: UserProfile) async throws -> String {
         try await performRequest(
             system: systemPrompt(for: profile),
@@ -55,6 +68,8 @@ enum CoachService {
     /// A question asked out loud mid-run (see `VoiceCoachController`) — same coach, same backend,
     /// but a deliberately different system prompt: she's mid-effort and the reply gets read aloud
     /// via text-to-speech, so it needs to be one short spoken sentence, not chat-length copy.
+    /// `@MainActor` pour la même raison que `send` ci-dessus : `profile.name` est lu ici.
+    @MainActor
     static func sendLiveVoiceQuery(question: String, liveContext: String, profile: UserProfile) async throws -> String {
         let system = """
         Tu es le coach running personnel de \(profile.name). Elle est EN TRAIN DE COURIR là, maintenant, et vient de te poser une question à voix haute pendant sa séance.
@@ -94,6 +109,7 @@ enum CoachService {
     /// Ported near-verbatim from `sendCoach` in the design handoff's `app.jsx` — the coach is
     /// presented as a real personal coach, never as an AI. System prompt is rebuilt from live
     /// profile/program state on every message.
+    @MainActor
     private static func systemPrompt(for s: UserProfile) -> String {
         var extra: [String] = []
         if let now = s.weightNowKg, let target = s.weightTargetKg {
@@ -146,7 +162,11 @@ private struct MessagesRequest: Encodable {
     var messages: [RequestMessage]
 }
 
-private struct RequestMessage: Encodable {
+/// `Sendable` explicitement : cette valeur est la SEULE chose qui franchit la limite entre le
+/// prologue isolé sur l'acteur principal (où les modèles SwiftData sont lus) et `performRequest`,
+/// qui s'exécute sur l'exécuteur global. La conformité serait déduite ici, mais l'écrire noir sur
+/// blanc rend l'invariant impossible à casser par inadvertance.
+private struct RequestMessage: Encodable, Sendable {
     var role: String
     var content: String
 }

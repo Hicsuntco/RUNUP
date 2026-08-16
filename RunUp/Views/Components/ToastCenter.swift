@@ -1,6 +1,13 @@
 import SwiftUI
 
 /// App-wide toast pill (bottom-center, ~2.2s auto-dismiss).
+///
+/// `@MainActor` parce que tout ce que fait cette classe est de l'interface : `withAnimation`,
+/// une annonce VoiceOver, et une propriété que SwiftUI observe. Sans l'annotation, la tâche de
+/// disparition ci-dessous capture une classe non-`Sendable` dans du code concurrent — un
+/// avertissement aujourd'hui, une erreur en Swift 6, et une vraie course de données entre
+/// l'écriture différée et la lecture par la vue.
+@MainActor
 @Observable
 final class ToastCenter {
     private(set) var message: String?
@@ -17,12 +24,12 @@ final class ToastCenter {
         // personne », « Connexion à Apple Santé impossible ». On tapait un bouton, rien ne se
         // passait, et rien ne disait pourquoi.
         AccessibilityNotification.Announcement(message).post()
+        // Plus de `await MainActor.run` : une `Task` créée depuis un contexte `@MainActor` hérite
+        // de son isolation, donc le corps s'exécute déjà sur le fil principal.
         dismissTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(2.2))
             guard !Task.isCancelled else { return }
-            await MainActor.run {
-                withAnimation(.easeOut(duration: 0.25)) { self?.message = nil }
-            }
+            withAnimation(.easeOut(duration: 0.25)) { self?.message = nil }
         }
     }
 }

@@ -10,6 +10,12 @@ import Observation
 /// calories. Ending the session saves a genuine workout to HealthKit (it counts toward her
 /// Apple rings, and the iPhone app's daily goals read those same stores), then hands the run's
 /// numbers to `WatchConnectivityManager` for the phone to turn into a `RunRecord` + debrief.
+///
+/// `@MainActor` : toutes les propriétés ci-dessous sont lues par l'écran de la montre à chaque
+/// image, et elles étaient écrites depuis deux files HealthKit distinctes (le délégué de session
+/// et celui du constructeur de séance). Les délégués en bas sont donc `nonisolated` et sautent
+/// explicitement sur l'acteur principal.
+@MainActor
 @Observable
 final class WatchWorkoutManager: NSObject {
     enum State: Equatable {
@@ -105,18 +111,14 @@ final class WatchWorkoutManager: NSObject {
                 session.startActivity(with: start)
                 try await builder.beginCollection(at: start)
 
-                await MainActor.run {
-                    self.session = session
-                    self.builder = builder
-                    self.startedAt = start
-                    self.state = .running
-                    self.startTicker()
-                }
+                self.session = session
+                self.builder = builder
+                self.startedAt = start
+                self.state = .running
+                self.startTicker()
             } catch {
-                await MainActor.run {
-                    self.state = .idle
-                    self.errorMessage = "Impossible de démarrer — vérifie l'accès Santé dans Réglages."
-                }
+                self.state = .idle
+                self.errorMessage = String(localized: "Impossible de démarrer — vérifie l'accès Santé dans Réglages.")
             }
         }
     }
@@ -127,9 +129,7 @@ final class WatchWorkoutManager: NSObject {
             while !Task.isCancelled {
                 guard let self else { return }
                 let elapsed = self.builder?.elapsedTime ?? 0
-                await MainActor.run {
-                    if self.state == .running || self.state == .paused { self.elapsedSeconds = elapsed }
-                }
+                if self.state == .running || self.state == .paused { self.elapsedSeconds = elapsed }
                 try? await Task.sleep(for: .seconds(1))
             }
         }
@@ -185,19 +185,17 @@ final class WatchWorkoutManager: NSObject {
             if let type = HKQuantityType.quantityType(forIdentifier: .heartRate) {
                 avgBpm = builder.statistics(for: type)?.averageQuantity()?.doubleValue(for: bpmUnit)
             }
-            await MainActor.run {
-                self.elapsedSeconds = elapsed
-                if let distance { self.distanceMeters = distance }
-                if let kcal { self.activeCalories = kcal }
-                if let avgBpm { self.avgHeartRate = Int(avgBpm.rounded()) }
-                WatchConnectivityManager.shared.sendCompletedRun(
-                    startedAt: self.startedAt ?? Date(),
-                    elapsedSeconds: self.elapsedSeconds,
-                    distanceKm: self.distanceMeters / 1000,
-                    kcal: self.activeCalories,
-                    avgHeartRate: self.avgHeartRate ?? 0
-                )
-            }
+            self.elapsedSeconds = elapsed
+            if let distance { self.distanceMeters = distance }
+            if let kcal { self.activeCalories = kcal }
+            if let avgBpm { self.avgHeartRate = Int(avgBpm.rounded()) }
+            WatchConnectivityManager.shared.sendCompletedRun(
+                startedAt: self.startedAt ?? Date(),
+                elapsedSeconds: self.elapsedSeconds,
+                distanceKm: self.distanceMeters / 1000,
+                kcal: self.activeCalories,
+                avgHeartRate: self.avgHeartRate ?? 0
+            )
         }
     }
 
@@ -216,23 +214,24 @@ final class WatchWorkoutManager: NSObject {
     }
 }
 
+// `nonisolated` : HealthKit appelle ces délégués depuis ses propres files, jamais depuis le fil
+// principal.
 extension WatchWorkoutManager: HKWorkoutSessionDelegate {
-    func workoutSession(_ workoutSession: HKWorkoutSession, didChangeTo toState: HKWorkoutSessionState, from fromState: HKWorkoutSessionState, date: Date) {
-        if toState == .ended {
-            finishAndSend(at: date)
-        }
+    nonisolated func workoutSession(_ workoutSession: HKWorkoutSession, didChangeTo toState: HKWorkoutSessionState, from fromState: HKWorkoutSessionState, date: Date) {
+        guard toState == .ended else { return }
+        Task { @MainActor in self.finishAndSend(at: date) }
     }
 
-    func workoutSession(_ workoutSession: HKWorkoutSession, didFailWithError error: Error) {
+    nonisolated func workoutSession(_ workoutSession: HKWorkoutSession, didFailWithError error: Error) {
         Task { @MainActor in
-            self.errorMessage = "La séance s'est interrompue — réessaie."
+            self.errorMessage = String(localized: "La séance s'est interrompue — réessaie.")
             self.state = .idle
         }
     }
 }
 
 extension WatchWorkoutManager: HKLiveWorkoutBuilderDelegate {
-    func workoutBuilder(_ workoutBuilder: HKLiveWorkoutBuilder, didCollectDataOf collectedTypes: Set<HKSampleType>) {
+    nonisolated func workoutBuilder(_ workoutBuilder: HKLiveWorkoutBuilder, didCollectDataOf collectedTypes: Set<HKSampleType>) {
         // Statistics are read on the builder's own queue — snapshot then hop to main.
         var newHeartRate: Int?
         var newAvgHeartRate: Int?
@@ -270,7 +269,7 @@ extension WatchWorkoutManager: HKLiveWorkoutBuilderDelegate {
         }
     }
 
-    func workoutBuilderDidCollectEvent(_ workoutBuilder: HKLiveWorkoutBuilder) {
+    nonisolated func workoutBuilderDidCollectEvent(_ workoutBuilder: HKLiveWorkoutBuilder) {
         let elapsed = workoutBuilder.elapsedTime
         Task { @MainActor in self.elapsedSeconds = elapsed }
     }

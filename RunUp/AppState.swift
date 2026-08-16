@@ -6,6 +6,20 @@ import ActivityKit
 
 /// Central app store + router — mirrors the `store`/`ctx` object threaded through the
 /// prototype via React context. Held once at the root and read via `@Environment(AppState.self)`.
+///
+/// `@MainActor` sur la classe entière, et non plus méthode par méthode. Cet objet n'existe que
+/// pour être lu par SwiftUI : chacune de ses propriétés observables est rendue à l'écran, et il
+/// possède des objets SwiftData (`profile`, `modelContext`) qui appartiennent au contexte du fil
+/// principal. Les annotations éparpillées sur trois méthodes laissaient tout le reste — dont
+/// `startRun()`, `endLiveRun()` et `toast()` — accessible depuis n'importe quel fil, ce que le
+/// compilateur ne pouvait ni vérifier ni empêcher. C'est la même famille de défaut que
+/// `ToastCenter`, `LiveRunViewModel` et `VoiceCoachController`, corrigée de la même façon.
+///
+/// Conséquence pratique : les rares appelants qui ne sont PAS sur le fil principal (les callbacks
+/// `WCSessionDelegate` de `WatchSessionService`, l'observateur `NSCalendarDayChanged`) doivent
+/// désormais sauter explicitement sur l'acteur principal — ce qu'ils faisaient déjà, mais par
+/// convention plutôt que sous garantie du compilateur.
+@MainActor
 @Observable
 final class AppState {
     let modelContext: ModelContext
@@ -89,8 +103,12 @@ final class AppState {
         // overnight) crosses midnight without ever backgrounding, so the week strip/weekNumber
         // stayed frozen on the old day indefinitely until the next real relaunch. This fires the
         // instant the system clock actually rolls over to a new calendar day, foreground or not.
+        // `MainActor.assumeIsolated` plutôt qu'un `Task` : `queue: .main` garantit déjà que ce bloc
+        // s'exécute sur le fil principal, donc on l'affirme au compilateur au lieu de replanifier
+        // le travail un tour de boucle plus tard. Un `Task` ferait basculer le rafraîchissement
+        // après le passage à minuit au tour suivant, ce qui n'apporte rien.
         NotificationCenter.default.addObserver(forName: .NSCalendarDayChanged, object: nil, queue: .main) { [weak self] _ in
-            self?.refreshProgramForCurrentDate()
+            MainActor.assumeIsolated { self?.refreshProgramForCurrentDate() }
         }
         ThemeStore.shared.themeID = self.profile.accentThemeID
         ThemeStore.shared.isLightMode = self.profile.isLightMode
@@ -122,18 +140,18 @@ final class AppState {
         // Reflects whatever's still queued from a previous session that got killed before it
         // could retry — without this, `pendingActivityCount` would silently start at its `= 0`
         // default and stay there until the next successful post/retry touched it.
-        // Hopped onto the main actor like the calls above rather than called directly: the outbox
-        // extension is `@MainActor` (it drives observable UI state) while `init` is not, and the
-        // count is only ever read by a view, so landing one runloop later is invisible.
-        Task { @MainActor in self.refreshPendingActivityCount() }
+        // Différé d'un tour de boucle plutôt qu'appelé directement : le compte n'est lu que par
+        // une vue, donc arriver au tour suivant est invisible, et cela évite de faire une lecture
+        // SwiftData de plus sur le chemin critique du lancement à froid.
+        Task { self.refreshPendingActivityCount() }
         // Les sorties encore en file appartiennent au compte qui les a produites. À la
         // déconnexion elles deviennent impubliables (leur jeton disparaît) et dangereuses (le
         // compte suivant les publierait sous son nom), donc on les abandonne. Posé ici plutôt
         // que dans `AuthService`, qui n'a pas à connaître l'état de l'app.
         auth.onSignOut = { [weak self] in
-            Task { @MainActor in self?.discardPendingClubActivities() }
+            Task { self?.discardPendingClubActivities() }
         }
-        Task { @MainActor in self.recoverInterruptedRunIfNeeded() }
+        Task { self.recoverInterruptedRunIfNeeded() }
     }
 
     /// Récupère une course que l'app a perdue en étant tuée en plein effort.
@@ -152,7 +170,6 @@ final class AppState {
     /// l'empiler dans `pendingDebriefs`, et laisser la feuille de debrief s'ouvrir depuis la
     /// racine. Elle valide son ressenti et la course entre dans le programme comme n'importe
     /// quelle autre.
-    @MainActor
     private func recoverInterruptedRunIfNeeded() {
         guard let snapshot = LiveRunSnapshotStore.loadRecoverable() else { return }
         // Consommé tout de suite : quoi qu'il advienne ensuite, cette course ne doit pas être
@@ -226,7 +243,6 @@ final class AppState {
     /// connected) so the "already checked today" guard is only ever consumed once, with the real
     /// sleep-aware answer — not consumed early by some other call site checking with `nil` before
     /// a HealthKit-aware one gets a chance to run today.
-    @MainActor
     private func checkSameDayAdjustment() async {
         let today = Calendar.current.startOfDay(for: .now)
         guard profile.lastSameDayAdjustmentCheckDay != today else { return }
@@ -281,10 +297,10 @@ final class AppState {
     /// Pulls today's step count and active calories from Apple Santé, if connected — the
     /// "Calories actives" and "Pas" daily goals are HealthKit-sourced, not something logged inside
     /// the app.
-    // @MainActor: this used to run on whatever executor the Task landed on, then mutate the
-    // SwiftData profile and insert notifications from a background thread — intermittent
-    // crashes/lost writes on every foreground sync. The HealthKit awaits still run off-main.
-    @MainActor
+    // Isolé sur l'acteur principal (via la classe) : ceci tournait autrefois sur l'exécuteur où
+    // la `Task` atterrissait, puis mutait le profil SwiftData et insérait des notifications depuis
+    // un fil de fond — plantages intermittents et écritures perdues à chaque synchro. Les `await`
+    // HealthKit, eux, continuent de s'exécuter hors du fil principal.
     private func syncDailyGoalsFromHealthKit() async {
         guard profile.connectedSources.contains(.apple) else { return }
         // Idempotent (only the first call registers) — placed here, on the sync path itself, so
@@ -292,9 +308,12 @@ final class AppState {
         // it in onboarding/Profil. The observer fires on new steps/calories samples — including
         // hourly background deliveries — and re-runs this same sync, which republishes the
         // widget. `[weak self]` because the closure outlives any single call.
-        healthKit.startObservingDailyGoals { [weak self] in
+        healthKit.startObservingDailyGoals { @Sendable [weak self] in
             guard let self else { return }
-            Task { @MainActor in await self.syncDailyGoalsFromHealthKit() }
+            // `Task` créée depuis un contexte NON isolé (HealthKit appelle depuis sa file) : elle
+            // n'hérite donc d'aucun acteur, et c'est l'`await` ci-dessous qui saute sur le
+            // principal — ce qui est précisément ce qu'on veut ici.
+            Task { await self.syncDailyGoalsFromHealthKit() }
         }
         async let steps = healthKit.stepsToday()
         async let calories = healthKit.activeCaloriesToday()

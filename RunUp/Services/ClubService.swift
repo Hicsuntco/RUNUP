@@ -475,7 +475,11 @@ struct ClubService {
     // MARK: -
 
     private func send<T: Decodable>(path: String, method: String, body: [String: Any]? = nil, query: [String: String]? = nil) async throws -> T {
-        guard let token = auth.token else { throw ClubServiceError.notSignedIn }
+        // `await` : `AuthService` est isolé sur l'acteur principal (il porte l'état de session
+        // observé par l'interface). Cette fonction, elle, est volontairement non isolée pour que
+        // la sérialisation et le réseau restent hors du fil principal — seule la lecture du jeton
+        // y saute, le temps d'un accès.
+        guard let token = await auth.token else { throw ClubServiceError.notSignedIn }
         var url = Self.baseURL.appending(path: path)
         if let query, !query.isEmpty {
             url.append(queryItems: query.map { URLQueryItem(name: $0.key, value: $0.value) })

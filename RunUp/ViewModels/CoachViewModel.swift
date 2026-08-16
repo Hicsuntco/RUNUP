@@ -5,6 +5,11 @@ import SwiftData
 /// Drives the coach chat — real Anthropic API calls via `CoachService`. Mirrors `sendCoach` in
 /// app.jsx: builds a fresh system prompt from live profile state on every message, surfaces a
 /// visible error bubble (with manual retry) on failure rather than retrying silently.
+///
+/// `@MainActor` : ce modèle possède un `ModelContext` et un `UserProfile` — des objets SwiftData
+/// liés au fil principal — et insère/supprime des `ChatMessage`. Rien de tout cela ne peut être
+/// touché ailleurs.
+@MainActor
 @Observable
 final class CoachViewModel {
     private let modelContext: ModelContext
@@ -36,30 +41,29 @@ final class CoachViewModel {
 
     private func request(history: [ChatMessage]) {
         isTyping = true
+        // La `Task` hérite de l'isolation `@MainActor`, d'où la disparition des deux
+        // `await MainActor.run` : le corps y est déjà. Seul l'appel réseau, `nonisolated` dans
+        // `CoachService`, quitte le fil principal.
         Task {
             do {
                 let reply = try await CoachService.send(history: history, profile: profile)
-                await MainActor.run {
-                    // A successful reply makes the old "Connexion coupée" bubbles (persisted, so
-                    // they'd otherwise litter the thread forever) obsolete — clear them.
-                    for stale in history.filter({ $0.role == .error }) {
-                        modelContext.delete(stale)
-                    }
-                    modelContext.insert(ChatMessage(role: .coach, text: reply))
-                    isTyping = false
-                    // The reply often lands while she's mid-warmup, phone in hand but eyes
-                    // elsewhere — a light tap says "réponse arrivée" without needing to look.
-                    Haptics.impact(.light)
+                // A successful reply makes the old "Connexion coupée" bubbles (persisted, so
+                // they'd otherwise litter the thread forever) obsolete — clear them.
+                for stale in history.filter({ $0.role == .error }) {
+                    modelContext.delete(stale)
                 }
+                modelContext.insert(ChatMessage(role: .coach, text: reply))
+                isTyping = false
+                // The reply often lands while she's mid-warmup, phone in hand but eyes
+                // elsewhere — a light tap says "réponse arrivée" without needing to look.
+                Haptics.impact(.light)
             } catch {
-                await MainActor.run {
-                    // At most one live error bubble — replace, don't stack.
-                    for stale in history.filter({ $0.role == .error }) {
-                        modelContext.delete(stale)
-                    }
-                    modelContext.insert(ChatMessage(role: .error, text: "Connexion coupée — le coach n'a pas pu répondre. Réessaie dans un instant."))
-                    isTyping = false
+                // At most one live error bubble — replace, don't stack.
+                for stale in history.filter({ $0.role == .error }) {
+                    modelContext.delete(stale)
                 }
+                modelContext.insert(ChatMessage(role: .error, text: String(localized: "Connexion coupée — le coach n'a pas pu répondre. Réessaie dans un instant.")))
+                isTyping = false
             }
         }
     }

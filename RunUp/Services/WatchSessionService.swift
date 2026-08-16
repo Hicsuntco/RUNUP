@@ -11,6 +11,12 @@ import WatchConnectivity
 ///   airplane mode, delivered when the devices reconnect). The phone builds the `RunRecord`,
 ///   inserts it, and opens the same RPE debrief every other run goes through, so streak/XP/
 ///   plan-adaptation work identically whether the run was tracked from pocket or wrist.
+///
+/// `@MainActor` : ce service lit et écrit `AppState` (contexte SwiftData, file de débriefs,
+/// toasts). Les callbacks `WCSessionDelegate` en bas, eux, arrivent sur une file système — ils
+/// sont donc explicitement `nonisolated` et sautent sur l'acteur principal, ce qui est ce que le
+/// code faisait déjà mais que rien ne garantissait.
+@MainActor
 final class WatchSessionService: NSObject {
     private unowned let appState: AppState
     /// Last context actually handed to WCSession — `publishWidgetSnapshot` fires on plenty of
@@ -66,34 +72,29 @@ final class WatchSessionService: NSObject {
 
     // MARK: Inbound completed run
 
-    private func handleCompletedRun(_ userInfo: [String: Any]) {
-        guard let clientId = userInfo["clientId"] as? String else { return }
+    private func handleCompletedRun(_ payload: CompletedRunPayload) {
         // Idempotency — transferUserInfo can re-deliver (and the watch could retry): the same
         // wrist run must never become two RunRecords.
         var seen = UserDefaults.standard.stringArray(forKey: Self.seenClientIdsKey) ?? []
-        guard !seen.contains(clientId) else { return }
-        seen.append(clientId)
+        guard !seen.contains(payload.clientId) else { return }
+        seen.append(payload.clientId)
         if seen.count > 100 { seen.removeFirst(seen.count - 100) }
         UserDefaults.standard.set(seen, forKey: Self.seenClientIdsKey)
 
-        let elapsedSeconds = userInfo["elapsedSeconds"] as? Double ?? 0
-        let distanceKm = userInfo["distanceKm"] as? Double ?? 0
-        let kcal = userInfo["kcal"] as? Double ?? 0
-        let avgHeartRate = userInfo["avgHeartRate"] as? Int ?? 0
         // A tap-started-tap-stopped accident on the wrist (a few seconds, no distance) shouldn't
         // pollute History — same spirit as the Live screen's own minimum.
-        guard elapsedSeconds >= 60, distanceKm >= 0.1 else { return }
+        guard payload.elapsedSeconds >= 60, payload.distanceKm >= 0.1 else { return }
 
         let record = AdaptivePlanEngine.buildRunRecord(
-            title: userInfo["title"] as? String ?? String(localized: "Course libre"),
-            elapsedSeconds: elapsedSeconds,
-            distanceKm: distanceKm,
-            kcal: kcal,
-            avgHeartRate: avgHeartRate
+            title: payload.title,
+            elapsedSeconds: payload.elapsedSeconds,
+            distanceKm: payload.distanceKm,
+            kcal: payload.kcal,
+            avgHeartRate: payload.avgHeartRate
         )
         // Dated when she actually ran, not when the queued transfer finally arrived — a run
         // finished Saturday in airplane mode must not appear as a Sunday run in History.
-        if let startedAtEpoch = userInfo["startedAt"] as? Double {
+        if let startedAtEpoch = payload.startedAtEpoch {
             record.date = Date(timeIntervalSince1970: startedAtEpoch)
         }
         // Inserted right away — like a GPS run, it really happened (DebriefSheet sees
@@ -109,22 +110,61 @@ final class WatchSessionService: NSObject {
     }
 }
 
+// `nonisolated` sur chacun : WatchConnectivity appelle ces méthodes depuis sa propre file, jamais
+// depuis le fil principal. Les déclarer telles quelles sur une classe `@MainActor` reviendrait à
+// promettre au compilateur quelque chose de faux ; le saut vers l'acteur principal est donc écrit
+// explicitement là où il a lieu.
 extension WatchSessionService: WCSessionDelegate {
-    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
+    nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
         guard activationState == .activated else { return }
         Task { @MainActor in self.pushTodaySession() }
     }
 
     // iOS-only requirements — fire when the user switches to a different paired watch.
     // Re-activating hands the session over to the newly active watch.
-    func sessionDidBecomeInactive(_ session: WCSession) {}
+    nonisolated func sessionDidBecomeInactive(_ session: WCSession) {}
 
-    func sessionDidDeactivate(_ session: WCSession) {
+    nonisolated func sessionDidDeactivate(_ session: WCSession) {
         session.activate()
     }
 
-    func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
-        guard userInfo["kind"] as? String == "completedRun" else { return }
-        Task { @MainActor in self.handleCompletedRun(userInfo) }
+    nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
+        // Décodé ICI, sur la file de WatchConnectivity, pour que seul un type `Sendable` traverse.
+        guard let payload = CompletedRunPayload(userInfo) else { return }
+        Task { @MainActor in self.handleCompletedRun(payload) }
+    }
+}
+
+/// La charge utile d'une course reçue de la montre, une fois extraite du `[String: Any]`.
+///
+/// Ce type existe pour une raison précise : `[String: Any]` n'est pas `Sendable`, donc le passer
+/// tel quel du callback `WCSessionDelegate` (file système) à l'acteur principal est exactement le
+/// franchissement d'isolation que Swift 6 interdit. On lit donc les valeurs là où elles arrivent
+/// — elles sont toutes de simples scalaires — et on ne fait traverser qu'une structure immuable
+/// et `Sendable`.
+///
+/// Déclaré au niveau du fichier et non imbriqué dans `WatchSessionService` : un type imbriqué
+/// dans une classe `@MainActor` en hérite l'isolation, ce qui rendrait son `init` inappelable
+/// depuis le callback `nonisolated` qui en a précisément besoin.
+private struct CompletedRunPayload: Sendable {
+    var clientId: String
+    var title: String
+    var elapsedSeconds: Double
+    var distanceKm: Double
+    var kcal: Double
+    var avgHeartRate: Int
+    var startedAtEpoch: Double?
+
+    init?(_ userInfo: [String: Any]) {
+        guard userInfo["kind"] as? String == "completedRun",
+              let clientId = userInfo["clientId"] as? String
+        else { return nil }
+        self.clientId = clientId
+        self.title = userInfo["title"] as? String ?? String(localized: "Course libre")
+        self.elapsedSeconds = userInfo["elapsedSeconds"] as? Double ?? 0
+        self.distanceKm = userInfo["distanceKm"] as? Double ?? 0
+        self.kcal = userInfo["kcal"] as? Double ?? 0
+        self.avgHeartRate = userInfo["avgHeartRate"] as? Int ?? 0
+        self.startedAtEpoch = userInfo["startedAt"] as? Double
     }
 }

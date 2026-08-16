@@ -84,7 +84,7 @@ struct ClubManagementView: View {
                 }
                 .padding(13)
                 .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
             } else {
                 Text("Aucun défi en cours pour l'instant.")
                     .font(RUFont.sans(11.5)).foregroundColor(RUColor.text3)
@@ -129,7 +129,7 @@ struct ClubManagementView: View {
         }
         .padding(.horizontal, 13).padding(.vertical, 11)
         .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 }
 
@@ -237,7 +237,7 @@ struct ClubMemberProfileView: View {
                         .lineLimit(1...3)
                         .padding(11)
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                     if let bioError {
                         Text(bioError).font(RUFont.sans(10.5)).foregroundColor(RUColor.rose)
                     }
@@ -376,7 +376,7 @@ struct CreateChallengeSheet: View {
                         }
                         .padding(13)
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                     }
 
                     VStack(alignment: .leading, spacing: 8) {

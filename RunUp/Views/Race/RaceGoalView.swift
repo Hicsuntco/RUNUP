@@ -147,7 +147,7 @@ struct RaceGoalView: View {
                             }
                             .padding(.horizontal, 14).padding(.vertical, 12)
                             .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                         }
                     }
                 } else {
@@ -167,7 +167,7 @@ struct RaceGoalView: View {
                             }
                             .padding(.horizontal, 14).padding(.vertical, 12)
                             .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                         }
                     }
                 }

@@ -347,6 +347,6 @@ private struct AuthFieldStyle: TextFieldStyle {
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
             .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 }

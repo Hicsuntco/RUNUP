@@ -72,7 +72,7 @@ struct DebriefSheet: View {
                 }
                 .padding(14)
                 .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                 .padding(.top, 14)
 
                 EyebrowLabel(text: "L'effort ressenti", color: RUColor.text3).padding(.top, 18).padding(.bottom, 10)

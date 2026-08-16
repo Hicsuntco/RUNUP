@@ -25,7 +25,7 @@ struct BirthdateStepView: View {
                     .colorScheme(RUColor.colorScheme)
                     .padding(13)
                     .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
 
                     if let age = vm.age {
                         Text("\(age) ans").font(RUFont.sans(13)).foregroundColor(RUColor.text2)

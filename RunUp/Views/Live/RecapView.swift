@@ -162,7 +162,7 @@ struct RecapView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 8)
                             .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                             HStack(spacing: 7) {
                                 ForEach(ShareCardTextColor.allCases) { style in
                                     SelectableChip(label: style.label, selected: shareTextColor == style) {
@@ -254,7 +254,7 @@ struct RecapView: View {
         }
         .padding(14)
         .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 
     private func elevationCard(_ run: RunRecord) -> some View {

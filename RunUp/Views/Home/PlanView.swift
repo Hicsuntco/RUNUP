@@ -121,7 +121,7 @@ struct PlanView: View {
             Text("\(week.number)").displayStyle(14).foregroundColor(week.isCurrent ? .white : RUColor.textPrimary)
                 .frame(width: 30, height: 30)
                 .background(week.isCurrent ? RUColor.rose : RUColor.card, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).stroke(RUColor.line, lineWidth: week.isCurrent ? 0 : RUSpacing.hairline))
+                .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).stroke(RUColor.cardBorder, lineWidth: week.isCurrent ? 0 : RUSpacing.hairline))
             VStack(alignment: .leading, spacing: 1) {
                 // Deux phrases entières plutôt qu'un suffixe français recollé dans l'interpolation :
                 // un fragment collé de l'extérieur ne passe jamais par le catalogue.
@@ -258,7 +258,7 @@ struct PlanView: View {
             .foregroundColor(tint)
             .frame(width: 26, height: 26)
             .background(isToday ? RUColor.rose.opacity(0.12) : RUColor.bg, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+            .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 
     private func dayRowAccessibilityLabel(day: PlannedDay, isToday: Bool, isRest: Bool) -> String {

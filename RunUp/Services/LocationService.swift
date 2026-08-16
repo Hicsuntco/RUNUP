@@ -37,7 +37,21 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     override init() {
         super.init()
         manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
+        // `Best` et non `BestForNavigation`. Apple documente ce dernier comme réservé à un
+        // appareil branché sur secteur : fusion de capteurs supplémentaire, puce GNSS à plein
+        // régime. C'est le chemin le plus long de l'app — 45 à 90 minutes, écran éteint,
+        // localisation en arrière-plan — donc le plus gros poste de batterie qui existe ici.
+        //
+        // L'argument décisif n'est pas le coût, c'est l'inutilité : le gestionnaire ci-dessous
+        // écarte lui-même tout point ayant bougé de moins de `max(hAcc, 8)` mètres, soit environ
+        // deux fixes sur trois à allure de course. On payait la précision sub-métrique pour des
+        // mesures qu'on refusait ensuite d'utiliser. `Best` vise ~5 m, largement sous ce plancher
+        // de bruit de 8 m, et c'est ce qu'utilisent Strava et Nike Run Club.
+        //
+        // Volontairement PAS de `distanceFilter` : l'auto-pause lit `currentSpeedMetersPerSecond`
+        // à chaque fix reçu, et un filtre de distance couperait précisément les callbacks à
+        // l'arrêt — donc la détection de pause, qui a besoin de savoir qu'on ne bouge plus.
+        manager.desiredAccuracy = kCLLocationAccuracyBest
         manager.activityType = .fitness
         manager.pausesLocationUpdatesAutomatically = false
         authorizationStatus = manager.authorizationStatus

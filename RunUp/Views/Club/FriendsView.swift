@@ -201,7 +201,7 @@ struct FriendsView: View {
         }
         .padding(.horizontal, 14).padding(.vertical, 11)
         .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 
     private var searchResultsList: some View {
@@ -265,7 +265,7 @@ struct FriendsView: View {
         }
         .padding(.horizontal, 13).padding(.vertical, 10)
         .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
         .contextMenu {
             Button("Signaler \(user.name)") {
                 reportTarget = ReportTarget(targetType: "user", targetId: user.id, displayName: user.name)

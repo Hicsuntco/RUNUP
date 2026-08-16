@@ -38,7 +38,7 @@ struct WellbeingFieldsView: View {
                         .colorScheme(RUColor.colorScheme)
                         .padding(13)
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
 
                         HStack {
                             Text("Durée moyenne du cycle").font(RUFont.sans(13)).foregroundColor(RUColor.textPrimary)
@@ -69,7 +69,7 @@ struct WellbeingFieldsView: View {
                         }
                         .padding(13)
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                     }
                     .padding(.top, 4)
                     .id("cycleFields")

@@ -340,7 +340,7 @@ struct ClubView: View {
                         .foregroundColor(RUColor.textPrimary)
                         .padding(.horizontal, 14).padding(.vertical, 11)
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                     Button("Créer") { Task { await createClub() } }
                         .buttonStyle(PrimaryButtonStyle(isDisabled: newClubName.trimmingCharacters(in: .whitespaces).isEmpty || isLoading))
                         .disabled(newClubName.trimmingCharacters(in: .whitespaces).isEmpty || isLoading)
@@ -357,7 +357,7 @@ struct ClubView: View {
                         .textInputAutocapitalization(.characters)
                         .padding(.horizontal, 14).padding(.vertical, 11)
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                     Button("Rejoindre") { Task { await joinClub() } }
                         .buttonStyle(PrimaryButtonStyle(isDisabled: joinCode.trimmingCharacters(in: .whitespaces).isEmpty || isLoading))
                         .disabled(joinCode.trimmingCharacters(in: .whitespaces).isEmpty || isLoading)
@@ -515,7 +515,7 @@ struct ClubView: View {
         }
         .padding(3)
         .background(RUColor.bg2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 
     /// Contenu de l'onglet Aperçu : « où en est le club en ce moment ». L'ordre suit celui de la
@@ -793,7 +793,7 @@ struct ClubView: View {
                 }
                 .padding(12)
                 .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                 .contextMenu {
                     if event.isMine {
                         Button("Annuler cette sortie", role: .destructive) { deleteEvent(event) }

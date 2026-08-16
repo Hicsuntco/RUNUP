@@ -33,7 +33,7 @@ struct BrandLogoIcon: View {
                             .scaledToFit()
                             .padding(size * 0.14)
                     )
-                    .overlay(RoundedRectangle(cornerRadius: size * 0.24, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                    .overlay(RoundedRectangle(cornerRadius: size * 0.24, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
             }
         } else {
             Text(fallbackText)

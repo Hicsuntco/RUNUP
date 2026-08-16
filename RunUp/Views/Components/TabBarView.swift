@@ -32,21 +32,26 @@ struct TabBarView: View {
         .padding(.horizontal, 6)
         .frame(height: RUSpacing.tabBarHeight)
         .background(.ultraThinMaterial.opacity(0.9))
-        // Was a fixed dark-navy tint regardless of theme — fine when the whole app was always
-        // dark, but a heavy near-black pill floating on a white page in light mode reads as a
-        // grey smudge rather than the same frosted-glass chrome the dark theme gets.
-        .background(RUColor.isLight ? Color(hex: 0xEDEDF4).opacity(0.92) : Color(hex: 0x12121A).opacity(0.72))
-        .overlay(
-            Capsule().stroke(RUColor.isLight ? Color.black.opacity(0.13) : Color.white.opacity(0.09), lineWidth: RUSpacing.hairline)
-        )
+        // La barre FLOTTE au-dessus du contenu, donc elle doit se lire comme une surface
+        // surélevée — c'est-à-dire `card`, comme toutes les autres surfaces surélevées depuis
+        // l'inversion du thème clair. Elle était figée à #EDEDF4, soit la couleur de la page en
+        // un peu plus foncé : une barre censée être posée au-dessus se lisait comme un trou.
+        .background(RUColor.card.opacity(RUColor.isLight ? 0.92 : 0.72))
+        .overlay(Capsule().stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
         .clipShape(Capsule())
-        .shadow(color: .black.opacity(RUColor.isLight ? 0.30 : 0.5), radius: 24, x: 0, y: 13)
+        // Une barre flottante a droit à plus d'élévation qu'une carte — mais pas à quatre fois
+        // plus. C'était 30 % d'encre là où les cartes sont passées à 4 et 8 %, reliquat de
+        // l'ancien langage d'ombre que le portage de la maquette a justement corrigé ailleurs.
+        .shadow(color: .black.opacity(RUColor.isLight ? 0.10 : 0.5), radius: 18, x: 0, y: 8)
     }
 
     private func tabButton(_ item: (AppScreen, String, String)) -> some View {
         let (screen, label, icon) = item
         let on = selected == screen
-        let color = on ? RUColor.rose2 : (RUColor.isLight ? Color.black.opacity(0.32) : Color.white.opacity(0.4))
+        // Les onglets inactifs passaient par une valeur codée en dur — noir à 32 % sur des
+        // libellés de 8 pt, soit 2,21:1. `text3` a précisément été recalibré pour ce cas, et
+        // contourner le jeton revenait à refaire l'erreur qu'il corrige.
+        let color = on ? RUColor.rose2 : RUColor.text3
         return Button(action: {
             Haptics.selection()
             onSelect(screen)

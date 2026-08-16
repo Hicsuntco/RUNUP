@@ -54,7 +54,9 @@ final class VoiceCoachController: NSObject {
     /// shouldn't need to be told about every tick.
     private let liveContextProvider: () -> String
 
-    private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "fr-FR"))
+    // Même langue que le coach : un moteur français transcrivant une question anglaise renvoie
+    // du charabia, qui part ensuite tel quel dans le prompt.
+    private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: CoachLanguage.current.speechIdentifier))
     private let audioEngine = AVAudioEngine()
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
@@ -176,7 +178,9 @@ final class VoiceCoachController: NSObject {
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio, options: [.duckOthers])
         try? AVAudioSession.sharedInstance().setActive(true)
         let utterance = AVSpeechUtterance(string: text)
-        utterance.voice = AVSpeechSynthesisVoice(language: "fr-FR")
+        // La voix suit la langue du coach : une réponse anglaise lue par une voix française est
+        // inintelligible, et c'est le seul canal où elle n'a pas d'écran pour rattraper.
+        utterance.voice = AVSpeechSynthesisVoice(language: CoachLanguage.current.speechIdentifier)
         utterance.rate = AVSpeechUtteranceDefaultSpeechRate
         synthesizer.speak(utterance)
     }

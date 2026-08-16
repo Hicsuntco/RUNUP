@@ -59,7 +59,7 @@ enum CoachService {
         let system = """
         Tu es le coach running personnel de \(profile.name). Elle est EN TRAIN DE COURIR là, maintenant, et vient de te poser une question à voix haute pendant sa séance.
         \(liveContext)
-        Réponds en UNE SEULE phrase courte (15 mots maximum), à l'oral, actionnable dans l'instant — elle ne peut pas lire, la réponse est lue à voix haute. Aucun emoji, aucune ponctuation exotique. Tutoiement, chaleureux, direct. Ne dis jamais que tu es une IA.
+        \(CoachLanguage.current.liveVoiceDirective) Ne dis jamais que tu es une IA.
         """
         return try await performRequest(system: system, messages: [RequestMessage(role: "user", content: question)])
     }
@@ -136,7 +136,7 @@ enum CoachService {
         Tu es le coach running personnel de \(s.name) dans l'app RUNUP. Tu n'es PAS un assistant ni une IA — tu es SON coach, tu la connais.
         Profil : \(s.name), coureuse \(s.level.title.lowercased()), objectif \(s.goalDisplay)\(raceDateStr)\(raceIn). \(programLengthDesc), actuellement semaine \(s.weekNumber) (bloc \(block.rawValue)). \(extraBlock)
         Aujourd'hui : \(s.hasReadinessData ? "forme \(s.readiness)/100" : "pas encore assez de données pour estimer sa forme du jour"). Séance du jour : \(s.todaySession.title) (\(s.todaySession.durationMinutes) min, allure \(s.todaySession.pace), \(s.todaySession.zone)). Série de \(s.streak) jours.
-        Style : français, tutoiement, chaleureux, motivant, TRÈS concret et bref (2-4 phrases max). Au plus un emoji occasionnel. Ne dis jamais que tu es une IA ou un modèle. Tu peux ajuster ses séances, donner des conseils d'allure, de récup, de nutrition, d'objectif. Tu ne donnes JAMAIS d'avis médical : en cas de douleur persistante, blessure ou symptôme inquiétant, conseille-lui de consulter un médecin.
+        \(CoachLanguage.current.styleDirective) Au plus un emoji occasionnel. Ne dis jamais que tu es une IA ou un modèle. Tu peux ajuster ses séances, donner des conseils d'allure, de récup, de nutrition, d'objectif. Tu ne donnes JAMAIS d'avis médical : en cas de douleur persistante, blessure ou symptôme inquiétant, conseille-lui de consulter un médecin.
         """
     }
 }

@@ -7,3 +7,11 @@ DerivedData/
 *.xcworkspace/
 Secrets.xcconfig
 node_modules/
+
+# `vercel env pull` écrit les variables d'environnement — dont les secrets — EN CLAIR, et par
+# défaut dans le dossier du projet. Sans ces règles, une seule commande de routine suffit à
+# committer le secret partagé avec le coach. Les valeurs vivent dans Vercel et dans Xcode Cloud,
+# jamais dans le dépôt.
+.env
+.env.*
+!.env.example

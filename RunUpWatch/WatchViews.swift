@@ -20,7 +20,10 @@ private enum WTheme {
     static func sansBold(_ size: CGFloat) -> Font { .custom("DMSans-Bold", size: size) }
     static func sansSemibold(_ size: CGFloat) -> Font { .custom("DMSans-SemiBold", size: size) }
 
-    static let fr = Locale(identifier: "fr_FR")
+    /// Anciennement figé sur `fr_FR`, ce qui imposait la virgule décimale à TOUT le monde : une
+    /// utilisatrice anglophone ou hispanophone voyait « 3,25 km » là où son système écrit
+    /// « 3.25 km ». Le séparateur décimal suit maintenant les réglages de la montre.
+    static var locale: Locale { .current }
 }
 
 // MARK: - Start
@@ -52,7 +55,9 @@ struct WatchStartView: View {
                     .tracking(1.2)
                     .foregroundStyle(WTheme.rose)
 
-                Text(connectivity.sessionTitle ?? "Course libre")
+                // `Text(String)` ne traduit PAS (contrairement à `Text("littéral")`), d'où le
+                // `String(localized:)` explicite sur le repli.
+                Text(connectivity.sessionTitle ?? String(localized: "Course libre"))
                     .font(WTheme.bebas(21))
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
@@ -117,7 +122,7 @@ struct WatchRunView: View {
     private var connectivity: WatchConnectivityManager { .shared }
 
     private var distanceLabel: String {
-        String(format: "%.2f", locale: WTheme.fr, workout.distanceMeters / 1000)
+        String(format: "%.2f", locale: WTheme.locale, workout.distanceMeters / 1000)
     }
 
     /// Elapsed vs. the session's planned duration — nil (ring hidden) for a free run with no
@@ -227,7 +232,7 @@ struct WatchSummaryView: View {
     @Environment(WatchWorkoutManager.self) private var workout
 
     private var distanceLabel: String {
-        String(format: "%.2f", locale: WTheme.fr, workout.distanceMeters / 1000)
+        String(format: "%.2f", locale: WTheme.locale, workout.distanceMeters / 1000)
     }
 
     var body: some View {

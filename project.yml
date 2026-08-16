@@ -223,6 +223,11 @@ targets:
       - path: RunUp/Resources/Fonts
         excludes:
           - "*.md"
+      # Le MÊME catalogue de chaînes que l'app iPhone. Sans lui, la montre restait entièrement en
+      # français quelle que soit la langue de l'utilisatrice — chaque `Text("…")` retombait sur sa
+      # clé française faute de traduction à charger. Le partager plutôt que d'en créer un second
+      # évite d'avoir à traduire deux fois les libellés communs (KM, TEMPS, KCAL, EN PAUSE…).
+      - path: RunUp/Resources/Localizable.xcstrings
     info:
       path: RunUpWatch/Info.plist
       properties:
@@ -232,6 +237,11 @@ targets:
         CFBundleVersion: "14"
         WKApplication: true
         WKCompanionAppBundleIdentifier: com.hicsuntco.runup
+        # Mêmes langues déclarées que l'app iPhone, sinon watchOS ne propose que le français.
+        CFBundleLocalizations:
+          - fr
+          - en
+          - es
         # Without the workout-processing background mode, watchOS suspends the app seconds after
         # the wrist drops — the HKWorkoutSession stops collecting mid-run.
         WKBackgroundModes:

@@ -193,18 +193,18 @@
         }
       }
     },
-    "RUNUP construit ton programme, l'ajuste chaque semaine selon ta forme, et te pousse juste ce qu'il faut — jamais plus, jamais moins.": {
+    "VALTA construit ton programme, l'ajuste chaque semaine selon ta forme, et te pousse juste ce qu'il faut — jamais plus, jamais moins.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "RUNUP builds your program, adjusts it every week based on how you're doing, and pushes you just the right amount — never more, never less."
+            "value": "VALTA builds your program, adjusts it every week based on how you're doing, and pushes you just the right amount — never more, never less."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "RUNUP construye tu programa, lo ajusta cada semana según tu forma, y te exige justo lo necesario — nunca más, nunca menos."
+            "value": "VALTA construye tu programa, lo ajusta cada semana según tu forma, y te exige justo lo necesario — nunca más, nunca menos."
           }
         }
       }
@@ -2625,18 +2625,18 @@
         }
       }
     },
-    "Ma course sur RunUp": {
+    "Ma course sur Valta": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "My run on RunUp"
+            "value": "My run on Valta"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mi carrera en RunUp"
+            "value": "Mi carrera en Valta"
           }
         }
       }
@@ -5659,18 +5659,18 @@
         }
       }
     },
-    "Active le classement mondial pour voir où tu te situes parmi tous les coureurs RunUp cette semaine.": {
+    "Active le classement mondial pour voir où tu te situes parmi tous les coureurs Valta cette semaine.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turn on the global leaderboard to see where you stand among all RunUp runners this week."
+            "value": "Turn on the global leaderboard to see where you stand among all Valta runners this week."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Activa la clasificación mundial para ver tu posición entre todos los corredores de RunUp esta semana."
+            "value": "Activa la clasificación mundial para ver tu posición entre todos los corredores de Valta esta semana."
           }
         }
       }
@@ -6395,18 +6395,18 @@
         }
       }
     },
-    "Rejoins mon club sur RunUp avec le code %@ !": {
+    "Rejoins mon club sur Valta avec le code %@ !": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Join my club on RunUp with the code %@!"
+            "value": "Join my club on Valta with the code %@!"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "¡Únete a mi club en RunUp con el código %@!"
+            "value": "¡Únete a mi club en Valta con el código %@!"
           }
         }
       }
@@ -7515,18 +7515,18 @@
         }
       }
     },
-    "Notifications refusées côté iPhone — active-les dans Réglages > RunUp.": {
+    "Notifications refusées côté iPhone — active-les dans Réglages > Valta.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Notifications denied on iPhone — enable them in Settings > RunUp."
+            "value": "Notifications denied on iPhone — enable them in Settings > Valta."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Notificaciones rechazadas en el iPhone — actívalas en Ajustes > RunUp."
+            "value": "Notificaciones rechazadas en el iPhone — actívalas en Ajustes > Valta."
           }
         }
       }
@@ -8283,18 +8283,18 @@
         }
       }
     },
-    "Rejoins-moi sur RunUp, mon appli de coaching running — utilise mon code %@ à l'inscription : https://runup-nu.vercel.app": {
+    "Rejoins-moi sur Valta, mon appli de coaching running — utilise mon code %@ à l'inscription : https://runup-nu.vercel.app": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Join me on RunUp, my running coach app — use my code %@ when you sign up: https://runup-nu.vercel.app"
+            "value": "Join me on Valta, my running coach app — use my code %@ when you sign up: https://runup-nu.vercel.app"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Únete a mí en RunUp, mi app de coaching de running — usa mi código %@ al registrarte: https://runup-nu.vercel.app"
+            "value": "Únete a mí en Valta, mi app de coaching de running — usa mi código %@ al registrarte: https://runup-nu.vercel.app"
           }
         }
       }
@@ -14263,19 +14263,19 @@
         }
       }
     },
-    "Rejoins mon club %@ sur RunUp avec le code %@ : https://runup-nu.vercel.app": {
+    "Rejoins mon club %@ sur Valta avec le code %@ : https://runup-nu.vercel.app": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Join my club %@ on RunUp with the code %@: https://runup-nu.vercel.app"
+            "value": "Join my club %@ on Valta with the code %@: https://runup-nu.vercel.app"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Únete a mi club %@ en RunUp con el código %@: https://runup-nu.vercel.app"
+            "value": "Únete a mi club %@ en Valta con el código %@: https://runup-nu.vercel.app"
           }
         }
       }
@@ -16099,19 +16099,19 @@
         }
       }
     },
-    "Termine ta toute première sortie sur RunUp.": {
+    "Termine ta toute première sortie sur Valta.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finish your very first run on RunUp."
+            "value": "Finish your very first run on Valta."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Termina tu primera salida en RunUp."
+            "value": "Termina tu primera salida en Valta."
           }
         }
       }
@@ -17697,18 +17697,18 @@
         }
       }
     },
-    "Micro non autorisé — active-le dans Réglages > RunUp.": {
+    "Micro non autorisé — active-le dans Réglages > Valta.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Microphone access denied — turn it on in Settings > RunUp."
+            "value": "Microphone access denied — turn it on in Settings > Valta."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Micrófono no autorizado: actívalo en Ajustes > RunUp."
+            "value": "Micrófono no autorizado: actívalo en Ajustes > Valta."
           }
         }
       }
@@ -17729,18 +17729,18 @@
         }
       }
     },
-    "Micro indisponible — vérifie l'autorisation dans Réglages > RunUp.": {
+    "Micro indisponible — vérifie l'autorisation dans Réglages > Valta.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Microphone unavailable — check the permission in Settings > RunUp."
+            "value": "Microphone unavailable — check the permission in Settings > Valta."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Micrófono no disponible: revisa el permiso en Ajustes > RunUp."
+            "value": "Micrófono no disponible: revisa el permiso en Ajustes > Valta."
           }
         }
       }

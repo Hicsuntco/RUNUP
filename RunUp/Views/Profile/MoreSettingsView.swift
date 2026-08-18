@@ -363,7 +363,7 @@ struct MoreSettingsView: View {
         let body = String(localized: "\n\n\n---\nCe qui suit aide juste au diagnostic :\nVersion \(version) (\(build)) · iOS \(system)")
         var components = URLComponents(string: "mailto:charlottegrudep@gmail.com")!
         components.queryItems = [
-            URLQueryItem(name: "subject", value: "Feedback RunUp bêta"),
+            URLQueryItem(name: "subject", value: "Feedback Valta bêta"),
             URLQueryItem(name: "body", value: body)
         ]
         return components.url!

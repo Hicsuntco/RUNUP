@@ -38,7 +38,7 @@ targets:
     info:
       path: RunUp/Info.plist
       properties:
-        CFBundleDisplayName: RunUp
+        CFBundleDisplayName: Valta
         # Shared app↔server secret for the coach proxy, substituted at build time from the
         # RUNUP_APP_SECRET build setting (Config.xcconfig → Secrets.xcconfig) instead of living as
         # a string literal in CoachService.swift, where it was committed in plain text. Read back
@@ -80,11 +80,11 @@ targets:
         # rejects the bundle for not supporting iPad Split View multitasking's full 4-orientation
         # set. This opts the app out of that requirement instead of adding rotation support.
         UIRequiresFullScreen: true
-        NSHealthShareUsageDescription: "RunUp lit tes données Santé (fréquence cardiaque, nombre de pas, calories actives, sommeil) pour calculer ta forme du jour, adapter ton programme et suivre tes objectifs quotidiens."
-        NSHealthUpdateUsageDescription: "RunUp enregistre tes séances de course dans Santé après chaque sortie."
-        NSLocationWhenInUseUsageDescription: "RunUp utilise ta position pour suivre ta distance, ton allure et ton tracé pendant une course."
-        NSMicrophoneUsageDescription: "RunUp utilise le micro pour t'écouter quand tu poses une question à voix haute à ton coach pendant une course."
-        NSSpeechRecognitionUsageDescription: "RunUp transcrit ce que tu dis pour que ton coach puisse te répondre à voix haute pendant une course."
+        NSHealthShareUsageDescription: "Valta lit tes données Santé (fréquence cardiaque, nombre de pas, calories actives, sommeil) pour calculer ta forme du jour, adapter ton programme et suivre tes objectifs quotidiens."
+        NSHealthUpdateUsageDescription: "Valta enregistre tes séances de course dans Santé après chaque sortie."
+        NSLocationWhenInUseUsageDescription: "Valta utilise ta position pour suivre ta distance, ton allure et ton tracé pendant une course."
+        NSMicrophoneUsageDescription: "Valta utilise le micro pour t'écouter quand tu poses une question à voix haute à ton coach pendant une course."
+        NSSpeechRecognitionUsageDescription: "Valta transcrit ce que tu dis pour que ton coach puisse te répondre à voix haute pendant une course."
         # `location` only — the run tracker really does keep GPS alive with the screen off.
         # `remote-notification` used to be listed too, but the server only ever sends visible
         # alert pushes (lib/apns.js), which need no background mode, and no silent-push handler
@@ -177,7 +177,7 @@ targets:
     info:
       path: RunUpWidgets/Info.plist
       properties:
-        CFBundleDisplayName: RunUp
+        CFBundleDisplayName: Valta
         # App Store validation requires an extension's version to match its host app's — keep
         # these two in step with `RunUp`'s `CFBundleShortVersionString`/`CFBundleVersion` above.
         CFBundleShortVersionString: "2.4"
@@ -231,7 +231,7 @@ targets:
     info:
       path: RunUpWatch/Info.plist
       properties:
-        CFBundleDisplayName: RunUp
+        CFBundleDisplayName: Valta
         # Must track the iOS app's version pair exactly — App Store validation requires it.
         CFBundleShortVersionString: "2.4"
         CFBundleVersion: "14"
@@ -246,9 +246,9 @@ targets:
         # the wrist drops — the HKWorkoutSession stops collecting mid-run.
         WKBackgroundModes:
           - workout-processing
-        NSHealthShareUsageDescription: "RunUp lit ta fréquence cardiaque pendant la course pour l'afficher en direct au poignet."
-        NSHealthUpdateUsageDescription: "RunUp enregistre ta course comme une vraie séance dans Santé — elle compte dans tes anneaux."
-        NSLocationWhenInUseUsageDescription: "RunUp utilise ta position pour mesurer distance et allure pendant une course depuis la montre."
+        NSHealthShareUsageDescription: "Valta lit ta fréquence cardiaque pendant la course pour l'afficher en direct au poignet."
+        NSHealthUpdateUsageDescription: "Valta enregistre ta course comme une vraie séance dans Santé — elle compte dans tes anneaux."
+        NSLocationWhenInUseUsageDescription: "Valta utilise ta position pour mesurer distance et allure pendant une course depuis la montre."
         UIAppFonts:
           - BebasNeue-Regular.ttf
           - DMSans-Bold.ttf

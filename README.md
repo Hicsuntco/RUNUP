@@ -1,6 +1,6 @@
-# RUNUP
+# VALTA
 
-RUNUP est une app iOS native (SwiftUI, iOS 17+) de coaching de course à pied avec un coach IA
+VALTA est une app iOS native (SwiftUI, iOS 17+) de coaching de course à pied avec un coach IA
 conversationnel réel. Reconstruite nativement à partir d'un handoff design complet
 (`design_handoff_runup_app/`) — voir ce dossier pour le README de handoff détaillé (tokens de
 design, description écran par écran, prototype de référence).

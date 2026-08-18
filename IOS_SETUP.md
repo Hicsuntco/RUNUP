@@ -14,9 +14,9 @@ généré de façon fiable par un seul outil sur ta machine).
 ## Générer le projet
 
 ```bash
-cd RunUp   # ou la racine du repo, là où se trouve project.yml
+cd Valta   # ou la racine du repo, là où se trouve project.yml
 xcodegen generate
-open RunUp.xcodeproj
+open Valta.xcodeproj
 ```
 
 Relance `xcodegen generate` à chaque fois que `project.yml` change (nouveau fichier source,
@@ -106,7 +106,7 @@ L'entitlement est déjà dans `project.yml` (`com.apple.developer.applesignin`).
 automatique (`CODE_SIGN_STYLE: Automatic`, déjà configuré), Xcode devrait activer la capability
 "Sign In with Apple" tout seul au premier build sur un appareil/simulateur connecté à ton compte
 développeur. Si Xcode affiche une erreur de provisioning à ce sujet : Signing & Capabilities →
-vérifie que "Sign In with Apple" apparaît dans la liste des capabilities de la cible RunUp (elle
+vérifie que "Sign In with Apple" apparaît dans la liste des capabilities de la cible Valta (elle
 devrait y être automatiquement, générée depuis `project.yml`) et relance le build.
 
 ### 4. Déployer et tester
@@ -203,11 +203,11 @@ sur l'écran d'accueil. Il tourne dans son propre processus, séparé de l'app �
    (`group.com.hicsuntco.runup`) sur ton compte développeur — avec la signature automatique
    (`CODE_SIGN_STYLE: Automatic`, déjà configuré sur les deux targets), il devrait proposer de le
    créer tout seul. Si Xcode affiche une erreur de provisioning à ce sujet : sélectionne la cible
-   `RunUp` → Signing & Capabilities → vérifie que "App Groups" apparaît et que
+   `Valta` → Signing & Capabilities → vérifie que "App Groups" apparaît et que
    `group.com.hicsuntco.runup` est bien coché, puis fais pareil pour la cible `RunUpWidgets`.
 3. Lance l'app une première fois sur un appareil (pas besoin du Simulateur, mais ça marche aussi)
    pour qu'elle publie un premier instantané, puis ajoute le widget : appui long sur l'écran
-   d'accueil → **+** → cherche "RunUp" → choisis la taille (petite ou moyenne).
+   d'accueil → **+** → cherche "Valta" → choisis la taille (petite ou moyenne).
 4. Le widget ne se met à jour tout seul qu'une fois par heure environ (limite du système) — mais
    l'app lui demande de se rafraîchir immédiatement à chaque fois que les objectifs du jour
    changent (fin de séance, sync Santé, changement de thème), donc en pratique il devrait toujours

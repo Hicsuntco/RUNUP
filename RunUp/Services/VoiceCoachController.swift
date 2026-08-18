@@ -54,7 +54,7 @@ final class VoiceCoachController: NSObject {
     /// Called by the mic button when the system permission request comes back denied — the
     /// controller can't know that itself (the view owns the request flow).
     func reportAuthorizationDenied() {
-        reportError(String(localized: "Micro non autorisé — active-le dans Réglages > RunUp."))
+        reportError(String(localized: "Micro non autorisé — active-le dans Réglages > Valta."))
     }
 
     private let profile: UserProfile
@@ -105,7 +105,7 @@ final class VoiceCoachController: NSObject {
             return
         }
         guard let recognitionRequest = try? configureAudioSession() else {
-            reportError(String(localized: "Micro indisponible — vérifie l'autorisation dans Réglages > RunUp."))
+            reportError(String(localized: "Micro indisponible — vérifie l'autorisation dans Réglages > Valta."))
             return
         }
 

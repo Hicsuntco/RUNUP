@@ -174,7 +174,7 @@ struct RecapView: View {
                             if let shareImage {
                                 ShareLink(
                                     item: shareImage,
-                                    preview: SharePreview("Ma course sur RunUp", image: shareImage)
+                                    preview: SharePreview("Ma course sur Valta", image: shareImage)
                                 ) {
                                     HStack(spacing: 8) {
                                         Image(systemName: "square.and.arrow.up")

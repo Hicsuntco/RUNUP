@@ -11,7 +11,7 @@ enum ShareCardTextColor: String, CaseIterable, Identifiable {
         switch self {
         case .blanc: return String(localized: "Blanc")
         case .noir: return String(localized: "Noir")
-        case .runup: return "RunUp" // nom de marque
+        case .runup: return "Valta" // nom de marque
         }
     }
 }
@@ -113,7 +113,7 @@ struct RunShareCardView: View {
             VStack(spacing: 5) {
                 HStack(spacing: 7) {
                     AppMarkView(size: 22, radius: 6)
-                    Text("RUNUP").font(RUFont.bebas(15)).tracking(4).foregroundStyle(valueStyle)
+                    Text("VALTA").font(RUFont.bebas(15)).tracking(4).foregroundStyle(valueStyle)
                 }
                 Text(Self.dateFormatter.string(from: run.date))
                     .font(RUFont.mono(9.5))

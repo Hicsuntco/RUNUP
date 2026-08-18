@@ -30,7 +30,7 @@ struct WelcomeView: View {
                             .lineSpacing(-4)
                             .padding(.top, 24)
 
-                        Text("RUNUP construit ton programme, l'ajuste chaque semaine selon ta forme, et te pousse juste ce qu'il faut — jamais plus, jamais moins.")
+                        Text("VALTA construit ton programme, l'ajuste chaque semaine selon ta forme, et te pousse juste ce qu'il faut — jamais plus, jamais moins.")
                             .font(RUFont.sans(14))
                             .foregroundColor(RUColor.text2)
                             .lineSpacing(6)

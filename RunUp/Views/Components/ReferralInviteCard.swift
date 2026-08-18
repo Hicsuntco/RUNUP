@@ -20,7 +20,7 @@ struct ReferralInviteCard: View {
     /// Une seule définition du message envoyé. `ShareLink` le passe tel quel à la feuille de
     /// partage système, donc il doit se suffire à lui-même dans un SMS comme dans un mail.
     private var shareMessage: String {
-        String(localized: "Rejoins-moi sur Valta, mon appli de coaching running — utilise mon code \(code) à l'inscription : https://runup-nu.vercel.app")
+        String(localized: "Rejoins-moi sur RunUp, mon appli de coaching running — utilise mon code \(code) à l'inscription : https://runup-nu.vercel.app")
     }
 
     var body: some View {

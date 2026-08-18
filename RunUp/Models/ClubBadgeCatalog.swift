@@ -22,7 +22,7 @@ enum ClubBadgeCatalog {
         Definition(key: "interval3", emoji: "⚡", name: String(localized: "Fractionné pro"), detail: String(localized: "Réalise des séances de fractionné ou de VMA.")),
         Definition(key: "earlyRun", emoji: "🌅", name: String(localized: "Lève-tôt"), detail: String(localized: "Termine une séance avant 7h du matin.")),
         Definition(key: "elevation300", emoji: "🏔", name: String(localized: "300 m de D+"), detail: String(localized: "Cumule du dénivelé positif sur tes sorties.")),
-        Definition(key: "firstRun", emoji: "👟", name: String(localized: "Première course"), detail: String(localized: "Termine ta toute première sortie sur Valta.")),
+        Definition(key: "firstRun", emoji: "👟", name: String(localized: "Première course"), detail: String(localized: "Termine ta toute première sortie sur RunUp.")),
         Definition(key: "streak7", emoji: "🌟", name: String(localized: "Série de 7 jours"), detail: String(localized: "Enchaîne 7 jours de séances sans interruption.")),
         Definition(key: "streak30", emoji: "👑", name: String(localized: "Série de 30 jours"), detail: String(localized: "Enchaîne 30 jours de séances sans interruption.")),
         Definition(key: "tenRuns", emoji: "🎯", name: String(localized: "10 courses"), detail: String(localized: "Termine 10 sorties au total.")),

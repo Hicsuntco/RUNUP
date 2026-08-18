@@ -1,12 +1,12 @@
-# Politique de confidentialité — VALTA
+# Politique de confidentialité — RUNUP
 
 **Dernière mise à jour : 13 août 2026**
 
-Cette politique explique quelles données l'application VALTA collecte, comment elles sont utilisées, et avec qui elles sont partagées.
+Cette politique explique quelles données l'application RUNUP collecte, comment elles sont utilisées, et avec qui elles sont partagées.
 
 ## Qui sommes-nous
 
-VALTA est éditée par **Charlotte Grudé**.
+RUNUP est éditée par **Charlotte Grudé**.
 Contact : **charlottegrudep@gmail.com**
 
 ## Données collectées
@@ -15,12 +15,12 @@ Contact : **charlottegrudep@gmail.com**
 Prénom, date de naissance, objectif de course (course à préparer, progression, perte de poids, reprise, forme), niveau d'expérience, jours de course choisis. Ces données sont saisies par toi lors de l'inscription (onboarding) et modifiables à tout moment dans Profil → Réglages.
 
 ### Données de santé (Apple Santé / HealthKit)
-Si tu actives la connexion Apple Santé, VALTA lit : fréquence cardiaque, nombre de pas, et le type/durée de tes séances de sport (course, renforcement musculaire, mobilité, yoga, pilates) — ces dernières alimentent tes objectifs quotidiens "Renfo & mobilité" et "Pas". VALTA écrit dans Apple Santé les séances de course que tu termines dans l'app (distance, durée, calories).
+Si tu actives la connexion Apple Santé, RUNUP lit : fréquence cardiaque, nombre de pas, et le type/durée de tes séances de sport (course, renforcement musculaire, mobilité, yoga, pilates) — ces dernières alimentent tes objectifs quotidiens "Renfo & mobilité" et "Pas". RUNUP écrit dans Apple Santé les séances de course que tu termines dans l'app (distance, durée, calories).
 
 **Ces données de santé ne sont jamais transmises à un tiers, ni stockées sur un serveur distant.** Elles restent sur ton appareil et dans ta base Apple Santé, conformément aux règles d'Apple sur les données de santé.
 
 ### Localisation (GPS)
-Pendant une course, VALTA utilise ta position pour mesurer la distance parcourue, l'allure et tracer ton itinéraire sur la carte. La localisation n'est utilisée que pendant une séance de course active et n'est pas partagée avec des tiers.
+Pendant une course, RUNUP utilise ta position pour mesurer la distance parcourue, l'allure et tracer ton itinéraire sur la carte. La localisation n'est utilisée que pendant une séance de course active et n'est pas partagée avec des tiers.
 
 ### Historique de course et données de progression
 Distance, durée, allure, fréquence cardiaque moyenne et splits de chaque course sont enregistrés localement sur ton appareil pour alimenter tes statistiques, ton historique et l'adaptation de ton programme.
@@ -31,7 +31,7 @@ Les messages que tu écris au coach, ainsi qu'un résumé de ton profil et de ta
 Voir la politique de confidentialité d'Anthropic : https://www.anthropic.com/legal/privacy
 
 ### Compte Le Club (optionnel)
-Le Club (classement, fil d'activité entre membres) est la seule fonctionnalité de VALTA qui nécessite un vrai compte — tout le reste de l'app fonctionne sans jamais te connecter. Si tu choisis de te connecter (Apple, ou email/mot de passe), nous créons un compte sur notre serveur contenant :
+Le Club (classement, fil d'activité entre membres) est la seule fonctionnalité de RUNUP qui nécessite un vrai compte — tout le reste de l'app fonctionne sans jamais te connecter. Si tu choisis de te connecter (Apple, ou email/mot de passe), nous créons un compte sur notre serveur contenant :
 
 - **Identifiant de connexion** : selon la méthode choisie, un identifiant Apple (jamais ton mot de passe Apple, que nous ne voyons jamais), ou ton email et un mot de passe (stocké sous forme hachée, jamais en clair) si tu choisis email/mot de passe.
 - **Prénom** — le tien, ou celui transmis par Apple lors de la première connexion.
@@ -45,12 +45,12 @@ Ces données Club **sont stockées sur notre serveur** (contrairement au reste d
 Le nom d'un club et ton prénom sont filtrés automatiquement pour bloquer les contenus manifestement injurieux. Depuis Le Club, tu peux à tout moment **signaler** un club, une personne ou une activité (Profil du club/classement/fil → appui long → "Signaler"), ou **bloquer** quelqu'un pour ne plus voir son score ni ses activités (sans avoir à quitter le club). Les signalements sont conservés (qui signale, quoi, pourquoi) le temps qu'on les traite. Un lien "Signaler un problème ou nous contacter" est aussi visible directement dans Le Club.
 
 ### Statistiques d'usage
-Pour savoir où l'application est confuse ou cassée (par exemple à quelle étape de l'inscription les gens abandonnent), VALTA enregistre une courte liste d'événements d'usage sur notre propre serveur : ouverture de l'app, étapes de l'inscription vues et validées, course démarrée et course terminée, message envoyé au coach, club créé ou rejoint. Chaque événement est accompagné de quelques informations techniques sur l'action elle-même (numéro d'étape, distance et durée arrondies d'une course, ressenti indiqué) — **jamais le contenu de ce que tu écris**, en particulier jamais tes messages au coach.
+Pour savoir où l'application est confuse ou cassée (par exemple à quelle étape de l'inscription les gens abandonnent), RUNUP enregistre une courte liste d'événements d'usage sur notre propre serveur : ouverture de l'app, étapes de l'inscription vues et validées, course démarrée et course terminée, message envoyé au coach, club créé ou rejoint. Chaque événement est accompagné de quelques informations techniques sur l'action elle-même (numéro d'étape, distance et durée arrondies d'une course, ressenti indiqué) — **jamais le contenu de ce que tu écris**, en particulier jamais tes messages au coach.
 
 Ces événements sont rattachés à un identifiant aléatoire généré par l'application sur ton appareil, qui n'est lié à aucune donnée personnelle et change si tu réinstalles l'application. Si tu es connectée au Club, ils sont aussi rattachés à ton compte. Ils sont conservés au maximum 400 jours, puis supprimés automatiquement.
 
 ### Aucune collecte publicitaire
-VALTA ne contient aucun SDK publicitaire, aucun traceur tiers, aucun outil d'analyse tiers, et ne vend aucune donnée. Les statistiques d'usage décrites ci-dessus sont enregistrées par notre propre serveur, pour nous seuls, et ne sont partagées avec personne.
+RUNUP ne contient aucun SDK publicitaire, aucun traceur tiers, aucun outil d'analyse tiers, et ne vend aucune donnée. Les statistiques d'usage décrites ci-dessus sont enregistrées par notre propre serveur, pour nous seuls, et ne sont partagées avec personne.
 
 ## Où sont stockées tes données
 
@@ -65,11 +65,11 @@ Les seules autres données qui quittent ton appareil sont celles envoyées à no
 - **Supprimer tes données locales** : désinstalle l'application, ou utilise "Refaire l'onboarding" pour repartir de zéro.
 - **Supprimer ton compte Le Club** : Profil → Compte → "Supprimer mon compte" — supprime immédiatement et définitivement ton compte, ton XP, ton appartenance au club et tes activités postées de notre serveur.
 - **Se déconnecter sans supprimer le compte** : Profil → Compte → "Se déconnecter".
-- **Révoquer l'accès à Apple Santé ou à la localisation** : Réglages iOS → Confidentialité et sécurité → Santé / Service de localisation → VALTA.
+- **Révoquer l'accès à Apple Santé ou à la localisation** : Réglages iOS → Confidentialité et sécurité → Santé / Service de localisation → RUNUP.
 
 ## Âge minimum
 
-VALTA n'est pas destinée aux enfants de moins de 13 ans.
+RUNUP n'est pas destinée aux enfants de moins de 13 ans.
 
 ## Modifications de cette politique
 

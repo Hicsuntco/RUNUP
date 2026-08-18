@@ -13,7 +13,7 @@ enum GPXExporter {
         let isoDate = ISO8601DateFormatter().string(from: run.date)
         return """
         <?xml version="1.0" encoding="UTF-8"?>
-        <gpx version="1.1" creator="Valta" xmlns="http://www.topografix.com/GPX/1/1">
+        <gpx version="1.1" creator="RunUp" xmlns="http://www.topografix.com/GPX/1/1">
           <metadata>
             <name>\(name)</name>
             <time>\(isoDate)</time>
@@ -38,7 +38,7 @@ enum GPXExporter {
         // synchronously on the main thread right as the context menu opens, and for a long run
         // (thousands of `<trkpt>` lines) that's a real, if brief, stall the naive every-time
         // rewrite doesn't need to pay more than once.
-        let filename = "Valta-\(Int(run.date.timeIntervalSince1970)).gpx"
+        let filename = "RunUp-\(Int(run.date.timeIntervalSince1970)).gpx"
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
         if FileManager.default.fileExists(atPath: url.path) {
             return url

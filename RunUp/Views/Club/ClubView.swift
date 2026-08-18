@@ -1149,7 +1149,7 @@ struct ClubView: View {
                 ProgressView().frame(maxWidth: .infinity).padding(.vertical, 20)
             } else if let globalBoard {
                 if !globalBoard.optedIn {
-                    Text("Active le classement mondial pour voir où tu te situes parmi tous les coureurs Valta cette semaine.")
+                    Text("Active le classement mondial pour voir où tu te situes parmi tous les coureurs RunUp cette semaine.")
                         .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
                         .frame(maxWidth: .infinity).padding(.vertical, 12)
                 } else if globalBoard.entries.isEmpty {
@@ -1218,7 +1218,7 @@ struct ClubView: View {
                                 .accessibilityLabel("Code d'invitation du club")
                                 .accessibilityValue(club.inviteCode.map { String($0) }.joined(separator: " "))
                             Spacer(minLength: 0)
-                            ShareLink(item: String(localized: "Rejoins mon club \(club.name) sur Valta avec le code \(club.inviteCode) : https://runup-nu.vercel.app")) {
+                            ShareLink(item: String(localized: "Rejoins mon club \(club.name) sur RunUp avec le code \(club.inviteCode) : https://runup-nu.vercel.app")) {
                                 HStack(spacing: 6) {
                                     Image(systemName: "square.and.arrow.up")
                                     Text("Partager")

@@ -217,7 +217,7 @@ struct SettingsView: View {
                                 } else {
                                     await MainActor.run {
                                         profile.coachNotificationsEnabled = false
-                                        appState.toast(String(localized: "Notifications refusées côté iPhone — active-les dans Réglages > Valta."))
+                                        appState.toast(String(localized: "Notifications refusées côté iPhone — active-les dans Réglages > RunUp."))
                                     }
                                 }
                             }

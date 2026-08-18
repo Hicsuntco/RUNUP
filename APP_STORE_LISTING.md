@@ -1,4 +1,4 @@
-# Fiche App Store — VALTA
+# Fiche App Store — RUNUP
 
 Contenu prêt à copier-coller dans App Store Connect (App Information / Fiche de l'app).
 
@@ -22,7 +22,7 @@ ci-dessous ; les sections communes (catégorie, âge, URLs, copyright) ne se sai
 
 ## Nom de l'app (30 caractères max)
 ```
-VALTA : Coach de Course
+RUNUP : Coach de Course
 ```
 
 ## Sous-titre (30 caractères max)
@@ -37,7 +37,7 @@ Un programme qui s'adapte après chaque sortie, un vrai coach qui te connaît, e
 
 ## Description (4000 caractères max)
 ```
-VALTA construit ton programme de course sur mesure, l'ajuste après chaque sortie selon ta forme et ton ressenti, et te pousse juste ce qu'il faut — jamais plus, jamais moins.
+RUNUP construit ton programme de course sur mesure, l'ajuste après chaque sortie selon ta forme et ton ressenti, et te pousse juste ce qu'il faut — jamais plus, jamais moins.
 
 UN VRAI COACH, PAS UN CHATBOT
 Un vrai coach personnel qui connaît ton objectif, ton historique et ta forme du jour. Pose-lui une question avant ta séance, demande un conseil nutrition, ou fais-toi rassurer après une sortie difficile. Pendant l'effort, tu peux même lui parler : tu appuies, tu poses ta question à voix haute, il te répond dans les écouteurs.
@@ -77,7 +77,7 @@ running,entrainement,fractionné,cardio,marathon,semi,10km,trail,vma,jogging,foo
 Aucun de ces mots n'apparaît dans le nom ni dans le sous-titre : Apple indexe déjà tous les mots du
 titre et du sous-titre, et les répéter ici ne fait que consommer des caractères sans ajouter une
 seule requête. C'est ce que faisait l'ancienne liste — `course`, `coach` et `coureuse` (même racine
-que `course`) y étaient tous déjà couverts par « VALTA : Coach de Course » / « Ton coach personnel
+que `course`) y étaient tous déjà couverts par « RUNUP : Coach de Course » / « Ton coach personnel
 de course ». Les 33 caractères récupérés servent maintenant à des termes réellement nouveaux
 (`trail`, `jogging`, `footing`, `allure`). Séparateur : virgule seule, sans espace — un espace
 après la virgule compte dans les 100 caractères et n'apporte rien.
@@ -88,7 +88,7 @@ après la virgule compte dans les 100 caractères et n'apporte rien.
 
 ## App name (30 characters max)
 ```
-VALTA: Running Coach
+RUNUP: Running Coach
 ```
 
 ## Subtitle (30 characters max)
@@ -103,7 +103,7 @@ A plan that rewrites itself after every run, a real coach who knows your history
 
 ## Description (4000 characters max)
 ```
-VALTA builds your running plan around your goal, reshapes it after every run based on how you actually felt, and pushes you exactly as much as it should — never more, never less.
+RUNUP builds your running plan around your goal, reshapes it after every run based on how you actually felt, and pushes you exactly as much as it should — never more, never less.
 
 A REAL COACH, NOT A CHATBOT
 A personal coach who knows your goal, your history and how today is going. Ask a question before a session, get nutrition advice, or talk it through after a run that hurt. Mid-run you can even talk to it: press, ask out loud, hear the answer in your headphones.
@@ -149,7 +149,7 @@ so repeating them here spends characters and buys nothing.
 
 ## Nombre de la app (30 caracteres máx.)
 ```
-VALTA: Entrenador Running
+RUNUP: Entrenador Running
 ```
 
 ## Subtítulo (30 caracteres máx.)
@@ -164,7 +164,7 @@ Un plan que se reescribe después de cada salida, un entrenador de verdad que te
 
 ## Descripción (4000 caracteres máx.)
 ```
-VALTA construye tu plan a partir de tu objetivo, lo reajusta después de cada salida según cómo te sentiste de verdad, y te exige justo lo que toca — ni más, ni menos.
+RUNUP construye tu plan a partir de tu objetivo, lo reajusta después de cada salida según cómo te sentiste de verdad, y te exige justo lo que toca — ni más, ni menos.
 
 UN ENTRENADOR DE VERDAD, NO UN CHATBOT
 Un entrenador personal que conoce tu objetivo, tu historial y cómo llevas el día. Pregúntale antes de la sesión, pídele consejo de nutrición, o desahógate después de una salida dura. Mientras corres puedes incluso hablarle: pulsas, preguntas en voz alta y te responde en los auriculares.

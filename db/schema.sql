@@ -299,3 +299,183 @@ CREATE INDEX IF NOT EXISTS idx_follows_follower_status ON follows(follower_id, s
 ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS uniq_users_username_lower ON users (lower(username));
+
+-- `blocks` only ever had its PRIMARY KEY (blocker_id, blocked_id) as an index, which Postgres
+-- cannot use for a lookup on blocked_id alone — the leading column is missing, so it falls back to
+-- a sequential scan of the whole table. Two hot WRITE paths do exactly that lookup, on every
+-- single call, before any push goes out:
+--   - notifyClubOfNewActivity (api/activities/[action].js) — runs on every activity posted, i.e.
+--     the app's most frequent write;
+--   - handleCreateEvent (api/clubs/[action].js) — runs on every group run created.
+-- Both filter club members with `NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ...)`,
+-- so the scan cost grows with the total number of blocks on the platform, not with the club's
+-- size. This index turns each one into an index lookup.
+CREATE INDEX IF NOT EXISTS idx_blocks_blocked ON blocks(blocked_id);
+
+-- Session-token revocation (see lib/auth.js). Our own JWTs are stateless — until this table, the
+-- only thing that ever invalidated one was its own expiry, so "se déconnecter" was purely a
+-- client-side gesture (drop the copy in the Keychain) and a stolen token stayed valid for months.
+-- One row per explicitly signed-out token, keyed by the `jti` claim now embedded in every issued
+-- token; `requireAuth` refuses any token whose jti is listed here. Scoped to one token on purpose:
+-- signing out on one device must not sign out her other devices.
+-- `expires_at` mirrors the token's own `exp` and exists only so rows can be dropped once the token
+-- they name would have expired anyway (pruned opportunistically in api/auth/[action].js — a
+-- revoked token past its expiry is already refused by signature verification).
+CREATE TABLE IF NOT EXISTS revoked_tokens (
+  jti TEXT PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  expires_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_revoked_tokens_expires ON revoked_tokens(expires_at);
+
+-- The client's own computed "this week's planned km" (sum of the current week's session
+-- durations/paces — see `UserProfile.plannedWeeklyKm`), pushed up via api/clubs/syncWeeklyTarget
+-- whenever Club loads. Lets the weekly leaderboard rank by % of each member's OWN plan instead of
+-- raw km, so a mixed-level club stays motivating for a beginner on a 15 km week next to a
+-- marathoner on a 60 km week. Nullable + no default: NULL (not 0) for any member who hasn't
+-- opened Club since this shipped, so the leaderboard can tell "no target on record" apart from "a
+-- genuine 0 km week" and fall back to km-only ranking for that member instead of dividing by zero.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_target_km NUMERIC;
+
+-- Behavioural analytics — first-party, on the Postgres this backend already runs (see
+-- api/events.js and RunUp/Services/Analytics.swift). Deliberately NOT a third-party SDK: any
+-- analytics vendor means a new sub-traitant to declare in PRIVACY_POLICY.md, a new "Tracking"
+-- answer in App Store Connect's privacy questionnaire, and an account/API key that doesn't exist
+-- yet — for numbers this one table already answers (where onboarding leaks, whether a first run
+-- ever happens, who comes back).
+--
+-- `user_id` is nullable, ON DELETE SET NULL, for two reasons that happen to want the same column
+-- shape: the decisive part of the funnel is pre-account (onboarding completes long before Club
+-- ever asks anyone to sign in, and most users never sign in at all), and account deletion
+-- (guideline 5.1.1(v)) must not take the rest of the funnel's history down with it — dropping the
+-- id leaves a row that is no longer about anyone in particular.
+-- `anonymous_id` is the device-scoped id the client generates on first launch: the only way to
+-- follow one person through the pre-account funnel at all, and — since the same device keeps
+-- sending it after sign-in — what lets those earlier events be stitched back to a real user id.
+CREATE TABLE IF NOT EXISTS events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  anonymous_id TEXT,
+  name TEXT NOT NULL,
+  props JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- The two shapes every question about this table takes: "how many X over the last N days" (funnel,
+-- conversion, retention) and "everything this one account did, most recent first" (support, or
+-- debugging one report). Unindexed, both are sequential scans over what will be by far the
+-- fastest-growing table here — one row per meaningful tap, against one row per completed run
+-- everywhere else.
+CREATE INDEX IF NOT EXISTS idx_events_name_created ON events(name, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_events_user_created ON events(user_id, created_at DESC);
+
+-- DAU/WAU/MAU and D7/D30 retention were literally uncomputable before this column: `created_at`
+-- says when an account was made, and nothing anywhere said whether it was ever used again.
+-- Written opportunistically by api/events.js on every authenticated batch (free — that request is
+-- already a write) rather than through a dedicated heartbeat endpoint nobody would remember to
+-- call. Nullable with no default: no account predating this migration has a value that could be
+-- backfilled honestly, and NULL says exactly that, where a fabricated `now()` would make every
+-- dormant account look active in the first retention query anyone runs.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ;
+
+-- Real per-run metrics on a posted activity. Until now `activities` carried only `distance_km`
+-- (added for challenge progress) plus a prose `text` — so the club/friends feed could show WHO ran
+-- and a sentence, but never the run itself. Every richer feed card design dies on that: duration,
+-- pace and elevation aren't styling, they're columns that didn't exist, and no amount of client
+-- work can render a number the API never sends.
+--
+-- All nullable, deliberately: 'strength' and 'badge' activities have no pace, and a run logged
+-- manually (AddRunSheet) or marked done without GPS has no elevation. NULL means "not applicable
+-- or not measured" and the client omits the metric rather than printing a fabricated 0 — the same
+-- rule that got a hardcoded VO2max removed from this app.
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS duration_seconds INTEGER;
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS avg_pace TEXT;
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS elevation_gain_m INTEGER;
+-- Set by the client only when it genuinely verified the run beat every prior real run (see
+-- `RecapView.recordKind`) — never inferred server-side, where the run history to compare against
+-- doesn't exist.
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS is_personal_record BOOLEAN NOT NULL DEFAULT false;
+
+-- ---------------------------------------------------------------------------
+-- Shared routes — "I'm somewhere new, where do I run?"
+-- ---------------------------------------------------------------------------
+-- The one thing no running app answers well: you're in a city for three days and
+-- you have no idea where to run. Strava and Komoot have route libraries, but a
+-- coaching app is where the question actually gets asked, right next to "what's
+-- my session today?".
+--
+-- A route is NOT an activity, and deliberately gets its own table rather than
+-- more columns on `activities`. It has a different lifetime (it stays useful for
+-- years after the run that produced it), a different audience (strangers in the
+-- same city, not your club), and its own moderation surface (a name and, later,
+-- a photo that anyone can see).
+--
+-- PRIVACY — the part that must not be got wrong. Until this feature, GPS traces
+-- never left the phone. Publishing one is the first time a user's precise
+-- movements reach the server, and a raw trace starts and ends at a home address.
+-- Two rules, both enforced on the DEVICE, before upload:
+--   1. Publication is explicit, per run. Never automatic, never a global toggle
+--      that back-fills history.
+--   2. The first and last 300 m are cut off (see RouteGeometry.trimmedForSharing).
+-- Trimming client-side rather than here is the whole point: a server that never
+-- receives the endpoints cannot leak them, whatever happens to it later.
+CREATE TABLE IF NOT EXISTS routes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  -- Same idempotency contract as `activities`: the app generates this once per
+  -- publication, so a retried POST on a flaky connection can't duplicate a route.
+  client_id UUID NOT NULL UNIQUE,
+  -- CASCADE, not SET NULL: `api/account/[action].js` promises that deleting an
+  -- account leaves nothing of the person behind, and a trace of their runs is
+  -- exactly the kind of thing that promise is about. Losing the route from the
+  -- map is the correct price.
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  -- User-supplied, so it goes through lib/moderation.js like club names do.
+  name TEXT NOT NULL,
+  -- Free text from the author: "plat, le long du fleuve", "ça grimpe au km 3".
+  notes TEXT,
+  distance_km NUMERIC NOT NULL,
+  elevation_gain_m INTEGER,
+  -- Indicative only — how long it took the person who published it, not a target.
+  duration_seconds INTEGER,
+  -- The trimmed, decimated trace: [[lat, lng], …]. JSONB rather than a geometry
+  -- type because there is no PostGIS on this database and none is needed: nothing
+  -- here does geometry, it draws a line and filters by a rectangle.
+  points JSONB NOT NULL,
+  -- A ~24-point version of the same trace, precomputed on the device. The discovery list draws
+  -- fifty routes at once; sending each one's full trace would be megabytes over a mobile
+  -- connection to draw squiggles a few millimetres wide. The full `points` is fetched only when
+  -- one route is opened.
+  preview_points JSONB NOT NULL,
+  -- First point OF THE TRIMMED TRACE — i.e. ~300 m from where the run really
+  -- started. This is what pins the route on the discovery map.
+  start_lat NUMERIC NOT NULL,
+  start_lng NUMERIC NOT NULL,
+  -- Reverse-geocoded on the device (CLGeocoder) and sent as text, so the server
+  -- needs no geocoding provider, no API key and no per-request cost.
+  locality TEXT,
+  country_code TEXT,
+  photo_url TEXT,
+  saves_count INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Discovery is "routes starting inside the map's current viewport", so a plain
+-- composite btree on the start point serves it. A route whose start falls just
+-- outside the viewport is missed; at this scale that is the right trade against
+-- carrying a GiST/box index for overlap testing, and the client already queries a
+-- rectangle padded well beyond what it draws.
+CREATE INDEX IF NOT EXISTS idx_routes_start ON routes(start_lat, start_lng);
+-- "Most saved first" is the default ordering of the discovery list.
+CREATE INDEX IF NOT EXISTS idx_routes_saves ON routes(saves_count DESC, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_routes_user ON routes(user_id, created_at DESC);
+
+-- Saving a route is the real quality signal (a kudos costs nothing; saving means
+-- "I intend to run this"), and it is also the user's own list of routes to try.
+CREATE TABLE IF NOT EXISTS route_saves (
+  route_id UUID NOT NULL REFERENCES routes(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (route_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_route_saves_user ON route_saves(user_id, created_at DESC);

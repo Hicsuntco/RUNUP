@@ -34,6 +34,9 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'syncBadges':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleSyncBadges(req, res, userId);
+    case 'syncWeeklyTarget':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleSyncWeeklyTarget(req, res, userId);
     case 'createEvent':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleCreateEvent(req, res, userId);
@@ -263,9 +266,12 @@ async function handleMine(req, res, userId) {
 
   // Weekly leaderboard: real km actually run THIS week (date_trunc('week') is ISO/Monday-start,
   // same convention as the app's plan engine) — a fresh race every Monday, next to the all-time
-  // XP board which a newcomer could otherwise never climb.
+  // XP board which a newcomer could otherwise never climb. `weekly_target_km` (each member's own
+  // client-computed plan for this week, see `handleSyncWeeklyTarget`) rides along so the client
+  // can offer a "% objectif" ranking mode alongside the raw-km one — still ordered by km here,
+  // the client re-sorts client-side when that mode is selected.
   const { rows: weekly } = await sql`
-    SELECT u.id, u.name, u.avatar_data, u.avatar_url, COALESCE(SUM(a.distance_km), 0) AS week_km
+    SELECT u.id, u.name, u.avatar_data, u.avatar_url, u.weekly_target_km, COALESCE(SUM(a.distance_km), 0) AS week_km
     FROM club_members cm
     JOIN users u ON u.id = cm.user_id
     LEFT JOIN activities a ON a.user_id = u.id AND a.club_id = cm.club_id
@@ -273,7 +279,7 @@ async function handleMine(req, res, userId) {
       AND a.created_at >= date_trunc('week', now())
     WHERE cm.club_id = ${clubId}
       AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
-    GROUP BY u.id, u.name, u.avatar_data, u.avatar_url
+    GROUP BY u.id, u.name, u.avatar_data, u.avatar_url, u.weekly_target_km
     ORDER BY week_km DESC, u.name ASC
     LIMIT 100
   `;
@@ -298,9 +304,18 @@ async function handleMine(req, res, userId) {
     events = rows;
   } catch { /* table not migrated yet on this deploy — degrade to no events, not a 500 */ }
 
-  const weeklyMapped = weekly.map((r, i) => ({
-    id: r.id, name: r.name, avatarBase64: r.avatar_data || null, avatarUrl: r.avatar_url || null, weekKm: Number(r.week_km), rank: i + 1, isMe: r.id === userId,
-  }));
+  const weeklyMapped = weekly.map((r, i) => {
+    const weekKm = Number(r.week_km);
+    const targetKm = r.weekly_target_km != null ? Number(r.weekly_target_km) : null;
+    return {
+      id: r.id, name: r.name, avatarBase64: r.avatar_data || null, avatarUrl: r.avatar_url || null,
+      weekKm, rank: i + 1, isMe: r.id === userId,
+      targetKm,
+      // null (not 0) when this member has no target on record yet — the client falls back to
+      // km-only display for that one row instead of showing a misleading "0%".
+      pctOfTarget: targetKm && targetKm > 0 ? Math.round((weekKm / targetKm) * 100) : null,
+    };
+  });
 
   res.status(200).json({
     club: { id: club.id, name: club.name, inviteCode: club.invite_code, memberCount: countRows[0].count },
@@ -467,6 +482,20 @@ async function handleSyncBadges(req, res, userId) {
       ON CONFLICT DO NOTHING
     `)
   );
+  res.status(200).json({ ok: true });
+}
+
+// Pushes up the client's own computed `plannedWeeklyKm` (see `UserProfile.plannedWeeklyKm`) —
+// this device is the only place that can compute it (real program/session data), same reasoning
+// as `handleSyncBadges`. Clamped to a sane range rather than trusted outright: a tampered or
+// corrupted value here would skew the "% objectif" leaderboard mode for the whole club, not just
+// this one member's own view of it.
+async function handleSyncWeeklyTarget(req, res, userId) {
+  const { targetKm } = req.body || {};
+  if (typeof targetKm !== 'number' || !Number.isFinite(targetKm) || targetKm < 0 || targetKm > 500) {
+    return res.status(400).json({ error: 'bad_request' });
+  }
+  await sql`UPDATE users SET weekly_target_km = ${targetKm} WHERE id = ${userId}`;
   res.status(200).json({ ok: true });
 }
 

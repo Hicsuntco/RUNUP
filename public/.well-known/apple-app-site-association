@@ -1,0 +1,12 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["SW49TQ25NV.com.hicsuntco.runup"],
+        "components": [
+          { "/": "/r/*", "comment": "Referral links open straight into RunUp with the code prefilled" }
+        ]
+      }
+    ]
+  }
+}

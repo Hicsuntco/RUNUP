@@ -1,13 +1,13 @@
-// Sets (or clears) the caller's profile photo — a data URI, resized/compressed client-side
-// (see ProfileView.setAvatar) before it ever reaches here. Uploaded to Vercel Blob storage and
-// only the resulting URL is kept in Postgres (`users.avatar_url`) — the old approach inlined the
-// full base64 blob directly in the `users` row, which meant every leaderboard/feed/comments query
-// that joined in an avatar was shipping a several-hundred-KB payload down the wire even though
-// only a 40pt circle was ever drawn from it. A URL is a few dozen bytes; the client fetches and
-// caches the actual image itself, once, only where it's shown.
+// Les deux opérations sur le compte lui-même : la photo de profil et la suppression.
 //
-// Requires a Blob store connected to this Vercel project (Storage tab → Create Database → Blob) —
-// once connected, Vercel injects BLOB_READ_WRITE_TOKEN automatically, nothing else to configure.
+// Elles vivaient dans deux fichiers (`avatar.js` et `delete.js`). Or Vercel compte UN fichier
+// sous `api/` = UNE fonction serverless, et le plan Hobby en autorise douze : le treizième
+// fichier (`api/events.js`, ajouté avec l'analytique) a fait échouer TOUT déploiement production,
+// CLI comme git, avec « No more than 12 Serverless Functions ». Les regrouper derrière le même
+// routeur `[action]` que `activities`, `friends`, `clubs`, `auth`, `moderation` et `strava` rend
+// le déploiement à nouveau possible sans rien changer aux URL : `/api/account/avatar` et
+// `/api/account/delete` répondent exactement comme avant, donc aucune version de l'app déjà
+// installée n'est affectée.
 const { put, del } = require('@vercel/blob');
 const { sql } = require('../../lib/db');
 const { requireAuth } = require('../../lib/auth');
@@ -30,6 +30,27 @@ module.exports = withErrorHandling(async function handler(req, res) {
   const userId = await requireAuth(req);
   if (!userId) return res.status(401).json({ error: 'unauthorized' });
 
+  switch (req.query.action) {
+    case 'avatar':
+      return handleAvatar(req, res, userId);
+    case 'delete':
+      return handleDelete(req, res, userId);
+    default:
+      return res.status(404).json({ error: 'not_found' });
+  }
+});
+
+// Sets (or clears) the caller's profile photo — a data URI, resized/compressed client-side
+// (see ProfileView.setAvatar) before it ever reaches here. Uploaded to Vercel Blob storage and
+// only the resulting URL is kept in Postgres (`users.avatar_url`) — the old approach inlined the
+// full base64 blob directly in the `users` row, which meant every leaderboard/feed/comments query
+// that joined in an avatar was shipping a several-hundred-KB payload down the wire even though
+// only a 40pt circle was ever drawn from it. A URL is a few dozen bytes; the client fetches and
+// caches the actual image itself, once, only where it's shown.
+//
+// Requires a Blob store connected to this Vercel project (Storage tab → Create Database → Blob) —
+// once connected, Vercel injects BLOB_READ_WRITE_TOKEN automatically, nothing else to configure.
+async function handleAvatar(req, res, userId) {
   // Per-user daily cap — every other write endpoint in this codebase has one (coach_usage
   // pattern), this was the one missing it: with no limit, a buggy retry loop or a scripted
   // attacker could hammer this with 200KB uploads indefinitely, unbounded write/storage cost.
@@ -82,4 +103,31 @@ module.exports = withErrorHandling(async function handler(req, res) {
   await sql`UPDATE users SET avatar_data = NULL, avatar_url = ${blob.url} WHERE id = ${userId}`;
   if (previousUrl && previousUrl !== blob.url) del(previousUrl).catch(() => {});
   res.status(200).json({ ok: true, avatarUrl: blob.url });
-});
+}
+
+// Account deletion — required by App Store guideline 5.1.1(v) whenever an app offers account
+// creation: users must be able to delete their account from inside the app, not just deactivate
+// it. Deleting the user row cascades (ON DELETE CASCADE in db/schema.sql) to their club
+// membership, posted activities, and kudos — nothing about them is left behind on the server.
+async function handleDelete(req, res, userId) {
+  // Revoke RunUp's Strava grant before the row (and its tokens) vanish — otherwise the app
+  // stays authorized on her Strava account invisibly, with no way left to undo it from our side.
+  try {
+    const { rows } = await sql`SELECT access_token FROM strava_connections WHERE user_id = ${userId}`;
+    if (rows[0]) {
+      await fetch('https://www.strava.com/oauth/deauthorize', {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: `access_token=${encodeURIComponent(rows[0].access_token)}`,
+      });
+    }
+  } catch { /* deletion must not fail because Strava is unreachable */ }
+
+  await sql`DELETE FROM users WHERE id = ${userId}`;
+  // coach_usage rows are keyed by string ("<prefix>:<id>"), not an FK — clean them up explicitly
+  // so no user-linked identifier survives deletion (guideline 5.1.1(v)). A suffix match instead of
+  // an exact prefix list so a future cap (a new "<prefix>:" key) can't silently be forgotten here
+  // the way "avatar:<id>" originally was.
+  await sql`DELETE FROM coach_usage WHERE key LIKE ${'%:' + userId}`;
+  res.status(200).json({ ok: true });
+}

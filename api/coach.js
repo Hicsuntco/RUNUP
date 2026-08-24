@@ -32,8 +32,24 @@ module.exports = withErrorHandling(async function handler(req, res) {
     return;
   }
 
+  // Accepts the current secret OR, when set, one previous secret. This exists purely to make
+  // rotation possible without breaking the app already on the App Store: that build has its
+  // secret compiled in, so the instant RUNUP_APP_SECRET changes, every existing install starts
+  // getting 401s on the coach until its user updates — which can take weeks, or never.
+  //
+  // Rotation procedure:
+  //   1. Set RUNUP_APP_SECRET_PREVIOUS to the OLD value, RUNUP_APP_SECRET to the NEW one, redeploy.
+  //      Old and new builds both work from here on.
+  //   2. Ship the app update carrying the new secret.
+  //   3. Once adoption is high enough, DELETE RUNUP_APP_SECRET_PREVIOUS and redeploy.
+  //
+  // Step 3 is not optional: the old value was committed in git and must be considered public, so
+  // leaving it accepted indefinitely keeps the endpoint open to anyone who reads the history.
   const secret = req.headers['x-runup-secret'];
-  if (!secret || !process.env.RUNUP_APP_SECRET || !timingSafeEqualStrings(secret, process.env.RUNUP_APP_SECRET)) {
+  const accepted = [process.env.RUNUP_APP_SECRET, process.env.RUNUP_APP_SECRET_PREVIOUS].filter(Boolean);
+  // `.some` over a fixed-size list of constant-time comparisons — every candidate is always
+  // compared, so this leaks no more than the single comparison it replaces.
+  if (!secret || accepted.length === 0 || !accepted.some((candidate) => timingSafeEqualStrings(secret, candidate))) {
     res.status(401).json({ error: 'unauthorized' });
     return;
   }

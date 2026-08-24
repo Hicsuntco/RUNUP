@@ -7,7 +7,9 @@ const { sql } = require('../../lib/db');
 const { requireAuth } = require('../../lib/auth');
 const { withErrorHandling, isUuid } = require('../../lib/http');
 
-const REPORT_TARGET_TYPES = new Set(['user', 'club', 'activity', 'comment']);
+// 'route' : un itinéraire partagé porte un nom et une note écrits par son autrice, visibles par
+// des inconnus — donc signalable, comme tout contenu généré par un utilisateur (App Store 1.2).
+const REPORT_TARGET_TYPES = new Set(['user', 'club', 'activity', 'comment', 'route']);
 
 module.exports = withErrorHandling(async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });

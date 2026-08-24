@@ -5,7 +5,7 @@ const { sql } = require('../../lib/db');
 const { requireAuth } = require('../../lib/auth');
 const { withErrorHandling, isUuid } = require('../../lib/http');
 const { sendPushToUser } = require('../../lib/apns');
-const { isBlockedEitherWay } = require('../../lib/social');
+const { isBlockedEitherWay, activityMetrics } = require('../../lib/social');
 const { underDailyCap } = require('../../lib/rateLimit');
 const { containsObjectionableContent } = require('../../lib/moderation');
 
@@ -73,6 +73,14 @@ const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
 async function handleSearch(req, res, userId) {
   const raw = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 60) : '';
   if (raw.length < 2) return res.status(200).json({ items: [] });
+
+  // Same daily cap every write path in this file uses. Search is a read, but it's the one endpoint
+  // that walks the whole user directory (the ILIKE branch below), so it's what a script would
+  // hammer to enumerate accounts one prefix at a time — and each call is an unindexed scan of
+  // `users`. 300/day is far past any real use: the client searches as she types, so looking
+  // someone up costs a handful of requests. Counted after the <2 char guard so keystrokes that
+  // never reach the database don't burn the quota.
+  if (!(await underDailyCap('search:' + userId, 300))) return res.status(429).json({ error: 'too_many_requests' });
 
   let rows;
   if (raw.includes('@')) {
@@ -262,6 +270,7 @@ async function handleList(req, res, userId) {
 async function handleFeed(req, res, userId) {
   const { rows } = await sql`
     SELECT a.id, a.text, a.created_at, u.name, u.id AS user_id, u.avatar_data, u.avatar_url,
+           a.distance_km, a.duration_seconds, a.avg_pace, a.elevation_gain_m, a.is_personal_record,
            (SELECT COUNT(*)::int FROM activity_kudos k WHERE k.activity_id = a.id) AS kudos,
            EXISTS(SELECT 1 FROM activity_kudos k WHERE k.activity_id = a.id AND k.user_id = ${userId}) AS kudoed_by_me,
            (SELECT COUNT(*)::int FROM activity_comments c WHERE c.activity_id = a.id) AS comments_count
@@ -281,6 +290,7 @@ async function handleFeed(req, res, userId) {
       avatarUrl: r.avatar_url || null,
       text: r.text,
       createdAt: r.created_at,
+      ...activityMetrics(r),
       kudos: r.kudos,
       kudoedByMe: r.kudoed_by_me,
       commentsCount: r.comments_count,

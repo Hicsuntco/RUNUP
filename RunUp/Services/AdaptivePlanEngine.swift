@@ -552,7 +552,7 @@ enum AdaptivePlanEngine {
             base = [
                 SessionArchetype(role: .easy, title: "Footing tranquille", subtitle: "installe l'endurance de fond, allure confort", pace: zones.easy, zone: "Z2", baseDuration: 30, kind: .easyFooting),
                 SessionArchetype(role: .speed, title: "Fractionné léger 5 × 500 m", subtitle: "récup 300 m · garde le tonus sans se cramer", pace: zones.threshold, zone: "Z3", baseDuration: 32, kind: .lightIntervals, intervals: IntervalStructure(reps: 5, repMeters: 500, recoveryMeters: 300)),
-                SessionArchetype(role: .longRun, title: "Sortie longue", subtitle: "allonge progressivement la distance", pace: zones.easy, zone: "Z2", baseDuration: longRunDuration(longRunKm, kind: .longRun))
+                SessionArchetype(role: .longRun, title: "Sortie longue", subtitle: "allonge progressivement la distance", pace: zones.easy, zone: "Z2", baseDuration: longRunDuration(longRunKm), kind: .longRun)
             ]
         case .specifique:
             let pos = buildWeekPosition(
@@ -573,14 +573,14 @@ enum AdaptivePlanEngine {
                 // model every modern endurance periodization is built on. `generateWeekSessions`
                 // additionally caps quality at 2/week, which this archetype absorbs.
                 SessionArchetype(role: .easy, title: "Footing endurance", subtitle: "allure facile — le socle aérobie, pas une séance au rabais", pace: zones.easy, zone: "Z2", baseDuration: 35, kind: .enduranceFooting),
-                SessionArchetype(role: .longRun, title: "Sortie longue", subtitle: "bloc spécifique, un peu d'allure course", pace: zones.marathon, zone: "Z2-3", baseDuration: longRunDuration(longRunKm, kind: .specificLongRun))
+                SessionArchetype(role: .longRun, title: "Sortie longue", subtitle: "bloc spécifique, un peu d'allure course", pace: zones.marathon, zone: "Z2-3", baseDuration: longRunDuration(longRunKm), kind: .specificLongRun)
             ]
         case .affutage:
             let longRunKm = max(6, raceKm * 0.35)
             base = [
                 SessionArchetype(role: .easy, title: "Footing d'entretien", subtitle: "relâché, garde les jambes fraîches", pace: zones.easy, zone: "Z2", baseDuration: 25, kind: .maintenanceFooting),
                 SessionArchetype(role: .speed, title: "Rappel d'allure 3 × 1 km", subtitle: "à l'allure visée le jour J", pace: zones.marathon, zone: "Z3", baseDuration: 25, kind: .racePaceReminder, intervals: IntervalStructure(reps: 3, repMeters: 1000, recoveryMeters: nil)),
-                SessionArchetype(role: .longRun, title: "Sortie courte", subtitle: "décharge avant l'objectif", pace: zones.easy, zone: "Z2", baseDuration: longRunDuration(longRunKm, kind: .shortRun))
+                SessionArchetype(role: .longRun, title: "Sortie courte", subtitle: "décharge avant l'objectif", pace: zones.easy, zone: "Z2", baseDuration: longRunDuration(longRunKm), kind: .shortRun)
             ]
         case .deload:
             // A cutback is ~65% of the load actually being carried right now, not a flat distance.
@@ -603,7 +603,7 @@ enum AdaptivePlanEngine {
             base = [
                 SessionArchetype(role: .easy, title: "Footing récup", subtitle: "coupe le volume, écoute tes jambes", pace: zones.easy, zone: "Z1-2", baseDuration: 22, kind: .recoveryFooting),
                 SessionArchetype(role: .speed, title: "Footing tonique", subtitle: "quelques accélérations libres, sans chrono", pace: zones.threshold, zone: "Z2-3", baseDuration: 28, kind: .stridesFooting),
-                SessionArchetype(role: .longRun, title: "Sortie longue allégée", subtitle: "aucune pression de distance cette semaine", pace: zones.easy, zone: "Z2", baseDuration: longRunDuration(max(5, carriedKm * 0.65, kind: .easedLongRun)))
+                SessionArchetype(role: .longRun, title: "Sortie longue allégée", subtitle: "aucune pression de distance cette semaine", pace: zones.easy, zone: "Z2", baseDuration: longRunDuration(max(5, carriedKm * 0.65)), kind: .easedLongRun)
             ]
         }
 

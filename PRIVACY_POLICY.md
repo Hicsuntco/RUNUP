@@ -1,6 +1,6 @@
 # Politique de confidentialité — RUNUP
 
-**Dernière mise à jour : 13 août 2026**
+**Dernière mise à jour : 24 août 2026**
 
 Cette politique explique quelles données l'application RUNUP collecte, comment elles sont utilisées, et avec qui elles sont partagées.
 
@@ -20,7 +20,16 @@ Si tu actives la connexion Apple Santé, RUNUP lit : fréquence cardiaque, nombr
 **Ces données de santé ne sont jamais transmises à un tiers, ni stockées sur un serveur distant.** Elles restent sur ton appareil et dans ta base Apple Santé, conformément aux règles d'Apple sur les données de santé.
 
 ### Localisation (GPS)
-Pendant une course, RUNUP utilise ta position pour mesurer la distance parcourue, l'allure et tracer ton itinéraire sur la carte. La localisation n'est utilisée que pendant une séance de course active et n'est pas partagée avec des tiers.
+Pendant une course, RUNUP utilise ta position pour mesurer la distance parcourue, l'allure et tracer ton itinéraire sur la carte. Le tracé reste sur ton appareil et n'est jamais partagé avec des tiers ; la seule exception est si tu choisis toi-même de publier une sortie comme itinéraire — voir « Itinéraires partagés » ci-dessous.
+
+### Itinéraires partagés (optionnel)
+Après une sortie, tu peux choisir de publier son tracé comme itinéraire, pour aider quelqu'un qui cherche où courir dans le coin. Ce n'est jamais automatique : rien n'est publié sans que tu l'aies demandé, sortie par sortie.
+
+**Avant l'envoi, et sur ton téléphone, les 300 premiers et derniers mètres du tracé sont supprimés.** Ni ton point de départ ni ton point d'arrivée réels ne quittent l'appareil : notre serveur ne les reçoit jamais, et ne peut donc pas les divulguer.
+
+Ce qui est publié : le tracé ainsi rogné, la distance, le dénivelé, le temps que tu as mis, le nom de la ville, le nom que tu donnes à l'itinéraire, la description que tu écris et, si tu en ajoutes une, une photo. Ces éléments sont visibles par toutes les personnes connectées, y compris hors de ton club.
+
+Tu peux signaler l'itinéraire de quelqu'un d'autre, et supprimer ton compte efface tous les itinéraires que tu as publiés. La localisation n'est utilisée que pendant une séance de course active et n'est pas partagée avec des tiers.
 
 ### Historique de course et données de progression
 Distance, durée, allure, fréquence cardiaque moyenne et splits de chaque course sont enregistrés localement sur ton appareil pour alimenter tes statistiques, ton historique et l'adaptation de ton programme.

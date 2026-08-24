@@ -26,6 +26,7 @@ struct RouteDetailSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                photo
                 map
                 title
                 stats
@@ -47,6 +48,21 @@ struct RouteDetailSheet: View {
     }
 
     // MARK: - Morceaux
+
+    @ViewBuilder
+    private var photo: some View {
+        if let photoUrl = current.photoUrl, let url = URL(string: photoUrl) {
+            AsyncImage(url: url) { image in
+                image.resizable().scaledToFill()
+            } placeholder: {
+                RUColor.card2
+            }
+            .frame(height: 200)
+            .frame(maxWidth: .infinity)
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .accessibilityLabel(Text("Photo du parcours"))
+        }
+    }
 
     private var map: some View {
         let coordinates = current.drawableCoordinates

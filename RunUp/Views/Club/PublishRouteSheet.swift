@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreLocation
+import PhotosUI
 
 /// Publier une sortie déjà courue comme itinéraire, pour quelqu'un qui débarque dans la ville.
 ///
@@ -22,6 +23,11 @@ struct PublishRouteSheet: View {
     @State private var countryCode: String?
     @State private var isPublishing = false
     @State private var errorMessage: String?
+    @State private var photoItem: PhotosPickerItem?
+    /// L'aperçu affiché ici, et le JPEG encodé prêt à partir. Les deux, parce que redimensionner
+    /// à l'envoi ferait attendre au moment où l'on appuie sur « publier ».
+    @State private var photoPreview: UIImage?
+    @State private var photoDataURI: String?
 
     /// Le tracé tel qu'il sera publié. Calculé une fois, et c'est LUI qui est dessiné : montrer le
     /// tracé complet avec une promesse de rognage demanderait de croire l'app sur parole.
@@ -41,6 +47,7 @@ struct PublishRouteSheet: View {
                 if let payload {
                     trimmedPreview(payload.points)
                     privacyNote
+                    photoSection
                 } else {
                     tooShortNote
                 }
@@ -121,6 +128,49 @@ struct PublishRouteSheet: View {
             .accessibilityLabel(Text("Aperçu du tracé qui sera publié"))
     }
 
+    /// La photo est ce qui donne envie d'y aller ; le tracé dit seulement où c'est. Optionnelle,
+    /// et présentée comme telle : la rendre obligatoire ferait abandonner la moitié des
+    /// publications sur une sortie faite de nuit ou sous la pluie.
+    private var photoSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Une photo du coin (optionnel)")
+                .font(RUFont.sans(11, weight: .semibold))
+                .tracking(1)
+                .foregroundColor(RUColor.text3)
+
+            if let photoPreview {
+                ZStack(alignment: .topTrailing) {
+                    Image(uiImage: photoPreview)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(height: 150)
+                        .frame(maxWidth: .infinity)
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    Button {
+                        self.photoPreview = nil
+                        self.photoDataURI = nil
+                        self.photoItem = nil
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 22))
+                            .foregroundStyle(.white, .black.opacity(0.45))
+                            .padding(8)
+                    }
+                    .accessibilityLabel(Text("Retirer la photo"))
+                }
+            } else {
+                PhotosPicker(selection: $photoItem, matching: .images) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "photo.on.rectangle")
+                        Text("AJOUTER UNE PHOTO")
+                    }
+                }
+                .buttonStyle(SecondaryButtonStyle())
+            }
+        }
+        .onChange(of: photoItem) { _, item in Task { await loadPhoto(item) } }
+    }
+
     private var privacyNote: some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: "lock.shield")
@@ -171,6 +221,19 @@ struct PublishRouteSheet: View {
         }
     }
 
+    /// Redimensionnée et encodée dès la sélection : 1080 px sur le côté long, qualité 0,6, ce qui
+    /// tient sous les 500 ko que `api/activities/routePhoto` accepte tout en restant net en plein
+    /// écran. Même chaîne que la photo de profil, à l'échelle près.
+    private func loadPhoto(_ item: PhotosPickerItem?) async {
+        guard let item,
+              let data = try? await item.loadTransferable(type: Data.self),
+              let image = UIImage(data: data) else { return }
+        let resized = image.resized(maxDimension: 1080)
+        guard let jpeg = resized.jpegData(compressionQuality: 0.6) else { return }
+        photoPreview = resized
+        photoDataURI = "data:image/jpeg;base64," + jpeg.base64EncodedString()
+    }
+
     private func publish() {
         guard canPublish else { return }
         isPublishing = true
@@ -190,6 +253,11 @@ struct PublishRouteSheet: View {
                     locality: locality,
                     countryCode: countryCode
                 )
+                // La photo part APRÈS, et son échec ne remet pas la publication en cause : un
+                // itinéraire sans photo reste utile, une publication perdue ne l'est pas.
+                if let id, let photoDataURI {
+                    try? await service.setRoutePhoto(routeId: id, dataURI: photoDataURI)
+                }
                 isPublishing = false
                 appState.toast(String(localized: "Itinéraire publié 🗺️"))
                 onPublished(id)

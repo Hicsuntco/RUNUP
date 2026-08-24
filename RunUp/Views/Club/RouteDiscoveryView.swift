@@ -228,11 +228,24 @@ private struct RouteRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            RouteThumbnail(route: route.drawableCoordinates.map {
-                RunRecord.RoutePoint(lat: $0.latitude, lng: $0.longitude, altitude: nil)
-            })
+            // La photo prime sur le tracé : c'est elle qui fait ouvrir une ligne. La forme du
+            // parcours reste consultable en grand dans le détail, où elle sert vraiment à décider.
+            Group {
+                if let photoUrl = route.photoUrl, let url = URL(string: photoUrl) {
+                    AsyncImage(url: url) { image in
+                        image.resizable().scaledToFill()
+                    } placeholder: {
+                        RUColor.card2
+                    }
+                } else {
+                    RouteThumbnail(route: route.drawableCoordinates.map {
+                        RunRecord.RoutePoint(lat: $0.latitude, lng: $0.longitude, altitude: nil)
+                    })
+                    .background(RUColor.card2)
+                }
+            }
             .frame(width: 52, height: 52)
-            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(route.name)

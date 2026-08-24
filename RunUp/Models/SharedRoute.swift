@@ -87,3 +87,8 @@ struct RoutePublishResponse: Decodable {
     var ok: Bool
     var id: String?
 }
+
+struct RoutePhotoResponse: Decodable {
+    var ok: Bool
+    var photoUrl: String?
+}

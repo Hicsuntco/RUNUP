@@ -1,6 +1,7 @@
 // Consolidated into one dynamic route ([action] = create | feed | kudos) instead of 3 separate
 // files — see api/auth/[action].js for why. /api/activities/create, /feed, /kudos still work
 // exactly as before.
+const { put, del } = require('@vercel/blob');
 const { sql } = require('../../lib/db');
 const { requireAuth } = require('../../lib/auth');
 const { withErrorHandling, isUuid } = require('../../lib/http');
@@ -52,6 +53,9 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'routesMine':
       if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
       return handleRoutesMine(req, res, userId);
+    case 'routePhoto':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleRoutePhoto(req, res, userId);
     default:
       return res.status(404).json({ error: 'not_found' });
   }
@@ -607,4 +611,70 @@ function mapRouteSummary(row) {
     authorUsername: row.author_username,
     authorAvatarUrl: row.author_avatar,
   };
+}
+
+// La photo d'un itinéraire — ce qui donne envie d'y aller, là où le tracé dit seulement où c'est.
+//
+// Même chaîne que les avatars (`api/account/[action].js`) : redimensionnée sur l'appareil, déposée
+// dans Vercel Blob, et seule l'URL atterrit en base. Stocker le base64 dans la ligne ferait
+// voyager plusieurs centaines de kilo-octets à chaque affichage de la liste de découverte, pour
+// une vignette de 52 points.
+//
+// Plus généreux que l'avatar (500 ko contre 200) : une photo de paysage en 1080 px porte
+// nettement plus d'information qu'une pastille de profil, et c'est tout l'intérêt.
+const MAX_ROUTE_PHOTO_LENGTH = 500000;
+const MAX_ROUTE_PHOTOS_PER_DAY = 20;
+
+function isValidJpegBuffer(buffer) {
+  return buffer.length > 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+}
+
+async function handleRoutePhoto(req, res, userId) {
+  const { routeId, photoDataURI } = req.body || {};
+  if (!isUuid(routeId)) return res.status(400).json({ error: 'bad_request' });
+
+  const { rows } = await sql`SELECT user_id, photo_url FROM routes WHERE id = ${routeId}`;
+  if (!rows[0]) return res.status(404).json({ error: 'not_found' });
+  // L'autrice seule : sans ce contrôle, n'importe qui pourrait remplacer la photo de n'importe
+  // quel itinéraire de la carte.
+  if (rows[0].user_id !== userId) return res.status(403).json({ error: 'forbidden' });
+  const previousUrl = rows[0].photo_url;
+
+  // Retirer la photo est un cas légitime et sans condition — ni cap, ni validation.
+  if (photoDataURI === null || photoDataURI === undefined) {
+    await sql`UPDATE routes SET photo_url = NULL WHERE id = ${routeId}`;
+    if (previousUrl) del(previousUrl).catch(() => {});
+    return res.status(200).json({ ok: true, photoUrl: null });
+  }
+
+  if (typeof photoDataURI !== 'string'
+      || photoDataURI.length > MAX_ROUTE_PHOTO_LENGTH
+      || !photoDataURI.startsWith('data:image/jpeg;base64,')) {
+    return res.status(400).json({ error: 'bad_request' });
+  }
+  if (!(await underDailyCap(`routePhoto:${userId}`, MAX_ROUTE_PHOTOS_PER_DAY))) {
+    return res.status(429).json({ error: 'too_many_uploads' });
+  }
+
+  let decoded;
+  try {
+    decoded = Buffer.from(photoDataURI.slice('data:image/jpeg;base64,'.length), 'base64');
+  } catch {
+    return res.status(400).json({ error: 'bad_request' });
+  }
+  // Les octets magiques, pas le préfixe annoncé par le client : c'est ce qui empêche vraiment de
+  // déposer autre chose qu'une image et de le servir à tous ceux qui consultent la carte.
+  if (!isValidJpegBuffer(decoded)) return res.status(400).json({ error: 'not_an_image' });
+
+  const blob = await put(`routes/${routeId}.jpg`, decoded, {
+    access: 'public',
+    contentType: 'image/jpeg',
+    // Chemin stable : un remplacement écrase l'objet au lieu d'en accumuler un par changement.
+    addRandomSuffix: false,
+    // Et donc un cache à casser, puisque l'URL ne change pas.
+    cacheControlMaxAge: 3600,
+  });
+  await sql`UPDATE routes SET photo_url = ${blob.url} WHERE id = ${routeId}`;
+  if (previousUrl && previousUrl !== blob.url) del(previousUrl).catch(() => {});
+  res.status(200).json({ ok: true, photoUrl: blob.url });
 }

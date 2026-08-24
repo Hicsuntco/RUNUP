@@ -437,6 +437,21 @@ struct ClubService {
         return response.savesCount
     }
 
+    /// Attache (ou retire) la photo d'un itinéraire dont je suis l'autrice.
+    ///
+    /// Séparé de `publishRoute` volontairement : la photo a besoin de l'identifiant de
+    /// l'itinéraire, donc elle ne peut partir qu'après. Et surtout, un échec d'envoi de photo ne
+    /// doit pas emporter la publication avec lui — un itinéraire sans photo reste utile, une
+    /// publication perdue ne l'est pas.
+    @discardableResult
+    func setRoutePhoto(routeId: String, dataURI: String?) async throws -> String? {
+        let response: RoutePhotoResponse = try await send(
+            path: "api/activities/routePhoto", method: "POST",
+            body: ["routeId": routeId, "photoDataURI": dataURI as Any]
+        )
+        return response.photoUrl
+    }
+
     /// Ceux que j'ai publiés, et ceux que j'ai enregistrés pour plus tard.
     func fetchMyRoutes() async throws -> (published: [SharedRoute], saved: [SharedRoute]) {
         let response: MyRoutesResponse = try await send(path: "api/activities/routesMine", method: "GET")

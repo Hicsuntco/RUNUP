@@ -18544,6 +18544,70 @@
           }
         }
       }
+    },
+    "Une photo du coin (optionnel)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A photo of the place (optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una foto del lugar (opcional)"
+          }
+        }
+      }
+    },
+    "AJOUTER UNE PHOTO": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ADD A PHOTO"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AÑADIR UNA FOTO"
+          }
+        }
+      }
+    },
+    "Retirer la photo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar la foto"
+          }
+        }
+      }
+    },
+    "Photo du parcours": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo of the route"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto del recorrido"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

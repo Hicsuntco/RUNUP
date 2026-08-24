@@ -28,6 +28,7 @@ struct RecapView: View {
     @State private var splitsRevealed = false
     /// Text-color style for the share card — re-rendered on the spot when a chip is tapped.
     @State private var shareTextColor: ShareCardTextColor = .blanc
+    @State private var showPublishRoute = false
 
     private var run: RunRecord? { historicalRun ?? appState.lastRun }
     private var isHistorical: Bool { historicalRun != nil }
@@ -202,6 +203,22 @@ struct RecapView: View {
                                 }
                                 .buttonStyle(SecondaryButtonStyle())
                             }
+                            // Proposé seulement quand il y a vraiment quelque chose à publier :
+                            // un compte pour en être l'autrice, et un tracé qui survit au rognage
+                            // des extrémités. Un bouton qui ouvrirait une feuille annonçant
+                            // « trop court » serait une fausse promesse.
+                            if appState.auth.isSignedIn, RouteGeometry.shareablePayload(run.route) != nil {
+                                Button {
+                                    Haptics.selection()
+                                    showPublishRoute = true
+                                } label: {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "map")
+                                        Text("PARTAGER CET ITINÉRAIRE")
+                                    }
+                                }
+                                .buttonStyle(SecondaryButtonStyle())
+                            }
                         }
                         .padding(.top, 10)
 
@@ -221,6 +238,10 @@ struct RecapView: View {
             }
             .background(RUColor.bg)
             .ignoresSafeArea(edges: .top)
+            .sheet(isPresented: $showPublishRoute) {
+                PublishRouteSheet(run: run)
+                    .runUpSheetStyle()
+            }
             .sheet(isPresented: $showDebrief) {
                 DebriefSheet(run: run)
                     .runUpSheetStyle()

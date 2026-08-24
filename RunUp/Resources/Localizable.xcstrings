@@ -17952,6 +17952,246 @@
           }
         }
       }
+    },
+    "Partager cet itinéraire": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share this route"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir esta ruta"
+          }
+        }
+      }
+    },
+    "PARTAGER CET ITINÉRAIRE": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SHARE THIS ROUTE"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "COMPARTIR ESTA RUTA"
+          }
+        }
+      }
+    },
+    "Quelqu'un qui arrive dans le coin verra ton parcours et pourra le suivre.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Someone arriving in the area will see your route and can follow it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alguien que llegue a la zona verá tu recorrido y podrá seguirlo."
+          }
+        }
+      }
+    },
+    "Aperçu du tracé qui sera publié": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview of the route that will be published"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vista previa del recorrido que se publicará"
+          }
+        }
+      }
+    },
+    "Les %lld premiers et derniers mètres sont retirés avant l'envoi : personne ne verra d'où tu es partie ni où tu es rentrée. C'est le tracé ci-dessus qui sera publié, pas celui que tu as couru.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The first and last %lld metres are removed before upload: nobody will see where you set off from or came home to. What gets published is the route above, not the one you ran."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminan los primeros y últimos %lld metros antes de enviarlo: nadie verá de dónde saliste ni a dónde volviste. Se publica el recorrido de arriba, no el que corriste."
+          }
+        }
+      }
+    },
+    "Cette sortie est trop courte pour être partagée : une fois les extrémités retirées, il ne resterait pas assez de tracé pour être utile.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This run is too short to share: once the ends are removed, there wouldn't be enough route left to be useful."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta salida es demasiado corta para compartirla: al quitar los extremos no quedaría recorrido suficiente para ser útil."
+          }
+        }
+      }
+    },
+    "Nom de l'itinéraire": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Route name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre de la ruta"
+          }
+        }
+      }
+    },
+    "Ce qu'il faut savoir (optionnel)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good to know (optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo que hay que saber (opcional)"
+          }
+        }
+      }
+    },
+    "Plat, le long du fleuve. Ça grimpe au km 3.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flat, along the river. It climbs at km 3."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Llano, junto al río. Sube en el km 3."
+          }
+        }
+      }
+    },
+    "PUBLIER L'ITINÉRAIRE": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PUBLISH ROUTE"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PUBLICAR LA RUTA"
+          }
+        }
+      }
+    },
+    "PUBLICATION…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PUBLISHING…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PUBLICANDO…"
+          }
+        }
+      }
+    },
+    "%lld km à %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld km in %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld km en %@"
+          }
+        }
+      }
+    },
+    "Parcours de %lld km": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld km route"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ruta de %lld km"
+          }
+        }
+      }
+    },
+    "Itinéraire publié 🗺️": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Route published 🗺️"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ruta publicada 🗺️"
+          }
+        }
+      }
+    },
+    "La publication a échoué — vérifie ta connexion et réessaie.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publishing failed — check your connection and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo publicar: revisa tu conexión e inténtalo de nuevo."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

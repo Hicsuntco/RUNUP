@@ -13810,13 +13810,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "D+"
+            "value": "ELEV."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "D+"
+            "value": "DESNIVEL"
           }
         }
       }
@@ -18189,6 +18189,358 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudo publicar: revisa tu conexión e inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Toutes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todas"
+          }
+        }
+      }
+    },
+    "≤ 6 km": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "≤ 6 km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "≤ 6 km"
+          }
+        }
+      }
+    },
+    "6–15 km": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6–15 km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6–15 km"
+          }
+        }
+      }
+    },
+    "15 km +": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "15 km +"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "15 km +"
+          }
+        }
+      }
+    },
+    "Chercher dans cette zone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search this area"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar en esta zona"
+          }
+        }
+      }
+    },
+    "Recherche des itinéraires…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Looking for routes…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscando rutas…"
+          }
+        }
+      }
+    },
+    "Impossible de charger les itinéraires — vérifie ta connexion.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't load the routes — check your connection."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron cargar las rutas: revisa tu conexión."
+          }
+        }
+      }
+    },
+    "Personne n'a encore partagé d'itinéraire par ici. Publie le tien après ta prochaine sortie et tu seras la première.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nobody has shared a route around here yet. Publish yours after your next run and you'll be the first."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía nadie ha compartido una ruta por aquí. Publica la tuya después de tu próxima salida y serás la primera."
+          }
+        }
+      }
+    },
+    "%lld m D+": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld m elev."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld m desnivel"
+          }
+        }
+      }
+    },
+    "Signaler cet itinéraire": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report this route"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denunciar esta ruta"
+          }
+        }
+      }
+    },
+    "Pourquoi ?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Why?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Por qué?"
+          }
+        }
+      }
+    },
+    "Ce signalement sera examiné. Merci de préciser ce qui pose problème.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This report will be reviewed. Please say what the problem is."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta denuncia será revisada. Indica cuál es el problema."
+          }
+        }
+      }
+    },
+    "Tracé de l'itinéraire": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Route trace"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trazado de la ruta"
+          }
+        }
+      }
+    },
+    "Partagé par %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared by %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartido por %@"
+          }
+        }
+      }
+    },
+    "SON TEMPS": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "THEIR TIME"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SU TIEMPO"
+          }
+        }
+      }
+    },
+    "GARDÉ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SAVED"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GUARDADA"
+          }
+        }
+      }
+    },
+    "RETIRER DE MES ITINÉRAIRES": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REMOVE FROM MY ROUTES"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QUITAR DE MIS RUTAS"
+          }
+        }
+      }
+    },
+    "GARDER CET ITINÉRAIRE": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SAVE THIS ROUTE"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GUARDAR ESTA RUTA"
+          }
+        }
+      }
+    },
+    "M'Y RENDRE": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GET ME THERE"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CÓMO LLEGAR"
+          }
+        }
+      }
+    },
+    "Signalement envoyé": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report sent"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denuncia enviada"
+          }
+        }
+      }
+    },
+    "Itinéraires": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Routes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rutas"
+          }
+        }
+      }
+    },
+    "Trouve où courir, ici ou en voyage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find somewhere to run, at home or away"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encuentra dónde correr, aquí o de viaje"
           }
         }
       }

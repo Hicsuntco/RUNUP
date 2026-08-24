@@ -47,6 +47,7 @@ struct ProfileView: View {
                 } else {
                     amisCard
                     clubCard
+                    itinerairesCard
                 }
             }
             .padding(.horizontal, RUSpacing.pagePadding)
@@ -398,6 +399,35 @@ struct ProfileView: View {
                     } else {
                         Text("Trouve des coureurs à suivre").font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.text2)
                     }
+                }
+            }
+        }
+        .buttonStyle(PressableStyle())
+    }
+
+    /// La troisième porte de l'onglet social. Elle répond à une question que les deux autres ne
+    /// posent pas : non pas « avec qui je cours », mais « où je cours », quand on est quelque part
+    /// qu'on ne connaît pas.
+    private var itinerairesCard: some View {
+        Button(action: {
+            appState.openRoutesTabOnNextVisit = true
+            appState.go(.club)
+        }) {
+            socialCard(tint: RUColor.violet) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle().fill(RUColor.violet.opacity(0.18))
+                        Image(systemName: "map.fill").font(.system(size: 15)).foregroundColor(RUColor.violet)
+                    }
+                    .frame(width: 40, height: 40)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Itinéraires").font(RUFont.sans(15, weight: .bold)).foregroundColor(RUColor.textPrimary)
+                        Text("Trouve où courir, ici ou en voyage")
+                            .font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
+                    }
+                    Spacer(minLength: 0)
+                    cardArrow
                 }
             }
         }

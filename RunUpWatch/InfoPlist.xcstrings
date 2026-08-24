@@ -1,0 +1,75 @@
+{
+  "sourceLanguage" : "fr",
+  "strings" : {
+    "NSHealthShareUsageDescription" : {
+      "comment" : "Dialogue système sur la montre — texte volontairement différent de celui de l'app iPhone.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RunUp reads your heart rate during a run to show it live on your wrist."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RunUp lee tu frecuencia cardíaca durante la carrera para mostrarla en directo en la muñeca."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RunUp lit ta fréquence cardiaque pendant la course pour l'afficher en direct au poignet."
+          }
+        }
+      }
+    },
+    "NSHealthUpdateUsageDescription" : {
+      "comment" : "Dialogue système sur la montre (écriture dans Santé).",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RunUp saves your run to Health as a real workout — it counts toward your rings."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RunUp guarda tu carrera en Salud como un entrenamiento real: cuenta para tus anillos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RunUp enregistre ta course comme une vraie séance dans Santé — elle compte dans tes anneaux."
+          }
+        }
+      }
+    },
+    "NSLocationWhenInUseUsageDescription" : {
+      "comment" : "Dialogue système sur la montre — watchOS n'engage le GPS que si la position est autorisée.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RunUp uses your location to measure distance and pace during a run from the watch."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RunUp usa tu ubicación para medir distancia y ritmo durante una carrera desde el reloj."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RunUp utilise ta position pour mesurer distance et allure pendant une course depuis la montre."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

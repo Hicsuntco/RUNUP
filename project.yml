@@ -25,6 +25,12 @@ targets:
       - path: RunUp/Resources/Fonts
       - path: RunUp/Resources/Assets.xcassets
       - path: RunUp/Resources/Localizable.xcstrings
+      # Traduit les descriptions d'autorisation ci-dessous (`NS*UsageDescription`). Sans ce
+      # catalogue, ces chaînes ne passent PAS par `Localizable.xcstrings` — elles vivent dans
+      # l'Info.plist — et iOS affichait donc ses dialogues système en français à tout le monde,
+      # au moment précis où l'on demande à quelqu'un l'accès à sa position, à son micro et à ses
+      # données de santé. Ses clés sont les clés Info.plist elles-mêmes, pas les phrases.
+      - path: RunUp/Resources/InfoPlist.xcstrings
       # Obligatoire depuis mai 2024 : sans ce fichier dans le bundle, App Store Connect refuse le
       # binaire à l'ENVOI (ITMS-91053), avant même toute revue humaine.
       - path: RunUp/Resources/PrivacyInfo.xcprivacy
@@ -228,6 +234,9 @@ targets:
       # clé française faute de traduction à charger. Le partager plutôt que d'en créer un second
       # évite d'avoir à traduire deux fois les libellés communs (KM, TEMPS, KCAL, EN PAUSE…).
       - path: RunUp/Resources/Localizable.xcstrings
+      # Catalogue distinct de celui de l'iPhone : la montre a ses propres textes d'autorisation
+      # (« au poignet », « depuis la montre »), donc les mêmes clés y portent d'autres phrases.
+      - path: RunUpWatch/InfoPlist.xcstrings
     info:
       path: RunUpWatch/Info.plist
       properties:

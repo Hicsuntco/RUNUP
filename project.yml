@@ -173,6 +173,13 @@ targets:
     sources:
       - path: RunUpWidgets
       - path: RunUp/Shared
+        excludes:
+          # `RouteGeometry` travaille sur des `RunRecord.RoutePoint`, et `RunRecord` vit dans
+          # `RunUp/Models`, qui n'est PAS compilé dans cette extension — ce fichier y provoquait
+          # donc une erreur « cannot find type 'RunRecord' in scope » depuis son introduction.
+          # Le widget dessine des anneaux et des objectifs, jamais un parcours : l'exclure est la
+          # bonne réponse, plutôt que de tirer tout le modèle de données dans l'extension.
+          - "RouteGeometry.swift" 
     resources:
       - path: RunUp/Resources/Fonts
         excludes:

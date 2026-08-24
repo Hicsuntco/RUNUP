@@ -364,6 +364,85 @@ struct ClubService {
         )
     }
 
+    // MARK: - Itinéraires partagés
+
+    /// Publie un itinéraire à partir d'une sortie déjà courue.
+    ///
+    /// Prend le tracé BRUT et applique `RouteGeometry.shareablePayload` ici, en un seul endroit :
+    /// aucun écran n'a à se souvenir de rogner, et aucun ne peut l'oublier. Rend `nil` — sans rien
+    /// envoyer — quand le parcours est trop court pour survivre au rognage.
+    @discardableResult
+    func publishRoute(clientId: UUID = UUID(),
+                      name: String,
+                      notes: String?,
+                      route: [RunRecord.RoutePoint],
+                      distanceKm: Double,
+                      elevationGainM: Int?,
+                      durationSeconds: Int?,
+                      locality: String?,
+                      countryCode: String?) async throws -> String? {
+        guard let payload = RouteGeometry.shareablePayload(route) else { return nil }
+
+        var body: [String: Any] = [
+            "clientId": clientId.uuidString,
+            "name": name,
+            "distanceKm": distanceKm,
+            "points": payload.points.map { [$0.lat, $0.lng] },
+            "preview": payload.preview.map { [$0.lat, $0.lng] },
+        ]
+        // Mêmes règles que `postActivity` : une clé absente devient NULL, là où un 0 ferait passer
+        // une absence de mesure pour une mesure.
+        if let notes, !notes.isEmpty { body["notes"] = notes }
+        if let elevationGainM { body["elevationGainM"] = elevationGainM }
+        if let durationSeconds { body["durationSeconds"] = durationSeconds }
+        if let locality, !locality.isEmpty { body["locality"] = locality }
+        if let countryCode, !countryCode.isEmpty { body["countryCode"] = countryCode }
+
+        let response: RoutePublishResponse = try await send(
+            path: "api/activities/routePublish", method: "POST", body: body
+        )
+        return response.id
+    }
+
+    /// Les itinéraires dont le départ tombe dans la zone affichée, du plus enregistré au plus
+    /// récent. `distMin`/`distMax` répondent à la vraie demande : « je veux 10 km ici ».
+    func fetchRoutesNearby(minLat: Double, maxLat: Double, minLng: Double, maxLng: Double,
+                           distMin: Double? = nil, distMax: Double? = nil) async throws -> [SharedRoute] {
+        var query: [String: String] = [
+            "minLat": String(minLat), "maxLat": String(maxLat),
+            "minLng": String(minLng), "maxLng": String(maxLng),
+        ]
+        if let distMin { query["distMin"] = String(distMin) }
+        if let distMax { query["distMax"] = String(distMax) }
+        let response: SharedRoutesResponse = try await send(
+            path: "api/activities/routesNearby", method: "GET", query: query
+        )
+        return response.routes
+    }
+
+    /// Le tracé complet d'un itinéraire — payé seulement quand on l'ouvre vraiment.
+    func fetchRoute(id: String) async throws -> SharedRoute {
+        let response: SharedRouteResponse = try await send(
+            path: "api/activities/routeDetail", method: "GET", query: ["id": id]
+        )
+        return response.route
+    }
+
+    @discardableResult
+    func setRouteSaved(routeId: String, saved: Bool) async throws -> Int {
+        let response: RouteSaveResponse = try await send(
+            path: "api/activities/routeSave", method: "POST",
+            body: ["routeId": routeId, "saved": saved]
+        )
+        return response.savesCount
+    }
+
+    /// Ceux que j'ai publiés, et ceux que j'ai enregistrés pour plus tard.
+    func fetchMyRoutes() async throws -> (published: [SharedRoute], saved: [SharedRoute]) {
+        let response: MyRoutesResponse = try await send(path: "api/activities/routesMine", method: "GET")
+        return (response.published, response.saved)
+    }
+
     /// Flags a club name, display name, or activity as objectionable — lands in the `reports`
     /// table for manual review (App Store guideline 1.2). `targetType` is "user", "club", or
     /// "activity"; `targetId` the relevant id.

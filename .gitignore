@@ -15,3 +15,18 @@ node_modules/
 .env
 .env.*
 !.env.example
+
+# `vercel link` écrit ici l'identifiant du projet et de l'organisation. C'est un lien entre CETTE
+# machine et le compte Vercel, pas un élément du projet — et il n'a rien à faire dans le dépôt.
+.vercel/
+
+# Générés par XcodeGen à partir de `project.yml`, comme le `.xcodeproj` : tout ce qu'ils
+# contiennent est déjà déclaré dans ce fichier. Les suivre, c'est se garantir un conflit à chaque
+# `xcodegen generate` et, tôt ou tard, une divergence silencieuse entre le YAML et le plist
+# réellement embarqué.
+RunUp/Info.plist
+RunUpWatch/Info.plist
+RunUpWidgets/Info.plist
+RunUp/RunUp.entitlements
+RunUpWatch/RunUpWatch.entitlements
+RunUpWidgets/RunUpWidgets.entitlements

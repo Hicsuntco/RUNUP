@@ -7,7 +7,7 @@ const { withErrorHandling, isUuid } = require('../../lib/http');
 const { sendPushToUser, sendPushToUsers } = require('../../lib/apns');
 const { containsObjectionableContent } = require('../../lib/moderation');
 const { underDailyCap } = require('../../lib/rateLimit');
-const { canViewActivity, activityMetrics } = require('../../lib/social');
+const { canViewActivity, activityMetrics, isBlockedEitherWay } = require('../../lib/social');
 
 const ALLOWED_TYPES = new Set(['run', 'strength', 'badge']);
 const REFERRAL_REWARD_XP = 100;
@@ -33,6 +33,25 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'delete':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleDelete(req, res, userId);
+    // Itinéraires partagés. Ces actions vivent ici plutôt que dans `api/routes/*.js` pour une
+    // raison très concrète : Vercel compte un fichier sous `api/` comme une fonction serverless,
+    // le plan Hobby en autorise douze, et le projet en a exactement douze. Un treizième fichier
+    // ferait échouer TOUS les déploiements (voir le commit qui a fusionné `api/account`).
+    case 'routePublish':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleRoutePublish(req, res, userId);
+    case 'routesNearby':
+      if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleRoutesNearby(req, res, userId);
+    case 'routeDetail':
+      if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleRouteDetail(req, res, userId);
+    case 'routeSave':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleRouteSave(req, res, userId);
+    case 'routesMine':
+      if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleRoutesMine(req, res, userId);
     default:
       return res.status(404).json({ error: 'not_found' });
   }
@@ -346,4 +365,246 @@ async function handleCommentCreate(req, res, userId) {
     text: trimmed,
     createdAt: inserted[0].created_at,
   });
+}
+
+
+// ---------------------------------------------------------------------------
+// Itinéraires partagés
+// ---------------------------------------------------------------------------
+// Voir `db/schema.sql` § "Shared routes" pour la règle de confidentialité : le tracé arrive ICI
+// déjà rogné de ses 300 premiers et derniers mètres, par l'app. Le serveur ne reçoit donc jamais
+// le point de départ réel d'une course, et ne peut pas le divulguer.
+
+const MAX_ROUTE_POINTS = 600;
+const MAX_PREVIEW_POINTS = 32;
+// Généreux pour un usage réel (on publie un itinéraire de temps en temps, pas dix par jour) et
+// serré pour un client trafiqué : chaque publication est une écriture JSONB non triviale.
+const MAX_ROUTES_PER_DAY = 10;
+const ROUTES_PAGE_SIZE = 50;
+
+function isLatLngPair(p) {
+  return Array.isArray(p) && p.length === 2
+    && Number.isFinite(p[0]) && Number.isFinite(p[1])
+    && p[0] >= -90 && p[0] <= 90 && p[1] >= -180 && p[1] <= 180;
+}
+
+function coerceNumber(value, { min, max }) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < min || n > max) return null;
+  return n;
+}
+
+// Publie un itinéraire. Idempotent sur `client_id` comme `create` : une reprise de requête sur une
+// connexion instable ne doit pas semer deux fois le même tracé sur la carte.
+async function handleRoutePublish(req, res, userId) {
+  const body = req.body || {};
+  if (!isUuid(body.clientId)) return res.status(400).json({ error: 'bad_request' });
+
+  const name = typeof body.name === 'string' ? body.name.trim().slice(0, 80) : '';
+  if (!name) return res.status(400).json({ error: 'bad_request' });
+  const notes = typeof body.notes === 'string' && body.notes.trim()
+    ? body.notes.trim().slice(0, 500)
+    : null;
+  // Même filtre que les noms de club et les commentaires (App Store 1.2) : ce nom et cette note
+  // sont visibles par des inconnus, pas seulement par le club de l'autrice.
+  if (containsObjectionableContent(name) || (notes && containsObjectionableContent(notes))) {
+    return res.status(422).json({ error: 'objectionable_content' });
+  }
+
+  const distanceKm = coerceNumber(body.distanceKm, { min: 0.5, max: 200 });
+  if (distanceKm === null) return res.status(400).json({ error: 'bad_request' });
+
+  const points = body.points;
+  if (!Array.isArray(points) || points.length < 2 || points.length > MAX_ROUTE_POINTS
+      || !points.every(isLatLngPair)) {
+    return res.status(400).json({ error: 'bad_route' });
+  }
+  // Le repli tronque plutôt que de refuser : un aperçu malformé est un défaut d'affichage, pas une
+  // raison de perdre la publication.
+  const preview = Array.isArray(body.preview) && body.preview.length >= 2
+    && body.preview.length <= MAX_PREVIEW_POINTS && body.preview.every(isLatLngPair)
+    ? body.preview
+    : points.slice(0, MAX_PREVIEW_POINTS);
+
+  if (!(await underDailyCap(`route:${userId}`, MAX_ROUTES_PER_DAY))) {
+    return res.status(429).json({ error: 'too_many_routes' });
+  }
+
+  const elevation = coerceNumber(body.elevationGainM, { min: 0, max: 20000 });
+  const duration = coerceNumber(body.durationSeconds, { min: 0, max: 86400 });
+  const locality = typeof body.locality === 'string' ? body.locality.trim().slice(0, 80) || null : null;
+  const countryCode = typeof body.countryCode === 'string'
+    ? body.countryCode.trim().toUpperCase().slice(0, 2) || null
+    : null;
+
+  const { rows } = await sql`
+    INSERT INTO routes (client_id, user_id, name, notes, distance_km, elevation_gain_m,
+                        duration_seconds, points, preview_points, start_lat, start_lng,
+                        locality, country_code)
+    VALUES (${body.clientId}, ${userId}, ${name}, ${notes}, ${distanceKm},
+            ${elevation === null ? null : Math.round(elevation)},
+            ${duration === null ? null : Math.round(duration)},
+            ${JSON.stringify(points)}::jsonb, ${JSON.stringify(preview)}::jsonb,
+            ${points[0][0]}, ${points[0][1]}, ${locality}, ${countryCode})
+    ON CONFLICT (client_id) DO NOTHING
+    RETURNING id
+  `;
+  if (!rows[0]) {
+    // Déjà publié par une tentative précédente — on renvoie l'identifiant existant plutôt qu'une
+    // erreur, pour que le client puisse quand même naviguer vers l'itinéraire.
+    const { rows: existing } = await sql`SELECT id FROM routes WHERE client_id = ${body.clientId}`;
+    return res.status(200).json({ ok: true, id: existing[0] ? existing[0].id : null, duplicate: true });
+  }
+  res.status(201).json({ ok: true, id: rows[0].id });
+}
+
+// Les itinéraires dont le DÉPART tombe dans le rectangle demandé. Pas de tracé complet ici, juste
+// l'aperçu : cinquante tracés complets feraient plusieurs mégaoctets pour dessiner des gribouillis
+// de quelques millimètres.
+async function handleRoutesNearby(req, res, userId) {
+  const minLat = coerceNumber(req.query.minLat, { min: -90, max: 90 });
+  const maxLat = coerceNumber(req.query.maxLat, { min: -90, max: 90 });
+  const minLng = coerceNumber(req.query.minLng, { min: -180, max: 180 });
+  const maxLng = coerceNumber(req.query.maxLng, { min: -180, max: 180 });
+  if ([minLat, maxLat, minLng, maxLng].some((v) => v === null) || minLat > maxLat || minLng > maxLng) {
+    return res.status(400).json({ error: 'bad_request' });
+  }
+  // Filtres de distance optionnels — c'est la demande réelle : « je veux 10 km ici ».
+  const distMin = coerceNumber(req.query.distMin, { min: 0, max: 200 });
+  const distMax = coerceNumber(req.query.distMax, { min: 0, max: 200 });
+
+  const { rows } = await sql`
+    SELECT r.id, r.name, r.distance_km, r.elevation_gain_m, r.duration_seconds,
+           r.preview_points, r.start_lat, r.start_lng, r.locality, r.country_code,
+           r.photo_url, r.saves_count, r.created_at,
+           u.name AS author_name, u.username AS author_username, u.avatar_url AS author_avatar,
+           EXISTS (SELECT 1 FROM route_saves s WHERE s.route_id = r.id AND s.user_id = ${userId}) AS saved
+    FROM routes r
+    JOIN users u ON u.id = r.user_id
+    WHERE r.start_lat BETWEEN ${minLat} AND ${maxLat}
+      AND r.start_lng BETWEEN ${minLng} AND ${maxLng}
+      AND (${distMin}::numeric IS NULL OR r.distance_km >= ${distMin})
+      AND (${distMax}::numeric IS NULL OR r.distance_km <= ${distMax})
+      -- Un blocage dans un sens ou dans l'autre retire l'itinéraire de la carte, comme il retire
+      -- les publications du fil.
+      AND NOT EXISTS (
+        SELECT 1 FROM blocks b
+        WHERE (b.blocker_id = ${userId} AND b.blocked_id = r.user_id)
+           OR (b.blocker_id = r.user_id AND b.blocked_id = ${userId})
+      )
+    ORDER BY r.saves_count DESC, r.created_at DESC
+    LIMIT ${ROUTES_PAGE_SIZE}
+  `;
+  res.status(200).json({ routes: rows.map(mapRouteSummary) });
+}
+
+// Le tracé complet d'UN itinéraire — payé seulement quand quelqu'un l'ouvre vraiment.
+async function handleRouteDetail(req, res, userId) {
+  const id = req.query.id;
+  if (!isUuid(id)) return res.status(400).json({ error: 'bad_request' });
+  const { rows } = await sql`
+    SELECT r.id, r.name, r.notes, r.distance_km, r.elevation_gain_m, r.duration_seconds,
+           r.points, r.preview_points, r.start_lat, r.start_lng, r.locality, r.country_code,
+           r.photo_url, r.saves_count, r.created_at, r.user_id,
+           u.name AS author_name, u.username AS author_username, u.avatar_url AS author_avatar,
+           EXISTS (SELECT 1 FROM route_saves s WHERE s.route_id = r.id AND s.user_id = ${userId}) AS saved
+    FROM routes r
+    JOIN users u ON u.id = r.user_id
+    WHERE r.id = ${id}
+  `;
+  const row = rows[0];
+  if (!row) return res.status(404).json({ error: 'not_found' });
+  if (await isBlockedEitherWay(userId, row.user_id)) return res.status(404).json({ error: 'not_found' });
+  res.status(200).json({
+    route: { ...mapRouteSummary(row), notes: row.notes, points: row.points || [] },
+  });
+}
+
+// Bascule l'enregistrement. `saves_count` est dénormalisé sur `routes` parce que c'est la clé de
+// tri de la liste de découverte : un COUNT() par ligne à chaque affichage de carte serait payé
+// cinquante fois par panoramique.
+async function handleRouteSave(req, res, userId) {
+  const { routeId, saved } = req.body || {};
+  if (!isUuid(routeId) || typeof saved !== 'boolean') return res.status(400).json({ error: 'bad_request' });
+  const { rows: exists } = await sql`SELECT user_id FROM routes WHERE id = ${routeId}`;
+  if (!exists[0]) return res.status(404).json({ error: 'not_found' });
+  if (await isBlockedEitherWay(userId, exists[0].user_id)) return res.status(404).json({ error: 'not_found' });
+
+  if (saved) {
+    const { rowCount } = await sql`
+      INSERT INTO route_saves (route_id, user_id) VALUES (${routeId}, ${userId})
+      ON CONFLICT DO NOTHING
+    `;
+    // Le compteur ne bouge que si la ligne a vraiment été créée — sinon un double appui le
+    // gonflerait indéfiniment.
+    if (rowCount > 0) await sql`UPDATE routes SET saves_count = saves_count + 1 WHERE id = ${routeId}`;
+  } else {
+    const { rowCount } = await sql`
+      DELETE FROM route_saves WHERE route_id = ${routeId} AND user_id = ${userId}
+    `;
+    if (rowCount > 0) {
+      await sql`UPDATE routes SET saves_count = GREATEST(saves_count - 1, 0) WHERE id = ${routeId}`;
+    }
+  }
+  const { rows } = await sql`SELECT saves_count FROM routes WHERE id = ${routeId}`;
+  res.status(200).json({ ok: true, savesCount: rows[0] ? Number(rows[0].saves_count) : 0 });
+}
+
+// Les itinéraires que j'ai publiés et ceux que j'ai enregistrés — la liste « à essayer ».
+async function handleRoutesMine(req, res, userId) {
+  const { rows: published } = await sql`
+    SELECT r.id, r.name, r.distance_km, r.elevation_gain_m, r.duration_seconds,
+           r.preview_points, r.start_lat, r.start_lng, r.locality, r.country_code,
+           r.photo_url, r.saves_count, r.created_at,
+           u.name AS author_name, u.username AS author_username, u.avatar_url AS author_avatar,
+           TRUE AS saved
+    FROM routes r JOIN users u ON u.id = r.user_id
+    WHERE r.user_id = ${userId}
+    ORDER BY r.created_at DESC LIMIT ${ROUTES_PAGE_SIZE}
+  `;
+  const { rows: saved } = await sql`
+    SELECT r.id, r.name, r.distance_km, r.elevation_gain_m, r.duration_seconds,
+           r.preview_points, r.start_lat, r.start_lng, r.locality, r.country_code,
+           r.photo_url, r.saves_count, r.created_at,
+           u.name AS author_name, u.username AS author_username, u.avatar_url AS author_avatar,
+           TRUE AS saved
+    FROM route_saves s
+    JOIN routes r ON r.id = s.route_id
+    JOIN users u ON u.id = r.user_id
+    WHERE s.user_id = ${userId}
+      AND NOT EXISTS (
+        SELECT 1 FROM blocks b
+        WHERE (b.blocker_id = ${userId} AND b.blocked_id = r.user_id)
+           OR (b.blocker_id = r.user_id AND b.blocked_id = ${userId})
+      )
+    ORDER BY s.created_at DESC LIMIT ${ROUTES_PAGE_SIZE}
+  `;
+  res.status(200).json({
+    published: published.map(mapRouteSummary),
+    saved: saved.map(mapRouteSummary),
+  });
+}
+
+// `numeric` revient en chaîne depuis Postgres ; le client attend des nombres. Même conversion
+// explicite que `activityMetrics` dans lib/social.js, et pour la même raison.
+function mapRouteSummary(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    distanceKm: row.distance_km === null ? null : Number(row.distance_km),
+    elevationGainM: row.elevation_gain_m === null ? null : Number(row.elevation_gain_m),
+    durationSeconds: row.duration_seconds === null ? null : Number(row.duration_seconds),
+    preview: row.preview_points || [],
+    startLat: Number(row.start_lat),
+    startLng: Number(row.start_lng),
+    locality: row.locality,
+    countryCode: row.country_code,
+    photoUrl: row.photo_url,
+    savesCount: Number(row.saves_count),
+    saved: row.saved === true,
+    createdAt: row.created_at,
+    authorName: row.author_name,
+    authorUsername: row.author_username,
+    authorAvatarUrl: row.author_avatar,
+  };
 }

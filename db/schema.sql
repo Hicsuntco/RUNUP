@@ -396,3 +396,86 @@ ALTER TABLE activities ADD COLUMN IF NOT EXISTS elevation_gain_m INTEGER;
 -- `RecapView.recordKind`) — never inferred server-side, where the run history to compare against
 -- doesn't exist.
 ALTER TABLE activities ADD COLUMN IF NOT EXISTS is_personal_record BOOLEAN NOT NULL DEFAULT false;
+
+-- ---------------------------------------------------------------------------
+-- Shared routes — "I'm somewhere new, where do I run?"
+-- ---------------------------------------------------------------------------
+-- The one thing no running app answers well: you're in a city for three days and
+-- you have no idea where to run. Strava and Komoot have route libraries, but a
+-- coaching app is where the question actually gets asked, right next to "what's
+-- my session today?".
+--
+-- A route is NOT an activity, and deliberately gets its own table rather than
+-- more columns on `activities`. It has a different lifetime (it stays useful for
+-- years after the run that produced it), a different audience (strangers in the
+-- same city, not your club), and its own moderation surface (a name and, later,
+-- a photo that anyone can see).
+--
+-- PRIVACY — the part that must not be got wrong. Until this feature, GPS traces
+-- never left the phone. Publishing one is the first time a user's precise
+-- movements reach the server, and a raw trace starts and ends at a home address.
+-- Two rules, both enforced on the DEVICE, before upload:
+--   1. Publication is explicit, per run. Never automatic, never a global toggle
+--      that back-fills history.
+--   2. The first and last 300 m are cut off (see RouteGeometry.trimmedForSharing).
+-- Trimming client-side rather than here is the whole point: a server that never
+-- receives the endpoints cannot leak them, whatever happens to it later.
+CREATE TABLE IF NOT EXISTS routes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  -- Same idempotency contract as `activities`: the app generates this once per
+  -- publication, so a retried POST on a flaky connection can't duplicate a route.
+  client_id UUID NOT NULL UNIQUE,
+  -- CASCADE, not SET NULL: `api/account/[action].js` promises that deleting an
+  -- account leaves nothing of the person behind, and a trace of their runs is
+  -- exactly the kind of thing that promise is about. Losing the route from the
+  -- map is the correct price.
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  -- User-supplied, so it goes through lib/moderation.js like club names do.
+  name TEXT NOT NULL,
+  -- Free text from the author: "plat, le long du fleuve", "ça grimpe au km 3".
+  notes TEXT,
+  distance_km NUMERIC NOT NULL,
+  elevation_gain_m INTEGER,
+  -- Indicative only — how long it took the person who published it, not a target.
+  duration_seconds INTEGER,
+  -- The trimmed, decimated trace: [[lat, lng], …]. JSONB rather than a geometry
+  -- type because there is no PostGIS on this database and none is needed: nothing
+  -- here does geometry, it draws a line and filters by a rectangle.
+  points JSONB NOT NULL,
+  -- A ~24-point version of the same trace, precomputed on the device. The discovery list draws
+  -- fifty routes at once; sending each one's full trace would be megabytes over a mobile
+  -- connection to draw squiggles a few millimetres wide. The full `points` is fetched only when
+  -- one route is opened.
+  preview_points JSONB NOT NULL,
+  -- First point OF THE TRIMMED TRACE — i.e. ~300 m from where the run really
+  -- started. This is what pins the route on the discovery map.
+  start_lat NUMERIC NOT NULL,
+  start_lng NUMERIC NOT NULL,
+  -- Reverse-geocoded on the device (CLGeocoder) and sent as text, so the server
+  -- needs no geocoding provider, no API key and no per-request cost.
+  locality TEXT,
+  country_code TEXT,
+  photo_url TEXT,
+  saves_count INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Discovery is "routes starting inside the map's current viewport", so a plain
+-- composite btree on the start point serves it. A route whose start falls just
+-- outside the viewport is missed; at this scale that is the right trade against
+-- carrying a GiST/box index for overlap testing, and the client already queries a
+-- rectangle padded well beyond what it draws.
+CREATE INDEX IF NOT EXISTS idx_routes_start ON routes(start_lat, start_lng);
+-- "Most saved first" is the default ordering of the discovery list.
+CREATE INDEX IF NOT EXISTS idx_routes_saves ON routes(saves_count DESC, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_routes_user ON routes(user_id, created_at DESC);
+
+-- Saving a route is the real quality signal (a kudos costs nothing; saving means
+-- "I intend to run this"), and it is also the user's own list of routes to try.
+CREATE TABLE IF NOT EXISTS route_saves (
+  route_id UUID NOT NULL REFERENCES routes(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (route_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_route_saves_user ON route_saves(user_id, created_at DESC);

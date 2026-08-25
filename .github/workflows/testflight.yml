@@ -7,7 +7,7 @@
 #
 # ─── CE QU'IL FAUT AVOIR CRÉÉ AVANT LE PREMIER LANCEMENT ────────────────────────────────────────
 #
-# Six secrets, dans Settings → Secrets and variables → Actions → New repository secret. Aucune de
+# Neuf secrets, dans Settings → Secrets and variables → Actions → New repository secret. Aucune de
 # ces valeurs ne doit être écrite ailleurs que là : ni dans un fichier du dépôt, ni dans un
 # message, ni dans une capture d'écran.
 #
@@ -36,8 +36,15 @@
 #                             redonne jamais. Encode-le pareil :
 #                                 base64 -i AuthKey_XXXXXXXXXX.p8 | tr -d '\n' | gh secret set ASC_KEY_P8
 #
-# Le Team ID (SW49TQ25NV) n'est pas un secret : il est déjà dans `project.yml` et dans
-# `ci_scripts/ExportOptions.plist`.
+#   APPLE_PROFILE_APP         Les trois profils de provisionnement de DISTRIBUTION, un par cible.
+#   APPLE_PROFILE_WIDGETS     developer.apple.com → Certificates, Identifiers & Profiles →
+#   APPLE_PROFILE_WATCH       Profiles → « + » → Distribution → App Store Connect, une fois par
+#                             bundle ID (com.hicsuntco.runup, .widgets, puis .watchkitapp en
+#                             choisissant watchOS). Télécharge les trois .mobileprovision et
+#                             encode-les comme le reste. Ils expirent au bout d'un an.
+#
+# Le Team ID (SW49TQ25NV) n'est pas un secret : il est déjà dans `project.yml`, et les options
+# d'export sont fabriquées à l'exécution à partir des profils eux-mêmes.
 #
 # ─── CE QUE ÇA COÛTE ────────────────────────────────────────────────────────────────────────────
 #
@@ -111,10 +118,14 @@ jobs:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APPLE_PROFILE_APP: ${{ secrets.APPLE_PROFILE_APP }}
+          APPLE_PROFILE_WIDGETS: ${{ secrets.APPLE_PROFILE_WIDGETS }}
+          APPLE_PROFILE_WATCH: ${{ secrets.APPLE_PROFILE_WATCH }}
         run: |
           missing=0
           for name in RUNUP_APP_SECRET APPLE_DIST_CERT_P12 APPLE_DIST_CERT_PASSWORD \
-                      ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8; do
+                      ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 \
+                      APPLE_PROFILE_APP APPLE_PROFILE_WIDGETS APPLE_PROFILE_WATCH; do
             eval "value=\${$name}"
             if [ -z "$value" ]; then
               echo "✗ $name — absent ou vide"
@@ -150,6 +161,20 @@ jobs:
             exit 1
           fi
           echo "✓ APPLE_DIST_CERT_P12 redonne bien une archive PKCS#12"
+
+          # Chaque profil est un plist enveloppé dans une signature CMS. Le décoder ici coûte une
+          # seconde et évite de découvrir à l'export qu'un des trois secrets contient autre chose.
+          for slot in APP WIDGETS WATCH; do
+            eval "b64=\${APPLE_PROFILE_$slot}"
+            if ! echo "$b64" | base64 -d 2>/dev/null | security cms -D -i /dev/stdin > /dev/null 2>&1; then
+              echo ""
+              echo "✗ APPLE_PROFILE_$slot ne redonne pas un profil de provisionnement lisible."
+              echo "  Le secret doit contenir le base64 du .mobileprovision telecharge depuis"
+              echo "  developer.apple.com. Voir IOS_SETUP.md."
+              exit 1
+            fi
+          done
+          echo "✓ Les trois profils de provisionnement sont lisibles"
 
       - name: Installer XcodeGen
         run: brew install xcodegen
@@ -252,6 +277,53 @@ jobs:
           chmod 600 "$KEY_PATH"
           echo "ASC_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
 
+      # Les profils de provisionnement de distribution, fournis en secrets plutôt que réclamés à
+      # Apple au moment de l'export.
+      #
+      # La signature automatique a bien fonctionné pour ARCHIVER — Xcode a créé des profils de
+      # DÉVELOPPEMENT tout seul. Mais l'export vers l'App Store réclame des profils de
+      # DISTRIBUTION, que la signature automatique ne sait obtenir que par la « signature dans le
+      # nuage », laquelle a répondu « Cloud signing permission error » sur les trois bundle IDs
+      # avec une clé d'équipe Admin — donc pour une raison qui ne dépend ni de ce dépôt ni de ce
+      # workflow. Trois profils fournis à l'avance suppriment cette dépendance entière : plus rien
+      # n'est demandé à Apple pendant l'export.
+      #
+      # Le prix : les profils expirent au bout d'un an et devront être régénérés. C'est écrit dans
+      # IOS_SETUP.md, avec la commande.
+      #
+      # Rien n'est codé en dur ici : le bundle ID, le nom et l'UUID sont LUS dans chaque profil.
+      # Une correspondance recopiée à la main entre un nom de profil et un bundle ID serait fausse
+      # dès que tu renommes un profil dans le portail Apple, et l'erreur ne sortirait qu'à
+      # l'export.
+      - name: Installer les profils de provisionnement
+        env:
+          PROFILE_APP: ${{ secrets.APPLE_PROFILE_APP }}
+          PROFILE_WIDGETS: ${{ secrets.APPLE_PROFILE_WIDGETS }}
+          PROFILE_WATCH: ${{ secrets.APPLE_PROFILE_WATCH }}
+        run: |
+          set -euo pipefail
+          DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$DIR"
+          MAP="$RUNNER_TEMP/profile-map.txt"
+          : > "$MAP"
+          for slot in APP WIDGETS WATCH; do
+            eval "b64=\${PROFILE_$slot}"
+            raw="$RUNNER_TEMP/$slot.mobileprovision"
+            echo "$b64" | base64 -d > "$raw"
+            # Un .mobileprovision est un plist signé en CMS : il faut le désenvelopper pour le lire.
+            plist="$RUNNER_TEMP/$slot.plist"
+            security cms -D -i "$raw" > "$plist"
+            uuid=$(/usr/libexec/PlistBuddy -c "Print :UUID" "$plist")
+            pname=$(/usr/libexec/PlistBuddy -c "Print :Name" "$plist")
+            # `application-identifier` vaut TEAMID.bundle.id ; on retire le préfixe d'équipe.
+            appid=$(/usr/libexec/PlistBuddy -c "Print :Entitlements:application-identifier" "$plist")
+            bundle=${appid#*.}
+            cp "$raw" "$DIR/$uuid.mobileprovision"
+            echo "$bundle=$pname" >> "$MAP"
+            echo "  ✓ $bundle → $pname"
+          done
+          echo "PROFILE_MAP=$MAP" >> "$GITHUB_ENV"
+
       - name: Archiver
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
@@ -270,20 +342,47 @@ jobs:
             -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
             OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN"
 
+      # Les options d'export sont ÉCRITES ICI, à partir des profils réellement installés, plutôt
+      # que lues dans un fichier versionné : la correspondance bundle ID → profil ne peut donc pas
+      # mentir sur ce que la machine a sous la main.
+      #
+      # Plus de `-allowProvisioningUpdates` ni de clé d'authentification sur cette commande : c'est
+      # exactement ce qui déclenchait la signature dans le nuage. Tout ce dont l'export a besoin
+      # est déjà sur la machine — le certificat dans le trousseau, les trois profils dans le
+      # dossier où Xcode les cherche.
       - name: Exporter l'IPA
-        env:
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
         run: |
           set -euo pipefail
+          OPTS="$RUNNER_TEMP/ExportOptions.plist"
+          python3 - "$PROFILE_MAP" "$OPTS" <<'PYTHON'
+          import sys, plistlib
+          profiles = {}
+          for line in open(sys.argv[1]):
+              line = line.strip()
+              if line:
+                  bundle, name = line.split("=", 1)
+                  profiles[bundle] = name
+          plistlib.dump({
+              "method": "app-store",
+              "teamID": "SW49TQ25NV",
+              "signingStyle": "manual",
+              # Le trousseau contient aussi deux identités de DÉVELOPPEMENT ; nommer la famille
+              # évite que codesign attrape la mauvaise.
+              "signingCertificate": "Apple Distribution",
+              "provisioningProfiles": profiles,
+              "uploadSymbols": True,
+              # À `true` (le défaut), Xcode réécrirait le numéro de build à l'export et le lien
+              # entre un build TestFlight et le commit qui l'a produit serait rompu.
+              "manageAppVersionAndBuildNumber": False,
+          }, open(sys.argv[2], "wb"))
+          PYTHON
+          echo "→ Options d'export :"
+          plutil -p "$OPTS"
           xcodebuild -exportArchive \
             -archivePath "$RUNNER_TEMP/RunUp.xcarchive" \
-            -exportOptionsPlist ci_scripts/ExportOptions.plist \
+            -exportOptionsPlist "$OPTS" \
             -exportPath "$RUNNER_TEMP/export" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$ASC_KEY_PATH" \
-            -authenticationKeyID "$ASC_KEY_ID" \
-            -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+            OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN"
           ls -lh "$RUNNER_TEMP/export"
 
       # Gardé 14 jours. Quand un envoi est refusé par App Store Connect, c'est ce fichier qu'on

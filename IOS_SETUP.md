@@ -49,7 +49,7 @@ que les 300 premiers et derniers mètres d'un tracé partagé sont bien retirés
 envoie. Comptez vingt à trente minutes, plus dix à trente minutes de traitement chez Apple avant
 que le build apparaisse dans TestFlight.
 
-**Six secrets à créer une fois** (Settings → Secrets and variables → Actions). Aucune de ces
+**Neuf secrets à créer une fois** (Settings → Secrets and variables → Actions). Aucune de ces
 valeurs ne doit se retrouver dans le dépôt, dans un message ou dans une capture d'écran :
 
 | Secret | D'où il vient |
@@ -60,21 +60,56 @@ valeurs ne doit se retrouver dans le dépôt, dans un message ou dans une captur
 | `ASC_KEY_ID` | App Store Connect → Users and Access → Integrations → App Store Connect API → **+**, rôle **Admin**. Pas « App Manager » : ce rôle crée des profils de développement mais se voit refuser la signature dans le nuage, et l'export échoue sur `Cloud signing permission error` après avoir archivé — soit un quart d'heure de machine pour découvrir un refus de permission. Le rôle d'une clé ne se change pas après coup ; il faut en recréer une. |
 | `ASC_ISSUER_ID` | Affiché en haut de la même page. |
 | `ASC_KEY_P8` | Le fichier `AuthKey_XXXXXXXXXX.p8`, téléchargeable **une seule fois** à la création de la clé. Posé directement : `base64 -i AuthKey_XXXXXXXXXX.p8 \| tr -d '\n' \| gh secret set ASC_KEY_P8`. |
+| `APPLE_PROFILE_APP` | Le profil de distribution de `com.hicsuntco.runup` (voir juste en dessous). |
+| `APPLE_PROFILE_WIDGETS` | Celui de `com.hicsuntco.runup.widgets`. |
+| `APPLE_PROFILE_WATCH` | Celui de `com.hicsuntco.runup.watchkitapp`. |
 
-Le Team ID (`SW49TQ25NV`) n'est pas un secret : il est déjà dans `project.yml` et dans
-`ci_scripts/ExportOptions.plist`.
+Le Team ID (`SW49TQ25NV`) n'est pas un secret : il est déjà dans `project.yml`, et les options
+d'export sont fabriquées à l'exécution à partir des profils eux-mêmes.
 
-Les profils de signature ne sont pas stockés : les trois cibles sont en signature automatique, et
-`xcodebuild -allowProvisioningUpdates` les crée et les télécharge lui-même avec la clé d'API.
-C'est ce qui évite d'avoir à réexporter trois profils à chaque expiration annuelle.
+#### Les trois profils de distribution
+
+Sur [developer.apple.com](https://developer.apple.com/account/resources/profiles/list) →
+Certificates, Identifiers & Profiles → **Profiles** → **+**, trois fois :
+
+| App ID à choisir | Type de profil |
+| --- | --- |
+| `com.hicsuntco.runup` | iOS → Distribution → **App Store Connect** |
+| `com.hicsuntco.runup.widgets` | iOS → Distribution → **App Store Connect** |
+| `com.hicsuntco.runup.watchkitapp` | **watchOS** → Distribution → **App Store Connect** |
+
+Chacun doit s'appuyer sur le certificat **Apple Distribution** — le même que `APPLE_DIST_CERT_P12`.
+Nomme-les comme tu veux : le workflow lit le nom et le bundle ID dans le fichier lui-même, il n'y a
+aucune correspondance recopiée à la main qui pourrait devenir fausse.
+
+Télécharge les trois, puis, en remplaçant chaque nom de fichier :
+
+```bash
+base64 -i ~/Downloads/RunUp_App_Store.mobileprovision | tr -d '\n' | gh secret set APPLE_PROFILE_APP
+base64 -i ~/Downloads/RunUp_Widgets.mobileprovision   | tr -d '\n' | gh secret set APPLE_PROFILE_WIDGETS
+base64 -i ~/Downloads/RunUp_Watch.mobileprovision     | tr -d '\n' | gh secret set APPLE_PROFILE_WATCH
+```
+
+**Ils expirent au bout d'un an.** À ce moment-là, l'export échouera ; il suffira de régénérer les
+trois profils au même endroit et de rejouer ces trois commandes.
+
+#### Pourquoi les profils sont fournis, et pas demandés à Apple
+
+Parce que la signature automatique ne va pas jusqu'au bout en CI. Elle fonctionne pour
+**archiver** — `-allowProvisioningUpdates` crée des profils de *développement* tout seul, et
+l'archivage réussit. Mais l'export vers l'App Store réclame des profils de *distribution*, que la
+signature automatique ne sait obtenir que par la « signature dans le nuage ». Celle-ci a répondu
+`Cloud signing permission error` sur les trois bundle IDs, avec une clé d'équipe au rôle Admin —
+donc pour une raison qui ne dépend ni du dépôt ni du workflow. Fournir les profils supprime cette
+dépendance entière : pendant l'export, plus rien n'est demandé à Apple.
 
 Le certificat est importé dans un trousseau jetable, détruit à la fin du job même en cas d'échec.
 
-La première étape du workflow vérifie que les six secrets existent et que les deux fichiers
-encodés en base64 se décodent bien en ce qu'ils prétendent être. Sans ce contrôle, un secret vide
-ne se manifeste qu'à l'archivage — `xcodebuild` parle alors de `invalidPEMDocument`, soit un
-message de cryptographie pour dire « ce fichier est vide », après avoir compilé et testé toute
-l'app.
+La première étape du workflow vérifie que les neuf secrets existent, et que les cinq qui sont des
+fichiers encodés se décodent bien en ce qu'ils prétendent être : une clé PEM, une archive PKCS#12,
+trois profils lisibles. Sans ce contrôle, un secret vide ne se manifeste qu'à l'archivage —
+`xcodebuild` parle alors de `invalidPEMDocument`, soit un message de cryptographie pour dire « ce
+fichier est vide », après avoir compilé et testé toute l'app.
 
 ### Depuis Xcode Cloud
 

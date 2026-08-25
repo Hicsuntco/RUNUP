@@ -55,11 +55,11 @@ valeurs ne doit se retrouver dans le dépôt, dans un message ou dans une captur
 | Secret | D'où il vient |
 | --- | --- |
 | `RUNUP_APP_SECRET` | La même chaîne que la variable Vercel du même nom. Sans elle, le coach répond 401 dans le build et rien d'autre ne casse — donc ça passe inaperçu. |
-| `APPLE_DIST_CERT_P12` | Trousseaux d'accès → clic droit sur « Apple Distribution: … » → Exporter au format `.p12`, puis `base64 -i Certificats.p12 \| pbcopy`. |
+| `APPLE_DIST_CERT_P12` | Trousseaux d'accès → clic droit sur « Apple Distribution: … » → Exporter au format `.p12`, puis `base64 -i Certificats.p12 \| tr -d '\n' \| gh secret set APPLE_DIST_CERT_P12`. |
 | `APPLE_DIST_CERT_PASSWORD` | Le mot de passe choisi pendant cet export. |
 | `ASC_KEY_ID` | App Store Connect → Users and Access → Integrations → App Store Connect API → **+**, rôle « App Manager ». |
 | `ASC_ISSUER_ID` | Affiché en haut de la même page. |
-| `ASC_KEY_P8` | Le fichier `AuthKey_XXXXXXXXXX.p8`, téléchargeable **une seule fois** à la création de la clé, encodé : `base64 -i AuthKey_XXXXXXXXXX.p8 \| pbcopy`. |
+| `ASC_KEY_P8` | Le fichier `AuthKey_XXXXXXXXXX.p8`, téléchargeable **une seule fois** à la création de la clé. Posé directement : `base64 -i AuthKey_XXXXXXXXXX.p8 \| tr -d '\n' \| gh secret set ASC_KEY_P8`. |
 
 Le Team ID (`SW49TQ25NV`) n'est pas un secret : il est déjà dans `project.yml` et dans
 `ci_scripts/ExportOptions.plist`.
@@ -69,6 +69,12 @@ Les profils de signature ne sont pas stockés : les trois cibles sont en signatu
 C'est ce qui évite d'avoir à réexporter trois profils à chaque expiration annuelle.
 
 Le certificat est importé dans un trousseau jetable, détruit à la fin du job même en cas d'échec.
+
+La première étape du workflow vérifie que les six secrets existent et que les deux fichiers
+encodés en base64 se décodent bien en ce qu'ils prétendent être. Sans ce contrôle, un secret vide
+ne se manifeste qu'à l'archivage — `xcodebuild` parle alors de `invalidPEMDocument`, soit un
+message de cryptographie pour dire « ce fichier est vide », après avoir compilé et testé toute
+l'app.
 
 ### Depuis Xcode Cloud
 
@@ -278,8 +284,9 @@ sur l'écran d'accueil. Il tourne dans son propre processus, séparé de l'app �
 
 ## Icône de l'app
 
-`RunUp/Resources/Assets.xcassets/AppIcon.appiconset/` contient un slot d'icône App Store
-(1024×1024, format "single size" iOS 17+) sans image — à remplir dans Xcode avant tout envoi sur
-TestFlight/App Store. Le logo décrit dans le handoff design (voir
+`RunUp/Resources/Assets.xcassets/AppIcon.appiconset/` contient l'icône App Store (1024×1024,
+format "single size" iOS 17+), et `RunUpWatch/Assets.xcassets/` la même pour la montre — les deux
+sont en place, un binaire sans elles étant refusé à l'envoi. Pour la refaire, le logo décrit dans
+le handoff design (voir
 `design_handoff_runup_app/README.md` § Assets, fonction `AppMark`) est un bon point de départ :
 c'est le même glyphe que `Views/Components/AppMarkView.swift`, à exporter en PNG haute résolution.

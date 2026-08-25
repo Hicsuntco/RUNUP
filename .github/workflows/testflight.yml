@@ -89,6 +89,64 @@ jobs:
       - name: Version de Xcode utilisée
         run: xcodebuild -version
 
+      # Les six secrets sont vérifiés ICI, avant tout le reste, parce qu'un secret absent ne se
+      # présente pas comme un secret absent.
+      #
+      # Un `ASC_KEY_P8` vide a déjà produit ceci : le workflow écrit un fichier de zéro octet,
+      # l'archivage démarre normalement, et `xcodebuild` répond quatre minutes plus tard
+      # « Invalid authentication key credential (CryptoKitASN1Error.invalidPEMDocument) » — un
+      # message qui parle de cryptographie pour dire « ce fichier est vide ». Entre-temps la
+      # machine a compilé et exécuté toute la suite de tests, facturée dix fois le tarif normal.
+      #
+      # Rien ici n'affiche la moindre valeur : seulement des noms et un verdict.
+      - name: Vérifier les secrets
+        env:
+          RUNUP_APP_SECRET: ${{ secrets.RUNUP_APP_SECRET }}
+          APPLE_DIST_CERT_P12: ${{ secrets.APPLE_DIST_CERT_P12 }}
+          APPLE_DIST_CERT_PASSWORD: ${{ secrets.APPLE_DIST_CERT_PASSWORD }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          missing=0
+          for name in RUNUP_APP_SECRET APPLE_DIST_CERT_P12 APPLE_DIST_CERT_PASSWORD \
+                      ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8; do
+            eval "value=\${$name}"
+            if [ -z "$value" ]; then
+              echo "✗ $name — absent ou vide"
+              missing=1
+            else
+              echo "✓ $name"
+            fi
+          done
+          if [ "$missing" -eq 1 ]; then
+            echo ""
+            echo "Settings → Secrets and variables → Actions."
+            echo "Voir IOS_SETUP.md § « Envoyer un build sur TestFlight » pour l'origine de chacun."
+            exit 1
+          fi
+
+          # Deux secrets sont des fichiers encodés en base64. Un encodage raté produit une chaîne
+          # non vide qui passe le test ci-dessus et casse bien plus loin — on décode donc pour de
+          # bon, et on regarde si ce qui sort ressemble à ce que ça doit être.
+          if ! echo "$ASC_KEY_P8" | base64 -d 2>/dev/null | head -1 | grep -q "BEGIN PRIVATE KEY"; then
+            echo ""
+            echo "✗ ASC_KEY_P8 ne redonne pas une clé PEM une fois décodé."
+            echo "  Le secret doit contenir le base64 du fichier AuthKey_XXXXXXXXXX.p8 :"
+            echo "    base64 -i AuthKey_XXXXXXXXXX.p8 | tr -d '\\n' | gh secret set ASC_KEY_P8"
+            exit 1
+          fi
+          echo "✓ ASC_KEY_P8 redonne bien une clé PEM"
+
+          # Une archive PKCS#12 est du DER : elle commence toujours par 30 82 (une SEQUENCE).
+          magic=$(echo "$APPLE_DIST_CERT_P12" | base64 -d 2>/dev/null | head -c 2 | od -An -tx1 | tr -d ' \n')
+          if [ "$magic" != "3082" ]; then
+            echo ""
+            echo "✗ APPLE_DIST_CERT_P12 ne redonne pas une archive PKCS#12 une fois décodé."
+            exit 1
+          fi
+          echo "✓ APPLE_DIST_CERT_P12 redonne bien une archive PKCS#12"
+
       - name: Installer XcodeGen
         run: brew install xcodegen
 

@@ -1,0 +1,259 @@
+# De ce dépôt à TestFlight, sans passer par Xcode.
+#
+# Ce workflow fait ce que tu faisais à la main dans Xcode — générer le projet, le construire,
+# le signer, l'envoyer à App Store Connect — sur une machine macOS louée à GitHub, à partir du
+# code tel qu'il est commité. L'intérêt n'est pas le confort : c'est qu'un build livré aux
+# testeurs corresponde exactement à un commit, et pas à l'état de ta machine ce jour-là.
+#
+# ─── CE QU'IL FAUT AVOIR CRÉÉ AVANT LE PREMIER LANCEMENT ────────────────────────────────────────
+#
+# Six secrets, dans Settings → Secrets and variables → Actions → New repository secret. Aucune de
+# ces valeurs ne doit être écrite ailleurs que là : ni dans un fichier du dépôt, ni dans un
+# message, ni dans une capture d'écran.
+#
+#   RUNUP_APP_SECRET          Le secret partagé avec `api/coach.js`, exactement la même chaîne que
+#                             la variable du même nom côté Vercel. Sans lui, le coach répond 401
+#                             dans le build — tout le reste marche, ce qui rend la panne difficile
+#                             à voir.
+#
+#   APPLE_DIST_CERT_P12       Ton certificat de distribution Apple, exporté depuis Trousseaux
+#                             d'accès (clic droit sur « Apple Distribution: … » → Exporter →
+#                             format .p12), puis encodé en base64 :
+#                                 base64 -i Certificats.p12 | pbcopy
+#                             C'est le contenu encodé qui va dans le secret, pas le fichier.
+#
+#   APPLE_DIST_CERT_PASSWORD  Le mot de passe choisi pendant cet export.
+#
+#   ASC_KEY_ID                App Store Connect → Users and Access → Integrations → App Store
+#   ASC_ISSUER_ID             Connect API → « + ». Rôle « App Manager » (suffisant pour envoyer un
+#   ASC_KEY_P8                build et pour laisser Xcode créer les profils de signature). La page
+#                             affiche le Key ID et l'Issuer ID, et propose UNE SEULE FOIS le
+#                             téléchargement du fichier AuthKey_XXXXXXXXXX.p8 — Apple ne le
+#                             redonne jamais. Encode-le pareil :
+#                                 base64 -i AuthKey_XXXXXXXXXX.p8 | pbcopy
+#
+# Le Team ID (SW49TQ25NV) n'est pas un secret : il est déjà dans `project.yml` et dans
+# `ci_scripts/ExportOptions.plist`.
+#
+# ─── CE QUE ÇA COÛTE ────────────────────────────────────────────────────────────────────────────
+#
+# Sur un dépôt privé, GitHub facture les machines macOS DIX FOIS le tarif d'une machine Linux.
+# D'où les deux garde-fous ci-dessous : les commits qui ne touchent qu'au serveur ou à la
+# documentation ne déclenchent rien, et deux exécutions ne se chevauchent jamais.
+
+name: TestFlight
+
+on:
+  # Le bouton : Actions → TestFlight → Run workflow. C'est par là que passe un envoi décidé,
+  # y compris depuis le téléphone.
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: "Numéro de build à imposer (vide = 1000 + numéro d'exécution)"
+        required: false
+        type: string
+
+  push:
+    branches:
+      - claude/runup-ios-swiftui-app-5b1yv6
+    # Rien de ce qui suit ne peut changer le binaire iOS d'un octet : le déclencher pour un
+    # correctif d'API ou une phrase de politique de confidentialité, ce serait payer une machine
+    # macOS pour reconstruire à l'identique.
+    paths-ignore:
+      - "api/**"
+      - "lib/**"
+      - "db/**"
+      - "public/**"
+      - "vercel.json"
+      - "package.json"
+      - "package-lock.json"
+      - "**/*.md"
+      - "privacy.html"
+      - "design_handoff_runup_app/**"
+
+# Deux envois en parallèle produiraient deux builds et une course à qui arrive le premier chez
+# Apple. `cancel-in-progress: false` : on laisse finir celui qui est déjà en train de signer
+# plutôt que de le tuer au milieu.
+concurrency:
+  group: testflight
+  cancel-in-progress: false
+
+jobs:
+  testflight:
+    runs-on: macos-15
+    timeout-minutes: 75
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Version de Xcode utilisée
+        run: xcodebuild -version
+
+      - name: Installer XcodeGen
+        run: brew install xcodegen
+
+      # Le numéro de build doit croître à chaque envoi, et ne jamais retomber sous un numéro déjà
+      # reçu par App Store Connect. `github.run_number` s'incrémente tout seul mais repart de 1 ;
+      # or Xcode Cloud a déjà envoyé des builds numérotés autour de 14. D'où le décalage de 1000 :
+      # cette chaîne-ci commence au-dessus de tout ce qui existe et ne peut plus la rattraper.
+      #
+      # Conséquence à connaître : après un envoi d'ici, un build Xcode Cloud (qui numérote 15, 16…)
+      # sera refusé pour la même version. Les deux chaînes ne peuvent pas alterner ; il faut en
+      # choisir une.
+      - name: Calculer le numéro de build
+        id: build
+        run: |
+          if [ -n "${{ inputs.build_number }}" ]; then
+            NUMBER="${{ inputs.build_number }}"
+          else
+            NUMBER=$(( 1000 + GITHUB_RUN_NUMBER ))
+          fi
+          echo "number=$NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Build $NUMBER"
+
+      # Écrit Secrets.xcconfig, impose le numéro de build aux trois cibles, génère le .xcodeproj.
+      # Exactement le même script que celui qu'exécute Xcode Cloud (`ci_post_clone.sh`), pour que
+      # les deux chaînes ne puissent pas produire des binaires différents.
+      - name: Préparer le projet
+        env:
+          RUNUP_APP_SECRET: ${{ secrets.RUNUP_APP_SECRET }}
+          BUILD_NUMBER: ${{ steps.build.outputs.number }}
+        run: sh ci_scripts/prepare_project.sh
+
+      # Les tests tournent AVANT la signature, sur simulateur, donc sans certificat : un échec
+      # coûte cinq minutes de machine au lieu de la construction complète. Et surtout,
+      # `RouteSharingPrivacyTests` vérifie que les 300 premiers et derniers mètres d'un tracé
+      # partagé sont bien retirés — c'est la seule promesse de cette app dont la rupture publierait
+      # l'adresse de quelqu'un. Aucun build ne doit partir aux testeurs sans qu'elle ait été
+      # vérifiée.
+      - name: Tests
+        run: |
+          set -o pipefail
+          UDID=$(xcrun simctl list devices available | grep -m1 -E '^ *iPhone' | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
+          if [ -z "$UDID" ]; then
+            echo "✗ Aucun simulateur iPhone disponible sur cette machine."
+            xcrun simctl list devices available
+            exit 1
+          fi
+          echo "→ Simulateur : $UDID"
+          xcodebuild test \
+            -project RunUp.xcodeproj \
+            -scheme RunUp \
+            -destination "id=$UDID" \
+            CODE_SIGNING_ALLOWED=NO
+
+      # Le certificat de distribution vit dans un trousseau JETABLE, créé ici et détruit à la fin
+      # du job (voir la dernière étape). Il n'est jamais ajouté au trousseau par défaut de la
+      # machine : les machines GitHub sont réinitialisées entre deux exécutions, mais compter
+      # là-dessus pour une clé privée de signature serait une hypothèse, pas une garantie.
+      - name: Installer le certificat de signature
+        env:
+          CERT_P12_BASE64: ${{ secrets.APPLE_DIST_CERT_P12 }}
+          CERT_PASSWORD: ${{ secrets.APPLE_DIST_CERT_PASSWORD }}
+        run: |
+          set -euo pipefail
+          KEYCHAIN="$RUNNER_TEMP/runup-signing.keychain-db"
+          KEYCHAIN_PASSWORD=$(uuidgen)
+          echo "KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
+
+          CERT="$RUNNER_TEMP/dist.p12"
+          echo "$CERT_P12_BASE64" | base64 -d > "$CERT"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$CERT" -k "$KEYCHAIN" -P "$CERT_PASSWORD" \
+            -T /usr/bin/codesign -T /usr/bin/security -A
+          # Sans ça, macOS ouvre une boîte de dialogue « autoriser codesign à utiliser cette
+          # clé ? » — sur une machine sans écran, la construction reste bloquée jusqu'au délai.
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" > /dev/null
+          # Le trousseau doit figurer dans la liste de recherche, sinon codesign ne le regarde pas.
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+
+          rm -f "$CERT"
+          echo "→ Identités disponibles :"
+          security find-identity -v -p codesigning "$KEYCHAIN" | sed 's/[0-9A-F]\{40\}/…/'
+
+      # La clé d'API App Store Connect sert deux fois : à laisser Xcode créer et télécharger les
+      # profils de signature des trois bundle IDs (`-allowProvisioningUpdates`), puis à envoyer
+      # l'IPA. `altool` la cherche à cet emplacement précis, sous ce nom précis.
+      - name: Installer la clé d'API App Store Connect
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.appstoreconnect/private_keys
+          KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
+          echo "$ASC_KEY_P8" | base64 -d > "$KEY_PATH"
+          chmod 600 "$KEY_PATH"
+          echo "ASC_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
+
+      - name: Archiver
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          xcodebuild archive \
+            -project RunUp.xcodeproj \
+            -scheme RunUp \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath "$RUNNER_TEMP/RunUp.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN"
+
+      - name: Exporter l'IPA
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/RunUp.xcarchive" \
+            -exportOptionsPlist ci_scripts/ExportOptions.plist \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+          ls -lh "$RUNNER_TEMP/export"
+
+      # Gardé 14 jours. Quand un envoi est refusé par App Store Connect, c'est ce fichier qu'on
+      # inspecte — sans lui, il faut relancer toute la construction pour comprendre.
+      - name: Conserver l'IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: RunUp-${{ steps.build.outputs.number }}.ipa
+          path: ${{ runner.temp }}/export/*.ipa
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Envoyer à TestFlight
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          IPA=$(ls "$RUNNER_TEMP/export"/*.ipa | head -1)
+          echo "→ Envoi de $(basename "$IPA")"
+          # `--upload-package` demanderait de décrire le paquet à la main ; `--upload-app` lit
+          # tout dans l'IPA, et refuse un binaire invalide avec les mêmes messages que la
+          # validation séparée — laquelle téléverserait l'IPA une deuxième fois pour rien.
+          xcrun altool --upload-app -f "$IPA" -t ios \
+            --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+          echo "✓ Build ${{ steps.build.outputs.number }} envoyé."
+          echo "  Apple met dix à trente minutes à le traiter avant qu'il apparaisse dans TestFlight."
+
+      # `if: always()` : une construction qui échoue à mi-chemin ne doit pas laisser derrière elle
+      # un trousseau déverrouillé contenant la clé privée de signature, ni la clé d'API.
+      - name: Effacer les secrets de la machine
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/runup-signing.keychain-db" 2>/dev/null || true
+          rm -rf ~/.appstoreconnect/private_keys

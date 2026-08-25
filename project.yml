@@ -157,6 +157,18 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: SW49TQ25NV
+    # Un schéma PARTAGÉ, déclaré ici plutôt que laissé à l'auto-création.
+    #
+    # `xcodebuild archive` exige un schéma. Sans déclaration, Xcode en fabrique un à la volée à la
+    # première ouverture du projet — invisible sur ta machine, mais fabriqué par une heuristique
+    # sur laquelle on n'a aucune prise, et refabriqué à chaque `xcodegen generate` sur une machine
+    # de CI qui, elle, part d'un dépôt sans `.xcodeproj`. Le déclarer, c'est garantir que la
+    # commande d'archivage du workflow trouve toujours la même chose, et que `RunUpTests` est bien
+    # attaché à l'action « Test » — sinon la CI construit sans jamais exécuter les tests de
+    # confidentialité des itinéraires, ce qui est exactement le contraire du but.
+    scheme:
+      testTargets:
+        - RunUpTests
 
   # Home Screen widget — shows the same single-ring 3-goal widget as `DailyGoalsBarsView`/streak,
   # fed by `DailyGoalsSnapshot` over the shared App Group rather than any live in-app state (a

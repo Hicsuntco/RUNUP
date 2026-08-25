@@ -23,6 +23,69 @@ Relance `xcodegen generate` à chaque fois que `project.yml` change (nouveau fic
 nouvelle capability, etc.) — les fichiers `.swift` eux n'ont pas besoin d'être ajoutés
 manuellement au projet, `project.yml` référence le dossier `RunUp/` entier.
 
+## Envoyer un build sur TestFlight
+
+Deux chaînes existent, et elles font la même chose : `.github/workflows/testflight.yml` (GitHub
+Actions) et `ci_scripts/ci_post_clone.sh` (Xcode Cloud). Toutes deux appellent
+`ci_scripts/prepare_project.sh`, qui écrit `Secrets.xcconfig`, impose le numéro de build aux trois
+cibles et lance `xcodegen` — c'est le seul endroit où ces gestes sont décrits, pour qu'elles ne
+puissent pas produire des binaires différents.
+
+**Il faut en choisir une.** GitHub numérote ses builds `1000 + numéro d'exécution`, Xcode Cloud
+repart de son propre compteur (autour de 15). Une fois qu'un build 1001 est arrivé chez Apple, un
+build 16 est refusé pour la même version : App Store Connect exige un numéro strictement croissant.
+Les faire alterner ne marche pas.
+
+### Depuis GitHub (recommandé — tout part du dépôt)
+
+Un envoi se déclenche de deux façons : automatiquement à chaque push sur la branche de
+développement qui touche au code iOS (les commits ne concernant que `api/`, `db/`, `lib/`, la doc
+ou le site sont ignorés — reconstruire à l'identique sur une machine macOS facturée dix fois le
+tarif normal n'apporte rien), ou à la main depuis **Actions → TestFlight → Run workflow**, qui
+accepte un numéro de build imposé.
+
+Le workflow génère le projet, **exécute les tests** (dont `RouteSharingPrivacyTests`, qui vérifie
+que les 300 premiers et derniers mètres d'un tracé partagé sont bien retirés), archive, signe et
+envoie. Comptez vingt à trente minutes, plus dix à trente minutes de traitement chez Apple avant
+que le build apparaisse dans TestFlight.
+
+**Six secrets à créer une fois** (Settings → Secrets and variables → Actions). Aucune de ces
+valeurs ne doit se retrouver dans le dépôt, dans un message ou dans une capture d'écran :
+
+| Secret | D'où il vient |
+| --- | --- |
+| `RUNUP_APP_SECRET` | La même chaîne que la variable Vercel du même nom. Sans elle, le coach répond 401 dans le build et rien d'autre ne casse — donc ça passe inaperçu. |
+| `APPLE_DIST_CERT_P12` | Trousseaux d'accès → clic droit sur « Apple Distribution: … » → Exporter au format `.p12`, puis `base64 -i Certificats.p12 \| pbcopy`. |
+| `APPLE_DIST_CERT_PASSWORD` | Le mot de passe choisi pendant cet export. |
+| `ASC_KEY_ID` | App Store Connect → Users and Access → Integrations → App Store Connect API → **+**, rôle « App Manager ». |
+| `ASC_ISSUER_ID` | Affiché en haut de la même page. |
+| `ASC_KEY_P8` | Le fichier `AuthKey_XXXXXXXXXX.p8`, téléchargeable **une seule fois** à la création de la clé, encodé : `base64 -i AuthKey_XXXXXXXXXX.p8 \| pbcopy`. |
+
+Le Team ID (`SW49TQ25NV`) n'est pas un secret : il est déjà dans `project.yml` et dans
+`ci_scripts/ExportOptions.plist`.
+
+Les profils de signature ne sont pas stockés : les trois cibles sont en signature automatique, et
+`xcodebuild -allowProvisioningUpdates` les crée et les télécharge lui-même avec la clé d'API.
+C'est ce qui évite d'avoir à réexporter trois profils à chaque expiration annuelle.
+
+Le certificat est importé dans un trousseau jetable, détruit à la fin du job même en cas d'échec.
+
+### Depuis Xcode Cloud
+
+`ci_scripts/ci_post_clone.sh` s'exécute tout seul après le clone. Il faut déclarer
+`RUNUP_APP_SECRET` en variable d'environnement du workflow, **cochée « Secret »** (App Store
+Connect → Xcode Cloud → le workflow → Environment → Environment Variables) — sans quoi sa valeur
+apparaîtrait en clair dans les logs de build. Le workflow doit aussi comporter une action
+**Archive** avec distribution **TestFlight (Internal Testing)** : un workflow « Default » se
+contente de construire et de tester, sans jamais rien envoyer.
+
+### Depuis Xcode, à la main
+
+`xcodegen generate`, puis Product → Archive, puis Distribute App → App Store Connect → Upload. Il
+faut alors incrémenter `CFBundleVersion` soi-même dans `project.yml` — aux **trois** endroits, car
+Apple refuse un binaire dont l'app, le widget et la montre ne portent pas le même couple
+(version, build).
+
 ## Coach backend (proxy Vercel)
 
 Le coach n'appelle jamais l'API Anthropic directement depuis l'app — aucune utilisatrice n'a de

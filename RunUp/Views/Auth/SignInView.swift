@@ -326,7 +326,9 @@ struct SignInView: View {
         let clean = usernameField.trimmingCharacters(in: .whitespaces).lowercased()
         do {
             try await ClubService(auth: appState.auth).updateProfile(username: clean)
-            try? await appState.auth.refreshMe()
+            // `refreshMe` rend l'utilisatrice mise à jour ; ici on ne veut que l'effet de bord
+            // (le rafraîchissement du profil en mémoire), d'où le `_ =` explicite.
+            _ = try? await appState.auth.refreshMe()
             dismiss()
         } catch ClubServiceError.badResponse(409, _) {
             usernameError = String(localized: "Ce pseudo est déjà pris.")

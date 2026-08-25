@@ -256,7 +256,7 @@ struct PublishRouteSheet: View {
                 // La photo part APRÈS, et son échec ne remet pas la publication en cause : un
                 // itinéraire sans photo reste utile, une publication perdue ne l'est pas.
                 if let id, let photoDataURI {
-                    try? await service.setRoutePhoto(routeId: id, dataURI: photoDataURI)
+                    _ = try? await service.setRoutePhoto(routeId: id, dataURI: photoDataURI)
                 }
                 isPublishing = false
                 appState.toast(String(localized: "Itinéraire publié 🗺️"))

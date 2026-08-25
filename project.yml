@@ -67,7 +67,7 @@ targets:
           - fr
           - en
           - es
-        CFBundleShortVersionString: "2.4"
+        CFBundleShortVersionString: "2.5"
         CFBundleVersion: "14"
         # Synthesized launch storyboard (no custom .storyboard file) — a plain color is all it
         # can show (the real animated wordmark only runs once app code is live, see
@@ -193,7 +193,7 @@ targets:
         CFBundleDisplayName: RunUp
         # App Store validation requires an extension's version to match its host app's — keep
         # these two in step with `RunUp`'s `CFBundleShortVersionString`/`CFBundleVersion` above.
-        CFBundleShortVersionString: "2.4"
+        CFBundleShortVersionString: "2.5"
         CFBundleVersion: "14"
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
@@ -249,7 +249,7 @@ targets:
       properties:
         CFBundleDisplayName: RunUp
         # Must track the iOS app's version pair exactly — App Store validation requires it.
-        CFBundleShortVersionString: "2.4"
+        CFBundleShortVersionString: "2.5"
         CFBundleVersion: "14"
         WKApplication: true
         WKCompanionAppBundleIdentifier: com.hicsuntco.runup

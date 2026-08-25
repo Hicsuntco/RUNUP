@@ -45,6 +45,23 @@ else
   echo "⚠️  Ajoute-le en variable d'environnement secrète du workflow Xcode Cloud."
 fi
 
+# 3. LE NUMÉRO DE BUILD EST FIGÉ DANS LE DÉPÔT.
+#    `project.yml` porte `CFBundleVersion` en dur, à trois endroits (app, widget, montre), et rien
+#    ne l'incrémente. App Store Connect refuse un couple (version, build) déjà reçu : le deuxième
+#    envoi échouerait, et il faudrait éditer trois lignes à la main avant chacun — avec le risque
+#    qu'elles divergent, ce qu'Apple refuse aussi (les trois cibles doivent porter le même couple).
+#
+#    Xcode Cloud fournit `CI_BUILD_NUMBER`, qui s'incrémente à chaque exécution du workflow. On le
+#    substitue AVANT la génération, donc les trois cibles le reçoivent d'un seul coup et restent
+#    forcément d'accord. En local, la variable est absente et le fichier n'est pas touché.
+if [ -n "$CI_BUILD_NUMBER" ]; then
+  echo "→ Numéro de build imposé par Xcode Cloud : $CI_BUILD_NUMBER"
+  tmp=$(mktemp)
+  sed "s/CFBundleVersion: \"[0-9][0-9]*\"/CFBundleVersion: \"$CI_BUILD_NUMBER\"/g" project.yml > "$tmp"
+  mv "$tmp" project.yml
+  grep -c "CFBundleVersion: \"$CI_BUILD_NUMBER\"" project.yml | xargs -I{} echo "  ({} cibles alignées)"
+fi
+
 echo "→ Génération de RunUp.xcodeproj"
 xcodegen generate
 

@@ -57,7 +57,7 @@ valeurs ne doit se retrouver dans le dépôt, dans un message ou dans une captur
 | `RUNUP_APP_SECRET` | La même chaîne que la variable Vercel du même nom. Sans elle, le coach répond 401 dans le build et rien d'autre ne casse — donc ça passe inaperçu. |
 | `APPLE_DIST_CERT_P12` | Trousseaux d'accès → clic droit sur « Apple Distribution: … » → Exporter au format `.p12`, puis `base64 -i Certificats.p12 \| tr -d '\n' \| gh secret set APPLE_DIST_CERT_P12`. |
 | `APPLE_DIST_CERT_PASSWORD` | Le mot de passe choisi pendant cet export. |
-| `ASC_KEY_ID` | App Store Connect → Users and Access → Integrations → App Store Connect API → **+**, rôle « App Manager ». |
+| `ASC_KEY_ID` | App Store Connect → Users and Access → Integrations → App Store Connect API → **+**, rôle **Admin**. Pas « App Manager » : ce rôle crée des profils de développement mais se voit refuser la signature dans le nuage, et l'export échoue sur `Cloud signing permission error` après avoir archivé — soit un quart d'heure de machine pour découvrir un refus de permission. Le rôle d'une clé ne se change pas après coup ; il faut en recréer une. |
 | `ASC_ISSUER_ID` | Affiché en haut de la même page. |
 | `ASC_KEY_P8` | Le fichier `AuthKey_XXXXXXXXXX.p8`, téléchargeable **une seule fois** à la création de la clé. Posé directement : `base64 -i AuthKey_XXXXXXXXXX.p8 \| tr -d '\n' \| gh secret set ASC_KEY_P8`. |
 

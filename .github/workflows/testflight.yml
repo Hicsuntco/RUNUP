@@ -25,12 +25,16 @@
 #   APPLE_DIST_CERT_PASSWORD  Le mot de passe choisi pendant cet export.
 #
 #   ASC_KEY_ID                App Store Connect → Users and Access → Integrations → App Store
-#   ASC_ISSUER_ID             Connect API → « + ». Rôle « App Manager » (suffisant pour envoyer un
-#   ASC_KEY_P8                build et pour laisser Xcode créer les profils de signature). La page
-#                             affiche le Key ID et l'Issuer ID, et propose UNE SEULE FOIS le
-#                             téléchargement du fichier AuthKey_XXXXXXXXXX.p8 — Apple ne le
+#   ASC_ISSUER_ID             Connect API → « + ». Rôle **Admin**, et pas « App Manager » : ce
+#   ASC_KEY_P8                dernier laisse bien Xcode créer des profils de développement, donc
+#                             l'archivage réussit, puis l'export se fait refuser la signature dans
+#                             le nuage — « Cloud signing permission error », après un quart d'heure
+#                             de machine. Le rôle d'une clé est figé à sa création : pour le
+#                             corriger il faut révoquer la clé et en créer une autre.
+#                             La page affiche le Key ID et l'Issuer ID, et propose UNE SEULE FOIS
+#                             le téléchargement du fichier AuthKey_XXXXXXXXXX.p8 — Apple ne le
 #                             redonne jamais. Encode-le pareil :
-#                                 base64 -i AuthKey_XXXXXXXXXX.p8 | pbcopy
+#                                 base64 -i AuthKey_XXXXXXXXXX.p8 | tr -d '\n' | gh secret set ASC_KEY_P8
 #
 # Le Team ID (SW49TQ25NV) n'est pas un secret : il est déjà dans `project.yml` et dans
 # `ci_scripts/ExportOptions.plist`.

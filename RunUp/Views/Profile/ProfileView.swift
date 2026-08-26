@@ -95,18 +95,13 @@ struct ProfileView: View {
             HStack(spacing: 11) {
                 avatarButton
                 VStack(alignment: .leading, spacing: 5) {
-                    // Un nom n'est pas un titre d'affiche. `displayStyle` route vers Bebas Neue,
-                    // une fonte qui n'a PAS de bas-de-casse : tout ce qui y passe ressort en
-                    // capitales, quoi qu'on ait saisi. « Charlotte » devenait donc « CHARLOTTE »,
-                    // et un nom à casse particulière — d'Arcy, McLeod, van der Berg — y perdrait
-                    // ce qui le distingue. La règle vaut pour les titres écrits par l'app, pas
-                    // pour un nom propre tapé par quelqu'un.
+                    // Un nom n'est pas un titre d'affiche. Il reste en DM Sans même depuis
+                    // qu'Oswald a remplacé Bebas : la fonte d'affichage est condensée, et une
+                    // condensée resserre un nom propre au lieu de le porter. C'est aussi ce qui
+                    // le distingue visuellement des titres écrits par l'app, autour de lui.
                     //
-                    // DM Sans Bold, donc, et la même fonte dans les deux thèmes : `bebas()`
-                    // bascule sur une grasse système en clair, si bien que le nom changeait aussi
-                    // de dessin selon le thème. `minimumScaleFactor` parce que DM Sans est plus
-                    // large que Bebas — un nom long tenait dans la condensée, il doit continuer
-                    // de tenir ici.
+                    // `minimumScaleFactor` parce que DM Sans est plus large qu'une condensée —
+                    // un nom long doit continuer de tenir sur une ligne.
                     Text(profile.name)
                         .font(RUFont.sans(19, weight: .bold))
                         .foregroundColor(RUColor.textPrimary)

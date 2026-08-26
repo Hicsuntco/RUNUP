@@ -67,17 +67,38 @@ enum RUFont {
         return min(scaledSize, size * maxScale)
     }
 
-    /// Bebas Neue's condensed poster caps read energetic/gamified — right for the app's dark
-    /// mode, but it's the single biggest reason light mode didn't read as the sober, premium,
-    /// "digital coach" register she wants competing with Runna. Every `displayStyle()`/`.bebas()`
-    /// call site (hundreds of them) switches automatically in light mode to a heavy system sans
-    /// instead — no other file needs to change. Dark mode is untouched on purpose: two deliberate
-    /// moods, not one compromise.
-    static func bebas(_ size: CGFloat) -> Font {
-        let pointSize = scaled(size)
-        return RUColor.isLight
-            ? .system(size: pointSize, weight: .heavy, design: .default)
-            : .custom("BebasNeue-Regular", fixedSize: pointSize)
+    /// La fonte d'affichage : titres, grands nombres, libellés de boutons.
+    ///
+    /// # Pourquoi ce n'est plus Bebas Neue
+    ///
+    /// Bebas n'a PAS de bas-de-casse. Ce n'est pas un réglage de casse qu'on pourrait retirer :
+    /// la fonte ne contient que des capitales, donc tout ce qui y passe est crié. « Fractionné
+    /// léger 5 × 500 m » s'affichait « FRACTIONNÉ LÉGER 5 × 500 M », et un nom propre y perdait
+    /// sa casse d'origine.
+    ///
+    /// Et le jeton se dédoublait selon le thème : Bebas en sombre, une grasse SYSTÈME en clair.
+    /// L'app changeait donc d'identité typographique selon un interrupteur des réglages — deux
+    /// dessins pour un seul produit, ce qu'aucun des deux thèmes ne demandait.
+    ///
+    /// Oswald SemiBold règle les deux d'un coup : condensée comme Bebas, donc la même énergie sur
+    /// un grand nombre, mais avec de vraies minuscules, et la même dans les deux thèmes.
+    ///
+    /// # Pourquoi 0,86
+    ///
+    /// Les deux fontes ne remplissent pas le même carré. Mesuré sur les fichiers eux-mêmes, à
+    /// taille de point égale : la hauteur de capitale d'Oswald vaut 1,16× celle de Bebas, ses
+    /// chiffres sont 1,24× plus larges, ses capitales 1,34×. Substituée à l'identique, elle
+    /// aurait grossi chaque titre de l'app et fait déborder les rangées denses — colonnes de
+    /// métriques, tuiles de podium, bande de jours — dont les tailles avaient toutes été réglées
+    /// à l'œil contre Bebas.
+    ///
+    /// 0,86 ≈ 1 / 1,16 aligne les hauteurs de capitale : le poids visuel de chaque écran reste
+    /// exactement là où il avait été posé. Les chiffres restent 7 % plus larges (1,24 × 0,86),
+    /// ce que les mises en page absorbent.
+    private static let displayScale: CGFloat = 0.86
+
+    static func display(_ size: CGFloat) -> Font {
+        .custom("Oswald-SemiBold", fixedSize: scaled(size) * displayScale)
     }
 
     static func mono(_ size: CGFloat, weight: DMWeight = .regular) -> Font {
@@ -148,7 +169,10 @@ extension Text {
     /// returns `some View` rather than `Text` — safe everywhere it's used since none of these
     /// call sites concatenate the result with `+` (that requires `Text` on both sides).
     func displayStyle(_ size: CGFloat) -> some View {
-        self.font(RUFont.bebas(size)).tracking(0.5)
+        // Interlettrage à 0 : le +0,5 pt venait de Bebas, dont les capitales très étroites se
+        // collaient les unes aux autres. Oswald est déjà dessinée avec son propre approche ;
+        // l'écarter davantage la ferait flotter.
+        self.font(RUFont.display(size))
     }
 
     /// Class `.eye` — eyebrow label above section/card titles.

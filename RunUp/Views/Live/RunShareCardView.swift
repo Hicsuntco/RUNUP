@@ -113,7 +113,7 @@ struct RunShareCardView: View {
             VStack(spacing: 5) {
                 HStack(spacing: 7) {
                     AppMarkView(size: 22, radius: 6)
-                    Text("RUNUP").font(RUFont.bebas(15)).tracking(4).foregroundStyle(valueStyle)
+                    Text("RUNUP").font(RUFont.display(15)).tracking(4).foregroundStyle(valueStyle)
                 }
                 Text(Self.dateFormatter.string(from: run.date))
                     .font(RUFont.mono(9.5))
@@ -126,7 +126,7 @@ struct RunShareCardView: View {
         .frame(width: 360, height: 640)
     }
 
-    /// One Strava-style stacked stat — small tracked label over a big Bebas value, centered.
+    /// One Strava-style stacked stat — small tracked label over a big display value, centered.
     private func statBlock(_ label: String, _ value: String, valueSize: CGFloat) -> some View {
         VStack(spacing: 1) {
             Text(label)
@@ -135,7 +135,7 @@ struct RunShareCardView: View {
                 .foregroundColor(secondaryColor)
                 .modifier(OutlinedTextShadow(light: outlineIsLight))
             Text(value)
-                .font(RUFont.bebas(valueSize))
+                .font(RUFont.display(valueSize))
                 .foregroundStyle(valueStyle)
                 .modifier(OutlinedTextShadow(light: outlineIsLight))
                 // A whisper of rose around white, a restrained one on the gradient style, none on

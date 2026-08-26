@@ -242,8 +242,8 @@ struct ClubView: View {
                         EyebrowLabel(text: "Le Club", color: RUColor.rose)
                         HStack(spacing: 6) {
                             // Même raison que le nom du Profil : « Ebury » est un nom propre saisi
-                            // par quelqu'un, pas un titre d'écran, et Bebas Neue le rendait
-                            // « EBURY » faute de bas-de-casse.
+                            // par quelqu'un, pas un titre d'écran. La fonte d'affichage lui va
+                            // moins bien qu'au reste : condensée, elle écrase un nom propre.
                             Text(club.name)
                                 .font(RUFont.sans(22, weight: .bold))
                                 .foregroundColor(RUColor.textPrimary)

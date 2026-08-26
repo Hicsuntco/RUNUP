@@ -16,7 +16,10 @@ private enum WTheme {
 
     static let roseVioletGradient = LinearGradient(colors: [rose, violet], startPoint: .topLeading, endPoint: .bottomTrailing)
 
-    static func bebas(_ size: CGFloat) -> Font { .custom("BebasNeue-Regular", size: size) }
+    /// Même fonte d'affichage que l'app, même facteur de compensation — voir
+    /// `RUFont.display` : Oswald remplit son carré autrement que Bebas, et les tailles de
+    /// cet écran ont été réglées contre l'ancienne.
+    static func display(_ size: CGFloat) -> Font { .custom("Oswald-SemiBold", size: size * 0.86) }
     static func sansBold(_ size: CGFloat) -> Font { .custom("DMSans-Bold", size: size) }
     static func sansSemibold(_ size: CGFloat) -> Font { .custom("DMSans-SemiBold", size: size) }
 
@@ -58,7 +61,7 @@ struct WatchStartView: View {
                 // `Text(String)` ne traduit PAS (contrairement à `Text("littéral")`), d'où le
                 // `String(localized:)` explicite sur le repli.
                 Text(connectivity.sessionTitle ?? String(localized: "Course libre"))
-                    .font(WTheme.bebas(21))
+                    .font(WTheme.display(21))
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
@@ -75,7 +78,7 @@ struct WatchStartView: View {
                             if workout.state == .starting {
                                 ProgressView().tint(.white)
                             } else {
-                                Text("COURIR").font(WTheme.bebas(16)).foregroundStyle(.white)
+                                Text("COURIR").font(WTheme.display(16)).foregroundStyle(.white)
                             }
                         }
                         .frame(width: 92, height: 92)
@@ -158,7 +161,7 @@ struct WatchRunView: View {
                 }
 
                 Text(workout.elapsedLabel)
-                    .font(WTheme.bebas(38))
+                    .font(WTheme.display(38))
                     .foregroundStyle(workout.state == .paused ? .white.opacity(0.5) : .white)
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
@@ -208,7 +211,7 @@ struct WatchRunView: View {
     private func metric(value: String, unit: String, accent: Color = .white) -> some View {
         VStack(spacing: 1) {
             Text(value)
-                .font(WTheme.bebas(22))
+                .font(WTheme.display(22))
                 .foregroundStyle(accent)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
@@ -252,7 +255,7 @@ struct WatchSummaryView: View {
 
                     VStack(spacing: 0) {
                         Text(distanceLabel)
-                            .font(WTheme.bebas(34))
+                            .font(WTheme.display(34))
                             .foregroundStyle(.white)
                         Text("KM")
                             .font(WTheme.sansBold(9.5))
@@ -276,7 +279,7 @@ struct WatchSummaryView: View {
 
                 Button(action: { workout.reset() }) {
                     Text("OK")
-                        .font(WTheme.bebas(18))
+                        .font(WTheme.display(18))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 38)
@@ -292,7 +295,7 @@ struct WatchSummaryView: View {
     private func metric(value: String, unit: String, accent: Color = .white) -> some View {
         VStack(spacing: 1) {
             Text(value)
-                .font(WTheme.bebas(18))
+                .font(WTheme.display(18))
                 .foregroundStyle(accent)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)

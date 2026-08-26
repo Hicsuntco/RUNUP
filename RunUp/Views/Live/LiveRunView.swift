@@ -115,7 +115,7 @@ struct LiveRunView: View {
                     Circle().fill(RUColor.rose).frame(width: 6, height: 6)
                         .shadow(color: RUColor.rose.opacity(RUColor.isLight ? 0 : 1), radius: 4)
                     Text(vm?.isAutoPaused == true ? "PAUSE AUTO" : (vm?.isPaused == true ? "EN PAUSE" : "EN DIRECT"))
-                        .font(RUFont.bebas(11)).tracking(2).foregroundColor(RUColor.rose2)
+                        .font(RUFont.display(11)).tracking(2).foregroundColor(RUColor.rose2)
                 }
                 .padding(.horizontal, 12).padding(.vertical, 7)
                 .background(RUColor.rose.opacity(0.16), in: Capsule())
@@ -127,7 +127,7 @@ struct LiveRunView: View {
             // rep, actual elapsed recovery time), not a guessed flat-distance chunk.
             if let label = vm?.segmentLabel {
                 Text(label)
-                    .font(RUFont.bebas(12))
+                    .font(RUFont.display(12))
                     .foregroundColor(.white)
                     .padding(.horizontal, 12).padding(.vertical, 7)
                     .background(.black.opacity(0.4), in: Capsule())

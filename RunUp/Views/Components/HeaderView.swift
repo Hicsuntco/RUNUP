@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Screen header: eyebrow + large Bebas title, optional trailing accessory. Mirrors `Header` in ui.jsx.
+/// Screen header: eyebrow + large display title, optional trailing accessory. Mirrors `Header` in ui.jsx.
 struct HeaderView<Trailing: View>: View {
     var eyebrow: String
     var title: String

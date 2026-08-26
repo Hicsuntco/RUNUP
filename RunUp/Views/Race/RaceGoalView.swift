@@ -162,7 +162,7 @@ struct RaceGoalView: View {
                                     Text(pacingPlan[i].0).font(RUFont.sans(10)).foregroundColor(RUColor.text2)
                                 }
                                 Spacer()
-                                (Text(pacingPlan[i].2).font(RUFont.bebas(18)).foregroundColor(isLast ? RUColor.rose2 : RUColor.textPrimary)
+                                (Text(pacingPlan[i].2).font(RUFont.display(18)).foregroundColor(isLast ? RUColor.rose2 : RUColor.textPrimary)
                                     + Text(" /km").font(RUFont.sans(9)).foregroundColor(RUColor.text2))
                             }
                             .padding(.horizontal, 14).padding(.vertical, 12)

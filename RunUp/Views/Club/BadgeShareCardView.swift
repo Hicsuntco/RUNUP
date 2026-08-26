@@ -34,7 +34,7 @@ struct BadgeShareCardView: View {
                         .tracking(2.5)
                         .foregroundColor(color)
                     Text(badge.name)
-                        .font(RUFont.bebas(34))
+                        .font(RUFont.display(34))
                         .foregroundColor(RUColor.textPrimary)
                         .multilineTextAlignment(.center)
                     Text(badge.detail)
@@ -48,7 +48,7 @@ struct BadgeShareCardView: View {
                 VStack(spacing: 5) {
                     HStack(spacing: 7) {
                         AppMarkView(size: 22, radius: 6, color: RUColor.rose)
-                        Text("RUNUP").font(RUFont.bebas(15)).tracking(4).foregroundColor(RUColor.textPrimary)
+                        Text("RUNUP").font(RUFont.display(15)).tracking(4).foregroundColor(RUColor.textPrimary)
                     }
                     Text(Self.dateFormatter.string(from: .now))
                         .font(RUFont.mono(9.5))

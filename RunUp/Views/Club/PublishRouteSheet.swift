@@ -109,7 +109,7 @@ struct PublishRouteSheet: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Partager cet itinéraire")
-                .font(RUFont.bebas(28))
+                .font(RUFont.display(28))
                 .foregroundColor(RUColor.textPrimary)
             Text("Quelqu'un qui arrive dans le coin verra ton parcours et pourra le suivre.")
                 .font(RUFont.sans(14))

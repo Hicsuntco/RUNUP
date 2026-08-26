@@ -5,6 +5,28 @@ struct ClubInfo: Decodable {
     var name: String
     var inviteCode: String
     var memberCount: Int
+    /// Le club figure-t-il dans l'annuaire public. Optionnel, comme `city` et `isOwner` :
+    /// l'app et le backend ne se déploient jamais en même temps, et un décodage strict de ces
+    /// trois clés viderait tout l'onglet Club pendant la fenêtre où le serveur ne les renvoie
+    /// pas encore.
+    var isPublic: Bool?
+    var city: String?
+    /// Seul le créateur du club peut le publier ou le retirer. Renseigné par le serveur, qui
+    /// revérifie de toute façon à l'écriture.
+    var isOwner: Bool?
+}
+
+/// Un club de l'annuaire, vu par quelqu'un qui n'en est pas membre : juste de quoi décider s'il
+/// vaut la peine d'être rejoint. Ni code d'invitation, ni liste de membres.
+struct DiscoverableClub: Decodable, Identifiable, Hashable {
+    var id: String
+    var name: String
+    var city: String?
+    var memberCount: Int
+}
+
+private struct DiscoverResponse: Decodable {
+    var clubs: [DiscoverableClub]
 }
 
 struct LeaderboardRow: Decodable, Identifiable, Hashable {
@@ -308,6 +330,31 @@ struct ClubService {
 
     func joinClub(inviteCode: String) async throws -> ClubJoinedResponse {
         try await send(path: "api/clubs/join", method: "POST", body: ["inviteCode": inviteCode])
+    }
+
+    /// Rejoindre un club de l'annuaire, sans code. Le serveur n'accepte l'identifiant que si le
+    /// club est effectivement publié — un identifiant connu ne remplace pas un code d'invitation.
+    func joinPublicClub(id: String) async throws -> ClubJoinedResponse {
+        try await send(path: "api/clubs/join", method: "POST", body: ["clubId": id])
+    }
+
+    /// L'annuaire. `query` vide renvoie les clubs les plus fournis ; sinon une recherche sur le
+    /// nom ou la ville.
+    func discoverClubs(query: String = "") async throws -> [DiscoverableClub] {
+        let trimmed = query.trimmingCharacters(in: .whitespaces)
+        let response: DiscoverResponse = try await send(
+            path: "api/clubs/discover",
+            method: "GET",
+            query: trimmed.isEmpty ? nil : ["q": trimmed]
+        )
+        return response.clubs
+    }
+
+    /// Publier son club dans l'annuaire, ou l'en retirer. Réservé à son créateur.
+    func setClubVisibility(isPublic: Bool, city: String?) async throws {
+        var body: [String: Any] = ["isPublic": isPublic]
+        if let city, !city.trimmingCharacters(in: .whitespaces).isEmpty { body["city"] = city }
+        let _: OkResponse = try await send(path: "api/clubs/setVisibility", method: "POST", body: body)
     }
 
     func leaveClub() async throws {

@@ -215,6 +215,72 @@ ambos, así que repetirlas aquí gasta caracteres sin aportar ninguna búsqueda 
 
 ---
 
+# Captures d'écran
+
+> **Pourquoi cette section existe.** Ce fichier soignait le nom, le sous-titre, le texte
+> promotionnel et 4 000 caractères de description dans trois langues — et ne disait rien des
+> captures. Or Apple affiche les trois premières captures directement sur la carte de résultat de
+> recherche, et les mesures publiées du secteur convergent : **la première capture décide de 60 à
+> 80 % de l'installation**, seuls ~17 % des visiteurs font défiler au-delà d'elle, et la durée
+> moyenne passée sur une fiche est de sept secondes. Un jeu de captures construit relève la
+> conversion de 20 à 35 % ; les traduire dans la langue du visiteur en ajoute ~26 %. Autrement dit,
+> tout ce qui précède dans ce fichier pèse moins que ces six images.
+
+## Format
+
+Une seule série à fournir : **iPhone 6,9″, 1320 × 2868 px, portrait**. Depuis 2026 Apple ne
+réclame plus que la plus grande taille de chaque famille et redimensionne lui-même pour les
+appareils plus petits. Pas d'iPad ici (l'app ne cible pas l'iPad), pas de 6,5″.
+
+Les trois localisations ont chacune leur série : une capture en français sur une fiche
+hispanophone annule le bénéfice de la traduction.
+
+## Règles de composition
+
+1. **Le texte est incrusté dans l'image**, au-dessus de l'appareil, en gros. Une capture brute
+   d'écran d'app est illisible à la taille où elle est vue. La phrase doit se lire à 250 px de
+   large — c'est le seul test qui compte, et il se fait en réduisant l'image avant de la déposer.
+2. **Thème sombre** pour les six. C'est le registre premium du secteur, et une image sombre se
+   détache dans une fiche App Store qui est, elle, blanche.
+3. **Une promesse par capture**, jamais deux.
+4. **Rien qui ne soit dans l'app.** Même règle que pour la description (Guideline 2.3) : une
+   capture montrant une fonctionnalité absente est un motif de rejet.
+5. **La preuve sociale sur la capture n°1 dès qu'elle existe** — note moyenne, nombre d'avis ou
+   citation presse. C'est l'ajout unique le plus rentable documenté sur ce format ; tant que l'app
+   n'a pas d'avis, laisser la place vide plutôt que d'inventer.
+
+## Les six images
+
+| # | Écran à capturer | Ce qu'elle doit montrer |
+|---|---|---|
+| 1 | Accueil | Les anneaux du jour, la séance du jour, le bandeau de programme. C'est l'image qui doit dire « app de course sérieuse » en une seconde. |
+| 2 | Coach | Un vrai échange, avec une question précise et une réponse qui montre que le coach connaît l'objectif. C'est ce qu'aucun concurrent direct n'a. |
+| 3 | Course en direct | Carte avec tracé, allure, fréquence cardiaque. La preuve que l'app fait le travail pendant l'effort. |
+| 4 | Club / Amis | Classement, fil d'activité, une sortie de groupe. À refaire une fois le club rempli — un classement à un membre dessert le propos. |
+| 5 | Stats | La bande de volume et la courbe de progression, sur un compte réellement fourni. |
+| 6 | Apple Watch + widget | La montre au poignet et le widget d'écran d'accueil, côte à côte. |
+
+## Phrases incrustées
+
+| # | 🇫🇷 Français | 🇬🇧 English | 🇪🇸 Español |
+|---|---|---|---|
+| 1 | Un plan qui s'adapte à toi | A plan that adapts to you | Un plan que se adapta a ti |
+| 2 | Un vrai coach, pas un chatbot | A real coach, not a chatbot | Un coach de verdad, no un chatbot |
+| 3 | Chaque sortie, en direct | Every run, live | Cada salida, en directo |
+| 4 | Ne cours plus seul | Never run alone | Nunca corras solo |
+| 5 | Ta progression, en clair | Your progress, clearly | Tu progreso, con claridad |
+| 6 | Aussi à ton poignet | On your wrist too | También en tu muñeca |
+
+## Ordre de production
+
+Les captures 1 à 3 et 6 sont réalisables tout de suite sur un compte de démonstration bien
+rempli. Les 4 et 5 demandent des données réelles — un club avec plusieurs membres, un historique
+de plusieurs semaines — et valent d'attendre plutôt que d'être montées avec un classement à une
+ligne et une courbe plate. En attendant, une série de quatre vaut mieux qu'une série de six dont
+deux desservent.
+
+---
+
 # Sections communes (à saisir une seule fois)
 
 ## Catégorie

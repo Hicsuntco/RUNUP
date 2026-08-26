@@ -25,6 +25,7 @@ struct ClubView: View {
     @State private var reportTarget: ReportTarget?
     @State private var pendingBlock: (userId: String, name: String)?
     @State private var showManagement = false
+    @State private var showDirectory = false
     @State private var commentsActivity: FeedItem?
     @State private var selectedBadge: ClubBadge?
     /// Set only when `syncBadgesIfNeeded` finds a key `badges` reports earned that isn't yet in
@@ -268,6 +269,12 @@ struct ClubView: View {
             }
         }
         .padding(.vertical, 2)
+        .sheet(isPresented: $showDirectory) {
+            ClubDirectorySheet(clubService: clubService) { name in
+                appState.toast(String(localized: "Bienvenue dans \(name) !"))
+                Task { await loadIfSignedIn() }
+            }
+        }
         .sheet(isPresented: $showManagement) {
             if let club = board.club {
                 ClubManagementView(
@@ -295,7 +302,13 @@ struct ClubView: View {
                             pendingBlock = (member.id, member.name)
                         }
                     },
-                    onUpdateBio: { bio in try await updateBio(bio) }
+                    onUpdateBio: { bio in try await updateBio(bio) },
+                    onSetVisibility: { isPublic, city in
+                        try await clubService.setClubVisibility(isPublic: isPublic, city: city)
+                        // Recharge : `board.club.isPublic` alimente l'interrupteur, et le laisser
+                        // périmé ferait revenir l'ancienne valeur à la réouverture de la feuille.
+                        await loadIfSignedIn()
+                    }
                 )
             }
         }
@@ -369,6 +382,37 @@ struct ClubView: View {
                         .buttonStyle(PrimaryButtonStyle(isDisabled: joinCode.trimmingCharacters(in: .whitespaces).isEmpty || isLoading))
                         .disabled(joinCode.trimmingCharacters(in: .whitespaces).isEmpty || isLoading)
                 }
+            }
+
+            // La troisième porte, et la seule qui s'ouvre sans connaître déjà quelqu'un. Les deux
+            // au-dessus supposent un club à soi ou un code reçu de quelqu'un — c'est-à-dire
+            // qu'elles ne servent à personne qui découvre l'app seul.
+            VStack(alignment: .leading, spacing: 6) {
+                EyebrowLabel(text: "Ou parcourir l'annuaire", color: RUColor.rose2)
+                Button(action: { showDirectory = true }) {
+                    HStack(spacing: 10) {
+                        Image(systemName: "binoculars.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(RUColor.rose)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("Découvrir des clubs")
+                                .font(RUFont.sans(13.5, weight: .bold))
+                                .foregroundColor(RUColor.textPrimary)
+                            Text("Ceux qui se sont rendus publics")
+                                .font(RUFont.sans(10.5))
+                                .foregroundColor(RUColor.text3)
+                        }
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(RUColor.text3)
+                    }
+                    .padding(.horizontal, 14).padding(.vertical, 12)
+                    .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(PressableStyle())
             }
         }
         .padding(16)

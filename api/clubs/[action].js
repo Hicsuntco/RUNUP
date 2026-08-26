@@ -46,6 +46,12 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'deleteEvent':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleDeleteEvent(req, res, userId);
+    case 'discover':
+      if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleDiscover(req, res, userId);
+    case 'setVisibility':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleSetVisibility(req, res, userId);
     case 'globalWeekly':
       if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
       return handleGlobalWeekly(req, res, userId);
@@ -124,11 +130,24 @@ async function handleJoin(req, res, userId) {
   // mistyped-code retry count.
   if (!(await underDailyCap('join:' + userId, 20))) return res.status(429).json({ error: 'too_many_requests' });
 
-  const { inviteCode } = req.body || {};
-  if (!inviteCode) return res.status(400).json({ error: 'bad_request' });
+  const { inviteCode, clubId } = req.body || {};
 
-  const { rows } = await sql`SELECT id, name FROM clubs WHERE invite_code = ${String(inviteCode).trim().toUpperCase().slice(0, 12)}`;
-  const club = rows[0];
+  // Deux façons d'entrer, et une seule différence entre elles : ce qui tient lieu de preuve
+  // qu'on a le droit d'être là. Le code d'invitation EST cette preuve pour un club privé ; pour
+  // un club de l'annuaire, c'est sa publication volontaire par son créateur. D'où le
+  // `AND is_public` — sans lui, connaître un identifiant suffirait à entrer dans n'importe quel
+  // club, et le code d'invitation ne protégerait plus rien.
+  let club;
+  if (clubId) {
+    if (!isUuid(clubId)) return res.status(400).json({ error: 'bad_request' });
+    const { rows } = await sql`SELECT id, name FROM clubs WHERE id = ${clubId} AND is_public`;
+    club = rows[0];
+  } else if (inviteCode) {
+    const { rows } = await sql`SELECT id, name FROM clubs WHERE invite_code = ${String(inviteCode).trim().toUpperCase().slice(0, 12)}`;
+    club = rows[0];
+  } else {
+    return res.status(400).json({ error: 'bad_request' });
+  }
   if (!club) return res.status(404).json({ error: 'not_found' });
 
   // Same double-submit race as create — the unique index is the real guard, the pre-check above
@@ -220,7 +239,7 @@ async function handleMine(req, res, userId) {
   if (memberRows.length === 0) return res.status(200).json({ club: null, leaderboard: [] });
 
   const clubId = memberRows[0].club_id;
-  const { rows: clubRows } = await sql`SELECT id, name, invite_code FROM clubs WHERE id = ${clubId}`;
+  const { rows: clubRows } = await sql`SELECT id, name, invite_code, is_public, city, created_by FROM clubs WHERE id = ${clubId}`;
   const club = clubRows[0];
 
   // Rank is computed over every member first (a subquery), then blocked users are filtered out
@@ -318,7 +337,13 @@ async function handleMine(req, res, userId) {
   });
 
   res.status(200).json({
-    club: { id: club.id, name: club.name, inviteCode: club.invite_code, memberCount: countRows[0].count },
+    club: {
+      id: club.id, name: club.name, inviteCode: club.invite_code, memberCount: countRows[0].count,
+      isPublic: club.is_public, city: club.city,
+      // Seul le créateur voit et bascule l'interrupteur d'annuaire — le client n'a pas à deviner
+      // qui a le droit, et l'API le revérifie de toute façon côté `setVisibility`.
+      isOwner: club.created_by === userId,
+    },
     leaderboard: leaderboard.map((r) => ({
       id: r.id, name: r.name, xp: r.xp_total, rank: Number(r.rank), isMe: r.id === userId,
       bio: r.bio || null,
@@ -503,6 +528,52 @@ async function handleSyncWeeklyTarget(req, res, userId) {
 // this is a bigger visibility surface than the club-scoped weekly board, which is why it's
 // opt-in (see `global_leaderboard_opt_in`) rather than on for everyone by default. The caller's
 // own block list still applies, same as the club leaderboard.
+// L'annuaire. Ne renvoie que des clubs dont le créateur a explicitement demandé la publication.
+async function handleDiscover(req, res, userId) {
+  const raw = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 40) : '';
+  // Classés par nombre de membres décroissant, et non par date : un annuaire où le premier
+  // résultat est un club vide n'aide personne, et un club qui tourne est celui qu'on a intérêt à
+  // rejoindre. Les clubs à un seul membre restent listés — c'est ainsi qu'ils sortent de un.
+  const { rows } = raw
+    ? await sql`
+        SELECT c.id, c.name, c.city, COUNT(cm.user_id)::int AS member_count
+        FROM clubs c LEFT JOIN club_members cm ON cm.club_id = c.id
+        WHERE c.is_public AND (c.name ILIKE ${'%' + raw + '%'} OR c.city ILIKE ${'%' + raw + '%'})
+        GROUP BY c.id ORDER BY member_count DESC, c.name ASC LIMIT 30
+      `
+    : await sql`
+        SELECT c.id, c.name, c.city, COUNT(cm.user_id)::int AS member_count
+        FROM clubs c LEFT JOIN club_members cm ON cm.club_id = c.id
+        WHERE c.is_public
+        GROUP BY c.id ORDER BY member_count DESC, c.name ASC LIMIT 30
+      `;
+
+  res.status(200).json({
+    clubs: rows.map((r) => ({ id: r.id, name: r.name, city: r.city, memberCount: r.member_count })),
+  });
+}
+
+// Publier ou retirer son club de l'annuaire. Réservé à son créateur.
+async function handleSetVisibility(req, res, userId) {
+  const { rows } = await sql`SELECT id, created_by FROM clubs WHERE created_by = ${userId}`;
+  const club = rows[0];
+  if (!club) return res.status(403).json({ error: 'forbidden' });
+
+  const { isPublic, city } = req.body || {};
+  if (typeof isPublic !== 'boolean') return res.status(400).json({ error: 'bad_request' });
+
+  const cleanCity = typeof city === 'string' ? city.trim().slice(0, 60) : null;
+  // Une ville s'affiche à des inconnus dès la publication : elle passe le même filtre que le nom
+  // du club, sans quoi l'annuaire devient le seul endroit de l'app où l'on peut écrire n'importe
+  // quoi à la vue de tous.
+  if (cleanCity && containsObjectionableContent(cleanCity)) {
+    return res.status(422).json({ error: 'objectionable_content' });
+  }
+
+  await sql`UPDATE clubs SET is_public = ${isPublic}, city = ${cleanCity || null} WHERE id = ${club.id}`;
+  res.status(200).json({ ok: true, isPublic, city: cleanCity || null });
+}
+
 async function handleGlobalWeekly(req, res, userId) {
   const { rows } = await sql`
     SELECT id, name, avatar_data, avatar_url, week_km, rank FROM (

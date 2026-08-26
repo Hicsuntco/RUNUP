@@ -16,14 +16,25 @@ struct ClubManagementView: View {
     var onReport: (LeaderboardRow) -> Void
     var onBlock: (LeaderboardRow) -> Void
     var onUpdateBio: (String) async throws -> Void
+    /// Publier le club dans l'annuaire, ou l'en retirer. Le serveur revérifie que l'appelant en
+    /// est bien le créateur.
+    var onSetVisibility: (Bool, String?) async throws -> Void
 
     @State private var showCreateChallenge = false
+    @State private var isPublic = false
+    @State private var cityText = ""
+    @State private var isSavingVisibility = false
+    @State private var visibilityError: String?
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     inviteCodeCard
+
+                    // Réservé au créateur : c'est lui qui décide d'exposer le nom de son club à
+                    // des inconnus, et le serveur refuse l'écriture à quiconque d'autre.
+                    if club.isOwner == true { directorySection }
 
                     challengeSection
 
@@ -60,8 +71,93 @@ struct ClubManagementView: View {
             .sheet(isPresented: $showCreateChallenge) {
                 CreateChallengeSheet(onCreate: onCreateChallenge)
             }
+            .onAppear {
+                isPublic = club.isPublic ?? false
+                cityText = club.city ?? ""
+            }
         }
         .preferredColorScheme(RUColor.colorScheme)
+    }
+
+    /// L'interrupteur d'annuaire.
+    ///
+    /// Le club est le mécanisme de rétention le plus complet de l'app — classement, défis, fil,
+    /// sorties — et il ne se rejoignait que par code d'invitation, donc uniquement en connaissant
+    /// déjà quelqu'un dedans. Publier ouvre la seule porte qui n'exige pas de contact préalable.
+    ///
+    /// Opt-in strict, et dit comme tel : ce qui devient visible, c'est le nom, la ville et le
+    /// nombre de membres. Ni la liste des membres, ni le fil, ni le code d'invitation.
+    private var directorySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            EyebrowLabel(text: "Annuaire des clubs", color: RUColor.rose2)
+
+            Toggle(isOn: Binding(
+                get: { isPublic },
+                set: { newValue in
+                    isPublic = newValue
+                    Task { await saveVisibility() }
+                }
+            )) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Rendre ce club visible")
+                        .font(RUFont.sans(13.5, weight: .semibold))
+                        .foregroundColor(RUColor.textPrimary)
+                    Text("Nom, ville et nombre de membres. Rien d'autre — ni la liste des membres, ni le fil, ni le code.")
+                        .font(RUFont.sans(10.5))
+                        .foregroundColor(RUColor.text3)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .tint(RUColor.rose)
+            .disabled(isSavingVisibility)
+
+            if isPublic {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Où court le club")
+                        .font(RUFont.sans(10.5, weight: .semibold))
+                        .foregroundColor(RUColor.text3)
+                    HStack {
+                        TextField("", text: $cityText, prompt: Text("Paris, Lyon, Bruxelles…").foregroundColor(RUColor.text3))
+                            .textFieldStyle(.plain)
+                            .font(RUFont.sans(13))
+                            .foregroundColor(RUColor.textPrimary)
+                            .padding(.horizontal, 14).padding(.vertical, 11)
+                            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                        Button("Enregistrer") { Task { await saveVisibility() } }
+                            .buttonStyle(PrimaryButtonStyle(isDisabled: isSavingVisibility))
+                            .disabled(isSavingVisibility)
+                            .fixedSize()
+                    }
+                }
+            }
+
+            if let visibilityError {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 11))
+                    Text(visibilityError).font(RUFont.sans(11))
+                }
+                .foregroundColor(RUColor.rose)
+            }
+        }
+        .padding(16)
+        .ruCard()
+    }
+
+    private func saveVisibility() async {
+        isSavingVisibility = true
+        defer { isSavingVisibility = false }
+        visibilityError = nil
+        do {
+            try await onSetVisibility(isPublic, cityText)
+        } catch let ClubServiceError.badResponse(status, _) where status == 422 {
+            visibilityError = String(localized: "Ce nom de ville n'est pas accepté.")
+        } catch {
+            // L'interrupteur revient à son état d'avant : afficher « visible » alors que le
+            // serveur ne l'a pas enregistré serait le pire des deux mondes.
+            isPublic = club.isPublic ?? false
+            visibilityError = String(localized: "Impossible d'enregistrer — vérifie ta connexion.")
+        }
     }
 
     private var challengeSection: some View {

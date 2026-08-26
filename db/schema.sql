@@ -54,6 +54,24 @@ CREATE TABLE IF NOT EXISTS clubs (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- L'ANNUAIRE DE CLUBS.
+--
+-- Jusqu'ici un club ne se rejoignait QUE par code d'invitation : il fallait déjà connaître
+-- quelqu'un dedans pour y entrer. C'est cohérent pour un club d'amis, et c'est une impasse pour
+-- un compte neuf — or le club est le mécanisme de rétention le mieux documenté de l'app (défis,
+-- classement, fil), et il ne servait à personne n'ayant pas déjà un contact.
+--
+-- `is_public` est un OPT-IN, à false par défaut : cette migration ne rend visible aucun club
+-- existant, et seul le créateur peut le basculer. Le code d'invitation continue de fonctionner
+-- exactement pareil, pour les clubs privés comme publics.
+ALTER TABLE clubs ADD COLUMN IF NOT EXISTS is_public BOOLEAN NOT NULL DEFAULT false;
+-- Où le club court. Texte libre saisi par le créateur : l'app n'a ni géolocalisation de club ni
+-- référentiel de villes, et en bâtir un pour trier un annuaire de cette taille serait
+-- disproportionné.
+ALTER TABLE clubs ADD COLUMN IF NOT EXISTS city TEXT;
+-- Index partiel : l'annuaire ne lit que les clubs publics, qui resteront une petite minorité.
+CREATE INDEX IF NOT EXISTS idx_clubs_public ON clubs(is_public) WHERE is_public;
+
 CREATE TABLE IF NOT EXISTS club_members (
   club_id UUID NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,

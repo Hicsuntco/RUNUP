@@ -3,7 +3,7 @@
 Contenu prêt à copier-coller dans App Store Connect (App Information / Fiche de l'app).
 
 L'app est livrée avec trois localisations réelles (`CFBundleLocalizations: fr, en, es` dans
-project.yml, adossées à 744 clés traduites dans `RunUp/Resources/Localizable.xcstrings`) — la fiche
+project.yml, adossées à 1 119 clés traduites dans `RunUp/Resources/Localizable.xcstrings`) — la fiche
 doit donc exister dans les trois, sinon App Store Connect n'expose l'app qu'en français et les
 recherches anglophones/hispanophones ne la trouvent jamais. Chaque locale a sa propre section
 ci-dessous ; les sections communes (catégorie, âge, URLs, copyright) ne se saisissent qu'une fois.
@@ -60,6 +60,9 @@ Un widget sur l'écran d'accueil pour tes objectifs du jour et ta série en cour
 STATS QUI COMPTENT VRAIMENT
 Tendance d'allure, records personnels, prédictions de temps sur 5 km, 10 km, semi et marathon, charge d'entraînement sur 8 semaines, carte de tous tes parcours, et suivi d'usure de tes chaussures.
 
+OÙ COURIR QUAND TU NE CONNAIS PAS L'ENDROIT
+Tu débarques dans une ville et tu ne sais pas où aller courir ? La carte montre les itinéraires publiés par d'autres coureurs autour de toi, avec leur distance, leur dénivelé et souvent une photo du coin. Filtre par longueur, garde ceux qui te tentent, ouvre le départ dans Plans. Tes propres sorties se partagent en deux gestes — et les 300 premiers et derniers mètres sont retirés avant l'envoi : personne ne verra d'où tu es partie ni où tu es rentrée.
+
 CLUB & COMMUNAUTÉ
 Classement de la semaine et classement général, défis de club, sorties de groupe, fil d'activité et badges. Et si tu préfères suivre quelques personnes plutôt qu'un club entier, un fil d'amis fait exactement ça.
 
@@ -71,7 +74,7 @@ Nécessite iOS 17 ou version ultérieure. La connexion à Apple Santé est optio
 
 ## Mots-clés (100 caractères max, séparés par des virgules sans espace)
 ```
-running,entrainement,fractionné,cardio,marathon,semi,10km,trail,vma,jogging,footing,allure
+running,entrainement,fractionné,cardio,marathon,semi,10km,trail,vma,jogging,footing,allure,parcours
 ```
 
 Aucun de ces mots n'apparaît dans le nom ni dans le sous-titre : Apple indexe déjà tous les mots du
@@ -79,7 +82,7 @@ titre et du sous-titre, et les répéter ici ne fait que consommer des caractèr
 seule requête. C'est ce que faisait l'ancienne liste — `course`, `coach` et `coureuse` (même racine
 que `course`) y étaient tous déjà couverts par « RUNUP : Coach de Course » / « Ton coach personnel
 de course ». Les 33 caractères récupérés servent maintenant à des termes réellement nouveaux
-(`trail`, `jogging`, `footing`, `allure`). Séparateur : virgule seule, sans espace — un espace
+(`trail`, `jogging`, `footing`, `allure`, `parcours`). Séparateur : virgule seule, sans espace — un espace
 après la virgule compte dans les 100 caractères et n'apporte rien.
 
 ---
@@ -126,6 +129,9 @@ A Home Screen widget for today's goals and your current streak. During a run, th
 STATS THAT ACTUALLY MEAN SOMETHING
 Pace trend, personal records, finish-time predictions for 5K, 10K, half and marathon, eight weeks of training load, a map of every route you've run, and shoe mileage tracking.
 
+WHERE TO RUN WHEN YOU DON'T KNOW THE PLACE
+New city, no idea where to run? The map shows routes published by other runners around you, with distance, elevation and often a photo of the spot. Filter by length, keep the ones you like, open the start in Maps. Sharing your own runs takes two taps — and the first and last 300 metres are stripped before anything is sent, so nobody sees where you set off from or came home to.
+
 CLUB & COMMUNITY
 Weekly and all-time leaderboards, club challenges, group runs, an activity feed and badges. And if you'd rather follow a handful of people than a whole club, a friends feed does exactly that.
 
@@ -137,7 +143,7 @@ Requires iOS 17 or later. Connecting Apple Health is optional but recommended fo
 
 ## Keywords (100 characters max, comma-separated, no spaces)
 ```
-run,5k,10k,half,marathon,pace,tracker,gps,interval,cardio,jog,fitness,workout,race,training
+run,5k,10k,half,marathon,pace,tracker,gps,interval,cardio,jog,fitness,workout,routes,race,training
 ```
 
 None of these repeats a word from the name or subtitle — Apple already indexes every word in both,
@@ -187,6 +193,9 @@ Un widget en la pantalla de inicio con tus objetivos del día y tu racha. Mientr
 ESTADÍSTICAS QUE SIRVEN PARA ALGO
 Tendencia de ritmo, récords personales, predicciones de tiempo en 5 km, 10 km, media y maratón, ocho semanas de carga de entrenamiento, un mapa con todos tus recorridos y control del desgaste de tus zapatillas.
 
+DÓNDE CORRER CUANDO NO CONOCES EL SITIO
+¿Llegas a una ciudad nueva y no sabes por dónde correr? El mapa muestra las rutas publicadas por otros corredores a tu alrededor, con su distancia, su desnivel y muchas veces una foto del lugar. Filtra por longitud, guarda las que te apetezcan, abre el inicio en Mapas. Compartir tus propias salidas son dos toques — y los primeros y últimos 300 metros se recortan antes de enviar nada: nadie verá de dónde saliste ni dónde volviste.
+
 CLUB Y COMUNIDAD
 Clasificación semanal y general, retos de club, quedadas para correr, muro de actividad e insignias. Y si prefieres seguir a unas pocas personas en vez de a un club entero, hay un muro de amigos que hace justo eso.
 
@@ -198,7 +207,7 @@ Requiere iOS 17 o posterior. Conectar Apple Salud es opcional, pero recomendable
 
 ## Palabras clave (100 caracteres máx., separadas por comas sin espacios)
 ```
-correr,maraton,10k,media,ritmo,entrenamiento,cardio,gps,series,fondo,trote,carrera,fitness
+correr,maraton,10k,media,ritmo,entrenamiento,cardio,gps,series,fondo,trote,rutas,carrera,fitness
 ```
 
 Ninguna repite una palabra del nombre ni del subtítulo: Apple ya indexa todas las palabras de
@@ -215,13 +224,52 @@ ambos, así que repetirlas aquí gasta caracteres sin aportar ninguna búsqueda 
 ## Classification d'âge
 Aucun contenu sensible (pas de violence, contenu adulte, jeu d'argent...) → typiquement **4+**. À confirmer via le questionnaire App Store Connect.
 
+Répondre **oui** au contenu généré par les utilisateurs : noms de clubs, messages du fil, photos de
+profil, et désormais les itinéraires publiés — leur nom, leurs notes libres, leur photo. La
+Guideline 1.2 exige alors quatre choses, toutes présentes, à savoir citer si la revue les demande :
+un filtre sur le contenu publié (`lib/moderation.js`, appliqué aux noms et aux notes d'itinéraire),
+un signalement dans l'app (`api/moderation/[action].js` accepte `route` comme cible, au même titre
+que `user`, `club`, `activity` et `comment`), un blocage entre utilisatrices (`lib/social.js`,
+`isBlockedEitherWay`, qui masque les itinéraires dans les deux sens), et un contact — l'URL de
+support ci-dessous.
+
 ## Confidentialité (App Privacy)
-L'app collecte des événements d'usage first-party (voir `api/events.js` et
-`RunUp/Services/Analytics.swift`) : à déclarer en **Analytics / Product Interaction**, avec
-**"Data Not Linked to You"** pour les événements pré-inscription (identifiant anonyme uniquement) et
-**"Data Linked to You"** dès qu'un compte Club existe. Répondre **non** à "Tracking" : aucun SDK
-tiers, aucun IDFA, aucun partage avec un courtier de données — donc pas d'App Tracking Transparency
-à afficher.
+
+Cinq familles de données à déclarer. Une déclaration incomplète est un motif de rejet au même titre
+qu'une description inexacte, et la moitié de ce qui suit n'existait pas avant les itinéraires
+partagés.
+
+**Localisation — précise, liée à l'utilisatrice.** Publier un itinéraire envoie un tracé GPS
+(`routes.points`, `start_lat`, `start_lng`, `locality`) rattaché au compte et **visible
+publiquement**. Les 300 premiers et derniers mètres sont retirés sur l'appareil avant l'envoi
+(`RouteGeometry.trimmedForSharing`) : ça protège le domicile, mais ça ne change rien à la
+déclaration — c'est bien de la localisation précise, collectée et liée. Usage : **App
+Functionality**. À noter pour la revue : rien ne part tant qu'aucun itinéraire n'est publié, le
+suivi de course seul reste sur l'appareil et dans Apple Santé.
+
+**Contenu utilisateur — photos, lié à l'utilisatrice.** La photo de profil (`users.avatar_url`) et
+la photo facultative d'un itinéraire (`routes.photo_url`), toutes deux stockées dans Vercel Blob et
+lisibles par leur URL. Usage : **App Functionality**.
+
+**Santé et forme physique — lié à l'utilisatrice.** Le fil du Club et les classements conservent la
+distance et le libellé de chaque sortie (`activities.distance_km`, `activities.text`), ainsi que la
+distance, le dénivelé et la durée de chaque itinéraire publié. En revanche, ce qui est lu dans
+Apple Santé ne quitte jamais l'appareil. Usage : **App Functionality**.
+
+**Coordonnées et identifiants — liés à l'utilisatrice.** Un compte Club stocke un nom et une adresse
+e-mail, ou l'identifiant opaque de Sign in with Apple (`users.name`, `users.email`,
+`users.apple_sub`). Usage : **App Functionality**.
+
+**Analytique.** Événements d'usage first-party (voir `api/events.js` et
+`RunUp/Services/Analytics.swift`) : **Analytics / Product Interaction**, en **"Data Not Linked to
+You"** pour les événements pré-inscription (identifiant anonyme uniquement) et **"Data Linked to
+You"** dès qu'un compte Club existe.
+
+**Tracking : non.** Aucun SDK tiers, aucun IDFA, aucun partage avec un courtier de données — donc
+pas d'App Tracking Transparency à afficher.
+
+Tout ce qui précède disparaît à la suppression du compte : `routes` et `route_saves` sont en
+`ON DELETE CASCADE` sur `users`, ce que `api/account/[action].js` promet explicitement.
 
 ## URLs requises
 - **URL de support** : `mailto:charlottegrudep@gmail.com`

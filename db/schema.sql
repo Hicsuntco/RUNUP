@@ -397,6 +397,23 @@ ALTER TABLE activities ADD COLUMN IF NOT EXISTS elevation_gain_m INTEGER;
 -- doesn't exist.
 ALTER TABLE activities ADD COLUMN IF NOT EXISTS is_personal_record BOOLEAN NOT NULL DEFAULT false;
 
+-- Ce que ce post RACONTE, dans une forme qui ne dépend d'aucune langue.
+--
+-- `text` est une phrase toute faite — « a couru 8,2 km · Sortie longue » — composée sur l'appareil
+-- de celle qui poste, DANS SA LANGUE, puis servie telle quelle à tout le monde. Une app qui se
+-- vend en trois langues affichait donc un fil français à ses lectrices anglophones. Le titre de
+-- séance est le pire des deux morceaux : il vient de `RunRecord.title`, qui porte depuis un moment
+-- le libellé AFFICHÉ au moment de la course, donc déjà traduit — dans la langue de l'autrice.
+--
+-- Cette colonne porte à la place un identifiant stable : la valeur brute d'un `SessionKind`
+-- (`long_run`, `vo2max_intervals`…) pour une course, ou `daily_goals` pour le badge des trois
+-- objectifs. L'appareil qui LIT le fil recompose la phrase dans SA langue.
+--
+-- NULL pour tout ce qui précède cette colonne, et pour une séance hors plan : le client retombe
+-- alors sur `text`, qui reste la meilleure chose dont il dispose. `text` n'est pas remplacé — il
+-- reste ce que reçoit la notification push, qui part du serveur et n'a aucune langue à consulter.
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS content_key TEXT;
+
 -- ---------------------------------------------------------------------------
 -- Shared routes — "I'm somewhere new, where do I run?"
 -- ---------------------------------------------------------------------------

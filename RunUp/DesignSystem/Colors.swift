@@ -146,6 +146,18 @@ enum RUColor {
         return (r * a + pr * (1 - a), g * a + pg * (1 - a), b * a + pb * (1 - a))
     }
 
+    /// Le taux de teinte des cartes « destination » du Profil (Amis, Club, Itinéraires).
+    ///
+    /// 7 % était calibré en sombre, où la carte de base est déjà une translucidité blanche à
+    /// 4,5 % sur du quasi-noir : une pointe de couleur y suffit à distinguer deux cartes. Posé
+    /// sur `card` en clair — du BLANC PUR depuis la refonte du thème clair — le même 7 % rend
+    /// un blanc à peine rosé que le contour teinté portait seul. Les trois cartes redevenaient
+    /// trois rectangles blancs identiques, exactement ce que la teinte existe pour éviter.
+    ///
+    /// Le sombre garde sa valeur : l'y monter éclaircirait les cartes teintées au point de les
+    /// faire flotter au-dessus de toutes les autres surfaces de la page.
+    static var socialTintAmount: Double { isLight ? 0.12 : 0.07 }
+
     static func tint(_ color: Color, _ amount: Double, over base: Color) -> Color {
         let c = flattened(color)
         let b = flattened(base)
@@ -186,8 +198,21 @@ enum RUColor {
         // parfaitement invisible. En clair il descend donc vers `card`, la surface à laquelle
         // elle appartient. Le sombre garde son ancrage sur `bg` : c'est là que sa teinte
         // rose-noir doit se fondre.
+        //
+        // Deuxième correction, la teinte claire : `#FBF8FB` est un rose codé en dur — il restait
+        // rose quelle que soit la palette choisie dans Apparence, si bien qu'en thème clair une
+        // app réglée sur Lime ou Cyan gardait des cartes héro rosées, seule survivance de
+        // l'ancien accent fixe. Et à 3 points de blanc, il ne se voyait de toute façon
+        // pratiquement pas : une carte héro claire était indiscernable d'une carte ordinaire,
+        // alors que c'est précisément sa raison d'être. Un vrai lavis d'accent à 6 %, dérivé de
+        // la palette courante comme tout le reste du thème.
+        // Et la teinte sombre a exactement le même défaut : `#20101C` est un rose-noir codé en
+        // dur, resté tel quel quand le nuancier est arrivé. Mesuré, il vaut le rose de marque à
+        // ~9 % sur `bg` — la valeur est donc reprise à l'identique, simplement exprimée à partir
+        // de l'accent courant. Rendu inchangé sous la palette Rose (celle par défaut), corrigé
+        // sous les sept autres.
         LinearGradient(
-            colors: [isLight ? Color(hex: 0xFBF8FB) : Color(hex: 0x20101C), isLight ? card : bg],
+            colors: [isLight ? tint(rose, 0.06, over: card) : tint(rose, 0.09, over: bg), isLight ? card : bg],
             startPoint: .top,
             endPoint: .bottom
         )

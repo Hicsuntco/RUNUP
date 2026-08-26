@@ -24,7 +24,20 @@ struct ProfileView: View {
     @State private var isLoadingSocial = true
     @State private var board: ClubBoard?
     @State private var friendsList: FriendsList?
-    @State private var todaysFriendActivityCount = 0
+    /// Le fil lui-même, plus seulement son décompte : la carte Amis en montre désormais les deux
+    /// premières lignes. « 3 nouvelles activités aujourd'hui » demande d'aller voir pour savoir
+    /// de quoi il s'agit ; deux lignes réelles répondent avant qu'on ait à taper.
+    @State private var friendsFeed: [FeedItem] = []
+
+    private var todaysFriendActivityCount: Int {
+        friendsFeed.filter { Calendar.current.isDateInToday($0.createdAt) }.count
+    }
+
+    private static let relativeFormatter: RelativeDateTimeFormatter = {
+        let f = RelativeDateTimeFormatter()
+        f.unitsStyle = .short
+        return f
+    }()
 
     private static let raceDateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -39,6 +52,17 @@ struct ProfileView: View {
                 header
 
                 statRow
+
+                // Local, donc affiché avant toute considération de compte : ces deux blocs sont
+                // les seuls de la page à ne rien attendre du réseau, et c'est précisément ce que
+                // regardait un écran vide au premier lancement.
+                if !runs.isEmpty {
+                    WeekVolumeStrip(runs: runs)
+                }
+
+                if !firstStepsDone {
+                    firstStepsCard
+                }
 
                 if !auth.isSignedIn {
                     signInPrompt
@@ -307,7 +331,7 @@ struct ProfileView: View {
             // posé par-dessus : c'est la règle du fichier de tokens, et ici elle compte vraiment —
             // en thème sombre `card` est lui-même une translucidité blanche, empiler deux couches
             // translucides y donnerait une carte plus claire que toutes les autres de la page.
-            .background(shape.fill(RUColor.tint(tint, 0.07, over: RUColor.card)))
+            .background(shape.fill(RUColor.tint(tint, RUColor.socialTintAmount, over: RUColor.card)))
             // Le contour, lui, reste translucide : `RUColor.line` est une couleur à alpha (noir
             // 14% / blanc 8%) et `tint(_:over:)` rend une couleur opaque — mélanger dedans
             // donnerait un trait quasi noir en thème clair au lieu d'un filet.
@@ -381,7 +405,15 @@ struct ProfileView: View {
 
                     teaserDivider
 
-                    if let friendsList, !friendsList.following.isEmpty {
+                    // Trois cas, du plus riche au plus pauvre : ce que les amis ont couru, sinon
+                    // qui sont les amis, sinon l'invitation à en trouver.
+                    if !friendsFeed.isEmpty {
+                        VStack(alignment: .leading, spacing: 9) {
+                            ForEach(friendsFeed.prefix(2)) { item in
+                                feedPreviewRow(item)
+                            }
+                        }
+                    } else if let friendsList, !friendsList.following.isEmpty {
                         HStack(spacing: 8) {
                             HStack(spacing: -7) {
                                 ForEach(friendsList.following.prefix(3)) { user in
@@ -389,11 +421,7 @@ struct ProfileView: View {
                                         .overlay(Circle().stroke(RUColor.bg, lineWidth: 2))
                                 }
                             }
-                            Text(todaysFriendActivityCount > 0
-                                 ? (todaysFriendActivityCount > 1
-                                    ? String(localized: "\(todaysFriendActivityCount) nouvelles activités aujourd'hui")
-                                    : String(localized: "\(todaysFriendActivityCount) nouvelle activité aujourd'hui"))
-                                 : "Rien de nouveau aujourd'hui")
+                            Text("Rien de nouveau aujourd'hui")
                                 .font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.text2)
                         }
                     } else {
@@ -413,11 +441,16 @@ struct ProfileView: View {
             appState.openRoutesTabOnNextVisit = true
             appState.go(.club)
         }) {
-            socialCard(tint: RUColor.violet) {
+            // Cyan, et non violet comme Amis : les trois destinations de la page portaient deux
+            // teintes pour trois cartes, si bien qu'Amis et Itinéraires — les deux qui n'ont rien
+            // à voir l'une avec l'autre — se lisaient comme une paire. Trois teintes, trois
+            // endroits. Le cyan est déjà un jeton sémantique de l'app, pas une couleur inventée
+            // ici, et il suit le thème clair/sombre comme les deux autres.
+            socialCard(tint: RUColor.cyan) {
                 HStack(spacing: 12) {
                     ZStack {
-                        Circle().fill(RUColor.violet.opacity(0.18))
-                        Image(systemName: "map.fill").font(.system(size: 15)).foregroundColor(RUColor.violet)
+                        Circle().fill(RUColor.cyan.opacity(0.18))
+                        Image(systemName: "map.fill").font(.system(size: 15)).foregroundColor(RUColor.cyan)
                     }
                     .frame(width: 40, height: 40)
 
@@ -466,6 +499,12 @@ struct ProfileView: View {
 
                     teaserDivider
 
+                    // Le podium seulement à partir de deux membres : un « 1ᵉʳ » solitaire dans un
+                    // club d'une personne se moque de celle qui le lit.
+                    if topThree.count >= 2 {
+                        clubPodium
+                    }
+
                     if let event = board?.events?.first {
                         HStack(spacing: 4) {
                             Image(systemName: "mappin.circle.fill").font(.system(size: 11)).foregroundColor(RUColor.rose)
@@ -492,6 +531,262 @@ struct ProfileView: View {
         .buttonStyle(PressableStyle())
     }
 
+    // MARK: - Feed preview
+
+    /// Une ligne du fil des amis, réduite à ce qui se lit sans réfléchir : qui, combien, quand.
+    private func feedPreviewRow(_ item: FeedItem) -> some View {
+        HStack(spacing: 8) {
+            AvatarView(
+                urlString: item.avatarUrl,
+                base64DataURI: item.avatarBase64,
+                initial: String(item.name.prefix(1)),
+                size: 22,
+                seed: item.userId
+            )
+            VStack(alignment: .leading, spacing: 1) {
+                HStack(spacing: 5) {
+                    Text(item.name)
+                        .font(RUFont.sans(10.5, weight: .bold))
+                        .foregroundColor(RUColor.textPrimary)
+                        .lineLimit(1)
+                    if item.isPersonalRecord {
+                        // Un record personnel est la seule chose du fil qui mérite qu'on lève les
+                        // yeux — c'est aussi ce qui fait applaudir, donc ce qui fait revenir.
+                        Text("RECORD")
+                            .font(RUFont.sans(7.5, weight: .bold))
+                            .tracking(0.6)
+                            .foregroundColor(RUColor.amber)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1)
+                            .overlay(Capsule().stroke(RUColor.amber.opacity(0.45), lineWidth: RUSpacing.hairline))
+                    }
+                }
+                Text(feedMeta(item))
+                    .font(RUFont.mono(9.5))
+                    .foregroundColor(RUColor.text3)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 0)
+            if item.kudos > 0 {
+                HStack(spacing: 3) {
+                    Image(systemName: "hands.clap.fill").font(.system(size: 8))
+                    Text("\(item.kudos)").font(RUFont.mono(9))
+                }
+                .foregroundColor(RUColor.text3)
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    /// « 8,2 km · 5:12 /km · il y a 2 h » — chaque colonne seulement si elle a été mesurée, comme
+    /// `ActivityFeedRow` : une séance de renfo n'a pas de distance, et un « 0 km » ferait passer
+    /// une absence de mesure pour une mesure.
+    private func feedMeta(_ item: FeedItem) -> String {
+        var parts: [String] = []
+        if let km = item.distanceKm, km > 0 {
+            parts.append(String(format: "%.1f km", km))
+        }
+        if let pace = item.avgPace, !pace.isEmpty {
+            parts.append("\(pace) /km")
+        }
+        parts.append(Self.relativeFormatter.localizedString(for: item.createdAt, relativeTo: .now))
+        return parts.joined(separator: " · ")
+    }
+
+    // MARK: - Club podium
+
+    private var topThree: [LeaderboardRow] { Array((board?.leaderboard ?? []).prefix(3)) }
+
+    /// Le classement du club, réduit à trois tuiles. La carte disait « 14 membres » — un nombre
+    /// qui ne donne envie de rien. Trois noms, trois scores et sa propre place dedans, si.
+    private var clubPodium: some View {
+        HStack(spacing: 6) {
+            ForEach(topThree) { row in
+                podiumCell(row)
+            }
+        }
+    }
+
+    private func podiumCell(_ row: LeaderboardRow) -> some View {
+        let shape = RoundedRectangle(cornerRadius: RUSpacing.radiusCompact - 2, style: .continuous)
+        return VStack(spacing: 3) {
+            AvatarView(
+                urlString: row.avatarUrl,
+                base64DataURI: row.avatarBase64,
+                initial: String(row.name.prefix(1)),
+                size: 20,
+                // `seed: nil` pour soi — le dégradé de marque, comme partout ailleurs dans l'app
+                // où « moi » apparaît à côté des autres.
+                seed: row.isMe ? nil : row.id
+            )
+            Text(rankLabel(row.rank))
+                .font(RUFont.sans(8, weight: .bold))
+                .foregroundColor(RUColor.text3)
+            Text("\(row.xp)")
+                .displayStyle(15)
+                .foregroundColor(RUColor.textPrimary)
+            Text(row.isMe ? String(localized: "Toi") : row.name)
+                .font(RUFont.sans(8.5))
+                .foregroundColor(RUColor.text2)
+                .lineLimit(1)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 5)
+        .background(shape.fill(row.isMe ? RUColor.tint(RUColor.rose, 0.14, over: RUColor.card2) : RUColor.card2))
+        .overlay(shape.stroke(row.isMe ? RUColor.rose.opacity(0.35) : RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+        .accessibilityElement(children: .combine)
+    }
+
+    private func rankLabel(_ rank: Int) -> String {
+        rank == 1 ? String(localized: "1ᵉʳ") : "\(rank)ᵉ"
+    }
+
+    // MARK: - Premiers pas
+
+    private var stepGoalDone: Bool { !profile.goalDisplay.isEmpty }
+    private var stepRunDone: Bool { !runs.isEmpty }
+    private var stepSocialDone: Bool {
+        board?.club != nil || !(friendsList?.following.isEmpty ?? true)
+    }
+    private var doneStepCount: Int { [stepGoalDone, stepRunDone, stepSocialDone].filter { $0 }.count }
+    /// La carte disparaît d'elle-même une fois les trois franchis — elle n'a pas de réglage, pas
+    /// de croix à fermer, et ne revient jamais.
+    private var firstStepsDone: Bool { doneStepCount == 3 }
+
+    /// Ce qui remplace le vide d'un compte neuf.
+    ///
+    /// Au premier lancement cet écran affichait trois zéros et deux cartes qui annonçaient elles
+    /// aussi zéro — soit, sur la moitié haute, cinq façons de dire « il n'y a rien », puis 60 %
+    /// de page vide. Or il y a bien quelque chose à faire, et c'est même la seule chose qui
+    /// compte à ce moment-là. Un parcours en trois pas, dont le premier est déjà validé par
+    /// l'onboarding : commencer à 1/3 plutôt qu'à 0/3 n'est pas cosmétique, c'est la différence
+    /// entre une liste de corvées et quelque chose de déjà entamé.
+    private var firstStepsCard: some View {
+        VStack(alignment: .leading, spacing: 11) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 2) {
+                    EyebrowLabel(text: "Premiers pas")
+                    Text("Trois choses et c'est parti")
+                        .font(RUFont.sans(13.5, weight: .bold))
+                        .foregroundColor(RUColor.textPrimary)
+                }
+                Spacer(minLength: 8)
+                Text("\(doneStepCount)/3")
+                    .font(RUFont.mono(11, weight: .medium))
+                    .foregroundColor(RUColor.text2)
+            }
+
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(RUColor.bg2)
+                    Capsule()
+                        .fill(RUColor.accentGradient(from: .leading, to: .trailing))
+                        .frame(width: max(0, geo.size.width * CGFloat(doneStepCount) / 3))
+                }
+            }
+            .frame(height: 3)
+
+            VStack(spacing: 0) {
+                stepRow(
+                    index: 1,
+                    done: stepGoalDone,
+                    title: String(localized: "Ton objectif est fixé"),
+                    detail: objectifText ?? String(localized: "Choisis ce que tu prépares"),
+                    action: { appState.go(.home) }
+                )
+                stepRow(
+                    index: 2,
+                    done: stepRunDone,
+                    title: String(localized: "Enregistre ta première sortie"),
+                    detail: String(localized: "Même 2 km — c'est ce qui démarre tout"),
+                    cta: String(localized: "COURIR"),
+                    action: { appState.startRun() }
+                )
+                stepRow(
+                    index: 3,
+                    done: stepSocialDone,
+                    title: String(localized: "Rejoins un club, suis un coureur"),
+                    detail: String(localized: "Courir seul est le meilleur moyen d'arrêter"),
+                    cta: String(localized: "VOIR"),
+                    isLast: true,
+                    action: {
+                        // Déconnectée, la porte n'est pas le club : c'est le compte. L'envoyer sur
+                        // un onglet qui lui redemandera de se connecter serait un aller-retour.
+                        if auth.isSignedIn {
+                            appState.openFriendsTabOnNextVisit = true
+                            appState.go(.club)
+                        } else {
+                            showSignIn = true
+                        }
+                    }
+                )
+            }
+        }
+        .padding(15)
+        .ruCard()
+    }
+
+    private func stepRow(
+        index: Int,
+        done: Bool,
+        title: String,
+        detail: String,
+        cta: String? = nil,
+        isLast: Bool = false,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            VStack(spacing: 0) {
+                HStack(spacing: 10) {
+                    ZStack {
+                        Circle().fill(done ? RUColor.rose : Color.clear)
+                        Circle().strokeBorder(done ? Color.clear : RUColor.text4, lineWidth: 1.5)
+                        if done {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundColor(RUColor.onRose)
+                        } else {
+                            Text("\(index)")
+                                .font(RUFont.sans(9, weight: .bold))
+                                .foregroundColor(RUColor.text3)
+                        }
+                    }
+                    .frame(width: 20, height: 20)
+
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(title)
+                            .font(RUFont.sans(11, weight: .bold))
+                            .foregroundColor(done ? RUColor.text2 : RUColor.textPrimary)
+                            // Une étape franchie reste lisible mais cesse d'appeler : c'est la
+                            // suivante qui doit attirer l'œil.
+                            .strikethrough(done, color: RUColor.text3)
+                        Text(detail)
+                            .font(RUFont.sans(9))
+                            .foregroundColor(RUColor.text3)
+                            .lineLimit(1)
+                    }
+                    Spacer(minLength: 6)
+                    if let cta, !done {
+                        HStack(spacing: 3) {
+                            Text(cta).font(RUFont.sans(9, weight: .bold))
+                            Image(systemName: "arrow.right").font(.system(size: 8, weight: .bold))
+                        }
+                        .foregroundColor(RUColor.rose)
+                    }
+                }
+                .padding(.vertical, 9)
+
+                if !isLast {
+                    Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableStyle())
+        .disabled(done)
+    }
+
     // MARK: - Data loading
 
     private func loadSocialSummary() async {
@@ -507,7 +802,7 @@ struct ProfileView: View {
 
         board = boardResult
         friendsList = friendsListResult
-        todaysFriendActivityCount = (friendsFeedResult ?? []).filter { Calendar.current.isDateInToday($0.createdAt) }.count
+        friendsFeed = friendsFeedResult ?? []
         isLoadingSocial = false
     }
 }

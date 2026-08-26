@@ -43,6 +43,79 @@ struct HomeView: View {
         }
     }
 
+    // MARK: - Premier palier
+
+    /// Entre la première sortie et la dixième, l'app ne disait rien.
+    ///
+    /// Le catalogue de badges récompense la 1re course, puis la 10e. Rien entre les deux —
+    /// c'est-à-dire rien dans exactement la fenêtre où l'on abandonne. C'est le défaut structurel
+    /// de la catégorie : contrairement à une app bancaire, une app de course ne montre aucun
+    /// bénéfice le premier jour, et le secteur perd quatre utilisateurs sur cinq avant le
+    /// septième.
+    ///
+    /// La carte comble cette fenêtre, et suit une règle stricte : elle n'affiche QUE des
+    /// grandeurs monotones — nombre de sorties, kilomètres cumulés, plus longue sortie. Aucune ne
+    /// peut baisser d'une semaine sur l'autre. Une comparaison d'allure aurait été plus
+    /// gratifiante quand elle est bonne, et désastreuse au cinquième jour d'une reprise : au
+    /// moment précis où quelqu'un hésite à continuer, on ne lui montre pas un chiffre capable de
+    /// lui donner tort.
+    ///
+    /// Elle disparaît d'elle-même à la dixième sortie, quand le badge prend le relais.
+    private var showMilestone: Bool { runs.count >= 3 && runs.count < 10 }
+
+    private var milestoneTotalKm: Double { runs.reduce(0) { $0 + $1.distanceKm } }
+    private var milestoneLongestKm: Double { runs.map(\.distanceKm).max() ?? 0 }
+
+    /// Nombre de jours entre la première sortie et aujourd'hui, bornes comprises — « 3 sorties en
+    /// 9 jours » dit quelque chose que « 3 sorties » seul ne dit pas : une régularité.
+    private var milestoneDaySpan: Int {
+        guard let first = runs.map(\.date).min() else { return 1 }
+        let cal = Calendar.current
+        let days = cal.dateComponents([.day], from: cal.startOfDay(for: first), to: cal.startOfDay(for: .now)).day ?? 0
+        return max(1, days + 1)
+    }
+
+    private var milestoneCard: some View {
+        let remaining = 10 - runs.count
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 3) {
+                    EyebrowLabel(text: "Ton premier palier", color: RUColor.rose2)
+                    Text("\(runs.count) sorties en \(milestoneDaySpan) jours")
+                        .font(RUFont.sans(15, weight: .bold))
+                        .foregroundColor(RUColor.textPrimary)
+                }
+                Spacer(minLength: 8)
+                Text("👟").font(.system(size: 24))
+            }
+
+            HStack(alignment: .firstTextBaseline, spacing: 20) {
+                milestoneStat(value: "\(runs.count)", label: runs.count > 1 ? String(localized: "sorties") : String(localized: "sortie"))
+                milestoneStat(value: String(format: "%.0f", milestoneTotalKm), label: String(localized: "km cumulés"))
+                milestoneStat(value: String(format: "%.1f", milestoneLongestKm), label: String(localized: "plus longue"))
+                Spacer(minLength: 0)
+            }
+
+            Text(remaining > 1
+                 ? String(localized: "Encore \(remaining) sorties avant le badge « 10 courses ».")
+                 : String(localized: "Encore une sortie avant le badge « 10 courses »."))
+                .font(RUFont.sans(11.5))
+                .foregroundColor(RUColor.text2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(15)
+        .ruHeroCard()
+        .accessibilityElement(children: .combine)
+    }
+
+    private func milestoneStat(value: String, label: String) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(value).displayStyle(21).foregroundColor(RUColor.textPrimary)
+            Text(label).font(RUFont.sans(9.5, weight: .semibold)).foregroundColor(RUColor.text3)
+        }
+    }
+
     private var mainContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
@@ -95,6 +168,9 @@ struct HomeView: View {
                 quickStatsRow
 
                 sessionCard
+
+                // Après la séance, jamais avant : c'est un encouragement, pas une action.
+                if showMilestone { milestoneCard }
 
                 programWeekCard
 

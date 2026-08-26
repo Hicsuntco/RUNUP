@@ -18832,6 +18832,422 @@
           }
         }
       }
+    },
+    "Ton premier palier": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your first milestone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu primer hito"
+          }
+        }
+      }
+    },
+    "%lld sorties en %lld jours": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld runs in %lld days"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld salidas en %lld días"
+          }
+        }
+      }
+    },
+    "km cumulés": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "total km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "km acumulados"
+          }
+        }
+      }
+    },
+    "plus longue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "longest"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "la más larga"
+          }
+        }
+      }
+    },
+    "Encore %lld sorties avant le badge « 10 courses ».": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld more runs to the “10 runs” badge."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld salidas más para el logro «10 carreras»."
+          }
+        }
+      }
+    },
+    "Encore une sortie avant le badge « 10 courses ».": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One more run to the “10 runs” badge."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una salida más para el logro «10 carreras»."
+          }
+        }
+      }
+    },
+    "Découvrir un club": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find a club"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descubrir un club"
+          }
+        }
+      }
+    },
+    "Nom du club ou ville…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Club name or city…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre del club o ciudad…"
+          }
+        }
+      }
+    },
+    "Effacer la recherche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear search"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrar la búsqueda"
+          }
+        }
+      }
+    },
+    "L'annuaire est encore vide": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The directory is still empty"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El directorio aún está vacío"
+          }
+        }
+      }
+    },
+    "Aucun club ne correspond": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No club matches"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ningún club coincide"
+          }
+        }
+      }
+    },
+    "Aucun club ne s'y est encore publié. Crée le tien et publie-le : c'est comme ça qu'il se remplit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No club has listed itself yet. Create yours and list it — that's how it fills up."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ningún club se ha publicado todavía. Crea el tuyo y publícalo: así se llena."
+          }
+        }
+      }
+    },
+    "Essaie un autre nom, ou une ville.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try another name, or a city."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prueba con otro nombre o una ciudad."
+          }
+        }
+      }
+    },
+    "Impossible de charger l'annuaire — vérifie ta connexion.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't load the directory — check your connection."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo cargar el directorio: revisa tu conexión."
+          }
+        }
+      }
+    },
+    "Tu es déjà dans un club — quitte-le d'abord.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're already in a club — leave it first."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya estás en un club: sal de él primero."
+          }
+        }
+      }
+    },
+    "Impossible de rejoindre ce club — réessaie.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't join this club — try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo unir a este club: inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Ou parcourir l'annuaire": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Or browse the directory"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O explora el directorio"
+          }
+        }
+      }
+    },
+    "Découvrir des clubs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discover clubs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descubrir clubes"
+          }
+        }
+      }
+    },
+    "Ceux qui se sont rendus publics": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The ones that made themselves public"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los que se han hecho públicos"
+          }
+        }
+      }
+    },
+    "Bienvenue dans %@ !": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcome to %@!"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¡Bienvenida a %@!"
+          }
+        }
+      }
+    },
+    "Annuaire des clubs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Club directory"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Directorio de clubes"
+          }
+        }
+      }
+    },
+    "Rendre ce club visible": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make this club visible"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hacer visible este club"
+          }
+        }
+      }
+    },
+    "Nom, ville et nombre de membres. Rien d'autre — ni la liste des membres, ni le fil, ni le code.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name, city and member count. Nothing else — not the member list, not the feed, not the code."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre, ciudad y número de miembros. Nada más: ni la lista de miembros, ni el muro, ni el código."
+          }
+        }
+      }
+    },
+    "Où court le club": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where the club runs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dónde corre el club"
+          }
+        }
+      }
+    },
+    "Paris, Lyon, Bruxelles…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paris, Lyon, Brussels…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "París, Lyon, Bruselas…"
+          }
+        }
+      }
+    },
+    "Ce nom de ville n'est pas accepté.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That city name isn't accepted."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ese nombre de ciudad no se acepta."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

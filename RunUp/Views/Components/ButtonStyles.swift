@@ -11,7 +11,7 @@ struct PressableStyle: ButtonStyle {
     }
 }
 
-/// Full-width primary CTA — Bebas Neue label, rose fill, rose glow shadow. Class `.b.btn-rose`.
+/// Full-width primary CTA — display-face label, rose fill, rose glow shadow. Class `.b.btn-rose`.
 struct PrimaryButtonStyle: ButtonStyle {
     var isDisabled: Bool = false
     var fill: AnyShapeStyle? = nil
@@ -30,7 +30,7 @@ struct PrimaryButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(RUFont.bebas(16))
+            .font(RUFont.display(16))
             .tracking(1)
             // Encre décidée par la luminance de l'accent, pas un blanc en dur : sur les
             // palettes pâles du nuancier (Lime, Cyan, Ambre) le libellé blanc tombait à

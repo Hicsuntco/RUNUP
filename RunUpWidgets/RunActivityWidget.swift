@@ -25,14 +25,14 @@ struct RunActivityWidget: Widget {
                 DynamicIslandExpandedRegion(.leading) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(String(format: "%.2f", locale: Locale(identifier: "fr_FR"), context.state.distanceKm))
-                            .font(.custom("BebasNeue-Regular", size: 24))
+                            .font(DisplayFont.font(24))
                             .foregroundColor(.white)
                         Text("KM").font(.custom("DMSans-Bold", size: 9)).tracking(1).foregroundColor(.white.opacity(0.5))
                     }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     VStack(alignment: .trailing, spacing: 2) {
-                        Text(context.state.paceLabel).font(.custom("BebasNeue-Regular", size: 18)).foregroundColor(.white)
+                        Text(context.state.paceLabel).font(DisplayFont.font(18)).foregroundColor(.white)
                         Text("/KM").font(.custom("DMSans-Bold", size: 9)).tracking(1).foregroundColor(.white.opacity(0.5))
                     }
                 }
@@ -66,7 +66,7 @@ struct RunActivityWidget: Widget {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Text("RUN")
-                    .font(.custom("BebasNeue-Regular", size: 17))
+                    .font(DisplayFont.font(17))
                     .tracking(1)
                     .foregroundColor(Self.accent)
                 Spacer()
@@ -86,7 +86,7 @@ struct RunActivityWidget: Widget {
                 Spacer(minLength: 8)
                 VStack(alignment: .trailing, spacing: 1) {
                     elapsedText(context.state)
-                        .font(.custom("BebasNeue-Regular", size: 26))
+                        .font(DisplayFont.font(26))
                         .foregroundColor(.white)
                     Text("TEMPS").font(.custom("DMSans-Bold", size: 8.5)).tracking(1).foregroundColor(.white.opacity(0.4))
                 }
@@ -119,7 +119,7 @@ struct RunActivityWidget: Widget {
     private func metric(value: String, label: String) -> some View {
         VStack(alignment: .leading, spacing: 1) {
             Text(value)
-                .font(.custom("BebasNeue-Regular", size: 26))
+                .font(DisplayFont.font(26))
                 .foregroundColor(.white)
             Text(label).font(.custom("DMSans-Bold", size: 8.5)).tracking(1).foregroundColor(.white.opacity(0.4))
         }

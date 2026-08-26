@@ -293,11 +293,11 @@ struct HomeView: View {
                     // record — logging it shouldn't require the full GPS flow.
                     Button(action: { appState.markTodaySessionDone() }) {
                         HStack { Image(systemName: "checkmark"); Text("FAIT") }
-                            // Matches DÉMARRER's PrimaryButtonStyle typography (bebas display
+                            // Matches DÉMARRER's PrimaryButtonStyle typography (la police de titrage
                             // font) so the two read as one paired control, not two mismatched
                             // buttons — the outline vs. filled chrome from SecondaryButtonStyle
                             // is what should carry the "lower emphasis" signal, not the font.
-                            .font(RUFont.bebas(16))
+                            .font(RUFont.display(16))
                             .tracking(1)
                     }
                     .buttonStyle(SecondaryButtonStyle())

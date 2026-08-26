@@ -115,7 +115,7 @@ struct DailyGoalsWidgetView: View {
         VStack(spacing: 3) {
             Spacer(minLength: 0)
             Text("\(snapshot.dailyGoalsDone)/\(snapshot.dailyGoalsTotal)")
-                .font(.custom("BebasNeue-Regular", size: 46))
+                .font(DisplayFont.font(46))
                 .foregroundColor(roseColor)
             Text("BOUCLÉS")
                 .font(.custom("DMSans-Bold", size: 9))
@@ -149,7 +149,7 @@ struct DailyGoalsWidgetView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .lastTextBaseline, spacing: 6) {
                 Text("\(snapshot.dailyGoalsDone)/\(snapshot.dailyGoalsTotal)")
-                    .font(.custom("BebasNeue-Regular", size: 30))
+                    .font(DisplayFont.font(30))
                     .foregroundColor(roseColor)
                 Text("BOUCLÉS")
                     .font(.custom("DMSans-Bold", size: 8.5))
@@ -203,7 +203,7 @@ struct DailyGoalsWidgetView: View {
     private var streakBadge: some View {
         HStack(spacing: 2) {
             Image(systemName: "flame.fill").font(.system(size: 8))
-            Text("\(snapshot.streak)").font(.custom("BebasNeue-Regular", size: 12))
+            Text("\(snapshot.streak)").font(DisplayFont.font(12))
         }
         .foregroundColor(flameColor)
         .padding(.horizontal, 6.5)

@@ -14,7 +14,7 @@ struct SplashView: View {
         ZStack {
             RUColor.bg.ignoresSafeArea()
             Text("RUNUP")
-                .font(RUFont.bebas(40))
+                .font(RUFont.display(40))
                 .tracking(7)
                 .foregroundColor(RUColor.textPrimary)
                 .opacity(opacity)

@@ -105,7 +105,7 @@ targets:
         NSSupportsLiveActivitiesFrequentUpdates: true
         ITSAppUsesNonExemptEncryption: false
         UIAppFonts:
-          - BebasNeue-Regular.ttf
+          - BricolageGrotesque-ExtraBold.ttf
           - DMSans-Light.ttf
           - DMSans-Regular.ttf
           - DMSans-Medium.ttf
@@ -213,7 +213,7 @@ targets:
         # numerals, DM Sans Bold for labels) — no need to ship the whole main-app font set into a
         # second bundle.
         UIAppFonts:
-          - BebasNeue-Regular.ttf
+          - BricolageGrotesque-ExtraBold.ttf
           - DMSans-Bold.ttf
           - DMSans-SemiBold.ttf
     entitlements:
@@ -243,6 +243,9 @@ targets:
       # Only the hex/darken color math — the rest of Shared/ is widget/Live Activity plumbing
       # (RunActivityAttributes imports ActivityKit, which doesn't exist on watchOS).
       - path: RunUp/Shared/ColorHex.swift
+      # La montre ne prend de `RunUp/Shared` que les fichiers dont elle a besoin, un par un —
+      # le dossier entier y ferait entrer du code qui dépend de modèles absents de cette cible.
+      - path: RunUp/Shared/DisplayFont.swift
     resources:
       - path: RunUpWatch/Assets.xcassets
       - path: RunUp/Resources/Fonts
@@ -278,7 +281,7 @@ targets:
         NSHealthUpdateUsageDescription: "RunUp enregistre ta course comme une vraie séance dans Santé — elle compte dans tes anneaux."
         NSLocationWhenInUseUsageDescription: "RunUp utilise ta position pour mesurer distance et allure pendant une course depuis la montre."
         UIAppFonts:
-          - BebasNeue-Regular.ttf
+          - BricolageGrotesque-ExtraBold.ttf
           - DMSans-Bold.ttf
           - DMSans-SemiBold.ttf
     entitlements:

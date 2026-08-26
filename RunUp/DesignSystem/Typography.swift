@@ -3,7 +3,8 @@ import Observation
 import UIKit
 
 /// Font tokens — see README § Typography.
-/// - Display/numerals ("Bebas Neue", class `.b`): big numbers, headlines, buttons.
+/// - Display/numerals ("Bricolage Grotesque ExtraBold", class `.b`): big numbers, headlines,
+///   buttons — voir `display(_:)` et son facteur de taille.
 /// - Body ("DM Sans", 300–700 + italic): body copy, labels.
 /// - Monospace ("DM Mono", class `.m`): timestamps, XP counters, precise numeric readouts.
 /// - Eyebrow (class `.eye`): 9px, 3px tracking, uppercase, weight 700, used above section titles.
@@ -14,18 +15,21 @@ import UIKit
 /// the single place that decides how the app answers the iOS text-size setting. That indirection
 /// is deliberate, and it fixes two different problems at once:
 ///
-/// 1. The light-mode branch of `bebas(_:)` used `.system(size:)`, which does NOT scale with
-///    Dynamic Type at all — in light mode, every big number, headline and button label in the app
-///    (hundreds of `displayStyle()` call sites) was frozen at its hardcoded point size no matter
-///    what the user had chosen in Réglages → Affichage → Taille du texte.
+/// 1. La police de titrage avait, en mode clair, une branche `.system(size:)` qui ne suit PAS
+///    Dynamic Type — en mode clair, chaque grand chiffre, titre et libellé de bouton de l'app
+///    restait figé à sa taille codée en dur, quoi que l'utilisatrice ait choisi dans
+///    Réglages → Affichage → Taille du texte. Cette branche a disparu avec Bebas (voir
+///    `display(_:)`), mais l'indirection qui l'avait corrigée reste ce qui garantit qu'aucun
+///    token ne puisse la réintroduire.
 /// 2. The `.custom(_:size:)` initializer the other tokens used *does* scale (Apple: "scales with
 ///    the body text style"), but with no ceiling whatsoever: at the largest accessibility size
 ///    `.body` grows 17pt → 53pt, i.e. ≈3.1×. Applied to the week strip, the 3-up stat rows, the
 ///    prediction tiles or the tab bar labels — all fixed-width, side-by-side layouts — that
 ///    doesn't degrade gracefully, it collapses into unreadable truncation.
 ///
-/// So the two branches also stopped agreeing with each other: the same screen scaled or didn't
-/// depending purely on whether light mode was on. One shared, capped path makes them consistent.
+/// Les deux branches avaient fini par ne plus s'accorder : le même écran suivait ou non le
+/// réglage selon que le mode clair était actif. Un seul chemin, plafonné, les rend cohérentes —
+/// et il n'y a plus qu'une seule police de titrage à suivre, sur les deux fonds.
 ///
 /// Reactivity works exactly like `RUColor`'s theme tokens do (see `ThemeStore`): the sizes are
 /// computed, not stored, and they read an `@Observable` singleton — `TextSizeStore` — so every
@@ -67,17 +71,21 @@ enum RUFont {
         return min(scaledSize, size * maxScale)
     }
 
-    /// Bebas Neue's condensed poster caps read energetic/gamified — right for the app's dark
-    /// mode, but it's the single biggest reason light mode didn't read as the sober, premium,
-    /// "digital coach" register she wants competing with Runna. Every `displayStyle()`/`.bebas()`
-    /// call site (hundreds of them) switches automatically in light mode to a heavy system sans
-    /// instead — no other file needs to change. Dark mode is untouched on purpose: two deliberate
-    /// moods, not one compromise.
-    static func bebas(_ size: CGFloat) -> Font {
-        let pointSize = scaled(size)
-        return RUColor.isLight
-            ? .system(size: pointSize, weight: .heavy, design: .default)
-            : .custom("BebasNeue-Regular", fixedSize: pointSize)
+    /// La police de titrage : titres, grands chiffres, libellés en capitales, boutons.
+    ///
+    /// C'était Bebas Neue — des capitales d'affiche condensées, énergiques, registre salle de
+    /// sport. Elle avait deux défauts. Elle ne tenait pas sur fond clair, au point que le mode
+    /// clair la remplaçait par une system sans lourde : l'app avait donc DEUX identités
+    /// typographiques selon le thème. Et elle est une police d'affiche, un genre qui date vite.
+    ///
+    /// Bricolage Grotesque tient sur les deux fonds, d'où la disparition de la bifurcation.
+    ///
+    /// Le nom de la police et le facteur de taille vivent dans `DisplayFont` (RunUp/Shared) :
+    /// le widget et la montre les utilisent aussi, et une police nommée à trois endroits finit
+    /// toujours par n'être changée qu'à deux.
+    ///
+    static func display(_ size: CGFloat) -> Font {
+        .custom(DisplayFont.postScriptName, fixedSize: scaled(DisplayFont.pointSize(for: size)))
     }
 
     static func mono(_ size: CGFloat, weight: DMWeight = .regular) -> Font {
@@ -143,12 +151,12 @@ final class TextSizeStore {
 }
 
 extension Text {
-    /// Class `.b` in the prototype — Bebas Neue display type, tight tracking.
+    /// Class `.b` in the prototype — la police de titrage, interlettrage serré.
     /// `.tracking`/`.textCase` are `View`-only modifiers (not declared on `Text` itself), so this
     /// returns `some View` rather than `Text` — safe everywhere it's used since none of these
     /// call sites concatenate the result with `+` (that requires `Text` on both sides).
     func displayStyle(_ size: CGFloat) -> some View {
-        self.font(RUFont.bebas(size)).tracking(0.5)
+        self.font(RUFont.display(size)).tracking(0.5)
     }
 
     /// Class `.eye` — eyebrow label above section/card titles.

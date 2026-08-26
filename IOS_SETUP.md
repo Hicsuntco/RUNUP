@@ -103,6 +103,11 @@ signature automatique ne sait obtenir que par la « signature dans le nuage ». 
 donc pour une raison qui ne dépend ni du dépôt ni du workflow. Fournir les profils supprime cette
 dépendance entière : pendant l'export, plus rien n'est demandé à Apple.
 
+La construction tourne sur l'image `macos-26`, et le workflow y sélectionne explicitement le Xcode
+le plus récent installé plutôt que celui par défaut. App Store Connect refuse tout binaire construit
+avec un SDK iOS antérieur à 26 — et le refus tombe à la toute dernière étape, une fois l'IPA signé
+et téléversé. Le workflow vérifie donc la version du SDK avant de compiler.
+
 Le certificat est importé dans un trousseau jetable, détruit à la fin du job même en cas d'échec.
 
 La première étape du workflow vérifie que les neuf secrets existent, et que les cinq qui sont des

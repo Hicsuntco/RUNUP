@@ -91,14 +91,41 @@ concurrency:
 
 jobs:
   testflight:
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 75
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Version de Xcode utilisée
-        run: xcodebuild -version
+      # Le Xcode par défaut de l'image n'est pas forcément le plus récent qu'elle contient, et ce
+      # détail décide de l'issue : App Store Connect a REFUSÉ un IPA parfaitement signé parce
+      # qu'il avait été construit avec le SDK iOS 18.5 de Xcode 16.4, alors qu'Apple exige
+      # désormais le SDK iOS 26 ou plus. Le refus arrive à la toute dernière étape, après vingt
+      # minutes de machine, et ne dit rien du fait que la machine avait un Xcode plus récent
+      # sous la main.
+      #
+      # D'où : on choisit explicitement le plus récent, et on vérifie le SDK AVANT de compiler.
+      - name: Choisir Xcode
+        run: |
+          set -euo pipefail
+          latest=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          echo "→ Xcode retenu : $latest"
+          sudo xcode-select -s "$latest"
+          xcodebuild -version
+          sdk=$(xcodebuild -showsdks | grep -Eo "iphoneos[0-9.]+" | sort -V | tail -1 | sed "s/iphoneos//")
+          if [ -z "$sdk" ]; then
+            echo "✗ Aucun SDK iOS trouvé — xcode-select a-t-il pointé sur une installation valide ?"
+            xcodebuild -showsdks
+            exit 1
+          fi
+          echo "→ SDK iOS le plus récent : $sdk"
+          if [ "${sdk%%.*}" -lt 26 ]; then
+            echo ""
+            echo "✗ App Store Connect refuse tout binaire construit avec un SDK iOS antérieur à 26."
+            echo "  Cette machine ne propose que le SDK $sdk. Il faut une image plus récente"
+            echo "  (le champ runs-on du workflow)."
+            exit 1
+          fi
 
       # Les six secrets sont vérifiés ICI, avant tout le reste, parce qu'un secret absent ne se
       # présente pas comme un secret absent.
@@ -369,7 +396,9 @@ jobs:
                   bundle, name = line.split("=", 1)
                   profiles[bundle] = name
           plistlib.dump({
-              "method": "app-store",
+              # « app-store-connect » depuis Xcode 15.4 ; « app-store » ne fait plus que
+              # survivre par compatibilité.
+              "method": "app-store-connect",
               "teamID": "SW49TQ25NV",
               "signingStyle": "manual",
               # Le trousseau contient aussi deux identités de DÉVELOPPEMENT ; nommer la famille

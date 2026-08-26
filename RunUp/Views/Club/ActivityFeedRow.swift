@@ -64,11 +64,15 @@ struct ActivityFeedRow: View {
                     .accessibilityLabel("Record personnel")
                 }
             }
-            // Le texte du serveur commence par un verbe conjugué (« a couru 8,2 km · Sortie
-            // longue ») : il reste rattaché au nom au-dessus, mais sur sa propre ligne plutôt
-            // qu'en une seule phrase enroulée autour de l'avatar — c'est la ligne de contenu de
-            // la carte, elle mérite sa largeur pleine.
-            Text(item.text)
+            // La phrase commence par un verbe conjugué (« a couru 8,2 km · Sortie longue ») :
+            // elle reste rattachée au nom au-dessus, mais sur sa propre ligne plutôt qu'en une
+            // seule phrase enroulée autour de l'avatar — c'est la ligne de contenu de la carte,
+            // elle mérite sa largeur pleine.
+            //
+            // `localizedText` et pas `text` : le serveur renvoie la phrase telle que l'autrice
+            // l'a composée, DANS SA LANGUE. Ici, on la refabrique dans celle de la lectrice dès
+            // que le post porte de quoi le faire — voir `FeedItem.localizedText`.
+            Text(item.localizedText)
                 .font(RUFont.sans(13))
                 .foregroundColor(RUColor.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)

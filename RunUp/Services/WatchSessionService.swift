@@ -50,6 +50,10 @@ final class WatchSessionService: NSObject {
         var payload: [String: Any] = [:]
         if !isRestDay {
             let session = profile.todaySession
+            // `sessionKind` accompagne le titre sans le remplacer : le titre est ce que la montre
+            // AFFICHE, le type est ce qu'elle RENVOIE une fois la course finie. Sans lui, une
+            // course lancée au poignet revient sans rien qui identifie la séance, et son post de
+            // club reste figé dans la langue de son autrice — voir `activities.content_key`.
             context = [
                 "sessionTitle": session.title,
                 "sessionPace": session.pace,
@@ -60,6 +64,13 @@ final class WatchSessionService: NSObject {
                 "sessionPace": session.pace,
                 "sessionDurationMinutes": session.durationMinutes,
             ]
+            // Absent des plans enregistrés avant l'introduction de `SessionKind` : la clé est
+            // alors omise, et la course revient sans type — comme avant, plutôt qu'avec une
+            // chaîne vide qui aurait l'air d'un type.
+            if let kind = session.kind {
+                context["sessionKind"] = kind.rawValue
+                payload["sessionKind"] = kind.rawValue
+            }
         }
         guard context != lastSentContext else { return }
         do {
@@ -92,6 +103,7 @@ final class WatchSessionService: NSObject {
             kcal: payload.kcal,
             avgHeartRate: payload.avgHeartRate
         )
+        if let raw = payload.sessionKind { record.sessionKind = SessionKind(rawValue: raw) }
         // Dated when she actually ran, not when the queued transfer finally arrived — a run
         // finished Saturday in airplane mode must not appear as a Sunday run in History.
         if let startedAtEpoch = payload.startedAtEpoch {
@@ -154,6 +166,9 @@ private struct CompletedRunPayload: Sendable {
     var kcal: Double
     var avgHeartRate: Int
     var startedAtEpoch: Double?
+    /// Le type de la séance courue, renvoyé par la montre tel que le téléphone le lui avait
+    /// donné. Absent pour une course libre, et pour une montre pas encore mise à jour.
+    var sessionKind: String?
 
     init?(_ userInfo: [String: Any]) {
         guard userInfo["kind"] as? String == "completedRun",
@@ -166,5 +181,7 @@ private struct CompletedRunPayload: Sendable {
         self.kcal = userInfo["kcal"] as? Double ?? 0
         self.avgHeartRate = userInfo["avgHeartRate"] as? Int ?? 0
         self.startedAtEpoch = userInfo["startedAt"] as? Double
+        // Pas la clé "kind" : celle-là porte déjà le type du MESSAGE ("completedRun").
+        self.sessionKind = userInfo["sessionKind"] as? String
     }
 }

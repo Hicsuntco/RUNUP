@@ -166,7 +166,11 @@ struct DebriefSheet: View {
                         elevationGainM: run.elevationGainM > 0 ? run.elevationGainM : nil,
                         isPersonalRecord: RunRecord.beatsPersonalRecord(run, history: runs)
                     )
-                    appState.postClubActivity(type: "run", text: feedText, xpEarned: 120, metrics: metrics)
+                    // `contentKey` accompagne la phrase sans la remplacer : le serveur garde `text` pour la
+                    // notification push, qu'il compose lui-même et sans connaître la langue de qui la
+                    // reçoit, tandis que le fil se refabrique la phrase chez sa lectrice. Absent pour
+                    // une séance hors plan — il n'y a alors aucun type de séance à nommer.
+                    appState.postClubActivity(type: "run", text: feedText, xpEarned: 120, contentKey: run.sessionKind?.rawValue, metrics: metrics)
                     // Deliberately here rather than in `AppState.endLiveRun` — this tap is where a
                     // run actually becomes real on every path into it (GPS, "FAIT", a run handed
                     // back by the Watch), and it's the tap that credits XP/streak/plan adaptation.
@@ -198,7 +202,7 @@ struct DebriefSheet: View {
                         Haptics.impact(.heavy)
                     }
                     if AdaptivePlanEngine.checkDailyGoalsBonus(appState.profile) {
-                        appState.postClubActivity(type: "badge", text: String(localized: "a bouclé ses 3 objectifs du jour"), xpEarned: 120)
+                        appState.postClubActivity(type: "badge", text: String(localized: "a bouclé ses 3 objectifs du jour"), xpEarned: 120, contentKey: "daily_goals")
                         appState.notify(icon: "🎉", colorHex: 0xC9FF3B, title: String(localized: "Journée bouclée"), text: String(localized: "Tes 3 objectifs du jour sont faits — +120 XP."))
                         NotificationService.shared.postImmediateNotification(title: String(localized: "Journée bouclée 🎉"), body: String(localized: "Tes 3 objectifs du jour sont faits — +120 XP."))
                         Haptics.impact(.heavy)

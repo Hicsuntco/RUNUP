@@ -128,13 +128,20 @@ struct FeedItem: Decodable, Identifiable {
     var avgPace: String?
     var elevationGainM: Int?
     var isPersonalRecord: Bool
+    /// Ce que ce post raconte, sous une forme qui ne dépend d'aucune langue : la valeur brute d'un
+    /// `SessionKind` pour une course, `daily_goals` pour le badge des trois objectifs. Voir
+    /// `localizedText` juste en dessous, et `activities.content_key` dans db/schema.sql.
+    ///
+    /// `nil` pour les activités antérieures à ce champ et pour une séance hors plan — la phrase du
+    /// serveur reste alors la meilleure chose disponible.
+    var contentKey: String?
     var kudos: Int
     var kudoedByMe: Bool
     var commentsCount: Int
 
     private enum CodingKeys: String, CodingKey {
         case id, userId, name, avatarUrl, avatarBase64, text, createdAt
-        case distanceKm, durationSeconds, avgPace, elevationGainM, isPersonalRecord
+        case distanceKm, durationSeconds, avgPace, elevationGainM, isPersonalRecord, contentKey
         case kudos, kudoedByMe, commentsCount
     }
 
@@ -157,9 +164,36 @@ struct FeedItem: Decodable, Identifiable {
         avgPace = try c.decodeIfPresent(String.self, forKey: .avgPace)
         elevationGainM = try c.decodeIfPresent(Int.self, forKey: .elevationGainM)
         isPersonalRecord = try c.decodeIfPresent(Bool.self, forKey: .isPersonalRecord) ?? false
+        contentKey = try c.decodeIfPresent(String.self, forKey: .contentKey)
         kudos = try c.decode(Int.self, forKey: .kudos)
         kudoedByMe = try c.decode(Bool.self, forKey: .kudoedByMe)
         commentsCount = try c.decode(Int.self, forKey: .commentsCount)
+    }
+
+    /// La phrase du fil, dans la langue de celle qui LIT.
+    ///
+    /// `text` arrive du serveur déjà rédigé — « a couru 8,2 km · Sortie longue » — dans la langue
+    /// de celle qui a posté. Une app vendue en trois langues servait donc un fil français à ses
+    /// lectrices anglophones, jusque dans le titre de séance : `RunRecord.title` porte le libellé
+    /// affiché pendant la course, donc déjà traduit — dans SA langue à elle.
+    ///
+    /// Avec `contentKey`, rien de tout ça n'a besoin de voyager : on connaît le type de séance et
+    /// la distance, et la phrase se refabrique ici avec les chaînes locales. Les deux formats sont
+    /// exactement ceux qu'emploie `DebriefSheet` au moment de poster — même clé de catalogue, donc
+    /// mêmes traductions, sans rien à retraduire.
+    ///
+    /// Sans `contentKey` — activité d'avant ce champ, séance hors plan — on garde `text` : la
+    /// phrase de l'autrice reste très au-dessus d'une carte vide.
+    var localizedText: String {
+        guard let contentKey else { return text }
+        if contentKey == "daily_goals" { return String(localized: "a bouclé ses 3 objectifs du jour") }
+        guard let kind = SessionKind(rawValue: contentKey) else { return text }
+        let sessionTitle = String(localized: String.LocalizationValue(kind.titleKey))
+        guard let distanceKm, distanceKm > 0.05 else {
+            return String(localized: "a fait sa séance · \(sessionTitle)")
+        }
+        let distance = String(format: "%.1f", locale: Locale.current, distanceKm)
+        return String(localized: "a couru \(distance) km · \(sessionTitle)")
     }
 
     /// Vrai dès qu'au moins une métrique existe — la ligne KM / ALLURE / D+ de la carte
@@ -346,8 +380,12 @@ struct ClubService {
     /// network) never double-counts the XP or duplicates the feed entry — see
     /// `api/activities/create.js`. `metrics` (run activities only) feeds real club-challenge
     /// progress server-side and the KM / ALLURE / D+ line on the feed card.
-    func postActivity(clientId: UUID = UUID(), type: String, text: String, xpEarned: Int, metrics: ActivityMetrics = .none) async throws {
+    func postActivity(clientId: UUID = UUID(), type: String, text: String, xpEarned: Int, contentKey: String? = nil, metrics: ActivityMetrics = .none) async throws {
         var body: [String: Any] = ["clientId": clientId.uuidString, "type": type, "text": text, "xpEarned": xpEarned]
+        // `text` part quand même : c'est lui que reçoit la notification push, composée côté
+        // serveur, qui n'a aucune langue de destinataire à consulter. `contentKey` s'y ajoute pour
+        // le fil, où l'appareil qui lit peut, lui, faire mieux.
+        if let contentKey { body["contentKey"] = contentKey }
         // Chaque métrique n'est envoyée que si elle a été réellement mesurée : une clé absente
         // devient NULL en base, ce que le fil sait afficher comme « pas de donnée ». Envoyer 0
         // ferait apparaître « 0 D+ » sur une sortie dont le dénivelé n'a simplement jamais été

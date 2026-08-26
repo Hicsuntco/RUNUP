@@ -78,7 +78,7 @@ async function handleDelete(req, res, userId) {
 // user's club feed, and credits its XP to their real, server-side total — this is what makes the
 // leaderboard and feed genuinely backed by real actions instead of mock data.
 async function handleCreate(req, res, userId) {
-  const { clientId, type, text, xpEarned, distanceKm, durationSeconds, avgPace, elevationGainM, isPersonalRecord } = req.body || {};
+  const { clientId, type, text, xpEarned, distanceKm, durationSeconds, avgPace, elevationGainM, isPersonalRecord, contentKey } = req.body || {};
   const cleanText = typeof text === 'string' ? text.trim().slice(0, 200) : '';
   if (!isUuid(clientId) || !ALLOWED_TYPES.has(type) || !cleanText || typeof xpEarned !== 'number') {
     return res.status(400).json({ error: 'bad_request' });
@@ -90,6 +90,11 @@ async function handleCreate(req, res, userId) {
   // uses) — this cap just stops a tampered client from inflating the shared leaderboard, it's not
   // meant to be the real anti-cheat mechanism.
   const xp = Math.max(0, Math.min(500, Math.round(xpEarned)));
+  // Un identifiant, pas du texte : il ne s'affiche jamais tel quel, l'appareil qui lit s'en sert
+  // pour retrouver une chaîne traduite chez lui (voir `activities.content_key` dans schema.sql).
+  // D'où le filtre sur la forme plutôt que le filtre de modération — et l'absence de filtre
+  // laisserait passer n'importe quoi dans une colonne dont la valeur sert de clé.
+  const key = typeof contentKey === 'string' && /^[a-z0-9_]{1,40}$/.test(contentKey) ? contentKey : null;
   // Only 'run' activities carry a real distance — a structured column (rather than parsing it
   // back out of `text`) is what lets club challenges compute real collective progress. Finite +
   // capped at 500 km: `Infinity > 0` is true in JS, and a tampered client's `1e12` would
@@ -146,8 +151,8 @@ async function handleCreate(req, res, userId) {
   // unique-constraint 500 instead of `duplicate: true`, and XP must only be credited when this
   // request is the one that actually inserted the row.
   const { rows: inserted } = await sql`
-    INSERT INTO activities (client_id, user_id, club_id, type, text, xp_earned, distance_km, duration_seconds, avg_pace, elevation_gain_m, is_personal_record)
-    VALUES (${clientId}, ${userId}, ${clubId}, ${type}, ${cleanText}, ${xp}, ${distance}, ${duration}, ${pace}, ${elevation}, ${personalRecord})
+    INSERT INTO activities (client_id, user_id, club_id, type, text, xp_earned, distance_km, duration_seconds, avg_pace, elevation_gain_m, is_personal_record, content_key)
+    VALUES (${clientId}, ${userId}, ${clubId}, ${type}, ${cleanText}, ${xp}, ${distance}, ${duration}, ${pace}, ${elevation}, ${personalRecord}, ${key})
     ON CONFLICT (client_id) DO NOTHING
     RETURNING id
   `;
@@ -206,6 +211,7 @@ async function handleFeed(req, res, userId) {
   const { rows } = await sql`
     SELECT a.id, a.text, a.created_at, u.name, u.id AS user_id, u.avatar_data, u.avatar_url,
            a.distance_km, a.duration_seconds, a.avg_pace, a.elevation_gain_m, a.is_personal_record,
+           a.content_key,
            (SELECT COUNT(*)::int FROM activity_kudos k WHERE k.activity_id = a.id) AS kudos,
            EXISTS(SELECT 1 FROM activity_kudos k WHERE k.activity_id = a.id AND k.user_id = ${userId}) AS kudoed_by_me,
            (SELECT COUNT(*)::int FROM activity_comments c WHERE c.activity_id = a.id) AS comments_count

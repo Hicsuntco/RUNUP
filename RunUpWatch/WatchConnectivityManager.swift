@@ -23,6 +23,9 @@ final class WatchConnectivityManager: NSObject {
     private(set) var sessionTitle: String?
     private(set) var sessionPace: String?
     private(set) var sessionDurationMinutes: Int?
+    /// Jamais affiché : la montre ne fait que le transporter, du téléphone vers le téléphone, pour
+    /// que la course revienne en sachant quelle séance elle exécutait.
+    private(set) var sessionKind: String?
 
     private override init() {
         super.init()
@@ -55,6 +58,7 @@ final class WatchConnectivityManager: NSObject {
             "avgHeartRate": avgHeartRate,
         ]
         if let sessionTitle { payload["title"] = sessionTitle }
+        if let sessionKind { payload["sessionKind"] = sessionKind }
         WCSession.default.transferUserInfo(payload)
     }
 
@@ -62,6 +66,7 @@ final class WatchConnectivityManager: NSObject {
         sessionTitle = context.title
         sessionPace = context.pace
         sessionDurationMinutes = context.durationMinutes
+        sessionKind = context.kind
     }
 }
 
@@ -91,10 +96,12 @@ private struct SessionContext: Sendable {
     var title: String?
     var pace: String?
     var durationMinutes: Int?
+    var kind: String?
 
     init(_ context: [String: Any]) {
         title = context["sessionTitle"] as? String
         pace = context["sessionPace"] as? String
         durationMinutes = context["sessionDurationMinutes"] as? Int
+        kind = context["sessionKind"] as? String
     }
 }

@@ -31,18 +31,23 @@ private struct PendingClubActivity: Codable, Equatable {
     /// appartenant au compte courant : c'est le comportement d'avant, et le seul compte plausible
     /// au moment où elle a été écrite.
     var userId: String?
+    /// L'identifiant, indépendant de la langue, de ce que raconte ce post — voir
+    /// `activities.content_key` dans db/schema.sql. Optionnel pour la même raison que les deux
+    /// champs au-dessus : une file écrite avant lui n'en a pas.
+    var contentKey: String?
 
-    init(clientId: UUID, type: String, text: String, xpEarned: Int, metrics: ActivityMetrics?, userId: String?) {
+    init(clientId: UUID, type: String, text: String, xpEarned: Int, metrics: ActivityMetrics?, userId: String?, contentKey: String?) {
         self.clientId = clientId
         self.type = type
         self.text = text
         self.xpEarned = xpEarned
         self.metrics = metrics
         self.userId = userId
+        self.contentKey = contentKey
     }
 
     private enum CodingKeys: String, CodingKey {
-        case clientId, type, text, xpEarned, metrics, userId
+        case clientId, type, text, xpEarned, metrics, userId, contentKey
         /// Le champ tel qu'il était écrit avant que les métriques soient regroupées. Une sortie
         /// encore en file au moment de la mise à jour porte cette clé et pas `metrics`.
         case legacyDistanceKm = "distanceKm"
@@ -54,6 +59,7 @@ private struct PendingClubActivity: Codable, Equatable {
         type = try c.decode(String.self, forKey: .type)
         text = try c.decode(String.self, forKey: .text)
         xpEarned = try c.decode(Int.self, forKey: .xpEarned)
+        contentKey = try c.decodeIfPresent(String.self, forKey: .contentKey)
         if let stored = try c.decodeIfPresent(ActivityMetrics.self, forKey: .metrics) {
             metrics = stored
         } else if let legacy = try c.decodeIfPresent(Double.self, forKey: .legacyDistanceKm) {
@@ -111,7 +117,7 @@ extension AppState {
     /// (Club participation is optional; this must never block the flow it's called from). Queued
     /// to the local outbox *before* the network attempt, so a kill mid-request still leaves
     /// something to retry rather than a `try?` that discarded the payload the instant it failed.
-    func postClubActivity(type: String, text: String, xpEarned: Int, metrics: ActivityMetrics = .none) {
+    func postClubActivity(type: String, text: String, xpEarned: Int, contentKey: String? = nil, metrics: ActivityMetrics = .none) {
         guard auth.isSignedIn else { return }
         let pending = PendingClubActivity(
             clientId: UUID(),
@@ -119,7 +125,8 @@ extension AppState {
             text: text,
             xpEarned: xpEarned,
             metrics: metrics,
-            userId: auth.currentUser?.id
+            userId: auth.currentUser?.id,
+            contentKey: contentKey
         )
         outbox.append(pending)
         pendingActivityCount = outbox.count
@@ -159,7 +166,7 @@ extension AppState {
     private func attemptPost(_ pending: PendingClubActivity) async {
         let service = ClubService(auth: auth)
         do {
-            try await service.postActivity(clientId: pending.clientId, type: pending.type, text: pending.text, xpEarned: pending.xpEarned, metrics: pending.metrics ?? .none)
+            try await service.postActivity(clientId: pending.clientId, type: pending.type, text: pending.text, xpEarned: pending.xpEarned, contentKey: pending.contentKey, metrics: pending.metrics ?? .none)
             outbox.removeAll { $0.clientId == pending.clientId }
             pendingActivityCount = outbox.count
         } catch {

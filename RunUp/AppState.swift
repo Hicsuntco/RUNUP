@@ -323,7 +323,7 @@ final class AppState {
         profile.stepsToday = await steps
         profile.activeCaloriesToday = await calories
         if AdaptivePlanEngine.checkDailyGoalsBonus(profile) {
-            postClubActivity(type: "badge", text: String(localized: "a bouclé ses 3 objectifs du jour"), xpEarned: 120)
+            postClubActivity(type: "badge", text: String(localized: "a bouclé ses 3 objectifs du jour"), xpEarned: 120, contentKey: "daily_goals")
             notify(icon: "🎉", colorHex: 0xC9FF3B, title: String(localized: "Journée bouclée"), text: String(localized: "Tes 3 objectifs du jour sont faits — +120 XP."))
             NotificationService.shared.postImmediateNotification(title: String(localized: "Journée bouclée 🎉"), body: String(localized: "Tes 3 objectifs du jour sont faits — +120 XP."))
             toast(String(localized: "Journée bouclée · +120 XP 🎉"))
@@ -415,6 +415,10 @@ final class AppState {
             kcal: Double(session.durationMinutes) * 7,
             avgHeartRate: 0
         )
+        // Le type de la séance suit la course : c'est ce qui permet au fil du club de refabriquer
+        // sa phrase dans la langue de qui la lit (voir `FeedItem.localizedText`). Nil pour un plan
+        // enregistré avant `SessionKind`.
+        record.sessionKind = session.kind
         // Deliberately NOT inserted into SwiftData here — `DebriefSheet` inserts it on VALIDER.
         // Inserting up front meant dismissing the debrief sheet without validating left a phantom
         // synthetic run in History/Stats for a session that was never actually confirmed done.

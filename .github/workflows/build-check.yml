@@ -1,0 +1,74 @@
+# Est-ce que ça compile ?
+#
+# Ce workflow ne livre rien : il construit l'app et lance les tests, sur une machine macOS, à
+# chaque poussée. Il existe parce que `testflight.yml` ne répond à cette question qu'au prix
+# d'une chaîne complète — secrets, certificat, profils, archivage, envoi — et seulement quand on
+# la déclenche à la main. Entre deux envois, rien ne disait si le dépôt compilait encore.
+#
+# C'est surtout la seule vérification possible pour du code écrit ailleurs que dans Xcode : une
+# session d'agent tourne sous Linux, où SwiftUI n'existe pas et où aucune toolchain Swift ne peut
+# valider une seule ligne. Le code y est relu, jamais compilé. Ce workflow est ce qui transforme
+# « ça devrait compiler » en une réponse.
+#
+# Aucun secret n'est nécessaire : `prepare_project.sh` tolère l'absence de RUNUP_APP_SECRET (le
+# coach répondrait 401 dans ce binaire, sans conséquence puisqu'il n'est jamais installé) et la
+# signature est désactivée. À noter tout de même : une machine macOS est facturée dix fois une
+# machine Linux chez GitHub. C'est le prix d'un retour en une dizaine de minutes plutôt qu'à la
+# prochaine ouverture d'Xcode.
+
+name: Compilation
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+# Une poussée annule la vérification encore en cours sur la même branche : c'est l'état du
+# dernier commit qui intéresse, pas celui de l'avant-dernier.
+concurrency:
+  group: build-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Le Xcode par défaut de l'image n'est pas forcément le plus récent qu'elle contient. Pas
+      # de contrôle du SDK ici, contrairement à `testflight.yml` : la version minimale exigée par
+      # App Store Connect ne concerne que ce qui est ENVOYÉ, et faire échouer une vérification de
+      # compilation pour ça n'apprendrait rien sur le code.
+      - name: Choisir Xcode
+        run: |
+          set -euo pipefail
+          latest=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          echo "→ Xcode retenu : $latest"
+          sudo xcode-select -s "$latest"
+          xcodebuild -version
+
+      - name: Installer XcodeGen
+        run: brew install xcodegen
+
+      # Le même script que Xcode Cloud et que la chaîne TestFlight — sans quoi cette
+      # vérification pourrait passer sur un projet que les deux autres ne génèrent pas pareil.
+      - name: Préparer le projet
+        run: sh ci_scripts/prepare_project.sh
+
+      - name: Construire et tester
+        run: |
+          set -o pipefail
+          UDID=$(xcrun simctl list devices available | grep -m1 -E '^ *iPhone' | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
+          if [ -z "$UDID" ]; then
+            echo "✗ Aucun simulateur iPhone disponible sur cette machine."
+            xcrun simctl list devices available
+            exit 1
+          fi
+          echo "→ Simulateur : $UDID"
+          xcodebuild test \
+            -project RunUp.xcodeproj \
+            -scheme RunUp \
+            -destination "id=$UDID" \
+            CODE_SIGNING_ALLOWED=NO

@@ -56,11 +56,16 @@ struct FriendsView: View {
                     } else if isLoading && feed.isEmpty {
                         loadingCard
                     } else {
-                        // Les demandes en attente passent avant le réglage "Compte privé" : ce
-                        // sont des actions qui attendent une réponse, pas un paramètre.
+                        // Les demandes en attente passent avant tout : ce sont des actions qui
+                        // attendent une réponse.
                         if !incomingRequests.isEmpty { requestsCard }
-                        privacyRow
+                        // Le fil AVANT le réglage « Compte privé ». Sur un compte neuf — le seul
+                        // état où cet écran est vide, et donc celui où il compte le plus — la
+                        // carte la plus haute et la plus visible de l'écran était un interrupteur
+                        // de confidentialité, au-dessus de l'unique chose à y faire : trouver
+                        // quelqu'un. Un réglage ne prend pas le pas sur le contenu.
                         feedSection
+                        privacyRow
                     }
                 }
 
@@ -388,18 +393,34 @@ struct FriendsView: View {
                     // s'ils ont l'app. C'est l'état de TOUT nouveau compte, et donc l'endroit où
                     // l'invitation par code a le plus de sens : elle vivait jusqu'ici dans
                     // « Plus de réglages », derrière la molette du Profil.
+                    // Une vraie carte, et non trois paragraphes posés à même la page : c'est le
+                    // seul contenu de l'écran à ce moment-là, et du texte nu au milieu du vide se
+                    // lit comme un message d'erreur plutôt que comme une invitation à agir.
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Personne à suivre pour l'instant")
-                            .font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                        HStack(spacing: 10) {
+                            ZStack {
+                                Circle().fill(RUColor.violet.opacity(0.16))
+                                Image(systemName: "person.2.fill")
+                                    .font(.system(size: 15))
+                                    .foregroundColor(RUColor.violet)
+                            }
+                            .frame(width: 36, height: 36)
+                            Text("Personne à suivre pour l'instant")
+                                .font(RUFont.sans(13.5, weight: .bold))
+                                .foregroundColor(RUColor.textPrimary)
+                        }
                         Text("Cherche quelqu'un par son nom ou son pseudo juste au-dessus — ou invite ceux avec qui tu cours déjà.")
-                            .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                            .font(RUFont.sans(12)).foregroundColor(RUColor.text2)
                             .fixedSize(horizontal: false, vertical: true)
                         if let code = auth.currentUser?.referralCode {
+                            Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
                             ReferralInviteCard(code: code)
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 6)
+                    .padding(15)
+                    .ruCard()
+                    .padding(.top, 2)
                 } else {
                     Text("Personne n'a encore rien posté — reviens plus tard.")
                         .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
@@ -447,6 +468,20 @@ struct FriendsView: View {
             errorMessage = String(localized: "Impossible de charger le fil d'activité — vérifie ta connexion.")
         }
         isLoading = false
+
+        // Le fil vide propose d'inviter « ceux avec qui tu cours déjà » — mais la carte
+        // d'invitation ne s'affiche que `if let code = auth.currentUser?.referralCode`, et cette
+        // valeur vient de la réponse d'authentification MISE EN CACHE à la connexion. Un compte
+        // ouvert avant l'arrivée du parrainage a donc un utilisateur local sans code, alors que
+        // le serveur, lui, en attribue un d'office (`api/me.js` le rattrape à chaque appel). Le
+        // texte promettait donc une invitation, et le bouton n'apparaissait jamais — précisément
+        // pour les comptes les plus anciens, et sur le seul écran où ça se voit.
+        //
+        // Un rafraîchissement suffit, et seulement quand le code manque : `refreshMe` réécrit
+        // `currentUser` avec ce que le serveur vient de rattraper.
+        if auth.currentUser?.referralCode == nil {
+            _ = try? await auth.refreshMe()
+        }
     }
 
     private func scheduleSearch(_ text: String) {

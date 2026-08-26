@@ -241,7 +241,14 @@ struct ClubView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         EyebrowLabel(text: "Le Club", color: RUColor.rose)
                         HStack(spacing: 6) {
-                            Text(club.name).displayStyle(24).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                            // Même raison que le nom du Profil : « Ebury » est un nom propre saisi
+                            // par quelqu'un, pas un titre d'écran, et Bebas Neue le rendait
+                            // « EBURY » faute de bas-de-casse.
+                            Text(club.name)
+                                .font(RUFont.sans(22, weight: .bold))
+                                .foregroundColor(RUColor.textPrimary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.6)
                             Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundColor(RUColor.text3)
                         }
                     }

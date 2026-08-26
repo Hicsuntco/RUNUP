@@ -3,7 +3,7 @@ import Observation
 import UIKit
 
 /// Font tokens — see README § Typography.
-/// - Display/numerals ("Bricolage Grotesque ExtraBold", class `.b`): big numbers, headlines,
+/// - Display/numerals ("DM Sans ExtraBold", class `.b`): big numbers, headlines,
 ///   buttons — voir `display(_:)` et son facteur de taille.
 /// - Body ("DM Sans", 300–700 + italic): body copy, labels.
 /// - Monospace ("DM Mono", class `.m`): timestamps, XP counters, precise numeric readouts.
@@ -78,7 +78,8 @@ enum RUFont {
     /// clair la remplaçait par une system sans lourde : l'app avait donc DEUX identités
     /// typographiques selon le thème. Et elle est une police d'affiche, un genre qui date vite.
     ///
-    /// Bricolage Grotesque tient sur les deux fonds, d'où la disparition de la bifurcation.
+    /// C'est désormais DM Sans ExtraBold — la même famille que le texte courant, une graisse plus
+    /// haut. Elle tient sur les deux fonds, d'où la disparition de la bifurcation.
     ///
     /// Le nom de la police et le facteur de taille vivent dans `DisplayFont` (RunUp/Shared) :
     /// le widget et la montre les utilisent aussi, et une police nommée à trois endroits finit

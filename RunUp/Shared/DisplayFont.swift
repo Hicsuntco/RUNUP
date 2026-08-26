@@ -11,24 +11,33 @@ import SwiftUI
 /// Ce fichier vit dans `RunUp/Shared`, compilé par les trois cibles. Il ne dépend que de SwiftUI :
 /// aucun modèle, rien qui puisse le rendre inéligible à l'une d'elles.
 enum DisplayFont {
-    /// Le nom PostScript, pas le nom de famille : c'est celui-là que `Font.custom` attend, et il
-    /// diffère du nom de fichier (`BricolageGrotesque-ExtraBold.ttf` → famille « Bricolage
-    /// Grotesque ExtraBold »).
-    static let postScriptName = "BricolageGrotesque-ExtraBold"
+    /// Le nom PostScript, pas le nom de famille : c'est celui-là que `Font.custom` attend.
+    ///
+    /// C'est DM Sans en ExtraBold — la MÊME famille que le texte courant de l'app, une graisse
+    /// plus haut. Autrement dit : plus de police de titrage du tout.
+    ///
+    /// Ce n'est pas un renoncement, c'est le registre visé. Bebas était une condensée d'affiche,
+    /// Bricolage une grotesque à caractère ; toutes deux ont une voix, et c'est cette voix qui
+    /// gênait. Les apps de course qui lisent « premium » n'ont pas de police de titrage : elles
+    /// ont une seule famille neutre, et laissent la hiérarchie se faire par la graisse et la
+    /// taille. Une famille au lieu de deux, c'est aussi une police de moins à charger et plus
+    /// rien qui puisse mal vieillir séparément du reste.
+    static let postScriptName = "DMSans-ExtraBold"
 
     /// ─── POURQUOI 0,82 ────────────────────────────────────────────────────────────────────────
     ///
     /// Toutes les tailles passées aux fonctions ci-dessous ont été dessinées contre Bebas Neue,
     /// dans une seule maquette, les unes par rapport aux autres. Bebas est une CONDENSÉE : à
-    /// taille de point égale, sur les vraies chaînes de l'app, Bricolage ExtraBold est
-    /// **1,67 fois plus large** (rapport de largeur mesuré 0,60 sur « SORTIE LONGUE »,
-    /// « FONCTIONNEL HYROX · CIRCUIT INTENSE », « DÉMARRER », « ALLURE »).
+    /// taille de point égale, sur les vraies chaînes de l'app, DM Sans ExtraBold est
+    /// **1,7 fois plus large**. Un remplacement à taille identique ferait déborder chaque titre.
     ///
-    /// Mais sa hauteur de capitale est plus PETITE : 0,660 em contre 0,700. Les deux mesures
-    /// tirent donc en sens inverse — compenser la largeur demanderait 0,60 et donnerait un texte
-    /// minuscule, compenser la hauteur demanderait 1,06 et ferait déborder chaque titre. Aucun
-    /// facteur unique n'est juste ; celui-ci est le compromis, et il se règle ici, en un nombre,
-    /// après avoir regardé un vrai écran.
+    /// Compenser la largeur exactement demanderait 0,58 et donnerait un texte minuscule. 0,82 est
+    /// le compromis : il tient dans les gabarits sans raboter la présence des grands chiffres.
+    ///
+    /// Mesuré au passage, et c'est ce qui a rendu ce changement indolore : DM Sans ExtraBold est à
+    /// 1 % près de la largeur de Bricolage, avec une hauteur de capitale PLUS GRANDE (0,700 contre
+    /// 0,660 — exactement celle de Bebas). Même encombrement, un peu plus de présence, même
+    /// facteur.
     ///
     /// La vraie réponse, plus tard, est de reprendre les 27 tailles une à une contre la nouvelle
     /// police. Ce facteur est l'étape honnête en attendant, pas un remplacement de ce travail.

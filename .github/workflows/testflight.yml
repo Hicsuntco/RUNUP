@@ -166,13 +166,19 @@ jobs:
           # seconde et évite de découvrir à l'export qu'un des trois secrets contient autre chose.
           for slot in APP WIDGETS WATCH; do
             eval "b64=\${APPLE_PROFILE_$slot}"
-            if ! echo "$b64" | base64 -d 2>/dev/null | security cms -D -i /dev/stdin > /dev/null 2>&1; then
+            # Passer par un fichier : `security cms` relit son entrée, ce qu'un tube ne permet
+            # pas — sur /dev/stdin il échouerait sur un profil parfaitement valide.
+            probe="$RUNNER_TEMP/probe-$slot.mobileprovision"
+            echo "$b64" | base64 -d > "$probe" 2>/dev/null || true
+            if ! security cms -D -i "$probe" > /dev/null 2>&1; then
               echo ""
               echo "✗ APPLE_PROFILE_$slot ne redonne pas un profil de provisionnement lisible."
               echo "  Le secret doit contenir le base64 du .mobileprovision telecharge depuis"
               echo "  developer.apple.com. Voir IOS_SETUP.md."
+              rm -f "$probe"
               exit 1
             fi
+            rm -f "$probe"
           done
           echo "✓ Les trois profils de provisionnement sont lisibles"
 

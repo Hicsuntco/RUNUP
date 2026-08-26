@@ -26,11 +26,19 @@ enum RUColor {
     // Inverser le rapport produit en clair ce que le sombre obtient déjà, par la même logique :
     // la carte est la surface CLAIRE, le fond recule. Le filet et l'ombre redeviennent des
     // finitions au lieu de porter seuls la séparation.
-    static var bg: Color { isLight ? Color(hex: 0xF4F4F8) : Color(hex: 0x0E0E14) }
+    //
+    // Un cran plus profond qu'avant (#F4F4F8) : entre ce gris et le BLANC PUR des cartes, il n'y
+    // avait que 4 % d'écart, et c'est le filet à 6 % qui portait seul la séparation — d'où des
+    // cartes qui ne se posaient sur rien. Le sombre n'a jamais eu ce problème : entre #0E0E14 et
+    // une carte à +4,5 % de blanc, l'œil lit tout de suite deux plans. Le clair a maintenant sa
+    // propre marge, et le filet comme l'ombre redeviennent des finitions.
+    static var bg: Color { isLight ? Color(hex: 0xEAEAF0) : Color(hex: 0x0E0E14) }
     /// Un cran plus ENFONCÉ que `bg` en clair, un cran plus haut en sombre — dans les deux cas
     /// « la rainure dans laquelle une pastille `card` vient se poser » (rail des sélecteurs
     /// segmentés). C'est la relation qui compte, pas la direction.
-    static var bg2: Color { isLight ? Color(hex: 0xE9E9F0) : Color(hex: 0x15151E) }
+    // Descendu avec `bg` : à #E9E9F0 il devenait indiscernable du nouveau fond de page, et une
+    // rainure qui a la couleur de la page n'est plus une rainure.
+    static var bg2: Color { isLight ? Color(hex: 0xDFDFE7) : Color(hex: 0x15151E) }
 
     // Theme-aware — follow the user's chosen accent (Profil → Apparence → Couleur de l'app, see
     // `AccentTheme`/`ThemeStore`).
@@ -105,7 +113,7 @@ enum RUColor {
     static var card: Color { isLight ? Color(hex: 0xFFFFFF) : Color.white.opacity(0.045) }
     /// Sous-surface DANS une carte (ligne de classement, tuile de jour) : elle doit reculer par
     /// rapport à `card`, donc gris pâle sur une carte devenue blanche.
-    static var card2: Color { isLight ? Color(hex: 0xF1F1F6) : Color.white.opacity(0.03) }
+    static var card2: Color { isLight ? Color(hex: 0xF2F2F7) : Color.white.opacity(0.03) }
     static var line: Color { isLight ? Color.black.opacity(0.14) : Color.white.opacity(0.08) }
 
     /// Le contour d'une CARTE, distinct de `line`. Une carte blanche posée sur un fond gris est
@@ -113,7 +121,7 @@ enum RUColor {
     /// redessinerait au trait, et l'écran redeviendrait une grille de rectangles cerclés. `line`
     /// reste inchangé partout où il sépare vraiment — filets entre colonnes de chiffres, lignes
     /// de liste, pistes de barres de progression.
-    static var cardBorder: Color { isLight ? Color.black.opacity(0.06) : Color.white.opacity(0.08) }
+    static var cardBorder: Color { isLight ? Color.black.opacity(0.085) : Color.white.opacity(0.08) }
 
     /// Mélange opaque de `color` dans `base`, exactement `color-mix(in srgb, color N%, base)` en CSS.
     ///
@@ -145,18 +153,6 @@ enum RUColor {
         UIColor(bg).getRed(&pr, green: &pg, blue: &pb, alpha: &pa)
         return (r * a + pr * (1 - a), g * a + pg * (1 - a), b * a + pb * (1 - a))
     }
-
-    /// Le taux de teinte des cartes « destination » du Profil (Amis, Club, Itinéraires).
-    ///
-    /// 7 % était calibré en sombre, où la carte de base est déjà une translucidité blanche à
-    /// 4,5 % sur du quasi-noir : une pointe de couleur y suffit à distinguer deux cartes. Posé
-    /// sur `card` en clair — du BLANC PUR depuis la refonte du thème clair — le même 7 % rend
-    /// un blanc à peine rosé que le contour teinté portait seul. Les trois cartes redevenaient
-    /// trois rectangles blancs identiques, exactement ce que la teinte existe pour éviter.
-    ///
-    /// Le sombre garde sa valeur : l'y monter éclaircirait les cartes teintées au point de les
-    /// faire flotter au-dessus de toutes les autres surfaces de la page.
-    static var socialTintAmount: Double { isLight ? 0.12 : 0.07 }
 
     static func tint(_ color: Color, _ amount: Double, over base: Color) -> Color {
         let c = flattened(color)

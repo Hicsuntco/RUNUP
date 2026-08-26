@@ -18608,6 +18608,230 @@
           }
         }
       }
+    },
+    "Trois choses et c'est parti": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Three things and you're off"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tres cosas y ya estás"
+          }
+        }
+      }
+    },
+    "Ton objectif est fixé": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your goal is set"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu objetivo está fijado"
+          }
+        }
+      }
+    },
+    "Choisis ce que tu prépares": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose what you're training for"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige para qué te preparas"
+          }
+        }
+      }
+    },
+    "Enregistre ta première sortie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log your first run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registra tu primera salida"
+          }
+        }
+      }
+    },
+    "Même 2 km — c'est ce qui démarre tout": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Even 2 km — that's what starts everything"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aunque sean 2 km: es lo que lo pone todo en marcha"
+          }
+        }
+      }
+    },
+    "Rejoins un club, suis un coureur": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join a club, follow a runner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Únete a un club, sigue a alguien"
+          }
+        }
+      }
+    },
+    "Courir seul est le meilleur moyen d'arrêter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running alone is the surest way to stop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correr solo es la forma más segura de dejarlo"
+          }
+        }
+      }
+    },
+    "VOIR": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SEE"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VER"
+          }
+        }
+      }
+    },
+    "Toi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tú"
+          }
+        }
+      }
+    },
+    "1ᵉʳ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1st"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1.º"
+          }
+        }
+      }
+    },
+    "Volume hebdomadaire": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekly volume"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volumen semanal"
+          }
+        }
+      }
+    },
+    "il y a %lld sem.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld wks ago"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hace %lld sem."
+          }
+        }
+      }
+    },
+    "cette sem.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "this wk"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "esta sem."
+          }
+        }
+      }
+    },
+    "%@ kilomètres sur les %lld dernières semaines, avec un pic à %@ kilomètres.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kilometres over the last %lld weeks, peaking at %@ kilometres."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kilómetros en las últimas %lld semanas, con un pico de %@ kilómetros."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

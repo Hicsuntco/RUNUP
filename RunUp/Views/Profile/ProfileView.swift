@@ -321,25 +321,44 @@ struct ProfileView: View {
     /// identiques et deviennent deux endroits distincts et reconnaissables.
     private func socialCard<Content: View>(tint: Color, @ViewBuilder content: () -> Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous)
+        // EN CLAIR, PAS DE TEINTE DU TOUT. C'est la correction la plus importante de ce fichier,
+        // et elle vient d'une erreur de raisonnement, pas de réglage : en sombre, teinter une
+        // carte de son accent produit une couleur SOMBRE — un bordeaux, un indigo, un vert nuit —
+        // qui recule derrière le texte posé dessus. Sur du blanc, la même teinte produit un
+        // PASTEL, et un pastel avance. Les trois destinations devenaient un bloc lavande, un
+        // bloc rose dragée et un bloc menthe : trois surfaces qui réclament l'attention en même
+        // temps, sur un écran dont tout le reste est neutre.
+        //
+        // Monter le taux de 7 à 12 % avait aggravé exactement ce qu'il prétendait corriger.
+        //
+        // En clair, ce qui distingue les trois cartes est donc la PASTILLE : 36 pt de violet, de
+        // dégradé de marque ou de cyan sur une carte blanche. C'est la quantité de couleur qu'un
+        // fond blanc supporte, et c'est déjà ce que l'œil utilisait pour reconnaître les cartes,
+        // même sous le lavis. Le sombre garde sa teinte : elle y fonctionne, pour la raison
+        // exactement inverse.
+        let isLight = RUColor.isLight
         return content()
             .padding(15)
             // Mélange OPAQUE dans `card` (`RUColor.tint`), pas un `tint.opacity(0.07)` translucide
             // posé par-dessus : c'est la règle du fichier de tokens, et ici elle compte vraiment —
             // en thème sombre `card` est lui-même une translucidité blanche, empiler deux couches
             // translucides y donnerait une carte plus claire que toutes les autres de la page.
-            .background(shape.fill(RUColor.tint(tint, RUColor.socialTintAmount, over: RUColor.card)))
+            .background(shape.fill(isLight ? RUColor.card : RUColor.tint(tint, 0.07, over: RUColor.card)))
             // Le contour, lui, reste translucide : `RUColor.line` est une couleur à alpha (noir
             // 14% / blanc 8%) et `tint(_:over:)` rend une couleur opaque — mélanger dedans
             // donnerait un trait quasi noir en thème clair au lieu d'un filet.
-            .overlay(shape.stroke(tint.opacity(0.3), lineWidth: RUSpacing.hairline))
+            // Le contour suit : un filet teinté autour d'une carte blanche redessinerait au
+            // trait ce que le fond ne dit plus, et l'écran redeviendrait une grille de rectangles
+            // cerclés de couleur.
+            .overlay(shape.stroke(isLight ? RUColor.cardBorder : tint.opacity(0.3), lineWidth: RUSpacing.hairline))
             // Même ombre que `ruCard()`, et surtout pas plus. Cette carte portait encore
             // l'ancienne (radius 16, y 5, 16 %), rescapée parce qu'elle est posée à la main ici
             // plutôt que par le modificateur partagé : les deux seules cartes teintées de la page
             // flottaient donc quatre fois plus haut que toutes les cartes neutres de l'app. La
             // maquette fait l'inverse — une teinte se distingue par sa couleur, jamais par plus
             // d'élévation.
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.04 : 0), radius: 1, x: 0, y: 1)
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.08 : 0), radius: 4, x: 0, y: 3)
+            .shadow(color: .black.opacity(isLight ? 0.05 : 0), radius: 1, x: 0, y: 1)
+            .shadow(color: .black.opacity(isLight ? 0.10 : 0), radius: 6, x: 0, y: 4)
     }
 
     /// `.social-card-arrow` — un chevron nu se perd dans une carte teintée ; dans une pastille

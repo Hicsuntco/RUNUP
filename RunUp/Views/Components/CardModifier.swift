@@ -33,8 +33,12 @@ struct CardBackground: ViewModifier {
             // thèmes mais n'en AFFICHE qu'en clair — ce que le 0 explicite ci-dessous produit
             // déjà. Le choix existant est donc conservé : il donne le même rendu, en évitant de
             // composer une passe d'ombre inutile à chaque carte.
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.04 : 0), radius: 1, x: 0, y: 1)
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.08 : 0), radius: 4, x: 0, y: 3)
+            // Seconde couche relevée (0,08 / rayon 4 → 0,10 / rayon 6, un point plus bas) en
+            // même temps que le fond de page s'est assombri : les deux vont ensemble. L'ombre
+            // reste rentrée sous le bord bas plutôt qu'étalée en halo — c'est ce qui distingue
+            // une carte posée d'une carte qui flotte.
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.05 : 0), radius: 1, x: 0, y: 1)
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.10 : 0), radius: 6, x: 0, y: 4)
     }
 }
 
@@ -59,7 +63,11 @@ extension View {
             // aucune ombre du tout, et celles qui en ont (`.sesh.active`, `.challenge-card
             // .coach-tint`) héritent simplement de l'ombre neutre de leur famille. Une teinte se
             // distingue par sa couleur de fond et son contour teinté, jamais par plus d'élévation.
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.04 : 0), radius: 1, x: 0, y: 1)
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.08 : 0), radius: 4, x: 0, y: 3)
+            // Seconde couche relevée (0,08 / rayon 4 → 0,10 / rayon 6, un point plus bas) en
+            // même temps que le fond de page s'est assombri : les deux vont ensemble. L'ombre
+            // reste rentrée sous le bord bas plutôt qu'étalée en halo — c'est ce qui distingue
+            // une carte posée d'une carte qui flotte.
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.05 : 0), radius: 1, x: 0, y: 1)
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.10 : 0), radius: 6, x: 0, y: 4)
     }
 }

@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 /// Douze semaines de volume, en une bande de barres.
 ///

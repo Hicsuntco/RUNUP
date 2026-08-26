@@ -29,10 +29,6 @@ struct ProfileView: View {
     /// de quoi il s'agit ; deux lignes réelles répondent avant qu'on ait à taper.
     @State private var friendsFeed: [FeedItem] = []
 
-    private var todaysFriendActivityCount: Int {
-        friendsFeed.filter { Calendar.current.isDateInToday($0.createdAt) }.count
-    }
-
     private static let relativeFormatter: RelativeDateTimeFormatter = {
         let f = RelativeDateTimeFormatter()
         f.unitsStyle = .short

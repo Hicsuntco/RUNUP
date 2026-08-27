@@ -85,14 +85,22 @@ struct DailyGoalsBarsView: View {
                 // Fill: from the same start point, out to `pct` of the way along the segment. The
                 // gradient sweep spans the segment's full angular range (not just the filled
                 // part), so the trim below reveals progressively more of the same fixed sweep —
-                // early progress reads a touch muted, filling all the way to the goal reaches the
-                // fully saturated color, the same "brightens as it completes" read Apple's rings
+                // early progress sits at the base accent, filling all the way to the goal reaches
+                // its most intense form, the same "brightens as it completes" read Apple's rings
                 // have, without animating the gradient itself (only `trim` — a `Shape`'s own
                 // `animatableData` — needs to interpolate for this to animate smoothly).
+                //
+                // Le départ était `color.darkened(0.28)`, et c'est ce qui rendait l'anneau terne :
+                // en clair, l'arc « calories » partait de `#A60A3B`, un bordeaux. Un objectif
+                // ATTEINT révèle tout le balayage, donc cette bouillie restait affichée en
+                // permanence sur une bonne moitié de l'arc — l'inverse de ce que l'effet
+                // cherchait. Le dégradé va maintenant de l'accent vers sa version la plus vive
+                // (`#E60E52` → `#FF0050`) : lumineux d'un bout à l'autre, et le sens « ça
+                // s'éclaire en se remplissant » est conservé.
                 Circle()
                     .trim(from: seg.trimStart, to: fillEnd)
                     .stroke(
-                        AngularGradient(gradient: Gradient(colors: [color.darkened(0.28), color]), center: .center, startAngle: .degrees(seg.gradientStartDegrees), endAngle: .degrees(seg.gradientEndDegrees)),
+                        AngularGradient(gradient: Gradient(colors: [color, color.vivid(0.22)]), center: .center, startAngle: .degrees(seg.gradientStartDegrees), endAngle: .degrees(seg.gradientEndDegrees)),
                         style: StrokeStyle(lineWidth: Self.strokeWidth, lineCap: .round)
                     )
                     .animation(reduceMotion ? nil : .easeOut(duration: 0.9), value: pct)

@@ -33,4 +33,28 @@ extension Color {
         let factor = CGFloat(max(0, min(1, 1 - amount)))
         return Color(red: r * factor, green: g * factor, blue: b * factor, opacity: a)
     }
+
+    /// La même teinte, poussée vers son maximum d'intensité — plus lumineuse tant qu'il reste de
+    /// la marge, puis plus saturée une fois la luminosité au plafond.
+    ///
+    /// Le pendant de `darkened` pour les dégradés d'accent, et pas son inverse : multiplier les
+    /// canaux RVB comme le fait `darkened` fabrique de la boue. `#E60E52` assombri de 28 % donne
+    /// `#A60A3B`, un bordeaux terne — la teinte est conservée, mais la couleur ne dit plus rien
+    /// du rose de la marque. Travailler en TSV plutôt qu'en RVB garde la teinte ET l'éclat.
+    ///
+    /// L'ordre compte : monter la saturation d'abord sur une couleur déjà sombre la rendrait
+    /// criarde sans la rendre lumineuse. On dépense la marge de luminosité en premier, et le
+    /// reliquat seulement ensuite en saturation — ce qui rend l'effet utile aussi en mode sombre,
+    /// où les accents sont déjà à luminosité maximale et où seul le gain de saturation reste
+    /// disponible.
+    func vivid(_ amount: Double) -> Color {
+        let ui = UIColor(self)
+        var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        guard ui.getHue(&h, saturation: &s, brightness: &b, alpha: &a) else { return self }
+        let amt = CGFloat(max(0, amount))
+        let newB = min(1, b * (1 + amt))
+        let spent = b > 0 ? (newB / b) - 1 : amt
+        let newS = min(1, s * (1 + max(0, amt - spent)))
+        return Color(hue: Double(h), saturation: Double(newS), brightness: Double(newB), opacity: Double(a))
+    }
 }

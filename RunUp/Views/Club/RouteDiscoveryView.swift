@@ -249,9 +249,9 @@ private struct RouteRow: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(route.name)
-                    .font(RUFont.sans(14.5, weight: .semibold))
+                    .font(RUFont.sans(14.5, weight: .bold))
                     .foregroundColor(RUColor.textPrimary)
-                    .lineLimit(1)
+                    .lineLimit(1).minimumScaleFactor(0.8)
                 Text(route.subtitleLine)
                     .font(RUFont.sans(11.5))
                     .foregroundColor(RUColor.text3)

@@ -217,7 +217,7 @@ struct AddRunSheet: View {
                         }
                     }
                 }
-            Text(unit).font(RUFont.sans(12, weight: .medium)).foregroundColor(RUColor.text2)
+            Text(unit).font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.text2)
         }
         .padding(.horizontal, 14)
         .frame(minHeight: 48)

@@ -104,7 +104,7 @@ struct BadgeUnlockedView: View {
                         // recovery as `RecapView`'s share card: a manual retry, "Continuer" below
                         // still works either way if she doesn't bother.
                         Button("Réessayer") { renderShareCard() }
-                            .font(RUFont.sans(12, weight: .medium))
+                            .font(RUFont.sans(12, weight: .semibold))
                             .foregroundColor(RUColor.rose2)
                             .frame(minHeight: 44)
                             .contentShape(Rectangle())
@@ -113,7 +113,7 @@ struct BadgeUnlockedView: View {
                     }
 
                     Button(action: onDismiss) {
-                        Text("Continuer").font(RUFont.sans(13, weight: .medium)).foregroundColor(RUColor.text2)
+                        Text("Continuer").font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.text2)
                     }
                     .buttonStyle(PressableStyle())
                 }

@@ -40,7 +40,7 @@ struct ActivityFeedRow: View {
                     Text(item.name)
                         .font(RUFont.sans(13, weight: .bold))
                         .foregroundColor(RUColor.textPrimary)
-                        .lineLimit(1)
+                        .lineLimit(1).minimumScaleFactor(0.8)
                     Text(item.createdAt.relativeDescription).font(RUFont.sans(10)).foregroundColor(RUColor.text3)
                 }
                 Spacer(minLength: 0)
@@ -98,7 +98,7 @@ struct ActivityFeedRow: View {
                         Text("👏")
                         Text("\(item.kudos)")
                     }
-                    .font(RUFont.sans(12, weight: .medium))
+                    .font(RUFont.sans(12, weight: .semibold))
                     .foregroundColor(item.kudoedByMe ? RUColor.rose2 : RUColor.text2)
                     .padding(.trailing, 6)
                     .frame(minHeight: 44)
@@ -115,7 +115,7 @@ struct ActivityFeedRow: View {
                         Image(systemName: "bubble.left")
                         Text("\(item.commentsCount)")
                     }
-                    .font(RUFont.sans(12, weight: .medium))
+                    .font(RUFont.sans(12, weight: .semibold))
                     .foregroundColor(RUColor.text2)
                     .padding(.trailing, 6)
                     .frame(minHeight: 44)

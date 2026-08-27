@@ -81,7 +81,7 @@ struct DebriefSheet: View {
                         Button(action: { rpe = opt }) {
                             VStack(spacing: 5) {
                                 Text(opt.emoji).font(.system(size: 22))
-                                Text(opt.label).font(RUFont.sans(9, weight: .medium)).foregroundColor(rpe == opt ? RUColor.rose2 : RUColor.text2)
+                                Text(opt.label).font(RUFont.sans(9, weight: .semibold)).foregroundColor(rpe == opt ? RUColor.rose2 : RUColor.text2)
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)

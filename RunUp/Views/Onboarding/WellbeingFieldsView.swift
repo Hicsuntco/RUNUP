@@ -55,7 +55,7 @@ struct WellbeingFieldsView: View {
                                 .disabled(vm.averageCycleLengthDays <= 21)
 
                                 Text("\(vm.averageCycleLengthDays) jours")
-                                    .font(RUFont.sans(13, weight: .medium))
+                                    .font(RUFont.sans(13, weight: .semibold))
                                     .frame(minWidth: 56)
 
                                 Button(action: { vm.averageCycleLengthDays = min(35, vm.averageCycleLengthDays + 1) }) {

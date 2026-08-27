@@ -37,36 +37,30 @@ enum RUColor {
     ///
     /// Un fond gris avec des cartes blanches sépare mieux, mécaniquement. Ce n'est pas ce qui est
     /// voulu ici.
-    static var bg: Color { isLight ? Color(hex: 0xFFF7F2) : Color(hex: 0x0B0B0F) }
+    static var bg: Color { isLight ? Color(hex: 0xFFFFFF) : Color(hex: 0x0B0B0F) }
 
     /// Le fond de PAGE, à poser à la racine d'un écran — un dégradé en clair, une couleur en
     /// sombre.
     ///
-    /// En clair, le fond n'est ni blanc ni gris : il descend d'un rose très pâle vers une crème
-    /// chaude puis une menthe. C'est ce qui donne leur richesse aux modes clairs des références,
-    /// et ça règle du même coup le problème qui nous avait coûté plusieurs essais — une carte
-    /// blanche sur un fond légèrement teinté se détache d'elle-même, sans avoir à charger le filet
-    /// ni l'ombre.
+    /// En clair il est BLANC. Il était passé par un dégradé rose pâle → crème → menthe, hérité
+    /// d'une direction artistique qui a été abandonnée ensuite ; le blanc est la valeur d'avant,
+    /// reprise telle quelle.
     ///
-    /// `bg` reste une COULEUR unie et garde son rôle partout où une teinte plate est nécessaire :
-    /// le liseré d'un avatar, la fin d'un autre dégradé, un cercle plein. Sa valeur claire est la
-    /// teinte médiane du dégradé, pour que ces usages ne jurent avec aucune de ses extrémités.
+    /// Ce que le dégradé réglait, le blanc le réglait déjà autrement : une carte blanche sur une
+    /// page blanche ne se détache pas d'elle-même, donc `line` et `cardBorder` remontent à 11 %
+    /// et 13 % — leurs valeurs de l'époque — et `card2` se réenfonce à `#EFEEF6`. Sur une page
+    /// blanche, la profondeur est portée par le filet et la sous-surface, pas par le fond.
     ///
-    /// En sombre, le dégradé n'a que deux arrêts identiques : le même type de vue des deux côtés,
-    /// donc aucun appel n'a besoin de savoir dans quel thème il se trouve.
+    /// `pageBackground` reste un dégradé du point de vue du TYPE, avec deux arrêts identiques des
+    /// deux côtés : les 27 écrans qui l'utilisent à leur racine n'ont pas à savoir dans quel thème
+    /// ils se trouvent, et repasser à un dégradé un jour ne touchera pas un seul appel.
     static var pageBackground: LinearGradient {
-        isLight
-            ? LinearGradient(
-                colors: [Color(hex: 0xFDF1F5), Color(hex: 0xFFF7F2), Color(hex: 0xF5FAF3)],
-                startPoint: UnitPoint(x: 0.1, y: 0),
-                endPoint: UnitPoint(x: 0.9, y: 1)
-              )
-            : LinearGradient(colors: [bg, bg], startPoint: .top, endPoint: .bottom)
+        LinearGradient(colors: [bg, bg], startPoint: .top, endPoint: .bottom)
     }
     /// Un cran plus ENFONCÉ que `bg` en clair, un cran plus haut en sombre — dans les deux cas
     /// « la rainure dans laquelle une pastille `card` vient se poser » (rail des sélecteurs
     /// segmentés). C'est la relation qui compte, pas la direction.
-    static var bg2: Color { isLight ? Color(hex: 0xF0EAF0) : Color(hex: 0x131319) }
+    static var bg2: Color { isLight ? Color(hex: 0xEDECF5) : Color(hex: 0x131319) }
 
     // Theme-aware — follow the user's chosen accent (Profil → Apparence → Couleur de l'app, see
     // `AccentTheme`/`ThemeStore`).
@@ -148,8 +142,8 @@ enum RUColor {
     /// Assombri à `#EFEEF6` : sur une page blanche c'est LUI qui porte la profondeur, puisque la
     /// carte ne peut plus le faire. 1,15:1 contre le blanc — faible dans l'absolu, mais c'est le
     /// maximum tolérable avant que la sous-surface ne devienne une carte à son tour.
-    static var card2: Color { isLight ? Color(hex: 0xF6F3F8) : Color(hex: 0x1F1F27) }
-    static var line: Color { isLight ? Color.black.opacity(0.08) : Color.white.opacity(0.08) }
+    static var card2: Color { isLight ? Color(hex: 0xEFEEF6) : Color(hex: 0x1F1F27) }
+    static var line: Color { isLight ? Color.black.opacity(0.11) : Color.white.opacity(0.08) }
 
     /// Le contour d'une CARTE, distinct de `line`. Une carte blanche posée sur un fond gris est
     /// déjà séparée par le fond : lui garder le filet de `line` (noir à 14 %) sur 1 pt la
@@ -161,7 +155,7 @@ enum RUColor {
     /// finition qu'on voit.
     /// Redescendu à 7 % : sur un fond désormais teinté, la carte blanche se détache par sa
     /// couleur, et le filet redevient une finition au lieu de porter la séparation à lui seul.
-    static var cardBorder: Color { isLight ? Color.black.opacity(0.07) : Color.white.opacity(0.08) }
+    static var cardBorder: Color { isLight ? Color.black.opacity(0.13) : Color.white.opacity(0.08) }
 
     /// Mélange opaque de `color` dans `base`, exactement `color-mix(in srgb, color N%, base)` en CSS.
     ///

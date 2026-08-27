@@ -44,7 +44,7 @@ struct SelectableCard: View {
                     Text(emoji).font(.system(size: 24))
                 }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(RUFont.sans(15, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                    Text(title).font(RUFont.sans(15, weight: .bold)).foregroundColor(RUColor.textPrimary)
                     if let subtitle {
                         Text(subtitle).font(RUFont.sans(11.5)).foregroundColor(RUColor.text2).lineSpacing(2)
                     }

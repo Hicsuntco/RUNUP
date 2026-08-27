@@ -31,18 +31,19 @@ enum DisplayFont {
     /// qui lui a succédé est plus large à taille de point égale, d'où ce facteur de compensation :
     /// sans lui, les titres débordent de leurs gabarits.
     ///
-    /// 0,94 pour Archivo. Le facteur ne se dérive pas de la largeur mais de la HAUTEUR DE
-    /// CAPITALE, parce que c'est elle qui décide de la taille perçue d'un titre ou d'un grand
-    /// chiffre : Archivo est à 0,686 em contre 0,697 pour Poppins, soit 1,6 % de moins, d'où
-    /// 0,92 × 1,016 ≈ 0,94. À ce facteur les titres ont exactement la présence qu'ils avaient.
+    /// 1,16 : la compensation d'Archivo (0,94, dérivée de sa hauteur de capitale, 0,686 em contre
+    /// 0,697 pour Poppins) multipliée par le même relèvement de 1,238 que le texte courant.
     ///
-    /// Vérifié dans l'autre sens : Archivo est aussi 9 % plus étroite que Poppins, donc à 0,94
-    /// les titres occupent 8 % de moins en largeur qu'avant. Le risque du changement était le
-    /// débordement, il va dans le bon sens.
+    /// Le MÊME multiplicateur des deux côtés, et c'est tout l'enjeu de ce nombre. Ne relever que
+    /// le corps aurait inversé la hiérarchie : `display` sert aussi à de petits nombres, jusqu'à
+    /// 11 pt de taille dessinée, et à 0,94 ils seraient tombés sous des libellés courants montés
+    /// à 1,30. Un titre plus petit que le texte qu'il coiffe. Appliquer le même facteur des deux
+    /// côtés laisse intactes toutes les proportions choisies au dessin ; l'app grandit, elle ne
+    /// se réorganise pas.
     ///
-    /// La vraie réponse, plus tard, est de reprendre les 27 tailles une à une. Ce facteur est
-    /// l'étape honnête en attendant, pas un remplacement de ce travail.
-    static let sizeFactor: CGFloat = 0.94
+    /// Les tailles vont de 11 à 40, donc de 12,8 à 46,4 pt à l'écran. La plus grande est le
+    /// « RUNUP » de l'écran de lancement, cinq lettres sur une page vide.
+    static let sizeFactor: CGFloat = 1.16
 
     /// La taille de point à demander pour retrouver l'encombrement dessiné à l'origine.
     static func pointSize(for designSize: CGFloat) -> CGFloat { designSize * sizeFactor }

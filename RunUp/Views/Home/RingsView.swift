@@ -181,7 +181,7 @@ struct RingsView: View {
             .accessibilityLabel("Jour précédent")
 
             Text(dayLabel)
-                .font(RUFont.sans(13, weight: .medium))
+                .font(RUFont.sans(13, weight: .semibold))
                 .foregroundColor(RUColor.textPrimary)
                 .frame(maxWidth: .infinity)
                 .lineLimit(1)
@@ -232,7 +232,7 @@ struct RingsView: View {
             Circle().fill(color).frame(width: 10, height: 10).shadow(color: color.opacity(0.4), radius: 6)
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("Séance").font(RUFont.sans(16, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                    Text("Séance").font(RUFont.sans(16, weight: .bold)).foregroundColor(RUColor.textPrimary)
                     Spacer()
                     Text(restDay ? "Repos" : (done ? "Faite ✓" : (isToday ? "À faire" : "Non faite")))
                         .font(RUFont.sans(11, weight: .bold))
@@ -250,7 +250,7 @@ struct RingsView: View {
             Circle().fill(color).frame(width: 10, height: 10).shadow(color: color.opacity(0.4), radius: 6)
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text(name).font(RUFont.sans(16, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                    Text(name).font(RUFont.sans(16, weight: .bold)).foregroundColor(RUColor.textPrimary)
                     Spacer()
                     (Text(formattedValue(value)).font(RUFont.sans(11, weight: .bold)).foregroundColor(color)
                         + Text(" / \(formattedValue(goal)) \(unit)").font(RUFont.mono(11)).foregroundColor(RUColor.text2))

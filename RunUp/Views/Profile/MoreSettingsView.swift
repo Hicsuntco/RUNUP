@@ -252,7 +252,7 @@ struct MoreSettingsView: View {
                         HStack(spacing: 7) {
                             Circle().fill(cyclePhaseColor(phase)).frame(width: 8, height: 8)
                             Text("Phase actuelle estimée : \(cyclePhaseLabel(phase))")
-                                .font(RUFont.sans(12, weight: .medium))
+                                .font(RUFont.sans(12, weight: .semibold))
                                 .foregroundColor(cyclePhaseColor(phase))
                         }
                     }
@@ -396,7 +396,7 @@ struct MoreSettingsView: View {
                     .font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
                 Spacer()
                 Button(isSavingIdentity ? "…" : "Enregistrer") { Task { await saveIdentity() } }
-                    .font(RUFont.sans(11.5, weight: .medium))
+                    .font(RUFont.sans(11.5, weight: .semibold))
                     .foregroundColor(RUColor.rose2)
                     .disabled(isSavingIdentity)
             }

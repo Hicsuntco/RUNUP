@@ -49,7 +49,7 @@ struct SocialView: View {
         Button(action: { appState.go(.profile) }) {
             HStack(spacing: 6) {
                 Image(systemName: "chevron.left").font(.system(size: 12, weight: .bold))
-                Text("Profil").font(RUFont.sans(13, weight: .medium))
+                Text("Profil").font(RUFont.sans(13, weight: .semibold))
             }
             .foregroundColor(RUColor.text2)
             .frame(minHeight: 44)

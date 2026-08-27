@@ -101,15 +101,22 @@ enum RUFont {
     /// 6 % et pas davantage : les rangées de trois métriques côte à côte sont à largeur fixe, et
     /// au-delà elles tronquent au lieu de s'adapter. Comme le facteur de titrage, c'est un nombre,
     /// à un seul endroit, qu'on rouvre après avoir regardé un écran.
-    /// Remonté de 1,00 à 1,05 avec le passage à Archivo. Le facteur suit la HAUTEUR D'X, pas la
-    /// largeur : c'est elle qui fait la taille perçue du texte courant. Archivo est à 0,526 em
-    /// contre 0,551 pour Poppins, soit 4,5 % de moins ; 1 / 0,955 ≈ 1,05 rend au texte la taille
-    /// à laquelle il se lisait.
+    /// 1,30, et ce n'est plus une compensation de police : c'est un choix de générosité.
     ///
-    /// Le garde-fou de ce nombre a toujours été les rangées de trois métriques côte à côte, à
-    /// largeur fixe, qui tronquent au lieu de s'adapter. Il tient : Archivo est 9 % plus étroite
-    /// que Poppins, donc même relevée de 5 %, une ligne occupe 4 % de MOINS qu'avant.
-    private static let bodySizeFactor: CGFloat = 1.05
+    /// Deux choses se cumulent dans ce nombre. La compensation d'Archivo d'abord — sa hauteur
+    /// d'x est 4,5 % sous celle de Poppins, ce qui valait 1,05. Puis le relèvement demandé, à
+    /// partir d'une mesure des captures de référence : leur texte courant tourne autour de 16 pt
+    /// quand les libellés d'ici étaient dessinés à 12. Le rapport est de 1,33 ; 1,30 le rejoint
+    /// presque, et fait passer un libellé de 12 pt à 15,6 pt à l'écran.
+    ///
+    /// Le garde-fou reste le même — les rangées de métriques côte à côte tronquent au lieu de
+    /// s'adapter — mais il n'est plus le facteur limitant : les neuf libellés d'une seule ligne
+    /// qui n'avaient pas de `minimumScaleFactor` en ont un, donc ils rétrécissent au lieu de se
+    /// couper. C'était la condition pour pouvoir monter aussi haut sans casser une rangée.
+    ///
+    /// Archivo aide aussi : 9 % plus étroite que Poppins, donc une ligne relevée de 30 % occupe
+    /// 19 % de plus qu'avant, pas 30.
+    private static let bodySizeFactor: CGFloat = 1.30
 
     static func mono(_ size: CGFloat, weight: DMWeight = .regular) -> Font {
         let pointSize = scaled(size * bodySizeFactor)

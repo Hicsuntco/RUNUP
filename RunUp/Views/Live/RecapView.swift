@@ -149,7 +149,7 @@ struct RecapView: View {
                                     VStack(spacing: 8) {
                                         Image(systemName: "exclamationmark.triangle").font(.system(size: 20)).foregroundColor(RUColor.text3)
                                         Button("Réessayer") { renderShareCard(for: run) }
-                                            .font(RUFont.sans(12, weight: .medium))
+                                            .font(RUFont.sans(12, weight: .semibold))
                                             .foregroundColor(RUColor.rose2)
                                             .padding(.horizontal, 4)
                                             .frame(minHeight: 44)

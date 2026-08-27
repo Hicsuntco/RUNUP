@@ -102,7 +102,7 @@ struct ShoesView: View {
         return VStack(alignment: .leading, spacing: 10) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(shoe.name).font(RUFont.sans(14.5, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                    Text(shoe.name).font(RUFont.sans(14.5, weight: .bold)).foregroundColor(RUColor.textPrimary)
                     // A ternary of string literals defaults to `String`, not `LocalizedStringKey`
                     // — same gotcha `EyebrowLabel` works around — so this needs the explicit
                     // wrap too, or it'd silently never translate into EN/ES.
@@ -134,9 +134,9 @@ struct ShoesView: View {
                 Text("/ \(String(format: "%.0f", shoe.alertThresholdKm)) km").font(RUFont.mono(11)).foregroundColor(RUColor.text3)
                 Spacer()
                 if fraction >= 1 {
-                    Text("À remplacer").font(RUFont.sans(10.5, weight: .medium)).foregroundColor(RUColor.rose)
+                    Text("À remplacer").font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.rose)
                 } else if fraction >= 0.8 {
-                    Text("Bientôt en fin de vie").font(RUFont.sans(10.5, weight: .medium)).foregroundColor(RUColor.amber)
+                    Text("Bientôt en fin de vie").font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.amber)
                 }
             }
         }

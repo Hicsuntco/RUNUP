@@ -155,7 +155,7 @@ struct LiveRunView: View {
         HStack(spacing: 8) {
             Image(systemName: "exclamationmark.triangle.fill").foregroundColor(RUColor.amber).font(.system(size: 14))
             Text("Signal GPS instable — position estimée")
-                .font(RUFont.sans(11.5, weight: .medium))
+                .font(RUFont.sans(11.5, weight: .semibold))
                 .foregroundColor(Color(hex: 0xFFD79A))
         }
         .padding(.horizontal, 12).padding(.vertical, 9)

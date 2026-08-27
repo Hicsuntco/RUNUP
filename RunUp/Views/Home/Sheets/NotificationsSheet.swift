@@ -16,7 +16,7 @@ struct NotificationsSheet: View {
                     // every other list screen in the app at least says something here.
                     VStack(spacing: 10) {
                         Image(systemName: "bell.slash").font(.system(size: 28)).foregroundColor(RUColor.text3)
-                        Text("Rien pour l'instant").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                        Text("Rien pour l'instant").font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                         Text("Tes séances, tes séries et l'activité du club apparaîtront ici.")
                             .font(RUFont.sans(12)).foregroundColor(RUColor.text2)
                             .multilineTextAlignment(.center)
@@ -35,7 +35,7 @@ struct NotificationsSheet: View {
                                     .overlay(Text(n.icon).font(.system(size: 15)))
                             }
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(n.title).font(RUFont.sans(13, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                                Text(n.title).font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                                 Text(n.text).font(RUFont.sans(12)).foregroundColor(RUColor.text2).lineSpacing(2)
                                 Text(n.timestamp, style: .relative).font(RUFont.sans(10)).foregroundColor(RUColor.text3)
                             }

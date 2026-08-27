@@ -129,7 +129,11 @@ final class VoiceCoachController: NSObject {
 
     private func configureAudioSession() throws -> SFSpeechAudioBufferRecognitionRequest {
         let session = AVAudioSession.sharedInstance()
-        try session.setCategory(.playAndRecord, mode: .spokenAudio, options: [.duckOthers, .allowBluetooth])
+        // `.allowBluetoothHFP` et non `.allowBluetooth` : un pur renommage côté Apple, la même
+        // constante, disponible sur toutes les versions que l'app vise. HFP est le profil qui
+        // ouvre le MICRO d'un casque Bluetooth — exactement ce qu'il faut ici, où l'on écoute une
+        // question posée à voix haute pendant la course.
+        try session.setCategory(.playAndRecord, mode: .spokenAudio, options: [.duckOthers, .allowBluetoothHFP])
         try session.setActive(true, options: .notifyOthersOnDeactivation)
 
         let request = SFSpeechAudioBufferRecognitionRequest()

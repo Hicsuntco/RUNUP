@@ -33,8 +33,15 @@ struct CardBackground: ViewModifier {
             // thèmes mais n'en AFFICHE qu'en clair — ce que le 0 explicite ci-dessous produit
             // déjà. Le choix existant est donc conservé : il donne le même rendu, en évitant de
             // composer une passe d'ombre inutile à chaque carte.
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.04 : 0), radius: 1, x: 0, y: 1)
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.08 : 0), radius: 4, x: 0, y: 3)
+            //
+            // Valeurs relevées d'un cran (0,04 → 0,05 et 0,08 → 0,10, flou 4 → 6) EN MÊME TEMPS
+            // que le fond de page s'est enfoncé, et les deux vont ensemble. Tant que la carte et
+            // le fond ne différaient que de 1,10:1, aucune ombre raisonnable ne pouvait porter
+            // seule la séparation — la monter assez pour qu'elle y arrive aurait fait flotter les
+            // cartes. Maintenant que le fond recule pour de bon, l'ombre redevient ce qu'elle doit
+            // être : une finition qui confirme le relief au lieu de le fabriquer.
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.05 : 0), radius: 1, x: 0, y: 1)
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.10 : 0), radius: 6, x: 0, y: 4)
     }
 }
 
@@ -59,7 +66,7 @@ extension View {
             // aucune ombre du tout, et celles qui en ont (`.sesh.active`, `.challenge-card
             // .coach-tint`) héritent simplement de l'ombre neutre de leur famille. Une teinte se
             // distingue par sa couleur de fond et son contour teinté, jamais par plus d'élévation.
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.04 : 0), radius: 1, x: 0, y: 1)
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.08 : 0), radius: 4, x: 0, y: 3)
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.05 : 0), radius: 1, x: 0, y: 1)
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.10 : 0), radius: 6, x: 0, y: 4)
     }
 }

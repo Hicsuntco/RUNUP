@@ -25,7 +25,21 @@ final class HealthKitService {
         return types
     }()
 
-    private static let writeTypes: Set<HKSampleType> = [HKObjectType.workoutType()]
+    /// La séance, plus les deux mesures qu'elle porte.
+    ///
+    /// L'ancien initialiseur `HKWorkout(totalEnergyBurned:totalDistance:)` rangeait ces deux
+    /// nombres comme des PROPRIÉTÉS de la séance, sans autorisation supplémentaire.
+    /// `HKWorkoutBuilder` — son remplaçant depuis iOS 17 — les écrit comme de vrais échantillons,
+    /// qui demandent chacun leur propre droit d'écriture. Sans eux, la séance apparaîtrait dans
+    /// Santé sans distance ni calories.
+    ///
+    /// Conséquence à connaître : une utilisatrice déjà connectée sera redemandée une fois, pour
+    /// ces deux types-là.
+    private static let writeTypes: Set<HKSampleType> = [
+        HKObjectType.workoutType(),
+        HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!,
+        HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning)!
+    ]
 
     func requestAuthorization() async throws {
         guard Self.isHealthDataAvailable else { return }
@@ -153,21 +167,67 @@ final class HealthKitService {
         }
     }
 
-    /// Saves a completed run as an HKWorkout.
-    /// `duration` is the real moving time (pauses excluded) — passed separately from start/end
-    /// because `end - start` includes every pause, and Santé would otherwise show a 30-min run
-    /// with a 15-min coffee stop as a 45-min workout.
+    /// Enregistre une sortie terminée dans Santé.
+    ///
+    /// `duration` est le temps de mouvement réel, pauses exclues — transmis à part de start/end,
+    /// parce que `end - start` inclut chaque pause et que Santé afficherait sinon une sortie de
+    /// 30 min avec un café de 15 min comme une séance de 45 min.
+    ///
+    /// ─── POURQUOI DES ÉVÉNEMENTS DE PAUSE ────────────────────────────────────────────────────
+    ///
+    /// L'ancien `HKWorkout(start:end:duration:)` acceptait les trois valeurs indépendamment.
+    /// `HKWorkoutBuilder` ne le permet pas : il CALCULE la durée à partir de la fenêtre de collecte
+    /// moins le temps passé en pause. Deux façons de retrouver la bonne durée, et une seule est
+    /// honnête.
+    ///
+    /// Fermer la collecte à `start + duration` donnerait la bonne durée, mais dirait que la sortie
+    /// s'est terminée quinze minutes avant la réalité. Poser une paire pause/reprise couvrant
+    /// l'écart garde les VRAIS début, fin et durée — les trois valeurs qu'on lit dans Santé — au
+    /// prix d'une seule approximation, la position de la pause dans la sortie, que rien n'affiche.
+    ///
+    /// La position exacte demanderait de conserver les horodatages de pause jusqu'ici, ce que
+    /// `RunRecord` ne fait pas. C'est le vrai correctif, et il est ailleurs.
     func saveRun(start: Date, end: Date, duration: TimeInterval, distanceKm: Double, kcal: Double) async throws {
-        let workout = HKWorkout(
-            activityType: .running,
-            start: start,
-            end: end,
-            duration: duration,
-            totalEnergyBurned: HKQuantity(unit: .kilocalorie(), doubleValue: kcal),
-            totalDistance: HKQuantity(unit: .meterUnit(with: .kilo), doubleValue: distanceKm),
-            metadata: nil
-        )
-        try await store.save(workout)
+        let configuration = HKWorkoutConfiguration()
+        configuration.activityType = .running
+        configuration.locationType = .outdoor
+
+        let builder = HKWorkoutBuilder(healthStore: store, configuration: configuration, device: .local())
+        try await builder.beginCollection(at: start)
+
+        // Chaque mesure n'est jointe que si elle existe vraiment : une séance sans GPS n'a pas de
+        // distance, et un échantillon à zéro n'est pas la même chose qu'une absence de mesure.
+        var samples: [HKSample] = []
+        if kcal > 0, let energyType = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) {
+            samples.append(HKQuantitySample(
+                type: energyType,
+                quantity: HKQuantity(unit: .kilocalorie(), doubleValue: kcal),
+                start: start,
+                end: end
+            ))
+        }
+        if distanceKm > 0, let distanceType = HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning) {
+            samples.append(HKQuantitySample(
+                type: distanceType,
+                quantity: HKQuantity(unit: .meterUnit(with: .kilo), doubleValue: distanceKm),
+                start: start,
+                end: end
+            ))
+        }
+        if !samples.isEmpty {
+            try await builder.addSamples(samples)
+        }
+
+        let movingEnd = min(start.addingTimeInterval(duration), end)
+        if movingEnd < end {
+            try await builder.addWorkoutEvents([
+                HKWorkoutEvent(type: .pause, dateInterval: DateInterval(start: movingEnd, duration: 0), metadata: nil),
+                HKWorkoutEvent(type: .resume, dateInterval: DateInterval(start: end, duration: 0), metadata: nil)
+            ])
+        }
+
+        try await builder.endCollection(at: end)
+        _ = try await builder.finishWorkout()
     }
 
     /// `end` is `.now` for today (only counts what's actually happened so far — not a future
@@ -176,7 +236,19 @@ final class HealthKitService {
         let cal = Calendar.current
         let start = cal.startOfDay(for: date)
         let end = cal.isDateInToday(date) ? Date.now : (cal.date(byAdding: .day, value: 1, to: start) ?? start)
-        let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
+        // Les échantillons écrits par RUNUP elle-même sont EXCLUS, et ça devient indispensable
+        // maintenant que `saveRun` en écrit : `HKStatisticsQuery` somme toutes les sources sans
+        // dédoublonner, là où l'app Santé, elle, choisit une source par intervalle. Sans ce
+        // filtre, une sortie de 400 kcal enregistrée par RUNUP s'ajouterait aux ~400 kcal que
+        // l'iPhone a mesurées sur la même période, et l'anneau de calories afficherait le double
+        // après chaque course — une erreur qui n'a pas l'air d'un bug, juste d'une bonne journée.
+        //
+        // La requête de sommeil plus haut n'a pas besoin de ce filtre : l'app n'écrit jamais de
+        // sommeil.
+        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+            HKQuery.predicateForSamples(withStart: start, end: end),
+            NSCompoundPredicate(notPredicateWithSubpredicate: HKQuery.predicateForObjects(from: HKSource.default()))
+        ])
         return await withCheckedContinuation { continuation in
             let query = HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: .cumulativeSum) { _, stats, _ in
                 continuation.resume(returning: stats?.sumQuantity()?.doubleValue(for: unit) ?? 0)

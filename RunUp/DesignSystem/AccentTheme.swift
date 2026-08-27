@@ -41,8 +41,23 @@ struct AccentTheme: Identifiable, Equatable {
     /// Seule la palette « rose » figure dans cette table : c'est la seule dont la maquette
     /// définisse une déclinaison claire. Les sept autres suivent la règle multiplicative, qui
     /// conserve leur teinte.
+    /// Le rose clair est désormais CELUI DU MODE SOMBRE, `#FF0F5B`, et non plus sa version
+    /// assombrie `#E60E52`.
+    ///
+    /// Assombrir pour gagner du contraste enlève de l'éclat : c'est mécanique, et c'est ce qui
+    /// faisait dire de ce mode clair qu'il était fade. `#FF0F5B` sur blanc vaut 3,84:1 — au-dessus
+    /// du seuil de 3:1 pour un élément graphique ou du gros texte, en dessous des 4,5:1 exigés
+    /// pour du petit texte. Le compromis est assumé, et il est nommé ici plutôt que découvert.
+    ///
+    /// `light` (le token `rose2`) prend le rôle inverse du mode sombre : là-bas c'est la teinte
+    /// ÉCLAIRCIE, ici c'est la teinte PROFONDE, `#D40B4A` à 5,32:1 — celle qui reste lisible en
+    /// petit texte, et qui donne au dégradé deux extrémités réellement distinctes.
+    ///
+    /// Seule la palette « rose » est traitée ainsi. Les sept autres gardent la dérivation par
+    /// assombrissement : lime, ambre et cyan à pleine intensité seraient illisibles sur blanc,
+    /// leurs teintes étant intrinsèquement claires.
     private static let mockupLightPalettes: [String: (primary: Color, light: Color, tail: Color)] = [
-        "rose": (Color(hex: 0xE60E52), Color(hex: 0xF0356F), Color(hex: 0x7053E6))
+        "rose": (Color(hex: 0xFF0F5B), Color(hex: 0xD40B4A), Color(hex: 0x7053E6))
     ]
 
     /// L'accent principal sur fond clair — celui de la maquette si elle en fixe un, sinon la

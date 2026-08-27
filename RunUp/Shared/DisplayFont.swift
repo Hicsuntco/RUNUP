@@ -41,7 +41,13 @@ enum DisplayFont {
     ///
     /// La vraie réponse, plus tard, est de reprendre les 27 tailles une à une contre la nouvelle
     /// police. Ce facteur est l'étape honnête en attendant, pas un remplacement de ce travail.
-    static let sizeFactor: CGFloat = 0.82
+    ///
+    /// Relevé de 0,82 à 0,94 : à 0,82 les titres et les grands chiffres étaient jugés trop petits,
+    /// et c'est cohérent avec la mesure — 0,82 compensait la largeur au détriment de la hauteur de
+    /// capitale, qui tombait à 0,57 em quand Bebas en occupait 0,70. À 0,94 elle remonte à 0,66,
+    /// soit presque celle d'origine, au prix d'une largeur qui reste supérieure à celle de Bebas.
+    /// C'est le sens du compromis, pas sa disparition.
+    static let sizeFactor: CGFloat = 0.94
 
     /// La taille de point à demander pour retrouver l'encombrement dessiné contre Bebas.
     static func pointSize(for designSize: CGFloat) -> CGFloat { designSize * sizeFactor }

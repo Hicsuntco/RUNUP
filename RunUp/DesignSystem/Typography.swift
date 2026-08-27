@@ -89,8 +89,20 @@ enum RUFont {
         .custom(DisplayFont.postScriptName, fixedSize: scaled(DisplayFont.pointSize(for: size)))
     }
 
+    /// Le texte courant et les métriques, relevés de 6 %.
+    ///
+    /// Séparé du facteur de titrage parce que les deux problèmes sont distincts : celui du
+    /// titrage venait du changement de police, celui-ci est un jugement sur l'app telle qu'elle
+    /// est — les libellés de 10 à 13 pt de la maquette sont serrés pour un écran lu en courant,
+    /// souvent au soleil, souvent en bougeant.
+    ///
+    /// 6 % et pas davantage : les rangées de trois métriques côte à côte sont à largeur fixe, et
+    /// au-delà elles tronquent au lieu de s'adapter. Comme le facteur de titrage, c'est un nombre,
+    /// à un seul endroit, qu'on rouvre après avoir regardé un écran.
+    private static let bodySizeFactor: CGFloat = 1.06
+
     static func mono(_ size: CGFloat, weight: DMWeight = .regular) -> Font {
-        let pointSize = scaled(size)
+        let pointSize = scaled(size * bodySizeFactor)
         switch weight {
         case .medium: return .custom("DMMono-Medium", fixedSize: pointSize)
         default: return .custom("DMMono-Regular", fixedSize: pointSize)
@@ -98,7 +110,7 @@ enum RUFont {
     }
 
     static func sans(_ size: CGFloat, weight: DMWeight = .regular) -> Font {
-        let pointSize = scaled(size)
+        let pointSize = scaled(size * bodySizeFactor)
         switch weight {
         case .light: return .custom("DMSans-Light", fixedSize: pointSize)
         case .regular: return .custom("DMSans-Regular", fixedSize: pointSize)
@@ -109,7 +121,7 @@ enum RUFont {
     }
 
     static func sansItalic(_ size: CGFloat) -> Font {
-        .custom("DMSans-Italic", fixedSize: scaled(size))
+        .custom("DMSans-Italic", fixedSize: scaled(size * bodySizeFactor))
     }
 
     enum DMWeight {

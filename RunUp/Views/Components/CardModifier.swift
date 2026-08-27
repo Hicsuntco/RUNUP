@@ -40,8 +40,8 @@ struct CardBackground: ViewModifier {
             // seule la séparation — la monter assez pour qu'elle y arrive aurait fait flotter les
             // cartes. Maintenant que le fond recule pour de bon, l'ombre redevient ce qu'elle doit
             // être : une finition qui confirme le relief au lieu de le fabriquer.
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.05 : 0), radius: 1, x: 0, y: 1)
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.10 : 0), radius: 6, x: 0, y: 4)
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.06 : 0), radius: 2, x: 0, y: 1)
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.13 : 0), radius: 9, x: 0, y: 5)
     }
 }
 
@@ -66,7 +66,7 @@ extension View {
             // aucune ombre du tout, et celles qui en ont (`.sesh.active`, `.challenge-card
             // .coach-tint`) héritent simplement de l'ombre neutre de leur famille. Une teinte se
             // distingue par sa couleur de fond et son contour teinté, jamais par plus d'élévation.
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.05 : 0), radius: 1, x: 0, y: 1)
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.10 : 0), radius: 6, x: 0, y: 4)
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.06 : 0), radius: 2, x: 0, y: 1)
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.13 : 0), radius: 9, x: 0, y: 5)
     }
 }

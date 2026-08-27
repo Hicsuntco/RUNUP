@@ -26,19 +26,22 @@ enum RUColor {
     // Inverser le rapport produit en clair ce que le sombre obtient déjà, par la même logique :
     // la carte est la surface CLAIRE, le fond recule. Le filet et l'ombre redeviennent des
     // finitions au lieu de porter seuls la séparation.
-    /// `#E8E7EF` et non plus `#F4F4F8`. Une carte blanche sur `#F4F4F8` a un rapport de
-    /// contraste de **1,10:1** — sous le seuil où l'œil voit deux surfaces plutôt qu'une. Tout
-    /// l'écran clair reposait donc sur un filet à 6 % et une ombre à 4 % pour exister, c'est-à-dire
-    /// sur rien : c'est ça, la fadeur. `#E8E7EF` porte ce rapport à **1,23:1**, et le texte
-    /// principal y reste à 14,8:1, l'accent à 3,76:1.
+    /// Blanc pur en clair, demandé tel quel.
     ///
-    /// Ce départ de la maquette est assumé : elle pose « des cartes de papier à plat », un parti
-    /// pris qui rend en impression et pas sur un écran de téléphone tenu à bout de bras.
-    static var bg: Color { isLight ? Color(hex: 0xE8E7EF) : Color(hex: 0x0E0E14) }
+    /// La page est blanche, donc une carte blanche ne peut plus se détacher par sa COULEUR — il ne
+    /// reste que le filet et l'ombre. C'est exactement la configuration qui avait produit la
+    /// fadeur ; la différence est qu'on la choisit maintenant, et qu'on paie son prix ailleurs :
+    /// `cardBorder` monte à 13 % (1,36:1, visible), l'ombre gagne un cran, et la profondeur passe
+    /// par les SOUS-SURFACES à l'intérieur des cartes (`card2`), qui elles ont le droit d'être
+    /// teintées.
+    ///
+    /// Un fond gris avec des cartes blanches sépare mieux, mécaniquement. Ce n'est pas ce qui est
+    /// voulu ici.
+    static var bg: Color { isLight ? Color(hex: 0xFFFFFF) : Color(hex: 0x0E0E14) }
     /// Un cran plus ENFONCÉ que `bg` en clair, un cran plus haut en sombre — dans les deux cas
     /// « la rainure dans laquelle une pastille `card` vient se poser » (rail des sélecteurs
     /// segmentés). C'est la relation qui compte, pas la direction.
-    static var bg2: Color { isLight ? Color(hex: 0xDCDBE6) : Color(hex: 0x15151E) }
+    static var bg2: Color { isLight ? Color(hex: 0xEDECF5) : Color(hex: 0x15151E) }
 
     // Theme-aware — follow the user's chosen accent (Profil → Apparence → Couleur de l'app, see
     // `AccentTheme`/`ThemeStore`).
@@ -113,8 +116,11 @@ enum RUColor {
     static var card: Color { isLight ? Color(hex: 0xFFFFFF) : Color.white.opacity(0.045) }
     /// Sous-surface DANS une carte (ligne de classement, tuile de jour) : elle doit reculer par
     /// rapport à `card`, donc gris pâle sur une carte devenue blanche.
-    static var card2: Color { isLight ? Color(hex: 0xF0EFF7) : Color.white.opacity(0.03) }
-    static var line: Color { isLight ? Color.black.opacity(0.16) : Color.white.opacity(0.08) }
+    /// Assombri à `#EFEEF6` : sur une page blanche c'est LUI qui porte la profondeur, puisque la
+    /// carte ne peut plus le faire. 1,15:1 contre le blanc — faible dans l'absolu, mais c'est le
+    /// maximum tolérable avant que la sous-surface ne devienne une carte à son tour.
+    static var card2: Color { isLight ? Color(hex: 0xEFEEF6) : Color.white.opacity(0.03) }
+    static var line: Color { isLight ? Color.black.opacity(0.11) : Color.white.opacity(0.08) }
 
     /// Le contour d'une CARTE, distinct de `line`. Une carte blanche posée sur un fond gris est
     /// déjà séparée par le fond : lui garder le filet de `line` (noir à 14 %) sur 1 pt la
@@ -124,7 +130,7 @@ enum RUColor {
     /// Remonté de 6 % à 10 % : à 6 % sur blanc le filet vaut 1,13:1, il ne dessine rien. Il
     /// reste une finition — le fond, désormais plus sombre, porte la séparation — mais une
     /// finition qu'on voit.
-    static var cardBorder: Color { isLight ? Color.black.opacity(0.10) : Color.white.opacity(0.08) }
+    static var cardBorder: Color { isLight ? Color.black.opacity(0.13) : Color.white.opacity(0.08) }
 
     /// Mélange opaque de `color` dans `base`, exactement `color-mix(in srgb, color N%, base)` en CSS.
     ///

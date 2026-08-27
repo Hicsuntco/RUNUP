@@ -42,7 +42,7 @@ struct RecoveryView: View {
 
                 VStack(alignment: .leading, spacing: 6) {
                     EyebrowLabel(text: "Aujourd'hui", color: RUColor.rose2)
-                    Text("Marche, étirements ou repos complet").font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                    Text("Marche, étirements ou repos complet").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
                     Text("Pas de course prévue — hydrate-toi bien et dors un peu plus si tu peux.")
                         .font(RUFont.sans(12)).foregroundColor(RUColor.text2).lineSpacing(3)
                 }

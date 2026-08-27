@@ -33,7 +33,7 @@ RunUp/
 ├── ViewModels/                  — état par écran/flow
 ├── Services/                    — HealthKit, CoreLocation, appel au proxy coach, persistance,
 │                                   moteur du plan adaptatif
-├── DesignSystem/                — couleurs, typographie (Bebas Neue/DM Sans/DM Mono), espacements
+├── DesignSystem/                — couleurs, typographie (Archivo/DM Mono), espacements
 ├── Views/                       — un dossier par section, un fichier par écran
 │   ├── Onboarding/
 │   ├── Home/
@@ -46,7 +46,7 @@ RunUp/
 │   ├── ProgramEnd/
 │   └── Components/               — primitives partagées (anneaux, cartes, boutons, tab bar…)
 └── Resources/
-    ├── Fonts/                   — Bebas Neue, DM Sans, DM Mono (.ttf, licence OFL)
+    ├── Fonts/                   — Archivo, DM Mono (.ttf, licence OFL)
     └── Assets.xcassets
 ```
 

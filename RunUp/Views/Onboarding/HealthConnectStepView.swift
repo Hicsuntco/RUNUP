@@ -95,14 +95,14 @@ private struct ConnectRow: View {
                 }
                 Spacer()
                 if source != .apple {
-                    Text("Bientôt").font(RUFont.sans(11, weight: .semibold)).foregroundColor(RUColor.text2)
+                    Text("Bientôt").font(RUFont.sans(11, weight: .medium)).foregroundColor(RUColor.text2)
                 } else if busy {
                     ProgressView().tint(RUColor.textPrimary)
                 } else if connected {
                     Text("CONNECTÉ ✓").font(RUFont.sans(11, weight: .bold)).foregroundColor(RUColor.lime)
                 } else {
                     Text("Connecter")
-                        .font(RUFont.sans(11, weight: .semibold))
+                        .font(RUFont.sans(11, weight: .medium))
                         .foregroundColor(RUColor.text2)
                         .padding(.horizontal, 12).padding(.vertical, 6)
                         .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))

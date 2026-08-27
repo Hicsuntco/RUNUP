@@ -105,12 +105,12 @@ targets:
         NSSupportsLiveActivitiesFrequentUpdates: true
         ITSAppUsesNonExemptEncryption: false
         UIAppFonts:
-          - Poppins-Light.ttf
-          - Poppins-Regular.ttf
-          - Poppins-Medium.ttf
-          - Poppins-SemiBold.ttf
-          - Poppins-Bold.ttf
-          - Poppins-Italic.ttf
+          - Archivo-Light.ttf
+          - Archivo-Regular.ttf
+          - Archivo-Medium.ttf
+          - Archivo-SemiBold.ttf
+          - Archivo-Bold.ttf
+          - Archivo-Italic.ttf
           - DMMono-Regular.ttf
           - DMMono-Medium.ttf
     dependencies:
@@ -199,9 +199,9 @@ targets:
           # partagé étaient tout de même copiés dans son bundle : non enregistrés, donc inertes —
           # ~750 Ko de poids mort dans une extension. Ce que l'UIAppFonts n'enregistre pas ne peut
           # de toute façon pas se charger, les retirer ne change rien à l'affichage.
-          - "Poppins-Light.ttf"
-          - "Poppins-Regular.ttf"
-          - "Poppins-Italic.ttf"
+          - "Archivo-Light.ttf"
+          - "Archivo-Regular.ttf"
+          - "Archivo-Italic.ttf"
           - "DMMono-Regular.ttf"
           - "DMMono-Medium.ttf"
       # L'extension est signée et livrée séparément de l'app : le manifeste de l'app ne la couvre
@@ -221,9 +221,9 @@ targets:
         # font set into a second bundle. Same family as the app (DisplayFont.family): a widget in a
         # different typeface than the app is the one mismatch a user sees side by side.
         UIAppFonts:
-          - Poppins-Medium.ttf
-          - Poppins-Bold.ttf
-          - Poppins-SemiBold.ttf
+          - Archivo-Medium.ttf
+          - Archivo-Bold.ttf
+          - Archivo-SemiBold.ttf
     entitlements:
       path: RunUpWidgets/RunUpWidgets.entitlements
       properties:
@@ -263,9 +263,9 @@ targets:
           # partagé étaient tout de même copiés dans son bundle : non enregistrés, donc inertes —
           # ~750 Ko de poids mort dans une extension. Ce que l'UIAppFonts n'enregistre pas ne peut
           # de toute façon pas se charger, les retirer ne change rien à l'affichage.
-          - "Poppins-Light.ttf"
-          - "Poppins-Regular.ttf"
-          - "Poppins-Italic.ttf"
+          - "Archivo-Light.ttf"
+          - "Archivo-Regular.ttf"
+          - "Archivo-Italic.ttf"
           - "DMMono-Regular.ttf"
           - "DMMono-Medium.ttf"
       # Le MÊME catalogue de chaînes que l'app iPhone. Sans lui, la montre restait entièrement en
@@ -298,9 +298,9 @@ targets:
         NSHealthUpdateUsageDescription: "RunUp enregistre ta course comme une vraie séance dans Santé — elle compte dans tes anneaux."
         NSLocationWhenInUseUsageDescription: "RunUp utilise ta position pour mesurer distance et allure pendant une course depuis la montre."
         UIAppFonts:
-          - Poppins-Medium.ttf
-          - Poppins-Bold.ttf
-          - Poppins-SemiBold.ttf
+          - Archivo-Medium.ttf
+          - Archivo-Bold.ttf
+          - Archivo-SemiBold.ttf
     entitlements:
       path: RunUpWatch/RunUpWatch.entitlements
       properties:

@@ -121,7 +121,7 @@ struct HomeView: View {
                 Button(action: { appState.newGoalWizardPresented = true }) {
                     HStack(spacing: 5) {
                         Image(systemName: "arrow.counterclockwise").font(.system(size: 11))
-                        Text("Refaire un programme").font(RUFont.sans(10.5, weight: .semibold))
+                        Text("Refaire un programme").font(RUFont.sans(10.5, weight: .medium))
                     }
                     .foregroundColor(RUColor.text3)
                     .frame(maxWidth: .infinity, minHeight: 44)
@@ -281,7 +281,7 @@ struct HomeView: View {
             } else if profile.seanceDoneToday {
                 Text(session.displaySubtitle).font(RUFont.sans(11)).foregroundColor(RUColor.text2).padding(.top, 4)
                 Text("Séance faite aujourd'hui ✓")
-                    .font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.lime)
+                    .font(RUFont.sans(12, weight: .medium)).foregroundColor(RUColor.lime)
                     .padding(.top, 14)
             } else {
                 Text(session.displaySubtitle).font(RUFont.sans(11)).foregroundColor(RUColor.text2).padding(.top, 4)
@@ -375,7 +375,7 @@ struct HomeView: View {
                         .foregroundColor(weeklyComparisonColor(delta: delta, lastWeek: lastWeek))
                         .multilineTextAlignment(.leading)
                     Spacer(minLength: 0)
-                    Text("Mes stats").font(RUFont.sans(11, weight: .semibold)).foregroundColor(RUColor.text3)
+                    Text("Mes stats").font(RUFont.sans(11, weight: .medium)).foregroundColor(RUColor.text3)
                     Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundColor(RUColor.text3)
                 }
                 Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
@@ -395,7 +395,7 @@ struct HomeView: View {
             HStack(alignment: .lastTextBaseline, spacing: 1) {
                 Text(value).displayStyle(21).foregroundColor(RUColor.textPrimary)
                 if let suffix {
-                    Text(suffix).font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.text3)
+                    Text(suffix).font(RUFont.sans(12, weight: .medium)).foregroundColor(RUColor.text3)
                 }
             }
             .lineLimit(1)
@@ -492,7 +492,7 @@ struct HomeView: View {
         HStack(spacing: 8) {
             Circle().fill(color).frame(width: 7, height: 7)
             Text(LocalizedStringKey(name))
-                .font(RUFont.sans(12, weight: .semibold))
+                .font(RUFont.sans(12, weight: .medium))
                 .foregroundColor(RUColor.textPrimary)
                 .lineLimit(1).minimumScaleFactor(0.75)
             Spacer(minLength: 6)

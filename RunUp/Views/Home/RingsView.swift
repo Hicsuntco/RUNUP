@@ -181,7 +181,7 @@ struct RingsView: View {
             .accessibilityLabel("Jour précédent")
 
             Text(dayLabel)
-                .font(RUFont.sans(13, weight: .semibold))
+                .font(RUFont.sans(13, weight: .medium))
                 .foregroundColor(RUColor.textPrimary)
                 .frame(maxWidth: .infinity)
                 .lineLimit(1)

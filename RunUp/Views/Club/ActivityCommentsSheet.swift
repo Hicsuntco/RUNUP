@@ -65,7 +65,7 @@ struct ActivityCommentsSheet: View {
             AvatarView(urlString: comment.avatarUrl, base64DataURI: comment.avatarBase64, initial: String(comment.name.prefix(1)), size: 28, seed: comment.userId == currentUserId ? nil : comment.userId)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
-                    Text(comment.name).font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                    Text(comment.name).font(RUFont.sans(12, weight: .medium)).foregroundColor(RUColor.textPrimary)
                     Text(comment.createdAt.relativeDescription).font(RUFont.sans(9.5)).foregroundColor(RUColor.text3)
                 }
                 Text(comment.text).font(RUFont.sans(12.5)).foregroundColor(RUColor.text2).lineSpacing(2)

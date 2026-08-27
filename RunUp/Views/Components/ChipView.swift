@@ -19,7 +19,7 @@ struct SelectableChip: View {
                         .transition(.scale.combined(with: .opacity))
                 }
                 Text(LocalizedStringKey(label))
-                    .font(RUFont.sans(13, weight: .semibold))
+                    .font(RUFont.sans(13, weight: .medium))
             }
             .foregroundColor(selected ? .white : RUColor.text2)
             .padding(.horizontal, 15)

@@ -162,7 +162,7 @@ struct PlanView: View {
         VStack(spacing: 2) {
             if !week.isCurrent {
                 Text(week.isDone ? "Résumé type de cette semaine passée" : "Aperçu — s'ajustera selon ta forme de la semaine précédente")
-                    .font(RUFont.sans(9.5, weight: .semibold)).foregroundColor(RUColor.text3)
+                    .font(RUFont.sans(9.5, weight: .medium)).foregroundColor(RUColor.text3)
                     .padding(.horizontal, 4).padding(.top, 8)
             }
             ForEach(dayList(for: week), id: \.0) { letter, day, state in

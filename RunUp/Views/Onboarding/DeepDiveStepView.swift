@@ -112,7 +112,7 @@ private struct NumField: View {
                             }
                         }
                     }
-                Text(unit).font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.text2)
+                Text(unit).font(RUFont.sans(12, weight: .medium)).foregroundColor(RUColor.text2)
             }
             .padding(13)
             .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))

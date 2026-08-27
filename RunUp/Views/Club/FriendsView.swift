@@ -175,7 +175,7 @@ struct FriendsView: View {
     private var loadingCard: some View {
         VStack(spacing: 12) {
             ProgressView().tint(RUColor.rose)
-            Text("Chargement…").font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.text2)
+            Text("Chargement…").font(RUFont.sans(13, weight: .medium)).foregroundColor(RUColor.text2)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)
@@ -367,7 +367,7 @@ struct FriendsView: View {
     private func countLabel(value: Int, label: String) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 4) {
             Text("\(value)").displayStyle(17).foregroundColor(RUColor.textPrimary)
-            Text(label).font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.text3)
+            Text(label).font(RUFont.sans(10.5, weight: .medium)).foregroundColor(RUColor.text3)
         }
         .frame(minHeight: 44)
         .contentShape(Rectangle())
@@ -390,7 +390,7 @@ struct FriendsView: View {
                     // « Plus de réglages », derrière la molette du Profil.
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Personne à suivre pour l'instant")
-                            .font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                            .font(RUFont.sans(13, weight: .medium)).foregroundColor(RUColor.textPrimary)
                         Text("Cherche quelqu'un par son nom ou son pseudo juste au-dessus — ou invite ceux avec qui tu cours déjà.")
                             .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
                             .fixedSize(horizontal: false, vertical: true)
@@ -637,7 +637,7 @@ private struct PeopleListSheet: View {
                                 people.removeAll { $0.id == user.id }
                                 onAction(user)
                             }
-                            .font(RUFont.sans(11, weight: .semibold))
+                            .font(RUFont.sans(11, weight: .medium))
                             .foregroundColor(RUColor.text2)
                             .padding(.horizontal, 11).padding(.vertical, 6)
                             .frame(minHeight: 44)

@@ -140,7 +140,7 @@ struct RaceGoalView: View {
                             HStack(spacing: 12) {
                                 RoundedRectangle(cornerRadius: 2).fill(RUColor.text4).frame(width: 3, height: 30)
                                 VStack(alignment: .leading, spacing: 1) {
-                                    Text(hyroxStrategy[i].0).font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                                    Text(hyroxStrategy[i].0).font(RUFont.sans(13, weight: .medium)).foregroundColor(RUColor.textPrimary)
                                     Text(hyroxStrategy[i].1).font(RUFont.sans(10)).foregroundColor(RUColor.text2).lineSpacing(2)
                                 }
                                 Spacer()
@@ -158,7 +158,7 @@ struct RaceGoalView: View {
                             HStack(spacing: 12) {
                                 RoundedRectangle(cornerRadius: 2).fill(isLast ? RUColor.rose : RUColor.text4).frame(width: 3, height: 30)
                                 VStack(alignment: .leading, spacing: 1) {
-                                    Text(pacingPlan[i].1).font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                                    Text(pacingPlan[i].1).font(RUFont.sans(13, weight: .medium)).foregroundColor(RUColor.textPrimary)
                                     Text(pacingPlan[i].0).font(RUFont.sans(10)).foregroundColor(RUColor.text2)
                                 }
                                 Spacer()

@@ -98,7 +98,7 @@ struct ActivityFeedRow: View {
                         Text("👏")
                         Text("\(item.kudos)")
                     }
-                    .font(RUFont.sans(12, weight: .semibold))
+                    .font(RUFont.sans(12, weight: .medium))
                     .foregroundColor(item.kudoedByMe ? RUColor.rose2 : RUColor.text2)
                     .padding(.trailing, 6)
                     .frame(minHeight: 44)
@@ -115,7 +115,7 @@ struct ActivityFeedRow: View {
                         Image(systemName: "bubble.left")
                         Text("\(item.commentsCount)")
                     }
-                    .font(RUFont.sans(12, weight: .semibold))
+                    .font(RUFont.sans(12, weight: .medium))
                     .foregroundColor(RUColor.text2)
                     .padding(.trailing, 6)
                     .frame(minHeight: 44)

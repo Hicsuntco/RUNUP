@@ -134,9 +134,9 @@ struct ShoesView: View {
                 Text("/ \(String(format: "%.0f", shoe.alertThresholdKm)) km").font(RUFont.mono(11)).foregroundColor(RUColor.text3)
                 Spacer()
                 if fraction >= 1 {
-                    Text("À remplacer").font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.rose)
+                    Text("À remplacer").font(RUFont.sans(10.5, weight: .medium)).foregroundColor(RUColor.rose)
                 } else if fraction >= 0.8 {
-                    Text("Bientôt en fin de vie").font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.amber)
+                    Text("Bientôt en fin de vie").font(RUFont.sans(10.5, weight: .medium)).foregroundColor(RUColor.amber)
                 }
             }
         }

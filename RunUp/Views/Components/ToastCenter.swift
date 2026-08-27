@@ -42,7 +42,7 @@ struct ToastHost: ViewModifier {
         content.overlay(alignment: .bottom) {
             if let message = toastCenter.message {
                 Text(message)
-                    .font(RUFont.sans(13, weight: .semibold))
+                    .font(RUFont.sans(13, weight: .medium))
                     // Hardcoded dark-on-light regardless of theme, deliberately — it's a
                     // transient overlay that floats above arbitrary content in EITHER theme, and
                     // `RUColor.bg` is pure white in light mode (`Colors.swift:13`), so a

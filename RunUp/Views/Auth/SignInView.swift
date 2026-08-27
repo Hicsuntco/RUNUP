@@ -73,7 +73,7 @@ struct SignInView: View {
                         mode = mode == .signIn ? .signUp : .signIn
                         errorMessage = nil
                     }
-                    .font(RUFont.sans(12, weight: .semibold))
+                    .font(RUFont.sans(12, weight: .medium))
                     .foregroundColor(RUColor.text2)
                     .padding(.vertical, 12)
                     .contentShape(Rectangle())
@@ -130,7 +130,7 @@ struct SignInView: View {
                 .disabled(!isValidUsernameFormat(usernameField) || isSavingUsername)
 
             Button("Plus tard") { dismiss() }
-                .font(RUFont.sans(12, weight: .semibold))
+                .font(RUFont.sans(12, weight: .medium))
                 .foregroundColor(RUColor.text2)
                 .padding(.vertical, 12)
                 .contentShape(Rectangle())

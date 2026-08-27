@@ -39,7 +39,7 @@ struct StatsView: View {
                 HeaderView(eyebrow: "Analyse · progression", title: runs.isEmpty ? "Ta progression démarre ici" : "Ta forme évolue") {
                     Button(action: { appState.go(.history) }) {
                         HStack(spacing: 5) {
-                            Text("Historique").font(RUFont.sans(11, weight: .semibold))
+                            Text("Historique").font(RUFont.sans(11, weight: .medium))
                             Text("›")
                         }
                         .foregroundColor(RUColor.text2)
@@ -196,7 +196,7 @@ struct StatsView: View {
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(LocalizedStringKey(title))
-                    .font(RUFont.sans(12.5, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                    .font(RUFont.sans(12.5, weight: .medium)).foregroundColor(RUColor.textPrimary)
                     .lineLimit(1).minimumScaleFactor(0.75)
                 Text(subtitle)
                     .font(RUFont.sans(9.5)).foregroundColor(RUColor.text3)

@@ -283,7 +283,7 @@ struct FlowChips: View {
             ForEach(chips, id: \.self) { chip in
                 Button(action: { onTap(chip) }) {
                     Text(chip)
-                        .font(RUFont.sans(11, weight: .semibold))
+                        .font(RUFont.sans(11, weight: .medium))
                         .foregroundColor(RUColor.text2)
                         .padding(.horizontal, 11).padding(.vertical, 6)
                         .frame(minHeight: 44)

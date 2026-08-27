@@ -59,7 +59,7 @@ struct HyroxDetailsStepView: View {
                 .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
 
                 if let days = vm.daysUntilRace {
-                    Text("J-\(days)").font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.rose2).padding(.top, 10)
+                    Text("J-\(days)").font(RUFont.sans(12, weight: .medium)).foregroundColor(RUColor.rose2).padding(.top, 10)
                 }
             }
             ObNext(disabled: !vm.canProceed(fromStep: 3), action: onNext)

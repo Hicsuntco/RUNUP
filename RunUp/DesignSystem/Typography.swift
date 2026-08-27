@@ -4,7 +4,7 @@ import UIKit
 
 /// Font tokens — see README § Typography.
 ///
-/// Une seule famille de texte, `DisplayFont.family` (Poppins), déclinée par taille et par graisse :
+/// Une seule famille de texte, `DisplayFont.family` (Archivo), déclinée par taille et par graisse :
 /// - Display/numerals (Medium, class `.b`): big numbers, headlines,
 ///   buttons — voir `display(_:)` et son facteur de taille.
 /// - Body (300–700 + italic): body copy, labels.
@@ -80,7 +80,7 @@ enum RUFont {
     /// clair la remplaçait par une system sans lourde : l'app avait donc DEUX identités
     /// typographiques selon le thème. Et elle est une police d'affiche, un genre qui date vite.
     ///
-    /// C'est désormais Poppins Medium — la même famille que le texte courant, une graisse plus
+    /// C'est désormais Archivo Medium — la même famille que le texte courant, une graisse plus
     /// haut. Elle tient sur les deux fonds, d'où la disparition de la bifurcation.
     ///
     /// Le nom de la police et le facteur de taille vivent dans `DisplayFont` (RunUp/Shared) :
@@ -101,11 +101,15 @@ enum RUFont {
     /// 6 % et pas davantage : les rangées de trois métriques côte à côte sont à largeur fixe, et
     /// au-delà elles tronquent au lieu de s'adapter. Comme le facteur de titrage, c'est un nombre,
     /// à un seul endroit, qu'on rouvre après avoir regardé un écran.
-    /// Ramené de 1,06 à 1,00 avec le passage à Poppins, qui mesure 1,082 fois la largeur de
-    /// DM Sans sur les vraies chaînes de l'app. Les lignes restent donc à peu près aussi longues
-    /// qu'avant, et comme Poppins a une hauteur d'x plus grande, le texte se lit un peu PLUS gros
-    /// à taille de point égale — l'inverse de ce qu'un simple rapport de largeur laisserait croire.
-    private static let bodySizeFactor: CGFloat = 1.00
+    /// Remonté de 1,00 à 1,05 avec le passage à Archivo. Le facteur suit la HAUTEUR D'X, pas la
+    /// largeur : c'est elle qui fait la taille perçue du texte courant. Archivo est à 0,526 em
+    /// contre 0,551 pour Poppins, soit 4,5 % de moins ; 1 / 0,955 ≈ 1,05 rend au texte la taille
+    /// à laquelle il se lisait.
+    ///
+    /// Le garde-fou de ce nombre a toujours été les rangées de trois métriques côte à côte, à
+    /// largeur fixe, qui tronquent au lieu de s'adapter. Il tient : Archivo est 9 % plus étroite
+    /// que Poppins, donc même relevée de 5 %, une ligne occupe 4 % de MOINS qu'avant.
+    private static let bodySizeFactor: CGFloat = 1.05
 
     static func mono(_ size: CGFloat, weight: DMWeight = .regular) -> Font {
         let pointSize = scaled(size * bodySizeFactor)

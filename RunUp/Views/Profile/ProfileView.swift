@@ -83,7 +83,7 @@ struct ProfileView: View {
                         HStack(spacing: 4) {
                             Image(systemName: "target").font(.system(size: 9)).foregroundColor(RUColor.text3)
                             Text(objectifText)
-                                .font(RUFont.sans(10, weight: .semibold))
+                                .font(RUFont.sans(10, weight: .medium))
                                 .foregroundColor(RUColor.text2)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.8)
@@ -256,7 +256,7 @@ struct ProfileView: View {
                 }
                 Text(value).displayStyle(19).foregroundColor(valueColor)
             }
-            Text(label).font(RUFont.sans(9.5, weight: .semibold)).foregroundColor(RUColor.text3)
+            Text(label).font(RUFont.sans(9.5, weight: .medium)).foregroundColor(RUColor.text3)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(value) \(label)")
@@ -276,7 +276,7 @@ struct ProfileView: View {
     private var signInPrompt: some View {
         VStack(spacing: 12) {
             AppMarkView(size: 40)
-            Text("Ton profil prend vie à plusieurs").font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+            Text("Ton profil prend vie à plusieurs").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
             // Cet écran est le SEUL accès au club et aux amis depuis que Profil est le 5e onglet :
             // déconnectée, il n'existe plus aucun autre chemin vers eux. Il doit donc dire ce
             // qu'il y a derrière, pas seulement qu'il faut se connecter — une porte, pas un mur.
@@ -394,10 +394,10 @@ struct ProfileView: View {
                                     ? String(localized: "\(todaysFriendActivityCount) nouvelles activités aujourd'hui")
                                     : String(localized: "\(todaysFriendActivityCount) nouvelle activité aujourd'hui"))
                                  : "Rien de nouveau aujourd'hui")
-                                .font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.text2)
+                                .font(RUFont.sans(10.5, weight: .medium)).foregroundColor(RUColor.text2)
                         }
                     } else {
-                        Text("Trouve des coureurs à suivre").font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.text2)
+                        Text("Trouve des coureurs à suivre").font(RUFont.sans(10.5, weight: .medium)).foregroundColor(RUColor.text2)
                     }
                 }
             }
@@ -481,10 +481,10 @@ struct ProfileView: View {
                         // public, ni géolocalisation de clubs, ni notion de club « proche » dans
                         // le schéma. La carte dit donc ce qui est réellement faisable.
                         Text("Rejoins un club avec un code d'invitation, ou crée le tien")
-                            .font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.text2)
+                            .font(RUFont.sans(10.5, weight: .medium)).foregroundColor(RUColor.text2)
                     } else {
                         Text("Aucune sortie prévue pour l'instant")
-                            .font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.text3)
+                            .font(RUFont.sans(10.5, weight: .medium)).foregroundColor(RUColor.text3)
                     }
                 }
             }

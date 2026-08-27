@@ -170,7 +170,7 @@ struct SettingsView: View {
         let selected = profile.isLightMode == isLight
         return Button(action: { selectMode(isLight: isLight) }) {
             Text(label)
-                .font(RUFont.sans(12, weight: .semibold))
+                .font(RUFont.sans(12, weight: .medium))
                 .foregroundColor(selected ? .white : RUColor.text2)
                 .padding(.horizontal, 14).padding(.vertical, 6)
                 .background(selected ? RUColor.rose : .clear, in: Capsule())
@@ -304,10 +304,10 @@ private struct StravaConnectionRow: View {
                     ProgressView().tint(RUColor.rose)
                 } else if isConnected {
                     Button("Déconnecter") { Task { await disconnect() } }
-                        .font(RUFont.sans(11.5, weight: .semibold)).foregroundColor(RUColor.text3)
+                        .font(RUFont.sans(11.5, weight: .medium)).foregroundColor(RUColor.text3)
                 } else {
                     Button("Connecter") { Task { await connect() } }
-                        .font(RUFont.sans(11.5, weight: .semibold)).foregroundColor(RUColor.rose2)
+                        .font(RUFont.sans(11.5, weight: .medium)).foregroundColor(RUColor.rose2)
                 }
             }
 
@@ -317,7 +317,7 @@ private struct StravaConnectionRow: View {
                         if isImporting { ProgressView().tint(RUColor.text2) }
                         Text(isImporting ? "Import en cours…" : "Importer mon historique Strava")
                     }
-                    .font(RUFont.sans(11.5, weight: .semibold))
+                    .font(RUFont.sans(11.5, weight: .medium))
                     .foregroundColor(RUColor.text2)
                 }
                 .buttonStyle(PressableStyle())

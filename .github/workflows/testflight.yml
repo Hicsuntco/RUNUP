@@ -240,6 +240,15 @@ jobs:
           BUILD_NUMBER: ${{ steps.build.outputs.number }}
         run: sh ci_scripts/prepare_project.sh
 
+      # `Font.custom` ne lève rien sur un nom de police introuvable : SwiftUI retombe en silence
+      # sur la police système. Une famille renommée, un fichier oublié dans l'UIAppFonts d'une
+      # cible, un nom PostScript qui n'est pas celui qu'on croit — rien de tout ça ne casse le
+      # build, et ça ne se voit que sur l'appareil, écran par écran. Neuf builds sont partis avec
+      # ce défaut avant qu'il soit compris. Cette vérification coûte une seconde et le rend
+      # impossible à répéter.
+      - name: Vérifier que les polices demandées sont livrées
+        run: python3 ci_scripts/check_fonts.py
+
       # Les tests tournent AVANT la signature, sur simulateur, donc sans certificat : un échec
       # coûte cinq minutes de machine au lieu de la construction complète. Et surtout,
       # `RouteSharingPrivacyTests` vérifie que les 300 premiers et derniers mètres d'un tracé

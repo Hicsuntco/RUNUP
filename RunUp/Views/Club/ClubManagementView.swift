@@ -70,7 +70,7 @@ struct ClubManagementView: View {
                 EyebrowLabel(text: "Défi du club", color: RUColor.text3)
                 Spacer()
                 Button(challenge == nil ? "Créer" : "Changer") { showCreateChallenge = true }
-                    .font(RUFont.sans(11.5, weight: .semibold))
+                    .font(RUFont.sans(11.5, weight: .medium))
                     .foregroundColor(RUColor.rose2)
                     .padding(.vertical, 12)
                     .frame(minHeight: 44)
@@ -78,7 +78,7 @@ struct ClubManagementView: View {
             }
             if let challenge {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(challenge.title).font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                    Text(challenge.title).font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
                     Text("\(Int(challenge.progressKm)) / \(Int(challenge.targetKm)) km parcourus ensemble")
                         .font(RUFont.sans(11.5)).foregroundColor(RUColor.text2)
                 }
@@ -247,13 +247,13 @@ struct ClubMemberProfileView: View {
                             bioText = savedBio ?? ""
                             bioError = nil
                         }
-                        .font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.text3)
+                        .font(RUFont.sans(12, weight: .medium)).foregroundColor(RUColor.text3)
                         .padding(.vertical, 12)
                         .frame(minHeight: 44)
                         .contentShape(Rectangle())
                         Spacer()
                         Button(isSavingBio ? "…" : "Enregistrer") { Task { await saveBio(onUpdateBio) } }
-                            .font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.rose2)
+                            .font(RUFont.sans(12, weight: .medium)).foregroundColor(RUColor.rose2)
                             .disabled(isSavingBio)
                             .padding(.vertical, 12)
                             .frame(minHeight: 44)
@@ -293,7 +293,7 @@ struct ClubMemberProfileView: View {
                                     .overlay(Text(badge.emoji).font(.system(size: 22)))
                                     .opacity(badge.earned ? 1 : 0.35)
                                 Text(badge.name)
-                                    .font(RUFont.sans(8, weight: .semibold))
+                                    .font(RUFont.sans(8, weight: .medium))
                                     .foregroundColor(badge.earned ? RUColor.textPrimary : RUColor.text2)
                                     .multilineTextAlignment(.center)
                                     .lineLimit(2)
@@ -372,7 +372,7 @@ struct CreateChallengeSheet: View {
                                         }
                                     }
                                 }
-                            Text("km").font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.text2)
+                            Text("km").font(RUFont.sans(12, weight: .medium)).foregroundColor(RUColor.text2)
                         }
                         .padding(13)
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))

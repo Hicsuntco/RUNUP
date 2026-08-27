@@ -2788,6 +2788,74 @@
         }
       }
     },
+    "Badges · %lld sur %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Badges · %lld of %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insignias · %lld de %lld"
+          }
+        }
+      }
+    },
+    "Badges à débloquer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Badges to unlock"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insignias por desbloquear"
+          }
+        }
+      }
+    },
+    "Badges, %lld débloqués sur %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Badges, %lld unlocked out of %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insignias, %lld desbloqueadas de %lld"
+          }
+        }
+      }
+    },
+    "Badges, aucun débloqué sur %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Badges, none unlocked out of %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insignias, ninguna desbloqueada de %lld"
+          }
+        }
+      }
+    },
     "Base": {
       "localizations": {
         "en": {
@@ -3710,6 +3778,23 @@
         }
       }
     },
+    "Choisir une course à préparer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick a race to train for"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una carrera para preparar"
+          }
+        }
+      }
+    },
     "Choisis au moins 2 jours pour progresser": {
       "localizations": {
         "en": {
@@ -4029,6 +4114,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Comentarios"
+          }
+        }
+      }
+    },
+    "Communauté": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Community"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comunidad"
           }
         }
       }
@@ -8481,6 +8583,23 @@
         }
       }
     },
+    "Mon objectif": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My goal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mi objetivo"
+          }
+        }
+      }
+    },
     "Mon propre temps": {
       "localizations": {
         "en": {
@@ -8493,6 +8612,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mi propio tiempo"
+          }
+        }
+      }
+    },
+    "Mon équipement": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My gear"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mi equipo"
           }
         }
       }
@@ -13041,6 +13177,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Seguir"
+          }
+        }
+      }
+    },
+    "Suivre leur kilométrage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Track their mileage"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sigue su kilometraje"
           }
         }
       }

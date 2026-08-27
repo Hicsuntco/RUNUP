@@ -45,10 +45,22 @@ struct ProfileView: View {
                 } else if isLoadingSocial {
                     loadingSocialCard
                 } else {
-                    amisCard
-                    clubCard
-                    itinerairesCard
+                    // Les trois blocs de la page portent chacun un intertitre depuis que les
+                    // badges et l'équipement sont apparus dessous : sans celui-ci, les cartes
+                    // sociales étaient la seule section anonyme de l'écran.
+                    VStack(alignment: .leading, spacing: 10) {
+                        EyebrowLabel(text: String(localized: "Communauté"))
+                        VStack(spacing: 12) {
+                            amisCard
+                            clubCard
+                            itinerairesCard
+                        }
+                    }
                 }
+
+                badgeSection
+
+                gearSection
             }
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.top, 8)
@@ -490,6 +502,116 @@ struct ProfileView: View {
             }
         }
         .buttonStyle(PressableStyle())
+    }
+
+    // MARK: - Badges
+
+    /// Les badges du catalogue, gagnés et verrouillés, calculés par `ClubBadgeEngine` — la même
+    /// dérivation que l'écran Club, pas une seconde copie.
+    private var badges: [ClubBadge] { ClubBadgeEngine.badges(runs: runs, profile: profile) }
+    private var earnedBadges: [ClubBadge] { badges.filter(\.earned) }
+
+    /// Les badges vivaient uniquement dans l'écran Club, alors que le profil affichait déjà leur
+    /// NOMBRE en haut de page — un chiffre sans rien derrière, et « 0 badge » ne disait pas ce
+    /// qu'il y avait à gagner.
+    ///
+    /// La bande montre les gagnés d'abord, puis les autres en verrouillé : quand il n'y en a
+    /// aucun — le cas au premier lancement — l'écran montre quand même ce qui est atteignable au
+    /// lieu d'une rangée vide. Tapoter ouvre le Club, où chaque badge a son détail et sa
+    /// progression ; c'est une vitrine ici, pas un second écran de badges.
+    private var badgeSection: some View {
+        let ordered = earnedBadges + badges.filter { !$0.earned }
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                EyebrowLabel(text: earnedBadges.isEmpty
+                             ? String(localized: "Badges à débloquer")
+                             : String(localized: "Badges · \(earnedBadges.count) sur \(badges.count)"))
+                Spacer()
+            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(ordered) { badge in
+                        let color = ClubBadgeCatalog.color(for: badge.key)
+                        VStack(spacing: 6) {
+                            HexagonBadgeShape()
+                                .fill(badge.earned ? color.opacity(0.22) : RUColor.card2)
+                                .overlay(HexagonBadgeShape().stroke(badge.earned ? color.opacity(0.7) : RUColor.line, lineWidth: RUSpacing.hairline))
+                                .aspectRatio(1, contentMode: .fit)
+                                .overlay(Text(badge.emoji).font(.system(size: 26)))
+                                .opacity(badge.earned ? 1 : 0.35)
+                                .shadow(color: badge.earned ? color.opacity(0.35) : .clear, radius: 8, x: 0, y: 3)
+                            Text(badge.name)
+                                .font(RUFont.sans(8.5, weight: .semibold))
+                                .foregroundColor(badge.earned ? RUColor.textPrimary : RUColor.text2)
+                                .multilineTextAlignment(.center)
+                                .lineLimit(2)
+                                .minimumScaleFactor(0.8)
+                        }
+                        .frame(width: 66)
+                    }
+                }
+                .padding(.vertical, 2)
+                .padding(.horizontal, 2)
+            }
+            // Une seule cible tapable pour toute la bande : chaque tuile ouvrirait la même
+            // destination, et un `Button` par badge ferait vingt arrêts VoiceOver identiques.
+            .contentShape(Rectangle())
+            .onTapGesture { appState.go(.club) }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(earnedBadges.isEmpty
+                                ? String(localized: "Badges, aucun débloqué sur \(badges.count)")
+                                : String(localized: "Badges, \(earnedBadges.count) débloqués sur \(badges.count)"))
+            .accessibilityAddTraits(.isButton)
+        }
+    }
+
+    // MARK: - Gear and goal
+
+    /// Deux destinations qui n'existaient que trois taps plus loin — Profil → réglages → plus de
+    /// réglages. Le kilométrage des chaussures est une donnée d'usure qu'on consulte, pas un
+    /// réglage qu'on pose une fois ; et l'objectif de course s'affiche déjà en haut de cet écran,
+    /// sans qu'on puisse l'ouvrir depuis là.
+    private var gearSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            EyebrowLabel(text: String(localized: "Mon équipement"))
+            VStack(spacing: 8) {
+                destinationRow(icon: "shoeprints.fill",
+                               title: String(localized: "Mes chaussures"),
+                               subtitle: String(localized: "Suivre leur kilométrage")) { appState.go(.shoes) }
+                destinationRow(icon: "target",
+                               title: String(localized: "Mon objectif"),
+                               subtitle: objectifText ?? String(localized: "Choisir une course à préparer")) { appState.go(.race) }
+            }
+        }
+    }
+
+    private func destinationRow(icon: String, title: String, subtitle: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 13) {
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(RUColor.rose)
+                    .frame(width: 38, height: 38)
+                    .background(RUColor.rose.opacity(0.10), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title).font(RUFont.sans(13.5, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                    Text(subtitle).font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+                        .lineLimit(1).minimumScaleFactor(0.8)
+                }
+                Spacer(minLength: 8)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(RUColor.text3)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title), \(subtitle)")
     }
 
     // MARK: - Data loading

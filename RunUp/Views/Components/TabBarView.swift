@@ -91,28 +91,30 @@ struct TabBarView: View {
         .accessibilityAddTraits(on ? .isSelected : [])
     }
 
-    /// Le bouton central, volontairement PLUS HAUT que la barre.
+    /// Le bouton central, CONTENU dans la barre.
     ///
-    /// Le décalage vers le haut est ce qui le fait émerger ; il n'est possible que parce que la
-    /// pile n'est plus rognée (voir `body`). Le rond monte au-dessus du bord, le libellé « RUN »
-    /// reste à l'intérieur.
+    /// Il a été essayé en débordement — rond agrandi, remonté au-dessus du bord — pour réparer un
+    /// rognage. Sur un vrai téléphone ça ne donnait pas un bouton surélevé mais une pastille
+    /// collée par-dessus la barre, sans rapport avec elle. Le rognage n'était que le symptôme ; la
+    /// cause était un bouton dimensionné exactement à la hauteur de sa barre.
+    ///
+    /// 40 + 3 + le libellé ≈ 54 dans une barre de 56 : il rentre, avec sa marge, et il ne peut
+    /// plus être coupé — ni flotter. Le `clipShape` reste retiré du `body` malgré tout : il
+    /// rognait par principe ce qui dépassait, et ce piège n'a aucune raison d'être remis en place.
     private var runButton: some View {
         Button(action: onStartRun) {
             VStack(spacing: 3) {
                 Circle()
                     .fill(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom))
-                    .frame(width: 54, height: 54)
-                    .overlay(Image(systemName: "play.fill").foregroundColor(RUColor.onRose).font(.system(size: 17)))
-                    // Une ombre en mode clair aussi : sur une barre blanche translucide, un rond
-                    // rose sans ombre est un aplat posé dessus, pas un bouton qui émerge.
-                    .shadow(color: RUColor.rose.opacity(RUColor.isLight ? 0.32 : 0.55), radius: 12, x: 0, y: 5)
+                    .frame(width: 40, height: 40)
+                    .overlay(Image(systemName: "play.fill").foregroundColor(RUColor.onRose).font(.system(size: 14)))
+                    .shadow(color: RUColor.rose.opacity(RUColor.isLight ? 0 : 0.55), radius: 14, x: 0, y: 6)
                 Text("RUN")
                     .font(RUFont.sans(8, weight: .bold))
                     .tracking(1)
                     .foregroundColor(RUColor.rose2)
             }
             .frame(width: 60)
-            .offset(y: -10)
         }
         .buttonStyle(PressableStyle())
     }

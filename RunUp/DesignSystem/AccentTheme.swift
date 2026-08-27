@@ -41,13 +41,15 @@ struct AccentTheme: Identifiable, Equatable {
     /// Seule la palette « rose » figure dans cette table : c'est la seule dont la maquette
     /// définisse une déclinaison claire. Les sept autres suivent la règle multiplicative, qui
     /// conserve leur teinte.
-    /// Le rose clair est désormais CELUI DU MODE SOMBRE, `#FF0F5B`, et non plus sa version
-    /// assombrie `#E60E52`.
+    /// Le rose clair est `#E60E52`, la valeur de la maquette.
     ///
-    /// Assombrir pour gagner du contraste enlève de l'éclat : c'est mécanique, et c'est ce qui
-    /// faisait dire de ce mode clair qu'il était fade. `#FF0F5B` sur blanc vaut 3,84:1 — au-dessus
-    /// du seuil de 3:1 pour un élément graphique ou du gros texte, en dessous des 4,5:1 exigés
-    /// pour du petit texte. Le compromis est assumé, et il est nommé ici plutôt que découvert.
+    /// Il avait été remplacé par `#FF0F5B`, celui du mode sombre, pour gagner en éclat. Vu sur un
+    /// vrai téléphone, le résultat a été jugé pire : sur un fond blanc, ce rose-là vire au fluo et
+    /// tire vers l'orangé au lieu de paraître vif. Le contraste y était aussi pour quelque chose —
+    /// 3,84:1 contre 4,62:1 — mais c'est le rendu qui a tranché, pas la mesure.
+    ///
+    /// À retenir pour la prochaine fois : la fadeur de ce mode clair ne venait pas de la
+    /// saturation de l'accent. Le chercher là était une erreur de diagnostic.
     ///
     /// `light` (le token `rose2`) reste ÉCLATANT, `#F0356F` — la valeur de la maquette, 3,86:1,
     /// soit exactement le contraste du rose principal.
@@ -62,7 +64,7 @@ struct AccentTheme: Identifiable, Equatable {
     /// assombrissement : lime, ambre et cyan à pleine intensité seraient illisibles sur blanc,
     /// leurs teintes étant intrinsèquement claires.
     private static let mockupLightPalettes: [String: (primary: Color, light: Color, tail: Color)] = [
-        "rose": (Color(hex: 0xFF0F5B), Color(hex: 0xF0356F), Color(hex: 0x7053E6))
+        "rose": (Color(hex: 0xE60E52), Color(hex: 0xF0356F), Color(hex: 0x7053E6))
     ]
 
     /// L'accent principal sur fond clair — celui de la maquette si elle en fixe un, sinon la

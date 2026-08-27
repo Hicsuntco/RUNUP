@@ -14637,23 +14637,6 @@
         }
       }
     },
-    "Salut %@": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hey %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hola, %@"
-          }
-        }
-      }
-    },
     "Notifications, %lld non lues": {
       "extractionState": "manual",
       "localizations": {

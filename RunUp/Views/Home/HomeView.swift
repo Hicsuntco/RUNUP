@@ -49,10 +49,14 @@ struct HomeView: View {
                 HeaderView(
                     // La date du jour, pas "Semaine 4/9" : la carte programme juste en dessous
                     // affiche déjà la semaine ET le bloc, donc l'eyebrow ne faisait que répéter
-                    // l'information la plus proche à l'écran. Une date ancre le "Salut Camille"
-                    // dans le vrai jour, comme la maquette (`.greet` au-dessus de `.greet-name`).
+                    // l'information la plus proche à l'écran. Une date ancre le prénom dans le
+                    // vrai jour, comme la maquette (`.greet` au-dessus de `.greet-name`).
+                    //
+                    // Le prénom SEUL, sans salutation. « Salut Charlotte » se lit une fois avec
+                    // plaisir et cent fois comme un automatisme ; le prénom seul, sous la date du
+                    // jour, dit la même chose sans faire semblant de dire bonjour.
                     eyebrow: isFreeRun ? String(localized: "Mode course libre") : todayDateEyebrow,
-                    title: String(localized: "Salut \(profile.name)")
+                    title: profile.name
                 ) {
                     HStack(spacing: 8) {
                         streakChip

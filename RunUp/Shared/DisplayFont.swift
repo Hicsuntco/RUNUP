@@ -1,81 +1,42 @@
 import SwiftUI
 
-/// La police de titrage de RunUp, nommée et dimensionnée en un seul endroit.
+/// La police de RunUp, nommée et dimensionnée en un seul endroit.
 ///
-/// Trois cibles l'utilisent — l'app, le widget, la montre — et jusqu'ici chacune écrivait son nom
-/// PostScript en dur, neuf fois rien que dans le widget. Changer de police demandait donc de
-/// retrouver toutes ces chaînes, et il suffisait d'en oublier une pour que l'app affiche deux
-/// polices différentes sans que rien ne le signale : une chaîne `.custom` introuvable ne lève
-/// aucune erreur, elle retombe silencieusement sur la police système.
+/// Trois cibles l'utilisent — l'app, le widget, la montre — et chacune écrivait son nom PostScript
+/// en dur, vingt fois en tout. Une chaîne `.custom` introuvable ne lève aucune erreur : elle
+/// retombe en silence sur la police système. En oublier une, c'était donc livrer un widget dans une
+/// autre police que l'app sans le moindre avertissement.
 ///
-/// Ce fichier vit dans `RunUp/Shared`, compilé par les trois cibles. Il ne dépend que de SwiftUI :
-/// aucun modèle, rien qui puisse le rendre inéligible à l'une d'elles.
+/// Ce fichier vit dans `RunUp/Shared`, compilé par les trois cibles. Il ne dépend que de SwiftUI.
 enum DisplayFont {
-    /// Le nom PostScript, pas le nom de famille : c'est celui-là que `Font.custom` attend.
-    ///
-    /// C'est Poppins en Medium — la MÊME famille que le texte courant, une graisse plus haut.
-    /// Autrement dit : plus de police de titrage du tout.
-    ///
-    /// Medium (500), et c'est le point important.
-    ///
-    /// Quatre polices de titrage ont été essayées et refusées — Bebas en capitales d'affiche,
-    /// Bricolage ExtraBold, DM Sans en 800 puis en 700 — et elles avaient toutes le même défaut :
-    /// elles étaient LOURDES. Chercher parmi d'autres familles grasses revenait à reposer la même
-    /// question. Une graisse moyenne dit « simple et joli » là où une graisse noire dit
-    /// « performance » ; c'est un registre, pas une nuance.
-    ///
-    /// La hiérarchie repose désormais sur la TAILLE et l'interlettrage négatif, pas sur la
-    /// graisse. C'est ce que fait la première des références fournies, dont les titres sont en
-    /// graisse légère.
-    ///
-    /// Ce n'est pas un renoncement, c'est le registre visé. Bebas était une condensée d'affiche,
-    /// Bricolage une grotesque à caractère ; toutes deux ont une voix, et c'est cette voix qui
-    /// gênait. Les apps de course qui lisent « premium » n'ont pas de police de titrage : elles
-    /// ont une seule famille neutre, et laissent la hiérarchie se faire par la graisse et la
-    /// taille. Une famille au lieu de deux, c'est aussi une police de moins à charger et plus
-    /// rien qui puisse mal vieillir séparément du reste.
     /// La famille de TOUTE l'app — titrage et texte courant confondus.
     ///
-    /// Elle vit ici plutôt que dans `RUFont` parce que le widget et la montre en ont besoin aussi,
-    /// et qu'ils ne compilent pas le système de design de l'app. Ils la nommaient en dur, à vingt
-    /// endroits ; le jour où la famille a changé, ces vingt-là sont devenus des noms introuvables,
-    /// et `Font.custom` ne lève rien sur un nom introuvable — il retombe en silence sur la police
-    /// système. Un widget dans une autre police que l'app, sans le moindre avertissement.
+    /// Il n'y a plus de police de titrage. Quatre ont été essayées et refusées — Bebas en
+    /// capitales d'affiche, Bricolage ExtraBold, DM Sans en 800 puis en 700 — toutes pour le même
+    /// motif : elles étaient lourdes, et une graisse noire dit « performance » là où on veut
+    /// « simple et joli ». La hiérarchie repose désormais sur la taille et l'interlettrage négatif,
+    /// pas sur la graisse.
+    ///
+    /// Changer de police, c'est changer cette ligne. Rien d'autre.
     static let family = "Poppins"
 
+    /// Le nom PostScript, pas le nom de famille : c'est celui-là que `Font.custom` attend.
     static let postScriptName = "\(family)-Medium"
 
-    /// ─── POURQUOI 0,82 ────────────────────────────────────────────────────────────────────────
+    /// Les 27 tailles de l'app ont été dessinées contre Bebas Neue, une condensée. Chaque famille
+    /// qui lui a succédé est plus large à taille de point égale, d'où ce facteur de compensation :
+    /// sans lui, les titres débordent de leurs gabarits.
     ///
-    /// Toutes les tailles passées aux fonctions ci-dessous ont été dessinées contre Bebas Neue,
-    /// dans une seule maquette, les unes par rapport aux autres. Bebas est une CONDENSÉE : à
-    /// taille de point égale, sur les vraies chaînes de l'app, DM Sans Bold est
-    /// **1,7 fois plus large**. Un remplacement à taille identique ferait déborder chaque titre.
+    /// 0,92 pour Poppins, mesuré sur les vraies chaînes de l'app (Poppins vaut 1,082 fois la
+    /// largeur de DM Sans, le facteur précédent était 0,98). Les titres retrouvent exactement
+    /// l'encombrement qu'ils avaient, et la hauteur d'x plus grande de Poppins fait qu'ils se
+    /// lisent un peu plus gros à encombrement égal.
     ///
-    /// Compenser la largeur exactement demanderait 0,58 et donnerait un texte minuscule. 0,82 est
-    /// le compromis : il tient dans les gabarits sans raboter la présence des grands chiffres.
-    ///
-    /// Mesuré au passage, et c'est ce qui a rendu ce changement indolore : DM Sans ExtraBold est à
-    /// 1 % près de la largeur de Bricolage, avec une hauteur de capitale PLUS GRANDE (0,700 contre
-    /// 0,660 — exactement celle de Bebas). Même encombrement, un peu plus de présence, même
-    /// facteur.
-    ///
-    /// La vraie réponse, plus tard, est de reprendre les 27 tailles une à une contre la nouvelle
-    /// police. Ce facteur est l'étape honnête en attendant, pas un remplacement de ce travail.
-    ///
-    /// 0,82 → 0,94 → 0,98 → 0,92. Le dernier cran n'est pas un recul : Poppins mesure 1,082 fois
-    /// la largeur de DM Sans, donc à facteur égal les titres auraient débordé. 0,92 leur rend
-    /// exactement l'encombrement qu'ils avaient, et la hauteur d'x plus grande de Poppins fait
-    /// qu'ils se lisent quand même un peu plus gros.
-    ///
-    /// Historique : à 0,82 les titres et les grands chiffres étaient jugés trop petits,
-    /// et c'est cohérent avec la mesure — 0,82 compensait la largeur au détriment de la hauteur de
-    /// capitale, qui tombait à 0,57 em quand Bebas en occupait 0,70. À 0,94 elle remonte à 0,66,
-    /// soit presque celle d'origine, au prix d'une largeur qui reste supérieure à celle de Bebas.
-    /// C'est le sens du compromis, pas sa disparition.
+    /// La vraie réponse, plus tard, est de reprendre les 27 tailles une à une. Ce facteur est
+    /// l'étape honnête en attendant, pas un remplacement de ce travail.
     static let sizeFactor: CGFloat = 0.92
 
-    /// La taille de point à demander pour retrouver l'encombrement dessiné contre Bebas.
+    /// La taille de point à demander pour retrouver l'encombrement dessiné à l'origine.
     static func pointSize(for designSize: CGFloat) -> CGFloat { designSize * sizeFactor }
 
     /// La police à taille fixe, pour le widget et la montre — qui n'ont pas le mécanisme Dynamic

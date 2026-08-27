@@ -208,9 +208,9 @@ targets:
         CFBundleVersion: "14"
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
-        # Only the 2 families this widget's redesign actually uses (Bebas Neue for the streak/ring
-        # numerals, DM Sans Bold for labels) — no need to ship the whole main-app font set into a
-        # second bundle.
+        # Only the 3 weights this widget actually draws with — no need to ship the whole main-app
+        # font set into a second bundle. Same family as the app (DisplayFont.family): a widget in a
+        # different typeface than the app is the one mismatch a user sees side by side.
         UIAppFonts:
           - Poppins-Medium.ttf
           - Poppins-Bold.ttf

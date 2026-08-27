@@ -195,6 +195,15 @@ targets:
       - path: RunUp/Resources/Fonts
         excludes:
           - "*.md"
+          # Cette cible ne déclare que 3 fichiers dans son UIAppFonts. Les 5 autres du dossier
+          # partagé étaient tout de même copiés dans son bundle : non enregistrés, donc inertes —
+          # ~750 Ko de poids mort dans une extension. Ce que l'UIAppFonts n'enregistre pas ne peut
+          # de toute façon pas se charger, les retirer ne change rien à l'affichage.
+          - "Poppins-Light.ttf"
+          - "Poppins-Regular.ttf"
+          - "Poppins-Italic.ttf"
+          - "DMMono-Regular.ttf"
+          - "DMMono-Medium.ttf"
       # L'extension est signée et livrée séparément de l'app : le manifeste de l'app ne la couvre
       # pas, il lui faut le sien. Elle lit `DailyGoalsSnapshot` via UserDefaults du groupe partagé.
       - path: RunUpWidgets/PrivacyInfo.xcprivacy
@@ -250,6 +259,15 @@ targets:
       - path: RunUp/Resources/Fonts
         excludes:
           - "*.md"
+          # Cette cible ne déclare que 3 fichiers dans son UIAppFonts. Les 5 autres du dossier
+          # partagé étaient tout de même copiés dans son bundle : non enregistrés, donc inertes —
+          # ~750 Ko de poids mort dans une extension. Ce que l'UIAppFonts n'enregistre pas ne peut
+          # de toute façon pas se charger, les retirer ne change rien à l'affichage.
+          - "Poppins-Light.ttf"
+          - "Poppins-Regular.ttf"
+          - "Poppins-Italic.ttf"
+          - "DMMono-Regular.ttf"
+          - "DMMono-Medium.ttf"
       # Le MÊME catalogue de chaînes que l'app iPhone. Sans lui, la montre restait entièrement en
       # français quelle que soit la langue de l'utilisatrice — chaque `Text("…")` retombait sur sa
       # clé française faute de traduction à charger. Le partager plutôt que d'en créer un second

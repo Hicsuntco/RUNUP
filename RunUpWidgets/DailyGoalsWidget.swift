@@ -118,7 +118,7 @@ struct DailyGoalsWidgetView: View {
                 .font(DisplayFont.font(46))
                 .foregroundColor(roseColor)
             Text("BOUCLÉS")
-                .font(.custom("DMSans-Bold", size: 9))
+                .font(.custom("\(DisplayFont.family)-Bold", size: 9))
                 .tracking(1.6)
                 .foregroundColor(text2)
             Spacer(minLength: 0)
@@ -137,8 +137,8 @@ struct DailyGoalsWidgetView: View {
 
     private func subStat(label: String, value: String, trailing: Bool = false) -> some View {
         VStack(alignment: trailing ? .trailing : .leading, spacing: 1) {
-            Text(value).font(.custom("DMSans-Bold", size: 11)).foregroundColor(textPrimary)
-            Text(label).font(.custom("DMSans-Bold", size: 6.5)).tracking(0.8).foregroundColor(text2)
+            Text(value).font(.custom("\(DisplayFont.family)-Bold", size: 11)).foregroundColor(textPrimary)
+            Text(label).font(.custom("\(DisplayFont.family)-Bold", size: 6.5)).tracking(0.8).foregroundColor(text2)
         }
     }
 
@@ -152,12 +152,12 @@ struct DailyGoalsWidgetView: View {
                     .font(DisplayFont.font(30))
                     .foregroundColor(roseColor)
                 Text("BOUCLÉS")
-                    .font(.custom("DMSans-Bold", size: 8.5))
+                    .font(.custom("\(DisplayFont.family)-Bold", size: 8.5))
                     .tracking(1.2)
                     .foregroundColor(text2)
                 Spacer(minLength: 0)
                 Text(Self.footerDateFormatter.string(from: entryDate).uppercased())
-                    .font(.custom("DMSans-SemiBold", size: 7.5))
+                    .font(.custom("\(DisplayFont.family)-SemiBold", size: 7.5))
                     .tracking(0.6)
                     .foregroundColor(text2)
             }
@@ -179,8 +179,8 @@ struct DailyGoalsWidgetView: View {
 
     private func gridCell(value: String, label: String, valueColor: Color? = nil) -> some View {
         VStack(alignment: .leading, spacing: 1) {
-            Text(value).font(.custom("DMSans-Bold", size: 13)).foregroundColor(valueColor ?? textPrimary)
-            Text(label).font(.custom("DMSans-Bold", size: 7)).tracking(0.8).foregroundColor(text2)
+            Text(value).font(.custom("\(DisplayFont.family)-Bold", size: 13)).foregroundColor(valueColor ?? textPrimary)
+            Text(label).font(.custom("\(DisplayFont.family)-Bold", size: 7)).tracking(0.8).foregroundColor(text2)
         }
     }
 

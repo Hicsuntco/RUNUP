@@ -27,22 +27,22 @@ struct RunActivityWidget: Widget {
                         Text(String(format: "%.2f", locale: Locale(identifier: "fr_FR"), context.state.distanceKm))
                             .font(DisplayFont.font(24))
                             .foregroundColor(.white)
-                        Text("KM").font(.custom("DMSans-Bold", size: 9)).tracking(1).foregroundColor(.white.opacity(0.5))
+                        Text("KM").font(.custom("\(DisplayFont.family)-Bold", size: 9)).tracking(1).foregroundColor(.white.opacity(0.5))
                     }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     VStack(alignment: .trailing, spacing: 2) {
                         Text(context.state.paceLabel).font(DisplayFont.font(18)).foregroundColor(.white)
-                        Text("/KM").font(.custom("DMSans-Bold", size: 9)).tracking(1).foregroundColor(.white.opacity(0.5))
+                        Text("/KM").font(.custom("\(DisplayFont.family)-Bold", size: 9)).tracking(1).foregroundColor(.white.opacity(0.5))
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     HStack(spacing: 6) {
                         Image(systemName: statusIcon(context.state))
-                        Text(context.attributes.sessionTitle).font(.custom("DMSans-SemiBold", size: 12)).lineLimit(1).minimumScaleFactor(0.7)
+                        Text(context.attributes.sessionTitle).font(.custom("\(DisplayFont.family)-SemiBold", size: 12)).lineLimit(1).minimumScaleFactor(0.7)
                         Spacer()
                         elapsedText(context.state)
-                            .font(.custom("DMSans-Bold", size: 13))
+                            .font(.custom("\(DisplayFont.family)-Bold", size: 13))
                             .monospacedDigit()
                     }
                     .foregroundColor(.white.opacity(0.85))
@@ -51,7 +51,7 @@ struct RunActivityWidget: Widget {
                 Image(systemName: "figure.run").foregroundColor(Self.accent)
             } compactTrailing: {
                 elapsedText(context.state)
-                    .font(.custom("DMSans-Bold", size: 13))
+                    .font(.custom("\(DisplayFont.family)-Bold", size: 13))
                     .monospacedDigit()
                     .foregroundColor(.white)
                     .frame(maxWidth: 52)
@@ -72,7 +72,7 @@ struct RunActivityWidget: Widget {
                 Spacer()
                 HStack(spacing: 6) {
                     Text(context.attributes.sessionTitle)
-                        .font(.custom("DMSans-SemiBold", size: 11))
+                        .font(.custom("\(DisplayFont.family)-SemiBold", size: 11))
                         .foregroundColor(.white.opacity(0.55))
                         .lineLimit(1)
                     statusBadge(context.state)
@@ -88,7 +88,7 @@ struct RunActivityWidget: Widget {
                     elapsedText(context.state)
                         .font(DisplayFont.font(26))
                         .foregroundColor(.white)
-                    Text("TEMPS").font(.custom("DMSans-Bold", size: 8.5)).tracking(1).foregroundColor(.white.opacity(0.4))
+                    Text("TEMPS").font(.custom("\(DisplayFont.family)-Bold", size: 8.5)).tracking(1).foregroundColor(.white.opacity(0.4))
                 }
             }
 
@@ -97,9 +97,9 @@ struct RunActivityWidget: Widget {
                 let fraction = max(0, min(1, context.state.elapsedSeconds / plannedSeconds))
                 VStack(alignment: .leading, spacing: 5) {
                     HStack {
-                        Text("SÉANCE").font(.custom("DMSans-Bold", size: 8.5)).tracking(1).foregroundColor(.white.opacity(0.4))
+                        Text("SÉANCE").font(.custom("\(DisplayFont.family)-Bold", size: 8.5)).tracking(1).foregroundColor(.white.opacity(0.4))
                         Spacer()
-                        Text("\(context.attributes.plannedDurationMinutes) MIN PRÉVUES").font(.custom("DMSans-Bold", size: 8.5)).tracking(0.6).foregroundColor(.white.opacity(0.4))
+                        Text("\(context.attributes.plannedDurationMinutes) MIN PRÉVUES").font(.custom("\(DisplayFont.family)-Bold", size: 8.5)).tracking(0.6).foregroundColor(.white.opacity(0.4))
                     }
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
@@ -121,7 +121,7 @@ struct RunActivityWidget: Widget {
             Text(value)
                 .font(DisplayFont.font(26))
                 .foregroundColor(.white)
-            Text(label).font(.custom("DMSans-Bold", size: 8.5)).tracking(1).foregroundColor(.white.opacity(0.4))
+            Text(label).font(.custom("\(DisplayFont.family)-Bold", size: 8.5)).tracking(1).foregroundColor(.white.opacity(0.4))
         }
     }
 

@@ -13,7 +13,7 @@ import SwiftUI
 enum DisplayFont {
     /// Le nom PostScript, pas le nom de famille : c'est celui-là que `Font.custom` attend.
     ///
-    /// C'est DM Sans en Bold — la MÊME famille que le texte courant, une graisse plus haut.
+    /// C'est Poppins en Medium — la MÊME famille que le texte courant, une graisse plus haut.
     /// Autrement dit : plus de police de titrage du tout.
     ///
     /// Medium (500), et c'est le point important.
@@ -34,7 +34,16 @@ enum DisplayFont {
     /// ont une seule famille neutre, et laissent la hiérarchie se faire par la graisse et la
     /// taille. Une famille au lieu de deux, c'est aussi une police de moins à charger et plus
     /// rien qui puisse mal vieillir séparément du reste.
-    static let postScriptName = "DMSans-Medium"
+    /// La famille de TOUTE l'app — titrage et texte courant confondus.
+    ///
+    /// Elle vit ici plutôt que dans `RUFont` parce que le widget et la montre en ont besoin aussi,
+    /// et qu'ils ne compilent pas le système de design de l'app. Ils la nommaient en dur, à vingt
+    /// endroits ; le jour où la famille a changé, ces vingt-là sont devenus des noms introuvables,
+    /// et `Font.custom` ne lève rien sur un nom introuvable — il retombe en silence sur la police
+    /// système. Un widget dans une autre police que l'app, sans le moindre avertissement.
+    static let family = "Poppins"
+
+    static let postScriptName = "\(family)-Medium"
 
     /// ─── POURQUOI 0,82 ────────────────────────────────────────────────────────────────────────
     ///
@@ -54,16 +63,17 @@ enum DisplayFont {
     /// La vraie réponse, plus tard, est de reprendre les 27 tailles une à une contre la nouvelle
     /// police. Ce facteur est l'étape honnête en attendant, pas un remplacement de ce travail.
     ///
-    /// Relevé de 0,82 à 0,94 puis à 0,98 — ce dernier cran vient du passage en Medium, qui mesure
-    /// 0,96 fois la largeur de Bold : le titrage s'allège ET grandit un peu, sans qu'aucune mise
-    /// en page ne bouge.
+    /// 0,82 → 0,94 → 0,98 → 0,92. Le dernier cran n'est pas un recul : Poppins mesure 1,082 fois
+    /// la largeur de DM Sans, donc à facteur égal les titres auraient débordé. 0,92 leur rend
+    /// exactement l'encombrement qu'ils avaient, et la hauteur d'x plus grande de Poppins fait
+    /// qu'ils se lisent quand même un peu plus gros.
     ///
     /// Historique : à 0,82 les titres et les grands chiffres étaient jugés trop petits,
     /// et c'est cohérent avec la mesure — 0,82 compensait la largeur au détriment de la hauteur de
     /// capitale, qui tombait à 0,57 em quand Bebas en occupait 0,70. À 0,94 elle remonte à 0,66,
     /// soit presque celle d'origine, au prix d'une largeur qui reste supérieure à celle de Bebas.
     /// C'est le sens du compromis, pas sa disparition.
-    static let sizeFactor: CGFloat = 0.98
+    static let sizeFactor: CGFloat = 0.92
 
     /// La taille de point à demander pour retrouver l'encombrement dessiné contre Bebas.
     static func pointSize(for designSize: CGFloat) -> CGFloat { designSize * sizeFactor }

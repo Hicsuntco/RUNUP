@@ -99,7 +99,11 @@ enum RUFont {
     /// 6 % et pas davantage : les rangées de trois métriques côte à côte sont à largeur fixe, et
     /// au-delà elles tronquent au lieu de s'adapter. Comme le facteur de titrage, c'est un nombre,
     /// à un seul endroit, qu'on rouvre après avoir regardé un écran.
-    private static let bodySizeFactor: CGFloat = 1.06
+    /// Ramené de 1,06 à 1,00 avec le passage à Poppins, qui mesure 1,082 fois la largeur de
+    /// DM Sans sur les vraies chaînes de l'app. Les lignes restent donc à peu près aussi longues
+    /// qu'avant, et comme Poppins a une hauteur d'x plus grande, le texte se lit un peu PLUS gros
+    /// à taille de point égale — l'inverse de ce qu'un simple rapport de largeur laisserait croire.
+    private static let bodySizeFactor: CGFloat = 1.00
 
     static func mono(_ size: CGFloat, weight: DMWeight = .regular) -> Font {
         let pointSize = scaled(size * bodySizeFactor)
@@ -109,19 +113,27 @@ enum RUFont {
         }
     }
 
+    /// La famille du texte courant, nommée UNE fois.
+    ///
+    /// C'est elle qui dessine l'écrasante majorité de ce qu'on lit : 348 appels à `sans` contre
+    /// 82 au titrage. Autrement dit, changer la police de titrage ne change presque rien à
+    /// l'impression que donne un écran — c'est ici qu'il faut agir, et c'est ici qu'on agira la
+    /// prochaine fois, en modifiant cette seule chaîne.
+    private static let bodyFamily = DisplayFont.family
+
     static func sans(_ size: CGFloat, weight: DMWeight = .regular) -> Font {
         let pointSize = scaled(size * bodySizeFactor)
         switch weight {
-        case .light: return .custom("DMSans-Light", fixedSize: pointSize)
-        case .regular: return .custom("DMSans-Regular", fixedSize: pointSize)
-        case .medium: return .custom("DMSans-Medium", fixedSize: pointSize)
-        case .semibold: return .custom("DMSans-SemiBold", fixedSize: pointSize)
-        case .bold: return .custom("DMSans-Bold", fixedSize: pointSize)
+        case .light: return .custom("\(bodyFamily)-Light", fixedSize: pointSize)
+        case .regular: return .custom("\(bodyFamily)-Regular", fixedSize: pointSize)
+        case .medium: return .custom("\(bodyFamily)-Medium", fixedSize: pointSize)
+        case .semibold: return .custom("\(bodyFamily)-SemiBold", fixedSize: pointSize)
+        case .bold: return .custom("\(bodyFamily)-Bold", fixedSize: pointSize)
         }
     }
 
     static func sansItalic(_ size: CGFloat) -> Font {
-        .custom("DMSans-Italic", fixedSize: scaled(size * bodySizeFactor))
+        .custom("\(bodyFamily)-Italic", fixedSize: scaled(size * bodySizeFactor))
     }
 
     enum DMWeight {

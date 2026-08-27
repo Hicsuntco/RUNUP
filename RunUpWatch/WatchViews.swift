@@ -19,8 +19,8 @@ private enum WTheme {
     /// Passe par `DisplayFont` (RunUp/Shared) : même police et même facteur de taille que
     /// l'app et le widget, décidés à un seul endroit.
     static func display(_ size: CGFloat) -> Font { DisplayFont.font(size) }
-    static func sansBold(_ size: CGFloat) -> Font { .custom("DMSans-Bold", size: size) }
-    static func sansSemibold(_ size: CGFloat) -> Font { .custom("DMSans-SemiBold", size: size) }
+    static func sansBold(_ size: CGFloat) -> Font { .custom("\(DisplayFont.family)-Bold", size: size) }
+    static func sansSemibold(_ size: CGFloat) -> Font { .custom("\(DisplayFont.family)-SemiBold", size: size) }
 
     /// Anciennement figé sur `fr_FR`, ce qui imposait la virgule décimale à TOUT le monde : une
     /// utilisatrice anglophone ou hispanophone voyait « 3,25 km » là où son système écrit

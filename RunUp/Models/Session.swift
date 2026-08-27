@@ -194,6 +194,14 @@ struct DayStatus: Codable, Equatable, Identifiable {
     var id: Int { weekday }
     /// 0 = Monday ... 6 = Sunday.
     var weekday: Int
+    /// ⚠️ Conservé pour décoder les profils existants, mais **à ne jamais afficher**.
+    ///
+    /// `weekStrip` est persisté dans SwiftData, donc cette lettre a été calculée UNE FOIS, dans la
+    /// langue de l'app à la création du profil, et écrite en base. Un téléphone passé en anglais
+    /// affichait donc « L M M J V S D » au milieu d'une interface anglaise — exactement le défaut
+    /// que `SessionKind` avait éliminé pour les titres de séance, reproduit un cran plus loin.
+    ///
+    /// Utiliser `displayLetter` à la place : il se recalcule à chaque affichage.
     var letter: String
     var state: State
     /// The real calendar date this cell represents — lets the strip show an actual date number
@@ -201,6 +209,10 @@ struct DayStatus: Codable, Equatable, Identifiable {
     /// decoding a `weekStrip` persisted before this field existed, so existing profiles don't
     /// crash on launch.
     var date: Date = .now
+
+    /// L'initiale à AFFICHER, dans la langue courante — dérivée du jour de la semaine, jamais
+    /// relue de la base.
+    var displayLetter: String { DayStatus.letters[min(max(weekday, 0), DayStatus.letters.count - 1)] }
 
     /// Dérivées des noms complets, et non écrites en dur : « L M M J V S D » n'est juste qu'en
     /// français et en espagnol. L'initiale du nom traduit donne la bonne lettre dans chaque

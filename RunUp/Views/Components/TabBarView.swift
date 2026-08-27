@@ -31,14 +31,21 @@ struct TabBarView: View {
         }
         .padding(.horizontal, 6)
         .frame(height: RUSpacing.tabBarHeight)
-        .background(.ultraThinMaterial.opacity(0.9))
+        // `in: Capsule()` sur chaque fond, et SURTOUT plus de `.clipShape(Capsule())` en aval.
+        //
+        // Le bouton RUN est censé DÉPASSER de la barre — c'est tout son principe. Un `clipShape`
+        // posé sur la pile entière rognait donc précisément ce qui devait dépasser, et le rond
+        // apparaissait coupé net par le haut. Le défaut était masqué tant que le bouton mesurait
+        // exactement la hauteur de la barre ; agrandir les libellés d'onglet l'a rendu visible.
+        //
+        // Un fond dessiné DANS une forme habille la barre sans toucher au contenu.
+        .background(.ultraThinMaterial.opacity(0.9), in: Capsule())
         // La barre FLOTTE au-dessus du contenu, donc elle doit se lire comme une surface
         // surélevée — c'est-à-dire `card`, comme toutes les autres surfaces surélevées depuis
         // l'inversion du thème clair. Elle était figée à #EDEDF4, soit la couleur de la page en
         // un peu plus foncé : une barre censée être posée au-dessus se lisait comme un trou.
-        .background(RUColor.card.opacity(RUColor.isLight ? 0.92 : 0.72))
+        .background(RUColor.card.opacity(RUColor.isLight ? 0.92 : 0.72), in: Capsule())
         .overlay(Capsule().stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
-        .clipShape(Capsule())
         // Une barre flottante a droit à plus d'élévation qu'une carte — mais pas à quatre fois
         // plus. C'était 30 % d'encre là où les cartes sont passées à 4 et 8 %, reliquat de
         // l'ancien langage d'ombre que le portage de la maquette a justement corrigé ailleurs.
@@ -84,20 +91,28 @@ struct TabBarView: View {
         .accessibilityAddTraits(on ? .isSelected : [])
     }
 
+    /// Le bouton central, volontairement PLUS HAUT que la barre.
+    ///
+    /// Le décalage vers le haut est ce qui le fait émerger ; il n'est possible que parce que la
+    /// pile n'est plus rognée (voir `body`). Le rond monte au-dessus du bord, le libellé « RUN »
+    /// reste à l'intérieur.
     private var runButton: some View {
         Button(action: onStartRun) {
-            VStack(spacing: 4) {
+            VStack(spacing: 3) {
                 Circle()
                     .fill(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom))
-                    .frame(width: 50, height: 50)
-                    .overlay(Image(systemName: "play.fill").foregroundColor(RUColor.onRose).font(.system(size: 16)))
-                    .shadow(color: RUColor.rose.opacity(RUColor.isLight ? 0 : 0.55), radius: 14, x: 0, y: 6)
+                    .frame(width: 54, height: 54)
+                    .overlay(Image(systemName: "play.fill").foregroundColor(RUColor.onRose).font(.system(size: 17)))
+                    // Une ombre en mode clair aussi : sur une barre blanche translucide, un rond
+                    // rose sans ombre est un aplat posé dessus, pas un bouton qui émerge.
+                    .shadow(color: RUColor.rose.opacity(RUColor.isLight ? 0.32 : 0.55), radius: 12, x: 0, y: 5)
                 Text("RUN")
                     .font(RUFont.sans(8, weight: .bold))
                     .tracking(1)
                     .foregroundColor(RUColor.rose2)
             }
             .frame(width: 60)
+            .offset(y: -10)
         }
         .buttonStyle(PressableStyle())
     }

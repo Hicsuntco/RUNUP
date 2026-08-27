@@ -49,15 +49,20 @@ struct AccentTheme: Identifiable, Equatable {
     /// du seuil de 3:1 pour un élément graphique ou du gros texte, en dessous des 4,5:1 exigés
     /// pour du petit texte. Le compromis est assumé, et il est nommé ici plutôt que découvert.
     ///
-    /// `light` (le token `rose2`) prend le rôle inverse du mode sombre : là-bas c'est la teinte
-    /// ÉCLAIRCIE, ici c'est la teinte PROFONDE, `#D40B4A` à 5,32:1 — celle qui reste lisible en
-    /// petit texte, et qui donne au dégradé deux extrémités réellement distinctes.
+    /// `light` (le token `rose2`) reste ÉCLATANT, `#F0356F` — la valeur de la maquette, 3,86:1,
+    /// soit exactement le contraste du rose principal.
+    ///
+    /// Il avait été passé à `#D40B4A`, une teinte profonde, au motif qu'elle resterait lisible en
+    /// petit texte. C'était une erreur de lecture du jeton : `rose2` est employé à 74 endroits —
+    /// l'anneau d'objectifs, l'onglet actif, le libellé RUN, les métriques de l'écran de course —
+    /// et tous veulent de l'éclat. L'assombrir revenait à réintroduire la fadeur à l'endroit
+    /// précis d'où elle venait, sous couvert de l'améliorer.
     ///
     /// Seule la palette « rose » est traitée ainsi. Les sept autres gardent la dérivation par
     /// assombrissement : lime, ambre et cyan à pleine intensité seraient illisibles sur blanc,
     /// leurs teintes étant intrinsèquement claires.
     private static let mockupLightPalettes: [String: (primary: Color, light: Color, tail: Color)] = [
-        "rose": (Color(hex: 0xFF0F5B), Color(hex: 0xD40B4A), Color(hex: 0x7053E6))
+        "rose": (Color(hex: 0xFF0F5B), Color(hex: 0xF0356F), Color(hex: 0x7053E6))
     ]
 
     /// L'accent principal sur fond clair — celui de la maquette si elle en fixe un, sinon la

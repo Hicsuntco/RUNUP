@@ -199,7 +199,7 @@ struct HomeView: View {
                     }
                 }()
                 VStack(spacing: 5) {
-                    Text(day.letter).displayStyle(11).foregroundColor(color)
+                    Text(day.displayLetter).displayStyle(11).foregroundColor(color)
                     ZStack {
                         if day.state == .today {
                             Circle().stroke(RUColor.rose2, lineWidth: 1.5).frame(width: 19, height: 19)

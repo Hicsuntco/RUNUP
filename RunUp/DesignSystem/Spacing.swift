@@ -39,7 +39,9 @@ enum RUSpacing {
     /// définition du contour, pas de l'élévation.
     static let hairline: CGFloat = 1
 
-    static let tabBarHeight: CGFloat = 64
-    static let tabBarBottomInset: CGFloat = 18
+    /// 56 et non plus 64, et l'encoche du bas 12 au lieu de 18 : la barre occupait 82 pt en
+    /// bas de chaque écran, pour cinq cibles de 44.
+    static let tabBarHeight: CGFloat = 56
+    static let tabBarBottomInset: CGFloat = 12
     static let tabBarSideInset: CGFloat = 17
 }

@@ -43,7 +43,7 @@ struct ClubManagementView: View {
                 }
                 .padding(18)
             }
-            .background(RUColor.bg)
+            .background(RUColor.pageBackground)
             .navigationTitle(club.name)
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: LeaderboardRow.self) { member in
@@ -214,7 +214,7 @@ struct ClubMemberProfileView: View {
             .padding(.bottom, 30)
             .frame(maxWidth: .infinity, alignment: .top)
         }
-        .background(RUColor.bg)
+        .background(RUColor.pageBackground)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             savedBio = member.bio
@@ -393,7 +393,7 @@ struct CreateChallengeSheet: View {
                 }
                 .padding(18)
             }
-            .background(RUColor.bg)
+            .background(RUColor.pageBackground)
             .navigationTitle("Nouveau défi")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -466,7 +466,7 @@ struct CreateEventSheet: View {
                 }
                 .padding(18)
             }
-            .background(RUColor.bg)
+            .background(RUColor.pageBackground)
             .navigationTitle("Sortie de groupe")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

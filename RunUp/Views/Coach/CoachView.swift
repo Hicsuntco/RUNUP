@@ -67,7 +67,7 @@ struct CoachView: View {
             }
             inputBar
         }
-        .background(RUColor.bg)
+        .background(RUColor.pageBackground)
         .onAppear {
             if vm == nil { vm = CoachViewModel(modelContext: modelContext, profile: profile) }
         }

@@ -236,7 +236,7 @@ struct RecapView: View {
                     .padding(.bottom, 24)
                 }
             }
-            .background(RUColor.bg)
+            .background(RUColor.pageBackground)
             .ignoresSafeArea(edges: .top)
             .sheet(isPresented: $showPublishRoute) {
                 PublishRouteSheet(run: run)

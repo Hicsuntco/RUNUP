@@ -650,7 +650,7 @@ private struct PeopleListSheet: View {
                 }
                 .padding(16)
             }
-            .background(RUColor.bg)
+            .background(RUColor.pageBackground)
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

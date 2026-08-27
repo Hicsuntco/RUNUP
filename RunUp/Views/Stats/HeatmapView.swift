@@ -63,6 +63,6 @@ struct HeatmapView: View {
                 }
             }
         }
-        .background(RUColor.bg)
+        .background(RUColor.pageBackground)
     }
 }

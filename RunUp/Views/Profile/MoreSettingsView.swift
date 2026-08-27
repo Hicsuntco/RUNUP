@@ -54,7 +54,7 @@ struct MoreSettingsView: View {
                 }
                 .padding(18)
             }
-            .background(RUColor.bg)
+            .background(RUColor.pageBackground)
             .navigationTitle("Plus de réglages")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

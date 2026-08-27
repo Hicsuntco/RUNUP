@@ -66,7 +66,7 @@ struct HistoryView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
-        .background(RUColor.bg)
+        .background(RUColor.pageBackground)
         .sheet(isPresented: $showAddRun) { AddRunSheet() }
         .sheet(item: $selectedRun) { run in RecapView(historicalRun: run) }
         .alert(

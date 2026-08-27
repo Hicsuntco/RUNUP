@@ -49,7 +49,7 @@ struct ActivityCommentsSheet: View {
 
                 composer
             }
-            .background(RUColor.bg)
+            .background(RUColor.pageBackground)
             .navigationTitle("Commentaires")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

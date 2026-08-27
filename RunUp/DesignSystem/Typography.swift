@@ -164,12 +164,18 @@ final class TextSizeStore {
 }
 
 extension Text {
-    /// Class `.b` in the prototype — la police de titrage, interlettrage serré.
+    /// Class `.b` in the prototype — la police de titrage, interlettrage serré (négatif).
     /// `.tracking`/`.textCase` are `View`-only modifiers (not declared on `Text` itself), so this
     /// returns `some View` rather than `Text` — safe everywhere it's used since none of these
     /// call sites concatenate the result with `+` (that requires `Text` on both sides).
     func displayStyle(_ size: CGFloat) -> some View {
-        self.font(RUFont.display(size)).tracking(0.5)
+        // Interlettrage NÉGATIF, proportionnel à la taille (−3 %), là où il était fixé à +0,5.
+        //
+        // Un titrage gras espacé positivement se lit comme du texte agrandi ; c'est le resserrage
+        // qui le fait lire comme un titre. La proportionnalité compte autant que le signe : à
+        // 11 pt, −0,33 se remarque à peine, à 46 pt, −1,4 change la ligne entière. Une valeur
+        // fixe ne peut pas servir les deux.
+        self.font(RUFont.display(size)).tracking(-size * 0.03)
     }
 
     /// Class `.eye` — eyebrow label above section/card titles.

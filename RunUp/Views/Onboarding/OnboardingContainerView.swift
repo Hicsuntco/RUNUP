@@ -10,7 +10,10 @@ struct OnboardingContainerView: View {
     var body: some View {
         ZStack {
             RadialGradient(colors: [RUColor.rose.opacity(vm.showWelcome ? 0.22 : 0.16), .clear], center: .top, startRadius: 0, endRadius: 420)
-            RUColor.bg
+            // NOTE : ce fond est posé APRÈS le halo, donc au-DESSUS de lui dans un ZStack — il le
+            // masque entièrement. C'est antérieur à ce changement et laissé tel quel : inverser
+            // l'ordre modifierait l'aspect de l'accueil d'onboarding, ce qui n'est pas l'objet ici.
+            RUColor.pageBackground
 
             if vm.showWelcome {
                 // The top of the funnel every other onboarding number is a percentage of — the app

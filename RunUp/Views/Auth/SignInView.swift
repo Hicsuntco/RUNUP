@@ -83,7 +83,7 @@ struct SignInView: View {
                 .padding(.bottom, 40)
             }
         }
-        .background(RUColor.bg)
+        .background(RUColor.pageBackground)
         .disabled(isLoading)
         .overlay {
             if isLoading {

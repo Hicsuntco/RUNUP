@@ -63,7 +63,7 @@ struct RouteDiscoveryView: View {
             filterBar
             listSection
         }
-        .background(RUColor.bg)
+        .background(RUColor.pageBackground)
         .sheet(item: $selected) { route in
             RouteDetailSheet(route: route) { updated in
                 if let index = routes.firstIndex(where: { $0.id == updated.id }) { routes[index] = updated }

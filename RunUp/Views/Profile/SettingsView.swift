@@ -40,7 +40,7 @@ struct SettingsView: View {
                 .padding(.top, 8)
                 .padding(.bottom, 40)
             }
-            .background(RUColor.bg)
+            .background(RUColor.pageBackground)
             .navigationTitle("Réglages")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -54,7 +54,7 @@ struct ProfileView: View {
             .padding(.top, 8)
             .padding(.bottom, 130)
         }
-        .background(RUColor.bg)
+        .background(RUColor.pageBackground)
         .task { await loadSocialSummary() }
         .refreshable { await loadSocialSummary() }
         .onChange(of: auth.isSignedIn) { _, signedIn in

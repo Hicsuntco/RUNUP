@@ -99,7 +99,7 @@ struct PublishRouteSheet: View {
             }
             .padding(20)
         }
-        .background(RUColor.bg)
+        .background(RUColor.pageBackground)
         .task { await resolveLocality() }
         .onAppear { if name.isEmpty { name = placeholderName } }
     }

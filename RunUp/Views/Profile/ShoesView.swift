@@ -54,7 +54,7 @@ struct ShoesView: View {
             .padding(.top, 8)
             .padding(.bottom, 60)
         }
-        .background(RUColor.bg)
+        .background(RUColor.pageBackground)
         .sheet(isPresented: $showAddShoe) { AddShoeSheet() }
         .alert(
             "Retirer cette paire ?",
@@ -183,7 +183,7 @@ private struct AddShoeSheet: View {
                 }
                 .padding(18)
             }
-            .background(RUColor.bg)
+            .background(RUColor.pageBackground)
             .navigationTitle("Nouvelle paire")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

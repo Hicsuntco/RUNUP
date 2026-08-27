@@ -44,5 +44,5 @@ struct AppMarkView: View {
 #Preview {
     AppMarkView(size: 88, radius: 26)
         .padding()
-        .background(RUColor.bg)
+        .background(RUColor.pageBackground)
 }

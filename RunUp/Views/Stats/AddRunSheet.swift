@@ -84,7 +84,7 @@ struct AddRunSheet: View {
                 }
                 .padding(18)
             }
-            .background(RUColor.bg)
+            .background(RUColor.pageBackground)
             .navigationTitle("Ajouter une course")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -13,8 +13,13 @@ import SwiftUI
 enum DisplayFont {
     /// Le nom PostScript, pas le nom de famille : c'est celui-là que `Font.custom` attend.
     ///
-    /// C'est DM Sans en ExtraBold — la MÊME famille que le texte courant de l'app, une graisse
-    /// plus haut. Autrement dit : plus de police de titrage du tout.
+    /// C'est DM Sans en Bold — la MÊME famille que le texte courant, une graisse plus haut.
+    /// Autrement dit : plus de police de titrage du tout.
+    ///
+    /// Bold et non ExtraBold : à 800, les titres avaient l'épaisseur d'un titre d'affiche ; à 700
+    /// ils gardent leur autorité sans peser. La largeur ne change pas — Bold mesure 0,994 fois
+    /// ExtraBold sur les vraies chaînes de l'app — donc le facteur ci-dessous reste valable tel
+    /// quel, et aucune mise en page ne bouge.
     ///
     /// Ce n'est pas un renoncement, c'est le registre visé. Bebas était une condensée d'affiche,
     /// Bricolage une grotesque à caractère ; toutes deux ont une voix, et c'est cette voix qui
@@ -22,13 +27,13 @@ enum DisplayFont {
     /// ont une seule famille neutre, et laissent la hiérarchie se faire par la graisse et la
     /// taille. Une famille au lieu de deux, c'est aussi une police de moins à charger et plus
     /// rien qui puisse mal vieillir séparément du reste.
-    static let postScriptName = "DMSans-ExtraBold"
+    static let postScriptName = "DMSans-Bold"
 
     /// ─── POURQUOI 0,82 ────────────────────────────────────────────────────────────────────────
     ///
     /// Toutes les tailles passées aux fonctions ci-dessous ont été dessinées contre Bebas Neue,
     /// dans une seule maquette, les unes par rapport aux autres. Bebas est une CONDENSÉE : à
-    /// taille de point égale, sur les vraies chaînes de l'app, DM Sans ExtraBold est
+    /// taille de point égale, sur les vraies chaînes de l'app, DM Sans Bold est
     /// **1,7 fois plus large**. Un remplacement à taille identique ferait déborder chaque titre.
     ///
     /// Compenser la largeur exactement demanderait 0,58 et donnerait un texte minuscule. 0,82 est

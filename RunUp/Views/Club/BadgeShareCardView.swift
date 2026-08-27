@@ -60,6 +60,6 @@ struct BadgeShareCardView: View {
             .padding(40)
         }
         .frame(width: 360, height: 640)
-        .background(RUColor.bg)
+        .background(RUColor.pageBackground)
     }
 }

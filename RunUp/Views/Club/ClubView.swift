@@ -1633,7 +1633,7 @@ struct BadgeDetailView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity)
-        .background(RUColor.bg)
+        .background(RUColor.pageBackground)
     }
 }
 

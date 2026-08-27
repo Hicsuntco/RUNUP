@@ -29,7 +29,7 @@ struct SocialView: View {
                 }
             }
         }
-        .background(RUColor.bg)
+        .background(RUColor.pageBackground)
         .onAppear {
             if appState.openFriendsTabOnNextVisit {
                 mode = .friends

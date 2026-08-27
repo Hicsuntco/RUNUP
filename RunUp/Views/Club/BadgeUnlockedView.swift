@@ -24,7 +24,7 @@ struct BadgeUnlockedView: View {
 
     var body: some View {
         ZStack {
-            RUColor.bg.ignoresSafeArea()
+            RUColor.pageBackground.ignoresSafeArea()
 
             VStack {
                 HStack {

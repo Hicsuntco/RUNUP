@@ -36,7 +36,7 @@ struct RouteDetailSheet: View {
             }
             .padding(20)
         }
-        .background(RUColor.bg)
+        .background(RUColor.pageBackground)
         .task { await loadFullTrace() }
         .alert("Signaler cet itinéraire", isPresented: $reportPresented) {
             TextField("Pourquoi ?", text: $reportReason)

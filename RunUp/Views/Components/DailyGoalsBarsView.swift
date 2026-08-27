@@ -117,5 +117,5 @@ struct DailyGoalsBarsView: View {
 #Preview {
     DailyGoalsBarsView(progress: [1, 0.6, 0.12], size: 180)
         .padding()
-        .background(RUColor.bg)
+        .background(RUColor.pageBackground)
 }

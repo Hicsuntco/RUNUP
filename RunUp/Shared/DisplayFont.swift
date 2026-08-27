@@ -16,10 +16,17 @@ enum DisplayFont {
     /// C'est DM Sans en Bold — la MÊME famille que le texte courant, une graisse plus haut.
     /// Autrement dit : plus de police de titrage du tout.
     ///
-    /// Bold et non ExtraBold : à 800, les titres avaient l'épaisseur d'un titre d'affiche ; à 700
-    /// ils gardent leur autorité sans peser. La largeur ne change pas — Bold mesure 0,994 fois
-    /// ExtraBold sur les vraies chaînes de l'app — donc le facteur ci-dessous reste valable tel
-    /// quel, et aucune mise en page ne bouge.
+    /// Medium (500), et c'est le point important.
+    ///
+    /// Quatre polices de titrage ont été essayées et refusées — Bebas en capitales d'affiche,
+    /// Bricolage ExtraBold, DM Sans en 800 puis en 700 — et elles avaient toutes le même défaut :
+    /// elles étaient LOURDES. Chercher parmi d'autres familles grasses revenait à reposer la même
+    /// question. Une graisse moyenne dit « simple et joli » là où une graisse noire dit
+    /// « performance » ; c'est un registre, pas une nuance.
+    ///
+    /// La hiérarchie repose désormais sur la TAILLE et l'interlettrage négatif, pas sur la
+    /// graisse. C'est ce que fait la première des références fournies, dont les titres sont en
+    /// graisse légère.
     ///
     /// Ce n'est pas un renoncement, c'est le registre visé. Bebas était une condensée d'affiche,
     /// Bricolage une grotesque à caractère ; toutes deux ont une voix, et c'est cette voix qui
@@ -27,7 +34,7 @@ enum DisplayFont {
     /// ont une seule famille neutre, et laissent la hiérarchie se faire par la graisse et la
     /// taille. Une famille au lieu de deux, c'est aussi une police de moins à charger et plus
     /// rien qui puisse mal vieillir séparément du reste.
-    static let postScriptName = "DMSans-Bold"
+    static let postScriptName = "DMSans-Medium"
 
     /// ─── POURQUOI 0,82 ────────────────────────────────────────────────────────────────────────
     ///
@@ -47,12 +54,16 @@ enum DisplayFont {
     /// La vraie réponse, plus tard, est de reprendre les 27 tailles une à une contre la nouvelle
     /// police. Ce facteur est l'étape honnête en attendant, pas un remplacement de ce travail.
     ///
-    /// Relevé de 0,82 à 0,94 : à 0,82 les titres et les grands chiffres étaient jugés trop petits,
+    /// Relevé de 0,82 à 0,94 puis à 0,98 — ce dernier cran vient du passage en Medium, qui mesure
+    /// 0,96 fois la largeur de Bold : le titrage s'allège ET grandit un peu, sans qu'aucune mise
+    /// en page ne bouge.
+    ///
+    /// Historique : à 0,82 les titres et les grands chiffres étaient jugés trop petits,
     /// et c'est cohérent avec la mesure — 0,82 compensait la largeur au détriment de la hauteur de
     /// capitale, qui tombait à 0,57 em quand Bebas en occupait 0,70. À 0,94 elle remonte à 0,66,
     /// soit presque celle d'origine, au prix d'une largeur qui reste supérieure à celle de Bebas.
     /// C'est le sens du compromis, pas sa disparition.
-    static let sizeFactor: CGFloat = 0.94
+    static let sizeFactor: CGFloat = 0.98
 
     /// La taille de point à demander pour retrouver l'encombrement dessiné contre Bebas.
     static func pointSize(for designSize: CGFloat) -> CGFloat { designSize * sizeFactor }

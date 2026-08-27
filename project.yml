@@ -212,6 +212,7 @@ targets:
         # numerals, DM Sans Bold for labels) — no need to ship the whole main-app font set into a
         # second bundle.
         UIAppFonts:
+          - DMSans-Medium.ttf
           - DMSans-Bold.ttf
           - DMSans-SemiBold.ttf
     entitlements:
@@ -279,6 +280,7 @@ targets:
         NSHealthUpdateUsageDescription: "RunUp enregistre ta course comme une vraie séance dans Santé — elle compte dans tes anneaux."
         NSLocationWhenInUseUsageDescription: "RunUp utilise ta position pour mesurer distance et allure pendant une course depuis la montre."
         UIAppFonts:
+          - DMSans-Medium.ttf
           - DMSans-Bold.ttf
           - DMSans-SemiBold.ttf
     entitlements:

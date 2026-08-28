@@ -61,8 +61,8 @@ struct PublishRouteSheet: View {
                         .font(RUFont.sans(.emphasis))
                         .foregroundColor(RUColor.textPrimary)
                         .padding(12)
-                        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous)
                             .stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                 }
 
@@ -76,8 +76,8 @@ struct PublishRouteSheet: View {
                         .font(RUFont.sans(.emphasis))
                         .foregroundColor(RUColor.textPrimary)
                         .padding(12)
-                        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous)
                             .stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                 }
 
@@ -122,8 +122,8 @@ struct PublishRouteSheet: View {
             .frame(height: 160)
             .frame(maxWidth: .infinity)
             .padding(14)
-            .background(RUColor.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
+            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous)
                 .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
             .accessibilityLabel(Text("Aperçu du tracé qui sera publié"))
     }
@@ -145,7 +145,7 @@ struct PublishRouteSheet: View {
                         .scaledToFill()
                         .frame(height: 150)
                         .frame(maxWidth: .infinity)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
                     Button {
                         self.photoPreview = nil
                         self.photoDataURI = nil
@@ -182,7 +182,7 @@ struct PublishRouteSheet: View {
                 .foregroundColor(RUColor.text2)
         }
         .padding(12)
-        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
     }
 
     private var tooShortNote: some View {
@@ -194,7 +194,7 @@ struct PublishRouteSheet: View {
                 .foregroundColor(RUColor.text2)
         }
         .padding(12)
-        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
     }
 
     /// « Boucle de 8 km » — un nom déjà rempli, que l'utilisatrice n'a qu'à corriger. Un champ vide

@@ -88,8 +88,8 @@ struct ActivityCommentsSheet: View {
                 .foregroundColor(RUColor.textPrimary)
                 .lineLimit(1...4)
                 .padding(.horizontal, 14).padding(.vertical, 10)
-                .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
 
             Button(action: { Task { await send() } }) {
                 Image(systemName: "arrow.up.circle.fill")

@@ -88,7 +88,7 @@ private struct ConnectRow: View {
             HStack(spacing: 14) {
                 icon
                     .frame(width: 40, height: 40)
-                    .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(source.title).font(RUFont.sans(.emphasis, weight: .bold)).foregroundColor(RUColor.textPrimary)
                     Text(source.subtitle).font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
@@ -110,8 +110,8 @@ private struct ConnectRow: View {
             }
             .padding(15)
             .opacity(source != .apple ? 0.5 : 1)
-            .background(connected ? RUColor.lime.opacity(0.1) : RUColor.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(connected ? RUColor.lime.opacity(0.35) : RUColor.line, lineWidth: RUSpacing.hairline))
+            .background(connected ? RUColor.lime.opacity(0.1) : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous).stroke(connected ? RUColor.lime.opacity(0.35) : RUColor.line, lineWidth: RUSpacing.hairline))
         }
         .buttonStyle(PressableStyle())
         .disabled(source != .apple)

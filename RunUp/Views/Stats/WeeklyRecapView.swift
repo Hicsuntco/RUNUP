@@ -203,7 +203,7 @@ struct WeeklyRecapView: View {
             RUCardHeader(icon: "chart.bar.fill", tint: RUColor.cyan, title: "Volume par jour (km)")
             HStack(alignment: .bottom, spacing: 6) {
                 ForEach(bars.indices, id: \.self) { i in
-                    RoundedRectangle(cornerRadius: 4)
+                    RoundedRectangle(cornerRadius: RUSpacing.radiusBar)
                         // Dégradé rose2 → rose sur la barre du jour (comme `.db.today .b2` dans
                         // la maquette), au lieu d'un aplat : c'est le même dégradé que le bouton
                         // RUN et le sélecteur de période des Stats, donc la barre "aujourd'hui"
@@ -260,8 +260,8 @@ struct WeeklyRecapView: View {
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 14).padding(.vertical, 12)
-        .background(RUColor.rose.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.rose.opacity(0.26), lineWidth: RUSpacing.hairline))
+        .background(RUColor.rose.opacity(0.08), in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(RUColor.rose.opacity(0.26), lineWidth: RUSpacing.hairline))
         // Le trophée et le fond teinté sont décoratifs ; sans regroupement, VoiceOver lit le
         // libellé et sa valeur comme deux arrêts, sans dire qu'il s'agit d'un record.
         .accessibilityElement(children: .combine)

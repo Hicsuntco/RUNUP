@@ -59,8 +59,8 @@ struct SelectableCard: View {
                     )
             }
             .padding(15)
-            .background(selected ? RUColor.rose.opacity(0.12) : RUColor.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(selected ? RUColor.rose.opacity(0.4) : RUColor.line, lineWidth: RUSpacing.hairline))
+            .background(selected ? RUColor.rose.opacity(0.12) : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous).stroke(selected ? RUColor.rose.opacity(0.4) : RUColor.line, lineWidth: RUSpacing.hairline))
             .animation(.easeOut(duration: 0.15), value: selected)
         }
         .buttonStyle(PressableStyle())

@@ -26,7 +26,7 @@ struct RUCardHeader<Accessory: View>: View {
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(tint)
                     .frame(width: 26, height: 26)
-                    .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: RUSpacing.radiusTile, style: .continuous))
             }
             VStack(alignment: .leading, spacing: 1) {
                 Text(LocalizedStringKey(title))

@@ -82,8 +82,8 @@ struct ClubManagementView: View {
                         .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
                 }
                 .padding(13)
-                .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
             } else {
                 Text("Aucun défi en cours pour l'instant.")
                     .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
@@ -127,8 +127,8 @@ struct ClubManagementView: View {
             Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold)).foregroundColor(RUColor.text3)
         }
         .padding(.horizontal, 13).padding(.vertical, 11)
-        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 }
 
@@ -235,8 +235,8 @@ struct ClubMemberProfileView: View {
                         .foregroundColor(RUColor.textPrimary)
                         .lineLimit(1...3)
                         .padding(11)
-                        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                        .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                     if let bioError {
                         Text(bioError).font(RUFont.sans(.small)).foregroundColor(RUColor.rose)
                     }
@@ -374,8 +374,8 @@ struct CreateChallengeSheet: View {
                             Text("km").font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.text2)
                         }
                         .padding(13)
-                        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                        .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                     }
 
                     VStack(alignment: .leading, spacing: 8) {

@@ -205,7 +205,7 @@ struct PlanView: View {
                         .font(RUFont.sans(.label, weight: .semibold))
                         .foregroundColor(RUColor.text2)
                         .frame(width: 32, height: 32)
-                        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous))
                     Text("Semaine \(week.number)")
                         .font(RUFont.sans(.emphasis, weight: .semibold))
                         .foregroundColor(RUColor.textPrimary)
@@ -336,9 +336,9 @@ struct PlanView: View {
         // teinté + un liseré rose, au lieu d'une puce "aujourd'hui" posée au milieu de la ligne
         // qui poussait le titre de la séance et décalait la colonne durée/allure d'un jour à
         // l'autre. Teinte, pas aplat — l'accent reste un liseré et une icône.
-        .background(isToday ? RUColor.rose.opacity(0.07) : Color.clear, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+        .background(isToday ? RUColor.rose.opacity(0.07) : Color.clear, in: RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 11, style: .continuous)
+            RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous)
                 .stroke(isToday ? RUColor.rose.opacity(0.3) : Color.clear, lineWidth: RUSpacing.hairline)
         )
         .contentShape(Rectangle())
@@ -375,8 +375,8 @@ struct PlanView: View {
             .font(.system(size: 12, weight: .semibold))
             .foregroundColor(tint)
             .frame(width: 30, height: 30)
-            .background(isToday ? RUColor.rose.opacity(0.12) : RUColor.bg, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+            .background(isToday ? RUColor.rose.opacity(0.12) : RUColor.bg, in: RoundedRectangle(cornerRadius: RUSpacing.radiusTile, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusTile, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 
     private func dayRowAccessibilityLabel(day: PlannedDay, isToday: Bool, isRest: Bool) -> String {

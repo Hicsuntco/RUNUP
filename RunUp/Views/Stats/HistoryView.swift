@@ -236,8 +236,8 @@ struct HistoryView: View {
             }
         }
         .frame(width: 52, height: 52)
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+        .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
         // Purely decorative for VoiceOver — the distance/time/pace it traces are already read
         // from the row's own label, and an unlabeled thumbnail otherwise reads as a bare,
         // meaningless "Map" stop.

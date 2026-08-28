@@ -201,8 +201,8 @@ struct FriendsView: View {
             }
         }
         .padding(.horizontal, 14).padding(.vertical, 11)
-        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+        .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 
     private var searchResultsList: some View {
@@ -265,8 +265,8 @@ struct FriendsView: View {
             trailing()
         }
         .padding(.horizontal, 13).padding(.vertical, 10)
-        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
         .contextMenu {
             Button("Signaler \(user.name)") {
                 reportTarget = ReportTarget(targetType: "user", targetId: user.id, displayName: user.name)
@@ -646,7 +646,7 @@ private struct PeopleListSheet: View {
                             .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                         }
                         .padding(.horizontal, 13).padding(.vertical, 10)
-                        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
                     }
                 }
                 .padding(16)

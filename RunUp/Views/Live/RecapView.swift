@@ -163,8 +163,8 @@ struct RecapView: View {
                             .frame(height: 230)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 8)
-                            .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                            .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                             HStack(spacing: 7) {
                                 ForEach(ShareCardTextColor.allCases) { style in
                                     SelectableChip(label: style.label, selected: shareTextColor == style) {
@@ -275,8 +275,8 @@ struct RecapView: View {
             Spacer(minLength: 0)
         }
         .padding(14)
-        .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+        .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 
     private func elevationCard(_ run: RunRecord) -> some View {
@@ -383,8 +383,8 @@ struct RecapView: View {
             Text("\(index + 1)").font(RUFont.mono(11)).foregroundColor(RUColor.text2).frame(width: 16)
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 6).fill(RUColor.card)
-                    RoundedRectangle(cornerRadius: 6)
+                    RoundedRectangle(cornerRadius: RUSpacing.radiusMicro).fill(RUColor.card)
+                    RoundedRectangle(cornerRadius: RUSpacing.radiusMicro)
                         .fill(isLast ? RUColor.rose : RUColor.text4)
                         // Bars sweep in one after the other (40ms stagger per row) instead of the
                         // whole list appearing pre-drawn — same "revealed, not dumped" read as the

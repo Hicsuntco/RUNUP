@@ -240,8 +240,8 @@ struct HomeView: View {
                 // announced.
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel(dayAccessibilityLabel(day))
-                .background(bg, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(border, lineWidth: RUSpacing.hairline))
+                .background(bg, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(border, lineWidth: RUSpacing.hairline))
             }
         }
     }

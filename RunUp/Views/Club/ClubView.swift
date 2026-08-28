@@ -339,8 +339,8 @@ struct ClubView: View {
                         .font(RUFont.sans(.emphasis))
                         .foregroundColor(RUColor.textPrimary)
                         .padding(.horizontal, 14).padding(.vertical, 11)
-                        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                        .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                     Button("Créer") { Task { await createClub() } }
                         .buttonStyle(PrimaryButtonStyle(isDisabled: newClubName.trimmingCharacters(in: .whitespaces).isEmpty || isLoading))
                         .disabled(newClubName.trimmingCharacters(in: .whitespaces).isEmpty || isLoading)
@@ -356,8 +356,8 @@ struct ClubView: View {
                         .foregroundColor(RUColor.textPrimary)
                         .textInputAutocapitalization(.characters)
                         .padding(.horizontal, 14).padding(.vertical, 11)
-                        .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                        .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                     Button("Rejoindre") { Task { await joinClub() } }
                         .buttonStyle(PrimaryButtonStyle(isDisabled: joinCode.trimmingCharacters(in: .whitespaces).isEmpty || isLoading))
                         .disabled(joinCode.trimmingCharacters(in: .whitespaces).isEmpty || isLoading)
@@ -429,7 +429,7 @@ struct ClubView: View {
             Text("\(info.level)").displayStyle(22).foregroundColor(.white)
                 .contentTransition(.numericText())
                 .frame(width: 52, height: 52)
-                .background(LinearGradient(colors: [RUColor.violet, RUColor.rose], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .background(LinearGradient(colors: [RUColor.violet, RUColor.rose], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .lastTextBaseline) {
                     Text("Niveau \(info.level) · \(info.title)").font(RUFont.sans(.title, weight: .bold)).foregroundColor(.white)
@@ -513,8 +513,8 @@ struct ClubView: View {
             segment(String(localized: "Activité"), .feed)
         }
         .padding(3)
-        .background(RUColor.bg2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+        .background(RUColor.bg2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 
     /// Contenu de l'onglet Aperçu : « où en est le club en ce moment ». L'ordre suit celui de la
@@ -609,7 +609,7 @@ struct ClubView: View {
                 // audit's forced-44pt height on this pill too big and asked for it back.
                 .padding(.vertical, 9)
                 .frame(maxWidth: .infinity)
-                .background(tab == value ? RUColor.card : .clear, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                .background(tab == value ? RUColor.card : .clear, in: RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous))
                 .shadow(color: .black.opacity(tab == value && RUColor.isLight ? 0.08 : 0), radius: 3, x: 0, y: 1)
         }
         .buttonStyle(PressableStyle())
@@ -727,8 +727,8 @@ struct ClubView: View {
                     .buttonStyle(PressableStyle())
                 }
                 .padding(12)
-                .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                 .contextMenu {
                     if event.isMine {
                         Button("Annuler cette sortie", role: .destructive) { deleteEvent(event) }
@@ -946,7 +946,7 @@ struct ClubView: View {
         // l'air décalée par erreur. Le fond teinté suffit largement à la distinguer.
         .padding(.horizontal, 8)
         .padding(.vertical, 11)
-        .background(entry.isMe ? RUColor.rose.opacity(0.09) : Color.clear, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(entry.isMe ? RUColor.rose.opacity(0.09) : Color.clear, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
         .contentShape(Rectangle())
     }
 
@@ -1002,7 +1002,7 @@ struct ClubView: View {
         // Même chrome que `weekRow` ci-dessus (retrait uniforme, fond teinté pour « toi »).
         .padding(.horizontal, 8)
         .padding(.vertical, 11)
-        .background(entry.isMe ? RUColor.rose.opacity(0.09) : Color.clear, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(entry.isMe ? RUColor.rose.opacity(0.09) : Color.clear, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
         .contentShape(Rectangle())
         .contextMenu {
             if !entry.isMe {
@@ -1115,7 +1115,7 @@ struct ClubView: View {
                             }
                             .padding(.horizontal, 8)
                             .padding(.vertical, 11)
-                            .background(entry.isMe ? RUColor.rose.opacity(0.09) : Color.clear, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .background(entry.isMe ? RUColor.rose.opacity(0.09) : Color.clear, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
                         }
                     }
                 }
@@ -1536,6 +1536,10 @@ struct ClubBadge: Identifiable {
 /// `ClubMemberProfileView` can reuse it for other members' badges too.
 struct BadgeDetailView: View {
     var badge: ClubBadge
+    /// Rendue à la demande, et seulement pour un badge gagné : `ImageRenderer` coûte un rendu
+    /// complet hors écran, inutile pour une tuile verrouillée qui ne sera pas partagée.
+    @State private var shareImage: Image?
+    @State private var shareRenderFailed = false
 
     var body: some View {
         let color = ClubBadgeCatalog.color(for: badge.key)
@@ -1565,10 +1569,53 @@ struct BadgeDetailView: View {
                 Text(progressText).font(RUFont.mono(13, weight: .semibold)).foregroundColor(RUColor.rose2)
             }
 
+            // La carte partageable existait déjà (`BadgeShareCardView`), mais n'était rendue que
+            // par `BadgeUnlockedView` — l'animation de déblocage, vue une fois. Passé cette
+            // fenêtre, un badge gagné n'était plus partageable du tout : la seule image que l'app
+            // sait fabriquer d'une réussite devenait inatteignable une seconde après l'avoir
+            // obtenue.
+            if badge.earned {
+                if let shareImage {
+                    ShareLink(item: shareImage, preview: SharePreview(badge.name, image: shareImage)) {
+                        HStack(spacing: 7) {
+                            Image(systemName: "square.and.arrow.up")
+                            Text("Partager ce badge")
+                        }
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                    .padding(.horizontal, 30)
+                } else if shareRenderFailed {
+                    // Même récupération que `RecapView` et `BadgeUnlockedView` : `uiImage` peut
+                    // revenir nil sous pression mémoire, et sans reprise manuelle le bouton
+                    // resterait absent pour toujours.
+                    Button("Réessayer") { renderShareCard() }
+                        .font(RUFont.sans(.body, weight: .semibold))
+                        .foregroundColor(RUColor.rose2)
+                        .frame(minHeight: 44)
+                } else {
+                    ProgressView().tint(RUColor.text3)
+                }
+            }
+
             Spacer()
         }
         .frame(maxWidth: .infinity)
         .background(RUColor.pageBackground)
+        .task {
+            guard badge.earned, shareImage == nil else { return }
+            renderShareCard()
+        }
+    }
+
+    @MainActor private func renderShareCard() {
+        shareRenderFailed = false
+        let renderer = ImageRenderer(content: BadgeShareCardView(badge: badge))
+        renderer.scale = 3
+        guard let uiImage = renderer.uiImage else {
+            shareRenderFailed = true
+            return
+        }
+        shareImage = Image(uiImage: uiImage)
     }
 }
 

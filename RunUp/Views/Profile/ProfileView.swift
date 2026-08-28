@@ -650,7 +650,7 @@ struct ProfileView: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(RUColor.rose)
                     .frame(width: 38, height: 38)
-                    .background(RUColor.rose.opacity(0.10), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .background(RUColor.rose.opacity(0.10), in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title).font(RUFont.sans(.emphasis, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                     Text(subtitle).font(RUFont.sans(.small)).foregroundColor(RUColor.text3)

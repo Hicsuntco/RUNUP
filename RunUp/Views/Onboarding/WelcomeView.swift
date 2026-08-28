@@ -39,9 +39,9 @@ struct WelcomeView: View {
                         VStack(alignment: .leading, spacing: 14) {
                             ForEach(valueProps, id: \.title) { prop in
                                 HStack(alignment: .top, spacing: 14) {
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous)
                                         .fill(RUColor.card)
-                                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                                        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                                         .frame(width: 38, height: 38)
                                         .overlay(Image(systemName: prop.icon).foregroundColor(RUColor.rose2).font(.system(size: 15)))
                                     VStack(alignment: .leading, spacing: 3) {

@@ -146,7 +146,7 @@ struct RingsView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(18)
-                        .background(RadialGradient(colors: [RUColor.rose.opacity(0.2), .clear], center: .top, startRadius: 0, endRadius: 200), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .background(RadialGradient(colors: [RUColor.rose.opacity(0.2), .clear], center: .top, startRadius: 0, endRadius: 200), in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
                         .scaleEffect(celebrationShown ? 1 : 0.85)
                         .opacity(celebrationShown ? 1 : 0)
                         .onAppear {

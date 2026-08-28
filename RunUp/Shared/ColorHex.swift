@@ -57,4 +57,46 @@ extension Color {
         let newS = min(1, s * (1 + max(0, amt - spent)))
         return Color(hue: Double(h), saturation: Double(newS), brightness: Double(newB), opacity: Double(a))
     }
+
+    /// La même teinte, assombrie juste assez pour atteindre un contraste donné sur du BLANC.
+    ///
+    /// Le mode clair dérivait ses accents en assombrissant de 10 ou 14 % — un pourcentage fixe,
+    /// appliqué à des teintes dont la luminosité de départ varie du simple au double. Sur le rose
+    /// ça tombait juste ; sur le lime, l'ambre et le cyan, dont la teinte est intrinsèquement
+    /// claire, l'accent restait à 1,9:1 contre du blanc. Illisible, pas « un peu pâle » : à ce
+    /// niveau le texte disparaît dans la page.
+    ///
+    /// Viser un CONTRASTE plutôt qu'un pourcentage règle le problème à la source : chaque teinte
+    /// descend de ce qu'il faut, et pas plus. Une couleur qui atteint déjà le seuil n'est pas
+    /// touchée du tout.
+    ///
+    /// Le travail se fait en TSV, comme `vivid` et pour la même raison : multiplier les canaux
+    /// RVB désature vers le noir et fabrique de la boue.
+    func meetingContrastOnWhite(_ target: Double) -> Color {
+        let ui = UIColor(self)
+        var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        guard ui.getHue(&h, saturation: &s, brightness: &b, alpha: &a) else { return self }
+
+        func contrast(_ brightness: CGFloat) -> Double {
+            let c = UIColor(hue: h, saturation: s, brightness: brightness, alpha: 1)
+            var r: CGFloat = 0, g: CGFloat = 0, bl: CGFloat = 0, al: CGFloat = 0
+            c.getRed(&r, green: &g, blue: &bl, alpha: &al)
+            func lin(_ v: CGFloat) -> Double {
+                let d = Double(v)
+                return d <= 0.03928 ? d / 12.92 : pow((d + 0.055) / 1.055, 2.4)
+            }
+            let l = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(bl)
+            return 1.05 / (l + 0.05)
+        }
+
+        if contrast(b) >= target { return self }
+        // Recherche dichotomique sur la luminosité : la fonction est monotone, donc vingt
+        // itérations suffisent largement à la précision d'un canal 8 bits.
+        var lo: CGFloat = 0.05, hi = b
+        for _ in 0..<20 {
+            let mid = (lo + hi) / 2
+            if contrast(mid) >= target { lo = mid } else { hi = mid }
+        }
+        return Color(hue: Double(h), saturation: Double(s), brightness: Double(lo), opacity: Double(a))
+    }
 }

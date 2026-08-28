@@ -23,9 +23,9 @@ struct RecoveryView: View {
 
                     HStack(spacing: 5) {
                         ForEach(0..<total, id: \.self) { i in
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous)
                                 .fill(i < done ? RUColor.lime : RUColor.card)
-                                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(i < done ? RUColor.lime : RUColor.line, lineWidth: RUSpacing.hairline))
+                                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous).stroke(i < done ? RUColor.lime : RUColor.line, lineWidth: RUSpacing.hairline))
                                 .frame(width: 34, height: 34)
                                 .overlay(
                                     Text(i < done ? "✓" : "\(i + 1)")

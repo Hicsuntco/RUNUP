@@ -71,8 +71,8 @@ struct DebriefSheet: View {
                         .font(RUFont.sans(.label)).foregroundColor(RUColor.textPrimary).lineSpacing(3)
                 }
                 .padding(14)
-                .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                 .padding(.top, 14)
 
                 EyebrowLabel(text: "L'effort ressenti", color: RUColor.text3).padding(.top, 18).padding(.bottom, 10)
@@ -85,8 +85,8 @@ struct DebriefSheet: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
-                            .background(rpe == opt ? RUColor.rose.opacity(0.12) : RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(rpe == opt ? RUColor.rose.opacity(0.35) : RUColor.line, lineWidth: RUSpacing.hairline))
+                            .background(rpe == opt ? RUColor.rose.opacity(0.12) : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(rpe == opt ? RUColor.rose.opacity(0.35) : RUColor.line, lineWidth: RUSpacing.hairline))
                         }
                         .buttonStyle(PressableStyle())
                         // The app's own core adaptive-plan mechanic, asked after every single run

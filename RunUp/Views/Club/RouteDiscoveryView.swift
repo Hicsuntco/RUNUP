@@ -245,7 +245,7 @@ private struct RouteRow: View {
                 }
             }
             .frame(width: 52, height: 52)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(route.name)

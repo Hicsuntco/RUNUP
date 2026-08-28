@@ -159,9 +159,9 @@ struct LiveRunView: View {
                 .foregroundColor(Color(hex: 0xFFD79A))
         }
         .padding(.horizontal, 12).padding(.vertical, 9)
-        .background(RUColor.amber.opacity(0.16), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.amber.opacity(0.4), lineWidth: RUSpacing.hairline))
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(RUColor.amber.opacity(0.16), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.amber.opacity(0.4), lineWidth: RUSpacing.hairline))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
     }
 
     private func coachBubble(_ text: String) -> some View {
@@ -174,9 +174,9 @@ struct LiveRunView: View {
             }
         }
         .padding(14)
-        .background(Color(hex: 0x0E0E14).opacity(0.85), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(RUColor.rose.opacity(0.25), lineWidth: RUSpacing.hairline))
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(Color(hex: 0x0E0E14).opacity(0.85), in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous).stroke(RUColor.rose.opacity(0.25), lineWidth: RUSpacing.hairline))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
         .padding(.top, 90)
         // Speaker icon + "Coach · en direct" eyebrow + the coach line were three separate stops.
         .accessibilityElement(children: .combine)

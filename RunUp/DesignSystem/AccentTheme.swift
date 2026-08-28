@@ -67,19 +67,47 @@ struct AccentTheme: Identifiable, Equatable {
         "rose": (Color(hex: 0xE60E52), Color(hex: 0xF0356F), Color(hex: 0x7053E6))
     ]
 
-    /// L'accent principal sur fond clair — celui de la maquette si elle en fixe un, sinon la
-    /// version assombrie qui conserve la teinte.
-    var primaryOnLight: Color { Self.mockupLightPalettes[id]?.primary ?? primary.darkened(0.10) }
-    /// Le pendant de `light` sur fond clair (token `RUColor.rose2`).
+    /// Le seuil de contraste que les accents doivent atteindre sur du blanc.
     ///
-    /// Le repli assombrit `primary` et non `light`, contrairement à ce que fait la maquette pour
-    /// la palette de marque. C'est délibéré et documenté dans `RUColor.rose2` : sur fond sombre
-    /// `light` est une teinte ÉCLAIRCIE, et plusieurs palettes (lime, ambre, cyan) l'ont si pâle
-    /// qu'assombrie de 14 % elle resterait illisible en texte sur du blanc. Le rose, lui, a sa
-    /// valeur exacte dans la table ci-dessus, donc il n'a pas besoin de ce repli.
-    var lightOnLight: Color { Self.mockupLightPalettes[id]?.light ?? primary.darkened(0.14) }
+    /// 3,5:1 et pas 4,5:1 — le seuil WCAG AA du petit texte — et c'est un arbitrage assumé. Le
+    /// rose de la marque est à 3,86:1 en `light` ; le pousser à 4,5 l'assombrit en bordeaux, ce
+    /// qui a déjà été essayé et refusé, à juste titre : ce jeton sert à 74 endroits qui veulent
+    /// tous de l'éclat (anneau d'objectifs, onglet actif, métriques en direct). Un seuil à 3,5
+    /// ne touche AUCUNE des trois valeurs de la palette rose, ni celles du violet, du bleu, du
+    /// magenta ou du corail. Il ne corrige que ce qui est cassé.
+    ///
+    /// Et ce qui était cassé l'était vraiment : lime à 1,87:1, ambre à 2,26, cyan à 2,20. Ce ne
+    /// sont pas des accents un peu pâles, c'est du texte qui disparaît dans la page. Une
+    /// utilisatrice qui choisissait le nuancier Lime obtenait un mode clair inutilisable.
+    private static let lightContrastFloor = 3.5
+
+    /// Les trois accents résolus pour le fond clair, calculés UNE fois par nuancier.
+    ///
+    /// La recherche dichotomique de `meetingContrastOnWhite` coûte une vingtaine de conversions
+    /// de couleur ; `RUColor.rose` est lu à plus de mille endroits et à chaque redessin. Un `let`
+    /// statique est initialisé paresseusement et une seule fois par Swift, donc le coût est payé
+    /// au premier accès et jamais ensuite.
+    private static let resolvedOnLight: [String: (primary: Color, light: Color, tail: Color)] = {
+        var out: [String: (primary: Color, light: Color, tail: Color)] = [:]
+        for theme in all {
+            if let fixed = mockupLightPalettes[theme.id] { out[theme.id] = fixed; continue }
+            let p = theme.primary.meetingContrastOnWhite(lightContrastFloor)
+            // `light` reste distinct de `primary` : une fois les deux ramenés au même seuil, ils
+            // tombaient sur la MÊME couleur, et la palette perdait un cran. Un cran plus sombre
+            // plutôt qu'un cran plus clair — c'est l'inversion que ce fichier documente déjà pour
+            // le fond clair, et ça ne peut que faire monter le contraste.
+            out[theme.id] = (p, p.darkened(0.08), theme.tail.meetingContrastOnWhite(lightContrastFloor))
+        }
+        return out
+    }()
+
+    /// L'accent principal sur fond clair — celui de la maquette si elle en fixe un, sinon la
+    /// teinte descendue juste assez pour être lisible.
+    var primaryOnLight: Color { Self.resolvedOnLight[id]?.primary ?? primary }
+    /// Le pendant de `light` sur fond clair (token `RUColor.rose2`).
+    var lightOnLight: Color { Self.resolvedOnLight[id]?.light ?? light }
     /// Le pendant de `tail` sur fond clair (token `RUColor.violet`).
-    var tailOnLight: Color { Self.mockupLightPalettes[id]?.tail ?? tail.darkened(0.10) }
+    var tailOnLight: Color { Self.resolvedOnLight[id]?.tail ?? tail }
 }
 
 /// Live holder for the chosen accent theme's id, read by `RUColor`'s theme-aware tokens from

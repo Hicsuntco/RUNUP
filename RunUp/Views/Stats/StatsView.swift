@@ -574,8 +574,8 @@ struct StatsView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)
-        .background(highlighted ? RUColor.rose.opacity(0.14) : RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(highlighted ? RUColor.rose.opacity(0.3) : RUColor.line, lineWidth: RUSpacing.hairline))
+        .background(highlighted ? RUColor.rose.opacity(0.14) : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(highlighted ? RUColor.rose.opacity(0.3) : RUColor.line, lineWidth: RUSpacing.hairline))
     }
 
     // MARK: Training load — was a fixed fake bar chart + fake "ratio charge 1.1"
@@ -632,7 +632,7 @@ struct StatsView: View {
             } else {
                 HStack(alignment: .bottom, spacing: 5) {
                     ForEach(bars.indices, id: \.self) { i in
-                        RoundedRectangle(cornerRadius: 4)
+                        RoundedRectangle(cornerRadius: RUSpacing.radiusBar)
                             .fill(i == bars.count - 1 ? RUColor.rose : RUColor.line)
                             // Same grow-from-baseline reveal as WeeklyRecapView's volume chart.
                             .frame(height: chartRevealed ? max(4, bars[i] / maxBar * 70) : 4)

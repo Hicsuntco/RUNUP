@@ -52,7 +52,7 @@ struct SignInView: View {
                         // against the near-white light-mode sheet.
                         .signInWithAppleButtonStyle(RUColor.isLight ? .black : .white)
                         .frame(height: 50)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
 
                     HStack {
                         Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)

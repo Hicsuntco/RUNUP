@@ -4,8 +4,35 @@ import CoreGraphics
 enum RUSpacing {
     static let pagePadding: CGFloat = 18
 
-    static let radiusStandard: CGFloat = 18
+    // ── Rayons ────────────────────────────────────────────────────────────────────────────────
+    //
+    // Il y avait quatre jetons et CENT TRENTE-CINQ nombres écrits à la main, sur dix valeurs
+    // distinctes. Treize appels seulement passaient par un jeton.
+    //
+    // Les valeurs ci-dessous sont exactement celles déjà employées, une par famille de forme :
+    // remplacer un littéral par son jeton ne déplace donc aucun pixel. Réduire ensuite dix
+    // valeurs à cinq est une décision de design visible, séparée de ce rangement — la même
+    // distinction que pour l'échelle typographique, et pour la même raison : on ne modifie pas
+    // en douce une app qui vient d'être validée sous prétexte de la ranger.
+    //
+    // Ce que le rangement apporte : la forme des cartes se règle ici, pas dans 135 fichiers.
+
+    /// 2 — jauges et barres de progression fines.
+    static let radiusBar: CGFloat = 2
+    /// 6 — petites jauges, curseurs.
+    static let radiusMicro: CGFloat = 6
+    /// 8 — pastilles d'icône, tuiles de jour.
+    static let radiusTile: CGFloat = 8
+    /// 10 — vignettes, pastilles d'icône plus grandes.
+    static let radiusChip: CGFloat = 10
+    /// 12 — sous-surfaces dans une carte, champs de saisie.
+    static let radiusInner: CGFloat = 12
+    /// 14 — la carte courante. La valeur la plus employée de l'app, et de loin.
     static let radiusCompact: CGFloat = 14
+    /// 16 — cartes qui portent un contenu large (grilles, feuilles).
+    static let radiusLarge: CGFloat = 16
+    /// 18 — la carte de premier plan.
+    static let radiusStandard: CGFloat = 18
     static let radiusPill: CGFloat = 99
     /// A deliberately larger radius for a handful of always-dark "trophy" cards that keep their
     /// own fixed gradient in both themes (Club's level card) rather than routing through

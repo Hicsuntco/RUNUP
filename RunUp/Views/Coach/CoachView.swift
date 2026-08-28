@@ -164,8 +164,8 @@ struct CoachView: View {
                     .buttonStyle(PressableStyle())
             }
             .padding(12)
-            .background(RUColor.amber.opacity(0.1), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.amber.opacity(0.3), lineWidth: RUSpacing.hairline))
+            .background(RUColor.amber.opacity(0.1), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.amber.opacity(0.3), lineWidth: RUSpacing.hairline))
         case .coach:
             coachBubble(message.text)
         case .user:

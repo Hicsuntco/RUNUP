@@ -59,7 +59,7 @@ struct RouteDetailSheet: View {
             }
             .frame(height: 200)
             .frame(maxWidth: .infinity)
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
             .accessibilityLabel(Text("Photo du parcours"))
         }
     }
@@ -73,7 +73,7 @@ struct RouteDetailSheet: View {
             }
         }
         .frame(height: 220)
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
         .allowsHitTesting(false)
         .accessibilityLabel(Text("Tracé de l'itinéraire"))
     }
@@ -115,7 +115,7 @@ struct RouteDetailSheet: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)
-        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
     }
 
     private func notesCard(_ notes: String) -> some View {
@@ -124,8 +124,8 @@ struct RouteDetailSheet: View {
             .foregroundColor(RUColor.text2)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(14)
-            .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous)
                 .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 

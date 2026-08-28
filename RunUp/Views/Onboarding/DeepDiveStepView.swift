@@ -115,8 +115,8 @@ private struct NumField: View {
                 Text(unit).font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.text2)
             }
             .padding(13)
-            .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
         }
     }
 }

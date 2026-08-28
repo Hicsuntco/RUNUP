@@ -137,7 +137,7 @@ struct RaceGoalView: View {
                     VStack(spacing: 6) {
                         ForEach(hyroxStrategy.indices, id: \.self) { i in
                             HStack(spacing: 12) {
-                                RoundedRectangle(cornerRadius: 2).fill(RUColor.text4).frame(width: 3, height: 30)
+                                RoundedRectangle(cornerRadius: RUSpacing.radiusBar).fill(RUColor.text4).frame(width: 3, height: 30)
                                 VStack(alignment: .leading, spacing: 1) {
                                     Text(hyroxStrategy[i].0).font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                                     Text(hyroxStrategy[i].1).font(RUFont.sans(.small)).foregroundColor(RUColor.text2).lineSpacing(2)
@@ -145,8 +145,8 @@ struct RaceGoalView: View {
                                 Spacer()
                             }
                             .padding(.horizontal, 14).padding(.vertical, 12)
-                            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                         }
                     }
                 } else {
@@ -155,7 +155,7 @@ struct RaceGoalView: View {
                         ForEach(pacingPlan.indices, id: \.self) { i in
                             let isLast = i == pacingPlan.count - 1
                             HStack(spacing: 12) {
-                                RoundedRectangle(cornerRadius: 2).fill(isLast ? RUColor.rose : RUColor.text4).frame(width: 3, height: 30)
+                                RoundedRectangle(cornerRadius: RUSpacing.radiusBar).fill(isLast ? RUColor.rose : RUColor.text4).frame(width: 3, height: 30)
                                 VStack(alignment: .leading, spacing: 1) {
                                     Text(pacingPlan[i].1).font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                                     Text(pacingPlan[i].0).font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
@@ -165,8 +165,8 @@ struct RaceGoalView: View {
                                     + Text(" /km").font(RUFont.sans(.micro)).foregroundColor(RUColor.text2))
                             }
                             .padding(.horizontal, 14).padding(.vertical, 12)
-                            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                         }
                     }
                 }
@@ -237,7 +237,7 @@ struct RaceGoalView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
-        .background(highlighted ? RUColor.rose.opacity(0.12) : RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(highlighted ? RUColor.rose.opacity(0.3) : RUColor.line, lineWidth: RUSpacing.hairline))
+        .background(highlighted ? RUColor.rose.opacity(0.12) : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(highlighted ? RUColor.rose.opacity(0.3) : RUColor.line, lineWidth: RUSpacing.hairline))
     }
 }

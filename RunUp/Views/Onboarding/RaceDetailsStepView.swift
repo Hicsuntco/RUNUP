@@ -21,8 +21,8 @@ struct RaceDetailsStepView: View {
                                 .foregroundColor(vm.distance == d ? RUColor.rose2 : RUColor.textPrimary)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 18)
-                                .background(vm.distance == d ? RUColor.rose.opacity(0.12) : RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(vm.distance == d ? RUColor.rose.opacity(0.4) : RUColor.line, lineWidth: RUSpacing.hairline))
+                                .background(vm.distance == d ? RUColor.rose.opacity(0.12) : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
+                                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(vm.distance == d ? RUColor.rose.opacity(0.4) : RUColor.line, lineWidth: RUSpacing.hairline))
                         }
                         .buttonStyle(PressableStyle())
                         .gridCellColumns(d == .other ? 2 : 1)
@@ -71,8 +71,8 @@ struct RaceDetailsStepView: View {
                     .labelsHidden()
                     .colorScheme(RUColor.colorScheme)
                     .padding(13)
-                    .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                    .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
 
                     if let days = vm.daysUntilRace {
                         Text("J-\(days)").font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.rose2).padding(.top, 10)

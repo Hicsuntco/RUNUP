@@ -125,7 +125,7 @@ struct SessionDetailSheet: View {
                     VStack(spacing: 6) {
                         ForEach(steps.indices, id: \.self) { i in
                             HStack(spacing: 12) {
-                                RoundedRectangle(cornerRadius: 2).fill(steps[i].2).frame(width: 3, height: 32)
+                                RoundedRectangle(cornerRadius: RUSpacing.radiusBar).fill(steps[i].2).frame(width: 3, height: 32)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(steps[i].0).font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                                     Text(steps[i].1).font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
@@ -165,8 +165,8 @@ struct SessionDetailSheet: View {
                             .foregroundColor(RUColor.lime)
                             .frame(maxWidth: .infinity)
                             .padding(16)
-                            .background(RUColor.lime.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RUColor.lime.opacity(0.25), lineWidth: RUSpacing.hairline))
+                            .background(RUColor.lime.opacity(0.08), in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(RUColor.lime.opacity(0.25), lineWidth: RUSpacing.hairline))
                             .padding(.top, 16)
                     } else {
                         HStack(spacing: 8) {

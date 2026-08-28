@@ -381,13 +381,13 @@ struct MoreSettingsView: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .padding(.horizontal, 12).padding(.vertical, 9)
-                .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous))
             TextField("Nom (facultatif)", text: $lastNameText)
                 .textFieldStyle(.plain)
                 .font(RUFont.sans(.emphasis))
                 .foregroundColor(RUColor.textPrimary)
                 .padding(.horizontal, 12).padding(.vertical, 9)
-                .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous))
             if let identityError {
                 Text(identityError).font(RUFont.sans(.small)).foregroundColor(RUColor.rose)
             }

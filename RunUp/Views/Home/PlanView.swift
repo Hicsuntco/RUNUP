@@ -280,8 +280,7 @@ struct PlanView: View {
     private func blockPill(_ block: AdaptivePlanEngine.TrainingBlock) -> some View {
         Text(block.label)
             .font(RUFont.sans(.small, weight: .bold))
-            .tracking(0.6)
-            .textCase(.uppercase)
+            .tracking(0.2)
             .foregroundColor(RUColor.rose)
             .padding(.horizontal, 9).padding(.vertical, 5)
             .background(RUColor.rose.opacity(0.10), in: Capsule())

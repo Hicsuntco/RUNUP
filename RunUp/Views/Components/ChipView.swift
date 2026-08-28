@@ -111,8 +111,12 @@ struct MetricColumn: View {
                 // distinction, l'interlettrage n'a pas à la doubler.
                 // 0,4 plutôt que 0,3 : en passant de gras à moyen, les capitales se resserrent
                 // un peu et ont besoin d'un cheveu d'air en plus pour rester lisibles.
-                .tracking(0.4)
-                .textCase(.uppercase)
+                // Plus de capitales. Aucune des quatre références n'en met sous un chiffre :
+                // elles écrivent « steps », « glass », « bpm », « hours » en minuscules, juste
+                // après la valeur. Les capitales espacées sont une convention de tableau de bord
+                // technique ; elles donnent à chaque micro-libellé le poids d'un titre et
+                // fabriquent du bruit là où il faut du calme.
+                .tracking(0.2)
                 // `--ru-ink3` dans la maquette, pour ces libellés comme pour les eyebrows —
                 // `ink2` y est réservé à la prose secondaire. Voir `eyebrowStyle`.
                 .foregroundColor(RUColor.text3)

@@ -16,29 +16,38 @@ enum RUSpacing {
     // en douce une app qui vient d'être validée sous prétexte de la ranger.
     //
     // Ce que le rangement apporte : la forme des cartes se règle ici, pas dans 135 fichiers.
+    //
+    // ── Et c'est ce qui a permis de les relever d'un cran ────────────────────────────────────
+    // 14 → 18 pour la carte courante, 18 → 22 pour celle de premier plan, et le reste à
+    // l'avenant. Les quatre références apportées ont toutes des angles nettement plus doux que
+    // ce que l'app avait ; à 14 pt sur un écran de 393, une carte lit « boîte », à 18 elle lit
+    // « surface ». C'est le changement le moins risqué du lot — un rayon ne déplace aucun
+    // contenu, il ne fait que retailler le coin — et l'un des plus visibles.
+    //
+    // Sans le rangement d'abord, c'était 135 nombres à retrouver un par un.
 
     /// 2 — jauges et barres de progression fines.
     static let radiusBar: CGFloat = 2
     /// 6 — petites jauges, curseurs.
     static let radiusMicro: CGFloat = 6
-    /// 8 — pastilles d'icône, tuiles de jour.
-    static let radiusTile: CGFloat = 8
-    /// 10 — vignettes, pastilles d'icône plus grandes.
-    static let radiusChip: CGFloat = 10
-    /// 12 — sous-surfaces dans une carte, champs de saisie.
-    static let radiusInner: CGFloat = 12
-    /// 14 — la carte courante. La valeur la plus employée de l'app, et de loin.
-    static let radiusCompact: CGFloat = 14
-    /// 16 — cartes qui portent un contenu large (grilles, feuilles).
-    static let radiusLarge: CGFloat = 16
-    /// 18 — la carte de premier plan.
-    static let radiusStandard: CGFloat = 18
+    /// 10 — pastilles d'icône, tuiles de jour.
+    static let radiusTile: CGFloat = 10
+    /// 12 — vignettes, pastilles d'icône plus grandes.
+    static let radiusChip: CGFloat = 12
+    /// 14 — sous-surfaces dans une carte, champs de saisie.
+    static let radiusInner: CGFloat = 14
+    /// 18 — la carte courante. La valeur la plus employée de l'app, et de loin.
+    static let radiusCompact: CGFloat = 18
+    /// 20 — cartes qui portent un contenu large (grilles, feuilles).
+    static let radiusLarge: CGFloat = 20
+    /// 22 — la carte de premier plan.
+    static let radiusStandard: CGFloat = 22
     static let radiusPill: CGFloat = 99
     /// A deliberately larger radius for a handful of always-dark "trophy" cards that keep their
     /// own fixed gradient in both themes (Club's level card) rather than routing through
     /// `.ruCard()`/`.ruHeroCard()`'s theme-aware fill — named here instead of a bare `20` so it
     /// reads as an intentional third size, not a stray one-off.
-    static let radiusHero: CGFloat = 20
+    static let radiusHero: CGFloat = 24
 
     /// Padding intérieur d'une carte standard. La maquette ne l'uniformise pas — ses cartes vont de
     /// 7px (`.activity-tile`, une tuile de grille) à 14px (`.session-card`, la carte héro) — mais

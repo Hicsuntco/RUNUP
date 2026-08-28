@@ -231,7 +231,13 @@ extension Text {
     ///   tokens se correspondent d'ailleurs exactement (`ink3` sombre = 32% blanc = `text3`).
     ///   Sans effet sur les ~66 des 83 `EyebrowLabel` qui passent déjà une couleur explicite.
     func eyebrowStyle(color: Color = RUColor.text3) -> some View {
-        self.font(RUFont.sans(.small, weight: .bold)).tracking(1.8).textCase(.uppercase).foregroundColor(color)
+        // Plus de capitales, et une graisse en moins. Ce style coiffe désormais des libellés
+        // de CHAMP et des chapeaux de page ; les quatre références écrivent les deux en
+        // minuscules — « Good morning! » au-dessus d'un nom en gras, jamais « GOOD MORNING! ».
+        // Les capitales espacées donnaient à chaque micro-libellé le poids d'un titre : c'est
+        // une convention de tableau de bord technique, et elle fabriquait du bruit là où ces
+        // écrans ont besoin de calme.
+        self.font(RUFont.sans(.small, weight: .semibold)).tracking(0.2).foregroundColor(color)
     }
 }
 
@@ -241,29 +247,31 @@ extension Text {
 /// d'un 12. Des écarts trop petits pour se lire comme une hiérarchie, et assez grands pour que
 /// rien ne s'aligne : chaque écran avait été réglé à l'œil, séparément.
 ///
-/// Les six valeurs sont choisies pour DÉPLACER LE MOINS POSSIBLE — 142 appels sur 362, d'un
-/// dixième de point en moyenne — et pas pour dessiner l'échelle idéale. Élargir les écarts en une
-/// vraie progression géométrique (9 / 10,5 / 12 / 14 / 16 / 19) rendrait la hiérarchie plus
-/// franche, mais changerait visiblement une app qui vient d'être validée. C'est une décision de
-/// design à prendre exprès, pas un effet de bord d'un rangement.
+/// Le premier rangement les avait posées au plus près des dix-neuf valeurs d'origine, exprès :
+/// il ne fallait pas modifier en douce une app qui venait d'être validée. C'est désormais un
+/// choix assumé, et les écarts sont ceux d'une vraie progression — chaque cran vaut 1,14 à 1,23
+/// fois le précédent, là où quatre d'entre eux tenaient dans un seul point.
 ///
-/// Ce que ce rangement apporte tout de suite : le prochain réglage global se fait sur six
-/// nombres, ici, au lieu de 362 appels dispersés. `ci_scripts/check_type_scale.py` refuse
-/// désormais un appel à `RUFont.sans` avec un nombre écrit à la main, pour que les dix-neuf
-/// valeurs ne reviennent pas une par une.
+/// `body` ne bouge pas d'un dixième : c'est l'ancre, la taille du texte courant qui a été
+/// approuvée. Tout se déplace AUTOUR d'elle — les deux crans du bas descendent pour laisser
+/// respirer les unités et les notes, les trois du haut montent pour que les titres se lisent
+/// comme des titres. À l'écran (facteur 1,25) : 10,6 / 13,1 / 15 / 17,5 / 20 / 23,1.
+///
+/// La variante numérique est `private` pour que les dix-neuf valeurs ne reviennent pas une par
+/// une : le compilateur refuse un nombre écrit à la main hors de ce fichier.
 enum RUTextSize: CGFloat {
-    /// 9 — micro-étiquettes en capitales, suffixes d'unité.
-    case micro = 9
-    /// 11 — valeurs secondaires, notes, sous-titres de ligne.
-    case small = 11
-    /// 12 — le texte courant.
+    /// 8,5 — suffixes d'unité, micro-libellés sous un chiffre.
+    case micro = 8.5
+    /// 10,5 — valeurs secondaires, notes, sous-titres de ligne.
+    case small = 10.5
+    /// 12 — le texte courant. Le seul cran qui ne bouge pas.
     case body = 12
-    /// 13 — libellés de carte, titres de ligne de liste.
-    case label = 13
-    /// 14 — libellés qui doivent primer sur leurs voisins.
-    case emphasis = 14
-    /// 17 — titres de carte et de section.
-    case title = 17
+    /// 14 — libellés de carte, titres de ligne de liste.
+    case label = 14
+    /// 16 — libellés qui doivent primer sur leurs voisins.
+    case emphasis = 16
+    /// 18,5 — titres de carte et de section.
+    case title = 18.5
 }
 
 struct EyebrowLabel: View {

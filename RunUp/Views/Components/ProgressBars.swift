@@ -101,8 +101,7 @@ struct PhaseProgressBar: View {
                         // français alors que les trois clés y sont déjà.
                         Text(LocalizedStringKey(phase.name))
                             .font(RUFont.sans(.micro, weight: .bold))
-                            .tracking(1)
-                            .textCase(.uppercase)
+                            .tracking(0.2)
                             .foregroundColor(RUColor.text2)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }

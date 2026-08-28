@@ -316,7 +316,7 @@ struct HomeView: View {
                             // buttons — the outline vs. filled chrome from SecondaryButtonStyle
                             // is what should carry the "lower emphasis" signal, not the font.
                             .font(RUFont.display(16))
-                            .tracking(1)
+                            .tracking(0.2)
                     }
                     .buttonStyle(SecondaryButtonStyle())
 
@@ -421,7 +421,7 @@ struct HomeView: View {
             // rétrécit plutôt que de tronquer si un chiffre déborde le sien.
             .minimumScaleFactor(0.6)
             Text(LocalizedStringKey(label))
-                .font(RUFont.sans(.micro, weight: .bold)).tracking(0.8).textCase(.uppercase)
+                .font(RUFont.sans(.micro, weight: .bold)).tracking(0.2)
                 .foregroundColor(RUColor.text3)
                 .lineLimit(1).minimumScaleFactor(0.7)
         }
@@ -440,7 +440,7 @@ struct HomeView: View {
         HStack(spacing: 5) {
             Image(systemName: isRestDay ? "moon.zzz.fill" : "bolt.fill").font(.system(size: 9, weight: .bold))
             Text(LocalizedStringKey(isRestDay ? "Aujourd'hui" : "Séance du jour"))
-                .font(RUFont.sans(.micro, weight: .bold)).tracking(1).textCase(.uppercase)
+                .font(RUFont.sans(.micro, weight: .bold)).tracking(0.2)
         }
         .foregroundColor(isRestDay ? RUColor.text2 : .white)
         .padding(.horizontal, 10)

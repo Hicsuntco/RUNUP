@@ -4,7 +4,7 @@ import UIKit
 
 /// Font tokens — see README § Typography.
 ///
-/// Une seule famille de texte, `DisplayFont.family` (Archivo), déclinée par taille et par graisse :
+/// Une seule famille de texte, `DisplayFont.family` (Inter), déclinée par taille et par graisse :
 /// - Display/numerals (Medium, class `.b`): big numbers, headlines,
 ///   buttons — voir `display(_:)` et son facteur de taille.
 /// - Body (300–700 + italic): body copy, labels.
@@ -80,7 +80,7 @@ enum RUFont {
     /// clair la remplaçait par une system sans lourde : l'app avait donc DEUX identités
     /// typographiques selon le thème. Et elle est une police d'affiche, un genre qui date vite.
     ///
-    /// C'est désormais Archivo Medium — la même famille que le texte courant, une graisse plus
+    /// C'est désormais Inter Medium — la même famille que le texte courant, une graisse plus
     /// haut. Elle tient sur les deux fonds, d'où la disparition de la bifurcation.
     ///
     /// Le nom de la police et le facteur de taille vivent dans `DisplayFont` (RunUp/Shared) :
@@ -101,22 +101,18 @@ enum RUFont {
     /// 6 % et pas davantage : les rangées de trois métriques côte à côte sont à largeur fixe, et
     /// au-delà elles tronquent au lieu de s'adapter. Comme le facteur de titrage, c'est un nombre,
     /// à un seul endroit, qu'on rouvre après avoir regardé un écran.
-    /// 1,30, et ce n'est plus une compensation de police : c'est un choix de générosité.
+    /// 1,25, et comme pour le titrage ce chiffre en baisse ne rapetisse rien : il maintient.
     ///
-    /// Deux choses se cumulent dans ce nombre. La compensation d'Archivo d'abord — sa hauteur
-    /// d'x est 4,5 % sous celle de Poppins, ce qui valait 1,05. Puis le relèvement demandé, à
-    /// partir d'une mesure des captures de référence : leur texte courant tourne autour de 16 pt
-    /// quand les libellés d'ici étaient dessinés à 12. Le rapport est de 1,33 ; 1,30 le rejoint
-    /// presque, et fait passer un libellé de 12 pt à 15,6 pt à l'écran.
+    /// Le relèvement décidé plus tôt — le texte courant devait passer d'environ 12 pt dessinés à
+    /// la générosité des références, autour de 16 — reste entier. Seule la compensation de police
+    /// change : Inter a une hauteur d'x de 0,546 em contre 0,526 pour Archivo, donc 1,30 × 0,964
+    /// ≈ 1,25 rend très exactement la même taille perçue, qui est celle qui a été validée.
     ///
-    /// Le garde-fou reste le même — les rangées de métriques côte à côte tronquent au lieu de
-    /// s'adapter — mais il n'est plus le facteur limitant : les neuf libellés d'une seule ligne
-    /// qui n'avaient pas de `minimumScaleFactor` en ont un, donc ils rétrécissent au lieu de se
-    /// couper. C'était la condition pour pouvoir monter aussi haut sans casser une rangée.
-    ///
-    /// Archivo aide aussi : 9 % plus étroite que Poppins, donc une ligne relevée de 30 % occupe
-    /// 19 % de plus qu'avant, pas 30.
-    private static let bodySizeFactor: CGFloat = 1.30
+    /// Le garde-fou reste les rangées de métriques côte à côte, à largeur fixe. Il tient :
+    /// Inter est 4,9 % plus large qu'Archivo et le facteur baisse de 3,8 %, donc une ligne occupe
+    /// 1 % de plus qu'avant. Les neuf libellés d'une seule ligne gardent par ailleurs leur
+    /// `minimumScaleFactor` — ils rétrécissent au lieu de se couper.
+    private static let bodySizeFactor: CGFloat = 1.25
 
     static func mono(_ size: CGFloat, weight: DMWeight = .regular) -> Font {
         let pointSize = scaled(size * bodySizeFactor)

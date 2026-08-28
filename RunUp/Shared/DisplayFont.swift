@@ -11,18 +11,28 @@ import SwiftUI
 enum DisplayFont {
     /// La famille de TOUTE l'app — titrage et texte courant confondus.
     ///
-    /// Il n'y a plus de police de titrage. Cinq familles ont été essayées et refusées — Bebas en
-    /// capitales d'affiche, Bricolage ExtraBold, DM Sans en 800 puis en 700, Poppins — et la
-    /// leçon n'était pas dans la famille : c'était la GRAISSE. L'app posait ses libellés en
-    /// SemiBold, une géométrique ronde en SemiBold à 12 pt donne un rendu épais, et changer de
-    /// famille sans changer ça reposait chaque fois la même question.
+    /// Il n'y a plus de police de titrage. Six familles ont été essayées avant celle-ci — Bebas
+    /// en capitales d'affiche, Bricolage ExtraBold, DM Sans en 800 puis en 700, Poppins, Archivo.
     ///
-    /// Archivo est une grotesque, plus sèche et 9 % plus étroite qu'une géométrique ; les
-    /// libellés courants sont passés en Medium. La hiérarchie repose sur la taille et
-    /// l'interlettrage négatif, pas sur la graisse.
+    /// Le motif du refus a fini par se voir dans ce qu'elles avaient toutes : une VOIX. Bebas
+    /// était une condensée d'affiche, Bricolage une grotesque à caractère, Poppins une géométrique
+    /// ronde, Archivo une grotesque sportive. Les trois références finalement apportées — trois
+    /// captures d'apps que personne n'aurait décrites par leur typographie — utilisent toutes la
+    /// police système d'iOS ou son équivalent : une grotesque neutre, sans particularité, à
+    /// grande hauteur d'x. Ce n'était donc pas « quelle voix », c'était « pas de voix ».
     ///
-    /// Changer de police, c'est changer cette ligne. Rien d'autre.
-    static let family = "Archivo"
+    /// Inter est cette grotesque-là, dessinée pour les interfaces à l'écran, et c'est le sosie le
+    /// plus proche de SF Pro qui se distribue en fichier.
+    ///
+    /// # Pourquoi pas la police système directement
+    ///
+    /// C'est littéralement ce que montrent les références, et ce serait un fichier de moins à
+    /// charger. Mais `.system` ne donne pas la même police partout : sur watchOS il rend SF
+    /// Compact, une autre famille. L'app et la montre afficheraient deux typographies
+    /// différentes, sans que rien ne le signale — exactement la panne silencieuse que
+    /// `ci_scripts/check_fonts.py` a été écrit pour rendre impossible. Un fichier livré aux trois
+    /// cibles rend le même dessin sur les trois.
+    static let family = "Inter"
 
     /// Le nom PostScript, pas le nom de famille : c'est celui-là que `Font.custom` attend.
     static let postScriptName = "\(family)-Medium"
@@ -31,19 +41,21 @@ enum DisplayFont {
     /// qui lui a succédé est plus large à taille de point égale, d'où ce facteur de compensation :
     /// sans lui, les titres débordent de leurs gabarits.
     ///
-    /// 1,16 : la compensation d'Archivo (0,94, dérivée de sa hauteur de capitale, 0,686 em contre
-    /// 0,697 pour Poppins) multipliée par le même relèvement de 1,238 que le texte courant.
+    /// 1,09 pour Inter, et ce chiffre ne dit PAS que les titres rapetissent : il les laisse
+    /// exactement là où ils étaient. Inter a une hauteur de capitale de 0,728 em contre 0,686 pour
+    /// Archivo — 6 % de plus. Sans baisser le facteur d'autant (1,16 × 0,943 ≈ 1,09), le même
+    /// nombre de points aurait donné des titres 6 % plus grands.
     ///
-    /// Le MÊME multiplicateur des deux côtés, et c'est tout l'enjeu de ce nombre. Ne relever que
-    /// le corps aurait inversé la hiérarchie : `display` sert aussi à de petits nombres, jusqu'à
-    /// 11 pt de taille dessinée, et à 0,94 ils seraient tombés sous des libellés courants montés
-    /// à 1,30. Un titre plus petit que le texte qu'il coiffe. Appliquer le même facteur des deux
-    /// côtés laisse intactes toutes les proportions choisies au dessin ; l'app grandit, elle ne
-    /// se réorganise pas.
+    /// Le facteur suit la hauteur de capitale, pas la taille de point, parce que c'est elle qui
+    /// décide de la taille PERÇUE d'un titre ou d'un grand chiffre. C'est cette taille perçue-là
+    /// qui a été validée ; changer de police ne devait pas la changer.
     ///
-    /// Les tailles vont de 11 à 40, donc de 12,8 à 46,4 pt à l'écran. La plus grande est le
-    /// « RUNUP » de l'écran de lancement, cinq lettres sur une page vide.
-    static let sizeFactor: CGFloat = 1.16
+    /// Le même multiplicateur qu'au corps s'applique toujours des deux côtés — voir
+    /// `RUFont.bodySizeFactor` — pour qu'aucun titre ne passe sous le texte qu'il coiffe.
+    ///
+    /// Inter est 4,9 % plus large qu'Archivo ; au facteur réduit, une ligne occupe donc 1 % de
+    /// plus qu'avant. Rien à reprendre dans les gabarits.
+    static let sizeFactor: CGFloat = 1.09
 
     /// La taille de point à demander pour retrouver l'encombrement dessiné à l'origine.
     static func pointSize(for designSize: CGFloat) -> CGFloat { designSize * sizeFactor }

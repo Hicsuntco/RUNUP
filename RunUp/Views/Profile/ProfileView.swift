@@ -38,7 +38,7 @@ struct ProfileView: View {
             VStack(alignment: .leading, spacing: 16) {
                 header
 
-                statRow
+                if runs.isEmpty { firstDayCard } else { statRow }
 
                 if !auth.isSignedIn {
                     signInPrompt
@@ -270,6 +270,64 @@ struct ProfileView: View {
             }
             Text(label).font(RUFont.sans(9.5, weight: .semibold)).foregroundColor(RUColor.text3)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(value) \(label)")
+    }
+
+    // MARK: - Jour 1
+
+    /// Ce que voit une utilisatrice qui vient de finir les huit étapes d'inscription.
+    ///
+    /// Elle voyait « 0 km · 0 sem. de suite · 0 badge ». Trois zéros comme résumé d'une personne,
+    /// juste après le moment le plus coûteux du parcours — c'est le point où l'app se fait
+    /// désinstaller, pas au troisième jour. Et ces trois zéros sont exacts : le problème n'est pas
+    /// qu'ils mentent, c'est qu'ils répondent à une question que personne ne pose le premier jour.
+    ///
+    /// La rangée de chiffres revient dès la première course enregistrée, et elle a alors quelque
+    /// chose à dire. En attendant, l'écran montre ce que le programme VA faire — des données tout
+    /// aussi réelles, elles existent depuis la fin de l'inscription.
+    private var firstDayCard: some View {
+        let shape = AdaptivePlanEngine.ProgramShape.compute(
+            goal: profile.goalId, raceDate: profile.raceDate,
+            from: profile.programStartDate ?? .now)
+        return VStack(alignment: .leading, spacing: 12) {
+            RUCardHeader(icon: "flag.checkered", tint: RUColor.rose,
+                         title: String(localized: "Ton programme est prêt"),
+                         subtitle: objectifText ?? String(localized: "Ta première séance t'attend"))
+            HStack(spacing: 10) {
+                if let total = shape.totalWeeks {
+                    firstDayFact(icon: "calendar", value: "\(total)",
+                                 label: total > 1 ? String(localized: "semaines") : String(localized: "semaine"))
+                    firstDayFact(icon: "square.stack.3d.up.fill", value: "3",
+                                 label: String(localized: "phases"))
+                } else {
+                    firstDayFact(icon: "infinity", value: "∞",
+                                 label: String(localized: "sans date de fin"))
+                }
+                if let days = profile.daysUntilRace {
+                    firstDayFact(icon: "target", value: String(localized: "J-\(days)"),
+                                 label: String(localized: "avant course"))
+                }
+            }
+            Text("Tes kilomètres, ta série et tes badges apparaîtront ici dès ta première sortie.")
+                .font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .ruHeroCard()
+    }
+
+    private func firstDayFact(icon: String, value: String, label: String) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Image(systemName: icon).font(.system(size: 11, weight: .semibold)).foregroundColor(RUColor.rose)
+            Text(value).displayStyle(19).foregroundColor(RUColor.textPrimary)
+                .lineLimit(1).minimumScaleFactor(0.6)
+            Text(LocalizedStringKey(label))
+                .font(RUFont.sans(9, weight: .semibold)).foregroundColor(RUColor.text3)
+                .lineLimit(1).minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(value) \(label)")
     }

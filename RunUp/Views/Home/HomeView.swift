@@ -19,6 +19,18 @@ struct HomeView: View {
     /// Trois semaines plutôt que deux : une marge qui absorbe les semaines à cheval sur un
     /// changement de mois ou d'année sans jamais rogner la comparaison.
     @Query private var runs: [RunRecord]
+    /// UNE ligne, et seulement pour savoir s'il en existe une.
+    ///
+    /// `runs` ci-dessus est borné aux trois dernières semaines : `runs.isEmpty` y signifie « rien
+    /// couru depuis trois semaines », pas « jamais couru ». S'en servir pour l'état du premier
+    /// jour souhaiterait la bienvenue à quelqu'un qui revient après un mois d'arrêt. Une requête
+    /// non bornée dirait la vérité mais rechargerait tout l'historique — tracés GPS compris — à
+    /// chaque retour sur l'onglet, ce que le commentaire ci-dessus existe précisément pour
+    /// éviter. `fetchLimit = 1` répond à la question sans payer ce prix.
+    @Query private var firstRunProbe: [RunRecord]
+
+    /// Aucune course enregistrée, jamais — l'état du premier jour.
+    private var hasNeverRun: Bool { firstRunProbe.isEmpty }
 
     init() {
         let cutoff = Calendar.current.date(byAdding: .weekOfYear, value: -3, to: .now) ?? .distantPast
@@ -27,6 +39,9 @@ struct HomeView: View {
             sort: \RunRecord.date,
             order: .reverse
         )
+        var probe = FetchDescriptor<RunRecord>(sortBy: [SortDescriptor(\RunRecord.date)])
+        probe.fetchLimit = 1
+        _firstRunProbe = Query(probe)
     }
 
     private var profile: UserProfile { appState.profile }
@@ -436,6 +451,13 @@ struct HomeView: View {
     }
 
     private func weeklyComparisonText(delta: Double, lastWeek: Double) -> String {
+        // Le premier jour, « pas de course enregistrée » est exact et ne sert à rien : c'est une
+        // comparaison avec un passé qui n'existe pas encore, posée sous deux zéros. Distinguer
+        // « jamais couru » de « rien couru la semaine dernière » demande une phrase de plus et
+        // change ce que l'écran dit d'elle.
+        if hasNeverRun {
+            return String(localized: "Ta première sortie lancera ta série.")
+        }
         guard lastWeek > 0 else {
             return String(localized: "Semaine dernière : pas de course enregistrée.")
         }

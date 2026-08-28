@@ -56,7 +56,7 @@ struct StatsView: View {
                 // compacte en bas de page. Avant, "Mes routes" — une simple destination —
                 // s'intercalait pleine largeur entre les totaux et la semaine, coupant l'écran
                 // d'analyse en deux avec un lien.
-                summaryGrid
+                if runs.isEmpty { firstDayBanner } else { summaryGrid }
                 weekCard
                 paceCard
 
@@ -95,6 +95,25 @@ struct StatsView: View {
     /// Mêmes quatre données réelles qu'avant — total, nombre de sorties, temps cumulé, série.
     /// Chacune reçoit sa teinte, prise dans les jetons existants : aucune couleur nouvelle, mais
     /// quatre chiffres qui ne se ressemblent plus.
+    /// Le jour 1, la grille affiche quatre zéros sous un titre qui dit « Ta progression démarre
+    /// ici ». Les zéros sont exacts, mais quatre tuiles pour dire « rien » occupent le haut de
+    /// l'écran avec l'absence de données au lieu de la promesse.
+    ///
+    /// Les deux cartes du bas ont déjà leur phrase d'attente ; c'est le résumé qui n'en avait pas.
+    private var firstDayBanner: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            RUCardHeader(icon: "chart.line.uptrend.xyaxis", tint: RUColor.rose,
+                         title: "Rien à analyser pour l'instant",
+                         subtitle: "C'est normal, tu viens de commencer")
+            Text("Dès ta première sortie, cet écran affichera ton allure moyenne, ta charge d'entraînement et tes records — calculés sur tes courses, pas sur des moyennes.")
+                .font(RUFont.sans(12)).foregroundColor(RUColor.text2).lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .ruHeroCard()
+    }
+
     private var summaryGrid: some View {
         VStack(spacing: 10) {
             HStack(spacing: 10) {

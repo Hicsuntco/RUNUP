@@ -3129,6 +3129,23 @@
         }
       }
     },
+    "C'est normal, tu viens de commencer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That's normal, you've just started"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es normal, acabas de empezar"
+          }
+        }
+      }
+    },
     "C'est parti %@. Départ tranquille, laisse le corps se mettre en route.": {
       "extractionState": "manual",
       "localizations": {
@@ -5340,6 +5357,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Desde tu 1.ª carrera con GPS"
+          }
+        }
+      }
+    },
+    "Dès ta première sortie, cet écran affichera ton allure moyenne, ta charge d'entraînement et tes records — calculés sur tes courses, pas sur des moyennes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From your first run on, this screen will show your average pace, your training load and your records — computed from your own runs, not from averages."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desde tu primera salida, esta pantalla mostrará tu ritmo medio, tu carga de entrenamiento y tus récords — calculados con tus carreras, no con promedios."
           }
         }
       }
@@ -11999,6 +12033,23 @@
         }
       }
     },
+    "Rien à analyser pour l'instant": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing to analyse yet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nada que analizar todavía"
+          }
+        }
+      }
+    },
     "Route, trail, obstacle… précise ce que tu prépares.": {
       "localizations": {
         "en": {
@@ -14141,6 +14192,40 @@
         }
       }
     },
+    "Ta première sortie lancera ta série.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your first run will start your streak."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu primera salida iniciará tu racha."
+          }
+        }
+      }
+    },
+    "Ta première séance t'attend": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your first session is waiting"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu primera sesión te espera"
+          }
+        }
+      }
+    },
     "Ta priorité": {
       "localizations": {
         "en": {
@@ -14581,6 +14666,23 @@
         }
       }
     },
+    "Tes kilomètres, ta série et tes badges apparaîtront ici dès ta première sortie.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your kilometres, streak and badges will show up here after your first run."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus kilómetros, tu racha y tus insignias aparecerán aquí tras tu primera salida."
+          }
+        }
+      }
+    },
     "Tes meilleures sorties": {
       "extractionState": "manual",
       "localizations": {
@@ -14951,6 +15053,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tu programa de %lld semanas está listo"
+          }
+        }
+      }
+    },
+    "Ton programme est prêt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your program is ready"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu programa está listo"
           }
         }
       }
@@ -16655,6 +16774,23 @@
         }
       }
     },
+    "phases": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "phases"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "fases"
+          }
+        }
+      }
+    },
     "ratio charge %@": {
       "localizations": {
         "en": {
@@ -16701,6 +16837,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "recuperación"
+          }
+        }
+      }
+    },
+    "sans date de fin": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no end date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sin fecha de fin"
           }
         }
       }

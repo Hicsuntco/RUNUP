@@ -77,7 +77,7 @@ struct TabBarView: View {
                     .font(.system(size: 18, weight: on ? .semibold : .regular))
                     .foregroundColor(color)
                 Text(LocalizedStringKey(label))
-                    .font(RUFont.sans(8, weight: .semibold))
+                    .font(RUFont.sans(.micro, weight: .semibold))
                     .tracking(0.5)
                     .foregroundColor(color)
             }
@@ -110,7 +110,7 @@ struct TabBarView: View {
                     .overlay(Image(systemName: "play.fill").foregroundColor(RUColor.onRose).font(.system(size: 14)))
                     .shadow(color: RUColor.rose.opacity(RUColor.isLight ? 0 : 0.55), radius: 14, x: 0, y: 6)
                 Text("RUN")
-                    .font(RUFont.sans(8, weight: .bold))
+                    .font(RUFont.sans(.micro, weight: .bold))
                     .tracking(1)
                     .foregroundColor(RUColor.rose2)
             }

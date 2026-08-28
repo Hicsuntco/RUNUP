@@ -30,12 +30,12 @@ struct RUCardHeader<Accessory: View>: View {
             }
             VStack(alignment: .leading, spacing: 1) {
                 Text(LocalizedStringKey(title))
-                    .font(RUFont.sans(13.5, weight: .bold))
+                    .font(RUFont.sans(.emphasis, weight: .bold))
                     .foregroundColor(RUColor.textPrimary)
                     .lineLimit(1).minimumScaleFactor(0.8)
                 if let subtitle {
                     Text(LocalizedStringKey(subtitle))
-                        .font(RUFont.sans(10.5))
+                        .font(RUFont.sans(.small))
                         .foregroundColor(RUColor.text3)
                         .lineLimit(1).minimumScaleFactor(0.8)
                 }
@@ -86,7 +86,7 @@ struct RUStatTile: View {
                         .lineLimit(1).minimumScaleFactor(0.6)
                     if let unit {
                         Text(LocalizedStringKey(unit))
-                            .font(RUFont.sans(10.5, weight: .semibold))
+                            .font(RUFont.sans(.small, weight: .semibold))
                             .foregroundColor(RUColor.text3)
                     }
                 }
@@ -101,7 +101,7 @@ struct RUStatTile: View {
                     .frame(height: 5)
                 } else if let footnote {
                     Text(LocalizedStringKey(footnote))
-                        .font(RUFont.sans(10))
+                        .font(RUFont.sans(.small))
                         .foregroundColor(RUColor.text3)
                         .lineLimit(1).minimumScaleFactor(0.8)
                 }

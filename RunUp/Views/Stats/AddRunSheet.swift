@@ -140,7 +140,7 @@ struct AddRunSheet: View {
     private var dateRow: some View {
         HStack {
             rowIcon("calendar")
-            Text("Date").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+            Text("Date").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
             Spacer()
             DatePicker("", selection: $date, in: ...Date.now, displayedComponents: .date)
                 .datePickerStyle(.compact)
@@ -154,7 +154,7 @@ struct AddRunSheet: View {
     private var typeRow: some View {
         HStack {
             rowIcon("list.bullet")
-            Text("Type de séance").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+            Text("Type de séance").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
             Spacer()
             Menu {
                 ForEach(Self.titles, id: \.self) { t in
@@ -168,7 +168,7 @@ struct AddRunSheet: View {
                     Text(LocalizedStringKey(title))
                     Image(systemName: "chevron.up.chevron.down").font(.system(size: 10, weight: .semibold))
                 }
-                .font(RUFont.sans(13.5, weight: .medium))
+                .font(RUFont.sans(.emphasis, weight: .medium))
                 .foregroundColor(RUColor.text2)
             }
         }
@@ -179,7 +179,7 @@ struct AddRunSheet: View {
     private var shoeRow: some View {
         HStack {
             rowIcon("shoeprints.fill")
-            Text("Chaussures").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+            Text("Chaussures").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
             Spacer()
             Menu {
                 Button("Aucune") { selectedShoeID = nil }
@@ -191,7 +191,7 @@ struct AddRunSheet: View {
                     Text(selectedShoeName)
                     Image(systemName: "chevron.up.chevron.down").font(.system(size: 10, weight: .semibold))
                 }
-                .font(RUFont.sans(13.5, weight: .medium))
+                .font(RUFont.sans(.emphasis, weight: .medium))
                 .foregroundColor(RUColor.text2)
             }
         }
@@ -202,7 +202,7 @@ struct AddRunSheet: View {
     private func numRow(icon: String, label: String, value: Binding<String>, unit: String, placeholder: String) -> some View {
         HStack {
             rowIcon(icon)
-            Text(LocalizedStringKey(label)).font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+            Text(LocalizedStringKey(label)).font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
             Spacer()
             TextField("", text: value, prompt: Text(placeholder).foregroundColor(RUColor.text3))
                 .keyboardType(.decimalPad)
@@ -217,7 +217,7 @@ struct AddRunSheet: View {
                         }
                     }
                 }
-            Text(unit).font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.text2)
+            Text(unit).font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.text2)
         }
         .padding(.horizontal, 14)
         .frame(minHeight: 48)

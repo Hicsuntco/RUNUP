@@ -100,7 +100,7 @@ struct PhaseProgressBar: View {
                         // jamais le catalogue, donc « Base / Spécifique / Affûtage » restaient en
                         // français alors que les trois clés y sont déjà.
                         Text(LocalizedStringKey(phase.name))
-                            .font(RUFont.sans(8, weight: .bold))
+                            .font(RUFont.sans(.micro, weight: .bold))
                             .tracking(1)
                             .textCase(.uppercase)
                             .foregroundColor(RUColor.text2)

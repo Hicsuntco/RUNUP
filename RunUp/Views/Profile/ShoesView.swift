@@ -39,7 +39,7 @@ struct ShoesView: View {
 
                 if shoes.isEmpty {
                     Text("Ajoute une paire pour suivre son usure — chaque course lui est attribuée automatiquement une fois que c'est ta paire par défaut.")
-                        .font(RUFont.sans(12)).foregroundColor(RUColor.text2).lineSpacing(3)
+                        .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
                         .padding(.top, 4)
                 } else {
                     ForEach(activeShoes) { shoe in shoeRow(shoe) }
@@ -102,12 +102,12 @@ struct ShoesView: View {
         return VStack(alignment: .leading, spacing: 10) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(shoe.name).font(RUFont.sans(14.5, weight: .bold)).foregroundColor(RUColor.textPrimary)
+                    Text(shoe.name).font(RUFont.sans(.emphasis, weight: .bold)).foregroundColor(RUColor.textPrimary)
                     // A ternary of string literals defaults to `String`, not `LocalizedStringKey`
                     // — same gotcha `EyebrowLabel` works around — so this needs the explicit
                     // wrap too, or it'd silently never translate into EN/ES.
                     Text(LocalizedStringKey(isRetired ? "Retirée" : (isDefault ? "Paire par défaut" : "Appuie pour la définir par défaut")))
-                        .font(RUFont.sans(10.5)).foregroundColor(isDefault && !isRetired ? RUColor.cyan : RUColor.text3)
+                        .font(RUFont.sans(.small)).foregroundColor(isDefault && !isRetired ? RUColor.cyan : RUColor.text3)
                 }
                 Spacer()
                 Menu {
@@ -137,9 +137,9 @@ struct ShoesView: View {
                 Text("/ \(String(format: "%.0f", shoe.alertThresholdKm)) km").font(RUFont.mono(11)).foregroundColor(RUColor.text3)
                 Spacer()
                 if fraction >= 1 {
-                    Text("À remplacer").font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.rose)
+                    Text("À remplacer").font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.rose)
                 } else if fraction >= 0.8 {
-                    Text("Bientôt en fin de vie").font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.amber)
+                    Text("Bientôt en fin de vie").font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.amber)
                 }
             }
         }
@@ -181,7 +181,7 @@ private struct AddShoeSheet: View {
                         EyebrowLabel(text: "Déjà parcourus (facultatif)", color: RUColor.text3)
                         ObTextField(placeholder: "0", text: $startKmText, keyboard: .decimalPad)
                         Text("Si cette paire n'est pas neuve, indique les km déjà dessus.")
-                            .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                            .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                     }
                 }
                 .padding(18)

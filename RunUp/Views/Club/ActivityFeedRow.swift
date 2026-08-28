@@ -38,10 +38,10 @@ struct ActivityFeedRow: View {
                 AvatarView(urlString: item.avatarUrl, base64DataURI: item.avatarBase64, initial: String(item.name.prefix(1)), size: 34, seed: isMine ? nil : item.userId)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)
-                        .font(RUFont.sans(13, weight: .bold))
+                        .font(RUFont.sans(.label, weight: .bold))
                         .foregroundColor(RUColor.textPrimary)
                         .lineLimit(1).minimumScaleFactor(0.8)
-                    Text(item.createdAt.relativeDescription).font(RUFont.sans(10)).foregroundColor(RUColor.text3)
+                    Text(item.createdAt.relativeDescription).font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                 }
                 Spacer(minLength: 0)
                 // `.pr-badge` : la pastille de record vit dans l'en-tête, à l'opposé du nom, et
@@ -54,7 +54,7 @@ struct ActivityFeedRow: View {
                         Image(systemName: "trophy.fill").font(.system(size: 8, weight: .bold))
                         Text("RECORD")
                     }
-                    .font(RUFont.sans(9, weight: .bold))
+                    .font(RUFont.sans(.micro, weight: .bold))
                     .tracking(0.4)
                     .foregroundColor(RUColor.rose)
                     .padding(.horizontal, 8)
@@ -73,7 +73,7 @@ struct ActivityFeedRow: View {
             // l'a composée, DANS SA LANGUE. Ici, on la refabrique dans celle de la lectrice dès
             // que le post porte de quoi le faire — voir `FeedItem.localizedText`.
             Text(item.localizedText)
-                .font(RUFont.sans(13))
+                .font(RUFont.sans(.label))
                 .foregroundColor(RUColor.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -98,7 +98,7 @@ struct ActivityFeedRow: View {
                         Text("👏")
                         Text("\(item.kudos)")
                     }
-                    .font(RUFont.sans(12, weight: .semibold))
+                    .font(RUFont.sans(.body, weight: .semibold))
                     .foregroundColor(item.kudoedByMe ? RUColor.rose2 : RUColor.text2)
                     .padding(.trailing, 6)
                     .frame(minHeight: 44)
@@ -115,7 +115,7 @@ struct ActivityFeedRow: View {
                         Image(systemName: "bubble.left")
                         Text("\(item.commentsCount)")
                     }
-                    .font(RUFont.sans(12, weight: .semibold))
+                    .font(RUFont.sans(.body, weight: .semibold))
                     .foregroundColor(RUColor.text2)
                     .padding(.trailing, 6)
                     .frame(minHeight: 44)

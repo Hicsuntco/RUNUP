@@ -40,7 +40,7 @@ struct HeatmapView: View {
             if runsWithRoute.isEmpty {
                 Spacer()
                 Text("Aucun parcours GPS enregistré pour l'instant — la carte se remplit après ta première course trackée.")
-                    .font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
                 Spacer()

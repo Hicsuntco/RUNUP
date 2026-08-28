@@ -139,7 +139,7 @@ struct PlanView: View {
         if let total = shape.totalWeeks {
             VStack(alignment: .leading, spacing: 12) {
                 Text("\(total) semaines en 3 phases, calées sur ta date de course. Le plan s'ajuste chaque semaine selon ta forme — pas séance par séance.")
-                    .font(RUFont.sans(12)).foregroundColor(RUColor.text2).lineSpacing(3)
+                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
                 PhaseProgressBar(phases: [
                     PhaseSegment(name: "Base", done: min(profile.weekNumber, shape.baseWeeks), total: shape.baseWeeks, color: RUColor.rose),
                     PhaseSegment(name: "Spécifique", done: max(0, min(profile.weekNumber - shape.baseWeeks, shape.specificWeeks)), total: shape.specificWeeks, color: RUColor.rose2),
@@ -148,7 +148,7 @@ struct PlanView: View {
             }
         } else {
             Text("Programme ouvert, sans date de fin — une semaine plus légère toutes les 4 semaines. Il s'ajuste chaque semaine selon ta forme.")
-                .font(RUFont.sans(12)).foregroundColor(RUColor.text2).lineSpacing(3)
+                .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
         }
     }
 
@@ -170,13 +170,13 @@ struct PlanView: View {
             VStack(alignment: .leading, spacing: 5) {
                 HStack(spacing: 10) {
                     Text("Semaine \(week.number)")
-                        .font(RUFont.sans(17, weight: .bold))
+                        .font(RUFont.sans(.title, weight: .bold))
                         .foregroundColor(RUColor.textPrimary)
                     blockPill(week.block)
                     Spacer(minLength: 8)
                 }
                 Text("~\(week.estimatedKm) km · \(completedCount)/\(plannedCount) séances faites")
-                    .font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
             }
 
             VStack(spacing: 4) {
@@ -202,16 +202,16 @@ struct PlanView: View {
             }) {
                 HStack(spacing: 12) {
                     Text("\(week.number)")
-                        .font(RUFont.sans(13, weight: .semibold))
+                        .font(RUFont.sans(.label, weight: .semibold))
                         .foregroundColor(RUColor.text2)
                         .frame(width: 32, height: 32)
                         .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                     Text("Semaine \(week.number)")
-                        .font(RUFont.sans(13.5, weight: .semibold))
+                        .font(RUFont.sans(.emphasis, weight: .semibold))
                         .foregroundColor(RUColor.textPrimary)
                     Spacer(minLength: 8)
                     Text("~\(week.estimatedKm) km")
-                        .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                        .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
                     Image(systemName: "chevron.down")
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundColor(RUColor.text3)
@@ -230,7 +230,7 @@ struct PlanView: View {
                     Text(week.isDone
                          ? "Résumé type de cette semaine passée"
                          : "Aperçu — s'ajustera selon ta forme de la semaine précédente")
-                        .font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
+                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 4).padding(.bottom, 2)
                     ForEach(dayList(for: week), id: \.0) { letter, day, state in
@@ -279,7 +279,7 @@ struct PlanView: View {
     /// l'intertitre du groupe qui la porte.
     private func blockPill(_ block: AdaptivePlanEngine.TrainingBlock) -> some View {
         Text(block.label)
-            .font(RUFont.sans(10, weight: .bold))
+            .font(RUFont.sans(.small, weight: .bold))
             .tracking(0.6)
             .textCase(.uppercase)
             .foregroundColor(RUColor.rose)
@@ -313,14 +313,14 @@ struct PlanView: View {
         let isRest = session == nil || session?.durationMinutes == 0
         let isToday = state == .today
         return HStack(spacing: 10) {
-            Text(letter).font(RUFont.sans(11, weight: .semibold)).foregroundColor(RUColor.text3).frame(width: 30, alignment: .leading)
+            Text(letter).font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text3).frame(width: 30, alignment: .leading)
             dayIcon(session: session, isRest: isRest, completed: day.completed, isToday: isToday)
             VStack(alignment: .leading, spacing: 1) {
                 Text(session?.displayTitle ?? String(localized: "Repos"))
-                    .font(RUFont.sans(12.5, weight: isToday ? .semibold : .regular))
+                    .font(RUFont.sans(.label, weight: isToday ? .semibold : .regular))
                     .foregroundColor(isRest ? RUColor.text3 : RUColor.textPrimary)
                 if let subtitle = session?.displaySubtitle, !isRest {
-                    Text(subtitle).font(RUFont.sans(10)).foregroundColor(RUColor.text3).lineLimit(2)
+                    Text(subtitle).font(RUFont.sans(.small)).foregroundColor(RUColor.text3).lineLimit(2)
                 }
             }
             Spacer(minLength: 8)

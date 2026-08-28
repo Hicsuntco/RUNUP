@@ -85,7 +85,7 @@ struct RouteDetailSheet: View {
                 .foregroundColor(RUColor.textPrimary)
             if let author = current.authorName {
                 Text(String(localized: "Partagé par \(author)"))
-                    .font(RUFont.sans(12.5))
+                    .font(RUFont.sans(.label))
                     .foregroundColor(RUColor.text3)
             }
         }
@@ -111,7 +111,7 @@ struct RouteDetailSheet: View {
     private func statTile(_ value: String, _ label: String) -> some View {
         VStack(spacing: 2) {
             Text(value).font(RUFont.display(22)).foregroundColor(RUColor.textPrimary)
-            Text(label).font(RUFont.sans(9.5, weight: .semibold)).tracking(1).foregroundColor(RUColor.text3)
+            Text(label).font(RUFont.sans(.micro, weight: .semibold)).tracking(1).foregroundColor(RUColor.text3)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)
@@ -120,7 +120,7 @@ struct RouteDetailSheet: View {
 
     private func notesCard(_ notes: String) -> some View {
         Text(notes)
-            .font(RUFont.sans(14))
+            .font(RUFont.sans(.emphasis))
             .foregroundColor(RUColor.text2)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(14)
@@ -159,7 +159,7 @@ struct RouteDetailSheet: View {
 
     private var reportButton: some View {
         Button("Signaler cet itinéraire") { reportPresented = true }
-            .font(RUFont.sans(12))
+            .font(RUFont.sans(.body))
             .foregroundColor(RUColor.text3)
             .frame(maxWidth: .infinity, minHeight: 44)
     }

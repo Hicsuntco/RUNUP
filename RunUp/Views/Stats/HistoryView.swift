@@ -32,7 +32,7 @@ struct HistoryView: View {
 
             if runs.isEmpty {
                 Text("Aucune course pour l'instant — termine une sortie ou ajoutes-en une manuellement.")
-                    .font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
                     .padding(.horizontal, RUSpacing.pagePadding)
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
@@ -138,10 +138,10 @@ struct HistoryView: View {
                 Text(appState.pendingActivityCount == 1
                      ? String(localized: "1 course pas encore synchronisée")
                      : String(localized: "\(appState.pendingActivityCount) courses pas encore synchronisées"))
-                    .font(RUFont.sans(12.5, weight: .semibold))
+                    .font(RUFont.sans(.label, weight: .semibold))
                     .foregroundColor(RUColor.textPrimary)
                 Text("Elles restent sur ton téléphone, rien n'est perdu — nouvelle tentative automatique bientôt.")
-                    .font(RUFont.sans(10.5))
+                    .font(RUFont.sans(.small))
                     .foregroundColor(RUColor.text2)
                 Button(action: {
                     Haptics.selection()
@@ -151,7 +151,7 @@ struct HistoryView: View {
                         Image(systemName: "arrow.triangle.2.circlepath").font(.system(size: 10, weight: .semibold))
                         Text("Réessayer maintenant")
                     }
-                    .font(RUFont.sans(11, weight: .semibold))
+                    .font(RUFont.sans(.small, weight: .semibold))
                     .foregroundColor(RUColor.rose)
                     .frame(minHeight: 30)
                 }
@@ -181,16 +181,16 @@ struct HistoryView: View {
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 8) {
                     Text(run.date, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated).locale(Locale.current))
-                        .font(RUFont.sans(10, weight: .semibold)).foregroundColor(RUColor.text3)
+                        .font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text3)
                     Spacer(minLength: 0)
                     // A manually-logged run has no real heart-rate reading — 0 would just be a
                     // fake number dressed up as data, so the line is dropped entirely instead.
                     if run.avgHeartRate > 0 {
-                        Text("FC moy \(run.avgHeartRate)").font(RUFont.sans(10)).foregroundColor(RUColor.text3)
+                        Text("FC moy \(run.avgHeartRate)").font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                     }
                 }
                 Text(run.title)
-                    .font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                    .font(RUFont.sans(.emphasis, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                     .lineLimit(1).minimumScaleFactor(0.8)
                 HStack(spacing: 12) {
                     Text(String(format: "%.1f km", locale: Locale.current, run.distanceKm))
@@ -201,7 +201,7 @@ struct HistoryView: View {
                     Text(run.avgPace + "/km").foregroundColor(RUColor.rose2)
                     Spacer(minLength: 0)
                 }
-                .font(RUFont.sans(11.5, weight: .semibold))
+                .font(RUFont.sans(.body, weight: .semibold))
                 .foregroundColor(RUColor.text2)
                 .lineLimit(1).minimumScaleFactor(0.8)
                 .padding(.top, 1)

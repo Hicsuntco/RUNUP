@@ -41,7 +41,7 @@ struct WellbeingFieldsView: View {
                         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
 
                         HStack {
-                            Text("Durée moyenne du cycle").font(RUFont.sans(13)).foregroundColor(RUColor.textPrimary)
+                            Text("Durée moyenne du cycle").font(RUFont.sans(.label)).foregroundColor(RUColor.textPrimary)
                             Spacer()
                             // A native `Stepper`'s +/- segments render at a fixed ~29pt tall
                             // regardless of surrounding padding — no way to grow that from the
@@ -56,7 +56,7 @@ struct WellbeingFieldsView: View {
                                 .accessibilityLabel("Un jour de moins")
 
                                 Text("\(vm.averageCycleLengthDays) jours")
-                                    .font(RUFont.sans(13, weight: .semibold))
+                                    .font(RUFont.sans(.label, weight: .semibold))
                                     .frame(minWidth: 56)
 
                                 Button(action: { vm.averageCycleLengthDays = min(35, vm.averageCycleLengthDays + 1) }) {

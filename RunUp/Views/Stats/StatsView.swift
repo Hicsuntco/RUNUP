@@ -39,7 +39,7 @@ struct StatsView: View {
                 HeaderView(eyebrow: "Analyse · progression", title: runs.isEmpty ? "Ta progression démarre ici" : "Ta forme évolue") {
                     Button(action: { appState.go(.history) }) {
                         HStack(spacing: 5) {
-                            Text("Historique").font(RUFont.sans(11, weight: .semibold))
+                            Text("Historique").font(RUFont.sans(.small, weight: .semibold))
                             Text("›")
                         }
                         .foregroundColor(RUColor.text2)
@@ -106,7 +106,7 @@ struct StatsView: View {
                          title: "Rien à analyser pour l'instant",
                          subtitle: "C'est normal, tu viens de commencer")
             Text("Dès ta première sortie, cet écran affichera ton allure moyenne, ta charge d'entraînement et tes records — calculés sur tes courses, pas sur des moyennes.")
-                .font(RUFont.sans(12)).foregroundColor(RUColor.text2).lineSpacing(3)
+                .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(16)
@@ -206,10 +206,10 @@ struct StatsView: View {
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(LocalizedStringKey(title))
-                    .font(RUFont.sans(12.5, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                    .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                     .lineLimit(1).minimumScaleFactor(0.75)
                 Text(subtitle)
-                    .font(RUFont.sans(9.5)).foregroundColor(RUColor.text3)
+                    .font(RUFont.sans(.micro)).foregroundColor(RUColor.text3)
                     .lineLimit(1).minimumScaleFactor(0.7)
             }
         }
@@ -254,7 +254,7 @@ struct StatsView: View {
                             color: deltaKm >= 0 ? RUColor.lime : RUColor.amber
                         )
                     }
-                    Text("›").font(RUFont.sans(15, weight: .bold)).foregroundColor(RUColor.text3)
+                    Text("›").font(RUFont.sans(.emphasis, weight: .bold)).foregroundColor(RUColor.text3)
                 }
                 HStack(spacing: 24) {
                     MetricColumn(value: String(format: "%.1f", locale: Locale.current, thisWeekKm), label: "km", valueSize: 24)
@@ -357,7 +357,7 @@ struct StatsView: View {
             if let recentAvgPace {
                 HStack(alignment: .lastTextBaseline, spacing: 6) {
                     Text(PaceModel.formatDuration(recentAvgPace)).displayStyle(44).foregroundColor(RUColor.textPrimary)
-                    Text("/km").font(RUFont.sans(14)).foregroundColor(RUColor.text2)
+                    Text("/km").font(RUFont.sans(.emphasis)).foregroundColor(RUColor.text2)
                     // Poussé au bord droit (le `margin-left:auto` de la maquette) : collé au
                     // "/km", le delta se lisait comme une deuxième unité accrochée au chiffre
                     // héros ; à l'opposé de la ligne, il se lit comme ce qu'il est — une
@@ -374,7 +374,7 @@ struct StatsView: View {
                 Text(runs.count == 1
                      ? "Sur ta dernière course"
                      : "Sur tes \(min(5, runs.count)) dernières courses")
-                    .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
 
                 if recentPacesSecPerKm.count >= 2 {
                     Canvas { context, size in
@@ -411,7 +411,7 @@ struct StatsView: View {
                             context.fill(Path(ellipseIn: CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8)).strokedPath(StrokeStyle(lineWidth: 1.5)), with: .color(RUColor.bg))
                             let labelY = max(9, p.y - 14)
                             context.draw(
-                                Text("RECORD").font(RUFont.sans(7, weight: .bold)).foregroundColor(RUColor.lime),
+                                Text("RECORD").font(RUFont.sans(.micro, weight: .bold)).foregroundColor(RUColor.lime),
                                 at: CGPoint(x: min(max(p.x, 22), size.width - 22), y: labelY)
                             )
                         }
@@ -430,17 +430,17 @@ struct StatsView: View {
                             Spacer()
                             Text("Plus lente \(PaceModel.formatDuration(maxPace))/km")
                         }
-                        .font(RUFont.sans(10)).foregroundColor(RUColor.text3)
+                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                         .padding(.top, 4)
                     }
                 } else {
                     Text("Pas assez de courses sur cette période — essaie une fenêtre plus large.")
-                        .font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                         .padding(.top, 6)
                 }
             } else {
                 Text("Termine quelques courses pour voir ton allure évoluer ici.")
-                    .font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
                     .padding(.top, 4)
             }
         }
@@ -478,7 +478,7 @@ struct StatsView: View {
                          subtitle: "Tes meilleures sorties")
             if runs.isEmpty {
                 Text("Tes records apparaîtront ici après ta première course.")
-                    .font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
             } else {
                 HStack(spacing: 8) {
                     predictionTile("PLUS LONGUE", longestRun.map { String(format: "%.1f km", locale: Locale.current, $0.distanceKm) } ?? "—", highlighted: false)
@@ -544,19 +544,19 @@ struct StatsView: View {
             }
             if bestRecentPerformance == nil {
                 Text("Estimation basée sur ton profil — termine une course pour une prédiction plus précise.")
-                    .font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
+                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
             } else if profile.goalId == .race,
                       let raceKm = profile.effectiveRaceDistanceKm,
                       let chrono = profile.raceChrono,
                       let targetSeconds = PaceModel.parseChronoSeconds(chrono, distance: profile.raceDistance) {
                 let deltaSeconds = targetSeconds - predictedSeconds(forKm: raceKm)
                 Text("Objectif \(profile.goalDisplay) → ")
-                    .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                     + Text(deltaSeconds >= 0
                            ? "en avance de \(Int(deltaSeconds))″"
                            : "\(Int(-deltaSeconds))″ à gagner")
-                        .font(RUFont.sans(11, weight: .bold)).foregroundColor(deltaSeconds >= 0 ? RUColor.lime : RUColor.amber)
-                    + Text(" sur ton objectif.").font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                        .font(RUFont.sans(.small, weight: .bold)).foregroundColor(deltaSeconds >= 0 ? RUColor.lime : RUColor.amber)
+                    + Text(" sur ton objectif.").font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
             }
         }
         .padding(16)
@@ -569,7 +569,7 @@ struct StatsView: View {
             // Catalog (only the `LocalizedStringKey` initializer does), so "5 KM"/"10 KM"/"SEMI"
             // silently never localized despite the app having EN/ES translations. Pre-existing gap,
             // fixed in passing since this function was already touched for the MARATHON tile.
-            Text(LocalizedStringKey(label)).font(RUFont.sans(8, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
+            Text(LocalizedStringKey(label)).font(RUFont.sans(.micro, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
             Text(value).displayStyle(22).foregroundColor(highlighted ? RUColor.rose2 : RUColor.textPrimary)
         }
         .frame(maxWidth: .infinity)
@@ -628,7 +628,7 @@ struct StatsView: View {
             }
             if runs.isEmpty {
                 Text("Ta charge d'entraînement s'affichera ici après tes premières courses.")
-                    .font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
             } else {
                 HStack(alignment: .bottom, spacing: 5) {
                     ForEach(bars.indices, id: \.self) { i in
@@ -649,13 +649,13 @@ struct StatsView: View {
                 .frame(height: 70, alignment: .bottom)
                 .onAppear { chartRevealed = true }
                 HStack {
-                    Text("S-7").font(RUFont.sans(10)).foregroundColor(RUColor.text3)
+                    Text("S-7").font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                     Spacer()
                     if let ratio = acuteChronicRatio {
-                        Text("ratio charge \(String(format: "%.1f", locale: Locale.current, ratio))").font(RUFont.sans(10)).foregroundColor(RUColor.text3)
+                        Text("ratio charge \(String(format: "%.1f", locale: Locale.current, ratio))").font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                     }
                     Spacer()
-                    Text("Cette sem.").font(RUFont.sans(10)).foregroundColor(RUColor.text3)
+                    Text("Cette sem.").font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                 }
             }
         }

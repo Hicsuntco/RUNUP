@@ -19,7 +19,7 @@ struct RecoveryView: View {
                     Text("🌿").font(.system(size: 34))
                     Text("Place à la récupération").displayStyle(22).foregroundColor(RUColor.textPrimary)
                     Text("Ton corps a fait le plus dur. On souffle \(total) jours avant de repartir — c'est ce qui fait tenir les progrès dans la durée.")
-                        .font(RUFont.sans(12.5)).foregroundColor(RUColor.text2).multilineTextAlignment(.center).lineSpacing(3)
+                        .font(RUFont.sans(.label)).foregroundColor(RUColor.text2).multilineTextAlignment(.center).lineSpacing(3)
 
                     HStack(spacing: 5) {
                         ForEach(0..<total, id: \.self) { i in
@@ -42,9 +42,9 @@ struct RecoveryView: View {
 
                 VStack(alignment: .leading, spacing: 6) {
                     RUCardHeader(icon: "sun.max.fill", tint: RUColor.rose2, title: "Aujourd'hui")
-                    Text("Marche, étirements ou repos complet").font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                    Text("Marche, étirements ou repos complet").font(RUFont.sans(.emphasis, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                     Text("Pas de course prévue — hydrate-toi bien et dors un peu plus si tu peux.")
-                        .font(RUFont.sans(12)).foregroundColor(RUColor.text2).lineSpacing(3)
+                        .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
                 }
                 .padding(16)
                 .ruCard()
@@ -53,7 +53,7 @@ struct RecoveryView: View {
                 // more tap-to-advance. What remains is an honest, explicit early exit.
                 if profile.recoveryDaysLeft > 0 {
                     Text("Jour \(done + 1) sur \(total) — la suite se débloque demain.")
-                        .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                        .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
                         .frame(maxWidth: .infinity)
                         .multilineTextAlignment(.center)
                     Button("JE ME SENS PRÊTE, PASSER LA RÉCUPÉRATION") {

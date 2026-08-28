@@ -86,7 +86,7 @@ struct RunShareCardView: View {
         VStack(spacing: 0) {
             if isPersonalRecord {
                 Text("🏆 NOUVEAU RECORD")
-                    .font(RUFont.sans(12, weight: .bold))
+                    .font(RUFont.sans(.body, weight: .bold))
                     .tracking(2)
                     .foregroundColor(secondaryColor)
                     .modifier(OutlinedTextShadow(light: outlineIsLight))
@@ -130,7 +130,7 @@ struct RunShareCardView: View {
     private func statBlock(_ label: String, _ value: String, valueSize: CGFloat) -> some View {
         VStack(spacing: 1) {
             Text(label)
-                .font(RUFont.sans(11.5, weight: .bold))
+                .font(RUFont.sans(.body, weight: .bold))
                 .tracking(2.5)
                 .foregroundColor(secondaryColor)
                 .modifier(OutlinedTextShadow(light: outlineIsLight))

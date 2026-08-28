@@ -23,7 +23,7 @@ struct ObTitle: View {
             Text(LocalizedStringKey(title)).displayStyle(30).foregroundColor(RUColor.textPrimary).lineSpacing(-2)
             if let subtitle {
                 Text(LocalizedStringKey(subtitle))
-                    .font(RUFont.sans(13))
+                    .font(RUFont.sans(.label))
                     .foregroundColor(RUColor.text2)
                     .lineSpacing(4)
                     .padding(.top, 4)
@@ -87,7 +87,7 @@ struct ObTextField: View {
     var body: some View {
         TextField("", text: $text, prompt: Text(LocalizedStringKey(placeholder)).foregroundColor(RUColor.text3))
             .keyboardType(keyboard)
-            .font(RUFont.sans(16))
+            .font(RUFont.sans(.title))
             .foregroundColor(RUColor.textPrimary)
             .padding(14)
             .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))

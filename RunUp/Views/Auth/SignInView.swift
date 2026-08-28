@@ -40,7 +40,7 @@ struct SignInView: View {
                         AppMarkView(size: 56)
                         Text("Connecte-toi").displayStyle(22).foregroundColor(RUColor.textPrimary)
                         Text("Pour rejoindre un vrai club, avec un classement et un fil d'activité réels.")
-                            .font(RUFont.sans(12.5))
+                            .font(RUFont.sans(.label))
                             .foregroundColor(RUColor.text2)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 20)
@@ -56,7 +56,7 @@ struct SignInView: View {
 
                     HStack {
                         Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
-                        Text("ou").font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+                        Text("ou").font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                         Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
                     }
 
@@ -64,7 +64,7 @@ struct SignInView: View {
 
                     if let errorMessage {
                         Text(errorMessage)
-                            .font(RUFont.sans(12))
+                            .font(RUFont.sans(.body))
                             .foregroundColor(RUColor.rose)
                             .multilineTextAlignment(.center)
                     }
@@ -73,7 +73,7 @@ struct SignInView: View {
                         mode = mode == .signIn ? .signUp : .signIn
                         errorMessage = nil
                     }
-                    .font(RUFont.sans(12, weight: .semibold))
+                    .font(RUFont.sans(.body, weight: .semibold))
                     .foregroundColor(RUColor.text2)
                     .padding(.vertical, 12)
                     .contentShape(Rectangle())
@@ -106,7 +106,7 @@ struct SignInView: View {
                 AppMarkView(size: 56)
                 Text("Choisis ton pseudo").displayStyle(22).foregroundColor(RUColor.textPrimary)
                 Text("Pour que tes amis te retrouvent facilement dans la recherche.")
-                    .font(RUFont.sans(12.5))
+                    .font(RUFont.sans(.label))
                     .foregroundColor(RUColor.text2)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 20)
@@ -120,7 +120,7 @@ struct SignInView: View {
 
             if let usernameError {
                 Text(usernameError)
-                    .font(RUFont.sans(12))
+                    .font(RUFont.sans(.body))
                     .foregroundColor(RUColor.rose)
                     .multilineTextAlignment(.center)
             }
@@ -130,7 +130,7 @@ struct SignInView: View {
                 .disabled(!isValidUsernameFormat(usernameField) || isSavingUsername)
 
             Button("Plus tard") { dismiss() }
-                .font(RUFont.sans(12, weight: .semibold))
+                .font(RUFont.sans(.body, weight: .semibold))
                 .foregroundColor(RUColor.text2)
                 .padding(.vertical, 12)
                 .contentShape(Rectangle())
@@ -179,11 +179,11 @@ struct SignInView: View {
             // tripped to the server before any error showed. Sign-in stays format-agnostic
             // (an existing account may predate any length rule); only sign-up gates on it.
             if !email.isEmpty && !isValidEmailFormat {
-                Text("Adresse email invalide.").font(RUFont.sans(11)).foregroundColor(RUColor.rose)
+                Text("Adresse email invalide.").font(RUFont.sans(.small)).foregroundColor(RUColor.rose)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             if mode == .signUp && !password.isEmpty && password.count < 8 {
-                Text("8 caractères minimum.").font(RUFont.sans(11)).foregroundColor(RUColor.rose)
+                Text("8 caractères minimum.").font(RUFont.sans(.small)).foregroundColor(RUColor.rose)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
@@ -344,7 +344,7 @@ struct SignInView: View {
 private struct AuthFieldStyle: TextFieldStyle {
     func _body(configuration: TextField<Self._Label>) -> some View {
         configuration
-            .font(RUFont.sans(14))
+            .font(RUFont.sans(.emphasis))
             .foregroundColor(RUColor.textPrimary)
             .padding(.horizontal, 14)
             .padding(.vertical, 12)

@@ -91,7 +91,7 @@ struct RouteDiscoveryView: View {
                     Annotation(route.name, coordinate: route.startCoordinate) {
                         Button { selected = route } label: {
                             Text(route.distanceKm.map { String(format: "%.0f", $0) } ?? "?")
-                                .font(RUFont.sans(11, weight: .bold))
+                                .font(RUFont.sans(.small, weight: .bold))
                                 .foregroundColor(RUColor.onRose)
                                 .frame(width: 26, height: 26)
                                 .background(Circle().fill(RUColor.rose))
@@ -115,7 +115,7 @@ struct RouteDiscoveryView: View {
                         Image(systemName: "arrow.clockwise")
                         Text("Chercher dans cette zone")
                     }
-                    .font(RUFont.sans(12.5, weight: .semibold))
+                    .font(RUFont.sans(.label, weight: .semibold))
                     .foregroundColor(RUColor.textPrimary)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 9)
@@ -143,7 +143,7 @@ struct RouteDiscoveryView: View {
                         Task { await search() }
                     } label: {
                         Text(option.label)
-                            .font(RUFont.sans(12.5, weight: .semibold))
+                            .font(RUFont.sans(.label, weight: .semibold))
                             .foregroundColor(isOn ? RUColor.onRose : RUColor.text2)
                             .padding(.horizontal, 14)
                             .padding(.vertical, 8)
@@ -185,7 +185,7 @@ struct RouteDiscoveryView: View {
 
     private func centeredMessage(_ text: String) -> some View {
         Text(text)
-            .font(RUFont.sans(13.5))
+            .font(RUFont.sans(.emphasis))
             .foregroundColor(RUColor.text3)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 32)
@@ -249,11 +249,11 @@ private struct RouteRow: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(route.name)
-                    .font(RUFont.sans(14.5, weight: .bold))
+                    .font(RUFont.sans(.emphasis, weight: .bold))
                     .foregroundColor(RUColor.textPrimary)
                     .lineLimit(1).minimumScaleFactor(0.8)
                 Text(route.subtitleLine)
-                    .font(RUFont.sans(11.5))
+                    .font(RUFont.sans(.body))
                     .foregroundColor(RUColor.text3)
                 if let elevation = route.elevationGainM, elevation > 0 {
                     Text("\(elevation) m D+")

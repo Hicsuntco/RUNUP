@@ -114,7 +114,7 @@ struct MoreSettingsView: View {
         Button(action: action) {
             HStack(spacing: 12) {
                 rowIcon(icon)
-                Text(label).font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                Text(label).font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
                 Text("›").foregroundColor(RUColor.text2)
             }
@@ -137,14 +137,14 @@ struct MoreSettingsView: View {
     /// `AdaptivePlanEngine.adjustForWellbeing` is already computing every week from this field.
     private var injuryCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Une douleur ou blessure à surveiller ?").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+            Text("Une douleur ou blessure à surveiller ?").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
             ChipFlowLayout {
                 ForEach([("none", "Aucune"), ("knee", "Genou"), ("ankle", "Cheville"), ("back", "Dos"), ("other", "Autre")], id: \.0) { id, label in
                     SelectableChip(label: label, selected: (profile.injuryArea ?? "none") == id) { profile.injuryArea = id }
                 }
             }
             Text("Le coach adapte tes séances de fractionné/VMA en conséquence, chaque semaine.")
-                .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
         }
         .padding(14)
         .ruCard()
@@ -158,9 +158,9 @@ struct MoreSettingsView: View {
             HStack {
                 rowIcon("pause.circle")
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Pause automatique aux arrêts").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                    Text("Pause automatique aux arrêts").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
                     Text("Met la course en pause si tu t'arrêtes, reprend toute seule.")
-                        .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                 }
                 Spacer()
                 Toggle("", isOn: Binding(get: { profile.autoPauseEnabled }, set: { profile.autoPauseEnabled = $0 }))
@@ -173,9 +173,9 @@ struct MoreSettingsView: View {
             HStack {
                 rowIcon("speaker.wave.2")
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Alertes vocales d'allure").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                    Text("Alertes vocales d'allure").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
                     Text("Prévient à voix haute si tu t'écartes de ton allure cible.")
-                        .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                 }
                 Spacer()
                 Toggle("", isOn: Binding(get: { profile.paceAlertsEnabled }, set: { profile.paceAlertsEnabled = $0 }))
@@ -204,7 +204,7 @@ struct MoreSettingsView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 rowIcon("drop.fill")
-                Text("Suivi du cycle").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                Text("Suivi du cycle").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
                 Toggle("", isOn: Binding(
                     get: { profile.cycleTrackingEnabled },
@@ -223,7 +223,7 @@ struct MoreSettingsView: View {
                 Divider().background(RUColor.line)
                 VStack(alignment: .leading, spacing: 14) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Date des dernières règles").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+                        Text("Date des dernières règles").font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
                         DatePicker(
                             "",
                             selection: Binding(get: { profile.lastPeriodStartDate ?? .now }, set: { profile.lastPeriodStartDate = $0 }),
@@ -236,7 +236,7 @@ struct MoreSettingsView: View {
                     }
 
                     HStack {
-                        Text("Durée moyenne du cycle").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+                        Text("Durée moyenne du cycle").font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
                         Spacer()
                         Stepper(
                             "\(profile.averageCycleLengthDays) jours",
@@ -252,7 +252,7 @@ struct MoreSettingsView: View {
                         HStack(spacing: 7) {
                             Circle().fill(cyclePhaseColor(phase)).frame(width: 8, height: 8)
                             Text("Phase actuelle estimée : \(cyclePhaseLabel(phase))")
-                                .font(RUFont.sans(12, weight: .semibold))
+                                .font(RUFont.sans(.body, weight: .semibold))
                                 .foregroundColor(cyclePhaseColor(phase))
                         }
                     }
@@ -300,7 +300,7 @@ struct MoreSettingsView: View {
             if let user = appState.auth.currentUser {
                 HStack {
                     rowIcon("person.crop.circle")
-                    Text("Connectée en tant que \(user.name)").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                    Text("Connectée en tant que \(user.name)").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
                     Spacer()
                 }
                 .padding(.horizontal, 14).padding(.vertical, 13)
@@ -313,7 +313,7 @@ struct MoreSettingsView: View {
             Button(action: { showDeleteAccountConfirm = true }) {
                 HStack(spacing: 12) {
                     rowIcon("trash", color: RUColor.rose)
-                    Text("Supprimer mon compte").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.rose)
+                    Text("Supprimer mon compte").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.rose)
                     Spacer()
                     if isDeletingAccount { ProgressView().tint(RUColor.rose) }
                 }
@@ -342,9 +342,9 @@ struct MoreSettingsView: View {
                 HStack {
                     rowIcon("envelope")
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Donner mon avis").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                        Text("Donner mon avis").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
                         Text("Un bug, une idée, un truc qui t'a gênée — ça part par mail.")
-                            .font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
+                            .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                     }
                     Spacer()
                     Text("›").foregroundColor(RUColor.text2)
@@ -376,7 +376,7 @@ struct MoreSettingsView: View {
         VStack(alignment: .leading, spacing: 10) {
             TextField("Pseudo (facultatif)", text: $usernameText)
                 .textFieldStyle(.plain)
-                .font(RUFont.sans(13.5))
+                .font(RUFont.sans(.emphasis))
                 .foregroundColor(RUColor.textPrimary)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
@@ -384,19 +384,19 @@ struct MoreSettingsView: View {
                 .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             TextField("Nom (facultatif)", text: $lastNameText)
                 .textFieldStyle(.plain)
-                .font(RUFont.sans(13.5))
+                .font(RUFont.sans(.emphasis))
                 .foregroundColor(RUColor.textPrimary)
                 .padding(.horizontal, 12).padding(.vertical, 9)
                 .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             if let identityError {
-                Text(identityError).font(RUFont.sans(11)).foregroundColor(RUColor.rose)
+                Text(identityError).font(RUFont.sans(.small)).foregroundColor(RUColor.rose)
             }
             HStack {
                 Text("Aide tes amis à te retrouver dans la recherche.")
-                    .font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
+                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                 Spacer()
                 Button(isSavingIdentity ? "…" : "Enregistrer") { Task { await saveIdentity() } }
-                    .font(RUFont.sans(11.5, weight: .semibold))
+                    .font(RUFont.sans(.body, weight: .semibold))
                     .foregroundColor(RUColor.rose2)
                     .disabled(isSavingIdentity)
             }

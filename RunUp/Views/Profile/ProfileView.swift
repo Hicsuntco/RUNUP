@@ -95,7 +95,7 @@ struct ProfileView: View {
                         HStack(spacing: 4) {
                             Image(systemName: "target").font(.system(size: 9)).foregroundColor(RUColor.text3)
                             Text(objectifText)
-                                .font(RUFont.sans(10, weight: .semibold))
+                                .font(RUFont.sans(.small, weight: .semibold))
                                 .foregroundColor(RUColor.text2)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.8)
@@ -268,7 +268,7 @@ struct ProfileView: View {
                 }
                 Text(value).displayStyle(19).foregroundColor(valueColor)
             }
-            Text(label).font(RUFont.sans(9.5, weight: .semibold)).foregroundColor(RUColor.text3)
+            Text(label).font(RUFont.sans(.micro, weight: .semibold)).foregroundColor(RUColor.text3)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(value) \(label)")
@@ -310,7 +310,7 @@ struct ProfileView: View {
                 }
             }
             Text("Tes kilomètres, ta série et tes badges apparaîtront ici dès ta première sortie.")
-                .font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+                .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(16)
@@ -324,7 +324,7 @@ struct ProfileView: View {
             Text(value).displayStyle(19).foregroundColor(RUColor.textPrimary)
                 .lineLimit(1).minimumScaleFactor(0.6)
             Text(LocalizedStringKey(label))
-                .font(RUFont.sans(9, weight: .semibold)).foregroundColor(RUColor.text3)
+                .font(RUFont.sans(.micro, weight: .semibold)).foregroundColor(RUColor.text3)
                 .lineLimit(1).minimumScaleFactor(0.7)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -346,14 +346,14 @@ struct ProfileView: View {
     private var signInPrompt: some View {
         VStack(spacing: 12) {
             AppMarkView(size: 40)
-            Text("Ton profil prend vie à plusieurs").font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+            Text("Ton profil prend vie à plusieurs").font(RUFont.sans(.emphasis, weight: .semibold)).foregroundColor(RUColor.textPrimary)
             // Cet écran est le SEUL accès au club et aux amis depuis que Profil est le 5e onglet :
             // déconnectée, il n'existe plus aucun autre chemin vers eux. Il doit donc dire ce
             // qu'il y a derrière, pas seulement qu'il faut se connecter — une porte, pas un mur.
             // (Rien n'est perdu au passage : rejoindre un club, suivre quelqu'un ou applaudir une
             // séance demande de toute façon un compte.)
             Text("Ton classement de club, le fil de tes amis et les sorties de groupe t'attendent ici.")
-                .font(RUFont.sans(11.5)).foregroundColor(RUColor.text2).multilineTextAlignment(.center)
+                .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).multilineTextAlignment(.center)
             Button("SE CONNECTER") { showSignIn = true }
                 .buttonStyle(PrimaryButtonStyle())
                 .padding(.top, 4)
@@ -423,10 +423,10 @@ struct ProfileView: View {
                         .frame(width: 40, height: 40)
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Amis").font(RUFont.sans(15, weight: .bold)).foregroundColor(RUColor.textPrimary)
+                            Text("Amis").font(RUFont.sans(.emphasis, weight: .bold)).foregroundColor(RUColor.textPrimary)
                             if let friendsList {
                                 Text("\(friendsList.followers.count) abonnés · \(friendsList.following.count) abonnements")
-                                    .font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
+                                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                             }
                         }
                         Spacer(minLength: 0)
@@ -438,7 +438,7 @@ struct ProfileView: View {
                         // qu'il fallait déjà avoir atteinte.
                         if let friendsList, !friendsList.incomingRequests.isEmpty {
                             Text("\(friendsList.incomingRequests.count)")
-                                .font(RUFont.sans(10, weight: .bold))
+                                .font(RUFont.sans(.small, weight: .bold))
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 6).padding(.vertical, 2)
                                 .background(RUColor.rose, in: Capsule())
@@ -464,10 +464,10 @@ struct ProfileView: View {
                                     ? String(localized: "\(todaysFriendActivityCount) nouvelles activités aujourd'hui")
                                     : String(localized: "\(todaysFriendActivityCount) nouvelle activité aujourd'hui"))
                                  : "Rien de nouveau aujourd'hui")
-                                .font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.text2)
+                                .font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text2)
                         }
                     } else {
-                        Text("Trouve des coureurs à suivre").font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.text2)
+                        Text("Trouve des coureurs à suivre").font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text2)
                     }
                 }
             }
@@ -492,9 +492,9 @@ struct ProfileView: View {
                     .frame(width: 40, height: 40)
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Itinéraires").font(RUFont.sans(15, weight: .bold)).foregroundColor(RUColor.textPrimary)
+                        Text("Itinéraires").font(RUFont.sans(.emphasis, weight: .bold)).foregroundColor(RUColor.textPrimary)
                         Text("Trouve où courir, ici ou en voyage")
-                            .font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
+                            .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                     }
                     Spacer(minLength: 0)
                     cardArrow
@@ -520,14 +520,14 @@ struct ProfileView: View {
                         .frame(width: 40, height: 40)
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Running Club").font(RUFont.sans(15, weight: .bold)).foregroundColor(RUColor.textPrimary)
+                            Text("Running Club").font(RUFont.sans(.emphasis, weight: .bold)).foregroundColor(RUColor.textPrimary)
                             if let club = board?.club {
                                 Text(club.memberCount > 1
                                      ? String(localized: "\(club.name) · \(club.memberCount) membres")
                                      : String(localized: "\(club.name) · \(club.memberCount) membre"))
-                                    .font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
+                                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                             } else {
-                                Text("Tu n'en as pas encore rejoint").font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
+                                Text("Tu n'en as pas encore rejoint").font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                             }
                         }
                         Spacer(minLength: 0)
@@ -539,10 +539,10 @@ struct ProfileView: View {
                     if let event = board?.events?.first {
                         HStack(spacing: 4) {
                             Image(systemName: "mappin.circle.fill").font(.system(size: 11)).foregroundColor(RUColor.rose)
-                            Text(event.title).font(RUFont.sans(10.5, weight: .bold)).foregroundColor(RUColor.rose).lineLimit(1).minimumScaleFactor(0.8)
+                            Text(event.title).font(RUFont.sans(.small, weight: .bold)).foregroundColor(RUColor.rose).lineLimit(1).minimumScaleFactor(0.8)
                             Text(event.going > 1
                                  ? String(localized: "— \(event.going) confirmés")
-                                 : String(localized: "— \(event.going) confirmé")).font(RUFont.sans(10.5)).foregroundColor(RUColor.text2)
+                                 : String(localized: "— \(event.going) confirmé")).font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                         }
                     } else if board?.club == nil {
                         // La maquette propose ici un aperçu de « 2 clubs près de toi » à
@@ -551,10 +551,10 @@ struct ProfileView: View {
                         // public, ni géolocalisation de clubs, ni notion de club « proche » dans
                         // le schéma. La carte dit donc ce qui est réellement faisable.
                         Text("Rejoins un club avec un code d'invitation, ou crée le tien")
-                            .font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.text2)
+                            .font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text2)
                     } else {
                         Text("Aucune sortie prévue pour l'instant")
-                            .font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.text3)
+                            .font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text3)
                     }
                 }
             }
@@ -599,7 +599,7 @@ struct ProfileView: View {
                                 .opacity(badge.earned ? 1 : 0.35)
                                 .shadow(color: badge.earned ? color.opacity(0.35) : .clear, radius: 8, x: 0, y: 3)
                             Text(badge.name)
-                                .font(RUFont.sans(8.5, weight: .semibold))
+                                .font(RUFont.sans(.micro, weight: .semibold))
                                 .foregroundColor(badge.earned ? RUColor.textPrimary : RUColor.text2)
                                 .multilineTextAlignment(.center)
                                 .lineLimit(2)
@@ -652,8 +652,8 @@ struct ProfileView: View {
                     .frame(width: 38, height: 38)
                     .background(RUColor.rose.opacity(0.10), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(RUFont.sans(13.5, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                    Text(subtitle).font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+                    Text(title).font(RUFont.sans(.emphasis, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                    Text(subtitle).font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                         .lineLimit(1).minimumScaleFactor(0.8)
                 }
                 Spacer(minLength: 8)

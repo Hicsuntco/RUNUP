@@ -31,7 +31,7 @@ struct ActivityCommentsSheet: View {
                         VStack(alignment: .leading, spacing: 12) {
                             if comments.isEmpty {
                                 Text("Aucun commentaire pour l'instant — sois la première !")
-                                    .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
                                     .frame(maxWidth: .infinity).padding(.vertical, 30)
                             }
                             ForEach(comments) { comment in
@@ -43,7 +43,7 @@ struct ActivityCommentsSheet: View {
                 }
 
                 if let errorMessage {
-                    Text(errorMessage).font(RUFont.sans(11)).foregroundColor(RUColor.rose)
+                    Text(errorMessage).font(RUFont.sans(.small)).foregroundColor(RUColor.rose)
                         .padding(.horizontal, 16).padding(.top, 4)
                 }
 
@@ -65,10 +65,10 @@ struct ActivityCommentsSheet: View {
             AvatarView(urlString: comment.avatarUrl, base64DataURI: comment.avatarBase64, initial: String(comment.name.prefix(1)), size: 28, seed: comment.userId == currentUserId ? nil : comment.userId)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
-                    Text(comment.name).font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                    Text(comment.createdAt.relativeDescription).font(RUFont.sans(9.5)).foregroundColor(RUColor.text3)
+                    Text(comment.name).font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                    Text(comment.createdAt.relativeDescription).font(RUFont.sans(.micro)).foregroundColor(RUColor.text3)
                 }
-                Text(comment.text).font(RUFont.sans(12.5)).foregroundColor(RUColor.text2).lineSpacing(2)
+                Text(comment.text).font(RUFont.sans(.label)).foregroundColor(RUColor.text2).lineSpacing(2)
             }
             Spacer(minLength: 0)
         }
@@ -84,7 +84,7 @@ struct ActivityCommentsSheet: View {
         HStack(alignment: .bottom, spacing: 10) {
             TextField("Écris un commentaire…", text: $newText, axis: .vertical)
                 .textFieldStyle(.plain)
-                .font(RUFont.sans(13))
+                .font(RUFont.sans(.label))
                 .foregroundColor(RUColor.textPrimary)
                 .lineLimit(1...4)
                 .padding(.horizontal, 14).padding(.vertical, 10)

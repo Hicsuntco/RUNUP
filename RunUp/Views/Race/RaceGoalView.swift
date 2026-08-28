@@ -80,7 +80,7 @@ struct RaceGoalView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 BackTitleHeaderView(eyebrow: "Ton objectif", title: goalTitle, titleSize: 24) { appState.go(.profile) }
-                Text(dateLine).font(RUFont.sans(12)).foregroundColor(RUColor.text2).padding(.leading, 34)
+                Text(dateLine).font(RUFont.sans(.body)).foregroundColor(RUColor.text2).padding(.leading, 34)
 
                 if hasRealRaceDay {
                     HStack(spacing: 10) {
@@ -114,7 +114,7 @@ struct RaceGoalView: View {
                         }
                     } else {
                         Text("Programme ouvert, sans date de fin fixe.")
-                            .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                            .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                     }
                 }
                 .padding(14)
@@ -128,7 +128,7 @@ struct RaceGoalView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         RUCardHeader(icon: "location.fill", tint: RUColor.violet, title: "Où tu en es")
                         Text(LocalizedStringKey(progressSummary))
-                            .font(RUFont.sans(12)).foregroundColor(RUColor.text2).lineSpacing(3)
+                            .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
                     }
                     .padding(14)
                     .ruCard()
@@ -139,8 +139,8 @@ struct RaceGoalView: View {
                             HStack(spacing: 12) {
                                 RoundedRectangle(cornerRadius: 2).fill(RUColor.text4).frame(width: 3, height: 30)
                                 VStack(alignment: .leading, spacing: 1) {
-                                    Text(hyroxStrategy[i].0).font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                                    Text(hyroxStrategy[i].1).font(RUFont.sans(10)).foregroundColor(RUColor.text2).lineSpacing(2)
+                                    Text(hyroxStrategy[i].0).font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                                    Text(hyroxStrategy[i].1).font(RUFont.sans(.small)).foregroundColor(RUColor.text2).lineSpacing(2)
                                 }
                                 Spacer()
                             }
@@ -157,12 +157,12 @@ struct RaceGoalView: View {
                             HStack(spacing: 12) {
                                 RoundedRectangle(cornerRadius: 2).fill(isLast ? RUColor.rose : RUColor.text4).frame(width: 3, height: 30)
                                 VStack(alignment: .leading, spacing: 1) {
-                                    Text(pacingPlan[i].1).font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                                    Text(pacingPlan[i].0).font(RUFont.sans(10)).foregroundColor(RUColor.text2)
+                                    Text(pacingPlan[i].1).font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                                    Text(pacingPlan[i].0).font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                                 }
                                 Spacer()
                                 (Text(pacingPlan[i].2).font(RUFont.display(18)).foregroundColor(isLast ? RUColor.rose2 : RUColor.textPrimary)
-                                    + Text(" /km").font(RUFont.sans(9)).foregroundColor(RUColor.text2))
+                                    + Text(" /km").font(RUFont.sans(.micro)).foregroundColor(RUColor.text2))
                             }
                             .padding(.horizontal, 14).padding(.vertical, 12)
                             .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -219,7 +219,7 @@ struct RaceGoalView: View {
         case .current: suffix = " ●"
         case .upcoming: suffix = ""
         }
-        return Text("\(name)\(suffix)").font(RUFont.sans(10)).foregroundColor(RUColor.text2)
+        return Text("\(name)\(suffix)").font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
     }
 
     private func tile(_ value: String, _ label: String, highlighted: Bool) -> some View {
@@ -233,7 +233,7 @@ struct RaceGoalView: View {
             // Was a bare `Text(label)` — never resolved through the String Catalog (pre-existing
             // gap on JOURS/OBJECTIF/ALLURE too), fixed in passing since this function was already
             // touched for the new SEMAINE/SÉRIE tiles.
-            Text(LocalizedStringKey(label)).font(RUFont.sans(8, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
+            Text(LocalizedStringKey(label)).font(RUFont.sans(.micro, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)

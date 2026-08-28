@@ -130,7 +130,18 @@ enum RUFont {
     /// prochaine fois, en modifiant cette seule chaîne.
     private static let bodyFamily = DisplayFont.family
 
-    static func sans(_ size: CGFloat, weight: DMWeight = .regular) -> Font {
+    /// Le point d'entrée normal : un cran nommé, pas un nombre.
+    static func sans(_ step: RUTextSize, weight: DMWeight = .regular) -> Font {
+        sans(step.rawValue, weight: weight)
+    }
+
+    static func sansItalic(_ step: RUTextSize) -> Font { sansItalic(step.rawValue) }
+
+    /// La variante numérique, `private` exprès : c'est par elle que les dix-neuf tailles sont
+    /// arrivées. Le compilateur refuse maintenant un nombre écrit à la main hors de ce fichier,
+    /// ce qu'aucune vérification d'intégration continue ne garantirait aussi bien — celle-ci ne
+    /// peut pas être contournée ni oubliée.
+    private static func sans(_ size: CGFloat, weight: DMWeight = .regular) -> Font {
         let pointSize = scaled(size * bodySizeFactor)
         switch weight {
         case .light: return .custom("\(bodyFamily)-Light", fixedSize: pointSize)
@@ -141,7 +152,7 @@ enum RUFont {
         }
     }
 
-    static func sansItalic(_ size: CGFloat) -> Font {
+    private static func sansItalic(_ size: CGFloat) -> Font {
         .custom("\(bodyFamily)-Italic", fixedSize: scaled(size * bodySizeFactor))
     }
 
@@ -153,7 +164,7 @@ enum RUFont {
 /// Live holder for the user's iOS text-size setting, read by `RUFont`'s scaled sizes from anywhere
 /// in the app. Exactly the same shape and rationale as `ThemeStore` (see `AccentTheme.swift`): the
 /// Observation framework tracks access to this object's properties during any view's `body`,
-/// however that reference was obtained, so `RUFont.sans(13)` and friends stay reactive without a
+/// however that reference was obtained, so `RUFont.sans(.label)` and friends stay reactive without a
 /// single call site having to take an `@Environment(\.dynamicTypeSize)` of its own.
 ///
 /// Seeded from `UIApplication.shared` and kept current by the system notification rather than by
@@ -220,8 +231,39 @@ extension Text {
     ///   tokens se correspondent d'ailleurs exactement (`ink3` sombre = 32% blanc = `text3`).
     ///   Sans effet sur les ~66 des 83 `EyebrowLabel` qui passent déjà une couleur explicite.
     func eyebrowStyle(color: Color = RUColor.text3) -> some View {
-        self.font(RUFont.sans(10, weight: .bold)).tracking(1.8).textCase(.uppercase).foregroundColor(color)
+        self.font(RUFont.sans(.small, weight: .bold)).tracking(1.8).textCase(.uppercase).foregroundColor(color)
     }
+}
+
+/// Les six crans de texte de l'app.
+///
+/// Il y en avait DIX-NEUF, de 7 à 18 pt par pas de 0,5 — un 12,5 à côté d'un 13, un 11,5 à côté
+/// d'un 12. Des écarts trop petits pour se lire comme une hiérarchie, et assez grands pour que
+/// rien ne s'aligne : chaque écran avait été réglé à l'œil, séparément.
+///
+/// Les six valeurs sont choisies pour DÉPLACER LE MOINS POSSIBLE — 142 appels sur 362, d'un
+/// dixième de point en moyenne — et pas pour dessiner l'échelle idéale. Élargir les écarts en une
+/// vraie progression géométrique (9 / 10,5 / 12 / 14 / 16 / 19) rendrait la hiérarchie plus
+/// franche, mais changerait visiblement une app qui vient d'être validée. C'est une décision de
+/// design à prendre exprès, pas un effet de bord d'un rangement.
+///
+/// Ce que ce rangement apporte tout de suite : le prochain réglage global se fait sur six
+/// nombres, ici, au lieu de 362 appels dispersés. `ci_scripts/check_type_scale.py` refuse
+/// désormais un appel à `RUFont.sans` avec un nombre écrit à la main, pour que les dix-neuf
+/// valeurs ne reviennent pas une par une.
+enum RUTextSize: CGFloat {
+    /// 9 — micro-étiquettes en capitales, suffixes d'unité.
+    case micro = 9
+    /// 11 — valeurs secondaires, notes, sous-titres de ligne.
+    case small = 11
+    /// 12 — le texte courant.
+    case body = 12
+    /// 13 — libellés de carte, titres de ligne de liste.
+    case label = 13
+    /// 14 — libellés qui doivent primer sur leurs voisins.
+    case emphasis = 14
+    /// 17 — titres de carte et de section.
+    case title = 17
 }
 
 struct EyebrowLabel: View {

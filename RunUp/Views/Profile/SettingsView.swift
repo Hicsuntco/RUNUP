@@ -59,7 +59,7 @@ struct SettingsView: View {
     private var moreSettingsRow: some View {
         Button(action: { showMoreSettings = true }) {
             HStack {
-                Text("Plus de réglages").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                Text("Plus de réglages").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
                 Text("›").foregroundColor(RUColor.text2)
             }
@@ -84,7 +84,7 @@ struct SettingsView: View {
     private var appleHealthRow: some View {
         HStack(spacing: 12) {
             Image(systemName: "apple.logo").font(.system(size: 16)).foregroundColor(RUColor.textPrimary)
-            Text(ConnectedSource.apple.title).font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+            Text(ConnectedSource.apple.title).font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
             Spacer()
             Toggle("", isOn: Binding(
                 get: { profile.connectedSources.contains(.apple) },
@@ -124,7 +124,7 @@ struct SettingsView: View {
     private var appearanceCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Mode d'affichage").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                Text("Mode d'affichage").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
                 HStack(spacing: 4) {
                     // `modeButton` reçoit un `String`, d'où `String(localized:)`.
@@ -137,7 +137,7 @@ struct SettingsView: View {
 
             Divider().background(RUColor.line)
 
-            Text("Couleur de l'app").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+            Text("Couleur de l'app").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: 4), spacing: 16) {
                 ForEach(AccentTheme.all) { theme in
                     Button(action: { selectAccent(theme) }) {
@@ -170,7 +170,7 @@ struct SettingsView: View {
         let selected = profile.isLightMode == isLight
         return Button(action: { selectMode(isLight: isLight) }) {
             Text(label)
-                .font(RUFont.sans(12, weight: .semibold))
+                .font(RUFont.sans(.body, weight: .semibold))
                 .foregroundColor(selected ? .white : RUColor.text2)
                 .padding(.horizontal, 14).padding(.vertical, 6)
                 .background(selected ? RUColor.rose : .clear, in: Capsule())
@@ -197,7 +197,7 @@ struct SettingsView: View {
     private var preferencesCard: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("Notifications du coach").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                Text("Notifications du coach").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
                 Toggle("", isOn: Binding(
                     get: { profile.coachNotificationsEnabled },
@@ -243,7 +243,7 @@ struct SettingsView: View {
     private var dailyGoalsCard: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("Objectif de pas").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                Text("Objectif de pas").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
                 Stepper(
                     "\(Int(profile.stepsGoal)) pas",
@@ -258,7 +258,7 @@ struct SettingsView: View {
             .padding(.horizontal, 14).padding(.vertical, 13)
             Divider().background(RUColor.line)
             HStack {
-                Text("Objectif calories actives").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                Text("Objectif calories actives").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
                 Stepper(
                     "\(Int(profile.activeCaloriesGoal)) kcal",
@@ -296,18 +296,18 @@ private struct StravaConnectionRow: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 12) {
                 Text("🟠").font(.system(size: 17))
-                Text("Strava").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                Text("Strava").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
                 if !auth.isSignedIn {
-                    Text("Nécessite un compte").font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
+                    Text("Nécessite un compte").font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                 } else if isLoading {
                     ProgressView().tint(RUColor.rose)
                 } else if isConnected {
                     Button("Déconnecter") { Task { await disconnect() } }
-                        .font(RUFont.sans(11.5, weight: .semibold)).foregroundColor(RUColor.text3)
+                        .font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.text3)
                 } else {
                     Button("Connecter") { Task { await connect() } }
-                        .font(RUFont.sans(11.5, weight: .semibold)).foregroundColor(RUColor.rose2)
+                        .font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.rose2)
                 }
             }
 
@@ -317,7 +317,7 @@ private struct StravaConnectionRow: View {
                         if isImporting { ProgressView().tint(RUColor.text2) }
                         Text(isImporting ? "Import en cours…" : "Importer mon historique Strava")
                     }
-                    .font(RUFont.sans(11.5, weight: .semibold))
+                    .font(RUFont.sans(.body, weight: .semibold))
                     .foregroundColor(RUColor.text2)
                 }
                 .buttonStyle(PressableStyle())
@@ -326,10 +326,10 @@ private struct StravaConnectionRow: View {
 
             if let importedCount {
                 Text(importedCount == 0 ? "Rien de nouveau à importer." : "\(importedCount) course\(importedCount > 1 ? "s" : "") importée\(importedCount > 1 ? "s" : "").")
-                    .font(RUFont.sans(10.5)).foregroundColor(RUColor.lime)
+                    .font(RUFont.sans(.small)).foregroundColor(RUColor.lime)
             }
             if let errorMessage {
-                Text(errorMessage).font(RUFont.sans(10.5)).foregroundColor(RUColor.rose)
+                Text(errorMessage).font(RUFont.sans(.small)).foregroundColor(RUColor.rose)
             }
         }
         .padding(.horizontal, 14).padding(.vertical, 13)

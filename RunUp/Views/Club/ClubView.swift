@@ -109,7 +109,7 @@ struct ClubView: View {
                     // error, especially on a light theme with a pale accent swatch selected.
                     HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 11))
-                        Text(errorMessage).font(RUFont.sans(11))
+                        Text(errorMessage).font(RUFont.sans(.small))
                     }
                     .foregroundColor(RUColor.rose)
                     .padding(.top, 4)
@@ -119,7 +119,7 @@ struct ClubView: View {
                     // Published contact info, surfaced directly here rather than only buried in
                     // the privacy policy — App Store guideline 1.2.
                     Link("Signaler un problème ou nous contacter", destination: URL(string: "mailto:charlottegrudep@gmail.com")!)
-                        .font(RUFont.sans(10.5))
+                        .font(RUFont.sans(.small))
                         .foregroundColor(RUColor.text3)
                         .frame(maxWidth: .infinity)
                         .padding(.top, 10)
@@ -302,7 +302,7 @@ struct ClubView: View {
         VStack(spacing: 12) {
             ProgressView().tint(RUColor.rose)
             Text("Chargement du club…")
-                .font(RUFont.sans(13, weight: .semibold))
+                .font(RUFont.sans(.label, weight: .semibold))
                 .foregroundColor(RUColor.text2)
         }
         .frame(maxWidth: .infinity)
@@ -315,9 +315,9 @@ struct ClubView: View {
     private var signInPrompt: some View {
         VStack(spacing: 12) {
             AppMarkView(size: 44)
-            Text("Le Club, c'est mieux à plusieurs").font(RUFont.sans(15, weight: .bold)).foregroundColor(RUColor.textPrimary)
+            Text("Le Club, c'est mieux à plusieurs").font(RUFont.sans(.emphasis, weight: .bold)).foregroundColor(RUColor.textPrimary)
             Text("Connecte-toi pour rejoindre un vrai club, avec un classement et un fil d'activité alimentés par de vraies personnes.")
-                .font(RUFont.sans(12)).foregroundColor(RUColor.text2).multilineTextAlignment(.center)
+                .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).multilineTextAlignment(.center)
             Button("SE CONNECTER") { showSignIn = true }
                 .buttonStyle(PrimaryButtonStyle())
                 .padding(.top, 4)
@@ -336,7 +336,7 @@ struct ClubView: View {
                 HStack {
                     TextField("Nom du club", text: $newClubName)
                         .textFieldStyle(.plain)
-                        .font(RUFont.sans(14))
+                        .font(RUFont.sans(.emphasis))
                         .foregroundColor(RUColor.textPrimary)
                         .padding(.horizontal, 14).padding(.vertical, 11)
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -376,7 +376,7 @@ struct ClubView: View {
                 Button("Signaler ce club") {
                     reportTarget = ReportTarget(targetType: "club", targetId: club.id, displayName: String(localized: "le club \(club.name)"))
                 }
-                .font(RUFont.sans(11, weight: .semibold))
+                .font(RUFont.sans(.small, weight: .semibold))
                 .foregroundColor(RUColor.text3)
                 .padding(.vertical, 12)
                 .frame(minHeight: 44)
@@ -387,7 +387,7 @@ struct ClubView: View {
             // instantly (rejoining needs the invite code again), and a double-tap made the second
             // call fail with a misleading error after the first had already succeeded.
             Button("Quitter le club") { showLeaveConfirm = true }
-                .font(RUFont.sans(11, weight: .semibold))
+                .font(RUFont.sans(.small, weight: .semibold))
                 .foregroundColor(RUColor.text3)
                 .disabled(isLoading)
                 .padding(.vertical, 12)
@@ -432,7 +432,7 @@ struct ClubView: View {
                 .background(LinearGradient(colors: [RUColor.violet, RUColor.rose], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .lastTextBaseline) {
-                    Text("Niveau \(info.level) · \(info.title)").font(RUFont.sans(16, weight: .bold)).foregroundColor(.white)
+                    Text("Niveau \(info.level) · \(info.title)").font(RUFont.sans(.title, weight: .bold)).foregroundColor(.white)
                     Spacer()
                     // Fixed light-on-dark — this card keeps its dark violet gradient in BOTH
                     // themes, so theme-aware text2 went dark-on-dark in light mode.
@@ -479,9 +479,9 @@ struct ClubView: View {
                     Text(challenge.title).displayStyle(19).foregroundColor(RUColor.textPrimary)
                     LinearBar(fraction: challenge.targetKm > 0 ? min(1, challenge.progressKm / challenge.targetKm) : 0, color: RUColor.rose)
                     HStack {
-                        Text(challengeProgressText(challenge)).font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                        Text(challengeProgressText(challenge)).font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                         Spacer()
-                        Text("ensemble").font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                        Text("ensemble").font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                     }
                 }
                 .padding(16)
@@ -491,7 +491,7 @@ struct ClubView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 3) {
                             RUCardHeader(icon: "flag.checkered", tint: RUColor.rose2, title: "Défi du club")
-                            Text("Aucun défi en cours — en créer un").font(RUFont.sans(13)).foregroundColor(RUColor.textPrimary)
+                            Text("Aucun défi en cours — en créer un").font(RUFont.sans(.label)).foregroundColor(RUColor.textPrimary)
                         }
                         Spacer()
                         Image(systemName: "plus.circle.fill").font(.system(size: 20)).foregroundColor(RUColor.rose2)
@@ -558,7 +558,7 @@ struct ClubView: View {
                     }
                     if active.count > 6 {
                         Text("+\(active.count - 6)")
-                            .font(RUFont.sans(10, weight: .bold))
+                            .font(RUFont.sans(.small, weight: .bold))
                             .foregroundColor(RUColor.text2)
                             .frame(width: 30, height: 30)
                             .background(RUColor.card2, in: Circle())
@@ -580,7 +580,7 @@ struct ClubView: View {
             if value == .global && globalBoard == nil { Task { await loadGlobalBoard() } }
         }) {
             Text(label)
-                .font(RUFont.sans(11, weight: .semibold))
+                .font(RUFont.sans(.small, weight: .semibold))
                 .foregroundColor(boardMode == value ? RUColor.rose2 : RUColor.text2)
                 .padding(.horizontal, 11).padding(.vertical, 6)
                 .frame(minHeight: 44)
@@ -596,7 +596,7 @@ struct ClubView: View {
             if value == .feed && feed.isEmpty { Task { await loadFeed() } }
         }) {
             Text(label)
-                .font(RUFont.sans(12.5, weight: .semibold))
+                .font(RUFont.sans(.label, weight: .semibold))
                 // Pastille NEUTRE (surface de carte sur rail `bg2`), pas un aplat d'accent —
                 // deux raisons. D'abord la règle que la maquette applique partout : l'accent
                 // souligne, il ne remplit pas. Ensuite, et c'est décisif ici, `SocialView`
@@ -631,14 +631,14 @@ struct ClubView: View {
                 RUCardHeader(icon: "chart.bar.fill", tint: RUColor.rose, title: "Le club cette semaine", subtitle: "Kilomètres cumulés")
                 HStack(alignment: .lastTextBaseline, spacing: 4) {
                     Text(km).displayStyle(26).foregroundColor(RUColor.textPrimary)
-                    Text("KM").font(RUFont.sans(10, weight: .bold)).foregroundColor(RUColor.text2)
+                    Text("KM").font(RUFont.sans(.small, weight: .bold)).foregroundColor(RUColor.text2)
                 }
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
                 Text("\(stats?.activeMembers ?? 0)").displayStyle(20).foregroundColor(RUColor.rose2)
                 Text(stats?.activeMembers == 1 ? "membre actif" : "membres actifs")
-                    .font(RUFont.sans(10)).foregroundColor(RUColor.text2)
+                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
             }
         }
         .padding(14)
@@ -684,7 +684,7 @@ struct ClubView: View {
                 Button(action: { showCreateEvent = true }) {
                     HStack(spacing: 4) {
                         Image(systemName: "plus").font(.system(size: 10, weight: .bold))
-                        Text("Proposer").font(RUFont.sans(11, weight: .semibold))
+                        Text("Proposer").font(RUFont.sans(.small, weight: .semibold))
                     }
                     .foregroundColor(RUColor.rose2)
                     .padding(8)
@@ -695,18 +695,18 @@ struct ClubView: View {
             }
             if (board.events ?? []).isEmpty {
                 Text("Aucune sortie prévue — propose un créneau, les autres n'ont qu'à dire « J'y serai ».")
-                    .font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
             }
             ForEach(board.events ?? []) { event in
                 HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(eventDateLabel(event.startsAt))
-                            .font(RUFont.sans(9, weight: .bold)).tracking(0.6).foregroundColor(RUColor.rose2)
-                        Text(event.title).font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                            .font(RUFont.sans(.micro, weight: .bold)).tracking(0.6).foregroundColor(RUColor.rose2)
+                        Text(event.title).font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                         if let location = event.location, !location.isEmpty {
                             HStack(spacing: 3) {
                                 Image(systemName: "mappin").font(.system(size: 8))
-                                Text(location).font(RUFont.sans(10.5))
+                                Text(location).font(RUFont.sans(.small))
                             }
                             .foregroundColor(RUColor.text2)
                         }
@@ -715,13 +715,13 @@ struct ClubView: View {
                     Button(action: { toggleRsvp(event) }) {
                         VStack(spacing: 2) {
                             Text(event.goingByMe ? "J'y serai ✓" : "J'y serai")
-                                .font(RUFont.sans(11, weight: .bold))
+                                .font(RUFont.sans(.small, weight: .bold))
                                 .foregroundColor(event.goingByMe ? .white : RUColor.textPrimary)
                                 .padding(.horizontal, 11).padding(.vertical, 6)
                                 .background(event.goingByMe ? RUColor.rose : RUColor.card, in: Capsule())
                                 .overlay(Capsule().stroke(event.goingByMe ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
                             Text("\(event.going) au départ")
-                                .font(RUFont.sans(9)).foregroundColor(RUColor.text2)
+                                .font(RUFont.sans(.micro)).foregroundColor(RUColor.text2)
                         }
                     }
                     .buttonStyle(PressableStyle())
@@ -845,7 +845,7 @@ struct ClubView: View {
         Group {
             if (board.weekly ?? []).isEmpty && !isLoading {
                 Text("Personne n'a encore couru cette semaine — lance-toi !")
-                    .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
                     .frame(maxWidth: .infinity).padding(.vertical, 20)
             } else {
                 // La bascule Km / % objectif était posée seule, alignée à droite, sans rien
@@ -928,7 +928,7 @@ struct ClubView: View {
                 .frame(width: 20)
             AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28, seed: entry.isMe ? nil : entry.id)
             Text(entry.isMe ? String(localized: "\(entry.name) · toi") : entry.name)
-                .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
+                .font(RUFont.sans(.label, weight: entry.isMe ? .semibold : .regular))
                 .foregroundColor(RUColor.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -992,7 +992,7 @@ struct ClubView: View {
                 .frame(width: 20)
             AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28, seed: entry.isMe ? nil : entry.id)
             Text(entry.isMe ? String(localized: "\(entry.name) · toi") : entry.name)
-                .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
+                .font(RUFont.sans(.label, weight: entry.isMe ? .semibold : .regular))
                 .foregroundColor(RUColor.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -1038,7 +1038,7 @@ struct ClubView: View {
                                 // earned read as "faded vs. normal" rather than "locked vs. won".
                                 .shadow(color: badge.earned ? color.opacity(0.35) : .clear, radius: 8, x: 0, y: 3)
                             Text(badge.name)
-                                .font(RUFont.sans(8, weight: .semibold))
+                                .font(RUFont.sans(.micro, weight: .semibold))
                                 .foregroundColor(badge.earned ? RUColor.textPrimary : RUColor.text2)
                                 .multilineTextAlignment(.center)
                                 .lineLimit(2)
@@ -1065,9 +1065,9 @@ struct ClubView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Classement mondial").font(RUFont.sans(14, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                    Text("Classement mondial").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
                     Text("Visible par tout le monde, pas juste ton club.")
-                        .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                 }
                 Spacer()
                 if let globalBoard {
@@ -1085,11 +1085,11 @@ struct ClubView: View {
             } else if let globalBoard {
                 if !globalBoard.optedIn {
                     Text("Active le classement mondial pour voir où tu te situes parmi tous les coureurs RunUp cette semaine.")
-                        .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                        .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
                         .frame(maxWidth: .infinity).padding(.vertical, 12)
                 } else if globalBoard.entries.isEmpty {
                     Text("Personne n'a encore couru cette semaine — sois la première !")
-                        .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                        .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
                         .frame(maxWidth: .infinity).padding(.vertical, 20)
                 } else {
                     let rows = globalBoard.entries
@@ -1105,7 +1105,7 @@ struct ClubView: View {
                                     .frame(width: 20)
                                 AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28, seed: entry.isMe ? nil : entry.id)
                                 Text(entry.isMe ? String(localized: "\(entry.name) · toi") : entry.name)
-                                    .font(RUFont.sans(13, weight: entry.isMe ? .semibold : .regular))
+                                    .font(RUFont.sans(.label, weight: entry.isMe ? .semibold : .regular))
                                     .foregroundColor(RUColor.textPrimary)
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.7)
@@ -1137,9 +1137,9 @@ struct ClubView: View {
                 if let club = board.club, club.memberCount <= 1 {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Tu es seule dans \(club.name)")
-                            .font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                            .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                         Text("Un club prend vie à plusieurs — classement, défis, sorties de groupe. Partage le code, ceux qui l'ont te rejoignent directement.")
-                            .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                            .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
                             .fixedSize(horizontal: false, vertical: true)
                         HStack(spacing: 10) {
                             Text(club.inviteCode)
@@ -1158,7 +1158,7 @@ struct ClubView: View {
                                     Image(systemName: "square.and.arrow.up")
                                     Text("Partager")
                                 }
-                                .font(RUFont.sans(12.5, weight: .semibold))
+                                .font(RUFont.sans(.label, weight: .semibold))
                             }
                             .buttonStyle(SecondaryButtonStyle())
                         }
@@ -1168,7 +1168,7 @@ struct ClubView: View {
                     .ruCard()
                 } else {
                     Text("Personne n'a encore rien posté — sois la première !")
-                        .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                        .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
                         .frame(maxWidth: .infinity).padding(.vertical, 20)
                 }
             }
@@ -1548,7 +1548,7 @@ struct BadgeDetailView: View {
                 .opacity(badge.earned ? 1 : 0.4)
                 .padding(.top, 22)
 
-            Text(badge.name).font(RUFont.sans(17, weight: .bold)).foregroundColor(RUColor.textPrimary)
+            Text(badge.name).font(RUFont.sans(.title, weight: .bold)).foregroundColor(RUColor.textPrimary)
 
             StatChip(
                 text: badge.earned ? "Débloqué" : "Pas encore débloqué",
@@ -1557,7 +1557,7 @@ struct BadgeDetailView: View {
             )
 
             Text(badge.detail)
-                .font(RUFont.sans(13)).foregroundColor(RUColor.text2)
+                .font(RUFont.sans(.label)).foregroundColor(RUColor.text2)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 30)
 

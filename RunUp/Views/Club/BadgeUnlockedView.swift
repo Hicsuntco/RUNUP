@@ -70,7 +70,7 @@ struct BadgeUnlockedView: View {
 
                 VStack(spacing: 8) {
                     Text("BADGE DÉBLOQUÉ")
-                        .font(RUFont.sans(11, weight: .bold))
+                        .font(RUFont.sans(.small, weight: .bold))
                         .tracking(2.5)
                         .foregroundColor(RUColor.text3)
                     Text(badge.name)
@@ -78,7 +78,7 @@ struct BadgeUnlockedView: View {
                         .foregroundColor(RUColor.textPrimary)
                         .multilineTextAlignment(.center)
                     Text(badge.detail)
-                        .font(RUFont.sans(13))
+                        .font(RUFont.sans(.label))
                         .foregroundColor(RUColor.text2)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 30)
@@ -104,7 +104,7 @@ struct BadgeUnlockedView: View {
                         // recovery as `RecapView`'s share card: a manual retry, "Continuer" below
                         // still works either way if she doesn't bother.
                         Button("Réessayer") { renderShareCard() }
-                            .font(RUFont.sans(12, weight: .semibold))
+                            .font(RUFont.sans(.body, weight: .semibold))
                             .foregroundColor(RUColor.rose2)
                             .frame(minHeight: 44)
                             .contentShape(Rectangle())
@@ -113,7 +113,7 @@ struct BadgeUnlockedView: View {
                     }
 
                     Button(action: onDismiss) {
-                        Text("Continuer").font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.text2)
+                        Text("Continuer").font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.text2)
                     }
                     .buttonStyle(PressableStyle())
                 }

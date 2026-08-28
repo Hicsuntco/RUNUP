@@ -128,7 +128,7 @@ struct WeeklyRecapView: View {
 
                 if weekRuns.isEmpty {
                     Text("Pas encore de course cette semaine — tu as le temps.")
-                        .font(RUFont.sans(12))
+                        .font(RUFont.sans(.body))
                         .foregroundColor(RUColor.text2)
                         .padding(16)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -178,10 +178,10 @@ struct WeeklyRecapView: View {
             HStack(alignment: .lastTextBaseline, spacing: 3) {
                 Text(value).displayStyle(30).foregroundColor(color)
                 if let unit {
-                    Text(unit).font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+                    Text(unit).font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
                 }
             }
-            Text(label).font(RUFont.sans(9, weight: .bold)).tracking(1).foregroundColor(RUColor.text2)
+            Text(label).font(RUFont.sans(.micro, weight: .bold)).tracking(1).foregroundColor(RUColor.text2)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
@@ -229,7 +229,7 @@ struct WeeklyRecapView: View {
             .onAppear { chartRevealed = true }
             HStack {
                 ForEach(DayStatus.letters, id: \.self) { letter in
-                    Text(letter).font(RUFont.sans(9, weight: .bold)).foregroundColor(RUColor.text3).frame(maxWidth: .infinity)
+                    Text(letter).font(RUFont.sans(.micro, weight: .bold)).foregroundColor(RUColor.text3).frame(maxWidth: .infinity)
                 }
             }
         }
@@ -251,11 +251,11 @@ struct WeeklyRecapView: View {
                 .frame(width: 38, height: 38)
                 .background(RUColor.rose.opacity(0.18), in: Circle())
             VStack(alignment: .leading, spacing: 2) {
-                Text(record.label).font(RUFont.sans(12.5, weight: .bold)).foregroundColor(RUColor.textPrimary)
+                Text(record.label).font(RUFont.sans(.label, weight: .bold)).foregroundColor(RUColor.textPrimary)
                 // No "+120 XP" suffix — no record-specific XP is ever granted (the 120 is the
                 // ordinary per-debrief award), so the label promised a bonus that doesn't exist.
                 Text(record.value)
-                    .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
             }
             Spacer(minLength: 0)
         }
@@ -271,8 +271,8 @@ struct WeeklyRecapView: View {
     private func runRow(_ run: RunRecord) -> some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(run.title).font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                Text(run.date.formatted(.dateTime.weekday(.wide).day().month().locale(Locale.current))).font(RUFont.sans(10.5)).foregroundColor(RUColor.text3)
+                Text(run.title).font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                Text(run.date.formatted(.dateTime.weekday(.wide).day().month().locale(Locale.current))).font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
             }
             Spacer()
             Text(String(format: "%.2f km", locale: Locale.current, run.distanceKm)).font(RUFont.mono(12)).foregroundColor(RUColor.text2)

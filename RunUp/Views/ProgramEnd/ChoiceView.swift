@@ -51,7 +51,7 @@ struct ChoiceView: View {
                         VStack(alignment: .leading, spacing: 3) {
                             Text("Se fixer un nouvel objectif").displayStyle(17).foregroundColor(RUColor.textPrimary)
                             Text("Une nouvelle course, progresser encore, perdre du poids…")
-                                .font(RUFont.sans(11.5)).foregroundColor(RUColor.text2).lineSpacing(2)
+                                .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(2)
                         }
                         Spacer(minLength: 0)
                         Text("→").foregroundColor(RUColor.rose2)
@@ -71,7 +71,7 @@ struct ChoiceView: View {
                         VStack(alignment: .leading, spacing: 3) {
                             Text("Mode course libre").displayStyle(17).foregroundColor(RUColor.textPrimary)
                             Text("Pas d'objectif précis — on te propose juste de quoi garder la forme.")
-                                .font(RUFont.sans(11.5)).foregroundColor(RUColor.text2).lineSpacing(2)
+                                .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(2)
                         }
                         Spacer(minLength: 0)
                         Text("→").foregroundColor(RUColor.text2)

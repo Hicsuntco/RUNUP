@@ -84,7 +84,7 @@ struct GhostButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(RUFont.sans(13, weight: .bold))
+            .font(RUFont.sans(.label, weight: .bold))
             .foregroundColor(tint ?? RUColor.rose)
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity, minHeight: 44)
@@ -103,7 +103,7 @@ struct SecondaryButtonStyle: ButtonStyle {
             // 800 dans la maquette, pour TOUS ses libellés de boutons sans exception
             // (`.cta-ghost`, `.share-btn`, `.badge-share-btn`, `.post-feed-btn`, `.retry-btn`) —
             // `.semibold` (600) était le seul poids de libellé plus léger que la maquette.
-            .font(RUFont.sans(13, weight: .bold))
+            .font(RUFont.sans(.label, weight: .bold))
             .foregroundColor(RUColor.textPrimary)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity, minHeight: 44)

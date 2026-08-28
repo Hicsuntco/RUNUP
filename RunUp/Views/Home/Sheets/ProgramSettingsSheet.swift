@@ -41,7 +41,7 @@ struct ProgramSettingsSheet: View {
                 ObTextField(placeholder: "Objectif", text: $goal)
 
                 Text("Le coach recalcule tes prochaines séances dès l'enregistrement.")
-                    .font(RUFont.sans(11.5)).foregroundColor(RUColor.text2).lineSpacing(3)
+                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
                     .padding(.top, 14)
 
                 Button("ENREGISTRER") {

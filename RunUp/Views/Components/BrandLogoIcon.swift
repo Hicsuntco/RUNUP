@@ -37,7 +37,7 @@ struct BrandLogoIcon: View {
             }
         } else {
             Text(fallbackText)
-                .font(RUFont.sans(10, weight: .bold))
+                .font(RUFont.sans(.small, weight: .bold))
                 .foregroundColor(RUColor.text3)
                 .frame(width: size, alignment: .leading)
         }

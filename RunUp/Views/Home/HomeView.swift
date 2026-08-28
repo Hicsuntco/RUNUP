@@ -119,7 +119,7 @@ struct HomeView: View {
 
                 if isFreeRun {
                     Text("Pas de plan fixe — le coach te propose de quoi garder la forme, jour après jour.")
-                        .font(RUFont.sans(11))
+                        .font(RUFont.sans(.small))
                         .foregroundColor(RUColor.text3)
                         .frame(maxWidth: .infinity)
                         .multilineTextAlignment(.center)
@@ -136,7 +136,7 @@ struct HomeView: View {
                 Button(action: { appState.newGoalWizardPresented = true }) {
                     HStack(spacing: 5) {
                         Image(systemName: "arrow.counterclockwise").font(.system(size: 11))
-                        Text("Refaire un programme").font(RUFont.sans(10.5, weight: .semibold))
+                        Text("Refaire un programme").font(RUFont.sans(.small, weight: .semibold))
                     }
                     .foregroundColor(RUColor.text3)
                     .frame(maxWidth: .infinity, minHeight: 44)
@@ -189,9 +189,9 @@ struct HomeView: View {
                             PhaseSegment(name: "Spécifique", done: max(0, min(profile.weekNumber - shape.baseWeeks, shape.specificWeeks)), total: shape.specificWeeks, color: RUColor.rose2),
                             PhaseSegment(name: "Affûtage", done: max(0, min(profile.weekNumber - shape.baseWeeks - shape.specificWeeks, shape.taperWeeks)), total: shape.taperWeeks, color: RUColor.violet)
                         ], showLabels: false)
-                        Text("\(total) semaines · voir le plan complet").font(RUFont.sans(10)).foregroundColor(RUColor.text2)
+                        Text("\(total) semaines · voir le plan complet").font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                     } else {
-                        Text("Programme ouvert · voir le plan complet").font(RUFont.sans(10)).foregroundColor(RUColor.text2)
+                        Text("Programme ouvert · voir le plan complet").font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                     }
                 }
             }
@@ -226,7 +226,7 @@ struct HomeView: View {
                             Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundColor(color)
                         } else {
                             Text("\(Calendar.current.component(.day, from: day.date))")
-                                .font(RUFont.sans(11, weight: day.state == .today ? .bold : .regular))
+                                .font(RUFont.sans(.small, weight: day.state == .today ? .bold : .regular))
                                 .foregroundColor(color)
                         }
                     }
@@ -290,15 +290,15 @@ struct HomeView: View {
                 // chose deux fois de suite (« Jour de repos — laisse ton corps récupérer », puis
                 // « Pas de séance prévue — profite-en pour récupérer »). Une seule suffit.
                 Text(session.displaySubtitle)
-                    .font(RUFont.sans(11)).foregroundColor(RUColor.text3)
+                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                     .padding(.top, 4)
             } else if profile.seanceDoneToday {
-                Text(session.displaySubtitle).font(RUFont.sans(11)).foregroundColor(RUColor.text2).padding(.top, 4)
+                Text(session.displaySubtitle).font(RUFont.sans(.small)).foregroundColor(RUColor.text2).padding(.top, 4)
                 Text("Séance faite aujourd'hui ✓")
-                    .font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.lime)
+                    .font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.lime)
                     .padding(.top, 14)
             } else {
-                Text(session.displaySubtitle).font(RUFont.sans(11)).foregroundColor(RUColor.text2).padding(.top, 4)
+                Text(session.displaySubtitle).font(RUFont.sans(.small)).foregroundColor(RUColor.text2).padding(.top, 4)
                 HStack(spacing: 16) {
                     MetricColumn(value: "\(session.durationMinutes)′", label: "Durée")
                     MetricColumn(value: session.pace, label: "Allure")
@@ -385,11 +385,11 @@ struct HomeView: View {
                 }
                 HStack(spacing: 6) {
                     Text(weeklyComparisonText(delta: delta, lastWeek: lastWeek))
-                        .font(RUFont.sans(11))
+                        .font(RUFont.sans(.small))
                         .foregroundColor(weeklyComparisonColor(delta: delta, lastWeek: lastWeek))
                         .multilineTextAlignment(.leading)
                     Spacer(minLength: 0)
-                    Text("Mes stats").font(RUFont.sans(11, weight: .semibold)).foregroundColor(RUColor.text3)
+                    Text("Mes stats").font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text3)
                     Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundColor(RUColor.text3)
                 }
                 Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
@@ -409,7 +409,7 @@ struct HomeView: View {
             HStack(alignment: .lastTextBaseline, spacing: 1) {
                 Text(value).displayStyle(21).foregroundColor(RUColor.textPrimary)
                 if let suffix {
-                    Text(suffix).font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.text3)
+                    Text(suffix).font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.text3)
                 }
             }
             .lineLimit(1)
@@ -417,7 +417,7 @@ struct HomeView: View {
             // rétrécit plutôt que de tronquer si un chiffre déborde le sien.
             .minimumScaleFactor(0.6)
             Text(LocalizedStringKey(label))
-                .font(RUFont.sans(8.5, weight: .bold)).tracking(0.8).textCase(.uppercase)
+                .font(RUFont.sans(.micro, weight: .bold)).tracking(0.8).textCase(.uppercase)
                 .foregroundColor(RUColor.text3)
                 .lineLimit(1).minimumScaleFactor(0.7)
         }
@@ -436,7 +436,7 @@ struct HomeView: View {
         HStack(spacing: 5) {
             Image(systemName: isRestDay ? "moon.zzz.fill" : "bolt.fill").font(.system(size: 9, weight: .bold))
             Text(LocalizedStringKey(isRestDay ? "Aujourd'hui" : "Séance du jour"))
-                .font(RUFont.sans(9, weight: .bold)).tracking(1).textCase(.uppercase)
+                .font(RUFont.sans(.micro, weight: .bold)).tracking(1).textCase(.uppercase)
         }
         .foregroundColor(isRestDay ? RUColor.text2 : .white)
         .padding(.horizontal, 10)
@@ -513,12 +513,12 @@ struct HomeView: View {
         HStack(spacing: 8) {
             Circle().fill(color).frame(width: 7, height: 7)
             Text(LocalizedStringKey(name))
-                .font(RUFont.sans(12, weight: .semibold))
+                .font(RUFont.sans(.body, weight: .semibold))
                 .foregroundColor(RUColor.textPrimary)
                 .lineLimit(1).minimumScaleFactor(0.75)
             Spacer(minLength: 6)
             Text(value)
-                .font(RUFont.sans(11, weight: .medium))
+                .font(RUFont.sans(.small, weight: .medium))
                 .foregroundColor(RUColor.text3)
                 .lineLimit(1).minimumScaleFactor(0.8)
         }
@@ -534,7 +534,7 @@ struct HomeView: View {
     private var streakChip: some View {
         HStack(spacing: 4) {
             Image(systemName: "flame.fill").font(.system(size: 12))
-            Text("\(profile.streak)").font(RUFont.sans(13, weight: .bold))
+            Text("\(profile.streak)").font(RUFont.sans(.label, weight: .bold))
         }
         .foregroundColor(profile.streak > 0 ? RUColor.amber : RUColor.text3)
         .padding(.horizontal, 10)

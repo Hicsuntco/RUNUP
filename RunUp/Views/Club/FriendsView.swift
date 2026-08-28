@@ -67,7 +67,7 @@ struct FriendsView: View {
                 if let errorMessage {
                     HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 11))
-                        Text(errorMessage).font(RUFont.sans(11))
+                        Text(errorMessage).font(RUFont.sans(.small))
                     }
                     .foregroundColor(RUColor.rose)
                 }
@@ -160,9 +160,9 @@ struct FriendsView: View {
     private var signInPrompt: some View {
         VStack(spacing: 12) {
             AppMarkView(size: 44)
-            Text("Suis de vraies personnes").font(RUFont.sans(15, weight: .bold)).foregroundColor(RUColor.textPrimary)
+            Text("Suis de vraies personnes").font(RUFont.sans(.emphasis, weight: .bold)).foregroundColor(RUColor.textPrimary)
             Text("Connecte-toi pour suivre qui tu veux et voir ses séances dans un fil, sans passer par un club.")
-                .font(RUFont.sans(12)).foregroundColor(RUColor.text2).multilineTextAlignment(.center)
+                .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).multilineTextAlignment(.center)
             Button("SE CONNECTER") { showSignIn = true }
                 .buttonStyle(PrimaryButtonStyle())
                 .padding(.top, 4)
@@ -175,7 +175,7 @@ struct FriendsView: View {
     private var loadingCard: some View {
         VStack(spacing: 12) {
             ProgressView().tint(RUColor.rose)
-            Text("Chargement…").font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.text2)
+            Text("Chargement…").font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.text2)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)
@@ -190,7 +190,7 @@ struct FriendsView: View {
             TextField("", text: $query, prompt: Text("Pseudo, email ou nom…").foregroundColor(RUColor.text3))
                 .textInputAutocapitalization(.never)
                 .foregroundColor(RUColor.textPrimary)
-                .font(RUFont.sans(13))
+                .font(RUFont.sans(.label))
             if isSearchingMode {
                 Button(action: { query = "" }) {
                     Image(systemName: "xmark.circle.fill").font(.system(size: 14)).foregroundColor(RUColor.text3)
@@ -211,11 +211,11 @@ struct FriendsView: View {
                 ProgressView().frame(maxWidth: .infinity).padding(.vertical, 20)
             } else if searchFailed {
                 Text("Recherche impossible — vérifie ta connexion.")
-                    .font(RUFont.sans(12)).foregroundColor(RUColor.rose)
+                    .font(RUFont.sans(.body)).foregroundColor(RUColor.rose)
                     .frame(maxWidth: .infinity).padding(.vertical, 20)
             } else if searchResults.isEmpty {
                 Text("Personne ne porte ce nom.")
-                    .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
                     .frame(maxWidth: .infinity).padding(.vertical, 20)
             }
             ForEach(searchResults) { user in
@@ -234,7 +234,7 @@ struct FriendsView: View {
         }
         return Button(action: { Task { await toggleFollow(user) } }) {
             Text(label)
-                .font(RUFont.sans(11.5, weight: .bold))
+                .font(RUFont.sans(.body, weight: .bold))
                 .foregroundColor(isActive ? RUColor.textPrimary : .white)
                 .padding(.horizontal, 13).padding(.vertical, 7)
                 .background(isActive ? RUColor.card2 : RUColor.rose, in: Capsule())
@@ -252,7 +252,7 @@ struct FriendsView: View {
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 4) {
                     Text(user.lastName.map { "\(user.name) \($0)" } ?? user.name)
-                        .font(RUFont.sans(13, weight: .medium)).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
+                        .font(RUFont.sans(.label, weight: .medium)).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
                     if user.isPrivate {
                         Image(systemName: "lock.fill").font(.system(size: 9)).foregroundColor(RUColor.text3)
                     }
@@ -282,9 +282,9 @@ struct FriendsView: View {
     private var privacyRow: some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Compte privé").font(RUFont.sans(13, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                Text("Compte privé").font(RUFont.sans(.label, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Text(isPrivate ? "Une demande devra être acceptée avant qu'on puisse te suivre." : "Tout le monde peut te suivre sans validation.")
-                    .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
             }
             Spacer()
             Toggle("", isOn: Binding(get: { isPrivate }, set: { _ in togglePrivate() }))
@@ -302,7 +302,7 @@ struct FriendsView: View {
             ForEach(incomingRequests) { user in
                 HStack(spacing: 12) {
                     AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 32, seed: user.id)
-                    Text(user.name).font(RUFont.sans(13, weight: .medium)).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
+                    Text(user.name).font(RUFont.sans(.label, weight: .medium)).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
                     Spacer(minLength: 8)
                     Button(action: { Task { await respond(user, accept: false) } }) {
                         Image(systemName: "xmark").font(.system(size: 11, weight: .bold)).foregroundColor(RUColor.text2)
@@ -353,7 +353,7 @@ struct FriendsView: View {
             .buttonStyle(PressableStyle())
             .accessibilityLabel("\(followers.count) abonnés, voir la liste")
 
-            Text("·").font(RUFont.sans(12)).foregroundColor(RUColor.text4)
+            Text("·").font(RUFont.sans(.body)).foregroundColor(RUColor.text4)
 
             Button(action: { peopleSheet = .following }) {
                 countLabel(value: following.count, label: following.count > 1 ? String(localized: "abonnements") : String(localized: "abonnement"))
@@ -368,7 +368,7 @@ struct FriendsView: View {
     private func countLabel(value: Int, label: String) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 4) {
             Text("\(value)").displayStyle(17).foregroundColor(RUColor.textPrimary)
-            Text(label).font(RUFont.sans(10.5, weight: .semibold)).foregroundColor(RUColor.text3)
+            Text(label).font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text3)
         }
         .frame(minHeight: 44)
         .contentShape(Rectangle())
@@ -391,9 +391,9 @@ struct FriendsView: View {
                     // « Plus de réglages », derrière la molette du Profil.
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Personne à suivre pour l'instant")
-                            .font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                            .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                         Text("Cherche quelqu'un par son nom ou son pseudo juste au-dessus — ou invite ceux avec qui tu cours déjà.")
-                            .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                            .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
                             .fixedSize(horizontal: false, vertical: true)
                         if let code = auth.currentUser?.referralCode {
                             ReferralInviteCard(code: code)
@@ -403,7 +403,7 @@ struct FriendsView: View {
                     .padding(.top, 6)
                 } else {
                     Text("Personne n'a encore rien posté — reviens plus tard.")
-                        .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                        .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
                         .frame(maxWidth: .infinity).padding(.vertical, 20)
                 }
             }
@@ -625,20 +625,20 @@ private struct PeopleListSheet: View {
                 VStack(spacing: 6) {
                     if people.isEmpty {
                         Text("Personne pour l'instant.")
-                            .font(RUFont.sans(12)).foregroundColor(RUColor.text3)
+                            .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
                             .frame(maxWidth: .infinity).padding(.vertical, 30)
                     }
                     ForEach(people) { user in
                         HStack(spacing: 12) {
                             AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 34, seed: user.id)
                             Text(user.lastName.map { "\(user.name) \($0)" } ?? user.name)
-                                .font(RUFont.sans(13, weight: .medium)).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
+                                .font(RUFont.sans(.label, weight: .medium)).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
                             Spacer(minLength: 8)
                             Button(actionLabel) {
                                 people.removeAll { $0.id == user.id }
                                 onAction(user)
                             }
-                            .font(RUFont.sans(11, weight: .semibold))
+                            .font(RUFont.sans(.small, weight: .semibold))
                             .foregroundColor(RUColor.text2)
                             .padding(.horizontal, 11).padding(.vertical, 6)
                             .frame(minHeight: 44)

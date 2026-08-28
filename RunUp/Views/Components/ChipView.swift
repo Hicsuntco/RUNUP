@@ -19,7 +19,7 @@ struct SelectableChip: View {
                         .transition(.scale.combined(with: .opacity))
                 }
                 Text(LocalizedStringKey(label))
-                    .font(RUFont.sans(13, weight: .semibold))
+                    .font(RUFont.sans(.label, weight: .semibold))
             }
             .foregroundColor(selected ? .white : RUColor.text2)
             .padding(.horizontal, 15)
@@ -67,7 +67,7 @@ struct StatChip: View {
 
     var body: some View {
         Text(LocalizedStringKey(text))
-            .font(RUFont.sans(10, weight: .bold))
+            .font(RUFont.sans(.small, weight: .bold))
             .foregroundColor(color)
             // 8px/10px de padding horizontal dans la maquette, soit ~10–12,5pt à son échelle.
             .padding(.horizontal, 10)
@@ -100,7 +100,7 @@ struct MetricColumn: View {
         VStack(alignment: alignment, spacing: 3) {
             Text(value).displayStyle(valueSize).foregroundColor(valueColor)
             Text(LocalizedStringKey(label))
-                .font(RUFont.sans(9, weight: .bold))
+                .font(RUFont.sans(.micro, weight: .bold))
                 // 0,02–0,03em partout dans la maquette pour cette famille de micro-libellés
                 // (`.mcard .l`, `.simplestat .l`, `.week-tile .l`, `.stat-summary-row .l`,
                 // `.pr-chip .l`, `.feed-stats .fl`) : à 9pt cela vaut ~0,25pt. L'ancien 1pt

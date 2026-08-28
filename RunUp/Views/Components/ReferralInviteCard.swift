@@ -27,11 +27,11 @@ struct ReferralInviteCard: View {
         VStack(alignment: .leading, spacing: 10) {
             if let title {
                 Text(title)
-                    .font(RUFont.sans(13, weight: .semibold))
+                    .font(RUFont.sans(.label, weight: .semibold))
                     .foregroundColor(RUColor.textPrimary)
             }
             Text("Invite un ami avec ton code — vous gagnez tous les deux +100 XP dès sa première séance.")
-                .font(RUFont.sans(12.5)).foregroundColor(RUColor.text2).lineSpacing(2)
+                .font(RUFont.sans(.label)).foregroundColor(RUColor.text2).lineSpacing(2)
                 .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 10) {
                 Text(code)
@@ -51,7 +51,7 @@ struct ReferralInviteCard: View {
                         Image(systemName: "square.and.arrow.up")
                         Text("Partager")
                     }
-                    .font(RUFont.sans(12.5, weight: .semibold))
+                    .font(RUFont.sans(.label, weight: .semibold))
                 }
                 .buttonStyle(SecondaryButtonStyle())
             }

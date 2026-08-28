@@ -68,7 +68,7 @@ struct DebriefSheet: View {
                 HStack(alignment: .top, spacing: 10) {
                     AppMarkView(size: 18, radius: 9)
                     Text(insightMessage)
-                        .font(RUFont.sans(13)).foregroundColor(RUColor.textPrimary).lineSpacing(3)
+                        .font(RUFont.sans(.label)).foregroundColor(RUColor.textPrimary).lineSpacing(3)
                 }
                 .padding(14)
                 .background(RUColor.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -81,7 +81,7 @@ struct DebriefSheet: View {
                         Button(action: { rpe = opt }) {
                             VStack(spacing: 5) {
                                 Text(opt.emoji).font(.system(size: 22))
-                                Text(opt.label).font(RUFont.sans(9, weight: .semibold)).foregroundColor(rpe == opt ? RUColor.rose2 : RUColor.text2)
+                                Text(opt.label).font(RUFont.sans(.micro, weight: .semibold)).foregroundColor(rpe == opt ? RUColor.rose2 : RUColor.text2)
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
@@ -103,7 +103,7 @@ struct DebriefSheet: View {
                             Text(impactLines[i].0).font(.system(size: 18))
                             (Text(impactLines[i].1).foregroundColor(RUColor.text2)
                                 + Text(impactLines[i].2).foregroundColor(i == 0 ? RUColor.textPrimary : RUColor.cyan).fontWeight(.bold))
-                                .font(RUFont.sans(12.5))
+                                .font(RUFont.sans(.label))
                                 .lineSpacing(2)
                         }
                         .padding(.top, 12)

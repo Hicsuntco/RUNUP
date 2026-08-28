@@ -150,7 +150,7 @@ struct RecapView: View {
                                         Image(systemName: "exclamationmark.triangle").font(.system(size: 20)).foregroundColor(RUColor.text3)
                                             .accessibilityHidden(true)
                                         Button("Réessayer") { renderShareCard(for: run) }
-                                            .font(RUFont.sans(12, weight: .semibold))
+                                            .font(RUFont.sans(.body, weight: .semibold))
                                             .foregroundColor(RUColor.rose2)
                                             .padding(.horizontal, 4)
                                             .frame(minHeight: 44)
@@ -270,7 +270,7 @@ struct RecapView: View {
         HStack(spacing: 10) {
             Text("🏆").font(.system(size: 20))
             Text(kind == .overall ? "Nouveau record personnel !" : "Meilleur temps sur ce parcours !")
-                .font(RUFont.sans(13, weight: .bold))
+                .font(RUFont.sans(.label, weight: .bold))
                 .foregroundColor(RUColor.textPrimary)
             Spacer(minLength: 0)
         }
@@ -292,7 +292,7 @@ struct RecapView: View {
             HStack {
                 Text("\(Int(minAlt.rounded())) m").font(RUFont.mono(11)).foregroundColor(RUColor.text2)
                 Spacer()
-                Text("+\(run.elevationGainM) m D+").font(RUFont.sans(11, weight: .bold)).foregroundColor(RUColor.lime)
+                Text("+\(run.elevationGainM) m D+").font(RUFont.sans(.small, weight: .bold)).foregroundColor(RUColor.lime)
                 Spacer()
                 Text("\(Int(maxAlt.rounded())) m").font(RUFont.mono(11)).foregroundColor(RUColor.text2)
             }
@@ -366,7 +366,7 @@ struct RecapView: View {
     private func statTile(_ value: String, _ label: String, _ color: Color = RUColor.textPrimary, index: Int = 0) -> some View {
         VStack(spacing: 3) {
             Text(value).displayStyle(24).foregroundColor(color)
-            Text(label).font(RUFont.sans(8, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
+            Text(label).font(RUFont.sans(.micro, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)

@@ -40,7 +40,7 @@ struct DeepDiveStepView: View {
             }
             NumField(label: "Taille", value: $vm.height, unit: "cm", placeholder: "168")
             Text("Ton coach adapte ses conseils course et nutrition à ton objectif — sans jamais sacrifier ta forme.")
-                .font(RUFont.sans(11.5)).foregroundColor(RUColor.text2).lineSpacing(3)
+                .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
         }
         .padding(.top, 20)
     }
@@ -112,7 +112,7 @@ private struct NumField: View {
                             }
                         }
                     }
-                Text(unit).font(RUFont.sans(12, weight: .semibold)).foregroundColor(RUColor.text2)
+                Text(unit).font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.text2)
             }
             .padding(13)
             .background(RUColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))

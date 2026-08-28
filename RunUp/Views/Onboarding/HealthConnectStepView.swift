@@ -90,19 +90,19 @@ private struct ConnectRow: View {
                     .frame(width: 40, height: 40)
                     .background(RUColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(source.title).font(RUFont.sans(15, weight: .bold)).foregroundColor(RUColor.textPrimary)
-                    Text(source.subtitle).font(RUFont.sans(11.5)).foregroundColor(RUColor.text2)
+                    Text(source.title).font(RUFont.sans(.emphasis, weight: .bold)).foregroundColor(RUColor.textPrimary)
+                    Text(source.subtitle).font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
                 }
                 Spacer()
                 if source != .apple {
-                    Text("Bientôt").font(RUFont.sans(11, weight: .semibold)).foregroundColor(RUColor.text2)
+                    Text("Bientôt").font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text2)
                 } else if busy {
                     ProgressView().tint(RUColor.textPrimary)
                 } else if connected {
-                    Text("CONNECTÉ ✓").font(RUFont.sans(11, weight: .bold)).foregroundColor(RUColor.lime)
+                    Text("CONNECTÉ ✓").font(RUFont.sans(.small, weight: .bold)).foregroundColor(RUColor.lime)
                 } else {
                     Text("Connecter")
-                        .font(RUFont.sans(11, weight: .semibold))
+                        .font(RUFont.sans(.small, weight: .semibold))
                         .foregroundColor(RUColor.text2)
                         .padding(.horizontal, 12).padding(.vertical, 6)
                         .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))

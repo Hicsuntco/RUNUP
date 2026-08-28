@@ -110,7 +110,7 @@ struct SessionDetailSheet: View {
 
                 if isRestDay {
                     Text(session.displaySubtitle)
-                        .font(RUFont.sans(13)).foregroundColor(RUColor.text2).lineSpacing(3)
+                        .font(RUFont.sans(.label)).foregroundColor(RUColor.text2).lineSpacing(3)
                         .padding(.top, 16)
                 } else {
                     HStack(spacing: 16) {
@@ -127,8 +127,8 @@ struct SessionDetailSheet: View {
                             HStack(spacing: 12) {
                                 RoundedRectangle(cornerRadius: 2).fill(steps[i].2).frame(width: 3, height: 32)
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(steps[i].0).font(RUFont.sans(13, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                                    Text(steps[i].1).font(RUFont.sans(11)).foregroundColor(RUColor.text2)
+                                    Text(steps[i].0).font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                                    Text(steps[i].1).font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                                 }
                                 Spacer()
                             }
@@ -151,7 +151,7 @@ struct SessionDetailSheet: View {
                                 Text("💡 Le coach a ajusté cette semaine à \"\(adj)\" d'après ta forme la semaine dernière.")
                             }
                         }
-                        .font(RUFont.sans(12))
+                        .font(RUFont.sans(.body))
                         .foregroundColor(RUColor.text2)
                         .lineSpacing(3)
                         .padding(13)
@@ -161,7 +161,7 @@ struct SessionDetailSheet: View {
 
                     if moved {
                         Text("Séance déplacée à demain ✓")
-                            .font(RUFont.sans(13, weight: .semibold))
+                            .font(RUFont.sans(.label, weight: .semibold))
                             .foregroundColor(RUColor.lime)
                             .frame(maxWidth: .infinity)
                             .padding(16)

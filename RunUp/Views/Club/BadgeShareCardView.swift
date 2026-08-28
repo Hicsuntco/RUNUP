@@ -30,7 +30,7 @@ struct BadgeShareCardView: View {
 
                 VStack(spacing: 6) {
                     Text("BADGE DÉBLOQUÉ")
-                        .font(RUFont.sans(12, weight: .bold))
+                        .font(RUFont.sans(.body, weight: .bold))
                         .tracking(2.5)
                         .foregroundColor(color)
                     Text(badge.name)
@@ -38,7 +38,7 @@ struct BadgeShareCardView: View {
                         .foregroundColor(RUColor.textPrimary)
                         .multilineTextAlignment(.center)
                     Text(badge.detail)
-                        .font(RUFont.sans(13))
+                        .font(RUFont.sans(.label))
                         .foregroundColor(RUColor.text2)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)

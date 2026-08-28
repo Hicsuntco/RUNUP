@@ -54,11 +54,11 @@ struct PublishRouteSheet: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Nom de l'itinéraire")
-                        .font(RUFont.sans(11, weight: .semibold))
+                        .font(RUFont.sans(.small, weight: .semibold))
                         .tracking(1)
                         .foregroundColor(RUColor.text3)
                     TextField(placeholderName, text: $name)
-                        .font(RUFont.sans(15))
+                        .font(RUFont.sans(.emphasis))
                         .foregroundColor(RUColor.textPrimary)
                         .padding(12)
                         .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -68,12 +68,12 @@ struct PublishRouteSheet: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Ce qu'il faut savoir (optionnel)")
-                        .font(RUFont.sans(11, weight: .semibold))
+                        .font(RUFont.sans(.small, weight: .semibold))
                         .tracking(1)
                         .foregroundColor(RUColor.text3)
                     TextField("Plat, le long du fleuve. Ça grimpe au km 3.", text: $notes, axis: .vertical)
                         .lineLimit(2...4)
-                        .font(RUFont.sans(15))
+                        .font(RUFont.sans(.emphasis))
                         .foregroundColor(RUColor.textPrimary)
                         .padding(12)
                         .background(RUColor.card2, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -83,7 +83,7 @@ struct PublishRouteSheet: View {
 
                 if let errorMessage {
                     Text(errorMessage)
-                        .font(RUFont.sans(13))
+                        .font(RUFont.sans(.label))
                         .foregroundColor(RUColor.rose)
                 }
 
@@ -112,7 +112,7 @@ struct PublishRouteSheet: View {
                 .font(RUFont.display(28))
                 .foregroundColor(RUColor.textPrimary)
             Text("Quelqu'un qui arrive dans le coin verra ton parcours et pourra le suivre.")
-                .font(RUFont.sans(14))
+                .font(RUFont.sans(.emphasis))
                 .foregroundColor(RUColor.text2)
         }
     }
@@ -134,7 +134,7 @@ struct PublishRouteSheet: View {
     private var photoSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Une photo du coin (optionnel)")
-                .font(RUFont.sans(11, weight: .semibold))
+                .font(RUFont.sans(.small, weight: .semibold))
                 .tracking(1)
                 .foregroundColor(RUColor.text3)
 
@@ -178,7 +178,7 @@ struct PublishRouteSheet: View {
             // Le chiffre est repris de la constante, pas recopié : si le rognage change un jour,
             // cette phrase ne peut pas devenir un mensonge.
             Text("Les \(Int(RouteGeometry.sharingTrimMeters)) premiers et derniers mètres sont retirés avant l'envoi : personne ne verra d'où tu es partie ni où tu es rentrée. C'est le tracé ci-dessus qui sera publié, pas celui que tu as couru.")
-                .font(RUFont.sans(12.5))
+                .font(RUFont.sans(.label))
                 .foregroundColor(RUColor.text2)
         }
         .padding(12)
@@ -190,7 +190,7 @@ struct PublishRouteSheet: View {
             Image(systemName: "exclamationmark.triangle")
                 .foregroundColor(RUColor.rose)
             Text("Cette sortie est trop courte pour être partagée : une fois les extrémités retirées, il ne resterait pas assez de tracé pour être utile.")
-                .font(RUFont.sans(12.5))
+                .font(RUFont.sans(.label))
                 .foregroundColor(RUColor.text2)
         }
         .padding(12)

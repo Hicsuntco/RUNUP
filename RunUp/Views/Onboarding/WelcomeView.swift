@@ -31,7 +31,7 @@ struct WelcomeView: View {
                             .padding(.top, 24)
 
                         Text("RUNUP construit ton programme, l'ajuste chaque semaine selon ta forme, et te pousse juste ce qu'il faut — jamais plus, jamais moins.")
-                            .font(RUFont.sans(14))
+                            .font(RUFont.sans(.emphasis))
                             .foregroundColor(RUColor.text2)
                             .lineSpacing(6)
                             .padding(.top, 14)
@@ -45,8 +45,8 @@ struct WelcomeView: View {
                                         .frame(width: 38, height: 38)
                                         .overlay(Image(systemName: prop.icon).foregroundColor(RUColor.rose2).font(.system(size: 15)))
                                     VStack(alignment: .leading, spacing: 3) {
-                                        Text(prop.title).font(RUFont.sans(14, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                                        Text(prop.desc).font(RUFont.sans(12)).foregroundColor(RUColor.text2).lineSpacing(3)
+                                        Text(prop.title).font(RUFont.sans(.emphasis, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                                        Text(prop.desc).font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
                                     }
                                 }
                             }

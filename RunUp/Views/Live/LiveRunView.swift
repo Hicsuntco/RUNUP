@@ -155,7 +155,7 @@ struct LiveRunView: View {
         HStack(spacing: 8) {
             Image(systemName: "exclamationmark.triangle.fill").foregroundColor(RUColor.amber).font(.system(size: 14))
             Text("Signal GPS instable — position estimée")
-                .font(RUFont.sans(11.5, weight: .semibold))
+                .font(RUFont.sans(.body, weight: .semibold))
                 .foregroundColor(Color(hex: 0xFFD79A))
         }
         .padding(.horizontal, 12).padding(.vertical, 9)
@@ -170,7 +170,7 @@ struct LiveRunView: View {
                 .overlay(Image(systemName: "speaker.wave.2.fill").foregroundColor(.white).font(.system(size: 13)))
             VStack(alignment: .leading, spacing: 3) {
                 RUCardHeader(icon: "bubble.left.fill", tint: RUColor.rose2, title: "Coach · en direct")
-                Text(text).font(RUFont.sans(12.5)).foregroundColor(.white).lineSpacing(3)
+                Text(text).font(RUFont.sans(.label)).foregroundColor(.white).lineSpacing(3)
             }
         }
         .padding(14)
@@ -291,7 +291,7 @@ struct LiveRunView: View {
     private func liveMetric(_ value: String, _ label: String, _ color: Color) -> some View {
         VStack(spacing: 2) {
             Text(value).displayStyle(26).foregroundColor(color)
-            Text(label).font(RUFont.sans(8, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
+            Text(label).font(RUFont.sans(.micro, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
         }
         .frame(maxWidth: .infinity)
         // The screen most glanced at mid-run — was two separate stops ("8:32" then, later,

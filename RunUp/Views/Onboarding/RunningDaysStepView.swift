@@ -34,7 +34,7 @@ struct RunningDaysStepView: View {
                 .padding(.top, 22)
 
                 Text(vm.runningDays.count < 2 ? "Choisis au moins 2 jours pour progresser" : "\(vm.runningDays.count) jours / semaine — bon rythme")
-                    .font(RUFont.sans(12))
+                    .font(RUFont.sans(.body))
                     .foregroundColor(vm.runningDays.count < 2 ? RUColor.amber : RUColor.text2)
                     .frame(maxWidth: .infinity)
                     .padding(.top, 14)
@@ -42,7 +42,7 @@ struct RunningDaysStepView: View {
                 if vm.runningDays.count >= 2 {
                     EyebrowLabel(text: "Jour de ta sortie longue", color: RUColor.text3).padding(.top, 20)
                     Text("Le plan y calera toujours ta séance la plus longue de la semaine.")
-                        .font(RUFont.sans(11)).foregroundColor(RUColor.text3).padding(.top, 2)
+                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text3).padding(.top, 2)
                     HStack(spacing: 5) {
                         ForEach(vm.runningDays.sorted(), id: \.self) { i in
                             let on = vm.effectiveLongRunDay == i

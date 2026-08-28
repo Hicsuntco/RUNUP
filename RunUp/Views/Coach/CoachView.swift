@@ -99,7 +99,7 @@ struct CoachView: View {
                 // Honest subtitle — the old green "en ligne" dot measured nothing (it was
                 // hardcoded, lit even in airplane mode).
                 Text("Connaît ton programme")
-                    .font(RUFont.sans(10))
+                    .font(RUFont.sans(.small))
                     .foregroundColor(RUColor.text2)
             }
             Spacer()
@@ -142,7 +142,7 @@ struct CoachView: View {
         else if Calendar.current.isDateInYesterday(date) { label = String(localized: "Hier") }
         else { label = Self.separatorFormatter.string(from: date) }
         return Text(label.uppercased())
-            .font(RUFont.sans(9, weight: .bold)).tracking(1.2)
+            .font(RUFont.sans(.micro, weight: .bold)).tracking(1.2)
             .foregroundColor(RUColor.text3)
             .frame(maxWidth: .infinity)
             .padding(.top, 6)
@@ -154,10 +154,10 @@ struct CoachView: View {
         case .error:
             HStack(spacing: 10) {
                 Image(systemName: "exclamationmark.triangle.fill").foregroundColor(RUColor.amber).font(.system(size: 15))
-                Text(message.text).font(RUFont.sans(12.5)).foregroundColor(RUColor.amberText).lineSpacing(2)
+                Text(message.text).font(RUFont.sans(.label)).foregroundColor(RUColor.amberText).lineSpacing(2)
                 Spacer(minLength: 0)
                 Button("Réessayer") { retryLast() }
-                    .font(RUFont.sans(11, weight: .bold))
+                    .font(RUFont.sans(.small, weight: .bold))
                     .foregroundColor(RUColor.amber)
                     .frame(minHeight: 44)
                     .contentShape(Rectangle())
@@ -172,7 +172,7 @@ struct CoachView: View {
             HStack {
                 Spacer(minLength: 40)
                 Text(message.text)
-                    .font(RUFont.sans(13))
+                    .font(RUFont.sans(.label))
                     .foregroundColor(RUColor.onRose)
                     .lineSpacing(2)
                     .padding(12)
@@ -184,7 +184,7 @@ struct CoachView: View {
     private func coachBubble(_ text: String) -> some View {
         HStack {
             Text(text)
-                .font(RUFont.sans(13))
+                .font(RUFont.sans(.label))
                 .foregroundColor(RUColor.textPrimary)
                 .lineSpacing(3)
                 .padding(12)
@@ -220,7 +220,7 @@ struct CoachView: View {
         HStack(spacing: 10) {
             TextField("", text: Binding(get: { vm?.draft ?? "" }, set: { vm?.draft = $0 }), prompt: Text("Écris à ton coach…").foregroundColor(RUColor.text3))
                 .foregroundColor(RUColor.textPrimary)
-                .font(RUFont.sans(13))
+                .font(RUFont.sans(.label))
                 // The keyboard return key used to just dismiss without sending — in a chat, return
                 // means send, same as every messaging app.
                 .submitLabel(.send)
@@ -283,7 +283,7 @@ struct FlowChips: View {
             ForEach(chips, id: \.self) { chip in
                 Button(action: { onTap(chip) }) {
                     Text(chip)
-                        .font(RUFont.sans(11, weight: .semibold))
+                        .font(RUFont.sans(.small, weight: .semibold))
                         .foregroundColor(RUColor.text2)
                         .padding(.horizontal, 11).padding(.vertical, 6)
                         .frame(minHeight: 44)

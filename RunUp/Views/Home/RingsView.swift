@@ -105,7 +105,7 @@ struct RingsView: View {
                     VStack(spacing: 2) {
                         Text("\(displayDone) / \(displayTotal)").displayStyle(28).foregroundColor(RUColor.textPrimary)
                         Text("BOUCLÉS")
-                            .font(RUFont.sans(10, weight: .bold))
+                            .font(RUFont.sans(.small, weight: .bold))
                             .tracking(1.5)
                             .foregroundColor(RUColor.text2)
                             .lineLimit(1)
@@ -131,7 +131,7 @@ struct RingsView: View {
                             AppMarkView(size: 34)
                             VStack(alignment: .leading, spacing: 3) {
                                 RUCardHeader(icon: "bubble.left.fill", tint: RUColor.rose2, title: "Coach")
-                                Text(coachNudge).font(RUFont.sans(12.5)).foregroundColor(RUColor.textPrimary)
+                                Text(coachNudge).font(RUFont.sans(.label)).foregroundColor(RUColor.textPrimary)
                             }
                         }
                         .padding(15)
@@ -142,7 +142,7 @@ struct RingsView: View {
                         // didn't have, matching the ring's own animate-on-appear fill above.
                         VStack(spacing: 6) {
                             Text("JOURNÉE BOUCLÉE").displayStyle(26).foregroundColor(RUColor.textPrimary)
-                            Text("Tes \(p.dailyGoalsTotal) objectifs du jour atteints 👏 +120 XP").font(RUFont.sans(12)).foregroundColor(RUColor.text2)
+                            Text("Tes \(p.dailyGoalsTotal) objectifs du jour atteints 👏 +120 XP").font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(18)
@@ -181,7 +181,7 @@ struct RingsView: View {
             .accessibilityLabel("Jour précédent")
 
             Text(dayLabel)
-                .font(RUFont.sans(13, weight: .semibold))
+                .font(RUFont.sans(.label, weight: .semibold))
                 .foregroundColor(RUColor.textPrimary)
                 .frame(maxWidth: .infinity)
                 .lineLimit(1)
@@ -232,10 +232,10 @@ struct RingsView: View {
             Circle().fill(color).frame(width: 10, height: 10).shadow(color: color.opacity(0.4), radius: 6)
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("Séance").font(RUFont.sans(16, weight: .bold)).foregroundColor(RUColor.textPrimary)
+                    Text("Séance").font(RUFont.sans(.title, weight: .bold)).foregroundColor(RUColor.textPrimary)
                     Spacer()
                     Text(restDay ? "Repos" : (done ? "Faite ✓" : (isToday ? "À faire" : "Non faite")))
-                        .font(RUFont.sans(11, weight: .bold))
+                        .font(RUFont.sans(.small, weight: .bold))
                         .foregroundColor(restDay ? RUColor.text2 : (done ? RUColor.lime : RUColor.text2))
                 }
                 LinearBar(fraction: displayProgress[0], color: restDay ? RUColor.text3 : color, height: 5)
@@ -250,9 +250,9 @@ struct RingsView: View {
             Circle().fill(color).frame(width: 10, height: 10).shadow(color: color.opacity(0.4), radius: 6)
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text(name).font(RUFont.sans(16, weight: .bold)).foregroundColor(RUColor.textPrimary)
+                    Text(name).font(RUFont.sans(.title, weight: .bold)).foregroundColor(RUColor.textPrimary)
                     Spacer()
-                    (Text(formattedValue(value)).font(RUFont.sans(11, weight: .bold)).foregroundColor(color)
+                    (Text(formattedValue(value)).font(RUFont.sans(.small, weight: .bold)).foregroundColor(color)
                         + Text(" / \(formattedValue(goal)) \(unit)").font(RUFont.mono(11)).foregroundColor(RUColor.text2))
                 }
                 LinearBar(fraction: goal == 0 ? 0 : value / goal, color: color, height: 5)

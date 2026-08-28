@@ -407,9 +407,13 @@ struct HomeView: View {
     private func quickStat(value: String, suffix: String?, label: String) -> some View {
         VStack(spacing: 2) {
             HStack(alignment: .lastTextBaseline, spacing: 1) {
-                Text(value).displayStyle(21).foregroundColor(RUColor.textPrimary)
+                Text(value).displayStyle(24).foregroundColor(RUColor.textPrimary)
                 if let suffix {
-                    Text(suffix).font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.text3)
+                    // Le dénominateur (« /32 » d'un objectif hebdo) était à 15 pt en semi-gras
+                    // contre un chiffre de 23 : un rapport de 1,5, où les références tiennent
+                    // 2,5 à 3. À cette distance, le suffixe se lit comme une seconde valeur au
+                    // lieu d'une précision sur la première.
+                    Text(suffix).font(RUFont.sans(.micro)).foregroundColor(RUColor.text3)
                 }
             }
             .lineLimit(1)

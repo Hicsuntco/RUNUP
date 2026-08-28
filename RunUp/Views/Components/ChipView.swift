@@ -100,13 +100,18 @@ struct MetricColumn: View {
         VStack(alignment: alignment, spacing: 3) {
             Text(value).displayStyle(valueSize).foregroundColor(valueColor)
             Text(LocalizedStringKey(label))
-                .font(RUFont.sans(.micro, weight: .bold))
+                // Moyenne, plus grasse. Le chiffre au-dessus est déjà le seul élément gras de
+                // la paire ; un libellé en gras à côté de lui réduit l'écart au lieu de le
+                // creuser. Les capitales et le gris suffisent à le tenir à sa place.
+                .font(RUFont.sans(.micro, weight: .medium))
                 // 0,02–0,03em partout dans la maquette pour cette famille de micro-libellés
                 // (`.mcard .l`, `.simplestat .l`, `.week-tile .l`, `.stat-summary-row .l`,
                 // `.pr-chip .l`, `.feed-stats .fl`) : à 9pt cela vaut ~0,25pt. L'ancien 1pt
                 // valait 0,11em, ~4× la maquette — la graisse et les capitales portent déjà la
                 // distinction, l'interlettrage n'a pas à la doubler.
-                .tracking(0.3)
+                // 0,4 plutôt que 0,3 : en passant de gras à moyen, les capitales se resserrent
+                // un peu et ont besoin d'un cheveu d'air en plus pour rester lisibles.
+                .tracking(0.4)
                 .textCase(.uppercase)
                 // `--ru-ink3` dans la maquette, pour ces libellés comme pour les eyebrows —
                 // `ink2` y est réservé à la prose secondaire. Voir `eyebrowStyle`.

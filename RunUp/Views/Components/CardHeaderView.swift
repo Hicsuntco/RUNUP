@@ -81,12 +81,16 @@ struct RUStatTile: View {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(value)
-                        .displayStyle(22)
+                        .displayStyle(25)
                         .foregroundColor(RUColor.textPrimary)
                         .lineLimit(1).minimumScaleFactor(0.6)
                     if let unit {
+                        // Régulière et un cran plus petite. Dans les références, l'unité qui
+                        // suit un chiffre (« 1250 Kcal », « 5 500 steps », « 86 bpm ») est
+                        // toujours en graisse normale et en gris : elle accompagne le chiffre,
+                        // elle ne rivalise pas avec lui. En semi-gras, elle tirait l'œil.
                         Text(LocalizedStringKey(unit))
-                            .font(RUFont.sans(.small, weight: .semibold))
+                            .font(RUFont.sans(.micro))
                             .foregroundColor(RUColor.text3)
                     }
                 }

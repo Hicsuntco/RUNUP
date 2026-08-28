@@ -5685,6 +5685,23 @@
         }
       }
     },
+    "Effacer la recherche": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear search"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrar la búsqueda"
+          }
+        }
+      }
+    },
     "Effacer toute la conversation ?": {
       "localizations": {
         "en": {
@@ -9410,6 +9427,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Te enviaremos un pequeño recordatorio para tus sesiones 🔔"
+          }
+        }
+      }
+    },
+    "Options de la paire": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Options for this pair"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opciones del par"
           }
         }
       }
@@ -15431,6 +15465,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Un dorsal a la vista — construimos el plan para el día de la carrera"
+          }
+        }
+      }
+    },
+    "Un jour de moins": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One day less"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un día menos"
+          }
+        }
+      }
+    },
+    "Un jour de plus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One day more"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un día más"
           }
         }
       }

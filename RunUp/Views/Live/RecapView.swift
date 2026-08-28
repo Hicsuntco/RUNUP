@@ -148,6 +148,7 @@ struct RecapView: View {
                                     // forever and "PARTAGER MA COURSE" stayed disabled for good.
                                     VStack(spacing: 8) {
                                         Image(systemName: "exclamationmark.triangle").font(.system(size: 20)).foregroundColor(RUColor.text3)
+                                            .accessibilityHidden(true)
                                         Button("Réessayer") { renderShareCard(for: run) }
                                             .font(RUFont.sans(12, weight: .semibold))
                                             .foregroundColor(RUColor.rose2)

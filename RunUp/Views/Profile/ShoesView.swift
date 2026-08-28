@@ -125,6 +125,9 @@ struct ShoesView: View {
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }
+                // Un `Menu` sans libellé s'annonce « points de suspension » : le nom du glyphe,
+                // pas ce qu'il ouvre.
+                .accessibilityLabel("Options de la paire")
             }
 
             LinearBar(fraction: fraction, color: barColor, height: 6)

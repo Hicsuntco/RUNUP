@@ -53,6 +53,7 @@ struct WellbeingFieldsView: View {
                                         .contentShape(Rectangle())
                                 }
                                 .disabled(vm.averageCycleLengthDays <= 21)
+                                .accessibilityLabel("Un jour de moins")
 
                                 Text("\(vm.averageCycleLengthDays) jours")
                                     .font(RUFont.sans(13, weight: .semibold))
@@ -64,6 +65,7 @@ struct WellbeingFieldsView: View {
                                         .contentShape(Rectangle())
                                 }
                                 .disabled(vm.averageCycleLengthDays >= 35)
+                                .accessibilityLabel("Un jour de plus")
                             }
                             .foregroundColor(RUColor.rose)
                         }

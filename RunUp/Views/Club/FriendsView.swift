@@ -197,6 +197,7 @@ struct FriendsView: View {
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }
+                .accessibilityLabel("Effacer la recherche")
             }
         }
         .padding(.horizontal, 14).padding(.vertical, 11)

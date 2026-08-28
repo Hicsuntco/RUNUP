@@ -56,7 +56,7 @@ struct StatsView: View {
                 // compacte en bas de page. Avant, "Mes routes" — une simple destination —
                 // s'intercalait pleine largeur entre les totaux et la semaine, coupant l'écran
                 // d'analyse en deux avec un lien.
-                summaryCard
+                summaryGrid
                 weekCard
                 paceCard
 
@@ -82,54 +82,45 @@ struct StatsView: View {
     private var totalDistanceKm: Double { runs.reduce(0) { $0 + $1.distanceKm } }
     private var totalDurationSeconds: Int { runs.reduce(0) { $0 + $1.durationSeconds } }
 
-    /// La `.stat-summary-row` de la maquette : quatre cellules centrées dans UNE carte, séparées
-    /// par des filets verticaux, chacune coiffée d'une icône. Avant, c'était quatre
-    /// `MetricColumn` alignées à gauche et écartées par des `Spacer()` — donc quatre colonnes de
-    /// largeurs inégales, sans rien pour dire où finit l'une et où commence la suivante, et dont
-    /// les libellés (« km total », « temps total ») portaient seuls tout le travail de lecture.
-    /// Mêmes quatre chiffres réels, rien de nouveau : total, nombre de sorties, temps cumulé,
-    /// série en cours.
-    private var summaryCard: some View {
-        HStack(spacing: 0) {
-            summaryCell(icon: "ruler", value: String(format: "%.0f", totalDistanceKm), label: "km")
-            summaryDivider
-            summaryCell(icon: "figure.run", value: "\(runs.count)", label: String(localized: "sortie\(runs.count > 1 ? "s" : "")"))
-            summaryDivider
-            summaryCell(icon: "clock", value: PaceModel.formatTotalDuration(totalDurationSeconds), label: "temps")
-            summaryDivider
-            summaryCell(
-                icon: "flame.fill",
-                value: "\(profile.streak)",
-                label: "j. de suite",
-                tint: profile.streak > 0 ? RUColor.lime : nil
-            )
+    /// La grille des références : quatre tuiles à deux par rangée, chacune avec son en-tête, son
+    /// chiffre et son unité — au lieu d'UNE carte pleine largeur découpée en quatre colonnes par
+    /// des filets verticaux.
+    ///
+    /// Ce n'est pas un changement décoratif. À quatre colonnes, chaque chiffre recevait un quart
+    /// de la largeur de l'écran : `summaryCell` portait `minimumScaleFactor(0.55)` sur la valeur
+    /// et `0.7` sur le libellé, autrement dit le gabarit prévoyait que le contenu ne rentre pas.
+    /// Un temps cumulé à trois chiffres (« 128h 40 ») s'affichait à 55 % de sa taille, à côté d'un
+    /// « 12 » à taille pleine. À deux par rangée, chaque chiffre a la place d'être lu.
+    ///
+    /// Mêmes quatre données réelles qu'avant — total, nombre de sorties, temps cumulé, série.
+    /// Chacune reçoit sa teinte, prise dans les jetons existants : aucune couleur nouvelle, mais
+    /// quatre chiffres qui ne se ressemblent plus.
+    private var summaryGrid: some View {
+        VStack(spacing: 10) {
+            HStack(spacing: 10) {
+                RUStatTile(icon: "ruler", tint: RUColor.rose,
+                           title: "Distance totale",
+                           value: String(format: "%.0f", totalDistanceKm), unit: "km",
+                           footnote: nil, progress: nil)
+                RUStatTile(icon: "figure.run", tint: RUColor.violet,
+                           title: "Sorties",
+                           value: "\(runs.count)",
+                           unit: runs.count > 1 ? "sorties" : "sortie",
+                           footnote: nil, progress: nil)
+            }
+            HStack(spacing: 10) {
+                RUStatTile(icon: "clock", tint: RUColor.cyan,
+                           title: "Temps cumulé",
+                           value: PaceModel.formatTotalDuration(totalDurationSeconds), unit: nil,
+                           footnote: nil, progress: nil)
+                RUStatTile(icon: "flame.fill",
+                           tint: profile.streak > 0 ? RUColor.lime : RUColor.text3,
+                           title: "Série",
+                           value: "\(profile.streak)",
+                           unit: profile.streak > 1 ? "jours" : "jour",
+                           footnote: nil, progress: nil)
+            }
         }
-        .padding(.vertical, 14)
-        .ruCard()
-    }
-
-    private var summaryDivider: some View {
-        Rectangle().fill(RUColor.line).frame(width: RUSpacing.hairline, height: 46)
-    }
-
-    private func summaryCell(icon: String, value: String, label: String, tint: Color? = nil) -> some View {
-        VStack(spacing: 5) {
-            Image(systemName: icon)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(tint ?? RUColor.text3)
-            Text(value).displayStyle(20).foregroundColor(tint ?? RUColor.textPrimary)
-                .lineLimit(1).minimumScaleFactor(0.55)
-            Text(LocalizedStringKey(label))
-                .font(RUFont.sans(8, weight: .bold)).tracking(0.8).textCase(.uppercase)
-                .foregroundColor(RUColor.text3)
-                .lineLimit(1).minimumScaleFactor(0.7)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.horizontal, 3)
-        // Même raison que `MetricColumn` (que cette cellule remplace ici) : sans ça l'icône, la
-        // valeur et le libellé sont trois arrêts VoiceOver décorrélés.
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(Text(LocalizedStringKey(label)) + Text(", ") + Text(value))
     }
 
     // MARK: Quick links — the two navigation affordances of the screen (heatmap: every GPS route
@@ -150,8 +141,8 @@ struct StatsView: View {
                     icon: "map",
                     title: "Mes routes",
                     subtitle: routedRunsCount > 0
-                        ? String(localized: "\(routedRunsCount) parcours trackés")
-                        : String(localized: "Dès ta 1re course trackée"),
+                        ? "\(routedRunsCount) parcours trackés"
+                        : "Dès ta 1re course trackée",
                     accessorySymbol: "chevron.right"
                 )
             }
@@ -165,7 +156,7 @@ struct StatsView: View {
                 quickLinkBody(
                     icon: "chart.line.uptrend.xyaxis",
                     title: "Analyse approfondie",
-                    subtitle: String(localized: "Records, charge, prédiction"),
+                    subtitle: "Records, charge, prédiction",
                     accessorySymbol: "chevron.down",
                     accessoryRotation: showDeepAnalysis ? 180 : 0
                 )
@@ -173,8 +164,8 @@ struct StatsView: View {
             .buttonStyle(PressableStyle())
             .ruCard(radius: RUSpacing.radiusCompact)
             .accessibilityLabel(showDeepAnalysis
-                ? String(localized: "Masquer l'analyse approfondie")
-                : String(localized: "Voir l'analyse approfondie"))
+                ? "Masquer l'analyse approfondie"
+                : "Voir l'analyse approfondie")
         }
     }
 
@@ -234,9 +225,9 @@ struct StatsView: View {
     private var weekCard: some View {
         Button(action: { appState.go(.weeklyRecap) }) {
             VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    EyebrowLabel(text: "Cette semaine")
-                    Spacer()
+                RUCardHeader(icon: "calendar", tint: RUColor.rose,
+                             title: "Cette semaine",
+                             subtitle: "Face à la semaine passée") {
                     if lastWeekKm > 0 {
                         let deltaKm = thisWeekKm - lastWeekKm
                         StatChip(
@@ -293,7 +284,7 @@ struct StatsView: View {
         if last < first - 2 { trend = String(localized: "en amélioration") } // fewer seconds/km = faster
         else if last > first + 2 { trend = String(localized: "en baisse") }
         else { trend = String(localized: "stable") }
-        return String(localized: "Allure \(trend), entre \(PaceModel.formatDuration(minPace)) et \(PaceModel.formatDuration(maxPace)) par kilomètre")
+        return "Allure \(trend), entre \(PaceModel.formatDuration(minPace)) et \(PaceModel.formatDuration(maxPace)) par kilomètre"
     }
 
     private var recentAvgPace: Double? {
@@ -339,9 +330,9 @@ struct StatsView: View {
 
     private var paceCard: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                EyebrowLabel(text: "Allure moyenne récente")
-                Spacer()
+            RUCardHeader(icon: "speedometer", tint: RUColor.violet,
+                         title: "Allure moyenne récente",
+                         subtitle: "Une sortie par point") {
                 rangePicker
             }
             if let recentAvgPace {
@@ -362,8 +353,8 @@ struct StatsView: View {
                     }
                 }
                 Text(runs.count == 1
-                     ? String(localized: "Sur ta dernière course")
-                     : String(localized: "Sur tes \(min(5, runs.count)) dernières courses"))
+                     ? "Sur ta dernière course"
+                     : "Sur tes \(min(5, runs.count)) dernières courses")
                     .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
 
                 if recentPacesSecPerKm.count >= 2 {
@@ -463,7 +454,9 @@ struct StatsView: View {
 
     private var recordsCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            EyebrowLabel(text: "Records personnels")
+            RUCardHeader(icon: "trophy.fill", tint: RUColor.amber,
+                         title: "Records personnels",
+                         subtitle: "Tes meilleures sorties")
             if runs.isEmpty {
                 Text("Tes records apparaîtront ici après ta première course.")
                     .font(RUFont.sans(12)).foregroundColor(RUColor.text2)
@@ -522,7 +515,9 @@ struct StatsView: View {
 
     private var predictionCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            EyebrowLabel(text: "Prédiction de course", color: RUColor.rose2)
+            RUCardHeader(icon: "target", tint: RUColor.rose2,
+                         title: "Prédiction de course",
+                         subtitle: "À partir de ta meilleure perf récente")
             HStack(spacing: 8) {
                 ForEach(predictionDistances.indices, id: \.self) { i in
                     predictionTile(predictionDistances[i].0, PaceModel.formatDuration(predictedSeconds(forKm: predictionDistances[i].1)), highlighted: i == highlightedPredictionIndex)
@@ -539,8 +534,8 @@ struct StatsView: View {
                 Text("Objectif \(profile.goalDisplay) → ")
                     .font(RUFont.sans(11)).foregroundColor(RUColor.text2)
                     + Text(deltaSeconds >= 0
-                           ? String(localized: "en avance de \(Int(deltaSeconds))″")
-                           : String(localized: "\(Int(-deltaSeconds))″ à gagner"))
+                           ? "en avance de \(Int(deltaSeconds))″"
+                           : "\(Int(-deltaSeconds))″ à gagner")
                         .font(RUFont.sans(11, weight: .bold)).foregroundColor(deltaSeconds >= 0 ? RUColor.lime : RUColor.amber)
                     + Text(" sur ton objectif.").font(RUFont.sans(11)).foregroundColor(RUColor.text2)
             }
@@ -598,16 +593,16 @@ struct StatsView: View {
     private func loadZoneLabel(_ ratio: Double) -> String {
         if ratio > 1.5 { return String(localized: "Charge élevée") }
         if ratio < 0.8 { return String(localized: "Charge faible") }
-        return String(localized: "Zone optimale")
+        return "Zone optimale"
     }
 
     private var loadCard: some View {
         let bars = weeklyDistances
         let maxBar = max(bars.max() ?? 1, 1)
         return VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                EyebrowLabel(text: "Charge · 8 sem.")
-                Spacer()
+            RUCardHeader(icon: "chart.bar.fill", tint: RUColor.cyan,
+                         title: "Charge d'entraînement",
+                         subtitle: "Sur 8 semaines") {
                 if let ratio = acuteChronicRatio {
                     StatChip(text: loadZoneLabel(ratio), color: ratio > 1.5 ? RUColor.amber : RUColor.cyan)
                 }
@@ -627,7 +622,7 @@ struct StatsView: View {
                             // No per-week value was ever exposed, and "this week" (the last bar)
                             // was marked by color alone — VoiceOver had nothing beyond a silent bar.
                             .accessibilityLabel(i == bars.count - 1
-                                ? String(localized: "Cette semaine")
+                                ? "Cette semaine"
                                 : String(localized: "Il y a \(bars.count - 1 - i) semaine\(bars.count - 1 - i > 1 ? "s" : "")"))
                             .accessibilityValue("\(String(format: "%.1f", locale: Locale.current, bars[i])) km")
                     }

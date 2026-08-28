@@ -3566,6 +3566,23 @@
         }
       }
     },
+    "Charge d'entraînement": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Training load"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carga de entrenamiento"
+          }
+        }
+      }
+    },
     "Charge faible": {
       "localizations": {
         "en": {
@@ -5164,6 +5181,23 @@
         }
       }
     },
+    "Distance totale": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total distance"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distancia total"
+          }
+        }
+      }
+    },
     "Distance, séances, série — le récap de ta semaine t'attend.": {
       "localizations": {
         "en": {
@@ -6099,6 +6133,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "FC, sueño, carreras"
+          }
+        }
+      }
+    },
+    "Face à la semaine passée": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Against last week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frente a la semana pasada"
           }
         }
       }
@@ -12843,6 +12894,23 @@
         }
       }
     },
+    "Sorties": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Runs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salidas"
+          }
+        }
+      }
+    },
     "Sorties de groupe": {
       "localizations": {
         "en": {
@@ -13342,6 +13410,23 @@
         }
       }
     },
+    "Sur 8 semaines": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Over 8 weeks"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En 8 semanas"
+          }
+        }
+      }
+    },
     "Sur ta dernière course": {
       "localizations": {
         "en": {
@@ -13628,6 +13713,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sesiones ajustadas a tus %lld días"
+          }
+        }
+      }
+    },
+    "Série": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streak"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Racha"
           }
         }
       }
@@ -14150,6 +14252,23 @@
         }
       }
     },
+    "Temps cumulé": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiempo total"
+          }
+        }
+      }
+    },
     "Temps que tu veux y consacrer / semaine": {
       "localizations": {
         "en": {
@@ -14441,6 +14560,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tus días de carrera"
+          }
+        }
+      }
+    },
+    "Tes meilleures sorties": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your best runs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus mejores salidas"
           }
         }
       }
@@ -15340,6 +15476,23 @@
         }
       }
     },
+    "Une sortie par point": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One run per point"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una salida por punto"
+          }
+        }
+      }
+    },
     "VALIDER & METTRE À JOUR": {
       "localizations": {
         "en": {
@@ -16077,6 +16230,23 @@
         }
       }
     },
+    "jour": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "day"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "día"
+          }
+        }
+      }
+    },
     "jour %lld": {
       "localizations": {
         "en": {
@@ -16138,6 +16308,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "día%@ de racha"
+          }
+        }
+      }
+    },
+    "jours": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "days"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "días"
           }
         }
       }
@@ -18280,6 +18467,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Por hacer"
+          }
+        }
+      }
+    },
+    "À partir de ta meilleure perf récente": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From your best recent performance"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A partir de tu mejor marca reciente"
           }
         }
       }

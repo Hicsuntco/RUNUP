@@ -98,8 +98,7 @@ struct RaceGoalView: View {
 
                 VStack(spacing: 10) {
                     HStack {
-                        EyebrowLabel(text: "Préparation")
-                        Spacer()
+                        RUCardHeader(icon: "calendar", tint: RUColor.rose, title: "Préparation")
                         if let total = shape.totalWeeks {
                             StatChip(text: String(localized: "Semaine \(min(profile.weekNumber, total))/\(total)"), color: RUColor.lime)
                         }
@@ -127,14 +126,14 @@ struct RaceGoalView: View {
                 // per-km split table over a format that isn't a straight run.
                 if !hasRealRaceDay {
                     VStack(alignment: .leading, spacing: 8) {
-                        EyebrowLabel(text: "Où tu en es", color: RUColor.text3)
+                        RUCardHeader(icon: "location.fill", tint: RUColor.violet, title: "Où tu en es")
                         Text(LocalizedStringKey(progressSummary))
                             .font(RUFont.sans(12)).foregroundColor(RUColor.text2).lineSpacing(3)
                     }
                     .padding(14)
                     .ruCard()
                 } else if profile.goalId == .hyrox {
-                    EyebrowLabel(text: "Stratégie · jour J", color: RUColor.text3)
+                    RUCardHeader(icon: "flag.checkered", tint: RUColor.rose2, title: "Stratégie · jour J")
                     VStack(spacing: 6) {
                         ForEach(hyroxStrategy.indices, id: \.self) { i in
                             HStack(spacing: 12) {
@@ -151,7 +150,7 @@ struct RaceGoalView: View {
                         }
                     }
                 } else {
-                    EyebrowLabel(text: "Stratégie d'allure · jour J", color: RUColor.text3)
+                    RUCardHeader(icon: "speedometer", tint: RUColor.rose2, title: "Stratégie d'allure · jour J")
                     VStack(spacing: 6) {
                         ForEach(pacingPlan.indices, id: \.self) { i in
                             let isLast = i == pacingPlan.count - 1

@@ -28,9 +28,9 @@ struct ClubManagementView: View {
                     challengeSection
 
                     VStack(alignment: .leading, spacing: 10) {
-                        EyebrowLabel(text: members.count > 1
-                            ? String(localized: "\(members.count) membres")
-                            : String(localized: "\(members.count) membre"), color: RUColor.text3)
+                        RUCardHeader(title: members.count > 1
+                                     ? String(localized: "\(members.count) membres")
+                                     : String(localized: "\(members.count) membre"))
                         VStack(spacing: 6) {
                             ForEach(members) { member in
                                 NavigationLink(value: member) {
@@ -67,8 +67,7 @@ struct ClubManagementView: View {
     private var challengeSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                EyebrowLabel(text: "Défi du club", color: RUColor.text3)
-                Spacer()
+                RUCardHeader(icon: "flag.checkered", tint: RUColor.rose2, title: "Défi du club")
                 Button(challenge == nil ? "Créer" : "Changer") { showCreateChallenge = true }
                     .font(RUFont.sans(11.5, weight: .semibold))
                     .foregroundColor(RUColor.rose2)
@@ -279,7 +278,7 @@ struct ClubMemberProfileView: View {
     /// few points wide. A fixed tile width lets a scroll view give each one its real size.
     private var badgesSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            EyebrowLabel(text: "Badges", color: RUColor.text3)
+            RUCardHeader(icon: "rosette", tint: RUColor.amber, title: "Badges")
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
                     ForEach(badges) { badge in

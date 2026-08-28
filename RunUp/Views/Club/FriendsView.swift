@@ -297,7 +297,7 @@ struct FriendsView: View {
 
     private var requestsCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            EyebrowLabel(text: "Demandes en attente", color: RUColor.rose2)
+            RUCardHeader(icon: "person.crop.circle.badge.plus", tint: RUColor.rose2, title: "Demandes en attente")
             ForEach(incomingRequests) { user in
                 HStack(spacing: 12) {
                     AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 32, seed: user.id)
@@ -379,7 +379,7 @@ struct FriendsView: View {
         // `LazyVStack` : même raison que le fil du club — 50 lignes construites d'un coup,
         // avatars compris, dont l'écrasante majorité hors écran.
         LazyVStack(alignment: .leading, spacing: 8) {
-            EyebrowLabel(text: "Fil d'activité", color: RUColor.rose)
+            RUCardHeader(icon: "bolt.fill", tint: RUColor.rose, title: "Fil d'activité")
             if feed.isEmpty && !isLoading {
                 if following.isEmpty {
                     // « Suis quelqu'un pour voir ses séances ici » était une phrase sans issue :

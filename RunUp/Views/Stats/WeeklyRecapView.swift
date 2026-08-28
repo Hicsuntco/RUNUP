@@ -117,15 +117,14 @@ struct WeeklyRecapView: View {
 
                 if let avgPaceSecPerKm {
                     HStack {
-                        EyebrowLabel(text: "Allure moyenne")
-                        Spacer()
+                        RUCardHeader(icon: "speedometer", tint: RUColor.violet, title: "Allure moyenne")
                         Text("\(PaceModel.formatDuration(avgPaceSecPerKm))/km").displayStyle(18).foregroundColor(RUColor.textPrimary)
                     }
                     .padding(16)
                     .ruCard()
                 }
 
-                EyebrowLabel(text: "Courses de la semaine", color: RUColor.text3).padding(.top, 6)
+                RUCardHeader(icon: "figure.run", tint: RUColor.rose, title: "Courses de la semaine").padding(.top, 6)
 
                 if weekRuns.isEmpty {
                     Text("Pas encore de course cette semaine — tu as le temps.")
@@ -201,7 +200,7 @@ struct WeeklyRecapView: View {
         let bars = dailyVolumes
         let maxBar = max(bars.max() ?? 1, 1)
         return VStack(alignment: .leading, spacing: 12) {
-            EyebrowLabel(text: "Volume par jour (km)")
+            RUCardHeader(icon: "chart.bar.fill", tint: RUColor.cyan, title: "Volume par jour (km)")
             HStack(alignment: .bottom, spacing: 6) {
                 ForEach(bars.indices, id: \.self) { i in
                     RoundedRectangle(cornerRadius: 4)

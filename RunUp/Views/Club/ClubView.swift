@@ -239,7 +239,7 @@ struct ClubView: View {
             if let club = board.club {
                 Button(action: { showManagement = true }) {
                     VStack(alignment: .leading, spacing: 2) {
-                        EyebrowLabel(text: "Le Club", color: RUColor.rose)
+                        RUCardHeader(icon: "person.3.fill", tint: RUColor.rose, title: "Le Club")
                         HStack(spacing: 6) {
                             Text(club.name).displayStyle(24).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
                             Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundColor(RUColor.text3)
@@ -249,7 +249,7 @@ struct ClubView: View {
                 .buttonStyle(PressableStyle())
             } else {
                 VStack(alignment: .leading, spacing: 2) {
-                    EyebrowLabel(text: "Le Club", color: RUColor.rose)
+                    RUCardHeader(icon: "person.3.fill", tint: RUColor.rose, title: "Le Club")
                     Text("Rejoins un club").displayStyle(24).foregroundColor(RUColor.textPrimary)
                 }
             }
@@ -332,7 +332,7 @@ struct ClubView: View {
     private var clubSetupCard: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 6) {
-                EyebrowLabel(text: "Créer un club", color: RUColor.rose2)
+                RUCardHeader(icon: "plus.circle.fill", tint: RUColor.rose2, title: "Créer un club", subtitle: "Tu en seras l'administratrice")
                 HStack {
                     TextField("Nom du club", text: $newClubName)
                         .textFieldStyle(.plain)
@@ -348,7 +348,7 @@ struct ClubView: View {
             }
 
             VStack(alignment: .leading, spacing: 6) {
-                EyebrowLabel(text: "Rejoindre avec un code", color: RUColor.rose2)
+                RUCardHeader(icon: "key.fill", tint: RUColor.rose2, title: "Rejoindre avec un code")
                 HStack {
                     TextField("Code d'invitation", text: $joinCode)
                         .textFieldStyle(.plain)
@@ -473,8 +473,7 @@ struct ClubView: View {
             if let challenge = board.challenge {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
-                        EyebrowLabel(text: "Défi du club", color: RUColor.rose2)
-                        Spacer()
+                        RUCardHeader(icon: "flag.checkered", tint: RUColor.rose2, title: "Défi du club")
                         StatChip(text: String(localized: "J-\(daysLeft(until: challenge.endDate))"), color: RUColor.rose2)
                     }
                     Text(challenge.title).displayStyle(19).foregroundColor(RUColor.textPrimary)
@@ -491,7 +490,7 @@ struct ClubView: View {
                 Button(action: { showManagement = true }) {
                     HStack {
                         VStack(alignment: .leading, spacing: 3) {
-                            EyebrowLabel(text: "Défi du club", color: RUColor.rose2)
+                            RUCardHeader(icon: "flag.checkered", tint: RUColor.rose2, title: "Défi du club")
                             Text("Aucun défi en cours — en créer un").font(RUFont.sans(13)).foregroundColor(RUColor.textPrimary)
                         }
                         Spacer()
@@ -545,7 +544,7 @@ struct ClubView: View {
         let active = (board.weekly ?? []).filter { $0.weekKm > 0 }
         if !active.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                EyebrowLabel(text: "Membres actifs cette semaine", color: RUColor.text3)
+                RUCardHeader(icon: "figure.run", tint: RUColor.violet, title: "Membres actifs cette semaine")
                 HStack(spacing: -8) {
                     ForEach(active.prefix(6)) { member in
                         AvatarView(
@@ -629,7 +628,7 @@ struct ClubView: View {
         let km = String(format: "%.1f", locale: Locale.current, stats?.totalKm ?? 0)
         return HStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 2) {
-                EyebrowLabel(text: "Le club cette semaine", color: RUColor.rose)
+                RUCardHeader(icon: "chart.bar.fill", tint: RUColor.rose, title: "Le club cette semaine", subtitle: "Kilomètres cumulés")
                 HStack(alignment: .lastTextBaseline, spacing: 4) {
                     Text(km).displayStyle(26).foregroundColor(RUColor.textPrimary)
                     Text("KM").font(RUFont.sans(10, weight: .bold)).foregroundColor(RUColor.text2)
@@ -681,8 +680,7 @@ struct ClubView: View {
     private var eventsCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                EyebrowLabel(text: "Sorties de groupe", color: RUColor.violet)
-                Spacer()
+                RUCardHeader(icon: "calendar", tint: RUColor.violet, title: "Sorties de groupe")
                 Button(action: { showCreateEvent = true }) {
                     HStack(spacing: 4) {
                         Image(systemName: "plus").font(.system(size: 10, weight: .bold))
@@ -818,7 +816,7 @@ struct ClubView: View {
             }
             .transition(.opacity)
 
-            EyebrowLabel(text: "Derniers badges", color: RUColor.text3)
+            RUCardHeader(icon: "rosette", tint: RUColor.amber, title: "Derniers badges")
             badgeStrip
         }
     }
@@ -855,7 +853,7 @@ struct ClubView: View {
                 // même ligne — c'est ce qui fait qu'on comprend « classement DE LA SEMAINE » et
                 // pas « classement tout court, avec un réglage mystérieux ».
                 HStack {
-                    EyebrowLabel(text: "Classement de la semaine", color: RUColor.text3)
+                    RUCardHeader(icon: "trophy.fill", tint: RUColor.amber, title: "Classement de la semaine")
                     Spacer(minLength: 8)
                     weeklyDisplayModePicker
                 }

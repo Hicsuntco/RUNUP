@@ -49,7 +49,7 @@ struct ProfileView: View {
                     // badges et l'équipement sont apparus dessous : sans celui-ci, les cartes
                     // sociales étaient la seule section anonyme de l'écran.
                     VStack(alignment: .leading, spacing: 10) {
-                        EyebrowLabel(text: String(localized: "Communauté"))
+                        RUCardHeader(title: String(localized: "Communauté"))
                         VStack(spacing: 12) {
                             amisCard
                             clubCard
@@ -523,7 +523,7 @@ struct ProfileView: View {
         let ordered = earnedBadges + badges.filter { !$0.earned }
         return VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
-                EyebrowLabel(text: earnedBadges.isEmpty
+                RUCardHeader(title: earnedBadges.isEmpty
                              ? String(localized: "Badges à débloquer")
                              : String(localized: "Badges · \(earnedBadges.count) sur \(badges.count)"))
                 Spacer()
@@ -573,7 +573,7 @@ struct ProfileView: View {
     /// sans qu'on puisse l'ouvrir depuis là.
     private var gearSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            EyebrowLabel(text: String(localized: "Mon équipement"))
+            RUCardHeader(title: String(localized: "Mon équipement"))
             VStack(spacing: 8) {
                 destinationRow(icon: "shoeprints.fill",
                                title: String(localized: "Mes chaussures"),

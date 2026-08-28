@@ -110,7 +110,7 @@ struct RecapView: View {
                         // Only when real per-km timings exist — a manual entry or a GPS run under
                         // 1 km has none, and `buildRunRecord` no longer fabricates a stand-in set.
                         if !run.splits.isEmpty {
-                            EyebrowLabel(text: "Splits par km", color: RUColor.text3).padding(.top, 8)
+                            RUCardHeader(icon: "list.number", tint: RUColor.violet, title: "Splits par km").padding(.top, 8)
 
                             VStack(spacing: 5) {
                                 let fractions = splitFractions(run.splits)
@@ -121,7 +121,7 @@ struct RecapView: View {
                         }
 
                         if ElevationProfileView.hasData(run.route) {
-                            EyebrowLabel(text: "Profil d'élévation", color: RUColor.text3).padding(.top, 8)
+                            RUCardHeader(icon: "mountain.2.fill", tint: RUColor.cyan, title: "Profil d'élévation").padding(.top, 8)
                             elevationCard(run)
                         }
 
@@ -135,7 +135,7 @@ struct RecapView: View {
                         // to pop into the middle of the scroll ~half a second in, shifting
                         // content under her finger.
                         VStack(spacing: 10) {
-                            EyebrowLabel(text: "Partage ta course", color: RUColor.text3)
+                            RUCardHeader(icon: "square.and.arrow.up", tint: RUColor.rose, title: "Partage ta course")
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             Group {
                                 if let shareImage {

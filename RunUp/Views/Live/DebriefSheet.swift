@@ -97,7 +97,7 @@ struct DebriefSheet: View {
                 }
 
                 VStack(alignment: .leading, spacing: 0) {
-                    EyebrowLabel(text: "Impact sur ton programme", color: RUColor.rose2)
+                    RUCardHeader(icon: "arrow.triangle.branch", tint: RUColor.rose2, title: "Impact sur ton programme")
                     ForEach(impactLines.indices, id: \.self) { i in
                         HStack(spacing: 12) {
                             Text(impactLines[i].0).font(.system(size: 18))

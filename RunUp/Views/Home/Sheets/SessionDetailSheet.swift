@@ -98,7 +98,7 @@ struct SessionDetailSheet: View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
-                        EyebrowLabel(text: isRestDay ? "Aujourd'hui" : "Séance clé", color: RUColor.rose)
+                        RUCardHeader(icon: isRestDay ? "moon.zzz.fill" : "figure.run", tint: RUColor.rose, title: isRestDay ? "Aujourd'hui" : "Séance clé")
                         Text(session.displayTitle).displayStyle(26).foregroundColor(RUColor.textPrimary)
                     }
                     Spacer()

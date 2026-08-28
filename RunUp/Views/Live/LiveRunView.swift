@@ -169,7 +169,7 @@ struct LiveRunView: View {
             Circle().fill(RUColor.rose).frame(width: 34, height: 34)
                 .overlay(Image(systemName: "speaker.wave.2.fill").foregroundColor(.white).font(.system(size: 13)))
             VStack(alignment: .leading, spacing: 3) {
-                EyebrowLabel(text: "Coach · en direct", color: RUColor.rose2)
+                RUCardHeader(icon: "bubble.left.fill", tint: RUColor.rose2, title: "Coach · en direct")
                 Text(text).font(RUFont.sans(12.5)).foregroundColor(.white).lineSpacing(3)
             }
         }

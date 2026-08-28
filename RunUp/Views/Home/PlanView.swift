@@ -99,14 +99,14 @@ struct PlanView: View {
 
                 if let current = currentWeek {
                     VStack(alignment: .leading, spacing: 10) {
-                        EyebrowLabel(text: String(localized: "Cette semaine"))
+                        RUCardHeader(title: String(localized: "Cette semaine"))
                         currentWeekCard(current)
                     }
                 }
 
                 ForEach(Array(upcomingGroups.enumerated()), id: \.offset) { _, group in
                     VStack(alignment: .leading, spacing: 10) {
-                        EyebrowLabel(text: groupTitle(group.block, weeks: group.weeks))
+                        RUCardHeader(title: groupTitle(group.block, weeks: group.weeks))
                         VStack(spacing: 8) {
                             ForEach(group.weeks) { week in
                                 collapsibleWeekCard(week)
@@ -250,15 +250,13 @@ struct PlanView: View {
     private var pastWeeksSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Button(action: { withAnimation(.easeOut(duration: 0.2)) { showPastWeeks.toggle() } }) {
-                HStack(spacing: 8) {
-                    EyebrowLabel(text: pastWeeks.count > 1
-                                 ? String(localized: "\(pastWeeks.count) semaines faites")
-                                 : String(localized: "1 semaine faite"))
+                RUCardHeader(title: pastWeeks.count > 1
+                             ? String(localized: "\(pastWeeks.count) semaines faites")
+                             : String(localized: "1 semaine faite")) {
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 10, weight: .semibold))
+                        .font(.system(size: 11, weight: .semibold))
                         .foregroundColor(RUColor.text3)
                         .rotationEffect(.degrees(showPastWeeks ? 0 : -90))
-                    Spacer()
                 }
                 .contentShape(Rectangle())
             }

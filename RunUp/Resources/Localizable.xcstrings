@@ -7640,6 +7640,23 @@
         }
       }
     },
+    "Kilomètres cumulés": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilometres logged"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilómetros acumulados"
+          }
+        }
+      }
+    },
     "Km": {
       "extractionState": "manual",
       "localizations": {
@@ -15114,6 +15131,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tendrás que volver a pedir el código de invitación para regresar."
+          }
+        }
+      }
+    },
+    "Tu en seras l'administratrice": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You'll be the admin"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serás la administradora"
           }
         }
       }

@@ -159,8 +159,7 @@ struct HomeView: View {
                             // Sa place est en eyebrow de la carte qui parle du programme — c'est
                             // là qu'il était, et c'était juste. Le J-x, lui, EST un chiffre court
                             // et reste dans la bande.
-                            EyebrowLabel(text: String(localized: "Ton programme · \(profile.goalDisplay)"), color: RUColor.rose)
-                            Spacer()
+                            RUCardHeader(icon: "map.fill", tint: RUColor.rose, title: String(localized: "Ton programme · \(profile.goalDisplay)"))
                             Text("→").foregroundColor(RUColor.rose2)
                         }
                         Text("\(weekEyebrow) · Bloc \(block.label)").displayStyle(17).foregroundColor(RUColor.textPrimary)
@@ -470,7 +469,7 @@ struct HomeView: View {
                 // 96 pt lui rend le poids d'élément principal de la carte.
                 DailyGoalsBarsView(progress: p.dailyGoalsProgress, size: 96)
                 VStack(alignment: .leading, spacing: 9) {
-                    EyebrowLabel(text: String(localized: "Tes objectifs · \(p.dailyGoalsDone)/\(p.dailyGoalsTotal) bouclés"))
+                    RUCardHeader(title: String(localized: "Tes objectifs · \(p.dailyGoalsDone)/\(p.dailyGoalsTotal) bouclés"))
                     ringLegendRow(
                         name: "Séance du jour",
                         value: p.isRestDayToday

@@ -130,7 +130,7 @@ struct RingsView: View {
                         HStack(spacing: 12) {
                             AppMarkView(size: 34)
                             VStack(alignment: .leading, spacing: 3) {
-                                EyebrowLabel(text: "Coach", color: RUColor.rose2)
+                                RUCardHeader(icon: "bubble.left.fill", tint: RUColor.rose2, title: "Coach")
                                 Text(coachNudge).font(RUFont.sans(12.5)).foregroundColor(RUColor.textPrimary)
                             }
                         }

@@ -33,7 +33,7 @@ struct ChoiceView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 10) {
-                    EyebrowLabel(text: "Bilan de ton programme")
+                    RUCardHeader(icon: "checkmark.seal.fill", tint: RUColor.rose, title: "Bilan de ton programme")
                     HStack(spacing: 20) {
                         MetricColumn(value: "\(totalKm)", label: "km parcourus")
                         // Deux clés entières plutôt qu'un « s » recollé : le pluriel ne se fabrique

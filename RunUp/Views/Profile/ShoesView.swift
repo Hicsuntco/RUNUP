@@ -45,7 +45,7 @@ struct ShoesView: View {
                     ForEach(activeShoes) { shoe in shoeRow(shoe) }
 
                     if !retiredShoes.isEmpty {
-                        EyebrowLabel(text: "Retirées", color: RUColor.text3).padding(.top, 10)
+                        RUCardHeader(icon: "archivebox.fill", tint: RUColor.text3, title: "Retirées").padding(.top, 10)
                         ForEach(retiredShoes) { shoe in shoeRow(shoe) }
                     }
                 }

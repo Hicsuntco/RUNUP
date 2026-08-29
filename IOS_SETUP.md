@@ -362,12 +362,13 @@ Les identifiants doivent être **exactement** ceux-ci — ils sont écrits dans
 
 | Identifiant | Durée | Prix cible |
 |---|---|---|
-| `com.hicsuntco.runup.plus.yearly` | 1 an | 59,99 € |
-| `com.hicsuntco.runup.plus.monthly` | 1 mois | 9,99 € |
+| `com.hicsuntco.runup.plus.yearly` | 1 an | 39,99 € |
+| `com.hicsuntco.runup.plus.monthly` | 1 mois | 6,99 € |
 
-Positionnement retenu : la moitié de Runna (19,99 $/mois, 119,99 $/an). L'annuel revient à 5 €/mois,
-soit 50 % de moins que le mensuel — l'app calcule et affiche cet écart à partir des prix réels
-renvoyés par StoreKit, donc il suffit de changer les prix pour que l'affichage suive.
+Positionnement retenu : environ le TIERS de Runna (19,99 $/mois, 119,99 $/an). L'annuel revient à
+3,33 €/mois, soit 52 % de moins que le mensuel — l'app calcule et affiche cet écart à partir des
+prix réels renvoyés par StoreKit, donc il suffit de changer les prix dans App Store Connect pour
+que l'affichage suive. Rien à redéployer.
 
 ### 4. L'essai de 7 jours
 

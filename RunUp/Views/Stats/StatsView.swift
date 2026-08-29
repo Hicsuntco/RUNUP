@@ -253,29 +253,29 @@ struct StatsView: View {
     private var weekCard: some View {
         Button(action: { appState.go(.weeklyRecap) }) {
             VStack(alignment: .leading, spacing: 10) {
+                // Même carte que sur l'accueil, littéralement le même composant.
+                //
+                // Cet écran comptait la semaine en SÉANCES (« 1/4 séances prévues ») là où
+                // l'accueil la comptait en KILOMÈTRES (« 5,0/32 km sem. ») : mêmes courses, mêmes
+                // dates, deux dénominateurs. Le kilomètre l'emporte parce que c'est celui du plan,
+                // qu'il bouge à chaque sortie, et qu'un compteur de séances ne dit rien d'une
+                // sortie écourtée. Les séances restent dites, en note sous la barre — une
+                // précision, plus un dénominateur concurrent.
                 RUCardHeader(icon: "calendar", tint: RUColor.rose,
                              title: "Cette semaine",
                              subtitle: "Face à la semaine passée") {
-                    if lastWeekKm > 0 {
-                        let deltaKm = thisWeekKm - lastWeekKm
-                        StatChip(
-                            text: deltaKm >= 0 ? "▲ +\(String(format: "%.1f", locale: Locale.current, deltaKm)) km" : "▼ \(String(format: "%.1f", locale: Locale.current, -deltaKm)) km",
-                            color: deltaKm >= 0 ? RUColor.lime : RUColor.amber
-                        )
-                    }
                     Text("›").font(RUFont.sans(.emphasis, weight: .bold)).foregroundColor(RUColor.text3)
                 }
-                HStack(spacing: 24) {
-                    MetricColumn(value: String(format: "%.1f", locale: Locale.current, thisWeekKm), label: "km", valueSize: 24)
-                    if !profile.runningDays.isEmpty {
-                        MetricColumn(
-                            value: "\(thisWeekRuns.count)/\(profile.runningDays.count)",
-                            label: "séances prévues",
-                            valueColor: thisWeekRuns.count >= profile.runningDays.count ? RUColor.lime : RUColor.textPrimary,
-                            valueSize: 24
-                        )
-                    }
-                }
+                WeekKmSummary(
+                    doneKm: thisWeekKm,
+                    plannedKm: profile.plannedWeeklyKm,
+                    lastWeekKm: lastWeekKm,
+                    footnote: profile.runningDays.isEmpty
+                        ? nil
+                        : (thisWeekRuns.count > 1
+                           ? String(localized: "\(thisWeekRuns.count) séances sur \(profile.runningDays.count) prévues")
+                           : String(localized: "\(thisWeekRuns.count) séance sur \(profile.runningDays.count) prévues"))
+                )
             }
             .padding(16)
             .ruCard()

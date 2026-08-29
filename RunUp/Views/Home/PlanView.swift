@@ -6,33 +6,41 @@ import SwiftUI
 /// semaines montrent un aperçu type généré de la même façon, annoncé comme tel puisque leur
 /// difficulté exacte dépend d'une adaptation qui n'a pas encore eu lieu.
 ///
-/// # Pourquoi trois groupes plutôt qu'une liste
+/// # Pourquoi une courbe plutôt qu'une liste
 ///
-/// L'écran empilait 8 à 16 cartes identiques, chacune repliable, chacune portant un chiffre, deux
-/// lignes de texte et un glyphe. Un plan de 16 semaines devenait 16 boîtes qui se ressemblaient,
-/// et la seule qui compte un jour donné — celle d'aujourd'hui — était noyée au milieu.
+/// L'écran a eu deux vies, et la deuxième n'a pas suffi. Il a d'abord empilé 8 à 16 cartes
+/// identiques, chacune repliable ; on les a ensuite groupées par phase, avec les semaines passées
+/// derrière un dépliant. C'était moins dense, mais toujours la même chose : une liste de boîtes
+/// grises où chaque ligne dit « Semaine 7 · ~34 km » et où rien ne distingue la 7 de la 8.
 ///
-/// Les semaines sont maintenant séparées selon ce qu'on en fait :
-/// - **la semaine en cours** est une carte à part, dépliée d'office, sans mécanique de pliage :
-///   c'est l'écran qu'on vient consulter, il n'y a rien à déplier pour l'atteindre ;
-/// - **les semaines à venir** sont des lignes calmes, groupées PAR PHASE sous un intertitre. Le
-///   groupe porte l'information que 16 lignes répétaient une à une, et le plan se lit alors comme
-///   sa structure réelle — Base, Spécifique, Affûtage — au lieu d'une numérotation ;
-/// - **les semaines passées** sont derrière un seul dépliant, fermé par défaut. Neuf semaines
-///   faites, c'était neuf lignes d'archive avant la première ligne utile.
+/// Or un plan périodisé N'EST PAS une liste. C'est une forme : le volume monte pendant la Base,
+/// culmine en Spécifique, retombe à l'Affûtage, avec une semaine allégée qui revient. C'est
+/// exactement ce qu'on achète en payant un plan adaptatif, et c'était la seule chose que l'écran
+/// ne montrait pas — il fallait déplier douze lignes et retenir douze nombres pour la deviner.
+///
+/// Trois mécanismes — la carte de la semaine en cours, l'accordéon des semaines à venir, le
+/// dépliant des semaines faites — sont donc remplacés par un seul : une barre par semaine, en
+/// couleur de phase, et sous elle la semaine choisie, dépliée. La semaine en cours est celle qui
+/// est choisie à l'ouverture, parce que c'est celle qu'on vient voir ; les autres sont à un geste.
 struct PlanView: View {
     @Environment(AppState.self) private var appState
     private var profile: UserProfile { appState.profile }
 
-    @State private var expandedWeek: Int?
-    /// Les semaines faites sont une archive : utile, mais pas ce qu'on ouvre l'écran pour voir.
-    @State private var showPastWeeks = false
-    /// Cached snapshot of `computeWeekSummaries()` — populated once in `.onAppear` and refreshed
-    /// only when the week actually advances (`.onChange(of: profile.weekNumber)`), instead of a
-    /// plain computed property that re-ran `AdaptivePlanEngine.generateWeekSessions` for every
-    /// week 1...weeksToShow on *any* local state change in this view — including just tapping a
-    /// week row to expand/collapse it (`expandedWeek` has nothing to do with what's generated).
+    /// La semaine que la page détaille. `nil` avant le premier calcul, puis toujours une valeur —
+    /// la semaine en cours à l'ouverture.
+    @State private var selectedWeek: Int?
+    /// Instantané de `computeWeekSummaries()`, calculé au premier affichage et rafraîchi seulement
+    /// quand la semaine avance. En propriété calculée, il relancerait
+    /// `AdaptivePlanEngine.generateWeekSessions` pour CHAQUE semaine du plan à la moindre
+    /// re-évaluation de la vue — et le graphique en dépend, donc à chaque changement de sélection.
     @State private var weekSummaries: [WeekSummary] = []
+    /// Les jours de la semaine affichée, mis en cache pour la même raison que `weekSummaries`.
+    ///
+    /// Pour une semaine autre que celle en cours, `dayList` régénère les séances par
+    /// `AdaptivePlanEngine`. La carte est visible en permanence maintenant — elle n'est plus
+    /// derrière un dépliement — donc l'appeler depuis le corps de la vue relancerait cette
+    /// génération à chaque re-évaluation, y compris celles que la sélection déclenche.
+    @State private var selectedDays: [(String, PlannedDay, DayStatus.State?)] = []
 
     private struct WeekSummary: Identifiable {
         var id: Int { number }
@@ -69,108 +77,206 @@ struct PlanView: View {
         }
     }
 
-    private var pastWeeks: [WeekSummary] { weekSummaries.filter { $0.isDone } }
     private var currentWeek: WeekSummary? { weekSummaries.first { $0.isCurrent } }
 
-    /// Les semaines à venir, groupées par phase et dans l'ordre. Un `Dictionary` perdrait
-    /// justement ce qui fait l'intérêt du groupe : Base vient avant Spécifique, qui vient avant
-    /// Affûtage, et une phase de récup peut revenir plusieurs fois au milieu.
-    private var upcomingGroups: [(block: AdaptivePlanEngine.TrainingBlock, weeks: [WeekSummary])] {
-        var groups: [(AdaptivePlanEngine.TrainingBlock, [WeekSummary])] = []
-        for week in weekSummaries where !week.isDone && !week.isCurrent {
-            if var last = groups.last, last.0 == week.block {
-                last.1.append(week)
-                groups[groups.count - 1] = last
-            } else {
-                groups.append((week.block, [week]))
-            }
-        }
-        return groups.map { (block: $0.0, weeks: $0.1) }
+    private var selected: WeekSummary? {
+        weekSummaries.first { $0.number == selectedWeek } ?? currentWeek
     }
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
+            VStack(alignment: .leading, spacing: 18) {
                 BackTitleHeaderView(eyebrow: String(localized: "Ton programme · \(profile.goalDisplay)"), title: "Le plan complet") {
                     appState.go(.home)
                 }
 
-                // La semaine en cours d'abord. La phrase qui décrit la forme du programme est
-                // la même toutes les semaines : c'est de la documentation, pas une donnée, et
-                // elle occupait le tiers haut de l'écran qu'on ouvre pour savoir ce qu'on court
-                // cette semaine. Elle passe sous la semaine, avec la barre de phases qu'elle
-                // commente — les deux se lisent ensemble, et plus personne ne doit les traverser.
-                if let current = currentWeek {
-                    VStack(alignment: .leading, spacing: 10) {
-                        RUCardHeader(title: String(localized: "Cette semaine"))
-                        currentWeekCard(current)
-                    }
+                volumeChart
+
+                weekNavigator
+
+                if let week = selected {
+                    weekCard(week)
                 }
 
-                planShapeSection
-
-                ForEach(Array(upcomingGroups.enumerated()), id: \.offset) { _, group in
-                    VStack(alignment: .leading, spacing: 10) {
-                        RUCardHeader(title: groupTitle(group.block, weeks: group.weeks))
-                        VStack(spacing: 8) {
-                            ForEach(group.weeks) { week in
-                                collapsibleWeekCard(week)
-                            }
-                        }
-                    }
-                }
-
-                if !pastWeeks.isEmpty {
-                    pastWeeksSection
-                }
+                planShapeNote
             }
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.top, 8)
             .padding(.bottom, 130)
         }
         .onAppear {
-            if expandedWeek == nil { expandedWeek = profile.weekNumber }
             weekSummaries = computeWeekSummaries()
+            if selectedWeek == nil { selectedWeek = profile.weekNumber }
+            refreshSelectedDays()
         }
-        .onChange(of: profile.weekNumber) { _, _ in
+        .onChange(of: selectedWeek) { _, _ in refreshSelectedDays() }
+        .onChange(of: profile.weekNumber) { _, week in
             weekSummaries = computeWeekSummaries()
+            // La semaine avance pendant que l'écran est ouvert : suivre le mouvement plutôt que
+            // laisser la page détailler une semaine qui vient de devenir passée.
+            selectedWeek = week
+            refreshSelectedDays()
         }
     }
 
-    /// La forme du programme : la phrase d'explication et, quand il y a une date de course, la
-    /// barre de phases. La phrase est courte — l'écran doit s'ouvrir sur le plan, pas sur un
-    /// paragraphe.
-    @ViewBuilder private var planShapeSection: some View {
-        if let total = shape.totalWeeks {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("\(total) semaines en 3 phases, calées sur ta date de course. Le plan s'ajuste chaque semaine selon ta forme — pas séance par séance.")
-                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
-                PhaseProgressBar(phases: [
-                    PhaseSegment(name: "Base", done: min(profile.weekNumber, shape.baseWeeks), total: shape.baseWeeks, color: RUColor.rose),
-                    PhaseSegment(name: "Spécifique", done: max(0, min(profile.weekNumber - shape.baseWeeks, shape.specificWeeks)), total: shape.specificWeeks, color: RUColor.rose2),
-                    PhaseSegment(name: "Affûtage", done: max(0, min(profile.weekNumber - shape.baseWeeks - shape.specificWeeks, shape.taperWeeks)), total: shape.taperWeeks, color: RUColor.violet)
-                ])
+    // MARK: La forme du plan
+
+    /// Une barre par semaine, en couleur de phase, hauteur proportionnelle au volume estimé.
+    ///
+    /// Les barres sont étroites — seize semaines dans une largeur d'écran — donc bien en dessous
+    /// des 44 pt des règles d'Apple. C'est le même arbitrage que pour un contrôle segmenté : elles
+    /// sont jointives, une frappe imprécise tombe sur la voisine et non dans le vide, et la zone
+    /// tapable couvre toute la hauteur du graphique. Pour viser sans se tromper, le sélecteur
+    /// juste en dessous offre deux vraies cibles de 44 pt.
+    private var volumeChart: some View {
+        let maxKm = max(1, weekSummaries.map(\.estimatedKm).max() ?? 1)
+        return VStack(alignment: .leading, spacing: 14) {
+            RUCardHeader(icon: "chart.bar.fill", tint: RUColor.rose,
+                         title: "La forme du plan",
+                         subtitle: "Volume estimé, semaine par semaine")
+            HStack(alignment: .bottom, spacing: 3) {
+                ForEach(weekSummaries) { week in
+                    volumeBar(week, maxKm: maxKm)
+                }
             }
-        } else {
-            Text("Programme ouvert, sans date de fin — une semaine plus légère toutes les 4 semaines. Il s'ajuste chaque semaine selon ta forme.")
-                .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
+            .frame(height: 108)
+            phaseLegend
+        }
+        .padding(16)
+        .ruCard()
+    }
+
+    private func volumeBar(_ week: WeekSummary, maxKm: Int) -> some View {
+        let isSelected = week.number == selected?.number
+        let height = max(5, CGFloat(week.estimatedKm) / CGFloat(maxKm) * 84)
+        return Button(action: {
+            Haptics.selection()
+            withAnimation(.easeOut(duration: 0.2)) { selectedWeek = week.number }
+        }) {
+            VStack(spacing: 5) {
+                Spacer(minLength: 0)
+                RoundedRectangle(cornerRadius: 3, style: .continuous)
+                    .fill(blockColor(week.block))
+                    // Les semaines faites reculent sans disparaître : elles font partie de la
+                    // forme — c'est même par elles qu'on voit la progression — mais elles ne sont
+                    // plus d'actualité.
+                    .opacity(week.isDone ? 0.3 : 1)
+                    .frame(height: height)
+                // Le repère de la semaine en cours. Il ne dépend pas de la sélection : on doit
+                // pouvoir regarder la semaine 12 sans perdre de vue où l'on en est.
+                Circle()
+                    .fill(week.isCurrent ? RUColor.textPrimary : Color.clear)
+                    .frame(width: 4, height: 4)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 108)
+            .contentShape(Rectangle())
+            .overlay(alignment: .bottom) {
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        .stroke(RUColor.textPrimary.opacity(0.55), lineWidth: 1.5)
+                        .frame(height: height + 8)
+                        .padding(.bottom, 5)
+                }
+            }
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityLabel(String(localized: "Semaine \(week.number), \(week.block.label), environ \(week.estimatedKm) kilomètres"))
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    /// Les phases réellement présentes dans ce plan, dans leur ordre d'apparition. Un programme
+    /// ouvert n'a ni Spécifique ni Affûtage : afficher trois pastilles dont deux ne correspondent
+    /// à aucune barre serait une légende qui ment.
+    private var phaseLegend: some View {
+        var seen: [AdaptivePlanEngine.TrainingBlock] = []
+        for week in weekSummaries where !seen.contains(week.block) { seen.append(week.block) }
+        return HStack(spacing: 14) {
+            ForEach(seen, id: \.rawValue) { block in
+                HStack(spacing: 5) {
+                    Circle().fill(blockColor(block)).frame(width: 7, height: 7)
+                    Text(block.label).font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .accessibilityHidden(true)
+    }
+
+    private func blockColor(_ block: AdaptivePlanEngine.TrainingBlock) -> Color {
+        switch block {
+        case .base: return RUColor.rose
+        case .specifique: return RUColor.rose2
+        case .affutage: return RUColor.violet
+        case .deload: return RUColor.text3
         }
     }
 
-    /// « Spécifique · semaines 11 à 13 ». Le numéro n'a plus à être répété sur chaque ligne du
-    /// groupe, et une phase d'une seule semaine ne dit pas « 14 à 14 ».
-    private func groupTitle(_ block: AdaptivePlanEngine.TrainingBlock, weeks: [WeekSummary]) -> String {
-        guard let first = weeks.first, let last = weeks.last else { return block.label }
-        return first.number == last.number
-            ? String(localized: "\(block.label) · semaine \(first.number)")
-            : String(localized: "\(block.label) · semaines \(first.number) à \(last.number)")
+    // MARK: Le sélecteur de semaine
+
+    /// Deux flèches de 44 pt et le nom de la semaine. Le graphique au-dessus sert à voir et à
+    /// sauter ; celui-ci sert à viser — et il donne à VoiceOver un chemin linéaire là où seize
+    /// barres n'en donnent pas.
+    private var weekNavigator: some View {
+        HStack(spacing: 10) {
+            navButton(systemName: "chevron.left", enabled: (selected?.number ?? 1) > 1) {
+                step(-1)
+            }
+            VStack(spacing: 1) {
+                Text(selected.map { String(localized: "Semaine \($0.number)") } ?? "")
+                    .font(RUFont.sans(.label, weight: .bold))
+                    .foregroundColor(RUColor.textPrimary)
+                Text(weekSubtitle)
+                    .font(RUFont.sans(.small))
+                    .foregroundColor(RUColor.text3)
+                    .lineLimit(1).minimumScaleFactor(0.8)
+            }
+            .frame(maxWidth: .infinity)
+            .accessibilityElement(children: .combine)
+            navButton(systemName: "chevron.right", enabled: (selected?.number ?? 0) < weeksToShow) {
+                step(1)
+            }
+        }
     }
 
-    /// La semaine en cours. Pas de bouton, pas de chevron, pas d'état déplié : elle est ouverte,
-    /// parce que c'est elle qu'on vient voir. Le liseré rose et l'en-tête teinté qui la
-    /// distinguaient d'un mur de cartes identiques ne servent plus à rien maintenant qu'elle est
-    /// seule sous son propre intertitre — sa place dans la page suffit à dire ce qu'elle est.
-    private func currentWeekCard(_ week: WeekSummary) -> some View {
+    private var weekSubtitle: String {
+        guard let week = selected else { return "" }
+        if week.isCurrent { return String(localized: "Cette semaine · \(week.block.label)") }
+        if week.isDone { return String(localized: "Faite · \(week.block.label)") }
+        return String(localized: "À venir · \(week.block.label)")
+    }
+
+    private func navButton(systemName: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(.system(size: 13, weight: .bold))
+                .foregroundColor(enabled ? RUColor.textPrimary : RUColor.text4)
+                .frame(width: 32, height: 32)
+                .background(RUColor.card, in: Circle())
+                .overlay(Circle().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableStyle())
+        .disabled(!enabled)
+        .accessibilityLabel(systemName == "chevron.left"
+                            ? String(localized: "Semaine précédente")
+                            : String(localized: "Semaine suivante"))
+    }
+
+    private func step(_ delta: Int) {
+        let next = (selected?.number ?? profile.weekNumber) + delta
+        guard next >= 1, next <= weeksToShow else { return }
+        Haptics.selection()
+        withAnimation(.easeOut(duration: 0.2)) { selectedWeek = next }
+    }
+
+    // MARK: La semaine choisie
+
+    /// Une seule carte, quelle que soit la semaine regardée. Il y en avait trois formes — la
+    /// semaine en cours, une ligne dépliable pour les suivantes, la même en plus pâle pour les
+    /// passées — pour montrer exactement le même contenu.
+    private func weekCard(_ week: WeekSummary) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 5) {
                 HStack(spacing: 10) {
@@ -180,12 +286,16 @@ struct PlanView: View {
                     blockPill(week.block)
                     Spacer(minLength: 8)
                 }
-                Text("~\(week.estimatedKm) km · \(completedCount)/\(plannedCount) séances faites")
+                Text(week.isCurrent
+                     ? String(localized: "~\(week.estimatedKm) km · \(completedCount)/\(plannedCount) séances faites")
+                     : (week.isDone
+                        ? String(localized: "~\(week.estimatedKm) km · résumé type de cette semaine passée")
+                        : String(localized: "~\(week.estimatedKm) km · s'ajustera selon ta forme")))
                     .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
             }
 
             VStack(spacing: 4) {
-                ForEach(dayList(for: week), id: \.0) { letter, day, state in
+                ForEach(selectedDays, id: \.0) { letter, day, state in
                     dayRow(letter: letter, day: day, state: state)
                 }
             }
@@ -196,92 +306,19 @@ struct PlanView: View {
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 
-    /// Une semaine à venir : une ligne, dépliable. Le nom de la phase vit dans l'intertitre du
-    /// groupe, donc la ligne n'a plus à le porter — il ne reste que ce qui distingue vraiment une
-    /// semaine de sa voisine, son numéro et son volume.
-    private func collapsibleWeekCard(_ week: WeekSummary) -> some View {
-        let isExpanded = expandedWeek == week.number
-        return VStack(spacing: 0) {
-            Button(action: {
-                withAnimation(.easeOut(duration: 0.2)) { expandedWeek = isExpanded ? nil : week.number }
-            }) {
-                HStack(spacing: 12) {
-                    Text("\(week.number)")
-                        .font(RUFont.sans(.label, weight: .semibold))
-                        .foregroundColor(RUColor.text2)
-                        .frame(width: 32, height: 32)
-                        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous))
-                    Text("Semaine \(week.number)")
-                        .font(RUFont.sans(.emphasis, weight: .semibold))
-                        .foregroundColor(RUColor.textPrimary)
-                    Spacer(minLength: 8)
-                    Text("~\(week.estimatedKm) km")
-                        .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(RUColor.text3)
-                        .rotationEffect(.degrees(isExpanded ? 0 : -90))
-                        .accessibilityLabel(isExpanded ? String(localized: "Réduire") : String(localized: "Développer"))
-                }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 12)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(PressableStyle())
-            .accessibilityElement(children: .combine)
-
-            if isExpanded {
-                VStack(spacing: 4) {
-                    Text(week.isDone
-                         ? "Résumé type de cette semaine passée"
-                         : "Aperçu — s'ajustera selon ta forme de la semaine précédente")
-                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 4).padding(.bottom, 2)
-                    ForEach(dayList(for: week), id: \.0) { letter, day, state in
-                        dayRow(letter: letter, day: day, state: state)
-                    }
-                }
-                .padding(.horizontal, 10).padding(.bottom, 12)
-            }
-        }
-        .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
-    }
-
-    /// Les semaines faites, derrière un seul dépliant. Elles restent consultables — c'est le
-    /// journal du programme — mais elles ne s'interposent plus entre l'ouverture de l'écran et la
-    /// semaine en cours.
-    private var pastWeeksSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Button(action: { withAnimation(.easeOut(duration: 0.2)) { showPastWeeks.toggle() } }) {
-                RUCardHeader(title: pastWeeks.count > 1
-                             ? String(localized: "\(pastWeeks.count) semaines faites")
-                             : String(localized: "1 semaine faite")) {
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(RUColor.text3)
-                        .rotationEffect(.degrees(showPastWeeks ? 0 : -90))
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(PressableStyle())
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel(showPastWeeks ? String(localized: "Masquer les semaines faites")
-                                              : String(localized: "Afficher les semaines faites"))
-
-            if showPastWeeks {
-                VStack(spacing: 8) {
-                    ForEach(pastWeeks) { week in
-                        collapsibleWeekCard(week).opacity(0.7)
-                    }
-                }
-            }
+    /// La phrase qui décrit la forme du programme, en bas et en petit : elle est la même toutes
+    /// les semaines, et le graphique en haut la montre désormais mieux qu'elle ne la dit.
+    @ViewBuilder private var planShapeNote: some View {
+        if let total = shape.totalWeeks {
+            Text("\(total) semaines en 3 phases, calées sur ta date de course. Le plan s'ajuste chaque semaine selon ta forme — pas séance par séance.")
+                .font(RUFont.sans(.small)).foregroundColor(RUColor.text3).lineSpacing(3)
+        } else {
+            Text("Programme ouvert, sans date de fin — une semaine plus légère toutes les 4 semaines. Il s'ajuste chaque semaine selon ta forme.")
+                .font(RUFont.sans(.small)).foregroundColor(RUColor.text3).lineSpacing(3)
         }
     }
 
-    /// La phase, en pastille. Elle ne figure que sur la semaine en cours : ailleurs, c'est
-    /// l'intertitre du groupe qui la porte.
+    /// La phase, en pastille, à côté du numéro de la semaine regardée.
     private func blockPill(_ block: AdaptivePlanEngine.TrainingBlock) -> some View {
         Text(block.label)
             .font(RUFont.sans(.small, weight: .bold))
@@ -301,6 +338,10 @@ struct PlanView: View {
         String(localized: "Jeu"), String(localized: "Ven"), String(localized: "Sam"),
         String(localized: "Dim")
     ]
+
+    private func refreshSelectedDays() {
+        selectedDays = selected.map { dayList(for: $0) } ?? []
+    }
 
     private func dayList(for week: WeekSummary) -> [(String, PlannedDay, DayStatus.State?)] {
         if week.isCurrent {

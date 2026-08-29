@@ -19,18 +19,10 @@ struct HomeView: View {
     /// Trois semaines plutôt que deux : une marge qui absorbe les semaines à cheval sur un
     /// changement de mois ou d'année sans jamais rogner la comparaison.
     @Query private var runs: [RunRecord]
-    /// UNE ligne, et seulement pour savoir s'il en existe une.
-    ///
-    /// `runs` ci-dessus est borné aux trois dernières semaines : `runs.isEmpty` y signifie « rien
-    /// couru depuis trois semaines », pas « jamais couru ». S'en servir pour l'état du premier
-    /// jour souhaiterait la bienvenue à quelqu'un qui revient après un mois d'arrêt. Une requête
-    /// non bornée dirait la vérité mais rechargerait tout l'historique — tracés GPS compris — à
-    /// chaque retour sur l'onglet, ce que le commentaire ci-dessus existe précisément pour
-    /// éviter. `fetchLimit = 1` répond à la question sans payer ce prix.
-    @Query private var firstRunProbe: [RunRecord]
-
-    /// Aucune course enregistrée, jamais — l'état du premier jour.
-    private var hasNeverRun: Bool { firstRunProbe.isEmpty }
+    // La sonde « a-t-elle déjà couru une fois » a disparu avec la bande de chiffres : elle
+    // n'existait que pour choisir entre deux phrases de comparaison, et la carte de la semaine ne
+    // pose plus cette question — un premier jour s'y lit « 0,0 / 32 km », ce qui est à la fois
+    // exact et suffisant. Une requête SwiftData de moins à chaque retour sur l'onglet.
 
     init() {
         let cutoff = Calendar.current.date(byAdding: .weekOfYear, value: -3, to: .now) ?? .distantPast
@@ -39,9 +31,6 @@ struct HomeView: View {
             sort: \RunRecord.date,
             order: .reverse
         )
-        var probe = FetchDescriptor<RunRecord>(sortBy: [SortDescriptor(\RunRecord.date)])
-        probe.fetchLimit = 1
-        _firstRunProbe = Query(probe)
     }
 
     private var profile: UserProfile { appState.profile }
@@ -119,8 +108,6 @@ struct HomeView: View {
 
                 ringsCard
 
-                quickStatsRow
-
                 programWeekCard
 
                 if isFreeRun {
@@ -171,7 +158,7 @@ struct HomeView: View {
                 // undo that per-day granularity instead of adding to it.
                 Group {
                     if !isFreeRun {
-                        HStack {
+                        HStack(spacing: 8) {
                             // L'objectif revient ici. Il était passé dans `quickStatsRow`, mais
                             // « 20KM · 1:45 » n'est pas UN chiffre : c'est une distance et un
                             // temps collés, trois fois plus large que le « J-58 » d'à côté. Dans
@@ -181,20 +168,39 @@ struct HomeView: View {
                             // là qu'il était, et c'était juste. Le J-x, lui, EST un chiffre court
                             // et reste dans la bande.
                             RUCardHeader(icon: "map.fill", tint: RUColor.rose, title: String(localized: "Ton programme · \(profile.goalDisplay)"))
+                            // Le J-x revient ici. Il vivait dans la bande de chiffres, qui n'existe
+                            // plus : la carte qui parle du programme est la bonne place pour un
+                            // compte à rebours vers la course que ce programme prépare.
+                            if let days = profile.daysUntilRace {
+                                StatChip(text: String(localized: "J-\(days)"), color: RUColor.rose2)
+                            }
                             Text("→").foregroundColor(RUColor.rose2)
                         }
                         Text("\(weekEyebrow) · Bloc \(block.label)").displayStyle(17).foregroundColor(RUColor.textPrimary)
                     }
                 }
                 .accessibilityElement(children: .combine)
+
+                // Les kilomètres de la semaine, à l'endroit où la semaine est décrite.
+                //
+                // Ils vivaient dans une bande à filets au-dessus, séparée de cette carte par la
+                // séance et l'anneau : deux blocs pour une seule semaine, l'un donnant le chiffre
+                // et l'autre les jours. La barre de phases part avec la bande — le bloc est déjà
+                // nommé au-dessus (« Bloc Base »), la forme complète du programme est le sujet de
+                // l'écran du plan, et deux barres de progression dans une même carte ne se lisent
+                // plus ni l'une ni l'autre.
+                if !isFreeRun {
+                    WeekKmSummary(
+                        doneKm: weeklyKm(weeksAgo: 0),
+                        plannedKm: profile.plannedWeeklyKm,
+                        lastWeekKm: weeklyKm(weeksAgo: 1),
+                        footnote: nil
+                    )
+                }
+
                 weekStrip
                 if !isFreeRun {
                     if let total = shape.totalWeeks {
-                        PhaseProgressBar(phases: [
-                            PhaseSegment(name: "Base", done: min(profile.weekNumber, shape.baseWeeks), total: shape.baseWeeks, color: RUColor.rose),
-                            PhaseSegment(name: "Spécifique", done: max(0, min(profile.weekNumber - shape.baseWeeks, shape.specificWeeks)), total: shape.specificWeeks, color: RUColor.rose2),
-                            PhaseSegment(name: "Affûtage", done: max(0, min(profile.weekNumber - shape.baseWeeks - shape.specificWeeks, shape.taperWeeks)), total: shape.taperWeeks, color: RUColor.violet)
-                        ], showLabels: false)
                         Text("\(total) semaines · voir le plan complet").font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                     } else {
                         Text("Programme ouvert · voir le plan complet").font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
@@ -352,150 +358,6 @@ struct HomeView: View {
         guard let weekStart = cal.date(byAdding: .weekOfYear, value: -weeksAgo, to: thisWeekStart) else { return 0 }
         let range = AdaptivePlanEngine.currentWeekRange(from: weekStart)
         return runs.filter { range.contains($0.date) }.reduce(0) { $0 + $1.distanceKm }
-    }
-
-    /// La bande `.simplestats` de la maquette : deux ou trois chiffres repères séparés par des
-    /// filets, posés à même la page (pas de carte) entre l'anneau et la séance.
-    ///
-    /// Remplace l'ancienne carte pleine largeur "Cette semaine · N km", qui dépensait une carte
-    /// entière pour un seul chiffre. Rien d'inventé : le km de la semaine et la comparaison avec
-    /// la semaine dernière sont les mêmes calculs qu'avant (`weeklyKm`), l'objectif hebdo affiché
-    /// en dénominateur est `plannedWeeklyKm` (le vrai plan de la semaine, 0 en course libre — le
-    /// dénominateur disparaît alors au lieu d'être inventé), et le J-x / l'objectif ne sont pas
-    /// nouveaux non plus : ils étaient jusqu'ici enterrés dans l'eyebrow de la carte programme.
-    /// Reste tapable vers les Stats, comme la carte qu'elle remplace.
-    private var quickStatsRow: some View {
-        let thisWeek = weeklyKm(weeksAgo: 0)
-        let lastWeek = weeklyKm(weeksAgo: 1)
-        let delta = thisWeek - lastWeek
-        let planned = profile.plannedWeeklyKm
-        return Button(action: { appState.go(.stats) }) {
-            // Encadrée par deux filets pleine largeur. Sans eux, la bande de chiffres ET la ligne
-            // « semaine dernière / Mes stats » flottaient toutes deux à même la page, sans rien
-            // pour dire qu'elles forment un bloc ni où il s'arrête : ça se lisait comme un trou
-            // entre deux cartes, pas comme une intention. Des filets plutôt qu'une carte, parce
-            // qu'une quatrième carte identique empilée aurait ramené l'écran à une pile de boîtes
-            // interchangeables — c'est justement ce que le passage à une bande devait défaire.
-            VStack(spacing: 10) {
-                Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
-                HStack(spacing: 0) {
-                    quickStat(
-                        value: String(format: "%.1f", locale: Locale.current, thisWeek),
-                        suffix: planned > 0 ? "/\(Int(planned.rounded()))" : nil,
-                        label: "km sem."
-                    )
-                    if let days = profile.daysUntilRace {
-                        quickStatDivider
-                        quickStat(value: String(localized: "J-\(days)"), suffix: nil, label: "avant course")
-                    }
-                }
-                // La comparaison ne s'écrit plus que lorsqu'elle compare quelque chose.
-                //
-                // Sinon la bande portait une phrase pleine largeur — « Semaine dernière : pas de
-                // course enregistrée. » — qui était la ligne la plus longue de l'écran d'accueil
-                // et dont le seul contenu était une absence. Un chiffre manquant n'a pas besoin
-                // d'être annoncé : il se voit. Là où il y a vraiment un écart, il devient un
-                // court « +4,2 km » à côté du chiffre qu'il commente, plutôt qu'une phrase sous
-                // la bande — c'est déjà la forme que prend le même écart dans la carte d'allure.
-                if let comparison = weeklyComparisonText(delta: delta, lastWeek: lastWeek) {
-                    HStack(spacing: 6) {
-                        Text(comparison)
-                            .font(RUFont.sans(.small))
-                            .foregroundColor(weeklyComparisonColor(delta: delta, lastWeek: lastWeek))
-                            .multilineTextAlignment(.leading)
-                        Spacer(minLength: 0)
-                        Text("Mes stats").font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text3)
-                        Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundColor(RUColor.text3)
-                    }
-                } else {
-                    HStack(spacing: 6) {
-                        Spacer(minLength: 0)
-                        Text("Mes stats").font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text3)
-                        Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundColor(RUColor.text3)
-                    }
-                }
-                Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
-            }
-            .frame(minHeight: 44)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(PressableStyle())
-    }
-
-    private var quickStatDivider: some View {
-        Rectangle().fill(RUColor.line).frame(width: RUSpacing.hairline, height: 34)
-    }
-
-    private func quickStat(value: String, suffix: String?, label: String) -> some View {
-        VStack(spacing: 2) {
-            HStack(alignment: .lastTextBaseline, spacing: 1) {
-                Text(value).displayStyle(24).foregroundColor(RUColor.textPrimary)
-                if let suffix {
-                    // Le dénominateur (« /32 » d'un objectif hebdo) était à 15 pt en semi-gras
-                    // contre un chiffre de 23 : un rapport de 1,5, où les références tiennent
-                    // 2,5 à 3. À cette distance, le suffixe se lit comme une seconde valeur au
-                    // lieu d'une précision sur la première.
-                    Text(suffix).font(RUFont.sans(.micro)).foregroundColor(RUColor.text3)
-                }
-            }
-            .lineLimit(1)
-            // Les colonnes se partagent la largeur à parts égales (`maxWidth: .infinity`) : on
-            // rétrécit plutôt que de tronquer si un chiffre déborde le sien.
-            .minimumScaleFactor(0.6)
-            Text(LocalizedStringKey(label))
-                .font(RUFont.sans(.micro, weight: .bold)).tracking(0.2)
-                .foregroundColor(RUColor.text3)
-                .lineLimit(1).minimumScaleFactor(0.7)
-        }
-        .frame(maxWidth: .infinity)
-        // Sans ça, VoiceOver lit la valeur et son libellé comme deux arrêts sans lien — même
-        // traitement que `MetricColumn`, dont cette colonne est la variante centrée.
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(Text(LocalizedStringKey(label)) + Text(", ") + Text(value + (suffix ?? "")))
-    }
-
-    /// La pastille dégradée `.session-card .tag` de la maquette, à la place de l'eyebrow rose
-    /// discret : c'est le seul endroit de l'écran où la maquette remplit vraiment avec l'accent,
-    /// et ça fait de la carte séance l'ancre visuelle de la page. Un jour de repos garde une
-    /// pastille neutre — il n'y a rien à mettre en avant.
-    private func sessionTag(_ isRestDay: Bool) -> some View {
-        HStack(spacing: 5) {
-            Image(systemName: isRestDay ? "moon.zzz.fill" : "bolt.fill").font(.system(size: 9, weight: .bold))
-            Text(LocalizedStringKey(isRestDay ? "Aujourd'hui" : "Séance du jour"))
-                .font(RUFont.sans(.micro, weight: .bold)).tracking(0.2)
-        }
-        .foregroundColor(isRestDay ? RUColor.text2 : .white)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
-        .background(
-            isRestDay
-                ? AnyShapeStyle(RUColor.card2)
-                : AnyShapeStyle(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom)),
-            in: Capsule()
-        )
-        .overlay(Capsule().stroke(isRestDay ? RUColor.line : Color.clear, lineWidth: RUSpacing.hairline))
-    }
-
-    /// La phrase de comparaison, ou `nil` quand il n'y a rien à comparer.
-    ///
-    /// Le premier jour, elle invite — c'est le seul moment où une phrase mérite la pleine largeur
-    /// de la bande. Quand la semaine dernière est vide sans que ce soit le premier jour, elle se
-    /// tait : « pas de course enregistrée » est exact, mais son seul contenu est une absence que
-    /// les deux zéros au-dessus disent déjà.
-    private func weeklyComparisonText(delta: Double, lastWeek: Double) -> String? {
-        if hasNeverRun {
-            return String(localized: "Ta première sortie lancera ta série.")
-        }
-        guard lastWeek > 0 else { return nil }
-        let deltaText = String(format: "%.1f", locale: Locale.current, abs(delta))
-        if delta > 0.05 { return String(localized: "+\(deltaText) km vs la semaine dernière") }
-        if delta < -0.05 { return String(localized: "-\(deltaText) km vs la semaine dernière") }
-        return String(localized: "Comme la semaine dernière")
-    }
-
-    private func weeklyComparisonColor(delta: Double, lastWeek: Double) -> Color {
-        guard lastWeek > 0, delta > 0.05 else { return RUColor.text2 }
-        return RUColor.lime
     }
 
     /// Légende verticale `.ring-legend` de la maquette (pastille · nom de l'objectif · valeur

@@ -1176,6 +1176,38 @@
         }
       }
     },
+    "%lld séance sur %lld prévues": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld run out of %lld planned"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld salida de %lld previstas"
+          }
+        }
+      }
+    },
+    "%lld séances sur %lld prévues": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld runs out of %lld planned"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld salidas de %lld previstas"
+          }
+        }
+      }
+    },
     "%lld/3 jours": {
       "extractionState": "manual",
       "localizations": {
@@ -1387,6 +1419,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "-%@ km respecto a la semana pasada"
+          }
+        }
+      }
+    },
+    "/ %lld km": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/ %lld km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/ %lld km"
           }
         }
       }
@@ -3944,6 +3992,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta semana"
+          }
+        }
+      }
+    },
+    "Cette semaine · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This week · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta semana · %@"
+          }
+        }
+      }
+    },
+    "Cette semaine, %@ kilomètres": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This week, %@ kilometres"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta semana, %@ kilómetros"
+          }
+        }
+      }
+    },
+    "Cette semaine, %@ kilomètres sur %lld prévus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This week, %@ kilometres out of %lld planned"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta semana, %@ kilómetros de %lld previstos"
           }
         }
       }
@@ -6770,6 +6866,22 @@
         }
       }
     },
+    "Faite · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hecha · %@"
+          }
+        }
+      }
+    },
     "Faite ✓": {
       "localizations": {
         "en": {
@@ -8370,6 +8482,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esfuerzo percibido"
+          }
+        }
+      }
+    },
+    "La forme du plan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The shape of your plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La forma del plan"
           }
         }
       }
@@ -13458,6 +13586,22 @@
         }
       }
     },
+    "Semaine %lld, %@, environ %lld kilomètres": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Week %lld, %@, about %lld kilometres"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Semana %lld, %@, unos %lld kilómetros"
+          }
+        }
+      }
+    },
     "Semaine %lld/%lld": {
       "localizations": {
         "en": {
@@ -13520,6 +13664,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Semana próxima: "
+          }
+        }
+      }
+    },
+    "Semaine précédente": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Semana anterior"
+          }
+        }
+      }
+    },
+    "Semaine suivante": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Semana siguiente"
           }
         }
       }
@@ -16747,6 +16923,22 @@
         }
       }
     },
+    "Volume estimé, semaine par semaine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimated volume, week by week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volumen estimado, semana a semana"
+          }
+        }
+      }
+    },
     "Volume par jour (km)": {
       "localizations": {
         "en": {
@@ -19680,6 +19872,38 @@
         }
       }
     },
+    "~%lld km · résumé type de cette semaine passée": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~%lld km · typical summary of that past week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~%lld km · resumen tipo de esa semana pasada"
+          }
+        }
+      }
+    },
+    "~%lld km · s'ajustera selon ta forme": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~%lld km · will adjust to your form"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~%lld km · se ajustará a tu forma"
+          }
+        }
+      }
+    },
     "À faire": {
       "localizations": {
         "en": {
@@ -19725,6 +19949,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hay que cambiarlas"
+          }
+        }
+      }
+    },
+    "À venir · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upcoming · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Próxima · %@"
           }
         }
       }

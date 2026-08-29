@@ -111,7 +111,11 @@ struct ProfileView: View {
                         .padding(.horizontal, 9).padding(.vertical, 4)
                         .background(RUColor.card, in: Capsule())
                         .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
-                        .contentShape(Capsule())
+                        // La pastille fait 26 pt : en faire une destination sans agrandir sa zone
+                        // tapable aurait été remplacer une ligne facile à viser par une cible qui
+                        // ne l'est pas.
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(PressableStyle())
                     .accessibilityElement(children: .combine)

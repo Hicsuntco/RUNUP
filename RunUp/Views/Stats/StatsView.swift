@@ -353,7 +353,12 @@ struct StatsView: View {
                     Text(LocalizedStringKey(range.rawValue))
                         .font(RUFont.mono(10, weight: .medium))
                         .foregroundColor(selectedRange == range ? .white : RUColor.text2)
-                        .padding(.horizontal, 9).padding(.vertical, 5)
+                        // 5 pt de marge verticale sur un texte de 12,5 donnaient des segments de
+                        // 23 pt de haut. Le contrôle segmenté d'iOS en fait 32 : c'est le plancher
+                        // que ce genre d'objet peut se permettre — les segments sont jointifs, une
+                        // frappe imprécise tombe sur le voisin plutôt que dans le vide, ce qui
+                        // n'est pas vrai d'une pastille isolée. En dessous, il n'y a plus d'excuse.
+                        .padding(.horizontal, 9).padding(.vertical, 9)
                         // Same gradient fill as `SelectableChip` — a flat rose square inside this
                         // pill read flat/dated next to it.
                         .background(

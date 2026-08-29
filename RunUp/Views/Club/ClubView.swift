@@ -708,6 +708,12 @@ struct ClubView: View {
                             Text("\(event.going) au départ")
                                 .font(RUFont.sans(.micro)).foregroundColor(RUColor.text2)
                         }
+                        // La capsule fait 25 pt de haut. C'est la seule action sociale de la carte
+                        // des sorties, et elle est isolée : rien autour pour rattraper une frappe
+                        // qui tombe à côté. La zone tapable monte à 44, la pastille ne bouge pas —
+                        // le même traitement que les boutons-icônes de l'app.
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(PressableStyle())
                 }
@@ -885,7 +891,8 @@ struct ClubView: View {
                     Text(mode == .km ? "Km" : "% objectif")
                         .font(RUFont.mono(10, weight: .medium))
                         .foregroundColor(weeklyDisplayMode == mode ? .white : RUColor.text2)
-                        .padding(.horizontal, 9).padding(.vertical, 5)
+                        // Même hauteur que le sélecteur de période des Stats, dont c'est l'idiome.
+                        .padding(.horizontal, 9).padding(.vertical, 9)
                         .background(
                             // Même dégradé d'accent que partout ailleurs, via le token partagé
                             // (`--ru-gradient` de la maquette) plutôt qu'un couple recopié à la

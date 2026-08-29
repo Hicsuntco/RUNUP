@@ -239,6 +239,9 @@ struct FriendsView: View {
                 .padding(.horizontal, 13).padding(.vertical, 7)
                 .background(isActive ? RUColor.card2 : RUColor.rose, in: Capsule())
                 .overlay(Capsule().stroke(isActive ? RUColor.line : Color.clear, lineWidth: RUSpacing.hairline))
+                // « Suivre » est l'action de cette liste, et sa capsule ne fait que 29 pt.
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())
     }

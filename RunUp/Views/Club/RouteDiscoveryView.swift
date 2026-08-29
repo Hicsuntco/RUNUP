@@ -96,6 +96,12 @@ struct RouteDiscoveryView: View {
                                 .frame(width: 26, height: 26)
                                 .background(Circle().fill(RUColor.rose))
                                 .overlay(Circle().stroke(.white.opacity(0.7), lineWidth: 1.5))
+                                // 26 pt, et posée sur une carte : rater l'épingle ne fait pas rien,
+                                // ça déplace la carte — la frappe manquée est punie deux fois. La
+                                // cible monte à 44 sans grossir l'épingle, qui doit rester petite
+                                // pour que plusieurs itinéraires proches restent distincts.
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(PressableStyle())
                     }
@@ -148,6 +154,8 @@ struct RouteDiscoveryView: View {
                             .padding(.horizontal, 14)
                             .padding(.vertical, 8)
                             .background(Capsule().fill(isOn ? RUColor.rose : RUColor.card2))
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(PressableStyle())
                 }

@@ -229,7 +229,7 @@ struct SettingsView: View {
             Text(label)
                 .font(RUFont.sans(.body, weight: .semibold))
                 .foregroundColor(selected ? .white : RUColor.text2)
-                .padding(.horizontal, 14).padding(.vertical, 6)
+                .padding(.horizontal, 14).padding(.vertical, 9)
                 .background(selected ? RUColor.rose : .clear, in: Capsule())
         }
         .buttonStyle(PressableStyle())

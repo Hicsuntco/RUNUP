@@ -49,7 +49,11 @@ struct MoreSettingsView: View {
                         accountCard
                     }
 
-                    sectionTitle("Bêta")
+                    // « Bêta » était juste tant que l'app se testait entre proches. Elle se vend
+                    // maintenant par abonnement : lire « Bêta » dans les réglages d'une app qu'on
+                    // vient de payer, c'est lire « ce n'est pas fini », et c'est le genre de mot
+                    // qui déclenche une demande de remboursement plutôt qu'un retour.
+                    sectionTitle("Aide et retours")
                     betaFeedbackCard
                 }
                 .padding(18)
@@ -336,13 +340,16 @@ struct MoreSettingsView: View {
     /// configured on their phone (unlike `MFMailComposeViewController`, which only fires if the
     /// built-in Mail app itself has an account set up). Same address `ClubView`'s "nous contacter"
     /// link already uses, so feedback and abuse reports land in the same inbox.
+    /// Le seul chemin vers un humain depuis les réglages. `ClubView` en porte un second, en bas
+    /// de son onglet — celui-là existe pour la règle 1.2 de l'App Store, qui veut un contact
+    /// joignable là où il y a du contenu publié par les utilisatrices.
     private var betaFeedbackCard: some View {
         VStack(spacing: 0) {
             Link(destination: feedbackMailURL) {
                 HStack {
                     rowIcon("envelope")
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Donner mon avis").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                        Text("Nous écrire").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
                         Text("Un bug, une idée, un truc qui t'a gênée — ça part par mail.")
                             .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                     }
@@ -363,7 +370,9 @@ struct MoreSettingsView: View {
         let body = String(localized: "\n\n\n---\nCe qui suit aide juste au diagnostic :\nVersion \(version) (\(build)) · iOS \(system)")
         var components = URLComponents(string: "mailto:charlottegrudep@gmail.com")!
         components.queryItems = [
-            URLQueryItem(name: "subject", value: "Feedback RunUp bêta"),
+            // Le sujet portait « bêta » lui aussi. Il sert à trier les messages reçus : la
+            // version et le build sont déjà dans le corps, ils suffisent à savoir d'où ça vient.
+            URLQueryItem(name: "subject", value: "RunUp — retour utilisateur"),
             URLQueryItem(name: "body", value: body)
         ]
         return components.url!

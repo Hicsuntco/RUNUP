@@ -17,6 +17,7 @@ struct ProfileView: View {
     private var clubService: ClubService { ClubService(auth: auth) }
 
     @State private var showSettings = false
+    @State private var selectedBadge: ClubBadge?
     @State private var showSignIn = false
     @State private var avatarPickerItem: PhotosPickerItem?
     @State private var isSavingAvatar = false
@@ -77,6 +78,9 @@ struct ProfileView: View {
         }
         .sheet(isPresented: $showSignIn) {
             SignInView()
+        }
+        .sheet(item: $selectedBadge) { badge in
+            BadgeDetailView(badge: badge).runUpSheetStyle(detents: [.height(300)])
         }
     }
 
@@ -595,8 +599,20 @@ struct ProfileView: View {
     ///
     /// La bande montre les gagnés d'abord, puis les autres en verrouillé : quand il n'y en a
     /// aucun — le cas au premier lancement — l'écran montre quand même ce qui est atteignable au
-    /// lieu d'une rangée vide. Tapoter ouvre le Club, où chaque badge a son détail et sa
-    /// progression ; c'est une vitrine ici, pas un second écran de badges.
+    /// lieu d'une rangée vide.
+    ///
+    /// Chaque tuile ouvre SON détail, et non plus l'onglet Club.
+    ///
+    /// Deux raisons. La première est un défaut de manipulation : toute la bande portait un seul
+    /// `onTapGesture`, et cette bande défile horizontalement. Taper pour arrêter une inertie de
+    /// défilement — le geste que tout le monde fait — déclenchait donc un changement d'onglet.
+    /// La seconde est qu'envoyer vers le Club demandait de retrouver le même badge dans une autre
+    /// bande, sur un autre écran, pour lire ce qu'il fallait faire pour le gagner. `BadgeDetailView`
+    /// existe déjà et rend exactement cette réponse : elle s'ouvre ici.
+    ///
+    /// Le commentaire d'origine refusait un `Button` par tuile pour ne pas donner vingt arrêts
+    /// VoiceOver identiques. L'objection tenait tant qu'ils menaient tous au même endroit ; vingt
+    /// destinations distinctes méritent vingt arrêts, chacun nommé.
     private var badgeSection: some View {
         let ordered = earnedBadges + badges.filter { !$0.earned }
         return VStack(alignment: .leading, spacing: 10) {
@@ -610,36 +626,38 @@ struct ProfileView: View {
                 HStack(spacing: 10) {
                     ForEach(ordered) { badge in
                         let color = ClubBadgeCatalog.color(for: badge.key)
-                        VStack(spacing: 6) {
-                            HexagonBadgeShape()
-                                .fill(badge.earned ? color.opacity(0.22) : RUColor.card2)
-                                .overlay(HexagonBadgeShape().stroke(badge.earned ? color.opacity(0.7) : RUColor.line, lineWidth: RUSpacing.hairline))
-                                .aspectRatio(1, contentMode: .fit)
-                                .overlay(Text(badge.emoji).font(.system(size: 26)))
-                                .opacity(badge.earned ? 1 : 0.35)
-                                .shadow(color: badge.earned ? color.opacity(0.35) : .clear, radius: 8, x: 0, y: 3)
-                            Text(badge.name)
-                                .font(RUFont.sans(.micro, weight: .semibold))
-                                .foregroundColor(badge.earned ? RUColor.textPrimary : RUColor.text2)
-                                .multilineTextAlignment(.center)
-                                .lineLimit(2)
-                                .minimumScaleFactor(0.8)
+                        Button(action: { selectedBadge = badge }) {
+                            VStack(spacing: 6) {
+                                HexagonBadgeShape()
+                                    .fill(badge.earned ? color.opacity(0.22) : RUColor.card2)
+                                    .overlay(HexagonBadgeShape().stroke(badge.earned ? color.opacity(0.7) : RUColor.line, lineWidth: RUSpacing.hairline))
+                                    .aspectRatio(1, contentMode: .fit)
+                                    .overlay(Text(badge.emoji).font(.system(size: 26)))
+                                    .opacity(badge.earned ? 1 : 0.35)
+                                    .shadow(color: badge.earned ? color.opacity(0.35) : .clear, radius: 8, x: 0, y: 3)
+                                Text(badge.name)
+                                    .font(RUFont.sans(.micro, weight: .semibold))
+                                    .foregroundColor(badge.earned ? RUColor.textPrimary : RUColor.text2)
+                                    .multilineTextAlignment(.center)
+                                    .lineLimit(2)
+                                    .minimumScaleFactor(0.8)
+                            }
+                            .frame(width: 66)
+                            // Un hexagone plein ne se laisse frapper que sur son tracé : sans ça,
+                            // ses coins coupés sont des zones mortes. Même remarque que dans
+                            // `ClubView.badgeStrip`.
+                            .contentShape(Rectangle())
                         }
-                        .frame(width: 66)
+                        .buttonStyle(PressableStyle())
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel(badge.earned
+                                            ? String(localized: "\(badge.name), débloqué")
+                                            : String(localized: "\(badge.name), à débloquer"))
                     }
                 }
                 .padding(.vertical, 2)
                 .padding(.horizontal, 2)
             }
-            // Une seule cible tapable pour toute la bande : chaque tuile ouvrirait la même
-            // destination, et un `Button` par badge ferait vingt arrêts VoiceOver identiques.
-            .contentShape(Rectangle())
-            .onTapGesture { appState.go(.club) }
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(earnedBadges.isEmpty
-                                ? String(localized: "Badges, aucun débloqué sur \(badges.count)")
-                                : String(localized: "Badges, \(earnedBadges.count) débloqués sur \(badges.count)"))
-            .accessibilityAddTraits(.isButton)
         }
     }
 

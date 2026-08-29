@@ -434,6 +434,22 @@
         }
       }
     },
+    "%@, à débloquer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, to unlock"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, por desbloquear"
+          }
+        }
+      }
+    },
     "%@, à venir": {
       "extractionState": "manual",
       "localizations": {
@@ -2352,6 +2368,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Afinamiento"
+          }
+        }
+      }
+    },
+    "Aide et retours": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Help and feedback"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayuda y comentarios"
           }
         }
       }
@@ -9708,6 +9740,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notificaciones, %lld sin leer"
+          }
+        }
+      }
+    },
+    "Nous écrire": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contact us"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escríbenos"
           }
         }
       }

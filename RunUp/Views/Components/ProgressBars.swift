@@ -27,9 +27,9 @@ struct OnboardingProgressBar: View {
 /// `--ru-gradient` (= `RUColor.accentGradient()`), jamais d'un aplat uni — c'est aussi l'une des
 /// trois surfaces que la v28 garde volontairement pleines (« les jauges de progression (barfill,
 /// day-bars) […] sont des indicateurs fonctionnels, pas des surfaces décoratives »). Le paramètre
-/// `color` reste néanmoins requis et sans dégradé par défaut : `RingsView` passe des couleurs
-/// SÉMANTIQUES (une par objectif, grise pour un jour de repos), que forcer en dégradé de marque
-/// effacerait.
+/// `color` reste néanmoins requis et sans dégradé par défaut : `PhaseProgressBar` ci-dessous et
+/// `RingsView` passent des couleurs SÉMANTIQUES (une par phase, grise pour un jour de repos), que
+/// forcer en dégradé de marque effacerait.
 struct LinearBar: View {
     var fraction: Double
     var color: Color
@@ -63,10 +63,54 @@ struct LinearBar: View {
     }
 }
 
-// `PhaseSegment` et `PhaseProgressBar` vivaient ici. La barre à trois segments Base / Spécifique
-// / Affûtage avait deux emplacements : la carte programme de l'accueil et le haut du plan complet.
-// L'accueil montre maintenant les kilomètres de la semaine à cet endroit — deux barres de
-// progression dans une même carte ne se lisent plus ni l'une ni l'autre — et le plan complet
-// dessine la périodisation entière, semaine par semaine, ce que trois segments proportionnels ne
-// pouvaient qu'annoncer. Sans appelant, elle est retirée plutôt que laissée à se démoder.
+/// One phase segment: label, done/total sessions, proportional width, own fill color.
+struct PhaseSegment: Identifiable {
+    let id = UUID()
+    var name: String
+    var done: Int
+    var total: Int
+    var color: Color
+}
 
+/// The 3-segment Base/Spécifique/Affûtage phase bar, segment widths proportional to `total`
+/// (mirrors CSS `flex: t` in the prototype).
+struct PhaseProgressBar: View {
+    var phases: [PhaseSegment]
+    var showLabels: Bool = true
+
+    private var weightSum: Double { max(1, phases.reduce(0) { $0 + $1.total }.doubleValue) }
+    private let gap: CGFloat = 4
+
+    var body: some View {
+        VStack(spacing: 6) {
+            GeometryReader { geo in
+                let available = geo.size.width - gap * CGFloat(max(0, phases.count - 1))
+                HStack(spacing: gap) {
+                    ForEach(phases) { phase in
+                        LinearBar(fraction: phase.total == 0 ? 0 : Double(phase.done) / Double(phase.total), color: phase.color)
+                            .frame(width: available * (phase.total.doubleValue / weightSum))
+                    }
+                }
+            }
+            .frame(height: 5)
+            if showLabels {
+                HStack(spacing: gap) {
+                    ForEach(phases) { phase in
+                        // Même écueil que `EyebrowLabel` : un `String` passé à `Text` ne traverse
+                        // jamais le catalogue, donc « Base / Spécifique / Affûtage » restaient en
+                        // français alors que les trois clés y sont déjà.
+                        Text(LocalizedStringKey(phase.name))
+                            .font(RUFont.sans(.micro, weight: .bold))
+                            .tracking(0.2)
+                            .foregroundColor(RUColor.text2)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+            }
+        }
+    }
+}
+
+private extension Int {
+    var doubleValue: Double { Double(self) }
+}

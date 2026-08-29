@@ -140,10 +140,34 @@ struct PlanView: View {
                 }
             }
             .frame(height: 108)
-            phaseLegend
+            phaseBar
         }
         .padding(16)
         .ruCard()
+    }
+
+    /// La barre de phases, sous le graphique.
+    ///
+    /// Elle avait disparu, et c'était une erreur. Le graphique et elle ne disent pas la même
+    /// chose : l'un montre le VOLUME semaine par semaine, elle montre où l'on en est dans la
+    /// périodisation — « 3 semaines de Base sur 6 » se lit sur elle d'un coup d'œil, alors qu'il
+    /// faut compter les barres pour le déduire du graphique. Elle sert aussi de légende : ses
+    /// trois libellés nomment les trois couleurs juste au-dessus, ce qu'une rangée de pastilles
+    /// faisait moins bien puisqu'elle n'ajoutait rien d'autre.
+    ///
+    /// Elle ne s'affiche que pour un plan à date de course. Un programme ouvert n'a ni Spécifique
+    /// ni Affûtage : trois segments dont deux resteraient vides décriraient un plan qui n'existe
+    /// pas.
+    @ViewBuilder private var phaseBar: some View {
+        if shape.totalWeeks != nil {
+            PhaseProgressBar(phases: [
+                PhaseSegment(name: "Base", done: min(profile.weekNumber, shape.baseWeeks), total: shape.baseWeeks, color: RUColor.rose),
+                PhaseSegment(name: "Spécifique", done: max(0, min(profile.weekNumber - shape.baseWeeks, shape.specificWeeks)), total: shape.specificWeeks, color: RUColor.rose2),
+                PhaseSegment(name: "Affûtage", done: max(0, min(profile.weekNumber - shape.baseWeeks - shape.specificWeeks, shape.taperWeeks)), total: shape.taperWeeks, color: RUColor.violet)
+            ])
+        } else {
+            phaseLegend
+        }
     }
 
     private func volumeBar(_ week: WeekSummary, maxKm: Int) -> some View {
@@ -185,9 +209,9 @@ struct PlanView: View {
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
-    /// Les phases réellement présentes dans ce plan, dans leur ordre d'apparition. Un programme
-    /// ouvert n'a ni Spécifique ni Affûtage : afficher trois pastilles dont deux ne correspondent
-    /// à aucune barre serait une légende qui ment.
+    /// La légende de repli, pour un programme ouvert : ses phases réellement présentes, dans leur
+    /// ordre d'apparition. La barre à trois segments ne convient pas là — il n'y a ni Spécifique
+    /// ni Affûtage à remplir — mais les couleurs du graphique ont quand même besoin d'être nommées.
     private var phaseLegend: some View {
         var seen: [AdaptivePlanEngine.TrainingBlock] = []
         for week in weekSummaries where !seen.contains(week.block) { seen.append(week.block) }

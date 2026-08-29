@@ -168,7 +168,16 @@ def cmd_status(_):
     # je viens de pousser est-il dans ce que j'ai sur mon téléphone ? » — et le numéro de version
     # ne la répond pas, puisque dix builds partagent la même version 2.5. Le numéro de build et sa
     # date d'envoi la répondent, en une ligne, sans ouvrir App Store Connect.
-    builds = call("GET", f"apps/{aid}/builds?limit=5&sort=-uploadedDate")["data"]
+    #
+    # Route de premier niveau avec un filtre, et non la relation `apps/{id}/builds` : celle-ci
+    # refuse `sort` avec un 400. Et le bloc entier est protégé — un ajout de diagnostic n'a pas à
+    # emporter la commande qui l'héberge, sinon `status` cesse de dire l'état des versions le jour
+    # où Apple change quelque chose à l'endpoint des builds.
+    try:
+        builds = call("GET", f"builds?filter[app]={aid}&limit=5&sort=-uploadedDate")["data"]
+    except SystemExit:
+        builds = None
+        print("  (impossible de lire les builds — le reste du statut suit)\n")
     if builds:
         print("  Dernières builds envoyées sur TestFlight :")
         for b in builds:
@@ -178,7 +187,7 @@ def cmd_status(_):
             expired = " (expirée)" if a.get("expired") else ""
             print(f"    build {a.get('version', '?'):>6}   {uploaded} UTC   {state}{expired}")
         print()
-    else:
+    elif builds is not None:
         print("  Aucune build envoyée.\n")
 
     versions = call("GET", f"apps/{aid}/appStoreVersions?limit=5")["data"]

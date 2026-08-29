@@ -149,6 +149,40 @@
         }
       }
     },
+    "%@ par an": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ per year"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ al año"
+          }
+        }
+      }
+    },
+    "%@ par mois": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ per month"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ al mes"
+          }
+        }
+      }
+    },
     "%@ t'attend — %lld′ à %@/km.": {
       "localizations": {
         "en": {
@@ -1817,6 +1851,23 @@
         }
       }
     },
+    "Abonnement": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subscription"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suscripción"
+          }
+        }
+      }
+    },
     "Abonnements": {
       "localizations": {
         "en": {
@@ -1893,6 +1944,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Acelera un poco, vas por debajo de tu ritmo objetivo."
+          }
+        }
+      }
+    },
+    "Achat en attente d'approbation.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchase waiting for approval."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra pendiente de aprobación."
+          }
+        }
+      }
+    },
+    "Actif": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activa"
           }
         }
       }
@@ -2269,6 +2354,23 @@
         }
       }
     },
+    "Allure, charge d'entraînement, records, prédictions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pace, training load, records, predictions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ritmo, carga de entrenamiento, récords, predicciones"
+          }
+        }
+      }
+    },
     "Allégée · nuit courte": {
       "localizations": {
         "en": {
@@ -2378,6 +2480,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Análisis · progreso"
+          }
+        }
+      }
+    },
+    "Annuel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yearly"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anual"
           }
         }
       }
@@ -2541,6 +2660,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Detener y enviar"
+          }
+        }
+      }
+    },
+    "Aucun abonnement actif trouvé.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No active subscription found."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha encontrado ninguna suscripción activa."
           }
         }
       }
@@ -2933,6 +3069,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cerca del final de su vida"
+          }
+        }
+      }
+    },
+    "Bienvenue dans RUNUP Plus 🎉": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcome to RUNUP Plus 🎉"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bienvenida a RUNUP Plus 🎉"
           }
         }
       }
@@ -3648,6 +3801,23 @@
         }
       }
     },
+    "Chargement des formules…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading plans…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargando planes…"
+          }
+        }
+      }
+    },
     "Chargement du club…": {
       "localizations": {
         "en": {
@@ -4120,6 +4290,23 @@
         }
       }
     },
+    "Commencer les 7 jours gratuits": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start the 7 free days"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar los 7 días gratis"
+          }
+        }
+      }
+    },
     "Comment tu te sens ?": {
       "localizations": {
         "en": {
@@ -4213,6 +4400,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cuenta eliminada"
+          }
+        }
+      }
+    },
+    "Conditions d'utilisation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terms of Use"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Términos de uso"
+          }
+        }
+      }
+    },
+    "Confidentialité": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacidad"
           }
         }
       }
@@ -6561,6 +6782,23 @@
         }
       }
     },
+    "Gérer mon abonnement": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage subscription"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestionar mi suscripción"
+          }
+        }
+      }
+    },
     "Harcèlement": {
       "localizations": {
         "en": {
@@ -7119,6 +7357,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudo eliminar la cuenta — inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Inactif": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inactive"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inactiva"
           }
         }
       }
@@ -7741,6 +7996,23 @@
         }
       }
     },
+    "L'achat n'a pas abouti.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The purchase did not go through."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La compra no se ha completado."
+          }
+        }
+      }
+    },
     "L'app fonctionne, mais rien de cette session ne sera enregistré. Tes courses, ton programme et tes messages sont toujours sur ton téléphone — ils n'ont pas été supprimés — et devraient réapparaître après une mise à jour de l'app.": {
       "extractionState": "manual",
       "localizations": {
@@ -7787,6 +8059,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esfuerzo percibido"
+          }
+        }
+      }
+    },
+    "La montre, le widget et le suivi GPS": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The watch, the widget and GPS tracking"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El reloj, el widget y el seguimiento GPS"
           }
         }
       }
@@ -7867,6 +8156,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "El club esta semana"
+          }
+        }
+      }
+    },
+    "Le club, les amis et les parcours partagés": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The club, friends and shared routes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El club, los amigos y las rutas compartidas"
           }
         }
       }
@@ -7952,6 +8258,23 @@
         }
       }
     },
+    "Le coach, sans limite de messages": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The coach, with no message limit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El entrenador, sin límite de mensajes"
+          }
+        }
+      }
+    },
     "Le plan complet": {
       "extractionState": "manual",
       "localizations": {
@@ -8029,6 +8352,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Las carreras ya registradas con este par conservarán sus otros datos, solo sin zapatilla asociada."
+          }
+        }
+      }
+    },
+    "Les formules n'ont pas pu être chargées.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The plans could not be loaded."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se han podido cargar los planes."
           }
         }
       }
@@ -8341,6 +8681,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Miembros activos esta semana"
+          }
+        }
+      }
+    },
+    "Mensuel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Monthly"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mensual"
           }
         }
       }
@@ -11450,6 +11807,23 @@
         }
       }
     },
+    "RUNUP Plus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RUNUP Plus"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RUNUP Plus"
+          }
+        }
+      }
+    },
     "RUNUP construit ton programme, l'ajuste chaque semaine selon ta forme, et te pousse juste ce qu'il faut — jamais plus, jamais moins.": {
       "localizations": {
         "en": {
@@ -11835,6 +12209,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reanudación suave: el programa aumenta el volumen progresivamente para evitar lesiones, antes de volver a un ritmo más sostenido."
+          }
+        }
+      }
+    },
+    "Restaurer mes achats": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore purchases"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurar mis compras"
           }
         }
       }
@@ -12525,6 +12916,23 @@
         }
       }
     },
+    "Sans engagement. Résiliable à tout moment depuis les Réglages de ton iPhone, et rien n'est prélevé avant le huitième jour.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No commitment. Cancel any time from your iPhone Settings, and nothing is charged before day eight."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin compromiso. Cancela cuando quieras desde los Ajustes de tu iPhone, y no se cobra nada antes del octavo día."
+          }
+        }
+      }
+    },
     "Santé & blessures": {
       "localizations": {
         "en": {
@@ -12752,6 +13160,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Media"
+          }
+        }
+      }
+    },
+    "Sept jours offerts. Ensuite, tout le programme, sans rien qui manque.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seven days on us. Then the whole program, with nothing held back."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siete días gratis. Después, todo el programa, sin que falte nada."
           }
         }
       }
@@ -15600,6 +16025,23 @@
         }
       }
     },
+    "Un programme qui s'adapte à ta forme chaque semaine": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A program that adapts to your form every week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un programa que se adapta a tu forma cada semana"
+          }
+        }
+      }
+    },
     "Un vrai coach, disponible à tout moment": {
       "localizations": {
         "en": {
@@ -15888,6 +16330,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ya no verán la actividad del otro, y esto elimina cualquier seguimiento entre ustedes."
+          }
+        }
+      }
+    },
+    "Vérification de ton abonnement…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking your subscription…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobando tu suscripción…"
           }
         }
       }
@@ -18461,6 +18920,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Series VO2máx 6 × 800 m"
+          }
+        }
+      }
+    },
+    "soit %@/mois": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "that's %@/month"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "es decir %@/mes"
           }
         }
       }

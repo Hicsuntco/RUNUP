@@ -330,3 +330,72 @@ sont en place, un binaire sans elles étant refusé à l'envoi. Pour la refaire,
 le handoff design (voir
 `design_handoff_runup_app/README.md` § Assets, fonction `AppMark`) est un bon point de départ :
 c'est le même glyphe que `Views/Components/AppMarkView.swift`, à exporter en PNG haute résolution.
+
+---
+
+## Abonnement RUNUP Plus — ce qu'il reste à faire dans App Store Connect
+
+Le code est en place et compile, mais **aucun abonnement ne peut être acheté ni testé** tant que
+les étapes ci-dessous ne sont pas faites. Elles ne peuvent l'être que depuis le compte Apple
+Developer, pas depuis le dépôt.
+
+### 1. Contrat des applications payantes
+
+App Store Connect → **Accord, taxes et services bancaires** → signer le *Paid Applications
+Agreement*, puis renseigner les coordonnées bancaires et fiscales.
+
+Tant que ce contrat est « en attente », `Product.products(for:)` renvoie une liste **vide** : le
+paywall affichera « Les formules n'ont pas pu être chargées » et rien d'autre. C'est la cause n° 1
+des paywalls vides, et elle ne produit aucun message d'erreur exploitable.
+
+### 2. Le groupe d'abonnement
+
+App Store Connect → l'app → **Abonnements** → créer un groupe, par exemple `RUNUP Plus`.
+
+Les deux formules doivent être **dans le même groupe**. Sinon, passer du mensuel à l'annuel crée un
+second abonnement au lieu de changer de formule, et l'utilisatrice paie les deux.
+
+### 3. Les deux produits
+
+Les identifiants doivent être **exactement** ceux-ci — ils sont écrits dans
+`SubscriptionService.ProductID` et une faute de frappe donne un paywall vide, sans erreur :
+
+| Identifiant | Durée | Prix cible |
+|---|---|---|
+| `com.hicsuntco.runup.plus.yearly` | 1 an | 59,99 € |
+| `com.hicsuntco.runup.plus.monthly` | 1 mois | 9,99 € |
+
+Positionnement retenu : la moitié de Runna (19,99 $/mois, 119,99 $/an). L'annuel revient à 5 €/mois,
+soit 50 % de moins que le mensuel — l'app calcule et affiche cet écart à partir des prix réels
+renvoyés par StoreKit, donc il suffit de changer les prix pour que l'affichage suive.
+
+### 4. L'essai de 7 jours
+
+Sur **chacun** des deux produits : **Offres d'introduction** → *Essai gratuit* → 7 jours → toutes
+les zones.
+
+C'est là que vit l'essai, et nulle part ailleurs dans le code. Un compte à rebours maison serait
+contourné en changeant l'heure du téléphone, remis à zéro à la réinstallation, et ne suivrait pas
+l'utilisatrice d'un appareil à l'autre.
+
+### 5. Métadonnées de revue
+
+Chaque produit a besoin d'un nom affiché, d'une description et d'une **capture d'écran de revue**
+(le paywall suffit). Un produit sans capture reste bloqué en « Métadonnées manquantes » et ne se
+charge pas en production.
+
+### 6. Tester avant de livrer
+
+- **Sandbox** : Réglages iOS → App Store → Compte Sandbox. Un abonnement d'un an s'y renouvelle
+  toutes les heures et l'essai de 7 jours y dure 3 minutes.
+- **TestFlight** : les achats sont automatiquement en sandbox, rien n'est débité.
+
+### 7. Ce qui reste ouvert, et qu'il faudra traiter
+
+La vérification est faite **sur l'appareil**. C'est solide contre la falsification ordinaire —
+StoreKit vérifie la signature d'Apple — mais un appareil débridé reste un appareil débridé.
+
+Le seul endroit où ça coûte de l'argent est le coach : chaque message est un appel serveur payé.
+La suite logique est que `api/coach` exige le JWS de la transaction en plus du secret partagé, et
+le vérifie contre les clés publiques d'Apple avant de répondre. Tant que ce n'est pas fait, un
+client modifié peut appeler le coach sans payer.

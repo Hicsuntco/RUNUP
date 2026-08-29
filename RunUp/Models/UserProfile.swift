@@ -153,8 +153,16 @@ final class UserProfile {
     var defaultShoeID: UUID? = nil
 
     // MARK: Meta
-    /// No paid tier ships in this version — everyone gets full access. Kept as a field (rather
-    /// than removed outright) so a future real subscription can gate on it without a migration.
+    /// Plus consulté par rien, et c'est voulu : l'accès est décidé par `SubscriptionService`, à
+    /// partir des droits StoreKit signés par Apple, pas par un booléen posé dans la base locale.
+    ///
+    /// Un abonnement stocké côté app est un abonnement que l'app peut se donner à elle-même — et
+    /// que rien ne retire après un remboursement ou une résiliation. `Transaction.currentEntitlements`
+    /// ne renvoie que ce qui est actif à l'instant où on le demande, ce qui est exactement la
+    /// question posée.
+    ///
+    /// Le champ reste déclaré parce que le retirer d'un modèle SwiftData déjà installé sur des
+    /// téléphones demande une migration, pour une valeur que plus personne ne lit.
     var premium: Bool
     var onboarded: Bool
     var distanceUnit: String

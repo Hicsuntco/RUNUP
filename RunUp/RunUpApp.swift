@@ -93,18 +93,46 @@ private struct RootView: View {
     }
 }
 
-/// Top-level switch: onboarding → main tabbed app.
+/// Aiguillage de premier niveau : inscription → abonnement → app.
+///
+/// # Pourquoi le paywall est ICI et pas dans un `sheet`
+///
+/// Le modèle retenu verrouille l'app entière après l'essai. Une feuille modale se referme d'un
+/// glissement vers le bas ; ce que cet écran doit faire, c'est remplacer l'app tant que
+/// l'abonnement n'est pas actif. Le mettre au même niveau que l'inscription est la seule
+/// construction où il n'existe aucun geste pour passer outre.
 private struct ContentRouterView: View {
     @Environment(AppState.self) private var appState
+    @State private var subscriptions = SubscriptionService()
 
     var body: some View {
         Group {
             if !appState.profile.onboarded {
                 OnboardingContainerView()
+            } else if subscriptions.isSubscribed == false {
+                PaywallView(subscriptions: subscriptions)
+            } else if subscriptions.isSubscribed == nil {
+                // La première vérification n'a pas encore répondu. Montrer le paywall pendant ce
+                // temps le montrerait à des abonnées — un clignotement bref mais insultant, et la
+                // pire chose que cet écran puisse faire. Montrer l'app serait pire dans l'autre
+                // sens : elle s'ouvrirait puis se verrouillerait sous les doigts.
+                subscriptionCheckPlaceholder
             } else {
                 RootTabView()
             }
         }
         .toastHost(appState.toastCenter)
+        .environment(subscriptions)
+        .task { await subscriptions.start() }
+    }
+
+    private var subscriptionCheckPlaceholder: some View {
+        VStack(spacing: 14) {
+            ProgressView().tint(RUColor.rose)
+            Text("Vérification de ton abonnement…")
+                .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(RUColor.pageBackground)
     }
 }

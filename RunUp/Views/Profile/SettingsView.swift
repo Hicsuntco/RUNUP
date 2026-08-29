@@ -15,6 +15,7 @@ struct SettingsView: View {
     private var profile: UserProfile { appState.profile }
 
     @State private var showMoreSettings = false
+    @Environment(SubscriptionService.self) private var subscriptions
 
     var body: some View {
         NavigationStack {
@@ -27,6 +28,9 @@ struct SettingsView: View {
 
                     sectionTitle("Apparence")
                     appearanceCard
+
+                    sectionTitle("Abonnement")
+                    subscriptionCard
 
                     sectionTitle("Préférences")
                     preferencesCard
@@ -54,6 +58,34 @@ struct SettingsView: View {
 
     private func sectionTitle(_ text: String) -> some View {
         EyebrowLabel(text: text, color: RUColor.text3)
+    }
+
+    /// L'état de l'abonnement et les deux gestes que la validation App Store attend d'y trouver :
+    /// gérer (donc résilier) et restaurer. Les cacher derrière les Réglages iOS est autorisé, les
+    /// omettre de l'app ne l'est pas.
+    private var subscriptionCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            RUCardHeader(icon: "sparkles", tint: RUColor.rose,
+                         title: "RUNUP Plus",
+                         subtitle: subscriptions.isSubscribed == true ? "Actif" : "Inactif")
+            Link(destination: URL(string: "https://apps.apple.com/account/subscriptions")!) {
+                HStack {
+                    Text("Gérer mon abonnement").font(RUFont.sans(.body, weight: .semibold))
+                    Spacer()
+                    Image(systemName: "arrow.up.right").font(.system(size: 11, weight: .semibold))
+                }
+                .foregroundColor(RUColor.textPrimary)
+                .frame(minHeight: 44)
+            }
+            Button("Restaurer mes achats") { Task { await subscriptions.restore() } }
+                .font(RUFont.sans(.body, weight: .semibold))
+                .foregroundColor(RUColor.rose2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(minHeight: 44)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .ruCard()
     }
 
     private var moreSettingsRow: some View {

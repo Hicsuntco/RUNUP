@@ -58,12 +58,21 @@ struct PlanView: View {
         AdaptivePlanEngine.ProgramShape.compute(goal: profile.goalId, raceDate: profile.raceDate, from: profile.programStartDate ?? .now)
     }
 
-    private var weeksToShow: Int {
-        shape.totalWeeks ?? max(profile.weekNumber + 7, 8)
+    /// Les semaines que la page dessine et laisse parcourir.
+    ///
+    /// Un plan de course est borné (20 semaines au plus, voir `ProgramShape.compute`) et sa forme
+    /// EST l'information : on le montre en entier. Un programme ouvert n'a pas de fin — après un
+    /// an, l'ancienne borne `weekNumber + 7` aurait dessiné 59 barres de trois points et généré
+    /// 59 semaines de séances à chaque ouverture de l'écran. Sa forme se répète toutes les
+    /// 4 semaines : une fenêtre autour de la semaine en cours dit tout ce qu'il y a à dire.
+    private var weekRange: ClosedRange<Int> {
+        if let total = shape.totalWeeks { return 1...max(1, total) }
+        let hi = profile.weekNumber + 7
+        return max(1, profile.weekNumber - 8)...max(hi, 8)
     }
 
     private func computeWeekSummaries() -> [WeekSummary] {
-        (1...weeksToShow).map { number in
+        weekRange.map { number in
             let sessions = number == profile.weekNumber
                 ? profile.weekSessions
                 : AdaptivePlanEngine.generateWeekSessions(weekNumber: number, tier: profile.weekTier, profile: profile)
@@ -243,7 +252,7 @@ struct PlanView: View {
     /// barres n'en donnent pas.
     private var weekNavigator: some View {
         HStack(spacing: 10) {
-            navButton(systemName: "chevron.left", enabled: (selected?.number ?? 1) > 1) {
+            navButton(systemName: "chevron.left", enabled: (selected?.number ?? weekRange.lowerBound) > weekRange.lowerBound) {
                 step(-1)
             }
             VStack(spacing: 1) {
@@ -257,7 +266,7 @@ struct PlanView: View {
             }
             .frame(maxWidth: .infinity)
             .accessibilityElement(children: .combine)
-            navButton(systemName: "chevron.right", enabled: (selected?.number ?? 0) < weeksToShow) {
+            navButton(systemName: "chevron.right", enabled: (selected?.number ?? weekRange.upperBound) < weekRange.upperBound) {
                 step(1)
             }
         }
@@ -290,7 +299,7 @@ struct PlanView: View {
 
     private func step(_ delta: Int) {
         let next = (selected?.number ?? profile.weekNumber) + delta
-        guard next >= 1, next <= weeksToShow else { return }
+        guard weekRange.contains(next) else { return }
         Haptics.selection()
         withAnimation(.easeOut(duration: 0.2)) { selectedWeek = next }
     }

@@ -22,6 +22,7 @@ on:
           - pousser-la-fiche-essai
           - pousser-la-fiche
           - composer-les-captures
+          - etat-des-builds
       version:
         description: "Numéro de version (doit correspondre à CFBundleShortVersionString)"
         required: true
@@ -110,6 +111,7 @@ jobs:
             pousser-la-fiche-essai)   python3 ci_scripts/asc.py push-metadata "$VERSION" --dry-run ;;
             pousser-la-fiche)         python3 ci_scripts/asc.py push-metadata "$VERSION" ;;
             composer-les-captures)    python3 ci_scripts/screenshots.py "$LANGUE" ;;
+            etat-des-builds)          python3 ci_scripts/asc.py ci ;;
             *) echo "::error::Action inconnue : $WHAT"; exit 1 ;;
           esac
 

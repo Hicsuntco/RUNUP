@@ -201,6 +201,54 @@ def cmd_status(_):
         print(f"    localisations : {', '.join(sorted(l['attributes']['locale'] for l in locs)) or 'aucune'}")
 
 
+def cmd_ci(_):
+    """Les dernières exécutions Xcode Cloud : ont-elles tourné, et se sont-elles bien terminées ?
+
+    Une build absente de TestFlight a deux causes très différentes — la construction a échoué, ou
+    elle n'a jamais démarré (quota épuisé, déclencheur qui ne couvre pas la branche) — et le
+    remède n'est pas le même. La liste des builds ne les distingue pas : dans les deux cas, elle
+    ne montre rien. Celle-ci les distingue.
+
+    Xcode Cloud est exposé par la même API et la même clé, à condition que la clé ait le rôle qui
+    va avec. Si Apple refuse, on le dit et on s'arrête là plutôt que de laisser une trace HTTP.
+    """
+    try:
+        products = call("GET", "ciProducts?limit=20")["data"]
+    except SystemExit:
+        sys.exit("Cette clé d'API n'a pas accès à Xcode Cloud (rôle insuffisant). "
+                 "→ regarde directement dans App Store Connect → Xcode Cloud.")
+
+    mine = [p for p in products
+            if (p["attributes"].get("name") or "").upper().startswith("RUNUP")] or products
+    if not mine:
+        print("Aucun produit Xcode Cloud sur ce compte.")
+        return
+
+    for product in mine:
+        print(f"Produit Xcode Cloud : {product['attributes'].get('name')}\n")
+        workflows = call("GET", f"ciProducts/{product['id']}/workflows?limit=20")["data"]
+        for wf in workflows:
+            a = wf["attributes"]
+            state = "actif" if a.get("isEnabled") else "DÉSACTIVÉ"
+            locked = " (verrouillé)" if a.get("isLockedForEditing") else ""
+            print(f"  Workflow « {a.get('name')} » — {state}{locked}")
+            runs = call("GET", f"ciWorkflows/{wf['id']}/buildRuns?limit=5")["data"]
+            if not runs:
+                print("    aucune exécution\n")
+                continue
+            for r in runs:
+                ra = r["attributes"]
+                started = (ra.get("startedDate") or ra.get("createdDate") or "")[:16].replace("T", " à ")
+                status = ra.get("completionStatus") or ra.get("executionProgress") or "?"
+                reason = ra.get("cancelReason")
+                branch = ((ra.get("sourceCommit") or {}).get("webUrl") or "")
+                print(f"    #{ra.get('number', '?'):<5} {started} UTC   {status}"
+                      + (f"   ({reason})" if reason else ""))
+                if branch:
+                    print(f"          {branch}")
+            print()
+
+
 def cmd_create_version(args):
     aid, _ = app_id()
     existing = call("GET", f"apps/{aid}/appStoreVersions?filter[versionString]={args.version}")["data"]
@@ -256,6 +304,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("status").set_defaults(func=cmd_status)
+    sub.add_parser("ci").set_defaults(func=cmd_ci)
     c = sub.add_parser("create-version"); c.add_argument("version"); c.set_defaults(func=cmd_create_version)
     m = sub.add_parser("push-metadata"); m.add_argument("version")
     m.add_argument("--dry-run", action="store_true"); m.set_defaults(func=cmd_push_metadata)

@@ -662,10 +662,17 @@ struct ClubView: View {
 
     /// Sorties de groupe — real proposed group runs with RSVP. The one feature that turns a
     /// leaderboard into an actual club: people running TOGETHER.
+    /// Une SECTION, plus une carte-dans-carte.
+    ///
+    /// L'onglet Vue d'ensemble empilait quatre cartes de même largeur et de même chrome — le
+    /// niveau, la semaine, le défi, les sorties — et c'est cette répétition qui faisait le « mur
+    /// de boîtes » reproché à tout l'écran. Les sorties sont une LISTE : l'intertitre passe sur
+    /// la page (le motif de « Mon équipement » sur le Profil), et chaque sortie devient sa propre
+    /// petite carte. La page respire ; le défi, désormais seule carte teintée après le héros
+    /// violet, redevient le point focal communautaire qu'il doit être.
     private var eventsCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                RUCardHeader(icon: "calendar", tint: RUColor.violet, title: "Sorties de groupe")
+            RUCardHeader(icon: "calendar", tint: RUColor.violet, title: "Sorties de groupe") {
                 Button(action: { showCreateEvent = true }) {
                     HStack(spacing: 4) {
                         Image(systemName: "plus").font(.system(size: 10, weight: .bold))
@@ -681,6 +688,7 @@ struct ClubView: View {
             if (board.events ?? []).isEmpty {
                 Text("Aucune sortie prévue — propose un créneau, les autres n'ont qu'à dire « J'y serai ».")
                     .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                    .padding(.horizontal, 2)
             }
             ForEach(board.events ?? []) { event in
                 HStack(spacing: 12) {
@@ -703,7 +711,7 @@ struct ClubView: View {
                                 .font(RUFont.sans(.small, weight: .bold))
                                 .foregroundColor(event.goingByMe ? .white : RUColor.textPrimary)
                                 .padding(.horizontal, 11).padding(.vertical, 6)
-                                .background(event.goingByMe ? RUColor.rose : RUColor.card, in: Capsule())
+                                .background(event.goingByMe ? RUColor.rose : RUColor.card2, in: Capsule())
                                 .overlay(Capsule().stroke(event.goingByMe ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
                             Text("\(event.going) au départ")
                                 .font(RUFont.sans(.micro)).foregroundColor(RUColor.text2)
@@ -718,8 +726,7 @@ struct ClubView: View {
                     .buttonStyle(PressableStyle())
                 }
                 .padding(12)
-                .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                .ruCard(radius: RUSpacing.radiusCompact)
                 .contextMenu {
                     if event.isMine {
                         Button("Annuler cette sortie", role: .destructive) { deleteEvent(event) }
@@ -727,8 +734,6 @@ struct ClubView: View {
                 }
             }
         }
-        .padding(14)
-        .ruCard()
         .sheet(isPresented: $showCreateEvent) {
             CreateEventSheet { title, location, date in
                 let created = try await clubService.createEvent(title: title, location: location, startsAt: date)

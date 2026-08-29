@@ -12037,6 +12037,22 @@
         }
       }
     },
+    "Publier l'itinéraire": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publish the route"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publicar la ruta"
+          }
+        }
+      }
+    },
     "QUEL HYROX ?": {
       "localizations": {
         "en": {
@@ -15396,6 +15412,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tiempo"
+          }
+        }
+      }
+    },
+    "Temps %@, distance %@ kilomètres": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time %1$@, distance %2$@ kilometres"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiempo %1$@, distancia %2$@ kilómetros"
           }
         }
       }

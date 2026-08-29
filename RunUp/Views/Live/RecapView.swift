@@ -195,30 +195,34 @@ struct RecapView: View {
                                 .disabled(true)
                                 .opacity(0.5)
                             }
-                            if let gpxURL = GPXExporter.fileURL(for: run) {
-                                ShareLink(item: gpxURL) {
-                                    HStack(spacing: 8) {
-                                        Image(systemName: "arrow.down.doc")
-                                        Text("EXPORTER EN GPX")
+                            // Deux actions SECONDAIRES, en une rangée discrète — plus deux
+                            // boutons pleine largeur. L'écran finissait sur une pile de quatre
+                            // boutons majuscules du même poids : partager la carte, exporter le
+                            // GPX, publier l'itinéraire, donner son ressenti. Quatre commandements
+                            // égaux, c'est aucun qui commande. Le partage garde son bouton — c'est
+                            // l'action de la section — et le ressenti garde le sien, en accent :
+                            // c'est l'action de l'ÉCRAN, celle qui nourrit le plan. L'export et la
+                            // publication, gestes rares, descendent au rang de liens.
+                            HStack(spacing: 10) {
+                                if let gpxURL = GPXExporter.fileURL(for: run) {
+                                    ShareLink(item: gpxURL) {
+                                        quietAction(icon: "arrow.down.doc", title: String(localized: "Exporter en GPX"))
                                     }
+                                    .buttonStyle(PressableStyle())
                                 }
-                                .buttonStyle(SecondaryButtonStyle())
-                            }
-                            // Proposé seulement quand il y a vraiment quelque chose à publier :
-                            // un compte pour en être l'autrice, et un tracé qui survit au rognage
-                            // des extrémités. Un bouton qui ouvrirait une feuille annonçant
-                            // « trop court » serait une fausse promesse.
-                            if appState.auth.isSignedIn, RouteGeometry.shareablePayload(run.route) != nil {
-                                Button {
-                                    Haptics.selection()
-                                    showPublishRoute = true
-                                } label: {
-                                    HStack(spacing: 8) {
-                                        Image(systemName: "map")
-                                        Text("PARTAGER CET ITINÉRAIRE")
+                                // Proposé seulement quand il y a vraiment quelque chose à publier :
+                                // un compte pour en être l'autrice, et un tracé qui survit au
+                                // rognage des extrémités. Un lien qui ouvrirait une feuille
+                                // annonçant « trop court » serait une fausse promesse.
+                                if appState.auth.isSignedIn, RouteGeometry.shareablePayload(run.route) != nil {
+                                    Button {
+                                        Haptics.selection()
+                                        showPublishRoute = true
+                                    } label: {
+                                        quietAction(icon: "map", title: String(localized: "Publier l'itinéraire"))
                                     }
+                                    .buttonStyle(PressableStyle())
                                 }
-                                .buttonStyle(SecondaryButtonStyle())
                             }
                         }
                         .padding(.top, 10)
@@ -363,6 +367,19 @@ struct RecapView: View {
     /// Tiles pop in one after the other (riding the same `splitsRevealed` flag as the split bars
     /// below them) — the run's numbers are the emotional payoff of the whole screen, and they used
     /// to just be there, fully formed, before the entrance transition even settled.
+    /// Une action de bas de section, au registre d'un lien : icône, libellé, 44 pt de frappe —
+    /// aucun chrome. La forme dit le rang.
+    private func quietAction(icon: String, title: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon).font(.system(size: 12, weight: .semibold))
+            Text(title).font(RUFont.sans(.body, weight: .semibold))
+        }
+        .foregroundColor(RUColor.text2)
+        .frame(maxWidth: .infinity, minHeight: 44)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+    }
+
     private func statTile(_ value: String, _ label: String, _ color: Color = RUColor.textPrimary, index: Int = 0) -> some View {
         VStack(spacing: 3) {
             Text(value).displayStyle(24).foregroundColor(color)

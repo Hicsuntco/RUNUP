@@ -23,6 +23,25 @@ import UIKit
 /// whenever she has the app's global appearance set to light, which would break contrast on a
 /// screen that stays visually dark regardless. Referencing the token here would be the bug, not
 /// the literal.
+///
+/// La doctrine ne s'appliquait qu'à deux couleurs sur la vingtaine que l'écran pose. Tout le
+/// reste — `rose2` sur « EN DIRECT » et l'allure, `textPrimary` dans la bulle du coach, `text2`
+/// sous chaque métrique, `amber` de l'alerte GPS, `line` du panneau — lisait les jetons
+/// thème-conscients : en mode clair, chacun basculait vers sa valeur « pour fond blanc » et se
+/// retrouvait sombre sur un écran resté noir. L'accent devenait un rose foncé, le titre du coach
+/// du noir sur noir. `Ink` ci-dessous fixe le registre sombre de TOUT l'écran : les accents
+/// lisent `AccentTheme` directement (ils suivent le nuancier, jamais le thème), le reste est
+/// littéral.
+private enum Ink {
+    /// L'accent de la coureuse, version fond sombre — quelle que soit l'apparence globale.
+    static var accent: Color { AccentTheme.current.primary }
+    static var accentSoft: Color { AccentTheme.current.light }
+    static let label = Color.white.opacity(0.55)
+    static let line = Color.white.opacity(0.08)
+    static let cyan = Color(hex: 0x38E0D0)
+    static let amber = Color(hex: 0xFFB03D)
+}
+
 struct LiveRunView: View {
     @Environment(AppState.self) private var appState
     @State private var cameraPosition: MapCameraPosition = .userLocation(fallback: .automatic)
@@ -80,7 +99,7 @@ struct LiveRunView: View {
         Map(position: $cameraPosition) {
             if displayedRoute.count > 1 {
                 MapPolyline(coordinates: displayedRoute)
-                    .stroke(RUColor.rose, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
+                    .stroke(Ink.accent, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
             }
             UserAnnotation()
         }
@@ -112,13 +131,13 @@ struct LiveRunView: View {
             HStack(spacing: 8) {
                 FrostedBackButton { appState.go(.home) }
                 HStack(spacing: 6) {
-                    Circle().fill(RUColor.rose).frame(width: 6, height: 6)
-                        .shadow(color: RUColor.rose.opacity(RUColor.isLight ? 0 : 1), radius: 4)
+                    Circle().fill(Ink.accent).frame(width: 6, height: 6)
+                        .shadow(color: Ink.accent, radius: 4)
                     Text(vm?.isAutoPaused == true ? "PAUSE AUTO" : (vm?.isPaused == true ? "EN PAUSE" : "EN DIRECT"))
-                        .font(RUFont.display(11)).tracking(2).foregroundColor(RUColor.rose2)
+                        .font(RUFont.display(11)).tracking(2).foregroundColor(Ink.accentSoft)
                 }
                 .padding(.horizontal, 12).padding(.vertical, 7)
-                .background(RUColor.rose.opacity(0.16), in: Capsule())
+                .background(Ink.accent.opacity(0.16), in: Capsule())
                 .background(.ultraThinMaterial, in: Capsule())
             }
             Spacer()
@@ -153,29 +172,33 @@ struct LiveRunView: View {
 
     private var gpsWarningBanner: some View {
         HStack(spacing: 8) {
-            Image(systemName: "exclamationmark.triangle.fill").foregroundColor(RUColor.amber).font(.system(size: 14))
+            Image(systemName: "exclamationmark.triangle.fill").foregroundColor(Ink.amber).font(.system(size: 14))
             Text("Signal GPS instable — position estimée")
                 .font(RUFont.sans(.body, weight: .semibold))
                 .foregroundColor(Color(hex: 0xFFD79A))
         }
         .padding(.horizontal, 12).padding(.vertical, 9)
-        .background(RUColor.amber.opacity(0.16), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.amber.opacity(0.4), lineWidth: RUSpacing.hairline))
+        .background(Ink.amber.opacity(0.16), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(Ink.amber.opacity(0.4), lineWidth: RUSpacing.hairline))
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
     }
 
     private func coachBubble(_ text: String) -> some View {
         HStack(spacing: 12) {
-            Circle().fill(RUColor.rose).frame(width: 34, height: 34)
+            Circle().fill(Ink.accent).frame(width: 34, height: 34)
                 .overlay(Image(systemName: "speaker.wave.2.fill").foregroundColor(.white).font(.system(size: 13)))
             VStack(alignment: .leading, spacing: 3) {
-                RUCardHeader(icon: "bubble.left.fill", tint: RUColor.rose2, title: "Coach · en direct")
+                // Pas de `RUCardHeader` ici : son titre lit `textPrimary`, qui devient noir en
+                // mode clair — sur cette bulle sombre, le nom du coach disparaissait.
+                Text("Coach · en direct")
+                    .font(RUFont.sans(.small, weight: .bold))
+                    .foregroundColor(Ink.accentSoft)
                 Text(text).font(RUFont.sans(.label)).foregroundColor(.white).lineSpacing(3)
             }
         }
         .padding(14)
         .background(Color(hex: 0x0E0E14).opacity(0.85), in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous).stroke(RUColor.rose.opacity(0.25), lineWidth: RUSpacing.hairline))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous).stroke(Ink.accent.opacity(0.25), lineWidth: RUSpacing.hairline))
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
         .padding(.top, 90)
         // Speaker icon + "Coach · en direct" eyebrow + the coach line were three separate stops.
@@ -184,23 +207,35 @@ struct LiveRunView: View {
 
     private var metricsPanel: some View {
         VStack(spacing: 14) {
-            VStack(spacing: 4) {
+            // Deux héros, pas un héros et une note de bas de page. La distance vivait dans un
+            // eyebrow de 10 pt sous le chrono — c'est pourtant l'autre chiffre qu'on vient
+            // chercher d'un coup d'œil en courant, en plein soleil. Elle monte à la taille d'un
+            // vrai chiffre ; le chrono reste le plus grand, c'est lui qui structure l'effort.
+            VStack(spacing: 0) {
                 Text(PaceModel.formatDuration(vm?.elapsedSeconds ?? 0)).displayStyle(64).foregroundColor(.white)
-                EyebrowLabel(text: String(localized: "Temps · \(String(format: "%.2f", locale: Locale.current, vm?.distanceKm ?? 0)) km"))
+                HStack(alignment: .lastTextBaseline, spacing: 5) {
+                    Text(String(format: "%.2f", locale: Locale.current, vm?.distanceKm ?? 0))
+                        .displayStyle(26).foregroundColor(.white)
+                    Text(verbatim: "KM")
+                        .font(RUFont.sans(.micro, weight: .bold)).tracking(1.5)
+                        .foregroundColor(Ink.label)
+                }
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(String(localized: "Temps \(PaceModel.formatDuration(vm?.elapsedSeconds ?? 0)), distance \(String(format: "%.2f", locale: Locale.current, vm?.distanceKm ?? 0)) kilomètres"))
 
             HStack(spacing: 10) {
                 // `liveMetric` rend son libellé par un `Text(String)` nu — d'où le
                 // `String(localized:)` explicite ici. « KCAL » est un symbole, il ne bouge pas.
-                liveMetric(vm?.paceLabel ?? "--:--", String(localized: "ALLURE"), RUColor.rose2)
+                liveMetric(vm?.paceLabel ?? "--:--", String(localized: "ALLURE"), Ink.accentSoft)
                 // No live sensor stream means no real reading — "--" rather than a fabricated
                 // number (was a fake sine-wave formula dressed up as a live measurement).
                 liveMetric(
                     vm?.heartRate.map { "\($0)" } ?? "--",
                     String(localized: "FC · \(appState.profile.todaySession.zone)"),
-                    RUColor.rose
+                    Ink.accent
                 )
-                liveMetric("\(Int(vm?.kcal ?? 0))", "KCAL", RUColor.cyan)
+                liveMetric("\(Int(vm?.kcal ?? 0))", "KCAL", Ink.cyan)
             }
 
             HStack(spacing: 16) {
@@ -245,7 +280,7 @@ struct LiveRunView: View {
         )
         .background(.ultraThinMaterial)
         .clipShape(RoundedCornerShape(radius: 26, corners: [.topLeft, .topRight]))
-        .overlay(RoundedCornerShape(radius: 26, corners: [.topLeft, .topRight]).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        .overlay(RoundedCornerShape(radius: 26, corners: [.topLeft, .topRight]).stroke(Ink.line, lineWidth: RUSpacing.hairline))
     }
 
     /// Was a purely decorative lock icon with no `Button`/action at all — replaced with the real
@@ -255,17 +290,17 @@ struct LiveRunView: View {
         let state = vm?.voiceCoach?.state ?? .idle
         return Button(action: handleMicTap) {
             ZStack {
-                Circle().fill(RUColor.rose.opacity(state == .listening ? 0.35 : 0.15))
-                Circle().strokeBorder(RUColor.rose.opacity(state == .listening ? 0.6 : 0.3), lineWidth: RUSpacing.hairline)
+                Circle().fill(Ink.accent.opacity(state == .listening ? 0.35 : 0.15))
+                Circle().strokeBorder(Ink.accent.opacity(state == .listening ? 0.6 : 0.3), lineWidth: RUSpacing.hairline)
                 switch state {
                 case .idle:
-                    Image(systemName: "mic.fill").foregroundColor(RUColor.rose2).font(.system(size: 15))
+                    Image(systemName: "mic.fill").foregroundColor(Ink.accentSoft).font(.system(size: 15))
                 case .listening:
-                    Image(systemName: "waveform").foregroundColor(RUColor.rose2).font(.system(size: 15))
+                    Image(systemName: "waveform").foregroundColor(Ink.accentSoft).font(.system(size: 15))
                 case .thinking:
-                    ProgressView().tint(RUColor.rose2)
+                    ProgressView().tint(Ink.accentSoft)
                 case .speaking:
-                    Image(systemName: "speaker.wave.2.fill").foregroundColor(RUColor.rose2).font(.system(size: 15))
+                    Image(systemName: "speaker.wave.2.fill").foregroundColor(Ink.accentSoft).font(.system(size: 15))
                 }
             }
             .frame(width: 52, height: 52)
@@ -291,7 +326,7 @@ struct LiveRunView: View {
     private func liveMetric(_ value: String, _ label: String, _ color: Color) -> some View {
         VStack(spacing: 2) {
             Text(value).displayStyle(26).foregroundColor(color)
-            Text(label).font(RUFont.sans(.micro, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
+            Text(label).font(RUFont.sans(.micro, weight: .bold)).tracking(1.5).foregroundColor(Ink.label)
         }
         .frame(maxWidth: .infinity)
         // The screen most glanced at mid-run — was two separate stops ("8:32" then, later,

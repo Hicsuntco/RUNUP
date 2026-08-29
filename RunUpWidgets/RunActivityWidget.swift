@@ -27,13 +27,13 @@ struct RunActivityWidget: Widget {
                         Text(String(format: "%.2f", locale: Locale(identifier: "fr_FR"), context.state.distanceKm))
                             .font(DisplayFont.font(24))
                             .foregroundColor(.white)
-                        Text("KM").font(.custom("\(DisplayFont.family)-Bold", size: 9)).tracking(1).foregroundColor(.white.opacity(0.5))
+                        Text(verbatim: "km").font(.custom("\(DisplayFont.family)-Bold", size: 9)).tracking(0.2).foregroundColor(.white.opacity(0.5))
                     }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     VStack(alignment: .trailing, spacing: 2) {
                         Text(context.state.paceLabel).font(DisplayFont.font(18)).foregroundColor(.white)
-                        Text("/KM").font(.custom("\(DisplayFont.family)-Bold", size: 9)).tracking(1).foregroundColor(.white.opacity(0.5))
+                        Text(verbatim: "/km").font(.custom("\(DisplayFont.family)-Bold", size: 9)).tracking(0.2).foregroundColor(.white.opacity(0.5))
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
@@ -65,9 +65,9 @@ struct RunActivityWidget: Widget {
     private func lockScreenView(context: ActivityViewContext<RunActivityAttributes>) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text("RUN")
+                Text("Run")
                     .font(DisplayFont.font(17))
-                    .tracking(1)
+                    .tracking(0.2)
                     .foregroundColor(Self.accent)
                 Spacer()
                 HStack(spacing: 6) {
@@ -80,15 +80,15 @@ struct RunActivityWidget: Widget {
             }
 
             HStack {
-                metric(value: String(format: "%.2f", locale: Locale(identifier: "fr_FR"), context.state.distanceKm), label: "KM")
+                metric(value: String(format: "%.2f", locale: Locale(identifier: "fr_FR"), context.state.distanceKm), label: "km")
                 Spacer(minLength: 8)
-                metric(value: context.state.paceLabel, label: "ALLURE")
+                metric(value: context.state.paceLabel, label: "Allure")
                 Spacer(minLength: 8)
                 VStack(alignment: .trailing, spacing: 1) {
                     elapsedText(context.state)
                         .font(DisplayFont.font(26))
                         .foregroundColor(.white)
-                    Text("TEMPS").font(.custom("\(DisplayFont.family)-Bold", size: 8.5)).tracking(1).foregroundColor(.white.opacity(0.4))
+                    Text("Temps").font(.custom("\(DisplayFont.family)-Bold", size: 8.5)).tracking(0.2).foregroundColor(.white.opacity(0.4))
                 }
             }
 
@@ -97,9 +97,9 @@ struct RunActivityWidget: Widget {
                 let fraction = max(0, min(1, context.state.elapsedSeconds / plannedSeconds))
                 VStack(alignment: .leading, spacing: 5) {
                     HStack {
-                        Text("SÉANCE").font(.custom("\(DisplayFont.family)-Bold", size: 8.5)).tracking(1).foregroundColor(.white.opacity(0.4))
+                        Text("Séance").font(.custom("\(DisplayFont.family)-Bold", size: 8.5)).tracking(0.2).foregroundColor(.white.opacity(0.4))
                         Spacer()
-                        Text("\(context.attributes.plannedDurationMinutes) MIN PRÉVUES").font(.custom("\(DisplayFont.family)-Bold", size: 8.5)).tracking(0.6).foregroundColor(.white.opacity(0.4))
+                        Text("\(context.attributes.plannedDurationMinutes) MIN PRÉVUES").font(.custom("\(DisplayFont.family)-Bold", size: 8.5)).tracking(0.2).foregroundColor(.white.opacity(0.4))
                     }
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
@@ -121,7 +121,8 @@ struct RunActivityWidget: Widget {
             Text(value)
                 .font(DisplayFont.font(26))
                 .foregroundColor(.white)
-            Text(label).font(.custom("\(DisplayFont.family)-Bold", size: 8.5)).tracking(1).foregroundColor(.white.opacity(0.4))
+            // Idem : sans `LocalizedStringKey`, ces libellés restent français pour tout le monde.
+            Text(LocalizedStringKey(label)).font(.custom("\(DisplayFont.family)-Bold", size: 8.5)).tracking(0.2).foregroundColor(.white.opacity(0.4))
         }
     }
 

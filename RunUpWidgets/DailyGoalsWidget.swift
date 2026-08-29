@@ -117,15 +117,15 @@ struct DailyGoalsWidgetView: View {
             Text("\(snapshot.dailyGoalsDone)/\(snapshot.dailyGoalsTotal)")
                 .font(DisplayFont.font(46))
                 .foregroundColor(roseColor)
-            Text("BOUCLÉS")
+            Text("bouclés")
                 .font(.custom("\(DisplayFont.family)-Bold", size: 9))
-                .tracking(1.6)
+                .tracking(0.2)
                 .foregroundColor(text2)
             Spacer(minLength: 0)
             HStack {
-                subStat(label: "PAS", value: snapshot.stepsRemaining > 0 ? "-\(grouped(snapshot.stepsRemaining))" : "✓")
+                subStat(label: "Pas", value: snapshot.stepsRemaining > 0 ? "-\(grouped(snapshot.stepsRemaining))" : "✓")
                 Spacer()
-                subStat(label: "KCAL", value: snapshot.activeCaloriesRemaining > 0 ? "-\(grouped(snapshot.activeCaloriesRemaining))" : "✓", trailing: true)
+                subStat(label: "kcal", value: snapshot.activeCaloriesRemaining > 0 ? "-\(grouped(snapshot.activeCaloriesRemaining))" : "✓", trailing: true)
             }
         }
         .padding(16)
@@ -138,7 +138,7 @@ struct DailyGoalsWidgetView: View {
     private func subStat(label: String, value: String, trailing: Bool = false) -> some View {
         VStack(alignment: trailing ? .trailing : .leading, spacing: 1) {
             Text(value).font(.custom("\(DisplayFont.family)-Bold", size: 11)).foregroundColor(textPrimary)
-            Text(label).font(.custom("\(DisplayFont.family)-Bold", size: 6.5)).tracking(0.8).foregroundColor(text2)
+            Text(LocalizedStringKey(label)).font(.custom("\(DisplayFont.family)-Bold", size: 6.5)).tracking(0.2).foregroundColor(text2)
         }
     }
 
@@ -151,24 +151,24 @@ struct DailyGoalsWidgetView: View {
                 Text("\(snapshot.dailyGoalsDone)/\(snapshot.dailyGoalsTotal)")
                     .font(DisplayFont.font(30))
                     .foregroundColor(roseColor)
-                Text("BOUCLÉS")
+                Text("bouclés")
                     .font(.custom("\(DisplayFont.family)-Bold", size: 8.5))
-                    .tracking(1.2)
+                    .tracking(0.2)
                     .foregroundColor(text2)
                 Spacer(minLength: 0)
-                Text(Self.footerDateFormatter.string(from: entryDate).uppercased())
+                Text(Self.footerDateFormatter.string(from: entryDate))
                     .font(.custom("\(DisplayFont.family)-SemiBold", size: 7.5))
-                    .tracking(0.6)
+                    .tracking(0.2)
                     .foregroundColor(text2)
             }
             LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)], spacing: 10) {
                 gridCell(
                     value: snapshot.isRestDay ? "Repos" : ((snapshot.progress[safe: 0] ?? 0) >= 1 ? "✓" : "À faire"),
-                    label: "SÉANCE"
+                    label: "Séance"
                 )
-                gridCell(value: "\(snapshot.streak)", label: "SÉRIE", valueColor: flameColor)
-                gridCell(value: snapshot.activeCaloriesRemaining > 0 ? "-\(grouped(snapshot.activeCaloriesRemaining))" : "✓", label: "KCAL")
-                gridCell(value: snapshot.stepsRemaining > 0 ? "-\(grouped(snapshot.stepsRemaining))" : "✓", label: "PAS")
+                gridCell(value: "\(snapshot.streak)", label: "Série", valueColor: flameColor)
+                gridCell(value: snapshot.activeCaloriesRemaining > 0 ? "-\(grouped(snapshot.activeCaloriesRemaining))" : "✓", label: "kcal")
+                gridCell(value: snapshot.stepsRemaining > 0 ? "-\(grouped(snapshot.stepsRemaining))" : "✓", label: "Pas")
             }
             Spacer(minLength: 0)
             weekDots
@@ -180,7 +180,7 @@ struct DailyGoalsWidgetView: View {
     private func gridCell(value: String, label: String, valueColor: Color? = nil) -> some View {
         VStack(alignment: .leading, spacing: 1) {
             Text(value).font(.custom("\(DisplayFont.family)-Bold", size: 13)).foregroundColor(valueColor ?? textPrimary)
-            Text(label).font(.custom("\(DisplayFont.family)-Bold", size: 7)).tracking(0.8).foregroundColor(text2)
+            Text(LocalizedStringKey(label)).font(.custom("\(DisplayFont.family)-Bold", size: 7)).tracking(0.2).foregroundColor(text2)
         }
     }
 

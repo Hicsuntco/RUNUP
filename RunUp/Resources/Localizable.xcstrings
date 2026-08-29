@@ -4796,6 +4796,23 @@
         }
       }
     },
+    "Courir": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correr"
+          }
+        }
+      }
+    },
     "Courir plus vite ou plus longtemps, sans course précise": {
       "extractionState": "manual",
       "localizations": {
@@ -6100,6 +6117,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Correo electrónico o contraseña incorrectos."
+          }
+        }
+      }
+    },
+    "En cours": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En curso"
+          }
+        }
+      }
+    },
+    "En pause": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paused"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En pausa"
           }
         }
       }
@@ -12576,6 +12627,23 @@
         }
       }
     },
+    "Run": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run"
+          }
+        }
+      }
+    },
     "Running Club": {
       "extractionState": "manual",
       "localizations": {
@@ -14915,6 +14983,23 @@
         }
       }
     },
+    "Temps": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiempo"
+          }
+        }
+      }
+    },
     "Temps cumulé": {
       "extractionState": "manual",
       "localizations": {
@@ -16764,6 +16849,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "buena"
+          }
+        }
+      }
+    },
+    "bouclés": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "done"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hechos"
           }
         }
       }
@@ -19900,6 +20002,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "✓ HECHO"
+          }
+        }
+      }
+    },
+    "✓ Terminé": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "✓ Done"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "✓ Terminado"
           }
         }
       }

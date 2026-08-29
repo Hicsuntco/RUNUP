@@ -52,9 +52,9 @@ struct WatchStartView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 8) {
-                Text("AUJOURD'HUI")
+                Text("Aujourd'hui")
                     .font(WTheme.sansBold(11))
-                    .tracking(1.2)
+                    .tracking(0.2)
                     .foregroundStyle(WTheme.rose)
 
                 // `Text(String)` ne traduit PAS (contrairement à `Text("littéral")`), d'où le
@@ -77,7 +77,7 @@ struct WatchStartView: View {
                             if workout.state == .starting {
                                 ProgressView().tint(.white)
                             } else {
-                                Text("COURIR").font(WTheme.display(16)).foregroundStyle(.white)
+                                Text("Courir").font(WTheme.display(16)).foregroundStyle(.white)
                             }
                         }
                         .frame(width: 92, height: 92)
@@ -143,7 +143,7 @@ struct WatchRunView: View {
                     .frame(width: 6, height: 6)
                 Text(workout.state == .paused ? "EN PAUSE" : "EN COURS")
                     .font(WTheme.sansBold(10))
-                    .tracking(1)
+                    .tracking(0.2)
                     .foregroundStyle(workout.state == .paused ? WTheme.text3 : WTheme.lime)
             }
 
@@ -169,12 +169,12 @@ struct WatchRunView: View {
             .frame(width: 118, height: 118)
 
             HStack(spacing: 5) {
-                metric(value: distanceLabel, unit: "KM")
-                metric(value: workout.paceLabel, unit: "/KM", accent: WTheme.rose)
+                metric(value: distanceLabel, unit: "km")
+                metric(value: workout.paceLabel, unit: "/km", accent: WTheme.rose)
             }
             HStack(spacing: 5) {
-                metric(value: workout.heartRate.map(String.init) ?? "--", unit: "BPM", accent: WTheme.violet)
-                metric(value: "\(Int(workout.activeCalories.rounded()))", unit: "KCAL")
+                metric(value: workout.heartRate.map(String.init) ?? "--", unit: "bpm", accent: WTheme.violet)
+                metric(value: "\(Int(workout.activeCalories.rounded()))", unit: "kcal")
             }
 
             HStack(spacing: 6) {
@@ -214,9 +214,11 @@ struct WatchRunView: View {
                 .foregroundStyle(accent)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
-            Text(unit)
+            // `Text(String)` ne consulte PAS le catalogue — seul `Text(LocalizedStringKey)` le
+            // fait. Sans ça, « Temps » restait français même avec le catalogue chargé.
+            Text(LocalizedStringKey(unit))
                 .font(WTheme.sansBold(8.5))
-                .tracking(1)
+                .tracking(0.2)
                 .foregroundStyle(WTheme.text3)
         }
         .frame(maxWidth: .infinity)
@@ -240,9 +242,9 @@ struct WatchSummaryView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 8) {
-                Text("✓ TERMINÉ")
+                Text("✓ Terminé")
                     .font(WTheme.sansBold(10.5))
-                    .tracking(1)
+                    .tracking(0.2)
                     .foregroundStyle(WTheme.lime)
                     .padding(.horizontal, 9)
                     .padding(.vertical, 3)
@@ -256,9 +258,9 @@ struct WatchSummaryView: View {
                         Text(distanceLabel)
                             .font(WTheme.display(34))
                             .foregroundStyle(.white)
-                        Text("KM")
+                        Text(verbatim: "km")
                             .font(WTheme.sansBold(9.5))
-                            .tracking(1)
+                            .tracking(0.2)
                             .foregroundStyle(.white.opacity(0.4))
                     }
                 }
@@ -266,9 +268,9 @@ struct WatchSummaryView: View {
                 .padding(.vertical, 2)
 
                 HStack(spacing: 14) {
-                    metric(value: workout.elapsedLabel, unit: "TEMPS")
-                    metric(value: workout.paceLabel, unit: "/KM", accent: WTheme.rose)
-                    metric(value: workout.avgHeartRate.map(String.init) ?? "--", unit: "BPM MOY", accent: WTheme.violet)
+                    metric(value: workout.elapsedLabel, unit: "Temps")
+                    metric(value: workout.paceLabel, unit: "/km", accent: WTheme.rose)
+                    metric(value: workout.avgHeartRate.map(String.init) ?? "--", unit: "bpm moy", accent: WTheme.violet)
                 }
 
                 Text("Ton bilan t'attend sur l'iPhone 📱")
@@ -298,9 +300,9 @@ struct WatchSummaryView: View {
                 .foregroundStyle(accent)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
-            Text(unit)
+            Text(LocalizedStringKey(unit))
                 .font(WTheme.sansBold(7.5))
-                .tracking(1)
+                .tracking(0.2)
                 .foregroundStyle(WTheme.text3)
         }
     }

@@ -206,6 +206,14 @@ targets:
           - "DMMono-Medium.ttf"
       # L'extension est signée et livrée séparément de l'app : le manifeste de l'app ne la couvre
       # pas, il lui faut le sien. Elle lit `DailyGoalsSnapshot` via UserDefaults du groupe partagé.
+      # LE CATALOGUE DE TRADUCTIONS. Il manquait, et le widget affichait donc ses libellés en
+      # français à TOUT LE MONDE — « BOUCLÉS », « SÉANCE », « KCAL » sur l'écran d'accueil d'une
+      # anglophone. Rien ne le signalait : `Text("Séance")` sans catalogue à charger retombe sur
+      # sa propre clé, qui est du français parfaitement lisible.
+      #
+      # La montre, elle, l'avait depuis le début. C'est en cherchant pourquoi les deux cibles ne
+      # se ressemblaient pas que l'écart est apparu.
+      - path: RunUp/Resources/Localizable.xcstrings
       - path: RunUpWidgets/PrivacyInfo.xcprivacy
     info:
       path: RunUpWidgets/Info.plist

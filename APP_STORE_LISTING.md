@@ -86,6 +86,22 @@ Conditions d'utilisation : https://www.apple.com/legal/internet-services/itunes/
 Politique de confidentialité : https://hicsuntco.github.io/RUNUP/privacy.html
 ```
 
+## Nouveautés de cette version (4000 caractères max — obligatoire pour une mise à jour)
+```
+Refonte complète de l'interface.
+
+• Une seule typographie dans toute l'app, plus grande et mieux hiérarchisée. Les chiffres dominent enfin les libellés qui les accompagnent.
+• Des cartes aux angles adoucis, des titres en gras là où il n'y avait que de petites étiquettes grises, et un mode clair repensé.
+• L'onglet Programme est réorganisé : la semaine en cours d'abord, les suivantes groupées par phase, les semaines faites rangées.
+• L'écran Stats passe en grille : quatre chiffres qui ont enfin la place d'être lus.
+• Le profil affiche tes badges et l'usure de tes chaussures, qui étaient enterrés dans les réglages.
+• Le premier jour montre ce que ton programme va faire, au lieu d'une page de zéros.
+• Le widget et l'Apple Watch suivent la même direction — et le widget est enfin traduit en anglais et en espagnol.
+• Contraste corrigé sur les nuanciers Lime, Cyan, Ambre et Corail : leur mode clair était illisible.
+
+RUNUP passe à l'abonnement. RUNUP Plus donne accès à tout — programme adaptatif, coach sans limite, stats, montre, club — après 7 jours d'essai gratuit. Si tu utilisais déjà l'app, l'essai s'applique aussi à toi.
+```
+
 ## Mots-clés (100 caractères max, séparés par des virgules sans espace)
 ```
 running,entrainement,fractionné,cardio,marathon,semi,10km,trail,vma,jogging,footing,allure,parcours
@@ -163,6 +179,22 @@ Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 Privacy Policy: https://hicsuntco.github.io/RUNUP/privacy.html
 ```
 
+## What's New in This Version (4000 characters max — required for an update)
+```
+A full interface redesign.
+
+• One typeface across the whole app, larger and better ranked. Numbers finally dominate the labels beside them.
+• Softer card corners, bold headings where there were only small grey labels, and a reworked light mode.
+• The Program tab is reorganised: this week first, the following ones grouped by phase, finished weeks tucked away.
+• Stats moves to a grid — four figures with room to be read.
+• Your profile now shows your badges and your shoe mileage, which were buried in settings.
+• Day one shows what your program is going to do, instead of a page of zeros.
+• The widget and the Apple Watch follow the same direction — and the widget is finally translated into English and Spanish.
+• Contrast fixed on the Lime, Cyan, Amber and Coral palettes: their light mode was unreadable.
+
+RUNUP moves to a subscription. RUNUP Plus unlocks everything — adaptive program, unlimited coach, stats, watch, club — after a 7-day free trial. If you were already using the app, the trial applies to you too.
+```
+
 ## Keywords (100 characters max, comma-separated, no spaces)
 ```
 run,5k,10k,half,marathon,pace,tracker,gps,interval,cardio,jog,fitness,workout,routes,race,training
@@ -233,6 +265,22 @@ RUNUP se usa con una suscripción RUNUP Plus, precedida de 7 días de prueba gra
 El pago se carga en tu cuenta de Apple al confirmar la compra, al final de los 7 días de prueba. La suscripción se renueva automáticamente salvo que se cancele al menos 24 horas antes del final del periodo en curso. El cargo de renovación se realiza en las 24 horas previas al final del periodo. Puedes gestionar tu suscripción y desactivar la renovación automática en los ajustes de tu cuenta de Apple después de la compra. Cualquier parte no utilizada de un periodo de prueba gratuito se pierde si contratas una suscripción durante ese periodo.
 Términos de uso: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 Política de privacidad: https://hicsuntco.github.io/RUNUP/privacy.html
+```
+
+## Novedades de esta versión (4000 caracteres máx. — obligatorio para una actualización)
+```
+Rediseño completo de la interfaz.
+
+• Una sola tipografía en toda la app, más grande y mejor jerarquizada. Los números por fin dominan a las etiquetas que los acompañan.
+• Esquinas de tarjeta más suaves, títulos en negrita donde solo había etiquetas grises pequeñas, y un modo claro replanteado.
+• La pestaña Programa se reorganiza: primero la semana en curso, las siguientes agrupadas por fase, las semanas hechas recogidas.
+• Estadísticas pasa a una cuadrícula: cuatro cifras con sitio para leerse.
+• Tu perfil muestra ahora tus insignias y el kilometraje de tus zapatillas, que estaban enterrados en los ajustes.
+• El primer día muestra lo que tu programa va a hacer, en vez de una página de ceros.
+• El widget y el Apple Watch siguen la misma dirección — y el widget está por fin traducido al inglés y al español.
+• Contraste corregido en las paletas Lima, Cian, Ámbar y Coral: su modo claro era ilegible.
+
+RUNUP pasa a suscripción. RUNUP Plus desbloquea todo — programa adaptativo, entrenador sin límite, estadísticas, reloj, club — tras 7 días de prueba gratuita. Si ya usabas la app, la prueba también se aplica a ti.
 ```
 
 ## Palabras clave (100 caracteres máx., separadas por comas sin espacios)

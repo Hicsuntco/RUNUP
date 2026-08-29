@@ -39,13 +39,13 @@ API = "https://api.appstoreconnect.apple.com/v1"
 LANGS = [
     ("fr-FR", "# 🇫🇷", {"name": "Nom de l'app", "subtitle": "Sous-titre",
                          "promo": "Texte promotionnel", "description": "Description",
-                         "keywords": "Mots-clés"}),
+                         "keywords": "Mots-clés", "whatsNew": "Nouveautés de cette version"}),
     ("en-US", "# 🇬🇧", {"name": "App name", "subtitle": "Subtitle",
                          "promo": "Promotional text", "description": "Description",
-                         "keywords": "Keywords"}),
+                         "keywords": "Keywords", "whatsNew": "What's New in This Version"}),
     ("es-ES", "# 🇪🇸", {"name": "Nombre de la app", "subtitle": "Subtítulo",
                          "promo": "Texto promocional", "description": "Descripción",
-                         "keywords": "Palabras clave"}),
+                         "keywords": "Palabras clave", "whatsNew": "Novedades de esta versión"}),
 ]
 
 
@@ -198,8 +198,11 @@ def cmd_push_metadata(args):
                 for l in call("GET", f"appStoreVersions/{vid}/appStoreVersionLocalizations")["data"]}
 
     for locale, fields in data.items():
+        # `whatsNew` est OBLIGATOIRE dès qu'une version de l'app est déjà en vente : sans notes
+        # de version, la soumission est refusée. L'app est publiée depuis la 1.1, donc ce champ
+        # ne peut pas être omis.
         attrs = {"description": fields["description"], "keywords": fields["keywords"],
-                 "promotionalText": fields["promo"],
+                 "promotionalText": fields["promo"], "whatsNew": fields["whatsNew"],
                  "supportUrl": "https://hicsuntco.github.io/RUNUP/privacy.html"}
         if args.dry_run:
             print(f"\n── {locale} " + "─" * 50)

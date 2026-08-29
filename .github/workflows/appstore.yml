@@ -26,6 +26,11 @@ on:
         required: true
         type: string
         default: "2.5"
+      branche:
+        description: "Branche où lire la fiche et le script"
+        required: true
+        type: string
+        default: "claude/runup-ios-swiftui-app-5b1yv6"
 
 # Deux exécutions en parallèle écriraient la même fiche depuis deux états différents.
 concurrency: appstore
@@ -34,7 +39,13 @@ jobs:
   appstore:
     runs-on: ubuntu-latest
     steps:
+      # Ce fichier vit sur `main` — GitHub n'affiche le bouton « Run workflow » que pour les
+      # workflows présents sur la branche par défaut. Mais `main` ne contient QUE le serveur :
+      # ni `ci_scripts/asc.py`, ni `APP_STORE_LISTING.md`. On récupère donc explicitement la
+      # branche qui les porte, au lieu de compter sur celle depuis laquelle on a cliqué.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branche }}
 
       # Échouer ici avec une phrase claire, plutôt que dans une erreur HTTP d'Apple vingt lignes
       # plus bas. Un secret vide se crée sans bruit — `gh secret set` accepte une entrée vide —

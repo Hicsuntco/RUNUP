@@ -44,13 +44,15 @@ final class SubscriptionService {
     private(set) var loadFailed = false
     private(set) var isPurchasing = false
 
-    private var updatesTask: Task<Void, Never>?
-
     init() {
         // Démarré avant tout achat, et jamais annulé tant que l'app vit : c'est par là qu'arrivent
         // les renouvellements, les remboursements, les achats faits sur un autre appareil et les
         // transactions qu'Apple rejoue après une interruption au milieu d'un paiement.
-        updatesTask = Task { [weak self] in
+        // Pas de `Task` retenue ni de `deinit` pour l'annuler : la classe est `@MainActor`, donc
+        // `deinit` — qui ne l'est pas — ne peut pas lire une de ses propriétés. La boucle se
+        // termine d'elle-même par le `guard let self` ci-dessous dès que l'objet disparaît, ce qui
+        // est le seul mécanisme dont on ait besoin : ce service vit aussi longtemps que l'app.
+        Task { [weak self] in
             for await update in Transaction.updates {
                 guard let self else { return }
                 if case .verified(let transaction) = update {
@@ -60,8 +62,6 @@ final class SubscriptionService {
             }
         }
     }
-
-    deinit { updatesTask?.cancel() }
 
     func start() async {
         await refreshEntitlement()

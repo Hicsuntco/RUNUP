@@ -21,11 +21,21 @@ on:
           - creer-la-version
           - pousser-la-fiche-essai
           - pousser-la-fiche
+          - composer-les-captures
       version:
         description: "Numéro de version (doit correspondre à CFBundleShortVersionString)"
         required: true
         type: string
         default: "2.5"
+      langue:
+        description: "Langue des accroches (pour composer-les-captures)"
+        required: true
+        type: choice
+        default: fr-FR
+        options:
+          - fr-FR
+          - en-US
+          - es-ES
       branche:
         description: "Branche où lire la fiche et le script"
         required: true
@@ -51,6 +61,7 @@ jobs:
       # plus bas. Un secret vide se crée sans bruit — `gh secret set` accepte une entrée vide —
       # et c'est déjà arrivé deux fois sur ce dépôt.
       - name: Vérifier les secrets
+        if: inputs.action != 'composer-les-captures'
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
@@ -71,6 +82,7 @@ jobs:
           echo "Trois secrets présents, clé décodable."
 
       - name: Installer la clé d'API
+        if: inputs.action != 'composer-les-captures'
         env:
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
         run: |
@@ -78,11 +90,16 @@ jobs:
           printf '%s' "$ASC_KEY_P8" | base64 -d > "$RUNNER_TEMP/asc.p8"
           chmod 600 "$RUNNER_TEMP/asc.p8"
 
+      - name: Installer Pillow
+        if: inputs.action == 'composer-les-captures'
+        run: python3 -m pip install --quiet Pillow
+
       - name: Exécuter
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           VERSION: ${{ inputs.version }}
+          LANGUE: ${{ inputs.langue }}
           WHAT: ${{ inputs.action }}
         run: |
           set -euo pipefail
@@ -92,8 +109,17 @@ jobs:
             creer-la-version)         python3 ci_scripts/asc.py create-version "$VERSION" ;;
             pousser-la-fiche-essai)   python3 ci_scripts/asc.py push-metadata "$VERSION" --dry-run ;;
             pousser-la-fiche)         python3 ci_scripts/asc.py push-metadata "$VERSION" ;;
+            composer-les-captures)    python3 ci_scripts/screenshots.py "$LANGUE" ;;
             *) echo "::error::Action inconnue : $WHAT"; exit 1 ;;
           esac
+
+      - name: Récupérer les captures
+        if: inputs.action == 'composer-les-captures'
+        uses: actions/upload-artifact@v4
+        with:
+          name: captures-${{ inputs.langue }}
+          path: appstore/out/${{ inputs.langue }}/
+          if-no-files-found: error
 
       # La clé ne doit pas survivre au job, même si une étape précédente a échoué.
       - name: Effacer la clé

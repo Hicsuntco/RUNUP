@@ -45,18 +45,23 @@ struct PaywallView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
-                header
-                advantagesList
-                offers
-                actions
-                legal
+            VStack(spacing: 0) {
+                hero
+                VStack(alignment: .leading, spacing: 16) {
+                    advantagesList
+                    offers
+                }
+                .padding(.horizontal, RUSpacing.pagePadding)
+                .padding(.top, 16)
+                .padding(.bottom, 20)
             }
-            .padding(.horizontal, RUSpacing.pagePadding)
-            .padding(.top, 12)
-            .padding(.bottom, 40)
         }
         .background(RUColor.pageBackground)
+        // Épinglé plutôt que posé à la fin du défilement. Le bouton était en bas d'une page qui
+        // laissait ensuite un tiers d'écran vide : il fallait faire défiler pour trouver l'action
+        // principale, et l'espace vide sous elle disait « c'est fini » alors que rien n'avait été
+        // proposé. Un pied fixe met le prix et l'action toujours sous le pouce.
+        .safeAreaInset(edge: .bottom) { footer }
         .task {
             await subscriptions.start()
             if selected == nil { selected = subscriptions.products.first }
@@ -66,69 +71,100 @@ struct PaywallView: View {
         }
     }
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 10) {
+    /// Le héros : un aplat d'accent pleine largeur, arrondi en bas.
+    ///
+    /// L'écran commençait par un titre noir sur fond blanc, au-dessus d'une pile de boîtes
+    /// blanches — l'écran le plus commercial de l'app ressemblait à une page de réglages. Une
+    /// couleur pleine en haut donne une identité en une demi-seconde, et c'est la seule chose que
+    /// cet écran doit réussir avant qu'on lise quoi que ce soit.
+    private var hero: some View {
+        VStack(alignment: .leading, spacing: 12) {
             if let onClose {
                 HStack {
                     Spacer()
                     Button(action: onClose) {
                         Image(systemName: "xmark")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(RUColor.text3)
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(RUColor.onRose.opacity(0.85))
                             .frame(width: 44, height: 44)
                             .contentShape(Rectangle())
                     }
                     .accessibilityLabel("Fermer")
                 }
+                .padding(.bottom, -8)
             }
-            Text("RUNUP Plus").displayStyle(30).foregroundColor(RUColor.textPrimary)
-            Text("Sept jours offerts. Ensuite, tout le programme, sans rien qui manque.")
-                .font(RUFont.sans(.label)).foregroundColor(RUColor.text2)
+            HStack(spacing: 8) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 13, weight: .bold))
+                Text("7 jours offerts")
+                    .font(RUFont.sans(.small, weight: .bold))
+            }
+            .foregroundColor(RUColor.onRose)
+            .padding(.horizontal, 12).padding(.vertical, 7)
+            .background(RUColor.onRose.opacity(0.18), in: Capsule())
+
+            Text("RUNUP Plus")
+                .displayStyle(34)
+                .foregroundColor(RUColor.onRose)
+            Text("Ton programme, ton coach et tes stats. Sans rien qui manque.")
+                .font(RUFont.sans(.label))
+                .foregroundColor(RUColor.onRose.opacity(0.88))
                 .fixedSize(horizontal: false, vertical: true)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
+        // Une carte teintée en retrait, pas une bannière pleine largeur passant sous la barre
+        // d'état. `ignoresSafeArea` sur un enfant de `ScrollView` ne fait pas ce qu'on croit — la
+        // vue est disposée dans l'espace du défilement — et la référence apportée fait exactement
+        // ça : sa carte verte « Your Weekly Progress » est une carte arrondie en retrait.
+        .background(RUColor.accentGradient(from: .topLeading, to: .bottomTrailing),
+                    in: RoundedRectangle(cornerRadius: RUSpacing.radiusHero, style: .continuous))
+        .padding(.horizontal, RUSpacing.pagePadding)
+        .padding(.top, onClose == nil ? 14 : 4)
     }
 
     private var advantagesList: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            ForEach(advantages) { advantage in
-                HStack(alignment: .top, spacing: 12) {
-                    Image(systemName: advantage.icon)
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(RUColor.rose)
-                        .frame(width: 28, height: 28)
-                        .background(RUColor.rose.opacity(0.10), in: RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous))
-                    Text(advantage.text)
-                        .font(RUFont.sans(.body)).foregroundColor(RUColor.textPrimary)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 5)
-                    Spacer(minLength: 0)
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Ce que tu débloques")
+                .font(RUFont.sans(.label, weight: .bold))
+                .foregroundColor(RUColor.textPrimary)
+            VStack(alignment: .leading, spacing: 13) {
+                ForEach(advantages) { advantage in
+                    HStack(alignment: .top, spacing: 12) {
+                        // Un glyphe plein, sans pastille. Cinq carrés rose pâle empilés faisaient
+                        // cinq taches délavées sur du blanc et tiraient l'œil avant le texte
+                        // qu'ils sont censés annoncer — c'était l'élément le plus bruyant de
+                        // l'écran pour l'information la moins importante.
+                        Image(systemName: advantage.icon)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(RUColor.rose)
+                            .frame(width: 22, alignment: .center)
+                        Text(advantage.text)
+                            .font(RUFont.sans(.body))
+                            .foregroundColor(RUColor.textPrimary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 0)
+                    }
                 }
             }
         }
-        .padding(16)
+        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
         .ruCard()
     }
 
     @ViewBuilder private var offers: some View {
         if subscriptions.products.isEmpty {
-            // Sans produits, il n'y a rien à acheter et le bouton mentirait. Le cas arrive pour de
-            // vrai : pas de réseau, ou des produits pas encore approuvés côté App Store Connect.
-            VStack(alignment: .leading, spacing: 8) {
-                Text(subscriptions.loadFailed
-                     ? "Les formules n'ont pas pu être chargées."
-                     : "Chargement des formules…")
-                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
-                if subscriptions.loadFailed {
-                    Button("Réessayer") { Task { await subscriptions.loadProducts() } }
-                        .font(RUFont.sans(.body, weight: .semibold))
-                        .foregroundColor(RUColor.rose2)
-                        .frame(minHeight: 44)
-                }
+            // Quasiment inatteignable depuis que `grantsAccess` laisse entrer dès qu'il n'y a rien
+            // à vendre : sans produits, cet écran ne s'affiche plus du tout. Reste une ligne
+            // sobre pour le cas où les produits disparaîtraient pendant que l'écran est ouvert —
+            // et surtout plus la grande carte vide qui occupait le milieu de la page.
+            HStack(spacing: 10) {
+                ProgressView().tint(RUColor.text3)
+                Text("Chargement des formules…")
+                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(16)
-            .ruCard()
         } else {
             VStack(spacing: 10) {
                 ForEach(subscriptions.products, id: \.id) { product in
@@ -218,8 +254,18 @@ struct PaywallView: View {
         return (year.price / Decimal(12)).formatted(year.priceFormatStyle)
     }
 
-    private var actions: some View {
-        VStack(spacing: 10) {
+    /// Le pied épinglé : le prix choisi, l'action, et les deux liens que la revue exige.
+    ///
+    /// Rassemblés ici parce qu'ils forment une seule décision. Éparpillés dans le défilement, le
+    /// bouton se lisait sans son prix et le prix sans son bouton.
+    private var footer: some View {
+        VStack(spacing: 9) {
+            if let line = priceLine {
+                Text(line)
+                    .font(RUFont.sans(.small))
+                    .foregroundColor(RUColor.text2)
+                    .multilineTextAlignment(.center)
+            }
             Button(action: { Task { await buy() } }) {
                 if subscriptions.isPurchasing {
                     ProgressView().tint(RUColor.onRose)
@@ -230,28 +276,41 @@ struct PaywallView: View {
             .buttonStyle(PrimaryButtonStyle())
             .disabled(selected == nil || subscriptions.isPurchasing)
 
-            Text("Sans engagement. Résiliable à tout moment depuis les Réglages de ton iPhone, et rien n'est prélevé avant le huitième jour.")
+            Text("Renouvellement automatique, résiliable à tout moment.")
                 .font(RUFont.sans(.micro)).foregroundColor(RUColor.text3)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
 
-            Button("Restaurer mes achats") { Task { await restore() } }
-                .font(RUFont.sans(.small, weight: .semibold))
-                .foregroundColor(RUColor.text2)
-                .frame(minHeight: 44)
+            HStack(spacing: 12) {
+                Button("Restaurer mes achats") { Task { await restore() } }
+                Text(verbatim: "·").foregroundColor(RUColor.text4)
+                Link("Conditions d'utilisation", destination: termsURL)
+                Text(verbatim: "·").foregroundColor(RUColor.text4)
+                Link("Confidentialité", destination: privacyURL)
+            }
+            .font(RUFont.sans(.micro))
+            .foregroundColor(RUColor.text3)
+            .frame(minHeight: 44)
         }
+        .padding(.horizontal, RUSpacing.pagePadding)
+        .padding(.top, 14)
+        .padding(.bottom, 6)
+        // Un fond opaque, pas transparent : le contenu défile DESSOUS, et sans lui les lignes de
+        // texte passeraient à travers le bouton.
+        .background(
+            RUColor.bg
+                .overlay(Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline),
+                         alignment: .top)
+                .ignoresSafeArea(edges: .bottom)
+        )
     }
 
-    private var legal: some View {
-        HStack(spacing: 14) {
-            Spacer()
-            Link("Conditions d'utilisation", destination: termsURL)
-            Text("·").foregroundColor(RUColor.text4)
-            Link("Confidentialité", destination: privacyURL)
-            Spacer()
-        }
-        .font(RUFont.sans(.micro))
-        .foregroundColor(RUColor.text3)
+    /// « 7 jours gratuits, puis 39,99 € par an ». La phrase que la revue cherche, et celle que
+    /// l'utilisatrice cherche aussi.
+    private var priceLine: String? {
+        guard let product = selected else { return nil }
+        let isYearly = product.id == SubscriptionService.ProductID.yearly
+        return isYearly
+            ? String(localized: "7 jours gratuits, puis \(product.displayPrice) par an")
+            : String(localized: "7 jours gratuits, puis \(product.displayPrice) par mois")
     }
 
     private func buy() async {

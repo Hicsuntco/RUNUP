@@ -1641,6 +1641,57 @@
         }
       }
     },
+    "7 jours gratuits, puis %@ par an": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 days free, then %@ per year"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 días gratis, luego %@ al año"
+          }
+        }
+      }
+    },
+    "7 jours gratuits, puis %@ par mois": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 days free, then %@ per month"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 días gratis, luego %@ al mes"
+          }
+        }
+      }
+    },
+    "7 jours offerts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 days free"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 días gratis"
+          }
+        }
+      }
+    },
     "7J": {
       "localizations": {
         "en": {
@@ -3571,6 +3622,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lo que hay que saber (opcional)"
+          }
+        }
+      }
+    },
+    "Ce que tu débloques": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What you unlock"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo que desbloqueas"
           }
         }
       }
@@ -12148,6 +12216,23 @@
         }
       }
     },
+    "Renouvellement automatique, résiliable à tout moment.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renews automatically, cancel any time."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se renueva automáticamente, cancela cuando quieras."
+          }
+        }
+      }
+    },
     "Repos": {
       "localizations": {
         "en": {
@@ -12912,6 +12997,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sábado"
+          }
+        }
+      }
+    },
+    "Sans engagement, résiliable à tout moment.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No commitment, cancel any time."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin compromiso, cancela cuando quieras."
           }
         }
       }
@@ -15578,6 +15680,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tu programa · %@"
+          }
+        }
+      }
+    },
+    "Ton programme, ton coach et tes stats. Sans rien qui manque.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your program, your coach and your stats. Nothing held back."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu programa, tu entrenador y tus estadísticas. Sin que falte nada."
           }
         }
       }

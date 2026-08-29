@@ -159,7 +159,7 @@ struct HomeView: View {
                 Group {
                     if !isFreeRun {
                         HStack(spacing: 8) {
-                            // L'objectif revient ici. Il était passé dans `quickStatsRow`, mais
+                            // L'objectif revient ici. Il était passé dans la bande de chiffres, mais
                             // « 20KM · 1:45 » n'est pas UN chiffre : c'est une distance et un
                             // temps collés, trois fois plus large que le « J-58 » d'à côté. Dans
                             // une bande de chiffres séparés par des filets, ça donnait trois
@@ -275,6 +275,32 @@ struct HomeView: View {
     /// A plain `VStack` with `.onTapGesture` for "open the detail sheet" opens exactly the same
     /// way, but SwiftUI correctly gives priority to the real `Button`s nested inside a tap-gesture
     /// container (unlike inside an actual `Button`), so FAIT/DÉMARRER get their own reliable taps.
+    /// La pastille dégradée `.session-card .tag` de la maquette, à la place de l'eyebrow rose
+    /// discret : c'est le seul endroit de l'écran où la maquette remplit vraiment avec l'accent,
+    /// et ça fait de la carte séance l'ancre visuelle de la page. Un jour de repos garde une
+    /// pastille neutre — il n'y a rien à mettre en avant.
+    ///
+    /// Elle vivait au milieu des aides de la bande de chiffres ; en supprimant la bande, j'ai
+    /// emporté cette fonction avec elle et cassé la compilation. Elle est désormais posée juste
+    /// au-dessus de son unique appelante.
+    private func sessionTag(_ isRestDay: Bool) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: isRestDay ? "moon.zzz.fill" : "bolt.fill").font(.system(size: 9, weight: .bold))
+            Text(LocalizedStringKey(isRestDay ? "Aujourd'hui" : "Séance du jour"))
+                .font(RUFont.sans(.micro, weight: .bold)).tracking(0.2)
+        }
+        .foregroundColor(isRestDay ? RUColor.text2 : .white)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(
+            isRestDay
+                ? AnyShapeStyle(RUColor.card2)
+                : AnyShapeStyle(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom)),
+            in: Capsule()
+        )
+        .overlay(Capsule().stroke(isRestDay ? RUColor.line : Color.clear, lineWidth: RUSpacing.hairline))
+    }
+
     private var sessionCard: some View {
         let session = profile.todaySession
         let isRestDay = session.durationMinutes == 0

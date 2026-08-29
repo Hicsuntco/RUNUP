@@ -6,14 +6,23 @@ promotionnels dans un formulaire web est exactement le genre de tâche où l'on 
 langue au mauvais endroit sans s'en apercevoir. `APP_STORE_LISTING.md` est la source, ce script
 l'envoie tel quel.
 
-    export ASC_KEY_ID=...          # l'identifiant de la clé
-    export ASC_ISSUER_ID=...       # l'identifiant d'émetteur (page Clés d'API)
-    export ASC_KEY_PATH=~/AuthKey_XXXXXXXX.p8
-
-    python3 ci_scripts/asc.py status              # ce qu'App Store Connect voit aujourd'hui
-    python3 ci_scripts/asc.py create-version 2.5  # créer la version iOS
-    python3 ci_scripts/asc.py push-metadata 2.5   # y pousser fr, en et es depuis le markdown
-    python3 ci_scripts/asc.py push-metadata 2.5 --dry-run   # afficher sans rien envoyer
+# NORMALEMENT, ON NE LANCE PAS CE SCRIPT À LA MAIN.
+#
+# Il est piloté par `.github/workflows/appstore.yml` : onglet Actions → App Store → Run workflow.
+# Les trois secrets y sont déjà, ce sont ceux de la chaîne TestFlight — donc pas de fichier `.p8`
+# à retrouver sur une machine, et rien à taper dans un terminal. C'était tout l'intérêt de monter
+# cette chaîne ; l'utiliser à moitié n'aurait aucun sens.
+#
+# En local, si un jour c'est utile :
+#
+#     export ASC_KEY_ID=...          # l'identifiant de la clé
+#     export ASC_ISSUER_ID=...       # l'identifiant d'émetteur (page Clés d'API)
+#     export ASC_KEY_PATH=~/AuthKey_XXXXXXXX.p8
+#
+#     python3 ci_scripts/asc.py status              # ce qu'App Store Connect voit aujourd'hui
+#     python3 ci_scripts/asc.py create-version 2.5  # créer la version iOS
+#     python3 ci_scripts/asc.py push-metadata 2.5   # y pousser fr, en et es depuis le markdown
+#     python3 ci_scripts/asc.py push-metadata 2.5 --dry-run   # afficher sans rien envoyer
 
 Ce que le script NE fait PAS, parce que l'API ne l'expose pas ou mal : les captures d'écran, le
 questionnaire de confidentialité et la classification d'âge. Ceux-là restent sur le web.

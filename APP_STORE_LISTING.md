@@ -8,6 +8,12 @@ doit donc exister dans les trois, sinon App Store Connect n'expose l'app qu'en f
 recherches anglophones/hispanophones ne la trouvent jamais. Chaque locale a sa propre section
 ci-dessous ; les sections communes (catégorie, âge, URLs, copyright) ne se saisissent qu'une fois.
 
+> **Abonnement** : les trois descriptions se terminent par le bloc que la revue exige pour un
+> abonnement à renouvellement automatique — titre, durée, prix, conditions de renouvellement, et
+> les deux liens. Ce n'est pas de la prose, c'est la guideline 3.1.2 : un de ces éléments manquant
+> est un rejet, pas une remarque. Les prix y sont écrits en dur, donc ils doivent être remis à jour
+> ici le jour où ils changent dans App Store Connect.
+
 > **Règle de rédaction** : rien ici ne doit décrire une fonctionnalité que le code n'implémente pas
 > réellement. Une promesse non tenue dans la fiche est un motif de rejet (App Review Guideline 2.3
 > — "Accurate Metadata"), et c'est exactement ce qui s'était glissé dans la version précédente de ce
@@ -70,6 +76,14 @@ FIN DE PROGRAMME, PAS FIN DE L'HISTOIRE
 À la fin de ton programme : récupération encadrée, puis nouvel objectif ou mode course libre sans plan fixe.
 
 Nécessite iOS 17 ou version ultérieure. La connexion à Apple Santé est optionnelle mais recommandée pour une forme du jour plus précise. Le Club demande un compte ; tout le reste de l'app fonctionne sans.
+
+ABONNEMENT RUNUP PLUS
+RUNUP s'utilise avec un abonnement RUNUP Plus, précédé de 7 jours d'essai gratuit.
+• RUNUP Plus mensuel — 9,99 € par mois
+• RUNUP Plus annuel — 59,99 € par an (soit 5 € par mois)
+Le paiement est débité sur ton compte Apple à la confirmation de l'achat, à la fin des 7 jours d'essai. L'abonnement se renouvelle automatiquement sauf s'il est résilié au moins 24 heures avant la fin de la période en cours. Ton compte est débité du renouvellement dans les 24 heures précédant la fin de la période. Tu peux gérer ton abonnement et désactiver le renouvellement automatique depuis les réglages de ton compte Apple après l'achat. Toute partie non utilisée d'une période d'essai gratuite est perdue si tu souscris un abonnement pendant cette période.
+Conditions d'utilisation : https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Politique de confidentialité : https://hicsuntco.github.io/RUNUP/privacy.html
 ```
 
 ## Mots-clés (100 caractères max, séparés par des virgules sans espace)
@@ -139,6 +153,14 @@ THE END OF A PLAN ISN'T THE END
 When your plan finishes: a guided recovery block, then a new goal or free-run mode with no fixed plan at all.
 
 Requires iOS 17 or later. Connecting Apple Health is optional but recommended for a more accurate daily readiness score. The Club needs an account; everything else works without one.
+
+RUNUP PLUS SUBSCRIPTION
+RUNUP is used with a RUNUP Plus subscription, starting with a 7-day free trial.
+• RUNUP Plus monthly — €9.99 per month
+• RUNUP Plus yearly — €59.99 per year (that's €5 per month)
+Payment is charged to your Apple account at confirmation of purchase, at the end of the 7-day trial. The subscription renews automatically unless cancelled at least 24 hours before the end of the current period. Your account is charged for renewal within 24 hours prior to the end of the current period. You can manage your subscription and switch off auto-renewal in your Apple account settings after purchase. Any unused portion of a free trial period is forfeited when you purchase a subscription during that period.
+Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy Policy: https://hicsuntco.github.io/RUNUP/privacy.html
 ```
 
 ## Keywords (100 characters max, comma-separated, no spaces)
@@ -203,6 +225,14 @@ QUE ACABE EL PLAN NO ES EL FINAL
 Al terminar tu plan: un bloque de recuperación guiado y, después, un nuevo objetivo o modo carrera libre sin plan fijo.
 
 Requiere iOS 17 o posterior. Conectar Apple Salud es opcional, pero recomendable para una forma del día más precisa. El Club necesita una cuenta; todo lo demás funciona sin ella.
+
+SUSCRIPCIÓN RUNUP PLUS
+RUNUP se usa con una suscripción RUNUP Plus, precedida de 7 días de prueba gratuita.
+• RUNUP Plus mensual — 9,99 € al mes
+• RUNUP Plus anual — 59,99 € al año (es decir, 5 € al mes)
+El pago se carga en tu cuenta de Apple al confirmar la compra, al final de los 7 días de prueba. La suscripción se renueva automáticamente salvo que se cancele al menos 24 horas antes del final del periodo en curso. El cargo de renovación se realiza en las 24 horas previas al final del periodo. Puedes gestionar tu suscripción y desactivar la renovación automática en los ajustes de tu cuenta de Apple después de la compra. Cualquier parte no utilizada de un periodo de prueba gratuito se pierde si contratas una suscripción durante ese periodo.
+Términos de uso: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Política de privacidad: https://hicsuntco.github.io/RUNUP/privacy.html
 ```
 
 ## Palabras clave (100 caracteres máx., separadas por comas sin espacios)

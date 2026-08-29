@@ -1,0 +1,101 @@
+# La fiche App Store, pilotée depuis GitHub.
+#
+# Les trois secrets nécessaires — `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8` — sont déjà là :
+# c'est la même clé d'API qui envoie les builds sur TestFlight. Rien de plus à installer, aucun
+# fichier `.p8` à retrouver sur une machine, et rien à taper dans un terminal.
+#
+# Onglet **Actions** → **App Store** → **Run workflow** → choisir l'action.
+
+name: App Store
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Que faire"
+        required: true
+        type: choice
+        default: status
+        options:
+          - status
+          - creer-la-version
+          - pousser-la-fiche-essai
+          - pousser-la-fiche
+      version:
+        description: "Numéro de version (doit correspondre à CFBundleShortVersionString)"
+        required: true
+        type: string
+        default: "2.5"
+      branche:
+        description: "Branche où lire la fiche et le script"
+        required: true
+        type: string
+        default: "claude/runup-ios-swiftui-app-5b1yv6"
+
+# Deux exécutions en parallèle écriraient la même fiche depuis deux états différents.
+concurrency: appstore
+
+jobs:
+  appstore:
+    runs-on: ubuntu-latest
+    steps:
+      # Ce fichier vit sur `main` — GitHub n'affiche le bouton « Run workflow » que pour les
+      # workflows présents sur la branche par défaut. Mais `main` ne contient QUE le serveur :
+      # ni `ci_scripts/asc.py`, ni `APP_STORE_LISTING.md`. On récupère donc explicitement la
+      # branche qui les porte, au lieu de compter sur celle depuis laquelle on a cliqué.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branche }}
+
+      # Échouer ici avec une phrase claire, plutôt que dans une erreur HTTP d'Apple vingt lignes
+      # plus bas. Un secret vide se crée sans bruit — `gh secret set` accepte une entrée vide —
+      # et c'est déjà arrivé deux fois sur ce dépôt.
+      - name: Vérifier les secrets
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          set -euo pipefail
+          for n in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8; do
+            if [ -z "${!n:-}" ]; then
+              echo "::error::Le secret $n est vide ou absent."
+              exit 1
+            fi
+          done
+          printf '%s' "$ASC_KEY_P8" | base64 -d > /tmp/key.p8
+          if ! head -1 /tmp/key.p8 | grep -q "BEGIN PRIVATE KEY"; then
+            echo "::error::ASC_KEY_P8 ne contient pas une clé PEM une fois décodé."
+            exit 1
+          fi
+          echo "Trois secrets présents, clé décodable."
+
+      - name: Installer la clé d'API
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$ASC_KEY_P8" | base64 -d > "$RUNNER_TEMP/asc.p8"
+          chmod 600 "$RUNNER_TEMP/asc.p8"
+
+      - name: Exécuter
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          VERSION: ${{ inputs.version }}
+          WHAT: ${{ inputs.action }}
+        run: |
+          set -euo pipefail
+          export ASC_KEY_PATH="$RUNNER_TEMP/asc.p8"
+          case "$WHAT" in
+            status)                   python3 ci_scripts/asc.py status ;;
+            creer-la-version)         python3 ci_scripts/asc.py create-version "$VERSION" ;;
+            pousser-la-fiche-essai)   python3 ci_scripts/asc.py push-metadata "$VERSION" --dry-run ;;
+            pousser-la-fiche)         python3 ci_scripts/asc.py push-metadata "$VERSION" ;;
+            *) echo "::error::Action inconnue : $WHAT"; exit 1 ;;
+          esac
+
+      # La clé ne doit pas survivre au job, même si une étape précédente a échoué.
+      - name: Effacer la clé
+        if: always()
+        run: rm -f "$RUNNER_TEMP/asc.p8" /tmp/key.p8

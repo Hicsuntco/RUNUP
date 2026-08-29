@@ -30,3 +30,10 @@ RunUpWidgets/Info.plist
 RunUp/RunUp.entitlements
 RunUpWatch/RunUpWatch.entitlements
 RunUpWidgets/RunUpWidgets.entitlements
+
+# Composées par `ci_scripts/screenshots.py` à partir de `appstore/raw/`. Rien à suivre ici : les
+# sources sont les captures brutes et les accroches, et le résultat se récupère en artefact du run.
+appstore/out/
+
+# Un .pyc de `asc.py` avait été committé par mégarde ; il est retiré ici.
+__pycache__/

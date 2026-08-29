@@ -88,22 +88,33 @@ struct ProfileView: View {
                 avatarButton
                 VStack(alignment: .leading, spacing: 5) {
                     Text(profile.name).displayStyle(18).foregroundColor(RUColor.textPrimary)
-                    if let objectifText {
-                        // `.profil-obj-pill` de la maquette : l'objectif était une simple ligne de
-                        // texte gris de plus, indistincte du reste ; dans une capsule bordée il
-                        // devient une étiquette d'identité, au même titre que le nom.
+                    // `.profil-obj-pill` de la maquette : l'objectif était une simple ligne de
+                    // texte gris de plus, indistincte du reste ; dans une capsule bordée il
+                    // devient une étiquette d'identité, au même titre que le nom.
+                    //
+                    // Elle est désormais le chemin vers l'objectif. Il vivait sous l'intertitre
+                    // « Mon équipement », à côté des chaussures — une course à préparer n'est pas
+                    // de l'équipement — et il était donc écrit deux fois sur le même écran, dont
+                    // une au mauvais endroit. La pastille l'affichait déjà : autant qu'elle y
+                    // mène. Elle s'affiche même sans objectif, sinon il n'y aurait plus aucune
+                    // porte d'entrée pour en choisir un.
+                    Button(action: { appState.go(.race) }) {
                         HStack(spacing: 4) {
                             Image(systemName: "target").font(.system(size: 9)).foregroundColor(RUColor.text3)
-                            Text(objectifText)
+                            Text(objectifText ?? String(localized: "Choisir une course à préparer"))
                                 .font(RUFont.sans(.small, weight: .semibold))
                                 .foregroundColor(RUColor.text2)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.8)
+                            Image(systemName: "chevron.right").font(.system(size: 8, weight: .semibold)).foregroundColor(RUColor.text3)
                         }
                         .padding(.horizontal, 9).padding(.vertical, 4)
                         .background(RUColor.card, in: Capsule())
                         .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                        .contentShape(Capsule())
                     }
+                    .buttonStyle(PressableStyle())
+                    .accessibilityElement(children: .combine)
                 }
             }
             Spacer(minLength: 8)
@@ -243,9 +254,14 @@ struct ProfileView: View {
             // `statCell` reçoit un `String` : sans `String(localized:)` ces libellés n'atteindraient
             // jamais le catalogue.
             statCell(value: String(format: "%.0f", totalKm), label: String(localized: "km"))
+            // `streak` compte des JOURS — un incrément par jour calendaire, une chaîne rompue
+            // au-delà de trois jours d'écart (`AdaptivePlanEngine.applyDebrief`). Le Profil était
+            // le seul écran à l'afficher en semaines : les badges disent « Série de 3 jours »,
+            // l'accueil « Série, N jours », le débrief « jour N », les Stats « N jours ». Une
+            // série de douze jours s'affichait ici « 12 sem. de suite » — douze semaines.
             statCell(
                 value: "\(profile.streak)",
-                label: String(localized: "sem. de suite"),
+                label: profile.streak > 1 ? String(localized: "jours de suite") : String(localized: "jour de suite"),
                 valueColor: profile.streak > 0 ? RUColor.rose : RUColor.textPrimary,
                 icon: profile.streak > 0 ? "flame.fill" : nil
             )
@@ -278,7 +294,7 @@ struct ProfileView: View {
 
     /// Ce que voit une utilisatrice qui vient de finir les huit étapes d'inscription.
     ///
-    /// Elle voyait « 0 km · 0 sem. de suite · 0 badge ». Trois zéros comme résumé d'une personne,
+    /// Elle voyait « 0 km · 0 jour de suite · 0 badge ». Trois zéros comme résumé d'une personne,
     /// juste après le moment le plus coûteux du parcours — c'est le point où l'app se fait
     /// désinstaller, pas au troisième jour. Et ces trois zéros sont exacts : le problème n'est pas
     /// qu'ils mentent, c'est qu'ils répondent à une question que personne ne pose le premier jour.
@@ -636,9 +652,6 @@ struct ProfileView: View {
                 destinationRow(icon: "shoeprints.fill",
                                title: String(localized: "Mes chaussures"),
                                subtitle: String(localized: "Suivre leur kilométrage")) { appState.go(.shoes) }
-                destinationRow(icon: "target",
-                               title: String(localized: "Mon objectif"),
-                               subtitle: objectifText ?? String(localized: "Choisir une course à préparer")) { appState.go(.race) }
             }
         }
     }

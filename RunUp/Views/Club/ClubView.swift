@@ -527,50 +527,7 @@ struct ClubView: View {
             weekPulseCard
             challengeCard
             eventsCard
-            activeMembersRow
             membershipRow
-        }
-    }
-
-    /// « Membres actifs cette semaine » — piles d'avatars de `.stack-avatars`.
-    ///
-    /// Données réelles uniquement : `board.weekly` est la liste, calculée côté serveur, de qui a
-    /// réellement couru depuis lundi. Le « +N » compte le reste de cette même liste, il n'est pas
-    /// dérivé du nombre total de membres du club (ce qui compterait comme « actifs » des gens qui
-    /// n'ont rien fait). L'onglet disparaît entièrement si personne n'a encore couru — la
-    /// maquette n'a jamais eu à montrer une semaine vide.
-    @ViewBuilder
-    private var activeMembersRow: some View {
-        let active = (board.weekly ?? []).filter { $0.weekKm > 0 }
-        if !active.isEmpty {
-            VStack(alignment: .leading, spacing: 8) {
-                RUCardHeader(icon: "figure.run", tint: RUColor.violet, title: "Membres actifs cette semaine")
-                HStack(spacing: -8) {
-                    ForEach(active.prefix(6)) { member in
-                        AvatarView(
-                            urlString: member.avatarUrl,
-                            base64DataURI: member.avatarBase64,
-                            initial: String(member.name.prefix(1)),
-                            size: 30,
-                            seed: member.isMe ? nil : member.id
-                        )
-                        .overlay(Circle().stroke(RUColor.bg, lineWidth: 2))
-                    }
-                    if active.count > 6 {
-                        Text("+\(active.count - 6)")
-                            .font(RUFont.sans(.small, weight: .bold))
-                            .foregroundColor(RUColor.text2)
-                            .frame(width: 30, height: 30)
-                            .background(RUColor.card2, in: Circle())
-                            .overlay(Circle().stroke(RUColor.bg, lineWidth: 2))
-                    }
-                }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(active.count > 1
-                    ? String(localized: "\(active.count) membres actifs cette semaine")
-                    : String(localized: "\(active.count) membre actif cette semaine"))
-            }
-            .padding(.top, 2)
         }
     }
 
@@ -623,22 +580,60 @@ struct ClubView: View {
     /// The club's pulse this week — real collective km + how many members actually ran, computed
     /// server-side over this Monday-started week. Gives the club a shared "we" number, not just
     /// individual rankings.
+    /// Les kilomètres du club cette semaine, et qui les a courus.
+    ///
+    /// Le nombre de membres actifs vivait ici, en chiffre, ET trois cartes plus bas en pile
+    /// d'avatars sous son propre intertitre « Membres actifs cette semaine ». Deux blocs pour un
+    /// seul fait, séparés par le défi et les sorties de groupe — assez loin l'un de l'autre pour
+    /// qu'on ne remarque pas que c'est le même. Les visages remplacent le chiffre : ils le
+    /// contiennent (on les compte) et disent en plus QUI, ce que « 4 » ne dira jamais.
     private var weekPulseCard: some View {
         let stats = board.weekStats
         let km = String(format: "%.1f", locale: Locale.current, stats?.totalKm ?? 0)
-        return HStack(spacing: 14) {
-            VStack(alignment: .leading, spacing: 2) {
-                RUCardHeader(icon: "chart.bar.fill", tint: RUColor.rose, title: "Le club cette semaine", subtitle: "Kilomètres cumulés")
-                HStack(alignment: .lastTextBaseline, spacing: 4) {
-                    Text(km).displayStyle(26).foregroundColor(RUColor.textPrimary)
-                    Text("KM").font(RUFont.sans(.small, weight: .bold)).foregroundColor(RUColor.text2)
+        let active = (board.weekly ?? []).filter { $0.weekKm > 0 }
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 14) {
+                VStack(alignment: .leading, spacing: 2) {
+                    RUCardHeader(icon: "chart.bar.fill", tint: RUColor.rose, title: "Le club cette semaine", subtitle: "Kilomètres cumulés")
+                    HStack(alignment: .lastTextBaseline, spacing: 4) {
+                        Text(km).displayStyle(26).foregroundColor(RUColor.textPrimary)
+                        Text("KM").font(RUFont.sans(.small, weight: .bold)).foregroundColor(RUColor.text2)
+                    }
                 }
+                Spacer(minLength: 8)
             }
-            Spacer()
-            VStack(alignment: .trailing, spacing: 2) {
-                Text("\(stats?.activeMembers ?? 0)").displayStyle(20).foregroundColor(RUColor.rose2)
-                Text(stats?.activeMembers == 1 ? "membre actif" : "membres actifs")
-                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
+            if !active.isEmpty {
+                HStack(spacing: 10) {
+                    HStack(spacing: -8) {
+                        ForEach(active.prefix(6)) { member in
+                            AvatarView(
+                                urlString: member.avatarUrl,
+                                base64DataURI: member.avatarBase64,
+                                initial: String(member.name.prefix(1)),
+                                size: 28,
+                                seed: member.isMe ? nil : member.id
+                            )
+                            .overlay(Circle().stroke(RUColor.card, lineWidth: 2))
+                        }
+                        if active.count > 6 {
+                            Text("+\(active.count - 6)")
+                                .font(RUFont.sans(.small, weight: .bold))
+                                .foregroundColor(RUColor.text2)
+                                .frame(width: 28, height: 28)
+                                .background(RUColor.card2, in: Circle())
+                                .overlay(Circle().stroke(RUColor.card, lineWidth: 2))
+                        }
+                    }
+                    Text(active.count > 1
+                         ? String(localized: "\(active.count) membres ont couru")
+                         : String(localized: "\(active.count) membre a couru"))
+                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
+                    Spacer(minLength: 0)
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(active.count > 1
+                    ? String(localized: "\(active.count) membres ont couru cette semaine")
+                    : String(localized: "\(active.count) membre a couru cette semaine"))
             }
         }
         .padding(14)

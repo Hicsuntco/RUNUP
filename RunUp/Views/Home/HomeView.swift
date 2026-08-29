@@ -105,15 +105,21 @@ struct HomeView: View {
                     }
                 }
 
-                // Ordre repris de la maquette "Accueil" : les objectifs du jour (l'anneau), puis
-                // la bande de chiffres repères, puis la séance — la séance reste l'ancre visuelle
-                // de l'écran, et tout ce qui est "plan / programme" passe après elle au lieu de
-                // s'intercaler entre l'en-tête et elle.
+                // La séance d'abord.
+                //
+                // L'ordre venait de la maquette — anneau, chiffres, séance — et la maquette a
+                // raison sur un écran qu'on consulte. Celui-ci n'est pas consulté, il est utilisé :
+                // on l'ouvre pour savoir ce qu'on court aujourd'hui, et c'est la seule carte qui
+                // porte un bouton. Elle arrivait en troisième position, après deux blocs qui
+                // regardent en arrière. Ce qui se fait passe donc avant ce qui s'est fait.
+                //
+                // L'anneau ne perd rien à venir en second : c'est un état, pas une action, et il
+                // reste au-dessus de la ligne de flottaison.
+                sessionCard
+
                 ringsCard
 
                 quickStatsRow
-
-                sessionCard
 
                 programWeekCard
 
@@ -509,16 +515,21 @@ struct HomeView: View {
                 // la moitié de la largeur du contenu. On ne va pas jusque-là (ce serait dépasser
                 // l'anneau héros de l'écran "Ta journée", qui doit rester le plus grand), mais
                 // 96 pt lui rend le poids d'élément principal de la carte.
-                DailyGoalsBarsView(progress: p.dailyGoalsProgress, size: 96)
+                DailyGoalsBarsView(goals: p.dailyGoalSlotsToday.map { .init(slot: $0.slot, progress: $0.progress) }, size: 96)
                 VStack(alignment: .leading, spacing: 9) {
                     RUCardHeader(title: String(localized: "Tes objectifs · \(p.dailyGoalsDone)/\(p.dailyGoalsTotal) bouclés"))
-                    ringLegendRow(
-                        name: "Séance du jour",
-                        value: p.isRestDayToday
-                            ? String(localized: "Repos")
-                            : (p.seanceDoneToday ? String(localized: "Faite") : String(localized: "À faire")),
-                        color: goalColors[0]
-                    )
+                    // La ligne « Séance du jour » disparaît les jours de repos, en même temps que
+                    // l'arc qui lui correspondait. Elle disait alors « Repos » — exactement ce que
+                    // la carte séance, désormais juste au-dessus, annonce en grand. Deux blocs
+                    // pour la même phrase, c'est la première raison pour laquelle cet écran
+                    // paraissait chargé un jour de repos.
+                    if !p.isRestDayToday {
+                        ringLegendRow(
+                            name: "Séance du jour",
+                            value: p.seanceDoneToday ? String(localized: "Faite") : String(localized: "À faire"),
+                            color: goalColors[0]
+                        )
+                    }
                     ringLegendRow(name: "Calories actives", value: "\(Int(p.activeCaloriesToday))/\(Int(p.activeCaloriesGoal))", color: goalColors[1])
                     ringLegendRow(name: "Pas", value: "\(Int(p.stepsToday))/\(Int(p.stepsGoal))", color: goalColors[2])
                 }

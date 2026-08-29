@@ -24,8 +24,11 @@ enum RingSegmentGeometry {
         let gradientEndDegrees: Double
     }
 
-    static func segment(at index: Int) -> Segment {
-        let spanDegrees = 360.0 / Double(segmentCount)
+    /// `count` plutôt que `segmentCount` en dur : un jour de repos ne compte que deux objectifs
+    /// — aucune séance n'a été demandée — et l'anneau doit alors se partager en deux, pas dessiner
+    /// un troisième arc qui ne pourra jamais se remplir sous un titre qui annonce « 0/2 ».
+    static func segment(at index: Int, count: Int = segmentCount) -> Segment {
+        let spanDegrees = 360.0 / Double(max(1, count))
         let startDeg = Double(index) * spanDegrees
         let endDeg = startDeg + (spanDegrees - gapDegrees)
         return Segment(

@@ -779,6 +779,38 @@
         }
       }
     },
+    "%lld membre a couru": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld member ran"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld miembro corrió"
+          }
+        }
+      }
+    },
+    "%lld membre a couru cette semaine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld member ran this week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld miembro corrió esta semana"
+          }
+        }
+      }
+    },
     "%lld membre actif cette semaine": {
       "extractionState": "manual",
       "localizations": {
@@ -842,6 +874,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld miembros activos esta semana"
+          }
+        }
+      }
+    },
+    "%lld membres ont couru": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld members ran"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld miembros corrieron"
+          }
+        }
+      }
+    },
+    "%lld membres ont couru cette semaine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld members ran this week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld miembros corrieron esta semana"
           }
         }
       }
@@ -17277,6 +17341,22 @@
         }
       }
     },
+    "jour de suite": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "day in a row"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "día seguido"
+          }
+        }
+      }
+    },
     "jour de série": {
       "extractionState": "manual",
       "localizations": {
@@ -17339,6 +17419,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "días"
+          }
+        }
+      }
+    },
+    "jours de suite": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "days in a row"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "días seguidos"
           }
         }
       }

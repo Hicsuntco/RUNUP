@@ -57,6 +57,11 @@ struct RingsView: View {
     /// as "Repos" with no session goal counted at all, contradicting History showing a real run.
     private var sessionDoneForSelected: Bool? {
         if hasRunOnSelectedDate { return true }
+        // Aujourd'hui, le plan réel de la semaine est connu : `isRestDayToday` lit `weekSessions`.
+        // Le deviner depuis le motif hebdomadaire — ce que fait `isRunningDayForSelected`, faute
+        // de mieux pour une date passée — pouvait le contredire, et l'anneau, son dénominateur et
+        // la ligne « Séance » se retrouvaient alors à répondre différemment à la même question.
+        if isToday { return p.isRestDayToday ? nil : p.seanceDoneToday }
         return isRunningDayForSelected ? false : nil
     }
 
@@ -68,6 +73,17 @@ struct RingsView: View {
             activeCalories: displayCalories, activeCaloriesGoal: p.activeCaloriesGoal
         )
     }
+    /// Les objectifs en jeu ce jour-là — deux un jour de repos. L'anneau dessinait jusqu'ici
+    /// trois arcs sous un « 2 / 3 » qui, lui, comptait juste : un des arcs ne pouvait pas se
+    /// remplir, et rien ne le disait.
+    private var displayGoals: [(slot: Int, progress: Double)] {
+        UserProfile.dailyGoalSlots(
+            sessionDone: sessionDoneForSelected,
+            steps: displaySteps, stepsGoal: p.stepsGoal,
+            activeCalories: displayCalories, activeCaloriesGoal: p.activeCaloriesGoal
+        )
+    }
+
     private var displayDone: Int { displayProgress.filter { $0 >= 1 }.count }
     private var displayTotal: Int { sessionDoneForSelected == nil ? 2 : 3 }
 
@@ -100,7 +116,7 @@ struct RingsView: View {
                 dayNavigator
 
                 ZStack {
-                    DailyGoalsBarsView(progress: displayProgress, size: 168, animateOnAppear: true)
+                    DailyGoalsBarsView(goals: displayGoals.map { .init(slot: $0.slot, progress: $0.progress) }, size: 168, animateOnAppear: true)
                         .opacity(isLoadingHistoricalDay ? 0.4 : 1)
                     VStack(spacing: 2) {
                         Text("\(displayDone) / \(displayTotal)").displayStyle(28).foregroundColor(RUColor.textPrimary)
@@ -238,7 +254,9 @@ struct RingsView: View {
                         .font(RUFont.sans(.small, weight: .bold))
                         .foregroundColor(restDay ? RUColor.text2 : (done ? RUColor.lime : RUColor.text2))
                 }
-                LinearBar(fraction: displayProgress[0], color: restDay ? RUColor.text3 : color, height: 5)
+                if !restDay {
+                    LinearBar(fraction: displayProgress[0], color: color, height: 5)
+                }
             }
         }
         .padding(14)

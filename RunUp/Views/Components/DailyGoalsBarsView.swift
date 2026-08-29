@@ -16,8 +16,17 @@ import SwiftUI
 /// `scaleEffect`-ed to `size`, so stroke width, gaps, and shadow all stay in the same proportion
 /// to the ring at every size this is used at.
 struct DailyGoalsBarsView: View {
-    /// [Séance du jour, Calories actives, Pas], each 0...1.
-    var progress: [Double]
+    /// Un objectif de la journée : son rang d'origine dans [Séance, Calories, Pas], et où il en
+    /// est. Le rang voyage avec l'objectif au lieu d'être sa position dans le tableau : sans lui,
+    /// une journée de repos — deux objectifs — repeindrait « calories » de la couleur de la
+    /// séance, et les pastilles de légende suivraient le même glissement.
+    struct Goal: Equatable {
+        var slot: Int
+        var progress: Double
+    }
+
+    /// Les objectifs RÉELLEMENT en jeu, dans l'ordre. Deux un jour de repos, trois sinon.
+    var goals: [Goal]
     var size: CGFloat = 96
     /// When true, the ring fills up from empty the first time this view appears instead of
     /// snapping straight to `progress` — used on `RingsView`'s hero widget so opening "Ta journée"
@@ -31,11 +40,11 @@ struct DailyGoalsBarsView: View {
     @State private var displayedProgress: [Double]
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    init(progress: [Double], size: CGFloat = 96, animateOnAppear: Bool = false) {
-        self.progress = progress
+    init(goals: [Goal], size: CGFloat = 96, animateOnAppear: Bool = false) {
+        self.goals = goals
         self.size = size
         self.animateOnAppear = animateOnAppear
-        _displayedProgress = State(initialValue: animateOnAppear ? progress.map { _ in 0 } : progress)
+        _displayedProgress = State(initialValue: animateOnAppear ? goals.map { _ in 0 } : goals.map(\.progress))
     }
 
     /// Each segment's fill color, in goal order — exposed so other views showing the same 3 goals
@@ -70,8 +79,9 @@ struct DailyGoalsBarsView: View {
 
     var body: some View {
         ZStack {
-            ForEach(Array(Self.fillColors.enumerated()), id: \.offset) { i, color in
-                let seg = RingSegmentGeometry.segment(at: i)
+            ForEach(Array(goals.enumerated()), id: \.offset) { i, goal in
+                let color = Self.fillColors[min(max(0, goal.slot), Self.fillColors.count - 1)]
+                let seg = RingSegmentGeometry.segment(at: i, count: goals.count)
                 let pct = max(0, min(1, i < displayedProgress.count ? displayedProgress[i] : 0))
                 let fillEnd = seg.trimStart + (seg.trimEnd - seg.trimStart) * pct
 
@@ -114,16 +124,16 @@ struct DailyGoalsBarsView: View {
         .scaleEffect(size / Self.canvasSize)
         .frame(width: size, height: size)
         .onAppear {
-            if animateOnAppear { displayedProgress = progress }
+            if animateOnAppear { displayedProgress = goals.map(\.progress) }
         }
-        .onChange(of: progress) { _, newValue in
-            displayedProgress = newValue
+        .onChange(of: goals) { _, newValue in
+            displayedProgress = newValue.map(\.progress)
         }
     }
 }
 
 #Preview {
-    DailyGoalsBarsView(progress: [1, 0.6, 0.12], size: 180)
+    DailyGoalsBarsView(goals: [.init(slot: 0, progress: 1), .init(slot: 1, progress: 0.6), .init(slot: 2, progress: 0.12)], size: 180)
         .padding()
         .background(RUColor.pageBackground)
 }

@@ -312,6 +312,11 @@ final class UserProfile {
         dailyGoalsProgress.filter { $0 >= 1 }.count
     }
 
+    /// Ce que l'anneau et sa légende doivent montrer aujourd'hui — voir `dailyGoalSlots`.
+    var dailyGoalSlotsToday: [(slot: Int, progress: Double)] {
+        Self.dailyGoalSlots(sessionDone: isRestDayToday ? nil : seanceDoneToday, steps: stepsToday, stepsGoal: stepsGoal, activeCalories: activeCaloriesToday, activeCaloriesGoal: activeCaloriesGoal)
+    }
+
     /// Real goals to close today — 2 on a rest day (no session was ever asked of you), 3
     /// otherwise. Drives the "X / Y bouclés" copy and the +120 XP bonus threshold below, so the
     /// bonus stays reachable on a rest day from the other 2 goals alone, without needing a fake
@@ -323,6 +328,23 @@ final class UserProfile {
     /// function so `RingsView`'s day browser can compute an honest ring for ANY past date without
     /// duplicating the "rest day excludes the séance slot" logic. `sessionDone: nil` means rest
     /// day (no séance goal existed that day) — matches `isRestDayToday`'s semantics.
+    /// Les objectifs RÉELLEMENT en jeu ce jour-là, chacun avec son rang d'origine.
+    ///
+    /// `dailyGoalsProgress` rend toujours trois valeurs, dont la première vaut 0 un jour de repos.
+    /// C'est juste pour compter — un 0 ne peut pas être « bouclé », et `dailyGoalsTotal` vaut bien
+    /// 2 ce jour-là — mais l'anneau et la légende lisaient ce tableau comme la liste des objectifs
+    /// et dessinaient donc trois arcs sous un titre annonçant « 0/2 », dont un qui ne pouvait
+    /// jamais se remplir. Compter et afficher sont deux questions différentes ; celle-ci répond à
+    /// la seconde.
+    ///
+    /// Le rang est conservé plutôt que redonné par la position : c'est lui qui porte la couleur,
+    /// et sans lui « calories » hériterait du rose de la séance les jours de repos.
+    static func dailyGoalSlots(sessionDone: Bool?, steps: Double, stepsGoal: Double, activeCalories: Double, activeCaloriesGoal: Double) -> [(slot: Int, progress: Double)] {
+        let all = dailyGoalsProgress(sessionDone: sessionDone, steps: steps, stepsGoal: stepsGoal, activeCalories: activeCalories, activeCaloriesGoal: activeCaloriesGoal)
+        let slots = sessionDone == nil ? [1, 2] : [0, 1, 2]
+        return slots.map { (slot: $0, progress: all[$0]) }
+    }
+
     static func dailyGoalsProgress(sessionDone: Bool?, steps: Double, stepsGoal: Double, activeCalories: Double, activeCaloriesGoal: Double) -> [Double] {
         [
             sessionDone == true ? 1 : 0,

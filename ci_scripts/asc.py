@@ -190,6 +190,40 @@ def cmd_status(_):
     elif builds is not None:
         print("  Aucune build envoyée.\n")
 
+    # Et pourquoi il en manque, le cas échéant.
+    #
+    # « Aucune build depuis ce matin » ne dit pas si la construction a échoué ou si elle n'a
+    # jamais démarré, et le remède n'est pas le même. Ces deux lignes-là le disent. En lecture
+    # seule, protégées : une clé sans droits Xcode Cloud ne doit pas empêcher le reste de
+    # s'afficher.
+    try:
+        products = call("GET", "ciProducts?limit=20")["data"]
+    except SystemExit:
+        products = []
+    for product in products:
+        if not (product["attributes"].get("name") or "").upper().startswith("RUNUP"):
+            continue
+        try:
+            workflows = call("GET", f"ciProducts/{product['id']}/workflows?limit=20")["data"]
+        except SystemExit:
+            break
+        for wf in workflows:
+            a = wf["attributes"]
+            print(f"  Xcode Cloud · « {a.get('name')} » — {'actif' if a.get('isEnabled') else 'DÉSACTIVÉ'}")
+            try:
+                runs = call("GET", f"ciWorkflows/{wf['id']}/buildRuns?limit=3")["data"]
+            except SystemExit:
+                runs = []
+            if not runs:
+                print("    aucune exécution")
+            for r in runs:
+                ra = r["attributes"]
+                started = (ra.get("startedDate") or ra.get("createdDate") or "")[:16].replace("T", " à ")
+                status = ra.get("completionStatus") or ra.get("executionProgress") or "?"
+                reason = f"   ({ra['cancelReason']})" if ra.get("cancelReason") else ""
+                print(f"    #{ra.get('number', '?'):<5} {started} UTC   {status}{reason}")
+        print()
+
     versions = call("GET", f"apps/{aid}/appStoreVersions?limit=5")["data"]
     if not versions:
         print("Aucune version. → python3 ci_scripts/asc.py create-version 2.5")

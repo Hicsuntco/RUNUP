@@ -163,6 +163,24 @@ def app_id():
 def cmd_status(_):
     aid, name = app_id()
     print(f"App : {name}  ({BUNDLE_ID})\n")
+
+    # Les builds d'abord. C'est la question qu'on se pose vraiment en ouvrant cet écran : « ce que
+    # je viens de pousser est-il dans ce que j'ai sur mon téléphone ? » — et le numéro de version
+    # ne la répond pas, puisque dix builds partagent la même version 2.5. Le numéro de build et sa
+    # date d'envoi la répondent, en une ligne, sans ouvrir App Store Connect.
+    builds = call("GET", f"apps/{aid}/builds?limit=5&sort=-uploadedDate")["data"]
+    if builds:
+        print("  Dernières builds envoyées sur TestFlight :")
+        for b in builds:
+            a = b["attributes"]
+            uploaded = (a.get("uploadedDate") or "")[:16].replace("T", " à ")
+            state = a.get("processingState", "?")
+            expired = " (expirée)" if a.get("expired") else ""
+            print(f"    build {a.get('version', '?'):>6}   {uploaded} UTC   {state}{expired}")
+        print()
+    else:
+        print("  Aucune build envoyée.\n")
+
     versions = call("GET", f"apps/{aid}/appStoreVersions?limit=5")["data"]
     if not versions:
         print("Aucune version. → python3 ci_scripts/asc.py create-version 2.5")

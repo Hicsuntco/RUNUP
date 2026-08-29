@@ -179,6 +179,15 @@ struct ClubView: View {
         } message: { target in
             Text("Pourquoi signales-tu \(target.displayName) ?")
         }
+        // Quitter le club — le bouton vit maintenant dans la feuille de gestion, qui se ferme
+        // avant de demander confirmation ; le dialogue doit donc être porté par une vue qui, elle,
+        // reste à l'écran. `leaveClub()` garde son propre garde-fou contre le double appel.
+        .confirmationDialog("Quitter le club ?", isPresented: $showLeaveConfirm, titleVisibility: .visible) {
+            Button("Quitter", role: .destructive) { Task { await leaveClub() } }
+            Button("Annuler", role: .cancel) {}
+        } message: {
+            Text("Tu devras redemander le code d'invitation pour revenir.")
+        }
         // Block confirmation — the other half of guideline 1.2, doesn't require leaving the club.
         .alert(
             "Bloquer \(pendingBlock?.name ?? "") ?",
@@ -288,7 +297,23 @@ struct ClubView: View {
                             pendingBlock = (member.id, member.name)
                         }
                     },
-                    onUpdateBio: { bio in try await updateBio(bio) }
+                    onUpdateBio: { bio in try await updateBio(bio) },
+                    // Même précaution que `onReport` ci-dessus : fermer la feuille, puis présenter
+                    // le dialogue une fois son animation de fermeture passée.
+                    onReportClub: {
+                        showManagement = false
+                        Task {
+                            try? await Task.sleep(for: .milliseconds(400))
+                            reportTarget = ReportTarget(targetType: "club", targetId: club.id, displayName: String(localized: "le club \(club.name)"))
+                        }
+                    },
+                    onLeaveClub: {
+                        showManagement = false
+                        Task {
+                            try? await Task.sleep(for: .milliseconds(400))
+                            showLeaveConfirm = true
+                        }
+                    }
                 )
             }
         }
@@ -366,40 +391,6 @@ struct ClubView: View {
         }
         .padding(16)
         .ruCard()
-    }
-
-    /// The invite code used to sit here too, as its own card — now lives in "Gestion du club"
-    /// (reached from the header) alongside the member list, so this row is just quick actions.
-    private var membershipRow: some View {
-        HStack {
-            if let club = board.club {
-                Button("Signaler ce club") {
-                    reportTarget = ReportTarget(targetType: "club", targetId: club.id, displayName: String(localized: "le club \(club.name)"))
-                }
-                .font(RUFont.sans(.small, weight: .semibold))
-                .foregroundColor(RUColor.text3)
-                .padding(.vertical, 12)
-                .frame(minHeight: 44)
-                .contentShape(Rectangle())
-            }
-            Spacer()
-            // Confirmation + in-flight guard — one accidental tap used to leave the club
-            // instantly (rejoining needs the invite code again), and a double-tap made the second
-            // call fail with a misleading error after the first had already succeeded.
-            Button("Quitter le club") { showLeaveConfirm = true }
-                .font(RUFont.sans(.small, weight: .semibold))
-                .foregroundColor(RUColor.text3)
-                .disabled(isLoading)
-                .padding(.vertical, 12)
-                .frame(minHeight: 44)
-                .contentShape(Rectangle())
-                .confirmationDialog("Quitter le club ?", isPresented: $showLeaveConfirm, titleVisibility: .visible) {
-                    Button("Quitter", role: .destructive) { Task { await leaveClub() } }
-                    Button("Annuler", role: .cancel) {}
-                } message: {
-                    Text("Tu devras redemander le code d'invitation pour revenir.")
-                }
-        }
     }
 
     // MARK: Signed in, in a club
@@ -527,7 +518,6 @@ struct ClubView: View {
             weekPulseCard
             challengeCard
             eventsCard
-            membershipRow
         }
     }
 

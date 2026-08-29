@@ -3,9 +3,15 @@ import UIKit
 
 /// "Gestion du club" — reached by tapping the club name in `ClubView`'s header. Groups what
 /// isn't part of the day-to-day leaderboard/feed: the invite code (used to sit as its own card on
-/// the main page, which read as clutter), the full member list, and a drill-down mini-profile per
-/// member. Report/block stay owned by `ClubView` (its confirmationDialog/alert are already wired
-/// there) — this only calls back into it.
+/// the main page, which read as clutter), the full member list, a drill-down mini-profile per
+/// member, et l'adhésion elle-même. Report/block stay owned by `ClubView` (its
+/// confirmationDialog/alert are already wired there) — this only calls back into it.
+///
+/// « Signaler ce club » et « Quitter le club » vivaient en bas de l'onglet Vue d'ensemble, en
+/// petit gris, sous les sorties de groupe : deux actions administratives — dont une
+/// irréversible sans le code d'invitation — posées sous le contenu d'un onglet sur trois, là où
+/// on fait défiler pour lire le club, pas pour le gérer. Leur place est ici, avec le code
+/// d'invitation et la liste des membres.
 struct ClubManagementView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(AppState.self) private var appState
@@ -16,6 +22,8 @@ struct ClubManagementView: View {
     var onReport: (LeaderboardRow) -> Void
     var onBlock: (LeaderboardRow) -> Void
     var onUpdateBio: (String) async throws -> Void
+    var onReportClub: () -> Void
+    var onLeaveClub: () -> Void
 
     @State private var showCreateChallenge = false
 
@@ -40,6 +48,8 @@ struct ClubManagementView: View {
                             }
                         }
                     }
+
+                    membershipSection
                 }
                 .padding(18)
             }
@@ -62,6 +72,50 @@ struct ClubManagementView: View {
             }
         }
         .preferredColorScheme(RUColor.colorScheme)
+    }
+
+    /// L'adhésion, en bas de la page et séparée du reste par son intertitre : ce sont les deux
+    /// seules actions de cet écran qui ne servent pas à faire vivre le club.
+    private var membershipSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            RUCardHeader(title: String(localized: "Mon adhésion"))
+            VStack(spacing: 8) {
+                Button(action: onReportClub) {
+                    membershipRow(icon: "exclamationmark.bubble", title: String(localized: "Signaler ce club"), destructive: false)
+                }
+                .buttonStyle(PressableStyle())
+                // Rouge, et dit ce qu'elle coûte. En gris de 10 pt au bas d'un onglet, « Quitter
+                // le club » avait exactement le poids visuel d'un lien de bas de page — pour une
+                // action qui redemande le code d'invitation pour revenir.
+                Button(action: onLeaveClub) {
+                    membershipRow(icon: "rectangle.portrait.and.arrow.right", title: String(localized: "Quitter le club"), destructive: true)
+                }
+                .buttonStyle(PressableStyle())
+            }
+        }
+    }
+
+    private func membershipRow(icon: String, title: String, destructive: Bool) -> some View {
+        let tint = destructive ? RUColor.rose : RUColor.text2
+        return HStack(spacing: 13) {
+            Image(systemName: icon)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(tint)
+                .frame(width: 38, height: 38)
+                .background(tint.opacity(0.10), in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+            Text(title)
+                .font(RUFont.sans(.label, weight: .semibold))
+                .foregroundColor(destructive ? RUColor.rose : RUColor.textPrimary)
+            // Pas de chevron : ces deux-là n'emmènent nulle part, elles ouvrent une demande de
+            // confirmation. C'est le reproche fait aux deux tuiles jumelles des Stats — la forme
+            // doit dire ce que le geste fait — et il vaut aussi dans l'autre sens.
+            Spacer(minLength: 8)
+        }
+        .padding(12)
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
+        .ruCard(radius: RUSpacing.radiusCompact)
+        .accessibilityElement(children: .combine)
     }
 
     private var challengeSection: some View {

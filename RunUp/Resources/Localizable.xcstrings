@@ -9322,6 +9322,22 @@
         }
       }
     },
+    "Mon adhésion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My membership"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mi afiliación"
+          }
+        }
+      }
+    },
     "Mon club": {
       "localizations": {
         "en": {

@@ -19,6 +19,7 @@ encore : les autres tailles d'iPhone sont dérivées automatiquement de celle-ci
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -32,11 +33,25 @@ FONTS = ROOT / "RunUp" / "Resources" / "Fonts"
 
 CANVAS = (1290, 2796)
 
+# Les captures viennent d'un iPhone, où elles s'appellent `IMG_0042.PNG` — extension EN MAJUSCULES.
+# Un `glob("*.png")` ne les voit pas sur le runner Linux, qui distingue la casse, et le script
+# s'arrête sur « aucune capture » devant un dossier plein.
+SUFFIXES = {".png", ".jpg", ".jpeg"}
+
 # La palette de marque, reprise telle quelle de `AccentTheme.swift` (id « rose »). Le dégradé va
 # du rose primaire vers le « tail » violet, exactement comme les dégradés de l'app.
 ROSE = (0xFF, 0x0F, 0x5B)
 VIOLET = (0x7C, 0x5C, 0xFF)
 INK = (0x0B, 0x0B, 0x0F)
+
+
+def natural(name: str) -> list:
+    """Trie `IMG_9.PNG` avant `IMG_10.PNG`, et `2.png` avant `10.png`.
+
+    Un tri alphabétique place `10` avant `2`, ce qui suffit à coller la mauvaise accroche sur la
+    mauvaise capture — une erreur invisible tant qu'on ne regarde pas les six images une par une.
+    """
+    return [int(part) if part.isdigit() else part.lower() for part in re.split(r"(\d+)", name)]
 
 
 def gradient(size: tuple[int, int], top: tuple[int, int, int], bottom: tuple[int, int, int]) -> Image.Image:
@@ -139,14 +154,20 @@ def main() -> int:
         print(f"Langue inconnue : {lang}. Connues : {', '.join(sorted(captions))}", file=sys.stderr)
         return 1
 
-    shots = sorted(RAW.glob("*.png")) + sorted(RAW.glob("*.jpg")) + sorted(RAW.glob("*.jpeg"))
-    shots = sorted(set(shots), key=lambda p: p.name)
+    shots = sorted(
+        (p for p in RAW.iterdir() if p.is_file() and p.suffix.lower() in SUFFIXES),
+        key=lambda p: natural(p.name),
+    )
     if not shots:
         print(
-            f"Aucune capture dans {RAW}. Dépose tes captures brutes (1.png, 2.png…) puis relance.",
+            f"Aucune capture dans {RAW}. Dépose tes captures brutes puis relance.",
             file=sys.stderr,
         )
         return 1
+
+    # L'ordre est celui des accroches : le dire à voix haute évite de découvrir l'inversion sur la
+    # fiche publiée plutôt qu'ici.
+    print(f"Ordre retenu : {', '.join(p.name for p in shots)}\n")
 
     texts = captions[lang]
     if len(shots) > len(texts):

@@ -26,9 +26,14 @@ l'onglet **Actions**, pour ne pas avoir à ouvrir un terminal.
    | 5 | Objectifs — l'anneau bien rempli |
    | 6 | Le Club |
 
-3. **Les déposer dans `appstore/raw/`**, nommées `1.png` … `6.png`. Depuis le navigateur :
-   ouvrir le dossier `appstore/raw` sur GitHub → **Add file** → **Upload files** → déposer →
-   **Commit changes** en choisissant la branche de travail.
+3. **Les déposer dans `appstore/raw/`.** Pas besoin de les renommer : le script les prend dans
+   l'ordre de leur nom, et les captures d'un iPhone se numérotent déjà dans l'ordre où elles ont
+   été prises (`IMG_0008.PNG`, `IMG_0009.PNG`…). Depuis le navigateur, sur le téléphone comme sur
+   l'ordinateur : ouvrir le dossier `appstore/raw` sur GitHub → **Add file** → **Upload files** →
+   déposer → **Commit changes** en choisissant la branche de travail.
+
+   Le run affiche l'ordre retenu en première ligne. C'est là qu'on voit une inversion, pas sur la
+   fiche publiée.
 
 4. **Lancer la composition.** Onglet **Actions** → **App Store** → **Run workflow** → action
    `composer-les-captures`, choisir la langue → **Run workflow**.

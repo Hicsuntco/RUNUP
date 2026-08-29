@@ -64,10 +64,10 @@ WIDGETS ET ÉCRAN VERROUILLÉ
 Un widget sur l'écran d'accueil pour tes objectifs du jour et ta série en cours. Pendant une course, l'activité en direct s'affiche sur l'écran verrouillé et dans la Dynamic Island.
 
 STATS QUI COMPTENT VRAIMENT
-Tendance d'allure, records personnels, prédictions de temps sur 5 km, 10 km, semi et marathon, charge d'entraînement sur 8 semaines, carte de tous tes parcours, et suivi d'usure de tes chaussures.
+Tendance d'allure, records personnels, prédictions sur 5 km, 10 km, semi et marathon, charge d'entraînement sur 8 semaines, carte de tes parcours et usure de tes chaussures.
 
 OÙ COURIR QUAND TU NE CONNAIS PAS L'ENDROIT
-Tu débarques dans une ville et tu ne sais pas où aller courir ? La carte montre les itinéraires publiés par d'autres coureurs autour de toi, avec leur distance, leur dénivelé et souvent une photo du coin. Filtre par longueur, garde ceux qui te tentent, ouvre le départ dans Plans. Tes propres sorties se partagent en deux gestes — et les 300 premiers et derniers mètres sont retirés avant l'envoi : personne ne verra d'où tu es partie ni où tu es rentrée.
+Tu débarques dans une ville et tu ne sais pas où courir ? La carte montre les itinéraires publiés autour de toi, avec distance, dénivelé et souvent une photo. Tes propres sorties se partagent en deux gestes — et les 300 premiers et derniers mètres sont retirés avant l'envoi : personne ne verra d'où tu es partie ni où tu es rentrée.
 
 CLUB & COMMUNAUTÉ
 Classement de la semaine et classement général, défis de club, sorties de groupe, fil d'activité et badges. Et si tu préfères suivre quelques personnes plutôt qu'un club entier, un fil d'amis fait exactement ça.
@@ -219,7 +219,7 @@ DÓNDE CORRER CUANDO NO CONOCES EL SITIO
 ¿Llegas a una ciudad nueva y no sabes por dónde correr? El mapa muestra las rutas publicadas por otros corredores a tu alrededor, con su distancia, su desnivel y muchas veces una foto del lugar. Filtra por longitud, guarda las que te apetezcan, abre el inicio en Mapas. Compartir tus propias salidas son dos toques — y los primeros y últimos 300 metros se recortan antes de enviar nada: nadie verá de dónde saliste ni dónde volviste.
 
 CLUB Y COMUNIDAD
-Clasificación semanal y general, retos de club, quedadas para correr, muro de actividad e insignias. Y si prefieres seguir a unas pocas personas en vez de a un club entero, hay un muro de amigos que hace justo eso.
+Clasificación semanal y general, retos de club, quedadas, muro de actividad e insignias. Y si prefieres seguir a unas pocas personas en vez de a un club entero, hay un muro de amigos.
 
 QUE ACABE EL PLAN NO ES EL FINAL
 Al terminar tu plan: un bloque de recuperación guiado y, después, un nuevo objetivo o modo carrera libre sin plan fijo.

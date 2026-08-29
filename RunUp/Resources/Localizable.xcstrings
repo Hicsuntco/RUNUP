@@ -16389,6 +16389,23 @@
         }
       }
     },
+    "Voir l'offre": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See what's included"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver la oferta"
+          }
+        }
+      }
+    },
     "Voir les commentaires": {
       "localizations": {
         "en": {

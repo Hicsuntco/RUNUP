@@ -15,6 +15,7 @@ struct SettingsView: View {
     private var profile: UserProfile { appState.profile }
 
     @State private var showMoreSettings = false
+    @State private var showPaywall = false
     @Environment(SubscriptionService.self) private var subscriptions
 
     var body: some View {
@@ -54,6 +55,9 @@ struct SettingsView: View {
         .sheet(isPresented: $showMoreSettings) {
             MoreSettingsView()
         }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView(subscriptions: subscriptions, onClose: { showPaywall = false })
+        }
     }
 
     private func sectionTitle(_ text: String) -> some View {
@@ -68,6 +72,27 @@ struct SettingsView: View {
             RUCardHeader(icon: "sparkles", tint: RUColor.rose,
                          title: "RUNUP Plus",
                          subtitle: subscriptions.isSubscribed == true ? "Actif" : "Inactif")
+            // Ouvrir l'offre à la demande, quel que soit l'état de l'abonnement.
+            //
+            // Sans ça, l'écran d'abonnement n'est atteignable qu'en N'ÉTANT PAS abonnée et
+            // seulement une fois les produits chargés — c'est-à-dire jamais pendant qu'on
+            // configure App Store Connect, qui réclame justement une capture de cet écran pour
+            // sortir le produit de « Métadonnées manquantes ». Œuf et poule.
+            //
+            // Utile ensuite, aussi : c'est le seul moyen pour une abonnée de revoir ce que son
+            // abonnement comprend.
+            Button(action: { showPaywall = true }) {
+                HStack {
+                    Text("Voir l'offre").font(RUFont.sans(.body, weight: .semibold))
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold))
+                }
+                .foregroundColor(RUColor.textPrimary)
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(PressableStyle())
+
             Link(destination: URL(string: "https://apps.apple.com/account/subscriptions")!) {
                 HStack {
                     Text("Gérer mon abonnement").font(RUFont.sans(.body, weight: .semibold))

@@ -29,14 +29,22 @@ l'onglet **Actions**, pour ne pas avoir à ouvrir un terminal.
    L'ordre des accroches suit celui des captures, pas l'inverse : si tes captures sortent dans un
    autre ordre, il est plus rapide de réécrire `captions.json` que de tout reprendre.
 
-3. **Les déposer dans `appstore/raw/`.** Pas besoin de les renommer : le script les prend dans
-   l'ordre de leur nom, et les captures d'un iPhone se numérotent déjà dans l'ordre où elles ont
-   été prises (`IMG_0008.PNG`, `IMG_0009.PNG`…). Depuis le navigateur, sur le téléphone comme sur
-   l'ordinateur : ouvrir le dossier `appstore/raw` sur GitHub → **Add file** → **Upload files** →
-   déposer → **Commit changes** en choisissant la branche de travail.
+3. **Recommencer dans chaque langue.** L'app est traduite ; les captures, elles, montrent la
+   langue du téléphone au moment de la prise. Une interface en français sous une accroche en
+   anglais se voit tout de suite, et coûte l'installation. Réglages → Général → Langue et région,
+   puis reprendre les six mêmes écrans.
 
-   Le run affiche l'ordre retenu en première ligne. C'est là qu'on voit une inversion, pas sur la
-   fiche publiée.
+   Les captures vont dans le dossier de leur langue — `appstore/raw/fr-FR/`, `appstore/raw/en-US/`,
+   `appstore/raw/es-ES/`. Pas besoin de les renommer : le script les prend dans l'ordre de leur
+   nom, et les captures d'un iPhone se numérotent déjà dans l'ordre où elles ont été prises
+   (`IMG_0008.PNG`, `IMG_0009.PNG`…).
+
+   Depuis le navigateur, sur un ordinateur — GitHub refuse les envois de fichiers depuis un
+   navigateur mobile : ouvrir le dossier de la langue sur GitHub → **Add file** → **Upload files**
+   → déposer → **Commit changes** en choisissant la branche de travail.
+
+   Le run affiche en tête le dossier lu et l'ordre retenu. C'est là qu'on voit une inversion, pas
+   sur la fiche publiée.
 
 4. **Lancer la composition.** Onglet **Actions** → **App Store** → **Run workflow** → action
    `composer-les-captures`, choisir la langue → **Run workflow**.

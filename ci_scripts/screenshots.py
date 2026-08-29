@@ -296,16 +296,24 @@ def main() -> int:
         print(f"Langue inconnue : {lang}. Connues : {', '.join(sorted(captions))}", file=sys.stderr)
         return 1
 
+    # Une série de captures par langue : l'app est traduite, et une interface en français sous une
+    # accroche en anglais coûte l'installation au moment où la personne fait défiler le carrousel.
+    # À défaut de dossier pour la langue demandée, on retombe sur les captures posées à la racine —
+    # utile tant qu'une seule série existe.
+    folder = RAW / lang
+    if not folder.is_dir():
+        folder = RAW
     shots = sorted(
-        (p for p in RAW.iterdir() if p.is_file() and p.suffix.lower() in SUFFIXES),
+        (p for p in folder.iterdir() if p.is_file() and p.suffix.lower() in SUFFIXES),
         key=lambda p: natural(p.name),
     )
     if not shots:
         print(
-            f"Aucune capture dans {RAW}. Dépose tes captures brutes puis relance.",
+            f"Aucune capture dans {folder}. Dépose les captures prises en {lang} puis relance.",
             file=sys.stderr,
         )
         return 1
+    print(f"Captures lues dans {folder.relative_to(ROOT)}")
 
     # L'ordre est celui des accroches : le dire à voix haute évite de découvrir l'inversion sur la
     # fiche publiée plutôt qu'ici.

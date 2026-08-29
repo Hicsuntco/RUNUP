@@ -211,7 +211,7 @@ def cmd_status(_):
             a = wf["attributes"]
             print(f"  Xcode Cloud · « {a.get('name')} » — {'actif' if a.get('isEnabled') else 'DÉSACTIVÉ'}")
             try:
-                runs = call("GET", f"ciWorkflows/{wf['id']}/buildRuns?limit=3")["data"]
+                runs = call("GET", f"ciWorkflows/{wf['id']}/buildRuns?limit=3&sort=-number")["data"]
             except SystemExit:
                 runs = []
             if not runs:
@@ -266,7 +266,7 @@ def cmd_ci(_):
             state = "actif" if a.get("isEnabled") else "DÉSACTIVÉ"
             locked = " (verrouillé)" if a.get("isLockedForEditing") else ""
             print(f"  Workflow « {a.get('name')} » — {state}{locked}")
-            runs = call("GET", f"ciWorkflows/{wf['id']}/buildRuns?limit=5")["data"]
+            runs = call("GET", f"ciWorkflows/{wf['id']}/buildRuns?limit=5&sort=-number")["data"]
             if not runs:
                 print("    aucune exécution\n")
                 continue

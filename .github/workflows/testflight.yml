@@ -246,6 +246,13 @@ jobs:
       # build, et ça ne se voit que sur l'appareil, écran par écran. Neuf builds sont partis avec
       # ce défaut avant qu'il soit compris. Cette vérification coûte une seconde et le rend
       # impossible à répéter.
+      # La fiche a des limites de champ dures : au-delà, App Store Connect refuse le collage, et
+      # ça ne se découvre qu'au moment de la saisie, après avoir tout rédigé. Le bloc d'abonnement
+      # obligatoire a fait dépasser deux descriptions, et la vérification a été faite après
+      # publication deux fois de suite.
+      - name: Vérifier la fiche App Store
+        run: python3 ci_scripts/check_listing.py
+
       - name: Vérifier que les polices demandées sont livrées
         run: python3 ci_scripts/check_fonts.py
 

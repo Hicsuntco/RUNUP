@@ -64,7 +64,7 @@ WIDGETS ET ÉCRAN VERROUILLÉ
 Un widget sur l'écran d'accueil pour tes objectifs du jour et ta série en cours. Pendant une course, l'activité en direct s'affiche sur l'écran verrouillé et dans la Dynamic Island.
 
 STATS QUI COMPTENT VRAIMENT
-Tendance d'allure, records personnels, prédictions sur 5 km, 10 km, semi et marathon, charge d'entraînement sur 8 semaines, carte de tes parcours et usure de tes chaussures.
+Tendance d'allure, records personnels, prédictions sur 5 km, 10 km, semi et marathon, charge d'entraînement sur 8 semaines, carte de tes parcours, usure des chaussures.
 
 OÙ COURIR QUAND TU NE CONNAIS PAS L'ENDROIT
 Tu débarques dans une ville et tu ne sais pas où courir ? La carte montre les itinéraires publiés autour de toi, avec distance, dénivelé et souvent une photo. Tes propres sorties se partagent en deux gestes — et les 300 premiers et derniers mètres sont retirés avant l'envoi : personne ne verra d'où tu es partie ni où tu es rentrée.
@@ -75,7 +75,7 @@ Classement de la semaine et classement général, défis de club, sorties de gro
 FIN DE PROGRAMME, PAS FIN DE L'HISTOIRE
 À la fin de ton programme : récupération encadrée, puis nouvel objectif ou mode course libre sans plan fixe.
 
-Nécessite iOS 17 ou version ultérieure. La connexion à Apple Santé est optionnelle mais recommandée pour une forme du jour plus précise. Le Club demande un compte ; tout le reste de l'app fonctionne sans.
+Nécessite iOS 17 ou version ultérieure. La connexion à Apple Santé est optionnelle, mais affine la forme du jour. Le Club demande un compte ; tout le reste de l'app fonctionne sans.
 
 ABONNEMENT RUNUP PLUS
 RUNUP s'utilise avec un abonnement RUNUP Plus, précédé de 7 jours d'essai gratuit.

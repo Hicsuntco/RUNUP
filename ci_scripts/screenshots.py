@@ -45,6 +45,42 @@ VIOLET = (0x7C, 0x5C, 0xFF)
 INK = (0x0B, 0x0B, 0x0F)
 
 
+# --- Le châssis -------------------------------------------------------------------------------
+#
+# Proportions relevées sur un iPhone 16 Pro Max : dalle de 430 × 932 pt, coins de 55 pt, îlot
+# dynamique de 125 × 36 pt posé à 11 pt du bord haut. Tout est exprimé en fraction de la LARGEUR
+# de la dalle, pour que le cadre reste juste à n'importe quelle échelle de rendu.
+#
+# Le rayon des coins est le détail qui décide de tout : à 5 % de la largeur on obtient une carte
+# aux angles adoucis, à 12,8 % on obtient un téléphone.
+SCREEN_RADIUS = 55 / 430
+BEZEL = 0.030
+ISLAND_W = 125 / 430
+ISLAND_H = 36 / 430
+ISLAND_TOP = 11 / 430
+
+# Le titane noir vu de face : une bande sombre bordée de deux arêtes vives. Ce sont ces deux
+# traits clairs, et eux seuls, qui font lire « métal » plutôt que « rectangle gris ».
+RAIL = [
+    (0.000, (58, 58, 60)),
+    (0.012, (150, 150, 156)),
+    (0.030, (40, 40, 42)),
+    (0.500, (74, 74, 77)),
+    (0.970, (40, 40, 42)),
+    (0.988, (150, 150, 156)),
+    (1.000, (58, 58, 60)),
+]
+
+# Les boutons, en fraction de la hauteur du châssis. À gauche le bouton Action puis les deux
+# touches de volume ; à droite le bouton latéral, plus long et décalé vers le bas.
+BUTTONS_LEFT = [(0.128, 0.165), (0.196, 0.258), (0.272, 0.334)]
+BUTTONS_RIGHT = [(0.210, 0.305)]
+
+INK = (10, 10, 14)
+ROSE = (0xFF, 0x0F, 0x5B)
+VIOLET = (0x7C, 0x5C, 0xFF)
+
+
 def natural(name: str) -> list:
     """Trie `IMG_9.PNG` avant `IMG_10.PNG`, et `2.png` avant `10.png`.
 
@@ -54,15 +90,64 @@ def natural(name: str) -> list:
     return [int(part) if part.isdigit() else part.lower() for part in re.split(r"(\d+)", name)]
 
 
-def gradient(size: tuple[int, int], top: tuple[int, int, int], bottom: tuple[int, int, int]) -> Image.Image:
-    """Un dégradé vertical. Dessiné en 1 px de large puis étiré : Pillow n'a pas de primitive."""
+def ramp(stops: list, t: float) -> tuple:
+    """La couleur d'un dégradé à arrêts, à la position `t`."""
+    if t <= stops[0][0]:
+        return stops[0][1]
+    for (t0, c0), (t1, c1) in zip(stops, stops[1:]):
+        if t0 <= t <= t1:
+            k = 0.0 if t1 == t0 else (t - t0) / (t1 - t0)
+            return tuple(int(c0[i] + (c1[i] - c0[i]) * k) for i in range(3))
+    return stops[-1][1]
+
+
+def linear(size: tuple, stops: list, horizontal: bool = False) -> Image.Image:
+    """Un dégradé à arrêts, dessiné sur une seule ligne puis étiré.
+
+    Pillow n'a pas de primitive de dégradé ; peindre pixel par pixel une image de 1290 × 2796 en
+    coûterait trois millions. Une ligne suffit, le redimensionnement fait le reste.
+    """
     w, h = size
-    strip = Image.new("RGB", (1, h))
+    n = w if horizontal else h
+    strip = Image.new("RGB", (n, 1))
     px = strip.load()
-    for y in range(h):
-        t = y / max(1, h - 1)
-        px[0, y] = tuple(int(top[i] + (bottom[i] - top[i]) * t) for i in range(3))
+    for i in range(n):
+        px[i, 0] = ramp(stops, i / max(1, n - 1))
+    if not horizontal:
+        strip = strip.rotate(-90, expand=True)
     return strip.resize(size, Image.BICUBIC)
+
+
+def glow(size: tuple, color: tuple, strength: float = 1.0) -> Image.Image:
+    """Un halo circulaire, en calque RGBA.
+
+    Construit en 256 px puis agrandi : une centaine d'ellipses concentriques suffisent à un
+    dégradé lisse une fois interpolées, et évitent d'en dessiner des milliers à taille réelle.
+    """
+    s = 256
+    field = Image.new("L", (s, s), 0)
+    d = ImageDraw.Draw(field)
+    steps = 120
+    for i in range(steps, 0, -1):
+        t = i / steps
+        r = t * s / 2
+        d.ellipse((s / 2 - r, s / 2 - r, s / 2 + r, s / 2 + r), fill=int(255 * strength * (1 - t) ** 2))
+    layer = Image.new("RGBA", size, color + (0,))
+    layer.putalpha(field.resize(size, Image.BICUBIC))
+    return layer
+
+
+def scene() -> Image.Image:
+    """Le fond : le dégradé de marque, éclairé derrière l'épaule de l'appareil.
+
+    Le halo clair ne décore pas — il sépare. Sur un aplat uniforme, un téléphone noir se découpe
+    par son ombre seule ; une zone plus claire derrière ses coins hauts lui donne un relief que
+    l'ombre ne suffit pas à produire.
+    """
+    canvas = linear(CANVAS, [(0.0, (255, 26, 100)), (0.55, (222, 30, 120)), (1.0, (110, 82, 255))])
+    canvas = canvas.convert("RGBA")
+    canvas.alpha_composite(glow((2200, 2200), (255, 140, 190), 0.45), (-455, -300))
+    return canvas.convert("RGB")
 
 
 def wrap(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont, width: int) -> list[str]:
@@ -85,62 +170,119 @@ def wrap(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont, wid
     return lines
 
 
+def tracked(draw: ImageDraw.ImageDraw, xy: tuple, text: str, font: ImageFont.FreeTypeFont,
+            fill: tuple, tracking: float) -> None:
+    """Écrit `text` en resserrant les lettres de `tracking` pixels.
+
+    Une police d'interface est espacée pour se lire à 15 px. Aux 76 px d'un titre, ce même
+    espacement fait flotter les lettres ; les afficheurs le resserrent toujours un peu. Pillow ne
+    sait pas le faire, d'où le tracé caractère par caractère.
+    """
+    x, y = xy
+    for char in text:
+        draw.text((x, y), char, font=font, fill=fill)
+        x += draw.textlength(char, font=font) + tracking
+
+
+def tracked_width(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont,
+                  tracking: float) -> float:
+    return sum(draw.textlength(c, font=font) for c in text) + tracking * (len(text) - 1)
+
+
+def device(shot: Image.Image, screen_w: int) -> tuple:
+    """Habille une capture d'un châssis d'iPhone.
+
+    Renvoie l'appareil en RGBA, son masque, et l'épaisseur du châssis — le masque sert à poser
+    l'ombre exactement sous la silhouette, pas sous un rectangle.
+    """
+    scale = screen_w / shot.width
+    sw, sh = screen_w, round(shot.height * scale)
+    shot = shot.resize((sw, sh), Image.LANCZOS).convert("RGBA")
+
+    b = max(2, round(sw * BEZEL))
+    dw, dh = sw + 2 * b, sh + 2 * b
+    r_screen = sw * SCREEN_RADIUS
+    r_device = r_screen + b
+
+    silhouette = Image.new("L", (dw, dh), 0)
+    ImageDraw.Draw(silhouette).rounded_rectangle((0, 0, dw - 1, dh - 1), radius=r_device, fill=255)
+
+    body = Image.new("RGBA", (dw, dh), (0, 0, 0, 0))
+    body.paste(linear((dw, dh), RAIL, horizontal=True).convert("RGBA"), (0, 0), silhouette)
+
+    # Le joint noir entre le titane et la dalle. Sans lui l'écran a l'air imprimé sur le métal.
+    ImageDraw.Draw(body).rounded_rectangle(
+        (b - 3, b - 3, dw - b + 2, dh - b + 2), radius=r_screen + 3, outline=(0, 0, 0, 255), width=3
+    )
+
+    screen_mask = Image.new("L", (sw, sh), 0)
+    ImageDraw.Draw(screen_mask).rounded_rectangle((0, 0, sw - 1, sh - 1), radius=r_screen, fill=255)
+    body.paste(shot, (b, b), screen_mask)
+
+    # L'îlot dynamique, posé par-dessus : il occupe le creux que la barre d'état laisse au milieu,
+    # entre l'heure et les icônes — il ne recouvre donc rien.
+    iw, ih = sw * ISLAND_W, sw * ISLAND_H
+    ix, iy = b + (sw - iw) / 2, b + sw * ISLAND_TOP
+    ImageDraw.Draw(body).rounded_rectangle((ix, iy, ix + iw, iy + ih), radius=ih / 2, fill=(0, 0, 0, 255))
+
+    return body, silhouette, b
+
+
 def compose(shot_path: Path, caption: str, dest: Path) -> None:
-    canvas = gradient(CANVAS, ROSE, VIOLET)
+    canvas = scene()
     draw = ImageDraw.Draw(canvas)
 
     font = ImageFont.truetype(str(FONTS / "Inter-Bold.ttf"), 76)
+    tracking = -1.6
     margin = 96
     lines = wrap(draw, caption, font, CANVAS[0] - margin * 2)
 
-    # L'accroche d'abord : c'est elle qui fixe où commence le téléphone. Une accroche sur trois
+    # L'accroche d'abord : c'est elle qui fixe où commence l'appareil. Une accroche sur trois
     # lignes ne doit pas se retrouver recouverte par la capture.
     leading = 92
     y = 190
     for line in lines:
-        w = draw.textlength(line, font=font)
-        draw.text(((CANVAS[0] - w) / 2, y), line, font=font, fill=(255, 255, 255))
+        w = tracked_width(draw, line, font, tracking)
+        tracked(draw, ((CANVAS[0] - w) / 2, y), line, font, (255, 255, 255), tracking)
         y += leading
 
-    shot = Image.open(shot_path).convert("RGB")
+    body, silhouette, b = device(Image.open(shot_path).convert("RGB"), screen_w=1046)
+    dw, dh = body.size
+    left = (CANVAS[0] - dw) // 2
+    top = int(y + 150)
 
-    # La largeur commande : une capture mise à l'échelle sur sa hauteur donne un timbre-poste au
-    # milieu d'un aplat rose. Le téléphone occupe donc toute la largeur utile et déborde en bas
-    # du cadre — c'est ce que font les fiches qu'on regarde comme référence.
-    scale = (CANVAS[0] - margin * 2) / shot.width
-    size = (int(shot.width * scale), int(shot.height * scale))
-    shot = shot.resize(size, Image.LANCZOS)
-
-    top = y + 120
+    # L'appareil sort par le bas. Le montrer en entier le réduirait à un objet posé au milieu du
+    # cadre ; le laisser déborder donne la profondeur qu'ont les fiches qu'on prend pour modèle.
     visible = max(0, CANVAS[1] - top)
-    if size[1] > visible:
-        shot = shot.crop((0, 0, size[0], visible))
-        size = (size[0], visible)
+    if dh > visible:
+        body = body.crop((0, 0, dw, visible))
+        silhouette = silhouette.crop((0, 0, dw, visible))
+        dh = visible
 
-    left = (CANVAS[0] - size[0]) // 2
-    radius = 56
+    # Les boutons, dessinés AVANT l'appareil : ils dépassent du châssis, qui les recouvre à demi.
+    # Ils sont du métal, pas de l'ombre : peints sombres, ils se lisaient comme des taches posées
+    # derrière le téléphone. Un gris clair les rattache à l'arête vive du châssis.
+    tab = max(3, round(b * 0.62))
+    full_h = round(1046 / Image.open(shot_path).width * Image.open(shot_path).height) + 2 * b
+    buttons = ImageDraw.Draw(canvas)
+    for lo, hi in BUTTONS_LEFT:
+        y0, y1 = top + full_h * lo, top + full_h * hi
+        buttons.rounded_rectangle((left - tab, y0, left + b, y1), radius=tab, fill=(146, 146, 152))
+    for lo, hi in BUTTONS_RIGHT:
+        y0, y1 = top + full_h * lo, top + full_h * hi
+        buttons.rounded_rectangle((left + dw - b, y0, left + dw + tab, y1), radius=tab, fill=(146, 146, 152))
 
-    # Le téléphone déborde par le bas : ses coins inférieurs sont hors cadre, et les arrondir sur
-    # la ligne de coupe donnerait une carte posée au ras du bord plutôt qu'un appareil qui sort de
-    # l'image. On dessine donc le rectangle plus haut que la découpe, pour que le bas tombe dehors.
-    bleeds = size[1] >= visible
-    bottom = size[1] - 1 + (radius * 2 if bleeds else 0)
-
-    # Le masque arrondi sert deux fois : à détourer la capture, et à dessiner l'ombre portée.
-    mask = Image.new("L", size, 0)
-    ImageDraw.Draw(mask).rounded_rectangle((0, 0, size[0] - 1, bottom), radius=radius, fill=255)
-
+    # L'ombre suit la silhouette, pas un rectangle : c'est ce qui la rend crédible aux coins.
     shadow = Image.new("RGBA", CANVAS, (0, 0, 0, 0))
-    ImageDraw.Draw(shadow).rounded_rectangle(
-        (left, top + 18, left + size[0] - 1, top + bottom + 18), radius=radius, fill=(0, 0, 0, 110)
-    )
-    shadow = shadow.filter(ImageFilter.GaussianBlur(34))
-    canvas = Image.alpha_composite(canvas.convert("RGBA"), shadow).convert("RGB")
+    tinted = Image.new("RGBA", (dw, dh), (0, 0, 0, 150))
+    shadow.paste(tinted, (left, top + 26), silhouette)
+    shadow = shadow.filter(ImageFilter.GaussianBlur(42))
+    canvas = Image.alpha_composite(canvas.convert("RGBA"), shadow)
 
-    canvas.paste(shot, (left, top), mask)
+    canvas.alpha_composite(body, (left, top))
 
     dest.parent.mkdir(parents=True, exist_ok=True)
-    canvas.save(dest, "PNG")
+    canvas.convert("RGB").save(dest, "PNG")
 
 
 def main() -> int:

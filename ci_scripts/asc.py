@@ -160,47 +160,57 @@ def app_id():
 
 # ── Commandes ─────────────────────────────────────────────────────────────────────────────────
 
-def print_build_issues(build_run_id: str, limit: int = 12) -> None:
+def print_build_issues(build_run_id: str, limit: int = 15) -> None:
     """Les erreurs qui ont fait échouer une exécution, lues depuis App Store Connect.
 
     Sans elles, « FAILED » oblige à ouvrir Xcode Cloud dans un navigateur pour apprendre qu'il
     manquait une virgule. Une exécution se décompose en actions (Build, Test, Archive…) et chaque
-    action porte ses problèmes ; c'est la seule route qui donne le fichier et la ligne.
+    action porte ses problèmes.
 
-    Tout est protégé : ce bloc sert à diagnostiquer une panne, il ne doit pas en provoquer une.
+    Rien n'est filtré. La première version ne demandait les problèmes qu'aux actions dont
+    `issueCounts.errors` était non nul, et ne gardait que le type ERROR : sur une exécution
+    réellement en échec, elle n'a rien affiché du tout. Un outil de diagnostic qui se tait est
+    pire que pas d'outil — il fait conclure qu'il n'y a rien à voir. On demande donc tout, et on
+    montre ce qui vient, y compris le décompte brut par action quand Apple ne détaille pas.
+
+    Tout est protégé : ce bloc sert à comprendre une panne, il n'a pas le droit d'en provoquer une.
     """
     try:
         actions = call("GET", f"ciBuildRuns/{build_run_id}/actions?limit=10")["data"]
     except SystemExit:
-        print("      (détail des erreurs indisponible)")
+        print("      (impossible de lire les actions de cette exécution)")
         return
+    if not actions:
+        print("      (aucune action rattachée à cette exécution)")
+        return
+
     shown = 0
     for action in actions:
-        name = action["attributes"].get("name", "?")
-        counts = action["attributes"].get("issueCounts") or {}
-        if not (counts.get("errors") or counts.get("testFailures")):
-            continue
+        aa = action["attributes"]
+        name = aa.get("name", "?")
+        counts = aa.get("issueCounts") or {}
+        summary = ", ".join(f"{k} : {v}" for k, v in counts.items() if v) or "aucun décompte"
+        print(f"      [{name}] {aa.get('completionStatus') or aa.get('executionProgress')} — {summary}")
         try:
             issues = call("GET", f"ciBuildActions/{action['id']}/issues?limit={limit}")["data"]
         except SystemExit:
+            print("        (problèmes non lisibles pour cette action)")
             continue
         for issue in issues:
             ia = issue["attributes"]
-            if ia.get("issueType") not in ("ERROR", "TEST_FAILURE"):
-                continue
             source = ia.get("fileSource") or {}
             where = source.get("path") or ""
-            line = (source.get("lineNumber") if isinstance(source.get("lineNumber"), int) else None)
+            line = source.get("lineNumber") if isinstance(source.get("lineNumber"), int) else None
             location = f"{where}:{line}" if where and line else where
             message = " ".join((ia.get("message") or "").split())
-            print(f"      [{name}] {message}")
+            print(f"        {ia.get('issueType', '?')} · {message}")
             if location:
-                print(f"              {location}")
+                print(f"          {location}")
             shown += 1
             if shown >= limit:
                 return
     if shown == 0:
-        print("      (aucune erreur détaillée renvoyée par Apple)")
+        print("      (Apple ne renvoie le détail d'aucun problème — voir Xcode Cloud)")
 
 
 def cmd_status(_):

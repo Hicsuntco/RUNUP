@@ -399,3 +399,16 @@ Le seul endroit où ça coûte de l'argent est le coach : chaque message est un 
 La suite logique est que `api/coach` exige le JWS de la transaction en plus du secret partagé, et
 le vérifie contre les clés publiques d'Apple avant de répondre. Tant que ce n'est pas fait, un
 client modifié peut appeler le coach sans payer.
+
+### Le verrou s'arme tout seul — et pas avant
+
+Tant qu'App Store Connect répond que `com.hicsuntco.runup.plus.*` n'existe pas, **l'app reste
+ouverte**. Ce n'est pas une porte dérobée, c'est le seul comportement défendable : enfermer
+quelqu'un dehors d'une app qu'on ne peut pas encore lui vendre est pire que de la laisser entrer.
+
+Le jour où les deux produits existent, le paywall se met en place de lui-même, sans rien à
+redéployer.
+
+Le distinguo tient parce que StoreKit sépare les deux cas : `Product.products(for:)` renvoie un
+tableau **vide** pour des identifiants inconnus, et **lève une erreur** quand elle ne peut pas
+joindre l'App Store. Couper le réseau ne donne donc pas l'app gratuitement.

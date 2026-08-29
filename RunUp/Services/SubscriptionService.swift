@@ -42,6 +42,18 @@ final class SubscriptionService {
     /// expérience que cet écran puisse produire.
     private(set) var isSubscribed: Bool?
     private(set) var loadFailed = false
+    /// L'App Store a répondu que ces identifiants n'existent pas.
+    ///
+    /// C'est un état de LANCEMENT, pas une panne : tant que les produits ne sont pas créés dans
+    /// App Store Connect, il n'y a rien à vendre — et enfermer quelqu'un dehors d'une app qu'on
+    /// ne peut pas lui vendre est la pire des deux erreurs possibles. L'app reste donc ouverte
+    /// tant que c'est le cas, et le verrou se referme tout seul le jour où les produits existent.
+    ///
+    /// Le distinguo tient parce que StoreKit distingue les deux cas : `Product.products(for:)`
+    /// renvoie un tableau VIDE pour des identifiants inconnus, et LÈVE une erreur quand elle ne
+    /// peut pas joindre l'App Store. Couper le réseau ne donne donc pas l'app gratuitement — ça
+    /// donne `loadFailed`, qui ne déverrouille rien.
+    private(set) var productsUnavailable = false
     private(set) var isPurchasing = false
 
     init() {
@@ -64,8 +76,10 @@ final class SubscriptionService {
     }
 
     func start() async {
-        await refreshEntitlement()
+        // Les produits AVANT le droit d'accès : c'est le chargement des produits qui dit s'il y a
+        // quelque chose à vendre, et l'aiguillage lit les deux ensemble.
         await loadProducts()
+        await refreshEntitlement()
     }
 
     func loadProducts() async {
@@ -74,10 +88,19 @@ final class SubscriptionService {
             // Ordre imposé, pas celui d'Apple : l'annuel en premier parce que c'est la formule
             // mise en avant, et `Product.products(for:)` ne garantit aucun ordre.
             products = ProductID.all.compactMap { id in fetched.first { $0.id == id } }
-            loadFailed = products.isEmpty
+            loadFailed = false
+            productsUnavailable = products.isEmpty
         } catch {
             loadFailed = true
+            productsUnavailable = false
         }
+    }
+
+    /// Faut-il laisser passer ? Oui si l'abonnement est actif, oui aussi tant qu'il n'y a
+    /// littéralement rien à vendre.
+    var grantsAccess: Bool? {
+        if productsUnavailable { return true }
+        return isSubscribed
     }
 
     /// L'état d'abonnement, relu depuis les droits courants plutôt que mémorisé.

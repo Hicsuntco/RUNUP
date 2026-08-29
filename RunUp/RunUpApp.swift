@@ -109,9 +109,9 @@ private struct ContentRouterView: View {
         Group {
             if !appState.profile.onboarded {
                 OnboardingContainerView()
-            } else if subscriptions.isSubscribed == false {
+            } else if subscriptions.grantsAccess == false {
                 PaywallView(subscriptions: subscriptions)
-            } else if subscriptions.isSubscribed == nil {
+            } else if subscriptions.grantsAccess == nil {
                 // La première vérification n'a pas encore répondu. Montrer le paywall pendant ce
                 // temps le montrerait à des abonnées — un clignotement bref mais insultant, et la
                 // pire chose que cet écran puisse faire. Montrer l'app serait pire dans l'autre

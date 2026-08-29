@@ -19,12 +19,15 @@ l'onglet **Actions**, pour ne pas avoir à ouvrir un terminal.
 
    | | Écran |
    |---|---|
-   | 1 | Programme — la semaine en cours |
-   | 2 | Accueil — les chiffres de la semaine |
-   | 3 | Le détail d'une sortie (carte + splits) |
+   | 1 | Accueil — objectifs du jour, programme en cours |
+   | 2 | Programme — le plan complet |
+   | 3 | Ta journée — les trois objectifs |
    | 4 | Le coach, avec une réponse à l'écran |
-   | 5 | Objectifs — l'anneau bien rempli |
-   | 6 | Le Club |
+   | 5 | Stats — ta forme évolue |
+   | 6 | Le partage d'une course |
+
+   L'ordre des accroches suit celui des captures, pas l'inverse : si tes captures sortent dans un
+   autre ordre, il est plus rapide de réécrire `captions.json` que de tout reprendre.
 
 3. **Les déposer dans `appstore/raw/`.** Pas besoin de les renommer : le script les prend dans
    l'ordre de leur nom, et les captures d'un iPhone se numérotent déjà dans l'ordre où elles ont

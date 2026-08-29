@@ -160,6 +160,24 @@ def app_id():
 
 # ── Commandes ─────────────────────────────────────────────────────────────────────────────────
 
+def print_run_actions(build_run_id: str) -> None:
+    """Le détail des actions d'une exécution qui ne s'est pas plantée.
+
+    « SUCCEEDED » ne veut pas dire « la build est sur TestFlight ». Une exécution peut très bien
+    compiler et archiver proprement sans que l'étape de distribution ait tourné — et de l'extérieur
+    les deux cas sont rigoureusement identiques : un vert dans Xcode Cloud, rien dans TestFlight.
+    Lister les actions et leur état sépare les deux sans ouvrir un navigateur.
+    """
+    try:
+        actions = call("GET", f"ciBuildRuns/{build_run_id}/actions?limit=10")["data"]
+    except SystemExit:
+        return
+    for action in actions:
+        aa = action["attributes"]
+        state = aa.get("completionStatus") or aa.get("executionProgress") or "?"
+        print(f"      [{aa.get('name', '?')}] {state}")
+
+
 def print_build_issues(build_run_id: str, limit: int = 15) -> None:
     """Les erreurs qui ont fait échouer une exécution, lues depuis App Store Connect.
 
@@ -226,19 +244,44 @@ def cmd_status(_):
     # refuse `sort` avec un 400. Et le bloc entier est protégé — un ajout de diagnostic n'a pas à
     # emporter la commande qui l'héberge, sinon `status` cesse de dire l'état des versions le jour
     # où Apple change quelque chose à l'endpoint des builds.
-    try:
-        builds = call("GET", f"builds?filter[app]={aid}&limit=5&sort=-uploadedDate")["data"]
-    except SystemExit:
-        builds = None
+    #
+    # Le tri est fait ici, sur le numéro de build, et non par l'API sur `uploadedDate` : cette
+    # date est remplie n'importe comment. La build 1072 y était datée de 13 h 03 alors qu'elle est
+    # apparue après 20 h — un tri sur cette date range donc les plus récentes n'importe où, et
+    # « les cinq dernières » en devient un mensonge. On demande une grande page, on trie sur le
+    # seul champ fiable, et on n'affiche que le haut.
+    #
+    # `preReleaseVersion` est demandé pour la même raison : une build rattachée à une autre chaîne
+    # de version (2.4, 2.6…) est invisible dans l'écran TestFlight de la 2.5 tout en existant
+    # parfaitement côté API. Si elle est là, il faut le voir ici plutôt que la chercher à la main.
+    builds, trains = None, {}
+    for query in (f"builds?filter[app]={aid}&limit=200&include=preReleaseVersion",
+                  f"builds?filter[app]={aid}&limit=200"):
+        try:
+            page = call("GET", query)
+        except SystemExit:
+            continue
+        builds = page["data"]
+        trains = {i["id"]: i["attributes"].get("version")
+                  for i in page.get("included", []) if i["type"] == "preReleaseVersions"}
+        break
+    if builds is None:
         print("  (impossible de lire les builds — le reste du statut suit)\n")
     if builds:
-        print("  Dernières builds envoyées sur TestFlight :")
-        for b in builds:
+        def build_number(b):
+            raw = (b["attributes"].get("version") or "").strip()
+            return int(raw) if raw.isdigit() else -1
+        builds.sort(key=build_number, reverse=True)
+        print(f"  Dernières builds envoyées sur TestFlight ({len(builds)} au total) :")
+        for b in builds[:8]:
             a = b["attributes"]
             uploaded = (a.get("uploadedDate") or "")[:16].replace("T", " à ")
             state = a.get("processingState", "?")
             expired = " (expirée)" if a.get("expired") else ""
-            print(f"    build {a.get('version', '?'):>6}   {uploaded} UTC   {state}{expired}")
+            rel = b.get("relationships", {}).get("preReleaseVersion", {}).get("data") or {}
+            train = trains.get(rel.get("id")) or "?"
+            print(f"    build {a.get('version', '?'):>6}   version {train:<6} "
+                  f"{uploaded} UTC   {state}{expired}")
         print()
     elif builds is not None:
         print("  Aucune build envoyée.\n")
@@ -277,6 +320,8 @@ def cmd_status(_):
                 print(f"    #{ra.get('number', '?'):<5} {started} UTC   {status}{reason}")
                 if status == "FAILED":
                     print_build_issues(r["id"])
+                else:
+                    print_run_actions(r["id"])
         print()
 
     versions = call("GET", f"apps/{aid}/appStoreVersions?limit=5")["data"]

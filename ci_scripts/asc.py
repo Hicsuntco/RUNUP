@@ -160,6 +160,49 @@ def app_id():
 
 # ── Commandes ─────────────────────────────────────────────────────────────────────────────────
 
+def print_build_issues(build_run_id: str, limit: int = 12) -> None:
+    """Les erreurs qui ont fait échouer une exécution, lues depuis App Store Connect.
+
+    Sans elles, « FAILED » oblige à ouvrir Xcode Cloud dans un navigateur pour apprendre qu'il
+    manquait une virgule. Une exécution se décompose en actions (Build, Test, Archive…) et chaque
+    action porte ses problèmes ; c'est la seule route qui donne le fichier et la ligne.
+
+    Tout est protégé : ce bloc sert à diagnostiquer une panne, il ne doit pas en provoquer une.
+    """
+    try:
+        actions = call("GET", f"ciBuildRuns/{build_run_id}/actions?limit=10")["data"]
+    except SystemExit:
+        print("      (détail des erreurs indisponible)")
+        return
+    shown = 0
+    for action in actions:
+        name = action["attributes"].get("name", "?")
+        counts = action["attributes"].get("issueCounts") or {}
+        if not (counts.get("errors") or counts.get("testFailures")):
+            continue
+        try:
+            issues = call("GET", f"ciBuildActions/{action['id']}/issues?limit={limit}")["data"]
+        except SystemExit:
+            continue
+        for issue in issues:
+            ia = issue["attributes"]
+            if ia.get("issueType") not in ("ERROR", "TEST_FAILURE"):
+                continue
+            source = ia.get("fileSource") or {}
+            where = source.get("path") or ""
+            line = (source.get("lineNumber") if isinstance(source.get("lineNumber"), int) else None)
+            location = f"{where}:{line}" if where and line else where
+            message = " ".join((ia.get("message") or "").split())
+            print(f"      [{name}] {message}")
+            if location:
+                print(f"              {location}")
+            shown += 1
+            if shown >= limit:
+                return
+    if shown == 0:
+        print("      (aucune erreur détaillée renvoyée par Apple)")
+
+
 def cmd_status(_):
     aid, name = app_id()
     print(f"App : {name}  ({BUNDLE_ID})\n")
@@ -222,6 +265,8 @@ def cmd_status(_):
                 status = ra.get("completionStatus") or ra.get("executionProgress") or "?"
                 reason = f"   ({ra['cancelReason']})" if ra.get("cancelReason") else ""
                 print(f"    #{ra.get('number', '?'):<5} {started} UTC   {status}{reason}")
+                if status == "FAILED":
+                    print_build_issues(r["id"])
         print()
 
     versions = call("GET", f"apps/{aid}/appStoreVersions?limit=5")["data"]

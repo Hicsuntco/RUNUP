@@ -1,5 +1,6 @@
 import SwiftUI
 import StoreKit
+import Foundation
 
 /// L'écran d'abonnement, affiché à la fin de l'inscription et tant que l'abonnement n'est pas
 /// actif.
@@ -25,12 +26,21 @@ struct PaywallView: View {
     private let termsURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
     private let privacyURL = URL(string: "https://hicsuntco.github.io/RUNUP/privacy.html")!
 
-    private var advantages: [(String, String)] {
-        [("figure.run", String(localized: "Un programme qui s'adapte à ta forme chaque semaine")),
-         ("bubble.left.fill", String(localized: "Le coach, sans limite de messages")),
-         ("chart.line.uptrend.xyaxis", String(localized: "Allure, charge d'entraînement, records, prédictions")),
-         ("applewatch", String(localized: "La montre, le widget et le suivi GPS")),
-         ("person.3.fill", String(localized: "Le club, les amis et les parcours partagés"))]
+    /// Un type nommé plutôt qu'un tuple : Swift n'accepte pas de key path vers un élément de
+    /// tuple, donc `ForEach(_, id: \.1)` ne compile pas — et l'erreur qu'il rend ne parle pas des
+    /// tuples.
+    private struct Advantage: Identifiable {
+        let icon: String
+        let text: String
+        var id: String { text }
+    }
+
+    private var advantages: [Advantage] {
+        [Advantage(icon: "figure.run", text: String(localized: "Un programme qui s'adapte à ta forme chaque semaine")),
+         Advantage(icon: "bubble.left.fill", text: String(localized: "Le coach, sans limite de messages")),
+         Advantage(icon: "chart.line.uptrend.xyaxis", text: String(localized: "Allure, charge d'entraînement, records, prédictions")),
+         Advantage(icon: "applewatch", text: String(localized: "La montre, le widget et le suivi GPS")),
+         Advantage(icon: "person.3.fill", text: String(localized: "Le club, les amis et les parcours partagés"))]
     }
 
     var body: some View {
@@ -80,14 +90,14 @@ struct PaywallView: View {
 
     private var advantagesList: some View {
         VStack(alignment: .leading, spacing: 12) {
-            ForEach(advantages, id: \.1) { icon, text in
+            ForEach(advantages) { advantage in
                 HStack(alignment: .top, spacing: 12) {
-                    Image(systemName: icon)
+                    Image(systemName: advantage.icon)
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(RUColor.rose)
                         .frame(width: 28, height: 28)
                         .background(RUColor.rose.opacity(0.10), in: RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous))
-                    Text(text)
+                    Text(advantage.text)
                         .font(RUFont.sans(.body)).foregroundColor(RUColor.textPrimary)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, 5)
@@ -189,9 +199,15 @@ struct PaywallView: View {
         guard let year = subscriptions.products.first(where: { $0.id == SubscriptionService.ProductID.yearly }),
               let month = subscriptions.products.first(where: { $0.id == SubscriptionService.ProductID.monthly })
         else { return nil }
-        let full = month.price * 12
-        guard full > 0, year.price < full else { return nil }
-        return Int((((full - year.price) / full) * 100).rounded())
+        // En `Double`, pas en `Decimal`. `Product.price` est un `Decimal`, et `Decimal * 12`
+        // ne compile pas : le littéral n'est pas promu, il est inféré comme un autre type
+        // numérique. `Decimal` n'a pas non plus de `rounded()`. Pour un pourcentage affiché,
+        // la précision du `Double` est très au-delà du nécessaire.
+        let monthly = NSDecimalNumber(decimal: month.price).doubleValue
+        let yearly = NSDecimalNumber(decimal: year.price).doubleValue
+        let full = monthly * 12
+        guard full > 0, yearly < full else { return nil }
+        return Int(((full - yearly) / full * 100).rounded())
     }
 
     private var yearlyPerMonth: String? {
@@ -199,7 +215,7 @@ struct PaywallView: View {
         else { return nil }
         // Le format de prix DU PRODUIT, pas un format reconstruit : il porte déjà la devise et
         // les conventions de la boutique de l'utilisatrice.
-        return (year.price / 12).formatted(year.priceFormatStyle)
+        return (year.price / Decimal(12)).formatted(year.priceFormatStyle)
     }
 
     private var actions: some View {

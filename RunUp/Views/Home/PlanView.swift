@@ -95,14 +95,19 @@ struct PlanView: View {
                     appState.go(.home)
                 }
 
-                planShapeSection
-
+                // La semaine en cours d'abord. La phrase qui décrit la forme du programme est
+                // la même toutes les semaines : c'est de la documentation, pas une donnée, et
+                // elle occupait le tiers haut de l'écran qu'on ouvre pour savoir ce qu'on court
+                // cette semaine. Elle passe sous la semaine, avec la barre de phases qu'elle
+                // commente — les deux se lisent ensemble, et plus personne ne doit les traverser.
                 if let current = currentWeek {
                     VStack(alignment: .leading, spacing: 10) {
                         RUCardHeader(title: String(localized: "Cette semaine"))
                         currentWeekCard(current)
                     }
                 }
+
+                planShapeSection
 
                 ForEach(Array(upcomingGroups.enumerated()), id: \.offset) { _, group in
                     VStack(alignment: .leading, spacing: 10) {
@@ -318,15 +323,25 @@ struct PlanView: View {
                 Text(session?.displayTitle ?? String(localized: "Repos"))
                     .font(RUFont.sans(.label, weight: isToday ? .semibold : .regular))
                     .foregroundColor(isRest ? RUColor.text3 : RUColor.textPrimary)
-                if let subtitle = session?.displaySubtitle, !isRest {
+                // Le sous-titre ne s'affiche plus que sur la ligne du jour.
+                //
+                // C'est une phrase de coaching — « installe l'endurance de fond, allure confort » —
+                // et elle est tirée d'un petit répertoire : sur sept lignes, elle se répétait
+                // presque à l'identique et représentait à elle seule la moitié du texte de la
+                // carte. Répétée, elle n'apprend plus rien et fait le gris qui noie les titres ;
+                // sur la seule séance qu'on va faire aujourd'hui, elle redevient un conseil. Le
+                // détail complet de n'importe quelle séance reste dans `SessionDetailSheet`.
+                if isToday, let subtitle = session?.displaySubtitle, !isRest {
                     Text(subtitle).font(RUFont.sans(.small)).foregroundColor(RUColor.text3).lineLimit(2)
                 }
             }
             Spacer(minLength: 8)
             if let session, !isRest {
+                // Remontées de 10/9 à 11/10 : c'était le plus petit texte de l'app, en gris, en
+                // chasse fixe, et il portait les deux chiffres pour lesquels on ouvre la ligne.
                 VStack(alignment: .trailing, spacing: 1) {
-                    Text("\(session.durationMinutes)′ · \(session.zone)").font(RUFont.mono(10)).foregroundColor(RUColor.text2)
-                    Text("\(session.pace)/km").font(RUFont.mono(9)).foregroundColor(RUColor.text3)
+                    Text("\(session.durationMinutes)′ · \(session.zone)").font(RUFont.mono(11)).foregroundColor(RUColor.text2)
+                    Text("\(session.pace)/km").font(RUFont.mono(10)).foregroundColor(RUColor.text3)
                 }
             }
         }

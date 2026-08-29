@@ -1080,6 +1080,22 @@
         }
       }
     },
+    "%lld sorties · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld runs · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld salidas · %@"
+          }
+        }
+      }
+    },
     "%lld/3 jours": {
       "extractionState": "manual",
       "localizations": {
@@ -1329,6 +1345,22 @@
         }
       }
     },
+    "1 sortie · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 run · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 salida · %@"
+          }
+        }
+      }
+    },
     "1 à 2h": {
       "localizations": {
         "en": {
@@ -1428,6 +1460,22 @@
         }
       }
     },
+    "12 derniers mois": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "last 12 months"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "últimos 12 meses"
+          }
+        }
+      }
+    },
     "15 km +": {
       "localizations": {
         "en": {
@@ -1493,6 +1541,22 @@
         }
       }
     },
+    "3 derniers mois": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "last 3 months"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "últimos 3 meses"
+          }
+        }
+      }
+    },
     "300 m de D+": {
       "extractionState": "manual",
       "localizations": {
@@ -1522,6 +1586,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "3M"
+          }
+        }
+      }
+    },
+    "4 dernières semaines": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "last 4 weeks"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "últimas 4 semanas"
           }
         }
       }
@@ -1637,6 +1717,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "6–15 km"
+          }
+        }
+      }
+    },
+    "7 derniers jours": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "last 7 days"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "últimos 7 días"
           }
         }
       }

@@ -23,6 +23,17 @@ struct StatsView: View {
     private enum StatsRange: String, CaseIterable, Identifiable {
         case week = "7J", month = "4S", quarter = "3M", year = "1A"
         var id: Self { self }
+        /// Le libellé long, pour la phrase sous le chiffre. « 4S » se lit dans une pastille
+        /// parce que ses trois voisines lui donnent son échelle ; seul dans une phrase, non.
+        var caption: String {
+            switch self {
+            case .week: return String(localized: "7 derniers jours")
+            case .month: return String(localized: "4 dernières semaines")
+            case .quarter: return String(localized: "3 derniers mois")
+            case .year: return String(localized: "12 derniers mois")
+            }
+        }
+
         var days: Int {
             switch self {
             case .week: return 7
@@ -60,7 +71,8 @@ struct StatsView: View {
                 weekCard
                 paceCard
 
-                quickLinksRow
+                routesTile
+                deepAnalysisToggle
                 if showDeepAnalysis {
                     recordsCard
                         .transition(.opacity.combined(with: .move(edge: .top)))
@@ -153,70 +165,67 @@ struct StatsView: View {
     /// approfondie), réunis en une paire de tuiles compactes côte à côte en bas de page. Chacun
     /// occupait avant toute la largeur — deux bandes pleine largeur au milieu d'un écran de
     /// cartes de données, pour ce qui n'est qu'« aller ailleurs » et « en voir plus ».
-    private var quickLinksRow: some View {
-        HStack(spacing: 10) {
-            Button(action: { appState.go(.heatmap) }) {
-                quickLinkBody(
-                    icon: "map",
-                    title: "Mes routes",
-                    subtitle: routedRunsCount > 0
-                        ? "\(routedRunsCount) parcours trackés"
-                        : "Dès ta 1re course trackée",
-                    accessorySymbol: "chevron.right"
-                )
-            }
-            .buttonStyle(PressableStyle())
-            .ruCard(radius: RUSpacing.radiusCompact)
-
-            Button(action: {
-                Haptics.selection()
-                withAnimation(.easeInOut(duration: 0.25)) { showDeepAnalysis.toggle() }
-            }) {
-                quickLinkBody(
-                    icon: "chart.line.uptrend.xyaxis",
-                    title: "Analyse approfondie",
-                    subtitle: "Records, charge, prédiction",
-                    accessorySymbol: "chevron.down",
-                    accessoryRotation: showDeepAnalysis ? 180 : 0
-                )
-            }
-            .buttonStyle(PressableStyle())
-            .ruCard(radius: RUSpacing.radiusCompact)
-            .accessibilityLabel(showDeepAnalysis
-                ? "Masquer l'analyse approfondie"
-                : "Voir l'analyse approfondie")
-        }
-    }
-
-    /// Les deux tuiles gardent le même gabarit — icône d'accent en haut à gauche, affordance en
-    /// haut à droite, titre + sous-titre en bas — pour qu'elles se lisent comme une paire. Les
-    /// deux textes sont bornés à une ligne : c'est ce qui garantit que les deux tuiles font
-    /// exactement la même hauteur, quel que soit le nombre de parcours trackés.
-    private func quickLinkBody(icon: String, title: String, subtitle: String, accessorySymbol: String, accessoryRotation: Double = 0) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Image(systemName: icon)
+    /// Deux gestes différents, deux formes différentes.
+    ///
+    /// C'étaient deux tuiles jumelles, côte à côte, même gabarit, même chrome : seule la
+    /// direction du chevron distinguait « ça t'emmène ailleurs » de « ça déplie ici ». Toute la
+    /// grammaire de l'écran dit qu'elles font la même chose, et il faut lire le chevron — 10 pt,
+    /// gris — pour découvrir que non. La forme doit porter le comportement, sinon il faut
+    /// essayer pour savoir.
+    ///
+    /// « Mes routes » garde donc la tuile qui mène ailleurs. L'analyse approfondie devient ce
+    /// qu'elle est : une ligne de dépliage, pleine largeur, juste au-dessus de ce qu'elle
+    /// déplie, et qui dit dans son libellé ce que le geste va faire.
+    private var routesTile: some View {
+        Button(action: { appState.go(.heatmap) }) {
+            HStack(spacing: 12) {
+                Image(systemName: "map")
                     .font(.system(size: 15, weight: .medium))
                     .foregroundColor(RUColor.rose)
-                Spacer(minLength: 4)
-                Image(systemName: accessorySymbol)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(RUColor.text3)
-                    .rotationEffect(.degrees(accessoryRotation))
+                    .frame(width: 34, height: 34)
+                    .background(RUColor.rose.opacity(0.12), in: RoundedRectangle(cornerRadius: RUSpacing.radiusTile, style: .continuous))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Mes routes")
+                        .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                    Text(routedRunsCount > 0
+                         ? String(localized: "\(routedRunsCount) parcours trackés")
+                         : String(localized: "Dès ta 1re course trackée"))
+                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                }
+                Spacer(minLength: 8)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 11, weight: .semibold)).foregroundColor(RUColor.text3)
             }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(LocalizedStringKey(title))
-                    .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                    .lineLimit(1).minimumScaleFactor(0.75)
-                Text(subtitle)
-                    .font(RUFont.sans(.micro)).foregroundColor(RUColor.text3)
-                    .lineLimit(1).minimumScaleFactor(0.7)
-            }
+            .padding(12)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .frame(minHeight: 44)
-        .contentShape(Rectangle())
+        .buttonStyle(PressableStyle())
+        .ruCard(radius: RUSpacing.radiusCompact)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var deepAnalysisToggle: some View {
+        Button(action: {
+            Haptics.selection()
+            withAnimation(.easeInOut(duration: 0.25)) { showDeepAnalysis.toggle() }
+        }) {
+            HStack(spacing: 8) {
+                Text(showDeepAnalysis ? "Masquer l'analyse approfondie" : "Voir l'analyse approfondie")
+                    .font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.text2)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 10, weight: .semibold)).foregroundColor(RUColor.text3)
+                    .rotationEffect(.degrees(showDeepAnalysis ? 180 : 0))
+                Spacer(minLength: 0)
+                Text("Records, charge, prédiction")
+                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text4)
+                    .lineLimit(1).minimumScaleFactor(0.8)
+            }
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityElement(children: .combine)
     }
 
     // MARK: This week — recency + consistency against the actual plan, missing before this: the
@@ -306,16 +315,32 @@ struct StatsView: View {
         return "Allure \(trend), entre \(PaceModel.formatDuration(minPace)) et \(PaceModel.formatDuration(maxPace)) par kilomètre"
     }
 
+    /// L'allure moyenne SUR LA FENÊTRE CHOISIE.
+    ///
+    /// Elle était figée sur les cinq dernières courses, quelle que soit la position du sélecteur
+    /// posé juste au-dessus. Passer de « 7J » à « 1A » redessinait la courbe et laissait le
+    /// chiffre héros — celui qu'on lit en premier, à 44 pt — sur les mêmes cinq courses. Un
+    /// contrôle qui semble commander la carte n'en commandait que la moitié : c'est le genre de
+    /// détail qui apprend à ne plus faire confiance à ce qu'on lit.
     private var recentAvgPace: Double? {
-        let last5 = runs.prefix(5).compactMap { PaceModel.parseSecPerKm($0.avgPace) }
-        guard !last5.isEmpty else { return nil }
-        return last5.reduce(0, +) / Double(last5.count)
+        average(of: recentPacesSecPerKm)
     }
 
+    /// La même moyenne sur la fenêtre PRÉCÉDENTE de même durée : « les 4 semaines d'avant »
+    /// quand on regarde 4 semaines. Comparer une fenêtre à un nombre fixe de courses ferait dire
+    /// à la flèche n'importe quoi dès qu'on change d'échelle.
     private var previousAvgPace: Double? {
-        let previous5 = runs.dropFirst(5).prefix(5).compactMap { PaceModel.parseSecPerKm($0.avgPace) }
-        guard !previous5.isEmpty else { return nil }
-        return previous5.reduce(0, +) / Double(previous5.count)
+        let cal = Calendar.current
+        guard let start = cal.date(byAdding: .day, value: -selectedRange.days, to: .now),
+              let previousStart = cal.date(byAdding: .day, value: -selectedRange.days, to: start)
+        else { return nil }
+        let window = runs.filter { $0.date >= previousStart && $0.date < start }
+        return average(of: window.compactMap { PaceModel.parseSecPerKm($0.avgPace) })
+    }
+
+    private func average(of values: [Double]) -> Double? {
+        guard !values.isEmpty else { return nil }
+        return values.reduce(0, +) / Double(values.count)
     }
 
     private var rangePicker: some View {
@@ -350,7 +375,7 @@ struct StatsView: View {
     private var paceCard: some View {
         VStack(alignment: .leading, spacing: 6) {
             RUCardHeader(icon: "speedometer", tint: RUColor.violet,
-                         title: "Allure moyenne récente",
+                         title: "Allure moyenne",
                          subtitle: "Une sortie par point") {
                 rangePicker
             }
@@ -371,9 +396,9 @@ struct StatsView: View {
                         )
                     }
                 }
-                Text(runs.count == 1
-                     ? "Sur ta dernière course"
-                     : "Sur tes \(min(5, runs.count)) dernières courses")
+                Text(chartRuns.count == 1
+                     ? String(localized: "1 sortie · \(selectedRange.caption)")
+                     : String(localized: "\(chartRuns.count) sorties · \(selectedRange.caption)"))
                     .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
 
                 if recentPacesSecPerKm.count >= 2 {
@@ -439,7 +464,13 @@ struct StatsView: View {
                         .padding(.top, 6)
                 }
             } else {
-                Text("Termine quelques courses pour voir ton allure évoluer ici.")
+                // Depuis que le chiffre suit la fenêtre choisie, « vide » a deux sens très
+                // différents : jamais couru, ou rien couru CETTE période. Dire « termine quelques
+                // courses » à quelqu'un qui en a cinquante derrière lui, parce qu'il regarde les
+                // 7 derniers jours, c'est le message qui donne tort à l'app.
+                Text(runs.isEmpty
+                     ? "Termine quelques courses pour voir ton allure évoluer ici."
+                     : "Pas assez de courses sur cette période — essaie une fenêtre plus large.")
                     .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
                     .padding(.top, 4)
             }

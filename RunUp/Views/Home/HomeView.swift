@@ -383,14 +383,30 @@ struct HomeView: View {
                         quickStat(value: String(localized: "J-\(days)"), suffix: nil, label: "avant course")
                     }
                 }
-                HStack(spacing: 6) {
-                    Text(weeklyComparisonText(delta: delta, lastWeek: lastWeek))
-                        .font(RUFont.sans(.small))
-                        .foregroundColor(weeklyComparisonColor(delta: delta, lastWeek: lastWeek))
-                        .multilineTextAlignment(.leading)
-                    Spacer(minLength: 0)
-                    Text("Mes stats").font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text3)
-                    Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundColor(RUColor.text3)
+                // La comparaison ne s'écrit plus que lorsqu'elle compare quelque chose.
+                //
+                // Sinon la bande portait une phrase pleine largeur — « Semaine dernière : pas de
+                // course enregistrée. » — qui était la ligne la plus longue de l'écran d'accueil
+                // et dont le seul contenu était une absence. Un chiffre manquant n'a pas besoin
+                // d'être annoncé : il se voit. Là où il y a vraiment un écart, il devient un
+                // court « +4,2 km » à côté du chiffre qu'il commente, plutôt qu'une phrase sous
+                // la bande — c'est déjà la forme que prend le même écart dans la carte d'allure.
+                if let comparison = weeklyComparisonText(delta: delta, lastWeek: lastWeek) {
+                    HStack(spacing: 6) {
+                        Text(comparison)
+                            .font(RUFont.sans(.small))
+                            .foregroundColor(weeklyComparisonColor(delta: delta, lastWeek: lastWeek))
+                            .multilineTextAlignment(.leading)
+                        Spacer(minLength: 0)
+                        Text("Mes stats").font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text3)
+                        Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundColor(RUColor.text3)
+                    }
+                } else {
+                    HStack(spacing: 6) {
+                        Spacer(minLength: 0)
+                        Text("Mes stats").font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text3)
+                        Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundColor(RUColor.text3)
+                    }
                 }
                 Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
             }
@@ -454,17 +470,17 @@ struct HomeView: View {
         .overlay(Capsule().stroke(isRestDay ? RUColor.line : Color.clear, lineWidth: RUSpacing.hairline))
     }
 
-    private func weeklyComparisonText(delta: Double, lastWeek: Double) -> String {
-        // Le premier jour, « pas de course enregistrée » est exact et ne sert à rien : c'est une
-        // comparaison avec un passé qui n'existe pas encore, posée sous deux zéros. Distinguer
-        // « jamais couru » de « rien couru la semaine dernière » demande une phrase de plus et
-        // change ce que l'écran dit d'elle.
+    /// La phrase de comparaison, ou `nil` quand il n'y a rien à comparer.
+    ///
+    /// Le premier jour, elle invite — c'est le seul moment où une phrase mérite la pleine largeur
+    /// de la bande. Quand la semaine dernière est vide sans que ce soit le premier jour, elle se
+    /// tait : « pas de course enregistrée » est exact, mais son seul contenu est une absence que
+    /// les deux zéros au-dessus disent déjà.
+    private func weeklyComparisonText(delta: Double, lastWeek: Double) -> String? {
         if hasNeverRun {
             return String(localized: "Ta première sortie lancera ta série.")
         }
-        guard lastWeek > 0 else {
-            return String(localized: "Semaine dernière : pas de course enregistrée.")
-        }
+        guard lastWeek > 0 else { return nil }
         let deltaText = String(format: "%.1f", locale: Locale.current, abs(delta))
         if delta > 0.05 { return String(localized: "+\(deltaText) km vs la semaine dernière") }
         if delta < -0.05 { return String(localized: "-\(deltaText) km vs la semaine dernière") }

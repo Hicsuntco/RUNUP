@@ -353,42 +353,36 @@ struct HomeView: View {
                 }
                 .padding(.top, 14)
 
-                // Une seule action, en pleine largeur. Les deux boutons côte à côte, de même
-                // taille et de même forme, annonçaient deux choix équivalents — alors qu'on
-                // démarre la séance neuf fois sur dix et qu'on la déclare faite dans le cas
-                // restant. À parts égales, la paire prenait la silhouette d'une boîte de
-                // dialogue « Annuler / OK », et c'est cette silhouette-là qui faisait bon marché,
-                // pas le bouton lui-même.
-                Button(action: { appState.startRun() }) {
-                    HStack { Image(systemName: "play.fill"); Text("DÉMARRER") }
-                }
-                .buttonStyle(PrimaryButtonStyle())
-                .padding(.top, 15)
-
-                // L'échappatoire — séance de renfo, tapis, ou simple oubli d'appuyer sur
-                // enregistrer : la déclarer faite n'a pas à passer par le GPS. Elle descend au
-                // rang de lien discret, le même traitement que l'export GPX et la publication de
-                // trace sur le récap, pour que l'app dise partout la même chose de ses actions
-                // secondaires.
-                // Sans coche, et pas en pleine largeur.
+                // DÉMARRER, et un « + » à côté.
                 //
-                // La coche disait deux fois la même chose que les mots, et à cette taille un
-                // pictogramme collé à du texte fait bricolage plutôt qu'intention. Une capsule
-                // centrée, plus étroite que le bouton du dessus, dit « action secondaire » par sa
-                // forme et sa largeur — sans avoir besoin d'un signe pour l'annoncer.
-                Button(action: { appState.markTodaySessionDone() }) {
-                    Text("Je l'ai déjà faite")
-                        .font(RUFont.sans(.body, weight: .semibold))
-                        .foregroundColor(RUColor.text2)
-                        .padding(.horizontal, 20)
-                        .frame(minHeight: 44)
-                        .background(Capsule().fill(RUColor.card2))
-                        .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
-                        .contentShape(Capsule())
+                // Les deux actions ne sont pas de même nature : l'une lance une course, l'autre en
+                // enregistre une déjà faite. Deux boutons de même taille et de même forme les
+                // annonçaient comme deux choix équivalents, ce qui donnait à la carte la silhouette
+                // d'une boîte de dialogue « Annuler / OK ». Un carré compact à côté du bouton
+                // pleine largeur dit la hiérarchie par la géométrie, sans avoir besoin d'un mot.
+                //
+                // Et le « + » ouvre une saisie plutôt que de valider tout seul : une séance faite
+                // hors de l'app a une distance et une durée réelles, que l'app ne peut pas
+                // deviner. Les demander vaut mieux que de les inventer ou de les laisser à zéro.
+                HStack(spacing: 10) {
+                    Button(action: { appState.startRun() }) {
+                        HStack { Image(systemName: "play.fill"); Text("DÉMARRER") }
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+
+                    Button(action: { Haptics.selection(); appState.openLogSession() }) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundColor(RUColor.text2)
+                            .frame(width: 52, height: 52)
+                            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(PressableStyle())
+                    .accessibilityLabel("Ajouter une séance déjà faite")
                 }
-                .buttonStyle(PressableStyle())
-                .frame(maxWidth: .infinity)
-                .padding(.top, 10)
+                .padding(.top, 15)
             }
         }
         .padding(16)

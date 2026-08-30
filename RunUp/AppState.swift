@@ -58,7 +58,8 @@ final class AppState {
     /// recovery/choice first. Replaces the old "Refaire l'onboarding" action, which re-asked her
     /// name/sexe/date de naissance/blessures — everything, not just the goal — to get a new plan.
     var newGoalWizardPresented = false
-    /// Runs waiting for their RPE debrief — a "FAIT" tap (`markTodaySessionDone`) or a run
+    /// Runs waiting for their RPE debrief — a session logged by hand (`markTodaySessionDone`,
+    /// depuis la feuille « Séance déjà faite ») or a run
     /// delivered from the Watch (`WatchSessionService.handleCompletedRun`) appends here rather
     /// than overwriting a single slot. Two runs finishing in quick succession (e.g. the Watch
     /// queuing several while the phone was out of range, then delivering them together on
@@ -499,21 +500,26 @@ final class AppState {
     /// `avgHeartRate` is 0 — `HistoryView` already knows to hide that line rather than show a
     /// fake number) and opens the same RPE debrief every other run goes through, so streak/XP/
     /// plan-adaptation all work identically either way.
-    func markTodaySessionDone() {
+    /// - Parameters:
+    ///   - distanceKm: la distance réellement parcourue, 0 si elle n'a pas de sens (renfo, tapis
+    ///     sans compteur). Elle est SAISIE, jamais déduite : l'ancienne version calculait une
+    ///     distance depuis la durée prévue et l'allure cible, ce qui fabriquait un « 5,2 km à
+    ///     5:30/km » d'apparence précise pour une sortie qui avait pu se courir à n'importe quelle
+    ///     allure. Zéro était honnête ; un chiffre saisi l'est tout autant et vaut bien mieux.
+    ///   - durationMinutes: la durée réelle, pré-remplie avec celle du plan mais modifiable.
+    func markTodaySessionDone(distanceKm: Double, durationMinutes: Int) {
         let session = profile.todaySession
-        guard session.durationMinutes > 0 else { return }
-        let elapsedSeconds = Double(session.durationMinutes * 60)
-        // "FAIT" means she ran it without the app tracking it — there's no GPS behind this tap,
-        // so there's no real distance or pace to report, only the planned target. The old code
-        // derived a distance from elapsedSeconds / plannedPace, which fabricated a precise-looking
-        // "5.2 km @ 5:30/km" for a run that could have gone at any real pace at all, for every
-        // session with a pace target — not just the paceless HYROX case this comment used to
-        // describe. Distance 0 is the honest record; kcal falls back to a time-based estimate.
+        guard session.durationMinutes > 0, durationMinutes > 0 else { return }
+        let elapsedSeconds = Double(durationMinutes * 60)
+        // Les mêmes 62 kcal/km que `LiveRunViewModel.kcal` dès qu'une distance est connue, et le
+        // repli à la durée sinon. Deux constantes différentes pour la même approximation feraient
+        // diverger une course au GPS et une course saisie à la main sur des chiffres identiques.
+        let kcal = distanceKm > 0 ? distanceKm * 62 : Double(durationMinutes) * 7
         let record = AdaptivePlanEngine.buildRunRecord(
             title: session.title,
             elapsedSeconds: elapsedSeconds,
-            distanceKm: 0,
-            kcal: Double(session.durationMinutes) * 7,
+            distanceKm: distanceKm,
+            kcal: kcal,
             avgHeartRate: 0
         )
         // Le type de la séance suit la course : c'est ce qui permet au fil du club de refabriquer
@@ -526,7 +532,10 @@ final class AppState {
         pendingDebriefs.append(record)
     }
 
+    var logSessionPresented = false
+
     func openSessionDetail() { sessionDetailPresented = true }
+    func openLogSession() { logSessionPresented = true }
     func openMoveSession() { moveSessionPresented = true }
     func openProgramSettings() { programSettingsPresented = true }
     func openNotifications() { notificationsPresented = true }

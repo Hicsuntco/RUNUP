@@ -21006,6 +21006,91 @@
           }
         }
       }
+    },
+    "Séance déjà faite": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session already done"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesión ya hecha"
+          }
+        }
+      }
+    },
+    "Enregistre-la comme si tu venais de la faire.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log it as if you'd just finished."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regístrala como si acabaras de hacerla."
+          }
+        }
+      }
+    },
+    "La distance est facultative — laisse-la vide pour une séance de renforcement ou un tapis sans compteur.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distance is optional — leave it empty for a strength session or a treadmill with no readout."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La distancia es opcional — déjala vacía para una sesión de fuerza o una cinta sin contador."
+          }
+        }
+      }
+    },
+    "Enregistrer la séance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log the session"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrar la sesión"
+          }
+        }
+      }
+    },
+    "Ajouter une séance déjà faite": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a session already done"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir una sesión ya hecha"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

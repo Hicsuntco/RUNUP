@@ -54,12 +54,16 @@ final class LiveRunViewModel {
     /// Seuils, armement et compte des secondes immobiles : voir `AutoPause`, où la règle vit
     /// seule et sous test.
     private var autoPauseState = AutoPause.State()
-    /// Auto-pause relies entirely on `CLLocation.speed`, which stays ~0 with no real GPS
-    /// displacement (treadmill, indoor track, a bad urban-canyon fix) — without this, she'd have
-    /// to manually tap play every ~10s for the whole run since the auto-resume condition can
-    /// never fire. Tracks consecutive auto-pause cycles that gained no real distance; after a
-    /// few in a row this session's auto-pause turns itself off (her persisted setting is
-    /// untouched) so the run stops livelocking.
+    /// Le cas qui reste après tout ce que `AutoPause` règle : le tapis de course et la piste
+    /// couverte, où l'appareil ne se déplace pas du tout. La vitesse y est réellement nulle et
+    /// l'éloignement aussi, donc les deux preuves de reprise disent « toujours à l'arrêt », et
+    /// elle devrait taper « reprendre » toutes les dix secondes pendant une heure. Au bout de
+    /// trois cycles de pause sans le moindre mètre gagné, la pause automatique se coupe pour
+    /// cette course seulement — son réglage enregistré n'est pas touché.
+    ///
+    /// Ce garde-fou était inatteignable avant : `autoPause()` n'est appelée que depuis la branche
+    /// NON pausée de `tick()`, donc une pause dont on ne pouvait plus sortir ne comptait jamais
+    /// de deuxième cycle. La reprise par éloignement est ce qui le rend enfin accessible.
     private var autoPauseCyclesWithNoDistance = 0
     private var autoPauseCycleStartDistanceKm: Double = 0
     private var runtimeAutoPauseDisabled = false

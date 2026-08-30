@@ -390,8 +390,16 @@ struct PlanView: View {
         let session = day.session
         let isRest = session == nil || session?.durationMinutes == 0
         let isToday = state == .today
+        let family = isRest ? SessionFamily.rest : (session?.family ?? .endurance)
         return HStack(spacing: 10) {
             Text(letter).font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text3).frame(width: 30, alignment: .leading)
+            // La bande. Deux pixels et demi de couleur, et la semaine cesse d'être une liste pour
+            // devenir une forme : on voit trois séances d'endurance, un fractionné, une sortie
+            // longue, sans lire une seule ligne. C'est l'écart le plus net entre notre plan et
+            // celui des apps qui se lisent d'un coup d'œil.
+            RoundedRectangle(cornerRadius: 2, style: .continuous)
+                .fill(isRest ? Color.clear : family.tint)
+                .frame(width: 3, height: 34)
             dayIcon(session: session, isRest: isRest, completed: day.completed, isToday: isToday)
             VStack(alignment: .leading, spacing: 1) {
                 Text(session?.displayTitle ?? String(localized: "Repos"))
@@ -452,19 +460,18 @@ struct PlanView: View {
     /// classification que le modèle expose réellement (déjà partagée par `SessionDetailSheet` et
     /// l'écran Live) — aucune catégorie inventée au-delà de repos / endurance / fractionné.
     private func dayIcon(session: WorkoutSession?, isRest: Bool, completed: Bool, isToday: Bool) -> some View {
-        let symbol: String
-        if completed { symbol = "checkmark" }
-        else if isRest { symbol = "moon.zzz.fill" }
-        else if session?.isIntervalSession == true { symbol = "bolt.fill" }
-        else { symbol = "figure.run" }
-
-        let tint: Color = completed || isToday ? RUColor.rose : isRest ? RUColor.text3 : RUColor.text2
+        let family = isRest ? SessionFamily.rest : (session?.family ?? .endurance)
+        // Le ✓ d'une séance faite continue de primer sur le symbole de famille : « c'est fait »
+        // répond à une question plus pressante que « c'était quoi ». La couleur, elle, reste celle
+        // de la famille — sinon une semaine terminée redevient un mur uniforme.
+        let symbol = completed ? "checkmark" : family.symbol
+        let tint = family.tint
         return Image(systemName: symbol)
             .font(.system(size: 12, weight: .semibold))
             .foregroundColor(tint)
             .frame(width: 30, height: 30)
-            .background(isToday ? RUColor.rose.opacity(0.12) : RUColor.bg, in: RoundedRectangle(cornerRadius: RUSpacing.radiusTile, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusTile, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+            .background(tint.opacity(isRest ? 0.06 : 0.14), in: RoundedRectangle(cornerRadius: RUSpacing.radiusTile, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusTile, style: .continuous).stroke(isToday ? RUColor.rose.opacity(0.35) : RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 
     private func dayRowAccessibilityLabel(day: PlannedDay, isToday: Bool, isRest: Bool) -> String {

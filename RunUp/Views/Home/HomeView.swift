@@ -283,9 +283,18 @@ struct HomeView: View {
     /// Elle vivait au milieu des aides de la bande de chiffres ; en supprimant la bande, j'ai
     /// emporté cette fonction avec elle et cassé la compilation. Elle est désormais posée juste
     /// au-dessus de son unique appelante.
-    private func sessionTag(_ isRestDay: Bool) -> some View {
+    /// La pastille « aujourd'hui ».
+    ///
+    /// Son symbole était `bolt.fill` pour toute séance — or l'éclair désigne le FRACTIONNÉ dans le
+    /// plan depuis que les familles ont une forme. Le même signe pour deux choses différentes sur
+    /// deux écrans voisins : la pastille prend maintenant le symbole de la famille du jour.
+    ///
+    /// Sa couleur, elle, ne bouge pas. Sur l'accueil il n'y a qu'une séance : une couleur de
+    /// famille n'y apprendrait rien et disputerait l'accent, alors que dans le plan, où sept
+    /// lignes se côtoient, c'est précisément ce qui donne la forme de la semaine.
+    private func sessionTag(_ isRestDay: Bool, family: SessionFamily) -> some View {
         HStack(spacing: 5) {
-            Image(systemName: isRestDay ? "moon.zzz.fill" : "bolt.fill").font(.system(size: 9, weight: .bold))
+            Image(systemName: isRestDay ? "moon.zzz.fill" : family.symbol).font(.system(size: 9, weight: .bold))
             Text(LocalizedStringKey(isRestDay ? "Aujourd'hui" : "Séance du jour"))
                 .font(RUFont.sans(.micro, weight: .bold)).tracking(0.2)
         }
@@ -306,7 +315,7 @@ struct HomeView: View {
         let isRestDay = session.durationMinutes == 0
         return VStack(alignment: .leading, spacing: 0) {
             HStack {
-                sessionTag(isRestDay)
+                sessionTag(isRestDay, family: session.family)
                 Spacer()
                 if let adj = session.adjustment {
                     StatChip(text: adj, color: RUColor.rose2)

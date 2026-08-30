@@ -111,6 +111,18 @@ enum RUColor {
     /// `rose2` above.
     static var amberText: Color { isLight ? Color(hex: 0x8A5A00) : Color(hex: 0xFFD79A) }
 
+    // Trois teintes ajoutées pour la palette des familles de séance (voir `SessionFamily.tint`).
+    // Elles sont FIXES, comme les trois précédentes et pour la même raison, mais celle-ci compte
+    // double : une famille de séance est une information, pas une décoration. Si « sortie longue »
+    // empruntait le violet de l'accent, elle changerait de couleur quand on change de thème
+    // d'accent — et la palette qu'on vient d'apprendre ne voudrait plus rien dire.
+    //
+    // Toutes tiennent au-dessus de 3:1 sur `card`, dans les deux thèmes : ember 6,4 / 5,5 —
+    // azure 7,3 / 5,8 — grape 5,8 / 6,7.
+    static var ember: Color { isLight ? Color(hex: 0xC2352A) : Color(hex: 0xFF6B5A) }
+    static var azure: Color { isLight ? Color(hex: 0x0F62C8) : Color(hex: 0x5AA9FF) }
+    static var grape: Color { isLight ? Color(hex: 0x5B3FD6) : Color(hex: 0x9B7CFF) }
+
     static var textPrimary: Color { isLight ? Color(hex: 0x15151C) : Color.white }
     static var text2: Color { isLight ? Color.black.opacity(0.72) : Color.white.opacity(0.68) }
     /// `text3` échouait au contraste dans LES DEUX thèmes — et le sombre, qui est le thème par
@@ -241,5 +253,41 @@ enum RUColor {
 
     static var violetRoseGradient: LinearGradient {
         LinearGradient(colors: [violet, rose], startPoint: .leading, endPoint: .trailing)
+    }
+}
+
+/// La palette des familles de séance : une couleur par famille, la même partout.
+///
+/// Elle vit ici, dans le système de design, et pas dans le modèle : `SessionFamily` doit rester
+/// une classification d'entraînement, lisible et testable sans SwiftUI. C'est l'interface qui
+/// décide de quelle couleur elle l'habille.
+extension SessionFamily {
+    var tint: Color {
+        switch self {
+        case .rest: return RUColor.text3
+        case .recovery: return RUColor.cyan
+        case .endurance: return RUColor.lime
+        case .longRun: return RUColor.grape
+        case .tempo: return RUColor.amber
+        case .intervals: return RUColor.ember
+        case .functional: return RUColor.azure
+        }
+    }
+
+    /// Le symbole qui accompagne la couleur.
+    ///
+    /// Une couleur seule ne suffit pas : environ un homme sur douze distingue mal le rouge du
+    /// vert, et ce sont précisément les deux extrémités de cette palette — le footing facile et le
+    /// fractionné. Chaque famille porte donc aussi une forme.
+    var symbol: String {
+        switch self {
+        case .rest: return "moon.zzz.fill"
+        case .recovery: return "leaf.fill"
+        case .endurance: return "figure.run"
+        case .longRun: return "arrow.right.to.line"
+        case .tempo: return "speedometer"
+        case .intervals: return "bolt.fill"
+        case .functional: return "dumbbell.fill"
+        }
     }
 }

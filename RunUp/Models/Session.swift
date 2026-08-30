@@ -26,6 +26,22 @@ struct IntervalStructure: Codable, Equatable {
 ///
 /// `rawValue` explicite et stable : c'est ce qui est persisté. Renommer un cas Swift ne doit
 /// jamais invalider les plans déjà enregistrés.
+/// Les sept familles de séance, de la plus calme à la plus dure.
+///
+/// L'ordre des cas est celui de l'effort : il sert de tri naturel partout où une légende ou un
+/// récapitulatif doit les présenter, sans qu'aucun écran ait à réinventer le classement.
+enum SessionFamily: String, CaseIterable, Codable, Equatable {
+    case rest
+    case recovery
+    case endurance
+    case longRun
+    case tempo
+    case intervals
+    /// Le renforcement et la technique HYROX. Hors de l'axe d'effort de la course — il vient donc
+    /// en dernier plutôt qu'à une place qu'il ne mérite ni d'un côté ni de l'autre.
+    case functional
+}
+
 enum SessionKind: String, Codable, Equatable, CaseIterable {
     case easyFooting = "easy_footing"
     case lightIntervals = "light_intervals"
@@ -77,6 +93,51 @@ enum SessionKind: String, Codable, Equatable, CaseIterable {
     /// segment, sans jamais être étiquetées fractionné. Cette différence était portée par deux
     /// mécanismes distincts (recherche de mots d'un côté, expression régulière de l'autre) ; la
     /// perdre en unifiant aurait changé l'affichage de toutes les séances HYROX.
+    /// La FAMILLE de la séance — l'axe que quelqu'un lit vraiment en ouvrant son plan.
+    ///
+    /// Trente-deux types de séance, c'est un vocabulaire de moteur d'entraînement, pas une chose
+    /// qu'on regarde. Sept familles, c'est une palette : trois vertes, une rouge, une violette, et
+    /// la semaine se lit sans lire un mot. C'est ce qui manquait au plan, dont les lignes étaient
+    /// toutes de la même couleur et devaient donc être lues une par une.
+    ///
+    /// `.intervals` reprend EXACTEMENT `isIntervalWorkout`, et pas « ce qui a une structure en
+    /// répétitions » : les courses compromises HYROX sont découpées en « N × 1 km » sans avoir
+    /// jamais été étiquetées fractionné, et la distinction est déjà portée ailleurs dans l'app.
+    /// Deux classifications qui se contrediraient seraient pires qu'une seule imparfaite.
+    ///
+    /// Le `switch` est exhaustif, sans `default:` — un type de séance ajouté demain ne compilera
+    /// pas tant que sa famille n'aura pas été choisie. C'est voulu : le repli silencieux d'un
+    /// `default` donnerait une couleur plausible à une séance mal classée, ce qui est le seul
+    /// résultat vraiment coûteux ici.
+    var family: SessionFamily {
+        switch self {
+        case .rest:
+            return .rest
+
+        case .recoveryFooting, .hyroxRecoveryFooting:
+            return .recovery
+
+        case .easyFooting, .enduranceFooting, .maintenanceFooting, .shortRun, .stridesFooting,
+             .hyroxBaseFooting, .hyroxMaintenanceFooting, .freeRunMaintenance, .freeRunDiscovery,
+             .comeback:
+            return .endurance
+
+        case .tempoRun, .hyroxTempoSled:
+            return .tempo
+
+        case .lightIntervals, .vo2maxIntervals, .racePaceReminder, .freeRunLightIntervals:
+            return .intervals
+
+        case .longRun, .specificLongRun, .easedLongRun:
+            return .longRun
+
+        case .hyroxTechnique, .hyroxTechniquePro, .hyroxIntenseCircuit, .hyroxIntenseCircuitPro,
+             .hyroxCompromisedRun3, .hyroxCompromisedRun6, .hyroxCompromisedRunLight2,
+             .hyroxStationsReminder, .hyroxLightSimulation, .hyroxLightFunctional:
+            return .functional
+        }
+    }
+
     var isIntervalWorkout: Bool {
         switch self {
         case .lightIntervals, .vo2maxIntervals, .racePaceReminder, .freeRunLightIntervals:
@@ -148,6 +209,19 @@ struct WorkoutSession: Codable, Equatable {
         if let kind { return kind.isIntervalWorkout }
         let t = title.lowercased()
         return t.contains("fractionné") || t.contains("rappel d'allure")
+    }
+
+    /// La famille de cette séance, pour la couleur qui la désigne dans le plan.
+    ///
+    /// Les plans enregistrés avant l'introduction de `kind` n'ont pas de type, et il n'est pas
+    /// question de les laisser sans couleur : le repli reprend la seule distinction que ces
+    /// séances-là portent encore — durée nulle, donc repos ; sinon fractionné ou endurance, lu
+    /// dans le titre par `isIntervalSession`. Trois familles au lieu de sept sur les vieux plans,
+    /// mais aucune ligne muette au milieu d'une semaine colorée.
+    var family: SessionFamily {
+        if let kind { return kind.family }
+        if durationMinutes == 0 { return .rest }
+        return isIntervalSession ? .intervals : .endurance
     }
 
     /// Parses "N × Dm" / "N × D km" straight from the title (e.g. "5 × 500 m", "6 × 800m",

@@ -371,3 +371,62 @@ Tout ce qui précède disparaît à la suppression du compte : `routes` et `rout
 ```
 © 2026 Charlotte Grudé
 ```
+
+## Informations pour la vérification (App Review Information)
+
+Ce champ n'est pas localisé et n'est lu que par Apple : il est donc en anglais, la langue de
+l'équipe de revue. Il n'apparaît nulle part dans la fiche publique.
+
+Deux choses le rendent nécessaire ici plutôt que facultatif. L'app entière est derrière un essai
+puis un abonnement — un vérificateur qui tombe sur le mur de paiement sans savoir quoi en faire
+rejette au titre du 2.1, et c'est le rejet le plus fréquent des apps par abonnement. Et une app de
+course ne se vérifie normalement qu'en allant courir, ce qu'un vérificateur ne fera pas : il faut
+lui donner le chemin qui montre l'app pleine sans quitter son bureau.
+
+```
+DEMO ACCOUNT
+  Sign in with e-mail (not "Sign in with Apple") using the credentials in the fields above.
+  The account already has a generated training plan, a few logged runs and one club, so the
+  app is populated on first launch.
+
+SUBSCRIPTION — PLEASE READ FIRST
+  The whole app sits behind a 7-day free trial followed by an auto-renewable subscription.
+  Access is granted by the StoreKit entitlement of the *Apple ID* on the device, NOT by the
+  RUNUP account — so the demo account above cannot have "used up" the trial for you. On your
+  sandbox Apple ID the introductory offer is available and costs nothing.
+
+  Path: launch the app, complete onboarding (about 6 short questions), the paywall appears,
+  tap the trial button. If StoreKit products fail to load for any reason, the app deliberately
+  unlocks itself rather than showing a paywall it cannot honour, so you will not be locked out.
+
+SEEING A RUN WITHOUT GOING FOR A RUN
+  On the Home tab, next to the START button, the "+" logs an already-completed session: enter
+  a distance and a duration and confirm. This fills the stats, the weekly plan, the streak and
+  the club feed exactly as a real GPS run would, and needs neither location nor movement.
+  Use it if you would rather not walk around with the device.
+
+LOCATION
+  Requested only when a run is started, and used only for distance, pace and the route trace.
+  The background mode exists because tracking must survive the screen locking mid-run.
+  Sharing a route is a separate, explicit action; when it happens the first and last 300 m of
+  the trace are removed on-device before upload, so a published route cannot point at a home
+  address. Nothing about a run leaves the device unless the user publishes it.
+
+CONTACTS
+  One opt-in button in the Friends screen ("find my contacts on RUNUP"). E-mail addresses are
+  hashed on-device (SHA-256, lowercased and trimmed) and only the hashes are sent; the server
+  compares them to a generated column of hashes, receives no address, stores none, and keeps
+  no hash it was sent. Phone numbers are never read. Declining the permission leaves every
+  other feature working.
+
+HEALTH
+  HealthKit is read-only (heart rate during a run, and workout history). Nothing is written
+  back, and nothing read from Health ever leaves the device.
+
+USER-GENERATED CONTENT (guideline 1.2)
+  The club feed, comments and shared routes are user-generated. In the app: a blocklist filter
+  runs server-side on every submission; any member can be reported or blocked from their
+  profile and from the leaderboard (blocking hides content in both directions); and an account
+  can be deleted from Settings → More settings → Delete my account, which cascades and removes
+  the user's runs, comments, routes and club memberships.
+```

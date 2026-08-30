@@ -26,7 +26,6 @@ struct MoreSettingsView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     sectionTitle("Course")
                     runSettingsCard
-                    shoesCard
 
                     sectionTitle("Programme")
                     programCard
@@ -64,7 +63,12 @@ struct MoreSettingsView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Fermer") { dismiss() } }
             }
-            .onAppear {
+            // `task(id:)` et non `onAppear` : `currentUser` arrive du serveur, et il peut très bien
+            // n'être pas encore là quand cette feuille s'ouvre. Rempli une seule fois à
+            // l'apparition, le champ « Pseudo » restait alors VIDE alors que le compte en a un —
+            // et « Enregistrer » envoyait cette chaîne vide, ce qui effaçait le pseudo. Une perte
+            // de donnée silencieuse, déclenchée par un geste qui prétendait sauvegarder.
+            .task(id: appState.auth.currentUser?.id) {
                 usernameText = appState.auth.currentUser?.username ?? ""
                 lastNameText = appState.auth.currentUser?.lastName ?? ""
             }
@@ -193,13 +197,6 @@ struct MoreSettingsView: View {
                     .accessibilityLabel("Alertes vocales d'allure")
             }
             .padding(14)
-        }
-        .ruCard()
-    }
-
-    private var shoesCard: some View {
-        VStack(spacing: 0) {
-            programRow("shoeprints.fill", String(localized: "Mes chaussures")) { dismiss(); appState.go(.shoes) }
         }
         .ruCard()
     }
@@ -394,6 +391,8 @@ struct MoreSettingsView: View {
                     Text("›").foregroundColor(RUColor.text2)
                 }
                 .padding(.horizontal, 14).padding(.vertical, 13)
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
             }
             .buttonStyle(PressableStyle())
         }
@@ -441,10 +440,15 @@ struct MoreSettingsView: View {
                 Text("Aide tes amis à te retrouver dans la recherche.")
                     .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                 Spacer()
-                Button(isSavingIdentity ? "…" : "Enregistrer") { Task { await saveIdentity() } }
-                    .font(RUFont.sans(.body, weight: .semibold))
-                    .foregroundColor(RUColor.rose2)
-                    .disabled(isSavingIdentity)
+                Button(action: { Task { await saveIdentity() } }) {
+                    Text(isSavingIdentity ? "…" : "Enregistrer")
+                        .font(RUFont.sans(.body, weight: .semibold))
+                        .foregroundColor(RUColor.rose2)
+                        .padding(.horizontal, 10)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .disabled(isSavingIdentity)
             }
         }
         .padding(.horizontal, 14).padding(.vertical, 13)

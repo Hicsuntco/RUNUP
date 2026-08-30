@@ -51,17 +51,9 @@ final class LiveRunViewModel {
     /// distinguishes "resume automatically the moment she starts moving again" from a deliberate
     /// manual pause, which should only ever end on an explicit tap.
     private(set) var isAutoPaused = false
-    /// Consecutive ticks (seconds) below `autoPauseSpeedThreshold` while actively running — reset
-    /// the moment speed picks back up, or on any resume.
-    private var stationarySeconds: Double = 0
-    /// ~2.2 km/h — well under even a very slow walking pace, so normal jog-walk intervals or a
-    /// red light glance don't trigger it; only a genuine stop (red light, water fountain, tying a
-    /// shoelace) does, and only after it's held for `autoPauseDelaySeconds`.
-    private static let autoPauseSpeedThreshold: Double = 0.6
-    private static let autoPauseDelaySeconds: Double = 10
-    /// Deliberately higher than the pause threshold (hysteresis) — resuming right at the same
-    /// speed that triggered the pause would flicker pause/resume on every small fluctuation.
-    private static let autoResumeSpeedThreshold: Double = 1.3
+    /// Seuils, armement et compte des secondes immobiles : voir `AutoPause`, où la règle vit
+    /// seule et sous test.
+    private var autoPauseState = AutoPause.State()
     /// Auto-pause relies entirely on `CLLocation.speed`, which stays ~0 with no real GPS
     /// displacement (treadmill, indoor track, a bad urban-canyon fix) — without this, she'd have
     /// to manually tap play every ~10s for the whole run since the auto-resume condition can
@@ -119,6 +111,21 @@ final class LiveRunViewModel {
 
     var distanceKm: Double { location.distanceMeters / 1000 }
     var isSignalUnstable: Bool { location.isSignalUnstable }
+
+    /// Ce que l'écran doit dire de la localisation. Il n'affichait qu'un seul cas — « signal
+    /// instable » — et se taisait dans les deux qui comptent : pendant l'accrochage, où une
+    /// distance figée à 0,00 est normale, et quand l'autorisation est refusée, où elle ne se
+    /// débloquera jamais toute seule. Les deux se ressemblaient trait pour trait à l'écran, et
+    /// ressemblaient toutes deux à une app cassée.
+    enum GPSState { case denied, searching, unstable, ok }
+    var gpsState: GPSState {
+        switch location.authorizationStatus {
+        case .denied, .restricted: return .denied
+        default: break
+        }
+        if !location.hasFix { return .searching }
+        return location.isSignalUnstable ? .unstable : .ok
+    }
 
     /// Real guided execution for a structured session ("5 × 500 m") — warmup → each rep (ends the
     /// moment real GPS distance covers `repKm` since the rep began, not a guessed flat 1.2 km
@@ -206,6 +213,10 @@ final class LiveRunViewModel {
 
     func start() {
         startedAt = Date()
+        autoPauseState = AutoPause.State()
+        autoPauseCyclesWithNoDistance = 0
+        autoPauseCycleStartDistanceKm = 0
+        runtimeAutoPauseDisabled = false
         // La séance est capturée ICI, une fois pour toutes : c'est le seul instant où
         // `profile.todaySession` désigne à coup sûr la séance que la coureuse a sous les yeux.
         // Tout ce qui la relirait plus tard lirait potentiellement celle du lendemain.
@@ -248,7 +259,12 @@ final class LiveRunViewModel {
         guard !isPaused else {
             // A manual pause (isAutoPaused == false) only ever ends on an explicit tap — this
             // only watches for movement resuming while WE'RE the one who paused it.
-            if isAutoPaused, location.currentSpeedMetersPerSecond > Self.autoResumeSpeedThreshold {
+            // Deux preuves indépendantes qu'elle est repartie, et une seule suffit : une vitesse
+            // franche, ou un vrai éloignement du point d'arrêt. La seconde existe parce que la
+            // première manque à l'appel exactement là où on en a besoin — à l'arrêt, sous un
+            // immeuble, `CLLocation.speed` devient indisponible. Avec la vitesse seule, une pause
+            // automatique prise dans ces conditions ne se levait plus jamais toute seule.
+            if isAutoPaused, movementResumed {
                 resumeFromAutoPause()
             }
             return
@@ -279,15 +295,10 @@ final class LiveRunViewModel {
             advanceIntervalSegmentIfNeeded()
         }
         checkPaceAlert()
-        if profile.autoPauseEnabled && !runtimeAutoPauseDisabled {
-            if location.currentSpeedMetersPerSecond < Self.autoPauseSpeedThreshold {
-                stationarySeconds += 1
-                if stationarySeconds >= Self.autoPauseDelaySeconds {
-                    autoPause()
-                }
-            } else {
-                stationarySeconds = 0
-            }
+        if AutoPause.tick(&autoPauseState,
+                          speed: location.currentSpeedMetersPerSecond,
+                          enabled: profile.autoPauseEnabled && !runtimeAutoPauseDisabled) {
+            autoPause()
         }
         // Every 5s, not every tick — ActivityKit updates are meant to be occasional, not a
         // per-second stream (the chrono ticks itself via `timerReference`; these pushes only
@@ -376,7 +387,7 @@ final class LiveRunViewModel {
         voiceCoach?.announce(delta > 0 ? "Accélère un peu, tu es sous ton allure cible." : "Ralentis légèrement, tu vas plus vite que ton allure cible.")
     }
 
-    /// A genuine stop held for `autoPauseDelaySeconds` (red light, water fountain) — pauses the
+    /// A genuine stop held for `AutoPause.delaySeconds` (red light, water fountain) — pauses the
     /// same way a manual tap would (chrono/distance freeze) but keeps GPS running so `tick()` can
     /// notice her moving again and resume on its own, matching what Strava/Garmin call
     /// "auto pause".
@@ -402,10 +413,16 @@ final class LiveRunViewModel {
         updateLiveActivity()
     }
 
+    /// Vraie reprise du mouvement, par l'une ou l'autre des deux mesures — voir `AutoPause`.
+    private var movementResumed: Bool {
+        AutoPause.shouldResume(speed: location.currentSpeedMetersPerSecond,
+                               metersSincePause: location.metersSincePause)
+    }
+
     private func resumeFromAutoPause() {
         isPaused = false
         isAutoPaused = false
-        stationarySeconds = 0
+        autoPauseState.stationarySeconds = 0
         if let pauseBeganAt {
             accumulatedPauseSeconds += Date().timeIntervalSince(pauseBeganAt)
             self.pauseBeganAt = nil
@@ -460,7 +477,7 @@ final class LiveRunViewModel {
             // Covers resuming a manual pause AND tapping resume while auto-paused — either way
             // this is now a real, un-paused run.
             isAutoPaused = false
-            stationarySeconds = 0
+            autoPauseState.stationarySeconds = 0
             // resume(), never start() — start() zeroes route/distance, which is exactly what used
             // to wipe a paused run back to 0,00 km at the traffic light.
             location.resume()

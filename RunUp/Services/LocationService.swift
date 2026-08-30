@@ -17,9 +17,31 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     /// (distance/route-trace rendering) only ever needed lat/lng.
     private(set) var routeAltitudes: [Double?] = []
     private(set) var distanceMeters: Double = 0
-    private(set) var currentSpeedMetersPerSecond: Double = 0
+    /// Vitesse instantanée, ou `nil` quand l'appareil ne la connaît pas.
+    ///
+    /// `CLLocation.speed` vaut une valeur NÉGATIVE quand elle est indisponible — c'est le cas des
+    /// premiers points de chaque course, et de tout point calculé sans effet Doppler. Le code
+    /// écrivait `max(0, newest.speed)`, ce qui transformait « je ne sais pas » en « 0 m/s », donc
+    /// en « elle est à l'arrêt » pour la pause automatique. Rendre l'inconnu explicite est la
+    /// seule façon que l'appelant ne puisse pas le confondre avec un arrêt.
+    private(set) var currentSpeedMetersPerSecond: Double?
     private(set) var isSignalUnstable = false
     private(set) var authorizationStatus: CLAuthorizationStatus = .notDetermined
+    /// Vrai dès qu'un point exploitable est arrivé. Une puce GNSS froide met 5 à 30 secondes à
+    /// accrocher, et pendant tout ce temps le service n'a strictement rien à dire sur la course —
+    /// ni la distance, ni l'allure, ni surtout si la coureuse bouge. Sans ce drapeau, l'appelant
+    /// ne peut pas distinguer « immobile » de « pas encore de signal », et l'écran ne peut pas
+    /// distinguer « l'app cherche » de « l'app est cassée ».
+    private(set) var hasFix = false
+    /// Distance à vol d'oiseau depuis l'endroit où l'accumulation a été suspendue.
+    ///
+    /// La reprise automatique ne s'appuyait que sur `CLLocation.speed`. Or c'est précisément à
+    /// l'arrêt, sous un immeuble ou sous les arbres, que ce champ devient indisponible — donc au
+    /// moment exact où la reprise en a besoin. Un déplacement mesuré entre deux points, lui,
+    /// reste lisible quoi qu'il arrive : si elle s'est éloignée de vingt-cinq mètres du feu
+    /// rouge, elle est repartie, que l'appareil sache dire à quelle vitesse ou non.
+    private(set) var metersSincePause: Double = 0
+    private var pauseAnchor: CLLocation?
     /// Sum of positive altitude deltas between consecutive fixes with a trustworthy
     /// `verticalAccuracy` — real GPS-derived elevation gain, not the flat 0 `RunRecord` used to
     /// always ship with (nothing tracked altitude at all).
@@ -70,6 +92,9 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         distanceMeters = 0
         elevationGainMeters = 0
         lastLocation = nil
+        hasFix = false
+        currentSpeedMetersPerSecond = nil
+        isSignalUnstable = false
         resume()
     }
 
@@ -79,6 +104,8 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     func resume() {
         isAccumulating = true
         lastLocation = nil
+        pauseAnchor = nil
+        metersSincePause = 0
         applyBackgroundUpdatesIfAuthorized()
         manager.startUpdatingLocation()
     }
@@ -93,6 +120,8 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     func pauseAccumulation() {
         isAccumulating = false
         lastLocation = nil
+        pauseAnchor = nil
+        metersSincePause = 0
     }
 
     /// Only valid once authorization is actually granted — setting the flag beforehand risks the
@@ -114,11 +143,25 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let newest = locations.last else { return }
         isSignalUnstable = newest.horizontalAccuracy > unstableAccuracyThreshold || newest.horizontalAccuracy < 0
+        if newest.horizontalAccuracy >= 0 { hasFix = true }
         // Always kept live, even while accumulation is paused — auto-pause's whole resume
-        // detection depends on seeing speed pick back up.
-        currentSpeedMetersPerSecond = max(0, newest.speed)
+        // detection depends on seeing speed pick back up. Négatif = indisponible, et cela reste
+        // `nil` jusqu'au prochain point qui porte une vraie mesure.
+        currentSpeedMetersPerSecond = newest.speed >= 0 ? newest.speed : nil
 
-        guard isAccumulating else { return }
+        guard isAccumulating else {
+            // Suspendue : on n'accumule plus ni distance ni tracé, mais on continue de mesurer
+            // de combien elle s'est éloignée du point d'arrêt — c'est ce qui permet de repartir
+            // sans dépendre d'une vitesse que l'appareil ne sait pas toujours donner.
+            guard newest.horizontalAccuracy >= 0, newest.horizontalAccuracy < 65 else { return }
+            if let anchor = pauseAnchor {
+                metersSincePause = newest.distance(from: anchor)
+            } else {
+                pauseAnchor = newest
+                metersSincePause = 0
+            }
+            return
+        }
 
         // All delivered fixes, not just the last — batched background delivery otherwise cuts
         // the corners off every curve and undercounts distance.
@@ -165,5 +208,8 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         isSignalUnstable = true
+        // La vitesse connue devient périmée à l'instant où la localisation échoue : la garder
+        // ferait croire à la pause automatique qu'elle mesure encore quelque chose.
+        currentSpeedMetersPerSecond = nil
     }
 }

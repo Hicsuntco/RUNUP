@@ -50,6 +50,7 @@ struct LiveRunView: View {
     /// every single one — see `mapLayer`'s `.onChange` for why.
     @State private var displayedRoute: [CLLocationCoordinate2D] = []
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.openURL) private var openURL
 
     private var vm: LiveRunViewModel? { appState.liveRun }
 
@@ -146,26 +147,56 @@ struct LiveRunView: View {
             // endroits afficherait « RÉP. 3/5 » deux fois sur le même écran.
         }
         .overlay(alignment: .top) {
-            if vm?.isSignalUnstable == true {
-                gpsWarningBanner
+            if let state = vm?.gpsState, state != .ok {
+                gpsBanner(state)
                     .padding(.top, 48)
                     // The coach bubble right above gets a slide+fade via `topBannerText`'s
                     // animation; this sibling banner used to just pop in with no transition.
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
-        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: vm?.isSignalUnstable == true)
-        .onChange(of: vm?.isSignalUnstable == true) { _, unstable in
+        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: vm?.gpsState)
+        .onChange(of: vm?.gpsState) { _, state in
             // One buzz when the signal first degrades (not per frame it stays degraded) — she's
             // mid-run and not watching the screen; the warning is useless if it arrives silently.
-            if unstable { Haptics.warning() }
+            // Pas pendant l'accrochage : c'est l'état normal des premières secondes de chaque
+            // course, et faire vibrer le téléphone pour dire « tout se passe comme prévu » est
+            // précisément ce qui apprend à ignorer les alertes.
+            if state == .unstable || state == .denied { Haptics.warning() }
         }
     }
 
-    private var gpsWarningBanner: some View {
+    /// Trois messages, parce qu'il y a trois situations que la coureuse doit pouvoir distinguer
+    /// d'un coup d'œil — et qu'un écran muet les rendait identiques : une distance qui reste à
+    /// 0,00 se lit « l'app est cassée » aussi bien quand le GPS accroche encore que quand
+    /// l'autorisation a été refusée.
+    @ViewBuilder
+    private func gpsBanner(_ state: LiveRunViewModel.GPSState) -> some View {
+        switch state {
+        case .denied:
+            Button {
+                if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+            } label: {
+                bannerBody(icon: "location.slash.fill",
+                           text: "Localisation refusée — ouvrir les Réglages")
+            }
+            .buttonStyle(.plain)
+            .contentShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+        case .searching:
+            bannerBody(icon: "location.magnifyingglass",
+                       text: "Recherche du signal GPS…")
+        case .unstable:
+            bannerBody(icon: "exclamationmark.triangle.fill",
+                       text: "Signal GPS instable — position estimée")
+        case .ok:
+            EmptyView()
+        }
+    }
+
+    private func bannerBody(icon: String, text: String) -> some View {
         HStack(spacing: 8) {
-            Image(systemName: "exclamationmark.triangle.fill").foregroundColor(Ink.amber).font(.system(size: 14))
-            Text("Signal GPS instable — position estimée")
+            Image(systemName: icon).foregroundColor(Ink.amber).font(.system(size: 14))
+            Text(text)
                 .font(RUFont.sans(.body, weight: .semibold))
                 .foregroundColor(Color(hex: 0xFFD79A))
         }

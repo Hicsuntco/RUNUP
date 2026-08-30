@@ -119,6 +119,10 @@ struct PlanView: View {
             refreshSelectedDays()
         }
         .onChange(of: selectedWeek) { _, _ in refreshSelectedDays() }
+        // La liste des jours est mise en cache dans `selectedDays` — sans ceci, une séance
+        // déplacée depuis la feuille resterait affichée à son ancien jour jusqu'à ce qu'on quitte
+        // l'écran. Le déplacement aurait bien eu lieu, et l'écran dirait le contraire.
+        .onChange(of: profile.weekSessions) { _, _ in refreshSelectedDays() }
         .onChange(of: profile.weekNumber) { _, week in
             weekSummaries = computeWeekSummaries()
             // La semaine avance pendant que l'écran est ouvert : suivre le mouvement plutôt que
@@ -332,6 +336,29 @@ struct PlanView: View {
                     dayRow(letter: letter, day: day, state: state)
                 }
             }
+
+            // Le décalage, offert sur la semaine en cours et sur elle seule.
+            //
+            // C'est la seule semaine qui existe vraiment : `weekSessions` la persiste, les
+            // suivantes sont régénérées à chaque affichage. Proposer le geste sur une semaine
+            // future donnerait un déplacement effacé à la prochaine ouverture de l'écran, sans
+            // que rien ne le signale — pire qu'une fonction absente.
+            //
+            // Une action nommée sous la liste plutôt qu'une poignée sur chaque ligne : elle se
+            // voit, elle s'explique, et elle ne remet pas sur les sept lignes la densité qu'on
+            // vient d'en retirer.
+            if week.isCurrent && plannedCount > 0 {
+                Button(action: { Haptics.selection(); appState.openMoveSession() }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "calendar.badge.clock").font(.system(size: 12, weight: .semibold))
+                        Text("Déplacer une séance").font(RUFont.sans(.small, weight: .semibold))
+                    }
+                    .foregroundColor(RUColor.text2)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(PressableStyle())
+            }
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -397,7 +424,7 @@ struct PlanView: View {
             // devenir une forme : on voit trois séances d'endurance, un fractionné, une sortie
             // longue, sans lire une seule ligne. C'est l'écart le plus net entre notre plan et
             // celui des apps qui se lisent d'un coup d'œil.
-            RoundedRectangle(cornerRadius: 2, style: .continuous)
+            RoundedRectangle(cornerRadius: RUSpacing.radiusBar, style: .continuous)
                 .fill(isRest ? Color.clear : family.tint)
                 .frame(width: 3, height: 34)
             dayIcon(session: session, isRest: isRest, completed: day.completed, isToday: isToday)

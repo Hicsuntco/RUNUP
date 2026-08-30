@@ -57,6 +57,10 @@ struct RootTabView: View {
             SessionDetailSheet()
                 .runUpSheetStyle()
         }
+        .sheet(isPresented: Binding(get: { appState.moveSessionPresented }, set: { appState.moveSessionPresented = $0 })) {
+            MoveSessionSheet()
+                .runUpSheetStyle()
+        }
         .sheet(isPresented: Binding(get: { appState.programSettingsPresented }, set: { appState.programSettingsPresented = $0 })) {
             ProgramSettingsSheet()
                 .runUpSheetStyle()

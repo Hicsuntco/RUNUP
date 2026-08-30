@@ -20632,6 +20632,125 @@
           }
         }
       }
+    },
+    "Déplacer une séance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move a session"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mover una sesión"
+          }
+        }
+      }
+    },
+    "Vers quel jour ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To which day?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿A qué día?"
+          }
+        }
+      }
+    },
+    "Séance déplacée": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session moved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesión movida"
+          }
+        }
+      }
+    },
+    "Aucune séance à déplacer cette semaine.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No session to move this week."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna sesión que mover esta semana."
+          }
+        }
+      }
+    },
+    "Les séances déjà faites ne se déplacent pas.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sessions already done can't be moved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las sesiones ya hechas no se mueven."
+          }
+        }
+      }
+    },
+    "⚠ marque les jours qui placeraient deux séances exigeantes l'une après l'autre. C'est permis, mais c'est ainsi qu'on se blesse.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⚠ marks days that would put two demanding sessions back to back. It's allowed, but that's how you get injured."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⚠ marca los días que pondrían dos sesiones exigentes seguidas. Está permitido, pero así es como uno se lesiona."
+          }
+        }
+      }
+    },
+    "Libre": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Libre"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

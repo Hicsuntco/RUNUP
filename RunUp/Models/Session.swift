@@ -40,6 +40,23 @@ enum SessionFamily: String, CaseIterable, Codable, Equatable {
     /// Le renforcement et la technique HYROX. Hors de l'axe d'effort de la course — il vient donc
     /// en dernier plutôt qu'à une place qu'il ne mérite ni d'un côté ni de l'autre.
     case functional
+
+    /// Les familles qui demandent un jour de récupération derrière elles.
+    ///
+    /// C'est la règle que le générateur applique déjà — deux séances de qualité par semaine au
+    /// maximum, jamais dos à dos — exprimée sur l'axe des familles, pour que le déplacement manuel
+    /// d'une séance puisse prévenir quand il s'apprête à la défaire.
+    ///
+    /// Le renforcement en fait partie. Toutes les séances fonctionnelles ne sont pas dures — la
+    /// technique de station l'est peu — mais les circuits intenses et les courses compromises
+    /// dominent la famille, et sur une question de blessure, avertir en trop coûte un haussement
+    /// d'épaules là où avertir en moins coûte une semaine d'arrêt.
+    var isDemanding: Bool {
+        switch self {
+        case .rest, .recovery, .endurance: return false
+        case .longRun, .tempo, .intervals, .functional: return true
+        }
+    }
 }
 
 enum SessionKind: String, Codable, Equatable, CaseIterable {

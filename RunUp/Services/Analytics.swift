@@ -104,6 +104,13 @@ final class Analytics: @unchecked Sendable {
         /// qui reconstitue un parcours nominatif. Un compteur de fréquentation, pas un journal de
         /// navigation.
         case screenViewed = "screen_viewed"
+        /// Une séance déplacée d'un jour à l'autre, avec `from` et `to` en index de jour.
+        ///
+        /// C'est la mesure qui dit si le plan est vécu comme un cadre ou comme une contrainte. Si
+        /// cet événement est rare, le plan tombe juste ; s'il est fréquent, ce sont les jours de
+        /// course du profil qui sont mal réglés, et la réponse n'est pas de déplacer chaque
+        /// semaine à la main mais de les corriger une fois.
+        case sessionMoved = "session_moved"
     }
 
     private static let baseURL = URL(string: "https://runup-nu.vercel.app")!

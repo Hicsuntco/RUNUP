@@ -50,6 +50,7 @@ final class AppState {
 
     // Sheets
     var sessionDetailPresented = false
+    var moveSessionPresented = false
     var programSettingsPresented = false
     var notificationsPresented = false
     /// The same "nouvel objectif" wizard `ChoiceView` presents at the end of a program — hoisted
@@ -392,6 +393,43 @@ final class AppState {
         return record
     }
 
+    /// Déplace une séance d'un jour à l'autre de la semaine en cours.
+    ///
+    /// Écrit directement dans `weekSessions`, qui EST la semaine en cours — il n'y a pas de couche
+    /// de surcharge à tenir, et donc rien qui puisse se désynchroniser du plan. Les semaines
+    /// suivantes ne sont pas concernées : elles sont régénérées à chaque affichage, un déplacement
+    /// y serait silencieusement perdu (voir `SessionMove`).
+    ///
+    /// Rend `false` quand le déplacement est refusé, pour que l'appelant n'affiche pas une
+    /// confirmation d'une chose qui n'a pas eu lieu.
+    @discardableResult
+    func moveSession(from: Int, to: Int) -> Bool {
+        guard let moved = SessionMove.apply(to: profile.weekSessions, from: from, to: to) else { return false }
+        profile.weekSessions = moved
+
+        // La bande de la semaine sur l'accueil lit `weekStrip`, pas `weekSessions`, et son état
+        // « repos » vient des jours de course du profil — pas des séances réellement posées. Sans
+        // ces deux lignes, l'accueil continuerait d'annoncer une séance le jour qu'on vient de
+        // libérer et de marquer repos celui où elle vient d'atterrir : deux représentations de la
+        // même semaine, dont une seule aurait bougé.
+        //
+        // `.done` n'est jamais touché : un jour déjà validé ne peut pas être l'un des deux (une
+        // séance faite ne se déplace pas), et l'écraser effacerait une séance qui a bien eu lieu.
+        let today = AdaptivePlanEngine.currentWeekdayIndex()
+        profile.weekStrip = profile.weekStrip.map { day in
+            guard day.weekday == from || day.weekday == to, day.state != .done else { return day }
+            var updated = day
+            let occupied = (moved.first { $0.weekday == day.weekday }?.session?.durationMinutes ?? 0) > 0
+            updated.state = !occupied ? .rest : (day.weekday == today ? .today : .upcoming)
+            return updated
+        }
+
+        Haptics.success()
+        toast(String(localized: "Séance déplacée"))
+        Analytics.shared.track(.sessionMoved, ["from": .int(from), "to": .int(to)])
+        return true
+    }
+
     /// Logs today's planned session as done without going through the GPS Live Run flow — for a
     /// strength day, a treadmill session, or simply forgetting to hit record. Builds a synthetic
     /// `RunRecord` from the session's own planned duration/pace (no real heart-rate reading, so
@@ -426,6 +464,7 @@ final class AppState {
     }
 
     func openSessionDetail() { sessionDetailPresented = true }
+    func openMoveSession() { moveSessionPresented = true }
     func openProgramSettings() { programSettingsPresented = true }
     func openNotifications() { notificationsPresented = true }
 

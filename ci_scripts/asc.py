@@ -286,12 +286,26 @@ def cmd_status(_):
     elif builds is not None:
         print("  Aucune build envoyée.\n")
 
-    # Et pourquoi il en manque, le cas échéant.
+    # ⚠️ CE QUI SUIT N'EST PAS LA CHAÎNE DE LIVRAISON.
     #
-    # « Aucune build depuis ce matin » ne dit pas si la construction a échoué ou si elle n'a
-    # jamais démarré, et le remède n'est pas le même. Ces deux lignes-là le disent. En lecture
-    # seule, protégées : une clé sans droits Xcode Cloud ne doit pas empêcher le reste de
-    # s'afficher.
+    # Les builds qui arrivent sur TestFlight sont construites et envoyées par le workflow GitHub
+    # Actions « TestFlight » (`.github/workflows/testflight.yml`), sur une machine macOS louée,
+    # avec les certificats de distribution du dépôt. Son numéro de build vaut 1000 + son numéro
+    # d'exécution — d'où les 10XX de la liste ci-dessus.
+    #
+    # Xcode Cloud, lui, ne fait qu'archiver dans son coin : « Distribution Preparation » est sur
+    # None, il n'envoie rien. C'est un contrôle de compilation, utile, et RIEN D'AUTRE.
+    #
+    # Cette confusion a coûté une journée entière. Cet outil affichait les exécutions Xcode Cloud
+    # sous les builds, sans rien dire de leur rôle ; trois d'entre elles se sont terminées
+    # SUCCEEDED pendant que la vraie chaîne échouait à l'envoi sur un quota Apple épuisé, et le
+    # diagnostic a conclu à un blocage de compte. Un outil qui montre le mauvais tuyau est pire
+    # qu'un outil muet : il donne une réponse, et elle est fausse.
+    #
+    # En lecture seule, protégé : une clé sans droits Xcode Cloud ne doit pas empêcher le reste
+    # de s'afficher.
+    print("  Les builds ci-dessus viennent du workflow GitHub Actions « TestFlight »")
+    print("  (numéro de build = 1000 + numéro d'exécution). Ce qui suit ne livre RIEN :\n")
     try:
         products = call("GET", "ciProducts?limit=20")["data"]
     except SystemExit:
@@ -305,7 +319,8 @@ def cmd_status(_):
             break
         for wf in workflows:
             a = wf["attributes"]
-            print(f"  Xcode Cloud · « {a.get('name')} » — {'actif' if a.get('isEnabled') else 'DÉSACTIVÉ'}")
+            print(f"  Xcode Cloud · « {a.get('name')} » — {'actif' if a.get('isEnabled') else 'DÉSACTIVÉ'}"
+                  f"   (contrôle de compilation seulement)")
             try:
                 runs = call("GET", f"ciWorkflows/{wf['id']}/buildRuns?limit=3&sort=-number")["data"]
             except SystemExit:

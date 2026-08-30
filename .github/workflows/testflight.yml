@@ -81,6 +81,12 @@ on:
       - "**/*.md"
       - "privacy.html"
       - "design_handoff_runup_app/**"
+      # Les captures brutes, les accroches et le composeur qui les assemble : tout ce dossier
+      # sert à FABRIQUER la fiche App Store, rien n'y entre dans le binaire. Déposer six photos
+      # d'écran y payait une machine macOS pendant neuf minutes, pour reconstruire exactement la
+      # même app — et surtout pour consommer un envoi du quota quotidien d'Apple, celui-là même
+      # qui nous a bloqués une journée entière.
+      - "appstore/**"
 
 # Deux envois en parallèle produiraient deux builds et une course à qui arrive le premier chez
 # Apple. `cancel-in-progress: false` : on laisse finir celui qui est déjà en train de signer

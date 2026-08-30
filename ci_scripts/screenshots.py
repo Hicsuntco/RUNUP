@@ -345,22 +345,55 @@ def main() -> int:
     print(f"Ordre retenu : {', '.join(p.name for p in shots)}\n")
 
     texts = captions[lang]
-    if len(shots) > len(texts):
-        print(
-            f"{len(shots)} captures pour {len(texts)} accroches en {lang} : ajoute des accroches "
-            f"dans appstore/captions.json, ou retire des captures.",
-            file=sys.stderr,
-        )
-        return 1
+
+    # Le rang vient du nom du fichier quand il commence par un chiffre — `4-club.png` reçoit la
+    # quatrième accroche, où qu'il soit dans le dossier et quoi qu'il manque autour.
+    #
+    # L'appariement par position seul est un piège : à six accroches et cinq captures, la capture
+    # du partage hérite de l'accroche du club, les suivantes décalent, et rien ne le signale. On
+    # ne s'en aperçoit qu'en regardant la fiche publiée. Tant que les captures viennent d'un
+    # iPhone et s'appellent `IMG_9143.PNG`, le repli positionnel reste le seul choix possible.
+    ranked = {}
+    for shot in shots:
+        digits = ""
+        for char in shot.name:
+            if not char.isdigit():
+                break
+            digits += char
+        if digits:
+            ranked[int(digits)] = shot
+
+    if ranked and len(ranked) == len(shots):
+        unknown = sorted(r for r in ranked if not 1 <= r <= len(texts))
+        if unknown:
+            print(
+                f"Rangs hors des {len(texts)} accroches de {lang} : "
+                f"{', '.join(str(r) for r in unknown)}.",
+                file=sys.stderr,
+            )
+            return 1
+        pairs = [(ranked[r], texts[r - 1], r) for r in sorted(ranked)]
+        manquants = [r for r in range(1, len(texts) + 1) if r not in ranked]
+        if manquants:
+            print(f"Rangs encore absents : {', '.join(str(r) for r in manquants)}.\n")
+    else:
+        if len(shots) > len(texts):
+            print(
+                f"{len(shots)} captures pour {len(texts)} accroches en {lang} : ajoute des "
+                f"accroches dans appstore/captions.json, ou retire des captures.",
+                file=sys.stderr,
+            )
+            return 1
+        pairs = [(shot, text, i) for i, (shot, text) in enumerate(zip(shots, texts), start=1)]
 
     dest_dir = OUT / lang
-    for index, (shot, caption) in enumerate(zip(shots, texts), start=1):
+    for shot, caption, index in pairs:
         dest = dest_dir / f"{index}.png"
         compose(shot, caption, dest)
         shown = caption if isinstance(caption, str) else f"{caption[0]} — {caption[1]}"
         print(f"{shot.name} → {dest.relative_to(ROOT)}   « {shown} »")
 
-    print(f"\n{len(shots)} captures composées dans {dest_dir.relative_to(ROOT)} ({CANVAS[0]}×{CANVAS[1]}).")
+    print(f"\n{len(pairs)} captures composées dans {dest_dir.relative_to(ROOT)} ({CANVAS[0]}×{CANVAS[1]}).")
     return 0
 
 

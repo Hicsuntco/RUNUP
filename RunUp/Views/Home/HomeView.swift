@@ -370,17 +370,25 @@ struct HomeView: View {
                 // rang de lien discret, le même traitement que l'export GPX et la publication de
                 // trace sur le récap, pour que l'app dise partout la même chose de ses actions
                 // secondaires.
+                // Sans coche, et pas en pleine largeur.
+                //
+                // La coche disait deux fois la même chose que les mots, et à cette taille un
+                // pictogramme collé à du texte fait bricolage plutôt qu'intention. Une capsule
+                // centrée, plus étroite que le bouton du dessus, dit « action secondaire » par sa
+                // forme et sa largeur — sans avoir besoin d'un signe pour l'annoncer.
                 Button(action: { appState.markTodaySessionDone() }) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "checkmark").font(.system(size: 12, weight: .semibold))
-                        Text("Je l'ai déjà faite").font(RUFont.sans(.body, weight: .semibold))
-                    }
-                    .foregroundColor(RUColor.text2)
-                    .frame(maxWidth: .infinity, minHeight: 44)
-                    .contentShape(Rectangle())
+                    Text("Je l'ai déjà faite")
+                        .font(RUFont.sans(.body, weight: .semibold))
+                        .foregroundColor(RUColor.text2)
+                        .padding(.horizontal, 20)
+                        .frame(minHeight: 44)
+                        .background(Capsule().fill(RUColor.card2))
+                        .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                        .contentShape(Capsule())
                 }
-                .buttonStyle(.plain)
-                .padding(.top, 2)
+                .buttonStyle(PressableStyle())
+                .frame(maxWidth: .infinity)
+                .padding(.top, 10)
             }
         }
         .padding(16)

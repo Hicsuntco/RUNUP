@@ -105,6 +105,12 @@ struct MoveSessionSheet: View {
                 .buttonStyle(PressableStyle())
             }
 
+            // Dite ici, au moment du choix, et pas seulement sur l'écran d'où l'on vient : c'est
+            // l'instant où l'on croit régler la chose pour de bon.
+            Text("Ne vaut que pour cette semaine. Les suivantes suivent tes jours de course.")
+                .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                .padding(.top, 2)
+
             if destinations.contains(where: \.warns) {
                 Text("⚠ marque les jours qui placeraient deux séances exigeantes l'une après l'autre. C'est permis, mais c'est ainsi qu'on se blesse.")
                     .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)

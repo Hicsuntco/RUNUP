@@ -358,6 +358,26 @@ struct PlanView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(PressableStyle())
+            } else if !week.isCurrent && !week.isDone {
+                // Une semaine à venir ne porte AUCUN déplacement, et sans cette ligne rien ne le
+                // dit : on décale une séance cette semaine, on avance d'une semaine, on la
+                // retrouve à son ancien jour, et on conclut que le déplacement n'a pas marché.
+                //
+                // Elle donne aussi le vrai remède. Si le conflit revient chaque semaine, ce ne
+                // sont pas les séances qu'il faut déplacer une par une — ce sont les jours de
+                // course, qui se règlent une fois pour toutes.
+                Button(action: { Haptics.selection(); appState.programSettingsPresented = true }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "calendar").font(.system(size: 11, weight: .semibold))
+                        Text("Cette semaine suit tes jours de course · Les modifier")
+                            .font(RUFont.sans(.small, weight: .semibold))
+                            .multilineTextAlignment(.leading)
+                    }
+                    .foregroundColor(RUColor.text3)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(PressableStyle())
             }
         }
         .padding(16)

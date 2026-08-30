@@ -20785,6 +20785,40 @@
           }
         }
       }
+    },
+    "Ne vaut que pour cette semaine. Les suivantes suivent tes jours de course.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This week only. The weeks after follow your running days."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo para esta semana. Las siguientes siguen tus días de carrera."
+          }
+        }
+      }
+    },
+    "Cette semaine suit tes jours de course · Les modifier": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This week follows your running days · Change them"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta semana sigue tus días de carrera · Cambiarlos"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

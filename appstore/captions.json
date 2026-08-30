@@ -1,26 +1,80 @@
 {
   "fr-FR": [
-    "Ta journée, ton programme, ta course. Sur un seul écran",
-    "Un programme qui s'adapte à ta forme, chaque semaine",
-    "Trois objectifs par jour, pas trente",
-    "Un coach qui a lu tes dernières séances",
-    "Tes vrais chiffres, pas des moyennes",
-    "Partage ta course, pas seulement ton temps"
+    [
+      "Tout sur un écran",
+      "Ta journée, ton programme, ta course."
+    ],
+    [
+      "Un plan qui s'adapte",
+      "Il se recalcule sur ta forme, chaque semaine."
+    ],
+    [
+      "Trois objectifs par jour",
+      "Pas trente. Trois."
+    ],
+    [
+      "Un coach qui te connaît",
+      "Il a lu tes dernières séances."
+    ],
+    [
+      "Tes vrais chiffres",
+      "Pas des moyennes de tout le monde."
+    ],
+    [
+      "Partage ta course",
+      "Le tracé, le dénivelé, l'effort. Pas juste un temps."
+    ]
   ],
   "en-US": [
-    "Your day, your plan, your race. On one screen",
-    "A plan that adapts to your form, week by week",
-    "Three goals a day, not thirty",
-    "A coach that has read your last sessions",
-    "Your real numbers, not averages",
-    "Share your run, not just your time"
+    [
+      "Everything on one screen",
+      "Your day, your plan, your run."
+    ],
+    [
+      "A plan that adapts",
+      "It recalculates on your form, every week."
+    ],
+    [
+      "Three goals a day",
+      "Not thirty. Three."
+    ],
+    [
+      "A coach who knows you",
+      "It has read your last sessions."
+    ],
+    [
+      "Your real numbers",
+      "Not everyone else's averages."
+    ],
+    [
+      "Share the run",
+      "The route, the climb, the effort. Not just a time."
+    ]
   ],
   "es-ES": [
-    "Tu día, tu plan, tu carrera. En una sola pantalla",
-    "Un plan que se adapta a tu forma, cada semana",
-    "Tres objetivos al día, no treinta",
-    "Un entrenador que ha leído tus últimas sesiones",
-    "Tus cifras reales, no promedios",
-    "Comparte tu carrera, no solo tu tiempo"
+    [
+      "Todo en una pantalla",
+      "Tu día, tu plan, tu carrera."
+    ],
+    [
+      "Un plan que se adapta",
+      "Se recalcula según tu forma, cada semana."
+    ],
+    [
+      "Tres objetivos al día",
+      "No treinta. Tres."
+    ],
+    [
+      "Un entrenador que te conoce",
+      "Ha leído tus últimas sesiones."
+    ],
+    [
+      "Tus cifras reales",
+      "No los promedios de los demás."
+    ],
+    [
+      "Comparte la carrera",
+      "El trazado, el desnivel, el esfuerzo. No solo un tiempo."
+    ]
   ]
 }

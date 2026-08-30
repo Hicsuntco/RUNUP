@@ -228,23 +228,48 @@ def device(shot: Image.Image, screen_w: int) -> tuple:
     return body, silhouette, b
 
 
-def compose(shot_path: Path, caption: str, dest: Path) -> None:
-    canvas = scene()
+def compose(shot_path: Path, caption, dest: Path) -> None:
+    """Compose une capture sous son accroche.
+
+    L'accroche tient sur deux étages : un titre court et gras, une phrase claire et légère en
+    dessous. Sur une seule ligne d'un seul poids, une accroche de dix mots oblige à s'arrêter pour
+    la lire — or dans le carrousel de l'App Store on voit deux images et demie d'un coup, en
+    diagonale, et ce qui n'est pas saisi d'un balayage n'est pas lu du tout. Le titre porte la
+    promesse, le sous-titre l'explique à qui s'arrête.
+
+    Une accroche restée sous forme de chaîne simple est acceptée et rendue sans sous-titre : le
+    format a changé, et le composeur n'a pas à casser sur un fichier écrit dans l'ancien.
+    """
+    title, subtitle = (caption, "") if isinstance(caption, str) else (caption[0], caption[1])
+
+    canvas = scene().convert("RGBA")
     draw = ImageDraw.Draw(canvas)
 
-    font = ImageFont.truetype(str(FONTS / "Inter-Bold.ttf"), 76)
-    tracking = -1.6
+    font = ImageFont.truetype(str(FONTS / "Inter-Bold.ttf"), 82)
+    tracking = -1.8
     margin = 96
-    lines = wrap(draw, caption, font, CANVAS[0] - margin * 2)
+    lines = wrap(draw, title, font, CANVAS[0] - margin * 2)
 
     # L'accroche d'abord : c'est elle qui fixe où commence l'appareil. Une accroche sur trois
     # lignes ne doit pas se retrouver recouverte par la capture.
-    leading = 92
+    leading = 98
     y = 190
     for line in lines:
         w = tracked_width(draw, line, font, tracking)
         tracked(draw, ((CANVAS[0] - w) / 2, y), line, font, (255, 255, 255), tracking)
         y += leading
+
+    # Le second étage. Plus petit, plus maigre, et surtout pas tout à fait blanc : à blanc plein
+    # il pèse autant que le titre et les deux se disputent le regard. À 82 % il se lit sans
+    # effort et reste second.
+    if subtitle:
+        sub_font = ImageFont.truetype(str(FONTS / "Inter-Light.ttf"), 48)
+        sub_margin = 150
+        y += 14
+        for line in wrap(draw, subtitle, sub_font, CANVAS[0] - sub_margin * 2):
+            w = draw.textlength(line, font=sub_font)
+            draw.text(((CANVAS[0] - w) / 2, y), line, font=sub_font, fill=(255, 255, 255, 209))
+            y += 62
 
     body, silhouette, b = device(Image.open(shot_path).convert("RGB"), screen_w=1046)
     dw, dh = body.size
@@ -332,7 +357,8 @@ def main() -> int:
     for index, (shot, caption) in enumerate(zip(shots, texts), start=1):
         dest = dest_dir / f"{index}.png"
         compose(shot, caption, dest)
-        print(f"{shot.name} → {dest.relative_to(ROOT)}   « {caption} »")
+        shown = caption if isinstance(caption, str) else f"{caption[0]} — {caption[1]}"
+        print(f"{shot.name} → {dest.relative_to(ROOT)}   « {shown} »")
 
     print(f"\n{len(shots)} captures composées dans {dest_dir.relative_to(ROOT)} ({CANVAS[0]}×{CANVAS[1]}).")
     return 0

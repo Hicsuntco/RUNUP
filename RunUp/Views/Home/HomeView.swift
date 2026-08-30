@@ -344,26 +344,34 @@ struct HomeView: View {
                 }
                 .padding(.top, 14)
 
-                HStack(spacing: 8) {
-                    // For a strength session, a treadmill run, or just forgetting to hit
-                    // record — logging it shouldn't require the full GPS flow.
-                    Button(action: { appState.markTodaySessionDone() }) {
-                        HStack { Image(systemName: "checkmark"); Text("FAIT") }
-                            // Matches DÉMARRER's PrimaryButtonStyle typography (la police de titrage
-                            // font) so the two read as one paired control, not two mismatched
-                            // buttons — the outline vs. filled chrome from SecondaryButtonStyle
-                            // is what should carry the "lower emphasis" signal, not the font.
-                            .font(RUFont.display(16))
-                            .tracking(0.2)
-                    }
-                    .buttonStyle(SecondaryButtonStyle())
-
-                    Button(action: { appState.startRun() }) {
-                        HStack { Image(systemName: "play.fill"); Text("DÉMARRER") }
-                    }
-                    .buttonStyle(PrimaryButtonStyle())
+                // Une seule action, en pleine largeur. Les deux boutons côte à côte, de même
+                // taille et de même forme, annonçaient deux choix équivalents — alors qu'on
+                // démarre la séance neuf fois sur dix et qu'on la déclare faite dans le cas
+                // restant. À parts égales, la paire prenait la silhouette d'une boîte de
+                // dialogue « Annuler / OK », et c'est cette silhouette-là qui faisait bon marché,
+                // pas le bouton lui-même.
+                Button(action: { appState.startRun() }) {
+                    HStack { Image(systemName: "play.fill"); Text("DÉMARRER") }
                 }
+                .buttonStyle(PrimaryButtonStyle())
                 .padding(.top, 15)
+
+                // L'échappatoire — séance de renfo, tapis, ou simple oubli d'appuyer sur
+                // enregistrer : la déclarer faite n'a pas à passer par le GPS. Elle descend au
+                // rang de lien discret, le même traitement que l'export GPX et la publication de
+                // trace sur le récap, pour que l'app dise partout la même chose de ses actions
+                // secondaires.
+                Button(action: { appState.markTodaySessionDone() }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark").font(.system(size: 12, weight: .semibold))
+                        Text("Je l'ai déjà faite").font(RUFont.sans(.body, weight: .semibold))
+                    }
+                    .foregroundColor(RUColor.text2)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 2)
             }
         }
         .padding(16)

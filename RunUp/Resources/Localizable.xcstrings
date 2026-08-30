@@ -20598,6 +20598,40 @@
           }
         }
       }
+    },
+    "Je l'ai déjà faite": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I already did it"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya la he hecho"
+          }
+        }
+      }
+    },
+    "Localisation refusée · Activer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Location denied · Turn on"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ubicación denegada · Activar"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

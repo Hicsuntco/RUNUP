@@ -1,5 +1,6 @@
 import SwiftUI
 import MapKit
+import UIKit
 
 /// « Je suis à Lisbonne trois jours, où je cours ? »
 ///
@@ -23,6 +24,8 @@ struct RouteDiscoveryView: View {
     @State private var loadFailed = false
     @State private var selected: SharedRoute?
     @State private var filter: DistanceFilter = .all
+    @State private var permission = LocationPermission()
+    @Environment(\.openURL) private var openURL
 
     /// Les distances que les gens cherchent vraiment quand ils arrivent quelque part.
     private enum DistanceFilter: String, CaseIterable, Identifiable {
@@ -107,10 +110,19 @@ struct RouteDiscoveryView: View {
                     }
                 }
             }
-            .mapControls { MapUserLocationButton() }
+            // Le bouton d'Apple n'est montré que s'il peut faire quelque chose. Sans
+            // autorisation il affiche un compte à rebours qui ne s'arrête jamais et ne propose
+            // rien : de l'extérieur, la carte a simplement l'air cassée.
+            .mapControls {
+                if permission.isGranted { MapUserLocationButton() }
+            }
             .onMapCameraChange(frequency: .onEnd) { context in
                 visibleRegion = context.region
             }
+            // Demandée ici, et pas seulement au départ d'une course : c'est le seul autre écran
+            // de l'app qui a besoin de savoir où tu es, et quiconque ouvrait cette carte avant
+            // d'avoir couru une première fois n'avait jamais vu la question.
+            .task { permission.requestIfNeeded() }
 
             if regionMovedSinceSearch && !isLoading {
                 Button {
@@ -128,6 +140,31 @@ struct RouteDiscoveryView: View {
                     .background(Capsule().fill(RUColor.card))
                     .overlay(Capsule().stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                     .shadow(color: .black.opacity(0.12), radius: 8, y: 3)
+                }
+                .buttonStyle(PressableStyle())
+                .padding(.top, 12)
+            }
+
+            // Refus explicite : iOS ne repose plus la question, donc laisser la carte muette
+            // reviendrait à la laisser paraître cassée une deuxième fois. Ce lien est le seul
+            // chemin qui reste, et il mène là où la décision peut être reprise.
+            if permission.isRefused {
+                Button {
+                    if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "location.slash")
+                        Text("Localisation refusée · Activer")
+                    }
+                    .font(RUFont.sans(.label, weight: .semibold))
+                    .foregroundColor(RUColor.textPrimary)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 9)
+                    .frame(minHeight: 44)
+                    .background(Capsule().fill(RUColor.card))
+                    .overlay(Capsule().stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                    .shadow(color: .black.opacity(0.12), radius: 8, y: 3)
+                    .contentShape(Capsule())
                 }
                 .buttonStyle(PressableStyle())
                 .padding(.top, 12)
@@ -284,3 +321,44 @@ private struct RouteRow: View {
         .ruCard()
     }
 }
+
+
+/// Le strict nécessaire pour savoir si cette carte a le droit de se centrer sur toi.
+///
+/// `MapUserLocationButton` n'a aucun état « je n'ai pas la permission » : sans autorisation il
+/// affiche son compte à rebours, indéfiniment, sans jamais poser la question. Or l'app ne
+/// demandait la localisation qu'au démarrage d'une course, dans `LiveRunViewModel` — donc
+/// quiconque ouvrait cette carte avant d'avoir couru une première fois voyait un bouton tourner
+/// dans le vide, et rien ne lui disait pourquoi.
+///
+/// Volontairement séparé de `LocationService` : celui-ci allume le GPS, tient une trace et calcule
+/// une distance, tout ce dont cette carte n'a pas besoin. Ici on ne veut qu'une réponse — a-t-on
+/// le droit, oui ou non — et la poser une fois si personne ne l'a encore posée.
+@Observable
+final class LocationPermission: NSObject, CLLocationManagerDelegate {
+    private let manager: CLLocationManager
+    private(set) var status: CLAuthorizationStatus
+
+    override init() {
+        let manager = CLLocationManager()
+        self.manager = manager
+        self.status = manager.authorizationStatus
+        super.init()
+        manager.delegate = self
+    }
+
+    var isGranted: Bool { status == .authorizedWhenInUse || status == .authorizedAlways }
+    var isRefused: Bool { status == .denied || status == .restricted }
+
+    /// Ne redemande jamais : passé le premier refus, iOS n'affiche plus rien et l'appel est un
+    /// coup dans l'eau. C'est aux Réglages de reprendre la main à partir de là.
+    func requestIfNeeded() {
+        guard status == .notDetermined else { return }
+        manager.requestWhenInUseAuthorization()
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        status = manager.authorizationStatus
+    }
+}
+

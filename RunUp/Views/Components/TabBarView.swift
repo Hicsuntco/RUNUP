@@ -46,6 +46,10 @@ struct TabBarView: View {
         // un peu plus foncé : une barre censée être posée au-dessus se lisait comme un trou.
         .background(RUColor.card.opacity(RUColor.isLight ? 0.92 : 0.72), in: Capsule())
         .overlay(Capsule().stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+        // Et la barre elle-même arrête les touches, y compris dans les marges au-dessus et en
+        // dessous des libellés : elle est posée SUR le contenu, elle doit se comporter comme
+        // telle. Un fond dessiné `in: Capsule()` habille sans rien intercepter.
+        .contentShape(Capsule())
         // Une barre flottante a droit à plus d'élévation qu'une carte — mais pas à quatre fois
         // plus. C'était 30 % d'encre là où les cartes sont passées à 4 et 8 %, reliquat de
         // l'ancien langage d'ombre que le portage de la maquette a justement corrigé ailleurs.
@@ -82,6 +86,13 @@ struct TabBarView: View {
                     .foregroundColor(color)
             }
             .frame(maxWidth: .infinity, minHeight: 44)
+            // Sans forme de contact, un `Button` dont le libellé est une pile d'un point, d'une
+            // icône et d'un mot n'est touchable QUE sur ces trois formes — les creux entre elles
+            // ne répondent pas, et le doigt les traverse. Sur l'accueil, ce qui se trouve juste
+            // dessous est « Refaire un programme », en pleine largeur : viser Profil déclenchait
+            // la remise à zéro du programme. Le reste de l'app pose déjà ce `contentShape`
+            // partout ; la seule chrome permanente de l'app était la seule à ne pas l'avoir.
+            .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())
         // The only persistent navigation chrome in the app, visible on every screen — without
@@ -114,7 +125,11 @@ struct TabBarView: View {
                     .tracking(1)
                     .foregroundColor(RUColor.rose2)
             }
-            .frame(width: 60)
+            // Même défaut que les onglets, sur le bouton le plus utilisé de l'app : le rond fait
+            // 40 pt, le creux qui le sépare de « RUN » ne répondait pas, et l'ensemble n'atteignait
+            // la hauteur réglementaire par aucun côté. La cible monte à 44 sans que le rond grossisse.
+            .frame(width: 60, minHeight: 44)
+            .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())
     }

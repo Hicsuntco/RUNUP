@@ -33,8 +33,20 @@ FONTS = ROOT / "RunUp" / "Resources" / "Fonts"
 
 CANVAS = (1290, 2796)
 
-# La hauteur à laquelle le châssis commence, sur les six images sans exception.
-DEVICE_TOP = 600
+# Le châssis, en entier.
+#
+# Il débordait par le bas, volontairement : un appareil coupé au bord du cadre a plus de
+# profondeur qu'un objet posé au milieu, et c'est ce que font les fiches qu'on regarde en face.
+# Ça ne marche que si le bas de l'écran n'a rien à montrer. Or RUNUP a une barre d'onglets
+# flottante tout en bas de chaque écran : le débordement rognait précisément un élément
+# d'interface, et cinq captures sur cinq semblaient mal cadrées plutôt que mises en scène.
+#
+# L'appareil tient donc entier, avec une marge sous lui. La largeur d'écran descend de 1046 à
+# 998 — cinq pour cent, invisibles — et c'est ce qui permet au texte de garder sa place au-dessus
+# sans que rien ne se touche.
+DEVICE_TOP = 520
+DEVICE_BOTTOM_MARGIN = 36
+SCREEN_W = 998
 
 # Les captures viennent d'un iPhone, où elles s'appellent `IMG_0042.PNG` — extension EN MAJUSCULES.
 # Un `glob("*.png")` ne les voit pas sur le runner Linux, qui distingue la casse, et le script
@@ -352,7 +364,7 @@ def compose(shot_path: Path, caption, dest: Path) -> None:
             draw.text(((CANVAS[0] - w) / 2, y), line, font=sub_font, fill=(255, 255, 255, 255))
             y += 62
 
-    body, silhouette, b = device(clean_status_bar(Image.open(shot_path).convert("RGB")), screen_w=1046)
+    body, silhouette, b = device(clean_status_bar(Image.open(shot_path).convert("RGB")), screen_w=SCREEN_W)
     dw, dh = body.size
     left = (CANVAS[0] - dw) // 2
 
@@ -372,10 +384,13 @@ def compose(shot_path: Path, caption, dest: Path) -> None:
         print(f"  ⚠ accroche trop longue de {round(y - top + 40)} px — elle touchera l'appareil : "
               f"raccourcis le titre ou le sous-titre.", file=sys.stderr)
 
-    # L'appareil sort par le bas. Le montrer en entier le réduirait à un objet posé au milieu du
-    # cadre ; le laisser déborder donne la profondeur qu'ont les fiches qu'on prend pour modèle.
-    visible = max(0, CANVAS[1] - top)
+    # Le recadrage reste, comme filet de sécurité : une capture d'un appareil plus allongé que
+    # prévu déborderait sinon hors du cadre sans rien dire. Avec les proportions d'aujourd'hui il
+    # ne se déclenche pas — l'appareil tient entier, marge comprise.
+    visible = max(0, CANVAS[1] - DEVICE_BOTTOM_MARGIN - top)
     if dh > visible:
+        print(f"  ⚠ appareil recadré de {dh - visible} px en bas — capture plus haute que prévu.",
+              file=sys.stderr)
         body = body.crop((0, 0, dw, visible))
         silhouette = silhouette.crop((0, 0, dw, visible))
         dh = visible
@@ -384,7 +399,7 @@ def compose(shot_path: Path, caption, dest: Path) -> None:
     # Ils sont du métal, pas de l'ombre : peints sombres, ils se lisaient comme des taches posées
     # derrière le téléphone. Un gris clair les rattache à l'arête vive du châssis.
     tab = max(3, round(b * 0.62))
-    full_h = round(1046 / Image.open(shot_path).width * Image.open(shot_path).height) + 2 * b
+    full_h = round(SCREEN_W / Image.open(shot_path).width * Image.open(shot_path).height) + 2 * b
     buttons = ImageDraw.Draw(canvas)
     for lo, hi in BUTTONS_LEFT:
         y0, y1 = top + full_h * lo, top + full_h * hi

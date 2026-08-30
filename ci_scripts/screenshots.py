@@ -449,15 +449,28 @@ def main() -> int:
     # du partage hérite de l'accroche du club, les suivantes décalent, et rien ne le signale. On
     # ne s'en aperçoit qu'en regardant la fiche publiée. Tant que les captures viennent d'un
     # iPhone et s'appellent `IMG_9143.PNG`, le repli positionnel reste le seul choix possible.
-    ranked = {}
+    ranked: dict[int, Path] = {}
     for shot in shots:
         digits = ""
         for char in shot.name:
             if not char.isdigit():
                 break
             digits += char
-        if digits:
-            ranked[int(digits)] = shot
+        if not digits:
+            continue
+        rank = int(digits)
+        # Deux fichiers pour le même rang, et il faut s'arrêter.
+        #
+        # Le cas n'a rien de théorique : l'iPhone nomme ses captures en `.PNG`, le dossier
+        # contenait des `.png`, et `1-accueil.PNG` a cohabité avec `1-accueil.png` — l'ancienne
+        # version de l'écran et la nouvelle, côte à côte, revendiquant la même accroche. En
+        # écrasant silencieusement, le composeur aurait choisi selon l'ordre de tri, c'est-à-dire
+        # au hasard du point de vue de qui dépose les fichiers, et aurait pu publier l'ancienne.
+        if rank in ranked:
+            print(f"Deux captures pour le rang {rank} : {ranked[rank].name} et {shot.name}. "
+                  f"Supprime celle qui n'a plus lieu d'être.", file=sys.stderr)
+            return 1
+        ranked[rank] = shot
 
     if ranked and len(ranked) == len(shots):
         unknown = sorted(r for r in ranked if not 1 <= r <= len(texts))

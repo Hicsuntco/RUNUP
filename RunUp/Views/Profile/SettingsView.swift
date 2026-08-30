@@ -39,6 +39,9 @@ struct SettingsView: View {
                     sectionTitle("Objectifs quotidiens")
                     dailyGoalsCard
 
+                    sectionTitle("Mon équipement")
+                    shoesRow
+
                     moreSettingsRow
                 }
                 .padding(.horizontal, RUSpacing.pagePadding)
@@ -113,6 +116,34 @@ struct SettingsView: View {
         .ruCard()
     }
 
+    /// Le kilométrage des chaussures vivait sur le Profil, entre les cartes sociales et les
+    /// statistiques. Il y était le seul élément qui ne parle ni de soi ni des autres — un réglage
+    /// d'équipement au milieu d'une page de vie sociale. Ici, il est à côté des autres choses
+    /// qu'on règle une fois et qu'on revient consulter.
+    private var shoesRow: some View {
+        Button(action: { dismiss(); appState.go(.shoes) }) {
+            HStack(spacing: 12) {
+                Image(systemName: "shoeprints.fill")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(RUColor.rose2)
+                    .frame(width: 22)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Mes chaussures")
+                        .font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                    Text("Suivre leur kilométrage")
+                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                }
+                Spacer()
+                Text("›").foregroundColor(RUColor.text2)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 13)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableStyle())
+        .ruCard()
+    }
+
     private var moreSettingsRow: some View {
         Button(action: { showMoreSettings = true }) {
             HStack {
@@ -121,6 +152,11 @@ struct SettingsView: View {
                 Text("›").foregroundColor(RUColor.text2)
             }
             .padding(.horizontal, 14).padding(.vertical, 13)
+            // Sans forme de contact, la ligne n'est touchable que sur ses deux textes : le vide
+            // entre « Plus de réglages » et le chevron — soit la moitié de la largeur — ne
+            // répondait pas. C'est ce qui la faisait paraître capricieuse.
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())
         .ruCard()
@@ -213,6 +249,7 @@ struct SettingsView: View {
                             }
                         }
                         .frame(width: 46, height: 46)
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(PressableStyle())
                     .accessibilityLabel(theme.name)
@@ -231,7 +268,9 @@ struct SettingsView: View {
                 .font(RUFont.sans(.body, weight: .semibold))
                 .foregroundColor(selected ? .white : RUColor.text2)
                 .padding(.horizontal, 14).padding(.vertical, 9)
+                .frame(minHeight: 44)
                 .background(selected ? RUColor.rose : .clear, in: Capsule())
+                .contentShape(Capsule())
         }
         .buttonStyle(PressableStyle())
     }
@@ -377,6 +416,8 @@ private struct StravaConnectionRow: View {
                     }
                     .font(RUFont.sans(.body, weight: .semibold))
                     .foregroundColor(RUColor.text2)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(PressableStyle())
                 .disabled(isImporting)

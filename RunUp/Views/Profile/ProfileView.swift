@@ -61,7 +61,6 @@ struct ProfileView: View {
 
                 badgeSection
 
-                gearSection
             }
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.top, 8)
@@ -414,6 +413,11 @@ struct ProfileView: View {
             // d'élévation.
             .shadow(color: .black.opacity(RUColor.isLight ? 0.04 : 0), radius: 1, x: 0, y: 1)
             .shadow(color: .black.opacity(RUColor.isLight ? 0.08 : 0), radius: 4, x: 0, y: 3)
+            // Les trois cartes sociales sont des boutons entiers — Club, Amis, Itinéraires. Sans
+            // forme de contact, seuls leurs textes et leurs pastilles répondaient : sur une carte
+            // de cette taille, la majorité de la surface visée ne faisait rien. Posé ici, dans
+            // l'enveloppe partagée, plutôt que trois fois sur les appelants.
+            .contentShape(shape)
     }
 
     /// `.social-card-arrow` — un chevron nu se perd dans une carte teintée ; dans une pastille
@@ -659,52 +663,6 @@ struct ProfileView: View {
                 .padding(.horizontal, 2)
             }
         }
-    }
-
-    // MARK: - Gear and goal
-
-    /// Deux destinations qui n'existaient que trois taps plus loin — Profil → réglages → plus de
-    /// réglages. Le kilométrage des chaussures est une donnée d'usure qu'on consulte, pas un
-    /// réglage qu'on pose une fois ; et l'objectif de course s'affiche déjà en haut de cet écran,
-    /// sans qu'on puisse l'ouvrir depuis là.
-    private var gearSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            RUCardHeader(title: String(localized: "Mon équipement"))
-            VStack(spacing: 8) {
-                destinationRow(icon: "shoeprints.fill",
-                               title: String(localized: "Mes chaussures"),
-                               subtitle: String(localized: "Suivre leur kilométrage")) { appState.go(.shoes) }
-            }
-        }
-    }
-
-    private func destinationRow(icon: String, title: String, subtitle: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 13) {
-                Image(systemName: icon)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(RUColor.rose)
-                    .frame(width: 38, height: 38)
-                    .background(RUColor.rose.opacity(0.10), in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(RUFont.sans(.emphasis, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                    Text(subtitle).font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
-                        .lineLimit(1).minimumScaleFactor(0.8)
-                }
-                Spacer(minLength: 8)
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(RUColor.text3)
-            }
-            .padding(.horizontal, 14).padding(.vertical, 12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(PressableStyle())
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(title), \(subtitle)")
     }
 
     // MARK: - Data loading

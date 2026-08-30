@@ -123,6 +123,11 @@ struct MoreSettingsView: View {
                 Text("›").foregroundColor(RUColor.text2)
             }
             .padding(.horizontal, 14).padding(.vertical, 13)
+            // Même défaut que la ligne qui mène ici : seuls l'icône, le libellé et le chevron
+            // répondaient, et tout le vide entre eux traversait. Sur un écran qui n'est QUE des
+            // lignes comme celle-ci, ça donne un tactile qui semble marcher une fois sur deux.
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())
     }
@@ -252,6 +257,36 @@ struct MoreSettingsView: View {
                         .foregroundColor(RUColor.textPrimary)
                     }
 
+                    // « Mes règles ont commencé aujourd'hui » — la seule chose qu'on observe
+                    // vraiment, et dont tout le reste se déduit.
+                    //
+                    // Sans ce bouton, corriger un cycle décalé demandait d'ouvrir le sélecteur de
+                    // date et de trouver le bon jour. Or l'écart se reporte d'un cycle au suivant :
+                    // au bout de trois mois l'app annonce une phase lutéale à quelqu'un qui a ses
+                    // règles, et adapte le programme sur cette erreur.
+                    Button(action: {
+                        let updated = CycleTracking.recordingPeriodStart(
+                            lastStart: profile.lastPeriodStartDate,
+                            averageLength: profile.averageCycleLengthDays,
+                            newStart: .now
+                        )
+                        profile.lastPeriodStartDate = updated.lastStart
+                        profile.averageCycleLengthDays = updated.averageLength
+                        Haptics.success()
+                        appState.toast(String(localized: "Cycle réancré sur aujourd'hui"))
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "arrow.clockwise").font(.system(size: 12, weight: .semibold))
+                            Text("Mes règles ont commencé aujourd'hui")
+                                .font(RUFont.sans(.body, weight: .semibold))
+                        }
+                        .foregroundColor(RUColor.rose)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .background(RUColor.rose.opacity(0.10), in: Capsule())
+                        .contentShape(Capsule())
+                    }
+                    .buttonStyle(PressableStyle())
+
                     if let phase = profile.cyclePhase {
                         HStack(spacing: 7) {
                             Circle().fill(cyclePhaseColor(phase)).frame(width: 8, height: 8)
@@ -322,6 +357,8 @@ struct MoreSettingsView: View {
                     if isDeletingAccount { ProgressView().tint(RUColor.rose) }
                 }
                 .padding(.horizontal, 14).padding(.vertical, 13)
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
             }
             .buttonStyle(PressableStyle())
             .disabled(isDeletingAccount)

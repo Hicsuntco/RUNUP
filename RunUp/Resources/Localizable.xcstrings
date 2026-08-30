@@ -21091,6 +21091,40 @@
           }
         }
       }
+    },
+    "Mes règles ont commencé aujourd'hui": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My period started today"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mi regla empezó hoy"
+          }
+        }
+      }
+    },
+    "Cycle réancré sur aujourd'hui": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cycle re-anchored on today"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ciclo reajustado a hoy"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

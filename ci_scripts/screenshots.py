@@ -33,6 +33,9 @@ FONTS = ROOT / "RunUp" / "Resources" / "Fonts"
 
 CANVAS = (1290, 2796)
 
+# La hauteur à laquelle le châssis commence, sur les six images sans exception.
+DEVICE_TOP = 600
+
 # Les captures viennent d'un iPhone, où elles s'appellent `IMG_0042.PNG` — extension EN MAJUSCULES.
 # Un `glob("*.png")` ne les voit pas sur le runner Linux, qui distingue la casse, et le script
 # s'arrête sur « aucune capture » devant un dossier plein.
@@ -228,6 +231,83 @@ def device(shot: Image.Image, screen_w: int) -> tuple:
     return body, silhouette, b
 
 
+# --- La barre d'état -----------------------------------------------------------------------
+#
+# Une capture prise sur un vrai téléphone porte l'heure qu'il était, le niveau de réseau du
+# moment, et surtout les pastilles d'état de son propriétaire — la cloche barrée du mode
+# silencieux, une alarme, un enregistrement en cours. C'est le détail qui fait lire « quelqu'un a
+# photographié son téléphone » là où la fiche d'à côté dit « photo de produit ». Apple lui-même
+# fige 9:41 dans tous ses visuels depuis la première keynote de l'iPhone.
+#
+# On repeint donc la bande haute avec la couleur de fond de l'app, et on la redessine : l'heure à
+# gauche, réseau plein, wifi, batterie pleine à droite. Rien n'est ajouté que la capture n'ait eu ;
+# on retire ce qui n'appartient qu'à ce téléphone-là.
+STATUS_BAND = 185 / 2868      # fraction de la HAUTEUR de la capture
+STATUS_MID = 98 / 2868
+
+
+def _status_ink(shot: Image.Image) -> tuple:
+    """La couleur du fond de la barre, prise sur les toutes premières lignes.
+
+    Les trois premières rangées de pixels sont du fond, quel que soit l'écran : rien de l'app n'y
+    monte, pas même l'îlot dynamique, qui commence plus bas.
+    """
+    w = shot.width
+    sample = [shot.getpixel((x, y)) for y in (2, 6, 10) for x in range(4, w - 4, max(1, w // 40))]
+    return max(set(sample), key=sample.count)
+
+
+def clean_status_bar(shot: Image.Image) -> Image.Image:
+    shot = shot.copy()
+    w, h = shot.size
+    band = round(h * STATUS_BAND)
+    mid = round(h * STATUS_MID)
+    bg = _status_ink(shot)
+    ink = (255, 255, 255) if sum(bg) < 384 else (0, 0, 0)
+
+    draw = ImageDraw.Draw(shot)
+    draw.rectangle((0, 0, w, band), fill=bg)
+
+    size = round(w * 0.042)
+    font = ImageFont.truetype(str(FONTS / "Inter-SemiBold.ttf"), size)
+    draw.text((round(w * 0.082), mid), "9:41", font=font, fill=ink, anchor="lm")
+
+    unit = w / 430          # un point de la dalle, en pixels
+    right = w - round(unit * 27)
+
+    # La batterie : coque, téton, et le plein à l'intérieur.
+    bw, bh = round(unit * 25), round(unit * 12)
+    x1, y0 = right, mid - bh // 2
+    draw.rounded_rectangle((x1 - bw, y0, x1, y0 + bh), radius=round(unit * 3.5),
+                           outline=ink, width=max(1, round(unit * 1.1)))
+    draw.rounded_rectangle((x1 - bw + round(unit * 2), y0 + round(unit * 2),
+                            x1 - round(unit * 2), y0 + bh - round(unit * 2)),
+                           radius=round(unit * 1.6), fill=ink)
+    draw.rounded_rectangle((x1 + round(unit * 1.2), mid - round(unit * 2.6),
+                            x1 + round(unit * 3), mid + round(unit * 2.6)),
+                           radius=round(unit * 1.2), fill=ink)
+
+    # Le wifi : trois arcs et un point, dessinés d'un seul geste angulaire.
+    cx = x1 - bw - round(unit * 12)
+    cy = mid + round(unit * 5)
+    for i, r in enumerate((unit * 10.5, unit * 6.8, unit * 3.1)):
+        draw.arc((cx - r, cy - r, cx + r, cy + r), start=218, end=322,
+                 fill=ink, width=max(1, round(unit * 1.9)))
+    draw.ellipse((cx - unit * 1.1, cy - unit * 1.1, cx + unit * 1.1, cy + unit * 1.1), fill=ink)
+
+    # Le réseau : quatre barres croissantes, toutes pleines.
+    bar_w = unit * 3.1
+    gap = unit * 1.7
+    base = mid + unit * 5.2
+    left = cx - unit * 10.5 - gap * 2 - (bar_w + gap) * 4
+    for i in range(4):
+        height = unit * (3.4 + i * 2.6)
+        x = left + i * (bar_w + gap)
+        draw.rounded_rectangle((x, base - height, x + bar_w, base),
+                               radius=unit * 1.1, fill=ink)
+    return shot
+
+
 def compose(shot_path: Path, caption, dest: Path) -> None:
     """Compose une capture sous son accroche.
 
@@ -259,22 +339,38 @@ def compose(shot_path: Path, caption, dest: Path) -> None:
         tracked(draw, ((CANVAS[0] - w) / 2, y), line, font, (255, 255, 255), tracking)
         y += leading
 
-    # Le second étage. Plus petit, plus maigre, et surtout pas tout à fait blanc : à blanc plein
-    # il pèse autant que le titre et les deux se disputent le regard. À 82 % il se lit sans
-    # effort et reste second.
+    # Le second étage, en blanc PLEIN. Il a d'abord été posé à 82 % pour qu'il ne dispute pas le
+    # titre — et sur ce rose-là, ça le faisait tomber à 2,88:1, sous le plancher de 3:1 des grands
+    # caractères. C'était creuser l'écart par le mauvais levier : la taille et la graisse suffisent
+    # à dire « second », l'opacité ne fait que rendre illisible.
     if subtitle:
         sub_font = ImageFont.truetype(str(FONTS / "Inter-Light.ttf"), 48)
         sub_margin = 150
         y += 14
         for line in wrap(draw, subtitle, sub_font, CANVAS[0] - sub_margin * 2):
             w = draw.textlength(line, font=sub_font)
-            draw.text(((CANVAS[0] - w) / 2, y), line, font=sub_font, fill=(255, 255, 255, 209))
+            draw.text(((CANVAS[0] - w) / 2, y), line, font=sub_font, fill=(255, 255, 255, 255))
             y += 62
 
-    body, silhouette, b = device(Image.open(shot_path).convert("RGB"), screen_w=1046)
+    body, silhouette, b = device(clean_status_bar(Image.open(shot_path).convert("RGB")), screen_w=1046)
     dw, dh = body.size
     left = (CANVAS[0] - dw) // 2
-    top = int(y + 150)
+
+    # Le châssis démarre TOUJOURS à la même hauteur, quelle que soit la longueur de l'accroche.
+    #
+    # Il suivait le bas du texte : une accroche dont le sous-titre passait sur deux lignes
+    # repoussait l'appareil de soixante pixels. Sur les six images de la fiche, deux avaient donc
+    # leur téléphone plus bas que les quatre autres — et dans le carrousel, où l'on fait défiler
+    # une image après l'autre au même endroit de l'écran, l'appareil montait et descendait sous
+    # l'œil. C'est ce sautillement, plus qu'aucun détail de rendu, qui fait qu'une fiche a l'air
+    # montée à la main.
+    #
+    # La zone de texte est donc réservée, pas mesurée. Une accroche qui la déborderait se ferait
+    # recouvrir : le composeur le dit plutôt que de la laisser passer.
+    top = DEVICE_TOP
+    if y > top - 40:
+        print(f"  ⚠ accroche trop longue de {round(y - top + 40)} px — elle touchera l'appareil : "
+              f"raccourcis le titre ou le sous-titre.", file=sys.stderr)
 
     # L'appareil sort par le bas. Le montrer en entier le réduirait à un objet posé au milieu du
     # cadre ; le laisser déborder donne la profondeur qu'ont les fiches qu'on prend pour modèle.

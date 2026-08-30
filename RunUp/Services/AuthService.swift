@@ -55,6 +55,15 @@ final class AuthService {
     /// l'app et n'a aucune raison de le connaître.
     var onSignOut: (() -> Void)?
 
+    /// Appelé chaque fois qu'un compte devient le compte courant — connexion, inscription, et
+    /// aussi la reprise de session au lancement.
+    ///
+    /// La reprise en fait partie volontairement : c'est par là que les profils créés avant que
+    /// `UserProfile.ownerAccountID` n'existe se font adopter par leur compte, sans que personne
+    /// n'ait à se reconnecter. Sans ça, ils resteraient sans propriétaire jusqu'à la prochaine
+    /// déconnexion — c'est-à-dire précisément jusqu'au moment où l'on aurait eu besoin de savoir.
+    var onAuthenticated: ((AuthenticatedUser) -> Void)?
+
     private static let baseURL = URL(string: "https://runup-nu.vercel.app")!
 
     init() {
@@ -92,6 +101,7 @@ final class AuthService {
             lastName: decoded.lastName, username: decoded.username
         )
         currentUser = user
+        onAuthenticated?(user)
         return user
     }
 
@@ -159,6 +169,7 @@ final class AuthService {
         token = decoded.token
         currentUser = decoded.user
         KeychainService.saveToken(decoded.token)
+        onAuthenticated?(decoded.user)
     }
 
     private func send<T: Decodable>(_ request: URLRequest) async throws -> T {

@@ -111,6 +111,13 @@ final class Analytics: @unchecked Sendable {
         /// course du profil qui sont mal réglés, et la réponse n'est pas de déplacer chaque
         /// semaine à la main mais de les corriger une fois.
         case sessionMoved = "session_moved"
+        /// Un compte s'est connecté sur un appareil dont les données appartenaient à un autre, et
+        /// la personne a choisi de repartir à neuf.
+        ///
+        /// Compté parce que c'est un effacement, et qu'un effacement doit se voir. Si ce nombre
+        /// monte, c'est que des téléphones changent de mains — ou, plus probablement, que
+        /// quelqu'un se trompe de compte à la connexion et qu'il faut regarder pourquoi.
+        case accountSwitchedFresh = "account_switched_fresh"
     }
 
     private static let baseURL = URL(string: "https://runup-nu.vercel.app")!

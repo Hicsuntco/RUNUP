@@ -20853,6 +20853,91 @@
           }
         }
       }
+    },
+    "Ces données ne sont pas les tiennes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This data isn't yours"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estos datos no son tuyos"
+          }
+        }
+      }
+    },
+    "Ce téléphone contient le profil de %@ — son programme, son historique et ses réglages. Tu viens de te connecter avec un autre compte.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This phone holds %@'s profile — their plan, their history and their settings. You've just signed in with a different account."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este teléfono contiene el perfil de %@ — su plan, su historial y sus ajustes. Acabas de iniciar sesión con otra cuenta."
+          }
+        }
+      }
+    },
+    "Repartir à neuf": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start fresh"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar de cero"
+          }
+        }
+      }
+    },
+    "Ce n'est pas le bon compte": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wrong account"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No es la cuenta correcta"
+          }
+        }
+      }
+    },
+    "Repartir à neuf efface le programme, l'historique des courses et la conversation avec le coach enregistrés sur cet appareil. Ce qui appartient au Club — les sorties publiées, les kilomètres du club — reste sur le compte de chacune.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starting fresh erases the plan, the run history and the coach conversation stored on this device. What belongs to the Club — published runs, club kilometres — stays on each person's account."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar de cero borra el plan, el historial de carreras y la conversación con el entrenador guardados en este dispositivo. Lo que pertenece al Club — las carreras publicadas, los kilómetros del club — permanece en la cuenta de cada persona."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

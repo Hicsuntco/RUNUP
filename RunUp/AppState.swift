@@ -155,7 +155,70 @@ final class AppState {
         auth.onSignOut = { [weak self] in
             Task { self?.discardPendingClubActivities() }
         }
+        auth.onAuthenticated = { [weak self] user in
+            self?.reconcileProfileOwner(with: user)
+        }
         Task { self.recoverInterruptedRunIfNeeded() }
+    }
+
+    // MARK: - À qui appartient ce téléphone
+
+    /// Le compte qui vient de se connecter n'est pas celui dont les données sont affichées.
+    ///
+    /// Non nil déclenche une feuille qui bloque tout : il n'y a pas de bonne façon de continuer
+    /// sans avoir demandé. Effacer d'office détruirait le programme de quelqu'un qui s'est
+    /// simplement trompé de compte ; ne rien faire montrerait son nom et sa photo à quelqu'un
+    /// d'autre. Les deux sont pires que la question.
+    var profileOwnerConflict: AuthenticatedUser?
+
+    /// Confronte le propriétaire du profil au compte qui se connecte.
+    ///
+    /// Appelé à chaque authentification, reprise de session au lancement comprise — c'est par là
+    /// que les profils antérieurs à `ownerAccountID` se font adopter, sans rien demander à
+    /// personne : ils appartiennent bien à qui utilise ce téléphone depuis toujours.
+    func reconcileProfileOwner(with user: AuthenticatedUser) {
+        switch ProfileOwnership.decide(currentOwner: profile.ownerAccountID, signingIn: user.id) {
+        case .adopt:
+            profile.ownerAccountID = user.id
+        case .alreadyOwned:
+            break
+        case .conflict:
+            profileOwnerConflict = user
+        }
+    }
+
+    /// Efface les données de la personne précédente et repart d'un profil neuf, rattaché au
+    /// nouveau compte.
+    ///
+    /// Tout part : le profil, l'historique des courses, la conversation avec le coach, les
+    /// notifications, les chaussures. Effacer le seul profil laisserait derrière lui un historique
+    /// et des messages qui n'appartiennent pas au compte qui arrive — c'est-à-dire exactement la
+    /// fuite qu'on répare, déplacée d'un écran.
+    ///
+    /// Le profil neuf a `onboarded == false` : l'app repart sur l'intégration, comme après une
+    /// première installation. C'est bien ce qu'on veut dire par « repartir à neuf ».
+    func startFreshForNewAccount() {
+        guard let user = profileOwnerConflict else { return }
+        try? modelContext.delete(model: RunRecord.self)
+        try? modelContext.delete(model: ChatMessage.self)
+        try? modelContext.delete(model: AppNotification.self)
+        try? modelContext.delete(model: Shoe.self)
+        modelContext.delete(profile)
+
+        let fresh = UserProfile()
+        fresh.ownerAccountID = user.id
+        modelContext.insert(fresh)
+        profile = fresh
+
+        profileOwnerConflict = nil
+        screen = .home
+        Analytics.shared.track(.accountSwitchedFresh)
+    }
+
+    /// L'autre issue : ce n'était pas le bon compte. On se déconnecte, et rien n'est touché.
+    func cancelAccountSwitch() {
+        profileOwnerConflict = nil
+        auth.signOut()
     }
 
     /// Récupère une course que l'app a perdue en étant tuée en plein effort.

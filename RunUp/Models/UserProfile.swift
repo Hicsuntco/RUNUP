@@ -165,6 +165,19 @@ final class UserProfile {
     /// téléphones demande une migration, pour une valeur que plus personne ne lit.
     var premium: Bool
     var onboarded: Bool
+
+    /// L'identifiant du compte à qui appartiennent ces données — nil tant qu'aucun compte n'a
+    /// jamais été relié à cet appareil.
+    ///
+    /// Optionnel, et c'est ce qui rend le champ ajoutable sans migration : les profils déjà
+    /// installés le décodent à nil, et `ProfileOwnership` traite ce nil comme « adopter », ce qui
+    /// est la bonne réponse pour eux — la personne devant l'écran est bien celle qui a toujours
+    /// utilisé ce téléphone.
+    ///
+    /// Ce champ existe pour une seule question : le compte qui se connecte est-il celui dont on
+    /// affiche le nom, la photo et le programme ? Sans lui, la réponse était toujours « oui » par
+    /// défaut, et un téléphone prêté montrait les données du précédent propriétaire.
+    var ownerAccountID: String?
     var distanceUnit: String
     var coachNotificationsEnabled: Bool
     /// Auto-pause at a stop (red light, water fountain) during a live run — on by default, like
@@ -248,6 +261,7 @@ final class UserProfile {
         self.xp = 0
         self.premium = true
         self.onboarded = false
+        self.ownerAccountID = nil
         self.distanceUnit = "km"
         self.coachNotificationsEnabled = true
     }

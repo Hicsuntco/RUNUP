@@ -122,6 +122,16 @@ private struct ContentRouterView: View {
             }
         }
         .toastHost(appState.toastCenter)
+        // Posée à la racine, au-dessus de TOUT — intégration et paywall compris. Un compte peut se
+        // connecter depuis n'importe où, et la question « à qui sont ces données » ne peut pas
+        // attendre qu'on soit passé par un écran d'abonnement.
+        .sheet(isPresented: Binding(
+            get: { appState.profileOwnerConflict != nil },
+            set: { if !$0 { appState.profileOwnerConflict = nil } }
+        )) {
+            AccountSwitchSheet()
+                .runUpSheetStyle(detents: [.medium])
+        }
         .environment(subscriptions)
         .task { await subscriptions.start() }
     }

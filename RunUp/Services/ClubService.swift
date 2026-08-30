@@ -551,6 +551,20 @@ struct ClubService {
         return response.items
     }
 
+    /// Retrouve, parmi les comptes existants, ceux dont l'adresse est dans le carnet d'adresses —
+    /// à partir d'empreintes, jamais d'adresses.
+    ///
+    /// Le hachage a lieu sur le téléphone (`ContactMatcher`), et c'est ce qui rend l'échange
+    /// acceptable : le serveur reçoit des empreintes SHA-256, ne peut pas remonter aux adresses,
+    /// et ne garde rien de ce qu'on lui envoie. Le carnet d'adresses ne quitte jamais l'appareil.
+    func matchContacts(emailHashes: [String]) async throws -> [PublicUser] {
+        guard !emailHashes.isEmpty else { return [] }
+        let response: PublicUserListResponse = try await send(
+            path: "api/friends/matchContacts", method: "POST", body: ["hashes": emailHashes]
+        )
+        return response.items
+    }
+
     /// Follows a real account — instant ("accepted") unless they've gone private, in which case
     /// the server returns "pending" and she'll sit in their incoming requests until approved.
     @discardableResult

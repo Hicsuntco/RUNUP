@@ -20938,6 +20938,74 @@
           }
         }
       }
+    },
+    "Trouver mes contacts sur RUNUP": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find my contacts on RUNUP"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encontrar mis contactos en RUNUP"
+          }
+        }
+      }
+    },
+    "Autoriser l'accès aux contacts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow access to contacts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permitir el acceso a los contactos"
+          }
+        }
+      }
+    },
+    "Tes contacts sur RUNUP": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your contacts on RUNUP"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus contactos en RUNUP"
+          }
+        }
+      }
+    },
+    "Personne de ton carnet d'adresses n'a encore de compte, ou ils se sont inscrits avec une autre adresse. La recherche par nom reste le chemin le plus sûr.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nobody in your address book has an account yet, or they signed up with a different address. Searching by name is still the surest way."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nadie de tu agenda tiene cuenta todavía, o se registraron con otra dirección. Buscar por nombre sigue siendo lo más fiable."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

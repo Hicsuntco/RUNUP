@@ -496,3 +496,24 @@ CREATE TABLE IF NOT EXISTS route_saves (
   PRIMARY KEY (route_id, user_id)
 );
 CREATE INDEX IF NOT EXISTS idx_route_saves_user ON route_saves(user_id, created_at DESC);
+
+-- Retrouver quelqu'un depuis son carnet d'adresses, sans jamais recevoir ce carnet.
+--
+-- L'app hache chaque adresse e-mail de tes contacts SUR LE TÉLÉPHONE (SHA-256 de l'adresse en
+-- minuscules, sans espaces) et n'envoie que les empreintes. Le serveur compare des empreintes à des
+-- empreintes : il ne reçoit aucune adresse, n'en stocke aucune, et ne peut pas remonter d'une
+-- empreinte à l'adresse qui l'a produite. C'est ce qui rend l'échange acceptable — un carnet
+-- d'adresses est la donnée la plus sensible qu'une app puisse demander.
+--
+-- Colonne GÉNÉRÉE, et c'est le point important : Postgres la calcule et la maintient lui-même à
+-- chaque insertion et à chaque changement d'adresse. La calculer dans le code applicatif aurait
+-- voulu dire penser à le faire à l'inscription, à la connexion Apple, et partout où une adresse
+-- change un jour — un oubli et la personne devient introuvable sans que rien ne le signale.
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_sha256 TEXT
+  GENERATED ALWAYS AS (encode(digest(lower(btrim(email)), 'sha256'), 'hex')) STORED;
+
+-- Le croisement compare jusqu'à un millier d'empreintes d'un coup : sans index, chaque recherche
+-- dans les contacts parcourrait toute la table des comptes.
+CREATE INDEX IF NOT EXISTS idx_users_email_sha256 ON users (email_sha256);

@@ -90,6 +90,10 @@ targets:
         NSHealthUpdateUsageDescription: "RunUp enregistre tes séances de course dans Santé après chaque sortie."
         NSLocationWhenInUseUsageDescription: "RunUp utilise ta position pour suivre ta distance, ton allure et ton tracé pendant une course."
         NSMicrophoneUsageDescription: "RunUp utilise le micro pour t'écouter quand tu poses une question à voix haute à ton coach pendant une course."
+        # Le carnet d'adresses ne quitte JAMAIS le téléphone : l'app hache les adresses e-mail sur
+        # l'appareil et n'envoie que les empreintes (voir `ContactMatcher`). La phrase le dit, parce
+        # que c'est la seule chose que la personne veut savoir au moment où iOS lui pose la question.
+        NSContactsUsageDescription: "RunUp compare tes contacts aux comptes existants pour te dire qui utilise déjà l'app. Les adresses sont transformées en empreintes illisibles sur ton téléphone avant l'envoi — ton carnet d'adresses n'en sort jamais, et rien n'est conservé."
         NSSpeechRecognitionUsageDescription: "RunUp transcrit ce que tu dis pour que ton coach puisse te répondre à voix haute pendant une course."
         # `location` only — the run tracker really does keep GPS alive with the screen off.
         # `remote-notification` used to be listed too, but the server only ever sends visible

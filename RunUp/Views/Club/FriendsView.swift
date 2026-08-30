@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// The lighter, club-independent social option (see `SocialView`) — follow real accounts
 /// directly, no shared leaderboard/challenges/invite-code "esprit club" required. A follow is
@@ -22,6 +23,12 @@ struct FriendsView: View {
     @State private var isSearching = false
     @State private var searchFailed = false
     @State private var searchTask: Task<Void, Never>?
+    @State private var isMatchingContacts = false
+    @State private var contactsDenied = false
+    /// Les comptes trouvés dans le carnet d'adresses. Un état à part, et non le champ de
+    /// recherche : y écrire relancerait une recherche par nom, qui écraserait aussitôt ces
+    /// résultats — le champ pilote `scheduleSearch` à chaque frappe.
+    @State private var contactMatches: [PublicUser]?
 
     @State private var showSignIn = false
     @State private var peopleSheet: PeopleSheetKind?
@@ -51,8 +58,11 @@ struct FriendsView: View {
                     // l'en-tête de l'écran, pas de son contenu.
                     countsRow
                     searchField
+                    contactsButton
                     if isSearchingMode {
                         searchResultsList
+                    } else if let contactMatches {
+                        contactResultsList(contactMatches)
                     } else if isLoading && feed.isEmpty {
                         loadingCard
                     } else {
@@ -203,6 +213,89 @@ struct FriendsView: View {
         .padding(.horizontal, 14).padding(.vertical, 11)
         .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+    }
+
+    /// « Qui, parmi mes contacts, est déjà là ? »
+    ///
+    /// Chercher un ami par son nom suppose de savoir sous quel nom il s'est inscrit, et de
+    /// l'écrire exactement. Le carnet d'adresses répond à la question sans rien demander à
+    /// personne — mais il ne quitte pas le téléphone : `ContactMatcher` hache les adresses sur
+    /// place et n'envoie que les empreintes.
+    @ViewBuilder private var contactsButton: some View {
+        if !isSearchingMode {
+            Button(action: { Task { await matchContacts() } }) {
+                HStack(spacing: 8) {
+                    if isMatchingContacts {
+                        ProgressView().controlSize(.small).tint(RUColor.text2)
+                    } else {
+                        Image(systemName: "person.crop.circle.badge.questionmark")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+                    Text(contactsDenied ? "Autoriser l'accès aux contacts" : "Trouver mes contacts sur RUNUP")
+                        .font(RUFont.sans(.label, weight: .semibold))
+                }
+                .foregroundColor(RUColor.text2)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(PressableStyle())
+            .disabled(isMatchingContacts)
+        }
+    }
+
+    private func matchContacts() async {
+        // Un refus antérieur ne se redemande pas : iOS ne repose plus la question, et rappeler
+        // `requestAccess` renverrait un non immédiat sans que rien n'apparaisse à l'écran. Le seul
+        // chemin qui reste passe par les Réglages.
+        if ContactMatcher.authorizationStatus == .denied || ContactMatcher.authorizationStatus == .restricted {
+            contactsDenied = true
+            if let url = URL(string: UIApplication.openSettingsURLString) { await UIApplication.shared.open(url) }
+            return
+        }
+
+        isMatchingContacts = true
+        searchFailed = false
+        defer { isMatchingContacts = false }
+
+        do {
+            let hashes = try await ContactMatcher.emailHashes()
+            contactMatches = try await clubService.matchContacts(emailHashes: hashes)
+        } catch ContactMatcher.Failure.denied {
+            contactsDenied = true
+        } catch {
+            searchFailed = true
+        }
+    }
+
+    private func contactResultsList(_ users: [PublicUser]) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Tes contacts sur RUNUP")
+                    .font(RUFont.sans(.label, weight: .bold)).foregroundColor(RUColor.textPrimary)
+                Spacer()
+                Button(action: { contactMatches = nil }) {
+                    Text("Fermer").font(RUFont.sans(.body, weight: .semibold))
+                        .foregroundColor(RUColor.text2)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+            }
+
+            if users.isEmpty {
+                // Dire pourquoi, et pas seulement que c'est vide. Le croisement se fait sur les
+                // adresses e-mail : quelqu'un inscrit avec une adresse absente du carnet, ou via
+                // « Masquer mon adresse » d'Apple, ne peut pas être trouvé par ce chemin — et
+                // laisser croire à un bug ferait chercher au mauvais endroit.
+                Text("Personne de ton carnet d'adresses n'a encore de compte, ou ils se sont inscrits avec une autre adresse. La recherche par nom reste le chemin le plus sûr.")
+                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text3).lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.vertical, 6)
+            }
+
+            ForEach(users) { user in
+                personRow(user) { followButton(for: user) }
+            }
+        }
     }
 
     private var searchResultsList: some View {

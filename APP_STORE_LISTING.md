@@ -343,6 +343,19 @@ e-mail, ou l'identifiant opaque de Sign in with Apple (`users.name`, `users.emai
 You"** pour les événements pré-inscription (identifiant anonyme uniquement) et **"Data Linked to
 You"** dès qu'un compte Club existe.
 
+**Contacts — liés à l'utilisatrice.** « Trouver mes contacts sur RUNUP » lit les adresses e-mail du
+carnet d'adresses, les hache **sur l'appareil** (SHA-256 de l'adresse en minuscules, sans espaces —
+voir `ContactMatcher`) et n'envoie que les empreintes. Le serveur les compare à la colonne générée
+`users.email_sha256`, ne reçoit aucune adresse, n'en stocke aucune et ne conserve pas les empreintes
+reçues. Les numéros de téléphone ne sont jamais lus. Usage : **App Functionality**.
+
+À déclarer malgré tout, et c'est un choix délibéré. Apple dispense de déclaration les données qui
+ne servent qu'à traiter la requête en cours et ne sont pas conservées — ce qui est exactement notre
+cas, et on pourrait donc ne rien déclarer. Mais la dispense se plaide, alors qu'une déclaration se
+lit : sur le carnet d'adresses, qui est la donnée la plus sensible qu'une app puisse demander,
+déclarer en trop n'a jamais fait rejeter personne et déclarer en moins est un motif de retrait.
+Préciser en notes de revue que rien ne quitte l'appareil en clair et que rien n'est conservé.
+
 **Tracking : non.** Aucun SDK tiers, aucun IDFA, aucun partage avec un courtier de données — donc
 pas d'App Tracking Transparency à afficher.
 

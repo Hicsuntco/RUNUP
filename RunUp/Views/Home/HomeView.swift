@@ -430,20 +430,31 @@ struct HomeView: View {
                 // 96 pt lui rend le poids d'élément principal de la carte.
                 DailyGoalsBarsView(goals: p.dailyGoalSlotsToday.map { .init(slot: $0.slot, progress: $0.progress) }, size: 96)
                 VStack(alignment: .leading, spacing: 9) {
-                    RUCardHeader(title: String(localized: "Tes objectifs · \(p.dailyGoalsDone)/\(p.dailyGoalsTotal) bouclés"))
+                    // « Objectifs · 0/3 », et non « Tes objectifs · 0/3 bouclés ».
+                    //
+                    // « Tes » ne distingue rien — tout l'écran est déjà à toi, et il est le seul
+                    // possessif de la page. « Bouclés » redit ce que la fraction dit mieux : 0/3
+                    // ne peut vouloir dire qu'une chose. Sept mots deviennent trois, la ligne
+                    // cesse de passer sur deux lignes à côté de l'anneau, et rien de l'information
+                    // n'est perdu.
+                    RUCardHeader(title: String(localized: "Objectifs · \(p.dailyGoalsDone)/\(p.dailyGoalsTotal)"))
                     // La ligne « Séance du jour » disparaît les jours de repos, en même temps que
                     // l'arc qui lui correspondait. Elle disait alors « Repos » — exactement ce que
                     // la carte séance, désormais juste au-dessus, annonce en grand. Deux blocs
                     // pour la même phrase, c'est la première raison pour laquelle cet écran
                     // paraissait chargé un jour de repos.
                     if !p.isRestDayToday {
+                        // « Séance », pas « Séance du jour » : la carte juste au-dessus annonce
+                        // déjà la séance du jour en grand, et l'écran de détail nomme cette même
+                        // ligne « Séance ». Deux libellés pour la même chose, dont le plus long
+                        // était sur le plus petit espace.
                         ringLegendRow(
-                            name: "Séance du jour",
+                            name: "Séance",
                             value: p.seanceDoneToday ? String(localized: "Faite") : String(localized: "À faire"),
                             color: goalColors[0]
                         )
                     }
-                    ringLegendRow(name: "Calories actives", value: "\(Int(p.activeCaloriesToday))/\(Int(p.activeCaloriesGoal))", color: goalColors[1])
+                    ringLegendRow(name: "Calories", value: "\(Int(p.activeCaloriesToday))/\(Int(p.activeCaloriesGoal))", color: goalColors[1])
                     ringLegendRow(name: "Pas", value: "\(Int(p.stepsToday))/\(Int(p.stepsGoal))", color: goalColors[2])
                 }
             }

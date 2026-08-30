@@ -20819,6 +20819,40 @@
           }
         }
       }
+    },
+    "Objectifs · %lld/%lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goals · %lld/%lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Objetivos · %lld/%lld"
+          }
+        }
+      }
+    },
+    "Calories": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calories"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calorías"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

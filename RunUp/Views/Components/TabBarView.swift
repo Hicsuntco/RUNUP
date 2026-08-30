@@ -128,7 +128,11 @@ struct TabBarView: View {
             // Même défaut que les onglets, sur le bouton le plus utilisé de l'app : le rond fait
             // 40 pt, le creux qui le sépare de « RUN » ne répondait pas, et l'ensemble n'atteignait
             // la hauteur réglementaire par aucun côté. La cible monte à 44 sans que le rond grossisse.
-            .frame(width: 60, minHeight: 44)
+            // Deux appels, pas un : `frame` a une surcharge à dimensions fixes et une à bornes,
+            // et `width:` ne peut pas voisiner avec `minHeight:` dans la même. La largeur est
+            // fixe, la hauteur est un plancher.
+            .frame(width: 60)
+            .frame(minHeight: 44)
             .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())

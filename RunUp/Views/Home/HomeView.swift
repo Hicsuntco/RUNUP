@@ -118,25 +118,6 @@ struct HomeView: View {
                         .multilineTextAlignment(.center)
                         .padding(.top, 4)
                 }
-
-                // Descendu tout en bas : c'est une action de maintenance, rare et à moitié
-                // destructive (le programme repart à la semaine 1), qui occupait jusqu'ici la
-                // deuxième place de l'écran ouvert tous les jours. La maquette n'a rien de tel
-                // en haut — elle enchaîne directement anneau → chiffres → séance.
-                // Ouvre le même assistant "nouvel objectif" que Profil/Plus de réglages et que
-                // l'écran de fin de programme (ChoiceView) — il ne remplace que
-                // objectif/distance/allure/jours, rien de personnel (nom, blessures, cycle...).
-                Button(action: { appState.newGoalWizardPresented = true }) {
-                    HStack(spacing: 5) {
-                        Image(systemName: "arrow.counterclockwise").font(.system(size: 11))
-                        Text("Refaire un programme").font(RUFont.sans(.small, weight: .semibold))
-                    }
-                    .foregroundColor(RUColor.text3)
-                    .frame(maxWidth: .infinity, minHeight: 44)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(PressableStyle())
-                .padding(.top, 4)
             }
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.top, 8)

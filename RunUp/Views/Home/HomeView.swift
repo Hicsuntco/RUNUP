@@ -454,8 +454,19 @@ struct HomeView: View {
                             color: goalColors[0]
                         )
                     }
-                    ringLegendRow(name: "Calories", value: "\(Int(p.activeCaloriesToday))/\(Int(p.activeCaloriesGoal))", color: goalColors[1])
-                    ringLegendRow(name: "Pas", value: "\(Int(p.stepsToday))/\(Int(p.stepsGoal))", color: goalColors[2])
+                    // Le chiffre atteint seul, sans son objectif — l'arc à gauche le dessine déjà.
+                    //
+                    // « 254/15000 » était la chaîne la plus lourde de l'écran pour ce qu'elle
+                    // apprend : le second nombre ne bouge jamais, et la seule chose qu'on en tire
+                    // — suis-je loin du compte — se lit d'un coup d'œil sur la longueur de l'arc,
+                    // sans arithmétique. L'objectif reste écrit en toutes lettres sur « Ta
+                    // journée », qui est l'écran où on va justement le regarder.
+                    //
+                    // Groupé par milliers, et selon la locale : `8432` demande un effort de
+                    // lecture que `8 432` ne demande pas, et l'anglais veut sa virgule là où le
+                    // français veut son espace.
+                    ringLegendRow(name: "Calories", value: Int(p.activeCaloriesToday).formatted(), color: goalColors[1])
+                    ringLegendRow(name: "Pas", value: Int(p.stepsToday).formatted(), color: goalColors[2])
                 }
             }
             .padding(16)

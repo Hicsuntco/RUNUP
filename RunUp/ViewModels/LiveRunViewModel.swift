@@ -146,11 +146,16 @@ final class LiveRunViewModel {
     /// case the UI shows nothing rather than a guess.
     var segmentLabel: String? {
         guard let currentSegment, let reps = session.intervalStructure?.reps else { return nil }
+        // Les quatre libellés étaient des littéraux français nus. Les clés existent pourtant dans
+        // le catalogue depuis toujours : c'est `String(localized:)` qui manquait, et rien ne le
+        // signalait — la pastille était en 12 pt dans un coin. Elle est maintenant le surtitre du
+        // bloc de consigne, au centre de l'écran de course, et un « ÉCHAUFFEMENT » sur un
+        // téléphone anglais s'y verrait tout de suite.
         switch currentSegment {
-        case .warmup: return "ÉCHAUFFEMENT"
-        case .rep(let n): return "RÉP. \(n)/\(reps)"
-        case .recovery: return "RÉCUPÉRATION"
-        case .cooldown: return "RETOUR AU CALME"
+        case .warmup: return String(localized: "ÉCHAUFFEMENT")
+        case .rep(let n): return String(localized: "RÉP. \(n)/\(reps)")
+        case .recovery: return String(localized: "RÉCUPÉRATION")
+        case .cooldown: return String(localized: "RETOUR AU CALME")
         }
     }
     // Same 62 kcal/km estimate as `markTodaySessionDone` — two different constants for the same

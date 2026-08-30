@@ -20751,6 +20751,40 @@
           }
         }
       }
+    },
+    "ALLURE CIBLE": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TARGET PACE"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RITMO OBJETIVO"
+          }
+        }
+      }
+    },
+    "Consigne, allure cible %@ par kilomètre": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instruction, target pace %@ per kilometre"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consigna, ritmo objetivo %@ por kilómetro"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

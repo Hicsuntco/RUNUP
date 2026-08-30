@@ -141,17 +141,9 @@ struct LiveRunView: View {
                 .background(.ultraThinMaterial, in: Capsule())
             }
             Spacer()
-            // Only when the session's own title declares a real rep structure ("5 × 500 m") —
-            // driven by `LiveRunViewModel`'s real segment state machine (actual GPS distance per
-            // rep, actual elapsed recovery time), not a guessed flat-distance chunk.
-            if let label = vm?.segmentLabel {
-                Text(label)
-                    .font(RUFont.display(12))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 12).padding(.vertical, 7)
-                    .background(.black.opacity(0.4), in: Capsule())
-                    .background(.ultraThinMaterial, in: Capsule())
-            }
+            // La pastille de segment vivait ici, en haut à droite, en 12 pt. Elle est maintenant
+            // le surtitre du bloc de consigne, au centre et dans le regard. La garder aux deux
+            // endroits afficherait « RÉP. 3/5 » deux fois sur le même écran.
         }
         .overlay(alignment: .top) {
             if vm?.isSignalUnstable == true {
@@ -205,14 +197,55 @@ struct LiveRunView: View {
         .accessibilityElement(children: .combine)
     }
 
+    /// Y a-t-il quelque chose à dire, à cet instant, que le chrono ne dit pas ?
+    private var hasInstruction: Bool {
+        let pace = appState.profile.todaySession.pace
+        return !pace.isEmpty && pace != "—" && pace != "--:--"
+    }
+
+    /// La consigne du moment : le segment en cours, et l'allure à tenir.
+    ///
+    /// `segmentLabel` n'existe que pour les séances dont la structure est réelle — il est piloté
+    /// par la machine à états du modèle de vue, sur la distance GPS parcourue dans la répétition,
+    /// pas sur un découpage supposé. Sur un footing continu il vaut nil, et le surtitre annonce
+    /// simplement l'allure de la séance : c'est la seule consigne qu'il y ait, et elle vaut
+    /// d'être dite.
+    @ViewBuilder private var instruction: some View {
+        if hasInstruction {
+            VStack(spacing: 2) {
+                Text(vm?.segmentLabel ?? String(localized: "ALLURE CIBLE"))
+                    .font(RUFont.display(11)).tracking(2)
+                    .foregroundColor(Ink.accentSoft)
+                Text(verbatim: "\(appState.profile.todaySession.pace)/km")
+                    .displayStyle(34)
+                    .foregroundColor(Ink.accent)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(String(localized: "Consigne, allure cible \(appState.profile.todaySession.pace) par kilomètre"))
+        }
+    }
+
     private var metricsPanel: some View {
         VStack(spacing: 14) {
-            // Deux héros, pas un héros et une note de bas de page. La distance vivait dans un
-            // eyebrow de 10 pt sous le chrono — c'est pourtant l'autre chiffre qu'on vient
-            // chercher d'un coup d'œil en courant, en plein soleil. Elle monte à la taille d'un
-            // vrai chiffre ; le chrono reste le plus grand, c'est lui qui structure l'effort.
+            // LA CONSIGNE D'ABORD, le chronomètre ensuite.
+            //
+            // Le chrono occupait le plus grand corps de l'écran — et c'est le chiffre le moins
+            // coaché de tous : une montre à vingt euros le donne. Ce qu'une app de coaching a de
+            // plus à dire, c'est quoi faire maintenant. Sur une séance à répétitions, cette
+            // consigne changeait toutes les quatre-vingt-dix secondes et vivait dans une pastille
+            // de 12 pt, en haut à droite, hors du regard de quelqu'un qui court.
+            //
+            // Elle monte donc au-dessus du chrono, avec le segment en surtitre et l'allure visée
+            // en gros. Le chrono descend de 64 à 52 : il reste le plus grand chiffre de l'écran —
+            // c'est lui qui structure l'effort — mais il cesse d'être la première chose lue.
+            //
+            // Rien n'est inventé quand il n'y a rien à dire : sans allure cible au plan (HYROX,
+            // course libre), le bloc disparaît et le chrono retrouve ses 64 pt.
+            instruction
+
             VStack(spacing: 0) {
-                Text(PaceModel.formatDuration(vm?.elapsedSeconds ?? 0)).displayStyle(64).foregroundColor(.white)
+                Text(PaceModel.formatDuration(vm?.elapsedSeconds ?? 0))
+                    .displayStyle(hasInstruction ? 52 : 64).foregroundColor(.white)
                 HStack(alignment: .lastTextBaseline, spacing: 5) {
                     Text(String(format: "%.2f", locale: Locale.current, vm?.distanceKm ?? 0))
                         .displayStyle(26).foregroundColor(.white)

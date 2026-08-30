@@ -205,10 +205,11 @@ struct SettingsView: View {
                             if profile.accentThemeID == theme.id {
                                 // Theme-aware — a white selection ring was invisible on the
                                 // near-white light-mode card.
+                                // L'anneau seul. Il fait 2,5 pt et encercle la pastille choisie
+                                // parmi huit : c'est déjà sans ambiguïté, et une coche posée sur
+                                // une pastille de couleur oblige à choisir une encre qui tienne
+                                // sur Lime comme sur Violet — un problème que l'anneau n'a pas.
                                 Circle().stroke(RUColor.textPrimary, lineWidth: 2.5).frame(width: 46, height: 46)
-                                // Sur la pastille de CETTE palette, pas sur l'accent courant : la grille montre
-                                // les huit, et la coche doit rester lisible sur Lime comme sur Violet.
-                                Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)).foregroundColor(RUColor.onAccent(theme.primary))
                             }
                         }
                         .frame(width: 46, height: 46)

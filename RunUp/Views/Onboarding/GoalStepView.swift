@@ -54,9 +54,8 @@ struct SelectableCard: View {
                     .strokeBorder(selected ? RUColor.rose : RUColor.line, lineWidth: 2)
                     .background(Circle().fill(selected ? RUColor.rose : .clear))
                     .frame(width: 20, height: 20)
-                    .overlay(
-                        Group { if selected { Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundColor(.white) } }
-                    )
+                    // Le rond passe de vide à plein : la coche par-dessus répétait la même chose
+                    // dans dix points de côté, à l'endroit où elle est le moins lisible.
             }
             .padding(15)
             .background(selected ? RUColor.rose.opacity(0.12) : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))

@@ -10,17 +10,16 @@ struct SelectableChip: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 5) {
-                if selected {
-                    // A small affordance beyond color alone — the flat rose fill used to be the
-                    // only signal a chip was picked, easy to miss at a glance across a whole row.
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 10, weight: .bold))
-                        .transition(.scale.combined(with: .opacity))
-                }
-                Text(LocalizedStringKey(label))
-                    .font(RUFont.sans(.label, weight: .semibold))
-            }
+            // Sans coche. Elle avait été ajoutée comme repère au-delà de la seule couleur, mais
+            // la sélection ne repose pas sur la couleur : une pastille choisie porte un dégradé
+            // plein et du texte blanc, une pastille libre un fond de carte et du texte gris. C'est
+            // un écart de LUMINOSITÉ, lisible sans distinguer les teintes — la coche n'ajoutait
+            // rien qu'un pictogramme collé devant chaque mot.
+            //
+            // Elle changeait aussi la largeur de la pastille à la sélection, ce qui faisait sauter
+            // toute la rangée d'un cran à chaque appui.
+            Text(LocalizedStringKey(label))
+                .font(RUFont.sans(.label, weight: .semibold))
             .foregroundColor(selected ? .white : RUColor.text2)
             .padding(.horizontal, 15)
             .padding(.vertical, 11)

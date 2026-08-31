@@ -96,24 +96,25 @@ final class SubscriptionService {
         }
     }
 
-    /// Faut-il laisser passer ?
+    /// Y a-t-il quelque chose à vendre ?
     ///
-    /// Oui si l'abonnement est actif. Oui aussi, et c'est le point important, **dès qu'on ne peut
-    /// rien vendre** — quelle qu'en soit la raison.
+    /// Non veut dire : réseau coupé, panne StoreKit, ou produit pas encore approuvé. Dans ce cas
+    /// tout se déverrouille — un écran qui ne peut rien encaisser n'a pas le droit de bloquer.
     ///
     /// La première version distinguait « produits inexistants » (on laisse entrer) de « échec de
     /// chargement » (on verrouille), pour qu'on ne puisse pas s'offrir l'app en coupant le
     /// réseau. C'était le bon raisonnement sur le mauvais critère : la conséquence réelle a été
-    /// un paywall affichant « Les formules n'ont pas pu être chargées » au-dessus d'un bouton qui
-    /// ne mène nulle part, sans le moindre geste pour en sortir. Une coupure réseau, une panne
-    /// StoreKit ou un produit pas encore approuvé enferment alors dehors quelqu'un qui a payé.
+    /// un verrou affichant « Les formules n'ont pas pu être chargées » au-dessus d'un bouton qui
+    /// ne mène nulle part. Le petit risque d'abus que la règle laisse est très en dessous du coût
+    /// de la panne qu'elle évite.
+    var canSell: Bool { !products.isEmpty }
+
+    /// La seule question que les écrans posent : cette fonctionnalité-là est-elle ouverte ?
     ///
-    /// Un écran qui ne peut rien vendre n'a pas le droit de bloquer : la règle est là, et le
-    /// petit risque d'abus qu'elle laisse est très en dessous du coût de la panne qu'elle évite.
-    var grantsAccess: Bool? {
-        if isSubscribed == true { return true }
-        if products.isEmpty { return true }
-        return isSubscribed
+    /// La décision vit dans `Entitlement`, sous test, plutôt qu'ici où elle serait mêlée à
+    /// StoreKit et invérifiable autrement qu'en achetant vraiment un abonnement.
+    func unlocks(_ feature: PlusFeature) -> Bool {
+        Entitlement.unlocks(feature, isSubscribed: isSubscribed, canSell: canSell)
     }
 
     /// L'état d'abonnement, relu depuis les droits courants plutôt que mémorisé.

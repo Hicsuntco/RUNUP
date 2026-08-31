@@ -99,15 +99,23 @@ struct PlanView: View {
                     appState.go(.home)
                 }
 
-                volumeChart
+                // Le plan COMPLET est ce que Plus vend : la périodisation sur plusieurs
+                // semaines, sa forme, et son recalcul après chaque sortie. La séance du jour
+                // reste gratuite sur l'accueil — c'est elle qui donne envie de voir la suite, et
+                // la cacher reviendrait à vendre quelque chose que personne n'a goûté.
+                PlusSection(feature: .adaptivePlan, teaserHeight: 200) {
+                    VStack(alignment: .leading, spacing: 18) {
+                        volumeChart
 
-                weekNavigator
+                        weekNavigator
 
-                if let week = selected {
-                    weekCard(week)
+                        if let week = selected {
+                            weekCard(week)
+                        }
+
+                        planShapeNote
+                    }
                 }
-
-                planShapeNote
             }
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.top, 8)

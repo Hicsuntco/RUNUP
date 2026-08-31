@@ -93,30 +93,37 @@ private struct RootView: View {
     }
 }
 
-/// Aiguillage de premier niveau : inscription → abonnement → app.
+/// Aiguillage de premier niveau : inscription → app.
 ///
-/// # Pourquoi le paywall est ICI et pas dans un `sheet`
+/// # Pourquoi le paywall n'est PLUS ici
 ///
-/// Le modèle retenu verrouille l'app entière après l'essai. Une feuille modale se referme d'un
-/// glissement vers le bas ; ce que cet écran doit faire, c'est remplacer l'app tant que
-/// l'abonnement n'est pas actif. Le mettre au même niveau que l'inscription est la seule
-/// construction où il n'existe aucun geste pour passer outre.
+/// Il occupait cette place parce que le modèle verrouillait l'app entière après sept jours. La
+/// construction était juste pour ce modèle — au même niveau que l'inscription, sans aucun geste
+/// pour passer outre — et c'est le modèle qui a changé.
+///
+/// Le mur enfermait le Club, le fil d'amis, les classements et les itinéraires partagés avec le
+/// reste. Une fonctionnalité sociale sans monde ne vaut rien : personne ne paye pour rejoindre un
+/// club vide, donc le club restait vide, donc personne ne payait. Le suivi, l'historique et tout
+/// le social sont désormais gratuits pour toujours ; ce qui se vend est le programme et le coach
+/// (voir `PlusFeature`), et le paywall s'ouvre depuis la fonctionnalité qu'on vient de vouloir —
+/// au moment où l'on sait ce qu'on achète, plutôt qu'au septième jour devant une porte fermée.
 private struct ContentRouterView: View {
     @Environment(AppState.self) private var appState
     @State private var subscriptions = SubscriptionService()
+
+    /// L'offre montrée une fois, juste après l'inscription.
+    ///
+    /// Sans le mur, plus rien ne présentait spontanément l'abonnement : on perdrait les gens qui
+    /// viennent de répondre à six questions sur leur objectif, c'est-à-dire précisément ceux qui
+    /// sont le plus disposés à écouter. La différence avec l'ancien modèle n'est pas qu'on ne
+    /// demande plus — c'est qu'on accepte un non. L'écran se ferme, et l'app derrière fonctionne.
+    @AppStorage("paywall.introShown.v1") private var introShown = false
+    @State private var showIntro = false
 
     var body: some View {
         Group {
             if !appState.profile.onboarded {
                 OnboardingContainerView()
-            } else if subscriptions.grantsAccess == false {
-                PaywallView(subscriptions: subscriptions)
-            } else if subscriptions.grantsAccess == nil {
-                // La première vérification n'a pas encore répondu. Montrer le paywall pendant ce
-                // temps le montrerait à des abonnées — un clignotement bref mais insultant, et la
-                // pire chose que cet écran puisse faire. Montrer l'app serait pire dans l'autre
-                // sens : elle s'ouvrirait puis se verrouillerait sous les doigts.
-                subscriptionCheckPlaceholder
             } else {
                 RootTabView()
             }
@@ -132,17 +139,31 @@ private struct ContentRouterView: View {
             AccountSwitchSheet()
                 .runUpSheetStyle(detents: [.medium])
         }
+        // Une seule présentation du paywall, à la racine — au-dessus des onglets, donc il
+        // survit à un changement d'onglet, et aucun écran verrouillé n'a à savoir comment on
+        // présente une feuille. Les verrous se contentent de poser `appState.plusPrompt`.
+        .sheet(item: Binding(
+            get: { appState.plusPrompt },
+            set: { appState.plusPrompt = $0 }
+        )) { feature in
+            PaywallView(subscriptions: subscriptions,
+                        highlighted: feature,
+                        onClose: { appState.plusPrompt = nil })
+        }
+        // Plein écran, et non une feuille : c'est l'offre d'ouverture, elle mérite la place. Une
+        // présentation distincte de celle des verrous ci-dessus, pour que les deux ne se
+        // disputent jamais la même source — deux `sheet(item:)` sur la même vue est le genre de
+        // construction qui marche jusqu'au jour où les deux se déclenchent ensemble.
+        .fullScreenCover(isPresented: $showIntro) {
+            PaywallView(subscriptions: subscriptions, onClose: { showIntro = false })
+        }
+        .onChange(of: appState.profile.onboarded) { _, onboarded in
+            guard onboarded, !introShown else { return }
+            introShown = true
+            showIntro = true
+        }
         .environment(subscriptions)
         .task { await subscriptions.start() }
     }
 
-    private var subscriptionCheckPlaceholder: some View {
-        VStack(spacing: 14) {
-            ProgressView().tint(RUColor.rose)
-            Text("Vérification de ton abonnement…")
-                .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(RUColor.pageBackground)
-    }
 }

@@ -17,10 +17,18 @@ struct NewGoalWizardView: View {
 
     private let goals: [GoalType] = GoalType.allCases.filter { $0 != .restart }
 
+    @Environment(SubscriptionService.self) private var subscriptions
+
     var body: some View {
         ZStack {
             RUColor.bg.ignoresSafeArea()
-            if building {
+            if !subscriptions.unlocks(.raceGoal) {
+                // Se fixer une nouvelle course, c'est demander à RUNUP de construire une
+                // périodisation — base, spécifique, affûtage, calée sur une date. C'est
+                // exactement ce que Plus vend. L'objectif DÉJÀ en cours, lui, reste consultable :
+                // on ne reprend pas ce qui a été donné.
+                ScrollView { PlusLockCard(feature: .raceGoal).padding(RUSpacing.pagePadding) }
+            } else if building {
                 buildingView
             } else {
                 content

@@ -76,9 +76,9 @@ struct StatsView: View {
                 if showDeepAnalysis {
                     recordsCard
                         .transition(.opacity.combined(with: .move(edge: .top)))
-                    predictionCard
+                    PlusSection(feature: .predictions) { predictionCard }
                         .transition(.opacity.combined(with: .move(edge: .top)))
-                    loadCard
+                    PlusSection(feature: .trainingLoad) { loadCard }
                         .transition(.opacity.combined(with: .move(edge: .top)))
                 }
             }

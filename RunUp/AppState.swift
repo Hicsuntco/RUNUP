@@ -172,6 +172,16 @@ final class AppState {
     /// d'autre. Les deux sont pires que la question.
     var profileOwnerConflict: AuthenticatedUser?
 
+    /// La fonctionnalité Plus qu'on vient de vouloir, et qui fait ouvrir l'écran d'abonnement.
+    ///
+    /// Un seul point de présentation, à la racine, plutôt qu'une feuille par écran verrouillé :
+    /// le paywall peut se demander depuis n'importe où — un verrou dans les statistiques, le
+    /// micro du coach pendant une course, l'onglet Programme — et aucun de ces endroits n'a à
+    /// savoir comment on présente une feuille modale. Retenir LAQUELLE a été demandée permet en
+    /// plus à l'écran de vente de parler de ce qu'elle voulait, et à l'analytique de dire quelle
+    /// porte fait vraiment vendre.
+    var plusPrompt: PlusFeature?
+
     /// Confronte le propriétaire du profil au compte qui se connecte.
     ///
     /// Appelé à chaque authentification, reprise de session au lancement comprise — c'est par là

@@ -51,6 +51,7 @@ struct LiveRunView: View {
     @State private var displayedRoute: [CLLocationCoordinate2D] = []
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.openURL) private var openURL
+    @Environment(SubscriptionService.self) private var subscriptions
 
     private var vm: LiveRunViewModel? { appState.liveRun }
 
@@ -352,7 +353,14 @@ struct LiveRunView: View {
     /// loud, tap again to stop and send, hear a real spoken reply.
     private var voiceCoachButton: some View {
         let state = vm?.voiceCoach?.state ?? .idle
-        return Button(action: handleMicTap) {
+        // Verrouillé, le bouton reste à sa place, avec son micro et un petit cadenas. Le retirer
+        // serait la seule option qui n'apprend rien : on ne peut pas vouloir ce qu'on n'a jamais
+        // vu. Et en pleine course, un bouton est la seule forme qu'un verrou puisse prendre —
+        // aucune carte d'argumentaire n'a sa place sur cet écran-là.
+        let locked = !subscriptions.unlocks(.voiceCoach)
+        return Button(action: {
+            if locked { appState.plusPrompt = .voiceCoach } else { handleMicTap() }
+        }) {
             ZStack {
                 Circle().fill(Ink.accent.opacity(state == .listening ? 0.35 : 0.15))
                 Circle().strokeBorder(Ink.accent.opacity(state == .listening ? 0.6 : 0.3), lineWidth: RUSpacing.hairline)
@@ -368,10 +376,20 @@ struct LiveRunView: View {
                 }
             }
             .frame(width: 52, height: 52)
+            .overlay(alignment: .bottomTrailing) {
+                if locked {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundColor(Ink.accentSoft)
+                        .padding(4)
+                        .background(Color(hex: 0x0E0E14).opacity(0.85), in: Circle())
+                }
+            }
         }
         .buttonStyle(PressableStyle())
-        .disabled(state == .thinking || state == .speaking)
-        .accessibilityLabel(state == .listening ? "Arrêter et envoyer" : "Parler au coach")
+        .disabled(!locked && (state == .thinking || state == .speaking))
+        .accessibilityLabel(locked ? "Le coach vocal fait partie de RUNUP Plus"
+                                   : (state == .listening ? "Arrêter et envoyer" : "Parler au coach"))
     }
 
     private func handleMicTap() {

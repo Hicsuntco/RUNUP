@@ -8,6 +8,7 @@ struct CoachView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var modelContext
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(SubscriptionService.self) private var subscriptions
     @Query(sort: \ChatMessage.timestamp) private var messages: [ChatMessage]
     @State private var vm: CoachViewModel?
     @State private var typingBounce = false
@@ -24,6 +25,12 @@ struct CoachView: View {
     ]
 
     private var profile: UserProfile { appState.profile }
+
+    /// Le coach est la fonctionnalité qui se vend le mieux d'elle-même : il suffit de le laisser
+    /// dire bonjour. L'écran garde donc son en-tête, son message d'accueil et l'historique s'il y
+    /// en a un — ce qui disparaît, c'est la possibilité de répondre. On voit exactement ce qu'on
+    /// n'a pas, ce qui vaut mieux que n'importe quel argumentaire à sa place.
+    private var coachLocked: Bool { !subscriptions.unlocks(.coach) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -51,8 +58,10 @@ struct CoachView: View {
                             typingIndicator
                         }
 
-                        FlowChips(chips: chips) { send($0) }
-                            .padding(.vertical, 4)
+                        if !coachLocked {
+                            FlowChips(chips: chips) { send($0) }
+                                .padding(.vertical, 4)
+                        }
                     }
                     .padding(.horizontal, 18)
                 }
@@ -65,7 +74,13 @@ struct CoachView: View {
                     if let last = messages.last { scrollProxy.scrollTo(last.id, anchor: .bottom) }
                 }
             }
-            inputBar
+            if coachLocked {
+                PlusLockCard(feature: .coach)
+                    .padding(.horizontal, RUSpacing.pagePadding)
+                    .padding(.bottom, 12)
+            } else {
+                inputBar
+            }
         }
         .background(RUColor.pageBackground)
         .onAppear {

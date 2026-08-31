@@ -15,8 +15,15 @@ import Foundation
 struct PaywallView: View {
     @Environment(AppState.self) private var appState
     var subscriptions: SubscriptionService
+    /// La fonctionnalité qui a fait ouvrir cet écran, quand il vient d'un verrou.
+    ///
+    /// Elle change le titre : quelqu'un qui vient d'essayer de parler au coach lit « Ton coach
+    /// personnel » plutôt qu'une promesse générale sur l'abonnement. C'est le seul instant où
+    /// l'envie est précise, et la gâcher en récitant tout le catalogue est le plus sûr moyen de
+    /// perdre la vente qu'on avait déjà à moitié faite.
+    var highlighted: PlusFeature?
     /// `nil` à la fin de l'inscription — il n'y a nulle part où revenir. Renseigné quand l'écran
-    /// est ouvert depuis les réglages, où il doit se fermer.
+    /// est ouvert depuis les réglages ou depuis un verrou, où il doit se fermer.
     var onClose: (() -> Void)?
 
     @State private var selected: Product?
@@ -70,7 +77,10 @@ struct PaywallView: View {
             // de « elle a vu un écran vide ».
             Analytics.shared.track(.paywallShown, [
                 "products": .int(subscriptions.products.count),
-                "origin": .string(onClose == nil ? "onboarding" : "settings"),
+                // Quelle porte fait vendre : le verrou du coach ne convertit sûrement pas comme
+                // celui des prédictions, et c'est exactement ce qu'on veut apprendre pour savoir
+                // où placer la frontière la prochaine fois.
+                "origin": .string(highlighted?.rawValue ?? (onClose == nil ? "onboarding" : "settings")),
             ])
             if subscriptions.products.isEmpty {
                 Analytics.shared.track(.paywallProductsUnavailable)
@@ -113,10 +123,11 @@ struct PaywallView: View {
             .padding(.horizontal, 12).padding(.vertical, 7)
             .background(RUColor.onRose.opacity(0.18), in: Capsule())
 
-            Text("RUNUP Plus")
+            Text(highlighted?.title ?? String(localized: "RUNUP Plus"))
                 .displayStyle(34)
                 .foregroundColor(RUColor.onRose)
-            Text("Ton programme, ton coach et tes stats. Sans rien qui manque.")
+                .fixedSize(horizontal: false, vertical: true)
+            Text(highlighted?.pitch ?? String(localized: "Ton programme, ton coach et tes stats. Sans rien qui manque."))
                 .font(RUFont.sans(.label))
                 .foregroundColor(RUColor.onRose.opacity(0.88))
                 .fixedSize(horizontal: false, vertical: true)

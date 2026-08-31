@@ -27,7 +27,7 @@ on:
         description: "Numéro de version (doit correspondre à CFBundleShortVersionString)"
         required: true
         type: string
-        default: "2.5"
+        default: "2.6"
       langue:
         description: "Langue des accroches (pour composer-les-captures)"
         required: true

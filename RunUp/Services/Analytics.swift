@@ -118,6 +118,29 @@ final class Analytics: @unchecked Sendable {
         /// monte, c'est que des téléphones changent de mains — ou, plus probablement, que
         /// quelqu'un se trompe de compte à la connexion et qu'il faut regarder pourquoi.
         case accountSwitchedFresh = "account_switched_fresh"
+
+        // MARK: L'entonnoir d'abonnement
+        //
+        // Il manquait en entier, alors que l'app est entièrement derrière l'essai puis
+        // l'abonnement : rien ne disait si personne ne paye parce que personne n'atteint le mur
+        // de paiement, parce qu'on le voit et qu'on repart, ou parce que l'achat casse. Ce sont
+        // trois maladies différentes, avec trois remèdes opposés, et aucune ne se distingue des
+        // deux autres depuis le tableau de bord des ventes d'Apple — qui ne montre que l'issue.
+        case paywallShown = "paywall_shown"
+        case paywallPlanSelected = "paywall_plan_selected"
+        case purchaseStarted = "purchase_started"
+        case purchaseCompleted = "purchase_completed"
+        /// Refus explicite dans la feuille d'Apple. À distinguer d'un échec : ici tout a
+        /// fonctionné, la personne a dit non.
+        case purchaseCancelled = "purchase_cancelled"
+        case purchaseFailed = "purchase_failed"
+        case restoreTapped = "restore_tapped"
+        /// L'app s'ouvre alors qu'elle n'a rien pu vendre — voir `SubscriptionService.grantsAccess`,
+        /// qui déverrouille délibérément quand StoreKit ne rend aucun produit, parce qu'un écran
+        /// qui ne peut rien encaisser n'a pas le droit de bloquer. C'est la bonne décision et
+        /// c'est aussi, littéralement, l'app donnée gratuitement. Sans cet événement la fuite est
+        /// invisible : ces gens-là ne se plaignent pas, ils utilisent l'app.
+        case paywallProductsUnavailable = "paywall_products_unavailable"
     }
 
     private static let baseURL = URL(string: "https://runup-nu.vercel.app")!

@@ -351,7 +351,12 @@ struct RecapView: View {
     }
 
     private func renderShareCard(for run: RunRecord) {
-        let renderer = ImageRenderer(content: RunShareCardView(run: run, textColor: shareTextColor, isPersonalRecord: recordKind(for: run) != nil))
+        let renderer = ImageRenderer(content: RunShareCardView(
+            run: run,
+            textColor: shareTextColor,
+            referralCode: appState.auth.currentUser?.referralCode,
+            isPersonalRecord: recordKind(for: run) != nil
+        ))
         renderer.scale = 3 // retina-quality output at the card's 360×640pt logical size
         // `isOpaque` defaults to false, which is exactly what the card needs — anything left
         // unpainted in the view keeps its alpha in the rendered UIImage, so the PNG layers

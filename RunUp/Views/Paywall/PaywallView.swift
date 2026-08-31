@@ -65,6 +65,16 @@ struct PaywallView: View {
         .task {
             await subscriptions.start()
             if selected == nil { selected = subscriptions.products.first }
+            // Après `start()`, pas avant : le nombre de formules effectivement chargées fait
+            // partie de ce qu'on veut savoir, et c'est ce qui distingue « elle a vu une offre »
+            // de « elle a vu un écran vide ».
+            Analytics.shared.track(.paywallShown, [
+                "products": .int(subscriptions.products.count),
+                "origin": .string(onClose == nil ? "onboarding" : "settings"),
+            ])
+            if subscriptions.products.isEmpty {
+                Analytics.shared.track(.paywallProductsUnavailable)
+            }
         }
         .onChange(of: subscriptions.products.map(\.id)) { _, _ in
             if selected == nil { selected = subscriptions.products.first }
@@ -177,7 +187,14 @@ struct PaywallView: View {
     private func offerRow(_ product: Product) -> some View {
         let isSelected = selected?.id == product.id
         let isYearly = product.id == SubscriptionService.ProductID.yearly
-        return Button(action: { selected = product }) {
+        return Button(action: {
+            // Seulement quand la sélection CHANGE : retaper la formule déjà cochée n'est pas un
+            // second choix, et le compter gonflerait l'étape la plus intéressante de l'entonnoir.
+            if selected?.id != product.id {
+                Analytics.shared.track(.paywallPlanSelected, ["plan": .string(isYearly ? "yearly" : "monthly")])
+            }
+            selected = product
+        }) {
             HStack(spacing: 12) {
                 Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
                     .font(.system(size: 19))
@@ -315,19 +332,30 @@ struct PaywallView: View {
 
     private func buy() async {
         guard let product = selected else { return }
+        let plan: AnalyticsValue = .string(product.id == SubscriptionService.ProductID.yearly ? "yearly" : "monthly")
+        Analytics.shared.track(.purchaseStarted, ["plan": plan])
         switch await subscriptions.purchase(product) {
         case .subscribed:
+            Analytics.shared.track(.purchaseCompleted, ["plan": plan])
             appState.toast(String(localized: "Bienvenue dans RUNUP Plus 🎉"))
         case .pending:
+            // « En attente » n'est ni un succès ni un échec — typiquement Demander à acheter, sur
+            // un compte enfant. Le ranger avec l'un des deux fausserait les deux.
+            Analytics.shared.track(.purchaseFailed, ["plan": plan, "reason": .string("pending")])
             appState.toast(String(localized: "Achat en attente d'approbation."))
         case .failed:
+            Analytics.shared.track(.purchaseFailed, ["plan": plan, "reason": .string("failed")])
             appState.toast(String(localized: "L'achat n'a pas abouti."))
         case .cancelled:
-            break
+            // Distinct d'un échec, et c'est tout l'intérêt : ici la machinerie a parfaitement
+            // fonctionné, la personne a lu le prix et a dit non. Un taux d'annulation élevé se
+            // corrige sur l'offre ; un taux d'échec élevé se corrige dans le code.
+            Analytics.shared.track(.purchaseCancelled, ["plan": plan])
         }
     }
 
     private func restore() async {
+        Analytics.shared.track(.restoreTapped)
         await subscriptions.restore()
         if subscriptions.isSubscribed != true {
             appState.toast(String(localized: "Aucun abonnement actif trouvé."))

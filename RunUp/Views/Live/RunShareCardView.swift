@@ -27,6 +27,16 @@ enum ShareCardTextColor: String, CaseIterable, Identifiable {
 struct RunShareCardView: View {
     var run: RunRecord
     var textColor: ShareCardTextColor = .blanc
+    /// Le code de parrainage de la personne qui partage, ou `nil` si elle n'a pas de compte.
+    ///
+    /// Une course partagée est la seule publicité que RunUp ne paye pas : elle est publiée par
+    /// quelqu'un qui vient de courir, devant des gens qui le connaissent. La carte portait déjà la
+    /// marque, mais aucun moyen d'agir — il fallait retenir un nom et aller le chercher dans
+    /// l'App Store. Avec le lien, la même image devient un parrainage : le filleul arrive avec le
+    /// code déjà rempli (`ReferralLinkHandler`), et la personne qui a partagé touche sa
+    /// récompense à la première vraie sortie du filleul. Le mécanisme existait entièrement,
+    /// il ne manquait que cette ligne pour qu'il quitte l'écran des réglages.
+    var referralCode: String?
     /// True only when `RecapView` verified this run genuinely beat every prior real run (pace or
     /// distance) — never a guess made just for the card.
     var isPersonalRecord: Bool = false
@@ -68,6 +78,11 @@ struct RunShareCardView: View {
         f.dateFormat = "d MMMM yyyy"
         return f
     }()
+
+    /// Le domaine des liens de parrainage, celui que `ReferralLinkHandler` sait recevoir et que
+    /// `vercel.json` réécrit vers `api/referral-redirect.js`. Sans le `https://`, qui n'apprend
+    /// rien à personne et coûte huit caractères sur une ligne qui doit rester discrète.
+    private static let referralHost = "runup-nu.vercel.app"
 
     /// Le tracé réel, normalisé dans un carré 0…1 — la MÊME forme que celle parcourue.
     ///
@@ -119,6 +134,16 @@ struct RunShareCardView: View {
                     .font(RUFont.mono(9.5))
                     .tracking(1)
                     .foregroundColor(secondaryColor.opacity(0.85))
+                if let referralCode, !referralCode.isEmpty {
+                    // Plus petit et plus discret que la date : sur une story, c'est une mention
+                    // qu'on lit si on a envie de savoir, pas une bannière. Une carte qui crie son
+                    // adresse ne se partage pas — et une carte qu'on ne partage pas ne recrute
+                    // personne, quelle que soit la taille du lien.
+                    Text(verbatim: "\(Self.referralHost)/r/\(referralCode)")
+                        .font(RUFont.mono(8))
+                        .tracking(0.5)
+                        .foregroundColor(secondaryColor.opacity(0.6))
+                }
             }
             .modifier(OutlinedTextShadow(light: outlineIsLight))
             .padding(.top, 22)

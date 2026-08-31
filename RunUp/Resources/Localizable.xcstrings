@@ -2045,6 +2045,23 @@
         }
       }
     },
+    "ALLURE CIBLE": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TARGET PACE"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RITMO OBJETIVO"
+          }
+        }
+      }
+    },
     "ALLURE MOY": {
       "localizations": {
         "en": {
@@ -2532,6 +2549,23 @@
         }
       }
     },
+    "Ajouter une séance déjà faite": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a session already done"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir una sesión ya hecha"
+          }
+        }
+      }
+    },
     "Alertes vocales d'allure": {
       "localizations": {
         "en": {
@@ -2939,6 +2973,22 @@
         }
       }
     },
+    "Appuie, pose ta question à voix haute, il te répond dans les écouteurs — sans sortir le téléphone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap, ask out loud, hear the answer in your earbuds — without taking your phone out."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pulsa, pregunta en voz alta y te responde en los auriculares, sin sacar el teléfono."
+          }
+        }
+      }
+    },
     "Arrêter et envoyer": {
       "localizations": {
         "en": {
@@ -3101,6 +3151,23 @@
         }
       }
     },
+    "Aucune séance à déplacer cette semaine.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No session to move this week."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna sesión que mover esta semana."
+          }
+        }
+      }
+    },
     "Aujourd'hui": {
       "localizations": {
         "en": {
@@ -3113,6 +3180,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hoy"
+          }
+        }
+      }
+    },
+    "Autoriser l'accès aux contacts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow access to contacts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permitir el acceso a los contactos"
           }
         }
       }
@@ -3295,6 +3379,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Base"
+          }
+        }
+      }
+    },
+    "Base, spécifique, affûtage : un vrai plan calé sur la date de ta course, de 4 à 20 semaines.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Base, specific, taper: a real plan built around your race date, from 4 to 20 weeks."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Base, específico, afinamiento: un plan real según la fecha de tu carrera, de 4 a 20 semanas."
           }
         }
       }
@@ -3770,6 +3870,23 @@
         }
       }
     },
+    "Calories": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calories"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calorías"
+          }
+        }
+      }
+    },
     "Calories actives": {
       "localizations": {
         "en": {
@@ -3798,6 +3915,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este mensaje no está permitido — reformúlalo."
+          }
+        }
+      }
+    },
+    "Ce n'est pas le bon compte": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wrong account"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No es la cuenta correcta"
           }
         }
       }
@@ -3883,6 +4017,22 @@
         }
       }
     },
+    "Ce que tu vaux aujourd'hui sur 5 km, 10 km, semi et marathon, d'après tes vraies sorties.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What you are worth today over 5K, 10K, half and marathon, from your actual runs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo que vales hoy en 5 km, 10 km, media y maratón, según tus salidas reales."
+          }
+        }
+      }
+    },
     "Ce signalement sera examiné. Merci de préciser ce qui pose problème.": {
       "localizations": {
         "en": {
@@ -3927,6 +4077,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este texto no está permitido — reformula."
+          }
+        }
+      }
+    },
+    "Ce téléphone contient le profil de %@ — son programme, son historique et ses réglages. Tu viens de te connecter avec un autre compte.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This phone holds %@'s profile — their plan, their history and their settings. You've just signed in with a different account."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este teléfono contiene el perfil de %@ — su plan, su historial y sus ajustes. Acabas de iniciar sesión con otra cuenta."
+          }
+        }
+      }
+    },
+    "Ces données ne sont pas les tiennes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This data isn't yours"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estos datos no son tuyos"
           }
         }
       }
@@ -3992,6 +4176,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta semana"
+          }
+        }
+      }
+    },
+    "Cette semaine suit tes jours de course · Les modifier": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This week follows your running days · Change them"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta semana sigue tus días de carrera · Cambiarlos"
           }
         }
       }
@@ -5019,6 +5220,23 @@
         }
       }
     },
+    "Consigne, allure cible %@ par kilomètre": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instruction, target pace %@ per kilometre"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consigna, ritmo objetivo %@ por kilómetro"
+          }
+        }
+      }
+    },
     "Contenu inapproprié": {
       "localizations": {
         "en": {
@@ -5114,6 +5332,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Correr más rápido o más lejos, sin una carrera concreta"
+          }
+        }
+      }
+    },
+    "Cours quand tu veux": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run whenever you want"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corre cuando quieras"
           }
         }
       }
@@ -5429,6 +5663,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ciclo"
+          }
+        }
+      }
+    },
+    "Cycle réancré sur aujourd'hui": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cycle re-anchored on today"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ciclo reajustado a hoy"
           }
         }
       }
@@ -5809,6 +6060,22 @@
         }
       }
     },
+    "Distance, allure, tracé, dénivelé et fréquence cardiaque — tout est enregistré, et tout part dans Apple Santé.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distance, pace, route, elevation and heart rate — all recorded, all sent to Apple Health."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distancia, ritmo, recorrido, desnivel y frecuencia cardiaca: todo se registra y va a Apple Salud."
+          }
+        }
+      }
+    },
     "Distance, séances, série — le récap de ta semaine t'attend.": {
       "localizations": {
         "en": {
@@ -6021,6 +6288,22 @@
         }
       }
     },
+    "Découvrir RUNUP Plus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discover RUNUP Plus"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descubrir RUNUP Plus"
+          }
+        }
+      }
+    },
     "Défi du club": {
       "localizations": {
         "en": {
@@ -6130,6 +6413,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Departamento o número"
+          }
+        }
+      }
+    },
+    "Déplacer une séance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move a session"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mover una sesión"
           }
         }
       }
@@ -6542,6 +6842,23 @@
         }
       }
     },
+    "Enregistre-la comme si tu venais de la faire.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log it as if you'd just finished."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regístrala como si acabaras de hacerla."
+          }
+        }
+      }
+    },
     "Enregistrer": {
       "localizations": {
         "en": {
@@ -6554,6 +6871,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Guardar"
+          }
+        }
+      }
+    },
+    "Enregistrer la séance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log the session"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrar la sesión"
           }
         }
       }
@@ -7303,6 +7637,38 @@
         }
       }
     },
+    "Huit semaines de charge en un coup d'œil, pour voir venir le surmenage avant qu'il ne te blesse.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eight weeks of load at a glance, so you see overtraining coming before it injures you."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocho semanas de carga de un vistazo, para ver venir el sobreentrenamiento antes de lesionarte."
+          }
+        }
+      }
+    },
+    "Il a lu tes dernières séances. Pose-lui une question avant de partir, demande un conseil, fais-toi rassurer après une sortie difficile.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "He has read your recent sessions. Ask a question before heading out, get advice, or some reassurance after a hard run."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ha leído tus últimas sesiones. Hazle una pregunta antes de salir, pide consejo o tranquilízate tras una salida dura."
+          }
+        }
+      }
+    },
     "Il connaît ton objectif, ton historique, et te répond comme un humain le ferait.": {
       "localizations": {
         "en": {
@@ -8044,6 +8410,23 @@
         }
       }
     },
+    "Je l'ai déjà faite": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I already did it"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya la he hecho"
+          }
+        }
+      }
+    },
     "Je m'entraîne sérieusement depuis des années": {
       "extractionState": "manual",
       "localizations": {
@@ -8486,6 +8869,23 @@
         }
       }
     },
+    "La distance est facultative — laisse-la vide pour une séance de renforcement ou un tapis sans compteur.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distance is optional — leave it empty for a strength session or a treadmill with no readout."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La distancia es opcional — déjala vacía para una sesión de fuerza o una cinta sin contador."
+          }
+        }
+      }
+    },
     "La forme du plan": {
       "localizations": {
         "en": {
@@ -8632,6 +9032,22 @@
         }
       }
     },
+    "Le coach dans tes écouteurs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your coach in your earbuds"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu entrenador en los auriculares"
+          }
+        }
+      }
+    },
     "Le coach garde ton programme et ta forme en tête — seul l'historique des messages est effacé.": {
       "localizations": {
         "en": {
@@ -8676,6 +9092,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "El coach recalcula tus próximas sesiones en cuanto guardes."
+          }
+        }
+      }
+    },
+    "Le coach vocal fait partie de RUNUP Plus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice coaching is part of RUNUP Plus"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El entrenador por voz forma parte de RUNUP Plus"
           }
         }
       }
@@ -8763,6 +9195,22 @@
         }
       }
     },
+    "Le suivi de tes courses, ton historique et le Club restent gratuits.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run tracking, your history and the Club stay free."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El seguimiento de tus carreras, tu historial y el Club siguen siendo gratis."
+          }
+        }
+      }
+    },
     "Les %lld premiers et derniers mètres sont retirés avant l'envoi : personne ne verra d'où tu es partie ni où tu es rentrée. C'est le tracé ci-dessus qui sera publié, pas celui que tu as couru.": {
       "localizations": {
         "en": {
@@ -8808,6 +9256,73 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se han podido cargar los planes."
+          }
+        }
+      }
+    },
+    "Les séances déjà faites ne se déplacent pas.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sessions already done can't be moved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las sesiones ya hechas no se mueven."
+          }
+        }
+      }
+    },
+    "Libre": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Libre"
+          }
+        }
+      }
+    },
+    "Localisation refusée · Activer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Location denied · Turn on"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ubicación denegada · Activar"
+          }
+        }
+      }
+    },
+    "Localisation refusée — ouvrir les Réglages": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Location denied — open Settings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ubicación denegada: abrir Ajustes"
           }
         }
       }
@@ -9223,6 +9738,23 @@
         }
       }
     },
+    "Mes règles ont commencé aujourd'hui": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My period started today"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mi regla empezó hoy"
+          }
+        }
+      }
+    },
     "Mes stats": {
       "extractionState": "manual",
       "localizations": {
@@ -9625,6 +10157,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dejar de seguir"
+          }
+        }
+      }
+    },
+    "Ne vaut que pour cette semaine. Les suivantes suivent tes jours de course.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This week only. The weeks after follow your running days."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo para esta semana. Las siguientes siguen tus días de carrera."
           }
         }
       }
@@ -10222,6 +10771,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Objetivos diarios"
+          }
+        }
+      }
+    },
+    "Objectifs · %lld/%lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goals · %lld/%lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Objetivos · %lld/%lld"
           }
         }
       }
@@ -10935,6 +11501,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Perder peso"
+          }
+        }
+      }
+    },
+    "Personne de ton carnet d'adresses n'a encore de compte, ou ils se sont inscrits avec une autre adresse. La recherche par nom reste le chemin le plus sûr.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nobody in your address book has an account yet, or they signed up with a different address. Searching by name is still the surest way."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nadie de tu agenda tiene cuenta todavía, o se registraron con otra dirección. Buscar por nombre sigue siendo lo más fiable."
           }
         }
       }
@@ -12375,6 +12958,22 @@
         }
       }
     },
+    "Recherche du signal GPS…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searching for GPS signal…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscando señal GPS…"
+          }
+        }
+      }
+    },
     "Recherche impossible — vérifie ta connexion.": {
       "localizations": {
         "en": {
@@ -12648,6 +13247,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Se renueva automáticamente, cancela cuando quieras."
+          }
+        }
+      }
+    },
+    "Repartir à neuf": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start fresh"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar de cero"
+          }
+        }
+      }
+    },
+    "Repartir à neuf efface le programme, l'historique des courses et la conversation avec le coach enregistrés sur cet appareil. Ce qui appartient au Club — les sorties publiées, les kilomètres du club — reste sur le compte de chacune.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starting fresh erases the plan, the run history and the coach conversation stored on this device. What belongs to the Club — published runs, club kilometres — stays on each person's account."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar de cero borra el plan, el historial de carreras y la conversación con el entrenador guardados en este dispositivo. Lo que pertenece al Club — las carreras publicadas, los kilómetros del club — permanece en la cuenta de cada persona."
           }
         }
       }
@@ -14685,6 +15318,40 @@
         }
       }
     },
+    "Séance déjà faite": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session already done"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesión ya hecha"
+          }
+        }
+      }
+    },
+    "Séance déplacée": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session moved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesión movida"
+          }
+        }
+      }
+    },
     "Séance déplacée à demain": {
       "localizations": {
         "en": {
@@ -15072,6 +15739,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "TU RITMO IDEAL"
+          }
+        }
+      }
+    },
+    "Ta charge d'entraînement": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your training load"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu carga de entrenamiento"
           }
         }
       }
@@ -15711,6 +16394,23 @@
         }
       }
     },
+    "Tes contacts sur RUNUP": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your contacts on RUNUP"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus contactos en RUNUP"
+          }
+        }
+      }
+    },
     "Tes données n'ont pas pu être ouvertes": {
       "extractionState": "manual",
       "localizations": {
@@ -15843,6 +16543,22 @@
         }
       }
     },
+    "Tes temps prévus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your predicted times"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus tiempos previstos"
+          }
+        }
+      }
+    },
     "Tiens ton allure sur chaque répétition, récupère bien entre les blocs 👊": {
       "extractionState": "manual",
       "localizations": {
@@ -15937,6 +16653,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tu coach adapta sus consejos de carrera y nutrición a tu objetivo, sin sacrificar nunca tu forma física."
+          }
+        }
+      }
+    },
+    "Ton coach personnel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your personal coach"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu entrenador personal"
           }
         }
       }
@@ -16152,6 +16884,22 @@
         }
       }
     },
+    "Ton programme qui s'adapte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your plan, always adjusting"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu plan, siempre ajustándose"
+          }
+        }
+      }
+    },
     "Ton programme sur mesure est prêt": {
       "localizations": {
         "en": {
@@ -16329,6 +17077,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Encuentra tu ritmo de crucero: apunta a %@, zancada suelta."
+          }
+        }
+      }
+    },
+    "Trouver mes contacts sur RUNUP": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find my contacts on RUNUP"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encontrar mis contactos en RUNUP"
           }
         }
       }
@@ -16612,6 +17377,22 @@
         }
       }
     },
+    "Un plan périodisé calé sur ton objectif, qui se recalcule après chaque sortie selon ta forme et ton ressenti.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A periodised plan built around your goal, recalculated after every run from your shape and how it felt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un plan periodizado según tu objetivo, que se recalcula tras cada salida según tu forma y tus sensaciones."
+          }
+        }
+      }
+    },
     "Un plan qui vit avec toi": {
       "localizations": {
         "en": {
@@ -16854,6 +17635,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Viernes"
+          }
+        }
+      }
+    },
+    "Vers quel jour ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To which day?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿A qué día?"
           }
         }
       }
@@ -20486,6 +21284,23 @@
         }
       }
     },
+    "⚠ marque les jours qui placeraient deux séances exigeantes l'une après l'autre. C'est permis, mais c'est ainsi qu'on se blesse.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⚠ marks days that would put two demanding sessions back to back. It's allowed, but that's how you get injured."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⚠ marca los días que pondrían dos sesiones exigentes seguidas. Está permitido, pero así es como uno se lesiona."
+          }
+        }
+      }
+    },
     "⚠️ %@": {
       "localizations": {
         "en": {
@@ -20595,533 +21410,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "💡 El coach ajustó esta semana a \"%@\" según tu forma la semana pasada."
-          }
-        }
-      }
-    },
-    "Je l'ai déjà faite": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I already did it"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ya la he hecho"
-          }
-        }
-      }
-    },
-    "Localisation refusée · Activer": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Location denied · Turn on"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ubicación denegada · Activar"
-          }
-        }
-      }
-    },
-    "Déplacer une séance": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Move a session"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mover una sesión"
-          }
-        }
-      }
-    },
-    "Vers quel jour ?": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "To which day?"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "¿A qué día?"
-          }
-        }
-      }
-    },
-    "Séance déplacée": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Session moved"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sesión movida"
-          }
-        }
-      }
-    },
-    "Aucune séance à déplacer cette semaine.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No session to move this week."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ninguna sesión que mover esta semana."
-          }
-        }
-      }
-    },
-    "Les séances déjà faites ne se déplacent pas.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sessions already done can't be moved."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Las sesiones ya hechas no se mueven."
-          }
-        }
-      }
-    },
-    "⚠ marque les jours qui placeraient deux séances exigeantes l'une après l'autre. C'est permis, mais c'est ainsi qu'on se blesse.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "⚠ marks days that would put two demanding sessions back to back. It's allowed, but that's how you get injured."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "⚠ marca los días que pondrían dos sesiones exigentes seguidas. Está permitido, pero así es como uno se lesiona."
-          }
-        }
-      }
-    },
-    "Libre": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Free"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Libre"
-          }
-        }
-      }
-    },
-    "ALLURE CIBLE": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "TARGET PACE"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "RITMO OBJETIVO"
-          }
-        }
-      }
-    },
-    "Consigne, allure cible %@ par kilomètre": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Instruction, target pace %@ per kilometre"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Consigna, ritmo objetivo %@ por kilómetro"
-          }
-        }
-      }
-    },
-    "Ne vaut que pour cette semaine. Les suivantes suivent tes jours de course.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This week only. The weeks after follow your running days."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Solo para esta semana. Las siguientes siguen tus días de carrera."
-          }
-        }
-      }
-    },
-    "Cette semaine suit tes jours de course · Les modifier": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This week follows your running days · Change them"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Esta semana sigue tus días de carrera · Cambiarlos"
-          }
-        }
-      }
-    },
-    "Objectifs · %lld/%lld": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Goals · %lld/%lld"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Objetivos · %lld/%lld"
-          }
-        }
-      }
-    },
-    "Calories": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Calories"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Calorías"
-          }
-        }
-      }
-    },
-    "Ces données ne sont pas les tiennes": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This data isn't yours"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Estos datos no son tuyos"
-          }
-        }
-      }
-    },
-    "Ce téléphone contient le profil de %@ — son programme, son historique et ses réglages. Tu viens de te connecter avec un autre compte.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This phone holds %@'s profile — their plan, their history and their settings. You've just signed in with a different account."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Este teléfono contiene el perfil de %@ — su plan, su historial y sus ajustes. Acabas de iniciar sesión con otra cuenta."
-          }
-        }
-      }
-    },
-    "Repartir à neuf": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start fresh"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Empezar de cero"
-          }
-        }
-      }
-    },
-    "Ce n'est pas le bon compte": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wrong account"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No es la cuenta correcta"
-          }
-        }
-      }
-    },
-    "Repartir à neuf efface le programme, l'historique des courses et la conversation avec le coach enregistrés sur cet appareil. Ce qui appartient au Club — les sorties publiées, les kilomètres du club — reste sur le compte de chacune.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Starting fresh erases the plan, the run history and the coach conversation stored on this device. What belongs to the Club — published runs, club kilometres — stays on each person's account."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Empezar de cero borra el plan, el historial de carreras y la conversación con el entrenador guardados en este dispositivo. Lo que pertenece al Club — las carreras publicadas, los kilómetros del club — permanece en la cuenta de cada persona."
-          }
-        }
-      }
-    },
-    "Trouver mes contacts sur RUNUP": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Find my contacts on RUNUP"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Encontrar mis contactos en RUNUP"
-          }
-        }
-      }
-    },
-    "Autoriser l'accès aux contacts": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Allow access to contacts"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Permitir el acceso a los contactos"
-          }
-        }
-      }
-    },
-    "Tes contacts sur RUNUP": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your contacts on RUNUP"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tus contactos en RUNUP"
-          }
-        }
-      }
-    },
-    "Personne de ton carnet d'adresses n'a encore de compte, ou ils se sont inscrits avec une autre adresse. La recherche par nom reste le chemin le plus sûr.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nobody in your address book has an account yet, or they signed up with a different address. Searching by name is still the surest way."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nadie de tu agenda tiene cuenta todavía, o se registraron con otra dirección. Buscar por nombre sigue siendo lo más fiable."
-          }
-        }
-      }
-    },
-    "Séance déjà faite": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Session already done"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sesión ya hecha"
-          }
-        }
-      }
-    },
-    "Enregistre-la comme si tu venais de la faire.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Log it as if you'd just finished."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Regístrala como si acabaras de hacerla."
-          }
-        }
-      }
-    },
-    "La distance est facultative — laisse-la vide pour une séance de renforcement ou un tapis sans compteur.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Distance is optional — leave it empty for a strength session or a treadmill with no readout."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La distancia es opcional — déjala vacía para una sesión de fuerza o una cinta sin contador."
-          }
-        }
-      }
-    },
-    "Enregistrer la séance": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Log the session"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Registrar la sesión"
-          }
-        }
-      }
-    },
-    "Ajouter une séance déjà faite": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a session already done"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Añadir una sesión ya hecha"
-          }
-        }
-      }
-    },
-    "Mes règles ont commencé aujourd'hui": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "My period started today"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mi regla empezó hoy"
-          }
-        }
-      }
-    },
-    "Cycle réancré sur aujourd'hui": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cycle re-anchored on today"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ciclo reajustado a hoy"
           }
         }
       }

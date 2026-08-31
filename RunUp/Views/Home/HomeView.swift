@@ -4,6 +4,7 @@ import SwiftData
 /// "Programme" home screen — mirrors `ProgScreen` in screensA.jsx.
 struct HomeView: View {
     @Environment(AppState.self) private var appState
+    @Environment(SubscriptionService.self) private var subscriptions
     // Scoped to unread only — this query exists solely to badge the bell icon with a count, but
     // an unscoped `@Query` fetched every notification ever created (unbounded, grows for the
     // app's whole lifetime) just to filter it back down to unread right after. NotificationsSheet
@@ -104,11 +105,29 @@ struct HomeView: View {
                 //
                 // L'anneau ne perd rien à venir en second : c'est un état, pas une action, et il
                 // reste au-dessus de la ligne de flottaison.
-                sessionCard
+                // Le programme entier — la séance du jour comprise — fait partie de RUNUP Plus.
+                //
+                // Sans lui, l'accueil ne devient pas vide : il redevient ce qu'il est pour qui ne
+                // suit pas de plan. On court quand on veut, on enregistre, on garde ses anneaux
+                // du jour et sa série. Le bouton DÉMARRER est exactement le même — verrouiller la
+                // possibilité de courir dans une app de course n'aurait aucun sens, et c'est
+                // précisément ce qui peuple le Club et fait vivre le fil.
+                //
+                // Ce qui manque est nommé et montré juste en dessous, plutôt que simplement
+                // absent : personne ne peut vouloir un programme dont il ignore l'existence.
+                if planUnlocked {
+                    sessionCard
 
-                ringsCard
+                    ringsCard
 
-                programWeekCard
+                    programWeekCard
+                } else {
+                    freeRunCard
+
+                    ringsCard
+
+                    PlusLockCard(feature: .adaptivePlan)
+                }
 
                 if isFreeRun {
                     Text("Pas de plan fixe — le coach te propose de quoi garder la forme, jour après jour.")
@@ -291,6 +310,65 @@ struct HomeView: View {
         .overlay(Capsule().stroke(isRestDay ? RUColor.line : Color.clear, lineWidth: RUSpacing.hairline))
     }
 
+    /// DÉMARRER, et un « + » à côté.
+    ///
+    /// Les deux actions ne sont pas de même nature : l'une lance une course, l'autre en
+    /// enregistre une déjà faite. Deux boutons de même taille et de même forme les annonçaient
+    /// comme deux choix équivalents, ce qui donnait à la carte la silhouette d'une boîte de
+    /// dialogue « Annuler / OK ». Un carré compact à côté du bouton pleine largeur dit la
+    /// hiérarchie par la géométrie, sans avoir besoin d'un mot.
+    ///
+    /// Et le « + » ouvre une saisie plutôt que de valider tout seul : une séance faite hors de
+    /// l'app a une distance et une durée réelles, que l'app ne peut pas deviner. Les demander
+    /// vaut mieux que de les inventer ou de les laisser à zéro.
+    ///
+    /// Partagée entre la carte de séance et la carte de course libre : ce sont les deux mêmes
+    /// gestes, et deux copies auraient divergé au premier changement.
+    private var runActionsRow: some View {
+        HStack(spacing: 10) {
+            Button(action: { appState.startRun() }) {
+                HStack { Image(systemName: "play.fill"); Text("DÉMARRER") }
+            }
+            .buttonStyle(PrimaryButtonStyle())
+
+            Button(action: { Haptics.selection(); appState.openLogSession() }) {
+                Image(systemName: "plus")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(RUColor.text2)
+                    .frame(width: 52, height: 52)
+                    .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(PressableStyle())
+            .accessibilityLabel("Ajouter une séance déjà faite")
+        }
+    }
+
+    private var planUnlocked: Bool { subscriptions.unlocks(.adaptivePlan) }
+
+    /// L'accueil de qui ne suit pas de programme. Pas un écran dégradé : l'écran d'une app de
+    /// course qui fait très bien ce qu'on attend d'elle — partir courir, et garder la trace.
+    private var freeRunCard: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            EyebrowLabel(text: String(localized: "Aujourd'hui"), color: RUColor.rose)
+            Text("Cours quand tu veux")
+                .displayStyle(23)
+                .foregroundColor(RUColor.textPrimary)
+                .padding(.top, 8)
+            Text("Distance, allure, tracé, dénivelé et fréquence cardiaque — tout est enregistré, et tout part dans Apple Santé.")
+                .font(RUFont.sans(.small))
+                .foregroundColor(RUColor.text2)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 4)
+            runActionsRow
+                .padding(.top, 15)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .ruCard()
+    }
+
     private var sessionCard: some View {
         let session = profile.todaySession
         let isRestDay = session.durationMinutes == 0
@@ -345,25 +423,8 @@ struct HomeView: View {
                 // Et le « + » ouvre une saisie plutôt que de valider tout seul : une séance faite
                 // hors de l'app a une distance et une durée réelles, que l'app ne peut pas
                 // deviner. Les demander vaut mieux que de les inventer ou de les laisser à zéro.
-                HStack(spacing: 10) {
-                    Button(action: { appState.startRun() }) {
-                        HStack { Image(systemName: "play.fill"); Text("DÉMARRER") }
-                    }
-                    .buttonStyle(PrimaryButtonStyle())
-
-                    Button(action: { Haptics.selection(); appState.openLogSession() }) {
-                        Image(systemName: "plus")
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundColor(RUColor.text2)
-                            .frame(width: 52, height: 52)
-                            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(PressableStyle())
-                    .accessibilityLabel("Ajouter une séance déjà faite")
-                }
-                .padding(.top, 15)
+                runActionsRow
+                    .padding(.top, 15)
             }
         }
         .padding(16)
@@ -418,13 +479,23 @@ struct HomeView: View {
                     // la carte séance, désormais juste au-dessus, annonce en grand. Deux blocs
                     // pour la même phrase, c'est la première raison pour laquelle cet écran
                     // paraissait chargé un jour de repos.
-                    if !p.isRestDayToday {
+                    // Sans programme, il n'y a pas de jour de repos : chaque jour est un jour
+                    // où l'on peut courir, donc la ligne reste.
+                    if !planUnlocked || !p.isRestDayToday {
                         // « Séance », pas « Séance du jour » : la carte juste au-dessus annonce
                         // déjà la séance du jour en grand, et l'écran de détail nomme cette même
                         // ligne « Séance ». Deux libellés pour la même chose, dont le plus long
                         // était sur le plus petit espace.
+                        // « Séance » nomme la séance du programme, qui n'existe pas sans Plus.
+                        // Sans programme, l'objectif du jour est simplement d'aller courir — et
+                        // c'est le même booléen qui le mesure.
                         ringLegendRow(
-                            name: "Séance",
+                            // Les DEUX sont des clés, pas des chaînes traduites :
+                            // `ringLegendRow` fait lui-même la recherche au catalogue. Passer un
+                            // `String(localized:)` ici traduirait une première fois, puis
+                            // rechercherait le résultat français comme s'il était une clé — ça
+                            // marche en français par identité, et ça casse partout ailleurs.
+                            name: planUnlocked ? "Séance" : "Course",
                             value: p.seanceDoneToday ? String(localized: "Faite") : String(localized: "À faire"),
                             color: goalColors[0]
                         )

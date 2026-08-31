@@ -438,12 +438,34 @@ struct StatsView: View {
                         if let recordIndex = recordPointIndex, recordIndex < pointPositions.count {
                             let p = pointPositions[recordIndex]
                             context.fill(Path(ellipseIn: CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8)), with: .color(RUColor.lime))
-                            context.fill(Path(ellipseIn: CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8)).strokedPath(StrokeStyle(lineWidth: 1.5)), with: .color(RUColor.bg))
-                            let labelY = max(9, p.y - 14)
-                            context.draw(
-                                Text("RECORD").font(RUFont.sans(.micro, weight: .bold)).foregroundColor(RUColor.lime),
-                                at: CGPoint(x: min(max(p.x, 22), size.width - 22), y: labelY)
+                            context.fill(Path(ellipseIn: CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8)).strokedPath(StrokeStyle(lineWidth: 1.5)), with: .color(RUColor.card))
+
+                            // Le mot était coupé par la courbe. Un record d'allure est un point
+                            // BAS en valeur, donc HAUT à l'écran : `max(9, p.y - 14)` le plaquait
+                            // presque toujours contre le bord supérieur, c'est-à-dire exactement
+                            // là où passe le tracé. Et il était centré sur une abscisse bornée à
+                            // 22 points au jugé, sans rapport avec la largeur réelle du mot, donc
+                            // rogné à droite sur les écrans étroits.
+                            //
+                            // Deux corrections, et il faut les deux. On MESURE l'étiquette au
+                            // lieu de deviner. Puis, faute de place au-dessus, on la pose SOUS le
+                            // point plutôt que de la coller au plafond — et on peint un fond
+                            // derrière elle dans tous les cas, parce qu'au milieu d'un graphique
+                            // aucune position n'est à l'abri d'un trait qui passe.
+                            let label = context.resolve(
+                                Text("RECORD").font(RUFont.sans(.micro, weight: .bold)).foregroundColor(RUColor.lime)
                             )
+                            let labelSize = label.measure(in: size)
+                            let fitsAbove = p.y - 14 - labelSize.height / 2 >= 1
+                            let labelY = fitsAbove ? p.y - 14 : p.y + 14
+                            let halfWidth = labelSize.width / 2
+                            let labelX = min(max(p.x, halfWidth + 3), size.width - halfWidth - 3)
+                            let plate = CGRect(x: labelX - halfWidth - 4,
+                                               y: labelY - labelSize.height / 2 - 2,
+                                               width: labelSize.width + 8,
+                                               height: labelSize.height + 4)
+                            context.fill(Path(roundedRect: plate, cornerRadius: 4), with: .color(RUColor.card.opacity(0.92)))
+                            context.draw(label, at: CGPoint(x: labelX, y: labelY))
                         }
                     }
                     .frame(height: 70)

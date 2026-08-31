@@ -27,6 +27,12 @@ struct BuildingProgramView: View {
         ]
     }
 
+    private var buildFraction: Double {
+        guard !buildSteps.isEmpty else { return 0 }
+        return min(1, Double(vm.buildProgress) / Double(buildSteps.count))
+    }
+    private var buildIsDone: Bool { vm.buildProgress >= buildSteps.count }
+
     /// Program length is variable (tied to a real race date, or open-ended for other goals) since
     /// the plan-engine rebuild — this used to just say "9 semaines" regardless of what was
     /// actually about to be built.
@@ -40,10 +46,13 @@ struct BuildingProgramView: View {
         ObScreen {
             Spacer()
             VStack(spacing: 22) {
-                RingView(pct: Double(vm.buildProgress) / 4 * 100, color: RUColor.rose, size: 110, strokeWidth: 7) {
-                    Text(vm.buildProgress == 4 ? "✓" : "\(Int(Double(vm.buildProgress) / 4 * 100))%")
+                // Le 4 était écrit trois fois, sans lien avec la liste qui décide vraiment du
+                // nombre de paliers. Un cinquième élément ajouté un jour à `buildSteps` aurait
+                // envoyé l'anneau à 125 % et laissé la coche de fin inatteignable.
+                RingView(pct: buildFraction * 100, color: RUColor.rose, size: 110, strokeWidth: 7) {
+                    Text(buildIsDone ? "✓" : "\(Int(buildFraction * 100))%")
                         .displayStyle(30)
-                        .foregroundColor(vm.buildProgress == 4 ? RUColor.lime : RUColor.textPrimary)
+                        .foregroundColor(buildIsDone ? RUColor.lime : RUColor.textPrimary)
                 }
                 VStack(spacing: 6) {
                     // A generic "ON CONSTRUIT TON PROGRAMME" was the exact same reveal moment for
@@ -88,14 +97,14 @@ struct BuildingProgramView: View {
             .padding(.top, 26)
             Spacer()
             VStack(spacing: 4) {
-                Text(vm.buildProgress == 4 ? String(localized: "Prêt !") : buildingLabel)
+                Text(buildIsDone ? String(localized: "Prêt !") : buildingLabel)
                     .font(RUFont.sans(.small))
                     .foregroundColor(RUColor.text3)
                 // Shown right before the system notification permission prompt fires (see
                 // `OnboardingContainerView.finish()`) — that dialog used to appear with zero lead-
                 // in, right as she lands on Home, so a blind "Autoriser ?" read as coming from
                 // nowhere. This gives it a reason before it shows up.
-                if vm.buildProgress == 4 {
+                if buildIsDone {
                     Text("On t'enverra un petit rappel pour tes séances 🔔")
                         .font(RUFont.sans(.small))
                         .foregroundColor(RUColor.text3)
@@ -110,13 +119,23 @@ struct BuildingProgramView: View {
 
     private func runSequence() {
         vm.buildProgress = 0
-        let delays: [Double] = [0.6, 1.3, 2.1, 2.9]
-        for (i, delay) in delays.enumerated() {
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+        // Un palier par seconde, parce que l'anneau met exactement une seconde à rejoindre sa
+        // nouvelle valeur (`RingView.fillDuration`). Les paliers tombaient tous les 0,6 à 0,8
+        // seconde : chacun coupait l'animation du précédent en pleine décélération, et l'anneau
+        // repartait de plus belle — il sautait. Le pourcentage au centre, lui, changeait
+        // instantanément, si bien qu'il annonçait 50 % au-dessus d'un anneau qui en montrait 30.
+        //
+        // Dérivé de la constante plutôt que réécrit ici : les deux DOIVENT être d'accord, et
+        // c'est la seule construction où ils ne peuvent plus diverger en silence.
+        let step = RingView<EmptyView>.fillDuration
+        for i in 0..<buildSteps.count {
+            DispatchQueue.main.asyncAfter(deadline: .now() + step * Double(i + 1)) {
                 vm.buildProgress = i + 1
             }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.8) {
+        // Une demi-seconde après le dernier palier : le temps de voir la coche et de lire
+        // « Prêt ! », sans quoi l'écran s'en va au moment précis où il annonce sa réussite.
+        DispatchQueue.main.asyncAfter(deadline: .now() + step * Double(buildSteps.count) + 0.5) {
             onDone()
         }
     }

@@ -14,6 +14,9 @@ struct NewGoalWizardView: View {
     @State private var days: Set<Int> = [1, 2, 4, 6]
     @State private var building = false
     @State private var buildPct: Double = 0
+    /// Séparé de `buildPct`, et c'est tout l'objet du correctif ci-dessous.
+    @State private var buildFinished = false
+    private static let buildDuration: Double = 2.2
 
     private let goals: [GoalType] = GoalType.allCases.filter { $0 != .restart }
 
@@ -121,7 +124,7 @@ struct NewGoalWizardView: View {
                     .buttonStyle(PressableStyle())
                 }
             }
-            Button("CONSTRUIRE MON PROGRAMME") { building = true; scheduleFinish() }
+            Button("CONSTRUIRE MON PROGRAMME") { building = true }
                 .buttonStyle(PrimaryButtonStyle(isDisabled: days.count < 2))
                 .disabled(days.count < 2)
                 .padding(.top, 20)
@@ -134,28 +137,39 @@ struct NewGoalWizardView: View {
             // progress; this now genuinely animates to 100% over the same wait `scheduleFinish`
             // uses before the new program is actually ready.
             RingView(pct: buildPct, color: RUColor.rose, size: 100, strokeWidth: 7) {
-                Text(buildPct >= 100 ? "✓" : "🎯")
+                // `buildFinished` et non `buildPct >= 100`. `withAnimation` change la valeur
+                // IMMÉDIATEMENT et n'anime que le rendu : `buildPct` valait donc 100 dès la
+                // première image, et la coche verte de fin s'affichait au centre d'un anneau qui
+                // commençait tout juste à se remplir. Deux secondes de contradiction à l'écran.
+                Text(buildFinished ? "✓" : "🎯")
                     .font(.system(size: 26))
-                    .foregroundColor(buildPct >= 100 ? RUColor.lime : RUColor.textPrimary)
+                    .foregroundColor(buildFinished ? RUColor.lime : RUColor.textPrimary)
             }
             Text("Ton nouveau\nprogramme arrive").displayStyle(22).multilineTextAlignment(.center).foregroundColor(RUColor.textPrimary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // L'animation démarrait dans l'action du bouton, donc dans le même tour de boucle que le
+        // basculement qui fait APPARAÎTRE cet écran : l'anneau n'avait jamais été rendu à zéro
+        // quand on lui demandait d'aller à cent, et il surgissait déjà rempli avant de se
+        // reprendre — le saut. Ici, la vue est posée à zéro, puis animée.
+        .task { await runBuild() }
     }
 
-    private func scheduleFinish() {
-        withAnimation(.easeInOut(duration: 2.2)) { buildPct = 100 }
-        Task {
-            try? await Task.sleep(for: .seconds(2.2))
-            await MainActor.run {
-                let result = AdaptivePlanEngine.NewGoalResult(goal: goal ?? .health, distance: goal == .race ? distance : nil, chrono: goal == .race ? chrono : nil, raceDate: goal == .race ? raceDate : nil, runningDays: Array(days))
-                AdaptivePlanEngine.startNewProgram(result, profile: appState.profile)
-                NotificationService.shared.rescheduleDailyReminder(for: appState.profile)
-                Haptics.success()
-                appState.toast(String(localized: "Ton nouveau programme est prêt"))
-                dismiss()
-                appState.go(.home)
-            }
-        }
+    private func runBuild() async {
+        withAnimation(.easeInOut(duration: Self.buildDuration)) { buildPct = 100 }
+        try? await Task.sleep(for: .seconds(Self.buildDuration))
+        guard !Task.isCancelled else { return }
+        buildFinished = true
+        finish()
+    }
+
+    private func finish() {
+        let result = AdaptivePlanEngine.NewGoalResult(goal: goal ?? .health, distance: goal == .race ? distance : nil, chrono: goal == .race ? chrono : nil, raceDate: goal == .race ? raceDate : nil, runningDays: Array(days))
+        AdaptivePlanEngine.startNewProgram(result, profile: appState.profile)
+        NotificationService.shared.rescheduleDailyReminder(for: appState.profile)
+        Haptics.success()
+        appState.toast(String(localized: "Ton nouveau programme est prêt"))
+        dismiss()
+        appState.go(.home)
     }
 }

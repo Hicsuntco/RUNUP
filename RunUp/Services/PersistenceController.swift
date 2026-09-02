@@ -1,14 +1,60 @@
 import Foundation
 import SwiftData
 
+/// La version 1 du schéma sur disque.
+///
+/// # Pourquoi une version, alors que rien n'a encore migré
+///
+/// Jusqu'ici le magasin n'en portait aucune. SwiftData s'en sortait parce que tous les
+/// changements de modèle étaient des ajouts de propriétés optionnelles — le cas exact que sa
+/// migration légère absorbe seule. Le premier qui ne l'est pas (une propriété obligatoire sans
+/// valeur par défaut, un type qui change, une relation renommée) ne pouvait alors mener nulle
+/// part : sans plan, sans version, SwiftData n'a aucun moyen de savoir ce qu'il lit ni quoi en
+/// faire. Il refuse d'ouvrir, et `makeContainer()` bascule tout le monde en mémoire — donc
+/// réinscription à chaque lancement, pour tous les gens déjà installés, jusqu'à ce qu'un
+/// correctif sorte.
+///
+/// Déclarer la version maintenant fait tamponner le magasin. C'est ce tampon qui rend une
+/// migration possible plus tard ; il ne se pose pas rétroactivement.
+///
+/// # CE QU'IL FAUDRA FAIRE AU PREMIER CHANGEMENT CASSANT — lire avant de toucher un modèle
+///
+/// `models` pointe ici vers les types VIVANTS, pas vers des copies figées. C'est volontaire :
+/// figer une copie de `UserProfile` aujourd'hui dupliquerait 477 lignes et 85 propriétés qui
+/// divergeraient dès le lendemain. Tant qu'il n'existe qu'une version, elle décrit forcément
+/// l'état actuel et l'accord est gratuit.
+///
+/// Le jour où un changement ne passe plus en migration légère, en revanche, il faut geler AVANT
+/// de modifier quoi que ce soit :
+///
+/// 1. Copier les définitions de modèle telles qu'elles sont AUJOURD'HUI dans `RunUpSchemaV1`,
+///    en `enum` imbriqué — elles ne bougeront plus jamais.
+/// 2. Créer `RunUpSchemaV2` qui pointe vers les types vivants, et y faire le changement.
+/// 3. Ajouter l'étape entre les deux dans `RunUpMigrationPlan.stages` : `.lightweight` si
+///    SwiftData s'en sort, `.custom` avec les blocs `willMigrate`/`didMigrate` sinon.
+///
+/// Faire le changement d'abord et geler ensuite ne gèle plus rien : V1 décrirait déjà le nouvel
+/// état, et la migration serait un aller-retour sur place.
+enum RunUpSchemaV1: VersionedSchema {
+    static var versionIdentifier: Schema.Version { Schema.Version(1, 0, 0) }
+    static var models: [any PersistentModel.Type] {
+        [UserProfile.self, RunRecord.self, ChatMessage.self, AppNotification.self, Shoe.self]
+    }
+}
+
+/// Le chemin d'une version du magasin à la suivante.
+///
+/// Vide aujourd'hui, et c'est normal : il n'existe qu'une version, donc aucune étape à franchir.
+/// Ce qu'il apporte tout de suite, c'est l'endroit où la première étape ira — au lieu de nulle
+/// part — et le fait que le conteneur soit ouvert AVEC un plan, ce qui fait tamponner la version
+/// sur le magasin des gens déjà installés dès cette mise à jour.
+enum RunUpMigrationPlan: SchemaMigrationPlan {
+    static var schemas: [any VersionedSchema.Type] { [RunUpSchemaV1.self] }
+    static var stages: [MigrationStage] { [] }
+}
+
 enum PersistenceController {
-    static let schema = Schema([
-        UserProfile.self,
-        RunRecord.self,
-        ChatMessage.self,
-        AppNotification.self,
-        Shoe.self
-    ])
+    static let schema = Schema(versionedSchema: RunUpSchemaV1.self)
 
     /// How the app ended up running against whatever store it's using.
     ///
@@ -40,7 +86,9 @@ enum PersistenceController {
     static func makeContainer() -> ModelContainer {
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {
-            return try ModelContainer(for: schema, configurations: [configuration])
+            return try ModelContainer(for: schema,
+                                      migrationPlan: RunUpMigrationPlan.self,
+                                      configurations: [configuration])
         } catch {
             // A store that can't open (a model change that isn't a valid lightweight migration
             // from what's on disk) must not crash the app forever — every launch failing, with
@@ -73,6 +121,9 @@ enum PersistenceController {
             storeState = .inMemoryFallback(reason: String(describing: error))
             let fallbackConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
             do {
+                // Sans plan ici, délibérément : il n'y a pas de magasin sur disque à faire
+                // évoluer, et c'est justement le plan qui vient d'échouer. Le repasser
+                // rejouerait la panne au lieu de s'en écarter.
                 return try ModelContainer(for: schema, configurations: [fallbackConfiguration])
             } catch {
                 // Nothing left to degrade to: the schema itself can't be materialised even with no

@@ -112,6 +112,10 @@ CORRECTIONS
 • Une pause automatique prise à l'arrêt sous un immeuble ne se levait plus toute seule.
 • L'anneau de construction du programme sautait au lieu de se remplir, et affichait sa coche de fin avant d'avoir fini.
 • Sur la courbe d'allure, la mention « RECORD » était coupée par le tracé.
+• La carte à partager s'affichait minuscule au milieu d'un grand cadre vide : l'aperçu a maintenant la forme de ce que tu partages.
+• Sur le Profil, le chiffre de ta série tombait plus bas que les deux autres.
+• Les semaines grises du plan disent enfin ce qu'elles sont : des semaines de décharge, où le volume baisse exprès.
+• Restaurer un achat pouvait annoncer « aucun abonnement » alors que c'était le réseau qui manquait.
 • Recherche d'amis depuis ton carnet d'adresses : les adresses sont transformées en empreintes sur ton iPhone, aucune n'est envoyée ni conservée.
 • Une séance déjà faite s'ajoute depuis l'accueil, avec sa vraie distance et sa vraie durée.
 • Le suivi du cycle menstruel se réancre quand les règles arrivent en avance ou en retard.
@@ -210,6 +214,10 @@ FIXES
 • An auto-pause taken at a standstill under a building would never lift on its own.
 • The plan-building ring jumped instead of filling, and showed its completion tick before finishing.
 • On the pace trend, the "RECORD" label was cut through by the curve.
+• The share card showed up tiny inside a big empty frame; the preview is now shaped like the thing you share.
+• On the Profile, your streak number sat lower than the two beside it.
+• The grey weeks in the plan finally say what they are: recovery weeks, where the volume drops on purpose.
+• Restoring a purchase could report "no subscription" when the network was the thing that was missing.
 • Find friends from your address book: e-mail addresses are turned into fingerprints on your iPhone; none is ever sent or stored.
 • Log an already-completed session from the home screen, with its real distance and duration.
 • Menstrual cycle tracking re-anchors when your period arrives early or late.
@@ -303,6 +311,10 @@ CORRECCIONES
 • Una pausa automática tomada al detenerse bajo un edificio ya no se levantaba sola.
 • El anillo de construcción del plan saltaba en vez de llenarse, y mostraba su marca de fin antes de terminar.
 • En la curva de ritmo, la palabra «RECORD» quedaba cortada por el trazo.
+• La tarjeta para compartir salía diminuta dentro de un marco vacío; ahora la vista previa tiene la forma de lo que compartes.
+• En el Perfil, el número de tu racha quedaba más bajo que los otros dos.
+• Las semanas grises del plan dicen por fin lo que son: semanas de descarga, donde el volumen baja a propósito.
+• Restaurar una compra podía anunciar «sin suscripción» cuando lo que faltaba era la red.
 • Buscar amigos desde tu agenda: las direcciones se convierten en huellas en tu iPhone; ninguna se envía ni se guarda.
 • Añade una sesión ya hecha desde el inicio, con su distancia y duración reales.
 • El seguimiento del ciclo menstrual se reajusta cuando la regla llega antes o después.

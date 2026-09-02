@@ -61,20 +61,20 @@ Le suivi GPS de tes courses : distance, allure, tracé, dénivelé, fréquence c
 RUNUP PLUS — 7 JOURS OFFERTS
 Le programme périodisé et son adaptation, le coach écrit et vocal, la préparation d'une date de course, tes temps prévus et ta charge d'entraînement.
 
-UN VRAI COACH, PAS UN CHATBOT
+UN VRAI COACH, PAS UN CHATBOT — RUNUP PLUS
 Un vrai coach personnel qui connaît ton objectif, ton historique et ta forme du jour. Pose-lui une question avant ta séance, demande un conseil nutrition, ou fais-toi rassurer après une sortie difficile. Pendant l'effort, tu peux même lui parler : tu appuies, tu poses ta question à voix haute, il te répond dans les écouteurs.
 
-UN PROGRAMME QUI VIT AVEC TOI
+UN PROGRAMME QUI VIT AVEC TOI — RUNUP PLUS
 Après chaque course, donne ton ressenti (RPE) — le programme ajuste la difficulté des semaines suivantes. Base, spécifique, affûtage : un vrai plan périodisé calé sur la date de ta course, de 4 à 20 semaines selon le temps qu'il te reste. Sans date de course (progresser, perdre du poids, reprendre en douceur, rester en forme), il tourne en continu avec ses semaines de décharge. Nuit trop courte ou séance de la veille trop dure ? La séance du jour s'allège d'elle-même.
 
 SUIVI DE COURSE EN DIRECT
 Carte et tracé en temps réel, allure, fréquence cardiaque, calories. Chaque sortie part dans Apple Santé, s'exporte en GPX, et se partage en carte visuelle avec ton tracé.
 
 APPLE WATCH
-Lance ta course depuis ta montre, sans emporter ton iPhone : fréquence cardiaque au poignet, distance et calories en direct. Ta séance du jour est poussée sur la montre, et chaque course terminée au poignet revient sur le téléphone avec son bilan et son adaptation de programme.
+Lance ta course depuis ta montre, sans emporter ton iPhone : fréquence cardiaque au poignet, distance et calories en direct. Chaque course terminée au poignet revient sur le téléphone avec son bilan. Avec RUNUP Plus, ta séance du jour est poussée sur la montre.
 
 STATS QUI COMPTENT VRAIMENT
-Tendance d'allure, records personnels, prédictions sur 5 km, 10 km, semi et marathon, charge d'entraînement sur 8 semaines, carte de tes parcours, usure des chaussures.
+Tendance d'allure, records personnels, carte de tes parcours, usure des chaussures. Avec RUNUP Plus : prédictions sur 5 km, 10 km, semi et marathon, et charge d'entraînement sur 8 semaines.
 
 OÙ COURIR QUAND TU NE CONNAIS PAS L'ENDROIT
 Tu débarques dans une ville et tu ne sais pas où courir ? La carte montre les itinéraires publiés autour de toi, avec distance, dénivelé et souvent une photo. Tes propres sorties se partagent en deux gestes — et les 300 premiers et derniers mètres sont retirés avant l'envoi : personne ne verra d'où tu es partie ni où tu es rentrée.
@@ -82,7 +82,7 @@ Tu débarques dans une ville et tu ne sais pas où courir ? La carte montre les 
 CLUB & COMMUNAUTÉ
 Classement de la semaine et classement général, défis de club, sorties de groupe, fil d'activité et badges. Et si tu préfères suivre quelques personnes plutôt qu'un club entier, un fil d'amis fait exactement ça.
 
-FIN DE PROGRAMME, PAS FIN DE L'HISTOIRE
+FIN DE PROGRAMME, PAS FIN DE L'HISTOIRE — RUNUP PLUS
 À la fin de ton programme : récupération encadrée, puis nouvel objectif ou mode course libre sans plan fixe.
 
 Nécessite iOS 17 ou version ultérieure. La connexion à Apple Santé est optionnelle, mais affine la forme du jour. Le Club demande un compte ; tout le reste de l'app fonctionne sans.
@@ -159,20 +159,20 @@ GPS tracking for every run: distance, pace, route, elevation, heart rate. Your f
 RUNUP PLUS — 7 DAYS FREE
 The periodised plan and its adaptation, the coach by text and by voice, race-day preparation, your predicted times and your training load.
 
-A REAL COACH, NOT A CHATBOT
+A REAL COACH, NOT A CHATBOT — RUNUP PLUS
 A personal coach who knows your goal, your history and how today is going. Ask a question before a session, get nutrition advice, or talk it through after a run that hurt. Mid-run you can even talk to it: press, ask out loud, hear the answer in your headphones.
 
-A PLAN THAT LIVES WITH YOU
+A PLAN THAT LIVES WITH YOU — RUNUP PLUS
 After every run, rate how hard it felt (RPE) — the plan adjusts the difficulty of the weeks ahead. Base, specific, taper: a genuinely periodised plan built around your race date, 4 to 20 weeks depending on how long you have. With no race date (getting faster, losing weight, easing back in, staying fit), it runs continuously with built-in cutback weeks. Short night, or yesterday's session too brutal? Today's session eases off on its own.
 
 LIVE RUN TRACKING
 Real-time map and route, pace, heart rate, calories. Every run is saved to Apple Health, exports as GPX, and shares as a card with your route on it.
 
 APPLE WATCH
-Start a run from your watch and leave your iPhone at home: wrist heart rate, live distance and calories. Today's session is pushed to the watch, and every run you finish on your wrist comes back to the phone with its debrief and its plan adjustment.
+Start a run from your watch and leave your iPhone at home: wrist heart rate, live distance and calories. Every run you finish on your wrist comes back to the phone with its debrief. With RUNUP Plus, today's session is pushed to the watch.
 
 STATS THAT ACTUALLY MEAN SOMETHING
-Pace trend, personal records, finish-time predictions for 5K, 10K, half and marathon, eight weeks of training load, a map of every route you've run, and shoe mileage tracking.
+Pace trend, personal records, a map of every route you've run, and shoe mileage tracking. With RUNUP Plus: finish-time predictions for 5K, 10K, half and marathon, and eight weeks of training load.
 
 WHERE TO RUN WHEN YOU DON'T KNOW THE PLACE
 New city, no idea where to run? The map shows routes published by other runners around you, with distance, elevation and often a photo of the spot. Filter by length, keep the ones you like, open the start in Maps. Sharing your own runs takes two taps — and the first and last 300 metres are stripped before anything is sent, so nobody sees where you set off from or came home to.
@@ -180,7 +180,7 @@ New city, no idea where to run? The map shows routes published by other runners 
 CLUB & COMMUNITY
 Weekly and all-time leaderboards, club challenges, group runs, an activity feed and badges. And if you'd rather follow a handful of people than a whole club, a friends feed does exactly that.
 
-THE END OF A PLAN ISN'T THE END
+THE END OF A PLAN ISN'T THE END — RUNUP PLUS
 When your plan finishes: a guided recovery block, then a new goal or free-run mode with no fixed plan at all.
 
 Requires iOS 17 or later. Connecting Apple Health is optional but recommended for a more accurate daily readiness score. The Club needs an account; everything else works without one.
@@ -252,20 +252,20 @@ El seguimiento GPS de cada carrera: distancia, ritmo, recorrido, desnivel y frec
 RUNUP PLUS — 7 DÍAS GRATIS
 El plan periodizado y su adaptación, el entrenador por escrito y por voz, la preparación de una carrera, tus tiempos previstos y tu carga de entrenamiento.
 
-UN ENTRENADOR DE VERDAD, NO UN CHATBOT
+UN ENTRENADOR DE VERDAD, NO UN CHATBOT — RUNUP PLUS
 Un entrenador personal que conoce tu objetivo, tu historial y cómo llevas el día. Pregúntale antes de la sesión, pídele consejo de nutrición, o desahógate después de una salida dura. Mientras corres puedes incluso hablarle: pulsas, preguntas en voz alta y te responde en los auriculares.
 
-UN PLAN QUE VIVE CONTIGO
+UN PLAN QUE VIVE CONTIGO — RUNUP PLUS
 Después de cada salida, valora lo dura que te resultó (RPE) — el plan ajusta la dificultad de las semanas siguientes. Base, específico, puesta a punto: un plan realmente periodizado alrededor de la fecha de tu carrera, de 4 a 20 semanas según el tiempo que te quede. Sin fecha de carrera (progresar, perder peso, volver poco a poco, mantenerte en forma), sigue de forma continua con sus semanas de descarga. ¿Mala noche, o sesión de ayer demasiado dura? La sesión de hoy se aligera sola.
 
 SEGUIMIENTO EN DIRECTO
 Mapa y recorrido en tiempo real, ritmo, frecuencia cardíaca y calorías. Cada salida se guarda en Apple Salud, se exporta en GPX y se comparte como tarjeta con tu recorrido.
 
 APPLE WATCH
-Empieza a correr desde el reloj y deja el iPhone en casa: frecuencia cardíaca en la muñeca, distancia y calorías en directo. Tu sesión del día se envía al reloj, y cada carrera que termines en la muñeca vuelve al teléfono con su balance y su ajuste de plan.
+Empieza a correr desde el reloj y deja el iPhone en casa: frecuencia cardíaca en la muñeca, distancia y calorías en directo. Cada carrera que termines en la muñeca vuelve al teléfono con su balance. Con RUNUP Plus, tu sesión del día se envía al reloj.
 
 ESTADÍSTICAS QUE SIRVEN PARA ALGO
-Tendencia de ritmo, récords personales, predicciones de tiempo en 5 km, 10 km, media y maratón, ocho semanas de carga de entrenamiento, un mapa con todos tus recorridos y control del desgaste de tus zapatillas.
+Tendencia de ritmo, récords personales, un mapa con todos tus recorridos y control del desgaste de tus zapatillas. Con RUNUP Plus: predicciones de tiempo en 5 km, 10 km, media y maratón, y ocho semanas de carga de entrenamiento.
 
 DÓNDE CORRER CUANDO NO CONOCES EL SITIO
 ¿Llegas a una ciudad nueva y no sabes por dónde correr? El mapa muestra las rutas publicadas por otros corredores a tu alrededor, con su distancia, su desnivel y muchas veces una foto del lugar. Filtra por longitud, guarda las que te apetezcan, abre el inicio en Mapas. Compartir tus propias salidas son dos toques — y los primeros y últimos 300 metros se recortan antes de enviar nada: nadie verá de dónde saliste ni dónde volviste.
@@ -273,7 +273,7 @@ DÓNDE CORRER CUANDO NO CONOCES EL SITIO
 CLUB Y COMUNIDAD
 Clasificación semanal y general, retos de club, quedadas, muro de actividad e insignias. Y si prefieres seguir a unas pocas personas en vez de a un club entero, hay un muro de amigos.
 
-QUE ACABE EL PLAN NO ES EL FINAL
+QUE ACABE EL PLAN NO ES EL FINAL — RUNUP PLUS
 Al terminar tu plan: un bloque de recuperación guiado y, después, un nuevo objetivo o modo carrera libre sin plan fijo.
 
 Requiere iOS 17 o posterior. Conectar Apple Salud es opcional, pero afina la forma del día. El Club necesita una cuenta; todo lo demás funciona sin ella.

@@ -278,19 +278,37 @@ struct ProfileView: View {
         .padding(.horizontal, 2)
     }
 
+    /// Taille du chiffre, écrite une fois : `displayStyle` ne s'applique pas à un `Text` composé,
+    /// donc sa police et son interlettrage sont reproduits ci-dessous et doivent rester d'accord
+    /// avec lui.
+    private static let statValueSize: CGFloat = 19
+
     private func statCell(value: String, label: String, valueColor: Color = RUColor.textPrimary, icon: String? = nil) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 4) {
-            // La flamme est groupée avec le chiffre dans un HStack imbriqué, centré, plutôt que
-            // posée directement dans la rangée alignée sur la ligne de base : une image n'a pas de
-            // ligne de base typographique, et l'aligner comme du texte la fait flotter. Le HStack
-            // imbriqué, lui, expose la ligne de base de son propre Text — la rangée extérieure
-            // s'aligne donc bien sur le chiffre.
-            HStack(spacing: 3) {
-                if let icon {
-                    Image(systemName: icon).font(.system(size: 11)).foregroundColor(valueColor)
-                }
-                Text(value).displayStyle(19).foregroundColor(valueColor)
-            }
+        // La flamme est une PIÈCE JOINTE dans le `Text`, pas une vue posée à côté de lui.
+        //
+        // La version précédente les groupait dans un `HStack` imbriqué, en pariant que celui-ci
+        // exposerait la ligne de base de son propre `Text` à la rangée extérieure. Il ne le fait
+        // pas : sans alignement déclaré, ce `HStack` est CENTRÉ, et une image de 11 pt centrée
+        // contre un chiffre de 19 pt déborde au-dessus de sa hampe. La ligne de base que le
+        // conteneur annonce se décale d'autant, et le « 1 » de la série tombe plus bas que le
+        // « 5 » des kilomètres et le « 1 » des badges — le défaut visible sur l'écran Profil.
+        //
+        // Une image inline dans un `Text` n'a pas ce problème, et pas seulement en pratique :
+        // elle est posée SUR la ligne de base du texte par construction. Il n'y a donc plus
+        // d'alignement à obtenir, plus de conteneur intermédiaire, et rien qui puisse se
+        // redécaler au prochain changement de taille.
+        let number: Text = {
+            guard let icon else { return Text(value) }
+            // La police du segment l'emporte sur celle appliquée à la composition : la flamme
+            // garde ses 11 pt sous un chiffre de 19.
+            return Text(Image(systemName: icon)).font(.system(size: 11)) + Text(" ") + Text(value)
+        }()
+
+        return HStack(alignment: .firstTextBaseline, spacing: 4) {
+            number
+                .font(RUFont.display(Self.statValueSize))
+                .tracking(-Self.statValueSize * 0.03)
+                .foregroundColor(valueColor)
             Text(label).font(RUFont.sans(.micro, weight: .semibold)).foregroundColor(RUColor.text3)
         }
         .accessibilityElement(children: .combine)

@@ -898,24 +898,17 @@ enum AdaptivePlanEngine {
         profile.weekRPECount += 1
         profile.recentRPESeverities.append(severity)
         if profile.recentRPESeverities.count > 5 { profile.recentRPESeverities.removeFirst() }
-        // Real "série" semantics — the old bare `streak += 1` never reset and counted twice on a
-        // 2-session day, so a once-a-week runner showed "Série de 52 jours" after a year. One
-        // increment per calendar day; a gap longer than 3 days (bigger than any planned rest
-        // block in a 3-4 sessions/week plan) means the chain broke and restarts at 1.
-        let cal = Calendar.current
-        if let last = profile.lastStreakDate {
-            let gapDays = cal.dateComponents([.day], from: cal.startOfDay(for: last), to: cal.startOfDay(for: .now)).day ?? 0
-            if gapDays == 0 {
-                // Second séance today — the day is already counted.
-            } else if gapDays <= 3 {
-                profile.streak += 1
-            } else {
-                profile.streak = 1
-            }
-        } else {
-            profile.streak = max(1, profile.streak == 0 ? 1 : profile.streak + 1)
-        }
-        profile.lastStreakDate = .now
+        // La règle vit dans `Streak`, seule et sous test. Elle était écrite ici ET dans
+        // `recomputeStreak` ci-dessous, chacune affirmant de son côté qu'un écart de plus de
+        // trois jours rompt la chaîne — deux implémentations d'une même règle finissent toujours
+        // par diverger, et celle-ci divergerait en silence : la série n'aurait pas planté, elle
+        // aurait simplement affiché un nombre faux.
+        let advanced = Streak.afterSession(
+            Streak.State(count: profile.streak, lastDay: profile.lastStreakDate),
+            on: .now
+        )
+        profile.streak = advanced.count
+        profile.lastStreakDate = advanced.lastDay
         profile.xp += 120
         profile.completedDebriefsCount += 1
         return "Programme mis à jour · +120 XP"
@@ -928,26 +921,9 @@ enum AdaptivePlanEngine {
     /// using the same "gap of ≤3 days doesn't break the chain" rule `applyDebrief` uses (real
     /// rest days shouldn't zero out a streak). Call after any History edit — add or delete.
     static func recomputeStreak(profile: UserProfile, currentRuns: [RunRecord]) {
-        let cal = Calendar.current
-        let days = Set(currentRuns.map { cal.startOfDay(for: $0.date) }).sorted(by: >)
-        guard let mostRecent = days.first else {
-            profile.streak = 0
-            profile.lastStreakDate = nil
-            return
-        }
-        var streak = 1
-        var cursor = mostRecent
-        for day in days.dropFirst() {
-            let gap = cal.dateComponents([.day], from: day, to: cursor).day ?? 0
-            guard gap <= 3 else { break }
-            streak += 1
-            cursor = day
-        }
-        // A chain that stopped more than 3 days ago is over, even though it existed once —
-        // matches `applyDebrief`'s own "gap > 3 restarts at 1" rule.
-        let gapToToday = cal.dateComponents([.day], from: mostRecent, to: cal.startOfDay(for: .now)).day ?? 0
-        profile.streak = gapToToday <= 3 ? streak : 0
-        profile.lastStreakDate = gapToToday <= 3 ? mostRecent : nil
+        let recomputed = Streak.recompute(runDays: currentRuns.map(\.date))
+        profile.streak = recomputed.count
+        profile.lastStreakDate = recomputed.lastDay
     }
 
     // MARK: Same-day adjustment

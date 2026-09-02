@@ -658,19 +658,16 @@ struct StatsView: View {
     /// Monday-anchored week buckets `weeklyDistances` plots as bars below it — a rolling
     /// 7-day/28-day window anchored on `.now` disagreed with those calendar-week bars mid-week
     /// (the printed ratio could visually contradict what the bars showed).
+    /// Le calcul et ses seuils vivent dans `TrainingLoad`, sous test : c'est un marqueur de
+    /// blessure, et il n'était vérifiable qu'en accumulant huit semaines de vraies courses.
     private var acuteChronicRatio: Double? {
-        let bars = weeklyDistances
-        guard bars.count >= 4, let acute = bars.last else { return nil }
-        let last4 = bars.suffix(4)
-        let chronicWeeklyAvg = last4.reduce(0, +) / Double(last4.count)
-        guard chronicWeeklyAvg > 0 else { return nil }
-        return acute / chronicWeeklyAvg
+        TrainingLoad.acuteChronicRatio(weeklyKm: weeklyDistances)
     }
 
+    /// La CLÉ, pas une chaîne traduite : `StatChip` la passe à `LocalizedStringKey` et s'en
+    /// charge. Deux des trois libellés arrivaient ici déjà traduits, donc traduits deux fois.
     private func loadZoneLabel(_ ratio: Double) -> String {
-        if ratio > 1.5 { return String(localized: "Charge élevée") }
-        if ratio < 0.8 { return String(localized: "Charge faible") }
-        return "Zone optimale"
+        TrainingLoad.zone(for: ratio).labelKey
     }
 
     private var loadCard: some View {
@@ -681,7 +678,8 @@ struct StatsView: View {
                          title: "Charge d'entraînement",
                          subtitle: "Sur 8 semaines") {
                 if let ratio = acuteChronicRatio {
-                    StatChip(text: loadZoneLabel(ratio), color: ratio > 1.5 ? RUColor.amber : RUColor.cyan)
+                    StatChip(text: loadZoneLabel(ratio),
+                              color: TrainingLoad.zone(for: ratio) == .high ? RUColor.amber : RUColor.cyan)
                 }
             }
             if runs.isEmpty {

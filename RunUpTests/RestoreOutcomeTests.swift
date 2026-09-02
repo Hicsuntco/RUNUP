@@ -48,9 +48,22 @@ final class RestoreOutcomeTests: XCTestCase {
         }
     }
 
-    /// Et aucune ne doit annoncer une absence qu'elle n'a pas constatée.
-    func testOnlyTheVerifiedEmptyCaseMentionsAnAbsence() {
-        XCTAssertTrue(RestoreOutcome.nothingFound.message.contains("Aucun"))
-        XCTAssertFalse(RestoreOutcome.couldNotCheck.message.contains("Aucun"))
+    /// Trois états, trois messages différents.
+    ///
+    /// La première version de ce test cherchait le mot « Aucun » dans le message rendu. Elle
+    /// échouait dès que le simulateur tournait en anglais : `String(localized:)` traduit, et
+    /// « No active subscription » ne contient évidemment pas « Aucun ». Le défaut était dans le
+    /// test, pas dans le code — chercher des MOTS revient à tester le catalogue de traduction en
+    /// croyant tester une règle, et ça casse à la première langue ajoutée.
+    ///
+    /// Ce qui compte vraiment est structurel et ne dépend d'aucune langue : deux états qui
+    /// disent la même chose sont deux états qu'on aurait pu ne pas séparer, et c'est justement
+    /// leur séparation qui corrige le bug d'origine. L'interdiction d'annoncer une absence non
+    /// constatée, elle, est vérifiée au niveau de la DÉCISION par
+    /// `testAFailedSyncNeverClaimsThereIsNothing` — au bon endroit, avant toute traduction.
+    func testTheThreeOutcomesDoNotSayTheSameThing() {
+        let messages = Set([RestoreOutcome.restored, .nothingFound, .couldNotCheck].map(\.message))
+        XCTAssertEqual(messages.count, 3,
+                       "Deux issues distinctes affichent le même message : la nuance se perd à l'écran.")
     }
 }

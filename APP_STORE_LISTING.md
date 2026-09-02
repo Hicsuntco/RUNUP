@@ -414,15 +414,26 @@ DEMO ACCOUNT
   The account already has a generated training plan, a few logged runs and one club, so the
   app is populated on first launch.
 
-SUBSCRIPTION — PLEASE READ FIRST
-  The whole app sits behind a 7-day free trial followed by an auto-renewable subscription.
-  Access is granted by the StoreKit entitlement of the *Apple ID* on the device, NOT by the
-  RUNUP account — so the demo account above cannot have "used up" the trial for you. On your
-  sandbox Apple ID the introductory offer is available and costs nothing.
+FREE TIER AND SUBSCRIPTION
+  Most of the app is free with no time limit and no account required beyond the Club: GPS run
+  tracking, history, stats, daily goals, the weekly recap, Apple Health, Apple Watch, widgets,
+  and the whole social side (leaderboards, challenges, feed, friends, shared routes).
 
-  Path: launch the app, complete onboarding (about 6 short questions), the paywall appears,
-  tap the trial button. If StoreKit products fail to load for any reason, the app deliberately
-  unlocks itself rather than showing a paywall it cannot honour, so you will not be locked out.
+  RUNUP Plus adds the periodised training plan and its week-to-week adaptation, the coach by
+  text and by voice, race-day preparation, predicted race times and training load. A 7-day free
+  trial precedes it.
+
+  Two notes that save time:
+  - Access is granted by the StoreKit entitlement of the *Apple ID* on the device, NOT by the
+    RUNUP account, so the demo account above cannot have "used up" the trial for you. On your
+    sandbox Apple ID the introductory offer is available and costs nothing.
+  - Nothing is behind a wall you cannot get past. Locked features show what they contain and
+    offer the trial; declining leaves the rest of the app fully usable. If StoreKit products
+    fail to load for any reason, the app deliberately unlocks everything rather than showing a
+    paywall it cannot honour.
+
+  Path to the paid features: finish onboarding (about 6 short questions), the offer appears
+  once and can be dismissed. Afterwards, opening the Coach tab or the full plan offers it again.
 
 SEEING A RUN WITHOUT GOING FOR A RUN
   On the Home tab, next to the START button, the "+" logs an already-completed session: enter

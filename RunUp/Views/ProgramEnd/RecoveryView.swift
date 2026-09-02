@@ -30,7 +30,11 @@ struct RecoveryView: View {
                                 .overlay(
                                     Text(i < done ? "✓" : "\(i + 1)")
                                         .displayStyle(13)
-                                        .foregroundColor(i < done ? Color(hex: 0x0A0A0A) : RUColor.text2)
+                                        // `onAccent` et non un noir écrit à la main : la pastille est remplie de
+                                        // `lime`, qui vaut 0xC8FF3D en sombre et 0x6B9E00 en clair. La règle
+                                        // choisit par la luminance du fond réel — ce qu'un littéral ne peut
+                                        // pas faire, quel que soit le soin avec lequel on le choisit.
+                                        .foregroundColor(i < done ? RUColor.onAccent(RUColor.lime) : RUColor.text2)
                                 )
                         }
                     }

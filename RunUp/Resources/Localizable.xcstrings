@@ -6758,6 +6758,22 @@
         }
       }
     },
+    "En gris, les semaines de décharge : le volume baisse exprès, c'est là que les progrès se fixent.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grey weeks are recovery weeks: the volume drops on purpose — that is when the gains take hold."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En gris, las semanas de descarga: el volumen baja a propósito, es cuando se fijan los progresos."
+          }
+        }
+      }
+    },
     "En pause": {
       "extractionState": "manual",
       "localizations": {

@@ -47,6 +47,10 @@ CANVAS = (1290, 2796)
 DEVICE_TOP = 520
 DEVICE_BOTTOM_MARGIN = 36
 SCREEN_W = 998
+# Marges des deux étages de l'accroche. Nommées parce que le contrôle de débordement les lit
+# aussi : deux valeurs séparées auraient fini par diverger, et le contrôle aurait menti.
+TITLE_MARGIN = 96
+SUB_MARGIN = 150
 
 # Les captures viennent d'un iPhone, où elles s'appellent `IMG_0042.PNG` — extension EN MAJUSCULES.
 # Un `glob("*.png")` ne les voit pas sur le runner Linux, qui distingue la casse, et le script
@@ -170,6 +174,12 @@ def wrap(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont, wid
 
     On mesure le texte réellement rendu plutôt que de compter les caractères : les accroches sont
     traduites, et une ligne qui tient en anglais déborde souvent en français.
+
+    Le retour à la ligne fonctionne, et c'est bien le problème : il absorbe silencieusement une
+    accroche trop longue. Deux sous-titres débordaient de huit et de quatre-vingt-douze pixels,
+    et se retrouvaient sur deux lignes dont la seconde ne portait qu'un mot — « semaine. »,
+    « temps. » — au milieu d'un jeu où les autres tenaient sur une ligne. Personne ne l'avait vu
+    parce que rien ne le disait : l'image se composait sans broncher.
     """
     lines: list[str] = []
     line = ""
@@ -339,7 +349,7 @@ def compose(shot_path: Path, caption, dest: Path) -> None:
 
     font = ImageFont.truetype(str(FONTS / "Inter-Bold.ttf"), 82)
     tracking = -1.8
-    margin = 96
+    margin = TITLE_MARGIN
     lines = wrap(draw, title, font, CANVAS[0] - margin * 2)
 
     # L'accroche d'abord : c'est elle qui fixe où commence l'appareil. Une accroche sur trois
@@ -357,7 +367,7 @@ def compose(shot_path: Path, caption, dest: Path) -> None:
     # à dire « second », l'opacité ne fait que rendre illisible.
     if subtitle:
         sub_font = ImageFont.truetype(str(FONTS / "Inter-Light.ttf"), 48)
-        sub_margin = 150
+        sub_margin = SUB_MARGIN
         y += 14
         for line in wrap(draw, subtitle, sub_font, CANVAS[0] - sub_margin * 2):
             w = draw.textlength(line, font=sub_font)
@@ -421,6 +431,27 @@ def compose(shot_path: Path, caption, dest: Path) -> None:
     canvas.convert("RGB").save(dest, "PNG")
 
 
+def overflowing_captions(captions: dict) -> list[str]:
+    """Les accroches qui ne tiennent pas sur une ligne, toutes langues confondues."""
+    probe = ImageDraw.Draw(Image.new("RGB", (1, 1)))
+    title_font = ImageFont.truetype(str(FONTS / "Inter-Bold.ttf"), 82)
+    sub_font = ImageFont.truetype(str(FONTS / "Inter-Light.ttf"), 48)
+    out: list[str] = []
+    for locale, items in sorted(captions.items()):
+        for rank, caption in enumerate(items, start=1):
+            title, subtitle = (caption, "") if isinstance(caption, str) else (caption[0], caption[1])
+            for label, text, font, width in (
+                ("titre", title, title_font, CANVAS[0] - TITLE_MARGIN * 2),
+                ("sous-titre", subtitle, sub_font, CANVAS[0] - SUB_MARGIN * 2),
+            ):
+                if not text:
+                    continue
+                measured = probe.textlength(text, font=font)
+                if measured > width:
+                    out.append(f"{locale} n°{rank} {label} : {int(measured)} px pour {width} — « {text} »")
+    return out
+
+
 def main() -> int:
     lang = sys.argv[1] if len(sys.argv) > 1 else "fr-FR"
 
@@ -431,6 +462,22 @@ def main() -> int:
     if lang not in captions:
         print(f"Langue inconnue : {lang}. Connues : {', '.join(sorted(captions))}", file=sys.stderr)
         return 1
+
+    # TOUTES les langues sont vérifiées, pas seulement celle qu'on compose.
+    #
+    # Une accroche trop longue ne casse rien : `wrap` la coupe, et l'image sort. C'est exactement
+    # ce qui rendait le défaut invisible — deux sous-titres débordaient de huit et de quatre-vingt-
+    # douze pixels, et se retrouvaient sur deux lignes dont la seconde ne portait qu'un mot, au
+    # milieu d'un jeu où les autres tenaient sur une ligne. Un titre anglais et un titre espagnol
+    # débordaient aussi, sans que personne ne compose jamais ces langues-là pour s'en apercevoir.
+    #
+    # C'est un avertissement et non une erreur : une accroche sur deux lignes reste parfois le bon
+    # choix. Ce qu'on veut, c'est que ce soit une décision et non une surprise.
+    if too_long := overflowing_captions(captions):
+        print("\nAccroches qui passeront à la ligne :", file=sys.stderr)
+        for line in too_long:
+            print(f"  {line}", file=sys.stderr)
+        print("", file=sys.stderr)
 
     # Une série de captures par langue : l'app est traduite, et une interface en français sous une
     # accroche en anglais coûte l'installation au moment où la personne fait défiler le carrousel.

@@ -6,7 +6,7 @@
     ],
     [
       "Un plan qui s'adapte",
-      "Il se recalcule sur ta forme, chaque semaine."
+      "Recalculé sur ta forme, chaque semaine."
     ],
     [
       "Un coach qui te connaît",
@@ -21,8 +21,8 @@
       "Pas trente. Trois."
     ],
     [
-      "Partage ta course",
-      "Le tracé, le dénivelé, l'effort. Pas juste un temps."
+      "Ta course, en image",
+      "Le tracé, le dénivelé, l'effort."
     ]
   ],
   "en-US": [
@@ -47,8 +47,8 @@
       "Not thirty. Three."
     ],
     [
-      "Share the run",
-      "The route, the climb, the effort. Not just a time."
+      "Your run, as an image",
+      "The route, the climb, the effort."
     ]
   ],
   "es-ES": [
@@ -61,7 +61,7 @@
       "Se recalcula según tu forma, cada semana."
     ],
     [
-      "Un entrenador que te conoce",
+      "Tu entrenador te conoce",
       "Ha leído tus últimas sesiones."
     ],
     [
@@ -73,8 +73,8 @@
       "No treinta. Tres."
     ],
     [
-      "Comparte la carrera",
-      "El trazado, el desnivel, el esfuerzo. No solo un tiempo."
+      "Tu carrera, en imagen",
+      "El trazado, el desnivel, el esfuerzo."
     ]
   ]
 }

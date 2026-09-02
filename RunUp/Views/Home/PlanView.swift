@@ -162,9 +162,39 @@ struct PlanView: View {
             }
             .frame(height: 108)
             phaseBar
+            deloadNote
         }
         .padding(16)
         .ruCard()
+    }
+
+    /// Ce que la barre grise veut dire.
+    ///
+    /// La barre de phases sert de légende aux trois couleurs de périodisation — Base, Spécifique,
+    /// Affûtage. Elle ne pouvait pas nommer la quatrième : une semaine de décharge n'est pas une
+    /// phase, c'en est un creux À L'INTÉRIEUR d'une phase, et l'ajouter à une barre de progression
+    /// aurait décrit un plan qui n'existe pas.
+    ///
+    /// Résultat : la seule barre qui rompt le rythme, celle que l'œil va chercher en premier
+    /// parce qu'elle est grise et courte, était la seule que rien n'expliquait. C'est d'autant
+    /// plus dommage que c'est la meilleure chose que le graphique ait à raconter — le moment où le
+    /// programme allège de lui-même pour laisser la charge se transformer en progrès.
+    ///
+    /// Une ligne, et seulement quand le plan affiché en contient : une légende qui nomme une
+    /// couleur absente apprend à ignorer les légendes.
+    @ViewBuilder private var deloadNote: some View {
+        if weekSummaries.contains(where: { $0.block == .deload }) {
+            HStack(alignment: .firstTextBaseline, spacing: 7) {
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .fill(RUColor.text3)
+                    .frame(width: 10, height: 10)
+                Text("En gris, les semaines de décharge : le volume baisse exprès, c'est là que les progrès se fixent.")
+                    .font(RUFont.sans(.small))
+                    .foregroundColor(RUColor.text3)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.top, 2)
+        }
     }
 
     /// La barre de phases, sous le graphique.

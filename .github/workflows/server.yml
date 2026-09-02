@@ -1,0 +1,36 @@
+# Les tests du serveur.
+#
+# Séparés de la chaîne TestFlight, et pas par goût de la symétrie : `testflight.yml` ignore
+# volontairement `api/**` et `lib/**` (voir son `paths-ignore`), parce qu'une modification qui
+# n'entre pas dans le binaire ne doit pas payer neuf minutes de machine macOS ni consommer un
+# envoi du quota quotidien d'Apple. Conséquence directe : sans ce fichier, un changement
+# serveur ne déclenche RIEN. Les tests écrits ne tourneraient jamais.
+#
+# Une machine Linux, quelques secondes, et le lanceur intégré à Node — aucune dépendance de test
+# à installer, donc rien qui puisse casser tout seul un lundi matin.
+name: Serveur
+
+on:
+  push:
+    paths:
+      - "api/**"
+      - "lib/**"
+      - "tests/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/server.yml"
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      # `npm ci` et non `npm install` : la suite doit tourner contre les versions EXACTES du
+      # verrou, sinon un test vert ici ne dit rien de ce qui est déployé.
+      - run: npm ci
+      - run: npm test

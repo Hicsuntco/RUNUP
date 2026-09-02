@@ -12,6 +12,8 @@ struct DebriefSheet: View {
     @Query private var runs: [RunRecord]
     var run: RunRecord
     @State private var rpe: RPE = .justeBien
+    @Environment(SubscriptionService.self) private var subscriptions
+    private var planUnlocked: Bool { subscriptions.unlocks(.adaptivePlan) }
 
     /// The plan only ever re-adjusts at a week boundary (see `AdaptivePlanEngine.tierDelta`),
     /// never session-to-session — this used to say "Prochaine séance" (next session), implying
@@ -49,6 +51,11 @@ struct DebriefSheet: View {
         // could contradict what actually happens after two harder sessions the same week.
         let nextWeekLabel = String(localized: "Semaine prochaine : ")
         let streakLine = ("🔥", String(localized: "Série en cours : "), String(localized: "jour \(nextStreak)"))
+        // Sans abonnement il n'y a pas de programme à ajuster : promettre que la semaine
+        // prochaine sera relevée ou allégée serait une promesse sur quelque chose d'invisible et
+        // d'inexistant. Le ressenti reste demandé — il est enregistré avec la course et servira le
+        // jour où un programme existe — mais la carte ne parle plus que de ce qui est vrai.
+        guard planUnlocked else { return [streakLine] }
         switch rpe {
         case .facile, .justeBien:
             return [("📈", nextWeekLabel, String(localized: "compte pour relever l'intensité")), streakLine]
@@ -97,7 +104,9 @@ struct DebriefSheet: View {
                 }
 
                 VStack(alignment: .leading, spacing: 0) {
-                    RUCardHeader(icon: "arrow.triangle.branch", tint: RUColor.rose2, title: "Impact sur ton programme")
+                    RUCardHeader(icon: planUnlocked ? "arrow.triangle.branch" : "flame",
+                                 tint: RUColor.rose2,
+                                 title: planUnlocked ? "Impact sur ton programme" : "Ce que ça change")
                     ForEach(impactLines.indices, id: \.self) { i in
                         HStack(spacing: 12) {
                             Text(impactLines[i].0).font(.system(size: 18))

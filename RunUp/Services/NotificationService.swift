@@ -100,15 +100,29 @@ final class NotificationService: NSObject {
         dateComponents.minute = 0
         guard let fireDate = Calendar.current.date(from: dateComponents), fireDate > .now else { return }
 
+        // Le programme fait partie de RUNUP Plus. Sans abonnement, nommer la séance du jour, sa
+        // durée et son allure donne le contenu payant dans l'écran verrouillé du téléphone — et
+        // pire, invite à ouvrir une porte fermée. Le rappel reste, parce que ramener quelqu'un
+        // courir est utile à tout le monde, mais il ne dit plus que ce qui lui appartient.
+        //
+        // `Entitlement.hasPlusCached` et non `SubscriptionService` : celui-ci est `@MainActor` et
+        // vit dans l'environnement SwiftUI, hors de portée d'ici.
+        let hasPlus = Entitlement.hasPlusCached
+
         center.getNotificationSettings { [center] settings in
             guard settings.authorizationStatus == .authorized else { return }
             let content = UNMutableNotificationContent()
-            content.title = String(localized: "Séance du jour")
-            // `displayTitle` et non `title` : `title` est le libellé français interne d'une
-            // séance (voir `WorkoutSession`), il ne doit jamais partir tel quel dans une
-            // notification.
-            let sessionName = session.displayTitle
-            content.body = String(localized: "\(sessionName) t'attend — \(session.durationMinutes)′ à \(session.pace)/km.")
+            if hasPlus {
+                content.title = String(localized: "Séance du jour")
+                // `displayTitle` et non `title` : `title` est le libellé français interne d'une
+                // séance (voir `WorkoutSession`), il ne doit jamais partir tel quel dans une
+                // notification.
+                let sessionName = session.displayTitle
+                content.body = String(localized: "\(sessionName) t'attend — \(session.durationMinutes)′ à \(session.pace)/km.")
+            } else {
+                content.title = String(localized: "Et si tu allais courir ?")
+                content.body = String(localized: "Une sortie aujourd'hui, même courte, et ta série tient.")
+            }
             content.sound = .default
 
             let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)

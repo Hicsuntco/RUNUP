@@ -43,12 +43,20 @@ final class WatchSessionService: NSObject {
         let profile = appState.profile
         let today = AdaptivePlanEngine.currentWeekdayIndex()
         let isRestDay = profile.weekSessions.first(where: { $0.weekday == today }).map { $0.session == nil } ?? false
+        // Le programme fait partie de RUNUP Plus, et la montre n'a aucun moyen de le savoir : elle
+        // affiche ce qu'on lui envoie. Sans abonnement, on ne lui envoie donc rien de la séance —
+        // elle retombe alors sur son écran « pas de séance aujourd'hui », qui est exactement la
+        // vérité, et la course libre au poignet continue de fonctionner.
+        //
+        // `Entitlement.hasPlusCached` : ce service tourne hors de tout écran, `SubscriptionService`
+        // vit dans l'environnement SwiftUI.
+        let hidePlan = !Entitlement.hasPlusCached
 
         // Two parallel dictionaries: the [String: String] one exists only because [String: Any]
         // isn't Equatable — it's what makes the "did anything change?" guard possible.
         var context: [String: String] = [:]
         var payload: [String: Any] = [:]
-        if !isRestDay {
+        if !isRestDay && !hidePlan {
             let session = profile.todaySession
             // `sessionKind` accompagne le titre sans le remplacer : le titre est ce que la montre
             // AFFICHE, le type est ce qu'elle RENVOIE une fois la course finie. Sans lui, une

@@ -4033,6 +4033,22 @@
         }
       }
     },
+    "Ce que ça change": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What this changes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo que esto cambia"
+          }
+        }
+      }
+    },
     "Ce signalement sera examiné. Merci de préciser ce qui pose problème.": {
       "localizations": {
         "en": {
@@ -6952,6 +6968,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "¿Y ahora qué?"
+          }
+        }
+      }
+    },
+    "Et si tu allais courir ?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How about a run?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Y si sales a correr?"
           }
         }
       }
@@ -17552,6 +17584,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Una rutina constante que cabe en tu semana"
+          }
+        }
+      }
+    },
+    "Une sortie aujourd'hui, même courte, et ta série tient.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One run today, however short, and your streak holds."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una salida hoy, aunque sea corta, y tu racha aguanta."
           }
         }
       }

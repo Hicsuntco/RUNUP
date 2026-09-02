@@ -40,7 +40,15 @@ struct HomeView: View {
 
     var body: some View {
         Group {
-            switch profile.programPhase {
+            // Les phases de fin de programme — récupération encadrée, puis choix d'un nouvel
+            // objectif — REMPLACENT l'accueil. C'est juste quand on suit un programme : pendant
+            // la récupération, l'app doit dire de ne pas courir, et c'est tout son propos.
+            //
+            // Sans abonnement, il n'y a pas de programme, donc pas de phase à respecter — et
+            // surtout ces deux écrans ne portent aucun bouton pour partir courir. Une abonnée
+            // dont l'abonnement s'arrête en pleine récupération se retrouvait donc devant une app
+            // de course sans aucun moyen de courir, sans rien à l'écran pour l'expliquer.
+            switch planUnlocked ? profile.programPhase : .active {
             case .recovery: RecoveryView()
             case .choice: ChoiceView()
             default: mainContent

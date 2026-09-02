@@ -132,6 +132,10 @@ final class SubscriptionService {
             active = true
         }
         isSubscribed = active
+        // Recopié hors de SwiftUI pour que les notifications locales et la montre puissent le
+        // lire — voir `Entitlement.hasPlusCached`. Ici et nulle part ailleurs : c'est le seul
+        // endroit du code où l'on apprend la vérité, relue des droits StoreKit courants.
+        Entitlement.cacheHasPlus(active || !canSell)
     }
 
     enum PurchaseOutcome { case subscribed, cancelled, pending, failed }

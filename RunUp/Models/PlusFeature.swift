@@ -92,6 +92,33 @@ enum Entitlement {
     /// (`SubscriptionService.grantsAccess`), et elle vaut ici pour la même raison — un écran qui
     /// ne peut rien encaisser n'a pas le droit de bloquer. Le petit risque d'abus est très en
     /// dessous du coût de la panne qu'il évite.
+    /// Le dernier état connu de l'abonnement, hors de tout écran.
+    ///
+    /// `SubscriptionService` est `@MainActor` et vit dans l'environnement SwiftUI : les
+    /// notifications locales, la synchronisation avec la montre et tout ce qui tourne sans
+    /// interface ne peuvent pas l'interroger. Ils lisaient donc le programme comme si de rien
+    /// n'était, et une personne sans abonnement recevait chaque matin le nom exact de la séance
+    /// qu'elle ne peut pas ouvrir.
+    ///
+    /// Écrit dans le groupe d'app, à côté de l'instantané des widgets, pour la même raison : c'est
+    /// le seul endroit que les extensions savent lire.
+    ///
+    /// Volontairement optimiste au démarrage — `nil` vaut « ouvert ». Une valeur absente signifie
+    /// qu'aucune vérification n'a encore eu lieu, jamais qu'il n'y a pas d'abonnement, et fermer
+    /// par défaut ferait taire les rappels d'une abonnée le temps d'un premier lancement.
+    private static let cacheKey = "runup.entitlement.plus-active"
+    private static var sharedDefaults: UserDefaults? { UserDefaults(suiteName: DailyGoalsSnapshot.appGroupID) }
+
+    static var hasPlusCached: Bool {
+        guard let defaults = sharedDefaults,
+              defaults.object(forKey: cacheKey) != nil else { return true }
+        return defaults.bool(forKey: cacheKey)
+    }
+
+    static func cacheHasPlus(_ active: Bool) {
+        sharedDefaults?.set(active, forKey: cacheKey)
+    }
+
     static func unlocks(_ feature: PlusFeature, isSubscribed: Bool?, canSell: Bool) -> Bool {
         _ = feature // Aucune fonctionnalité n'a de régime particulier aujourd'hui — mais la
                     // signature le permet sans avoir à retoucher les appelants le jour où l'une

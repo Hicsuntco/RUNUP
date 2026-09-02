@@ -166,8 +166,15 @@ final class SubscriptionService {
 
     /// Obligatoire pour la validation App Store (guideline 3.1.1) : une utilisatrice qui change de
     /// téléphone doit pouvoir retrouver son abonnement sans repayer.
-    func restore() async {
-        try? await AppStore.sync()
+    func restore() async -> RestoreOutcome {
+        // `AppStore.sync()` lève quand le réseau manque, et aussi quand la personne referme la
+        // demande de mot de passe Apple. L'échec était avalé, et l'écran enchaînait sur
+        // « Aucun abonnement actif trouvé » — c'est-à-dire qu'il annonçait à une abonnée qui
+        // vient de changer de téléphone qu'elle n'a rien, et lui laissait entendre qu'il faut
+        // repayer. C'est le pire message possible, il est faux, et il tombe au pire moment.
+        var syncFailed = false
+        do { try await AppStore.sync() } catch { syncFailed = true }
         await refreshEntitlement()
+        return RestoreOutcome.decide(syncFailed: syncFailed, isSubscribed: isSubscribed)
     }
 }

@@ -3005,6 +3005,22 @@
         }
       }
     },
+    "Aucun abonnement actif sur ce compte Apple.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No active subscription on this Apple account."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay suscripción activa en esta cuenta de Apple."
+          }
+        }
+      }
+    },
     "Aucun abonnement actif trouvé.": {
       "extractionState": "manual",
       "localizations": {
@@ -8178,6 +8194,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudo eliminar la cuenta — inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Impossible de vérifier — réessaie quand tu auras du réseau.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not check — try again when you have a connection."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo comprobar: inténtalo de nuevo cuando tengas conexión."
           }
         }
       }
@@ -16604,6 +16636,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mantén el ritmo en cada serie, recupera bien entre bloques 👊"
+          }
+        }
+      }
+    },
+    "Ton abonnement est restauré.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your subscription is restored."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu suscripción está restaurada."
           }
         }
       }

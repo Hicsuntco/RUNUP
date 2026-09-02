@@ -1,0 +1,56 @@
+import XCTest
+@testable import RunUp
+
+/// Verrouille ce qu'on répond à « Restaurer mes achats ».
+///
+/// Le cas qui a motivé ces tests n'est pas théorique : la synchronisation avec l'App Store échoue
+/// quand le réseau manque, et aussi quand on referme la demande de mot de passe Apple. L'échec
+/// était avalé, puis l'app regardait s'il existait un abonnement — et n'en trouvant pas, elle
+/// annonçait « Aucun abonnement actif trouvé ».
+///
+/// Ce message est faux, il s'adresse à quelqu'un qui paye, et il tombe pendant qu'il essaie de
+/// récupérer ce qu'il a payé — typiquement sur un téléphone neuf, donc sur un réseau qu'on ne
+/// maîtrise pas. Toute la valeur de cette règle tient dans un écart : « je n'ai pas pu regarder »
+/// n'est pas « j'ai regardé, il n'y a rien ».
+final class RestoreOutcomeTests: XCTestCase {
+
+    func testAnActiveSubscriptionIsRestored() {
+        XCTAssertEqual(RestoreOutcome.decide(syncFailed: false, isSubscribed: true), .restored)
+    }
+
+    /// Même si la synchronisation a échoué : elle sert à aller CHERCHER un droit qu'on a déjà
+    /// trouvé. Échouer à chercher ce qu'on tient déjà ne change rien.
+    func testAnActiveSubscriptionWinsOverAFailedSync() {
+        XCTAssertEqual(RestoreOutcome.decide(syncFailed: true, isSubscribed: true), .restored)
+    }
+
+    /// Le vrai « il n'y a rien » : on a pu vérifier, et le compte Apple ne porte pas d'abonnement.
+    func testAVerifiedEmptyAccountSaysSo() {
+        XCTAssertEqual(RestoreOutcome.decide(syncFailed: false, isSubscribed: false), .nothingFound)
+    }
+
+    /// Le bug d'origine. Sans réseau, la réponse ne doit surtout pas être « tu n'as rien ».
+    func testAFailedSyncNeverClaimsThereIsNothing() {
+        XCTAssertEqual(RestoreOutcome.decide(syncFailed: true, isSubscribed: false), .couldNotCheck)
+        XCTAssertEqual(RestoreOutcome.decide(syncFailed: true, isSubscribed: nil), .couldNotCheck)
+    }
+
+    /// `nil` est un troisième état, pas un `false` déguisé : la vérification n'a pas abouti, même
+    /// si la synchronisation, elle, s'est bien passée.
+    func testAnUnknownStateIsNotAnEmptyAccount() {
+        XCTAssertEqual(RestoreOutcome.decide(syncFailed: false, isSubscribed: nil), .couldNotCheck)
+    }
+
+    /// Chaque issue doit avoir quelque chose à dire — un bouton qui ne répond rien fait retaper.
+    func testEveryOutcomeSpeaks() {
+        for outcome: RestoreOutcome in [.restored, .nothingFound, .couldNotCheck] {
+            XCTAssertFalse(outcome.message.isEmpty)
+        }
+    }
+
+    /// Et aucune ne doit annoncer une absence qu'elle n'a pas constatée.
+    func testOnlyTheVerifiedEmptyCaseMentionsAnAbsence() {
+        XCTAssertTrue(RestoreOutcome.nothingFound.message.contains("Aucun"))
+        XCTAssertFalse(RestoreOutcome.couldNotCheck.message.contains("Aucun"))
+    }
+}

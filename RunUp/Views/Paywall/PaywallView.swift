@@ -367,9 +367,8 @@ struct PaywallView: View {
 
     private func restore() async {
         Analytics.shared.track(.restoreTapped)
-        await subscriptions.restore()
-        if subscriptions.isSubscribed != true {
-            appState.toast(String(localized: "Aucun abonnement actif trouvé."))
-        }
+        // Le résultat est toujours annoncé, y compris quand ça marche : un bouton qui ne répond
+        // rien laisse croire qu'il n'a rien fait, et fait retaper.
+        appState.toast(await subscriptions.restore().message)
     }
 }

@@ -28,6 +28,16 @@ struct RecapView: View {
     @State private var splitsRevealed = false
     /// Text-color style for the share card — re-rendered on the spot when a chip is tapped.
     @State private var shareTextColor: ShareCardTextColor = .blanc
+
+    /// Hauteur de l'aperçu de la carte de partage, et le rapport de la carte elle-même.
+    ///
+    /// Nommés parce qu'ils doivent rester d'accord : l'aperçu en attente reproduit la silhouette
+    /// de la carte pour que la page ne saute pas quand l'image arrive, et il ne peut le faire
+    /// qu'en connaissant le rapport. Écrits deux fois, ils auraient divergé au premier
+    /// changement — et la version précédente de cet écran avait justement une boîte de 230 points
+    /// de haut sans aucun lien avec les 360 × 640 de la carte qu'elle affichait.
+    private static let sharePreviewHeight: CGFloat = 300
+    private static let shareCardAspect: CGFloat = 360.0 / 640.0
     @State private var showPublishRoute = false
 
     private var run: RunRecord? { historicalRun ?? appState.lastRun }
@@ -137,11 +147,25 @@ struct RecapView: View {
                         VStack(spacing: 10) {
                             RUCardHeader(icon: "square.and.arrow.up", tint: RUColor.rose, title: "Partage ta course")
                                 .frame(maxWidth: .infinity, alignment: .leading)
+                            // Le fond épouse la CARTE, il ne remplit plus la largeur de l'écran.
+                            //
+                            // La carte est au format story — 360 × 640. Posée par `scaledToFit`
+                            // dans un cadre pleine largeur de 230 points de haut, elle se réduisait
+                            // à sa hauteur : 230 × 360/640 ≈ 129 points de large, au centre d'un
+                            // cadre d'environ 360. Les deux tiers du panneau étaient vides à
+                            // gauche et à droite, et l'objet qu'on vend paraissait minuscule et
+                            // perdu — sur l'écran dont c'est tout le propos.
+                            //
+                            // Un aperçu doit ressembler à ce qu'on s'apprête à partager : un
+                            // rectangle vertical, cadré comme la story où il finira. Le dégradé
+                            // et le liseré passent donc sur l'image elle-même.
                             Group {
                                 if let shareImage {
                                     shareImage
                                         .resizable()
                                         .scaledToFit()
+                                        .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
+                                        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                                 } else if shareRenderFailed {
                                     // `ImageRenderer.uiImage` can come back nil under memory
                                     // pressure — without this, the spinner below just spun
@@ -158,13 +182,18 @@ struct RecapView: View {
                                     }
                                 } else {
                                     ProgressView().tint(RUColor.text2)
+                                        .frame(width: Self.sharePreviewHeight * Self.shareCardAspect)
+                                        .frame(maxHeight: .infinity)
+                                        .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
                                 }
                             }
-                            .frame(height: 230)
+                            // 300 et non 230 : à 129 points de large la carte n'était pas
+                            // seulement mal cadrée, elle était illisible — ses trois chiffres
+                            // tombaient sous la taille où l'on distingue encore ce qu'on partage.
+                            // Une hauteur fixe, identique pour les trois états, évite en plus que
+                            // la page saute au moment où l'image finit de se rendre.
+                            .frame(height: Self.sharePreviewHeight)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                             HStack(spacing: 7) {
                                 ForEach(ShareCardTextColor.allCases) { style in
                                     SelectableChip(label: style.label, selected: shareTextColor == style) {

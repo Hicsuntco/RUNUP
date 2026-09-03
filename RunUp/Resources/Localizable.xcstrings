@@ -9208,6 +9208,22 @@
         }
       }
     },
+    "Le coach n'a pas pu répondre à ça. Reformule autrement — et si c'est une douleur qui dure, parles-en à un médecin.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your coach couldn't answer that one. Try putting it differently — and if it's pain that lasts, see a doctor."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu entrenador no ha podido responder a eso. Pruébalo de otra forma; y si es un dolor que persiste, consulta a un médico."
+          }
+        }
+      }
+    },
     "Le coach n'a pas pu répondre — vérifie ta connexion.": {
       "localizations": {
         "en": {

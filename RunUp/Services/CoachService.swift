@@ -8,6 +8,12 @@ enum CoachServiceError: Error {
     case network(Error)
     case badResponse(Int, String)
     case emptyReply
+    /// Le modèle a décliné la demande. Ça arrive en HTTP 200, avec `stop_reason: "refusal"` et
+    /// souvent rien d'exploitable dans le contenu — donc sans ce cas, un refus était indiscernable
+    /// d'une panne réseau et s'affichait « Connexion coupée ». Ce n'est pas un détail sur un coach
+    /// à qui on parle de douleurs, de blessures et de poids : lui dire de réessayer plus tard,
+    /// c'est l'envoyer refaire trois fois quelque chose qui ne marchera pas.
+    case refused
 }
 
 /// Ce que le coach renvoie : ce qu'il dit, et éventuellement ce qu'il change.
@@ -141,9 +147,14 @@ enum CoachService {
         }
 
         let decoded = try JSONDecoder().decode(MessagesResponse.self, from: data)
+        // `first(where:)` et pas `first` : la réponse peut commencer par un bloc de réflexion ou
+        // un appel d'outil. Chercher le bloc de texte plutôt que prendre le premier venu est ce
+        // qui rend ce décodage indifférent à la réflexion du modèle.
         let text = decoded.content.first(where: { $0.type == "text" })?.text?.trimmingCharacters(in: .whitespacesAndNewlines)
         let action = decodeAction(from: data)
-        guard (text?.isEmpty == false) || action != nil else { throw CoachServiceError.emptyReply }
+        guard (text?.isEmpty == false) || action != nil else {
+            throw decoded.stopReason == "refusal" ? CoachServiceError.refused : CoachServiceError.emptyReply
+        }
         return CoachReply(text: text, action: action)
     }
 
@@ -260,6 +271,12 @@ private struct RequestMessage: Encodable, Sendable {
 
 private struct MessagesResponse: Decodable {
     var content: [ContentBlock]
+    var stopReason: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case content
+        case stopReason = "stop_reason"
+    }
 }
 
 private struct ContentBlock: Decodable {

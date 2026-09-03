@@ -105,7 +105,16 @@ final class CoachViewModel {
                 for stale in history.filter({ $0.role == .error }) {
                     modelContext.delete(stale)
                 }
-                modelContext.insert(ChatMessage(role: .error, text: String(localized: "Connexion coupée — le coach n'a pas pu répondre. Réessaie dans un instant.")))
+                // Un refus et une panne réseau demandent deux choses différentes à la coureuse :
+                // l'une se répare en réessayant, l'autre jamais. Les afficher pareil, c'est
+                // l'envoyer retaper trois fois une question qui ne passera pas.
+                let message: String
+                if case CoachServiceError.refused = error {
+                    message = String(localized: "Le coach n'a pas pu répondre à ça. Reformule autrement — et si c'est une douleur qui dure, parles-en à un médecin.")
+                } else {
+                    message = String(localized: "Connexion coupée — le coach n'a pas pu répondre. Réessaie dans un instant.")
+                }
+                modelContext.insert(ChatMessage(role: .error, text: message))
                 isTyping = false
             }
         }

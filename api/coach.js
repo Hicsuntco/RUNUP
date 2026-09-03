@@ -17,11 +17,30 @@ function timingSafeEqualStrings(a, b) {
   return crypto.timingSafeEqual(ha, hb);
 }
 
-const ALLOWED_MODEL = 'claude-opus-4-8';
-// Relevé de 500 : une réponse qui porte À LA FOIS du texte et un appel d'outil dépasse plus
-// facilement le plafond, et un dépassement ne se voit pas — la réponse arrive simplement coupée
-// au milieu d'une phrase, ce qui ressemble à un bug d'affichage plutôt qu'à une limite atteinte.
-const MAX_TOKENS_CAP = 800;
+const ALLOWED_MODEL = 'claude-opus-5';
+
+// Sur Opus 5, la réflexion est ACTIVE par défaut — c'est le changement de comportement à
+// connaître en venant d'Opus 4.8, où ne rien écrire voulait dire ne pas réfléchir. Elle est
+// écrite explicitement ici plutôt que laissée implicite, parce que la différence entre les deux
+// modèles est invisible dans le code et coûteuse à redécouvrir.
+//
+// Et surtout : on ne la coupe PAS, alors que ce serait le réflexe pour économiser des jetons. Un
+// Opus 5 sans réflexion écrit parfois son appel d'outil dans le texte visible au lieu de l'émettre
+// comme appel — le tour réussit, l'outil ne part jamais, aucune erreur n'est levée, et le
+// programme ne bouge pas pendant que le coach affirme le contraire. C'est exactement la panne que
+// tout ce travail cherche à éviter. On baisse donc l'effort plutôt que la réflexion : une
+// conversation de coaching n'est pas un problème difficile, et c'est le levier prévu pour ça.
+const THINKING = { type: 'adaptive' };
+const EFFORT = 'low';
+
+// Relevé de 500 à 800 quand les outils sont arrivés — une réponse qui porte À LA FOIS du texte et
+// un appel d'outil dépasse plus facilement le plafond, et un dépassement ne se voit pas : la
+// réponse arrive coupée au milieu d'une phrase, ce qui ressemble à un bug d'affichage plutôt qu'à
+// une limite atteinte. Relevé encore avec Opus 5, parce que les jetons de réflexion se comptent
+// dans ce même plafond : à 800, la réflexion mangerait la réponse. 2000 laisse largement de quoi
+// écrire quelques phrases là où 500 suffisaient, sans ouvrir en grand un budget que le plafond
+// quotidien par utilisatrice traduit directement en euros.
+const MAX_TOKENS_CAP = 2000;
 
 // Ce que le coach a le droit de changer au programme.
 //
@@ -212,6 +231,8 @@ module.exports = withErrorHandling(async function handler(req, res) {
   const body = {
     model: ALLOWED_MODEL,
     max_tokens: MAX_TOKENS_CAP,
+    thinking: THINKING,
+    output_config: { effort: EFFORT },
     system,
     messages,
   };

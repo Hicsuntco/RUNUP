@@ -152,6 +152,24 @@ est le seul point d'appel réseau côté app.
 3. Redéploie, puis vérifie que `RunUp/Services/CoachService.swift`'s `endpoint` pointe bien vers
    l'URL Vercel réelle du projet (`https://<projet>.vercel.app/api/coach`).
 
+**Le coach modifie le programme.** Il ne se contente pas de répondre : il peut alléger les
+séances, signaler une zone sensible, changer les jours de course ou décaler la séance du jour.
+Trois choses à savoir avant d'y toucher :
+
+- La liste de ce qu'il a le droit de faire (`COACH_TOOLS`) vit dans `api/coach.js`, jamais dans
+  l'app — même raison que le modèle et le plafond de jetons. L'app envoie `allow_actions`, un
+  drapeau qui ne peut que retirer des capacités : elle le met à `false` pour les questions posées
+  à voix haute en pleine course. **Ajouter un outil demande donc un redéploiement Vercel EN PLUS
+  d'une mise à jour de l'app** — et les deux ne sortent pas le même jour, donc un outil déployé
+  côté serveur doit rester sans effet sur une app plus ancienne (c'est le cas : `CoachAction.make`
+  ignore ce qu'elle ne connaît pas).
+- Il écrit dans les ENTRÉES du générateur (`UserProfile.trainingEase`, `injuryArea`,
+  `runningDays`), jamais dans les séances produites, qui sont regénérées chaque semaine. Voir
+  l'en-tête de `TrainingEase` — c'est la seule forme qui survit au lundi suivant.
+- Rien de ce qui vient du modèle n'est pris pour argent comptant : `CoachAction.make` et
+  `TrainingEase.sanitized` bornent tout, et `RunUpTests/CoachActionTests.swift` verrouille ces
+  bornes.
+
 **Côté app — `Secrets.xcconfig` (une fois, sur ta machine) :**
 
 Ce secret n'est **plus** écrit en dur dans `CoachService.swift` : il était committé en clair dans

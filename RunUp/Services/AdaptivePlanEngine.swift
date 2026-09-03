@@ -124,6 +124,16 @@ enum AdaptivePlanEngine {
     /// real day/week always ticks forward on its own without the app having to be opened on a
     /// fixed schedule.
     static func refreshProgramForCurrentDate(_ profile: UserProfile) {
+        // L'allègement posé par le coach expire tout seul, et il expire ICI — au lancement, avant
+        // que quoi que ce soit d'autre ne soit lu. Le laisser mourir au prochain lundi ferait
+        // mentir l'app pendant six jours : le bandeau annonce « jusqu'au 17 », et le 18 les
+        // séances sont toujours plafonnées. Regénérer tout de suite est le seul moyen que la date
+        // affichée soit la date vraie.
+        if let ease = profile.trainingEase, !ease.isActive() {
+            profile.trainingEase = nil
+            if profile.programPhase == .active { applyProgramSettingsChange(profile) }
+        }
+
         // Recovery advances with the real calendar, exactly like the active program below — it
         // used to advance one day per tap of a "JOUR SUIVANT" button instead, which let N quick
         // taps skip recovery entirely while never opening the app never advanced it at all.
@@ -664,15 +674,45 @@ enum AdaptivePlanEngine {
         }
     }
 
-    /// Eases the week's plan around a flagged injury and/or the estimated cycle phase — never
-    /// changes the *shape* of the week (still easy/speed/longRun), only lightens the load and
-    /// says so honestly in the subtitle, rather than silently deviating from what's printed.
-    /// Both signals are opt-in/user-provided (`profile.injuryArea`, `profile.cyclePhase`), so
-    /// this is a no-op for anyone who hasn't shared either.
+    /// Eases the week's plan around three opt-in signals: the ease the coach set from the
+    /// conversation (`profile.trainingEase`), a flagged injury (`profile.injuryArea`), and the
+    /// estimated cycle phase (`profile.cyclePhase`). A no-op for anyone who has shared none.
+    ///
+    /// L'injury et le cycle ne changent JAMAIS la forme de la semaine (toujours easy/speed/
+    /// longRun) : ils allègent la charge et le disent dans le sous-titre, plutôt que de dévier en
+    /// silence de ce qui est écrit. L'allègement du coach, lui, PEUT la changer — c'est même tout
+    /// ce que « plus de fractionné » veut dire — et c'est pour ça qu'il remplace la séance au lieu
+    /// de la raboter : une séance de vitesse rabotée reste une séance de vitesse.
     private static func adjustForWellbeing(_ archetypes: [SessionArchetype], profile: UserProfile) -> [SessionArchetype] {
         var result = archetypes
         let injury = profile.injuryArea
         let hasInjury = injury != nil && injury != "none"
+
+        // L'allègement posé par le coach passe EN PREMIER, et il remplace la séance de vitesse
+        // plutôt que de l'alléger : « plus de fractionné » n'est pas « un fractionné plus court ».
+        // Garder le titre « Fractionné VMA 6 × 800 m » sur une séance qu'on veut en Z2 mentirait à
+        // l'écran, et `SessionDetailSheet` y lirait des répétitions qu'on ne veut plus faire.
+        //
+        // Quand le bloc n'a pas de séance facile à mettre à la place (le travail technique HYROX
+        // n'en a pas), on retombe sur l'allègement sur place : c'est moins bien, et c'est plus
+        // honnête que d'inventer une séance qui n'appartient pas au bloc.
+        if let ease = profile.trainingEase, ease.isActive(), ease.noSpeedWork {
+            let easyTemplate = result.first { $0.role == .easy }
+            result = result.map { a in
+                guard a.role == .speed else { return a }
+                if var replacement = easyTemplate {
+                    replacement.baseDuration = a.baseDuration
+                    replacement.subtitle = ease.reason
+                    return replacement
+                }
+                var eased = a
+                eased.subtitle = ease.reason
+                eased.zone = "Z2"
+                eased.intervals = nil
+                eased.baseDuration = Int(Double(a.baseDuration) * 0.7)
+                return eased
+            }
+        }
 
         if hasInjury, let injury {
             result = result.map { a in
@@ -778,7 +818,29 @@ enum AdaptivePlanEngine {
             // sessions whose entire purpose is to SHED load before race day — the opposite of what
             // a taper is for.
             let isTaper = block == .affutage
-            let duration = isTaper ? archetype.baseDuration : archetype.baseDuration + (tier - 1) * 4
+            var duration = isTaper ? archetype.baseDuration : archetype.baseDuration + (tier - 1) * 4
+
+            // Le plafond du coach s'applique APRÈS le tier, pas avant : c'est la durée réellement
+            // affichée qu'il s'agit de borner. L'appliquer sur `baseDuration` laisserait le tier
+            // repasser au-dessus, et une coureuse à qui on a promis 30 minutes en verrait 38.
+            var cappedByEase = false
+            if let ease = profile.trainingEase, ease.isActive(), let cap = ease.maxMinutes, cap < duration {
+                duration = cap
+                cappedByEase = true
+            }
+
+            // Une séance raccourcie qui s'annonce « Niveau 3 » est un écran qui se contredit :
+            // l'étiquette promet une semaine plus chargée pendant que la durée dit l'inverse.
+            // Quand l'allègement mord, c'est lui qui a le dernier mot sur l'étiquette — c'est la
+            // seule chose qui explique ce que la coureuse a sous les yeux.
+            let adjustment: String?
+            if cappedByEase {
+                adjustment = profile.trainingEase?.reason
+            } else if tier > 1 && !isTaper {
+                adjustment = String(localized: "Niveau \(tier)")
+            } else {
+                adjustment = nil
+            }
 
             let session = WorkoutSession(
                 title: archetype.title,
@@ -786,7 +848,7 @@ enum AdaptivePlanEngine {
                 durationMinutes: duration,
                 pace: archetype.pace,
                 zone: archetype.zone,
-                adjustment: (tier > 1 && !isTaper) ? String(localized: "Niveau \(tier)") : nil,
+                adjustment: adjustment,
                 kind: archetype.kind,
                 intervals: archetype.intervals
             )
@@ -1102,6 +1164,109 @@ enum AdaptivePlanEngine {
         var chrono: String?
         var raceDate: Date?
         var runningDays: [Int]
+    }
+
+    // MARK: Le coach écrit dans le programme
+
+    /// L'état que `applyCoachAction` peut avoir modifié, capturé avant de le modifier.
+    ///
+    /// Restaurer les ENTRÉES ne suffirait pas : « décaler la séance du jour » ne change aucune
+    /// entrée, il permute deux jours de `weekSessions`. On garde donc aussi la semaine produite,
+    /// ce qui rend l'annulation exacte pour les cinq actions au lieu de quatre — et évite d'avoir
+    /// à raisonner, à chaque nouvelle action, sur ce qu'il faudrait penser à ajouter ici.
+    struct CoachActionSnapshot {
+        var trainingEase: TrainingEase?
+        var injuryArea: String?
+        var runningDays: [Int]
+        var preferredLongRunDay: Int?
+        var weekSessions: [PlannedDay]
+        var weekStrip: [DayStatus]
+        var todaySession: WorkoutSession
+    }
+
+    static func snapshot(_ profile: UserProfile) -> CoachActionSnapshot {
+        CoachActionSnapshot(
+            trainingEase: profile.trainingEase,
+            injuryArea: profile.injuryArea,
+            runningDays: profile.runningDays,
+            preferredLongRunDay: profile.preferredLongRunDay,
+            weekSessions: profile.weekSessions,
+            weekStrip: profile.weekStrip,
+            todaySession: profile.todaySession
+        )
+    }
+
+    static func restore(_ snapshot: CoachActionSnapshot, to profile: UserProfile) {
+        profile.trainingEase = snapshot.trainingEase
+        profile.injuryArea = snapshot.injuryArea
+        profile.runningDays = snapshot.runningDays
+        profile.preferredLongRunDay = snapshot.preferredLongRunDay
+        profile.weekSessions = snapshot.weekSessions
+        profile.weekStrip = snapshot.weekStrip
+        profile.todaySession = snapshot.todaySession
+    }
+
+    /// Applique une action du coach et renvoie la phrase à afficher dans le fil — ou `nil` quand
+    /// il n'y avait rien à faire.
+    ///
+    /// La phrase renvoyée est DÉJÀ traduite : elle doit être affichée avec `Text(String)`, jamais
+    /// via une `LocalizedStringKey`, sinon elle est traduite deux fois (ça marche en français par
+    /// identité, et ça casse partout ailleurs).
+    static func applyCoachAction(_ action: CoachAction, to profile: UserProfile) -> String? {
+        // Regénérer n'a de sens que sur un programme en cours. Pendant la récup ou l'écran de
+        // choix, il n'y a pas de semaine à recalculer : on enregistre le réglage, et il sera lu
+        // à la génération du prochain programme.
+        let regenerate = { if profile.programPhase == .active { applyProgramSettingsChange(profile) } }
+
+        switch action {
+        case .ease(let ease):
+            profile.trainingEase = ease
+            regenerate()
+            let until = ease.until.formatted(.dateTime.day().month(.wide))
+            if let cap = ease.maxMinutes, ease.noSpeedWork {
+                return String(localized: "Programme allégé — \(cap) min max, sans fractionné, jusqu'au \(until)")
+            } else if let cap = ease.maxMinutes {
+                return String(localized: "Programme allégé — \(cap) min max jusqu'au \(until)")
+            } else {
+                return String(localized: "Fractionné mis en pause jusqu'au \(until)")
+            }
+
+        case .sensitiveArea(let area):
+            // `nil` et « none » disent la même chose — l'un vient de l'onboarding, l'autre du
+            // coach. Les comparer bruts ferait annoncer « zone sensible levée » à quelqu'un qui
+            // n'en avait aucune.
+            let normalise: (String?) -> String? = { $0 == "none" ? nil : $0 }
+            let previous = normalise(profile.injuryArea)
+            guard previous != area else { return nil }
+            profile.injuryArea = area
+            regenerate()
+            guard let area else { return String(localized: "Zone sensible levée") }
+            return String(localized: "Zone sensible signalée : \(injuryLabel(area))")
+
+        case .runningDays(let days, let longRunDay):
+            let previousDays = profile.runningDays
+            let previousLongRun = profile.preferredLongRunDay
+            profile.runningDays = days
+            if let longRunDay { profile.preferredLongRunDay = longRunDay }
+            guard previousDays != profile.runningDays || previousLongRun != profile.preferredLongRunDay else { return nil }
+            regenerate()
+            let names = days.compactMap { DayStatus.fullNames.indices.contains($0) ? DayStatus.fullNames[$0] : nil }
+                .formatted(.list(type: .and))
+            return String(localized: "Jours de course : \(names)")
+
+        case .moveTodaysSession:
+            guard moveTodaySessionToTomorrow(profile) else { return nil }
+            return String(localized: "Séance du jour décalée à demain")
+
+        case .resumeNormal:
+            let hadEase = profile.trainingEase != nil
+            let hadInjury = profile.injuryArea != nil && profile.injuryArea != "none"
+            guard hadEase || hadInjury else { return nil }
+            profile.trainingEase = nil
+            profile.injuryArea = nil
+            regenerate()
+            return String(localized: "Programme repassé en normal")
+        }
     }
 
     static func startNewProgram(_ result: NewGoalResult, profile: UserProfile) {

@@ -10,6 +10,16 @@ enum CoachServiceError: Error {
     case emptyReply
 }
 
+/// Ce que le coach renvoie : ce qu'il dit, et éventuellement ce qu'il change.
+///
+/// `text` est optionnel parce qu'un tour où le coach n'appelle qu'un outil est légitime — rare,
+/// mais légitime. Dans ce cas c'est le résumé de l'action qui tient lieu de message, plutôt qu'une
+/// bulle vide au-dessus d'un bandeau qui, lui, dit déjà tout.
+struct CoachReply: Sendable {
+    var text: String?
+    var action: CoachAction?
+}
+
 enum CoachService {
     private static let endpoint = URL(string: "https://runup-nu.vercel.app/api/coach")!
     /// Shared secret between the app and `api/coach.js` — not a per-user credential, just a
@@ -36,6 +46,16 @@ enum CoachService {
     /// TODO(security): replace the `x-runup-secret` header with a DCAppAttestService assertion
     /// verified server-side in `api/coach.js`, and drop this shared secret entirely once shipped.
     private static let appSecret = Bundle.main.infoDictionary?["RUNUPAppSecret"] as? String ?? ""
+    /// Le format que les outils attendent pour les dates. `en_US_POSIX` pour la même raison que
+    /// dans `CoachAction` : un formateur sur la locale de l'appareil n'écrit pas « 2026-09-17 »
+    /// sur un calendrier non grégorien, et l'aller-retour ne retomberait pas sur ses pieds.
+    private static let isoDayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.calendar = Calendar(identifier: .gregorian)
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
     private static let raceDateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale.current
@@ -56,12 +76,17 @@ enum CoachService {
     /// l'exécuteur global. Le fil principal ne fait donc que ce qu'il est seul à pouvoir faire —
     /// lire les modèles et construire deux chaînes — puis rend la main.
     @MainActor
-    static func send(history: [ChatMessage], profile: UserProfile) async throws -> String {
+    static func send(history: [ChatMessage], profile: UserProfile) async throws -> CoachReply {
         try await performRequest(
             system: systemPrompt(for: profile),
             messages: history
-                .filter { $0.role != .error }
-                .map { RequestMessage(role: $0.role == .coach ? "assistant" : "user", content: $0.text) }
+                // Les bulles d'erreur ET les lignes d'action sont exclues : les premières ne sont
+                // pas de la conversation, les secondes sont un compte rendu de ce que le coach
+                // vient de faire. Les lui relire comme s'il les avait dites l'inviterait à les
+                // refaire — l'état réel du programme, lui, est déjà dans le prompt système.
+                .filter { $0.role == .user || $0.role == .coach }
+                .map { RequestMessage(role: $0.role == .coach ? "assistant" : "user", content: $0.text) },
+            allowActions: true
         )
     }
 
@@ -76,15 +101,30 @@ enum CoachService {
         \(liveContext)
         \(CoachLanguage.current.liveVoiceDirective) Ne dis jamais que tu es une IA.
         """
-        return try await performRequest(system: system, messages: [RequestMessage(role: "user", content: question)])
+        // `allowActions` reste faux : elle court, elle a le téléphone au bras et la réponse lui est
+        // lue à voix haute. Restructurer son programme à cet instant-là, sans qu'elle puisse rien
+        // voir ni annuler, n'est pas une chose qu'on fait à quelqu'un.
+        let reply = try await performRequest(
+            system: system,
+            messages: [RequestMessage(role: "user", content: question)],
+            allowActions: false
+        )
+        guard let text = reply.text, !text.isEmpty else { throw CoachServiceError.emptyReply }
+        return text
     }
 
-    private static func performRequest(system: String, messages: [RequestMessage]) async throws -> String {
+    private static func performRequest(
+        system: String,
+        messages: [RequestMessage],
+        allowActions: Bool
+    ) async throws -> CoachReply {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
         request.setValue(appSecret, forHTTPHeaderField: "x-runup-secret")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
-        request.httpBody = try JSONEncoder().encode(MessagesRequest(system: system, messages: messages))
+        request.httpBody = try JSONEncoder().encode(
+            MessagesRequest(system: system, messages: messages, allowActions: allowActions)
+        )
 
         let data: Data
         let response: URLResponse
@@ -102,8 +142,32 @@ enum CoachService {
 
         let decoded = try JSONDecoder().decode(MessagesResponse.self, from: data)
         let text = decoded.content.first(where: { $0.type == "text" })?.text?.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let text, !text.isEmpty else { throw CoachServiceError.emptyReply }
-        return text
+        let action = decodeAction(from: data)
+        guard (text?.isEmpty == false) || action != nil else { throw CoachServiceError.emptyReply }
+        return CoachReply(text: text, action: action)
+    }
+
+    /// Extrait le premier appel d'outil exploitable de la réponse.
+    ///
+    /// `JSONSerialization` plutôt que `Codable` pour ce seul champ : `input` n'a pas de forme fixe
+    /// — c'est un objet différent par outil — et lui écrire un décodeur générique coûterait une
+    /// petite machinerie de valeurs JSON pour un gain nul, puisque c'est de toute façon en `Data`
+    /// que `CoachAction.make` veut le recevoir.
+    ///
+    /// LE PREMIER, et un seul. Le modèle peut en émettre plusieurs dans un même tour ; les
+    /// appliquer tous donnerait une phrase de compte rendu illisible et une annulation qui défait
+    /// des choses que la coureuse n'a pas vues arriver. Un changement à la fois se lit, se
+    /// comprend et se défait.
+    private static func decodeAction(from data: Data) -> CoachAction? {
+        guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let content = root["content"] as? [[String: Any]] else { return nil }
+        for block in content where block["type"] as? String == "tool_use" {
+            guard let name = block["name"] as? String,
+                  let input = block["input"],
+                  let inputData = try? JSONSerialization.data(withJSONObject: input) else { continue }
+            if let action = CoachAction.make(name: name, input: inputData) { return action }
+        }
+        return nil
     }
 
     /// Ported near-verbatim from `sendCoach` in the design handoff's `app.jsx` — the coach is
@@ -121,6 +185,15 @@ enum CoachService {
         }
         if let injury = s.injuryArea, injury != "none" {
             extra.append("Attention, zone sensible signalée : \(AdaptivePlanEngine.injuryLabel(injury)).")
+        }
+        // Ce que le coach a DÉJÀ posé. Sans cette ligne il repose la même contrainte à chaque
+        // message — il n'a aucun autre moyen de savoir que le tour précédent a abouti — et la
+        // coureuse voit le même bandeau se répéter sans que rien ne change.
+        if let ease = s.trainingEase, ease.isActive() {
+            let cap = ease.maxMinutes.map { "\($0) min max" } ?? "pas de plafond de durée"
+            let speed = ease.noSpeedWork ? ", sans fractionné" : ""
+            let until = ease.until.formatted(.dateTime.day().month(.wide))
+            extra.append("Allègement déjà en place (\(cap)\(speed)) jusqu'au \(until) — ne le repose pas, tu peux le remplacer ou le lever.")
         }
         if let phase = s.cyclePhase {
             extra.append("Phase du cycle estimée : \(phase.rawValue) — adapte le ton (sois indulgent(e) sur l'intensité en phase menstruelle) sans jamais lui dire quoi faire de son corps à sa place.")
@@ -153,6 +226,8 @@ enum CoachService {
         Profil : \(s.name), coureuse \(s.level.title.lowercased()), objectif \(s.goalDisplay)\(raceDateStr)\(raceIn). \(programLengthDesc), actuellement semaine \(s.weekNumber) (bloc \(block.rawValue)). \(extraBlock)
         Aujourd'hui : \(s.hasReadinessData ? "forme \(s.readiness)/100" : "pas encore assez de données pour estimer sa forme du jour"). Séance du jour : \(s.todaySession.title) (\(s.todaySession.durationMinutes) min, allure \(s.todaySession.pace), \(s.todaySession.zone)). Série de \(s.streak) jours.
         \(CoachLanguage.current.styleDirective) Au plus un emoji occasionnel. Ne dis jamais que tu es une IA ou un modèle. Tu peux ajuster ses séances, donner des conseils d'allure, de récup, de nutrition, d'objectif. Tu ne donnes JAMAIS d'avis médical : en cas de douleur persistante, blessure ou symptôme inquiétant, conseille-lui de consulter un médecin.
+        Tu peux modifier son programme pour de vrai, avec les outils fournis. Sers-t'en quand tu annonces un changement — dire « on allège cette semaine » sans appeler l'outil ne change rien à son programme, et elle le découvrira en ouvrant l'onglet. À l'inverse, n'appelle pas d'outil pour un simple conseil, ni pour confirmer quelque chose qui est déjà en place. Un seul outil par message, et dis en toutes lettres ce que tu changes : c'est appliqué immédiatement.
+        Aujourd'hui nous sommes le \(Self.isoDayFormatter.string(from: .now)) (format des dates attendu par les outils).
         """
     }
 }
@@ -160,6 +235,18 @@ enum CoachService {
 private struct MessagesRequest: Encodable {
     var system: String
     var messages: [RequestMessage]
+    /// Demande au serveur de joindre les définitions d'outils (voir `api/coach.js`).
+    ///
+    /// C'est un drapeau qui ne peut que RESTREINDRE : le serveur ignore tout ce que l'app
+    /// prétendrait sur les outils eux-mêmes et n'attache que sa propre liste, figée. Un client
+    /// trafiqué peut donc se priver des actions, jamais s'en inventer — ce qui est exactement la
+    /// même logique que le modèle et le plafond de jetons, imposés côté serveur depuis le début.
+    var allowActions: Bool
+
+    private enum CodingKeys: String, CodingKey {
+        case system, messages
+        case allowActions = "allow_actions"
+    }
 }
 
 /// `Sendable` explicitement : cette valeur est la SEULE chose qui franchit la limite entre le

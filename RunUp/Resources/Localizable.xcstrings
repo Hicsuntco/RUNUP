@@ -2696,6 +2696,22 @@
         }
       }
     },
+    "Allégé par ton coach": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eased by your coach"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aligerado por tu entrenador"
+          }
+        }
+      }
+    },
     "Allégée · nuit courte": {
       "localizations": {
         "en": {
@@ -2854,6 +2870,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cancelar esta salida"
+          }
+        }
+      }
+    },
+    "Annulé — ton programme n'a pas changé.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undone — your training plan is unchanged."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshecho: tu plan no ha cambiado."
           }
         }
       }
@@ -7489,6 +7521,22 @@
         }
       }
     },
+    "Fractionné mis en pause jusqu'au %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speed work paused until %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Series en pausa hasta el %@"
+          }
+        }
+      }
+    },
     "Fractionné pro": {
       "extractionState": "manual",
       "localizations": {
@@ -8747,6 +8795,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Días de carrera"
+          }
+        }
+      }
+    },
+    "Jours de course : %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running days: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Días de carrera: %@"
           }
         }
       }
@@ -12311,6 +12375,38 @@
         }
       }
     },
+    "Programme allégé — %lld min max jusqu'au %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Training eased — %lld min max until %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entrenamiento aligerado — %lld min máx. hasta el %@"
+          }
+        }
+      }
+    },
+    "Programme allégé — %lld min max, sans fractionné, jusqu'au %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Training eased — %lld min max, no speed work, until %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entrenamiento aligerado — %lld min máx., sin series, hasta el %@"
+          }
+        }
+      }
+    },
     "Programme mis à jour": {
       "localizations": {
         "en": {
@@ -12405,6 +12501,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Programa abierto, sin fecha de fin — una semana más ligera cada 4 semanas. Se adapta cada semana a tu forma."
+          }
+        }
+      }
+    },
+    "Programme repassé en normal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Training back to normal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entrenamiento de nuevo normal"
           }
         }
       }
@@ -15398,6 +15510,22 @@
         }
       }
     },
+    "Séance du jour décalée à demain": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today's session moved to tomorrow"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesión de hoy movida a mañana"
+          }
+        }
+      }
+    },
     "Séance déjà faite": {
       "extractionState": "manual",
       "localizations": {
@@ -17975,6 +18103,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zona óptima"
+          }
+        }
+      }
+    },
+    "Zone sensible levée": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sensitive area cleared"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zona sensible retirada"
+          }
+        }
+      }
+    },
+    "Zone sensible signalée : %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sensitive area flagged: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zona sensible señalada: %@"
           }
         }
       }

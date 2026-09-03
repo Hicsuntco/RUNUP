@@ -96,6 +96,15 @@ final class UserProfile {
     /// inline default (not just one set in `init`) so SwiftData's lightweight migration can add
     /// this column to profiles saved before this field existed, instead of crashing at launch.
     var weekSessions: [PlannedDay] = []
+    /// L'allègement en cours, posé par le coach depuis la conversation (voir `CoachAction`).
+    ///
+    /// Optionnel et sans valeur par défaut autre que `nil` : c'est ce qui permet à la migration
+    /// légère de SwiftData d'ajouter cette colonne aux profils enregistrés avant qu'elle existe,
+    /// plutôt que de refuser d'ouvrir le magasin (voir l'en-tête de `PersistenceController`).
+    ///
+    /// Relu à chaque génération de semaine, jamais recopié dans les séances : c'est ce qui lui
+    /// permet de survivre au lundi suivant, contrairement à une séance qu'on aurait éditée.
+    var trainingEase: TrainingEase? = nil
     /// Difficulty tier for session duration/labeling — only ever changes at a week boundary,
     /// based on the previous week's average RPE, never after a single run.
     var weekTier: Int = 1

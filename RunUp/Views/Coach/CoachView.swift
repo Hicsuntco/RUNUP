@@ -181,6 +181,8 @@ struct CoachView: View {
             .padding(12)
             .background(RUColor.amber.opacity(0.1), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.amber.opacity(0.3), lineWidth: RUSpacing.hairline))
+        case .system:
+            appliedChangeRow(message)
         case .coach:
             coachBubble(message.text)
         case .user:
@@ -194,6 +196,41 @@ struct CoachView: View {
                     .background(RUColor.rose, in: BubbleShape(tailCorner: .topRight))
             }
         }
+    }
+
+    /// Ce que le coach vient de changer au programme.
+    ///
+    /// Volontairement PAS une bulle : ce n'est pas quelqu'un qui parle, c'est l'app qui rend
+    /// compte. Une bulle de plus dans le fil se lirait comme une phrase du coach, et la coureuse
+    /// n'aurait aucun moyen de distinguer ce qu'il a dit de ce qu'il a fait.
+    ///
+    /// `Text(message.text)` et pas `Text(LocalizedStringKey(...))` : la phrase arrive déjà
+    /// traduite d'`applyCoachAction`. La repasser par une clé la traduirait deux fois — invisible
+    /// en français, où la clé est sa propre traduction, cassé partout ailleurs.
+    private func appliedChangeRow(_ message: ChatMessage) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 12))
+                .foregroundColor(RUColor.lime)
+            Text(message.text)
+                .font(RUFont.sans(.small, weight: .semibold))
+                .foregroundColor(RUColor.text2)
+                .lineSpacing(2)
+            Spacer(minLength: 0)
+            if vm?.canUndo(message) == true {
+                Button("Annuler") { vm?.undoLastAction() }
+                    .font(RUFont.sans(.small, weight: .bold))
+                    .foregroundColor(RUColor.text3)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+                    .buttonStyle(PressableStyle())
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(RUColor.lime.opacity(0.1), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.lime.opacity(0.25), lineWidth: RUSpacing.hairline))
+        .accessibilityElement(children: .combine)
     }
 
     private func coachBubble(_ text: String) -> some View {

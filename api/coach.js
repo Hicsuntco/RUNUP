@@ -18,7 +18,101 @@ function timingSafeEqualStrings(a, b) {
 }
 
 const ALLOWED_MODEL = 'claude-opus-4-8';
-const MAX_TOKENS_CAP = 500;
+// Relevé de 500 : une réponse qui porte À LA FOIS du texte et un appel d'outil dépasse plus
+// facilement le plafond, et un dépassement ne se voit pas — la réponse arrive simplement coupée
+// au milieu d'une phrase, ce qui ressemble à un bug d'affichage plutôt qu'à une limite atteinte.
+const MAX_TOKENS_CAP = 800;
+
+// Ce que le coach a le droit de changer au programme.
+//
+// Défini ICI et nulle part ailleurs, pour la même raison que `ALLOWED_MODEL` et `MAX_TOKENS_CAP` :
+// l'app peut demander à ne PAS avoir d'outils (voir `allow_actions` plus bas), elle ne peut pas en
+// ajouter. Un client trafiqué ne peut donc pas s'inventer une action que le vrai programme
+// n'implémente pas — et surtout, la liste des choses qu'une conversation peut modifier reste
+// lisible d'un seul endroit.
+//
+// Pas de `strict: true`, volontairement : il obligerait à déclarer les champs facultatifs en
+// unions nullables, et un schéma que l'API refuserait ne dégraderait pas le coach — il le
+// couperait net, pour tout le monde, sur chaque message. La validation réelle est de toute façon
+// côté app (`CoachAction.make` et `TrainingEase.sanitized`), qui doit se défier de ces valeurs
+// même quand le schéma est respecté.
+const COACH_TOOLS = [
+  {
+    name: 'ease_training_load',
+    description:
+      "Allège durablement le programme : plafonne la durée des séances et/ou remplace le travail de vitesse par de l'endurance souple, jusqu'à une date. À utiliser quand une gêne, une blessure légère, une fatigue ou une contrainte de temps doit se voir dans le programme des prochains jours — pas pour une seule séance (utilise move_todays_session) ni pour un conseil sans effet sur le plan. Remplace l'allègement en cours s'il y en a un.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        max_minutes: {
+          type: 'integer',
+          description: "Durée maximale d'une séance, en minutes. Omettre s'il n'y a pas de plafond à poser.",
+        },
+        no_speed_work: {
+          type: 'boolean',
+          description: "true pour remplacer fractionnés et séances de seuil par de l'endurance souple.",
+        },
+        until: {
+          type: 'string',
+          description: "Dernier jour où l'allègement s'applique, inclus, au format AAAA-MM-JJ.",
+        },
+        reason: {
+          type: 'string',
+          description: 'Motif court affiché sur les séances concernées, ex. « Tendinite — endurance souple ». Moins de 80 caractères.',
+        },
+      },
+      required: ['no_speed_work', 'until', 'reason'],
+    },
+  },
+  {
+    name: 'set_sensitive_area',
+    description:
+      "Signale une zone du corps sensible, ce qui allège durablement les séances à impact. Utiliser « none » pour lever un signalement devenu inutile.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        area: {
+          type: 'string',
+          enum: ['knee', 'ankle', 'back', 'other', 'none'],
+          description: 'Zone concernée, ou « none » pour lever le signalement.',
+        },
+      },
+      required: ['area'],
+    },
+  },
+  {
+    name: 'set_running_days',
+    description:
+      "Change les jours de la semaine où elle court, et éventuellement le jour de la sortie longue. À utiliser quand ses contraintes ont changé pour de bon — pas pour décaler une seule séance.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        days: {
+          type: 'array',
+          items: { type: 'integer' },
+          description: 'Jours de course. 0 = lundi, 6 = dimanche. Au moins deux jours.',
+        },
+        long_run_day: {
+          type: 'integer',
+          description: 'Jour de la sortie longue, à choisir parmi days. Omettre pour le laisser tel quel.',
+        },
+      },
+      required: ['days'],
+    },
+  },
+  {
+    name: 'move_todays_session',
+    description:
+      "Décale la séance du jour à demain, en l'échangeant avec ce qui y était prévu. Pour un imprévu ponctuel ; sans effet un jour de repos, ou si la séance est déjà faite.",
+    input_schema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'resume_normal_training',
+    description:
+      "Lève tout : l'allègement en cours et le signalement de zone sensible. À utiliser quand elle va mieux et que le programme doit reprendre sa progression normale.",
+    input_schema: { type: 'object', properties: {} },
+  },
+];
 // Generous for a human actually chatting with her coach (a heavy day is a few dozen messages),
 // tight for anyone trying to use this endpoint as a free LLM proxy billed to the owner's key.
 const DAILY_REQUEST_CAP = 250;
@@ -60,7 +154,7 @@ module.exports = withErrorHandling(async function handler(req, res) {
     return;
   }
 
-  const { system, messages } = req.body || {};
+  const { system, messages, allow_actions: allowActions } = req.body || {};
   if (typeof system !== 'string' || !system || !Array.isArray(messages)) {
     res.status(400).json({ error: 'bad_request' });
     return;
@@ -121,6 +215,13 @@ module.exports = withErrorHandling(async function handler(req, res) {
     system,
     messages,
   };
+  // Un booléen qui ne peut que retirer des capacités : l'app le met à faux pour les questions
+  // posées à voix haute en pleine course, où la réponse est lue par synthèse vocale et où
+  // personne ne peut voir ni annuler un changement de programme. Tout ce qu'un appelant peut
+  // obtenir en mentant ici, c'est un coach qui ne modifie rien.
+  if (allowActions === true) {
+    body.tools = COACH_TOOLS;
+  }
 
   try {
     const upstream = await fetch('https://api.anthropic.com/v1/messages', {

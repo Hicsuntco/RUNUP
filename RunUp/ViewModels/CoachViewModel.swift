@@ -18,14 +18,45 @@ final class CoachViewModel {
     var isTyping = false
     var draft = ""
 
+    /// Le dernier changement appliqué, et de quoi le défaire.
+    ///
+    /// Un seul niveau, et en mémoire seulement. « Annuler » sert à rattraper un changement qu'on
+    /// voit arriver et dont on ne veut pas ; passé le message suivant, ou une relance de l'app,
+    /// ce n'est plus une annulation mais une modification, et elle se fait là où le réglage
+    /// vit — dans les réglages du programme, ou en le redemandant au coach.
+    private struct PendingUndo {
+        var snapshot: AdaptivePlanEngine.CoachActionSnapshot
+        var line: ChatMessage
+    }
+    private var pendingUndo: PendingUndo?
+
     init(modelContext: ModelContext, profile: UserProfile) {
         self.modelContext = modelContext
         self.profile = profile
     }
 
+    /// Cette ligne est-elle celle qu'on peut encore défaire ?
+    func canUndo(_ message: ChatMessage) -> Bool {
+        pendingUndo?.line === message
+    }
+
+    func undoLastAction() {
+        guard let pending = pendingUndo else { return }
+        AdaptivePlanEngine.restore(pending.snapshot, to: profile)
+        // La ligne reste, son texte change. La supprimer laisserait le message du coach — « on
+        // allège cette semaine » — seul au-dessus d'un programme inchangé, sans rien pour
+        // expliquer l'écart. Là, la contradiction est datée et lisible.
+        pending.line.text = String(localized: "Annulé — ton programme n'a pas changé.")
+        pendingUndo = nil
+        Haptics.impact(.light)
+    }
+
     func send(_ text: String, history: [ChatMessage]) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, !isTyping else { return }
+        // Le tour précédent n'est plus annulable : son instantané ne décrit plus l'état courant
+        // dès qu'un nouveau changement peut s'empiler dessus.
+        pendingUndo = nil
         let userMessage = ChatMessage(role: .user, text: trimmed)
         modelContext.insert(userMessage)
         draft = ""
@@ -52,7 +83,19 @@ final class CoachViewModel {
                 for stale in history.filter({ $0.role == .error }) {
                     modelContext.delete(stale)
                 }
-                modelContext.insert(ChatMessage(role: .coach, text: reply))
+                if let text = reply.text, !text.isEmpty {
+                    modelContext.insert(ChatMessage(role: .coach, text: text))
+                }
+                // L'instantané est pris AVANT d'appliquer, et seulement si une action arrive :
+                // c'est ce qui rend « Annuler » exact plutôt qu'approximatif.
+                if let action = reply.action {
+                    let snapshot = AdaptivePlanEngine.snapshot(profile)
+                    if let summary = AdaptivePlanEngine.applyCoachAction(action, to: profile) {
+                        let line = ChatMessage(role: .system, text: summary)
+                        modelContext.insert(line)
+                        pendingUndo = PendingUndo(snapshot: snapshot, line: line)
+                    }
+                }
                 isTyping = false
                 // The reply often lands while she's mid-warmup, phone in hand but eyes
                 // elsewhere — a light tap says "réponse arrivée" without needing to look.

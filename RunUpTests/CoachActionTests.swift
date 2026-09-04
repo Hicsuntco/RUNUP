@@ -339,6 +339,32 @@ final class CoachActionPlanEffectTests: XCTestCase {
                        before.map(\.session?.durationMinutes))
     }
 
+    /// Le cas trouvé en s'en servant : « deux fois par semaine, trente minutes maximum ».
+    ///
+    /// C'est UNE demande, et elle se traduit en DEUX outils — la fréquence et la durée. Le code ne
+    /// gardait que le premier appel d'outil du tour, et le prompt demandait au modèle de n'en
+    /// émettre qu'un : le programme est ressorti raccourci à trente minutes, et toujours à trois
+    /// séances. À moitié appliqué est pire que pas appliqué, parce qu'on croit avoir été entendue.
+    @MainActor
+    func testTwoSessionsOfThirtyMinutesAppliesBothHalves() {
+        let profile = makeProfile()
+        profile.programPhase = .active
+        AdaptivePlanEngine.refreshProgramForCurrentDate(profile)
+        XCTAssertEqual(profile.runningDays.count, 4, "on part bien de quatre séances")
+
+        let ease = TrainingEase(maxMinutes: 30, noSpeedWork: true,
+                                until: Date().addingTimeInterval(10 * 86_400), reason: "Tendinite")
+        for action in [CoachAction.runningDays(days: [1, 3], longRunDay: 3), .ease(ease)] {
+            XCTAssertNotNil(AdaptivePlanEngine.applyCoachAction(action, to: profile))
+        }
+
+        let running = profile.weekSessions.filter { ($0.session?.durationMinutes ?? 0) > 0 }
+        XCTAssertEqual(running.count, 2, "la fréquence demandée doit être appliquée, pas seulement la durée")
+        for day in running {
+            XCTAssertLessThanOrEqual(day.session?.durationMinutes ?? 0, 30)
+        }
+    }
+
     /// Une action qui ne change rien ne doit pas produire de ligne dans le fil : un bandeau
     /// « c'est fait » au-dessus d'un programme identique est pire que pas de bandeau du tout.
     @MainActor

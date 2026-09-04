@@ -18,12 +18,12 @@ enum CoachServiceError: Error {
 
 /// Ce que le coach renvoie : ce qu'il dit, et éventuellement ce qu'il change.
 ///
-/// `text` est optionnel parce qu'un tour où le coach n'appelle qu'un outil est légitime — rare,
-/// mais légitime. Dans ce cas c'est le résumé de l'action qui tient lieu de message, plutôt qu'une
+/// `text` est optionnel parce qu'un tour où le coach n'appelle que des outils est légitime — rare,
+/// mais légitime. Dans ce cas c'est le résumé des actions qui tient lieu de message, plutôt qu'une
 /// bulle vide au-dessus d'un bandeau qui, lui, dit déjà tout.
 struct CoachReply: Sendable {
     var text: String?
-    var action: CoachAction?
+    var actions: [CoachAction]
 }
 
 enum CoachService {
@@ -151,11 +151,11 @@ enum CoachService {
         // un appel d'outil. Chercher le bloc de texte plutôt que prendre le premier venu est ce
         // qui rend ce décodage indifférent à la réflexion du modèle.
         let text = decoded.content.first(where: { $0.type == "text" })?.text?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let action = decodeAction(from: data)
-        guard (text?.isEmpty == false) || action != nil else {
+        let actions = decodeActions(from: data)
+        guard (text?.isEmpty == false) || !actions.isEmpty else {
             throw decoded.stopReason == "refusal" ? CoachServiceError.refused : CoachServiceError.emptyReply
         }
-        return CoachReply(text: text, action: action)
+        return CoachReply(text: text, actions: actions)
     }
 
     /// Extrait le premier appel d'outil exploitable de la réponse.
@@ -165,20 +165,32 @@ enum CoachService {
     /// petite machinerie de valeurs JSON pour un gain nul, puisque c'est de toute façon en `Data`
     /// que `CoachAction.make` veut le recevoir.
     ///
-    /// LE PREMIER, et un seul. Le modèle peut en émettre plusieurs dans un même tour ; les
-    /// appliquer tous donnerait une phrase de compte rendu illisible et une annulation qui défait
-    /// des choses que la coureuse n'a pas vues arriver. Un changement à la fois se lit, se
-    /// comprend et se défait.
-    private static func decodeAction(from data: Data) -> CoachAction? {
+    /// TOUS, et pas seulement le premier.
+    ///
+    /// Ce code n'en gardait qu'un, au motif qu'un seul changement à la fois se lit et se défait
+    /// mieux. L'usage a tranché autrement : « deux fois par semaine, trente minutes maximum » est
+    /// UNE demande qui se traduit en deux outils, et n'en appliquer qu'un a produit un programme
+    /// raccourci mais toujours à trois séances — donc quelqu'un qui croit avoir été entendu et
+    /// découvre le contraire dans l'onglet. À moitié appliqué est pire que pas appliqué : au moins
+    /// « je n'ai pas pu » se voit.
+    ///
+    /// L'annulation, elle, ne souffre pas du pluriel : l'instantané est pris avant le tour entier,
+    /// donc « Annuler » défait exactement ce que ce message a changé, qu'il y ait eu un outil ou
+    /// quatre.
+    private static let maxActionsPerTurn = 4
+
+    private static func decodeActions(from data: Data) -> [CoachAction] {
         guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let content = root["content"] as? [[String: Any]] else { return nil }
+              let content = root["content"] as? [[String: Any]] else { return [] }
+        var actions: [CoachAction] = []
         for block in content where block["type"] as? String == "tool_use" {
+            guard actions.count < maxActionsPerTurn else { break }
             guard let name = block["name"] as? String,
                   let input = block["input"],
                   let inputData = try? JSONSerialization.data(withJSONObject: input) else { continue }
-            if let action = CoachAction.make(name: name, input: inputData) { return action }
+            if let action = CoachAction.make(name: name, input: inputData) { actions.append(action) }
         }
-        return nil
+        return actions
     }
 
     /// Ported near-verbatim from `sendCoach` in the design handoff's `app.jsx` — the coach is
@@ -237,7 +249,7 @@ enum CoachService {
         Profil : \(s.name), coureuse \(s.level.title.lowercased()), objectif \(s.goalDisplay)\(raceDateStr)\(raceIn). \(programLengthDesc), actuellement semaine \(s.weekNumber) (bloc \(block.rawValue)). \(extraBlock)
         Aujourd'hui : \(s.hasReadinessData ? "forme \(s.readiness)/100" : "pas encore assez de données pour estimer sa forme du jour"). Séance du jour : \(s.todaySession.title) (\(s.todaySession.durationMinutes) min, allure \(s.todaySession.pace), \(s.todaySession.zone)). Série de \(s.streak) jours.
         \(CoachLanguage.current.styleDirective) Au plus un emoji occasionnel. Ne dis jamais que tu es une IA ou un modèle. Tu peux ajuster ses séances, donner des conseils d'allure, de récup, de nutrition, d'objectif. Tu ne donnes JAMAIS d'avis médical : en cas de douleur persistante, blessure ou symptôme inquiétant, conseille-lui de consulter un médecin.
-        Tu peux modifier son programme pour de vrai, avec les outils fournis. Sers-t'en quand tu annonces un changement — dire « on allège cette semaine » sans appeler l'outil ne change rien à son programme, et elle le découvrira en ouvrant l'onglet. À l'inverse, n'appelle pas d'outil pour un simple conseil, ni pour confirmer quelque chose qui est déjà en place. Un seul outil par message, et dis en toutes lettres ce que tu changes : c'est appliqué immédiatement.
+        Tu peux modifier son programme pour de vrai, avec les outils fournis. Sers-t'en quand tu annonces un changement — dire « on allège cette semaine » sans appeler l'outil ne change rien à son programme, et elle le découvrira en ouvrant l'onglet. À l'inverse, n'appelle pas d'outil pour un simple conseil, ni pour confirmer quelque chose qui est déjà en place. Appelle AUTANT d'outils qu'il en faut pour couvrir toute sa demande, dans le même message : « deux fois par semaine, trente minutes maximum » en demande deux — la fréquence est `set_running_days`, la durée est `ease_training_load`. N'en appliquer qu'une partie est pire que rien : elle croit avoir été entendue et découvre un programme à moitié changé. Dis en toutes lettres tout ce que tu changes : c'est appliqué immédiatement.
         Aujourd'hui nous sommes le \(Self.isoDayFormatter.string(from: .now)) (format des dates attendu par les outils).
         """
     }

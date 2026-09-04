@@ -86,12 +86,20 @@ final class CoachViewModel {
                 if let text = reply.text, !text.isEmpty {
                     modelContext.insert(ChatMessage(role: .coach, text: text))
                 }
-                // L'instantané est pris AVANT d'appliquer, et seulement si une action arrive :
-                // c'est ce qui rend « Annuler » exact plutôt qu'approximatif.
-                if let action = reply.action {
+                // L'instantané est pris AVANT le tour entier, et une seule fois : c'est ce qui rend
+                // « Annuler » exact que le coach ait appelé un outil ou quatre.
+                //
+                // Et une seule ligne pour tout le tour, pas une par action. « deux fois par
+                // semaine, trente minutes maximum » est UNE demande dans sa tête ; lui répondre par
+                // deux bandeaux empilés lui ferait relire deux fois la même chose, et laisserait
+                // croire que deux décisions distinctes ont été prises.
+                if !reply.actions.isEmpty {
                     let snapshot = AdaptivePlanEngine.snapshot(profile)
-                    if let summary = AdaptivePlanEngine.applyCoachAction(action, to: profile) {
-                        let line = ChatMessage(role: .system, text: summary)
+                    let summaries = reply.actions.compactMap {
+                        AdaptivePlanEngine.applyCoachAction($0, to: profile)
+                    }
+                    if !summaries.isEmpty {
+                        let line = ChatMessage(role: .system, text: summaries.joined(separator: " · "))
                         modelContext.insert(line)
                         pendingUndo = PendingUndo(snapshot: snapshot, line: line)
                     }

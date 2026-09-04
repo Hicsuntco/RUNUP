@@ -266,6 +266,9 @@ targets:
       # La montre ne prend de `RunUp/Shared` que les fichiers dont elle a besoin, un par un —
       # le dossier entier y ferait entrer du code qui dépend de modèles absents de cette cible.
       - path: RunUp/Shared/DisplayFont.swift
+      # La disposition de l'écran de course, choisie sur le téléphone et poussée ici. Le type est
+      # partagé pour que les deux bouts du canal ne puissent pas diverger sur le format.
+      - path: RunUp/Shared/WatchRunLayout.swift
     resources:
       - path: RunUpWatch/Assets.xcassets
       - path: RunUp/Resources/Fonts

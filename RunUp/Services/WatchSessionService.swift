@@ -80,6 +80,18 @@ final class WatchSessionService: NSObject {
                 payload["sessionKind"] = kind.rawValue
             }
         }
+
+        // HORS du bloc ci-dessus, et c'est le point : la disposition de l'écran de course est un
+        // réglage, pas une donnée de séance. L'envoyer à l'intérieur la ferait disparaître les
+        // jours de repos — où le contexte est vide — et la montre repasserait à la disposition
+        // par défaut un jour sur deux.
+        //
+        // Elle voyage aussi quand rien d'autre ne change : c'est ce qui fait que le garde
+        // « quelque chose a-t-il bougé ? » juste en dessous voit un changement de réglage.
+        let layout = profile.watchRunLayout ?? .standard
+        context["runLayout"] = layout.wireValue
+        payload["runLayout"] = layout.wireValue
+
         guard context != lastSentContext else { return }
         do {
             try WCSession.default.updateApplicationContext(payload)

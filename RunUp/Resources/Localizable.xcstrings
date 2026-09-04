@@ -1455,6 +1455,22 @@
         }
       }
     },
+    "/km": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/km"
+          }
+        }
+      }
+    },
     "1 course pas encore synchronisée": {
       "extractionState": "manual",
       "localizations": {
@@ -1652,6 +1668,22 @@
         }
       }
     },
+    "1ᵉ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1st"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1.º"
+          }
+        }
+      }
+    },
     "2 à 3h": {
       "localizations": {
         "en": {
@@ -1681,6 +1713,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "250 km acumulados"
+          }
+        }
+      }
+    },
+    "2ᵉ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2nd"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2.º"
           }
         }
       }
@@ -1730,6 +1778,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "3M"
+          }
+        }
+      }
+    },
+    "3ᵉ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3rd"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3.º"
           }
         }
       }
@@ -3005,6 +3069,22 @@
         }
       }
     },
+    "Apple Watch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Watch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Watch"
+          }
+        }
+      }
+    },
     "Appuie pour la définir par défaut": {
       "localizations": {
         "en": {
@@ -3967,6 +4047,22 @@
         }
       }
     },
+    "Cardio": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heart rate"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pulso"
+          }
+        }
+      }
+    },
     "Ce message n'est pas autorisé — reformule-le.": {
       "localizations": {
         "en": {
@@ -4174,6 +4270,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este teléfono contiene el perfil de %@ — su plan, su historial y sus ajustes. Acabas de iniciar sesión con otra cuenta."
+          }
+        }
+      }
+    },
+    "Celui que tu lis sans t'arrêter de courir.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The one you read without breaking stride."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El que lees sin dejar de correr."
           }
         }
       }
@@ -9029,6 +9141,22 @@
         }
       }
     },
+    "La barre de progression suit toujours la durée de la séance, quel que soit le grand chiffre — c'est le seul objectif qu'une séance porte.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The progress bar always tracks the session's duration, whatever the big number is — it's the only target a session carries."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La barra de progreso sigue siempre la duración de la sesión, sea cual sea el número grande: es el único objetivo que lleva una sesión."
+          }
+        }
+      }
+    },
     "La distance est facultative — laisse-la vide pour une séance de renforcement ou un tapis sans compteur.": {
       "extractionState": "manual",
       "localizations": {
@@ -9322,6 +9450,22 @@
         }
       }
     },
+    "Le grand chiffre": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The big number"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El número grande"
+          }
+        }
+      }
+    },
     "Le plan complet": {
       "extractionState": "manual",
       "localizations": {
@@ -9449,6 +9593,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Las sesiones ya hechas no se mueven."
+          }
+        }
+      }
+    },
+    "Les trois petits": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The three small ones"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los tres pequeños"
           }
         }
       }
@@ -14961,6 +15121,22 @@
         }
       }
     },
+    "Sous le grand, de gauche à droite.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Under the big one, left to right."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bajo el grande, de izquierda a derecha."
+          }
+        }
+      }
+    },
     "Spam": {
       "localizations": {
         "en": {
@@ -15716,6 +15892,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sesión terminada"
+          }
+        }
+      }
+    },
+    "Séance · %lld %": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session · %lld %"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesión · %lld %"
           }
         }
       }
@@ -16550,6 +16742,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Terminar"
+          }
+        }
+      }
+    },
+    "Terminer la course": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End the run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminar la carrera"
           }
         }
       }
@@ -18420,6 +18628,22 @@
         }
       }
     },
+    "bpm": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bpm"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bpm"
+          }
+        }
+      }
+    },
     "cm": {
       "localizations": {
         "en": {
@@ -18842,6 +19066,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "días de racha"
+          }
+        }
+      }
+    },
+    "kcal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kcal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kcal"
           }
         }
       }

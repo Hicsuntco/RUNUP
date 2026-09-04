@@ -27,6 +27,11 @@ final class WatchConnectivityManager: NSObject {
     /// que la course revienne en sachant quelle séance elle exécutait.
     private(set) var sessionKind: String?
 
+    /// La disposition de l'écran de course, choisie sur le téléphone. Le défaut tant que rien
+    /// n'est arrivé — une montre à jour dont l'app iPhone n'a pas été rouverte doit afficher un
+    /// écran cohérent, pas un écran vide.
+    private(set) var runLayout: WatchRunLayout = .standard
+
     private override init() {
         super.init()
         guard WCSession.isSupported() else { return }
@@ -67,6 +72,10 @@ final class WatchConnectivityManager: NSObject {
         sessionPace = context.pace
         sessionDurationMinutes = context.durationMinutes
         sessionKind = context.kind
+        // On GARDE la dernière disposition connue quand la clé est absente, au lieu de retomber
+        // sur le défaut. Un contexte poussé par une version du téléphone qui ne l'envoie pas
+        // encore ne doit pas défaire un réglage que la coureuse a pris.
+        if let layout = context.runLayout { runLayout = layout }
     }
 }
 
@@ -97,11 +106,13 @@ private struct SessionContext: Sendable {
     var pace: String?
     var durationMinutes: Int?
     var kind: String?
+    var runLayout: WatchRunLayout?
 
     init(_ context: [String: Any]) {
         title = context["sessionTitle"] as? String
         pace = context["sessionPace"] as? String
         durationMinutes = context["sessionDurationMinutes"] as? Int
         kind = context["sessionKind"] as? String
+        runLayout = (context["runLayout"] as? String).flatMap(WatchRunLayout.init(wireValue:))
     }
 }

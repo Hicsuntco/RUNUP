@@ -96,6 +96,11 @@ final class UserProfile {
     /// inline default (not just one set in `init`) so SwiftData's lightweight migration can add
     /// this column to profiles saved before this field existed, instead of crashing at launch.
     var weekSessions: [PlannedDay] = []
+    /// La disposition de l'écran de course sur l'Apple Watch, choisie dans les réglages et
+    /// poussée à la montre avec la séance du jour. `nil` = la disposition par défaut, ce qui
+    /// évite d'écrire un réglage sur le disque de tous ceux qui n'y ont jamais touché.
+    var watchRunLayout: WatchRunLayout? = nil
+
     /// L'allègement en cours, posé par le coach depuis la conversation (voir `CoachAction`).
     ///
     /// Optionnel et sans valeur par défaut autre que `nil` : c'est ce qui permet à la migration

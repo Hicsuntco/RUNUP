@@ -27,6 +27,9 @@ struct MoreSettingsView: View {
                     sectionTitle("Course")
                     runSettingsCard
 
+                    sectionTitle("Apple Watch")
+                    watchLayoutCard
+
                     sectionTitle("Programme")
                     programCard
 
@@ -166,6 +169,111 @@ struct MoreSettingsView: View {
     /// Auto-pause at a stop (see `LiveRunViewModel.autoPause`) — on by default like Strava/Garmin,
     /// but a real opt-out for runners whose interval sessions include genuine short walk breaks
     /// that shouldn't freeze the chrono.
+    /// Ce que la montre affiche pendant une course.
+    ///
+    /// Le réglage se prend ICI et pas sur la montre : elle n'a pas de clavier, et personne ne
+    /// configure son affichage en courant. Il voyage ensuite par le canal qui pousse déjà la
+    /// séance du jour — d'où l'appel à `publishWidgetSnapshot()` à chaque changement, qui est le
+    /// point d'entrée existant de cette synchro.
+    private var watchLayoutCard: some View {
+        let layout = profile.watchRunLayout ?? .standard
+        return VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    rowIcon("applewatch")
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Le grand chiffre").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                        Text("Celui que tu lis sans t'arrêter de courir.")
+                            .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
+                    }
+                    Spacer()
+                }
+                // `SelectableChip` traduit lui-même son libellé (`Text(LocalizedStringKey(label))`),
+                // donc on lui passe la CLÉ et non une chaîne déjà traduite — la traduire ici puis
+                // la lui donner la traduirait deux fois : sans effet en français, cassé ailleurs.
+                ChipFlowLayout {
+                    ForEach(RunMetric.allCases, id: \.self) { metric in
+                        SelectableChip(label: metric.nameKey, selected: layout.hero == metric) {
+                            setWatchLayout(hero: metric, secondary: layout.secondary)
+                        }
+                    }
+                }
+            }
+            .padding(14)
+
+            Divider().background(RUColor.line)
+
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    rowIcon("square.grid.3x1.below.line.grid.1x2")
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Les trois petits").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                        Text("Sous le grand, de gauche à droite.")
+                            .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
+                    }
+                    Spacer()
+                }
+                ForEach(Array(layout.secondary.enumerated()), id: \.offset) { index, metric in
+                    HStack {
+                        Text(slotLabel(index))
+                            .font(RUFont.sans(.small, weight: .semibold))
+                            .foregroundColor(RUColor.text3)
+                            .frame(width: 26, alignment: .leading)
+                        Spacer()
+                        Menu {
+                            // Le héros n'est pas proposé : il est déjà affiché en grand
+                            // au-dessus, et le voir deux fois sur un écran de 198 points est le
+                            // genre de réglage qu'on prend par erreur et qu'on ne comprend qu'en
+                            // courant.
+                            ForEach(RunMetric.allCases.filter { $0 != layout.hero }, id: \.self) { candidate in
+                                Button {
+                                    var next = layout.secondary
+                                    if index < next.count { next[index] = candidate }
+                                    setWatchLayout(hero: layout.hero, secondary: next)
+                                } label: {
+                                    Text(LocalizedStringKey(candidate.nameKey))
+                                }
+                            }
+                        } label: {
+                            HStack(spacing: 5) {
+                                Text(LocalizedStringKey(metric.nameKey))
+                                    .font(RUFont.sans(.emphasis, weight: .medium))
+                                    .foregroundColor(RUColor.textPrimary)
+                                Image(systemName: "chevron.up.chevron.down")
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundColor(RUColor.text3)
+                            }
+                        }
+                        .accessibilityLabel(Text(slotLabel(index)))
+                    }
+                    .frame(minHeight: 34)
+                }
+                Text("La barre de progression suit toujours la durée de la séance, quel que soit le grand chiffre — c'est le seul objectif qu'une séance porte.")
+                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                    .padding(.top, 2)
+            }
+            .padding(14)
+        }
+        .ruCard()
+    }
+
+    private func slotLabel(_ index: Int) -> String {
+        switch index {
+        case 0: return String(localized: "1ᵉ")
+        case 1: return String(localized: "2ᵉ")
+        default: return String(localized: "3ᵉ")
+        }
+    }
+
+    /// Passe toujours par `sanitized` : c'est ce qui garantit qu'aucun geste de cet écran — y
+    /// compris choisir comme héros un chiffre déjà présent en bas — ne produise un affichage où
+    /// le même nombre apparaît deux fois.
+    private func setWatchLayout(hero: RunMetric, secondary: [RunMetric]) {
+        profile.watchRunLayout = WatchRunLayout.sanitized(hero: hero, secondary: secondary)
+        appState.publishWidgetSnapshot()
+        Haptics.selection()
+    }
+
     private var runSettingsCard: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {

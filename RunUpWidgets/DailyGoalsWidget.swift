@@ -51,50 +51,96 @@ struct DailyGoalsProvider: TimelineProvider {
     }
 }
 
-/// Fifth pass on the visual design. The previous (fourth) pass made a ring the hero — refined, but
-/// still a soft gradient card with corner glows, closer to the app's own energetic in-app cards
-/// than the flat, high-contrast "scoreboard" look she wants for the Home Screen specifically (real
-/// references: solid black tiles, oversized flat numbers, tiny tracked-caps labels, zero
-/// gradients/glow anywhere). This pass drops the ring, the gradient background, and both radial
-/// glows in favor of a flat fill and huge Bebas Neue numerals — same real data as before
-/// (`DailyGoalsSnapshot`), just presented the way the reference does.
+/// L'anneau de l'accueil, posé sur l'écran d'accueil.
+///
+/// La passe précédente avait retiré l'anneau au profit d'un chiffre plat, au motif qu'un widget
+/// doit se lire comme un tableau d'affichage et non comme une carte de l'app. Le résultat s'est
+/// avéré terne à l'usage : hors du chiffre coloré, tout était gris sur noir, l'œil n'avait qu'un
+/// seul point d'accroche, et la version moyenne répétait quatre fois la même cellule.
+///
+/// Le pari est inverse ici — le widget est un morceau de l'app posé sur le téléphone. Il dessine
+/// donc L'ANNEAU DE L'ACCUEIL, pas une imitation : `RingSegmentGeometry` est le fichier partagé
+/// que `DailyGoalsBarsView` utilise déjà, écrit exactement pour ça (son en-tête annonce un
+/// `WidgetRingView` qui avait disparu, et que voici de retour). Découpe, écart entre arcs, sens de
+/// rotation et plage du dégradé viennent tous de là : ils ne peuvent plus diverger.
+struct WidgetRingView: View {
+    /// Le rang d'origine dans [Séance, Calories, Pas] et l'avancement. Le rang voyage avec
+    /// l'objectif plutôt que d'être sa position : un jour de repos n'a que deux objectifs, et sans
+    /// lui « calories » hériterait de la couleur de la séance.
+    struct Goal { var slot: Int; var progress: Double }
+
+    var goals: [Goal]
+    var size: CGFloat
+    var colors: [Color]
+    var isLight: Bool
+
+    private static let canvas: CGFloat = 100
+    /// Plus épais que les 15 % de l'app, et c'est voulu : l'anneau est ici dessiné à 64-96 points
+    /// au lieu de 96-180. Le même POURCENTAGE donnerait un trait visuellement plus grêle, la
+    /// surface du disque croissant au carré du rayon là où le trait ne croît que linéairement.
+    private static let stroke: CGFloat = 17
+    private static let lightTrack = 0.26
+    private static let darkTrack = 0.22
+
+    var body: some View {
+        ZStack {
+            ForEach(Array(goals.enumerated()), id: \.offset) { i, goal in
+                let color = colors[min(max(0, goal.slot), colors.count - 1)]
+                let seg = RingSegmentGeometry.segment(at: i, count: goals.count)
+                let pct = max(0, min(1, goal.progress))
+                let fillEnd = seg.trimStart + (seg.trimEnd - seg.trimStart) * pct
+
+                // La piste porte une teinte sombre de SA couleur, pas un gris neutre : même vide,
+                // l'arc dit à quel objectif il appartient.
+                Circle()
+                    .trim(from: seg.trimStart, to: seg.trimEnd)
+                    .stroke(color.opacity(isLight ? Self.lightTrack : Self.darkTrack),
+                            style: StrokeStyle(lineWidth: Self.stroke, lineCap: .round))
+
+                // Le dégradé balaie tout l'arc, pas seulement sa part remplie : se remplir en
+                // révèle davantage, d'où le « ça s'éclaire en se terminant » des anneaux d'Apple.
+                Circle()
+                    .trim(from: seg.trimStart, to: fillEnd)
+                    .stroke(
+                        AngularGradient(
+                            gradient: Gradient(colors: [color, color.vivid(0.22)]),
+                            center: .center,
+                            startAngle: .degrees(seg.gradientStartDegrees),
+                            endAngle: .degrees(seg.gradientEndDegrees)
+                        ),
+                        style: StrokeStyle(lineWidth: Self.stroke, lineCap: .round)
+                    )
+            }
+        }
+        // Le `trim` d'un cercle démarre à 3 heures : on tourne pour que le premier arc parte de midi.
+        .rotationEffect(.degrees(-90))
+        .frame(width: Self.canvas, height: Self.canvas)
+        .scaleEffect(size / Self.canvas)
+        .frame(width: size, height: size)
+        // La légende à côté énonce les trois mêmes valeurs en toutes lettres : annoncer l'anneau
+        // ferait entendre deux fois la même chose à qui l'écoute.
+        .accessibilityHidden(true)
+    }
+}
+
 struct DailyGoalsWidgetView: View {
     @Environment(\.widgetFamily) private var family
     let snapshot: DailyGoalsSnapshot
-    /// The timeline entry's date — for the footer date label (a widget render is a frozen frame;
-    /// `.now` at body-evaluation time is the wrong clock to read).
+    /// La date de l'entrée : un rendu de widget est une image figée, `.now` au moment où le corps
+    /// s'évalue n'est pas la bonne horloge.
     var entryDate: Date = .now
 
-    /// "MER. 23 JUIL." — the medium footer's date stamp.
-    private static let footerDateFormatter: DateFormatter = {
+    private static let weekdayFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = .current
-        // Le GABARIT, pas un format figé : « EEE d MMM » rend « mer. 3 sept. » en français et
-        // « Wed 3 Sep » en anglais, mais l'ordre des éléments diffère selon les langues, et un
-        // format écrit en dur impose l'ordre français à tout le monde.
-        f.setLocalizedDateFormatFromTemplate("EEEdMMM")
+        f.setLocalizedDateFormatFromTemplate("EEEE")
         return f
     }()
 
-    private var isLight: Bool { snapshot.isLightMode }
-    /// [rose2, rose, violet] — whichever accent she actually picked in-app, never a fixed color,
-    /// so the widget always matches. `rose` (index 1) is the one flat hero color this design
-    /// spends everywhere else stays neutral white/gray.
-    private var colors: [Color] { WidgetAccentPalette.ringColors(themeID: snapshot.accentThemeID, isLight: isLight) }
-    private var roseColor: Color { colors[1] }
-
-    /// Flat, not a gradient — the whole point of this pass. Pure white in light mode, pure black
-    /// in dark, same "no gradient anywhere" rule the in-app light-mode pass applies too.
-    private var bg: Color { isLight ? .white : .black }
-    private var textPrimary: Color { isLight ? Color(hex: 0x15151C) : .white }
-    private var text2: Color { isLight ? .black.opacity(0.45) : .white.opacity(0.4) }
-    private var flameColor: Color { snapshot.streak > 0 ? Color(hex: 0xFFB03D) : text2 }
-
     /// Groupement des milliers selon la locale : « 2 400 » en français, « 2,400 » en anglais.
     ///
-    /// Était figé sur `fr_FR`, comme la date au-dessus — le même défaut que la montre avait déjà
-    /// corrigé de son côté, et qui était resté ici. Une anglophone lisait « 2 400 » et
-    /// « mer. 3 sept. » sur son écran d'accueil.
+    /// Était figé sur `fr_FR` — le même défaut que la montre avait déjà corrigé de son côté, et
+    /// qui était resté ici. Une anglophone lisait « 2 400 » sur son écran d'accueil.
     private static let groupedNumber: NumberFormatter = {
         let f = NumberFormatter()
         f.numberStyle = .decimal
@@ -104,6 +150,34 @@ struct DailyGoalsWidgetView: View {
 
     private func grouped(_ value: Int) -> String {
         Self.groupedNumber.string(from: NSNumber(value: value)) ?? "\(value)"
+    }
+
+    private var isLight: Bool { snapshot.isLightMode }
+    /// [rose2, rose, violet] — l'accent qu'elle a réellement choisi dans l'app, jamais une couleur
+    /// fixe, et dans l'ordre où `DailyGoalsBarsView.fillColors` les rend en interne.
+    private var colors: [Color] { WidgetAccentPalette.ringColors(themeID: snapshot.accentThemeID, isLight: isLight) }
+    private var bg: Color { isLight ? .white : .black }
+    private var textPrimary: Color { isLight ? Color(hex: 0x15151C) : .white }
+    private var text2: Color { isLight ? .black.opacity(0.45) : .white.opacity(0.42) }
+    private var flameColor: Color { snapshot.streak > 0 ? Color(hex: 0xFFB03D) : text2 }
+
+    /// Les objectifs réellement en jeu : deux un jour de repos, trois sinon. L'anneau se partage
+    /// alors en deux arcs plutôt que d'en dessiner un troisième qui ne pourra jamais se remplir.
+    private var goals: [WidgetRingView.Goal] {
+        let p = snapshot.progress
+        let all = (0..<3).map { WidgetRingView.Goal(slot: $0, progress: p[safe: $0] ?? 0) }
+        return snapshot.isRestDay ? Array(all.dropFirst()) : all
+    }
+
+    private var sessionValue: String {
+        if snapshot.isRestDay { return String(localized: "Repos") }
+        return (snapshot.progress[safe: 0] ?? 0) >= 1 ? "✓" : String(localized: "À faire")
+    }
+    private var caloriesValue: String {
+        snapshot.activeCaloriesRemaining > 0 ? "-\(grouped(snapshot.activeCaloriesRemaining))" : "✓"
+    }
+    private var stepsValue: String {
+        snapshot.stepsRemaining > 0 ? "-\(grouped(snapshot.stepsRemaining))" : "✓"
     }
 
     var body: some View {
@@ -116,96 +190,78 @@ struct DailyGoalsWidgetView: View {
         .containerBackground(for: .widget) { bg }
     }
 
-    /// Small: one huge flat number ("2/3 BOUCLÉS"), two compact sub-stats below, streak as a
-    /// corner badge — no ring, no card chrome, just numbers on flat black/white.
     private var smallBody: some View {
-        VStack(spacing: 3) {
-            Spacer(minLength: 0)
-            Text("\(snapshot.dailyGoalsDone)/\(snapshot.dailyGoalsTotal)")
-                .font(DisplayFont.font(46))
-                .foregroundColor(roseColor)
-            Text("bouclés")
-                .font(.custom("\(DisplayFont.family)-Bold", size: 11))
-                .tracking(0.2)
-                .foregroundColor(text2)
-            Spacer(minLength: 0)
-            HStack {
-                subStat(label: "Pas", value: snapshot.stepsRemaining > 0 ? "-\(grouped(snapshot.stepsRemaining))" : "✓")
-                Spacer()
-                subStat(label: "kcal", value: snapshot.activeCaloriesRemaining > 0 ? "-\(grouped(snapshot.activeCaloriesRemaining))" : "✓", trailing: true)
+        HStack(spacing: 10) {
+            WidgetRingView(goals: goals, size: 64, colors: colors, isLight: isLight)
+            VStack(alignment: .leading, spacing: 7) {
+                legendRow(slot: 0, value: sessionValue, label: "Séance", muted: snapshot.isRestDay)
+                legendRow(slot: 1, value: caloriesValue, label: "kcal")
+                legendRow(slot: 2, value: stepsValue, label: "Pas")
             }
+            Spacer(minLength: 0)
         }
-        .padding(14)
+        .padding(13)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .overlay(alignment: .topTrailing) {
-            if snapshot.streak > 0 { streakBadge }
+            if snapshot.streak > 0 { streakBadge.padding(9) }
         }
     }
 
-    private func subStat(label: String, value: String, trailing: Bool = false) -> some View {
-        VStack(alignment: trailing ? .trailing : .leading, spacing: 1) {
-            Text(value).font(.custom("\(DisplayFont.family)-Bold", size: 15)).foregroundColor(textPrimary)
-            Text(LocalizedStringKey(label)).font(.custom("\(DisplayFont.family)-Bold", size: 9.5)).tracking(0.2).foregroundColor(text2)
-        }
-    }
-
-    /// Medium: the same flat hero number leads, a 2x2 grid of real stats underneath (séance/kcal/
-    /// pas/série — everything `DailyGoalsSnapshot` actually carries, nothing invented), week dots
-    /// and the date along the bottom.
     private var mediumBody: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .lastTextBaseline, spacing: 6) {
-                Text("\(snapshot.dailyGoalsDone)/\(snapshot.dailyGoalsTotal)")
-                    .font(DisplayFont.font(32))
-                    .foregroundColor(roseColor)
-                Text("bouclés")
-                    .font(.custom("\(DisplayFont.family)-Bold", size: 10))
-                    .tracking(0.2)
-                    .foregroundColor(text2)
+        HStack(spacing: 16) {
+            WidgetRingView(goals: goals, size: 96, colors: colors, isLight: isLight)
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 7) {
+                    Text(Self.weekdayFormatter.string(from: entryDate).capitalized)
+                        .font(.custom("\(DisplayFont.family)-Bold", size: 16))
+                        .foregroundColor(textPrimary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    if snapshot.streak > 0 { streakBadge }
+                    Spacer(minLength: 0)
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    legendRow(slot: 0, value: sessionValue, label: "Séance", muted: snapshot.isRestDay)
+                    legendRow(slot: 1, value: caloriesValue, label: "kcal")
+                    legendRow(slot: 2, value: stepsValue, label: "Pas")
+                }
                 Spacer(minLength: 0)
-                Text(Self.footerDateFormatter.string(from: entryDate))
-                    .font(.custom("\(DisplayFont.family)-SemiBold", size: 9))
-                    .tracking(0.2)
-                    .foregroundColor(text2)
+                weekDots
             }
-            LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)], spacing: 6) {
-                // `String(localized:)` et pas la chaîne brute : `gridCell` affiche sa valeur avec
-                // `Text(String)`, qui ne traduit rien. Ces deux mots-là restaient donc en français
-                // pour tout le monde, juste au-dessus d'un libellé qui, lui, se traduisait.
-                gridCell(
-                    value: snapshot.isRestDay
-                        ? String(localized: "Repos")
-                        : ((snapshot.progress[safe: 0] ?? 0) >= 1 ? "✓" : String(localized: "À faire")),
-                    label: "Séance"
-                )
-                gridCell(value: "\(snapshot.streak)", label: "Série", valueColor: flameColor)
-                gridCell(value: snapshot.activeCaloriesRemaining > 0 ? "-\(grouped(snapshot.activeCaloriesRemaining))" : "✓", label: "kcal")
-                gridCell(value: snapshot.stepsRemaining > 0 ? "-\(grouped(snapshot.stepsRemaining))" : "✓", label: "Pas")
-            }
-            Spacer(minLength: 0)
-            weekDots
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding(13)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 
-    private func gridCell(value: String, label: String, valueColor: Color? = nil) -> some View {
-        VStack(alignment: .leading, spacing: 1) {
-            Text(value).font(.custom("\(DisplayFont.family)-Bold", size: 15)).foregroundColor(valueColor ?? textPrimary)
-            Text(LocalizedStringKey(label)).font(.custom("\(DisplayFont.family)-Bold", size: 9)).tracking(0.2).foregroundColor(text2)
+    /// Une pastille de la couleur de l'arc, puis la valeur, puis le libellé. La pastille est ce
+    /// qui relie la ligne à son arc — sans elle, l'anneau et sa légende sont deux objets séparés.
+    private func legendRow(slot: Int, value: String, label: String, muted: Bool = false) -> some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(colors[min(max(0, slot), colors.count - 1)].opacity(muted ? 0.35 : 1))
+                .frame(width: 7, height: 7)
+            Text(value)
+                .font(.custom("\(DisplayFont.family)-Bold", size: 12.5))
+                .foregroundColor(muted ? text2 : textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+            Text(LocalizedStringKey(label))
+                .font(.custom("\(DisplayFont.family)-SemiBold", size: 9.5))
+                .tracking(0.2)
+                .foregroundColor(text2)
+                .lineLimit(1)
         }
+        .accessibilityElement(children: .combine)
     }
 
-    /// The week at a glance, compressed to 7 dots (done = filled rose, today = an open rose ring,
-    /// rest = faint) — a hint, not a full lettered row.
     private var weekDots: some View {
         HStack(spacing: 5) {
             ForEach(Array(snapshot.weekStrip.enumerated()), id: \.offset) { _, day in
                 if day.isToday && !day.isDone {
-                    Circle().stroke(roseColor, lineWidth: 1.3).frame(width: 6, height: 6)
+                    Circle().stroke(colors[1], lineWidth: 1.3).frame(width: 6, height: 6)
                 } else {
                     Circle()
-                        .fill(day.isDone ? roseColor : text2.opacity(0.4))
+                        .fill(day.isDone ? colors[1] : text2.opacity(0.4))
                         .frame(width: 6, height: 6)
                 }
             }
@@ -214,12 +270,12 @@ struct DailyGoalsWidgetView: View {
 
     private var streakBadge: some View {
         HStack(spacing: 2) {
-            Image(systemName: "flame.fill").font(.system(size: 9.5))
-            Text("\(snapshot.streak)").font(DisplayFont.font(14))
+            Image(systemName: "flame.fill").font(.system(size: 9))
+            Text("\(snapshot.streak)").font(.custom("\(DisplayFont.family)-Bold", size: 11))
         }
         .foregroundColor(flameColor)
-        .padding(.horizontal, 6.5)
-        .padding(.vertical, 3)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2.5)
         .background(flameColor.opacity(isLight ? 0.12 : 0.16), in: Capsule())
     }
 }

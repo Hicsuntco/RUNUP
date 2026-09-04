@@ -1,7 +1,8 @@
 import Foundation
 
 /// Pure geometry for one segment of the "3 daily goals" single ring — shared by the in-app
-/// `DailyGoalsBarsView` and the widget extension's `WidgetRingView` so a tweak to gap size or
+/// `DailyGoalsBarsView` and the widget extension's `WidgetRingView` (which this header already
+/// promised through a pass where the widget had dropped its ring, and which draws it again) so a tweak to gap size or
 /// segment count only ever needs to change in one place, and so the trim fractions and the
 /// gradient's degree range (which must describe the exact same arc) can't drift out of sync with
 /// each other the way two independently-computed copies could.

@@ -1192,6 +1192,22 @@
         }
       }
     },
+    "%lld sur %lld objectifs bouclés": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld of %lld goals done"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld de %lld objetivos hechos"
+          }
+        }
+      }
+    },
     "%lld séance sur %lld prévues": {
       "localizations": {
         "en": {

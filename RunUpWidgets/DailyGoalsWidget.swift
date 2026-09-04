@@ -190,66 +190,92 @@ struct DailyGoalsWidgetView: View {
         .containerBackground(for: .widget) { bg }
     }
 
+    /// Petit : l'anneau, et un seul chiffre sous lui.
+    ///
+    /// La légende à trois lignes a été essayée et coupée à l'écran : 158 points de large, moins
+    /// les marges, moins l'anneau, il restait cinquante-huit points pour trois valeurs et leurs
+    /// libellés. Le rendu a fait ce qu'il devait : couper chaque ligne à une ou deux lettres. Une
+    /// maquette HTML ne subit pas cette contrainte de largeur, d'où l'erreur.
+    ///
+    /// Le petit widget n'a donc qu'un travail : dire d'un coup d'œil où on en est. C'est
+    /// exactement ce que l'anneau dit, et le détail attend le moyen, qui a la largeur pour lui.
     private var smallBody: some View {
-        HStack(spacing: 10) {
-            WidgetRingView(goals: goals, size: 64, colors: colors, isLight: isLight)
-            VStack(alignment: .leading, spacing: 7) {
-                legendRow(slot: 0, value: sessionValue, label: "Séance", muted: snapshot.isRestDay)
-                legendRow(slot: 1, value: caloriesValue, label: "kcal")
-                legendRow(slot: 2, value: stepsValue, label: "Pas")
+        VStack(spacing: 8) {
+            Spacer(minLength: 0)
+            WidgetRingView(goals: goals, size: 74, colors: colors, isLight: isLight)
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text("\(snapshot.dailyGoalsDone)/\(snapshot.dailyGoalsTotal)")
+                    .font(.custom("\(DisplayFont.family)-Bold", size: 17))
+                    .foregroundColor(textPrimary)
+                Text("bouclés")
+                    .font(.custom("\(DisplayFont.family)-SemiBold", size: 10.5))
+                    .foregroundColor(text2)
             }
             Spacer(minLength: 0)
         }
-        .padding(13)
+        .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .overlay(alignment: .topTrailing) {
             if snapshot.streak > 0 { streakBadge.padding(9) }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text("\(snapshot.dailyGoalsDone) sur \(snapshot.dailyGoalsTotal) objectifs bouclés"))
     }
 
+    /// Moyen : l'anneau, et la légende qui occupe VRAIMENT la largeur.
+    ///
+    /// La colonne de droite ne s'étirait pas — elle prenait la place de son contenu et laissait un
+    /// tiers de la carte vide. Et chaque ligne se lisait à l'envers, « À faire Séance » au lieu de
+    /// « Séance … à faire » : la valeur venait avant son libellé, ce qui marche sous un chiffre
+    /// centré et pas dans une phrase.
     private var mediumBody: some View {
-        HStack(spacing: 16) {
-            WidgetRingView(goals: goals, size: 96, colors: colors, isLight: isLight)
-            VStack(alignment: .leading, spacing: 8) {
+        HStack(spacing: 14) {
+            WidgetRingView(goals: goals, size: 92, colors: colors, isLight: isLight)
+            VStack(alignment: .leading, spacing: 7) {
                 HStack(spacing: 7) {
                     Text(Self.weekdayFormatter.string(from: entryDate).capitalized)
-                        .font(.custom("\(DisplayFont.family)-Bold", size: 16))
+                        .font(.custom("\(DisplayFont.family)-Bold", size: 15))
                         .foregroundColor(textPrimary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
-                    if snapshot.streak > 0 { streakBadge }
                     Spacer(minLength: 0)
+                    if snapshot.streak > 0 { streakBadge }
                 }
-                VStack(alignment: .leading, spacing: 6) {
-                    legendRow(slot: 0, value: sessionValue, label: "Séance", muted: snapshot.isRestDay)
-                    legendRow(slot: 1, value: caloriesValue, label: "kcal")
-                    legendRow(slot: 2, value: stepsValue, label: "Pas")
-                }
+                legendRow(slot: 0, value: sessionValue, label: "Séance", muted: snapshot.isRestDay)
+                legendRow(slot: 1, value: caloriesValue, label: "kcal")
+                legendRow(slot: 2, value: stepsValue, label: "Pas")
                 Spacer(minLength: 0)
                 weekDots
             }
+            // C'est CE modificateur qui manquait : sans lui la colonne se contente de la largeur
+            // de son texte, et la carte reste vide sur sa droite.
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(13)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .padding(12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    /// Une pastille de la couleur de l'arc, puis la valeur, puis le libellé. La pastille est ce
-    /// qui relie la ligne à son arc — sans elle, l'anneau et sa légende sont deux objets séparés.
+    /// Une ligne de légende : la pastille de l'arc, son libellé, et la valeur poussée à droite.
+    ///
+    /// Le libellé AVANT la valeur, et la valeur alignée au bord droit. L'ordre inverse donnait
+    /// « À faire Séance » ; celui-ci se lit comme une ligne de tableau, et l'alignement à droite
+    /// met les trois valeurs sur une même colonne — c'est ce qui les rend comparables d'un coup
+    /// d'œil au lieu de flotter chacune après un mot de longueur différente.
     private func legendRow(slot: Int, value: String, label: String, muted: Bool = false) -> some View {
         HStack(spacing: 6) {
             Circle()
                 .fill(colors[min(max(0, slot), colors.count - 1)].opacity(muted ? 0.35 : 1))
                 .frame(width: 7, height: 7)
-            Text(value)
-                .font(.custom("\(DisplayFont.family)-Bold", size: 12.5))
-                .foregroundColor(muted ? text2 : textPrimary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
             Text(LocalizedStringKey(label))
-                .font(.custom("\(DisplayFont.family)-SemiBold", size: 9.5))
-                .tracking(0.2)
+                .font(.custom("\(DisplayFont.family)-SemiBold", size: 11))
                 .foregroundColor(text2)
                 .lineLimit(1)
+            Spacer(minLength: 6)
+            Text(value)
+                .font(.custom("\(DisplayFont.family)-Bold", size: 13))
+                .foregroundColor(muted ? text2 : textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
         }
         .accessibilityElement(children: .combine)
     }

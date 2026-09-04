@@ -17,6 +17,9 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'search':
       if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
       return handleSearch(req, res, userId);
+    case 'matchContacts':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleMatchContacts(req, res, userId);
     case 'follow':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleFollow(req, res, userId);
@@ -110,6 +113,49 @@ async function handleSearch(req, res, userId) {
       LIMIT 20
     `);
   }
+  res.status(200).json({ items: rows.map(mapUser) });
+}
+
+// Retrouve, parmi les comptes existants, ceux dont l'adresse e-mail est dans le carnet d'adresses
+// de l'appelante — sans jamais recevoir ce carnet.
+//
+// Le téléphone hache chaque adresse (SHA-256 de l'adresse en minuscules, sans espaces) et n'envoie
+// que les empreintes. Ce point d'entrée compare des empreintes à la colonne générée
+// `users.email_sha256` : il ne voit aucune adresse, n'en écrit aucune, et ne garde rien de ce
+// qu'on lui envoie. Une empreinte qui ne correspond à personne ne laisse aucune trace.
+//
+// Ce que ça NE trouve pas, et il vaut mieux le savoir que le découvrir : quelqu'un inscrit avec une
+// adresse que l'appelante n'a pas dans ses contacts, et quiconque s'est inscrit avec « Masquer mon
+// adresse e-mail » d'Apple, dont l'adresse relais n'existe dans le carnet de personne. La
+// recherche par nom et par identifiant reste le chemin pour ces cas-là.
+async function handleMatchContacts(req, res, userId) {
+  const raw = Array.isArray(req.body?.hashes) ? req.body.hashes : null;
+  if (!raw) return res.status(400).json({ error: 'hashes_required' });
+
+  // Empreintes SHA-256 en hexadécimal, et rien d'autre. Le filtre n'est pas cosmétique : sans lui,
+  // ce point d'entrée accepterait n'importe quelle chaîne, et la première personne qui essaierait
+  // d'y passer des adresses en clair réussirait — l'app enverrait alors le carnet d'adresses que
+  // tout ce montage existe pour ne pas envoyer.
+  const hashes = [...new Set(
+    raw.filter((h) => typeof h === 'string' && /^[a-f0-9]{64}$/.test(h))
+  )].slice(0, 1000);
+  if (hashes.length === 0) return res.status(200).json({ items: [] });
+
+  // Plafond quotidien plus bas que celui de la recherche : un carnet d'adresses ne change pas
+  // vingt fois par jour, et chaque appel compare mille empreintes d'un coup. Vingt suffisent
+  // largement à un usage réel, et bornent ce qu'un script pourrait tester d'adresses.
+  if (!(await underDailyCap('contacts:' + userId, 20))) return res.status(429).json({ error: 'too_many_requests' });
+
+  const { rows } = await sql`
+    SELECT u.id, u.name, u.last_name, u.username, u.avatar_data, u.avatar_url, u.is_private, f.status AS follow_status
+    FROM users u
+    LEFT JOIN follows f ON f.follower_id = ${userId} AND f.followee_id = u.id
+    WHERE u.id != ${userId} AND u.email_sha256 = ANY(${hashes})
+      AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+      AND u.id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
+    ORDER BY u.name ASC
+    LIMIT 100
+  `;
   res.status(200).json({ items: rows.map(mapUser) });
 }
 

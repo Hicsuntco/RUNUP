@@ -100,6 +100,9 @@ Politique de confidentialité : https://hicsuntco.github.io/RUNUP/privacy.html
 ```
 RUNUP s'ouvre à tout le monde.
 
+TON COACH CHANGE TON PROGRAMME, PAS SEULEMENT D'AVIS
+Dis-lui qu'une tendinite revient, que tu n'as que deux créneaux cette semaine, que tu veux lever le pied dix jours : il applique. Séances raccourcies, fractionné mis en pause, jours de course déplacés. Tu vois exactement ce qu'il a changé, et tu peux l'annuler d'un geste. Avec RUNUP PLUS.
+
 GRATUIT, POUR TOUJOURS
 Le suivi GPS de tes courses, ton historique, tes statistiques, tes objectifs du jour, ta série, ton bilan de la semaine, Apple Santé, l'Apple Watch et les widgets. Et tout le Club : classements, défis, fil d'activité, amis et itinéraires partagés. Sans compte à rebours et sans publicité.
 
@@ -202,6 +205,9 @@ Privacy Policy: https://hicsuntco.github.io/RUNUP/privacy.html
 ```
 RUNUP is now open to everyone.
 
+YOUR COACH NOW CHANGES THE PLAN ITSELF
+Say a niggle is back, that you only have two slots this week, that you want to ease off for ten days — and it is applied. Shorter sessions, speed work paused, running days moved. You see exactly what changed, and one tap undoes it. With RUNUP PLUS.
+
 FREE, FOREVER
 GPS run tracking, your full history, your stats, today's goals, your streak, your weekly recap, Apple Health, Apple Watch and widgets. Plus the whole Club: leaderboards, challenges, activity feed, friends and shared routes. No countdown, no ads.
 
@@ -298,6 +304,9 @@ Política de privacidad: https://hicsuntco.github.io/RUNUP/privacy.html
 ## Novedades de esta versión (4000 caracteres máx. — obligatorio para una actualización)
 ```
 RUNUP se abre a todo el mundo.
+
+TU ENTRENADOR YA CAMBIA EL PLAN, NO SOLO DE OPINIÓN
+Dile que te vuelve una molestia, que esta semana solo tienes dos huecos, que quieres bajar el ritmo diez días: lo aplica. Sesiones más cortas, series en pausa, días de carrera cambiados. Ves exactamente qué ha cambiado y puedes deshacerlo con un toque. Con RUNUP PLUS.
 
 GRATIS, PARA SIEMPRE
 El seguimiento GPS de tus carreras, tu historial, tus estadísticas, tus objetivos del día, tu racha, tu resumen semanal, Apple Salud, el Apple Watch y los widgets. Y todo el Club: clasificaciones, retos, muro de actividad, amigos y rutas compartidas. Sin cuenta atrás y sin publicidad.

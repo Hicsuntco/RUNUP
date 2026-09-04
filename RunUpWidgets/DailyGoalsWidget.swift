@@ -68,8 +68,11 @@ struct DailyGoalsWidgetView: View {
     /// "MER. 23 JUIL." — the medium footer's date stamp.
     private static let footerDateFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "fr_FR")
-        f.dateFormat = "EEE d MMM"
+        f.locale = .current
+        // Le GABARIT, pas un format figé : « EEE d MMM » rend « mer. 3 sept. » en français et
+        // « Wed 3 Sep » en anglais, mais l'ordre des éléments diffère selon les langues, et un
+        // format écrit en dur impose l'ordre français à tout le monde.
+        f.setLocalizedDateFormatFromTemplate("EEEdMMM")
         return f
     }()
 
@@ -87,11 +90,15 @@ struct DailyGoalsWidgetView: View {
     private var text2: Color { isLight ? .black.opacity(0.45) : .white.opacity(0.4) }
     private var flameColor: Color { snapshot.streak > 0 ? Color(hex: 0xFFB03D) : text2 }
 
-    /// French-style thousands grouping ("2 400", not "2400") for the steps count.
+    /// Groupement des milliers selon la locale : « 2 400 » en français, « 2,400 » en anglais.
+    ///
+    /// Était figé sur `fr_FR`, comme la date au-dessus — le même défaut que la montre avait déjà
+    /// corrigé de son côté, et qui était resté ici. Une anglophone lisait « 2 400 » et
+    /// « mer. 3 sept. » sur son écran d'accueil.
     private static let groupedNumber: NumberFormatter = {
         let f = NumberFormatter()
         f.numberStyle = .decimal
-        f.locale = Locale(identifier: "fr_FR")
+        f.locale = .current
         return f
     }()
 
@@ -118,7 +125,7 @@ struct DailyGoalsWidgetView: View {
                 .font(DisplayFont.font(46))
                 .foregroundColor(roseColor)
             Text("bouclés")
-                .font(.custom("\(DisplayFont.family)-Bold", size: 9))
+                .font(.custom("\(DisplayFont.family)-Bold", size: 11))
                 .tracking(0.2)
                 .foregroundColor(text2)
             Spacer(minLength: 0)
@@ -128,7 +135,7 @@ struct DailyGoalsWidgetView: View {
                 subStat(label: "kcal", value: snapshot.activeCaloriesRemaining > 0 ? "-\(grouped(snapshot.activeCaloriesRemaining))" : "✓", trailing: true)
             }
         }
-        .padding(16)
+        .padding(14)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .overlay(alignment: .topTrailing) {
             if snapshot.streak > 0 { streakBadge }
@@ -137,8 +144,8 @@ struct DailyGoalsWidgetView: View {
 
     private func subStat(label: String, value: String, trailing: Bool = false) -> some View {
         VStack(alignment: trailing ? .trailing : .leading, spacing: 1) {
-            Text(value).font(.custom("\(DisplayFont.family)-Bold", size: 11)).foregroundColor(textPrimary)
-            Text(LocalizedStringKey(label)).font(.custom("\(DisplayFont.family)-Bold", size: 6.5)).tracking(0.2).foregroundColor(text2)
+            Text(value).font(.custom("\(DisplayFont.family)-Bold", size: 15)).foregroundColor(textPrimary)
+            Text(LocalizedStringKey(label)).font(.custom("\(DisplayFont.family)-Bold", size: 9.5)).tracking(0.2).foregroundColor(text2)
         }
     }
 
@@ -146,24 +153,29 @@ struct DailyGoalsWidgetView: View {
     /// pas/série — everything `DailyGoalsSnapshot` actually carries, nothing invented), week dots
     /// and the date along the bottom.
     private var mediumBody: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .lastTextBaseline, spacing: 6) {
                 Text("\(snapshot.dailyGoalsDone)/\(snapshot.dailyGoalsTotal)")
-                    .font(DisplayFont.font(30))
+                    .font(DisplayFont.font(32))
                     .foregroundColor(roseColor)
                 Text("bouclés")
-                    .font(.custom("\(DisplayFont.family)-Bold", size: 8.5))
+                    .font(.custom("\(DisplayFont.family)-Bold", size: 10))
                     .tracking(0.2)
                     .foregroundColor(text2)
                 Spacer(minLength: 0)
                 Text(Self.footerDateFormatter.string(from: entryDate))
-                    .font(.custom("\(DisplayFont.family)-SemiBold", size: 7.5))
+                    .font(.custom("\(DisplayFont.family)-SemiBold", size: 9))
                     .tracking(0.2)
                     .foregroundColor(text2)
             }
-            LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)], spacing: 10) {
+            LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)], spacing: 6) {
+                // `String(localized:)` et pas la chaîne brute : `gridCell` affiche sa valeur avec
+                // `Text(String)`, qui ne traduit rien. Ces deux mots-là restaient donc en français
+                // pour tout le monde, juste au-dessus d'un libellé qui, lui, se traduisait.
                 gridCell(
-                    value: snapshot.isRestDay ? "Repos" : ((snapshot.progress[safe: 0] ?? 0) >= 1 ? "✓" : "À faire"),
+                    value: snapshot.isRestDay
+                        ? String(localized: "Repos")
+                        : ((snapshot.progress[safe: 0] ?? 0) >= 1 ? "✓" : String(localized: "À faire")),
                     label: "Séance"
                 )
                 gridCell(value: "\(snapshot.streak)", label: "Série", valueColor: flameColor)
@@ -173,28 +185,28 @@ struct DailyGoalsWidgetView: View {
             Spacer(minLength: 0)
             weekDots
         }
-        .padding(16)
+        .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     private func gridCell(value: String, label: String, valueColor: Color? = nil) -> some View {
         VStack(alignment: .leading, spacing: 1) {
-            Text(value).font(.custom("\(DisplayFont.family)-Bold", size: 13)).foregroundColor(valueColor ?? textPrimary)
-            Text(LocalizedStringKey(label)).font(.custom("\(DisplayFont.family)-Bold", size: 7)).tracking(0.2).foregroundColor(text2)
+            Text(value).font(.custom("\(DisplayFont.family)-Bold", size: 15)).foregroundColor(valueColor ?? textPrimary)
+            Text(LocalizedStringKey(label)).font(.custom("\(DisplayFont.family)-Bold", size: 9)).tracking(0.2).foregroundColor(text2)
         }
     }
 
     /// The week at a glance, compressed to 7 dots (done = filled rose, today = an open rose ring,
     /// rest = faint) — a hint, not a full lettered row.
     private var weekDots: some View {
-        HStack(spacing: 4.5) {
+        HStack(spacing: 5) {
             ForEach(Array(snapshot.weekStrip.enumerated()), id: \.offset) { _, day in
                 if day.isToday && !day.isDone {
-                    Circle().stroke(roseColor, lineWidth: 1.2).frame(width: 5, height: 5)
+                    Circle().stroke(roseColor, lineWidth: 1.3).frame(width: 6, height: 6)
                 } else {
                     Circle()
                         .fill(day.isDone ? roseColor : text2.opacity(0.4))
-                        .frame(width: 5.5, height: 5.5)
+                        .frame(width: 6, height: 6)
                 }
             }
         }
@@ -202,8 +214,8 @@ struct DailyGoalsWidgetView: View {
 
     private var streakBadge: some View {
         HStack(spacing: 2) {
-            Image(systemName: "flame.fill").font(.system(size: 8))
-            Text("\(snapshot.streak)").font(DisplayFont.font(12))
+            Image(systemName: "flame.fill").font(.system(size: 9.5))
+            Text("\(snapshot.streak)").font(DisplayFont.font(14))
         }
         .foregroundColor(flameColor)
         .padding(.horizontal, 6.5)

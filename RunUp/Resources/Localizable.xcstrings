@@ -926,6 +926,22 @@
         }
       }
     },
+    "%lld min prévues": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min planned"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min previstos"
+          }
+        }
+      }
+    },
     "%lld minutes, %@, allure %@ par kilomètre": {
       "extractionState": "manual",
       "localizations": {

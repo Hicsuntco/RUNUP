@@ -24,16 +24,16 @@ struct RunActivityWidget: Widget {
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(String(format: "%.2f", locale: Locale(identifier: "fr_FR"), context.state.distanceKm))
+                        Text(String(format: "%.2f", locale: .current, context.state.distanceKm))
                             .font(DisplayFont.font(24))
                             .foregroundColor(.white)
-                        Text(verbatim: "km").font(.custom("\(DisplayFont.family)-Bold", size: 9)).tracking(0.2).foregroundColor(.white.opacity(0.5))
+                        Text(verbatim: "km").font(.custom("\(DisplayFont.family)-Bold", size: 10.5)).tracking(0.2).foregroundColor(.white.opacity(0.55))
                     }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     VStack(alignment: .trailing, spacing: 2) {
                         Text(context.state.paceLabel).font(DisplayFont.font(18)).foregroundColor(.white)
-                        Text(verbatim: "/km").font(.custom("\(DisplayFont.family)-Bold", size: 9)).tracking(0.2).foregroundColor(.white.opacity(0.5))
+                        Text(verbatim: "/km").font(.custom("\(DisplayFont.family)-Bold", size: 10.5)).tracking(0.2).foregroundColor(.white.opacity(0.55))
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
@@ -72,7 +72,7 @@ struct RunActivityWidget: Widget {
                 Spacer()
                 HStack(spacing: 6) {
                     Text(context.attributes.sessionTitle)
-                        .font(.custom("\(DisplayFont.family)-SemiBold", size: 11))
+                        .font(.custom("\(DisplayFont.family)-SemiBold", size: 12))
                         .foregroundColor(.white.opacity(0.55))
                         .lineLimit(1)
                     statusBadge(context.state)
@@ -80,7 +80,7 @@ struct RunActivityWidget: Widget {
             }
 
             HStack {
-                metric(value: String(format: "%.2f", locale: Locale(identifier: "fr_FR"), context.state.distanceKm), label: "km")
+                metric(value: String(format: "%.2f", locale: .current, context.state.distanceKm), label: "km")
                 Spacer(minLength: 8)
                 metric(value: context.state.paceLabel, label: "Allure")
                 Spacer(minLength: 8)
@@ -88,7 +88,7 @@ struct RunActivityWidget: Widget {
                     elapsedText(context.state)
                         .font(DisplayFont.font(26))
                         .foregroundColor(.white)
-                    Text("Temps").font(.custom("\(DisplayFont.family)-Bold", size: 8.5)).tracking(0.2).foregroundColor(.white.opacity(0.4))
+                    Text("Temps").font(.custom("\(DisplayFont.family)-Bold", size: 10)).tracking(0.2).foregroundColor(.white.opacity(0.45))
                 }
             }
 
@@ -97,9 +97,14 @@ struct RunActivityWidget: Widget {
                 let fraction = max(0, min(1, context.state.elapsedSeconds / plannedSeconds))
                 VStack(alignment: .leading, spacing: 5) {
                     HStack {
-                        Text("Séance").font(.custom("\(DisplayFont.family)-Bold", size: 8.5)).tracking(0.2).foregroundColor(.white.opacity(0.4))
+                        Text("Séance").font(.custom("\(DisplayFont.family)-Bold", size: 10)).tracking(0.2).foregroundColor(.white.opacity(0.45))
                         Spacer()
-                        Text("\(context.attributes.plannedDurationMinutes) MIN PRÉVUES").font(.custom("\(DisplayFont.family)-Bold", size: 8.5)).tracking(0.2).foregroundColor(.white.opacity(0.4))
+                        // La clé est en minuscules et la capitalisation est un style, pas du
+                        // texte : « MIN PRÉVUES » en dur donnait une clé introuvable dans le
+                        // catalogue, donc du français affiché à tout le monde.
+                        Text("\(context.attributes.plannedDurationMinutes) min prévues")
+                            .textCase(.uppercase)
+                            .font(.custom("\(DisplayFont.family)-Bold", size: 10)).tracking(0.2).foregroundColor(.white.opacity(0.45))
                     }
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
@@ -122,7 +127,7 @@ struct RunActivityWidget: Widget {
                 .font(DisplayFont.font(26))
                 .foregroundColor(.white)
             // Idem : sans `LocalizedStringKey`, ces libellés restent français pour tout le monde.
-            Text(LocalizedStringKey(label)).font(.custom("\(DisplayFont.family)-Bold", size: 8.5)).tracking(0.2).foregroundColor(.white.opacity(0.4))
+            Text(LocalizedStringKey(label)).font(.custom("\(DisplayFont.family)-Bold", size: 10)).tracking(0.2).foregroundColor(.white.opacity(0.45))
         }
     }
 

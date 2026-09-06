@@ -77,7 +77,12 @@ struct CoachView: View {
             if coachLocked {
                 PlusLockCard(feature: .coach)
                     .padding(.horizontal, RUSpacing.pagePadding)
-                    .padding(.bottom, 12)
+                    // La barre d'onglets FLOTTE au-dessus des écrans — `RootTabView` l'empile dans
+                    // un ZStack, elle ne pousse rien. Chaque écran paie donc lui-même sa garde au
+                    // sol. Cette branche-ci payait 12 points : la barre tranchait le bouton
+                    // « Découvrir RUNUP Plus » en deux et recouvrait entièrement la ligne qui dit
+                    // ce qui reste gratuit — sur le seul écran dont le rôle est de vendre.
+                    .padding(.bottom, RUSpacing.tabBarBottomInset + RUSpacing.tabBarHeight + 14)
             } else {
                 inputBar
             }
@@ -291,7 +296,10 @@ struct CoachView: View {
         .background(RUColor.card, in: Capsule())
         .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
         .padding(.horizontal, 16)
-        .padding(.bottom, 96)
+        // Les mêmes 96 points qu'avant, mais écrits à partir des mesures de la barre plutôt qu'en
+        // dur : c'est ce nombre nu, isolé de tout, qui a laissé la branche verrouillée ci-dessus
+        // repartir de zéro.
+        .padding(.bottom, RUSpacing.tabBarBottomInset + RUSpacing.tabBarHeight + 28)
         .padding(.top, 8)
     }
 

@@ -336,7 +336,13 @@ final class AppState {
                 elapsedSeconds: run.durationSeconds,
                 distanceKm: run.distanceKm,
                 kcal: run.kcal,
-                avgHeartRate: run.avgHeartRate
+                avgHeartRate: run.avgHeartRate,
+                elevationGainM: run.elevationGainM ?? 0,
+                // Le tracé de la sortie, lu dans Santé. C'est lui qui fait la différence entre une
+                // carte de fil avec une image et une carte sans : une course venue d'une Garmin
+                // arrivait jusqu'ici sans dessin, alors que le parcours était bien là, rangé à
+                // côté de la séance.
+                route: run.route
             )
             record.date = run.start
             record.healthWorkoutID = run.id

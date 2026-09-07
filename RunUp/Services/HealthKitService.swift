@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import HealthKit
+import CoreLocation
 
 /// Apple Santé integration — the only natively-supported data source in v1 (see README:
 /// "Utilise HealthKit pour la connexion Apple Santé en priorité ... Strava/Garmin peuvent
@@ -24,7 +25,12 @@ final class HealthKitService {
             // Comme pour les types d'écriture plus bas : une utilisatrice déjà connectée sera
             // redemandée une fois, pour ces deux-là.
             HKObjectType.workoutType(),
-            HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning)!
+            HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning)!,
+            // Le PARCOURS d'une séance, qui est un objet à part dans Santé — pas un champ de
+            // l'entraînement. Sans lui, une course importée d'une Garmin arrivait sans tracé, et
+            // sa carte de fil s'affichait dans sa version « sans image » : exactement ce qu'on
+            // venait de construire le fil pour éviter.
+            HKSeriesType.workoutRoute()
         ]
         if let sleep = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) {
             types.insert(sleep)
@@ -250,6 +256,17 @@ final class HealthKitService {
         var distanceKm: Double
         var kcal: Double
         var avgHeartRate: Int
+        /// Le parcours, quand la source en a écrit un. Vide sinon — un tapis de course, une montre
+        /// sans GPS, ou une séance saisie à la main en produisent une sans.
+        var route: [RunRecord.RoutePoint]
+        /// Le dénivelé positif, LU dans les métadonnées de la séance et non recalculé.
+        ///
+        /// `HKMetadataKeyElevationAscended` est la clé standard qu'écrivent l'Apple Watch et la
+        /// plupart des montres tierces. La refabriquer depuis les altitudes du parcours donnerait
+        /// une seconde implémentation d'une règle qui vit déjà dans `LocationService` — et deux
+        /// implémentations d'une même règle finissent toujours par diverger. `nil` quand la source
+        /// n'a rien écrit : une absence de mesure, pas un zéro.
+        var elevationGainM: Int?
     }
 
     /// Les courses écrites dans Santé par QUELQU'UN D'AUTRE que RUNUP, depuis une date donnée.
@@ -318,10 +335,100 @@ final class HealthKitService {
                 durationSeconds: workout.duration,
                 distanceKm: (meters ?? 0) / 1000,
                 kcal: kcal ?? 0,
-                avgHeartRate: Int((bpm ?? 0).rounded())
+                avgHeartRate: Int((bpm ?? 0).rounded()),
+                route: await route(for: workout),
+                elevationGainM: ascent(of: workout)
             ))
         }
         return runs
+    }
+
+    /// Le dénivelé positif écrit par la source, s'il y en a un.
+    ///
+    /// Négatif ou nul, on rend `nil` : une montre qui écrit zéro sur un parcours plat dit la même
+    /// chose qu'une montre qui n'écrit rien, et le fil sait afficher une absence — il ne sait pas
+    /// afficher « 0 m » sans que ça ressemble à une mesure.
+    private func ascent(of workout: HKWorkout) -> Int? {
+        guard let quantity = workout.metadata?[HKMetadataKeyElevationAscended] as? HKQuantity else { return nil }
+        let meters = quantity.doubleValue(for: .meter())
+        guard meters > 0 else { return nil }
+        return Int(meters.rounded())
+    }
+
+    // MARK: Le parcours d'une séance importée
+
+    /// Le tracé GPS d'un entraînement écrit par une autre source — une Garmin, une Coros, l'app
+    /// Exercice d'une Apple Watch.
+    ///
+    /// # Deux requêtes, parce que Santé range ça en deux temps
+    ///
+    /// Le parcours n'est pas un champ de l'entraînement : c'est une SÉRIE, un objet séparé qui lui
+    /// est rattaché. On demande d'abord les séries de cette séance, puis on lit les positions de
+    /// chacune. Une séance en a normalement une, parfois zéro (tapis de course, montre sans GPS),
+    /// et rien n'interdit d'en avoir plusieurs — d'où la concaténation plutôt qu'un premier
+    /// élément pris au hasard.
+    ///
+    /// # Ce qui est écarté
+    ///
+    /// Les positions dont la précision horizontale est négative : dans CoreLocation, c'est la
+    /// valeur qui signifie « cette coordonnée n'est pas valide », pas « elle est imprécise ». Les
+    /// seuils d'altitude sont ceux de `LocationService`, pour que le dénivelé d'une course
+    /// importée se calcule exactement comme celui d'une course enregistrée ici.
+    ///
+    /// Le résultat est décimé : une sortie longue enregistrée à la seconde produit des milliers de
+    /// points, et ils vivraient dans la base du téléphone pour toujours. Mille cinq cents suffisent
+    /// à redessiner un parcours au mètre près sur un écran.
+    private func route(for workout: HKWorkout) async -> [RunRecord.RoutePoint] {
+        let series: [HKWorkoutRoute] = await withCheckedContinuation { continuation in
+            let query = HKAnchoredObjectQuery(
+                type: HKSeriesType.workoutRoute(),
+                predicate: HKQuery.predicateForObjects(from: workout),
+                anchor: nil,
+                limit: HKObjectQueryNoLimit
+            ) { _, samples, _, _, _ in
+                continuation.resume(returning: (samples as? [HKWorkoutRoute]) ?? [])
+            }
+            store.execute(query)
+        }
+
+        var points: [RunRecord.RoutePoint] = []
+        for serie in series {
+            points += await locations(in: serie)
+        }
+        return RouteGeometry.decimatedPoints(points, keeping: 1500)
+    }
+
+    /// Les positions d'une série, ramassées à travers des rappels successifs.
+    ///
+    /// `HKWorkoutRouteQuery` livre le parcours PAR MORCEAUX : son gestionnaire est appelé plusieurs
+    /// fois, et seul le dernier appel porte `done`. Une continuation, elle, ne se reprend qu'une
+    /// fois — la reprendre deux fois plante le processus. D'où l'accumulateur verrouillé ci-dessous
+    /// plutôt qu'un simple booléen : les rappels n'arrivent pas sur le fil principal.
+    private func locations(in serie: HKWorkoutRoute) async -> [RunRecord.RoutePoint] {
+        let accumulator = RouteAccumulator()
+        return await withCheckedContinuation { continuation in
+            let query = HKWorkoutRouteQuery(route: serie) { _, locations, done, error in
+                if let locations {
+                    accumulator.add(locations.compactMap { location in
+                        // Négatif = coordonnée invalide, pas « imprécise ».
+                        guard location.horizontalAccuracy >= 0 else { return nil }
+                        return RunRecord.RoutePoint(
+                            lat: location.coordinate.latitude,
+                            lng: location.coordinate.longitude,
+                            // Mêmes seuils que `LocationService` : l'altitude n'est retenue que
+                            // quand elle est mesurée, jamais remplacée par un zéro qui se lirait
+                            // comme « niveau de la mer ».
+                            altitude: location.verticalAccuracy >= 0 && location.verticalAccuracy < 20
+                                ? location.altitude : nil
+                        )
+                    })
+                }
+                if done || error != nil {
+                    if let collected = accumulator.finish() { continuation.resume(returning: collected) }
+                }
+            }
+            store.execute(query)
+        }
     }
 
     private static let bpm = HKUnit.count().unitDivided(by: .minute())
@@ -377,5 +484,34 @@ final class HealthKitService {
             }
             store.execute(query)
         }
+    }
+}
+
+/// Ramasse les positions d'un parcours livré par morceaux, et garantit qu'on ne rend le résultat
+/// qu'UNE fois.
+///
+/// `HKWorkoutRouteQuery` appelle son gestionnaire plusieurs fois, depuis une file système. Reprendre
+/// deux fois la même continuation ne produit pas un bug discret : ça plante le processus. Le verrou
+/// est là pour ça, pas pour les performances — il protège deux lignes appelées quelques fois par
+/// course importée.
+private final class RouteAccumulator: @unchecked Sendable {
+    private let lock = NSLock()
+    private var points: [RunRecord.RoutePoint] = []
+    private var finished = false
+
+    func add(_ newPoints: [RunRecord.RoutePoint]) {
+        lock.lock()
+        points += newPoints
+        lock.unlock()
+    }
+
+    /// Les points la première fois, `nil` ensuite — l'appelant ne reprend la continuation que sur
+    /// une valeur non nulle.
+    func finish() -> [RunRecord.RoutePoint]? {
+        lock.lock()
+        defer { lock.unlock() }
+        if finished { return nil }
+        finished = true
+        return points
     }
 }

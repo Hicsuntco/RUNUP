@@ -7,19 +7,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "RunUp reads your Health data (runs recorded by your watch or another app, heart rate, step count, active calories, sleep) to count your runs towards your plan, gauge how today is going and track your daily goals."
+            "value": "RunUp reads your Health data (runs recorded by your watch or another app, their route, heart rate, step count, active calories, sleep) to count your runs towards your plan, gauge how today is going and track your daily goals."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "RunUp lee tus datos de Salud (las carreras registradas por tu reloj u otra app, frecuencia cardíaca, pasos, calorías activas, sueño) para que tus salidas cuenten en tu programa, calcular tu forma del día y seguir tus objetivos diarios."
+            "value": "RunUp lee tus datos de Salud (las carreras registradas por tu reloj u otra app, su recorrido, frecuencia cardíaca, pasos, calorías activas, sueño) para que tus salidas cuenten en tu programa, calcular tu forma del día y seguir tus objetivos diarios."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "RunUp lit tes données Santé (les courses enregistrées par ta montre ou une autre app, fréquence cardiaque, nombre de pas, calories actives, sommeil) pour faire compter tes sorties dans ton programme, calculer ta forme du jour et suivre tes objectifs quotidiens."
+            "value": "RunUp lit tes données Santé (les courses enregistrées par ta montre ou une autre app, leur parcours, fréquence cardiaque, nombre de pas, calories actives, sommeil) pour faire compter tes sorties dans ton programme, calculer ta forme du jour et suivre tes objectifs quotidiens."
           }
         }
       }

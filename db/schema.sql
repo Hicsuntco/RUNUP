@@ -83,6 +83,24 @@ CREATE TABLE IF NOT EXISTS activities (
 -- actually adds distance_km to a database from before this column existed.
 ALTER TABLE activities ADD COLUMN IF NOT EXISTS distance_km NUMERIC;
 
+-- Le tracé de la sortie, tel qu'il s'affiche dans le fil : [[lat, lng], …], une centaine de
+-- points au plus. Il arrive DÉJÀ rogné de ses extrémités par l'appareil — le début et la fin
+-- d'une course disent où quelqu'un habite, et c'est la raison pour laquelle aucun tracé n'était
+-- envoyé jusqu'ici. Le rognage est celui de la publication de parcours (`RouteGeometry
+-- .trimmedForSharing`), écrit et testé de longue date ; le serveur ne le refait pas et ne peut
+-- pas le vérifier. NULL pour une sortie trop courte, sans GPS, ou dont l'autrice a retiré le
+-- tracé après coup.
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS route_preview JSONB;
+-- Le titre que l'autrice donne à sa sortie, et sa note libre. `text` juste au-dessus reste la
+-- phrase FABRIQUÉE (« a couru 8,2 km · Sortie longue ») : elle décrit ce qui s'est passé et n'a
+-- pas à être réécrite. Ces deux colonnes-ci sont les seules que l'autrice possède, d'où la
+-- modération à l'écriture, comme les noms de clubs et les commentaires.
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS title TEXT;
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS note TEXT;
+-- Non-NULL dès la première modification. Affiché (« modifié ») plutôt que caché : un fil où un
+-- texte peut changer sans laisser de trace est un fil dont on ne peut rien citer.
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS edited_at TIMESTAMPTZ;
+
 CREATE INDEX IF NOT EXISTS idx_activities_club_created ON activities(club_id, created_at DESC);
 -- The referral "isFirstActivity" check (api/activities/[action].js) runs a user_id-scoped query
 -- on EVERY activity creation, unindexed on that column before this — a full scan on the app's

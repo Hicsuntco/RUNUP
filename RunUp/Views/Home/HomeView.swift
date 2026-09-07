@@ -134,10 +134,18 @@ struct HomeView: View {
 
                     ringsCard
 
-                    PlusLockCard(feature: .adaptivePlan)
+                    // Sans la ligne « ce qui reste gratuit » : les trois quarts de l'écran
+                    // au-dessus SONT la version gratuite en fonctionnement — la carte pour
+                    // partir courir, les anneaux du jour, la série. Le rappeler par écrit
+                    // au-dessous, c'est décrire ce qu'on a sous les yeux.
+                    PlusLockCard(feature: .adaptivePlan, showsFreeReminder: false)
                 }
 
-                if isFreeRun {
+                // `planUnlocked` en plus d'`isFreeRun` : sans abonnement, cette ligne promettait
+                // un coach qui est lui aussi derrière le verrou, deux centimètres sous une carte
+                // qui explique déjà qu'il n'y a pas de programme. Elle disait donc la même chose
+                // une deuxième fois, en annonçant une aide qui n'arrivera pas.
+                if isFreeRun && planUnlocked {
                     Text("Pas de plan fixe — le coach te propose de quoi garder la forme, jour après jour.")
                         .font(RUFont.sans(.small))
                         .foregroundColor(RUColor.text3)
@@ -364,7 +372,10 @@ struct HomeView: View {
                 .displayStyle(23)
                 .foregroundColor(RUColor.textPrimary)
                 .padding(.top, 8)
-            Text("Distance, allure, tracé, dénivelé et fréquence cardiaque — tout est enregistré, et tout part dans Apple Santé.")
+            // Énumérait les cinq mesures enregistrées. C'est vrai, et c'est de l'argumentaire :
+            // sur un écran qu'on ouvre pour partir courir, la liste se lit une fois et encombre
+            // les cent fois suivantes. Ce qui compte tient en une ligne.
+            Text("Tout est enregistré, et part dans Apple Santé.")
                 .font(RUFont.sans(.small))
                 .foregroundColor(RUColor.text2)
                 .fixedSize(horizontal: false, vertical: true)

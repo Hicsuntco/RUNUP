@@ -19,6 +19,16 @@ struct PlusLockCard: View {
     /// Version courte, pour une section verrouillée au milieu d'un écran qui, lui, fonctionne.
     /// La version longue est pour un écran entier.
     var compact = false
+    /// La ligne qui nomme ce qui reste gratuit.
+    ///
+    /// Elle vaut son encombrement là où l'écran ne montre RIEN d'autre que le verrou — l'assistant
+    /// de nouvel objectif, le coach — parce que la personne qui vient de buter sur une porte ne
+    /// sait pas, à cet instant, ce qui lui reste ouvert.
+    ///
+    /// Elle ne le vaut pas là où l'écran EST déjà la version gratuite en train de fonctionner.
+    /// L'accueil montre au-dessus la carte pour partir courir, les anneaux du jour et la série :
+    /// la phrase y décrit ce qu'on a sous les yeux, et rallonge un écran qu'on ouvre pour partir.
+    var showsFreeReminder = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: compact ? 8 : 12) {
@@ -46,10 +56,12 @@ struct PlusLockCard: View {
                                      : AnyButtonStyleBox(PrimaryButtonStyle()))
                 .padding(.top, 2)
 
-            Text("Le suivi de tes courses, ton historique et le Club restent gratuits.")
-                .font(RUFont.sans(.micro))
-                .foregroundColor(RUColor.text3)
-                .fixedSize(horizontal: false, vertical: true)
+            if showsFreeReminder {
+                Text("Le suivi de tes courses, ton historique et le Club restent gratuits.")
+                    .font(RUFont.sans(.micro))
+                    .foregroundColor(RUColor.text3)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(compact ? 16 : 20)
@@ -110,7 +122,9 @@ struct PlusSection<Content: View>: View {
                     .plusTeaser(true)
                     .frame(maxHeight: teaserHeight, alignment: .top)
                     .clipped()
-                PlusLockCard(feature: feature, compact: true)
+                // Une section verrouillée au milieu d'un écran qui fonctionne : le reste de la
+                // page dit déjà ce qui est gratuit, mieux qu'une phrase.
+                PlusLockCard(feature: feature, compact: true, showsFreeReminder: false)
             }
         }
     }

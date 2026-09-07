@@ -6319,22 +6319,6 @@
         }
       }
     },
-    "Distance, allure, tracé, dénivelé et fréquence cardiaque — tout est enregistré, et tout part dans Apple Santé.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Distance, pace, route, elevation and heart rate — all recorded, all sent to Apple Health."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Distancia, ritmo, recorrido, desnivel y frecuencia cardiaca: todo se registra y va a Apple Salud."
-          }
-        }
-      }
-    },
     "Distance, séances, série — le récap de ta semaine t'attend.": {
       "localizations": {
         "en": {
@@ -17510,6 +17494,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tu programa, tu entrenador y tus estadísticas. Sin que falte nada."
+          }
+        }
+      }
+    },
+    "Tout est enregistré, et part dans Apple Santé.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All of it recorded, and sent to Apple Health."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todo queda registrado y va a Apple Salud."
           }
         }
       }

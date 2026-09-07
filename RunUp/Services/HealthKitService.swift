@@ -300,20 +300,25 @@ final class HealthKitService {
                   let energyType = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned),
                   let heartType = HKObjectType.quantityType(forIdentifier: .heartRate) else { continue }
 
-            let meters = workout.statistics(for: distanceType)?.sumQuantity()?.doubleValue(for: .meter)
-                ?? await sum(type: distanceType, unit: .meter, in: workout)
-            let kcal = workout.statistics(for: energyType)?.sumQuantity()?.doubleValue(for: .kilocalorie())
-                ?? await sum(type: energyType, unit: .kilocalorie(), in: workout)
-            let bpm = workout.statistics(for: heartType)?.averageQuantity()?.doubleValue(for: Self.bpm)
-                ?? await average(type: heartType, unit: Self.bpm, in: workout)
+            // Écrit en `if` et non en `??` : le membre droit de `??` est une autoclosure, qui
+            // n'accepte pas d'appel asynchrone. Le compilateur le refuse — « 'await' cannot appear
+            // to the right of a non-assignment operator ».
+            var meters = workout.statistics(for: distanceType)?.sumQuantity()?.doubleValue(for: .meter())
+            if meters == nil { meters = await sum(type: distanceType, unit: .meter(), in: workout) }
+
+            var kcal = workout.statistics(for: energyType)?.sumQuantity()?.doubleValue(for: .kilocalorie())
+            if kcal == nil { kcal = await sum(type: energyType, unit: .kilocalorie(), in: workout) }
+
+            var bpm = workout.statistics(for: heartType)?.averageQuantity()?.doubleValue(for: Self.bpm)
+            if bpm == nil { bpm = await average(type: heartType, unit: Self.bpm, in: workout) }
 
             runs.append(ImportedRun(
                 id: workout.uuid,
                 start: workout.startDate,
                 durationSeconds: workout.duration,
-                distanceKm: meters / 1000,
-                kcal: kcal,
-                avgHeartRate: Int(bpm.rounded())
+                distanceKm: (meters ?? 0) / 1000,
+                kcal: kcal ?? 0,
+                avgHeartRate: Int((bpm ?? 0).rounded())
             ))
         }
         return runs

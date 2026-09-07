@@ -35,8 +35,16 @@ private struct PendingClubActivity: Codable, Equatable {
     /// `activities.content_key` dans db/schema.sql. Optionnel pour la même raison que les deux
     /// champs au-dessus : une file écrite avant lui n'en a pas.
     var contentKey: String?
+    /// Le tracé de la sortie, DÉJÀ rogné de ses extrémités — quatre-vingts points au plus, deux
+    /// kilo-octets. C'est ici, et pas au moment de l'envoi, que `RouteGeometry.feedTrace` est
+    /// appliqué : le rognage n'est pas idempotent, il ne peut donc exister qu'à un seul endroit,
+    /// et cet endroit doit être AVANT l'écriture sur disque — une sortie qui attend le réseau
+    /// pendant trois jours ne doit pas garder son tracé complet dans les réglages de l'app.
+    ///
+    /// Optionnel comme les trois champs au-dessus : une file écrite avant ce champ n'en a pas.
+    var trace: [RunRecord.RoutePoint]?
 
-    init(clientId: UUID, type: String, text: String, xpEarned: Int, metrics: ActivityMetrics?, userId: String?, contentKey: String?) {
+    init(clientId: UUID, type: String, text: String, xpEarned: Int, metrics: ActivityMetrics?, userId: String?, contentKey: String?, trace: [RunRecord.RoutePoint]?) {
         self.clientId = clientId
         self.type = type
         self.text = text
@@ -44,10 +52,11 @@ private struct PendingClubActivity: Codable, Equatable {
         self.metrics = metrics
         self.userId = userId
         self.contentKey = contentKey
+        self.trace = trace
     }
 
     private enum CodingKeys: String, CodingKey {
-        case clientId, type, text, xpEarned, metrics, userId, contentKey
+        case clientId, type, text, xpEarned, metrics, userId, contentKey, trace
         /// Le champ tel qu'il était écrit avant que les métriques soient regroupées. Une sortie
         /// encore en file au moment de la mise à jour porte cette clé et pas `metrics`.
         case legacyDistanceKm = "distanceKm"
@@ -60,6 +69,7 @@ private struct PendingClubActivity: Codable, Equatable {
         text = try c.decode(String.self, forKey: .text)
         xpEarned = try c.decode(Int.self, forKey: .xpEarned)
         contentKey = try c.decodeIfPresent(String.self, forKey: .contentKey)
+        trace = try c.decodeIfPresent([RunRecord.RoutePoint].self, forKey: .trace)
         if let stored = try c.decodeIfPresent(ActivityMetrics.self, forKey: .metrics) {
             metrics = stored
         } else if let legacy = try c.decodeIfPresent(Double.self, forKey: .legacyDistanceKm) {
@@ -117,7 +127,9 @@ extension AppState {
     /// (Club participation is optional; this must never block the flow it's called from). Queued
     /// to the local outbox *before* the network attempt, so a kill mid-request still leaves
     /// something to retry rather than a `try?` that discarded the payload the instant it failed.
-    func postClubActivity(type: String, text: String, xpEarned: Int, contentKey: String? = nil, metrics: ActivityMetrics = .none) {
+    /// `route` est le tracé BRUT de la sortie. Le rognage de confidentialité est appliqué ici, une
+    /// fois, et c'est le résultat qui est mis en file puis envoyé — voir `PendingClubActivity.trace`.
+    func postClubActivity(type: String, text: String, xpEarned: Int, contentKey: String? = nil, metrics: ActivityMetrics = .none, route: [RunRecord.RoutePoint] = []) {
         guard auth.isSignedIn else { return }
         let pending = PendingClubActivity(
             clientId: UUID(),
@@ -126,7 +138,8 @@ extension AppState {
             xpEarned: xpEarned,
             metrics: metrics,
             userId: auth.currentUser?.id,
-            contentKey: contentKey
+            contentKey: contentKey,
+            trace: RouteGeometry.feedTrace(route)
         )
         outbox.append(pending)
         pendingActivityCount = outbox.count
@@ -166,7 +179,7 @@ extension AppState {
     private func attemptPost(_ pending: PendingClubActivity) async {
         let service = ClubService(auth: auth)
         do {
-            try await service.postActivity(clientId: pending.clientId, type: pending.type, text: pending.text, xpEarned: pending.xpEarned, contentKey: pending.contentKey, metrics: pending.metrics ?? .none)
+            try await service.postActivity(clientId: pending.clientId, type: pending.type, text: pending.text, xpEarned: pending.xpEarned, contentKey: pending.contentKey, metrics: pending.metrics ?? .none, trace: pending.trace ?? [])
             outbox.removeAll { $0.clientId == pending.clientId }
             pendingActivityCount = outbox.count
         } catch {

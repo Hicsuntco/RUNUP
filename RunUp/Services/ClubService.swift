@@ -138,11 +138,34 @@ struct FeedItem: Decodable, Identifiable {
     var kudos: Int
     var kudoedByMe: Bool
     var commentsCount: Int
+    /// Le titre que l'autrice a donné à sa sortie, et sa note. `text` reste la phrase FABRIQUÉE
+    /// (« a couru 8,2 km · Sortie longue ») : elle décrit ce qui s'est passé, ces deux-ci disent
+    /// ce qu'elle en pense. `nil` tant qu'elle n'a rien écrit, ce qui sera le cas le plus fréquent.
+    var title: String?
+    var note: String?
+    /// Non-nil dès la première modification. Affiché, pas caché : un fil où un texte peut changer
+    /// sans laisser de trace est un fil dont on ne peut rien citer.
+    var editedAt: Date?
+    /// Le tracé, déjà rogné de ses extrémités AVANT d'être envoyé — voir `RouteGeometry.feedTrace`.
+    /// `nil` pour une sortie sans GPS, trop courte pour survivre au rognage, ou dont l'autrice a
+    /// retiré le tracé après coup.
+    var routePreview: [RunRecord.RoutePoint]?
+    /// Trois noms au plus parmi ceux qui ont aimé — ce qui transforme « 7 » en gens. Le compte
+    /// complet reste `kudos` ; ces noms n'en sont pas l'ordre, seulement un échantillon.
+    var kudosNames: [String]
+    /// Le dernier commentaire, en aperçu.
+    var lastComment: FeedComment?
+
+    struct FeedComment: Decodable, Equatable {
+        var name: String
+        var text: String
+    }
 
     private enum CodingKeys: String, CodingKey {
         case id, userId, name, avatarUrl, avatarBase64, text, createdAt
         case distanceKm, durationSeconds, avgPace, elevationGainM, isPersonalRecord, contentKey
         case kudos, kudoedByMe, commentsCount
+        case title, note, editedAt, routePreview, kudosNames, lastComment
     }
 
     /// Décodage volontairement tolérant sur les seuls champs de métrique. Le déploiement du
@@ -168,6 +191,23 @@ struct FeedItem: Decodable, Identifiable {
         kudos = try c.decode(Int.self, forKey: .kudos)
         kudoedByMe = try c.decode(Bool.self, forKey: .kudoedByMe)
         commentsCount = try c.decode(Int.self, forKey: .commentsCount)
+        // Tolérants, pour la même raison que les métriques au-dessus : le serveur et l'app ne se
+        // déploient jamais en même temps, et un `decode` strict sur une clé pas encore renvoyée
+        // viderait le fil entier plutôt qu'une carte.
+        title = try c.decodeIfPresent(String.self, forKey: .title)
+        note = try c.decodeIfPresent(String.self, forKey: .note)
+        editedAt = try c.decodeIfPresent(Date.self, forKey: .editedAt)
+        kudosNames = try c.decodeIfPresent([String].self, forKey: .kudosNames) ?? []
+        lastComment = try c.decodeIfPresent(FeedComment.self, forKey: .lastComment)
+        // Le tracé voyage en [[lat, lng], …] — la forme que la base stocke et que le serveur
+        // renvoie telle quelle. Une paire mal formée fait tomber le tracé entier plutôt que de
+        // dessiner une ligne qui saute : mieux vaut une carte sans dessin qu'un dessin faux.
+        if let pairs = try c.decodeIfPresent([[Double]].self, forKey: .routePreview),
+           pairs.count > 1, pairs.allSatisfy({ $0.count == 2 }) {
+            routePreview = pairs.map { RunRecord.RoutePoint(lat: $0[0], lng: $0[1]) }
+        } else {
+            routePreview = nil
+        }
     }
 
     /// La phrase du fil, dans la langue de celle qui LIT.
@@ -375,12 +415,31 @@ struct ClubService {
         try await send(path: "api/activities/comments", method: "POST", body: ["activityId": activityId, "text": text])
     }
 
+    /// Renomme sa propre sortie, lui met une note, ou lui retire son tracé.
+    ///
+    /// Le corps porte l'état FINAL des champs modifiables, pas seulement ceux qui changent : un
+    /// titre vidé veut dire « plus de titre ». C'est ce que produit un formulaire, qui est le seul
+    /// appelant — et la seule alternative, un `PATCH` partiel, obligerait à distinguer « absent »
+    /// de « vidé » des deux côtés du réseau.
+    func updateActivity(activityId: String, title: String?, note: String?, removeRoute: Bool) async throws {
+        var body: [String: Any] = ["activityId": activityId, "removeRoute": removeRoute]
+        if let title, !title.isEmpty { body["title"] = title }
+        if let note, !note.isEmpty { body["note"] = note }
+        let _: OkResponse = try await send(path: "api/activities/update", method: "POST", body: body)
+    }
+
     /// Posts one completed activity to the club feed and credits its XP to the account's real
     /// server-side total. `clientId` is a fresh UUID per call so a retried request (flaky
     /// network) never double-counts the XP or duplicates the feed entry — see
     /// `api/activities/create.js`. `metrics` (run activities only) feeds real club-challenge
     /// progress server-side and the KM / ALLURE / D+ line on the feed card.
-    func postActivity(clientId: UUID = UUID(), type: String, text: String, xpEarned: Int, contentKey: String? = nil, metrics: ActivityMetrics = .none) async throws {
+    ///
+    /// `trace` est DÉJÀ rogné : il vient de `RouteGeometry.feedTrace`, appelé une seule fois, au
+    /// moment où la sortie entre dans la file d'envoi (`postClubActivity`). Le rognage n'est pas
+    /// idempotent — l'appliquer une seconde fois retirerait 300 m de plus à chaque bout — donc il
+    /// ne peut pas vivre à la fois ici et là-bas. Il vit là-bas, parce que c'est aussi ce qui est
+    /// écrit sur le disque en attendant le réseau : la file ne garde jamais un tracé complet.
+    func postActivity(clientId: UUID = UUID(), type: String, text: String, xpEarned: Int, contentKey: String? = nil, metrics: ActivityMetrics = .none, trace: [RunRecord.RoutePoint] = []) async throws {
         var body: [String: Any] = ["clientId": clientId.uuidString, "type": type, "text": text, "xpEarned": xpEarned]
         // `text` part quand même : c'est lui que reçoit la notification push, composée côté
         // serveur, qui n'a aucune langue de destinataire à consulter. `contentKey` s'y ajoute pour
@@ -395,6 +454,9 @@ struct ClubService {
         if let avgPace = metrics.avgPace { body["avgPace"] = avgPace }
         if let elevationGainM = metrics.elevationGainM { body["elevationGainM"] = elevationGainM }
         if metrics.isPersonalRecord { body["isPersonalRecord"] = true }
+        // Absente plutôt que vide quand la sortie est trop courte pour un tracé rogné : la colonne
+        // reste NULL, et la carte du fil s'affiche sans dessin au lieu d'un cadre vide.
+        if trace.count > 1 { body["routePreview"] = trace.map { [$0.lat, $0.lng] } }
         let _: OkResponse = try await send(
             path: "api/activities/create",
             method: "POST",

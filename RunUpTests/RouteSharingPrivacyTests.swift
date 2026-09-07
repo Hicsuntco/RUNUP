@@ -134,4 +134,39 @@ final class RouteSharingPrivacyTests: XCTestCase {
         XCTAssertLessThanOrEqual(payload.preview.count, 32)
         XCTAssertGreaterThan(payload.preview.count, 1)
     }
+    // MARK: - Le tracé qui part avec une sortie du fil
+
+    /// La porte du fil doit rogner autant que celle des parcours publiés. C'est le même danger :
+    /// une boucle qui part et revient au même point dit où quelqu'un habite, et une carte de fil
+    /// la met sous les yeux de tout un club plutôt que d'une carte de découverte.
+    func testFeedTraceIsTrimmedLikeAPublishedRoute() {
+        let route = straightLine(pointCount: 400, stepMeters: 10)   // 4 km
+        guard let trace = RouteGeometry.feedTrace(route) else {
+            return XCTFail("un parcours de 4 km doit produire un tracé")
+        }
+        let firstKept = RouteGeometry.distanceMeters(route[0], trace[0])
+        let lastKept = RouteGeometry.distanceMeters(route[route.count - 1], trace[trace.count - 1])
+        XCTAssertGreaterThanOrEqual(firstKept, RouteGeometry.sharingTrimMeters - 20,
+                                    "le départ réel n'est pas assez loin du premier point envoyé")
+        XCTAssertGreaterThanOrEqual(lastKept, RouteGeometry.sharingTrimMeters - 20,
+                                    "l'arrivée réelle n'est pas assez loin du dernier point envoyé")
+    }
+
+    /// Trop court pour survivre au rognage : rien ne part. Pas un tracé raccourci, pas le tracé
+    /// d'origine — rien. La carte du fil sait se passer de dessin ; elle ne saurait pas se passer
+    /// de ça.
+    func testAShortRunSendsNoTraceAtAll() {
+        XCTAssertNil(RouteGeometry.feedTrace(straightLine(pointCount: 60, stepMeters: 10)))
+        XCTAssertNil(RouteGeometry.feedTrace([]))
+        XCTAssertNil(RouteGeometry.feedTrace(straightLine(pointCount: 2, stepMeters: 10)))
+    }
+
+    /// Borné, pour que cinquante cartes de fil ne se chargent pas comme cinquante parcours.
+    func testFeedTraceIsBounded() {
+        let long = straightLine(pointCount: 5000, stepMeters: 10)   // 50 km
+        let trace = RouteGeometry.feedTrace(long)
+        XCTAssertNotNil(trace)
+        XCTAssertLessThanOrEqual(trace?.count ?? 0, 80)
+        XCTAssertGreaterThan(trace?.count ?? 0, 2, "borné ne veut pas dire réduit à un segment")
+    }
 }

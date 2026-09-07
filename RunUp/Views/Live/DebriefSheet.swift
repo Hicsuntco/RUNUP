@@ -179,7 +179,7 @@ struct DebriefSheet: View {
                     // notification push, qu'il compose lui-même et sans connaître la langue de qui la
                     // reçoit, tandis que le fil se refabrique la phrase chez sa lectrice. Absent pour
                     // une séance hors plan — il n'y a alors aucun type de séance à nommer.
-                    appState.postClubActivity(type: "run", text: feedText, xpEarned: 120, contentKey: run.sessionKind?.rawValue, metrics: metrics)
+                    appState.postClubActivity(type: "run", text: feedText, xpEarned: 120, contentKey: run.sessionKind?.rawValue, metrics: metrics, route: run.route)
                     // Deliberately here rather than in `AppState.endLiveRun` — this tap is where a
                     // run actually becomes real on every path into it (GPS, "FAIT", a run handed
                     // back by the Watch), and it's the tap that credits XP/streak/plan adaptation.

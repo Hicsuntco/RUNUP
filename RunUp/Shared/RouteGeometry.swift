@@ -144,6 +144,24 @@ extension RouteGeometry {
         return (full, decimatedPoints(full, keeping: 24))
     }
 
+    /// Le tracé tel qu'il part avec une activité du fil, ou `nil` s'il ne doit pas partir.
+    ///
+    /// Même porte que `shareablePayload` — rognage puis longueur minimale, appliqués ici et pas
+    /// dans l'écran appelant, pour qu'aucun chemin ne puisse envoyer un tracé non rogné en
+    /// oubliant une étape. La seule différence est la finesse : quatre-vingts points, contre 24
+    /// pour une vignette de liste et 600 pour un parcours qu'on rouvrira au mètre près. Une carte
+    /// de fil fait environ 345 points de large ; au-delà de quatre-vingts, on envoie des sommets
+    /// que personne ne distingue.
+    ///
+    /// Rend `nil` — et non un tracé tronqué — pour une sortie trop courte pour survivre au
+    /// rognage. La carte du fil sait se passer de tracé ; elle ne saurait pas se passer de la
+    /// confidentialité.
+    static func feedTrace(_ route: [RunRecord.RoutePoint]) -> [RunRecord.RoutePoint]? {
+        let trimmed = trimmedForSharing(route)
+        guard trimmed.count > 1, lengthMeters(trimmed) >= minimumShareableMeters else { return nil }
+        return decimatedPoints(trimmed, keeping: 80)
+    }
+
     /// `decimated`, mais sur des points GPS plutôt que sur des points déjà projetés.
     static func decimatedPoints(_ route: [RunRecord.RoutePoint], keeping target: Int) -> [RunRecord.RoutePoint] {
         guard route.count > target, target > 1 else { return route }

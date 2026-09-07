@@ -164,35 +164,46 @@ struct WatchRunView: View {
     }
 
     var body: some View {
-        VStack(spacing: 6) {
+        // La hauteur vient du système, elle n'est pas devinée : `WatchRunMetrics` en dérive
+        // toutes les tailles, et le test qui l'accompagne vérifie que l'empilement tient sur
+        // chaque boîtier depuis le 40 mm. C'est la seule garantie possible pour un écran que
+        // personne ici ne peut regarder.
+        GeometryReader { screen in
+            stack(WatchRunMetrics(availableHeight: screen.size.height))
+        }
+        .background(WTheme.bg)
+    }
+
+    private func stack(_ m: WatchRunMetrics) -> some View {
+        VStack(spacing: m.spacing) {
             HStack(spacing: 5) {
                 Circle()
                     .fill(workout.state == .paused ? WTheme.text3 : WTheme.lime)
-                    .frame(width: 6, height: 6)
+                    .frame(width: m.statusDot, height: m.statusDot)
                 Text(workout.state == .paused ? "EN PAUSE" : "EN COURS")
-                    .font(WTheme.sansBold(10))
+                    .font(WTheme.sansBold(m.statusText))
                     .tracking(0.2)
                     .foregroundStyle(workout.state == .paused ? WTheme.text3 : WTheme.lime)
             }
 
             Spacer(minLength: 0)
 
-            VStack(spacing: 2) {
+            VStack(spacing: m.heroGap) {
                 Text(value(layout.hero))
-                    .font(WTheme.display(50))
+                    .font(WTheme.display(m.hero))
                     .foregroundStyle(workout.state == .paused ? tint(layout.hero).opacity(0.5) : tint(layout.hero))
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
                     .contentTransition(.numericText())
                 Text(LocalizedStringKey(layout.hero.nameKey))
-                    .font(WTheme.sansBold(10))
+                    .font(WTheme.sansBold(m.heroLabel))
                     .tracking(0.24)
                     .textCase(.uppercase)
                     .foregroundStyle(WTheme.text3)
             }
 
             if let fraction = progressFraction {
-                VStack(spacing: 4) {
+                VStack(spacing: m.progressGap) {
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
                             Capsule().fill(Color.white.opacity(0.12))
@@ -201,31 +212,35 @@ struct WatchRunView: View {
                                 .frame(width: geo.size.width * fraction)
                         }
                     }
-                    .frame(height: 4)
-                    Text("Séance · \(Int((fraction * 100).rounded())) %")
-                        .font(WTheme.sansBold(9))
-                        .tracking(0.2)
-                        .textCase(.uppercase)
-                        .foregroundStyle(WTheme.text3)
+                    .frame(height: m.progressBar)
+                    // Sacrifiée quand la place manque, et seule à l'être : la barre au-dessus dit
+                    // déjà la même chose, en moins précis.
+                    if m.showsProgressCaption {
+                        Text("Séance · \(Int((fraction * 100).rounded())) %")
+                            .font(WTheme.sansBold(m.progressCaption))
+                            .tracking(0.2)
+                            .textCase(.uppercase)
+                            .foregroundStyle(WTheme.text3)
+                    }
                 }
                 .padding(.horizontal, 8)
-                .padding(.top, 6)
+                .padding(.top, m.progressTop)
             }
 
             Spacer(minLength: 0)
 
             HStack(spacing: 4) {
                 ForEach(layout.secondary, id: \.self) { metric in
-                    VStack(spacing: 1) {
+                    VStack(spacing: m.secondaryGap) {
                         Text(value(metric))
-                            .font(WTheme.display(17))
+                            .font(WTheme.display(m.secondaryValue))
                             .foregroundStyle(tint(metric))
                             .lineLimit(1)
                             .minimumScaleFactor(0.6)
                         // `Text(String)` ne consulte PAS le catalogue — seul `Text(LocalizedStringKey)`
                         // le fait. Sans ça, « Temps » restait français même catalogue chargé.
                         Text(LocalizedStringKey(metric.unitKey))
-                            .font(WTheme.sansBold(8.5))
+                            .font(WTheme.sansBold(m.secondaryUnit))
                             .tracking(0.2)
                             .foregroundStyle(WTheme.text3)
                     }
@@ -236,10 +251,10 @@ struct WatchRunView: View {
             HStack(spacing: 6) {
                 Button(action: { workout.togglePause() }) {
                     Image(systemName: workout.state == .paused ? "play.fill" : "pause.fill")
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.system(size: m.buttonIcon, weight: .bold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 36)
+                        .frame(height: m.buttonHeight)
                         .background(WTheme.card, in: Capsule())
                 }
                 .buttonStyle(.plain)
@@ -247,20 +262,19 @@ struct WatchRunView: View {
 
                 Button(action: { workout.end() }) {
                     Image(systemName: "stop.fill")
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.system(size: m.buttonIcon, weight: .bold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 36)
+                        .frame(height: m.buttonHeight)
                         .background(WTheme.rose, in: Capsule())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Terminer la course")
             }
-            .padding(.top, 2)
+            .padding(.top, m.buttonTop)
         }
-        .padding(.horizontal, 4)
+        .padding(.horizontal, m.horizontalPadding)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(WTheme.bg)
     }
 }
 

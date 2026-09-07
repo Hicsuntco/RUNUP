@@ -269,6 +269,10 @@ targets:
       # La disposition de l'écran de course, choisie sur le téléphone et poussée ici. Le type est
       # partagé pour que les deux bouts du canal ne puissent pas diverger sur le format.
       - path: RunUp/Shared/WatchRunLayout.swift
+      # Les tailles de l'écran de course, dérivées de la hauteur que le système donne. Partagé
+      # pour que `WatchRunMetricsTests` puisse vérifier le budget vertical depuis la cible iOS —
+      # la cible montre, elle, n'a pas de tests.
+      - path: RunUp/Shared/WatchRunMetrics.swift
     resources:
       - path: RunUpWatch/Assets.xcassets
       - path: RunUp/Resources/Fonts

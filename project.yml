@@ -86,7 +86,7 @@ targets:
         # rejects the bundle for not supporting iPad Split View multitasking's full 4-orientation
         # set. This opts the app out of that requirement instead of adding rotation support.
         UIRequiresFullScreen: true
-        NSHealthShareUsageDescription: "RunUp lit tes données Santé (fréquence cardiaque, nombre de pas, calories actives, sommeil) pour calculer ta forme du jour, adapter ton programme et suivre tes objectifs quotidiens."
+        NSHealthShareUsageDescription: "RunUp lit tes données Santé (les courses enregistrées par ta montre ou une autre app, fréquence cardiaque, nombre de pas, calories actives, sommeil) pour faire compter tes sorties dans ton programme, calculer ta forme du jour et suivre tes objectifs quotidiens."
         NSHealthUpdateUsageDescription: "RunUp enregistre tes séances de course dans Santé après chaque sortie."
         NSLocationWhenInUseUsageDescription: "RunUp utilise ta position pour suivre ta distance, ton allure et ton tracé pendant une course."
         NSMicrophoneUsageDescription: "RunUp utilise le micro pour t'écouter quand tu poses une question à voix haute à ton coach pendant une course."

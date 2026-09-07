@@ -17,7 +17,14 @@ final class HealthKitService {
         var types: Set<HKObjectType> = [
             HKObjectType.quantityType(forIdentifier: .heartRate)!,
             HKObjectType.quantityType(forIdentifier: .stepCount)!,
-            HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!
+            HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!,
+            // Les courses enregistrées ailleurs — une Garmin, une Coros, l'app Exercice d'une
+            // Apple Watch — et la distance qu'elles portent. Voir `runWorkouts`.
+            //
+            // Comme pour les types d'écriture plus bas : une utilisatrice déjà connectée sera
+            // redemandée une fois, pour ces deux-là.
+            HKObjectType.workoutType(),
+            HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning)!
         ]
         if let sleep = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) {
             types.insert(sleep)
@@ -228,6 +235,116 @@ final class HealthKitService {
 
         try await builder.endCollection(at: end)
         _ = try await builder.finishWorkout()
+    }
+
+    // MARK: - Les courses enregistrées ailleurs
+
+    /// Une course lue dans Santé, réduite à ce dont `RunRecord` a besoin.
+    ///
+    /// Un type à nous plutôt que `HKWorkout` : ce dernier n'est pas `Sendable`, et le faire
+    /// traverser jusqu'à l'acteur principal obligerait à le décortiquer là-bas de toute façon.
+    struct ImportedRun: Sendable {
+        var id: UUID
+        var start: Date
+        var durationSeconds: Double
+        var distanceKm: Double
+        var kcal: Double
+        var avgHeartRate: Int
+    }
+
+    /// Les courses écrites dans Santé par QUELQU'UN D'AUTRE que RUNUP, depuis une date donnée.
+    ///
+    /// # Pourquoi cette lecture existe
+    ///
+    /// L'app savait écrire une course dans Santé et n'a jamais su en lire une. Pour qui court
+    /// avec une Garmin, une Coros, une Polar — ou simplement avec l'app Exercice d'une Apple
+    /// Watch — cela voulait dire un programme qui n'avance jamais : la sortie a bien eu lieu, elle
+    /// est dans Santé, et RUNUP la regardait sans la voir — elle ne demandait même pas le droit
+    /// de la lire (`readTypes` ne portait que cardio, pas, calories, sommeil).
+    ///
+    /// # Ce qui est exclu, et pourquoi deux fois
+    ///
+    /// `HKSource.default()` écarte ce que RUNUP a elle-même écrit — sans quoi chaque course faite
+    /// avec le bouton RUN reviendrait par la porte de Santé une seconde fois. Ce filtre suffit en
+    /// théorie ; l'appelant dédoublonne quand même sur l'horaire, parce qu'une même sortie peut
+    /// être écrite par deux sources (la montre ET l'application du fabricant) et que ces deux-là
+    /// ne sont ni l'une ni l'autre RUNUP.
+    ///
+    /// # Seulement la course à pied
+    ///
+    /// `.running` uniquement : ni marche, ni vélo, ni rando. Le programme est un programme de
+    /// course, et compter une sortie à vélo comme une séance donnerait un plan faux plutôt qu'un
+    /// plan vide.
+    func runWorkouts(since: Date) async -> [ImportedRun] {
+        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+            HKQuery.predicateForWorkouts(with: .running),
+            HKQuery.predicateForSamples(withStart: since, end: .now, options: .strictStartDate),
+            NSCompoundPredicate(notPredicateWithSubpredicate: HKQuery.predicateForObjects(from: HKSource.default()))
+        ])
+        let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
+        let workouts: [HKWorkout] = await withCheckedContinuation { continuation in
+            let query = HKSampleQuery(sampleType: HKObjectType.workoutType(), predicate: predicate,
+                                      limit: HKObjectQueryNoLimit, sortDescriptors: [sort]) { _, samples, _ in
+                continuation.resume(returning: (samples as? [HKWorkout]) ?? [])
+            }
+            store.execute(query)
+        }
+
+        var runs: [ImportedRun] = []
+        for workout in workouts {
+            // Les statistiques portées par l'entraînement lui-même quand la source les a écrites
+            // (c'est le cas des montres), une requête sur l'intervalle sinon. La seconde coûte un
+            // aller-retour par course, ce qui est acceptable : il n'y en a qu'une poignée par
+            // import, et zéro les jours où rien de neuf n'est arrivé.
+            guard let distanceType = HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning),
+                  let energyType = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned),
+                  let heartType = HKObjectType.quantityType(forIdentifier: .heartRate) else { continue }
+
+            let meters = workout.statistics(for: distanceType)?.sumQuantity()?.doubleValue(for: .meter)
+                ?? await sum(type: distanceType, unit: .meter, in: workout)
+            let kcal = workout.statistics(for: energyType)?.sumQuantity()?.doubleValue(for: .kilocalorie())
+                ?? await sum(type: energyType, unit: .kilocalorie(), in: workout)
+            let bpm = workout.statistics(for: heartType)?.averageQuantity()?.doubleValue(for: Self.bpm)
+                ?? await average(type: heartType, unit: Self.bpm, in: workout)
+
+            runs.append(ImportedRun(
+                id: workout.uuid,
+                start: workout.startDate,
+                durationSeconds: workout.duration,
+                distanceKm: meters / 1000,
+                kcal: kcal,
+                avgHeartRate: Int(bpm.rounded())
+            ))
+        }
+        return runs
+    }
+
+    private static let bpm = HKUnit.count().unitDivided(by: .minute())
+
+    private func sum(type: HKQuantityType, unit: HKUnit, in workout: HKWorkout) async -> Double {
+        await statistic(type: type, unit: unit, in: workout, options: .cumulativeSum) { $0.sumQuantity() }
+    }
+
+    private func average(type: HKQuantityType, unit: HKUnit, in workout: HKWorkout) async -> Double {
+        await statistic(type: type, unit: unit, in: workout, options: .discreteAverage) { $0.averageQuantity() }
+    }
+
+    /// Une statistique sur l'intervalle exact d'un entraînement, toutes sources confondues.
+    ///
+    /// Volontairement SANS le filtre `HKSource.default()` des sommes quotidiennes : on cherche ici
+    /// à décrire une course précise, pas à éviter de compter deux fois la même énergie. Si la
+    /// fréquence cardiaque de cette sortie a été écrite par un capteur tiers, c'est justement
+    /// celle-là qu'il faut lire.
+    private func statistic(type: HKQuantityType, unit: HKUnit, in workout: HKWorkout,
+                           options: HKStatisticsOptions,
+                           pick: @escaping (HKStatistics) -> HKQuantity?) async -> Double {
+        let predicate = HKQuery.predicateForSamples(withStart: workout.startDate, end: workout.endDate)
+        return await withCheckedContinuation { continuation in
+            let query = HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: options) { _, stats, _ in
+                continuation.resume(returning: stats.flatMap(pick)?.doubleValue(for: unit) ?? 0)
+            }
+            store.execute(query)
+        }
     }
 
     /// `end` is `.now` for today (only counts what's actually happened so far — not a future

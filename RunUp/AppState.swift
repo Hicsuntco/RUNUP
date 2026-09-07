@@ -286,10 +286,85 @@ final class AppState {
         )
     }
 
+
+    // MARK: - Les courses faites ailleurs
+
+    /// Récupère dans Apple Santé les courses que RUNUP n'a pas enregistrées elle-même.
+    ///
+    /// # Ce que ça répare
+    ///
+    /// L'app savait ÉCRIRE une course dans Santé et n'a jamais su en LIRE une. Pour qui court
+    /// avec une Garmin, une Coros, une Polar, ou avec l'app Exercice d'une Apple Watch, le
+    /// programme n'avançait donc jamais : la sortie avait bien eu lieu, elle était dans Santé, et
+    /// l'app la regardait sans la voir. Une semaine affichait « 1/4 séances » à quelqu'un qui en
+    /// avait couru quatre.
+    ///
+    /// # La course importée passe par le debrief, comme toutes les autres
+    ///
+    /// Elle est empilée dans `pendingDebriefs` plutôt qu'insérée en silence. Le ressenti n'est pas
+    /// une formalité : c'est lui qui nourrit l'accumulateur que le moteur moyenne au changement de
+    /// semaine, et donc l'ajustement de la suivante. Une sortie entrée sans ressenti compterait
+    /// dans l'historique sans peser sur le programme — la moitié du travail.
+    ///
+    /// # Deux garde-fous contre le doublon
+    ///
+    /// L'identifiant Santé d'abord, qui ne change pas. L'horaire ensuite, à cinq minutes près :
+    /// une même sortie peut être écrite dans Santé par deux sources différentes — la montre et
+    /// l'application du fabricant — et aucune des deux n'est RUNUP, donc le filtre par source du
+    /// service ne les écarte pas.
+    private func importRunsFromHealth() async {
+        guard profile.connectedSources.contains(.apple) else { return }
+
+        let since = HealthRunImport.window(lastImport: profile.lastHealthRunImport)
+        let found = await healthKit.runWorkouts(since: since)
+        // Écrite même quand rien n'est trouvé : sinon la fenêtre du premier passage recommencerait
+        // à sept jours à chaque ouverture, pour rien.
+        profile.lastHealthRunImport = .now
+        guard !found.isEmpty else { return }
+
+        let existing = (try? modelContext.fetch(FetchDescriptor<RunRecord>())) ?? []
+        let selected = HealthRunImport.selecting(
+            found,
+            knownIDs: Set(existing.compactMap(\.healthWorkoutID)),
+            existingDates: existing.map(\.date)
+        )
+
+        var imported: [RunRecord] = []
+        for run in selected {
+            let record = AdaptivePlanEngine.buildRunRecord(
+                title: String(localized: "Course importée"),
+                elapsedSeconds: run.durationSeconds,
+                distanceKm: run.distanceKm,
+                kcal: run.kcal,
+                avgHeartRate: run.avgHeartRate
+            )
+            record.date = run.start
+            record.healthWorkoutID = run.id
+            modelContext.insert(record)
+            imported.append(record)
+        }
+
+        guard !imported.isEmpty else { return }
+        pendingDebriefs.append(contentsOf: imported)
+
+        let distance = String(format: "%.1f", locale: Locale.current, imported.reduce(0) { $0 + $1.distanceKm })
+        notify(
+            icon: "❤️",
+            colorHex: 0xFF3B6B,
+            title: imported.count == 1
+                ? String(localized: "Sortie récupérée dans Santé")
+                : String(localized: "\(imported.count) sorties récupérées dans Santé"),
+            text: String(localized: "\(distance) km qui ne comptaient pas encore dans ton programme. Valide ton ressenti pour les y faire entrer.")
+        )
+    }
+
     /// Re-checks the program week/phase against the real calendar date — call whenever the app
     /// returns to the foreground so a skipped week or program completion is picked up even if the
     /// user didn't open the app on the exact day it happened.
     func refreshProgramForCurrentDate() {
+        // Les courses faites ailleurs d'abord, le programme ensuite : une sortie importée doit
+        // pouvoir compter dans la semaine que ce même appel s'apprête à évaluer.
+        Task { await importRunsFromHealth() }
         let previousWeek = profile.weekNumber
         AdaptivePlanEngine.refreshProgramForCurrentDate(profile)
         AdaptivePlanEngine.resetDailyGoalsIfNewDay(profile)

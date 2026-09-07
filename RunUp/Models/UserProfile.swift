@@ -131,6 +131,13 @@ final class UserProfile {
     /// manual edit) on every single HealthKit sync of the same day. Nil for anyone who hasn't hit
     /// that code path yet, same self-healing spirit as `lastDailyResetDay`.
     var lastSameDayAdjustmentCheckDay: Date?
+    /// La fin de la fenêtre déjà balayée par l'import depuis Apple Santé.
+    ///
+    /// Nil tant que l'import n'a jamais tourné : le premier balayage remonte alors de sept jours
+    /// seulement, et pas de toute une vie d'historique. Une première ouverture ne doit pas
+    /// déverser deux cents sorties dans l'historique ni empiler deux cents demandes de ressenti —
+    /// ce qui compte, c'est que le programme en cours reparte juste.
+    var lastHealthRunImport: Date?
     /// Was "Renfo & mobilité" (strength/mobility minutes) — replaced because a *daily* strength
     /// target doesn't match real training guidance (2-3x/week, not every day), which made the
     /// goal honestly near-impossible rather than motivating. Active calories work for everyone

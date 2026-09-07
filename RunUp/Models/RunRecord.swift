@@ -46,6 +46,14 @@ final class RunRecord {
     /// re-importing skip activities already pulled in, instead of duplicating History on every
     /// sync.
     var stravaActivityId: Int? = nil
+    /// Non-nil seulement pour une course importée d'Apple Santé — l'identifiant de l'entraînement
+    /// tel que Santé le porte.
+    ///
+    /// Même rôle que `stravaActivityId` juste au-dessus, et pour la même raison : l'import
+    /// repasse sur la même fenêtre à chaque retour au premier plan, et sans clé stable il
+    /// ajouterait la même sortie à l'historique autant de fois qu'on ouvre l'app. Cet
+    /// identifiant-là est attribué par Santé et ne bouge plus.
+    var healthWorkoutID: UUID? = nil
     /// Which `Shoe` this run was logged in, if any — a plain field (not a `@Relationship`) so
     /// deleting a `Shoe` never cascades onto real run history; `Shoe.totalKm` just stops counting
     /// a run whose shoe no longer exists.
@@ -67,7 +75,8 @@ final class RunRecord {
         elevationGainM: Int = 0,
         splits: [String] = [],
         route: [RoutePoint] = [],
-        stravaActivityId: Int? = nil
+        stravaActivityId: Int? = nil,
+        healthWorkoutID: UUID? = nil
     ) {
         self.date = date
         self.title = title
@@ -80,6 +89,7 @@ final class RunRecord {
         self.splits = splits
         self.route = route
         self.stravaActivityId = stravaActivityId
+        self.healthWorkoutID = healthWorkoutID
     }
 }
 

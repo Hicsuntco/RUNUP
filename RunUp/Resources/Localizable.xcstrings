@@ -149,6 +149,23 @@
         }
       }
     },
+    "%@ km qui ne comptaient pas encore dans ton programme. Valide ton ressenti pour les y faire entrer.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ km that weren't counting towards your plan yet. Rate how it felt to bring them in."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ km que aún no contaban en tu programa. Valida tus sensaciones para incorporarlos."
+          }
+        }
+      }
+    },
     "%@ par an": {
       "extractionState": "manual",
       "localizations": {
@@ -1172,6 +1189,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld carrera%@"
+          }
+        }
+      }
+    },
+    "%lld sorties récupérées dans Santé": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld runs picked up from Health"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld salidas recuperadas de Salud"
           }
         }
       }
@@ -5621,6 +5655,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Carrera nocturna"
+          }
+        }
+      }
+    },
+    "Course importée": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imported run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carrera importada"
           }
         }
       }
@@ -15036,6 +15087,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tirada larga"
+          }
+        }
+      }
+    },
+    "Sortie récupérée dans Santé": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run picked up from Health"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salida recuperada de Salud"
           }
         }
       }

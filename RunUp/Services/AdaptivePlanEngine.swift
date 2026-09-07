@@ -940,16 +940,25 @@ enum AdaptivePlanEngine {
         // partie à 23h50 et validée à 00h20 cochait le lundi et laissait la séance du dimanche
         // « à faire » pour toujours. Même chose pour une course reçue de la montre et validée le
         // lendemain matin. `run.date` est la seule date qui décrit ce qui s'est réellement passé.
+        //
+        // Et seulement si elle appartient à la semaine AFFICHÉE. Une course d'avant lundi
+        // désignerait le même jour de la semaine sept jours plus tard : une sortie du dimanche
+        // validée le lundi cochait le dimanche À VENIR. Le cas existait déjà pour une course
+        // reçue de la montre après un changement de semaine ; il devient courant avec l'import
+        // depuis Santé, qui remonte plusieurs jours en arrière. Le ressenti, l'XP et la série,
+        // eux, s'appliquent quoi qu'il arrive — ils ne sont pas attachés à une case.
         let runDay = weekdayIndex(for: run.date)
-        profile.weekStrip = profile.weekStrip.map { day in
-            var d = day
-            // Le jour de la course, quel que soit son état actuel — la case a pu redevenir
-            // `.upcoming` ou `.rest` si la semaine a été régénérée entre le départ et la validation.
-            if d.weekday == runDay { d.state = .done }
-            return d
-        }
-        if let idx = profile.weekSessions.firstIndex(where: { $0.weekday == runDay }) {
-            profile.weekSessions[idx].completed = true
+        if currentWeekRange().contains(run.date) {
+            profile.weekStrip = profile.weekStrip.map { day in
+                var d = day
+                // Le jour de la course, quel que soit son état actuel — la case a pu redevenir
+                // `.upcoming` ou `.rest` si la semaine a été régénérée entre le départ et la validation.
+                if d.weekday == runDay { d.state = .done }
+                return d
+            }
+            if let idx = profile.weekSessions.firstIndex(where: { $0.weekday == runDay }) {
+                profile.weekSessions[idx].completed = true
+            }
         }
         // Course libre's own completion flag — its `todaySession` template is independent of
         // `weekSessions` (see `chooseFreeRun`), so this is the only reliable "she did today's

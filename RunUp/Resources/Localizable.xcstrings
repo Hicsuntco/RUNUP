@@ -2599,6 +2599,57 @@
         }
       }
     },
+    "Aimé par %1$@ et %2$lld autres": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liked by %1$@ and %2$lld others"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le gustó a %1$@ y %2$lld más"
+          }
+        }
+      }
+    },
+    "Aimé par %1$@ et une autre personne": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liked by %1$@ and one other"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le gustó a %1$@ y otra persona"
+          }
+        }
+      }
+    },
+    "Aimé par %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liked by %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le gustó a %@"
+          }
+        }
+      }
+    },
     "Ajoute une paire pour suivre son usure — chaque course lui est attribuée automatiquement une fois que c'est ta paire par défaut.": {
       "localizations": {
         "en": {
@@ -3851,6 +3902,23 @@
         }
       }
     },
+    "C'est définitif : le tracé ne pourra pas être remis.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is permanent: the route cannot be put back."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es definitivo: el trazado no se podrá recuperar."
+          }
+        }
+      }
+    },
     "C'est la base de tout ton programme.": {
       "localizations": {
         "en": {
@@ -4271,6 +4339,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta denuncia será revisada. Indica cuál es el problema."
+          }
+        }
+      }
+    },
+    "Ce texte a été refusé par le filtre de contenu. Reformule-le.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The content filter rejected this text. Try rewording it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El filtro de contenido ha rechazado este texto. Reformúlalo."
           }
         }
       }
@@ -5102,6 +5187,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Empezar los 7 días gratis"
+          }
+        }
+      }
+    },
+    "Comment c'était ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How was it?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Qué tal fue?"
           }
         }
       }
@@ -8073,6 +8175,23 @@
         }
       }
     },
+    "Impossible d'enregistrer pour l'instant. Réessaie dans un moment.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't save right now. Try again in a moment."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se puede guardar ahora. Inténtalo en un momento."
+          }
+        }
+      }
+    },
     "Impossible d'enregistrer — vérifie ta connexion.": {
       "localizations": {
         "en": {
@@ -9501,6 +9620,23 @@
         }
       }
     },
+    "Le dessin du parcours disparaît du fil. Le début et la fin de ta course n'y ont jamais été envoyés.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The drawing of your route disappears from the feed. The start and end of your run were never sent there."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El dibujo del recorrido desaparece del muro. El inicio y el final de tu carrera nunca se enviaron."
+          }
+        }
+      }
+    },
     "Le grand chiffre": {
       "localizations": {
         "en": {
@@ -10353,6 +10489,23 @@
         }
       }
     },
+    "Modifier ma sortie": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit my run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar mi salida"
+          }
+        }
+      }
+    },
     "Modifier mon programme": {
       "localizations": {
         "en": {
@@ -10446,6 +10599,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mi objetivo"
+          }
+        }
+      }
+    },
+    "Mon premier 10 km": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My first 10K"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mi primer 10 km"
           }
         }
       }
@@ -10739,6 +10909,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No, gracias"
+          }
+        }
+      }
+    },
+    "Note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nota"
           }
         }
       }
@@ -13883,6 +14070,23 @@
         }
       }
     },
+    "Retirer le tracé": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the route"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar el trazado"
+          }
+        }
+      }
+    },
     "Retirer ton applaudissement": {
       "localizations": {
         "en": {
@@ -16502,6 +16706,23 @@
         }
       }
     },
+    "Ta sortie": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu salida"
+          }
+        }
+      }
+    },
     "Ta séance du jour t'attend : %@ (%lld′).": {
       "localizations": {
         "en": {
@@ -17088,6 +17309,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mantén el ritmo en cada serie, recupera bien entre bloques 👊"
+          }
+        }
+      }
+    },
+    "Titre": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Título"
           }
         }
       }
@@ -19378,6 +19616,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "menstrual"
+          }
+        }
+      }
+    },
+    "modifié": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "edited"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "editado"
           }
         }
       }

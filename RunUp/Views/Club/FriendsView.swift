@@ -33,6 +33,8 @@ struct FriendsView: View {
     @State private var showSignIn = false
     @State private var peopleSheet: PeopleSheetKind?
     @State private var commentsActivity: FeedItem?
+    /// La sortie en cours de modification — la sienne uniquement, le serveur le vérifie de son côté.
+    @State private var editingActivity: FeedItem?
     @State private var reportTarget: ReportTarget?
     @State private var pendingBlock: (userId: String, name: String)?
     @State private var pendingDeleteActivity: FeedItem?
@@ -106,6 +108,10 @@ struct FriendsView: View {
                 }
             )
             .runUpSheetStyle()
+        }
+        .sheet(item: $editingActivity) { activity in
+            EditActivitySheet(item: activity, onSaved: { Task { await load() } })
+                .runUpSheetStyle()
         }
         .sheet(item: $commentsActivity) { activity in
             ActivityCommentsSheet(
@@ -515,7 +521,8 @@ struct FriendsView: View {
                         reportTarget = ReportTarget(targetType: "activity", targetId: item.id, displayName: String(localized: "l'activité de \(item.name)"))
                     },
                     onBlock: { pendingBlock = (item.userId, item.name) },
-                    onDelete: { pendingDeleteActivity = item }
+                    onDelete: { pendingDeleteActivity = item },
+                    onEdit: { editingActivity = item }
                 )
             }
         }

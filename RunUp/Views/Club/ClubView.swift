@@ -26,6 +26,8 @@ struct ClubView: View {
     @State private var pendingBlock: (userId: String, name: String)?
     @State private var showManagement = false
     @State private var commentsActivity: FeedItem?
+    /// La sortie en cours de modification — la sienne uniquement, le serveur le vérifie de son côté.
+    @State private var editingActivity: FeedItem?
     @State private var selectedBadge: ClubBadge?
     /// Set only when `syncBadgesIfNeeded` finds a key `badges` reports earned that isn't yet in
     /// `profile.seenBadgeKeys` — i.e. genuinely just crossed the threshold this load, not merely
@@ -139,6 +141,10 @@ struct ClubView: View {
         }
         .sheet(item: $selectedBadge) { badge in
             BadgeDetailView(badge: badge).runUpSheetStyle(detents: [.height(300)])
+        }
+        .sheet(item: $editingActivity) { activity in
+            EditActivitySheet(item: activity, onSaved: { Task { await loadFeed() } })
+                .runUpSheetStyle()
         }
         .sheet(item: $commentsActivity) { activity in
             ActivityCommentsSheet(
@@ -1181,7 +1187,8 @@ struct ClubView: View {
                         reportTarget = ReportTarget(targetType: "activity", targetId: item.id, displayName: String(localized: "l'activité de \(item.name)"))
                     },
                     onBlock: { pendingBlock = (item.userId, item.name) },
-                    onDelete: { pendingDeleteActivity = item }
+                    onDelete: { pendingDeleteActivity = item },
+                    onEdit: { editingActivity = item }
                 )
             }
         }

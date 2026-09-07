@@ -317,6 +317,16 @@ enum ClubServiceError: Error {
     case network(Error)
     case badResponse(Int, String)
     case notSignedIn
+
+    /// Le texte a été refusé par le filtre de contenu, et non par une panne.
+    ///
+    /// La distinction compte pour la personne en face : dans un cas il faut réécrire, dans l'autre
+    /// réessayer. Les confondre en « une erreur est survenue » la laisse relancer indéfiniment un
+    /// texte qui ne passera jamais.
+    var isObjectionableContent: Bool {
+        guard case let .badResponse(status, body) = self else { return false }
+        return status == 422 && body.contains("objectionable_content")
+    }
 }
 
 /// Talks to RunUp's real club backend (`api/clubs/*.js`, `api/activities/*.js`) — replaces

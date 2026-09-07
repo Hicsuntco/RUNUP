@@ -9,6 +9,9 @@ const { sendPushToUser, sendPushToUsers } = require('../../lib/apns');
 const { containsObjectionableContent } = require('../../lib/moderation');
 const { underDailyCap } = require('../../lib/rateLimit');
 const { canViewActivity, activityMetrics, isBlockedEitherWay } = require('../../lib/social');
+const {
+  MAX_TITLE, MAX_NOTE, REJECTED, isLatLngPair, sanitizeOwnText, sanitizeRoutePreview,
+} = require('../../lib/activityFields');
 
 const ALLOWED_TYPES = new Set(['run', 'strength', 'badge']);
 const REFERRAL_REWARD_XP = 100;
@@ -31,6 +34,8 @@ module.exports = withErrorHandling(async function handler(req, res) {
       if (req.method === 'GET') return handleCommentsList(req, res, userId);
       if (req.method === 'POST') return handleCommentCreate(req, res, userId);
       return res.status(405).json({ error: 'method_not_allowed' });
+    case 'update':
+      return handleUpdate(req, res, userId);
     case 'delete':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleDelete(req, res, userId);
@@ -60,6 +65,57 @@ module.exports = withErrorHandling(async function handler(req, res) {
       return res.status(404).json({ error: 'not_found' });
   }
 });
+
+
+// Renommer sa sortie, lui ajouter une note, ou en retirer le tracé — après coup.
+//
+// # Pourquoi l'édition existe
+//
+// La phrase fabriquée (« a couru 8,2 km · Sortie longue ») dit ce qui s'est passé, et c'est très
+// bien. Elle ne dit pas que c'était le premier 10 km, ni qu'il pleuvait, ni que le genou a tenu.
+// Un fil où personne ne peut rien ajouter est un journal, pas une conversation.
+//
+// # Ce qui n'est PAS modifiable, et pourquoi
+//
+// Ni la distance, ni la durée, ni l'allure, ni le dénivelé, ni le record. Ces colonnes alimentent
+// les défis de club, dont la progression est une somme : les rendre modifiables offrirait à
+// n'importe qui un défi terminé en une requête. Ce qui s'édite ici est ce qui n'est compté nulle
+// part — du texte, et un tracé qu'on retire.
+//
+// # Le retrait du tracé
+//
+// `removeRoute` efface la colonne, définitivement. C'est le seul champ qu'on peut supprimer sans
+// supprimer la sortie, et il doit l'être : quelqu'un qui réalise après coup que le dessin de sa
+// boucle en dit trop ne doit pas avoir à choisir entre garder ça et effacer sa course.
+// # L'état complet, pas une retouche
+//
+// Le corps porte la valeur FINALE de chaque champ modifiable, pas seulement ceux qui changent :
+// un titre absent veut dire « plus de titre », pas « laisse-le tel quel ». C'est ce que produit
+// naturellement un formulaire, qui est le seul appelant — et un `PATCH` partiel obligerait à
+// distinguer « absent » de « vidé », distinction que personne n'aurait envie de déboguer.
+async function handleUpdate(req, res, userId) {
+  const { activityId, removeRoute } = req.body || {};
+  if (!isUuid(activityId)) return res.status(400).json({ error: 'bad_request' });
+
+  const title = sanitizeOwnText(req.body?.title, MAX_TITLE);
+  const note = sanitizeOwnText(req.body?.note, MAX_NOTE);
+  if (title === REJECTED || note === REJECTED) return res.status(422).json({ error: 'objectionable_content' });
+
+  // `user_id = ${userId}` dans le WHERE, comme la suppression : l'autorisation est la requête
+  // elle-même, pas un test qui la précède. Une activité qui n'est pas la sienne ne renvoie
+  // simplement aucune ligne, et ne révèle donc pas non plus qu'elle existe.
+  const { rows } = await sql`
+    UPDATE activities
+       SET title = ${title},
+           note = ${note},
+           route_preview = CASE WHEN ${removeRoute === true} THEN NULL ELSE route_preview END,
+           edited_at = now()
+     WHERE id = ${activityId} AND user_id = ${userId}
+    RETURNING id
+  `;
+  if (rows.length === 0) return res.status(404).json({ error: 'not_found' });
+  res.status(200).json({ ok: true });
+}
 
 // Removes ONE of the caller's own activities from the club feed — scoped to user_id in the
 // DELETE itself, so nobody can remove anyone else's post. Kudos and comments cascade with the
@@ -124,6 +180,13 @@ async function handleCreate(req, res, userId) {
   // and never infers one.
   const personalRecord = type === 'run' && isPersonalRecord === true;
 
+  // Le tracé, le titre et la note — voir `sanitizeRoutePreview` et `sanitizeOwnText`. Les trois
+  // sont facultatifs : une sortie sans GPS, sans titre et sans note reste une activité valide.
+  const routePreview = sanitizeRoutePreview(req.body?.routePreview);
+  const title = sanitizeOwnText(req.body?.title, MAX_TITLE);
+  const note = sanitizeOwnText(req.body?.note, MAX_NOTE);
+  if (title === REJECTED || note === REJECTED) return res.status(422).json({ error: 'objectionable_content' });
+
   // Per-user daily activity cap — each fresh clientId is otherwise a fresh XP award, so a
   // scripted loop with random UUIDs could farm unbounded xp_total onto the shared leaderboard.
   // 40/day is far beyond any real day of running + goals. Fails open on counter errors.
@@ -151,8 +214,9 @@ async function handleCreate(req, res, userId) {
   // unique-constraint 500 instead of `duplicate: true`, and XP must only be credited when this
   // request is the one that actually inserted the row.
   const { rows: inserted } = await sql`
-    INSERT INTO activities (client_id, user_id, club_id, type, text, xp_earned, distance_km, duration_seconds, avg_pace, elevation_gain_m, is_personal_record, content_key)
-    VALUES (${clientId}, ${userId}, ${clubId}, ${type}, ${cleanText}, ${xp}, ${distance}, ${duration}, ${pace}, ${elevation}, ${personalRecord}, ${key})
+    INSERT INTO activities (client_id, user_id, club_id, type, text, xp_earned, distance_km, duration_seconds, avg_pace, elevation_gain_m, is_personal_record, content_key, route_preview, title, note)
+    VALUES (${clientId}, ${userId}, ${clubId}, ${type}, ${cleanText}, ${xp}, ${distance}, ${duration}, ${pace}, ${elevation}, ${personalRecord}, ${key},
+            ${routePreview ? JSON.stringify(routePreview) : null}::jsonb, ${title}, ${note})
     ON CONFLICT (client_id) DO NOTHING
     RETURNING id
   `;
@@ -211,10 +275,29 @@ async function handleFeed(req, res, userId) {
   const { rows } = await sql`
     SELECT a.id, a.text, a.created_at, u.name, u.id AS user_id, u.avatar_data, u.avatar_url,
            a.distance_km, a.duration_seconds, a.avg_pace, a.elevation_gain_m, a.is_personal_record,
-           a.content_key,
+           a.content_key, a.route_preview, a.title, a.note, a.edited_at,
            (SELECT COUNT(*)::int FROM activity_kudos k WHERE k.activity_id = a.id) AS kudos,
            EXISTS(SELECT 1 FROM activity_kudos k WHERE k.activity_id = a.id AND k.user_id = ${userId}) AS kudoed_by_me,
-           (SELECT COUNT(*)::int FROM activity_comments c WHERE c.activity_id = a.id) AS comments_count
+           (SELECT COUNT(*)::int FROM activity_comments c WHERE c.activity_id = a.id) AS comments_count,
+           -- Trois NOMS, et non plus seulement un compte. « Aimé par Sofia, Marc et 5 autres » est
+           -- ce qui fait d'un chiffre des gens ; c'est aussi ce qui manquait, faute que le serveur
+           -- les renvoie. Trois : au-delà, la ligne passe à la ligne sur un téléphone.
+           --
+           -- Sans ordre défini : la table des kudos ne date pas ses lignes. Trois noms parmi ceux
+           -- qui ont aimé, donc, pas « les trois derniers » : la ligne ne prétend rien de plus.
+           (SELECT COALESCE(json_agg(t.name), '[]'::json) FROM (
+              SELECT u2.name FROM activity_kudos k2 JOIN users u2 ON u2.id = k2.user_id
+               WHERE k2.activity_id = a.id
+                 AND k2.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+               LIMIT 3) t) AS kudos_names,
+           -- Le dernier commentaire, en aperçu. Une carte qui affiche « 💬 2 » demande d'ouvrir
+           -- une feuille pour savoir si ces deux commentaires valent le détour ; celle qui montre
+           -- le dernier répond à la question sur place.
+           (SELECT json_build_object('name', u3.name, 'text', c3.text)
+              FROM activity_comments c3 JOIN users u3 ON u3.id = c3.user_id
+             WHERE c3.activity_id = a.id
+               AND c3.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+             ORDER BY c3.created_at DESC LIMIT 1) AS last_comment
     FROM activities a
     JOIN users u ON u.id = a.user_id
     WHERE a.club_id = ${clubId}
@@ -231,9 +314,15 @@ async function handleFeed(req, res, userId) {
       avatarBase64: r.avatar_data || null,
       avatarUrl: r.avatar_url || null,
       text: r.text,
+      title: r.title || null,
+      note: r.note || null,
+      editedAt: r.edited_at || null,
+      routePreview: r.route_preview || null,
       createdAt: r.created_at,
       ...activityMetrics(r),
       kudos: r.kudos,
+      kudosNames: r.kudos_names || [],
+      lastComment: r.last_comment || null,
       kudoedByMe: r.kudoed_by_me,
       commentsCount: r.comments_count,
     })),
@@ -391,12 +480,6 @@ const MAX_PREVIEW_POINTS = 32;
 // serré pour un client trafiqué : chaque publication est une écriture JSONB non triviale.
 const MAX_ROUTES_PER_DAY = 10;
 const ROUTES_PAGE_SIZE = 50;
-
-function isLatLngPair(p) {
-  return Array.isArray(p) && p.length === 2
-    && Number.isFinite(p[0]) && Number.isFinite(p[1])
-    && p[0] >= -90 && p[0] <= 90 && p[1] >= -180 && p[1] <= 180;
-}
 
 function coerceNumber(value, { min, max }) {
   const n = Number(value);

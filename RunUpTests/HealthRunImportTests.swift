@@ -98,4 +98,24 @@ final class HealthRunImportTests: XCTestCase {
         let selected = HealthRunImport.selecting([c, a, b], knownIDs: [], existingDates: [])
         XCTAssertEqual(selected.map(\.start), [a, b, c].map(\.start))
     }
+    /// Le tracé traverse la sélection sans être touché. C'est lui qui fait la différence entre une
+    /// carte de fil avec une image et une carte sans — et c'est le champ dont l'ajout a cassé ce
+    /// fichier, faute d'être couvert par quoi que ce soit.
+    func testTheRouteSurvivesSelection() {
+        var withRoute = run(60)
+        withRoute.route = [
+            RunRecord.RoutePoint(lat: 45.76, lng: 4.83),
+            RunRecord.RoutePoint(lat: 45.77, lng: 4.84),
+        ]
+        let selected = HealthRunImport.selecting([withRoute], knownIDs: [], existingDates: [])
+        XCTAssertEqual(selected.first?.route.count, 2)
+    }
+
+    /// Et une sortie sans parcours reste une sortie : un tapis de course ou une montre sans GPS
+    /// n'a pas de tracé, et ça ne doit rien empêcher.
+    func testARunWithoutARouteIsStillImported() {
+        let selected = HealthRunImport.selecting([run(60)], knownIDs: [], existingDates: [])
+        XCTAssertEqual(selected.count, 1)
+        XCTAssertTrue(selected.first?.route.isEmpty ?? false)
+    }
 }

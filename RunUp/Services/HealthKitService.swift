@@ -258,7 +258,12 @@ final class HealthKitService {
         var avgHeartRate: Int
         /// Le parcours, quand la source en a écrit un. Vide sinon — un tapis de course, une montre
         /// sans GPS, ou une séance saisie à la main en produisent une sans.
-        var route: [RunRecord.RoutePoint]
+        ///
+        /// Défaut à vide, et pas seulement par commodité : « pas de parcours » est un cas normal,
+        /// pas une valeur manquante qu'un appelant devrait avoir à nommer. Les tests de la règle
+        /// d'import construisent des sorties dont le tracé n'a aucune importance, et les obliger à
+        /// écrire `route: []` ne dirait rien de plus que ce défaut.
+        var route: [RunRecord.RoutePoint] = []
         /// Le dénivelé positif, LU dans les métadonnées de la séance et non recalculé.
         ///
         /// `HKMetadataKeyElevationAscended` est la clé standard qu'écrivent l'Apple Watch et la

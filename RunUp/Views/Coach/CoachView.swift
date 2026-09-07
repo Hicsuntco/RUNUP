@@ -36,42 +36,52 @@ struct CoachView: View {
         VStack(spacing: 0) {
             header
             ScrollViewReader { scrollProxy in
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 10) {
-                        if messages.isEmpty {
-                            daySeparator(.now)
-                            coachBubble(welcomeMessage)
-                        }
-
-                        // Day separators between message groups ("AUJOURD'HUI" / "HIER" / date) —
-                        // the whole persisted history lives in one thread, and without them a
-                        // reply from last Tuesday read as part of today's conversation.
-                        ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
-                            if index == 0 || !Calendar.current.isDate(message.timestamp, inSameDayAs: messages[index - 1].timestamp) {
-                                daySeparator(message.timestamp)
+                // `GeometryReader` uniquement pour connaître la hauteur visible du fil, qui sert de
+                // hauteur MINIMALE au contenu juste en dessous. C'est ce qui colle la conversation
+                // en bas de l'écran tant qu'elle est courte — un seul message d'accueil restait
+                // sinon accroché en haut, avec six cents points de vide sous lui. Au-delà de cette
+                // hauteur le minimum ne s'applique plus, donc un fil long se comporte exactement
+                // comme avant.
+                GeometryReader { geo in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 10) {
+                            if messages.isEmpty {
+                                daySeparator(.now)
+                                coachBubble(welcomeMessage)
                             }
-                            bubble(for: message)
-                                .id(message.id)
-                        }
 
-                        if vm?.isTyping == true {
-                            typingIndicator
-                        }
+                            // Day separators between message groups ("AUJOURD'HUI" / "HIER" / date) —
+                            // the whole persisted history lives in one thread, and without them a
+                            // reply from last Tuesday read as part of today's conversation.
+                            ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
+                                if index == 0 || !Calendar.current.isDate(message.timestamp, inSameDayAs: messages[index - 1].timestamp) {
+                                    daySeparator(message.timestamp)
+                                }
+                                bubble(for: message)
+                                    .id(message.id)
+                            }
 
-                        if !coachLocked {
-                            FlowChips(chips: chips) { send($0) }
-                                .padding(.vertical, 4)
+                            if vm?.isTyping == true {
+                                typingIndicator
+                            }
+
+                            if !coachLocked {
+                                FlowChips(chips: chips) { send($0) }
+                                    .padding(.vertical, 4)
+                            }
                         }
+                        .padding(.horizontal, 18)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .frame(minHeight: geo.size.height, alignment: .bottom)
                     }
-                    .padding(.horizontal, 18)
-                }
-                .onChange(of: messages.count) {
-                    if let last = messages.last { withAnimation { scrollProxy.scrollTo(last.id, anchor: .bottom) } }
-                }
-                // Land on the latest message when (re)opening the tab — `onChange` alone only
-                // fires on NEW messages, so a thread with history opened at the oldest bubble.
-                .onAppear {
-                    if let last = messages.last { scrollProxy.scrollTo(last.id, anchor: .bottom) }
+                    .onChange(of: messages.count) {
+                        if let last = messages.last { withAnimation { scrollProxy.scrollTo(last.id, anchor: .bottom) } }
+                    }
+                    // Land on the latest message when (re)opening the tab — `onChange` alone only
+                    // fires on NEW messages, so a thread with history opened at the oldest bubble.
+                    .onAppear {
+                        if let last = messages.last { scrollProxy.scrollTo(last.id, anchor: .bottom) }
+                    }
                 }
             }
             if coachLocked {

@@ -179,11 +179,12 @@ struct StatsView: View {
     private var routesTile: some View {
         Button(action: { appState.go(.heatmap) }) {
             HStack(spacing: 12) {
+                // Sans sa tuile teintée, comme les icônes d'en-tête et celles du plan : le
+                // glyphe porte l'information, son emballage n'en portait aucune.
                 Image(systemName: "map")
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.system(size: 17, weight: .medium))
                     .foregroundColor(RUColor.rose)
-                    .frame(width: 34, height: 34)
-                    .background(RUColor.rose.opacity(0.12), in: RoundedRectangle(cornerRadius: RUSpacing.radiusTile, style: .continuous))
+                    .frame(width: 26)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Mes routes")
                         .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
@@ -632,8 +633,12 @@ struct StatsView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)
-        .background(highlighted ? RUColor.rose.opacity(0.14) : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(highlighted ? RUColor.rose.opacity(0.3) : RUColor.line, lineWidth: RUSpacing.hairline))
+        // Une tuile de record : fond de sous-surface, sans contour. Celle qui est mise en avant
+        // garde un voile rosé — et perd son liseré, qui redisait ce que le fond dit déjà. Les
+        // autres passent de `card` à `card2` : sur une carte blanche, une tuile blanche n'était
+        // visible que par son filet, et c'est précisément le filet qu'on retire partout.
+        .background(highlighted ? RUColor.rose.opacity(0.12) : RUColor.card2,
+                    in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
     }
 
     // MARK: Training load — was a fixed fake bar chart + fake "ratio charge 1.1"

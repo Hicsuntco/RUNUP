@@ -517,11 +517,11 @@ struct PlanView: View {
         // teinté + un liseré rose, au lieu d'une puce "aujourd'hui" posée au milieu de la ligne
         // qui poussait le titre de la séance et décalait la colonne durée/allure d'un jour à
         // l'autre. Teinte, pas aplat — l'accent reste un liseré et une icône.
-        .background(isToday ? RUColor.rose.opacity(0.07) : Color.clear, in: RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous)
-                .stroke(isToday ? RUColor.rose.opacity(0.3) : Color.clear, lineWidth: RUSpacing.hairline)
-        )
+        //
+        // Le liseré est parti. Un fond teinté ET un contour disent la même chose deux fois, et le
+        // contour est celui des deux qui dessine une boîte. Le fond monte légèrement pour porter
+        // seul ce que les deux portaient ensemble.
+        .background(isToday ? RUColor.rose.opacity(0.10) : Color.clear, in: RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous))
         .contentShape(Rectangle())
         // La maquette déplie le détail de la séance du jour directement sous sa ligne
         // (`.sesh-detail` : échauffement / corps de séance / retour au calme). L'app a déjà mieux
@@ -551,12 +551,21 @@ struct PlanView: View {
         // de la famille — sinon une semaine terminée redevient un mur uniforme.
         let symbol = completed ? "checkmark" : family.symbol
         let tint = family.tint
+        // La tuile a perdu son fond et son contour.
+        //
+        // Sept lignes, sept carrés arrondis teintés dans une colonne : c'est le même motif que
+        // les carrés d'icône des en-têtes de section, retiré ce matin pour la même raison. Le
+        // symbole et sa couleur portaient déjà tout — repos, endurance, fractionné, séance faite.
+        // La tuile n'ajoutait qu'un cadre autour de chacun.
+        //
+        // Le glyphe grandit de 12 à 15 points : sans fond derrière lui, il doit tenir seul.
+        //
+        // `isToday` ne sert plus : le jour courant est signalé par le fond de SA LIGNE, pas par
+        // le contour de son icône. Le paramètre reste pour ne pas toucher les appelants.
         return Image(systemName: symbol)
-            .font(.system(size: 12, weight: .semibold))
-            .foregroundColor(tint)
+            .font(.system(size: 15, weight: .semibold))
+            .foregroundColor(isRest ? tint.opacity(0.55) : tint)
             .frame(width: 30, height: 30)
-            .background(tint.opacity(isRest ? 0.06 : 0.14), in: RoundedRectangle(cornerRadius: RUSpacing.radiusTile, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusTile, style: .continuous).stroke(isToday ? RUColor.rose.opacity(0.35) : RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 
     private func dayRowAccessibilityLabel(day: PlannedDay, isToday: Bool, isRest: Bool) -> String {

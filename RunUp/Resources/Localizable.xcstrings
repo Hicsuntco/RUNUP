@@ -17638,6 +17638,23 @@
         }
       }
     },
+    "Ton programme": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu programa"
+          }
+        }
+      }
+    },
     "Ton programme de %lld semaines est prêt": {
       "localizations": {
         "en": {

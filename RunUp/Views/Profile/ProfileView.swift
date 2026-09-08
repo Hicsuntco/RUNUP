@@ -418,11 +418,17 @@ struct ProfileView: View {
             // posé par-dessus : c'est la règle du fichier de tokens, et ici elle compte vraiment —
             // en thème sombre `card` est lui-même une translucidité blanche, empiler deux couches
             // translucides y donnerait une carte plus claire que toutes les autres de la page.
-            .background(shape.fill(RUColor.tint(tint, 0.07, over: RUColor.card)))
-            // Le contour, lui, reste translucide : `RUColor.line` est une couleur à alpha (noir
-            // 14% / blanc 8%) et `tint(_:over:)` rend une couleur opaque — mélanger dedans
-            // donnerait un trait quasi noir en thème clair au lieu d'un filet.
-            .overlay(shape.stroke(tint.opacity(0.3), lineWidth: RUSpacing.hairline))
+            // ── Ni fond teinté, ni contour coloré ───────────────────────────────────────────
+            //
+            // La carte portait les deux : un mélange de sa couleur à 7 % dans la surface, et un
+            // liseré de cette même couleur à 30 %. Vues sur un vrai téléphone en thème sombre,
+            // les trois cartes de Communauté étaient les objets les plus datés de l'app — un
+            // rectangle teinté cerclé de sa propre couleur, avec un gros disque plein à gauche.
+            //
+            // La couleur reste, entière, dans le DISQUE de l'icône. C'est le seul endroit où elle
+            // est à pleine intensité, donc le seul où elle est encore la couleur qu'on croyait
+            // poser. Diluée dans un fond, elle ne l'était plus.
+            .background(shape.fill(RUColor.card))
             // Même ombre que `ruCard()`, et surtout pas plus. Cette carte portait encore
             // l'ancienne (radius 16, y 5, 16 %), rescapée parce qu'elle est posée à la main ici
             // plutôt que par le modificateur partagé : les deux seules cartes teintées de la page
@@ -438,14 +444,17 @@ struct ProfileView: View {
             .contentShape(shape)
     }
 
-    /// `.social-card-arrow` — un chevron nu se perd dans une carte teintée ; dans une pastille
-    /// ronde de la couleur de la page, il redevient le bouton « ça s'ouvre » qu'il est censé être.
+    /// Un chevron nu.
+    ///
+    /// Il vivait dans une pastille ronde parce qu'il « se perdait sur une carte teintée » — la
+    /// carte ne l'est plus, et le disque n'a donc plus rien à compenser. Trois cartes, trois
+    /// disques de moins : sur un écran qui porte déjà trois grands disques d'icône à gauche, en
+    /// aligner trois autres à droite faisait six cercles pour six lignes.
     private var cardArrow: some View {
         Image(systemName: "chevron.right")
-            .font(.system(size: 11, weight: .bold))
-            .foregroundColor(RUColor.text2)
+            .font(.system(size: 12, weight: .bold))
+            .foregroundColor(RUColor.text3)
             .frame(width: 26, height: 26)
-            .background(RUColor.bg, in: Circle())
     }
 
     /// Filet de `.social-card-teaser` : sépare l'en-tête de la carte (qui/quoi) de son aperçu de

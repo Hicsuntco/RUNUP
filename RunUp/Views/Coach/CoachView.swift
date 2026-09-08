@@ -242,9 +242,12 @@ struct CoachView: View {
             }
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(RUColor.lime.opacity(0.1), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.lime.opacity(0.25), lineWidth: RUSpacing.hairline))
+        .padding(.vertical, 10)
+        // Un lime à 10 % sur un fond sombre ne donne pas un vert clair, il donne un OLIVE terne —
+        // et le liseré à 25 % l'entourait d'un cadre de la même teinte. Le fond devient neutre et
+        // le vert reste où il se voit : sur la coche. C'est la même correction que les pastilles,
+        // les tuiles d'icône et les cartes de Communauté — ne jamais diluer un accent.
+        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
         .accessibilityElement(children: .combine)
     }
 
@@ -283,6 +286,12 @@ struct CoachView: View {
         .accessibilityLabel("Le coach écrit…")
     }
 
+    /// Y a-t-il quelque chose à envoyer. Lu par la couleur du bouton ET par son état actif, qui
+    /// se contredisaient tant que chacun recalculait la condition de son côté.
+    private var canSend: Bool {
+        !(vm?.draft ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     private var inputBar: some View {
         HStack(spacing: 10) {
             TextField("", text: Binding(get: { vm?.draft ?? "" }, set: { vm?.draft = $0 }), prompt: Text("Écris à ton coach…").foregroundColor(RUColor.text3))
@@ -292,14 +301,21 @@ struct CoachView: View {
                 // means send, same as every messaging app.
                 .submitLabel(.send)
                 .onSubmit { send(vm?.draft ?? "") }
+            // Un bouton vide n'est pas un bouton rose PÂLE, c'est un bouton gris.
+            //
+            // L'opacité à 40 % s'appliquait au disque rose entier : sur un fond sombre, ça donnait
+            // un disque bordeaux — la même couleur sale que les pastilles et la case du jour, et
+            // pour la même raison. Un état désactivé se dit avec une surface neutre, pas avec un
+            // accent délavé.
             Button(action: { send(vm?.draft ?? "") }) {
-                Image(systemName: "arrow.up").foregroundColor(RUColor.onRose).font(.system(size: 14, weight: .bold))
+                Image(systemName: "arrow.up")
+                    .foregroundColor(canSend ? RUColor.onRose : RUColor.text3)
+                    .font(.system(size: 14, weight: .bold))
             }
             .frame(width: 44, height: 44)
-            .background(RUColor.rose, in: Circle())
+            .background(canSend ? AnyShapeStyle(RUColor.rose) : AnyShapeStyle(RUColor.card2), in: Circle())
             .buttonStyle(PressableStyle())
-            .opacity((vm?.draft ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.4 : 1)
-            .disabled((vm?.draft ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .disabled(!canSend)
             .accessibilityLabel("Envoyer")
         }
         .padding(.leading, 16).padding(.trailing, 8).padding(.vertical, 8)

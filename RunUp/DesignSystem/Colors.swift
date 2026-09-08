@@ -164,7 +164,15 @@ enum RUColor {
     /// carte ne peut plus le faire. 1,15:1 contre le blanc — faible dans l'absolu, mais c'est le
     /// maximum tolérable avant que la sous-surface ne devienne une carte à son tour.
     static var card2: Color { isLight ? Color(hex: 0xEDEBF4) : Color(hex: 0x201F2A) }
-    static var line: Color { isLight ? Color.black.opacity(0.07) : Color.white.opacity(0.07) }
+    /// Laissé à 11 %, volontairement, alors que `cardBorder` juste en dessous tombe à 5 %.
+    ///
+    /// Les deux ne font pas le même travail, et c'est écrit dans ce fichier depuis longtemps :
+    /// `cardBorder` DÉTOURE une carte — c'est lui qui fabriquait la grille de rectangles cerclés
+    /// qu'on vient de retirer. `line` SÉPARE : filets entre colonnes de chiffres, lignes de liste,
+    /// pistes de barres de progression. Baisser le second en même temps que le premier, c'était
+    /// effacer des séparateurs qui font leur travail sous prétexte de retirer des contours qui ne
+    /// le faisaient pas.
+    static var line: Color { isLight ? Color.black.opacity(0.11) : Color.white.opacity(0.08) }
 
     /// Le contour d'une CARTE, distinct de `line`. Une carte blanche posée sur un fond gris est
     /// déjà séparée par le fond : lui garder le filet de `line` (noir à 14 %) sur 1 pt la

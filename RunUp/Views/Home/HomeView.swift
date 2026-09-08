@@ -241,16 +241,26 @@ struct HomeView: View {
     private var weekStrip: some View {
         HStack(spacing: 5) {
             ForEach(profile.weekStrip) { day in
-                let (bg, border, color): (Color, Color, Color) = {
+                // Plus de contour, et un fond pour ceux qui n'en avaient pas.
+                //
+                // Une case « à venir » était de la couleur de la carte : seul son filet la
+                // rendait visible. Sept cases cerclées côte à côte, c'était une grille dans une
+                // grille — le motif qu'on retire partout ailleurs. Elles prennent maintenant la
+                // sous-surface prévue pour ça (`card2`), qui les montre par leur couleur, et le
+                // filet disparaît.
+                //
+                // Le jour COURANT garde un anneau, mais lui n'est pas un contour de boîte : c'est
+                // un repère, le seul de la rangée, et il ne se répète pas sept fois.
+                let (bg, color): (Color, Color) = {
                     switch day.state {
-                    case .done: return (RUColor.rose, RUColor.rose, .white)
-                    case .today: return (RUColor.rose.opacity(0.12), RUColor.rose.opacity(0.5), RUColor.rose2)
-                    case .rest: return (RUColor.card, RUColor.line, RUColor.text4)
-                    case .upcoming: return (RUColor.card, RUColor.line, RUColor.text2)
+                    case .done: return (RUColor.rose, .white)
+                    case .today: return (RUColor.tint(RUColor.rose, 0.14, over: RUColor.card), RUColor.rose2)
+                    case .rest: return (RUColor.card2, RUColor.text4)
+                    case .upcoming: return (RUColor.card2, RUColor.text2)
                     }
                 }()
-                VStack(spacing: 5) {
-                    Text(day.displayLetter).displayStyle(11).foregroundColor(color)
+                VStack(spacing: 6) {
+                    Text(day.displayLetter).displayStyle(12).foregroundColor(color)
                     ZStack {
                         if day.state == .today {
                             Circle().stroke(RUColor.rose2, lineWidth: 1.5).frame(width: 19, height: 19)
@@ -266,15 +276,20 @@ struct HomeView: View {
                     .frame(width: 19, height: 19)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
+                // 14 au lieu de 10 : la rangée passe d'environ 59 à 68 points de haut. Une bande
+                // de semaine plus haute que large se lit comme une frise ; plus large que haute,
+                // comme une barre d'onglets.
+                .padding(.vertical, 14)
                 // Each cell (weekday letter + a date number or checkmark, colored by state) was
                 // 2-3 separate disconnected VoiceOver stops with no indication of which day is
                 // today, done, or a rest day — that information lived only in color/border, never
                 // announced.
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel(dayAccessibilityLabel(day))
-                .background(bg, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(border, lineWidth: RUSpacing.hairline))
+                // `radiusInner` et non `radiusCompact` : ce dernier vient de passer de 18 à 22,
+                // et 22 sur une case de 43 points de large en ferait une gélule. Le rayon d'une
+                // forme doit rester proportionné à sa taille, pas suivre la carte qui la contient.
+                .background(bg, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
             }
         }
     }

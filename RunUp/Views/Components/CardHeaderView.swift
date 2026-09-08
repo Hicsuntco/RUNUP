@@ -20,13 +20,21 @@ struct RUCardHeader<Accessory: View>: View {
     @ViewBuilder var accessory: () -> Accessory
 
     var body: some View {
-        HStack(alignment: .center, spacing: 9) {
+        HStack(alignment: .center, spacing: 8) {
             if let icon {
+                // La pastille teintée derrière l'icône est partie.
+                //
+                // Un carré arrondi de 26 points, rempli d'un accent à 12 %, à gauche de CHAQUE
+                // titre de section : sur un écran qui en empile trois ou quatre, ça fait une
+                // colonne de petits carrés colorés — un des motifs les plus datés qui soient, et
+                // il était répété dans toute l'app puisque ce composant est partagé.
+                //
+                // L'icône reste, seule et à même le fond. Elle porte exactement la même
+                // information ; c'est son emballage qui n'en portait aucune.
                 Image(systemName: icon)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(tint)
-                    .frame(width: 26, height: 26)
-                    .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: RUSpacing.radiusTile, style: .continuous))
+                    .frame(width: 20)
             }
             VStack(alignment: .leading, spacing: 1) {
                 Text(LocalizedStringKey(title))

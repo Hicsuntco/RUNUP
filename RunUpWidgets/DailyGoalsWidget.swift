@@ -86,6 +86,10 @@ struct WidgetRingView: View {
         ZStack {
             ForEach(Array(goals.enumerated()), id: \.offset) { i, goal in
                 let color = colors[min(max(0, goal.slot), colors.count - 1)]
+                // Le voisin RÉELLEMENT dessiné, pas le numéro suivant : un jour de repos n'affiche
+                // que deux arcs. Voir `DailyGoalsBarsView`, dont ceci est le miroir.
+                let nextSlot = goals[(i + 1) % goals.count].slot
+                let nextColor = colors[min(max(0, nextSlot), colors.count - 1)]
                 let seg = RingSegmentGeometry.segment(at: i, count: goals.count)
                 let pct = max(0, min(1, goal.progress))
                 let fillEnd = seg.trimStart + (seg.trimEnd - seg.trimStart) * pct
@@ -102,11 +106,20 @@ struct WidgetRingView: View {
 
                 // Le dégradé balaie tout l'arc, pas seulement sa part remplie : se remplir en
                 // révèle davantage, d'où le « ça s'éclaire en se terminant » des anneaux d'Apple.
+                //
+                // Et son dernier arrêt est la couleur du VOISIN, pour que les deux se rencontrent
+                // dans la même teinte de part et d'autre de l'écart. Transition tardive : entre
+                // deux couleurs éloignées, le milieu de l'interpolation est plus terne que ses
+                // extrémités, et il ne doit occuper que quelques degrés.
                 Circle()
                     .trim(from: seg.trimStart, to: fillEnd)
                     .stroke(
                         AngularGradient(
-                            gradient: Gradient(colors: [color, color.vivid(0.22)]),
+                            gradient: Gradient(stops: [
+                                .init(color: color, location: 0),
+                                .init(color: color.vivid(0.22), location: 0.8),
+                                .init(color: nextColor, location: 1),
+                            ]),
                             center: .center,
                             startAngle: .degrees(seg.gradientStartDegrees),
                             endAngle: .degrees(seg.gradientEndDegrees)

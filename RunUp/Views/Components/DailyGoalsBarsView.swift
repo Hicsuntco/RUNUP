@@ -106,6 +106,14 @@ struct DailyGoalsBarsView: View {
         ZStack {
             ForEach(Array(goals.enumerated()), id: \.offset) { i, goal in
                 let color = Self.fillColors[min(max(0, goal.slot), Self.fillColors.count - 1)]
+                // La couleur de l'arc SUIVANT, vers laquelle celui-ci va se fondre.
+                //
+                // Prise dans `goals` et non dans `fillColors` : un jour de repos n'affiche que
+                // deux objectifs, et l'arc qui suit visuellement n'est alors pas celui dont le
+                // numéro suit. C'est le voisin RÉELLEMENT dessiné qui compte, sinon la jonction se
+                // fondrait vers une couleur absente de l'anneau.
+                let nextSlot = goals[(i + 1) % goals.count].slot
+                let nextColor = Self.fillColors[min(max(0, nextSlot), Self.fillColors.count - 1)]
                 let seg = RingSegmentGeometry.segment(at: i, count: goals.count)
                 let pct = max(0, min(1, i < displayedProgress.count ? displayedProgress[i] : 0))
                 let fillEnd = seg.trimStart + (seg.trimEnd - seg.trimStart) * pct
@@ -139,7 +147,36 @@ struct DailyGoalsBarsView: View {
                 Circle()
                     .trim(from: seg.trimStart, to: fillEnd)
                     .stroke(
-                        AngularGradient(gradient: Gradient(colors: [color, color.vivid(0.22)]), center: .center, startAngle: .degrees(seg.gradientStartDegrees), endAngle: .degrees(seg.gradientEndDegrees)),
+                        AngularGradient(
+                            // Trois arrêts, et le dernier est la couleur du VOISIN.
+                            //
+                            // Chaque arc garde sa propre couleur sur ses quatre premiers
+                            // cinquièmes — c'est là qu'on l'identifie — puis vire vers celle de
+                            // l'arc suivant sur le dernier. Les deux se rencontrent donc dans la
+                            // même teinte de part et d'autre de l'écart, et l'anneau se lit comme
+                            // un seul ruban qui change de couleur, au lieu de trois bâtons posés
+                            // en cercle.
+                            //
+                            // La transition est tardive et non centrée, pour une raison de
+                            // couleur : entre deux teintes éloignées, le milieu de l'interpolation
+                            // est toujours plus terne que ses extrémités — le cyan et le rose se
+                            // croisent dans un mauve gris. Reléguée au dernier cinquième, cette
+                            // zone terne tient dans quelques degrés au lieu d'occuper le tiers de
+                            // l'arc.
+                            //
+                            // Et le balayage couvre TOUT le segment, pas seulement sa part
+                            // remplie : le dégradé ne se déforme donc pas en se remplissant, et un
+                            // arc incomplet n'affiche jamais la couleur du voisin — la jonction
+                            // n'existe que quand les deux arcs l'atteignent.
+                            gradient: Gradient(stops: [
+                                .init(color: color, location: 0),
+                                .init(color: color.vivid(0.22), location: 0.8),
+                                .init(color: nextColor, location: 1),
+                            ]),
+                            center: .center,
+                            startAngle: .degrees(seg.gradientStartDegrees),
+                            endAngle: .degrees(seg.gradientEndDegrees)
+                        ),
                         style: StrokeStyle(lineWidth: Self.strokeWidth, lineCap: .round)
                     )
                     .animation(reduceMotion ? nil : .easeOut(duration: 0.9), value: pct)

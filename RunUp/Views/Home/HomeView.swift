@@ -69,7 +69,12 @@ struct HomeView: View {
                     // plaisir et cent fois comme un automatisme ; le prénom seul, sous la date du
                     // jour, dit la même chose sans faire semblant de dire bonjour.
                     eyebrow: isFreeRun ? String(localized: "Mode course libre") : todayDateEyebrow,
-                    title: profile.name
+                    title: profile.name,
+                    // 32 au lieu des 24 par défaut. Le prénom est la première chose de l'écran et
+                    // il avait la taille d'un titre de section ; les écrans qui paraissent
+                    // modernes ouvrent presque tous sur un mot posé grand, puis descendent vite.
+                    // C'est l'ÉCART entre les tailles qui crée la hiérarchie, pas leur valeur.
+                    titleSize: 32
                 ) {
                     HStack(spacing: 8) {
                         streakChip
@@ -424,12 +429,30 @@ struct HomeView: View {
                     .padding(.top, 14)
             } else {
                 Text(session.displaySubtitle).font(RUFont.sans(.small)).foregroundColor(RUColor.text2).padding(.top, 4)
-                HStack(spacing: 16) {
-                    MetricColumn(value: "\(session.durationMinutes)′", label: "Durée")
-                    MetricColumn(value: session.pace, label: "Allure")
-                    MetricColumn(value: session.zone, label: "Zone", valueColor: RUColor.rose2)
+                // UNE mesure domine, deux l'accompagnent.
+                //
+                // Les trois colonnes avaient la même taille — 20 points chacune — donc l'écran
+                // n'avait pas de sommet : rien n'attirait l'œil en premier, et une page sans
+                // sommet se lit comme une liste de champs. C'est ce qui faisait « plat », bien
+                // plus que les couleurs.
+                //
+                // La durée gagne : c'est la seule des trois qui décrit ce qu'on est sur le point
+                // de FAIRE. L'allure et la zone décrivent comment le faire, elles n'ont pas
+                // besoin d'être lues à un mètre.
+                HStack(alignment: .lastTextBaseline, spacing: 4) {
+                    Text("\(session.durationMinutes)")
+                        .font(RUFont.display(56))
+                        .foregroundColor(RUColor.textPrimary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                    Text(verbatim: "′")
+                        .font(RUFont.display(24))
+                        .foregroundColor(RUColor.text3)
+                    Spacer(minLength: 14)
+                    MetricColumn(value: session.pace, label: "Allure", valueSize: 17)
+                    MetricColumn(value: session.zone, label: "Zone", valueColor: RUColor.rose2, valueSize: 17)
                 }
-                .padding(.top, 14)
+                .padding(.top, 10)
 
                 // DÉMARRER, et un « + » à côté.
                 //
@@ -446,7 +469,10 @@ struct HomeView: View {
                     .padding(.top, 15)
             }
         }
-        .padding(16)
+        // 20 au lieu de 16 : c'est la carte qui porte le sommet de l'écran, et une marge plus
+        // large est ce qui distingue une carte principale d'une carte de liste — sans avoir à
+        // lui ajouter un contour, une teinte ou un badge.
+        .padding(20)
         .contentShape(Rectangle())
         .onTapGesture { appState.openSessionDetail() }
         .ruCard()

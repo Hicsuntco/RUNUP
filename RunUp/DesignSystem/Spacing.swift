@@ -25,6 +25,16 @@ enum RUSpacing {
     // contenu, il ne fait que retailler le coin — et l'un des plus visibles.
     //
     // Sans le rangement d'abord, c'était 135 nombres à retrouver un par un.
+    //
+    // ── Et relevés d'un cran de plus ─────────────────────────────────────────────────────────
+    // 18 → 22, 22 → 26, 20 → 24, 14 → 16. Même raisonnement qu'au tour précédent, poussé d'un
+    // cran : à 18 pt une carte lisait « surface », à 22 elle lit « objet posé ». C'est le geste
+    // le moins risqué d'une refonte visuelle — un rayon ne déplace aucun contenu, il ne fait que
+    // retailler le coin — et il se voit sur les trente écrans à la fois.
+    //
+    // Les petites formes ne bougent PAS : une pastille de 10 pt arrondie à 14 devient une gélule,
+    // et une jauge de 2 pt n'a pas de coin à adoucir. L'adoucissement vaut pour ce qui a la
+    // surface de le porter.
 
     /// 2 — jauges et barres de progression fines.
     static let radiusBar: CGFloat = 2
@@ -34,14 +44,14 @@ enum RUSpacing {
     static let radiusTile: CGFloat = 10
     /// 12 — vignettes, pastilles d'icône plus grandes.
     static let radiusChip: CGFloat = 12
-    /// 14 — sous-surfaces dans une carte, champs de saisie.
-    static let radiusInner: CGFloat = 14
-    /// 18 — la carte courante. La valeur la plus employée de l'app, et de loin.
-    static let radiusCompact: CGFloat = 18
-    /// 20 — cartes qui portent un contenu large (grilles, feuilles).
-    static let radiusLarge: CGFloat = 20
-    /// 22 — la carte de premier plan.
-    static let radiusStandard: CGFloat = 22
+    /// 16 — sous-surfaces dans une carte, champs de saisie.
+    static let radiusInner: CGFloat = 16
+    /// 22 — la carte courante. La valeur la plus employée de l'app, et de loin.
+    static let radiusCompact: CGFloat = 22
+    /// 24 — cartes qui portent un contenu large (grilles, feuilles).
+    static let radiusLarge: CGFloat = 24
+    /// 26 — la carte de premier plan.
+    static let radiusStandard: CGFloat = 26
     static let radiusPill: CGFloat = 99
     /// A deliberately larger radius for a handful of always-dark "trophy" cards that keep their
     /// own fixed gradient in both themes (Club's level card) rather than routing through

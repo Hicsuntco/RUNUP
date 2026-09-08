@@ -4,13 +4,17 @@ import SwiftUI
 struct HeaderView<Trailing: View>: View {
     var eyebrow: String
     var title: String
+    /// La taille du titre, réglable comme celle de `BackTitleHeaderView` juste en dessous, et pour
+    /// la même raison : un onglet de premier niveau ne se lit pas à la même échelle qu'un écran
+    /// poussé par-dessus. Le défaut reste la valeur d'avant, donc aucun appelant existant ne bouge.
+    var titleSize: CGFloat = 24
     @ViewBuilder var trailing: Trailing
 
     var body: some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 2) {
                 EyebrowLabel(text: eyebrow, color: RUColor.rose)
-                Text(LocalizedStringKey(title)).displayStyle(24).foregroundColor(RUColor.textPrimary)
+                Text(LocalizedStringKey(title)).displayStyle(titleSize).foregroundColor(RUColor.textPrimary)
             }
             Spacer()
             trailing

@@ -40,8 +40,17 @@ struct CardBackground: ViewModifier {
             // seule la séparation — la monter assez pour qu'elle y arrive aurait fait flotter les
             // cartes. Maintenant que le fond recule pour de bon, l'ombre redevient ce qu'elle doit
             // être : une finition qui confirme le relief au lieu de le fabriquer.
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.06 : 0), radius: 2, x: 0, y: 1)
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.13 : 0), radius: 9, x: 0, y: 5)
+            // ── Rouverte quand le fond de page est repassé au teinté ─────────────────────────
+            // Le raisonnement ci-dessus tenait tant que la carte et la page étaient toutes deux
+            // blanches : l'ombre devait alors porter une PART de la séparation, d'où sa densité.
+            // Le fond ayant reculé, elle n'a plus rien à porter — et une ombre dense sur un fond
+            // qui sépare déjà donne des cartes qui FLOTTENT, l'écueil que ce commentaire décrit
+            // lui-même deux paragraphes plus haut.
+            //
+            // Elle devient donc large, douce, à peine encrée : un halo qui POSE la carte au lieu
+            // de la détourer.
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.04 : 0), radius: 3, x: 0, y: 1)
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.07 : 0), radius: 16, x: 0, y: 7)
     }
 }
 
@@ -66,7 +75,16 @@ extension View {
             // aucune ombre du tout, et celles qui en ont (`.sesh.active`, `.challenge-card
             // .coach-tint`) héritent simplement de l'ombre neutre de leur famille. Une teinte se
             // distingue par sa couleur de fond et son contour teinté, jamais par plus d'élévation.
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.06 : 0), radius: 2, x: 0, y: 1)
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.13 : 0), radius: 9, x: 0, y: 5)
+            // ── Rouverte quand le fond de page est repassé au teinté ─────────────────────────
+            // Le raisonnement ci-dessus tenait tant que la carte et la page étaient toutes deux
+            // blanches : l'ombre devait alors porter une PART de la séparation, d'où sa densité.
+            // Le fond ayant reculé, elle n'a plus rien à porter — et une ombre dense sur un fond
+            // qui sépare déjà donne des cartes qui FLOTTENT, l'écueil que ce commentaire décrit
+            // lui-même deux paragraphes plus haut.
+            //
+            // Elle devient donc large, douce, à peine encrée : un halo qui POSE la carte au lieu
+            // de la détourer.
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.04 : 0), radius: 3, x: 0, y: 1)
+            .shadow(color: .black.opacity(RUColor.isLight ? 0.07 : 0), radius: 16, x: 0, y: 7)
     }
 }

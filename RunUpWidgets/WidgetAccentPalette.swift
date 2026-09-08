@@ -24,9 +24,17 @@ enum WidgetAccentPalette {
         let primary = Color(hex: swatch.primary)
         let light = Color(hex: swatch.light)
         let tail = Color(hex: swatch.tail)
-        let rose2 = isLight ? primary.darkened(0.14) : light
+        _ = light
+        // Trois objectifs, trois couleurs DISTINCTES — l'app vient de faire le même changement
+        // (voir `DailyGoalsBarsView.fillColors`). C'était `[rose2, primary, tail]`, soit deux
+        // teintes voisines sur trois : sur un anneau, elles se lisent comme un seul arc coupé.
+        //
+        // La troisième est un cyan FIXE et non une couleur du nuancier : un thème d'accent porte
+        // une teinte principale et sa queue, pas trois. C'est exactement ce que fait l'app, dont
+        // le `RUColor.cyan` ne suit pas non plus le nuancier choisi.
+        let cyan = Color(hex: isLight ? 0x0E9C8C : 0x38E0D0)
         // Same light-mode darkening as RUColor.rose/.violet in-app — without it the widget's
         // light ring was visibly more washed out than the identical in-app ring.
-        return isLight ? [rose2, primary.darkened(0.10), tail.darkened(0.10)] : [rose2, primary, tail]
+        return isLight ? [primary.darkened(0.10), tail.darkened(0.10), cyan] : [primary, tail, cyan]
     }
 }

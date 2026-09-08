@@ -50,7 +50,13 @@ struct DailyGoalsBarsView: View {
     /// Each segment's fill color, in goal order — exposed so other views showing the same 3 goals
     /// (the legend dots in `RingsView`, the stat labels in `HomeView`) draw from this instead of
     /// keeping a second, driftable copy of the palette.
-    static var fillColors: [Color] { [RUColor.rose2, RUColor.rose, RUColor.violet] }
+    /// Trois objectifs, trois COULEURS distinctes.
+    ///
+    /// C'était `[rose2, rose, violet]` : deux roses sur trois. Sur un anneau, deux teintes voisines
+    /// se lisent comme un seul arc coupé, et sur un écran déjà largement rose elles n'ajoutaient
+    /// aucune information — la séance et les calories se distinguaient par leur position, pas par
+    /// leur couleur. Trois objectifs différents méritent trois signaux différents.
+    static var fillColors: [Color] { [RUColor.rose, RUColor.violet, RUColor.cyan] }
 
     private static let canvasSize: CGFloat = 100
     /// 15 % du diamètre. C'était 12 %, aligné sur le widget après une comparaison côte à côte —

@@ -286,11 +286,15 @@ struct DailyGoalsWidgetView: View {
     private var weekDots: some View {
         HStack(spacing: 5) {
             ForEach(Array(snapshot.weekStrip.enumerated()), id: \.offset) { _, day in
+                // `colors[0]` et non `colors[1]` : depuis que les trois objectifs portent trois
+                // teintes distinctes, l'index 1 n'est plus l'accent principal mais le violet du
+                // deuxième objectif. Une pastille de jour n'appartient à aucun objectif — elle
+                // doit porter l'accent de l'app, qui est désormais en tête de liste.
                 if day.isToday && !day.isDone {
-                    Circle().stroke(colors[1], lineWidth: 1.3).frame(width: 6, height: 6)
+                    Circle().stroke(colors[0], lineWidth: 1.3).frame(width: 6, height: 6)
                 } else {
                     Circle()
-                        .fill(day.isDone ? colors[1] : text2.opacity(0.4))
+                        .fill(day.isDone ? colors[0] : text2.opacity(0.4))
                         .frame(width: 6, height: 6)
                 }
             }

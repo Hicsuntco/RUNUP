@@ -261,7 +261,11 @@ struct HomeView: View {
                 // colonnes, dont deux portent une marque.
                 let (bg, color): (Color, Color) = {
                     switch day.state {
-                    case .done: return (RUColor.rose, .white)
+                    // Un jour FAIT était une case entièrement remplie de rose : sur une frise
+                    // dont les autres cases n'ont plus de fond, ce pavé devenait l'objet le plus
+                    // saturé de l'écran — plus fort que le bouton DÉMARRER. Pour dire « mardi ».
+                    // La marque descend là où elle suffit : un disque rose autour de la coche.
+                    case .done: return (RUColor.card2, RUColor.textPrimary)
                     // Le fond de la case du jour était un accent dilué dans la carte. Sur un
                     // thème sombre, un rose à 14 % sur du #16161F ne donne pas « rose pâle », il
                     // donne un bordeaux terne — la couleur la plus sale de l'écran, et elle
@@ -282,7 +286,10 @@ struct HomeView: View {
                             Circle().stroke(RUColor.rose2, lineWidth: 1.5).frame(width: 19, height: 19)
                         }
                         if day.state == .done {
-                            Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundColor(color)
+                            Circle().fill(RUColor.rose).frame(width: 19, height: 19)
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(RUColor.onRose)
                         } else {
                             Text("\(Calendar.current.component(.day, from: day.date))")
                                 .font(RUFont.sans(.small, weight: day.state == .today ? .bold : .regular))
@@ -476,6 +483,18 @@ struct HomeView: View {
                 Text("Séance faite aujourd'hui ✓")
                     .font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.lime)
                     .padding(.top, 14)
+                // Une carte qui n'a plus d'action garde la place d'une carte qui en a une.
+                //
+                // Séance faite, il restait un titre, deux lignes, une coche — puis quatre-vingts
+                // points de vide, au SOMMET de l'écran. La carte occupait la meilleure place de la
+                // page pour ne rien proposer, et c'est ce vide qui creusait ensuite tout le bas de
+                // l'écran.
+                //
+                // Elle regarde donc devant : demain. C'est la seule chose qu'on vient encore
+                // chercher ici une fois la séance cochée, et c'est déjà dans le programme — il
+                // suffisait d'aller la lire. Un jour de repos demain, la ligne ne s'affiche pas et
+                // la carte reste courte : c'est correct aussi, il n'y a rien à annoncer.
+                if let next = tomorrowSession { tomorrowRow(next) }
             } else {
                 Text(session.displaySubtitle).font(RUFont.sans(.small)).foregroundColor(RUColor.text2).padding(.top, 4)
                 // UNE mesure domine, deux l'accompagnent.
@@ -556,6 +575,46 @@ struct HomeView: View {
     /// wasn't tied to anything she could act on. Total km run this week, compared against last
     /// week, is the number every runner already watches and tries to beat — real, concrete, and
     /// it visibly changes after every run instead of drifting inside a narrow band.
+    /// La séance de demain, si demain en porte une.
+    ///
+    /// Lue dans `weekSessions`, la même source que la bande de la semaine — pas une prévision, pas
+    /// un calcul : ce qui est déjà planifié. `nil` un jour de repos, et le dernier jour d'une
+    /// semaine dont la suivante n'est pas encore générée.
+    private var tomorrowSession: (title: String, minutes: Int)? {
+        guard let date = Calendar.current.date(byAdding: .day, value: 1, to: .now) else { return nil }
+        let index = AdaptivePlanEngine.weekdayIndex(for: date)
+        guard let planned = profile.weekSessions.first(where: { $0.weekday == index }),
+              let session = planned.session, session.durationMinutes > 0 else { return nil }
+        return (session.displayTitle, session.durationMinutes)
+    }
+
+    /// « DEMAIN · Sortie longue · 60 min », sous un filet.
+    ///
+    /// Volontairement discrète : elle informe, elle n'appelle pas à agir. Un second bouton dans
+    /// cette carte lui donnerait deux sommets, et on ne démarre pas la séance de demain.
+    private func tomorrowRow(_ next: (title: String, minutes: Int)) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
+            HStack(alignment: .firstTextBaseline, spacing: 9) {
+                Text("Demain")
+                    .font(RUFont.sans(.micro, weight: .bold))
+                    .tracking(1.2)
+                    .textCase(.uppercase)
+                    .foregroundColor(RUColor.text3)
+                Text(next.title)
+                    .font(RUFont.sans(.label, weight: .semibold))
+                    .foregroundColor(RUColor.text2)
+                    .lineLimit(1).minimumScaleFactor(0.8)
+                Spacer(minLength: 6)
+                Text("\(next.minutes) min")
+                    .font(RUFont.sans(.small, weight: .bold))
+                    .foregroundColor(RUColor.text3)
+            }
+        }
+        .padding(.top, 16)
+        .accessibilityElement(children: .combine)
+    }
+
     private func weeklyKm(weeksAgo: Int) -> Double {
         let cal = Calendar.current
         let thisWeekStart = AdaptivePlanEngine.currentWeekRange().lowerBound
@@ -587,7 +646,13 @@ struct HomeView: View {
                 // écraser la ligne de la séance juste au-dessus.
 DailyGoalsBarsView(goals: p.dailyGoalSlotsToday.map { .init(slot: $0.slot, progress: $0.progress) }, size: 96)
                 VStack(alignment: .leading, spacing: 9) {
-                    RUCardHeader(title: String(localized: "Objectifs · \(p.dailyGoalsDone)/\(p.dailyGoalsTotal)"))
+                    // Avec son icône, comme la carte du programme. L'écran portait trois
+                    // grammaires d'en-tête pour trois cartes — une pastille remplie, un titre nu,
+                    // une icône suivie d'un titre — et rien ne les reliait. Il en reste deux : le
+                    // titre à icône, commun aux cartes qui décrivent un ÉTAT, et la pastille de la
+                    // carte du jour, qui est la seule à porter une action.
+                    RUCardHeader(icon: "target", tint: RUColor.rose,
+                                 title: String(localized: "Objectifs · \(p.dailyGoalsDone)/\(p.dailyGoalsTotal)"))
                     // « Objectifs · 0/3 », et non « Tes objectifs · 0/3 bouclés ».
                     //
                     // « Tes » ne distingue rien — tout l'écran est déjà à toi, et il est le seul

@@ -6207,6 +6207,23 @@
         }
       }
     },
+    "Demain": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tomorrow"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mañana"
+          }
+        }
+      }
+    },
     "Demande envoyée": {
       "localizations": {
         "en": {

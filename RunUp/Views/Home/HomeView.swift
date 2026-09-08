@@ -189,13 +189,23 @@ struct HomeView: View {
                             // là qu'il était, et c'était juste. Le J-x, lui, EST un chiffre court
                             // et reste dans la bande.
                             RUCardHeader(icon: "map.fill", tint: RUColor.rose, title: String(localized: "Ton programme · \(profile.goalDisplay)"))
-                            // Le J-x revient ici. Il vivait dans la bande de chiffres, qui n'existe
-                            // plus : la carte qui parle du programme est la bonne place pour un
-                            // compte à rebours vers la course que ce programme prépare.
+                            // Le compte à rebours reste, sa PASTILLE part.
+                            //
+                            // « J-32 » dans une capsule rose remplie, à côté d'un titre déjà
+                            // coiffé d'une icône rose, dans une carte qui porte une flèche rose :
+                            // trois roses pour dire une chose. Le chiffre se lit aussi bien en
+                            // texte, et il cesse de réclamer l'attention d'un bouton alors qu'on
+                            // ne peut pas le toucher.
+                            //
+                            // La flèche part pour de bon : la carte entière est un bouton depuis
+                            // toujours, et sa dernière ligne dit déjà « voir le plan complet ».
+                            // Une flèche qui répète ce qu'une phrase dit deux lignes plus bas
+                            // n'est pas une affordance, c'est un ornement.
                             if let days = profile.daysUntilRace {
-                                StatChip(text: String(localized: "J-\(days)"), color: RUColor.rose2)
+                                Text(String(localized: "J-\(days)"))
+                                    .font(RUFont.sans(.small, weight: .bold))
+                                    .foregroundColor(RUColor.text3)
                             }
-                            Text("→").foregroundColor(RUColor.rose2)
                         }
                         Text("\(weekEyebrow) · Bloc \(block.label)").displayStyle(17).foregroundColor(RUColor.textPrimary)
                     }
@@ -616,9 +626,17 @@ struct HomeView: View {
         .ruCard()
     }
 
+    /// Sans pastille de couleur devant le nom.
+    ///
+    /// Elle servait à relier la ligne à son arc dans l'anneau. Cette correspondance ne tient plus
+    /// depuis que la PISTE est grise : à 0/3, l'anneau ne contient presque aucune couleur, et
+    /// trois pastilles pointaient vers des arcs qui n'existent pas encore. Elles ne reliaient plus
+    /// rien, elles ajoutaient trois taches roses de plus sur un écran qui en comptait seize.
+    ///
+    /// Le `color` reste dans la signature : c'est la ligne qui décide, pas l'appelant, et le jour
+    /// où la correspondance redevient utile elle se rebranche ici seule.
     private func ringLegendRow(name: String, value: String, color: Color) -> some View {
         HStack(spacing: 8) {
-            Circle().fill(color).frame(width: 7, height: 7)
             Text(LocalizedStringKey(name))
                 .font(RUFont.sans(.body, weight: .semibold))
                 .foregroundColor(RUColor.textPrimary)
@@ -629,8 +647,8 @@ struct HomeView: View {
                 .foregroundColor(RUColor.text3)
                 .lineLimit(1).minimumScaleFactor(0.8)
         }
-        // Sinon VoiceOver lit la pastille, le nom et la valeur comme trois arrêts distincts —
-        // et la pastille, seule porteuse de la correspondance avec l'anneau, ne dit rien du tout.
+        // Sinon VoiceOver lit le nom et la valeur comme deux arrêts distincts, alors qu'ils
+        // décrivent un seul objectif.
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text(LocalizedStringKey(name)) + Text(", ") + Text(value))
     }

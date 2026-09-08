@@ -129,10 +129,27 @@ struct HomeView: View {
                 // Ce qui manque est nommé et montré juste en dessous, plutôt que simplement
                 // absent : personne ne peut vouloir un programme dont il ignore l'existence.
                 if planUnlocked {
+                    // ── UNE carte, deux sections ─────────────────────────────────────────────
+                    //
+                    // L'écran empilait trois cartes de poids identique : même surface, même
+                    // rayon, même ombre, même marge. Rien ne dominait, donc rien ne se lisait en
+                    // premier — et c'est ça, et pas les couleurs ni les filets, qui donnait à la
+                    // page son air de formulaire.
+                    //
+                    // La carte est réservée à ce sur quoi on AGIT : la séance du jour, la seule
+                    // qui porte un bouton. Les objectifs et le programme sont des états, pas des
+                    // objets : ils deviennent des sections posées à même la page, annoncées par
+                    // un intitulé et séparées par de l'espace.
+                    //
+                    // C'est le même principe que tout ce qu'on retire depuis ce matin — les
+                    // filets, les tuiles d'icône, les boîtes de jour, les capsules — appliqué
+                    // cette fois à l'objet le plus gros de l'écran.
                     sessionCard
 
+                    sectionLabel("Objectifs du jour", trailing: "\(profile.dailyGoalsDone) / \(profile.dailyGoalsTotal)")
                     ringsCard
 
+                    sectionLabel("Ton programme", trailing: profile.goalDisplay)
                     programWeekCard
                 } else {
                     freeRunCard
@@ -179,35 +196,30 @@ struct HomeView: View {
                 // undo that per-day granularity instead of adding to it.
                 Group {
                     if !isFreeRun {
-                        HStack(spacing: 8) {
-                            // L'objectif revient ici. Il était passé dans la bande de chiffres, mais
-                            // « 20KM · 1:45 » n'est pas UN chiffre : c'est une distance et un
-                            // temps collés, trois fois plus large que le « J-58 » d'à côté. Dans
-                            // une bande de chiffres séparés par des filets, ça donnait trois
-                            // colonnes de largeurs incomparables et des filets posés au hasard.
-                            // Sa place est en eyebrow de la carte qui parle du programme — c'est
-                            // là qu'il était, et c'était juste. Le J-x, lui, EST un chiffre court
-                            // et reste dans la bande.
-                            RUCardHeader(icon: "map.fill", tint: RUColor.rose, title: String(localized: "Ton programme · \(profile.goalDisplay)"))
-                            // Le compte à rebours reste, sa PASTILLE part.
-                            //
-                            // « J-32 » dans une capsule rose remplie, à côté d'un titre déjà
-                            // coiffé d'une icône rose, dans une carte qui porte une flèche rose :
-                            // trois roses pour dire une chose. Le chiffre se lit aussi bien en
-                            // texte, et il cesse de réclamer l'attention d'un bouton alors qu'on
-                            // ne peut pas le toucher.
-                            //
-                            // La flèche part pour de bon : la carte entière est un bouton depuis
-                            // toujours, et sa dernière ligne dit déjà « voir le plan complet ».
-                            // Une flèche qui répète ce qu'une phrase dit deux lignes plus bas
-                            // n'est pas une affordance, c'est un ornement.
+                        // L'en-tête de carte a disparu avec la carte : l'intitulé de section
+                        // au-dessus dit déjà « TON PROGRAMME » et porte l'objectif. Ne reste que
+                        // ce qu'il ne dit pas — où en est la semaine, et dans combien de jours.
+                        HStack(alignment: .firstTextBaseline, spacing: 10) {
+                            // Où en est la semaine, en grand — c'est la première chose qu'on vient
+                            // chercher ici. L'objectif de la course, lui, est passé dans
+                            // l'intitulé de section : « 20km · 1:45 » ne change pas d'une semaine
+                            // à l'autre, il décrit la section entière, pas son contenu du jour.
+                            Text("\(weekEyebrow) · Bloc \(block.label)")
+                                .displayStyle(19)
+                                .foregroundColor(RUColor.textPrimary)
+                            Spacer(minLength: 0)
+                            // Le compte à rebours, en texte gris au bout de la ligne. Il était
+                            // une capsule rose remplie ; il se lit aussi bien sans, et il cesse
+                            // de réclamer l'attention d'un bouton alors qu'on ne peut pas le
+                            // toucher. La flèche qui l'accompagnait est partie pour de bon : la
+                            // section entière est un bouton, et sa dernière ligne dit déjà
+                            // « voir le plan complet ».
                             if let days = profile.daysUntilRace {
                                 Text(String(localized: "J-\(days)"))
                                     .font(RUFont.sans(.small, weight: .bold))
                                     .foregroundColor(RUColor.text3)
                             }
                         }
-                        Text("\(weekEyebrow) · Bloc \(block.label)").displayStyle(17).foregroundColor(RUColor.textPrimary)
                     }
                 }
                 .accessibilityElement(children: .combine)
@@ -238,10 +250,9 @@ struct HomeView: View {
                     }
                 }
             }
-            .padding(14)
+            .padding(.vertical, 4)
         }
         .buttonStyle(PressableStyle())
-        .ruCard()
         .disabled(isFreeRun)
     }
 
@@ -591,7 +602,6 @@ struct HomeView: View {
                     // ne peut vouloir dire qu'une chose. Sept mots deviennent trois, la ligne
                     // cesse de passer sur deux lignes à côté de l'anneau, et rien de l'information
                     // n'est perdu.
-                    RUCardHeader(title: String(localized: "Objectifs · \(p.dailyGoalsDone)/\(p.dailyGoalsTotal)"))
                     // La ligne « Séance du jour » disparaît les jours de repos, en même temps que
                     // l'arc qui lui correspondait. Elle disait alors « Repos » — exactement ce que
                     // la carte séance, désormais juste au-dessus, annonce en grand. Deux blocs
@@ -633,10 +643,9 @@ struct HomeView: View {
                     ringLegendRow(name: "Pas", value: Int(p.stepsToday).formatted(), color: goalColors[2])
                 }
             }
-            .padding(16)
+            .padding(.vertical, 4)
         }
         .buttonStyle(PressableStyle())
-        .ruCard()
     }
 
     /// Sans pastille de couleur devant le nom.
@@ -669,6 +678,31 @@ struct HomeView: View {
     /// `profile.streak` was already tracked (`AdaptivePlanEngine.applyDebrief`) and shown deep in
     /// Stats/Readiness/Club, but never on Home — the screen actually opened every day, where a
     /// visible streak does the most to make her not want to break it.
+    /// L'intitulé d'une section posée à même la page — petites capitales espacées, grises, avec
+    /// éventuellement un chiffre poussé au bord droit.
+    ///
+    /// C'est ce qui remplace l'en-tête d'une carte quand la carte disparaît : il faut bien que la
+    /// section se nomme, mais elle n'a pas besoin d'une surface pour le faire. L'espace au-dessus
+    /// est plus grand que celui du dessous — un titre appartient à ce qui le suit, pas à ce qui
+    /// le précède, et c'est cet écart qui groupe sans dessiner.
+    private func sectionLabel(_ title: LocalizedStringKey, trailing: String? = nil) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title)
+                .font(RUFont.sans(.micro, weight: .bold))
+                .tracking(1.4)
+                .textCase(.uppercase)
+                .foregroundColor(RUColor.text3)
+            Spacer(minLength: 8)
+            if let trailing {
+                Text(trailing)
+                    .font(RUFont.sans(.small, weight: .bold))
+                    .foregroundColor(RUColor.text3)
+            }
+        }
+        .padding(.top, 14)
+        .accessibilityElement(children: .combine)
+    }
+
     private var streakChip: some View {
         HStack(spacing: 4) {
             Image(systemName: "flame.fill").font(.system(size: 12))

@@ -11333,6 +11333,23 @@
         }
       }
     },
+    "Objectifs du jour": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today's goals"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Objetivos del día"
+          }
+        }
+      }
+    },
     "Objectifs quotidiens": {
       "localizations": {
         "en": {

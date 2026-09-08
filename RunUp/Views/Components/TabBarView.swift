@@ -119,7 +119,10 @@ struct TabBarView: View {
                     .fill(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom))
                     .frame(width: 40, height: 40)
                     .overlay(Image(systemName: "play.fill").foregroundColor(RUColor.onRose).font(.system(size: 14)))
-                    .shadow(color: RUColor.rose.opacity(RUColor.isLight ? 0 : 0.55), radius: 14, x: 0, y: 6)
+                    // 0,55 de rose sur 14 points de flou : le bouton RUN ne se posait pas sur
+                    // la barre, il l'éclairait. Ramené à une ombre qui le décolle sans le faire
+                    // rayonner — c'est un bouton, pas une lampe.
+                    .shadow(color: .black.opacity(RUColor.isLight ? 0 : 0.45), radius: 10, x: 0, y: 5)
                 Text("RUN")
                     .font(RUFont.sans(.micro, weight: .bold))
                     .tracking(1)
@@ -157,7 +160,9 @@ struct RunInProgressPill: View {
             .padding(.vertical, 9)
             .frame(minHeight: 44)
             .background(RUColor.rose, in: Capsule())
-            .shadow(color: RUColor.rose.opacity(RUColor.isLight ? 0 : 0.5), radius: 20, x: 0, y: 10)
+            // Même geste : la barre entière baignait dans un halo rose de 20 points. Une barre
+            // d'onglets se pose au-dessus du contenu, elle ne l'illumine pas.
+            .shadow(color: .black.opacity(RUColor.isLight ? 0 : 0.5), radius: 18, x: 0, y: 8)
         }
         .buttonStyle(PressableStyle())
     }

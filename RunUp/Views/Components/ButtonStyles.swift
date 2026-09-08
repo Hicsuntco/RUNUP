@@ -46,7 +46,15 @@ struct PrimaryButtonStyle: ButtonStyle {
             // The glow was a big part of what read as "gamified" rather than "premium digital" —
             // light mode drops it to nothing (the card shadow language handles elevation there
             // instead); dark mode's energetic glow is untouched.
-            .shadow(color: RUColor.rose.opacity(RUColor.isLight || isDisabled ? 0 : 0.3), radius: 16, x: 0, y: 4)
+            // Le halo rose est parti.
+            //
+            // Une ombre colorée de 16 points de flou sous un bouton rempli d'accent, c'est le
+            // néon de 2019 : ça ne dit rien de plus que le bouton (il est déjà le seul objet
+            // rempli de l'écran) et ça le fait BAVER sur le fond. Vu en vrai sur un écran sombre,
+            // c'est la première chose qui saute aux yeux — et pas dans le bon sens.
+            //
+            // Il ne s'affichait qu'en thème sombre, ce qui explique qu'il ait survécu si
+            // longtemps aux relectures faites en clair.
             .opacity(isDisabled ? 0.35 : (configuration.isPressed ? 0.85 : 1))
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
             .animation(.easeOut(duration: 0.12), value: configuration.isPressed)

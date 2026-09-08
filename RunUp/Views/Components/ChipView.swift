@@ -42,7 +42,9 @@ struct SelectableChip: View {
                 in: Capsule()
             )
             .overlay(Capsule().stroke(selected ? Color.clear : RUColor.line, lineWidth: RUSpacing.hairline))
-            .shadow(color: RUColor.rose.opacity(selected && !RUColor.isLight ? 0.3 : 0), radius: 10, x: 0, y: 4)
+            // Le halo d'une puce sélectionnée part avec les autres. Sur un écran de réglages
+            // qui en aligne cinq, un seul rayonne — et la sélection se voit déjà à son
+            // remplissage. Deux signaux pour une même information, dont un qui bave.
             .animation(.spring(response: 0.3, dampingFraction: 0.7), value: selected)
         }
         .buttonStyle(PressableStyle())

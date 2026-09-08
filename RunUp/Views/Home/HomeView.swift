@@ -254,7 +254,13 @@ struct HomeView: View {
                 let (bg, color): (Color, Color) = {
                     switch day.state {
                     case .done: return (RUColor.rose, .white)
-                    case .today: return (RUColor.tint(RUColor.rose, 0.14, over: RUColor.card), RUColor.rose2)
+                    // Le fond de la case du jour était un accent dilué dans la carte. Sur un
+                    // thème sombre, un rose à 14 % sur du #16161F ne donne pas « rose pâle », il
+                    // donne un bordeaux terne — la couleur la plus sale de l'écran, et elle
+                    // désignait justement le jour où l'on est. La case prend donc la même
+                    // sous-surface que ses voisines : c'est l'anneau et le texte roses qui la
+                    // distinguent, et ils le font sans salir.
+                    case .today: return (RUColor.card2, RUColor.rose2)
                     case .rest: return (RUColor.card2, RUColor.text4)
                     case .upcoming: return (RUColor.card2, RUColor.text2)
                     }
@@ -412,13 +418,7 @@ struct HomeView: View {
         let session = profile.todaySession
         let isRestDay = session.durationMinutes == 0
         return VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                sessionTag(isRestDay, family: session.family)
-                Spacer()
-                if let adj = session.adjustment {
-                    StatChip(text: adj, color: RUColor.rose2)
-                }
-            }
+            sessionTag(isRestDay, family: session.family)
             // Un jour de repos, cette carte n'a rien à faire faire : ni durée, ni allure, ni
             // boutons. Elle gardait pourtant le corps de 23 pt des jours de séance, ce qui
             // faisait de « REPOS » le bloc le plus lourd de l'écran — la hiérarchie disait
@@ -429,6 +429,27 @@ struct HomeView: View {
                 .displayStyle(isRestDay ? 18 : 23)
                 .foregroundColor(isRestDay ? RUColor.text2 : RUColor.textPrimary)
                 .padding(.top, 8)
+
+            // L'ajustement était une PASTILLE, en haut à droite, à côté du tag de séance.
+            //
+            // Ce n'est pas une pastille : c'est une PHRASE — « Semaine chargée — séances
+            // raccourcies ». Enfermée dans une capsule teintée, elle passait sur deux lignes,
+            // occupait la moitié de la largeur et pesait plus lourd que le titre qu'elle
+            // accompagne. Une pastille est faite pour un mot ou un nombre.
+            //
+            // Elle devient une ligne, sous le titre, à sa place chronologique : voici la séance,
+            // voici pourquoi elle est ce qu'elle est.
+            if let adjustment = session.adjustment {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .font(.system(size: 10, weight: .semibold))
+                    Text(adjustment)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .font(RUFont.sans(.small, weight: .medium))
+                .foregroundColor(RUColor.rose2)
+                .padding(.top, 6)
+            }
 
             if isRestDay {
                 // Le sous-titre du modèle et la phrase d'explication disaient déjà la même
@@ -454,18 +475,32 @@ struct HomeView: View {
                 // La durée gagne : c'est la seule des trois qui décrit ce qu'on est sur le point
                 // de FAIRE. L'allure et la zone décrivent comment le faire, elles n'ont pas
                 // besoin d'être lues à un mètre.
-                HStack(alignment: .lastTextBaseline, spacing: 4) {
-                    Text("\(session.durationMinutes)")
-                        .font(RUFont.display(56))
-                        .foregroundColor(RUColor.textPrimary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
-                    Text(verbatim: "′")
-                        .font(RUFont.display(24))
-                        .foregroundColor(RUColor.text3)
-                    Spacer(minLength: 14)
+                //
+                // Le prime « ′ » posé à 24 points à côté d'un 56 se lisait comme une virgule
+                // tronquée : « 40, ». Un grand chiffre porte son unité SOUS lui, en petites
+                // capitales, comme les deux mesures qui l'accompagnent — sinon ce n'est pas une
+                // unité, c'est un caractère perdu.
+                //
+                // Et les trois mesures sont groupées à GAUCHE, l'espace rejeté au bout. Avec un
+                // `Spacer` au milieu, le 40 et le couple allure/zone se retrouvaient collés aux
+                // deux bords avec un trou au centre : deux blocs qui s'ignorent au lieu d'une
+                // rangée qui se lit.
+                HStack(alignment: .lastTextBaseline, spacing: 18) {
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("\(session.durationMinutes)")
+                            .font(RUFont.display(56))
+                            .foregroundColor(RUColor.textPrimary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                        Text("minutes")
+                            .font(RUFont.sans(.micro, weight: .medium))
+                            .tracking(0.9)
+                            .textCase(.uppercase)
+                            .foregroundColor(RUColor.text3)
+                    }
                     MetricColumn(value: session.pace, label: "Allure", valueSize: 17)
                     MetricColumn(value: session.zone, label: "Zone", valueColor: RUColor.rose2, valueSize: 17)
+                    Spacer(minLength: 0)
                 }
                 .padding(.top, 10)
 

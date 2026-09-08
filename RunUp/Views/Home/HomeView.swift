@@ -261,6 +261,17 @@ struct HomeView: View {
                 //
                 // Le jour COURANT garde un anneau, mais lui n'est pas un contour de boîte : c'est
                 // un repère, le seul de la rangée, et il ne se répète pas sept fois.
+                //
+                // ── Et plus de fond du tout pour les jours ordinaires ────────────────────────
+                //
+                // Sept rectangles remplis côte à côte pour porter une lettre et un nombre, c'est
+                // sept objets dessinés là où il n'y a que deux états à signaler : ce qui est fait,
+                // et où l'on est. Les cinq autres jours ne sont rien de particulier — ils n'ont
+                // pas besoin d'une boîte pour le dire.
+                //
+                // C'est le même geste que partout ailleurs aujourd'hui : on cesse de dessiner un
+                // contenant autour de ce qui n'est pas un objet. Il reste une frise de sept
+                // colonnes, dont deux portent une marque.
                 let (bg, color): (Color, Color) = {
                     switch day.state {
                     case .done: return (RUColor.rose, .white)
@@ -271,8 +282,10 @@ struct HomeView: View {
                     // sous-surface que ses voisines : c'est l'anneau et le texte roses qui la
                     // distinguent, et ils le font sans salir.
                     case .today: return (RUColor.card2, RUColor.rose2)
-                    case .rest: return (RUColor.card2, RUColor.text4)
-                    case .upcoming: return (RUColor.card2, RUColor.text2)
+                    // `text3` et non `text4` : sans fond derrière lui, un chiffre à 20 %
+                    // d'opacité ne se lit plus, il se devine. La boîte lui servait de contraste.
+                    case .rest: return (.clear, RUColor.text3)
+                    case .upcoming: return (.clear, RUColor.text2)
                     }
                 }()
                 VStack(spacing: 6) {

@@ -73,12 +73,19 @@ struct StatChip: View {
             // 8px/10px de padding horizontal dans la maquette, soit ~10–12,5pt à son échelle.
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
-            // Aplat opaque à 12% mélangé dans `bg`, pas un `color.opacity(0.14)` translucide :
-            // voir `RUColor.tint`. Une pastille posée sur une carte se teintait du gris de la
-            // carte au lieu de rester plus claire qu'elle — la maquette mélange sur `--ru-bg`
-            // même pour les pastilles qui vivent dans une carte (`.follow-chip` dans
-            // `.suggest-card`), ce qui leur donne cet effet de découpe qui manquait ici.
-            .background(background ?? RUColor.tint(color, 0.12, over: RUColor.bg), in: Capsule())
+            // ── Le fond devient NEUTRE ──────────────────────────────────────────────────────
+            //
+            // Il était une teinte de la couleur de la pastille elle-même, diluée à 12 % dans le
+            // fond de page. Sur un thème sombre, ce mélange ne donne pas une version pâle de la
+            // couleur : il donne sa version SALE. Rose → bordeaux, ambre → brun, lime → olive.
+            // Vues sur un vrai téléphone, ces trois-là étaient les taches les plus ternes de
+            // l'écran, et le composant est partagé — donc elles étaient partout.
+            //
+            // Un fond neutre laisse la couleur au TEXTE, qui la porte mieux : une capsule grise
+            // avec « J-32 » écrit en rose se lit rose, sans que la capsule ait à se salir pour
+            // le dire. L'appelant garde `background` s'il a une raison de faire autrement.
+            .background(background ?? (RUColor.isLight ? Color.black.opacity(0.05)
+                                                       : Color.white.opacity(0.07)), in: Capsule())
     }
 }
 

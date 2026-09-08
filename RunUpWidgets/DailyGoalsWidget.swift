@@ -79,8 +79,8 @@ struct WidgetRingView: View {
     /// au lieu de 96-180. Le même POURCENTAGE donnerait un trait visuellement plus grêle, la
     /// surface du disque croissant au carré du rayon là où le trait ne croît que linéairement.
     private static let stroke: CGFloat = 17
-    private static let lightTrack = 0.26
-    private static let darkTrack = 0.22
+    private static let lightTrack = 0.10
+    private static let darkTrack = 0.12
 
     var body: some View {
         ZStack {
@@ -90,11 +90,14 @@ struct WidgetRingView: View {
                 let pct = max(0, min(1, goal.progress))
                 let fillEnd = seg.trimStart + (seg.trimEnd - seg.trimStart) * pct
 
-                // La piste porte une teinte sombre de SA couleur, pas un gris neutre : même vide,
-                // l'arc dit à quel objectif il appartient.
+                // La piste est GRISE, comme celle de l'anneau de l'accueil — voir le long
+                // commentaire des opacités dans `DailyGoalsBarsView`. Une piste teintée à côté
+                // d'un remplissage de la même couleur ne se distingue pas de lui : à 0/3, l'anneau
+                // se lisait plein. Sur un widget vu à bout de bras, c'est encore plus vrai que
+                // dans l'app, et il n'y a même pas de légende à côté pour rattraper.
                 Circle()
                     .trim(from: seg.trimStart, to: seg.trimEnd)
-                    .stroke(color.opacity(isLight ? Self.lightTrack : Self.darkTrack),
+                    .stroke((isLight ? Color.black : Color.white).opacity(isLight ? Self.lightTrack : Self.darkTrack),
                             style: StrokeStyle(lineWidth: Self.stroke, lineCap: .round))
 
                 // Le dégradé balaie tout l'arc, pas seulement sa part remplie : se remplir en

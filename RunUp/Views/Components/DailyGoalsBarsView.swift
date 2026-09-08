@@ -74,8 +74,27 @@ struct DailyGoalsBarsView: View {
     /// trop : à cette valeur la piste disparaît sur du blanc, et l'anneau ne se lit plus que par
     /// ses arcs remplis — donc comme un trait fin et brisé au lieu d'un anneau. 0,26 garde la
     /// distinction rempli / pas rempli tout en redonnant à l'anneau son corps.
-    private static let lightTrackOpacity = 0.26
-    private static let darkTrackOpacity = 0.22
+    /// ── La piste devient NEUTRE ────────────────────────────────────────────────────────────
+    ///
+    /// Les quatre réglages ci-dessus cherchaient tous la même chose par le même moyen : faire
+    /// qu'un anneau vide se lise vide, en baissant l'opacité d'une piste TEINTÉE. 0,36, puis
+    /// 0,15, puis 0,26. Vu sur un vrai téléphone, à 0/3, l'anneau se lit toujours plein à
+    /// quatre-vingt-dix pour cent.
+    ///
+    /// C'est que le problème n'est pas l'opacité, c'est la couleur. Une piste rose pâle posée à
+    /// côté d'un remplissage rose, ce sont deux roses : l'œil voit un anneau continu, il ne voit
+    /// pas où l'un s'arrête et où l'autre commence. Aucune opacité ne répare ça — plus haut on
+    /// lit « plein », plus bas on ne lit plus d'anneau du tout.
+    ///
+    /// Une piste GRISE règle les deux d'un coup : rempli et pas rempli deviennent deux choses
+    /// différentes, et l'anneau garde son corps. L'argument d'origine — « une piste teintée
+    /// rappelle à quel objectif l'arc appartient, comme les anneaux d'Apple » — ne tient pas ici :
+    /// la légende nomme les trois objectifs en toutes lettres à côté, avec leur pastille de
+    /// couleur. L'information est déjà là, deux centimètres à droite.
+    ///
+    /// Au passage, c'est trois éléments roses de moins sur un écran qui en comptait seize.
+    private static let lightTrackOpacity = 0.09
+    private static let darkTrackOpacity = 0.10
 
     var body: some View {
         ZStack {
@@ -85,12 +104,16 @@ struct DailyGoalsBarsView: View {
                 let pct = max(0, min(1, i < displayedProgress.count ? displayedProgress[i] : 0))
                 let fillEnd = seg.trimStart + (seg.trimEnd - seg.trimStart) * pct
 
-                // Track: the goal, always the full segment length — a dim tint of this segment's
-                // own color (like Apple's rings), not a neutral gray, so even the empty part hints
-                // at which goal it belongs to.
+                // La piste : la longueur totale du segment, en gris neutre — voir le long
+                // commentaire sur les opacités plus haut. Ce n'est plus une teinte de la couleur
+                // de l'arc, et c'est le changement qui fait qu'un anneau vide se lit enfin vide.
                 Circle()
                     .trim(from: seg.trimStart, to: seg.trimEnd)
-                    .stroke(color.opacity(RUColor.isLight ? Self.lightTrackOpacity : Self.darkTrackOpacity), style: StrokeStyle(lineWidth: Self.strokeWidth, lineCap: .round))
+                    .stroke(
+                        (RUColor.isLight ? Color.black : Color.white)
+                            .opacity(RUColor.isLight ? Self.lightTrackOpacity : Self.darkTrackOpacity),
+                        style: StrokeStyle(lineWidth: Self.strokeWidth, lineCap: .round)
+                    )
 
                 // Fill: from the same start point, out to `pct` of the way along the segment. The
                 // gradient sweep spans the segment's full angular range (not just the filled

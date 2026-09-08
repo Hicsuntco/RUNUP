@@ -316,10 +316,13 @@ struct HomeView: View {
                     .frame(width: 19, height: 19)
                 }
                 .frame(maxWidth: .infinity)
-                // 14 au lieu de 10 : la rangée passe d'environ 59 à 68 points de haut. Une bande
-                // de semaine plus haute que large se lit comme une frise ; plus large que haute,
-                // comme une barre d'onglets.
-                .padding(.vertical, 14)
+                // 11, et non plus 14. La rangée avait été montée à 68 points quand les sept
+                // cases portaient un fond : il fallait de la hauteur pour que des boîtes de cette
+                // largeur ne paraissent pas écrasées. Cinq d'entre elles n'ont plus de fond, et
+                // la seule qui en garde un devient, à cette hauteur, un bloc rose isolé qui pèse
+                // plus lourd que la séance du jour. Une frise se mesure à ce qu'elle porte, pas à
+                // ce qu'elle portait.
+                .padding(.vertical, 11)
                 // Each cell (weekday letter + a date number or checkmark, colored by state) was
                 // 2-3 separate disconnected VoiceOver stops with no indication of which day is
                 // today, done, or a rest day — that information lived only in color/border, never
@@ -553,6 +556,15 @@ struct HomeView: View {
                     .padding(.top, 15)
             }
         }
+        // La carte prend TOUTE la largeur, quel que soit son contenu.
+        //
+        // Sans ça, elle se réduisait à son texte le plus long dans les états qui n'ont ni rangée
+        // de mesures ni boutons — « séance faite », jour de repos. Le défaut existait depuis
+        // toujours mais restait invisible tant que trois cartes se suivaient : elles étaient
+        // toutes étroites ensemble. Depuis que les sections en dessous vont d'un bord à l'autre,
+        // la carte se retrouve seule à s'arrêter au milieu, et l'écran a l'air cassé — parce
+        // qu'il l'est.
+        .frame(maxWidth: .infinity, alignment: .leading)
         // 20 au lieu de 16 : c'est la carte qui porte le sommet de l'écran, et une marge plus
         // large est ce qui distingue une carte principale d'une carte de liste — sans avoir à
         // lui ajouter un contour, une teinte ou un badge.
@@ -593,7 +605,11 @@ struct HomeView: View {
                 // la moitié de la largeur du contenu. On ne va pas jusque-là (ce serait dépasser
                 // l'anneau héros de l'écran "Ta journée", qui doit rester le plus grand), mais
                 // 96 pt lui rend le poids d'élément principal de la carte.
-                DailyGoalsBarsView(goals: p.dailyGoalSlotsToday.map { .init(slot: $0.slot, progress: $0.progress) }, size: 96)
+                // 84, et non plus 96. La taille avait été montée à 96 pour que l'anneau pèse comme
+                // l'élément principal de SA CARTE. Il n'y a plus de carte : posé à même la page, à
+                // dix-huit points du bord, il n'a plus rien à dominer, et à 96 il se met à
+                // écraser la ligne de la séance juste au-dessus.
+                DailyGoalsBarsView(goals: p.dailyGoalSlotsToday.map { .init(slot: $0.slot, progress: $0.progress) }, size: 84)
                 VStack(alignment: .leading, spacing: 9) {
                     // « Objectifs · 0/3 », et non « Tes objectifs · 0/3 bouclés ».
                     //

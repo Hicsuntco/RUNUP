@@ -99,10 +99,10 @@ struct ClubManagementView: View {
         let tint = destructive ? RUColor.rose : RUColor.text2
         return HStack(spacing: 13) {
             Image(systemName: icon)
-                .font(.system(size: 14, weight: .semibold))
+                // Sans sa tuile teintée, comme les icônes d'en-tête, du plan et de Stats.
+                .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(tint)
-                .frame(width: 38, height: 38)
-                .background(tint.opacity(0.10), in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+                .frame(width: 28)
             Text(title)
                 .font(RUFont.sans(.label, weight: .semibold))
                 .foregroundColor(destructive ? RUColor.rose : RUColor.textPrimary)

@@ -132,8 +132,8 @@ struct HistoryView: View {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 15))
                 .foregroundColor(RUColor.amberText)
-                .frame(width: 30, height: 30)
-                .background(RUColor.amber.opacity(0.16), in: Circle())
+                .frame(width: 26)
+                // Sans son disque teinté : l'ambre reste au glyphe.
             VStack(alignment: .leading, spacing: 3) {
                 Text(appState.pendingActivityCount == 1
                      ? String(localized: "1 course pas encore synchronisée")
@@ -161,8 +161,9 @@ struct HistoryView: View {
             Spacer(minLength: 0)
         }
         .padding(12)
-        .background(RUColor.amber.opacity(0.1), in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous).stroke(RUColor.amber.opacity(0.35), lineWidth: RUSpacing.hairline))
+        // Surface neutre : l'accent reste au texte et à l'icône. Un amber
+        // dilué donne sa version sale, et le contour de la même couleur la redisait.
+        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
     }
 
     /// La `.hist-row` de la maquette : vignette du parcours à GAUCHE, puis date / titre / trois

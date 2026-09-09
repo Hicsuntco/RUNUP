@@ -245,7 +245,7 @@ struct RingsView: View {
         let restDay = sessionDoneForSelected == nil
         let done = sessionDoneForSelected == true
         return HStack(spacing: 12) {
-            Circle().fill(color).frame(width: 10, height: 10).shadow(color: color.opacity(0.4), radius: 6)
+            Circle().fill(color).frame(width: 10, height: 10)
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Text("Séance").font(RUFont.sans(.title, weight: .bold)).foregroundColor(RUColor.textPrimary)
@@ -265,7 +265,7 @@ struct RingsView: View {
 
     private func ringRow(name: String, color: Color, value: Double, goal: Double, unit: String) -> some View {
         HStack(spacing: 12) {
-            Circle().fill(color).frame(width: 10, height: 10).shadow(color: color.opacity(0.4), radius: 6)
+            Circle().fill(color).frame(width: 10, height: 10)
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Text(name).font(RUFont.sans(.title, weight: .bold)).foregroundColor(RUColor.textPrimary)

@@ -248,8 +248,8 @@ struct WeeklyRecapView: View {
             Image(systemName: "trophy.fill")
                 .font(.system(size: 17, weight: .medium))
                 .foregroundColor(RUColor.rose)
-                .frame(width: 38, height: 38)
-                .background(RUColor.rose.opacity(0.18), in: Circle())
+                .frame(width: 30)
+                // Sans son disque teinté : le rose reste au trophée.
             VStack(alignment: .leading, spacing: 2) {
                 Text(record.label).font(RUFont.sans(.label, weight: .bold)).foregroundColor(RUColor.textPrimary)
                 // No "+120 XP" suffix — no record-specific XP is ever granted (the 120 is the
@@ -260,8 +260,9 @@ struct WeeklyRecapView: View {
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 14).padding(.vertical, 12)
-        .background(RUColor.rose.opacity(0.08), in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(RUColor.rose.opacity(0.26), lineWidth: RUSpacing.hairline))
+        // Surface neutre : l'accent reste au texte et à l'icône. Un rose
+        // dilué donne sa version sale, et le contour de la même couleur la redisait.
+        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
         // Le trophée et le fond teinté sont décoratifs ; sans regroupement, VoiceOver lit le
         // libellé et sa valeur comme deux arrêts, sans dire qu'il s'agit d'un record.
         .accessibilityElement(children: .combine)

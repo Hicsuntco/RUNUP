@@ -194,8 +194,9 @@ struct CoachView: View {
                     .buttonStyle(PressableStyle())
             }
             .padding(12)
-            .background(RUColor.amber.opacity(0.1), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.amber.opacity(0.3), lineWidth: RUSpacing.hairline))
+            // Surface neutre : l'accent reste au texte et à l'icône. Un amber
+            // dilué donne sa version sale, et le contour de la même couleur la redisait.
+            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
         case .system:
             appliedChangeRow(message)
         case .coach:

@@ -220,7 +220,7 @@ struct ActivityFeedRow: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(Capsule().fill(onDark ? AnyShapeStyle(Color.white.opacity(0.18))
-                                          : AnyShapeStyle(RUColor.tint(RUColor.rose, 0.12, over: RUColor.card))))
+                                          : AnyShapeStyle(Color.black.opacity(0.05))))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Record personnel")
     }

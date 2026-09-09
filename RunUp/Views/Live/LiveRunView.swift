@@ -202,8 +202,9 @@ struct LiveRunView: View {
                 .foregroundColor(Color(hex: 0xFFD79A))
         }
         .padding(.horizontal, 12).padding(.vertical, 9)
-        .background(Ink.amber.opacity(0.16), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(Ink.amber.opacity(0.4), lineWidth: RUSpacing.hairline))
+        // Surface neutre, l'ambre reste au texte. L'écran de course est toujours sombre : un
+        // ambre à 16 % y donnait un brun, cerclé du même brun. Un accent n'a que deux états.
+        .background(Color.white.opacity(0.09), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
     }
 

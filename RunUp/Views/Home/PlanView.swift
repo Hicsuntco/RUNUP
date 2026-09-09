@@ -443,7 +443,9 @@ struct PlanView: View {
             .tracking(0.2)
             .foregroundColor(RUColor.rose)
             .padding(.horizontal, 9).padding(.vertical, 5)
-            .background(RUColor.rose.opacity(0.10), in: Capsule())
+            // Neutre : un rose à 10 % donne un bordeaux en thème sombre, et le texte
+            // est déjà rose. Même règle que `StatChip`.
+            .background(RUColor.card2, in: Capsule())
     }
 
     private var completedCount: Int { profile.weekSessions.filter(\.completed).count }

@@ -165,8 +165,9 @@ struct SessionDetailSheet: View {
                             .foregroundColor(RUColor.lime)
                             .frame(maxWidth: .infinity)
                             .padding(16)
-                            .background(RUColor.lime.opacity(0.08), in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(RUColor.lime.opacity(0.25), lineWidth: RUSpacing.hairline))
+                            // Surface neutre : l'accent reste au texte et à l'icône. Un lime
+                            // dilué donne sa version sale, et le contour de la même couleur la redisait.
+                            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
                             .padding(.top, 16)
                     } else {
                         HStack(spacing: 8) {

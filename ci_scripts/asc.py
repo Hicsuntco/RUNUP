@@ -645,7 +645,7 @@ OFFRES_PROMO = [
     # Une testeuse peut avoir déjà été abonnée, ou l'être encore : lui refuser le code pour ça
     # n'aurait aucun sens, d'où les trois éligibilités.
     {"produit": ANNUEL, "nom": "Testeurs RUNUP", "code": "RUNUPTEAM",
-     "mode": "FREE_TRIAL", "duree": "ONE_YEAR", "periodes": 1,
+     "mode": "FREE_TRIAL", "duree": "ONE_YEAR", "periodes": 1, "remise": 1.0,
      "eligibilites": ["NEW", "EXPIRED", "EXISTING"], "codes": 200},
     # LES NOUVELLES : la première année à moitié prix, puis le tarif plein. Un code appartient à
     # UNE offre, donc à UN produit — celui qui suit existe pour qui préfère payer au mois, sans
@@ -809,22 +809,35 @@ def cmd_promo_creer(args):
                     "offerMode": offre["mode"],
                     "duration": offre["duree"],
                     "numberOfPeriods": offre["periodes"],
+                    # CE QUI ARRIVE À L'ESSAI DE SEPT JOURS. L'app en offre un à tout nouvel
+                    # abonné ; un code promo croise donc forcément cette offre-là. « Empiler »
+                    # donnerait sept jours gratuits PUIS la remise — la personne à qui l'on a
+                    # promis la moitié du prix paierait zéro d'abord, et le décompte de son
+                    # année à moitié prix commencerait une semaine plus tard. « Remplacer »
+                    # donne exactement ce qui est annoncé, tout de suite.
+                    "offerEligibility": "REPLACE_INTRO_OFFERS",
                 },
                 "relationships": {
                     "subscription": {"data": {"type": "subscriptions", "id": abo["id"]}}}}}
 
-            # Une offre gratuite n'a pas de prix. Une offre à prix réduit en exige un DANS CHAQUE
-            # TERRITOIRE où l'abonnement est vendu — cent soixante-quinze ici. Et la moitié du prix
-            # français convertie ne serait pas la bonne réponse au Japon : chaque pays a sa propre
-            # grille, et c'est sur SON prix local que la remise se calcule.
-            if offre["mode"] != "FREE_TRIAL":
-                inclus, refs, retenus = tarifs_de_remise(abo["id"], offre["remise"])
-                corps["data"]["relationships"]["prices"] = {"data": refs}
-                corps["included"] = inclus
-                for terr in ("FRA", "USA", "ESP", "JPN"):
-                    if terr in retenus:
-                        print(f"    {terr} : {retenus[terr][0]} → {retenus[terr][1]}")
-                print(f"    {len(refs)} territoires tarifés")
+            # UNE GRILLE DE PRIX EST EXIGÉE MÊME POUR UNE OFFRE GRATUITE — Apple refuse la
+            # création sans elle. Ce n'est pas absurde : c'est cette grille qui déclare les
+            # territoires où l'offre existe, et le tarif qui s'y appliquerait. Une offre gratuite
+            # reprend donc le prix courant (remise de 1.0) : le montant n'est jamais prélevé, et
+            # la liste des pays reste exactement celle de l'abonnement.
+            #
+            # Une offre à prix réduit exige un palier DANS CHAQUE TERRITOIRE où l'abonnement est
+            # vendu — cent soixante-quinze ici. Et la moitié du prix français convertie ne serait
+            # pas la bonne réponse au Japon : chaque pays a sa propre grille imposée, et c'est sur
+            # SON prix local que la remise se calcule.
+            inclus, refs, retenus = tarifs_de_remise(abo["id"], offre["remise"])
+            corps["data"]["relationships"]["prices"] = {"data": refs}
+            corps["included"] = inclus
+            for terr in ("FRA", "USA", "ESP", "JPN"):
+                if terr in retenus:
+                    fleche = "offert" if offre["mode"] == "FREE_TRIAL" else str(retenus[terr][1])
+                    print(f"    {terr} : {retenus[terr][0]} → {fleche}")
+            print(f"    {len(refs)} territoires tarifés")
 
             if args.dry_run:
                 print("    (--dry-run : l'offre n'est pas créée, donc pas de code non plus)")

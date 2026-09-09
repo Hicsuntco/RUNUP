@@ -709,6 +709,13 @@ def cmd_promo(args):
                 print(f"      code « {cca.get('customCode')} » — {cca.get('numberOfCodes')} "
                       f"utilisations, expire le {(cca.get('expirationDate') or '?')[:10]}, "
                       f"{'actif' if cca.get('active') else 'INACTIF'}")
+                # LE LIEN, PARCE QUE C'EST LUI QU'ON ENVOIE. Taper un code à la main dans l'App
+                # Store demande de trouver « Utiliser un code cadeau » au fond d'un menu de
+                # compte ; ce lien ouvre directement l'écran, code prérempli. Il fonctionne sans
+                # aucune mise à jour de l'app — un code promo est un objet du compte, pas du
+                # binaire.
+                print(f"        https://apps.apple.com/redeem?ctx=offercodes&id={aid}"
+                      f"&code={cca.get('customCode')}")
     print()
 
 

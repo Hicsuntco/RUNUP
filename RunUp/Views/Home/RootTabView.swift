@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Root screen switcher + floating tab bar. Mirrors the `SCREENS` map and tab-bar visibility
 /// logic in app.jsx (`showBar = !['live','recap'].includes(screen)`).
@@ -17,6 +18,18 @@ struct RootTabView: View {
     private var tabSelection: AppScreen {
         appState.screen == .club ? .profile : appState.screen
     }
+
+    /// Le seul écran de la barre qui reçoive du texte.
+    ///
+    /// PARTOUT AILLEURS, UN ENCART DE CLAVIER N'A AUCUN SENS. Il n'y a rien à y taper : s'il en
+    /// arrive un, c'est un reste — le clavier d'un écran qu'on vient de quitter, ou d'une feuille
+    /// système qu'on vient de refermer. Et il ne se voit pas comme un clavier, il se voit comme
+    /// une page cassée : trois cents points de vide en bas, la barre d'onglets échouée au milieu
+    /// de l'écran, et la carte du programme coupée en deux dessous.
+    ///
+    /// Le Coach, lui, garde le comportement d'origine — tout remonte avec le clavier, barre
+    /// d'onglets comprise, et sa barre de saisie reste juste au-dessus.
+    private var typesText: Bool { appState.screen == .coach }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -45,12 +58,24 @@ struct RootTabView: View {
                 .padding(.bottom, RUSpacing.tabBarBottomInset)
             }
         }
+        // Un jeu de bords VIDE plutôt qu'un `if` autour du modificateur : la valeur change, pas
+        // la structure de la vue. Un `if` en donnerait deux différentes, et SwiftUI recréerait
+        // tout l'arbre — donc l'écran courant — à chaque passage sur le Coach.
+        .ignoresSafeArea(.keyboard, edges: typesText ? [] : .bottom)
         .animation(.easeInOut(duration: 0.25), value: appState.screen)
         // Un seul point d'émission pour toute l'app : chaque écran passe par ce `switch`, donc
         // rien ne peut être oublié ni compté deux fois. `onChange` plutôt qu'un `onAppear` par
         // écran, qui se serait redéclenché à chaque retour de feuille modale.
         .onAppear { Analytics.shared.track(.screenViewed, ["screen": .string(appState.screen.rawValue)]) }
         .onChange(of: appState.screen) { _, screen in
+            // LE CLAVIER NE SUIT PAS L'ÉCRAN QUI L'A OUVERT. En quittant le Coach pendant qu'on
+            // écrit, la vue est détruite avec son champ encore actif — `currentScreen` porte un
+            // `.id(appState.screen)`. iOS referme bien le clavier, mais l'encart de sécurité qui
+            // l'accompagnait reste parfois posé sur la hiérarchie. Le refermer AVANT de changer
+            // d'écran supprime le cas à la source ; le `ignoresSafeArea` ci-dessus n'est là que
+            // pour qu'il ne puisse plus rien casser s'il revenait par un autre chemin.
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                            to: nil, from: nil, for: nil)
             Analytics.shared.track(.screenViewed, ["screen": .string(screen.rawValue)])
         }
         .sheet(isPresented: Binding(get: { appState.sessionDetailPresented }, set: { appState.sessionDetailPresented = $0 })) {

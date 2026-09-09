@@ -115,22 +115,33 @@ def token() -> str:
 def call(method: str, path: str, body=None):
     url = path if path.startswith("http") else f"{API}/{path}"
     data = json.dumps(body).encode() if body is not None else None
-    req = urllib.request.Request(url, data=data, method=method)
-    req.add_header("Authorization", f"Bearer {token()}")
-    if data:
-        req.add_header("Content-Type", "application/json")
-    try:
-        with urllib.request.urlopen(req) as r:
-            raw = r.read()
-            return json.loads(raw) if raw else {}
-    except urllib.error.HTTPError as e:
-        detail = e.read().decode()
+
+    # UN 500 SUR UNE LECTURE SE RÉESSAIE, PAS UN 500 SUR UNE ÉCRITURE. Le serveur d'Apple rend
+    # des 500 passagers : la même requête `GET .../offerCodes` a échoué puis réussi à deux minutes
+    # d'intervalle, et faire tomber toute la commande pour ça n'a aucun sens. Mais un POST qui
+    # rend 500 peut très bien avoir créé l'objet avant de se plaindre — le rejouer créerait un
+    # doublon d'une offre qu'on ne peut ensuite que désactiver. Les lectures seulement, donc.
+    tentatives = 3 if method == "GET" else 1
+    for essai in range(tentatives):
+        req = urllib.request.Request(url, data=data, method=method)
+        req.add_header("Authorization", f"Bearer {token()}")
+        if data:
+            req.add_header("Content-Type", "application/json")
         try:
-            for err in json.loads(detail).get("errors", []):
-                print(f"  Apple : {err.get('title')} — {err.get('detail')}", file=sys.stderr)
-        except Exception:
-            print(detail, file=sys.stderr)
-        sys.exit(f"HTTP {e.code} sur {method} {path}")
+            with urllib.request.urlopen(req) as r:
+                raw = r.read()
+                return json.loads(raw) if raw else {}
+        except urllib.error.HTTPError as e:
+            if e.code >= 500 and essai < tentatives - 1:
+                time.sleep(2 ** essai)
+                continue
+            detail = e.read().decode()
+            try:
+                for err in json.loads(detail).get("errors", []):
+                    print(f"  Apple : {err.get('title')} — {err.get('detail')}", file=sys.stderr)
+            except Exception:
+                print(detail, file=sys.stderr)
+            sys.exit(f"HTTP {e.code} sur {method} {path}")
 
 
 # ── Lecture de la fiche ───────────────────────────────────────────────────────────────────────

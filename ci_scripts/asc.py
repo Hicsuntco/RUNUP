@@ -646,7 +646,10 @@ OFFRES_PROMO = [
     # n'aurait aucun sens, d'où les trois éligibilités.
     {"produit": ANNUEL, "nom": "Testeurs RUNUP", "code": "RUNUPTEAM",
      "mode": "FREE_TRIAL", "duree": "ONE_YEAR", "periodes": 1, "remise": 1.0,
-     "eligibilites": ["NEW", "EXPIRED", "EXISTING"], "codes": 200},
+     # Mille, et non deux cents : Apple refuse les petits nombres pour un code personnalisé
+     # (« Invalid number of codes »). C'est un PLAFOND d'utilisations, pas une quantité à
+     # distribuer — le code reste unique, et personne ne le reçoit qu'on ne lui ait envoyé.
+     "eligibilites": ["NEW", "EXPIRED", "EXISTING"], "codes": 1000},
     # LES NOUVELLES : la première année à moitié prix, puis le tarif plein. Un code appartient à
     # UNE offre, donc à UN produit — celui qui suit existe pour qui préfère payer au mois, sans
     # quoi la feuille d'Apple lui répondrait « non éligible » sans expliquer pourquoi.

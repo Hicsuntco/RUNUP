@@ -98,30 +98,27 @@ Politique de confidentialité : https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## Nouveautés de cette version (4000 caractères max — obligatoire pour une mise à jour)
 ```
-RUNUP s'ouvre à tout le monde.
+RUNUP lit enfin tes courses, où qu'elles soient enregistrées.
 
-TON COACH CHANGE TON PROGRAMME, PAS SEULEMENT D'AVIS
-Dis-lui qu'une tendinite revient, que tu n'as que deux créneaux cette semaine, que tu veux lever le pied dix jours : il applique. Séances raccourcies, fractionné mis en pause, jours de course déplacés. Tu vois exactement ce qu'il a changé, et tu peux l'annuler d'un geste. Avec RUNUP PLUS.
+TES SORTIES GARMIN COMPTENT
+Tu cours avec une Garmin, une Coros, une Polar, ou l'app Exercice de ta montre ? Ta sortie arrivait dans Apple Santé et RUNUP ne la voyait pas — ton programme restait bloqué à « 1/4 séances » alors que tu en avais couru quatre. C'est réparé : l'app va les chercher, avec leur tracé, et te demande simplement ton ressenti pour les faire entrer dans ta semaine.
 
-GRATUIT, POUR TOUJOURS
-Le suivi GPS de tes courses, ton historique, tes statistiques, tes objectifs du jour, ta série, ton bilan de la semaine, Apple Santé, l'Apple Watch et les widgets. Et tout le Club : classements, défis, fil d'activité, amis et itinéraires partagés. Sans compte à rebours et sans publicité.
+TON FIL RESSEMBLE ENFIN À QUELQUE CHOSE
+Le dessin de ton parcours en tête de carte, les prénoms de ceux qui ont aimé, le dernier commentaire sous les yeux. Et tu peux renommer une sortie, lui ajouter une note, ou en retirer le tracé après coup.
 
-RUNUP PLUS
-Le programme périodisé et son adaptation après chaque sortie, le coach écrit et vocal, la préparation d'une date de course, tes temps prévus et ta charge d'entraînement. Sept jours d'essai gratuit.
+Le tracé part rogné de 300 mètres à chaque bout : personne ne voit d'où tu pars ni où tu rentres.
+
+L'ÉCRAN DE COURSE DE L'APPLE WATCH
+Un seul chiffre, énorme, lisible le bras qui balance — et c'est toi qui choisis lequel. Temps, distance, allure, cardio ou calories en grand, trois autres en dessous. Ça se règle depuis l'iPhone, dans Profil.
+
+UNE APP PLUS PROPRE
+Une passe entière sur les couleurs et les surfaces. Les anneaux d'objectifs se lisent enfin : un anneau vide a l'air vide. Plus de halos, plus de pastilles ternes, plus de contours inutiles.
 
 CORRECTIONS
-• Le suivi GPS se mettait en pause tout seul dans les premières secondes de chaque course, et la distance restait bloquée à 0,00. L'appareil ne connaît pas encore ta vitesse pendant que la puce accroche, et l'app prenait ce « je ne sais pas » pour un arrêt.
-• L'écran de course dit maintenant ce qu'il fait : recherche du signal, signal instable, ou localisation refusée — avec un accès direct aux réglages dans ce dernier cas.
-• Une pause automatique prise à l'arrêt sous un immeuble ne se levait plus toute seule.
-• L'anneau de construction du programme sautait au lieu de se remplir, et affichait sa coche de fin avant d'avoir fini.
-• Sur la courbe d'allure, la mention « RECORD » était coupée par le tracé.
-• La carte à partager s'affichait minuscule au milieu d'un grand cadre vide : l'aperçu a maintenant la forme de ce que tu partages.
-• Sur le Profil, le chiffre de ta série tombait plus bas que les deux autres.
-• Les semaines grises du plan disent enfin ce qu'elles sont : des semaines de décharge, où le volume baisse exprès.
-• Restaurer un achat pouvait annoncer « aucun abonnement » alors que c'était le réseau qui manquait.
-• Recherche d'amis depuis ton carnet d'adresses : les adresses sont transformées en empreintes sur ton iPhone, aucune n'est envoyée ni conservée.
-• Une séance déjà faite s'ajoute depuis l'accueil, avec sa vraie distance et sa vraie durée.
-• Le suivi du cycle menstruel se réancre quand les règles arrivent en avance ou en retard.
+• Sur l'écran Coach, la carte d'abonnement passait sous la barre d'onglets : le bouton était coupé en deux.
+• Le fil du coach se colle en bas quand la conversation est courte, au lieu de laisser un grand vide.
+• L'accueil sans abonnement disait la même chose deux fois, et promettait un coach qu'on n'a pas encore.
+• Une course validée le lendemain d'un changement de semaine cochait le mauvais jour.
 ```
 
 ## Mots-clés (100 caractères max, séparés par des virgules sans espace)
@@ -203,30 +200,27 @@ Privacy Policy: https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## What's New in This Version (4000 characters max — required for an update)
 ```
-RUNUP is now open to everyone.
+RUNUP finally reads your runs, wherever they were recorded.
 
-YOUR COACH NOW CHANGES THE PLAN ITSELF
-Say a niggle is back, that you only have two slots this week, that you want to ease off for ten days — and it is applied. Shorter sessions, speed work paused, running days moved. You see exactly what changed, and one tap undoes it. With RUNUP PLUS.
+YOUR GARMIN RUNS COUNT
+Run with a Garmin, a Coros, a Polar, or your watch's Workout app? Your run landed in Apple Health and RUNUP never saw it — your plan stayed stuck at "1/4 sessions" when you had run four. Fixed: the app goes and gets them, route included, and simply asks how it felt so they count towards your week.
 
-FREE, FOREVER
-GPS run tracking, your full history, your stats, today's goals, your streak, your weekly recap, Apple Health, Apple Watch and widgets. Plus the whole Club: leaderboards, challenges, activity feed, friends and shared routes. No countdown, no ads.
+YOUR FEED FINALLY LOOKS LIKE SOMETHING
+Your route drawn across the top of the card, the names of the people who liked it, the latest comment right there. And you can rename a run, add a note, or remove its route afterwards.
 
-RUNUP PLUS
-The periodised plan and its adaptation after every run, the coach by text and by voice, race-day preparation, your predicted times and your training load. Seven-day free trial.
+The route is trimmed by 300 metres at each end before it leaves your phone: nobody sees where you start or where you come home.
+
+THE APPLE WATCH RUN SCREEN
+One number, huge, readable with your arm swinging — and you pick which one. Time, distance, pace, heart rate or calories in full size, three more below. Set from the iPhone, under Profile.
+
+A CLEANER APP
+A full pass over colours and surfaces. The daily goal rings finally read: an empty ring looks empty. No more glows, no more murky pills, no more pointless outlines.
 
 FIXES
-• GPS tracking paused itself within the first seconds of every run and distance stayed at 0.00. The device does not know your speed yet while the chip acquires a fix, and the app read that "don't know" as a stop.
-• The run screen now says what it is doing: acquiring signal, unstable signal, or location denied — with a direct route to Settings in that last case.
-• An auto-pause taken at a standstill under a building would never lift on its own.
-• The plan-building ring jumped instead of filling, and showed its completion tick before finishing.
-• On the pace trend, the "RECORD" label was cut through by the curve.
-• The share card showed up tiny inside a big empty frame; the preview is now shaped like the thing you share.
-• On the Profile, your streak number sat lower than the two beside it.
-• The grey weeks in the plan finally say what they are: recovery weeks, where the volume drops on purpose.
-• Restoring a purchase could report "no subscription" when the network was the thing that was missing.
-• Find friends from your address book: e-mail addresses are turned into fingerprints on your iPhone; none is ever sent or stored.
-• Log an already-completed session from the home screen, with its real distance and duration.
-• Menstrual cycle tracking re-anchors when your period arrives early or late.
+• On the Coach screen, the subscription card slid under the tab bar and its button was cut in half.
+• The coach thread now sits at the bottom when the conversation is short, instead of leaving a large gap.
+• The free Home screen said the same thing twice, and promised a coach you don't have yet.
+• A run confirmed the day after a week rolled over ticked the wrong day.
 ```
 
 ## Keywords (100 characters max, comma-separated, no spaces)
@@ -303,30 +297,27 @@ Política de privacidad: https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## Novedades de esta versión (4000 caracteres máx. — obligatorio para una actualización)
 ```
-RUNUP se abre a todo el mundo.
+RUNUP por fin lee tus carreras, se registren donde se registren.
 
-TU ENTRENADOR YA CAMBIA EL PLAN, NO SOLO DE OPINIÓN
-Dile que te vuelve una molestia, que esta semana solo tienes dos huecos, que quieres bajar el ritmo diez días: lo aplica. Sesiones más cortas, series en pausa, días de carrera cambiados. Ves exactamente qué ha cambiado y puedes deshacerlo con un toque. Con RUNUP PLUS.
+TUS SALIDAS DE GARMIN CUENTAN
+¿Corres con un Garmin, un Coros, un Polar o la app Entrenamiento de tu reloj? Tu salida llegaba a Apple Salud y RUNUP no la veía: tu programa se quedaba en «1/4 sesiones» cuando habías corrido cuatro. Arreglado: la app va a buscarlas, con su recorrido, y solo te pregunta cómo te sentiste para que cuenten en tu semana.
 
-GRATIS, PARA SIEMPRE
-El seguimiento GPS de tus carreras, tu historial, tus estadísticas, tus objetivos del día, tu racha, tu resumen semanal, Apple Salud, el Apple Watch y los widgets. Y todo el Club: clasificaciones, retos, muro de actividad, amigos y rutas compartidas. Sin cuenta atrás y sin publicidad.
+TU MURO POR FIN PARECE ALGO
+El dibujo de tu recorrido en lo alto de la tarjeta, los nombres de quienes le han dado a me gusta, el último comentario a la vista. Y puedes renombrar una salida, añadirle una nota o quitarle el recorrido después.
 
-RUNUP PLUS
-El plan periodizado y su adaptación tras cada salida, el entrenador por escrito y por voz, la preparación de una carrera, tus tiempos previstos y tu carga de entrenamiento. Siete días de prueba gratis.
+El recorrido sale recortado 300 metros por cada extremo: nadie ve de dónde sales ni dónde vuelves.
+
+LA PANTALLA DE CARRERA DEL APPLE WATCH
+Una sola cifra, enorme, legible con el brazo en movimiento, y tú eliges cuál. Tiempo, distancia, ritmo, pulso o calorías en grande, y otras tres debajo. Se ajusta desde el iPhone, en Perfil.
+
+UNA APP MÁS LIMPIA
+Una pasada completa sobre colores y superficies. Los anillos de objetivos por fin se leen: un anillo vacío parece vacío. Se acabaron los halos, las cápsulas apagadas y los contornos inútiles.
 
 CORRECCIONES
-• El seguimiento GPS se pausaba solo en los primeros segundos de cada carrera y la distancia se quedaba en 0,00. El dispositivo aún no conoce tu velocidad mientras el chip fija la señal, y la app tomaba ese «no lo sé» por una parada.
-• La pantalla de carrera ahora dice qué hace: buscando señal, señal inestable o ubicación denegada, con acceso directo a los Ajustes en este último caso.
-• Una pausa automática tomada al detenerse bajo un edificio ya no se levantaba sola.
-• El anillo de construcción del plan saltaba en vez de llenarse, y mostraba su marca de fin antes de terminar.
-• En la curva de ritmo, la palabra «RECORD» quedaba cortada por el trazo.
-• La tarjeta para compartir salía diminuta dentro de un marco vacío; ahora la vista previa tiene la forma de lo que compartes.
-• En el Perfil, el número de tu racha quedaba más bajo que los otros dos.
-• Las semanas grises del plan dicen por fin lo que son: semanas de descarga, donde el volumen baja a propósito.
-• Restaurar una compra podía anunciar «sin suscripción» cuando lo que faltaba era la red.
-• Buscar amigos desde tu agenda: las direcciones se convierten en huellas en tu iPhone; ninguna se envía ni se guarda.
-• Añade una sesión ya hecha desde el inicio, con su distancia y duración reales.
-• El seguimiento del ciclo menstrual se reajusta cuando la regla llega antes o después.
+• En la pantalla Coach, la tarjeta de suscripción pasaba bajo la barra de pestañas y su botón quedaba cortado.
+• El hilo del coach se apoya abajo cuando la conversación es corta, en vez de dejar un gran hueco.
+• La pantalla de inicio sin suscripción decía lo mismo dos veces y prometía un coach que aún no tienes.
+• Una carrera validada al día siguiente de un cambio de semana marcaba el día equivocado.
 ```
 
 ## Palabras clave (100 caracteres máx., separadas por comas sin espacios)

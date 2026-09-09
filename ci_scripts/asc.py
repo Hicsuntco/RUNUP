@@ -548,15 +548,28 @@ def cmd_submit(args):
         choisie = valides[0]
     print(f"  Build retenue : {choisie['number']}")
 
+    # SEULE LA LANGUE PRINCIPALE DOIT PORTER DES CAPTURES. Les autres s'en passent : l'App Store
+    # affiche alors celles de la langue principale. C'est une règle qu'il aurait été facile de
+    # rater dans l'autre sens — bloquer sur en-US et es-ES vides, et partir chercher des captures
+    # que la version précédente n'avait pas non plus. D'où le rappel de ce que portait la dernière
+    # version APPROUVÉE : c'est la seule preuve qui vaille que l'absence passe la revue.
+    primaire = call("GET", f"apps/{aid}")["data"]["attributes"].get("primaryLocale") or "fr-FR"
     captures = screenshot_count(vid)
-    for locale, n in sorted(captures.items()):
-        print(f"    {locale} : {n if n >= 0 else '?'} captures")
-    manquantes = [l for l, n in captures.items() if n == 0]
-    if manquantes and not args.force:
-        sys.exit(f"Aucune capture pour {', '.join(sorted(manquantes))} — la soumission serait "
-                 f"refusée. Les ajouter sur le web, ou relancer avec --force.")
     if not captures:
         sys.exit("Aucune localisation sur cette version. → push-metadata d'abord.")
+    for locale, n in sorted(captures.items()):
+        role = "  ← langue principale" if locale == primaire else " (repli sur la principale)" if not n else ""
+        print(f"    {locale} : {n if n >= 0 else '?'} captures{role}")
+    for v in call("GET", f"apps/{aid}/appStoreVersions?limit=10")["data"]:
+        if v["attributes"]["appStoreState"] != "READY_FOR_SALE":
+            continue
+        ref = screenshot_count(v["id"])
+        print(f"    (pour mémoire, la {v['attributes']['versionString']} approuvée portait : "
+              + ", ".join(f"{l} {n}" for l, n in sorted(ref.items())) + ")")
+        break
+    if captures.get(primaire, 0) < 1 and not args.force:
+        sys.exit(f"Aucune capture pour {primaire}, la langue principale — la soumission serait "
+                 f"refusée. Les ajouter sur le web, ou relancer avec --force.")
 
     if args.dry_run:
         print(f"\n(--dry-run : la build {choisie['number']} SERAIT attachée à la {args.version}, "

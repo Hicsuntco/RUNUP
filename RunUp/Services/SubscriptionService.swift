@@ -164,6 +164,31 @@ final class SubscriptionService {
         }
     }
 
+    /// Ce qu'il faut faire une fois la feuille de code promo refermée.
+    ///
+    /// LE DROIT N'ARRIVE PAS AVEC LA FERMETURE DE LA FEUILLE. Apple le livre par
+    /// `Transaction.updates`, quelques centaines de millisecondes plus tard — parfois plus. Poser
+    /// la question une seule fois, tout de suite, répondrait « rien » à quelqu'un qui vient
+    /// d'entrer un code parfaitement valide, et l'app afficherait le verrou pendant que
+    /// l'abonnement s'ouvre derrière.
+    ///
+    /// D'où l'attente bornée ci-dessous. Elle s'arrête à la première réponse positive — donc
+    /// immédiatement dans le cas ordinaire — et elle abandonne au bout de trois secondes. Rien
+    /// n'est perdu si elle abandonne : `Transaction.updates` finira par livrer la transaction et
+    /// les écrans se déverrouilleront d'eux-mêmes. Ce qu'on perd, c'est seulement le message.
+    func applyRedemption(sheetFailed: Bool) async -> OfferCodeOutcome {
+        if sheetFailed {
+            await refreshEntitlement()
+        } else {
+            for essai in 0..<8 {
+                await refreshEntitlement()
+                if isSubscribed == true { break }
+                if essai < 7 { try? await Task.sleep(for: .milliseconds(400)) }
+            }
+        }
+        return OfferCodeOutcome.decide(sheetFailed: sheetFailed, isSubscribed: isSubscribed)
+    }
+
     /// Obligatoire pour la validation App Store (guideline 3.1.1) : une utilisatrice qui change de
     /// téléphone doit pouvoir retrouver son abonnement sans repayer.
     func restore() async -> RestoreOutcome {

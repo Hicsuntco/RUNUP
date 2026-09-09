@@ -96,6 +96,22 @@ struct SettingsView: View {
             }
             .buttonStyle(PressableStyle())
 
+            // ICI ET PAS SEULEMENT SUR L'OFFRE. Quelqu'un à qui l'on vient d'envoyer un code
+            // le cherche dans les réglages de son abonnement, pas derrière un verrou de
+            // fonctionnalité — et une testeuse à qui l'on donne l'app gratuitement n'a aucune
+            // raison de passer par un écran de vente pour l'activer.
+            OfferCodeButton(subscriptions: subscriptions, onOutcome: announce) {
+                HStack {
+                    Text("Utiliser un code promo").font(RUFont.sans(.body, weight: .semibold))
+                    Spacer()
+                    Image(systemName: "ticket").font(.system(size: 12, weight: .semibold))
+                }
+                .foregroundColor(RUColor.textPrimary)
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(PressableStyle())
+
             Link(destination: URL(string: "https://apps.apple.com/account/subscriptions")!) {
                 HStack {
                     Text("Gérer mon abonnement").font(RUFont.sans(.body, weight: .semibold))
@@ -114,6 +130,10 @@ struct SettingsView: View {
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .ruCard()
+    }
+
+    private func announce(_ outcome: OfferCodeOutcome) {
+        if let message = outcome.message { appState.toast(message) }
     }
 
     /// Le kilométrage des chaussures vivait sur le Profil, entre les cartes sociales et les

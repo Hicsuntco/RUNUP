@@ -618,6 +618,86 @@ def cmd_submit(args):
     print(f"\n  Envoyée en revue — état de la soumission : {r['data']['attributes']['state']}")
 
 
+# ── Codes promo ───────────────────────────────────────────────────────────────────────────────
+#
+# UN CODE PROMO D'ABONNEMENT EST UN OBJET D'APP STORE CONNECT, pas une chaîne que l'app
+# comparerait. Apple le vérifie, l'app ne le voit jamais, et il ne peut donc pas être contourné
+# en bidouillant le téléphone. Ce qui suit crée ces objets ; l'app, elle, n'ouvre que la feuille.
+#
+# DEUX FORMES, ET ELLES NE SE RESSEMBLENT PAS :
+#
+#   · un CODE PERSONNALISÉ — une seule chaîne, « RUNUPTEAM », qu'on distribue à qui l'on veut,
+#     utilisable N fois jusqu'à une date. C'est ce qu'on veut ici : un code à envoyer par message.
+#   · des codes À USAGE UNIQUE — un lot de chaînes tirées au hasard, à télécharger en CSV.
+#     Utile pour une campagne, inutile pour une poignée de testeurs.
+#
+# CE QU'APPLE NE SAIT PAS FAIRE, ET C'EST IMPORTANT : « -50 % » n'existe pas. Une offre est
+# gratuite, ou fixée à un PALIER DE PRIX choisi, pour un nombre de périodes donné — après quoi
+# l'abonnement reprend son tarif plein. Le « 50 % » est donc le palier le plus proche de la
+# moitié du prix, calculé territoire par territoire, et il dure ce qu'on lui dit de durer.
+
+OFFRES_PROMO = [
+    {"cle": "testeurs", "nom": "Testeurs RUNUP", "code": "RUNUPTEAM",
+     "mode": "FREE_TRIAL", "duree": "ONE_YEAR", "periodes": 1,
+     # Une testeuse peut très bien avoir déjà été abonnée, ou l'être encore : lui refuser le code
+     # pour ça n'aurait aucun sens. Les trois éligibilités.
+     "eligibilites": ["NEW", "EXPIRED", "EXISTING"], "codes": 200},
+    {"cle": "bienvenue", "nom": "Bienvenue moitié prix", "code": "RUNUP50",
+     "mode": "PAY_AS_YOU_GO", "duree": "ONE_MONTH", "periodes": 3,
+     "eligibilites": ["NEW"], "codes": 10000, "remise": 0.5},
+]
+
+
+def abonnements(aid):
+    """Les abonnements de l'app, avec leur groupe."""
+    out = []
+    for g in call("GET", f"apps/{aid}/subscriptionGroups?limit=20")["data"]:
+        for s in call("GET", f"subscriptionGroups/{g['id']}/subscriptions?limit=50")["data"]:
+            out.append((g["attributes"].get("referenceName"), s))
+    return out
+
+
+def cmd_promo(args):
+    aid, _ = app_id()
+    trouves = abonnements(aid)
+    if not trouves:
+        sys.exit("Aucun abonnement sur cette app. Les codes promo ne s'appliquent qu'à un "
+                 "abonnement, et il n'y en a pas encore.")
+
+    for groupe, abo in trouves:
+        a = abo["attributes"]
+        print(f"\n  {a.get('productId')}  « {a.get('name')} »  — {a.get('state')}   [groupe {groupe}]")
+
+        prix = call("GET", f"subscriptions/{abo['id']}/prices"
+                           "?include=subscriptionPricePoint,territory&limit=200")
+        points = {i["id"]: i["attributes"] for i in prix.get("included", [])
+                  if i["type"] == "subscriptionPricePoints"}
+        territoires = {i["id"]: i["id"] for i in prix.get("included", []) if i["type"] == "territories"}
+        print(f"    {len(prix['data'])} prix sur {len(territoires)} territoires")
+        for p in prix["data"]:
+            rel = p.get("relationships", {})
+            terr = (rel.get("territory", {}).get("data") or {}).get("id")
+            pt = points.get((rel.get("subscriptionPricePoint", {}).get("data") or {}).get("id"), {})
+            if terr in ("FRA", "USA", "ESP"):
+                print(f"      {terr} : {pt.get('customerPrice')}")
+
+        codes = call("GET", f"subscriptions/{abo['id']}/offerCodes?limit=50")["data"]
+        if not codes:
+            print("    aucun code promo")
+        for c in codes:
+            ca = c["attributes"]
+            print(f"    offre « {ca.get('name')} » — {ca.get('offerMode')} "
+                  f"{ca.get('numberOfPeriods')}×{ca.get('duration')}, "
+                  f"{'active' if ca.get('active') else 'INACTIVE'}, "
+                  f"éligibilité {','.join(ca.get('customerEligibilities') or [])}")
+            for cc in call("GET", f"subscriptionOfferCodes/{c['id']}/customCodes?limit=20")["data"]:
+                cca = cc["attributes"]
+                print(f"      code « {cca.get('customCode')} » — {cca.get('numberOfCodes')} "
+                      f"utilisations, expire le {(cca.get('expirationDate') or '?')[:10]}, "
+                      f"{'actif' if cca.get('active') else 'INACTIF'}")
+    print()
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -631,6 +711,7 @@ def main():
                    help="numéro de build à attacher (par défaut : la plus récente VALID)")
     s.add_argument("--force", action="store_true", help="envoyer même sans captures")
     s.add_argument("--dry-run", action="store_true"); s.set_defaults(func=cmd_submit)
+    g = sub.add_parser("promo"); g.set_defaults(func=cmd_promo)
     args = p.parse_args()
     args.func(args)
 

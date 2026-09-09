@@ -8707,6 +8707,23 @@
         }
       }
     },
+    "J'ai un code promo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I have a promo code"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tengo un código promocional"
+          }
+        }
+      }
+    },
     "J'y serai": {
       "localizations": {
         "en": {
@@ -9324,6 +9341,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esfuerzo percibido"
+          }
+        }
+      }
+    },
+    "L'écran des codes n'a pas pu s'ouvrir.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The code screen couldn't open."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo abrir la pantalla de códigos."
           }
         }
       }
@@ -18423,6 +18457,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Una salida por punto"
+          }
+        }
+      }
+    },
+    "Utiliser un code promo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use a promo code"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar un código promocional"
           }
         }
       }

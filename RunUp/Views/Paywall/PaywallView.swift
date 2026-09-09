@@ -307,9 +307,23 @@ struct PaywallView: View {
             Text("Renouvellement automatique, résiliable à tout moment.")
                 .font(RUFont.sans(.micro)).foregroundColor(RUColor.text3)
 
+            // DEUX LIGNES, ET LA SÉPARATION EST CELLE DU SENS : ce qu'on peut FAIRE ici en
+            // haut, ce qu'on peut LIRE en dessous. Les quatre sur une seule ligne ne tiennent pas
+            // en micro sur un petit écran, et « J'ai un code » rangé entre deux liens juridiques
+            // serait invisible — c'est pourtant la seule porte d'entrée d'un testeur à qui l'on
+            // vient d'envoyer un code.
             HStack(spacing: 12) {
                 Button("Restaurer mes achats") { Task { await restore() } }
                 Text(verbatim: "·").foregroundColor(RUColor.text4)
+                OfferCodeButton(subscriptions: subscriptions, onOutcome: announce) {
+                    Text("J'ai un code promo")
+                }
+            }
+            .font(RUFont.sans(.micro))
+            .foregroundColor(RUColor.text3)
+            .frame(minHeight: 44)
+
+            HStack(spacing: 12) {
                 Link("Conditions d'utilisation", destination: termsURL)
                 Text(verbatim: "·").foregroundColor(RUColor.text4)
                 Link("Confidentialité", destination: privacyURL)
@@ -363,6 +377,12 @@ struct PaywallView: View {
             // corrige sur l'offre ; un taux d'échec élevé se corrige dans le code.
             Analytics.shared.track(.purchaseCancelled, ["plan": plan])
         }
+    }
+
+    /// Le résultat d'un code promo, dit seulement quand il y a quelque chose à dire.
+    private func announce(_ outcome: OfferCodeOutcome) {
+        if outcome == .unlocked { Analytics.shared.track(.purchaseCompleted, ["plan": .string("offer-code")]) }
+        if let message = outcome.message { appState.toast(message) }
     }
 
     private func restore() async {

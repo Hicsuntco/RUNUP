@@ -28,6 +28,7 @@ on:
           - codes-promo
           - codes-promo-essai
           - codes-promo-creer
+          - remplacer-la-build
       version:
         description: "Numéro de version (doit correspondre à CFBundleShortVersionString)"
         required: true
@@ -129,6 +130,7 @@ jobs:
             etat-des-builds)          python3 ci_scripts/asc.py ci ;;
             soumettre-essai)          python3 ci_scripts/asc.py submit "$VERSION" $BUILD_OPT --dry-run ;;
             soumettre)                python3 ci_scripts/asc.py submit "$VERSION" $BUILD_OPT ;;
+            remplacer-la-build)       python3 ci_scripts/asc.py submit "$VERSION" $BUILD_OPT --replace ;;
             codes-promo)              python3 ci_scripts/asc.py promo ;;
             codes-promo-essai)        python3 ci_scripts/asc.py promo-create --dry-run ;;
             codes-promo-creer)        python3 ci_scripts/asc.py promo-create ;;

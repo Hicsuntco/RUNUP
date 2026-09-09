@@ -507,6 +507,28 @@ def screenshot_count(vid: str) -> dict:
     return counts
 
 
+def annuler_soumission(aid: str, vid: str) -> bool:
+    """Retirer une version de la file de revue, pour pouvoir lui changer sa build.
+
+    Une version déjà envoyée ne se modifie pas : sa build est figée tant qu'elle est dans la file.
+    Le seul chemin est de retirer la soumission, changer la build, renvoyer. Tant que la revue n'a
+    pas COMMENCÉ, ça ne coûte que la place dans la file — quelques heures au pire. Une fois la
+    revue commencée, c'est une autre affaire : on repart de zéro derrière tout le monde.
+    """
+    for etat in ("READY_FOR_REVIEW", "WAITING_FOR_REVIEW", "IN_REVIEW", "UNRESOLVED_ISSUES"):
+        for r in call("GET", f"reviewSubmissions?filter[app]={aid}&filter[state]={etat}")["data"]:
+            items = call("GET", f"reviewSubmissions/{r['id']}/items?include=appStoreVersion")["data"]
+            porte = any((i.get("relationships", {}).get("appStoreVersion", {}).get("data") or {})
+                        .get("id") == vid for i in items)
+            if not porte:
+                continue
+            call("PATCH", f"reviewSubmissions/{r['id']}", {"data": {
+                "type": "reviewSubmissions", "id": r["id"], "attributes": {"canceled": True}}})
+            print(f"  Soumission retirée de la file (elle était en {etat}).")
+            return True
+    return False
+
+
 def cmd_submit(args):
     """Attacher une build à la version, puis l'envoyer en revue.
 
@@ -531,8 +553,20 @@ def cmd_submit(args):
     # information, et la réponse est de ne rien faire.
     OUVERTS = {"PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED",
                "METADATA_REJECTED", "INVALID_BINARY"}
+    if state not in OUVERTS and args.replace:
+        # Apple ne rend pas la version modifiable dans la seconde qui suit le retrait : on
+        # attend qu'elle repasse dans un état ouvert plutôt que d'échouer sur un 409 deux lignes
+        # plus bas.
+        if annuler_soumission(aid, vid):
+            for _ in range(10):
+                time.sleep(3)
+                state = call("GET", f"appStoreVersions/{vid}")["data"]["attributes"]["appStoreState"]
+                if state in OUVERTS:
+                    break
+            print(f"  La version est repassée en {state}.")
     if state not in OUVERTS:
-        print(f"La version {args.version} est en état {state} — rien à envoyer.")
+        print(f"La version {args.version} est en état {state} — rien à envoyer."
+              + ("" if args.replace else "  (--replace pour la retirer de la file et recommencer)"))
         return
 
     candidates = builds_for(aid, args.version)
@@ -915,6 +949,8 @@ def main():
     s.add_argument("--build", type=int, default=None,
                    help="numéro de build à attacher (par défaut : la plus récente VALID)")
     s.add_argument("--force", action="store_true", help="envoyer même sans captures")
+    s.add_argument("--replace", action="store_true",
+                   help="retirer la version de la file de revue pour lui changer sa build")
     s.add_argument("--dry-run", action="store_true"); s.set_defaults(func=cmd_submit)
     g = sub.add_parser("promo"); g.set_defaults(func=cmd_promo)
     gc = sub.add_parser("promo-create")

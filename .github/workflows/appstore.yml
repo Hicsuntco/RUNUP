@@ -26,6 +26,8 @@ on:
           - soumettre-essai
           - soumettre
           - codes-promo
+          - codes-promo-essai
+          - codes-promo-creer
       version:
         description: "Numéro de version (doit correspondre à CFBundleShortVersionString)"
         required: true
@@ -128,6 +130,8 @@ jobs:
             soumettre-essai)          python3 ci_scripts/asc.py submit "$VERSION" $BUILD_OPT --dry-run ;;
             soumettre)                python3 ci_scripts/asc.py submit "$VERSION" $BUILD_OPT ;;
             codes-promo)              python3 ci_scripts/asc.py promo ;;
+            codes-promo-essai)        python3 ci_scripts/asc.py promo-create --dry-run ;;
+            codes-promo-creer)        python3 ci_scripts/asc.py promo-create ;;
             *) echo "::error::Action inconnue : $WHAT"; exit 1 ;;
           esac
 

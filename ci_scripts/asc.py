@@ -29,7 +29,7 @@ Ce que le script NE fait PAS, parce que l'API ne l'expose pas ou mal : les captu
 questionnaire de confidentialité, la classification d'âge, et le nom et le sous-titre de l'app
 (`appInfoLocalizations`, qui ne dépendent pas d'une version). Ceux-là restent sur le web.
 """
-import argparse, base64, hashlib, json, os, pathlib, re, subprocess, sys, tempfile, time
+import argparse, base64, datetime, hashlib, json, os, pathlib, re, subprocess, sys, tempfile, time
 import urllib.request, urllib.error
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -636,13 +636,24 @@ def cmd_submit(args):
 # l'abonnement reprend son tarif plein. Le « 50 % » est donc le palier le plus proche de la
 # moitié du prix, calculé territoire par territoire, et il dure ce qu'on lui dit de durer.
 
+ANNUEL = "com.hicsuntco.runup.plus.yearly"
+MENSUEL = "com.hicsuntco.runup.plus.monthly"
+
 OFFRES_PROMO = [
-    {"cle": "testeurs", "nom": "Testeurs RUNUP", "code": "RUNUPTEAM",
+    # LES TESTEURS : un an offert, sur l'annuel seulement. Un testeur n'a aucune formule à
+    # choisir, et deux codes pour la même chose est une source d'erreur au moment de les envoyer.
+    # Une testeuse peut avoir déjà été abonnée, ou l'être encore : lui refuser le code pour ça
+    # n'aurait aucun sens, d'où les trois éligibilités.
+    {"produit": ANNUEL, "nom": "Testeurs RUNUP", "code": "RUNUPTEAM",
      "mode": "FREE_TRIAL", "duree": "ONE_YEAR", "periodes": 1,
-     # Une testeuse peut très bien avoir déjà été abonnée, ou l'être encore : lui refuser le code
-     # pour ça n'aurait aucun sens. Les trois éligibilités.
      "eligibilites": ["NEW", "EXPIRED", "EXISTING"], "codes": 200},
-    {"cle": "bienvenue", "nom": "Bienvenue moitié prix", "code": "RUNUP50",
+    # LES NOUVELLES : la première année à moitié prix, puis le tarif plein. Un code appartient à
+    # UNE offre, donc à UN produit — celui qui suit existe pour qui préfère payer au mois, sans
+    # quoi la feuille d'Apple lui répondrait « non éligible » sans expliquer pourquoi.
+    {"produit": ANNUEL, "nom": "Bienvenue moitié prix (annuel)", "code": "RUNUP50",
+     "mode": "PAY_AS_YOU_GO", "duree": "ONE_YEAR", "periodes": 1,
+     "eligibilites": ["NEW"], "codes": 10000, "remise": 0.5},
+    {"produit": MENSUEL, "nom": "Bienvenue moitié prix (mensuel)", "code": "RUNUP50M",
      "mode": "PAY_AS_YOU_GO", "duree": "ONE_MONTH", "periodes": 3,
      "eligibilites": ["NEW"], "codes": 10000, "remise": 0.5},
 ]
@@ -698,6 +709,144 @@ def cmd_promo(args):
     print()
 
 
+def points_de_prix(sub_id: str, territoires: list) -> dict:
+    """Tous les paliers de prix disponibles, par territoire.
+
+    Demandés par paquets : le filtre accepte plusieurs territoires, et une requête par pays en
+    ferait cent soixante-quinze. `include=territory` est indispensable — sans lui, les paliers
+    reviennent en vrac, sans moyen de savoir lequel appartient à quel pays.
+    """
+    out = {t: [] for t in territoires}
+    for i in range(0, len(territoires), 25):
+        paquet = ",".join(territoires[i:i + 25])
+        url = (f"subscriptions/{sub_id}/pricePoints?filter[territory]={paquet}"
+               f"&include=territory&limit=8000")
+        while url:
+            page = call("GET", url)
+            for p in page["data"]:
+                terr = (p.get("relationships", {}).get("territory", {}).get("data") or {}).get("id")
+                brut = p["attributes"].get("customerPrice")
+                if terr in out and brut is not None:
+                    out[terr].append((float(brut), p["id"]))
+            url = page.get("links", {}).get("next")
+    return out
+
+
+def prix_actuels(sub_id: str) -> dict:
+    """Le prix en vigueur dans chaque territoire — la base sur laquelle la remise se calcule."""
+    page = call("GET", f"subscriptions/{sub_id}/prices?include=subscriptionPricePoint&limit=200")
+    points = {i["id"]: i["attributes"] for i in page.get("included", [])
+              if i["type"] == "subscriptionPricePoints"}
+    out = {}
+    for p in page["data"]:
+        rel = p.get("relationships", {})
+        terr = (rel.get("territory", {}).get("data") or {}).get("id")
+        pt = points.get((rel.get("subscriptionPricePoint", {}).get("data") or {}).get("id"), {})
+        if terr and pt.get("customerPrice") is not None:
+            out[terr] = float(pt["customerPrice"])
+    return out
+
+
+def palier_le_plus_proche(paliers: list, cible: float):
+    """Le palier le plus proche de la cible, et à égalité le moins cher. Rend (prix, identifiant).
+
+    « Moitié prix » n'existe pas chez Apple : une offre est gratuite, ou fixée à un PALIER, et les
+    paliers sont une grille imposée — 19,99 €, 21,99 €, jamais 19,995. La moitié d'un prix tombe
+    donc presque toujours à côté, et il faut choisir. À égalité on descend : une remise annoncée à
+    moitié prix doit être au moins la moitié, jamais un centime au-dessus.
+    """
+    return min(paliers, key=lambda p: (abs(p[0] - cible), p[0]))
+
+
+def tarifs_de_remise(sub_id: str, remise: float):
+    """La grille de l'offre : un palier par territoire. Rend (inclus, références, retenus)."""
+    base = prix_actuels(sub_id)
+    grille = points_de_prix(sub_id, sorted(base))
+    inclus, refs, retenus = [], [], {}
+    for terr, prix in sorted(base.items()):
+        paliers = grille.get(terr) or []
+        if not paliers:
+            print(f"    {terr} : aucun palier disponible, territoire ignoré.")
+            continue
+        montant, pid = palier_le_plus_proche(paliers, prix * remise)
+        retenus[terr] = (prix, montant)
+        ref = f"prix-{terr}"
+        refs.append({"type": "subscriptionOfferCodePrices", "id": ref})
+        inclus.append({
+            "type": "subscriptionOfferCodePrices", "id": ref,
+            "relationships": {
+                "territory": {"data": {"type": "territories", "id": terr}},
+                "subscriptionPricePoint": {"data": {"type": "subscriptionPricePoints", "id": pid}}}})
+    return inclus, refs, retenus
+
+
+def cmd_promo_creer(args):
+    aid, _ = app_id()
+    par_produit = {a["attributes"].get("productId"): a for _, a in abonnements(aid)}
+
+    for offre in OFFRES_PROMO:
+        abo = par_produit.get(offre["produit"])
+        if abo is None:
+            print(f"  {offre['produit']} : abonnement introuvable, offre « {offre['nom']} » sautée.")
+            continue
+        print(f"\n  {offre['produit']} — offre « {offre['nom']} », code {offre['code']}")
+
+        existantes = {c["attributes"].get("name"): c["id"]
+                      for c in call("GET", f"subscriptions/{abo['id']}/offerCodes?limit=50")["data"]}
+        oid = existantes.get(offre["nom"])
+        if oid:
+            print("    l'offre existe déjà — rien à créer.")
+        else:
+            corps = {"data": {
+                "type": "subscriptionOfferCodes",
+                "attributes": {
+                    "name": offre["nom"],
+                    "customerEligibilities": offre["eligibilites"],
+                    "offerMode": offre["mode"],
+                    "duration": offre["duree"],
+                    "numberOfPeriods": offre["periodes"],
+                },
+                "relationships": {
+                    "subscription": {"data": {"type": "subscriptions", "id": abo["id"]}}}}}
+
+            # Une offre gratuite n'a pas de prix. Une offre à prix réduit en exige un DANS CHAQUE
+            # TERRITOIRE où l'abonnement est vendu — cent soixante-quinze ici. Et la moitié du prix
+            # français convertie ne serait pas la bonne réponse au Japon : chaque pays a sa propre
+            # grille, et c'est sur SON prix local que la remise se calcule.
+            if offre["mode"] != "FREE_TRIAL":
+                inclus, refs, retenus = tarifs_de_remise(abo["id"], offre["remise"])
+                corps["data"]["relationships"]["prices"] = {"data": refs}
+                corps["included"] = inclus
+                for terr in ("FRA", "USA", "ESP", "JPN"):
+                    if terr in retenus:
+                        print(f"    {terr} : {retenus[terr][0]} → {retenus[terr][1]}")
+                print(f"    {len(refs)} territoires tarifés")
+
+            if args.dry_run:
+                print("    (--dry-run : l'offre n'est pas créée, donc pas de code non plus)")
+                continue
+            oid = call("POST", "subscriptionOfferCodes", corps)["data"]["id"]
+            print("    offre créée.")
+
+        if args.dry_run:
+            print("    (--dry-run : le code n'est pas créé)")
+            continue
+
+        deja = {c["attributes"].get("customCode")
+                for c in call("GET", f"subscriptionOfferCodes/{oid}/customCodes?limit=50")["data"]}
+        if offre["code"] in deja:
+            print(f"    le code {offre['code']} existe déjà.")
+            continue
+        expire = (datetime.date.today() + datetime.timedelta(days=365)).isoformat()
+        call("POST", "subscriptionOfferCodeCustomCodes", {"data": {
+            "type": "subscriptionOfferCodeCustomCodes",
+            "attributes": {"customCode": offre["code"], "numberOfCodes": offre["codes"],
+                           "expirationDate": expire},
+            "relationships": {"offerCode": {"data": {"type": "subscriptionOfferCodes", "id": oid}}}}})
+        print(f"    code {offre['code']} créé — {offre['codes']} utilisations, expire le {expire}.")
+    print()
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -712,6 +861,8 @@ def main():
     s.add_argument("--force", action="store_true", help="envoyer même sans captures")
     s.add_argument("--dry-run", action="store_true"); s.set_defaults(func=cmd_submit)
     g = sub.add_parser("promo"); g.set_defaults(func=cmd_promo)
+    gc = sub.add_parser("promo-create")
+    gc.add_argument("--dry-run", action="store_true"); gc.set_defaults(func=cmd_promo_creer)
     args = p.parse_args()
     args.func(args)
 

@@ -79,6 +79,15 @@ on:
       - "package.json"
       - "package-lock.json"
       - "**/*.md"
+      # La chaîne App Store — créer la version, pousser la fiche, composer les captures, envoyer
+      # en revue — ne rentre dans aucun binaire. La modifier déclenchait pourtant une compilation
+      # macOS de dix minutes et, pire, un NOUVEAU numéro de build : au moment de choisir laquelle
+      # attacher à la version, deux builds au code identique se ressemblent trop pour qu'on les
+      # distingue. `check_listing.py` et `check_fonts.py` ne sont pas là : le workflow les exécute.
+      - "ci_scripts/asc.py"
+      - "ci_scripts/screenshots.py"
+      - ".github/workflows/appstore.yml"
+      - "appstore/**"
       - "privacy.html"
       - "design_handoff_runup_app/**"
       # Les captures brutes, les accroches et le composeur qui les assemble : tout ce dossier

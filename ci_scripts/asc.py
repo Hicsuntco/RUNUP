@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""App Store Connect depuis le terminal : créer une version, y pousser la fiche.
+"""App Store Connect depuis le terminal : créer une version, y pousser la fiche, l'envoyer en revue.
 
 Recopier trois descriptions de 4 000 caractères, trois jeux de mots-clés et trois textes
 promotionnels dans un formulaire web est exactement le genre de tâche où l'on colle la mauvaise
@@ -23,9 +23,11 @@ l'envoie tel quel.
 #     python3 ci_scripts/asc.py create-version 2.5  # créer la version iOS
 #     python3 ci_scripts/asc.py push-metadata 2.5   # y pousser fr, en et es depuis le markdown
 #     python3 ci_scripts/asc.py push-metadata 2.5 --dry-run   # afficher sans rien envoyer
+#     python3 ci_scripts/asc.py submit 2.5          # attacher la build et envoyer en revue
 
 Ce que le script NE fait PAS, parce que l'API ne l'expose pas ou mal : les captures d'écran, le
-questionnaire de confidentialité et la classification d'âge. Ceux-là restent sur le web.
+questionnaire de confidentialité, la classification d'âge, et le nom et le sous-titre de l'app
+(`appInfoLocalizations`, qui ne dépendent pas d'une version). Ceux-là restent sur le web.
 """
 import argparse, base64, hashlib, json, os, pathlib, re, subprocess, sys, tempfile, time
 import urllib.request, urllib.error
@@ -449,6 +451,152 @@ def cmd_push_metadata(args):
         print("\n(--dry-run : rien n'a été envoyé)")
 
 
+def builds_for(aid: str, version: str):
+    """Les builds envoyées SUR CETTE CHAÎNE DE VERSION, la plus récente d'abord.
+
+    Le filtre décisif est `preReleaseVersion` et non le numéro de build : une build 1128 peut
+    parfaitement porter la version 2.6 si elle a été construite avant le changement de
+    `CFBundleShortVersionString`. Attachée à la 2.7, Apple la refuse avec un 90062 — et c'est
+    exactement l'erreur qui a coûté une soirée à la 2.6.
+    """
+    page = call("GET", f"builds?filter[app]={aid}&limit=200&include=preReleaseVersion")
+    trains = {i["id"]: i["attributes"].get("version")
+              for i in page.get("included", []) if i["type"] == "preReleaseVersions"}
+    out = []
+    for b in page["data"]:
+        a = b["attributes"]
+        rel = b.get("relationships", {}).get("preReleaseVersion", {}).get("data") or {}
+        if trains.get(rel.get("id")) != version or a.get("expired"):
+            continue
+        raw = (a.get("version") or "").strip()
+        out.append({"id": b["id"], "number": int(raw) if raw.isdigit() else -1,
+                    "state": a.get("processingState", "?"),
+                    "uploaded": (a.get("uploadedDate") or "")[:16].replace("T", " à ")})
+    out.sort(key=lambda b: b["number"], reverse=True)
+    return out
+
+
+def screenshot_count(vid: str) -> dict:
+    """Combien de captures porte chaque langue de cette version.
+
+    Une version créée par l'API hérite normalement des captures de la précédente, mais « normalement »
+    n'est pas une vérification : une soumission sans captures est refusée, et le refus arrive des
+    heures plus tard. Ça se lit en trois requêtes, autant les faire avant d'envoyer.
+    """
+    counts = {}
+    for loc in call("GET", f"appStoreVersions/{vid}/appStoreVersionLocalizations")["data"]:
+        n = 0
+        try:
+            for s in call("GET", f"appStoreVersionLocalizations/{loc['id']}/appScreenshotSets"
+                                 "?include=appScreenshots")["data"]:
+                n += len(s.get("relationships", {}).get("appScreenshots", {}).get("data") or [])
+        except SystemExit:
+            n = -1
+        counts[loc["attributes"]["locale"]] = n
+    return counts
+
+
+def cmd_submit(args):
+    """Attacher une build à la version, puis l'envoyer en revue.
+
+    C'est le dernier maillon qui manquait : `create-version` et `push-metadata` préparaient la
+    fiche, mais il fallait encore ouvrir App Store Connect dans un navigateur pour choisir la
+    build et cliquer sur « Envoyer ». Les deux gestes sont ici.
+    """
+    aid, _ = app_id()
+
+    versions = call("GET", f"apps/{aid}/appStoreVersions?filter[versionString]={args.version}")["data"]
+    if not versions:
+        sys.exit(f"Version {args.version} introuvable. → create-version {args.version} d'abord.")
+    vid, state = versions[0]["id"], versions[0]["attributes"]["appStoreState"]
+
+    # Les états où la version accepte encore une build et une soumission. Tout le reste — déjà en
+    # revue, en attente de publication, en vente — n'est pas une erreur à contourner : c'est une
+    # information, et la réponse est de ne rien faire.
+    OUVERTS = {"PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED",
+               "METADATA_REJECTED", "INVALID_BINARY"}
+    if state not in OUVERTS:
+        print(f"La version {args.version} est en état {state} — rien à envoyer.")
+        return
+
+    candidates = builds_for(aid, args.version)
+    if not candidates:
+        sys.exit(f"Aucune build sur la chaîne {args.version}. La chaîne d'une build est fixée par "
+                 f"son CFBundleShortVersionString au moment de la compilation.")
+
+    print(f"  Builds de la chaîne {args.version} :")
+    for b in candidates[:6]:
+        print(f"    build {b['number']:>6}   {b['uploaded']} UTC   {b['state']}")
+    print()
+
+    valides = [b for b in candidates if b["state"] == "VALID"]
+    if args.build:
+        choisie = next((b for b in candidates if b["number"] == args.build), None)
+        if choisie is None:
+            sys.exit(f"La build {args.build} n'est pas sur la chaîne {args.version}.")
+        if choisie["state"] != "VALID":
+            sys.exit(f"La build {args.build} est en état {choisie['state']}, pas VALID.")
+    else:
+        if not valides:
+            sys.exit(f"Aucune build VALID sur la chaîne {args.version} — la plus récente est en "
+                     f"état {candidates[0]['state']}. Le traitement Apple prend ~10 minutes.")
+        choisie = valides[0]
+    print(f"  Build retenue : {choisie['number']}")
+
+    captures = screenshot_count(vid)
+    for locale, n in sorted(captures.items()):
+        print(f"    {locale} : {n if n >= 0 else '?'} captures")
+    manquantes = [l for l, n in captures.items() if n == 0]
+    if manquantes and not args.force:
+        sys.exit(f"Aucune capture pour {', '.join(sorted(manquantes))} — la soumission serait "
+                 f"refusée. Les ajouter sur le web, ou relancer avec --force.")
+    if not captures:
+        sys.exit("Aucune localisation sur cette version. → push-metadata d'abord.")
+
+    if args.dry_run:
+        print(f"\n(--dry-run : la build {choisie['number']} SERAIT attachée à la {args.version}, "
+              f"et la version SERAIT envoyée en revue. Rien n'a été envoyé.)")
+        return
+
+    call("PATCH", f"appStoreVersions/{vid}/relationships/build",
+         {"data": {"type": "builds", "id": choisie["id"]}})
+    print(f"\n  Build {choisie['number']} attachée à la version {args.version}.")
+
+    # Une soumission de revue est un OBJET, distinct de la version : on en crée une, on y met la
+    # version comme article, puis on la marque envoyée. Le compte n'en accepte qu'une ouverte à la
+    # fois — si une traîne, la réutiliser plutôt que d'en créer une seconde qui échouera.
+    ouverte = None
+    try:
+        for r in call("GET", f"reviewSubmissions?filter[app]={aid}"
+                             "&filter[state]=READY_FOR_REVIEW")["data"]:
+            ouverte = r["id"]
+    except SystemExit:
+        ouverte = None
+    if ouverte:
+        print("  Une soumission ouverte existait déjà — elle est réutilisée.")
+    else:
+        ouverte = call("POST", "reviewSubmissions", {"data": {
+            "type": "reviewSubmissions",
+            "attributes": {"platform": "IOS"},
+            "relationships": {"app": {"data": {"type": "apps", "id": aid}}}}})["data"]["id"]
+
+    deja = [i for i in call("GET", f"reviewSubmissions/{ouverte}/items")["data"]
+            if (i.get("relationships", {}).get("appStoreVersion", {}).get("data") or {}).get("id") == vid]
+    if deja:
+        print(f"  La version {args.version} est déjà dans la soumission.")
+    else:
+        call("POST", "reviewSubmissionItems", {"data": {
+            "type": "reviewSubmissionItems",
+            "relationships": {
+                "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": ouverte}},
+                "appStoreVersion": {"data": {"type": "appStoreVersions", "id": vid}}}}})
+        print(f"  Version {args.version} ajoutée à la soumission.")
+
+    r = call("PATCH", f"reviewSubmissions/{ouverte}",
+             {"data": {"type": "reviewSubmissions", "id": ouverte, "attributes": {"submitted": True}}})
+    print(f"\n  Envoyée en revue — état de la soumission : {r['data']['attributes']['state']}")
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -457,6 +605,11 @@ def main():
     c = sub.add_parser("create-version"); c.add_argument("version"); c.set_defaults(func=cmd_create_version)
     m = sub.add_parser("push-metadata"); m.add_argument("version")
     m.add_argument("--dry-run", action="store_true"); m.set_defaults(func=cmd_push_metadata)
+    s = sub.add_parser("submit"); s.add_argument("version")
+    s.add_argument("--build", type=int, default=None,
+                   help="numéro de build à attacher (par défaut : la plus récente VALID)")
+    s.add_argument("--force", action="store_true", help="envoyer même sans captures")
+    s.add_argument("--dry-run", action="store_true"); s.set_defaults(func=cmd_submit)
     args = p.parse_args()
     args.func(args)
 

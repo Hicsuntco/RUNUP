@@ -774,7 +774,10 @@ def tarifs_de_remise(sub_id: str, remise: float):
             continue
         montant, pid = palier_le_plus_proche(paliers, prix * remise)
         retenus[terr] = (prix, montant)
-        ref = f"prix-{terr}"
+        # Les accolades font partie de l'identifiant, ce n'est pas une interpolation oubliée :
+        # Apple distingue par cette syntaxe une référence LOCALE — un objet créé dans la même
+        # requête — d'un identifiant d'objet existant. « prix-FRA » tout court est refusé.
+        ref = f"${{prix-{terr}}}"
         refs.append({"type": "subscriptionOfferCodePrices", "id": ref})
         inclus.append({
             "type": "subscriptionOfferCodePrices", "id": ref,

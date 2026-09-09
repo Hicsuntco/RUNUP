@@ -762,17 +762,27 @@ def palier_le_plus_proche(paliers: list, cible: float):
     return min(paliers, key=lambda p: (abs(p[0] - cible), p[0]))
 
 
-def tarifs_de_remise(sub_id: str, remise: float):
-    """La grille de l'offre : un palier par territoire. Rend (inclus, références, retenus)."""
+def tarifs_de_remise(sub_id: str, remise: float, gratuite: bool = False):
+    """La grille de l'offre : un palier par territoire. Rend (inclus, références, retenus).
+
+    UNE OFFRE GRATUITE EST UN CAS À PART, et les deux refus d'Apple se contredisaient en
+    apparence : la liste des prix est OBLIGATOIRE, mais chaque entrée doit avoir un palier NUL.
+    Les deux tiennent ensemble dès qu'on voit à quoi sert cette liste — elle déclare les
+    territoires où l'offre existe, pas ce qu'on y paie. Pour une offre gratuite il n'y a
+    justement rien à payer, donc pas de palier, et pas non plus de grille à aller chercher.
+    """
     base = prix_actuels(sub_id)
-    grille = points_de_prix(sub_id, sorted(base))
+    grille = {} if gratuite else points_de_prix(sub_id, sorted(base))
     inclus, refs, retenus = [], [], {}
     for terr, prix in sorted(base.items()):
-        paliers = grille.get(terr) or []
-        if not paliers:
-            print(f"    {terr} : aucun palier disponible, territoire ignoré.")
-            continue
-        montant, pid = palier_le_plus_proche(paliers, prix * remise)
+        if gratuite:
+            montant, pid = 0.0, None
+        else:
+            paliers = grille.get(terr) or []
+            if not paliers:
+                print(f"    {terr} : aucun palier disponible, territoire ignoré.")
+                continue
+            montant, pid = palier_le_plus_proche(paliers, prix * remise)
         retenus[terr] = (prix, montant)
         # Les accolades font partie de l'identifiant, ce n'est pas une interpolation oubliée :
         # Apple distingue par cette syntaxe une référence LOCALE — un objet créé dans la même
@@ -783,7 +793,9 @@ def tarifs_de_remise(sub_id: str, remise: float):
             "type": "subscriptionOfferCodePrices", "id": ref,
             "relationships": {
                 "territory": {"data": {"type": "territories", "id": terr}},
-                "subscriptionPricePoint": {"data": {"type": "subscriptionPricePoints", "id": pid}}}})
+                "subscriptionPricePoint": {
+                    "data": None if pid is None else
+                    {"type": "subscriptionPricePoints", "id": pid}}}})
     return inclus, refs, retenus
 
 
@@ -823,17 +835,17 @@ def cmd_promo_creer(args):
                 "relationships": {
                     "subscription": {"data": {"type": "subscriptions", "id": abo["id"]}}}}}
 
-            # UNE GRILLE DE PRIX EST EXIGÉE MÊME POUR UNE OFFRE GRATUITE — Apple refuse la
-            # création sans elle. Ce n'est pas absurde : c'est cette grille qui déclare les
-            # territoires où l'offre existe, et le tarif qui s'y appliquerait. Une offre gratuite
-            # reprend donc le prix courant (remise de 1.0) : le montant n'est jamais prélevé, et
-            # la liste des pays reste exactement celle de l'abonnement.
+            # UNE LISTE DE PRIX EST EXIGÉE MÊME POUR UNE OFFRE GRATUITE — Apple refuse la
+            # création sans elle, tout en refusant qu'elle porte un palier. Les deux tiennent
+            # ensemble : cette liste déclare les TERRITOIRES où l'offre existe, pas ce qu'on y
+            # paie. Une offre gratuite y met donc ses pays, et rien d'autre.
             #
             # Une offre à prix réduit exige un palier DANS CHAQUE TERRITOIRE où l'abonnement est
             # vendu — cent soixante-quinze ici. Et la moitié du prix français convertie ne serait
             # pas la bonne réponse au Japon : chaque pays a sa propre grille imposée, et c'est sur
             # SON prix local que la remise se calcule.
-            inclus, refs, retenus = tarifs_de_remise(abo["id"], offre["remise"])
+            inclus, refs, retenus = tarifs_de_remise(
+                abo["id"], offre["remise"], gratuite=offre["mode"] == "FREE_TRIAL")
             corps["data"]["relationships"]["prices"] = {"data": refs}
             corps["included"] = inclus
             for terr in ("FRA", "USA", "ESP", "JPN"):

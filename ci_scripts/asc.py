@@ -734,7 +734,11 @@ def points_de_prix(sub_id: str, territoires: list) -> dict:
 
 def prix_actuels(sub_id: str) -> dict:
     """Le prix en vigueur dans chaque territoire — la base sur laquelle la remise se calcule."""
-    page = call("GET", f"subscriptions/{sub_id}/prices?include=subscriptionPricePoint&limit=200")
+    # `territory` DANS L'INCLUDE, et pas seulement `subscriptionPricePoint` : sans lui la relation
+    # ne porte qu'un lien, sans identifiant, et chaque prix revient sans pays. Le calcul rendait
+    # alors « 0 territoires tarifés » — pas une erreur, un silence.
+    page = call("GET", f"subscriptions/{sub_id}/prices"
+                       f"?include=subscriptionPricePoint,territory&limit=200")
     points = {i["id"]: i["attributes"] for i in page.get("included", [])
               if i["type"] == "subscriptionPricePoints"}
     out = {}

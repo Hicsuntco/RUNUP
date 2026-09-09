@@ -553,22 +553,11 @@ def cmd_submit(args):
     # information, et la réponse est de ne rien faire.
     OUVERTS = {"PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED",
                "METADATA_REJECTED", "INVALID_BINARY"}
-    if state not in OUVERTS and args.replace:
-        # Apple ne rend pas la version modifiable dans la seconde qui suit le retrait : on
-        # attend qu'elle repasse dans un état ouvert plutôt que d'échouer sur un 409 deux lignes
-        # plus bas.
-        if annuler_soumission(aid, vid):
-            for _ in range(10):
-                time.sleep(3)
-                state = call("GET", f"appStoreVersions/{vid}")["data"]["attributes"]["appStoreState"]
-                if state in OUVERTS:
-                    break
-            print(f"  La version est repassée en {state}.")
-    if state not in OUVERTS:
-        print(f"La version {args.version} est en état {state} — rien à envoyer."
-              + ("" if args.replace else "  (--replace pour la retirer de la file et recommencer)"))
-        return
-
+    # LA BUILD EST CHOISIE AVANT LE RETRAIT, ET L'ORDRE EST TOUTE LA CORRECTION. Retirer d'abord,
+    # puis découvrir que la build demandée est encore en cours de traitement chez Apple, laisserait
+    # la version HORS DE LA FILE et sans build à jour — le pire des deux états, et celui qu'aucune
+    # des vérifications suivantes ne rattrape puisqu'elles arrivent trop tard. On ne défait donc
+    # rien tant qu'on n'est pas certain d'avoir de quoi le refaire.
     candidates = builds_for(aid, args.version)
     if not candidates:
         sys.exit(f"Aucune build sur la chaîne {args.version}. La chaîne d'une build est fixée par "
@@ -592,6 +581,22 @@ def cmd_submit(args):
                      f"état {candidates[0]['state']}. Le traitement Apple prend ~10 minutes.")
         choisie = valides[0]
     print(f"  Build retenue : {choisie['number']}")
+
+    if state not in OUVERTS and args.replace:
+        # Apple ne rend pas la version modifiable dans la seconde qui suit le retrait : on
+        # attend qu'elle repasse dans un état ouvert plutôt que d'échouer sur un 409 deux lignes
+        # plus bas.
+        if annuler_soumission(aid, vid):
+            for _ in range(10):
+                time.sleep(3)
+                state = call("GET", f"appStoreVersions/{vid}")["data"]["attributes"]["appStoreState"]
+                if state in OUVERTS:
+                    break
+            print(f"  La version est repassée en {state}.")
+    if state not in OUVERTS:
+        print(f"La version {args.version} est en état {state} — rien à envoyer."
+              + ("" if args.replace else "  (--replace pour la retirer de la file et recommencer)"))
+        return
 
     # SEULE LA LANGUE PRINCIPALE DOIT PORTER DES CAPTURES. Les autres s'en passent : l'App Store
     # affiche alors celles de la langue principale. C'est une règle qu'il aurait été facile de

@@ -509,6 +509,11 @@ def cmd_submit(args):
     if not versions:
         sys.exit(f"Version {args.version} introuvable. → create-version {args.version} d'abord.")
     vid, state = versions[0]["id"], versions[0]["attributes"]["appStoreState"]
+    # Une soumission engage aussi la MISE EN VENTE : `AFTER_APPROVAL` publie tout seul dès qu'Apple
+    # approuve, `MANUAL` attend un clic. Ça ne se devine pas depuis l'écran de soumission, et ça se
+    # découvre mal en voyant la version apparaître sur l'App Store un dimanche matin.
+    sortie = versions[0]["attributes"].get("releaseType") or "non précisé"
+    print(f"  Version {args.version} — état {state}, mise en vente : {sortie}")
 
     # Les états où la version accepte encore une build et une soumission. Tout le reste — déjà en
     # revue, en attente de publication, en vente — n'est pas une erreur à contourner : c'est une
@@ -580,7 +585,10 @@ def cmd_submit(args):
             "attributes": {"platform": "IOS"},
             "relationships": {"app": {"data": {"type": "apps", "id": aid}}}}})["data"]["id"]
 
-    deja = [i for i in call("GET", f"reviewSubmissions/{ouverte}/items")["data"]
+    # `include` est indispensable : sans lui, la relation `appStoreVersion` d'un article ne porte
+    # qu'un lien, sans identifiant — la comparaison serait toujours fausse, et l'article ajouté
+    # une deuxième fois.
+    deja = [i for i in call("GET", f"reviewSubmissions/{ouverte}/items?include=appStoreVersion")["data"]
             if (i.get("relationships", {}).get("appStoreVersion", {}).get("data") or {}).get("id") == vid]
     if deja:
         print(f"  La version {args.version} est déjà dans la soumission.")

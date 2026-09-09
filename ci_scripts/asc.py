@@ -789,13 +789,16 @@ def tarifs_de_remise(sub_id: str, remise: float, gratuite: bool = False):
         # requête — d'un identifiant d'objet existant. « prix-FRA » tout court est refusé.
         ref = f"${{prix-{terr}}}"
         refs.append({"type": "subscriptionOfferCodePrices", "id": ref})
-        inclus.append({
-            "type": "subscriptionOfferCodePrices", "id": ref,
-            "relationships": {
-                "territory": {"data": {"type": "territories", "id": terr}},
-                "subscriptionPricePoint": {
-                    "data": None if pid is None else
-                    {"type": "subscriptionPricePoints", "id": pid}}}})
+        # ABSENTE PLUTÔT QUE NULLE. Apple répond « subscriptionPricePoint must be null » pour une
+        # offre gratuite ; envoyer littéralement `{"data": null}` lui fait rendre un 500, deux
+        # fois de suite. La relation est donc simplement omise — ce que JSON:API traite comme la
+        # même chose, et ce que leur serveur, lui, sait lire.
+        relations = {"territory": {"data": {"type": "territories", "id": terr}}}
+        if pid is not None:
+            relations["subscriptionPricePoint"] = {
+                "data": {"type": "subscriptionPricePoints", "id": pid}}
+        inclus.append({"type": "subscriptionOfferCodePrices", "id": ref,
+                       "relationships": relations})
     return inclus, refs, retenus
 
 

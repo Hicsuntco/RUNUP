@@ -25,6 +25,7 @@ on:
           - etat-des-builds
           - soumettre-essai
           - soumettre
+          - codes-promo
       version:
         description: "Numéro de version (doit correspondre à CFBundleShortVersionString)"
         required: true
@@ -126,6 +127,7 @@ jobs:
             etat-des-builds)          python3 ci_scripts/asc.py ci ;;
             soumettre-essai)          python3 ci_scripts/asc.py submit "$VERSION" $BUILD_OPT --dry-run ;;
             soumettre)                python3 ci_scripts/asc.py submit "$VERSION" $BUILD_OPT ;;
+            codes-promo)              python3 ci_scripts/asc.py promo ;;
             *) echo "::error::Action inconnue : $WHAT"; exit 1 ;;
           esac
 

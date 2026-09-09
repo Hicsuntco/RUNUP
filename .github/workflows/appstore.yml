@@ -22,11 +22,19 @@ on:
           - pousser-la-fiche-essai
           - pousser-la-fiche
           - composer-les-captures
+          - etat-des-builds
+          - soumettre-essai
+          - soumettre
       version:
         description: "Numéro de version (doit correspondre à CFBundleShortVersionString)"
         required: true
         type: string
-        default: "2.5"
+        default: "2.6"
+      build:
+        description: "Numéro de build à attacher (pour soumettre ; vide = la plus récente VALID)"
+        required: false
+        type: string
+        default: ""
       langue:
         description: "Langue des accroches (pour composer-les-captures)"
         required: true
@@ -100,16 +108,24 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           VERSION: ${{ inputs.version }}
           LANGUE: ${{ inputs.langue }}
+          BUILD: ${{ inputs.build }}
           WHAT: ${{ inputs.action }}
         run: |
           set -euo pipefail
           export ASC_KEY_PATH="$RUNNER_TEMP/asc.p8"
+          # Un champ laissé vide ne doit pas devenir « --build  » : l'option prend alors le mot
+          # suivant comme valeur, ou fait échouer argparse selon sa position.
+          BUILD_OPT=""
+          [ -n "${BUILD:-}" ] && BUILD_OPT="--build $BUILD"
           case "$WHAT" in
             status)                   python3 ci_scripts/asc.py status ;;
             creer-la-version)         python3 ci_scripts/asc.py create-version "$VERSION" ;;
             pousser-la-fiche-essai)   python3 ci_scripts/asc.py push-metadata "$VERSION" --dry-run ;;
             pousser-la-fiche)         python3 ci_scripts/asc.py push-metadata "$VERSION" ;;
             composer-les-captures)    python3 ci_scripts/screenshots.py "$LANGUE" ;;
+            etat-des-builds)          python3 ci_scripts/asc.py ci ;;
+            soumettre-essai)          python3 ci_scripts/asc.py submit "$VERSION" $BUILD_OPT --dry-run ;;
+            soumettre)                python3 ci_scripts/asc.py submit "$VERSION" $BUILD_OPT ;;
             *) echo "::error::Action inconnue : $WHAT"; exit 1 ;;
           esac
 

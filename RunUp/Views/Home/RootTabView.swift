@@ -19,7 +19,7 @@ struct RootTabView: View {
         appState.screen == .club ? .profile : appState.screen
     }
 
-    /// Le seul écran de la barre qui reçoive du texte.
+    /// Les écrans qui reçoivent du texte À MÊME LA PAGE.
     ///
     /// PARTOUT AILLEURS, UN ENCART DE CLAVIER N'A AUCUN SENS. Il n'y a rien à y taper : s'il en
     /// arrive un, c'est un reste — le clavier d'un écran qu'on vient de quitter, ou d'une feuille
@@ -27,9 +27,16 @@ struct RootTabView: View {
     /// une page cassée : trois cents points de vide en bas, la barre d'onglets échouée au milieu
     /// de l'écran, et la carte du programme coupée en deux dessous.
     ///
-    /// Le Coach, lui, garde le comportement d'origine — tout remonte avec le clavier, barre
-    /// d'onglets comprise, et sa barre de saisie reste juste au-dessus.
-    private var typesText: Bool { appState.screen == .coach }
+    /// Ces deux-là gardent le comportement d'origine — tout remonte avec le clavier, barre
+    /// d'onglets comprise, et le champ reste au-dessus.
+    ///
+    /// LA LISTE SE LIT DANS `currentScreen`, et « à même la page » en est la moitié importante :
+    /// une feuille est une hiérarchie séparée, que ce modificateur n'atteint pas. Les champs de
+    /// `AddShoeSheet`, `LogSessionSheet`, `MoreSettingsView` ou `AddRunSheet` continuent donc de
+    /// remonter tout seuls, et ces écrans-là ne sont pas dans la liste. Restent le Coach, et le
+    /// social — `SocialView` affiche `ClubView` et `FriendsView` en place, tous deux avec un
+    /// champ de recherche ou de code d'invitation.
+    private var typesText: Bool { appState.screen == .coach || appState.screen == .club }
 
     var body: some View {
         ZStack(alignment: .bottom) {

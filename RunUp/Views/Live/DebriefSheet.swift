@@ -77,7 +77,7 @@ struct DebriefSheet: View {
                     Text(insightMessage)
                         .font(RUFont.sans(.label)).foregroundColor(RUColor.textPrimary).lineSpacing(3)
                 }
-                .padding(14)
+                .padding(RUSpacing.cardPadding)
                 .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                 .padding(.top, 14)

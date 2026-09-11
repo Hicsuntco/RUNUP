@@ -60,7 +60,7 @@ struct EditActivitySheet: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(14)
+                    .padding(RUSpacing.cardPadding)
                     .ruCard()
 
                     field(label: "Titre", placeholder: "Mon premier 10 km") {
@@ -132,7 +132,7 @@ struct EditActivitySheet: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(14)
+        .padding(RUSpacing.cardPadding)
         .ruCard()
     }
 

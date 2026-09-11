@@ -132,6 +132,14 @@ struct RingsView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 6)
                 .animation(.easeOut(duration: 0.2), value: isLoadingHistoricalDay)
+                // LE SEUL GRAPHIQUE MUET DE L'APP, et c'était l'élément principal de l'écran
+                // entièrement consacré aux objectifs du jour. Au balayage VoiceOver, l'anneau de
+                // 168 points était sauté en silence et le centre donnait deux arrêts détachés :
+                // « 2 barre oblique 3 », puis « BOUCLÉS ». Partout ailleurs les graphiques sont
+                // soit étiquetés, soit explicitement masqués comme décoratifs — ici, ni l'un ni
+                // l'autre. La clé existait déjà au catalogue, traduite, et ne servait nulle part.
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text(String(localized: "\(displayDone) sur \(displayTotal) objectifs bouclés")))
 
                 VStack(spacing: 9) {
                     seanceRow
@@ -259,7 +267,7 @@ struct RingsView: View {
                 }
             }
         }
-        .padding(14)
+        .padding(RUSpacing.cardPadding)
         .ruCard()
     }
 
@@ -276,7 +284,7 @@ struct RingsView: View {
                 LinearBar(fraction: goal == 0 ? 0 : value / goal, color: color, height: 5)
             }
         }
-        .padding(14)
+        .padding(RUSpacing.cardPadding)
         .ruCard()
     }
 

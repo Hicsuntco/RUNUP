@@ -307,7 +307,7 @@ struct RecapView: View {
                 .foregroundColor(RUColor.textPrimary)
             Spacer(minLength: 0)
         }
-        .padding(14)
+        .padding(RUSpacing.cardPadding)
         .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
@@ -330,7 +330,7 @@ struct RecapView: View {
                 Text(verbatim: "\(Int(maxAlt.rounded())) m").font(RUFont.mono(11)).foregroundColor(RUColor.text2)
             }
         }
-        .padding(14)
+        .padding(RUSpacing.cardPadding)
         .ruCard()
         .accessibilityElement(children: .combine)
         .accessibilityLabel(String(localized: "Profil d'élévation, de \(Int(minAlt.rounded())) à \(Int(maxAlt.rounded())) mètres, dénivelé positif \(run.elevationGainM) mètres"))

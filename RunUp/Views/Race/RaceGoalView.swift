@@ -129,7 +129,7 @@ struct RaceGoalView: View {
                             .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                     }
                 }
-                .padding(14)
+                .padding(RUSpacing.cardPadding)
                 .ruCard()
                 }
 
@@ -143,7 +143,7 @@ struct RaceGoalView: View {
                         Text(LocalizedStringKey(progressSummary))
                             .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
                     }
-                    .padding(14)
+                    .padding(RUSpacing.cardPadding)
                     .ruCard()
                 } else if profile.goalId == .hyrox {
                     RUCardHeader(icon: "flag.checkered", tint: RUColor.rose2, title: "Stratégie · jour J")

@@ -394,7 +394,7 @@ struct FriendsView: View {
                 .tint(RUColor.rose)
                 .accessibilityLabel("Compte privé")
         }
-        .padding(14)
+        .padding(RUSpacing.cardPadding)
         .ruCard()
     }
 
@@ -425,7 +425,7 @@ struct FriendsView: View {
                 }
             }
         }
-        .padding(14)
+        .padding(RUSpacing.cardPadding)
         .ruCard()
     }
 

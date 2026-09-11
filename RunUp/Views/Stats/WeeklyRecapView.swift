@@ -184,7 +184,7 @@ struct WeeklyRecapView: View {
             Text(label).font(RUFont.sans(.micro, weight: .bold)).tracking(1).foregroundColor(RUColor.text2)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
+        .padding(RUSpacing.cardPadding)
         .ruCard()
         // Floats in a corner instead of sharing the vertical flow, so the one tile that has a
         // chip (the km delta vs. last week) doesn't push its own number down relative to the
@@ -279,7 +279,7 @@ struct WeeklyRecapView: View {
             Text(String(format: "%.2f km", locale: Locale.current, run.distanceKm)).font(RUFont.mono(12)).foregroundColor(RUColor.text2)
             Text(run.avgPace + "/km").font(RUFont.mono(12)).foregroundColor(RUColor.text2)
         }
-        .padding(14)
+        .padding(RUSpacing.cardPadding)
         .ruCard(radius: 14)
     }
 }

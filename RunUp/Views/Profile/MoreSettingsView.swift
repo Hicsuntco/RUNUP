@@ -162,7 +162,7 @@ struct MoreSettingsView: View {
             Text("Le coach adapte tes séances de fractionné/VMA en conséquence, chaque semaine.")
                 .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
         }
-        .padding(14)
+        .padding(RUSpacing.cardPadding)
         .ruCard()
     }
 
@@ -199,7 +199,7 @@ struct MoreSettingsView: View {
                     }
                 }
             }
-            .padding(14)
+            .padding(RUSpacing.cardPadding)
 
             Divider().background(RUColor.line)
 
@@ -252,7 +252,7 @@ struct MoreSettingsView: View {
                     .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                     .padding(.top, 2)
             }
-            .padding(14)
+            .padding(RUSpacing.cardPadding)
         }
         .ruCard()
     }
@@ -289,7 +289,7 @@ struct MoreSettingsView: View {
                     .tint(RUColor.rose)
                     .accessibilityLabel("Pause automatique aux arrêts")
             }
-            .padding(14)
+            .padding(RUSpacing.cardPadding)
             Divider().background(RUColor.line)
             HStack {
                 rowIcon("speaker.wave.2")
@@ -304,7 +304,7 @@ struct MoreSettingsView: View {
                     .tint(RUColor.rose)
                     .accessibilityLabel("Alertes vocales d'allure")
             }
-            .padding(14)
+            .padding(RUSpacing.cardPadding)
         }
         .ruCard()
     }

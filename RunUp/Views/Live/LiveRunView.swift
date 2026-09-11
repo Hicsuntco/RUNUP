@@ -221,7 +221,7 @@ struct LiveRunView: View {
                 Text(text).font(RUFont.sans(.label)).foregroundColor(.white).lineSpacing(3)
             }
         }
-        .padding(14)
+        .padding(RUSpacing.cardPadding)
         .background(Color(hex: 0x0E0E14).opacity(0.85), in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous).stroke(Ink.accent.opacity(0.25), lineWidth: RUSpacing.hairline))
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))

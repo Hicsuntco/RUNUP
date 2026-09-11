@@ -143,7 +143,7 @@ struct ShoesView: View {
                 }
             }
         }
-        .padding(14)
+        .padding(RUSpacing.cardPadding)
         .contentShape(Rectangle())
         .onTapGesture {
             guard !isRetired, !isDefault else { return }

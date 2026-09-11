@@ -123,7 +123,7 @@ struct RouteDetailSheet: View {
             .font(RUFont.sans(.emphasis))
             .foregroundColor(RUColor.text2)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(14)
+            .padding(RUSpacing.cardPadding)
             .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous)
                 .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))

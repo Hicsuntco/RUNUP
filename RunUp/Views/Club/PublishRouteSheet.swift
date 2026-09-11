@@ -121,7 +121,7 @@ struct PublishRouteSheet: View {
         RouteThumbnail(route: points, lineWidth: 3)
             .frame(height: 160)
             .frame(maxWidth: .infinity)
-            .padding(14)
+            .padding(RUSpacing.cardPadding)
             .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous)
                 .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))

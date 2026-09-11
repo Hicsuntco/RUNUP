@@ -86,7 +86,7 @@ struct ActivityFeedRow: View {
 
                 actions
             }
-            .padding(14)
+            .padding(RUSpacing.cardPadding)
         }
         .ruCard()
         .opacity(revealed ? 1 : 0)

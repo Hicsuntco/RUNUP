@@ -119,7 +119,7 @@ struct RUStatTile: View {
                 }
             }
         }
-        .padding(14)
+        .padding(RUSpacing.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .ruCard()
         .accessibilityElement(children: .combine)

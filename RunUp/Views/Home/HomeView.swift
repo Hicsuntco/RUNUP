@@ -225,7 +225,7 @@ struct HomeView: View {
                     }
                 }
             }
-            .padding(14)
+            .padding(RUSpacing.cardPadding)
         }
         .buttonStyle(PressableStyle())
         .ruCard()

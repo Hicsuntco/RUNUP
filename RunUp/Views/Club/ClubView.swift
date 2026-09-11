@@ -634,7 +634,7 @@ struct ClubView: View {
                     : String(localized: "\(active.count) membre a couru cette semaine"))
             }
         }
-        .padding(14)
+        .padding(RUSpacing.cardPadding)
         .ruCard()
     }
 
@@ -1033,12 +1033,7 @@ struct ClubView: View {
                     let color = ClubBadgeCatalog.color(for: badge.key)
                     Button(action: { selectedBadge = badge }) {
                         VStack(spacing: 5) {
-                            HexagonBadgeShape()
-                                .fill(RUColor.card2)
-                                .overlay(HexagonBadgeShape().stroke(badge.earned ? color : RUColor.line, lineWidth: RUSpacing.hairline))
-                                .aspectRatio(1, contentMode: .fit)
-                                .overlay(Text(badge.emoji).font(.system(size: 26)))
-                                .opacity(badge.earned ? 1 : 0.35)
+                            BadgeHexTile(emoji: badge.emoji, earned: badge.earned, color: color)
                             Text(badge.name)
                                 .font(RUFont.sans(.micro, weight: .semibold))
                                 .foregroundColor(badge.earned ? RUColor.textPrimary : RUColor.text2)
@@ -1079,7 +1074,7 @@ struct ClubView: View {
                         .accessibilityLabel("Rejoindre le classement mondial")
                 }
             }
-            .padding(14)
+            .padding(RUSpacing.cardPadding)
             .ruCard()
 
             if isLoadingGlobal && globalBoard == nil {
@@ -1166,7 +1161,7 @@ struct ClubView: View {
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(14)
+                    .padding(RUSpacing.cardPadding)
                     .ruCard()
                 } else {
                     Text("Personne n'a encore rien posté — sois la première !")
@@ -1547,12 +1542,8 @@ struct BadgeDetailView: View {
     var body: some View {
         let color = ClubBadgeCatalog.color(for: badge.key)
         VStack(spacing: 14) {
-            HexagonBadgeShape()
-                .fill(RUColor.card2)
-                .overlay(HexagonBadgeShape().stroke(badge.earned ? color : RUColor.line, lineWidth: RUSpacing.hairline))
-                .frame(width: 76, height: 76)
-                .overlay(Text(badge.emoji).font(.system(size: 34)))
-                .opacity(badge.earned ? 1 : 0.4)
+            BadgeHexTile(emoji: badge.emoji, earned: badge.earned, color: color,
+                         side: 76, emojiSize: 34, lockedOpacity: 0.4)
                 .padding(.top, 22)
 
             Text(badge.name).font(RUFont.sans(.title, weight: .bold)).foregroundColor(RUColor.textPrimary)

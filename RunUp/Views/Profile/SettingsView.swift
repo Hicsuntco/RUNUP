@@ -277,7 +277,7 @@ struct SettingsView: View {
                 }
             }
         }
-        .padding(14)
+        .padding(RUSpacing.cardPadding)
         .ruCard()
     }
 
@@ -539,8 +539,15 @@ private struct StravaConnectionRow: View {
         isImporting = false
     }
 
+    /// Les identifiants Strava déjà connus, sans charger tout l'historique.
+    ///
+    /// Le descripteur était nu : SwiftData matérialisait CHAQUE relevé, tracé GPS compris —
+    /// stocké en ligne, donc des dizaines de mégaoctets après quelques centaines de courses —
+    /// pour n'en garder qu'un entier par ligne. Le prédicat ne ramène plus que les courses
+    /// venues de Strava, les seules qui portent cet identifiant.
     private func existingStravaIds() -> Set<Int> {
-        let descriptor = FetchDescriptor<RunRecord>()
+        let descriptor = FetchDescriptor<RunRecord>(
+            predicate: #Predicate { $0.stravaActivityId != nil })
         let existing = (try? modelContext.fetch(descriptor)) ?? []
         return Set(existing.compactMap { $0.stravaActivityId })
     }

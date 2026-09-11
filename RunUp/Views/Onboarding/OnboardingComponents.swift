@@ -89,7 +89,7 @@ struct ObTextField: View {
             .keyboardType(keyboard)
             .font(RUFont.sans(.title))
             .foregroundColor(RUColor.textPrimary)
-            .padding(14)
+            .padding(RUSpacing.cardPadding)
             .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }

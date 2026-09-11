@@ -56,7 +56,7 @@ struct ReferralInviteCard: View {
                 .buttonStyle(SecondaryButtonStyle())
             }
         }
-        .padding(14)
+        .padding(RUSpacing.cardPadding)
         .ruCard()
     }
 }

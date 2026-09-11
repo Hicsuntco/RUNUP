@@ -666,12 +666,7 @@ struct ProfileView: View {
                         let color = ClubBadgeCatalog.color(for: badge.key)
                         Button(action: { selectedBadge = badge }) {
                             VStack(spacing: 6) {
-                                HexagonBadgeShape()
-                                    .fill(RUColor.card2)
-                                    .overlay(HexagonBadgeShape().stroke(badge.earned ? color : RUColor.line, lineWidth: RUSpacing.hairline))
-                                    .aspectRatio(1, contentMode: .fit)
-                                    .overlay(Text(badge.emoji).font(.system(size: 26)))
-                                    .opacity(badge.earned ? 1 : 0.35)
+                                BadgeHexTile(emoji: badge.emoji, earned: badge.earned, color: color)
                                 Text(badge.name)
                                     .font(RUFont.sans(.micro, weight: .semibold))
                                     .foregroundColor(badge.earned ? RUColor.textPrimary : RUColor.text2)

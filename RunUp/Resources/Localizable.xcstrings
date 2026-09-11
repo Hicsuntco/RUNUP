@@ -4458,6 +4458,23 @@
         }
       }
     },
+    "Cette adresse a déjà un compte avec mot de passe. Connecte-toi avec ton mot de passe.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This address already has a password account. Sign in with your password."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta dirección ya tiene una cuenta con contraseña. Inicia sesión con tu contraseña."
+          }
+        }
+      }
+    },
     "Cette paire dépasse %lld km — pense à la changer bientôt.": {
       "extractionState": "manual",
       "localizations": {
@@ -6954,6 +6971,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Borrar la búsqueda"
+          }
+        }
+      }
+    },
+    "Effacer le programme et l'historique de %@ ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erase %@'s plan and run history?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Borrar el plan y el historial de %@?"
           }
         }
       }
@@ -9637,6 +9671,23 @@
         }
       }
     },
+    "Le coach à la voix pendant l'effort": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice coaching while you run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El coach por voz durante el esfuerzo"
+          }
+        }
+      }
+    },
     "Le coach écrit…": {
       "extractionState": "manual",
       "localizations": {
@@ -12094,6 +12145,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cambiar a modo carrera libre"
+          }
+        }
+      }
+    },
+    "Pause auto désactivée pour cette course — le GPS ne détecte pas ton déplacement. Utilise le bouton pause toi-même.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto-pause off for this run — GPS isn't picking up your movement. Use the pause button yourself."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausa automática desactivada en esta carrera: el GPS no detecta tu movimiento. Usa el botón de pausa."
           }
         }
       }
@@ -16172,6 +16240,23 @@
         }
       }
     },
+    "Séance libre": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesión libre"
+          }
+        }
+      }
+    },
     "Séance solide 💪 Allure plutôt régulière du début à la fin.": {
       "localizations": {
         "en": {
@@ -16803,6 +16888,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tu sesión de hoy te espera: %@ (%lld′)."
+          }
+        }
+      }
+    },
+    "Ta séance, tes calories actives et tes pas, d'un coup d'œil.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your session, active calories and steps, at a glance."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu sesión, tus calorías activas y tus pasos, de un vistazo."
           }
         }
       }
@@ -17821,6 +17923,23 @@
         }
       }
     },
+    "Tout effacer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erase everything"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrarlo todo"
+          }
+        }
+      }
+    },
     "Tout est enregistré, et part dans Apple Santé.": {
       "extractionState": "manual",
       "localizations": {
@@ -18245,6 +18364,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Algo de fatiga → escúchate con la intensidad hoy."
+          }
+        }
+      }
+    },
+    "Un plan calé sur la date de ta course, affûtage compris": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A plan built around your race date, taper included"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un plan ajustado a la fecha de tu carrera, con puesta a punto"
           }
         }
       }

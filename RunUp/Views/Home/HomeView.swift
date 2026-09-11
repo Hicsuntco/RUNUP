@@ -463,7 +463,11 @@ struct HomeView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "arrow.triangle.2.circlepath")
                         .font(.system(size: 10, weight: .semibold))
-                    Text(adjustment)
+                    // `LocalizedStringKey` et non `Text(String)` : la valeur STOCKÉE est une
+                    // clé française (« Allégée · nuit courte »), que le catalogue traduit. La
+                    // fiche détail l'affichait déjà traduite via `StatChip` ; l'accueil montrait
+                    // le français à tout le monde. Même valeur, deux écrans, deux langues.
+                    Text(LocalizedStringKey(adjustment))
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .font(RUFont.sans(.small, weight: .medium))

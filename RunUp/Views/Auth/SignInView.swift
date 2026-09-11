@@ -51,7 +51,9 @@ struct SignInView: View {
                         // Black-on-light / white-on-dark — a fixed .white button was invisible
                         // against the near-white light-mode sheet.
                         .signInWithAppleButtonStyle(RUColor.isLight ? .black : .white)
-                        .frame(height: 50)
+                        // `minHeight` : le libellé d'Apple suit le Dynamic Type, la boîte non — en gros
+                // caractères, « Se connecter avec Apple » se faisait rogner en haut et en bas.
+                .frame(minHeight: 50)
                         .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
 
                     HStack {
@@ -286,8 +288,16 @@ struct SignInView: View {
             } else {
                 dismiss()
             }
-        } catch AuthServiceError.badResponse(409, _) {
-            errorMessage = String(localized: "Un compte existe déjà avec cet email.")
+        } catch AuthServiceError.badResponse(409, let corps) {
+            // DEUX 409 DIFFÉRENTS, ET LA DIFFÉRENCE EST TOUT CE QUI COMPTE ICI. « Un compte
+            // existe déjà » dit à quelqu'un qui s'inscrit que l'adresse est prise. Mais quand
+            // c'est « Se connecter avec Apple » qui se heurte à un compte à mot de passe, la
+            // phrase est un cul-de-sac : elle ne dit pas quoi faire, alors qu'il y a une porte
+            // juste en dessous. Le serveur refuse désormais de rattacher tout seul — voir
+            // `api/auth/[action].js` — donc c'est ici qu'on indique le chemin.
+            errorMessage = corps.contains("email_has_password_account")
+                ? String(localized: "Cette adresse a déjà un compte avec mot de passe. Connecte-toi avec ton mot de passe.")
+                : String(localized: "Un compte existe déjà avec cet email.")
         } catch AuthServiceError.badResponse(401, _) {
             errorMessage = String(localized: "Email ou mot de passe incorrect.")
         } catch AuthServiceError.badResponse(422, _) {

@@ -256,9 +256,25 @@ final class AppState {
 
         // Garde-fou contre un doublon : si un relevé couvre déjà ce départ, l'instantané est un
         // reliquat (arrêt normal dont l'effacement n'a pas abouti) et non une course perdue.
-        let descriptor = FetchDescriptor<RunRecord>()
-        if let existing = try? modelContext.fetch(descriptor),
-           existing.contains(where: { abs($0.date.timeIntervalSince(snapshot.startedAt)) < 300 }) {
+        //
+        // IL COMPARAIT UNE FIN À UN DÉPART. `RunRecord.date` portait l'instant du `stop()` pour
+        // une course GPS, `snapshot.startedAt` porte un départ : au-delà de cinq minutes de
+        // course — donc toujours, le plancher de récupération étant de deux minutes — l'écart
+        // dépassait la tolérance et le garde-fou ne pouvait PAS se déclencher. Un instantané
+        // survivant à un arrêt normal réinsérait la course entière au lancement suivant, avec sa
+        // notification et une feuille de ressenti qui recréditait 120 XP et la série. Les deux
+        // grandeurs sont désormais de même nature (voir `LiveRunViewModel.stop()`).
+        //
+        // Et la fenêtre est passée dans la requête. Sans prédicat, SwiftData matérialisait TOUT
+        // l'historique — chaque relevé portant son tracé GPS stocké en ligne, soit des dizaines
+        // de mégaoctets après quelques centaines de courses — pour tester un écart de dix
+        // minutes autour d'une seule date, au lancement à froid.
+        let debut = snapshot.startedAt.addingTimeInterval(-300)
+        let fin = snapshot.startedAt.addingTimeInterval(300)
+        var descriptor = FetchDescriptor<RunRecord>(
+            predicate: #Predicate { $0.date > debut && $0.date < fin })
+        descriptor.fetchLimit = 1
+        if let existing = try? modelContext.fetch(descriptor), !existing.isEmpty {
             return
         }
 
@@ -322,7 +338,13 @@ final class AppState {
         profile.lastHealthRunImport = .now
         guard !found.isEmpty else { return }
 
-        let existing = (try? modelContext.fetch(FetchDescriptor<RunRecord>())) ?? []
+        // Bornée à la fenêtre d'import. Sans prédicat, c'était TOUT l'historique — tracés GPS
+        // compris, stockés en ligne — chargé pour comparer des dates à sept jours au plus. Une
+        // marge d'un jour de chaque côté couvre la proximité de cinq minutes que teste
+        // `HealthRunImport.selecting`, qui ne regarde jamais plus loin.
+        let borne = since.addingTimeInterval(-86_400)
+        let existing = (try? modelContext.fetch(
+            FetchDescriptor<RunRecord>(predicate: #Predicate { $0.date > borne }))) ?? []
         let selected = HealthRunImport.selecting(
             found,
             knownIDs: Set(existing.compactMap(\.healthWorkoutID)),
@@ -600,14 +622,26 @@ final class AppState {
     ///   - durationMinutes: la durée réelle, pré-remplie avec celle du plan mais modifiable.
     func markTodaySessionDone(distanceKm: Double, durationMinutes: Int) {
         let session = profile.todaySession
-        guard session.durationMinutes > 0, durationMinutes > 0 else { return }
+        // LA SÉANCE DU JOUR N'EST PLUS UNE CONDITION. Le garde-fou exigeait
+        // `session.durationMinutes > 0`, c'est-à-dire qu'une séance soit prévue au plan
+        // aujourd'hui. Un jour de repos, `todaySession` vaut `restSession`, sa durée vaut zéro —
+        // et la fonction sortait EN SILENCE. Concrètement : sans abonnement, la carte pose le
+        // « + » tous les jours ; elle court 6 km sur un tapis un mardi de repos, saisit sa durée
+        // et sa distance, tape « Enregistrer », la feuille se ferme, et rien n'est écrit nulle
+        // part. Aucun message, aucune course dans l'historique — découvert le dimanche devant un
+        // bilan faux.
+        //
+        // Une course faite existe, qu'il y ait eu ou non une séance au plan ce jour-là. Seule la
+        // durée SAISIE reste obligatoire : c'est elle qui fait l'enregistrement.
+        guard durationMinutes > 0 else { return }
+        let titre = session.durationMinutes > 0 ? session.title : String(localized: "Séance libre")
         let elapsedSeconds = Double(durationMinutes * 60)
         // Les mêmes 62 kcal/km que `LiveRunViewModel.kcal` dès qu'une distance est connue, et le
         // repli à la durée sinon. Deux constantes différentes pour la même approximation feraient
         // diverger une course au GPS et une course saisie à la main sur des chiffres identiques.
         let kcal = distanceKm > 0 ? distanceKm * 62 : Double(durationMinutes) * 7
         let record = AdaptivePlanEngine.buildRunRecord(
-            title: session.title,
+            title: titre,
             elapsedSeconds: elapsedSeconds,
             distanceKm: distanceKm,
             kcal: kcal,

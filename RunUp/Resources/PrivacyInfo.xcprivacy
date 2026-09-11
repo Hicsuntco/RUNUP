@@ -17,10 +17,14 @@
     une divergence est un motif de rejet à part entière. Elle est donc écrite d'après ce que le
     code envoie, pas d'après ce qu'on aimerait envoyer.
 
+  LA LOCALISATION EST DÉCLARÉE DEPUIS LA 2.8, ET ELLE AURAIT DÛ L'ÊTRE AVANT. Ce bloc affirmait
+  « le tracé GPS n'est jamais transmis — aucune colonne de route n'existe côté serveur ». C'était
+  vrai quand la phrase a été écrite ; ça a cessé de l'être le jour où `activities.route_preview`
+  et la table `routes` sont apparues, et personne n'est revenu ici. Un manifeste qui décrit une
+  version antérieure du serveur est exactement la divergence que l'en-tête ci-dessus met en garde
+  contre — sauf qu'elle jouait contre nous.
+
   Ce qui n'est délibérément PAS déclaré, parce que ça ne quitte pas l'appareil :
-  · La localisation. Le tracé GPS n'est jamais transmis — aucune colonne de route n'existe côté
-    serveur. La distance et l'allure qui, elles, sont postées se déclarent en « Fitness », pas en
-    « Location » : ce sont des mesures d'exercice, pas des positions.
   · Les données lues dans Apple Santé (pas, calories, sommeil, fréquence cardiaque). Vérifié corps
     de requête par corps de requête : rien de ce qui vient de HealthKit ne part vers le serveur.
 
@@ -49,6 +53,36 @@
 
   <key>NSPrivacyCollectedDataTypes</key>
   <array>
+    <!-- Le tracé d'une sortie. Rogné de 300 m à chaque extrémité avant de partir
+         (RouteGeometry.trimmedForSharing), il est joint à la publication dans le fil du club et,
+         sur un geste explicite, à un itinéraire partagé. Rogné reste de la position : « précise »
+         est le bon niveau. La ville et le pays partent avec, d'où « coarse » également. -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypePreciseLocation</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+      </array>
+    </dict>
+
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeCoarseLocation</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+      </array>
+    </dict>
+
     <!-- Compte email/mot de passe. L'identifiant Apple n'expose pas d'adresse relayée ici. -->
     <dict>
       <key>NSPrivacyCollectedDataType</key>

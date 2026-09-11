@@ -340,7 +340,7 @@ struct DailyGoalsWidget: Widget {
             DailyGoalsWidgetView(snapshot: entry.snapshot, entryDate: entry.date)
         }
         .configurationDisplayName("Objectifs du jour")
-        .description("Ta séance, tes calories actives et tes pas, d'un coup d'œil.")
+        .description(Text("Ta séance, tes calories actives et tes pas, d'un coup d'œil."))
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }

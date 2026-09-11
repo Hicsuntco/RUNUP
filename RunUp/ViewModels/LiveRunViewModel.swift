@@ -410,7 +410,7 @@ final class LiveRunViewModel {
         Haptics.impact(.light)
         if autoPauseCyclesWithNoDistance >= 3 {
             runtimeAutoPauseDisabled = true
-            showCue("Pause auto désactivée pour cette course — le GPS ne détecte pas ton déplacement. Utilise le bouton pause toi-même.")
+            showCue(String(localized: "Pause auto désactivée pour cette course — le GPS ne détecte pas ton déplacement. Utilise le bouton pause toi-même."))
         } else {
             showCue("Pause automatique — reprends dès que tu es prête, ou continue à marcher pour repartir.")
         }
@@ -550,6 +550,17 @@ final class LiveRunViewModel {
         // traduit, et tout ce qui voudrait en déduire quelque chose (le badge fractionné du club)
         // doit lire ce champ-ci.
         record.sessionKind = session.kind
+        // DATÉE À SON DÉPART, PAS À SON ARRIVÉE. `buildRunRecord` laisse `date` à `.now`,
+        // c'est-à-dire l'instant de ce `stop()`. Les trois autres façons de créer un relevé
+        // rétrodatent déjà — la montre, la récupération d'app tuée, l'import Santé — et la course
+        // GPS, le chemin principal de l'app, était la seule à ne pas le faire.
+        //
+        // Ce que ça cassait : une sortie partie dimanche 23 h 50 et arrêtée lundi 00 h 20 cochait
+        // le LUNDI et laissait la séance du dimanche à faire pour toujours. Le moteur de plan
+        // porte un long commentaire expliquant qu'il corrige ce cas — il le corrigeait sur une
+        // date qui était déjà fausse. Même chose pour la série, le bilan hebdomadaire et les
+        // badges « sortie matinale » / « sortie nocturne », tous calculés sur une heure de fin.
+        record.date = startedAt
         endedAt = Date()
         // La course a une fin explicite : l'instantané n'a plus rien à récupérer, et le laisser
         // ferait proposer cette même course au prochain lancement.

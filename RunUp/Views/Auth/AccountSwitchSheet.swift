@@ -11,6 +11,7 @@ import SwiftUI
 /// contourner, et dont les deux issues sont écrites en clair.
 struct AccountSwitchSheet: View {
     @Environment(AppState.self) private var appState
+    @State private var confirming = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -31,8 +32,18 @@ struct AccountSwitchSheet: View {
                 .lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
 
+            // AVANT LE GESTE, POUR DE BON. Le commentaire disait déjà « dit avant le geste, pas
+            // après » — et le paragraphe était posé SOUS les boutons, dans une feuille à un seul
+            // détent moyen, sans défilement : la phrase qui nomme ce qu'on détruit tombait hors
+            // de l'écran, inatteignable. Elle est remontée à sa place.
+            Text("Repartir à neuf efface le programme, l'historique des courses et la conversation avec le coach enregistrés sur cet appareil. Ce qui appartient au Club — les sorties publiées, les kilomètres du club — reste sur le compte de chacune.")
+                .font(RUFont.sans(.small))
+                .foregroundColor(RUColor.text3)
+                .lineSpacing(2)
+                .fixedSize(horizontal: false, vertical: true)
+
             VStack(spacing: 10) {
-                Button(action: { appState.startFreshForNewAccount() }) {
+                Button(action: { confirming = true }) {
                     Text("Repartir à neuf")
                 }
                 .buttonStyle(PrimaryButtonStyle())
@@ -43,17 +54,21 @@ struct AccountSwitchSheet: View {
                 .buttonStyle(SecondaryButtonStyle())
             }
             .padding(.top, 4)
-
-            // Dit avant le geste, pas après. « Repartir à neuf » efface l'entraînement de
-            // quelqu'un : personne ne doit découvrir ce que ça voulait dire une fois que c'est
-            // fait.
-            Text("Repartir à neuf efface le programme, l'historique des courses et la conversation avec le coach enregistrés sur cet appareil. Ce qui appartient au Club — les sorties publiées, les kilomètres du club — reste sur le compte de chacune.")
-                .font(RUFont.sans(.small))
-                .foregroundColor(RUColor.text3)
-                .lineSpacing(2)
-                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(22)
+        // LA SEULE ACTION DESTRUCTRICE DE L'APP QUI N'EN AVAIT PAS. Supprimer une course en a
+        // une, une paire de chaussures en a une, effacer la conversation du coach en a une — et
+        // celle-ci efface les trois à la fois. Le bouton est en plus rose plein, celui qu'on
+        // tape par réflexe partout ailleurs dans l'app.
+        .confirmationDialog(
+            Text("Effacer le programme et l'historique de \(appState.profile.name) ?"),
+            isPresented: $confirming, titleVisibility: .visible
+        ) {
+            Button("Tout effacer", role: .destructive) { appState.startFreshForNewAccount() }
+            Button("Annuler", role: .cancel) { }
+        } message: {
+            Text("Cette action est définitive.")
+        }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(RUColor.bg)
         .interactiveDismissDisabled()

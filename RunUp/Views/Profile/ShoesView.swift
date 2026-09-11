@@ -52,7 +52,7 @@ struct ShoesView: View {
             }
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.top, 8)
-            .padding(.bottom, 60)
+            .padding(.bottom, RUSpacing.tabBarBottomInset + RUSpacing.tabBarHeight + 62)
         }
         .background(RUColor.pageBackground)
         .sheet(isPresented: $showAddShoe) { AddShoeSheet() }

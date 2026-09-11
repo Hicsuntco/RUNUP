@@ -109,7 +109,11 @@ struct AddRunSheet: View {
         let secPerKm = seconds / distance
         let run = RunRecord(
             date: date,
-            title: title,
+            // Traduit à l'ÉCRITURE. Le menu affiche « Long run », et la ligne d'historique
+            // relisait « Sortie longue » : `HistoryView` rend `run.title` en `Text(String)`, qui
+            // ne consulte jamais le catalogue — et ne doit pas le consulter, ce champ portant
+            // aussi du texte libre venu de Strava.
+            title: String(localized: String.LocalizationValue(title)),
             distanceKm: distance,
             durationSeconds: Int(seconds),
             avgPace: AdaptivePlanEngine.fmt(secPerKm),

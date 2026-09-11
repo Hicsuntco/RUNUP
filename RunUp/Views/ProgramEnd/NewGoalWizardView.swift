@@ -30,7 +30,19 @@ struct NewGoalWizardView: View {
                 // périodisation — base, spécifique, affûtage, calée sur une date. C'est
                 // exactement ce que Plus vend. L'objectif DÉJÀ en cours, lui, reste consultable :
                 // on ne reprend pas ce qui a été donné.
-                ScrollView { PlusLockCard(feature: .raceGoal).padding(RUSpacing.pagePadding) }
+                //
+                // L'EN-TÊTE VIT ICI AUSSI, ET C'EST LA CORRECTION. Cette branche n'en avait
+                // aucun — ni croix, ni chevron — et l'écran est un `fullScreenCover`, donc pas
+                // renvoyable au doigt. Une personne non abonnée qui touchait « Refaire un
+                // programme » tombait sur une carte de vente dont on ne sortait QU'EN TUANT
+                // L'APP. Et la seconde porte était pire : programme terminé, l'app lui demande
+                // de choisir la suite, et l'écran du choix se referme sur elle.
+                VStack(alignment: .leading, spacing: 16) {
+                    BackTitleHeaderView(title: "Nouvel objectif", titleSize: 20) { dismiss() }
+                        .padding(.top, 8)
+                    ScrollView { PlusLockCard(feature: .raceGoal) }
+                }
+                .padding(.horizontal, RUSpacing.pagePadding)
             } else if building {
                 buildingView
             } else {

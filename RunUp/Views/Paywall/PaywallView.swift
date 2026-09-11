@@ -46,8 +46,16 @@ struct PaywallView: View {
         [Advantage(icon: "figure.run", text: String(localized: "Un programme qui s'adapte à ta forme chaque semaine")),
          Advantage(icon: "bubble.left.fill", text: String(localized: "Le coach, sans limite de messages")),
          Advantage(icon: "chart.line.uptrend.xyaxis", text: String(localized: "Allure, charge d'entraînement, records, prédictions")),
-         Advantage(icon: "applewatch", text: String(localized: "La montre, le widget et le suivi GPS")),
-         Advantage(icon: "person.3.fill", text: String(localized: "Le club, les amis et les parcours partagés"))]
+         // CES DEUX LIGNES VENDAIENT DU GRATUIT. Le verrou qui ouvre cet écran affiche, un tap
+         // plus tôt : « Le suivi de tes courses, ton historique et le Club restent gratuits. »
+         // Et c'est LUI qui a raison — `PlusFeature` ne contient ni le social ni le GPS, ni la
+         // course sur la montre (seul le plan y est masqué). Les deux affirmations vivaient à un
+         // tap d'écart, sur le seul écran de l'app dont le métier est d'être cru. Vendre un accès
+         // déjà gratuit est en outre un motif de retour de revue.
+         //
+         // Ce qui les remplace est derrière le mur, et l'est vraiment.
+         Advantage(icon: "waveform", text: String(localized: "Le coach à la voix pendant l'effort")),
+         Advantage(icon: "flag.checkered", text: String(localized: "Un plan calé sur la date de ta course, affûtage compris"))]
     }
 
     var body: some View {
@@ -363,6 +371,10 @@ struct PaywallView: View {
         case .subscribed:
             Analytics.shared.track(.purchaseCompleted, ["plan": plan])
             appState.toast(String(localized: "Bienvenue dans RUNUP Plus 🎉"))
+            // ET ON FERME. Sans ça, Face ID validé et toast passé, il reste à l'écran le héros
+            // « 7 jours offerts », les formules cochables et un bouton d'achat toujours actif :
+            // rien ne dit que ça a marché, et le geste naturel est de retaper.
+            onClose?()
         case .pending:
             // « En attente » n'est ni un succès ni un échec — typiquement Demander à acheter, sur
             // un compte enfant. Le ranger avec l'un des deux fausserait les deux.
@@ -383,6 +395,7 @@ struct PaywallView: View {
     private func announce(_ outcome: OfferCodeOutcome) {
         if outcome == .unlocked { Analytics.shared.track(.purchaseCompleted, ["plan": .string("offer-code")]) }
         if let message = outcome.message { appState.toast(message) }
+        if outcome == .unlocked { onClose?() }
     }
 
     private func restore() async {

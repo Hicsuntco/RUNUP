@@ -515,6 +515,20 @@ private struct StravaConnectionRow: View {
                 modelContext.insert(record)
                 newCount += 1
             }
+            // LA SÉRIE SE RECALCULE APRÈS TOUT CHANGEMENT D'HISTORIQUE — c'est ce que dit le
+            // commentaire de `recomputeStreak`, et c'est ce que font déjà la suppression d'une
+            // course et la saisie manuelle. L'import Strava, lui, insérait N relevés sans jamais
+            // l'appeler : elle importait son historique, la sortie du jour comprise, et son
+            // compteur restait à sa valeur d'avant — puis bondissait des jours plus tard, à la
+            // première suppression, sans qu'aucun geste ne l'explique.
+            //
+            // Les relevés existants sont relus ici plutôt que pris d'un `@Query` : celui-ci n'a
+            // pas encore vu les insertions de la boucle. Même motif que les deux autres
+            // appelants.
+            if newCount > 0 {
+                let tous = (try? modelContext.fetch(FetchDescriptor<RunRecord>())) ?? []
+                AdaptivePlanEngine.recomputeStreak(profile: appState.profile, currentRuns: tous)
+            }
             importedCount = newCount
         } catch {
             errorMessage = String(localized: "Import Strava impossible, réessaie.")

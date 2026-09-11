@@ -136,8 +136,12 @@ private struct ContentRouterView: View {
             get: { appState.profileOwnerConflict != nil },
             set: { if !$0 { appState.profileOwnerConflict = nil } }
         )) {
+            // `.large` ET NON `.medium` : la feuille porte une icône, un titre en 26, deux
+            // paragraphes et deux boutons, dans un `VStack` sans défilement. À mi-écran, le
+            // paragraphe qui nomme ce que « Repartir à neuf » détruit passait sous le bord —
+            // et rien ne permettait d'aller le chercher.
             AccountSwitchSheet()
-                .runUpSheetStyle(detents: [.medium])
+                .runUpSheetStyle(detents: [.large])
         }
         // Une seule présentation du paywall, à la racine — au-dessus des onglets, donc il
         // survit à un changement d'onglet, et aucun écran verrouillé n'a à savoir comment on

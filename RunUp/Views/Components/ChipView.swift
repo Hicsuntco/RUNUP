@@ -20,7 +20,11 @@ struct SelectableChip: View {
             // toute la rangée d'un cran à chaque appui.
             Text(LocalizedStringKey(label))
                 .font(RUFont.sans(.label, weight: .semibold))
-            .foregroundColor(selected ? .white : RUColor.text2)
+            // `onAccent`, pas du blanc en dur. Le fond est le MÊME dégradé que le bouton
+            // DÉMARRER, qui est passé à `onRose` précisément pour ça : en palette Lime, le haut
+            // du dégradé vaut #DFFF8C, et du blanc dessus donne 1,12:1 — le libellé disparaît.
+            // `rose2` et non `rose` : c'est l'extrémité la plus pâle du dégradé, donc le pire cas.
+            .foregroundColor(selected ? RUColor.onAccent(RUColor.rose2) : RUColor.text2)
             .padding(.horizontal, 15)
             .padding(.vertical, 11)
             .frame(minHeight: 44)

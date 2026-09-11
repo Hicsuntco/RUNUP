@@ -7,7 +7,11 @@ import Foundation
 /// exact moment she finishes a run) silently and permanently dropped that run's server-side XP,
 /// club feed entry, and challenge progress, while the local streak/XP credit and "+120 XP" toast
 /// fired unconditionally regardless of whether the server ever received it.
-private struct PendingClubActivity: Codable, Equatable {
+/// Interne, et non `private` : c'est le seul `Codable` écrit à la main de la base, avec une clé
+/// héritée et quatre champs optionnels dont la perte se voit des jours plus tard, chez quelqu'un
+/// qui a couru hors réseau. Il a justement perdu `contentKey` et `trace` pendant des semaines.
+/// Un type qu'aucun test ne peut atteindre est un type où ça recommencera.
+struct PendingClubActivity: Codable, Equatable {
     var clientId: UUID
     var type: String
     var text: String
@@ -95,6 +99,13 @@ private struct PendingClubActivity: Codable, Equatable {
         try c.encode(xpEarned, forKey: .xpEarned)
         try c.encodeIfPresent(metrics, forKey: .metrics)
         try c.encodeIfPresent(userId, forKey: .userId)
+        // CES DEUX-LÀ MANQUAIENT, et c'est la perte que cette file existe pour empêcher.
+        // `init(from:)` les relit, les `CodingKeys` les déclarent — seul l'`encode` écrit à la
+        // main les avait oubliés. Une sortie finie hors réseau part donc en mémoire avec son
+        // tracé et sa clé de contenu, échoue, puis est rejouée DEPUIS LE DISQUE sans eux :
+        // carte du fil sans tracé, et texte figé en français pour tout le monde.
+        try c.encodeIfPresent(contentKey, forKey: .contentKey)
+        try c.encodeIfPresent(trace, forKey: .trace)
     }
 
     /// Vrai si cette sortie peut être publiée sous le compte donné. Une entrée sans propriétaire

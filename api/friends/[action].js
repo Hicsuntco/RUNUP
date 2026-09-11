@@ -318,6 +318,12 @@ async function handleFeed(req, res, userId) {
     SELECT a.id, a.text, a.created_at, u.name, u.id AS user_id, u.avatar_data, u.avatar_url,
            a.distance_km, a.duration_seconds, a.avg_pace, a.elevation_gain_m, a.is_personal_record,
            a.content_key,
+           -- MÊME CARTE, MÊMES CHAMPS. Les deux fils sont décodés par le MÊME type côté app, et
+           -- celui-ci ne sélectionnait ni le tracé, ni le titre, ni la note, ni la date
+           -- d'édition : la même sortie s'affichait avec sa carte et son titre dans l'onglet
+           -- Club, et nue dans l'onglet Amis. Aucune erreur nulle part — les champs sont
+           -- optionnels au décodage, donc l'absence passait inaperçue.
+           a.route_preview, a.title, a.note, a.edited_at,
            (SELECT COUNT(*)::int FROM activity_kudos k WHERE k.activity_id = a.id) AS kudos,
            EXISTS(SELECT 1 FROM activity_kudos k WHERE k.activity_id = a.id AND k.user_id = ${userId}) AS kudoed_by_me,
            (SELECT COUNT(*)::int FROM activity_comments c WHERE c.activity_id = a.id) AS comments_count
@@ -325,6 +331,7 @@ async function handleFeed(req, res, userId) {
     JOIN users u ON u.id = a.user_id
     JOIN follows f ON f.follower_id = ${userId} AND f.followee_id = a.user_id AND f.status = 'accepted'
     WHERE a.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+      AND a.user_id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
     ORDER BY a.created_at DESC
     LIMIT 50
   `;
@@ -336,6 +343,10 @@ async function handleFeed(req, res, userId) {
       avatarBase64: r.avatar_data || null,
       avatarUrl: r.avatar_url || null,
       text: r.text,
+      title: r.title || null,
+      note: r.note || null,
+      editedAt: r.edited_at || null,
+      routePreview: r.route_preview || null,
       createdAt: r.created_at,
       ...activityMetrics(r),
       kudos: r.kudos,

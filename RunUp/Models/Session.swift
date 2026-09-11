@@ -191,6 +191,17 @@ struct WorkoutSession: Codable, Equatable {
     /// Nil pour un effort continu (footing, tempo, sortie longue) — et pour les séances
     /// anciennes, qui retombent alors sur l'analyse du titre.
     var intervals: IntervalStructure? = nil
+    /// CE QUE LE MOTEUR A CHANGÉ, ET POURQUOI — « impact réduit », « allégé (phase menstruelle) ».
+    ///
+    /// Ces phrases étaient écrites dans `subtitle`, et `displaySubtitle` les jetait : `kind` est
+    /// non optionnel sur toute séance générée, donc le sous-titre affiché venait TOUJOURS du
+    /// catalogue et jamais du champ. La charge était bien allégée — durée réduite, zone abaissée —
+    /// mais rien ne l'expliquait. Pour la phase folliculaire et l'ovulation, ce suffixe était le
+    /// SEUL effet du suivi de cycle : la fonctionnalité ne produisait donc rien d'observable.
+    ///
+    /// Séparé de `subtitle` plutôt que concaténé dedans : le sous-titre décrit la séance, cette
+    /// note décrit son adaptation. Les mélanger est ce qui a fait perdre la seconde.
+    var adaptationNote: String? = nil
 
     /// Le titre à AFFICHER, dans la langue courante. Retombe sur le texte enregistré quand la
     /// séance est antérieure à `kind`.
@@ -200,8 +211,12 @@ struct WorkoutSession: Codable, Equatable {
     }
 
     var displaySubtitle: String {
-        guard let kind else { return subtitle }
-        return String(localized: String.LocalizationValue(kind.subtitleKey))
+        let base = kind.map { String(localized: String.LocalizationValue($0.subtitleKey)) } ?? subtitle
+        guard let adaptationNote else { return base }
+        // La note est une clé française, comme `adjustment` : traduite ici, stockée telle quelle.
+        // Une note venue du coach n'est pas au catalogue — la recherche échoue et la rend intacte,
+        // ce qui est correct, le coach écrivant déjà dans la langue de l'utilisatrice.
+        return base + " · " + String(localized: String.LocalizationValue(adaptationNote))
     }
 
     static let reprise = WorkoutSession(

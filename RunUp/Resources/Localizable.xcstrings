@@ -19072,6 +19072,23 @@
         }
       }
     },
+    "adapté à ta %@ sensible · impact réduit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "adapted to your sensitive %@ · lower impact"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "adaptado a tu %@ sensible · menor impacto"
+          }
+        }
+      }
+    },
     "allure": {
       "extractionState": "manual",
       "localizations": {
@@ -19122,6 +19139,23 @@
         }
       }
     },
+    "allégé (phase menstruelle)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lightened (menstrual phase)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "aligerado (fase menstrual)"
+          }
+        }
+      }
+    },
     "avant course": {
       "localizations": {
         "en": {
@@ -19168,6 +19202,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "insignias"
+          }
+        }
+      }
+    },
+    "bon moment pour pousser (phase folliculaire)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a good time to push (follicular phase)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "buen momento para exigirte (fase folicular)"
           }
         }
       }
@@ -19986,6 +20037,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "fases"
+          }
+        }
+      }
+    },
+    "pic de forme estimé, allure comme prévu (ovulation)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "estimated peak form, pace as planned (ovulation)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pico de forma estimado, ritmo según lo previsto (ovulación)"
           }
         }
       }
@@ -21694,6 +21762,23 @@
         }
       }
     },
+    "séance allégée aujourd'hui — allure confort, écoute-toi": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lightened session today — easy pace, listen to your body"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sesión aligerada hoy: ritmo cómodo, escúchate"
+          }
+        }
+      }
+    },
     "séance faite": {
       "extractionState": "manual",
       "localizations": {
@@ -21820,6 +21905,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "apunta a %@ /km en cada segmento, incluso bajo fatiga — no el ritmo de un 8 km aislado"
+          }
+        }
+      }
+    },
+    "vise le ressenti plus que le chrono (phase lutéale)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "go by feel rather than the clock (luteal phase)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "guíate por las sensaciones más que por el crono (fase lútea)"
           }
         }
       }

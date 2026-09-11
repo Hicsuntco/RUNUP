@@ -702,11 +702,11 @@ enum AdaptivePlanEngine {
                 guard a.role == .speed else { return a }
                 if var replacement = easyTemplate {
                     replacement.baseDuration = a.baseDuration
-                    replacement.subtitle = ease.reason
+                    replacement.adaptationNote = ease.reason
                     return replacement
                 }
                 var eased = a
-                eased.subtitle = ease.reason
+                eased.adaptationNote = ease.reason
                 eased.zone = "Z2"
                 eased.intervals = nil
                 eased.baseDuration = Int(Double(a.baseDuration) * 0.7)
@@ -720,7 +720,7 @@ enum AdaptivePlanEngine {
                 var eased = a
                 // Title is left as-is (still "Fractionné VMA 6 × 800 m" etc.) — SessionDetailSheet
                 // parses the real rep count straight out of it; only the load actually eases.
-                eased.subtitle = "adapté à ta \(injuryLabel(injury)) sensible · impact réduit"
+                eased.adaptationNote = "adapté à ta \(injuryLabel(injury)) sensible · impact réduit"
                 eased.zone = "Z2-3"
                 eased.baseDuration = Int(Double(a.baseDuration) * 0.7)
                 return eased
@@ -738,22 +738,22 @@ enum AdaptivePlanEngine {
                 case .menstrual:
                     // Energy/recovery capacity is typically lowest here — ease the whole week.
                     eased.baseDuration = Int(Double(a.baseDuration) * 0.85)
-                    if a.role == .speed { eased.subtitle += " · allégé (phase menstruelle)" }
+                    if a.role == .speed { eased.adaptationNote = "allégé (phase menstruelle)" }
                 case .luteal:
                     // Progesterone rise can raise perceived effort for the same real pace — a
                     // lighter touch than menstrual, and only on the hardest session.
                     if a.role == .speed {
                         eased.baseDuration = Int(Double(a.baseDuration) * 0.92)
-                        eased.subtitle += " · vise le ressenti plus que le chrono (phase lutéale)"
+                        eased.adaptationNote = "vise le ressenti plus que le chrono (phase lutéale)"
                     }
                 case .follicular:
                     // Rising estrogen typically means rising energy/recovery capacity — a real
                     // green light, not just "no adjustment".
-                    if a.role == .speed { eased.subtitle += " · bon moment pour pousser (phase folliculaire)" }
+                    if a.role == .speed { eased.adaptationNote = "bon moment pour pousser (phase folliculaire)" }
                 case .ovulation:
                     // Often the cycle's real performance peak — session stays exactly as planned,
                     // said explicitly rather than leaving it unremarked.
-                    if a.role == .speed { eased.subtitle += " · pic de forme estimé, allure comme prévu (ovulation)" }
+                    if a.role == .speed { eased.adaptationNote = "pic de forme estimé, allure comme prévu (ovulation)" }
                 }
                 return eased
             }
@@ -1048,7 +1048,7 @@ enum AdaptivePlanEngine {
         // five hours of sleep isn't training, it's risk) rather than just running the same
         // structure shorter.
         if session.isIntervalSession || session.zone.contains("3") || session.zone.contains("4") {
-            session.subtitle = "séance allégée aujourd'hui — allure confort, écoute-toi"
+            session.adaptationNote = "séance allégée aujourd'hui — allure confort, écoute-toi"
             session.zone = "Z2"
             session.durationMinutes = Int(Double(session.durationMinutes) * 0.7)
         } else {

@@ -98,24 +98,21 @@ Politique de confidentialité : https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## Nouveautés de cette version (4000 caractères max — obligatoire pour une mise à jour)
 ```
-RUNUP passe au crible, écran par écran.
+La suite de la passe au crible, côté vie privée et côté détails.
 
-TON PROGRAMME T'EXPLIQUE ENFIN CE QU'IL CHANGE
-Quand le plan s'allège — cheville sensible, nuit courte, phase du cycle — il te le dit maintenant sous la séance. La charge était déjà adaptée ; la phrase qui l'expliquait ne s'affichait plus.
+TA PHASE DE CYCLE NE PART PLUS SANS TON ACCORD
+Le suivi du cycle adapte ton programme sur ton téléphone — ça n'a jamais bougé. Mais il envoyait aussi ta phase estimée au service qui fait tourner le coach, sans le dire. C'est maintenant une case à part, décochée, qui nomme le destinataire. Refuser ne coûte rien : ton plan s'adapte exactement pareil.
 
-ET QUAND TU REPRENDS, TU REPRENDS VRAIMENT
-Tu dis au coach « ça va mieux » : il te rend tes jours de course, et il les nomme. Avant, la semaine réduite le restait pour toujours.
+UN RESSENTI BALAYÉ DU DOIGT N'EST PLUS PERDU
+La feuille de ressenti surgit parfois sous ton doigt quand une course arrive de ta montre. Si tu la balayais, la course restait dans l'historique mais ta série était cassée et ton programme ne l'avait pas vue. Une ligne « Ressenti manquant » permet d'y revenir.
 
-TES COURSES SONT DATÉES DE LEUR DÉPART
-Une sortie partie à 23h50 et finie après minuit cochait le mauvais jour et laissait la séance de la veille à faire pour toujours. Ta série aussi compte au jour où tu as couru, pas au jour où tu valides.
+TA CARTE DE SORTIE NE S'ARRÊTE PLUS AU MILIEU
+Un très long parcours était coupé à ses premiers points : la carte du fil montrait le début et s'arrêtait net. Elle garde maintenant la forme entière, du départ à l'arrivée.
 
-CE QUE TU SAISIS À LA MAIN EST ENREGISTRÉ
-Une course tapée un jour de repos disparaissait sans un mot. Plus maintenant.
+VOICEOVER LIT ENFIN L'ANNEAU DES OBJECTIFS
+C'était le seul graphique muet de l'app, sur l'écran qui leur est entièrement consacré.
 
-MOINS DE COULEUR, MIEUX PLACÉE
-Les badges, les sélecteurs et les cartes perdent leurs aplats délavés. Les accents restent entiers là où ils veulent dire quelque chose.
-
-Et pour les curieuses : ton jeton de connexion ne part plus dans les sauvegardes de ton ordinateur, ton tracé de sortie est décrit exactement pour ce qu'il est dans notre politique de confidentialité, et bloquer quelqu'un le fait disparaître dans les deux sens.
+Et sous le capot : une même adresse e-mail ne peut plus créer deux comptes selon les majuscules, la liste d'amis ne se charge plus sans limite, et seize tests de plus gardent les règles d'autorisation du serveur.
 ```
 
 ## Mots-clés (100 caractères max, séparés par des virgules sans espace)
@@ -197,24 +194,21 @@ Privacy Policy: https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## What's New in This Version (4000 characters max — required for an update)
 ```
-RUNUP, gone over screen by screen.
+The rest of the sweep — privacy first, then the details.
 
-YOUR PLAN NOW TELLS YOU WHAT IT CHANGED
-When a session is eased — sore ankle, short night, cycle phase — it says so under the session. The load was already adapted; the sentence explaining it had stopped showing.
+YOUR CYCLE PHASE NO LONGER LEAVES WITHOUT YOUR SAY-SO
+Cycle tracking adapts your plan on your phone — that never changed. But it also sent your estimated phase to the service that powers the coach, without saying so. That's now a separate checkbox, off by default, naming who receives it. Saying no costs nothing: your plan adapts exactly the same.
 
-AND WHEN YOU'RE BACK, YOU'RE REALLY BACK
-Tell the coach you're feeling better and it gives your running days back, by name. Before, a reduced week stayed reduced forever.
+FEEDBACK SWIPED AWAY IS NO LONGER LOST
+The feedback sheet sometimes appears under your thumb when a run arrives from your watch. Swipe it away and the run stayed in your history, but your streak broke and your plan never saw it. A "Feedback missing" row lets you go back.
 
-RUNS ARE DATED FROM THEIR START
-A run that began at 11:50pm and ended after midnight ticked the wrong day and left the previous day's session undone forever. Your streak counts the day you ran, too — not the day you logged it.
+YOUR RUN MAP NO LONGER STOPS HALFWAY
+A very long route was cut to its first points: the feed map showed the start and stopped dead. It now keeps the whole shape, start to finish.
 
-WHAT YOU TYPE IN GETS SAVED
-A run logged on a rest day used to vanish without a word. Not anymore.
+VOICEOVER FINALLY READS THE GOALS RING
+It was the only silent graphic in the app, on the screen entirely devoted to it.
 
-LESS COLOUR, BETTER PLACED
-Badges, pickers and cards lose their washed-out fills. Accents stay whole where they mean something.
-
-And for the curious: your session token no longer travels in your computer's backups, your run's route is described in our privacy policy for exactly what it is, and blocking someone now works in both directions.
+Under the hood: one email address can no longer create two accounts depending on capitals, the friends list no longer loads without a limit, and sixteen more tests guard the server's permission rules.
 ```
 
 ## Keywords (100 characters max, comma-separated, no spaces)
@@ -291,24 +285,21 @@ Política de privacidad: https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## Novedades de esta versión (4000 caracteres máx. — obligatorio para una actualización)
 ```
-RUNUP, repasada pantalla por pantalla.
+El resto del repaso: primero la privacidad, luego los detalles.
 
-TU PLAN YA TE EXPLICA LO QUE CAMBIA
-Cuando una sesión se aligera —tobillo sensible, noche corta, fase del ciclo— ahora te lo dice debajo de la sesión. La carga ya se adaptaba; la frase que lo explicaba había dejado de aparecer.
+TU FASE DEL CICLO YA NO SALE SIN TU PERMISO
+El seguimiento del ciclo adapta tu plan en tu teléfono, eso no ha cambiado. Pero también enviaba tu fase estimada al servicio que hace funcionar al coach, sin decirlo. Ahora es una casilla aparte, desmarcada, que nombra al destinatario. Decir que no no cuesta nada: tu plan se adapta exactamente igual.
 
-Y CUANDO VUELVES, VUELVES DE VERDAD
-Le dices al coach que estás mejor y te devuelve tus días de carrera, con su nombre. Antes, la semana reducida se quedaba así para siempre.
+UNA SENSACIÓN DESCARTADA YA NO SE PIERDE
+La hoja de sensaciones aparece a veces bajo tu dedo cuando llega una carrera de tu reloj. Si la descartabas, la carrera seguía en el historial pero tu racha se rompía y tu plan no la veía. Una línea «Falta la sensación» permite volver.
 
-LAS CARRERAS SE FECHAN AL EMPEZAR
-Una salida iniciada a las 23:50 y terminada pasada la medianoche marcaba el día equivocado y dejaba la sesión del día anterior sin hacer para siempre. Tu racha también cuenta el día en que corriste, no el día en que lo validas.
+EL MAPA DE TU SALIDA YA NO SE CORTA A MEDIAS
+Una ruta muy larga se recortaba a sus primeros puntos: el mapa del feed mostraba el inicio y se detenía en seco. Ahora conserva la forma entera, de la salida a la llegada.
 
-LO QUE ESCRIBES A MANO SE GUARDA
-Una carrera registrada en un día de descanso desaparecía sin decir nada. Ya no.
+VOICEOVER YA LEE EL ANILLO DE OBJETIVOS
+Era el único gráfico mudo de la app, en la pantalla dedicada por completo a ellos.
 
-MENOS COLOR, MEJOR COLOCADO
-Insignias, selectores y tarjetas pierden sus fondos desvaídos. Los acentos se mantienen enteros donde significan algo.
-
-Y para las curiosas: tu token de sesión ya no viaja en las copias de seguridad de tu ordenador, la ruta de tu salida se describe en nuestra política de privacidad por lo que realmente es, y bloquear a alguien funciona ahora en ambos sentidos.
+Y por dentro: una misma dirección de correo ya no puede crear dos cuentas según las mayúsculas, la lista de amigos ya no se carga sin límite, y dieciséis pruebas más protegen las reglas de permisos del servidor.
 ```
 
 ## Palabras clave (100 caracteres máx., separadas por comas sin espacios)

@@ -241,6 +241,7 @@ async function handleMine(req, res, userId) {
       WHERE cm.club_id = ${clubId}
     ) ranked
     WHERE id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+    AND id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
     ORDER BY xp_total DESC
     LIMIT 100
   `;
@@ -279,6 +280,7 @@ async function handleMine(req, res, userId) {
       AND a.created_at >= date_trunc('week', now())
     WHERE cm.club_id = ${clubId}
       AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+      AND u.id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
     GROUP BY u.id, u.name, u.avatar_data, u.avatar_url, u.weekly_target_km
     ORDER BY week_km DESC, u.name ASC
     LIMIT 100
@@ -517,6 +519,7 @@ async function handleGlobalWeekly(req, res, userId) {
       GROUP BY u.id, u.name, u.avatar_data, u.avatar_url
     ) ranked
     WHERE id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+    AND id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
     ORDER BY rank ASC
     LIMIT 100
   `;

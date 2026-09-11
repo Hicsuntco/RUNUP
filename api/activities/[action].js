@@ -289,6 +289,7 @@ async function handleFeed(req, res, userId) {
               SELECT u2.name FROM activity_kudos k2 JOIN users u2 ON u2.id = k2.user_id
                WHERE k2.activity_id = a.id
                  AND k2.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+                 AND k2.user_id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
                LIMIT 3) t) AS kudos_names,
            -- Le dernier commentaire, en aperçu. Une carte qui affiche « 💬 2 » demande d'ouvrir
            -- une feuille pour savoir si ces deux commentaires valent le détour ; celle qui montre
@@ -297,11 +298,13 @@ async function handleFeed(req, res, userId) {
               FROM activity_comments c3 JOIN users u3 ON u3.id = c3.user_id
              WHERE c3.activity_id = a.id
                AND c3.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+               AND c3.user_id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
              ORDER BY c3.created_at DESC LIMIT 1) AS last_comment
     FROM activities a
     JOIN users u ON u.id = a.user_id
     WHERE a.club_id = ${clubId}
       AND a.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+      AND a.user_id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
     ORDER BY a.created_at DESC
     LIMIT 50
   `;
@@ -400,6 +403,7 @@ async function handleCommentsList(req, res, userId) {
     JOIN users u ON u.id = c.user_id
     WHERE c.activity_id = ${activityId}
       AND c.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+      AND c.user_id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
     ORDER BY c.created_at ASC
     LIMIT 200
   `;
@@ -623,19 +627,27 @@ async function handleRouteSave(req, res, userId) {
   if (!exists[0]) return res.status(404).json({ error: 'not_found' });
   if (await isBlockedEitherWay(userId, exists[0].user_id)) return res.status(404).json({ error: 'not_found' });
 
+  // `RETURNING 1` ET NON `rowCount` : `lib/db.js` enveloppe le pilote Neon et ne rend QUE
+  // `{ rows }`. `rowCount` y valait donc `undefined`, `undefined > 0` vaut `false`, et le
+  // compteur n'a jamais bougé — pas une fois depuis qu'il existe. Une panne silencieuse : la
+  // ligne `route_saves` était bien écrite, l'app recevait « 0 enregistrement » sur l'itinéraire
+  // qu'elle venait d'enregistrer, et le tri « le plus enregistré d'abord » de la carte
+  // dégénérait en tri par date. Le nombre de lignes rendues, lui, se compte.
   if (saved) {
-    const { rowCount } = await sql`
+    const { rows: touched } = await sql`
       INSERT INTO route_saves (route_id, user_id) VALUES (${routeId}, ${userId})
       ON CONFLICT DO NOTHING
+      RETURNING 1
     `;
     // Le compteur ne bouge que si la ligne a vraiment été créée — sinon un double appui le
     // gonflerait indéfiniment.
-    if (rowCount > 0) await sql`UPDATE routes SET saves_count = saves_count + 1 WHERE id = ${routeId}`;
+    if (touched.length > 0) await sql`UPDATE routes SET saves_count = saves_count + 1 WHERE id = ${routeId}`;
   } else {
-    const { rowCount } = await sql`
+    const { rows: touched } = await sql`
       DELETE FROM route_saves WHERE route_id = ${routeId} AND user_id = ${userId}
+      RETURNING 1
     `;
-    if (rowCount > 0) {
+    if (touched.length > 0) {
       await sql`UPDATE routes SET saves_count = GREATEST(saves_count - 1, 0) WHERE id = ${routeId}`;
     }
   }

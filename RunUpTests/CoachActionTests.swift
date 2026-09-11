@@ -394,8 +394,16 @@ final class CoachActionPlanEffectTests: XCTestCase {
         XCTAssertEqual(profile.runningDays, [0, 2, 4, 6], "la semaine d'avant doit revenir")
         XCTAssertEqual(profile.preferredLongRunDay, 6)
         XCTAssertNil(profile.runningDaysBeforeEase, "la mémoire se vide une fois rendue")
-        // Un changement qu'on ne nomme pas n'existe pas pour elle.
-        XCTAssertEqual(ligne?.contains("jours de course rétablis"), true)
+        // Un changement qu'on ne nomme pas n'existe pas pour elle — mais on ne compare pas à du
+        // texte français : le simulateur de la CI tourne en anglais, et l'assertion échouait sur
+        // la traduction, pas sur le comportement. Le témoin est un retour à la normale SANS jours
+        // à rendre : si le message annonce vraiment le rétablissement, les deux diffèrent.
+        let temoin = makeProfile()
+        temoin.programPhase = .active
+        _ = AdaptivePlanEngine.applyCoachAction(.sensitiveArea("knee"), to: temoin)
+        let ligneSansJours = AdaptivePlanEngine.applyCoachAction(.resumeNormal, to: temoin)
+        XCTAssertNotNil(ligne)
+        XCTAssertNotEqual(ligne, ligneSansJours)
     }
 
     /// Le coach n'a réduit QUE la semaine, sans remise ni zone sensible. Avant, `resumeNormal`

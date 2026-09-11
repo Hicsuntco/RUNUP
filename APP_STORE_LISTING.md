@@ -98,27 +98,24 @@ Politique de confidentialité : https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## Nouveautés de cette version (4000 caractères max — obligatoire pour une mise à jour)
 ```
-RUNUP lit enfin tes courses, où qu'elles soient enregistrées.
+RUNUP passe au crible, écran par écran.
 
-TES SORTIES GARMIN COMPTENT
-Tu cours avec une Garmin, une Coros, une Polar, ou l'app Exercice de ta montre ? Ta sortie arrivait dans Apple Santé et RUNUP ne la voyait pas — ton programme restait bloqué à « 1/4 séances » alors que tu en avais couru quatre. C'est réparé : l'app va les chercher, avec leur tracé, et te demande simplement ton ressenti pour les faire entrer dans ta semaine.
+TON PROGRAMME T'EXPLIQUE ENFIN CE QU'IL CHANGE
+Quand le plan s'allège — cheville sensible, nuit courte, phase du cycle — il te le dit maintenant sous la séance. La charge était déjà adaptée ; la phrase qui l'expliquait ne s'affichait plus.
 
-TON FIL RESSEMBLE ENFIN À QUELQUE CHOSE
-Le dessin de ton parcours en tête de carte, les prénoms de ceux qui ont aimé, le dernier commentaire sous les yeux. Et tu peux renommer une sortie, lui ajouter une note, ou en retirer le tracé après coup.
+ET QUAND TU REPRENDS, TU REPRENDS VRAIMENT
+Tu dis au coach « ça va mieux » : il te rend tes jours de course, et il les nomme. Avant, la semaine réduite le restait pour toujours.
 
-Le tracé part rogné de 300 mètres à chaque bout : personne ne voit d'où tu pars ni où tu rentres.
+TES COURSES SONT DATÉES DE LEUR DÉPART
+Une sortie partie à 23h50 et finie après minuit cochait le mauvais jour et laissait la séance de la veille à faire pour toujours. Ta série aussi compte au jour où tu as couru, pas au jour où tu valides.
 
-L'ÉCRAN DE COURSE DE L'APPLE WATCH
-Un seul chiffre, énorme, lisible le bras qui balance — et c'est toi qui choisis lequel. Temps, distance, allure, cardio ou calories en grand, trois autres en dessous. Ça se règle depuis l'iPhone, dans Profil.
+CE QUE TU SAISIS À LA MAIN EST ENREGISTRÉ
+Une course tapée un jour de repos disparaissait sans un mot. Plus maintenant.
 
-UNE APP PLUS PROPRE
-Une passe entière sur les couleurs et les surfaces. Les anneaux d'objectifs se lisent enfin : un anneau vide a l'air vide. Plus de halos, plus de pastilles ternes, plus de contours inutiles.
+MOINS DE COULEUR, MIEUX PLACÉE
+Les badges, les sélecteurs et les cartes perdent leurs aplats délavés. Les accents restent entiers là où ils veulent dire quelque chose.
 
-CORRECTIONS
-• Sur l'écran Coach, la carte d'abonnement passait sous la barre d'onglets : le bouton était coupé en deux.
-• Le fil du coach se colle en bas quand la conversation est courte, au lieu de laisser un grand vide.
-• L'accueil sans abonnement disait la même chose deux fois, et promettait un coach qu'on n'a pas encore.
-• Une course validée le lendemain d'un changement de semaine cochait le mauvais jour.
+Et pour les curieuses : ton jeton de connexion ne part plus dans les sauvegardes de ton ordinateur, ton tracé de sortie est décrit exactement pour ce qu'il est dans notre politique de confidentialité, et bloquer quelqu'un le fait disparaître dans les deux sens.
 ```
 
 ## Mots-clés (100 caractères max, séparés par des virgules sans espace)
@@ -200,27 +197,24 @@ Privacy Policy: https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## What's New in This Version (4000 characters max — required for an update)
 ```
-RUNUP finally reads your runs, wherever they were recorded.
+RUNUP, gone over screen by screen.
 
-YOUR GARMIN RUNS COUNT
-Run with a Garmin, a Coros, a Polar, or your watch's Workout app? Your run landed in Apple Health and RUNUP never saw it — your plan stayed stuck at "1/4 sessions" when you had run four. Fixed: the app goes and gets them, route included, and simply asks how it felt so they count towards your week.
+YOUR PLAN NOW TELLS YOU WHAT IT CHANGED
+When a session is eased — sore ankle, short night, cycle phase — it says so under the session. The load was already adapted; the sentence explaining it had stopped showing.
 
-YOUR FEED FINALLY LOOKS LIKE SOMETHING
-Your route drawn across the top of the card, the names of the people who liked it, the latest comment right there. And you can rename a run, add a note, or remove its route afterwards.
+AND WHEN YOU'RE BACK, YOU'RE REALLY BACK
+Tell the coach you're feeling better and it gives your running days back, by name. Before, a reduced week stayed reduced forever.
 
-The route is trimmed by 300 metres at each end before it leaves your phone: nobody sees where you start or where you come home.
+RUNS ARE DATED FROM THEIR START
+A run that began at 11:50pm and ended after midnight ticked the wrong day and left the previous day's session undone forever. Your streak counts the day you ran, too — not the day you logged it.
 
-THE APPLE WATCH RUN SCREEN
-One number, huge, readable with your arm swinging — and you pick which one. Time, distance, pace, heart rate or calories in full size, three more below. Set from the iPhone, under Profile.
+WHAT YOU TYPE IN GETS SAVED
+A run logged on a rest day used to vanish without a word. Not anymore.
 
-A CLEANER APP
-A full pass over colours and surfaces. The daily goal rings finally read: an empty ring looks empty. No more glows, no more murky pills, no more pointless outlines.
+LESS COLOUR, BETTER PLACED
+Badges, pickers and cards lose their washed-out fills. Accents stay whole where they mean something.
 
-FIXES
-• On the Coach screen, the subscription card slid under the tab bar and its button was cut in half.
-• The coach thread now sits at the bottom when the conversation is short, instead of leaving a large gap.
-• The free Home screen said the same thing twice, and promised a coach you don't have yet.
-• A run confirmed the day after a week rolled over ticked the wrong day.
+And for the curious: your session token no longer travels in your computer's backups, your run's route is described in our privacy policy for exactly what it is, and blocking someone now works in both directions.
 ```
 
 ## Keywords (100 characters max, comma-separated, no spaces)
@@ -297,27 +291,24 @@ Política de privacidad: https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## Novedades de esta versión (4000 caracteres máx. — obligatorio para una actualización)
 ```
-RUNUP por fin lee tus carreras, se registren donde se registren.
+RUNUP, repasada pantalla por pantalla.
 
-TUS SALIDAS DE GARMIN CUENTAN
-¿Corres con un Garmin, un Coros, un Polar o la app Entrenamiento de tu reloj? Tu salida llegaba a Apple Salud y RUNUP no la veía: tu programa se quedaba en «1/4 sesiones» cuando habías corrido cuatro. Arreglado: la app va a buscarlas, con su recorrido, y solo te pregunta cómo te sentiste para que cuenten en tu semana.
+TU PLAN YA TE EXPLICA LO QUE CAMBIA
+Cuando una sesión se aligera —tobillo sensible, noche corta, fase del ciclo— ahora te lo dice debajo de la sesión. La carga ya se adaptaba; la frase que lo explicaba había dejado de aparecer.
 
-TU MURO POR FIN PARECE ALGO
-El dibujo de tu recorrido en lo alto de la tarjeta, los nombres de quienes le han dado a me gusta, el último comentario a la vista. Y puedes renombrar una salida, añadirle una nota o quitarle el recorrido después.
+Y CUANDO VUELVES, VUELVES DE VERDAD
+Le dices al coach que estás mejor y te devuelve tus días de carrera, con su nombre. Antes, la semana reducida se quedaba así para siempre.
 
-El recorrido sale recortado 300 metros por cada extremo: nadie ve de dónde sales ni dónde vuelves.
+LAS CARRERAS SE FECHAN AL EMPEZAR
+Una salida iniciada a las 23:50 y terminada pasada la medianoche marcaba el día equivocado y dejaba la sesión del día anterior sin hacer para siempre. Tu racha también cuenta el día en que corriste, no el día en que lo validas.
 
-LA PANTALLA DE CARRERA DEL APPLE WATCH
-Una sola cifra, enorme, legible con el brazo en movimiento, y tú eliges cuál. Tiempo, distancia, ritmo, pulso o calorías en grande, y otras tres debajo. Se ajusta desde el iPhone, en Perfil.
+LO QUE ESCRIBES A MANO SE GUARDA
+Una carrera registrada en un día de descanso desaparecía sin decir nada. Ya no.
 
-UNA APP MÁS LIMPIA
-Una pasada completa sobre colores y superficies. Los anillos de objetivos por fin se leen: un anillo vacío parece vacío. Se acabaron los halos, las cápsulas apagadas y los contornos inútiles.
+MENOS COLOR, MEJOR COLOCADO
+Insignias, selectores y tarjetas pierden sus fondos desvaídos. Los acentos se mantienen enteros donde significan algo.
 
-CORRECCIONES
-• En la pantalla Coach, la tarjeta de suscripción pasaba bajo la barra de pestañas y su botón quedaba cortado.
-• El hilo del coach se apoya abajo cuando la conversación es corta, en vez de dejar un gran hueco.
-• La pantalla de inicio sin suscripción decía lo mismo dos veces y prometía un coach que aún no tienes.
-• Una carrera validada al día siguiente de un cambio de semana marcaba el día equivocado.
+Y para las curiosas: tu token de sesión ya no viaja en las copias de seguridad de tu ordenador, la ruta de tu salida se describe en nuestra política de privacidad por lo que realmente es, y bloquear a alguien funciona ahora en ambos sentidos.
 ```
 
 ## Palabras clave (100 caracteres máx., separadas por comas sin espacios)

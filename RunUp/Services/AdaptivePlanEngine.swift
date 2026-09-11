@@ -523,6 +523,10 @@ enum AdaptivePlanEngine {
         /// La structure en répétitions, quand l'archétype en a une. Elle était jusqu'ici déduite
         /// du titre par expression régulière, donc perdue dès qu'on traduisait le titre.
         var intervals: IntervalStructure? = nil
+        /// L'adaptation posée sur CET archétype — blessure, phase du cycle, allègement du coach.
+        /// Recopiée telle quelle dans la séance produite ; voir `WorkoutSession.adaptationNote`
+        /// pour ce que ce champ répare.
+        var adaptationNote: String? = nil
     }
 
     /// Reference distance (km) the long run scales toward — the user's real race distance when
@@ -842,7 +846,7 @@ enum AdaptivePlanEngine {
                 adjustment = nil
             }
 
-            let session = WorkoutSession(
+            var session = WorkoutSession(
                 title: archetype.title,
                 subtitle: archetype.subtitle,
                 durationMinutes: duration,
@@ -852,6 +856,7 @@ enum AdaptivePlanEngine {
                 kind: archetype.kind,
                 intervals: archetype.intervals
             )
+            session.adaptationNote = archetype.adaptationNote
             return PlannedDay(weekday: weekday, session: session)
         }
     }

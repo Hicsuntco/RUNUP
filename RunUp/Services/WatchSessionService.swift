@@ -63,12 +63,19 @@ final class WatchSessionService: NSObject {
             // course lancée au poignet revient sans rien qui identifie la séance, et son post de
             // club reste figé dans la langue de son autrice — voir `activities.content_key`.
             context = [
-                "sessionTitle": session.title,
+                // `displayTitle`, PAS `title` : ce dernier est un identifiant interne, toujours
+                // français quelle que soit la langue de l'appareil — c'est écrit dans son propre
+                // commentaire. La montre l'affichait brut au milieu d'une interface anglaise,
+                // puis le renvoyait tel quel à la fin de la course : le relevé restait en
+                // français dans l'historique, dans l'en-tête du débriefing et dans le texte du
+                // post de club. `sessionKind` voyage à côté, donc rien ne dépend du titre pour
+                // identifier la séance.
+                "sessionTitle": session.displayTitle,
                 "sessionPace": session.pace,
                 "sessionDurationMinutes": String(session.durationMinutes),
             ]
             payload = [
-                "sessionTitle": session.title,
+                "sessionTitle": session.displayTitle,
                 "sessionPace": session.pace,
                 "sessionDurationMinutes": session.durationMinutes,
             ]

@@ -20,7 +20,7 @@ Si tu actives la connexion Apple Santé, RUNUP lit : fréquence cardiaque, nombr
 **Ces données de santé ne sont jamais transmises à un tiers, ni stockées sur un serveur distant.** Elles restent sur ton appareil et dans ta base Apple Santé, conformément aux règles d'Apple sur les données de santé.
 
 ### Localisation (GPS)
-Pendant une course, RUNUP utilise ta position pour mesurer la distance parcourue, l'allure et tracer ton itinéraire sur la carte. Le tracé reste sur ton appareil et n'est jamais partagé avec des tiers ; la seule exception est si tu choisis toi-même de publier une sortie comme itinéraire — voir « Itinéraires partagés » ci-dessous.
+Pendant une course, RUNUP utilise ta position pour mesurer la distance parcourue, l'allure et tracer ton itinéraire sur la carte. Le tracé n'est jamais partagé avec des tiers. Il quitte ton appareil dans deux cas, et dans les deux il est d'abord rogné de 300 mètres à chaque extrémité, sur ton téléphone : quand ta sortie est publiée dans le fil de ton club, où les membres de ton club voient sa forme sur une petite carte ; et quand tu choisis toi-même de la publier comme itinéraire — voir « Itinéraires partagés » ci-dessous. Ni ton point de départ ni ton point d'arrivée réels ne quittent l'appareil dans un cas comme dans l'autre.
 
 ### Itinéraires partagés (optionnel)
 Après une sortie, tu peux choisir de publier son tracé comme itinéraire, pour aider quelqu'un qui cherche où courir dans le coin. Ce n'est jamais automatique : rien n'est publié sans que tu l'aies demandé, sortie par sortie.

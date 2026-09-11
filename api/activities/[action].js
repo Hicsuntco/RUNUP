@@ -213,15 +213,31 @@ async function handleCreate(req, res, userId) {
   // Idempotent on clientId, atomically: the old check-then-insert raced a fast retry into a
   // unique-constraint 500 instead of `duplicate: true`, and XP must only be credited when this
   // request is the one that actually inserted the row.
+  //
+  // ET L'XP EST CRÉDITÉE DANS LA MÊME INSTRUCTION. C'étaient deux requêtes, donc deux appels
+  // réseau distincts — le pilote Neon parle en HTTP. Si l'insertion passait et que la seconde
+  // échouait (coupure, délai dépassé), la réponse était un 500, la file cliente rejouait le MÊME
+  // `clientId`, tombait sur `ON CONFLICT DO NOTHING`, recevait `duplicate: true`, un 200, et
+  // retirait l'entrée de la file. L'activité existait, `xp_earned` était en base, et
+  // `users.xp_total` n'était JAMAIS crédité — définitivement, aucun appel ne pouvant plus le
+  // rattraper. Le classement du club restait faux pour cette personne, sans trace de l'incident.
+  //
+  // Un seul aller-retour : ou les deux écritures passent, ou aucune.
   const { rows: inserted } = await sql`
-    INSERT INTO activities (client_id, user_id, club_id, type, text, xp_earned, distance_km, duration_seconds, avg_pace, elevation_gain_m, is_personal_record, content_key, route_preview, title, note)
-    VALUES (${clientId}, ${userId}, ${clubId}, ${type}, ${cleanText}, ${xp}, ${distance}, ${duration}, ${pace}, ${elevation}, ${personalRecord}, ${key},
-            ${routePreview ? JSON.stringify(routePreview) : null}::jsonb, ${title}, ${note})
-    ON CONFLICT (client_id) DO NOTHING
-    RETURNING id
+    WITH ins AS (
+      INSERT INTO activities (client_id, user_id, club_id, type, text, xp_earned, distance_km, duration_seconds, avg_pace, elevation_gain_m, is_personal_record, content_key, route_preview, title, note)
+      VALUES (${clientId}, ${userId}, ${clubId}, ${type}, ${cleanText}, ${xp}, ${distance}, ${duration}, ${pace}, ${elevation}, ${personalRecord}, ${key},
+              ${routePreview ? JSON.stringify(routePreview) : null}::jsonb, ${title}, ${note})
+      ON CONFLICT (client_id) DO NOTHING
+      RETURNING id, user_id
+    ), credit AS (
+      UPDATE users SET xp_total = xp_total + ${xp}
+      WHERE id = (SELECT user_id FROM ins)
+      RETURNING id
+    )
+    SELECT id FROM ins
   `;
   if (inserted.length === 0) return res.status(200).json({ ok: true, duplicate: true });
-  await sql`UPDATE users SET xp_total = xp_total + ${xp} WHERE id = ${userId}`;
 
   // Before the response, deliberately — Vercel may freeze the function the moment the response
   // is sent, silently dropping anything still in flight. A referral reward that sometimes

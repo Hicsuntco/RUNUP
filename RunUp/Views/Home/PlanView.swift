@@ -523,7 +523,7 @@ struct PlanView: View {
         // Le liseré est parti. Un fond teinté ET un contour disent la même chose deux fois, et le
         // contour est celui des deux qui dessine une boîte. Le fond monte légèrement pour porter
         // seul ce que les deux portaient ensemble.
-        .background(isToday ? RUColor.rose.opacity(0.10) : Color.clear, in: RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous))
+        .background(isToday ? RUColor.card2 : Color.clear, in: RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous))
         .contentShape(Rectangle())
         // La maquette déplie le détail de la séance du jour directement sous sa ligne
         // (`.sesh-detail` : échauffement / corps de séance / retour au calme). L'app a déjà mieux

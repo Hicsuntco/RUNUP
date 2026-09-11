@@ -61,12 +61,19 @@ extension View {
 
     /// Applies the subtle rose-tinted gradient background used on "hero" cards
     /// (forme du jour, coach nudge, program summary...).
-    func ruHeroCard(radius: CGFloat = RUSpacing.radiusStandard, borderOpacity: Double = 0.2) -> some View {
+    func ruHeroCard(radius: CGFloat = RUSpacing.radiusStandard, borderOpacity _: Double = 0.2) -> some View {
         self
             .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+            // LE CONTOUR TOMBE. C'était un accent dilué — 20 %, et jusqu'à 28 % chez certains
+            // appelants — posé dans le système de design lui-même, donc répété sur les onze
+            // cartes héros. La carte se distingue déjà par son dégradé ; en thème sombre,
+            // `cardBorder` vaut d'ailleurs `.clear` pour exactement cette raison.
+            //
+            // `borderOpacity` reste au paramètre pour ne pas casser les appelants qui le passent,
+            // et il est désormais sans effet : le supprimer partout est un autre commit.
             .overlay(
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .stroke(RUColor.rose.opacity(borderOpacity), lineWidth: RUSpacing.hairline)
+                    .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline)
             )
             // Exactement la même ombre que `ruCard()` — et surtout pas une ombre PLUS marquée.
             // L'ancienne (radius 18, y 6, 18%) faisait flotter les cartes teintées au-dessus des

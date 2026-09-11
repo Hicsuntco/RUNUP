@@ -58,8 +58,8 @@ struct SelectableCard: View {
                     // dans dix points de côté, à l'endroit où elle est le moins lisible.
             }
             .padding(15)
-            .background(selected ? RUColor.rose.opacity(0.12) : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous).stroke(selected ? RUColor.rose.opacity(0.4) : RUColor.line, lineWidth: RUSpacing.hairline))
+            .background(selected ? RUColor.card2 : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous).stroke(selected ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
             .animation(.easeOut(duration: 0.15), value: selected)
         }
         .buttonStyle(PressableStyle())

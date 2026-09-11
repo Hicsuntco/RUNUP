@@ -537,8 +537,8 @@ struct ClubView: View {
                 .foregroundColor(boardMode == value ? RUColor.rose2 : RUColor.text2)
                 .padding(.horizontal, 11).padding(.vertical, 6)
                 .frame(minHeight: 44)
-                .background(boardMode == value ? RUColor.rose.opacity(0.12) : RUColor.card2, in: Capsule())
-                .overlay(Capsule().stroke(boardMode == value ? RUColor.rose.opacity(0.4) : RUColor.line, lineWidth: RUSpacing.hairline))
+                .background(boardMode == value ? RUColor.card2 : RUColor.card2, in: Capsule())
+                .overlay(Capsule().stroke(boardMode == value ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
         }
         .buttonStyle(PressableStyle())
     }
@@ -1032,14 +1032,11 @@ struct ClubView: View {
                     Button(action: { selectedBadge = badge }) {
                         VStack(spacing: 5) {
                             HexagonBadgeShape()
-                                .fill(badge.earned ? color.opacity(0.22) : RUColor.card2)
-                                .overlay(HexagonBadgeShape().stroke(badge.earned ? color.opacity(0.7) : RUColor.line, lineWidth: RUSpacing.hairline))
+                                .fill(RUColor.card2)
+                                .overlay(HexagonBadgeShape().stroke(badge.earned ? color : RUColor.line, lineWidth: RUSpacing.hairline))
                                 .aspectRatio(1, contentMode: .fit)
                                 .overlay(Text(badge.emoji).font(.system(size: 26)))
                                 .opacity(badge.earned ? 1 : 0.35)
-                                // A real glow on earned tiles — opacity alone made locked vs.
-                                // earned read as "faded vs. normal" rather than "locked vs. won".
-                                .shadow(color: badge.earned ? color.opacity(0.35) : .clear, radius: 8, x: 0, y: 3)
                             Text(badge.name)
                                 .font(RUFont.sans(.micro, weight: .semibold))
                                 .foregroundColor(badge.earned ? RUColor.textPrimary : RUColor.text2)
@@ -1549,8 +1546,8 @@ struct BadgeDetailView: View {
         let color = ClubBadgeCatalog.color(for: badge.key)
         VStack(spacing: 14) {
             HexagonBadgeShape()
-                .fill(badge.earned ? color.opacity(0.22) : RUColor.card2)
-                .overlay(HexagonBadgeShape().stroke(badge.earned ? color.opacity(0.7) : RUColor.line, lineWidth: RUSpacing.hairline))
+                .fill(RUColor.card2)
+                .overlay(HexagonBadgeShape().stroke(badge.earned ? color : RUColor.line, lineWidth: RUSpacing.hairline))
                 .frame(width: 76, height: 76)
                 .overlay(Text(badge.emoji).font(.system(size: 34)))
                 .opacity(badge.earned ? 1 : 0.4)
@@ -1558,10 +1555,15 @@ struct BadgeDetailView: View {
 
             Text(badge.name).font(RUFont.sans(.title, weight: .bold)).foregroundColor(RUColor.textPrimary)
 
+            // Sans `background:` — le défaut de `StatChip` est déjà neutre, et il l'est
+            // délibérément : « rose → bordeaux, ambre → brun, lime → olive », c'est écrit dans
+            // le composant. Ce paramètre était l'échappatoire « si l'appelant a une raison » ;
+            // il servait ici à réintroduire exactement ce qui avait été retiré, et donnait une
+            // capsule olive en plein centre de la feuille de badge. `color` porte déjà le lime,
+            // sur le texte, où il se voit.
             StatChip(
                 text: badge.earned ? "Débloqué" : "Pas encore débloqué",
-                color: badge.earned ? RUColor.lime : RUColor.text3,
-                background: badge.earned ? RUColor.lime.opacity(0.14) : RUColor.card2
+                color: badge.earned ? RUColor.lime : RUColor.text3
             )
 
             Text(badge.detail)

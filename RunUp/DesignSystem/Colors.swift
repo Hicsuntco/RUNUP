@@ -267,7 +267,13 @@ enum RUColor {
             // l'était pas, et qui ne l'aurait de toute façon pas été pour les sept autres
             // palettes d'accent, ce gris étant écrit en dur. Un vrai lavis, dérivé de l'accent
             // courant, donc juste quelle que soit la couleur choisie dans Profil → Apparence.
-            colors: [isLight ? tint(rose, 0.12, over: card) : Color(hex: 0x20101C), isLight ? card : bg],
+            // LA BRANCHE SOMBRE AVAIT LE DÉFAUT QUE LA BRANCHE CLAIRE VENAIT DE CORRIGER. Le
+            // commentaire ci-dessus dit qu'un gris écrit en dur ne conviendrait pas aux sept
+            // autres palettes — et `#20101C` est un prune fixe, qui lave de rose-violet les onze
+            // cartes héros d'une utilisatrice en Lime ou en Cyan, avec une couleur qui n'existe
+            // nulle part ailleurs dans son app. Le thème sombre étant le défaut, c'était le cas
+            // le plus vu. Dérivé de l'accent comme l'autre, sur le fond de page.
+            colors: [isLight ? tint(rose, 0.12, over: card) : tint(rose, 0.10, over: bg), isLight ? card : bg],
             startPoint: .top,
             endPoint: .bottom
         )

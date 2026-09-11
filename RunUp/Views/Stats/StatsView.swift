@@ -633,11 +633,11 @@ struct StatsView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)
-        // Une tuile de record : fond de sous-surface, sans contour. Celle qui est mise en avant
-        // garde un voile rosé — et perd son liseré, qui redisait ce que le fond dit déjà. Les
-        // autres passent de `card` à `card2` : sur une carte blanche, une tuile blanche n'était
-        // visible que par son filet, et c'est précisément le filet qu'on retire partout.
-        .background(highlighted ? RUColor.rose.opacity(0.12) : RUColor.card2,
+        // Une tuile de record : fond de sous-surface, sans contour, le MÊME pour toutes. Celle
+        // qui est mise en avant gardait un « voile rosé » de 12 % — c'est-à-dire un bordeaux sur
+        // fond sombre. La mise en avant vit à la ligne du chiffre, en `rose2` plein : une couleur
+        // entière sur le texte se voit mieux qu'un lavis sur la surface, et c'est la règle.
+        .background(RUColor.card2,
                     in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
     }
 

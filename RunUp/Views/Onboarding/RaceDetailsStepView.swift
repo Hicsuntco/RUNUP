@@ -21,8 +21,8 @@ struct RaceDetailsStepView: View {
                                 .foregroundColor(vm.distance == d ? RUColor.rose2 : RUColor.textPrimary)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 18)
-                                .background(vm.distance == d ? RUColor.rose.opacity(0.12) : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
-                                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(vm.distance == d ? RUColor.rose.opacity(0.4) : RUColor.line, lineWidth: RUSpacing.hairline))
+                                .background(vm.distance == d ? RUColor.card2 : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
+                                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(vm.distance == d ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
                         }
                         .buttonStyle(PressableStyle())
                         .gridCellColumns(d == .other ? 2 : 1)

@@ -667,12 +667,11 @@ struct ProfileView: View {
                         Button(action: { selectedBadge = badge }) {
                             VStack(spacing: 6) {
                                 HexagonBadgeShape()
-                                    .fill(badge.earned ? color.opacity(0.22) : RUColor.card2)
-                                    .overlay(HexagonBadgeShape().stroke(badge.earned ? color.opacity(0.7) : RUColor.line, lineWidth: RUSpacing.hairline))
+                                    .fill(RUColor.card2)
+                                    .overlay(HexagonBadgeShape().stroke(badge.earned ? color : RUColor.line, lineWidth: RUSpacing.hairline))
                                     .aspectRatio(1, contentMode: .fit)
                                     .overlay(Text(badge.emoji).font(.system(size: 26)))
                                     .opacity(badge.earned ? 1 : 0.35)
-                                    .shadow(color: badge.earned ? color.opacity(0.35) : .clear, radius: 8, x: 0, y: 3)
                                 Text(badge.name)
                                     .font(RUFont.sans(.micro, weight: .semibold))
                                     .foregroundColor(badge.earned ? RUColor.textPrimary : RUColor.text2)

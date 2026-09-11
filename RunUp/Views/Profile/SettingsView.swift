@@ -416,7 +416,7 @@ private struct StravaConnectionRow: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 12) {
                 Text("🟠").font(.system(size: 17))
-                Text("Strava").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                Text(verbatim: "Strava").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
                 if !auth.isSignedIn {
                     Text("Nécessite un compte").font(RUFont.sans(.small)).foregroundColor(RUColor.text3)

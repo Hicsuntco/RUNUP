@@ -206,6 +206,35 @@ struct HistoryView: View {
                 .foregroundColor(RUColor.text2)
                 .lineLimit(1).minimumScaleFactor(0.8)
                 .padding(.top, 1)
+
+                // LA SEULE PORTE DE RETOUR VERS UN RESSENTI PERDU.
+                //
+                // Tout ce qui compte est accroché au bouton VALIDER du débriefing : l'adaptation
+                // du plan, la série, les 120 XP, la publication au club. Une feuille GLISSÉE vers
+                // le bas ne déclenche rien de tout ça — et la feuille surgit sous le doigt quand
+                // une course arrive de la montre pendant qu'on fait défiler le fil. La course
+                // était bien dans l'historique, mais la série cassée, la sortie jamais publiée,
+                // et le programme ne l'avait pas vue. Aucun écran ne permettait d'y revenir :
+                // l'historique ouvre un récapitulatif où le bouton « DONNER MON RESSENTI » est
+                // justement masqué pour une course passée.
+                //
+                // Bornée à la semaine en cours, pour la raison que le récapitulatif documente
+                // déjà : un ressenti d'une semaine passée corromprait le palier courant.
+                if run.debriefedAt == nil, AdaptivePlanEngine.currentWeekRange().contains(run.date) {
+                    Button(action: { appState.pendingDebriefs.append(run) }) {
+                        HStack(spacing: 5) {
+                            Image(systemName: "arrow.uturn.backward")
+                                .font(.system(size: 9, weight: .semibold))
+                            Text("Ressenti manquant")
+                                .font(RUFont.sans(.micro, weight: .semibold))
+                        }
+                        .foregroundColor(RUColor.rose2)
+                        .frame(minHeight: 44)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(PressableStyle())
+                }
             }
         }
         .padding(12)

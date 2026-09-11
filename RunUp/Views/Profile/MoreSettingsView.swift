@@ -349,6 +349,34 @@ struct MoreSettingsView: View {
                         .colorScheme(RUColor.colorScheme)
                     }
 
+                    // LE CONSENTEMENT DE TRANSMISSION, distinct du suivi et décoché d'avance.
+                    //
+                    // Le suivi ci-dessus adapte le plan SUR L'APPAREIL — rien ne sort. Cette
+                    // case-ci autorise l'envoi de la phase estimée au coach, donc à un service
+                    // tiers. Ce sont deux décisions différentes et elles étaient prises par une
+                    // seule bascule, qui n'annonçait que la première.
+                    //
+                    // Le destinataire est NOMMÉ. Une phrase qui dit « partager avec le coach »
+                    // sans dire que le coach est un service extérieur ne demande pas grand-chose.
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(alignment: .top) {
+                            Text("Partager ma phase avec le coach")
+                                .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
+                            Spacer()
+                            Toggle("", isOn: Binding(
+                                get: { profile.shareCyclePhaseWithCoach },
+                                set: { profile.shareCyclePhaseWithCoach = $0 }
+                            ))
+                            .labelsHidden()
+                            .tint(RUColor.rose)
+                            .accessibilityLabel("Partager ma phase de cycle avec le coach")
+                        }
+                        Text("Ta phase estimée est alors envoyée au service qui fait tourner le coach, pour qu'il adapte son ton. Sans ça, ton programme continue de s'adapter exactement pareil — le calcul se fait sur ton téléphone.")
+                            .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                            .lineSpacing(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
                     HStack {
                         Text("Durée moyenne du cycle").font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
                         Spacer()

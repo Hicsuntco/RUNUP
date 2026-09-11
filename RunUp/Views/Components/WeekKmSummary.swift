@@ -40,7 +40,7 @@ struct WeekKmSummary: View {
                 // Le dénominateur reste petit et gris : c'est une précision sur le chiffre, pas
                 // une seconde valeur. Un rapport de 1,5 les faisait lire comme deux nombres.
                 Text(plannedKm > 0
-                     ? String(localized: "/ \(Int(plannedKm.rounded())) km")
+                     ? "/ \(Int(plannedKm.rounded())) km"
                      : String(localized: "km"))
                     .font(RUFont.sans(.small, weight: .semibold))
                     .foregroundColor(RUColor.text3)

@@ -118,7 +118,7 @@ struct WeeklyRecapView: View {
                 if let avgPaceSecPerKm {
                     HStack {
                         RUCardHeader(icon: "speedometer", tint: RUColor.violet, title: "Allure moyenne")
-                        Text("\(PaceModel.formatDuration(avgPaceSecPerKm))/km").displayStyle(18).foregroundColor(RUColor.textPrimary)
+                        Text(verbatim: "\(PaceModel.formatDuration(avgPaceSecPerKm))/km").displayStyle(18).foregroundColor(RUColor.textPrimary)
                     }
                     .padding(16)
                     .ruCard()

@@ -271,6 +271,13 @@ jobs:
       - name: Vérifier que les polices demandées sont livrées
         run: python3 ci_scripts/check_fonts.py
 
+      # Une clé absente du catalogue ne casse rien : `String(localized:)` rend la clé, et le texte
+      # sort EN FRANÇAIS chez tout le monde. Ça ne se voit qu'en lançant l'app dans une autre
+      # langue, sur l'écran concerné — autant dire jamais. L'audit en a trouvé cinq d'un coup,
+      # dont deux écrites le jour même par quelqu'un qui corrigeait justement ce défaut.
+      - name: Vérifier que tout texte affiché est traduisible
+        run: python3 ci_scripts/check_strings.py
+
       # Les tests tournent AVANT la signature, sur simulateur, donc sans certificat : un échec
       # coûte cinq minutes de machine au lieu de la construction complète. Et surtout,
       # `RouteSharingPrivacyTests` vérifie que les 300 premiers et derniers mètres d'un tracé

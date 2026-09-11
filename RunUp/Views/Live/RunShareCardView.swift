@@ -128,7 +128,7 @@ struct RunShareCardView: View {
             VStack(spacing: 5) {
                 HStack(spacing: 7) {
                     AppMarkView(size: 22, radius: 6)
-                    Text("RUNUP").font(RUFont.display(15)).tracking(4).foregroundStyle(valueStyle)
+                    Text(verbatim: "RUNUP").font(RUFont.display(15)).tracking(4).foregroundStyle(valueStyle)
                 }
                 Text(Self.dateFormatter.string(from: run.date))
                     .font(RUFont.mono(9.5))

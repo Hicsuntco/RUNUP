@@ -26,6 +26,18 @@ final class UserProfile {
     // future upgrade path, but a manual start date works from day one for everyone regardless of
     // whether they already log cycle data in Apple Santé.
     var cycleTrackingEnabled: Bool = false
+    /// Est-ce que la phase estimée est TRANSMISE AU COACH — donc à un service tiers ?
+    ///
+    /// Séparé du suivi lui-même, et à `false` par défaut, parce que ce sont deux choses
+    /// différentes. Le suivi fait adapter le plan SUR L'APPAREIL : la durée baisse, la zone
+    /// descend, rien ne sort. Transmettre la phase au coach l'envoie dans le prompt système, donc
+    /// chez un tiers. C'est une donnée de santé au sens de l'article 9 du RGPD : elle demande un
+    /// consentement explicite, distinct, et jamais coché d'avance.
+    ///
+    /// L'interrupteur de suivi ne mentionnait aucune transmission ; il présentait la fonction
+    /// comme une adaptation locale — ce qu'elle est aussi, et c'est bien le problème : la moitié
+    /// annoncée était vraie, l'autre moitié était muette.
+    var shareCyclePhaseWithCoach: Bool = false
     var lastPeriodStartDate: Date? = nil
     var averageCycleLengthDays: Int = 28
 

@@ -455,7 +455,9 @@ struct ClubView: View {
     /// (« on en est où »), là où deux nombres bruts obligent à faire la division de tête. Rien
     /// d'inventé — c'est exactement `progressKm / targetKm`, tous deux calculés côté serveur.
     private func challengeProgressText(_ challenge: ClubChallenge) -> String {
-        let base = String(localized: "\(Int(challenge.progressKm)) / \(Int(challenge.targetKm)) km")
+        // Pas de `String(localized:)` : deux nombres, une barre, « km ». Rien à traduire, et
+        // une clé au catalogue pour ça aurait deux traductions identiques à la française.
+        let base = "\(Int(challenge.progressKm)) / \(Int(challenge.targetKm)) km"
         guard challenge.targetKm > 0 else { return base }
         let pct = Int((challenge.progressKm / challenge.targetKm * 100).rounded())
         return "\(base) — \(pct) %"
@@ -939,7 +941,7 @@ struct ClubView: View {
             if weeklyDisplayMode == .pctObjectif, let pct = entry.pctOfTarget {
                 weeklyPctBadge(pct: pct, isMe: entry.isMe)
             } else {
-                Text("\(String(format: "%.1f", locale: Locale.current, entry.weekKm)) km")
+                Text(verbatim: "\(String(format: "%.1f", locale: Locale.current, entry.weekKm)) km")
                     .displayStyle(14).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
             }
         }
@@ -1110,7 +1112,7 @@ struct ClubView: View {
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.7)
                                 Spacer()
-                                Text("\(String(format: "%.1f", locale: Locale.current, entry.weekKm)) km")
+                                Text(verbatim: "\(String(format: "%.1f", locale: Locale.current, entry.weekKm)) km")
                                     .displayStyle(14).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
                             }
                             .padding(.horizontal, 8)

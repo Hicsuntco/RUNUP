@@ -230,7 +230,11 @@ enum CoachService {
             let until = ease.until.formatted(.dateTime.day().month(.wide))
             extra.append("Allègement déjà en place (\(cap)\(speed)) jusqu'au \(until) — ne le repose pas, tu peux le remplacer ou le lever.")
         }
-        if let phase = s.cyclePhase {
+        // `shareCyclePhaseWithCoach` ET NON `cycleTrackingEnabled` : le suivi adapte le plan sur
+        // l'appareil sans que rien ne sorte ; seule cette case-ci autorise l'envoi de la phase à
+        // un tiers, et elle est décochée par défaut. Sans elle, le plan continue exactement comme
+        // avant — c'est `AdaptivePlanEngine` qui fait ce travail, pas le coach.
+        if s.shareCyclePhaseWithCoach, let phase = s.cyclePhase {
             extra.append("Phase du cycle estimée : \(phase.rawValue) — adapte le ton (sois indulgent(e) sur l'intensité en phase menstruelle) sans jamais lui dire quoi faire de son corps à sa place.")
         }
         if let weeklyTime = s.weeklyTimeBudget {

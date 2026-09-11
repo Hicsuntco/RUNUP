@@ -11907,6 +11907,40 @@
         }
       }
     },
+    "Partager ma phase avec le coach": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share my cycle phase with the coach"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir mi fase con el coach"
+          }
+        }
+      }
+    },
+    "Partager ma phase de cycle avec le coach": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share my cycle phase with the coach"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir mi fase del ciclo con el coach"
+          }
+        }
+      }
+    },
     "Partagé par %@": {
       "localizations": {
         "en": {
@@ -14121,6 +14155,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reanudación suave: el programa aumenta el volumen progresivamente para evitar lesiones, antes de volver a un ritmo más sostenido."
+          }
+        }
+      }
+    },
+    "Ressenti manquant": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feedback missing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta la sensación"
           }
         }
       }
@@ -16790,6 +16841,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tu mejor semana 🔥"
+          }
+        }
+      }
+    },
+    "Ta phase estimée est alors envoyée au service qui fait tourner le coach, pour qu'il adapte son ton. Sans ça, ton programme continue de s'adapter exactement pareil — le calcul se fait sur ton téléphone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your estimated phase is then sent to the service that powers the coach, so it can adjust its tone. Without this, your plan still adapts exactly the same — the calculation happens on your phone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu fase estimada se envía entonces al servicio que hace funcionar al coach, para que ajuste su tono. Sin esto, tu plan se adapta exactamente igual: el cálculo se hace en tu teléfono."
           }
         }
       }

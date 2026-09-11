@@ -13,7 +13,7 @@ struct SplashView: View {
     var body: some View {
         ZStack {
             RUColor.bg.ignoresSafeArea()
-            Text("RUNUP")
+            Text(verbatim: "RUNUP")
                 .font(RUFont.display(40))
                 .tracking(7)
                 .foregroundColor(RUColor.textPrimary)

@@ -133,8 +133,8 @@ struct ShoesView: View {
             LinearBar(fraction: fraction, color: barColor, height: 6)
 
             HStack {
-                Text("\(String(format: "%.0f", km)) km").font(RUFont.mono(12, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                Text("/ \(String(format: "%.0f", shoe.alertThresholdKm)) km").font(RUFont.mono(11)).foregroundColor(RUColor.text3)
+                Text(verbatim: "\(String(format: "%.0f", km)) km").font(RUFont.mono(12, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                Text(verbatim: "/ \(String(format: "%.0f", shoe.alertThresholdKm)) km").font(RUFont.mono(11)).foregroundColor(RUColor.text3)
                 Spacer()
                 if fraction >= 1 {
                     Text("À remplacer").font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.rose)

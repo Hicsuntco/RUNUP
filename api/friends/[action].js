@@ -280,25 +280,39 @@ async function handleRemoveFollower(req, res, userId) {
   res.status(200).json({ ok: true });
 }
 
+// LES TROIS SEULES LECTURES DU DÉPÔT SANS PLAFOND, et elles servent l'écran Amis, ouvert souvent.
+// Le quota de suivi est de 150 par jour, donc un compte d'un an peut suivre des dizaines de
+// milliers de personnes — et rien ne borne le nombre d'abonnés. La réponse grossissait sans limite,
+// chaque ligne pouvant porter un avatar en base64 hérité de plusieurs centaines de kilo-octets.
+//
+// `avatar_data` n'est plus renvoyée quand une URL existe : le client lit l'URL en priorité, donc
+// c'était du poids mort sur chaque ligne. Elle reste servie pour les comptes anciens qui n'ont que
+// ça, sans quoi leur photo disparaîtrait.
 async function handleList(req, res, userId) {
   const { rows: meRows } = await sql`SELECT is_private FROM users WHERE id = ${userId}`;
   const { rows: following } = await sql`
-    SELECT u.id, u.name, u.last_name, u.username, u.avatar_data, u.avatar_url, u.is_private
+    SELECT u.id, u.name, u.last_name, u.username, u.avatar_url, u.is_private,
+           CASE WHEN u.avatar_url IS NULL THEN u.avatar_data END AS avatar_data
     FROM follows f JOIN users u ON u.id = f.followee_id
     WHERE f.follower_id = ${userId} AND f.status = 'accepted'
     ORDER BY u.name ASC
+    LIMIT 500
   `;
   const { rows: followers } = await sql`
-    SELECT u.id, u.name, u.last_name, u.username, u.avatar_data, u.avatar_url, u.is_private
+    SELECT u.id, u.name, u.last_name, u.username, u.avatar_url, u.is_private,
+           CASE WHEN u.avatar_url IS NULL THEN u.avatar_data END AS avatar_data
     FROM follows f JOIN users u ON u.id = f.follower_id
     WHERE f.followee_id = ${userId} AND f.status = 'accepted'
     ORDER BY u.name ASC
+    LIMIT 500
   `;
   const { rows: incoming } = await sql`
-    SELECT u.id, u.name, u.last_name, u.username, u.avatar_data, u.avatar_url, u.is_private
+    SELECT u.id, u.name, u.last_name, u.username, u.avatar_url, u.is_private,
+           CASE WHEN u.avatar_url IS NULL THEN u.avatar_data END AS avatar_data
     FROM follows f JOIN users u ON u.id = f.follower_id
     WHERE f.followee_id = ${userId} AND f.status = 'pending'
     ORDER BY f.created_at ASC
+    LIMIT 500
   `;
   res.status(200).json({
     isPrivate: meRows[0]?.is_private || false,

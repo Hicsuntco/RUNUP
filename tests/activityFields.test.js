@@ -72,3 +72,28 @@ test('un tracé trop long est borné', () => {
   const many = Array.from({ length: MAX_FEED_ROUTE_POINTS + 200 }, (_, i) => [45 + i / 10000, 4.8]);
   assert.equal(sanitizeRoutePreview(many).length, MAX_FEED_ROUTE_POINTS);
 });
+
+// --- Le tracé : borné AVANT d'être parcouru, et échantillonné plutôt que tronqué ---
+
+test('un tracé démesuré est refusé sans être parcouru', () => {
+  const { MAX_FEED_ROUTE_INPUT } = require('../lib/activityFields');
+  const enorme = Array.from({ length: MAX_FEED_ROUTE_INPUT + 1 }, () => [48.85, 2.35]);
+  assert.equal(sanitizeRoutePreview(enorme), null);
+});
+
+test('un tracé plus long que la borne garde sa FORME, pas son début', () => {
+  // Cent mille mètres en ligne droite, de 0 à 1 de longitude. Une troncature par la tête rendrait
+  // un trait qui s'arrête au centième de la course ; l'échantillonnage garde les deux bouts.
+  const long = Array.from({ length: 1000 }, (_, i) => [48.85, i / 1000]);
+  const out = sanitizeRoutePreview(long);
+  assert.equal(out.length, MAX_FEED_ROUTE_POINTS);
+  assert.deepEqual(out[0], long[0], 'le départ est gardé');
+  assert.deepEqual(out[out.length - 1], long[long.length - 1], 'et l’arrivée aussi');
+  // Un point du milieu doit venir du milieu, pas du début.
+  assert.ok(out[Math.floor(out.length / 2)][1] > 0.4, 'le milieu du tracé est au milieu');
+});
+
+test('un tracé court est rendu tel quel', () => {
+  const court = [[48.85, 2.35], [48.86, 2.36], [48.87, 2.37]];
+  assert.deepEqual(sanitizeRoutePreview(court), court);
+});

@@ -309,6 +309,14 @@ CREATE TABLE IF NOT EXISTS follows (
 CREATE INDEX IF NOT EXISTS idx_follows_followee_status ON follows(followee_id, status);
 CREATE INDEX IF NOT EXISTS idx_follows_follower_status ON follows(follower_id, status);
 
+-- L'unicité de `email TEXT UNIQUE` est sensible à la casse, ce qui laissait coexister
+-- « Charlotte@x.com » et « charlotte@x.com » : deux comptes pour une personne, dont un vide, et
+-- une même empreinte `email_sha256` des deux côtés — donc un doublon dans « tes contacts ». Le
+-- même index fonctionnel que pour les pseudos juste en dessous, qui existait déjà et disait
+-- comment faire. Il indexe au passage la recherche par adresse, jusqu'ici en parcours complet.
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_users_email_lower ON users (lower(email));
+
+
 -- A first name alone (all onboarding/signup ever asked for) makes "search someone to follow" a
 -- coin flip once there's more than one Léo on the platform — these two fields let a real search
 -- disambiguate: a chosen, unique handle (api/account/profile.js), and a last name to search

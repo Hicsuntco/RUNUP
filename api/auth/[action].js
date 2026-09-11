@@ -137,7 +137,7 @@ async function handleSignup(req, res) {
   if (!(await underDailyCap('signup:' + ip, 30))) return res.status(429).json({ error: 'too_many_attempts' });
 
   const normalizedEmail = String(email).trim().toLowerCase().slice(0, 254);
-  const { rows: existing } = await sql`SELECT id FROM users WHERE email = ${normalizedEmail}`;
+  const { rows: existing } = await sql`SELECT id FROM users WHERE lower(email) = ${normalizedEmail}`;
   if (existing.length > 0) return res.status(409).json({ error: 'email_taken' });
 
   const passwordHash = await bcrypt.hash(password, 12);
@@ -188,7 +188,7 @@ async function handleLogin(req, res) {
   } catch { /* counter must never take login down with it */ }
 
   const normalizedEmail = String(email).trim().toLowerCase();
-  const { rows } = await sql`SELECT id, name, last_name, username, xp_total, password_hash, referral_code FROM users WHERE email = ${normalizedEmail}`;
+  const { rows } = await sql`SELECT id, name, last_name, username, xp_total, password_hash, referral_code FROM users WHERE lower(email) = ${normalizedEmail}`;
   const user = rows[0];
   // Same "invalid_credentials" whether the email doesn't exist or the password's wrong — doesn't
   // confirm to a caller which emails have an account.

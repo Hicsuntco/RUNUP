@@ -974,9 +974,17 @@ enum AdaptivePlanEngine {
         // trois jours rompt la chaîne — deux implémentations d'une même règle finissent toujours
         // par diverger, et celle-ci divergerait en silence : la série n'aurait pas planté, elle
         // aurait simplement affiché un nombre faux.
+        // AU JOUR DE LA COURSE, PAS AU JOUR DE LA VALIDATION. La ligne juste au-dessus impute
+        // déjà la séance à `run.date` et explique longuement pourquoi ; la série, elle, lisait
+        // `.now`. Une Garmin de dimanche dernier, importée d'Apple Santé et débriefée aujourd'hui,
+        // posait donc une série de 1 datée d'aujourd'hui — alors que la dernière course remonte à
+        // cinq jours. Deux conséquences vérifiables : au premier ajout ou retrait dans
+        // l'historique, `recomputeStreak` recalcule 0 et le chiffre saute de 1 à 0 sans geste ; et
+        // `debriefedYesterday`, qui lit cette date, rabotait la séance du lendemain au motif
+        // qu'« hier a été dur » — hier où elle n'avait pas couru.
         let advanced = Streak.afterSession(
             Streak.State(count: profile.streak, lastDay: profile.lastStreakDate),
-            on: .now
+            on: run.date
         )
         profile.streak = advanced.count
         profile.lastStreakDate = advanced.lastDay

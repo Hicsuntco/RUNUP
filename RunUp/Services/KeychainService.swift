@@ -18,6 +18,17 @@ enum KeychainService {
         SecItemDelete(query as CFDictionary)
         var attributes = query
         attributes[kSecValueData as String] = Data(token.utf8)
+        // `ThisDeviceOnly` EXCLUT LE JETON DES SAUVEGARDES. Sans classe d'accessibilité, l'élément
+        // prend `WhenUnlocked` : il part dans les sauvegardes chiffrées iTunes/Finder et se
+        // restaure sur un AUTRE appareil. Une sauvegarde récupérée — ordinateur familial, partagé,
+        // revendu — plus son mot de passe rend un jeton porteur valable trente jours, sans second
+        // facteur : lecture et publication d'activités, itinéraires, amis, suppression du compte.
+        // Elle n'en saurait rien, et la liste des jetons révoqués ne se remplit que si ELLE se
+        // déconnecte.
+        //
+        // `AfterFirstUnlock` plutôt que `WhenUnlocked` : les notifications et l'envoi différé
+        // doivent pouvoir lire le jeton écran verrouillé.
+        attributes[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         SecItemAdd(attributes as CFDictionary, nil)
     }
 

@@ -128,6 +128,18 @@ enum CoachService {
         request.httpMethod = "POST"
         request.setValue(appSecret, forHTTPHeaderField: "x-runup-secret")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
+        // LE JETON, QUI MANQUAIT. `api/coach.js` calcule son plafond quotidien sur `u:<compte>`
+        // quand il reconnaît l'appelante, et retombe sur `ip:<adresse>` sinon. Ce service était
+        // le seul à ne pas envoyer d'en-tête `Authorization` — tous les autres le font — donc la
+        // branche par compte n'a jamais été empruntée, et TOUT était compté par IP.
+        //
+        // Les deux effets sont réels et opposés. Derrière le NAT d'un opérateur mobile, des
+        // milliers d'abonnés partagent une adresse de sortie, donc UN SEUL quota : le coach se
+        // met à répondre 429 à des gens qui n'ont rien envoyé. Et à l'inverse, un abuseur n'a
+        // aucune limite de compte — quelques relais suffisent à multiplier les appels facturés.
+        if let token = KeychainService.loadToken() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
         request.httpBody = try JSONEncoder().encode(
             MessagesRequest(system: system, messages: messages, allowActions: allowActions)
         )

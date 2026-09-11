@@ -114,4 +114,25 @@ final class StreakTests: XCTestCase {
         XCTAssertEqual(advanced.count, recomputed.count)
         XCTAssertEqual(advanced.count, 2)
     }
+
+    /// Un ressenti validé APRÈS COUP sur une course plus ancienne que la chaîne. Le cas arrive dès
+    /// qu'une sortie remonte d'Apple Santé : l'import regarde jusqu'à sept jours en arrière, et le
+    /// débriefing attend dans la file.
+    func testUneCourseAnterieureNAllongePasLaChaine() {
+        let etat = Streak.State(count: 4, lastDay: day(0))
+        let apres = Streak.afterSession(etat, on: day(-5), calendar: cal)
+        XCTAssertEqual(apres.count, 4, "elle ne rallonge rien")
+        XCTAssertEqual(apres.lastDay, day(0), "et la date ne recule pas")
+    }
+
+    /// Le corollaire : une fois la date reculée, la comparaison suivante devenait fausse. Ce test
+    /// épingle l'enchaînement complet, pas seulement l'appel isolé.
+    func testDeuxValidationsDansLeDesordreRestentJustes() {
+        var etat = Streak.State(count: 0, lastDay: nil)
+        etat = Streak.afterSession(etat, on: day(-1), calendar: cal)   // hier, validée hier
+        etat = Streak.afterSession(etat, on: day(-4), calendar: cal)   // une vieille course importée
+        etat = Streak.afterSession(etat, on: day(0), calendar: cal)    // aujourd'hui
+        XCTAssertEqual(etat.count, 2)
+        XCTAssertEqual(etat.lastDay, day(0))
+    }
 }

@@ -506,6 +506,16 @@ async function handleSyncWeeklyTarget(req, res, userId) {
 // opt-in (see `global_leaderboard_opt_in`) rather than on for everyone by default. The caller's
 // own block list still applies, same as the club leaderboard.
 async function handleGlobalWeekly(req, res, userId) {
+  // LE SEUL ENDPOINT DE LECTURE COÛTEUX SANS PLAFOND. C'est la requête la plus lourde du
+  // serveur : jointure et agrégation sur TOUS les comptes inscrits au classement global et toutes
+  // leurs sorties de la semaine, fonction de fenêtre sur l'ensemble, et le `LIMIT 100` appliqué
+  // seulement APRÈS le tri. `join`, `event`, `search` et `contacts` ont tous le leur — celui-ci
+  // n'en avait aucun, et l'inscription autorise trente comptes par jour et par adresse. Une
+  // boucle sur cet appel fait recalculer l'agrégat complet à chaque fois, facturé au temps de
+  // calcul, et dégrade l'onglet Club de tout le monde au passage.
+  if (!(await underDailyCap('global:' + userId, 100))) {
+    return res.status(429).json({ error: 'too_many_requests' });
+  }
   const { rows } = await sql`
     SELECT id, name, avatar_data, avatar_url, week_km, rank FROM (
       SELECT u.id, u.name, u.avatar_data, u.avatar_url,

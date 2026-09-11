@@ -42,6 +42,12 @@ enum Streak {
             return State(count: max(1, state.count == 0 ? 1 : state.count + 1), lastDay: today)
         }
         let gap = calendar.dateComponents([.day], from: last, to: today).day ?? 0
+        // UNE SÉANCE PLUS ANCIENNE QUE LA CHAÎNE NE L'ALLONGE PAS. Le cas arrive dès qu'un
+        // ressenti est validé après coup — une course importée d'Apple Santé remonte jusqu'à sept
+        // jours et attend dans la file des débriefings. Sans ce garde-fou, l'écart négatif passait
+        // le test « moins de trois jours » deux lignes plus bas : la série s'incrémentait ET sa
+        // date reculait, ce qui cassait la comparaison suivante.
+        if gap < 0 { return state }
         if gap == 0 { return State(count: max(1, state.count), lastDay: today) }
         if gap <= toleratedGapDays { return State(count: state.count + 1, lastDay: today) }
         return State(count: 1, lastDay: today)

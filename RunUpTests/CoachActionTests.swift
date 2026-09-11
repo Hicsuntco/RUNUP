@@ -379,13 +379,14 @@ final class CoachActionPlanEffectTests: XCTestCase {
 
     /// Le défaut que cet ensemble de tests ne voyait pas : « reprendre normal » levait la remise
     /// et la zone sensible, et laissait la semaine réduite pour toujours.
+    @MainActor
     func testReprendreNormalRendLesJoursDeCourse() {
         let profile = makeProfile()
         profile.programPhase = .active
         profile.runningDays = [0, 2, 4, 6]
         profile.preferredLongRunDay = 6
 
-        _ = AdaptivePlanEngine.applyCoachAction(.injuryArea("knee"), to: profile)
+        _ = AdaptivePlanEngine.applyCoachAction(.sensitiveArea("knee"), to: profile)
         _ = AdaptivePlanEngine.applyCoachAction(.runningDays(days: [1, 4], longRunDay: 4), to: profile)
         XCTAssertEqual(profile.runningDays, [1, 4])
 
@@ -399,6 +400,7 @@ final class CoachActionPlanEffectTests: XCTestCase {
 
     /// Le coach n'a réduit QUE la semaine, sans remise ni zone sensible. Avant, `resumeNormal`
     /// renvoyait `nil` : aucune ligne, et il ne se passait rien.
+    @MainActor
     func testReprendreNormalAgitMemeSansRemiseNiBlessure() {
         let profile = makeProfile()
         profile.programPhase = .active
@@ -411,6 +413,7 @@ final class CoachActionPlanEffectTests: XCTestCase {
 
     /// Une AUGMENTATION est un nouveau régime, pas un allègement : il n'y a rien à rendre, et
     /// « reprendre normal » ne doit pas rabaisser la semaine à ce qu'elle était avant.
+    @MainActor
     func testUneAugmentationNeSeMemorisePas() {
         let profile = makeProfile()
         profile.programPhase = .active
@@ -423,6 +426,7 @@ final class CoachActionPlanEffectTests: XCTestCase {
     }
 
     /// Deux allègements successifs doivent rendre l'état d'avant le PREMIER, pas l'intermédiaire.
+    @MainActor
     func testDeuxAllegementsRendentLEtatDOrigine() {
         let profile = makeProfile()
         profile.programPhase = .active

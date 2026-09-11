@@ -110,6 +110,18 @@ final class UserProfile {
     /// Relu à chaque génération de semaine, jamais recopié dans les séances : c'est ce qui lui
     /// permet de survivre au lundi suivant, contrairement à une séance qu'on aurait éditée.
     var trainingEase: TrainingEase? = nil
+    /// Les jours de course d'AVANT l'allègement, pour savoir quoi rendre.
+    ///
+    /// `set_running_days` écrase `runningDays` sans rien garder. Quand le coach réduit la semaine
+    /// parce qu'on a mal quelque part, cette réduction est temporaire par nature — mais rien ne
+    /// permettait de la défaire : `resume_normal_training` levait la remise et la zone sensible,
+    /// et laissait la semaine à deux séances pour toujours. Le fil affichait « Programme repassé
+    /// en normal » avec une coche verte, et elle continuait de courir deux fois par semaine.
+    ///
+    /// Valeur par défaut en ligne, comme tout le reste de ce fichier : c'est ce qui rend la
+    /// migration SwiftData légère.
+    var runningDaysBeforeEase: [Int]? = nil
+    var longRunDayBeforeEase: Int? = nil
     /// Difficulty tier for session duration/labeling — only ever changes at a week boundary,
     /// based on the previous week's average RPE, never after a single run.
     var weekTier: Int = 1

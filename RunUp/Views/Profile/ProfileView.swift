@@ -101,7 +101,14 @@ struct ProfileView: View {
                     // une au mauvais endroit. La pastille l'affichait déjà : autant qu'elle y
                     // mène. Elle s'affiche même sans objectif, sinon il n'y aurait plus aucune
                     // porte d'entrée pour en choisir un.
-                    Button(action: { appState.go(.race) }) {
+                    // SANS OBJECTIF, LA PASTILLE MÈNE À L'ASSISTANT, PAS À L'ÉCRAN D'OBJECTIF.
+                    // Elle annonce « Choisir une course à préparer » et envoyait sur `RaceGoalView`,
+                    // qui est en LECTURE SEULE : « Date à définir », des tuiles vides, et aucun
+                    // bouton pour choisir quoi que ce soit. Le libellé promettait une action que
+                    // l'écran d'arrivée n'a pas. L'assistant, lui, fait exactement ce qui est écrit.
+                    Button(action: {
+                        if objectifText == nil { appState.newGoalWizardPresented = true } else { appState.go(.race) }
+                    }) {
                         HStack(spacing: 4) {
                             Image(systemName: "target").font(.system(size: 9)).foregroundColor(RUColor.text3)
                             Text(objectifText ?? String(localized: "Choisir une course à préparer"))

@@ -401,6 +401,9 @@ private struct StravaConnectionRow: View {
     var auth: AuthService
 
     @Environment(\.modelContext) private var modelContext
+    // Le profil, pour recalculer la série après un import : `recomputeStreak` l'écrit. Cette
+    // rangée vit dans les réglages, sous `SettingsView`, donc l'état de l'app est déjà là.
+    @Environment(AppState.self) private var appState
     @State private var isConnected = false
     @State private var isLoading = false
     @State private var isImporting = false

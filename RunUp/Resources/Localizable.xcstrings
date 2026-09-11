@@ -13087,6 +13087,23 @@
         }
       }
     },
+    "Programme repassé en normal · jours de course rétablis : %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to normal training · running days restored: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entrenamiento normal reanudado · días de carrera restablecidos: %@"
+          }
+        }
+      }
+    },
     "Programme sur mesure en préparation…": {
       "localizations": {
         "en": {

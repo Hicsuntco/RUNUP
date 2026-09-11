@@ -376,4 +376,61 @@ final class CoachActionPlanEffectTests: XCTestCase {
         XCTAssertNil(AdaptivePlanEngine.applyCoachAction(.runningDays(days: [0, 2, 4, 6], longRunDay: 6), to: profile),
                      "les jours sont déjà ceux-là")
     }
+
+    /// Le défaut que cet ensemble de tests ne voyait pas : « reprendre normal » levait la remise
+    /// et la zone sensible, et laissait la semaine réduite pour toujours.
+    func testReprendreNormalRendLesJoursDeCourse() {
+        let profile = makeProfile()
+        profile.programPhase = .active
+        profile.runningDays = [0, 2, 4, 6]
+        profile.preferredLongRunDay = 6
+
+        _ = AdaptivePlanEngine.applyCoachAction(.injuryArea("knee"), to: profile)
+        _ = AdaptivePlanEngine.applyCoachAction(.runningDays(days: [1, 4], longRunDay: 4), to: profile)
+        XCTAssertEqual(profile.runningDays, [1, 4])
+
+        let ligne = AdaptivePlanEngine.applyCoachAction(.resumeNormal, to: profile)
+        XCTAssertEqual(profile.runningDays, [0, 2, 4, 6], "la semaine d'avant doit revenir")
+        XCTAssertEqual(profile.preferredLongRunDay, 6)
+        XCTAssertNil(profile.runningDaysBeforeEase, "la mémoire se vide une fois rendue")
+        // Un changement qu'on ne nomme pas n'existe pas pour elle.
+        XCTAssertEqual(ligne?.contains("jours de course rétablis"), true)
+    }
+
+    /// Le coach n'a réduit QUE la semaine, sans remise ni zone sensible. Avant, `resumeNormal`
+    /// renvoyait `nil` : aucune ligne, et il ne se passait rien.
+    func testReprendreNormalAgitMemeSansRemiseNiBlessure() {
+        let profile = makeProfile()
+        profile.programPhase = .active
+        profile.runningDays = [0, 2, 4, 6]
+
+        _ = AdaptivePlanEngine.applyCoachAction(.runningDays(days: [2, 5], longRunDay: nil), to: profile)
+        XCTAssertNotNil(AdaptivePlanEngine.applyCoachAction(.resumeNormal, to: profile))
+        XCTAssertEqual(profile.runningDays, [0, 2, 4, 6])
+    }
+
+    /// Une AUGMENTATION est un nouveau régime, pas un allègement : il n'y a rien à rendre, et
+    /// « reprendre normal » ne doit pas rabaisser la semaine à ce qu'elle était avant.
+    func testUneAugmentationNeSeMemorisePas() {
+        let profile = makeProfile()
+        profile.programPhase = .active
+        profile.runningDays = [1, 4]
+
+        _ = AdaptivePlanEngine.applyCoachAction(.runningDays(days: [0, 2, 4, 6], longRunDay: 6), to: profile)
+        XCTAssertNil(profile.runningDaysBeforeEase)
+        _ = AdaptivePlanEngine.applyCoachAction(.resumeNormal, to: profile)
+        XCTAssertEqual(profile.runningDays, [0, 2, 4, 6], "on ne revient pas à deux séances")
+    }
+
+    /// Deux allègements successifs doivent rendre l'état d'avant le PREMIER, pas l'intermédiaire.
+    func testDeuxAllegementsRendentLEtatDOrigine() {
+        let profile = makeProfile()
+        profile.programPhase = .active
+        profile.runningDays = [0, 2, 4, 6]
+
+        _ = AdaptivePlanEngine.applyCoachAction(.runningDays(days: [1, 3, 5], longRunDay: nil), to: profile)
+        _ = AdaptivePlanEngine.applyCoachAction(.runningDays(days: [2], longRunDay: nil), to: profile)
+        _ = AdaptivePlanEngine.applyCoachAction(.resumeNormal, to: profile)
+        XCTAssertEqual(profile.runningDays, [0, 2, 4, 6])
+    }
 }

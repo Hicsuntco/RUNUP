@@ -96,6 +96,18 @@ struct RaceGoalView: View {
                     }
                 }
 
+                // LA FORME DU PLAN SE VEND, ET ELLE ÉTAIT DONNÉE ICI. L'accueil supprime la
+                // carte du programme sans abonnement, le Plan floute sa forme derrière un
+                // `PlusSection` — et cet écran, atteignable en permanence depuis la pastille
+                // d'objectif du Profil, affichait en clair « Semaine 4/16 », la barre de
+                // progression et Base / Spécifique / Affûtage avec l'état réel de chaque bloc.
+                // C'est mot pour mot ce que l'argumentaire vend. Soit le verrou de l'accueil
+                // mentait, soit cet écran fuyait ; c'était le second.
+                //
+                // Ce qui reste libre : le titre de l'objectif, la date et les trois tuiles. La
+                // ligne est celle qu'a déjà tracée l'accueil — la séance du jour reste gratuite,
+                // la FORME du plan se vend.
+                PlusSection(feature: .adaptivePlan, teaserHeight: 140) {
                 VStack(spacing: 10) {
                     HStack {
                         RUCardHeader(icon: "calendar", tint: RUColor.rose, title: "Préparation")
@@ -119,6 +131,7 @@ struct RaceGoalView: View {
                 }
                 .padding(14)
                 .ruCard()
+                }
 
                 // A per-km pacing table with a "Sprint final" phase only makes sense for a
                 // continuous road-race distance — HYROX alternates running with functional

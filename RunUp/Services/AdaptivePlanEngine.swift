@@ -1188,6 +1188,10 @@ enum AdaptivePlanEngine {
         var injuryArea: String?
         var runningDays: [Int]
         var preferredLongRunDay: Int?
+        // Touchés par `.runningDays` et par `.resumeNormal` : tout ce que `applyCoachAction` peut
+        // modifier doit figurer ici, sinon « Annuler » rend un état à moitié défait.
+        var runningDaysBeforeEase: [Int]?
+        var longRunDayBeforeEase: Int?
         var weekSessions: [PlannedDay]
         var weekStrip: [DayStatus]
         var todaySession: WorkoutSession
@@ -1199,6 +1203,8 @@ enum AdaptivePlanEngine {
             injuryArea: profile.injuryArea,
             runningDays: profile.runningDays,
             preferredLongRunDay: profile.preferredLongRunDay,
+            runningDaysBeforeEase: profile.runningDaysBeforeEase,
+            longRunDayBeforeEase: profile.longRunDayBeforeEase,
             weekSessions: profile.weekSessions,
             weekStrip: profile.weekStrip,
             todaySession: profile.todaySession
@@ -1210,6 +1216,8 @@ enum AdaptivePlanEngine {
         profile.injuryArea = snapshot.injuryArea
         profile.runningDays = snapshot.runningDays
         profile.preferredLongRunDay = snapshot.preferredLongRunDay
+        profile.runningDaysBeforeEase = snapshot.runningDaysBeforeEase
+        profile.longRunDayBeforeEase = snapshot.longRunDayBeforeEase
         profile.weekSessions = snapshot.weekSessions
         profile.weekStrip = snapshot.weekStrip
         profile.todaySession = snapshot.todaySession
@@ -1255,6 +1263,15 @@ enum AdaptivePlanEngine {
         case .runningDays(let days, let longRunDay):
             let previousDays = profile.runningDays
             let previousLongRun = profile.preferredLongRunDay
+            // UNE RÉDUCTION SE MÉMORISE, UNE AUGMENTATION NON. Réduire la semaine est ce que fait
+            // le coach quand on a mal quelque part : c'est temporaire, et `resume_normal_training`
+            // doit pouvoir le défaire. Passer à PLUS de séances est un nouveau régime, il n'y a
+            // rien à rendre. Et on n'écrase pas une mémoire déjà posée : deux allègements
+            // successifs doivent rendre l'état d'avant le PREMIER.
+            if profile.runningDaysBeforeEase == nil, days.count < previousDays.count {
+                profile.runningDaysBeforeEase = previousDays
+                profile.longRunDayBeforeEase = previousLongRun
+            }
             profile.runningDays = days
             if let longRunDay { profile.preferredLongRunDay = longRunDay }
             guard previousDays != profile.runningDays || previousLongRun != profile.preferredLongRunDay else { return nil }
@@ -1270,10 +1287,28 @@ enum AdaptivePlanEngine {
         case .resumeNormal:
             let hadEase = profile.trainingEase != nil
             let hadInjury = profile.injuryArea != nil && profile.injuryArea != "none"
-            guard hadEase || hadInjury else { return nil }
+            // LES JOURS RÉDUITS COMPTENT COMME « PAS NORMAL ». Sans ce troisième terme, un coach
+            // n'ayant réduit QUE la semaine repartait sur `nil` : aucune ligne ne s'affichait, et
+            // il ne se passait littéralement rien pendant qu'il écrivait « c'est reparti ».
+            let hadFewerDays = profile.runningDaysBeforeEase != nil
+            guard hadEase || hadInjury || hadFewerDays else { return nil }
             profile.trainingEase = nil
             profile.injuryArea = nil
+            var rendus: String?
+            if let avant = profile.runningDaysBeforeEase {
+                profile.runningDays = avant
+                profile.preferredLongRunDay = profile.longRunDayBeforeEase
+                profile.runningDaysBeforeEase = nil
+                profile.longRunDayBeforeEase = nil
+                rendus = avant.compactMap { DayStatus.fullNames.indices.contains($0) ? DayStatus.fullNames[$0] : nil }
+                    .formatted(.list(type: .and))
+            }
             regenerate()
+            // NOMMER CE QUI EST RENDU. « Repassé en normal » ne dit pas que la semaine retrouve
+            // ses quatre séances ; un changement qu'on ne nomme pas n'existe pas pour elle.
+            if let rendus {
+                return String(localized: "Programme repassé en normal · jours de course rétablis : \(rendus)")
+            }
             return String(localized: "Programme repassé en normal")
         }
     }

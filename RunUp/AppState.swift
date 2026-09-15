@@ -2,6 +2,7 @@ import Foundation
 import SwiftData
 import Observation
 import WidgetKit
+import CoreLocation
 import ActivityKit
 
 /// Central app store + router — mirrors the `store`/`ctx` object threaded through the
@@ -24,6 +25,8 @@ import ActivityKit
 final class AppState {
     let modelContext: ModelContext
     let healthKit = HealthKitService()
+    /// Les prévisions horaires, pour le conseil « il va pleuvoir, cours plutôt à tel moment ».
+    let weather = RunWeatherService()
     let toastCenter = ToastCenter()
     let auth = AuthService()
 
@@ -328,6 +331,48 @@ final class AppState {
     /// une même sortie peut être écrite dans Santé par deux sources différentes — la montre et
     /// l'application du fabricant — et aucune des deux n'est RUNUP, donc le filtre par source du
     /// service ne les écarte pas.
+    /// « Il va pleuvoir ce soir, cours plutôt ce midi. »
+    ///
+    /// Appelé avec le rafraîchissement quotidien, donc à l'ouverture de l'app — et c'est le bon
+    /// endroit pour une raison simple : le texte d'une notification est figé au moment où on la
+    /// programme. Une notification posée la veille ne peut pas parler de la pluie du lendemain.
+    /// Il faut donc être là quand la prévision arrive, et l'app est ouverte tous les jours chez
+    /// quelqu'un qui suit un programme.
+    ///
+    /// Quatre portes avant d'aller chercher quoi que ce soit, dans cet ordre : l'interrupteur, un
+    /// conseil déjà donné aujourd'hui, un jour de repos, et l'autorisation de notifier. Chacune
+    /// évite un appel réseau et une demande de position, et la dernière évite surtout d'aller
+    /// chercher une prévision pour une notification qui ne partira pas.
+    private func conseillerUnAutreCreneauSiPluie() async {
+        guard profile.weatherAlertsEnabled else { return }
+        if let dernier = profile.lastWeatherAdviceDate,
+           Calendar.current.isDateInToday(dernier) { return }
+        // Un jour de repos n'a pas de séance à déplacer.
+        guard profile.todaySession.durationMinutes > 0 else { return }
+        guard await NotificationService.shared.isAuthorized() else { return }
+
+        // Le départ de la dernière course sert de repli quand la position ponctuelle n'aboutit
+        // pas — on court presque toujours du même endroit, et deux kilomètres d'écart ne changent
+        // pas la réponse à « est-ce qu'il va pleuvoir à 18 h ».
+        let borne = Calendar.current.date(byAdding: .month, value: -3, to: .now) ?? .distantPast
+        var descripteur = FetchDescriptor<RunRecord>(
+            predicate: #Predicate { $0.date > borne },
+            sortBy: [SortDescriptor(\RunRecord.date, order: .reverse)])
+        descripteur.fetchLimit = 10
+        let recentes = (try? modelContext.fetch(descripteur)) ?? []
+        let repli = recentes.compactMap { $0.route.first }.first
+            .map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lng) }
+
+        let heures = await weather.hoursToday(fallback: repli)
+        guard let conseil = WeatherAdvice.advise(
+            hours: heures,
+            usual: WeatherAdvice.Slot.from(profile.preferredTimeOfDay)
+        ) else { return }
+
+        profile.lastWeatherAdviceDate = .now
+        NotificationService.shared.postWeatherAdvice(conseil)
+    }
+
     private func importRunsFromHealth() async {
         guard profile.connectedSources.contains(.apple) else { return }
 
@@ -393,6 +438,7 @@ final class AppState {
         // Les courses faites ailleurs d'abord, le programme ensuite : une sortie importée doit
         // pouvoir compter dans la semaine que ce même appel s'apprête à évaluer.
         Task { await importRunsFromHealth() }
+        Task { await conseillerUnAutreCreneauSiPluie() }
         let previousWeek = profile.weekNumber
         AdaptivePlanEngine.refreshProgramForCurrentDate(profile)
         AdaptivePlanEngine.resetDailyGoalsIfNewDay(profile)

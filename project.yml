@@ -132,6 +132,18 @@ targets:
         com.apple.developer.healthkit.background-delivery: true
         com.apple.developer.applesignin:
           - Default
+        # Les prévisions horaires qui décident de proposer un autre créneau quand la séance tombe
+        # sous la pluie — voir `RunWeatherService` et `WeatherAdvice`.
+        #
+        # ⚠️ UNE ÉTAPE MANUELLE, ET UNE SEULE, QUI NE PEUT PAS SE FAIRE D'ICI : WeatherKit doit
+        # être activé pour l'identifiant d'app sur developer.apple.com (Certificates, Identifiers
+        # & Profiles → Identifiers → com.hicsuntco.runup → cocher WeatherKit → Save), puis les
+        # profils de provisionnement régénérés. Sans ça la signature échoue à l'archivage, avec un
+        # message qui ne nomme pas WeatherKit.
+        #
+        # Le quota gratuit est de 500 000 appels par mois avec un compte développeur. Cette
+        # fonctionnalité en fait UN par jour et par personne, au plus.
+        com.apple.developer.weatherkit: true
         # Shares today's goals/streak/theme with the Home Screen widget (`RunUpWidgets` target) —
         # the widget runs in its own process with no other way to reach `UserProfile`. Needs a real
         # App Group created under her Apple Developer account (Certificates, Identifiers & Profiles

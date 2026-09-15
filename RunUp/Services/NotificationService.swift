@@ -204,6 +204,37 @@ final class NotificationService: NSObject {
     /// coach nudge. Thanks to `willPresent` below, this shows as a real banner even while the app
     /// is already open in the foreground, not just when backgrounded. Still requires real,
     /// already-granted OS authorization like every other notification here — never prompts.
+    /// Les notifications sont-elles autorisées ? Demandé AVANT d'aller chercher une prévision :
+    /// inutile de réveiller la position et le réseau pour une notification qui ne partira pas.
+    func isAuthorized() async -> Bool {
+        await center.notificationSettings().authorizationStatus == .authorized
+    }
+
+    /// « Il va pleuvoir ce soir. Ta séance passerait mieux ce midi. »
+    ///
+    /// Immédiate, et non programmée : le texte d'une notification est figé au moment où on la
+    /// programme, donc une notification posée hier ne peut pas parler de la pluie d'aujourd'hui.
+    /// Elle part quand la prévision arrive, c'est-à-dire quand l'app s'ouvre — ce qu'elle fait
+    /// tous les jours chez quelqu'un qui suit un programme.
+    func postWeatherAdvice(_ advice: WeatherAdvice.Advice) {
+        let quand = Self.moment(advice.avoid)
+        let plutot = Self.moment(advice.prefer)
+        postImmediateNotification(
+            title: String(localized: "Il va pleuvoir \(quand)"),
+            body: String(localized: "Ta séance passerait mieux \(plutot).")
+        )
+    }
+
+    /// « ce matin », « ce midi », « ce soir » — traduits, et jamais construits par concaténation :
+    /// l'ordre des mots d'une phrase ne survit pas au passage en espagnol.
+    private static func moment(_ slot: WeatherAdvice.Slot) -> String {
+        switch slot {
+        case .morning: return String(localized: "ce matin")
+        case .noon: return String(localized: "ce midi")
+        case .evening: return String(localized: "ce soir")
+        }
+    }
+
     func postImmediateNotification(title: String, body: String) {
         center.getNotificationSettings { [center] settings in
             guard settings.authorizationStatus == .authorized else { return }

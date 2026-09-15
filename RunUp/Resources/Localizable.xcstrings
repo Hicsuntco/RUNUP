@@ -8129,6 +8129,23 @@
         }
       }
     },
+    "Il va pleuvoir %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rain is coming %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Va a llover %@"
+          }
+        }
+      }
+    },
     "Il y a %lld semaine%@": {
       "extractionState": "manual",
       "localizations": {
@@ -10804,6 +10821,23 @@
         }
       }
     },
+    "Météo  Apple Weather": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weather  Apple Weather"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiempo  Apple Weather"
+          }
+        }
+      }
+    },
     "Ne plus suivre": {
       "localizations": {
         "en": {
@@ -13333,6 +13367,23 @@
         }
       }
     },
+    "Prévenir s'il va pleuvoir": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warn me if it's going to rain"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avisarme si va a llover"
+          }
+        }
+      }
+    },
     "Prévient à voix haute si tu t'écartes de ton allure cible.": {
       "localizations": {
         "en": {
@@ -13489,6 +13540,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "¿Cuándo?"
+          }
+        }
+      }
+    },
+    "Quand ton créneau habituel tombe sous l'averse et qu'un autre moment de la journée est au sec.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When your usual slot falls in the rain and another time of day is dry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando tu franja habitual cae bajo la lluvia y otro momento del día está seco."
           }
         }
       }
@@ -16977,6 +17045,23 @@
         }
       }
     },
+    "Ta séance passerait mieux %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your session would go better %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu sesión iría mejor %@."
+          }
+        }
+      }
+    },
     "Ta séance, tes calories actives et tes pas, d'un coup d'œil.": {
       "extractionState": "manual",
       "localizations": {
@@ -19337,6 +19422,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "bpm"
+          }
+        }
+      }
+    },
+    "ce matin": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "this morning"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "esta mañana"
+          }
+        }
+      }
+    },
+    "ce midi": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "at midday"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "al mediodía"
+          }
+        }
+      }
+    },
+    "ce soir": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "this evening"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "esta tarde"
           }
         }
       }

@@ -350,6 +350,41 @@ struct SettingsView: View {
                     .accessibilityLabel("Notifications du coach")
             }
             .padding(.horizontal, 14).padding(.vertical, 13)
+
+            Divider().background(RUColor.line)
+
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Prévenir s'il va pleuvoir")
+                            .font(RUFont.sans(.emphasis, weight: .medium))
+                            .foregroundColor(RUColor.textPrimary)
+                        Text("Quand ton créneau habituel tombe sous l'averse et qu'un autre moment de la journée est au sec.")
+                            .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                            .lineSpacing(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: 10)
+                    Toggle("", isOn: Binding(
+                        get: { profile.weatherAlertsEnabled },
+                        set: { profile.weatherAlertsEnabled = $0 }
+                    ))
+                    .labelsHidden()
+                    .tint(RUColor.rose)
+                    .accessibilityLabel("Prévenir s'il va pleuvoir")
+                }
+                // ATTRIBUTION EXIGÉE PAR APPLE, pas une politesse. Les conditions de WeatherKit
+                // imposent d'afficher la marque « Apple Weather » et un lien vers la page des
+                // sources partout où la donnée météo est utilisée. L'omettre est un motif de
+                // retour de revue, et il arrive après coup.
+                Link(destination: URL(string: "https://weatherkit.apple.com/legal-attribution.html")!) {
+                    Text("Météo  Apple Weather")
+                        .font(RUFont.sans(.micro))
+                        .foregroundColor(RUColor.text3)
+                        .frame(minHeight: 44, alignment: .leading)
+                }
+            }
+            .padding(.horizontal, 14).padding(.vertical, 13)
         }
         .ruCard()
     }

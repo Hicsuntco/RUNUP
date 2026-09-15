@@ -25,6 +25,20 @@ final class UserProfile {
     // fabricated) — see `cyclePhase` below. No HealthKit menstrual-flow sync yet; that's a real
     // future upgrade path, but a manual start date works from day one for everyone regardless of
     // whether they already log cycle data in Apple Santé.
+    /// Le conseil météo : « il va pleuvoir ce soir, cours plutôt ce midi ».
+    ///
+    /// Actif par défaut, et ça se défend parce que la règle qui le déclenche est volontairement
+    /// avare — il faut une pluie franche sur le créneau habituel, un autre créneau vraiment sec,
+    /// un écart net entre les deux et du temps devant. La plupart des jours, il ne dit rien.
+    ///
+    /// Il ne demande AUCUNE nouvelle autorisation : sans accès à la position déjà accordé pour les
+    /// courses, le service se tait. Faire surgir une demande d'accès pour une fonctionnalité que
+    /// personne n'a encore vue est le meilleur moyen de la faire refuser — et d'emporter le suivi
+    /// GPS avec elle.
+    var weatherAlertsEnabled: Bool = true
+    /// Le jour du dernier conseil envoyé. Un par jour au maximum : deux messages le même matin
+    /// pour la même averse, et l'interrupteur est coupé pour toujours.
+    var lastWeatherAdviceDate: Date? = nil
     var cycleTrackingEnabled: Bool = false
     /// Est-ce que la phase estimée est TRANSMISE AU COACH — donc à un service tiers ?
     ///

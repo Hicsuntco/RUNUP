@@ -47,8 +47,13 @@ final class RunWeatherService: NSObject, CLLocationManagerDelegate {
                     WeatherAdvice.Hour(
                         date: $0.date,
                         precipitationChance: $0.precipitationChance,
-                        precipitationIntensity: $0.precipitationIntensity
-                            .converted(to: .millimetersPerHour).value)
+                        // `precipitationAmount` et non « intensité » : WeatherKit donne, pour
+                        // chaque heure, la HAUTEUR d'eau attendue pendant cette heure-là. Sur une
+                        // heure, une hauteur en millimètres et une intensité en millimètres par
+                        // heure sont le même nombre — c'est exactement ce que `WeatherAdvice`
+                        // attend, et le seuil de bruine à 0,1 garde son sens.
+                        precipitationIntensity: $0.precipitationAmount
+                            .converted(to: .millimeters).value)
                 }
         } catch {
             // Silencieux, et c'est le bon comportement : pas de prévision, pas de conseil. Une

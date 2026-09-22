@@ -65,9 +65,19 @@ struct RingsView: View {
         return isRunningDayForSelected ? false : nil
     }
 
+    /// UNE SEULE SOURCE POUR TOUT L'ÉCRAN, et c'est la correction.
+    ///
+    /// Il y avait un raccourci `if isToday { return p.dailyGoalsProgress }`. Il ne changeait rien
+    /// aux pas ni aux calories — `displaySteps` et `displayCalories` rendent déjà exactement les
+    /// mêmes valeurs aujourd'hui. Il changeait UNE chose : la réponse à « la séance est-elle
+    /// faite ? ». Le raccourci lisait le drapeau du profil, le reste de l'écran lisait
+    /// `sessionDoneForSelected`, qui commence par regarder s'il existe une course ce jour-là.
+    ///
+    /// Le même écran affichait donc, au même instant : « Faite ✓ » sur la ligne (drapeau ignoré),
+    /// un arc plein sur l'anneau (même chemin), une barre VIDE juste en dessous (drapeau), et
+    /// « 2 / 3 » au centre (drapeau). Quatre rendus, deux sources, une seule question.
     private var displayProgress: [Double] {
-        if isToday { return p.dailyGoalsProgress }
-        return UserProfile.dailyGoalsProgress(
+        UserProfile.dailyGoalsProgress(
             sessionDone: sessionDoneForSelected,
             steps: displaySteps, stepsGoal: p.stepsGoal,
             activeCalories: displayCalories, activeCaloriesGoal: p.activeCaloriesGoal

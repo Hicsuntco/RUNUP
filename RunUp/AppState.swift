@@ -294,6 +294,9 @@ final class AppState {
         record.date = snapshot.startedAt
         record.sessionKind = snapshot.sessionKind
         modelContext.insert(record)
+        // La course EXISTE : la séance est faite, que le ressenti soit donné ou non. Voir
+        // `AdaptivePlanEngine.markSessionDone`.
+        AdaptivePlanEngine.markSessionDone(for: record, profile: profile)
         pendingDebriefs.append(record)
 
         let distance = String(format: "%.1f", locale: Locale.current, record.distanceKm)
@@ -414,6 +417,7 @@ final class AppState {
             record.date = run.start
             record.healthWorkoutID = run.id
             modelContext.insert(record)
+            AdaptivePlanEngine.markSessionDone(for: record, profile: profile)
             imported.append(record)
         }
 
@@ -611,6 +615,7 @@ final class AppState {
         }
         vm.saveToHealthKit(record)
         modelContext.insert(record)
+        AdaptivePlanEngine.markSessionDone(for: record, profile: profile)
         lastRun = record
         screen = .recap
         return record

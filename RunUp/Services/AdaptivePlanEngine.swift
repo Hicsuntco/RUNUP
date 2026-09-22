@@ -937,6 +937,48 @@ enum AdaptivePlanEngine {
     /// accumulator that `refreshProgramForCurrentDate` averages at the next week boundary, and
     /// (separately) the rolling window `UserProfile.readiness` reads for "forme du jour".
     @discardableResult
+    /// « Elle a couru ce jour-là » — le FAIT, séparé du ressenti.
+    ///
+    /// Ce marquage vivait à l'intérieur de `applyDebrief`, donc il n'avait lieu qu'à la
+    /// validation du ressenti. Une course pouvait donc exister dans l'historique pendant que
+    /// l'app affirmait « À faire » : c'est le cas ordinaire d'une sortie remontée d'Apple Santé,
+    /// qui attend son ressenti dans la file, et celui d'une feuille de débriefing refermée d'un
+    /// glissement. L'accueil disait « Course · À faire », la ligne de « Ta journée » disait
+    /// « Faite ✓ », et l'anneau dessinait encore autre chose — trois réponses à une question de
+    /// fait, au même instant.
+    ///
+    /// AVOIR COURU EST UN FAIT, CE QU'ON A RESSENTI EST UNE QUESTION. Les deux n'ont pas à être
+    /// répondus en même temps, et le premier ne doit pas attendre le second. `applyDebrief`
+    /// appelle toujours cette fonction — un ressenti validé implique une course — mais il n'est
+    /// plus le seul.
+    ///
+    /// SEULEMENT SI LA COURSE APPARTIENT À LA SEMAINE AFFICHÉE. Une sortie d'avant lundi
+    /// désignerait le même jour de la semaine sept jours plus tard : une course du dimanche
+    /// enregistrée le lundi cocherait le dimanche À VENIR. Le cas devient courant avec l'import
+    /// depuis Santé, qui remonte plusieurs jours en arrière.
+    static func markSessionDone(for run: RunRecord, profile: UserProfile) {
+        let runDay = weekdayIndex(for: run.date)
+        if currentWeekRange().contains(run.date) {
+            profile.weekStrip = profile.weekStrip.map { day in
+                var d = day
+                // Le jour de la course, quel que soit son état actuel — la case a pu redevenir
+                // `.upcoming` ou `.rest` si la semaine a été régénérée entre-temps.
+                if d.weekday == runDay { d.state = .done }
+                return d
+            }
+            if let idx = profile.weekSessions.firstIndex(where: { $0.weekday == runDay }) {
+                profile.weekSessions[idx].completed = true
+            }
+        }
+        // Course libre garde son propre drapeau : son modèle de séance du jour est indépendant de
+        // `weekSessions` (voir `chooseFreeRun`), donc c'est le seul signal fiable dans ce mode.
+        // Daté du JOUR DE LA COURSE et non de maintenant — une sortie d'hier validée ce matin
+        // n'a pas fait la séance d'aujourd'hui.
+        if profile.programPhase == .freerun, Calendar.current.isDateInToday(run.date) {
+            profile.freeRunSessionDoneDate = run.date
+        }
+    }
+
     static func applyDebrief(rpe: RPE, run: RunRecord, profile: UserProfile) -> String {
         profile.runValue = min(profile.runGoal, ((profile.runValue + run.distanceKm) * 100).rounded() / 100)
         // La séance est imputée au jour de la COURSE, pas au jour où le debrief est validé.
@@ -952,23 +994,7 @@ enum AdaptivePlanEngine {
         // reçue de la montre après un changement de semaine ; il devient courant avec l'import
         // depuis Santé, qui remonte plusieurs jours en arrière. Le ressenti, l'XP et la série,
         // eux, s'appliquent quoi qu'il arrive — ils ne sont pas attachés à une case.
-        let runDay = weekdayIndex(for: run.date)
-        if currentWeekRange().contains(run.date) {
-            profile.weekStrip = profile.weekStrip.map { day in
-                var d = day
-                // Le jour de la course, quel que soit son état actuel — la case a pu redevenir
-                // `.upcoming` ou `.rest` si la semaine a été régénérée entre le départ et la validation.
-                if d.weekday == runDay { d.state = .done }
-                return d
-            }
-            if let idx = profile.weekSessions.firstIndex(where: { $0.weekday == runDay }) {
-                profile.weekSessions[idx].completed = true
-            }
-        }
-        // Course libre's own completion flag — its `todaySession` template is independent of
-        // `weekSessions` (see `chooseFreeRun`), so this is the only reliable "she did today's
-        // free-run session" signal in that mode.
-        if profile.programPhase == .freerun { profile.freeRunSessionDoneDate = .now }
+        markSessionDone(for: run, profile: profile)
         let severity = 3 - rpe.rawValue // 0 = facile ... 3 = tropDur, same scale UserProfile.readiness reads
         profile.weekRPESum += severity
         profile.weekRPECount += 1

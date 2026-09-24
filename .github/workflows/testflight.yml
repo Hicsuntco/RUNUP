@@ -392,6 +392,17 @@ jobs:
             cp "$raw" "$DIR/$uuid.mobileprovision"
             echo "$bundle=$pname" >> "$MAP"
             echo "  ✓ $bundle → $pname"
+
+            # Un profil est figé au jour de sa création : cocher une capacité sur l'identifiant
+            # d'app ne met à jour aucun profil existant. Sans ce contrôle, l'oubli se paie douze
+            # minutes plus tard à l'export, par un message qu'on met un moment à relier à la case
+            # cochée la veille. Voir `ci_scripts/check_profile.py`.
+            case "$slot" in
+              APP) voulu="RunUp/RunUp.entitlements" ;;
+              WIDGETS) voulu="RunUpWidgets/RunUpWidgets.entitlements" ;;
+              WATCH) voulu="RunUpWatch/RunUpWatch.entitlements" ;;
+            esac
+            python3 ci_scripts/check_profile.py "$plist" "$voulu" "$pname"
           done
           echo "PROFILE_MAP=$MAP" >> "$GITHUB_ENV"
 

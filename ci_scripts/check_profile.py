@@ -34,6 +34,26 @@ son message est clair quand il échoue là-dessus.
 import plistlib, sys
 
 
+def demandees(chemin_demande) -> list:
+    """Les capacités que la cible réclame et qui viennent d'une case du portail.
+
+    Exposée à part parce que `ci_scripts/profils.py` applique EXACTEMENT la même règle avant de
+    décider qu'un profil est périmé. Deux copies de cette liste divergeraient le jour où une
+    capacité au nom inhabituel apparaîtrait, et le refus tomberait alors à l'export — l'endroit
+    précis d'où ce fichier a été écrit pour le faire remonter.
+    """
+    with open(chemin_demande, "rb") as f:
+        demande = plistlib.load(f)
+    return [k for k in demande
+            if k.startswith("com.apple.developer.")
+            or k.startswith("com.apple.security.")]
+
+
+def manquantes(entitlements_du_profil: dict, chemin_demande) -> list:
+    """Ce que la cible demande et que le profil ne porte pas. Vide = le profil convient."""
+    return [k for k in demandees(chemin_demande) if k not in entitlements_du_profil]
+
+
 def main(argv):
     if len(argv) != 4:
         print("usage: check_profile.py <profil.plist> <cible.entitlements> <nom du profil>",
@@ -43,16 +63,12 @@ def main(argv):
 
     with open(chemin_profil, "rb") as f:
         profil = plistlib.load(f).get("Entitlements", {})
-    with open(chemin_demande, "rb") as f:
-        demande = plistlib.load(f)
 
-    interessantes = [k for k in demande
-                     if k.startswith("com.apple.developer.")
-                     or k.startswith("com.apple.security.")]
-    manquantes = [k for k in interessantes if k not in profil]
+    interessantes = demandees(chemin_demande)
+    absentes = manquantes(profil, chemin_demande)
 
-    if manquantes:
-        print(f"::error::Le profil « {nom} » ne porte pas : {', '.join(manquantes)}",
+    if absentes:
+        print(f"::error::Le profil « {nom} » ne porte pas : {', '.join(absentes)}",
               file=sys.stderr)
         print("::error::Un profil est figé au jour de sa création. Coche la capacité sur "
               "developer.apple.com → Identifiers, PUIS régénère le profil "

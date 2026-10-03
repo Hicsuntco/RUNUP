@@ -60,38 +60,41 @@ valeurs ne doit se retrouver dans le dépôt, dans un message ou dans une captur
 | `ASC_KEY_ID` | App Store Connect → Users and Access → Integrations → App Store Connect API → **+**, rôle **Admin**. Pas « App Manager » : ce rôle crée des profils de développement mais se voit refuser la signature dans le nuage, et l'export échoue sur `Cloud signing permission error` après avoir archivé — soit un quart d'heure de machine pour découvrir un refus de permission. Le rôle d'une clé ne se change pas après coup ; il faut en recréer une. |
 | `ASC_ISSUER_ID` | Affiché en haut de la même page. |
 | `ASC_KEY_P8` | Le fichier `AuthKey_XXXXXXXXXX.p8`, téléchargeable **une seule fois** à la création de la clé. Posé directement : `base64 -i AuthKey_XXXXXXXXXX.p8 \| tr -d '\n' \| gh secret set ASC_KEY_P8`. |
-| `APPLE_PROFILE_APP` | Le profil de distribution de `com.hicsuntco.runup` (voir juste en dessous). |
-| `APPLE_PROFILE_WIDGETS` | Celui de `com.hicsuntco.runup.widgets`. |
-| `APPLE_PROFILE_WATCH` | Celui de `com.hicsuntco.runup.watchkitapp`. |
 
 Le Team ID (`SW49TQ25NV`) n'est pas un secret : il est déjà dans `project.yml`, et les options
 d'export sont fabriquées à l'exécution à partir des profils eux-mêmes.
 
-#### Les trois profils de distribution
+#### Les trois profils de distribution : il n'y a rien à faire
 
-Sur [developer.apple.com](https://developer.apple.com/account/resources/profiles/list) →
-Certificates, Identifiers & Profiles → **Profiles** → **+**, trois fois :
+Ils ne sont plus des secrets. `ci_scripts/profils.py` les demande à Apple au moment du build, avec
+la clé d'API ci-dessus, et les installe sur la machine. Tu n'as ni à les créer, ni à les
+télécharger, ni à les tenir à jour — y compris quand ils expirent, et y compris quand tu ajoutes
+une capacité.
 
-| App ID à choisir | Type de profil |
-| --- | --- |
-| `com.hicsuntco.runup` | iOS → Distribution → **App Store Connect** |
-| `com.hicsuntco.runup.widgets` | iOS → Distribution → **App Store Connect** |
-| `com.hicsuntco.runup.watchkitapp` | **watchOS** → Distribution → **App Store Connect** |
+**Pourquoi ce choix.** Un profil est une photo des capacités prises le jour de sa création. Cocher
+une capacité sur l'identifiant d'app ne met à jour aucun profil déjà créé. Quand WeatherKit a été
+ajouté, les trois secrets sont devenus périmés d'un coup et la chaîne est restée rouge jusqu'à ce
+que les trois soient refaits à la main — opération qui, deux fois, a produit un secret vide sans
+que rien ne le signale (`gh secret set` accepte une entrée vide sans broncher). Un profil fabriqué
+trente secondes avant l'export ne peut pas être périmé : la panne n'a plus d'endroit où se
+produire.
 
-Chacun doit s'appuyer sur le certificat **Apple Distribution** — le même que `APPLE_DIST_CERT_P12`.
-Nomme-les comme tu veux : le workflow lit le nom et le bundle ID dans le fichier lui-même, il n'y a
-aucune correspondance recopiée à la main qui pourrait devenir fausse.
+Le script ne touche qu'aux profils qu'il a lui-même créés — ceux dont le nom commence par
+`RunUp CI`. Les profils que tu crées à la main dans le portail ne sont ni lus ni supprimés.
 
-Télécharge les trois, puis, en remplaçant chaque nom de fichier :
+**Le seul cas qui demande encore un humain** : si une capacité n'est pas cochée sur l'identifiant
+d'app, aucun profil ne la portera, et il faut aller cocher la case. Le script distingue ce cas du
+profil simplement périmé et te donne le chemin exact :
 
-```bash
-base64 -i ~/Downloads/RunUp_App_Store.mobileprovision | tr -d '\n' | gh secret set APPLE_PROFILE_APP
-base64 -i ~/Downloads/RunUp_Widgets.mobileprovision   | tr -d '\n' | gh secret set APPLE_PROFILE_WIDGETS
-base64 -i ~/Downloads/RunUp_Watch.mobileprovision     | tr -d '\n' | gh secret set APPLE_PROFILE_WATCH
-```
+> Le profil « RunUp CI app » vient d'être fabriqué et ne porte toujours pas :
+> com.apple.developer.weatherkit
+> Ce n'est donc pas un profil périmé : la capacité n'est pas activée sur l'identifiant d'app
+> lui-même. developer.apple.com → Certificates, Identifiers & Profiles → Identifiers →
+> com.hicsuntco.runup → cocher la capacité → Save. Puis relancer : le profil se refera tout seul.
 
-**Ils expirent au bout d'un an.** À ce moment-là, l'export échouera ; il suffira de régénérer les
-trois profils au même endroit et de rejouer ces trois commandes.
+Les anciens secrets `APPLE_PROFILE_APP`, `APPLE_PROFILE_WIDGETS` et `APPLE_PROFILE_WATCH` ne sont
+plus lus. Tu peux les supprimer : `gh secret delete APPLE_PROFILE_APP`, etc.
+
 
 #### Pourquoi les profils sont fournis, et pas demandés à Apple
 

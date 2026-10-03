@@ -36,11 +36,14 @@
 #                             redonne jamais. Encode-le pareil :
 #                                 base64 -i AuthKey_XXXXXXXXXX.p8 | tr -d '\n' | gh secret set ASC_KEY_P8
 #
-#   APPLE_PROFILE_APP         Les trois profils de provisionnement de DISTRIBUTION, un par cible.
-#   APPLE_PROFILE_WIDGETS     developer.apple.com → Certificates, Identifiers & Profiles →
-#   APPLE_PROFILE_WATCH       Profiles → « + » → Distribution → App Store Connect, une fois par
-#                             bundle ID (com.hicsuntco.runup, .widgets, puis .watchkitapp en
-#                             choisissant watchOS). Télécharge les trois .mobileprovision et
+#   (Les profils de provisionnement NE SONT PLUS des secrets : ils sont fabriqués à chaque
+#   build par `ci_scripts/profils.py`, avec la clé d'API ci-dessus. Voir ce fichier pour le
+#   pourquoi. APPLE_PROFILE_APP, APPLE_PROFILE_WIDGETS et APPLE_PROFILE_WATCH ne servent plus
+#   à rien et peuvent être supprimés du dépôt.)
+#
+#   (ancienne procédure, conservée pour mémoire : developer.apple.com → Certificates,
+#                             Identifiers & Profiles → Profiles → « + » → Distribution → App
+#                             Store Connect, une fois par bundle ID. Télécharger les trois .mobileprovision et
 #                             encode-les comme le reste. Ils expirent au bout d'un an.
 #
 # Le Team ID (SW49TQ25NV) n'est pas un secret : il est déjà dans `project.yml`, et les options
@@ -160,14 +163,10 @@ jobs:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
-          APPLE_PROFILE_APP: ${{ secrets.APPLE_PROFILE_APP }}
-          APPLE_PROFILE_WIDGETS: ${{ secrets.APPLE_PROFILE_WIDGETS }}
-          APPLE_PROFILE_WATCH: ${{ secrets.APPLE_PROFILE_WATCH }}
         run: |
           missing=0
           for name in RUNUP_APP_SECRET APPLE_DIST_CERT_P12 APPLE_DIST_CERT_PASSWORD \
-                      ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 \
-                      APPLE_PROFILE_APP APPLE_PROFILE_WIDGETS APPLE_PROFILE_WATCH; do
+                      ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8; do
             eval "value=\${$name}"
             if [ -z "$value" ]; then
               echo "✗ $name — absent ou vide"
@@ -204,25 +203,6 @@ jobs:
           fi
           echo "✓ APPLE_DIST_CERT_P12 redonne bien une archive PKCS#12"
 
-          # Chaque profil est un plist enveloppé dans une signature CMS. Le décoder ici coûte une
-          # seconde et évite de découvrir à l'export qu'un des trois secrets contient autre chose.
-          for slot in APP WIDGETS WATCH; do
-            eval "b64=\${APPLE_PROFILE_$slot}"
-            # Passer par un fichier : `security cms` relit son entrée, ce qu'un tube ne permet
-            # pas — sur /dev/stdin il échouerait sur un profil parfaitement valide.
-            probe="$RUNNER_TEMP/probe-$slot.mobileprovision"
-            echo "$b64" | base64 -d > "$probe" 2>/dev/null || true
-            if ! security cms -D -i "$probe" > /dev/null 2>&1; then
-              echo ""
-              echo "✗ APPLE_PROFILE_$slot ne redonne pas un profil de provisionnement lisible."
-              echo "  Le secret doit contenir le base64 du .mobileprovision telecharge depuis"
-              echo "  developer.apple.com. Voir IOS_SETUP.md."
-              rm -f "$probe"
-              exit 1
-            fi
-            rm -f "$probe"
-          done
-          echo "✓ Les trois profils de provisionnement sont lisibles"
 
       - name: Installer XcodeGen
         run: brew install xcodegen
@@ -284,6 +264,11 @@ jobs:
       # partagé sont bien retirés — c'est la seule promesse de cette app dont la rupture publierait
       # l'adresse de quelqu'un. Aucun build ne doit partir aux testeurs sans qu'elle ait été
       # vérifiée.
+      # La règle qui décide si un profil est encore bon tourne en production à chaque build et
+      # décide seule d'en supprimer un chez Apple. Elle se vérifie sans réseau, en une seconde.
+      - name: Vérifier la règle des profils de provisionnement
+        run: python3 ci_scripts/test_profils.py
+
       - name: Tests
         run: |
           set -o pipefail
@@ -348,62 +333,39 @@ jobs:
           chmod 600 "$KEY_PATH"
           echo "ASC_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
 
-      # Les profils de provisionnement de distribution, fournis en secrets plutôt que réclamés à
-      # Apple au moment de l'export.
+      # Les profils de provisionnement de DISTRIBUTION, fabriqués à chaque build au lieu d'être
+      # stockés en secrets.
       #
-      # La signature automatique a bien fonctionné pour ARCHIVER — Xcode a créé des profils de
+      # La signature automatique a bien fonctionné pour ARCHIVER — Xcode crée des profils de
       # DÉVELOPPEMENT tout seul. Mais l'export vers l'App Store réclame des profils de
       # DISTRIBUTION, que la signature automatique ne sait obtenir que par la « signature dans le
       # nuage », laquelle a répondu « Cloud signing permission error » sur les trois bundle IDs
-      # avec une clé d'équipe Admin — donc pour une raison qui ne dépend ni de ce dépôt ni de ce
-      # workflow. Trois profils fournis à l'avance suppriment cette dépendance entière : plus rien
-      # n'est demandé à Apple pendant l'export.
+      # avec une clé d'équipe Admin. Fournir les profils à l'avance supprime cette dépendance.
       #
-      # Le prix : les profils expirent au bout d'un an et devront être régénérés. C'est écrit dans
-      # IOS_SETUP.md, avec la commande.
+      # Ils l'étaient par trois secrets, et ce choix avait un défaut qui a fini par coûter cher :
+      # UN PROFIL EST UNE PHOTO DES CAPACITÉS PRISES LE JOUR DE SA CRÉATION. Ajouter WeatherKit
+      # à `project.yml` a périmé les trois photos d'un coup, et la chaîne
+      # est restée rouge jusqu'à ce qu'un humain retrouve une machine, le portail Apple, et refasse
+      # les trois à la main. Deux fois sur ce trajet, l'encodage a produit un secret VIDE sans que
+      # rien ne le signale.
+      #
+      # `ci_scripts/profils.py` les DEMANDE à Apple ici, avec la clé d'API installée juste au-dessus.
+      # Un profil fabriqué il y a trente secondes porte les capacités d'il y a trente secondes :
+      # cette panne n'a plus d'endroit où se produire, et il n'y a plus de secret à tenir à jour.
+      #
+      # Reste un cas qui demande un humain : si la capacité n'est pas cochée sur l'IDENTIFIANT
+      # D'APP, aucun profil ne la portera. Le script le distingue et le dit explicitement.
       #
       # Rien n'est codé en dur ici : le bundle ID, le nom et l'UUID sont LUS dans chaque profil.
-      # Une correspondance recopiée à la main entre un nom de profil et un bundle ID serait fausse
-      # dès que tu renommes un profil dans le portail Apple, et l'erreur ne sortirait qu'à
-      # l'export.
-      - name: Installer les profils de provisionnement
+      - name: Fabriquer et installer les profils de provisionnement
         env:
-          PROFILE_APP: ${{ secrets.APPLE_PROFILE_APP }}
-          PROFILE_WIDGETS: ${{ secrets.APPLE_PROFILE_WIDGETS }}
-          PROFILE_WATCH: ${{ secrets.APPLE_PROFILE_WATCH }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
         run: |
           set -euo pipefail
           DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
-          mkdir -p "$DIR"
           MAP="$RUNNER_TEMP/profile-map.txt"
-          : > "$MAP"
-          for slot in APP WIDGETS WATCH; do
-            eval "b64=\${PROFILE_$slot}"
-            raw="$RUNNER_TEMP/$slot.mobileprovision"
-            echo "$b64" | base64 -d > "$raw"
-            # Un .mobileprovision est un plist signé en CMS : il faut le désenvelopper pour le lire.
-            plist="$RUNNER_TEMP/$slot.plist"
-            security cms -D -i "$raw" > "$plist"
-            uuid=$(/usr/libexec/PlistBuddy -c "Print :UUID" "$plist")
-            pname=$(/usr/libexec/PlistBuddy -c "Print :Name" "$plist")
-            # `application-identifier` vaut TEAMID.bundle.id ; on retire le préfixe d'équipe.
-            appid=$(/usr/libexec/PlistBuddy -c "Print :Entitlements:application-identifier" "$plist")
-            bundle=${appid#*.}
-            cp "$raw" "$DIR/$uuid.mobileprovision"
-            echo "$bundle=$pname" >> "$MAP"
-            echo "  ✓ $bundle → $pname"
-
-            # Un profil est figé au jour de sa création : cocher une capacité sur l'identifiant
-            # d'app ne met à jour aucun profil existant. Sans ce contrôle, l'oubli se paie douze
-            # minutes plus tard à l'export, par un message qu'on met un moment à relier à la case
-            # cochée la veille. Voir `ci_scripts/check_profile.py`.
-            case "$slot" in
-              APP) voulu="RunUp/RunUp.entitlements" ;;
-              WIDGETS) voulu="RunUpWidgets/RunUpWidgets.entitlements" ;;
-              WATCH) voulu="RunUpWatch/RunUpWatch.entitlements" ;;
-            esac
-            python3 ci_scripts/check_profile.py "$plist" "$voulu" "$pname"
-          done
+          python3 ci_scripts/profils.py "$DIR" "$MAP"
           echo "PROFILE_MAP=$MAP" >> "$GITHUB_ENV"
 
       - name: Archiver

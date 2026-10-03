@@ -98,21 +98,21 @@ Politique de confidentialité : https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## Nouveautés de cette version (4000 caractères max — obligatoire pour une mise à jour)
 ```
-La suite de la passe au crible, côté vie privée et côté détails.
+RUNUP regarde le ciel et te dit quand sortir.
 
-TA PHASE DE CYCLE NE PART PLUS SANS TON ACCORD
-Le suivi du cycle adapte ton programme sur ton téléphone — ça n'a jamais bougé. Mais il envoyait aussi ta phase estimée au service qui fait tourner le coach, sans le dire. C'est maintenant une case à part, décochée, qui nomme le destinataire. Refuser ne coûte rien : ton plan s'adapte exactement pareil.
+IL PLEUVRA CE SOIR — TU LE SAIS CE MATIN
+Ta séance est prévue à 18 h, et la pluie arrive à 17 h. En ouvrant l'app, RUNUP a déjà comparé le matin, le midi et le soir, heure par heure, et te propose le créneau sec.
 
-UN RESSENTI BALAYÉ DU DOIGT N'EST PLUS PERDU
-La feuille de ressenti surgit parfois sous ton doigt quand une course arrive de ta montre. Si tu la balayais, la course restait dans l'historique mais ta série était cassée et ton programme ne l'avait pas vue. Une ligne « Ressenti manquant » permet d'y revenir.
+Il ne parle que quand il a quelque chose à dire. Il faut que ton créneau habituel soit franchement mauvais, qu'un autre moment de la journée soit vraiment sec, que l'écart entre les deux soit net, et qu'il te reste deux heures pour t'organiser. Une alerte par jour au maximum.
 
-TA CARTE DE SORTIE NE S'ARRÊTE PLUS AU MILIEU
-Un très long parcours était coupé à ses premiers points : la carte du fil montrait le début et s'arrêtait net. Elle garde maintenant la forme entière, du départ à l'arrivée.
+Quand il pleut toute la journée, il se tait. Tu courras sous la pluie ou pas du tout : te le dire ne changerait que ton humeur.
 
-VOICEOVER LIT ENFIN L'ANNEAU DES OBJECTIFS
-C'était le seul graphique muet de l'app, sur l'écran qui leur est entièrement consacré.
+Ça s'éteint d'un interrupteur, « Prévenir s'il va pleuvoir », et aucune autorisation nouvelle n'est demandée. Prévisions Apple Weather.
 
-Et sous le capot : une même adresse e-mail ne peut plus créer deux comptes selon les majuscules, la liste d'amis ne se charge plus sans limite, et seize tests de plus gardent les règles d'autorisation du serveur.
+« À FAIRE » ET « FAITE » NE PEUVENT PLUS S'AFFICHER EN MÊME TEMPS
+L'accueil pouvait se contredire tout seul : le mot « Faite », un arc plein sur l'anneau, et juste en dessous une barre vide. Deux endroits répondaient à la question « la séance est-elle faite ? », et pas de la même façon. Il n'y en a plus qu'un.
+
+Et une course arrivée d'Apple Santé, ou récupérée après un plantage, compte désormais tout de suite — sans attendre que tu aies rempli ton ressenti. L'app annonçait « À faire » pour une sortie qu'elle montrait dans ton historique.
 ```
 
 ## Mots-clés (100 caractères max, séparés par des virgules sans espace)
@@ -194,21 +194,21 @@ Privacy Policy: https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## What's New in This Version (4000 characters max — required for an update)
 ```
-The rest of the sweep — privacy first, then the details.
+RUNUP watches the sky and tells you when to go.
 
-YOUR CYCLE PHASE NO LONGER LEAVES WITHOUT YOUR SAY-SO
-Cycle tracking adapts your plan on your phone — that never changed. But it also sent your estimated phase to the service that powers the coach, without saying so. That's now a separate checkbox, off by default, naming who receives it. Saying no costs nothing: your plan adapts exactly the same.
+IT WILL RAIN TONIGHT — YOU KNOW THIS MORNING
+Your session is set for 6pm, and the rain starts at 5. Open the app and RUNUP has already compared morning, midday and evening, hour by hour, and offers you the dry window.
 
-FEEDBACK SWIPED AWAY IS NO LONGER LOST
-The feedback sheet sometimes appears under your thumb when a run arrives from your watch. Swipe it away and the run stayed in your history, but your streak broke and your plan never saw it. A "Feedback missing" row lets you go back.
+It only speaks when it has something to say. Your usual slot has to be genuinely bad, another part of the day genuinely dry, the gap between them clear-cut, and you need two hours left to rearrange things. One alert a day, at most.
 
-YOUR RUN MAP NO LONGER STOPS HALFWAY
-A very long route was cut to its first points: the feed map showed the start and stopped dead. It now keeps the whole shape, start to finish.
+When it rains all day, it says nothing. You'll run in the rain or not at all: telling you would only change your mood.
 
-VOICEOVER FINALLY READS THE GOALS RING
-It was the only silent graphic in the app, on the screen entirely devoted to it.
+One switch turns it off — "Warn me if it's going to rain" — and no new permission is requested. Forecasts by Apple Weather.
 
-Under the hood: one email address can no longer create two accounts depending on capitals, the friends list no longer loads without a limit, and sixteen more tests guard the server's permission rules.
+"TO DO" AND "DONE" CAN NO LONGER SHOW AT ONCE
+The home screen could contradict itself: the word "Done", a full arc on the ring, and right below it an empty bar. Two places answered the question "is the session done?", and not the same way. Now there's only one.
+
+And a run that arrives from Apple Health, or is recovered after a crash, now counts straight away — without waiting for you to fill in how it felt. The app was announcing "To do" for a run it was showing in your history.
 ```
 
 ## Keywords (100 characters max, comma-separated, no spaces)
@@ -285,21 +285,21 @@ Política de privacidad: https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## Novedades de esta versión (4000 caracteres máx. — obligatorio para una actualización)
 ```
-El resto del repaso: primero la privacidad, luego los detalles.
+RUNUP mira el cielo y te dice cuándo salir.
 
-TU FASE DEL CICLO YA NO SALE SIN TU PERMISO
-El seguimiento del ciclo adapta tu plan en tu teléfono, eso no ha cambiado. Pero también enviaba tu fase estimada al servicio que hace funcionar al coach, sin decirlo. Ahora es una casilla aparte, desmarcada, que nombra al destinatario. Decir que no no cuesta nada: tu plan se adapta exactamente igual.
+ESTA NOCHE LLOVERÁ — LO SABES ESTA MAÑANA
+Tu sesión está prevista a las 18 h y la lluvia llega a las 17. Al abrir la app, RUNUP ya ha comparado la mañana, el mediodía y la tarde, hora por hora, y te propone la ventana seca.
 
-UNA SENSACIÓN DESCARTADA YA NO SE PIERDE
-La hoja de sensaciones aparece a veces bajo tu dedo cuando llega una carrera de tu reloj. Si la descartabas, la carrera seguía en el historial pero tu racha se rompía y tu plan no la veía. Una línea «Falta la sensación» permite volver.
+Solo habla cuando tiene algo que decir. Tu franja habitual debe estar francamente mal, otro momento del día realmente seco, la diferencia entre ambos clara, y deben quedarte dos horas para reorganizarte. Un aviso al día como máximo.
 
-EL MAPA DE TU SALIDA YA NO SE CORTA A MEDIAS
-Una ruta muy larga se recortaba a sus primeros puntos: el mapa del feed mostraba el inicio y se detenía en seco. Ahora conserva la forma entera, de la salida a la llegada.
+Cuando llueve todo el día, se calla. Correrás bajo la lluvia o no correrás: decírtelo solo cambiaría tu humor.
 
-VOICEOVER YA LEE EL ANILLO DE OBJETIVOS
-Era el único gráfico mudo de la app, en la pantalla dedicada por completo a ellos.
+Se apaga con un interruptor, «Avisarme si va a llover», y no se pide ningún permiso nuevo. Previsiones de Apple Weather.
 
-Y por dentro: una misma dirección de correo ya no puede crear dos cuentas según las mayúsculas, la lista de amigos ya no se carga sin límite, y dieciséis pruebas más protegen las reglas de permisos del servidor.
+«POR HACER» Y «HECHA» YA NO PUEDEN APARECER A LA VEZ
+La pantalla de inicio podía contradecirse sola: la palabra «Hecha», un arco lleno en el anillo, y justo debajo una barra vacía. Dos sitios respondían a la pregunta «¿está hecha la sesión?», y no de la misma forma. Ahora solo hay uno.
+
+Y una carrera que llega de Apple Salud, o que se recupera tras un fallo, cuenta ya de inmediato, sin esperar a que rellenes tus sensaciones. La app anunciaba «Por hacer» para una salida que mostraba en tu historial.
 ```
 
 ## Palabras clave (100 caracteres máx., separadas por comas sin espacios)

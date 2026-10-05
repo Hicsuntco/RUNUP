@@ -635,107 +635,101 @@ struct HomeView: View {
     /// "/400 KCAL", "/6000 PAS") plutôt que par leur nom, ce qui obligeait à décoder la couleur
     /// de l'anneau pour savoir de quel objectif on parle. Une ligne par objectif, nommée, laisse
     /// aussi la valeur respirer au lieu d'être tronquée.
+    /// L'anneau du jour, posé en GRAND et centré, avec le compte au milieu et ses objectifs
+    /// en dessous.
+    ///
+    /// # CE QU'IL ÉTAIT
+    ///
+    /// Un anneau de 84 points à gauche d'une carte, trois lignes « nom … valeur » à droite. Lisible,
+    /// mais c'était la mise en page d'une LIGNE DE LISTE appliquée à l'objet signature de l'app :
+    /// l'anneau segmenté n'existe nulle part ailleurs, et il se présentait comme une vignette au
+    /// bout d'un intitulé.
+    ///
+    /// # CE QU'IL EST
+    ///
+    /// Le centre de gravité de l'écran. Le compte vit DANS l'anneau — c'est le seul endroit où il
+    /// ne répète rien, puisque l'anneau le dessine déjà — et les trois objectifs passent en
+    /// colonnes dessous, alignés sur les trois arcs qu'ils nomment, de gauche à droite comme eux.
+    ///
+    /// # LA TAILLE EST FIXE, ET C'EST UN CHOIX
+    ///
+    /// 236 points, pas une fraction de la largeur. Une fraction demanderait de mesurer le
+    /// conteneur, donc un `GeometryReader` qui a besoin qu'on lui impose la hauteur qu'il est
+    /// justement censé calculer. 236 occupe les deux tiers du contenu sur un téléphone courant,
+    /// tient sur le plus étroit, et ne coûte aucune mesure.
     private var ringsCard: some View {
         let p = profile
-        // Same array `DailyGoalsBarsView` draws its bars in, so each stat's color always matches
-        // its bar's actual color.
+        // Le même tableau que `DailyGoalsBarsView` dessine, donc la pastille d'un objectif porte
+        // toujours la couleur de SON arc.
         let goalColors = DailyGoalsBarsView.fillColors
         return Button(action: { appState.go(.rings) }) {
-            HStack(spacing: 16) {
-                // Un cran plus grand que les 72 pt d'avant : la maquette donne à l'anneau presque
-                // la moitié de la largeur du contenu. On ne va pas jusque-là (ce serait dépasser
-                // l'anneau héros de l'écran "Ta journée", qui doit rester le plus grand), mais
-                // 96 pt lui rend le poids d'élément principal de la carte.
-                // 84, et non plus 96. La taille avait été montée à 96 pour que l'anneau pèse comme
-                // l'élément principal de SA CARTE. Il n'y a plus de carte : posé à même la page, à
-                // dix-huit points du bord, il n'a plus rien à dominer, et à 96 il se met à
-                // écraser la ligne de la séance juste au-dessus.
-DailyGoalsBarsView(goals: p.dailyGoalSlotsToday.map { .init(slot: $0.slot, progress: $0.progress) }, size: 96)
-                VStack(alignment: .leading, spacing: 9) {
-                    // Avec son icône, comme la carte du programme. L'écran portait trois
-                    // grammaires d'en-tête pour trois cartes — une pastille remplie, un titre nu,
-                    // une icône suivie d'un titre — et rien ne les reliait. Il en reste deux : le
-                    // titre à icône, commun aux cartes qui décrivent un ÉTAT, et la pastille de la
-                    // carte du jour, qui est la seule à porter une action.
-                    RUCardHeader(icon: "target", tint: RUColor.rose,
-                                 title: String(localized: "Objectifs · \(p.dailyGoalsDone)/\(p.dailyGoalsTotal)"))
-                    // « Objectifs · 0/3 », et non « Tes objectifs · 0/3 bouclés ».
-                    //
-                    // « Tes » ne distingue rien — tout l'écran est déjà à toi, et il est le seul
-                    // possessif de la page. « Bouclés » redit ce que la fraction dit mieux : 0/3
-                    // ne peut vouloir dire qu'une chose. Sept mots deviennent trois, la ligne
-                    // cesse de passer sur deux lignes à côté de l'anneau, et rien de l'information
-                    // n'est perdu.
-                    // La ligne « Séance du jour » disparaît les jours de repos, en même temps que
-                    // l'arc qui lui correspondait. Elle disait alors « Repos » — exactement ce que
-                    // la carte séance, désormais juste au-dessus, annonce en grand. Deux blocs
-                    // pour la même phrase, c'est la première raison pour laquelle cet écran
-                    // paraissait chargé un jour de repos.
-                    // Sans programme, il n'y a pas de jour de repos : chaque jour est un jour
-                    // où l'on peut courir, donc la ligne reste.
-                    if !planUnlocked || !p.isRestDayToday {
-                        // « Séance », pas « Séance du jour » : la carte juste au-dessus annonce
-                        // déjà la séance du jour en grand, et l'écran de détail nomme cette même
-                        // ligne « Séance ». Deux libellés pour la même chose, dont le plus long
-                        // était sur le plus petit espace.
-                        // « Séance » nomme la séance du programme, qui n'existe pas sans Plus.
-                        // Sans programme, l'objectif du jour est simplement d'aller courir — et
-                        // c'est le même booléen qui le mesure.
-                        ringLegendRow(
-                            // Les DEUX sont des clés, pas des chaînes traduites :
-                            // `ringLegendRow` fait lui-même la recherche au catalogue. Passer un
-                            // `String(localized:)` ici traduirait une première fois, puis
-                            // rechercherait le résultat français comme s'il était une clé — ça
-                            // marche en français par identité, et ça casse partout ailleurs.
-                            name: planUnlocked ? "Séance" : "Course",
-                            value: p.seanceDoneToday ? String(localized: "Faite") : String(localized: "À faire"),
-                            color: goalColors[0]
-                        )
+            VStack(spacing: 20) {
+                ZStack {
+                    DailyGoalsBarsView(
+                        goals: p.dailyGoalSlotsToday.map { .init(slot: $0.slot, progress: $0.progress) },
+                        size: 236,
+                        animateOnAppear: true
+                    )
+                    VStack(spacing: 2) {
+                        // `verbatim` : une fraction n'est pas une phrase, elle n'a rien à faire
+                        // dans le catalogue de traduction.
+                        Text(verbatim: "\(p.dailyGoalsDone)/\(p.dailyGoalsTotal)")
+                            .font(RUFont.display(44))
+                            .foregroundColor(RUColor.textPrimary)
+                            .monospacedDigit()
+                        Text("Ta journée")
+                            .font(RUFont.sans(.label, weight: .medium))
+                            .foregroundColor(RUColor.text3)
+                            .textCase(.uppercase)
+                            .tracking(1.6)
                     }
-                    // Le chiffre atteint seul, sans son objectif — l'arc à gauche le dessine déjà.
-                    //
-                    // « 254/15000 » était la chaîne la plus lourde de l'écran pour ce qu'elle
-                    // apprend : le second nombre ne bouge jamais, et la seule chose qu'on en tire
-                    // — suis-je loin du compte — se lit d'un coup d'œil sur la longueur de l'arc,
-                    // sans arithmétique. L'objectif reste écrit en toutes lettres sur « Ta
-                    // journée », qui est l'écran où on va justement le regarder.
-                    //
-                    // Groupé par milliers, et selon la locale : `8432` demande un effort de
-                    // lecture que `8 432` ne demande pas, et l'anglais veut sa virgule là où le
-                    // français veut son espace.
-                    ringLegendRow(name: "Calories", value: Int(p.activeCaloriesToday).formatted(), color: goalColors[1])
-                    ringLegendRow(name: "Pas", value: Int(p.stepsToday).formatted(), color: goalColors[2])
+                }
+                HStack(alignment: .top, spacing: 10) {
+                    // Les jours de repos n'ont pas de séance : l'arc disparaît, sa colonne aussi.
+                    if !planUnlocked || !p.isRestDayToday {
+                        ringStat(name: planUnlocked ? "Séance" : "Course",
+                                 value: p.seanceDoneToday ? String(localized: "Faite")
+                                                          : String(localized: "À faire"),
+                                 color: goalColors[0])
+                    }
+                    ringStat(name: "Calories", value: Int(p.activeCaloriesToday).formatted(),
+                             color: goalColors[1])
+                    ringStat(name: "Pas", value: Int(p.stepsToday).formatted(),
+                             color: goalColors[2])
                 }
             }
-            .padding(16)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
         }
         .buttonStyle(PressableStyle())
-        .ruCard()
+        // Plus de `.ruCard()`. Un anneau de 236 points dans un cadre à bord visible, c'est un
+        // cadre autour de l'élément le plus grand de l'écran : il ne le sépare plus de rien, il
+        // l'enferme. Posé à même la page, l'anneau EST la section.
     }
 
-    /// Sans pastille de couleur devant le nom.
+    /// Un objectif en colonne sous l'anneau : sa pastille, son nom, sa valeur.
     ///
-    /// Elle servait à relier la ligne à son arc dans l'anneau. Cette correspondance ne tient plus
-    /// depuis que la PISTE est grise : à 0/3, l'anneau ne contient presque aucune couleur, et
-    /// trois pastilles pointaient vers des arcs qui n'existent pas encore. Elles ne reliaient plus
-    /// rien, elles ajoutaient trois taches roses de plus sur un écran qui en comptait seize.
-    ///
-    /// Le `color` reste dans la signature : c'est la ligne qui décide, pas l'appelant, et le jour
-    /// où la correspondance redevient utile elle se rebranche ici seule.
-    private func ringLegendRow(name: String, value: String, color: Color) -> some View {
-        HStack(spacing: 8) {
+    /// La pastille revient ici alors qu'elle avait été retirée des anciennes lignes, et pour la
+    /// raison qui l'avait fait retirer : elle ne servait à rien tant que les colonnes étaient
+    /// empilées à CÔTÉ de l'anneau, puisque rien ne disait quelle ligne allait avec quel arc.
+    /// Sous l'anneau, les trois colonnes sont dans l'ordre des trois arcs — la pastille confirme
+    /// alors une correspondance que la position suggère déjà.
+    private func ringStat(name: String, value: String, color: Color) -> some View {
+        VStack(spacing: 7) {
+            Circle().fill(color).frame(width: 7, height: 7)
             Text(LocalizedStringKey(name))
+                .font(RUFont.sans(.label, weight: .medium))
+                .foregroundColor(RUColor.text3)
+                .textCase(.uppercase)
+                .tracking(1.1)
+                .lineLimit(1).minimumScaleFactor(0.7)
+            Text(value)
                 .font(RUFont.sans(.body, weight: .semibold))
                 .foregroundColor(RUColor.textPrimary)
-                .lineLimit(1).minimumScaleFactor(0.75)
-            Spacer(minLength: 6)
-            Text(value)
-                .font(RUFont.sans(.small, weight: .medium))
-                .foregroundColor(RUColor.text3)
-                .lineLimit(1).minimumScaleFactor(0.8)
+                .monospacedDigit()
+                .lineLimit(1).minimumScaleFactor(0.7)
         }
-        // Sinon VoiceOver lit le nom et la valeur comme deux arrêts distincts, alors qu'ils
-        // décrivent un seul objectif.
+        .frame(maxWidth: .infinity)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text(LocalizedStringKey(name)) + Text(", ") + Text(value))
     }

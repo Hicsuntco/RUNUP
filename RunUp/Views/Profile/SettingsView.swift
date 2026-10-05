@@ -293,6 +293,7 @@ struct SettingsView: View {
                 .contentShape(Capsule())
         }
         .buttonStyle(PressableStyle())
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
     private func selectMode(isLight: Bool) {

@@ -539,10 +539,15 @@ struct ClubView: View {
                 .foregroundColor(boardMode == value ? RUColor.rose2 : RUColor.text2)
                 .padding(.horizontal, 11).padding(.vertical, 6)
                 .frame(minHeight: 44)
-                .background(boardMode == value ? RUColor.card2 : RUColor.card2, in: Capsule())
+                // Les deux branches de ce ternaire valaient `card2` : le sélecteur ne changeait
+                // donc de REMPLISSAGE jamais, et la pastille active ne se distinguait que par un
+                // filet et une nuance de texte — le signal le plus faible de l'app. Tous ses
+                // voisins écrivent `card2 : card`.
+                .background(boardMode == value ? RUColor.card2 : RUColor.card, in: Capsule())
                 .overlay(Capsule().stroke(boardMode == value ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
         }
         .buttonStyle(PressableStyle())
+        .accessibilityAddTraits(boardMode == value ? .isSelected : [])
     }
 
     private func segment(_ label: String, _ value: Tab) -> some View {

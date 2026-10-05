@@ -25,6 +25,7 @@ struct RaceDetailsStepView: View {
                                 .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(vm.distance == d ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
                         }
                         .buttonStyle(PressableStyle())
+                        .accessibilityAddTraits(vm.distance == d ? .isSelected : [])
                         .gridCellColumns(d == .other ? 2 : 1)
                     }
                 }

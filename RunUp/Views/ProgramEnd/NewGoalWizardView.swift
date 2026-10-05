@@ -94,6 +94,7 @@ struct NewGoalWizardView: View {
                             .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(distance == d ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
                     }
                     .buttonStyle(PressableStyle())
+                    .accessibilityAddTraits(distance == d ? .isSelected : [])
                 }
             }
             EyebrowLabel(text: "Chrono visé", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
@@ -134,6 +135,7 @@ struct NewGoalWizardView: View {
                             .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(on ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
                     }
                     .buttonStyle(PressableStyle())
+                    .accessibilityAddTraits(on ? .isSelected : [])
                 }
             }
             Button("CONSTRUIRE MON PROGRAMME") { building = true }

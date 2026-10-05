@@ -265,6 +265,15 @@ jobs:
       - name: Vérifier que tout texte affiché est traduisible
         run: python3 ci_scripts/check_strings.py
 
+      # Une commande dont le libellé est une icône ne s'annonce pas : VoiceOver dit « bouton », et
+      # rien d'autre. Les siennes sont nommées une par une, et aucune n'est oubliée — cette
+      # barrière n'est pas là pour rattraper une dette, elle est là pour que le prochain bouton
+      # icône, écrit un soir dans une feuille modale, ne parte pas muet.
+      - name: Vérifier que les commandes à icône ont un nom
+        run: |
+          cd ci_scripts && python3 test_a11y.py
+          cd .. && python3 ci_scripts/check_a11y.py
+
       # Les tests tournent AVANT la signature, sur simulateur, donc sans certificat : un échec
       # coûte cinq minutes de machine au lieu de la construction complète. Et surtout,
       # `RouteSharingPrivacyTests` vérifie que les 300 premiers et derniers mètres d'un tracé

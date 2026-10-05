@@ -48,10 +48,16 @@ struct DailyGoalsBarsView: View {
     @State private var displayedProgress: [Double]
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    init(goals: [Goal], size: CGFloat = 96, animateOnAppear: Bool = false) {
+    // Cet `init` est écrit à la main pour amorcer `displayedProgress` — ce qui veut dire qu'une
+    // nouvelle propriété n'apparaît PAS toute seule dans l'initialiseur, contrairement au
+    // mémberwise que Swift fabrique. `strokeScale` ajouté sans toucher ici a donné « Extra
+    // argument 'strokeScale' in call » sur l'unique site d'appel qui s'en sert.
+    init(goals: [Goal], size: CGFloat = 96, animateOnAppear: Bool = false,
+         strokeScale: CGFloat = 1) {
         self.goals = goals
         self.size = size
         self.animateOnAppear = animateOnAppear
+        self.strokeScale = strokeScale
         _displayedProgress = State(initialValue: animateOnAppear ? goals.map { _ in 0 } : goals.map(\.progress))
     }
 

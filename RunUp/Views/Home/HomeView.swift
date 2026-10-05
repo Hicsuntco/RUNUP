@@ -3,6 +3,7 @@ import SwiftData
 
 /// "Programme" home screen — mirrors `ProgScreen` in screensA.jsx.
 struct HomeView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(AppState.self) private var appState
     @Environment(SubscriptionService.self) private var subscriptions
     // Scoped to unread only — this query exists solely to badge the bell icon with a count, but
@@ -129,21 +130,22 @@ struct HomeView: View {
                 // Ce qui manque est nommé et montré juste en dessous, plutôt que simplement
                 // absent : personne ne peut vouloir un programme dont il ignore l'existence.
                 if planUnlocked {
-                    sessionCard
+                    sessionCard.ruRises(reduceMotion)
 
-                    ringsCard
+                    ringsCard.ruRises(reduceMotion)
 
-                    programWeekCard
+                    programWeekCard.ruRises(reduceMotion)
                 } else {
-                    freeRunCard
+                    freeRunCard.ruRises(reduceMotion)
 
-                    ringsCard
+                    ringsCard.ruRises(reduceMotion)
 
                     // Sans la ligne « ce qui reste gratuit » : les trois quarts de l'écran
                     // au-dessus SONT la version gratuite en fonctionnement — la carte pour
                     // partir courir, les anneaux du jour, la série. Le rappeler par écrit
                     // au-dessous, c'est décrire ce qu'on a sous les yeux.
                     PlusLockCard(feature: .adaptivePlan, showsFreeReminder: false)
+                        .ruRises(reduceMotion)
                 }
 
                 // `planUnlocked` en plus d'`isFreeRun` : sans abonnement, cette ligne promettait

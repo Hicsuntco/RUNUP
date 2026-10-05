@@ -108,12 +108,15 @@ struct ActivityFeedRow: View {
     private func traceHead(_ trace: [RunRecord.RoutePoint]) -> some View {
         ZStack {
             Self.traceBackground
-            RouteThumbnail(
+            // Le tracé se DESSINE, il n'est pas posé. Sur une vignette de 52 points
+            // l'animation serait du bruit ; ici le tracé fait 192 points de haut et c'est le
+            // sujet de la carte — on voit la boucle partir et se refermer.
+            SelfDrawingRoute(
                 route: trace,
                 lineWidth: 3.5,
-                gradientColors: [RUColor.rose, RUColor.violet],
-                showsStart: true,
-                targetPoints: 80
+                colors: [RUColor.rose, RUColor.violet],
+                targetPoints: 140,
+                showsStart: true
             )
             // Les marges hautes et basses réservent la place du nom et des chiffres posés
             // par-dessus : le tracé ne passe jamais SOUS un texte, il s'arrête avant.

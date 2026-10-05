@@ -446,7 +446,11 @@ struct HomeView: View {
     private var freeRunCard: some View {
         VStack(alignment: .leading, spacing: 0) {
             EyebrowLabel(text: String(localized: "Aujourd'hui"), color: RUColor.rose)
-            Text("Cours quand tu veux")
+            // « Cours quand tu veux » donnait une PERMISSION, et définissait du même coup
+            // l'expérience gratuite par ce qu'elle n'a pas : un coach qui dit quoi faire. Une
+            // question invite au lieu d'autoriser, et elle s'enchaîne avec le bouton juste en
+            // dessous. « Courir » est dit, sinon « on sort ? » se lit comme une soirée.
+            Text("On sort courir ?")
                 .displayStyle(23)
                 .foregroundColor(RUColor.textPrimary)
                 .padding(.top, 8)
@@ -786,7 +790,7 @@ struct HomeView: View {
                 ZStack {
                     DailyGoalsBarsView(
                         goals: p.dailyGoalSlotsToday.map { .init(slot: $0.slot, progress: $0.progress) },
-                        size: 214,
+                        size: 186,
                         animateOnAppear: true,
                         strokeScale: 0.74
                     )
@@ -819,7 +823,14 @@ struct HomeView: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
+            // CETTE CARTE N'AVAIT PAS DE MARGES. Huit points en haut et en bas, zéro sur les
+            // côtés, là où toutes les autres en ont quatorze : l'anneau arrivait donc au bord de
+            // sa carte, et le cadrage se voyait avant le dessin. Les marges normales, plus de la
+            // hauteur — un objet rond a besoin de plus d'air qu'un bloc de texte pour ne pas
+            // paraître à l'étroit, parce que ses coins sont vides et que l'œil mesure la distance
+            // au point le plus PROCHE du bord, pas au cadre.
+            .padding(.horizontal, RUSpacing.cardPadding)
+            .padding(.vertical, 22)
         }
         .buttonStyle(PressableStyle())
         // La carte revient. Je l'avais retirée en pariant qu'un anneau de cette taille n'a plus

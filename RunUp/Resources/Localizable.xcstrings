@@ -11568,6 +11568,22 @@
         }
       }
     },
+    "On sort courir ?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Going for a run?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Salimos a correr?"
+          }
+        }
+      }
+    },
     "On t'enverra un petit rappel pour tes séances 🔔": {
       "localizations": {
         "en": {

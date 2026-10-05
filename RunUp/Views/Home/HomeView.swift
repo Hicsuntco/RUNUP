@@ -667,8 +667,9 @@ struct HomeView: View {
                 ZStack {
                     DailyGoalsBarsView(
                         goals: p.dailyGoalSlotsToday.map { .init(slot: $0.slot, progress: $0.progress) },
-                        size: 236,
-                        animateOnAppear: true
+                        size: 214,
+                        animateOnAppear: true,
+                        strokeScale: 0.74
                     )
                     VStack(spacing: 2) {
                         // `verbatim` : une fraction n'est pas une phrase, elle n'a rien à faire
@@ -684,27 +685,51 @@ struct HomeView: View {
                             .tracking(1.6)
                     }
                 }
+                // LA LÉGENDE LIT LA MÊME LISTE QUE L'ANNEAU, et c'est toute la correction.
+                //
+                // Elle fabriquait ses colonnes avec sa propre condition. Un lundi de repos,
+                // l'anneau comptait deux objectifs et la légende en affichait trois : l'écran
+                // montrait « 0/2 » au centre, et juste en dessous une colonne « Course · Faite »
+                // dont aucun arc ne portait la couleur. Deux sources pour « quels sont les
+                // objectifs du jour », et elles ne répondaient pas pareil.
                 HStack(alignment: .top, spacing: 10) {
-                    // Les jours de repos n'ont pas de séance : l'arc disparaît, sa colonne aussi.
-                    if !planUnlocked || !p.isRestDayToday {
-                        ringStat(name: planUnlocked ? "Séance" : "Course",
-                                 value: p.seanceDoneToday ? String(localized: "Faite")
-                                                          : String(localized: "À faire"),
-                                 color: goalColors[0])
+                    ForEach(p.dailyGoalSlotsToday.map { $0.slot }, id: \.self) { slot in
+                        ringStat(name: goalName(slot), value: goalValue(slot, p),
+                                 color: goalColors[min(max(0, slot), goalColors.count - 1)])
                     }
-                    ringStat(name: "Calories", value: Int(p.activeCaloriesToday).formatted(),
-                             color: goalColors[1])
-                    ringStat(name: "Pas", value: Int(p.stepsToday).formatted(),
-                             color: goalColors[2])
                 }
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
         }
         .buttonStyle(PressableStyle())
-        // Plus de `.ruCard()`. Un anneau de 236 points dans un cadre à bord visible, c'est un
-        // cadre autour de l'élément le plus grand de l'écran : il ne le sépare plus de rien, il
-        // l'enferme. Posé à même la page, l'anneau EST la section.
+        // La carte revient. Je l'avais retirée en pariant qu'un anneau de cette taille n'a plus
+        // besoin d'un cadre pour exister — vrai dans l'absolu, faux dans CET écran : la séance
+        // au-dessus et l'offre en dessous sont des cartes blanches posées sur un fond lavande,
+        // et l'anneau nu entre les deux ne se lisait pas comme une section, il se lisait comme un
+        // trou. Une grammaire par écran, pas deux.
+        .ruCard()
+    }
+
+    /// Le nom d'un objectif, par son rang d'origine dans [Séance, Calories, Pas].
+    ///
+    /// Rendu comme CLÉ, pas comme texte traduit : `ringStat` fait lui-même la recherche au
+    /// catalogue. Traduire ici donnerait une chaîne française qu'on rechercherait ensuite comme
+    /// une clé — ce qui marche en français par identité, et casse partout ailleurs.
+    private func goalName(_ slot: Int) -> String {
+        switch slot {
+        case 0: return planUnlocked ? "Séance" : "Course"
+        case 1: return "Calories"
+        default: return "Pas"
+        }
+    }
+
+    private func goalValue(_ slot: Int, _ p: UserProfile) -> String {
+        switch slot {
+        case 0: return p.seanceDoneToday ? String(localized: "Faite") : String(localized: "À faire")
+        case 1: return Int(p.activeCaloriesToday).formatted()
+        default: return Int(p.stepsToday).formatted()
+        }
     }
 
     /// Un objectif en colonne sous l'anneau : sa pastille, son nom, sa valeur.
@@ -715,14 +740,18 @@ struct HomeView: View {
     /// Sous l'anneau, les trois colonnes sont dans l'ordre des trois arcs — la pastille confirme
     /// alors une correspondance que la position suggère déjà.
     private func ringStat(name: String, value: String, color: Color) -> some View {
-        VStack(spacing: 7) {
-            Circle().fill(color).frame(width: 7, height: 7)
-            Text(LocalizedStringKey(name))
-                .font(RUFont.sans(.label, weight: .medium))
-                .foregroundColor(RUColor.text3)
-                .textCase(.uppercase)
-                .tracking(1.1)
-                .lineLimit(1).minimumScaleFactor(0.7)
+        VStack(spacing: 5) {
+            // La pastille SUR la ligne du nom, pas flottant au-dessus : détachée, elle se lisait
+            // comme une puce décorative à mi-chemin entre l'anneau et le texte.
+            HStack(spacing: 5) {
+                Circle().fill(color).frame(width: 6, height: 6)
+                Text(LocalizedStringKey(name))
+                    .font(RUFont.sans(.label, weight: .medium))
+                    .foregroundColor(RUColor.text3)
+                    .textCase(.uppercase)
+                    .tracking(1.1)
+                    .lineLimit(1).minimumScaleFactor(0.7)
+            }
             Text(value)
                 .font(RUFont.sans(.body, weight: .semibold))
                 .foregroundColor(RUColor.textPrimary)

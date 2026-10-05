@@ -32,6 +32,14 @@ struct DailyGoalsBarsView: View {
     /// snapping straight to `progress` — used on `RingsView`'s hero widget so opening "Ta journée"
     /// reads as the ring filling in front of you, not a static picture.
     var animateOnAppear: Bool = false
+    /// Le trait de l'anneau, en proportion de sa valeur normale.
+    ///
+    /// 15 % du diamètre a été calibré sur un anneau de 96 points. Le même POURCENTAGE sur un
+    /// anneau héros de plus de deux cents points donne un trait de trente-cinq points : la piste
+    /// vide devient alors la plus grosse masse de l'écran, et un matin à 0/2 se lit comme un
+    /// grand beignet gris. La valeur par défaut ne bouge pas — seul l'appelant qui pose l'anneau
+    /// en grand demande un trait plus fin.
+    var strokeScale: CGFloat = 1
 
     /// What's actually drawn — starts at 0 when `animateOnAppear` is set, then springs to
     /// `progress` in `onAppear`. `.trim`'s `from`/`to` are themselves animatable, so
@@ -102,6 +110,8 @@ struct DailyGoalsBarsView: View {
     private static let lightTrackOpacity = 0.09
     private static let darkTrackOpacity = 0.10
 
+    private var stroke: CGFloat { Self.strokeWidth * strokeScale }
+
     var body: some View {
         ZStack {
             ForEach(Array(goals.enumerated()), id: \.offset) { i, goal in
@@ -126,7 +136,7 @@ struct DailyGoalsBarsView: View {
                     .stroke(
                         (RUColor.isLight ? Color.black : Color.white)
                             .opacity(RUColor.isLight ? Self.lightTrackOpacity : Self.darkTrackOpacity),
-                        style: StrokeStyle(lineWidth: Self.strokeWidth, lineCap: .round)
+                        style: StrokeStyle(lineWidth: stroke, lineCap: .round)
                     )
 
                 // Fill: from the same start point, out to `pct` of the way along the segment. The
@@ -177,7 +187,7 @@ struct DailyGoalsBarsView: View {
                             startAngle: .degrees(seg.gradientStartDegrees),
                             endAngle: .degrees(seg.gradientEndDegrees)
                         ),
-                        style: StrokeStyle(lineWidth: Self.strokeWidth, lineCap: .round)
+                        style: StrokeStyle(lineWidth: stroke, lineCap: .round)
                     )
                     .animation(reduceMotion ? nil : .easeOut(duration: 0.9), value: pct)
             }

@@ -461,8 +461,12 @@ final class LiveRunViewModel {
     /// écartée de la cible — l'équivalent sonore du coup d'œil, pour les moments où elle ne
     /// regarde pas l'écran.
     ///
-    /// La comparaison est exactement celle de `paceStanding`, sur la même fenêtre et la même
-    /// tolérance. C'est tout l'intérêt : la voix ne peut plus contredire l'écran.
+    /// La règle et la tolérance sont celles de `paceStanding` — la voix ne peut plus contredire
+    /// l'écran sur le SENS de l'écart. Elle exige en revanche une fenêtre plus longue
+    /// (`alertMinimumSeconds` contre `displayMinimumSeconds`) et garde son délai de
+    /// quatre-vingt-dix secondes : un chiffre qu'on peut ignorer d'un coup d'œil coûte moins cher
+    /// qu'une voix dans les oreilles. L'écran peut donc dire ACCÉLÈRE sans que le coach parle ;
+    /// jamais l'inverse.
     private func checkPaceAlert() {
         guard profile.paceAlertsEnabled,
               elapsedSeconds >= Self.paceAlertMinElapsedSeconds,

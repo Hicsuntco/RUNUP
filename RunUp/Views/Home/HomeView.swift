@@ -291,7 +291,19 @@ struct HomeView: View {
                 // C'est le même geste que partout ailleurs aujourd'hui : on cesse de dessiner un
                 // contenant autour de ce qui n'est pas un objet. Il reste une frise de sept
                 // colonnes, dont deux portent une marque.
+                // AUJOURD'HUI SE LIT DE LA DATE, PAS DE L'ÉTAT.
+                //
+                // `applyProgramSettingsChange` teste `.rest` AVANT `i == today` : un jour de repos
+                // n'est donc JAMAIS marqué « aujourd'hui ». La frise entière se lisait éteinte le
+                // jour où l'on ne court pas, sans aucun repère pour savoir où l'on en est — ce
+                // qu'une capture a montré sans ambiguïté.
+                //
+                // Les deux ne sont pas la même question : un jour peut être aujourd'hui ET un jour
+                // de repos, et l'énumération les force dans une seule valeur. La date, elle, ne se
+                // trompe jamais et ne peut pas devenir périmée.
+                let estAujourdhui = Calendar.current.isDateInToday(day.date)
                 let (bg, color): (Color, Color) = {
+                    if day.state != .done && estAujourdhui { return (RUColor.card2, RUColor.rose2) }
                     switch day.state {
                     // Un jour FAIT était une case entièrement remplie de rose : sur une frise
                     // dont les autres cases n'ont plus de fond, ce pavé devenait l'objet le plus
@@ -314,7 +326,7 @@ struct HomeView: View {
                 VStack(spacing: 6) {
                     Text(day.displayLetter).displayStyle(12).foregroundColor(color)
                     ZStack {
-                        if day.state == .today {
+                        if estAujourdhui && day.state != .done {
                             Circle().stroke(RUColor.rose2, lineWidth: 1.5).frame(width: 19, height: 19)
                         }
                         if day.state == .done {
@@ -324,7 +336,7 @@ struct HomeView: View {
                                 .foregroundColor(RUColor.onRose)
                         } else {
                             Text("\(Calendar.current.component(.day, from: day.date))")
-                                .font(RUFont.sans(.small, weight: day.state == .today ? .bold : .regular))
+                                .font(RUFont.sans(.small, weight: estAujourdhui ? .bold : .regular))
                                 .foregroundColor(color)
                         }
                     }

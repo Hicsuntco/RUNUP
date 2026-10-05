@@ -4310,6 +4310,22 @@
         }
       }
     },
+    "Ce qu'il regarde": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What it reads"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo que lee"
+          }
+        }
+      }
+    },
     "Ce que tu débloques": {
       "extractionState": "manual",
       "localizations": {
@@ -6388,6 +6404,22 @@
         }
       }
     },
+    "Dernière sortie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Última salida"
+          }
+        }
+      }
+    },
     "Dim": {
       "extractionState": "manual",
       "localizations": {
@@ -7801,6 +7833,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rodaje suave"
+          }
+        }
+      }
+    },
+    "Forme": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Form"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forma"
           }
         }
       }

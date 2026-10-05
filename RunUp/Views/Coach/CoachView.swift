@@ -10,6 +10,16 @@ struct CoachView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(SubscriptionService.self) private var subscriptions
     @Query(sort: \ChatMessage.timestamp) private var messages: [ChatMessage]
+    /// La dernière course, et elle seule. `fetchLimit = 1` plutôt qu'une requête ouverte qu'on
+    /// trierait ensuite : cet écran n'a besoin que d'une ligne, et une requête sans plafond grossit
+    /// avec l'historique jusqu'à coûter cher sur un onglet qu'on ouvre tous les jours.
+    @Query private var dernieresCourses: [RunRecord]
+
+    init() {
+        var d = FetchDescriptor<RunRecord>(sortBy: [SortDescriptor(\RunRecord.date, order: .reverse)])
+        d.fetchLimit = 1
+        _dernieresCourses = Query(d)
+    }
     @State private var vm: CoachViewModel?
     @State private var typingBounce = false
     @State private var showClearConfirm = false
@@ -42,6 +52,7 @@ struct CoachView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
+            ceQuIlRegarde
             ScrollViewReader { scrollProxy in
                 // `GeometryReader` uniquement pour connaître la hauteur visible du fil, qui sert de
                 // hauteur MINIMALE au contenu juste en dessous. C'est ce qui colle la conversation
@@ -132,6 +143,62 @@ struct CoachView: View {
         default: formPart = String(localized: "Fatigue accumulée aujourd'hui (\(profile.readiness)/100).")
         }
         return String(localized: "Salut \(profile.name) 👋 \(formPart) \(sessionPart) Une question avant de te lancer ?")
+    }
+
+    /// CE QU'IL A LU — la preuve, pas un décor.
+    ///
+    /// Cet écran était vide aux quatre cinquièmes sous un seul message, et le vide était délibéré :
+    /// le fil est collé en bas pour qu'une conversation courte ne reste pas accrochée en haut. On
+    /// avait donc déplacé le trou, pas l'avoir bouché.
+    ///
+    /// Ce qui le remplit n'est pas de l'habillage. Le coach se vend sur « il a lu tes dernières
+    /// séances » — une promesse invérifiable tant qu'on ne montre pas CE QU'IL A LU. Quatre
+    /// chiffres qui viennent tous du profil et de l'historique, et la phrase devient un fait.
+    ///
+    /// Chaque tuile disparaît quand sa donnée n'existe pas : une forme sans un seul ressenti
+    /// derrière serait un nombre inventé, et « — » n'apprend rien à personne.
+    private var ceQuIlRegarde: some View {
+        let derniere = dernieresCourses.first
+        return VStack(alignment: .leading, spacing: 8) {
+            Text("Ce qu'il regarde")
+                .font(RUFont.sans(.label, weight: .medium))
+                .foregroundColor(RUColor.text3)
+                .textCase(.uppercase)
+                .tracking(1.4)
+            HStack(spacing: 8) {
+                if profile.hasReadinessData {
+                    tuileLue(nom: "Forme", valeur: "\(profile.readiness)/100", accent: true)
+                }
+                tuileLue(nom: "Aujourd'hui", valeur: profile.todaySession.displayTitle, accent: false)
+                if let derniere, derniere.distanceKm > 0 {
+                    tuileLue(nom: "Dernière sortie",
+                             valeur: String(format: "%.1f km", derniere.distanceKm)
+                                 + " · " + PaceModel.paceText(Double(derniere.durationSeconds) / derniere.distanceKm),
+                             accent: false)
+                }
+            }
+        }
+        .padding(.horizontal, 18)
+        .padding(.bottom, 4)
+    }
+
+    private func tuileLue(nom: String, valeur: String, accent: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(LocalizedStringKey(nom))
+                .font(RUFont.sans(.small, weight: .medium))
+                .foregroundColor(RUColor.text3)
+                .lineLimit(1).minimumScaleFactor(0.7)
+            Text(valeur)
+                .font(RUFont.sans(.label, weight: .semibold))
+                .foregroundColor(accent ? RUColor.rose : RUColor.textPrimary)
+                .lineLimit(1).minimumScaleFactor(0.6)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 10).padding(.horizontal, 12)
+        .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous)
+            .stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+        .accessibilityElement(children: .combine)
     }
 
     private var header: some View {

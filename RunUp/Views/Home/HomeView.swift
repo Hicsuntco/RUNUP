@@ -438,16 +438,24 @@ struct HomeView: View {
 
     private var sessionCard: some View {
         let session = profile.todaySession
-        let isRestDay = session.durationMinutes == 0
+        // `isRestDayToday` plutôt que la durée de la séance prescrite : COURIR EFFACE LE REPOS,
+        // et cette carte doit le dire comme l'anneau. Sinon l'écran annonce « Repos » juste
+        // au-dessus d'un anneau qui compte la séance du jour comme bouclée — deux réponses à
+        // « qu'est-ce qu'aujourd'hui ? », sur quinze centimètres d'écran.
+        let isRestDay = profile.isRestDayToday
+        // Le plan prescrivait du repos et la journée compte quand même : ce n'est plus du repos,
+        // et ce n'est pas la séance prévue non plus. C'est une sortie libre.
+        let reposEfface = session.durationMinutes == 0 && !isRestDay
+        let titre = reposEfface ? String(localized: "Course libre") : session.displayTitle
         return VStack(alignment: .leading, spacing: 0) {
-            sessionTag(isRestDay, family: session.family)
+            sessionTag(isRestDay, family: reposEfface ? .endurance : session.family)
             // Un jour de repos, cette carte n'a rien à faire faire : ni durée, ni allure, ni
             // boutons. Elle gardait pourtant le corps de 23 pt des jours de séance, ce qui
             // faisait de « REPOS » le bloc le plus lourd de l'écran — la hiérarchie disait
             // l'inverse de l'information. Le titre recule d'un cran et la carte se contente
             // d'une ligne, pour que le regard aille à l'anneau et aux chiffres de la semaine,
             // qui eux ont quelque chose à dire ce jour-là.
-            Text(session.displayTitle)
+            Text(titre)
                 .displayStyle(isRestDay ? 18 : 23)
                 .foregroundColor(isRestDay ? RUColor.text2 : RUColor.textPrimary)
                 .padding(.top, 8)
@@ -485,7 +493,12 @@ struct HomeView: View {
                     .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                     .padding(.top, 4)
             } else if profile.seanceDoneToday {
-                Text(session.displaySubtitle).font(RUFont.sans(.small)).foregroundColor(RUColor.text2).padding(.top, 4)
+                // Le sous-titre du modèle dirait « Jour de repos — laisse ton corps récupérer »,
+                // ce qui contredirait la ligne « Séance faite » juste en dessous.
+                Text(reposEfface
+                     ? String(localized: "Le plan prévoyait du repos — ta sortie compte quand même.")
+                     : session.displaySubtitle)
+                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text2).padding(.top, 4)
                 Text("Séance faite aujourd'hui ✓")
                     .font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.lime)
                     .padding(.top, 14)

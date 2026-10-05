@@ -9789,6 +9789,22 @@
         }
       }
     },
+    "Le plan prévoyait du repos — ta sortie compte quand même.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your plan called for rest — your run still counts."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu plan preveía descanso — tu salida cuenta igualmente."
+          }
+        }
+      }
+    },
     "Le plan y calera toujours ta séance la plus longue de la semaine.": {
       "localizations": {
         "en": {

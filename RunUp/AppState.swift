@@ -691,10 +691,9 @@ final class AppState {
         guard durationMinutes > 0 else { return }
         let titre = session.durationMinutes > 0 ? session.title : String(localized: "Séance libre")
         let elapsedSeconds = Double(durationMinutes * 60)
-        // Les mêmes 62 kcal/km que `LiveRunViewModel.kcal` dès qu'une distance est connue, et le
-        // repli à la durée sinon. Deux constantes différentes pour la même approximation feraient
-        // diverger une course au GPS et une course saisie à la main sur des chiffres identiques.
-        let kcal = distanceKm > 0 ? distanceKm * 62 : Double(durationMinutes) * 7
+        // Voir `Calories`, où la règle vit seule : la distance quand elle est connue, la durée
+        // en dernier recours.
+        let kcal = Calories.estimate(distanceKm: distanceKm, durationMinutes: durationMinutes)
         let record = AdaptivePlanEngine.buildRunRecord(
             title: titre,
             elapsedSeconds: elapsedSeconds,

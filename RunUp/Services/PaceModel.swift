@@ -158,11 +158,20 @@ enum PaceModel {
         return (km, seconds)
     }
 
-    /// « 6:26 » à partir de secondes par kilomètre.
+    /// « 6:26 » à partir de secondes par kilomètre. LE seul formateur d'allure de l'app.
     ///
     /// Rendue accessible hors de ce fichier plutôt que recopiée : l'accueil affiche aussi une
     /// allure moyenne, et deux formateurs finissent toujours par diverger sur l'arrondi — une
     /// seconde d'écart entre deux écrans qui montrent la même course.
+    ///
+    /// Ce qui était déjà arrivé, et pendant longtemps. `AdaptivePlanEngine.fmt` faisait le même
+    /// travail en TRONQUANT là où celle-ci arrondit : à 299,6 s/km, le plan annonçait « 5:00 »
+    /// et la ligne d'historique de la course écrite dessus « 4:59 ». Les deux chiffres étaient
+    /// le même, calculés deux fois. `fmt` n'existe plus ; ses six appels passent ici.
+    ///
+    /// Comme elle, cette fonction ne passe jamais aux heures : c'est une allure au kilomètre, pas
+    /// une durée. Un temps total se formate avec `formatDuration`, sans quoi une sortie longue de
+    /// 95 minutes s'écrit « 95:00 » au lieu de « 1:35:00 ».
     static func paceText(_ secondsPerKm: Double) -> String {
         let total = Int(secondsPerKm.rounded())
         return "\(total / 60):\(String(format: "%02d", total % 60))"

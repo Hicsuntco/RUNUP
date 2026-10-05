@@ -227,16 +227,16 @@ final class LiveRunViewModel {
         PaceModel.formatDuration(max(0, seconds.rounded()))
     }
 
-    // Same 62 kcal/km estimate as `markTodaySessionDone` — two different constants for the same
-    // approximation meant a GPS run and a manual run disagreed on identical distances.
-    var kcal: Double { distanceKm * 62 }
+    // Voir `Calories` : la constante était écrite ici, dans `AddRunSheet` et dans `AppState`,
+    // chacune avec un commentaire demandant aux deux autres de rester d'accord.
+    var kcal: Double { Calories.estimate(distanceKm: distanceKm) }
 
     /// La moyenne de toute la sortie. Elle garde sa place là où elle veut dire quelque chose —
     /// le `RunRecord`, le récap, la Live Activity — mais plus sur l'écran de course.
     var paceLabel: String {
         guard distanceKm > 0.05 else { return "--:--" }
         let secPerKm = elapsedSeconds / distanceKm
-        return AdaptivePlanEngine.fmt(secPerKm)
+        return PaceModel.paceText(secPerKm)
     }
 
     /// Ce que l'écran de course affiche sous ALLURE : l'allure des trente dernières secondes.
@@ -248,7 +248,7 @@ final class LiveRunViewModel {
         guard let secPerKm = PaceWindow.secPerKm(paceWindow, minimumSeconds: PaceWindow.displayMinimumSeconds) else {
             return paceLabel
         }
-        return AdaptivePlanEngine.fmt(secPerKm)
+        return PaceModel.paceText(secPerKm)
     }
 
     /// L'allure récente face à la cible du jour.

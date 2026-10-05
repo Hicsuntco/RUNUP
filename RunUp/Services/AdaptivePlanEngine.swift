@@ -880,15 +880,6 @@ enum AdaptivePlanEngine {
 
     // MARK: Live run → history
 
-    /// "m:ss" — pace-per-km only (never exceeds an hour in any realistic run), used for
-    /// `avgPace`/live pace display. A total run duration or elapsed-time display needs
-    /// `PaceModel.formatDuration` instead: this never rolls over to hours, so a 95-minute long run
-    /// used to render as "95:00" instead of "1:35:00" everywhere this was (mis)used for that.
-    static func fmt(_ seconds: Double) -> String {
-        let s = max(0, seconds)
-        return "\(Int(s / 60)):\(String(format: "%02d", Int(s.truncatingRemainder(dividingBy: 60))))"
-    }
-
     /// `realSplitSeconds` is the actual elapsed time between consecutive whole-km GPS crossings
     /// (see `LiveRunViewModel`) — when available, splits are the real pace-per-km the runner
     /// actually ran, not a formula-shaped curve. Falls back to that formula only for the
@@ -910,13 +901,13 @@ enum AdaptivePlanEngine {
         // meaningful distance to divide by.
         let dist = max(0, distanceKm)
         let t = max(0, elapsedSeconds)
-        let avgPace = dist > 0.05 ? fmt(t / dist) : "—"
+        let avgPace = dist > 0.05 ? PaceModel.paceText(t / dist) : "—"
         // Real splits or none at all — the old fallback generated a formula-shaped curve
         // (`secPerKm - 8 + i*3`) for any run without real per-km timings (manual entries, GPS
         // runs under 1 km), and RecapView rendered it under "Splits par km" as if measured.
         // Consumers already handle an empty list: RecapView hides the section, DebriefSheet's
         // insight falls back to its generic line.
-        let splits: [String] = (realSplitSeconds ?? []).map { fmt(max(0, $0)) }
+        let splits: [String] = (realSplitSeconds ?? []).map { PaceModel.paceText(max(0, $0)) }
         return RunRecord(
             title: title,
             distanceKm: dist,

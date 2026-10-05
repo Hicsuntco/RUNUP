@@ -116,12 +116,13 @@ struct AddRunSheet: View {
             title: String(localized: String.LocalizationValue(title)),
             distanceKm: distance,
             durationSeconds: Int(seconds),
-            avgPace: AdaptivePlanEngine.fmt(secPerKm),
+            avgPace: PaceModel.paceText(secPerKm),
             // 0 = "no real reading" — HistoryView hides the FC line rather than show a fake 0bpm.
             avgHeartRate: 0,
-            // A flat, deliberately rough estimate (no real heart rate to base it on) — better
-            // than showing 0 kcal for a real run.
-            kcal: Int((distance * 62).rounded())
+            // Une approximation plate et assumée (aucune fréquence cardiaque réelle derrière) —
+            // mieux que 0 kcal après une vraie sortie. Voir `Calories` : le même tarif que la
+            // course au GPS, pour que les deux ne divergent pas sur une distance identique.
+            kcal: Int(Calories.estimate(distanceKm: distance).rounded())
         )
         run.shoeID = selectedShoeID
         modelContext.insert(run)

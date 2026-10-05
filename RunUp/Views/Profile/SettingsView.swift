@@ -545,7 +545,7 @@ private struct StravaConnectionRow: View {
                     title: run.title,
                     distanceKm: run.distanceKm,
                     durationSeconds: run.durationSeconds,
-                    avgPace: AdaptivePlanEngine.fmt(run.distanceKm > 0 ? Double(run.durationSeconds) / run.distanceKm : 0),
+                    avgPace: PaceModel.paceText(run.distanceKm > 0 ? Double(run.durationSeconds) / run.distanceKm : 0),
                     avgHeartRate: run.avgHeartRate,
                     kcal: Int(run.distanceKm * 65),
                     elevationGainM: run.elevationGainM,

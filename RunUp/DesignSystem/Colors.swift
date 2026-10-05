@@ -189,7 +189,20 @@ enum RUColor {
     /// En sombre il tombe carrément à zéro : un contour clair sur une carte claire posée sur un
     /// fond noir ne finit rien, il souligne. C'est l'écart de luminosité qui sépare, comme sur
     /// toutes les interfaces sombres qui tiennent.
-    static var cardBorder: Color { isLight ? Color.black.opacity(0.05) : Color.clear }
+    /// ── L'OMBRE TOMBE, LE FILET REPREND LE TRAVAIL ───────────────────────────────────────
+    ///
+    /// Le filet était à 5 % parce qu'il ne portait RIEN : deux ombres posaient la carte, et un
+    /// contour par-dessus n'aurait fait que la redessiner au trait. Les ombres parties, il reste
+    /// seul, et 5 % de noir ne sépare pas un blanc d'un lavande à 96 % de luminosité.
+    ///
+    /// 10 %, DONC — mais pas 10 % de NOIR. C'est à cette valeur-là, en noir, que l'écran est
+    /// devenu « une grille de rectangles cerclés » et que le filet avait été redescendu. Un noir
+    /// pur sur une page teintée se lit comme un trait tracé par-dessus le dessin ; la même valeur
+    /// dans l'encre de la page se lit comme son bord. C'est le changement, pas le pourcentage.
+    ///
+    /// `#1A162E` est le gris de la page poussé vers le violet de l'accent — le même raisonnement
+    /// que `bg`, qui penche déjà de ce côté plutôt que vers un gris neutre.
+    static var cardBorder: Color { isLight ? Color(hex: 0x1A162E, opacity: 0.10) : Color.clear }
 
     /// Mélange opaque de `color` dans `base`, exactement `color-mix(in srgb, color N%, base)` en CSS.
     ///

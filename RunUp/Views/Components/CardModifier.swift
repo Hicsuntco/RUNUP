@@ -12,45 +12,19 @@ struct CardBackground: ViewModifier {
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
                     .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline)
             )
-            // Deux couches serrées plutôt qu'une grande ombre diffuse — report direct de la
-            // maquette (`0 1px 2px rgba(0,0,0,.04), 0 3px 8px -5px rgba(0,0,0,.08)`, l'ombre
-            // ajoutée en v27 à ses 15 composants-cartes). Le flou CSS vaut environ deux fois le
-            // `radius` SwiftUI, d'où 2px → 1 et 8px → 4 ; le `spread: -5px` de la seconde couche
-            // n'a pas d'équivalent SwiftUI, mais il rétracte l'ombre de 5px avant de la flouter de
-            // 8px, ce qui ne laisse dépasser qu'un liseré sous le bord bas : un `radius` réduit
-            // reproduit ce « rentré » de près.
+            // ── PLUS D'OMBRE PORTÉE ──────────────────────────────────────────────────────────
             //
-            // L'ancienne valeur (radius 16, y 5, noir à 16%) était un tout autre objet : un halo
-            // large et net, ~4× plus encré que la maquette. C'est ce qui creusait le plus l'écart
-            // visuel — la maquette pose des cartes de papier posées à plat, pas des cartes qui
-            // flottent.
+            // Elle n'existait qu'en clair : les deux couches sont à opacité ZÉRO en sombre, où
+            // c'est l'écart de luminosité qui sépare. Une app dont la moitié des thèmes se passe
+            // d'ombre n'a pas besoin d'ombre — elle a besoin de ce que l'ombre remplaçait.
             //
-            // Mode sombre — vérifié dans la maquette avant de trancher : son bloc `.theme-dark` ne
-            // redéfinit QUE des tokens de couleur (plus deux glows d'accent sur la tab bar et le
-            // point « aujourd'hui ») et ne retire jamais cette ombre. Mais elle est en noir pur à
-            // 4%/8%, posée sur un `--ru-bg` de #0E0E14 : à ces valeurs elle ne rend strictement
-            // rien sur un fond quasi noir. Autrement dit la maquette DÉCLARE l'ombre dans les deux
-            // thèmes mais n'en AFFICHE qu'en clair — ce que le 0 explicite ci-dessous produit
-            // déjà. Le choix existant est donc conservé : il donne le même rendu, en évitant de
-            // composer une passe d'ombre inutile à chaque carte.
+            // Sur du papier, une ombre portée empile du gris sur un fond déjà gris. Ce qui sépare
+            // une feuille blanche d'une table, ce n'est pas le flou sous ses bords, c'est son
+            // BORD. `cardBorder` le dessine, et il monte de 5 à 10 % en même temps que l'ombre
+            // part — les deux changements n'ont de sens qu'ensemble.
             //
-            // Valeurs relevées d'un cran (0,04 → 0,05 et 0,08 → 0,10, flou 4 → 6) EN MÊME TEMPS
-            // que le fond de page s'est enfoncé, et les deux vont ensemble. Tant que la carte et
-            // le fond ne différaient que de 1,10:1, aucune ombre raisonnable ne pouvait porter
-            // seule la séparation — la monter assez pour qu'elle y arrive aurait fait flotter les
-            // cartes. Maintenant que le fond recule pour de bon, l'ombre redevient ce qu'elle doit
-            // être : une finition qui confirme le relief au lieu de le fabriquer.
-            // ── Rouverte quand le fond de page est repassé au teinté ─────────────────────────
-            // Le raisonnement ci-dessus tenait tant que la carte et la page étaient toutes deux
-            // blanches : l'ombre devait alors porter une PART de la séparation, d'où sa densité.
-            // Le fond ayant reculé, elle n'a plus rien à porter — et une ombre dense sur un fond
-            // qui sépare déjà donne des cartes qui FLOTTENT, l'écueil que ce commentaire décrit
-            // lui-même deux paragraphes plus haut.
-            //
-            // Elle devient donc large, douce, à peine encrée : un halo qui POSE la carte au lieu
-            // de la détourer.
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.04 : 0), radius: 3, x: 0, y: 1)
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.07 : 0), radius: 16, x: 0, y: 7)
+            // Au passage : deux passes de composition en moins par carte, sur des écrans qui en
+            // affichent cinq.
     }
 }
 
@@ -75,23 +49,18 @@ extension View {
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
                     .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline)
             )
-            // Exactement la même ombre que `ruCard()` — et surtout pas une ombre PLUS marquée.
-            // L'ancienne (radius 18, y 6, 18%) faisait flotter les cartes teintées au-dessus des
-            // cartes neutres ; la maquette fait l'inverse : ses cartes teintées (`.pr-banner`,
-            // `.milestone-banner`, `.social-card`, `.insight-line`, `.coach-caption-card`) n'ont
-            // aucune ombre du tout, et celles qui en ont (`.sesh.active`, `.challenge-card
-            // .coach-tint`) héritent simplement de l'ombre neutre de leur famille. Une teinte se
-            // distingue par sa couleur de fond et son contour teinté, jamais par plus d'élévation.
-            // ── Rouverte quand le fond de page est repassé au teinté ─────────────────────────
-            // Le raisonnement ci-dessus tenait tant que la carte et la page étaient toutes deux
-            // blanches : l'ombre devait alors porter une PART de la séparation, d'où sa densité.
-            // Le fond ayant reculé, elle n'a plus rien à porter — et une ombre dense sur un fond
-            // qui sépare déjà donne des cartes qui FLOTTENT, l'écueil que ce commentaire décrit
-            // lui-même deux paragraphes plus haut.
+            // ── PLUS D'OMBRE PORTÉE ──────────────────────────────────────────────────────────
             //
-            // Elle devient donc large, douce, à peine encrée : un halo qui POSE la carte au lieu
-            // de la détourer.
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.04 : 0), radius: 3, x: 0, y: 1)
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.07 : 0), radius: 16, x: 0, y: 7)
+            // Elle n'existait qu'en clair : les deux couches sont à opacité ZÉRO en sombre, où
+            // c'est l'écart de luminosité qui sépare. Une app dont la moitié des thèmes se passe
+            // d'ombre n'a pas besoin d'ombre — elle a besoin de ce que l'ombre remplaçait.
+            //
+            // Sur du papier, une ombre portée empile du gris sur un fond déjà gris. Ce qui sépare
+            // une feuille blanche d'une table, ce n'est pas le flou sous ses bords, c'est son
+            // BORD. `cardBorder` le dessine, et il monte de 5 à 10 % en même temps que l'ombre
+            // part — les deux changements n'ont de sens qu'ensemble.
+            //
+            // Au passage : deux passes de composition en moins par carte, sur des écrans qui en
+            // affichent cinq.
     }
 }

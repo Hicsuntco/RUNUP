@@ -1799,6 +1799,22 @@
         }
       }
     },
+    "30 derniers jours": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last 30 days"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Últimos 30 días"
+          }
+        }
+      }
+    },
     "300 m de D+": {
       "extractionState": "manual",
       "localizations": {

@@ -26,14 +26,14 @@ enum PaceModel {
     static func zones(for profile: UserProfile) -> Zones {
         let thresholdSecPerKm = referenceThresholdPace(for: profile)
         return Zones(
-            easy: format(thresholdSecPerKm * 1.20),
-            marathon: format(thresholdSecPerKm * 1.08),
-            threshold: format(thresholdSecPerKm * 1.0),
+            easy: paceText(thresholdSecPerKm * 1.20),
+            marathon: paceText(thresholdSecPerKm * 1.08),
+            threshold: paceText(thresholdSecPerKm * 1.0),
             // 13% faster than threshold, not the previous 8%. vVO2max — what "VMA" actually means —
             // sits around 3-5K race pace, typically 12-18% faster than a threshold/10K pace. At 8%
             // the "Fractionné VMA" session was effectively a second tempo run at threshold effort
             // and never delivered the aerobic-power stimulus the session exists to produce.
-            interval: format(thresholdSecPerKm * 0.87),
+            interval: paceText(thresholdSecPerKm * 0.87),
             easySecPerKm: thresholdSecPerKm * 1.20,
             thresholdSecPerKm: thresholdSecPerKm
         )
@@ -158,7 +158,12 @@ enum PaceModel {
         return (km, seconds)
     }
 
-    private static func format(_ secondsPerKm: Double) -> String {
+    /// « 6:26 » à partir de secondes par kilomètre.
+    ///
+    /// Rendue accessible hors de ce fichier plutôt que recopiée : l'accueil affiche aussi une
+    /// allure moyenne, et deux formateurs finissent toujours par diverger sur l'arrondi — une
+    /// seconde d'écart entre deux écrans qui montrent la même course.
+    static func paceText(_ secondsPerKm: Double) -> String {
         let total = Int(secondsPerKm.rounded())
         return "\(total / 60):\(String(format: "%02d", total % 60))"
     }

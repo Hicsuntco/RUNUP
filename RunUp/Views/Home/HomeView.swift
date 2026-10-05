@@ -27,7 +27,11 @@ struct HomeView: View {
     // exact et suffisant. Une requête SwiftData de moins à chaque retour sur l'onglet.
 
     init() {
-        let cutoff = Calendar.current.date(byAdding: .weekOfYear, value: -3, to: .now) ?? .distantPast
+        // Six semaines, pas trois. La comparaison hebdomadaire n'en demande que deux ; le bloc
+        // de chiffres en demande trente jours. Élargir CETTE requête plutôt qu'en ouvrir une
+        // seconde : une quarantaine d'enregistrements au total, contre un deuxième aller-retour
+        // SwiftData à chaque retour sur l'écran le plus ouvert de l'app.
+        let cutoff = Calendar.current.date(byAdding: .weekOfYear, value: -6, to: .now) ?? .distantPast
         _runs = Query(
             filter: #Predicate<RunRecord> { $0.date >= cutoff },
             sort: \RunRecord.date,
@@ -129,21 +133,40 @@ struct HomeView: View {
                 //
                 // Ce qui manque est nommé et montré juste en dessous, plutôt que simplement
                 // absent : personne ne peut vouloir un programme dont il ignore l'existence.
+                // La séance du jour est la seule chose qui change avec l'abonnement en tête
+                // d'écran. Tout ce qui suit est à soi — ses objectifs, sa semaine, ses chiffres —
+                // et n'a donc aucune raison d'être derrière le verrou.
                 if planUnlocked {
                     sessionCard.ruRises(reduceMotion)
-
-                    ringsCard.ruRises(reduceMotion)
-
-                    programWeekCard.ruRises(reduceMotion)
                 } else {
                     freeRunCard.ruRises(reduceMotion)
+                }
 
-                    ringsCard.ruRises(reduceMotion)
+                ringsCard.ruRises(reduceMotion)
+
+                // La bande de la semaine pour tout le monde. Elle disait deux choses, et une
+                // seule était le produit payant : CE QUI EST PRÉVU. Ce qu'on a COURU est son
+                // propre historique. La carte montre donc les sept jours à tout le monde, et
+                // n'ajoute le programme qu'à qui l'a — ce qui vend mieux qu'un cadenas : une
+                // semaine à moitié remplie à côté d'une semaine dont chaque jour porte un nom
+                // montre la forme de ce qui manque, là où une case grise s'apprend à ne plus
+                // être vue.
+                programWeekCard.ruRises(reduceMotion)
+
+                // Les chiffres, pour tout le monde aussi, et cachés tant qu'il n'y a rien à
+                // montrer : « 0 km · 0 sortie » le premier jour est une carte qui décourage.
+                if trenteJours.count > 0 {
+                    statsCard.ruRises(reduceMotion)
+                }
+
+                if !planUnlocked {
 
                     // Sans la ligne « ce qui reste gratuit » : les trois quarts de l'écran
                     // au-dessus SONT la version gratuite en fonctionnement — la carte pour
                     // partir courir, les anneaux du jour, la série. Le rappeler par écrit
                     // au-dessous, c'est décrire ce qu'on a sous les yeux.
+                    // En dernier, et c'est le point. À la troisième place sur trois, cette carte
+                    // était un mur ; sous quatre blocs de contenu réel, c'est une proposition.
                     PlusLockCard(feature: .adaptivePlan, showsFreeReminder: false)
                         .ruRises(reduceMotion)
                 }
@@ -172,6 +195,13 @@ struct HomeView: View {
     /// lived at opposite ends of the screen). Tapping anywhere opens the full plan. In course
     /// libre there's no program to tease, so the card is just the days, not tappable.
     private var programWeekCard: some View {
+        // CE QUI EST PRÉVU reste payant ; les sept jours ne le sont plus.
+        //
+        // La condition était `!isFreeRun`, qui parle de la PHASE du programme, pas de
+        // l'abonnement. Montrer cette carte à qui n'a pas souscrit aurait donc livré le
+        // bloc, les kilomètres prévus et le lien vers le plan complet à quelqu'un dont le
+        // programme est justement derrière le verrou.
+        let montreLeProgramme = planUnlocked && !isFreeRun
         let shape = planShape
         let block = AdaptivePlanEngine.trainingBlock(forWeek: profile.weekNumber, shape: shape)
         return Button(action: { appState.go(.plan) }) {
@@ -180,7 +210,7 @@ struct HomeView: View {
                 // per day (see `dayAccessibilityLabel`); flattening it into this same combine would
                 // undo that per-day granularity instead of adding to it.
                 Group {
-                    if !isFreeRun {
+                    if montreLeProgramme {
                         HStack(alignment: .firstTextBaseline, spacing: 10) {
                             RUCardHeader(icon: "map.fill", tint: RUColor.rose,
                                          title: String(localized: "Ton programme · \(profile.goalDisplay)"))
@@ -209,7 +239,7 @@ struct HomeView: View {
                 // nommé au-dessus (« Bloc Base »), la forme complète du programme est le sujet de
                 // l'écran du plan, et deux barres de progression dans une même carte ne se lisent
                 // plus ni l'une ni l'autre.
-                if !isFreeRun {
+                if montreLeProgramme {
                     WeekKmSummary(
                         doneKm: weeklyKm(weeksAgo: 0),
                         plannedKm: profile.plannedWeeklyKm,
@@ -219,7 +249,7 @@ struct HomeView: View {
                 }
 
                 weekStrip
-                if !isFreeRun {
+                if montreLeProgramme {
                     if let total = shape.totalWeeks {
                         Text("\(total) semaines · voir le plan complet").font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                     } else {
@@ -231,7 +261,7 @@ struct HomeView: View {
         }
         .buttonStyle(PressableStyle())
         .ruCard()
-        .disabled(isFreeRun)
+        .disabled(!montreLeProgramme)
     }
 
     /// Shows the real date number (today circled), not just the bare weekday letter — so it's
@@ -670,6 +700,82 @@ struct HomeView: View {
     /// conteneur, donc un `GeometryReader` qui a besoin qu'on lui impose la hauteur qu'il est
     /// justement censé calculer. 236 occupe les deux tiers du contenu sur un téléphone courant,
     /// tient sur le plus étroit, et ne coûte aucune mesure.
+    /// Les trente derniers jours, en une passe sur la requête déjà faite.
+    ///
+    /// Trente jours plutôt que « six semaines » : c'est une fenêtre qui se maintient toute seule
+    /// et que personne n'a besoin de se faire expliquer. Elle glisse, donc elle ne récompense
+    /// jamais d'avoir bien couru il y a deux mois.
+    private var trenteJours: (km: Double, count: Int, seconds: Int) {
+        let depuis = Calendar.current.date(byAdding: .day, value: -30, to: .now) ?? .distantPast
+        var km = 0.0, secondes = 0, n = 0
+        for r in runs where r.date >= depuis {
+            km += r.distanceKm; secondes += r.durationSeconds; n += 1
+        }
+        return (km, n, secondes)
+    }
+
+    /// Ses chiffres à elle, sur l'accueil et sans abonnement.
+    ///
+    /// Ils vivaient dans l'onglet Stats, donc ils étaient déjà gratuits — les poser ici ne
+    /// déverrouille rien, ça déplace. Et ça donne à l'accueil une raison d'être ouvert un jour
+    /// où l'on ne court pas, ce que trois éléments dont une annonce ne donnaient pas.
+    private var statsCard: some View {
+        let s = trenteJours
+        let allure = s.km > 0 ? PaceModel.paceText(Double(s.seconds) / s.km) : "—"
+        return Button(action: { appState.go(.stats) }) {
+            VStack(alignment: .leading, spacing: 14) {
+                RUCardHeader(icon: "chart.bar.fill", tint: RUColor.rose,
+                             title: String(localized: "30 derniers jours"))
+                HStack(spacing: 10) {
+                    statTile(String(format: "%.0f", s.km), unit: "km", label: "Distance")
+                    statTile("\(s.count)", unit: nil, label: "Sorties")
+                }
+                HStack(spacing: 10) {
+                    statTile(dureeCourte(s.seconds), unit: nil, label: "Temps")
+                    statTile(allure, unit: s.km > 0 ? "/km" : nil, label: "Allure moyenne")
+                }
+            }
+            .padding(RUSpacing.cardPadding)
+        }
+        .buttonStyle(PressableStyle())
+        .ruCard()
+    }
+
+    /// « 3 h 28 », ou « 46 min » quand il n'y a pas d'heure à afficher.
+    ///
+    /// Un « 0 h 46 » serait exact et illisible : l'œil compte les zéros avant de lire le nombre.
+    private func dureeCourte(_ secondes: Int) -> String {
+        let h = secondes / 3600, m = (secondes % 3600) / 60
+        return h > 0 ? "\(h) h \(String(format: "%02d", m))" : "\(m) min"
+    }
+
+    /// Un chiffre, son unité, son nom. `verbatim` pour la valeur : un nombre formaté n'est pas
+    /// une phrase et n'a rien à faire dans le catalogue.
+    private func statTile(_ value: String, unit: String?, label: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(verbatim: value)
+                    .displayStyle(26)
+                    .foregroundColor(RUColor.textPrimary)
+                    .monospacedDigit()
+                    .lineLimit(1).minimumScaleFactor(0.6)
+                if let unit {
+                    Text(verbatim: unit)
+                        .font(RUFont.sans(.small, weight: .medium))
+                        .foregroundColor(RUColor.text3)
+                }
+            }
+            Text(LocalizedStringKey(label))
+                .font(RUFont.sans(.label, weight: .medium))
+                .foregroundColor(RUColor.text3)
+                .textCase(.uppercase)
+                .tracking(1.1)
+                .lineLimit(1).minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+    }
+
     private var ringsCard: some View {
         let p = profile
         // Le même tableau que `DailyGoalsBarsView` dessine, donc la pastille d'un objectif porte

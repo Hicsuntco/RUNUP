@@ -353,6 +353,21 @@ final class UserProfile {
     var isRestDayToday: Bool {
         if programPhase == .freerun { return false }
         guard let day = weekSessions.first(where: { $0.weekday == todayWeekdayIndex }) else { return false }
+        // COURIR EFFACE LE REPOS.
+        //
+        // Un jour de repos où l'on est sortie quand même n'est plus un jour de repos : la journée
+        // repasse à trois objectifs, et sa séance est bouclée. C'est un choix de produit, et il
+        // ferme une absurdité — l'autre option, ajouter un troisième objectif au moment où la
+        // course arrive, aurait fait passer la journée de « 2/2 bouclés » à « 2/3 » à l'instant
+        // où l'on sort. L'app ferait reculer quelqu'un parce qu'il a couru.
+        //
+        // Le signal est `completed`, écrit par `AdaptivePlanEngine.markSessionDone` quand une
+        // course est enregistrée ce jour-là, et REMIS À FALSE quand on supprime la course. La
+        // règle est donc réversible : effacer la sortie rend son repos à la journée.
+        //
+        // `completed` survit à la régénération de la semaine (voir `rebuildWeek`), donc un repos
+        // effacé lundi le reste même si le plan se recalcule mardi.
+        if day.completed { return false }
         guard let session = day.session else { return true }
         return session.durationMinutes == 0
     }

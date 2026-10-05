@@ -510,7 +510,11 @@ final class AppState {
             activeCaloriesRemaining: max(0, Int((profile.activeCaloriesGoal - profile.activeCaloriesToday).rounded())),
             stepsRemaining: max(0, Int((profile.stepsGoal - profile.stepsToday).rounded())),
             weekStrip: profile.weekStrip.map { WidgetWeekDay(letter: $0.letter, isDone: $0.state == .done, isToday: $0.state == .today) },
-            isRestDay: profile.weekSessions.first(where: { $0.weekday == today }).map { $0.session == nil } ?? false
+            // `isRestDayToday`, et non une troisième définition du repos. Celle d'ici regardait
+            // `session == nil` : elle ratait les repos exprimés par une séance de zéro minute,
+            // et surtout elle ignorait qu'une course efface le repos. Le widget affichait donc
+            // deux objectifs quand l'app en comptait trois, sur le même écran d'accueil.
+            isRestDay: profile.isRestDayToday
         )
         // Only burn a WidgetKit reload (daily budget ~40-70) when something the widget shows
         // actually changed — browsing the color nuancier used to exhaust it and silently freeze

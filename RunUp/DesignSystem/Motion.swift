@@ -56,6 +56,16 @@ enum RUMotion {
         Double(min(max(index, 0), staggerCap)) * stagger
     }
 
+    /// De combien une carte monte en entrant par le bas de l'écran.
+    ///
+    /// Voir `View.ruRises` pour ce que ce nombre doit respecter : il reste sous le plus petit
+    /// écart entre deux éléments auxquels le modificateur s'applique, sans quoi deux voisins se
+    /// recouvrent pendant le défilement.
+    ///
+    /// Ici plutôt que dans l'extension de `View` : une extension de PROTOCOLE n'accepte aucune
+    /// propriété stockée, pas même statique.
+    static let riseOffset: CGFloat = 6
+
     /// La même animation, ou AUCUNE si la personne a demandé moins de mouvement.
     ///
     /// Rendre `nil` plutôt qu'une version plus courte : « Réduire les animations » ne veut pas
@@ -77,13 +87,28 @@ extension View {
     /// Ni flou ni ombre ici : les deux se recalculent à chaque image pendant le défilement, et
     /// c'est exactement le budget qu'on n'a pas à 120 Hz. L'opacité et l'échelle sont gratuites,
     /// elles se font sur la couche déjà composée.
+    ///
+    /// # LE DÉCALAGE NE DÉPLACE RIEN DANS LA MISE EN PAGE, ET C'EST LE PIÈGE
+    ///
+    /// `offset` bouge ce qui est DESSINÉ sans toucher à la place réservée. Deux cartes voisines
+    /// ne traversent pas le bord de l'écran en même temps, donc elles ne reçoivent pas le même
+    /// décalage : celle du haut descend de 22 points pendant que celle du bas n'a pas encore
+    /// bougé. L'écart entre deux cartes de l'accueil est de 12. Elles se RECOUVRAIENT donc de dix
+    /// points pendant tout le défilement, et comme chaque carte porte un gros bouton, le symptôme
+    /// visible était « des boutons les uns sur les autres ».
+    ///
+    /// La règle : le décalage doit rester sous le plus petit écart des éléments auxquels on
+    /// applique ce modificateur. 6 points contre 12, donc, et la marge est intentionnelle.
+    ///
+    /// L'échelle, elle, est sûre quel que soit son réglage : ancrée en bas, une carte rétrécit
+    /// vers le HAUT, donc elle s'éloigne de celle du dessous au lieu d'entrer dedans.
     func ruRises(_ reduceMotion: Bool = false) -> some View {
         scrollTransition(topLeading: .identity, bottomTrailing: .interactive) { content, phase in
             let d = reduceMotion ? 0.0 : abs(phase.value)
             return content
                 .opacity(1 - 0.5 * d)
                 .scaleEffect(1 - 0.05 * d, anchor: .bottom)
-                .offset(y: 22 * d)
+                .offset(y: RUMotion.riseOffset * d)
         }
     }
 }

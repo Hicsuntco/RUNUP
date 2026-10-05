@@ -32,6 +32,29 @@ import UIKit
 /// du noir sur noir. `Ink` ci-dessous fixe le registre sombre de TOUT l'écran : les accents
 /// lisent `AccentTheme` directement (ils suivent le nuancier, jamais le thème), le reste est
 /// littéral.
+/// Les marges de l'écran, lues sur la fenêtre réelle.
+///
+/// Cet écran ignore les zones sûres pour que la carte aille bord à bord, et posait ensuite sa
+/// marge basse à la main : 16 points. Sur tous les iPhone sans bouton d'accueil, la barre de
+/// geste en occupe 34. Les trois boutons du bas — dont la pause, 70 points de diamètre — se
+/// trouvaient donc à cheval sur la zone où un glissement vers le haut appartient au système :
+/// une pause tapée un peu bas, en courant, essoufflée, ouvrait le sélecteur d'applications au
+/// lieu d'arrêter le chrono. C'est le seul geste de l'écran qu'on fait sans regarder.
+///
+/// Lu sur la fenêtre plutôt que sur l'environnement : à l'intérieur d'un `ignoresSafeArea()`,
+/// les encarts rapportés par la mise en page valent zéro — c'est précisément ce qu'on a demandé.
+/// Le même détour existe déjà dans `StravaService` pour la même raison.
+private enum ScreenEdges {
+    /// 34 points de repli : la valeur des modèles sans bouton d'accueil, c'est-à-dire la grande
+    /// majorité, et la seule erreur sans conséquence des deux (une marge un peu large sur un SE
+    /// plutôt qu'un bouton inatteignable sur un 15).
+    static var bottom: CGFloat {
+        UIApplication.shared.connectedScenes
+            .compactMap { ($0 as? UIWindowScene)?.keyWindow?.safeAreaInsets.bottom }
+            .first ?? 34
+    }
+}
+
 private enum Ink {
     /// L'accent de la coureuse, version fond sombre — quelle que soit l'apparence globale.
     static var accent: Color { AccentTheme.current.primary }
@@ -50,6 +73,8 @@ struct LiveRunView: View {
     /// every single one — see `mapLayer`'s `.onChange` for why.
     @State private var displayedRoute: [CLLocationCoordinate2D] = []
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Armé à l'apparition, pour que le point d'enregistrement respire. Voir `liveDot`.
+    @State private var pulse = false
     @Environment(\.openURL) private var openURL
     @Environment(SubscriptionService.self) private var subscriptions
 
@@ -133,8 +158,7 @@ struct LiveRunView: View {
             HStack(spacing: 8) {
                 FrostedBackButton { appState.go(.home) }
                 HStack(spacing: 6) {
-                    Circle().fill(Ink.accent).frame(width: 6, height: 6)
-                        .shadow(color: Ink.accent, radius: 4)
+                    liveDot
                     Text(vm?.isAutoPaused == true ? "PAUSE AUTO" : (vm?.isPaused == true ? "EN PAUSE" : "EN DIRECT"))
                         .font(RUFont.display(11)).tracking(2).foregroundColor(Ink.accentSoft)
                 }
@@ -165,6 +189,27 @@ struct LiveRunView: View {
             // précisément ce qui apprend à ignorer les alertes.
             if state == .unstable || state == .denied { Haptics.warning() }
         }
+    }
+
+    /// Le seul mouvement perpétuel de l'écran, et le seul qui porte une information.
+    ///
+    /// Un écran de course ne doit rien animer pour le plaisir : on le regarde en bougeant,
+    /// essoufflée, parfois sous la pluie, et tout ce qui frétille y coûte de l'attention qu'on
+    /// n'a pas. Ce point-là respire parce que son battement DIT quelque chose — l'enregistrement
+    /// tourne. Et il s'arrête net en pause : l'arrêt du battement est alors la deuxième preuve,
+    /// non textuelle, que le chrono est bien figé — utile exactement au moment où le mot « EN
+    /// PAUSE » est trop petit pour être lu en courant.
+    private var liveDot: some View {
+        let beating = pulse && vm?.isPaused != true && !reduceMotion
+        return Circle().fill(Ink.accent).frame(width: 6, height: 6)
+            .shadow(color: Ink.accent, radius: 4)
+            .scaleEffect(beating ? 1.55 : 1)
+            .opacity(beating ? 0.45 : 1)
+            .animation(beating ? .easeInOut(duration: 1.1).repeatForever(autoreverses: true)
+                               : RUMotion.digit,
+                       value: beating)
+            .onAppear { pulse = true }
+            .accessibilityHidden(true)
     }
 
     /// Trois messages, parce qu'il y a trois situations que la coureuse doit pouvoir distinguer
@@ -246,16 +291,108 @@ struct LiveRunView: View {
     @ViewBuilder private var instruction: some View {
         if hasInstruction {
             VStack(spacing: 2) {
-                Text(vm?.segmentLabel ?? String(localized: "ALLURE CIBLE"))
-                    .font(RUFont.display(11)).tracking(2)
-                    .foregroundColor(Ink.accentSoft)
-                Text(verbatim: "\(appState.profile.todaySession.pace)/km")
-                    .displayStyle(34)
-                    .foregroundColor(Ink.accent)
+                HStack(spacing: 7) {
+                    Text(vm?.segmentLabel ?? String(localized: "ALLURE CIBLE"))
+                        .font(RUFont.display(11)).tracking(2)
+                        .foregroundColor(Ink.accentSoft)
+                    // LE RESTANT, à côté du nom du segment.
+                    //
+                    // L'écran annonçait « RÉP. 3/5 » et s'arrêtait là. Elle savait donc quelle
+                    // répétition elle courait, et jamais s'il lui restait cinquante mètres ou
+                    // quatre cents — la seule chose qu'on veuille savoir au milieu d'une
+                    // répétition. Le modèle de vue l'avait sous la main depuis toujours : c'est
+                    // lui qui surveille la condition de fin du segment à chaque seconde.
+                    if let remaining = vm?.segmentRemainingLabel {
+                        Text(verbatim: "·")
+                            .font(RUFont.display(11)).foregroundColor(Ink.label)
+                        Text(remaining)
+                            .font(RUFont.display(11)).tracking(1)
+                            .foregroundColor(.white.opacity(0.82))
+                            .monospacedDigit()
+                            .contentTransition(.numericText())
+                            .animation(RUMotion.respecting(reduceMotion, RUMotion.digit), value: remaining)
+                    }
+                }
+                targetPaceLine
+                if let progress = vm?.segmentProgress {
+                    segmentBar(progress)
+                }
             }
             .accessibilityElement(children: .combine)
-            .accessibilityLabel(String(localized: "Consigne, allure cible \(appState.profile.todaySession.pace) par kilomètre"))
+            .accessibilityLabel(accessibleInstruction)
         }
+    }
+
+    /// L'ALLURE CIBLE, ET QUAND ELLE EST VRAIMENT LA CONSIGNE.
+    ///
+    /// Pendant une répétition — ou pendant toute une séance continue — l'allure du jour EST ce
+    /// qu'elle doit faire maintenant : gros, en accent, c'est la première chose lue de l'écran.
+    ///
+    /// Pendant l'échauffement, la récupération et le retour au calme, non : ces segments sont
+    /// volontairement hors allure cible, et l'écran affichait pourtant « ÉCHAUFFEMENT » suivi de
+    /// l'allure des répétitions dans le même accent — soit, lu à bout de souffle, la consigne de
+    /// courir son échauffement à l'allure de son travail. Le chiffre reste, parce qu'il est utile
+    /// de savoir vers quoi on s'échauffe ; il perd l'accent et gagne le mot CIBLE. Même place,
+    /// même taille, aucun saut de mise en page toutes les quatre-vingt-dix secondes : l'accent
+    /// seul dit « c'est maintenant ».
+    @ViewBuilder private var targetPaceLine: some View {
+        let pace = appState.profile.todaySession.pace
+        if vm?.isTargetEffortNow ?? true {
+            Text(verbatim: "\(pace)/km")
+                .displayStyle(34)
+                .foregroundColor(Ink.accent)
+        } else {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text("CIBLE")
+                    .font(RUFont.display(11)).tracking(2)
+                    .foregroundColor(Ink.label)
+                Text(verbatim: "\(pace)/km")
+                    .displayStyle(34)
+                    .foregroundColor(.white.opacity(0.45))
+            }
+        }
+    }
+
+    /// Ce que la consigne dit à voix haute, à la lettre — y compris le segment et son restant,
+    /// que l'étiquette précédente passait sous silence alors qu'ils sont à l'écran.
+    private var accessibleInstruction: String {
+        let pace = appState.profile.todaySession.pace
+        guard let segment = vm?.segmentLabel else {
+            return String(localized: "Consigne, allure cible \(pace) par kilomètre")
+        }
+        // « allure cible » quand c'est la consigne de l'instant, « cible » quand ce n'est que
+        // l'objectif de la séance — la même distinction que l'accent fait à l'écran, qui ne se
+        // voit pas quand on écoute.
+        let effort = vm?.isTargetEffortNow ?? true
+        guard let remaining = vm?.segmentRemainingLabel else {
+            return effort
+                ? String(localized: "\(segment), allure cible \(pace) par kilomètre")
+                : String(localized: "\(segment), cible \(pace) par kilomètre")
+        }
+        return effort
+            ? String(localized: "\(segment), reste \(remaining), allure cible \(pace) par kilomètre")
+            : String(localized: "\(segment), reste \(remaining), cible \(pace) par kilomètre")
+    }
+
+    /// La progression dans le segment en cours.
+    ///
+    /// Quatre points de haut et rien d'autre : sur cet écran, une barre est déjà le plus de
+    /// détail qu'on puisse se permettre. Masquée à VoiceOver — l'étiquette de la consigne
+    /// au-dessus énonce déjà le restant, en toutes lettres et avec son unité, ce qu'une barre ne
+    /// saurait pas faire.
+    private func segmentBar(_ progress: Double) -> some View {
+        Capsule().fill(Color.white.opacity(0.12))
+            .frame(height: 4)
+            .overlay(alignment: .leading) {
+                GeometryReader { geo in
+                    Capsule().fill(Ink.accent)
+                        .frame(width: geo.size.width * progress)
+                }
+            }
+            .frame(maxWidth: 220)
+            .padding(.top, 8)
+            .animation(RUMotion.respecting(reduceMotion, RUMotion.glide), value: progress)
+            .accessibilityHidden(true)
     }
 
     private var metricsPanel: some View {
@@ -277,11 +414,25 @@ struct LiveRunView: View {
             instruction
 
             VStack(spacing: 0) {
+                // LES CHIFFRES ROULENT, ILS NE SAUTENT PAS.
+                //
+                // `monospacedDigit` d'abord, et c'est le plus important des deux : avec des
+                // chiffres de largeurs différentes, un chrono de 52 points se décale
+                // horizontalement à chaque seconde — un tremblement permanent au centre de
+                // l'écran, sur le seul objet qu'on fixe en courant. La transition numérique
+                // ensuite, qui fait glisser le seul chiffre qui change au lieu de remplacer la
+                // ligne entière.
                 Text(PaceModel.formatDuration(vm?.elapsedSeconds ?? 0))
                     .displayStyle(hasInstruction ? 52 : 64).foregroundColor(.white)
+                    .monospacedDigit()
+                    .contentTransition(.numericText())
+                    .animation(RUMotion.respecting(reduceMotion, RUMotion.digit), value: Int(vm?.elapsedSeconds ?? 0))
                 HStack(alignment: .lastTextBaseline, spacing: 5) {
                     Text(String(format: "%.2f", locale: Locale.current, vm?.distanceKm ?? 0))
                         .displayStyle(26).foregroundColor(.white)
+                        .monospacedDigit()
+                        .contentTransition(.numericText())
+                        .animation(RUMotion.respecting(reduceMotion, RUMotion.digit), value: vm?.distanceKm ?? 0)
                     Text(verbatim: "KM")
                         .font(RUFont.sans(.micro, weight: .bold)).tracking(1.5)
                         .foregroundColor(Ink.label)
@@ -291,9 +442,7 @@ struct LiveRunView: View {
             .accessibilityLabel(String(localized: "Temps \(PaceModel.formatDuration(vm?.elapsedSeconds ?? 0)), distance \(String(format: "%.2f", locale: Locale.current, vm?.distanceKm ?? 0)) kilomètres"))
 
             HStack(spacing: 10) {
-                // `liveMetric` rend son libellé par un `Text(String)` nu — d'où le
-                // `String(localized:)` explicite ici. « KCAL » est un symbole, il ne bouge pas.
-                liveMetric(vm?.paceLabel ?? "--:--", String(localized: "ALLURE"), Ink.accentSoft)
+                paceMetric
                 // No live sensor stream means no real reading — "--" rather than a fabricated
                 // number (was a fake sine-wave formula dressed up as a live measurement).
                 liveMetric(
@@ -301,6 +450,8 @@ struct LiveRunView: View {
                     String(localized: "FC · \(appState.profile.todaySession.zone)"),
                     Ink.accent
                 )
+                // `liveMetric` rend son libellé par un `Text(String)` nu — mais « KCAL » est un
+                // symbole, il ne se traduit pas.
                 liveMetric("\(Int(vm?.kcal ?? 0))", "KCAL", Ink.cyan)
             }
 
@@ -339,7 +490,11 @@ struct LiveRunView: View {
         }
         .padding(.horizontal, 20)
         .padding(.top, 18)
-        .padding(.bottom, 16)
+        // Le fond du panneau descend jusqu'au bord physique de l'écran — c'est son dégradé qui
+        // ferme l'image. Son CONTENU, lui, s'arrête au-dessus de la barre de geste : voir
+        // `ScreenEdges`. Le plancher à 16 garde la marge d'origine sur les modèles à bouton
+        // d'accueil, où l'encart vaut zéro.
+        .padding(.bottom, max(16, ScreenEdges.bottom + 8))
         .frame(maxWidth: .infinity)
         .background(
             LinearGradient(colors: [Color(hex: 0x0E0E14).opacity(0.6), Color(hex: 0x0E0E14, opacity: 1)], startPoint: .top, endPoint: .bottom)
@@ -404,6 +559,59 @@ struct LiveRunView: View {
             }
             voiceCoach.toggle()
         }
+    }
+
+    /// L'ALLURE, ET CE QU'ELLE VAUT.
+    ///
+    /// Deux changements sur une seule case, et c'est la case la plus regardée de l'écran.
+    ///
+    /// Le chiffre, d'abord : c'était la moyenne de toute la sortie. Passé la vingtième minute,
+    /// elle ne bouge plus que de quelques secondes même quand la coureuse change franchement de
+    /// rythme — autrement dit, le seul nombre censé lui dire comment elle court maintenant ne le
+    /// disait plus. C'est l'allure des trente dernières secondes qui s'affiche désormais : la
+    /// seule qu'elle puisse corriger. La moyenne garde sa place au récap, où elle décrit une
+    /// course finie.
+    ///
+    /// Le libellé, ensuite. Tant qu'elle tient la cible, il dit ALLURE et rien ne change. Dès
+    /// qu'elle s'en écarte de plus que la tolérance, il devient le verbe que le coach prononce au
+    /// même instant — ACCÉLÈRE, RALENTIS — et passe à l'ambre avec le chiffre.
+    ///
+    /// Un mot plutôt qu'une flèche, et un mot plutôt que la couleur seule : la couleur ne se lit
+    /// pas pour tout le monde, et elle ne se lit pour personne à bout de souffle avec le soleil
+    /// dessus. C'est aussi le même mot que la voix, lue sur la même fenêtre et la même tolérance
+    /// — l'écran et le coach ne peuvent plus se contredire.
+    private var paceMetric: some View {
+        let standing = vm?.paceStanding ?? .unknown
+        let drift: Bool = standing == .tooSlow || standing == .tooFast
+        let label: String
+        switch standing {
+        case .tooSlow: label = String(localized: "ACCÉLÈRE")
+        case .tooFast: label = String(localized: "RALENTIS")
+        case .onTarget, .unknown: label = String(localized: "ALLURE")
+        }
+        let value = vm?.recentPaceLabel ?? "--:--"
+        // Pas le libellé affiché : « Allure 8:32 par kilomètre, ALLURE » est ce que donnerait sa
+        // reprise telle quelle.
+        let spoken: String
+        switch standing {
+        case .tooSlow: spoken = String(localized: "Allure \(value) par kilomètre, accélère")
+        case .tooFast: spoken = String(localized: "Allure \(value) par kilomètre, ralentis")
+        case .onTarget, .unknown: spoken = String(localized: "Allure \(value) par kilomètre")
+        }
+        return VStack(spacing: 2) {
+            Text(value).displayStyle(26)
+                .monospacedDigit()
+                .contentTransition(.numericText())
+                .animation(RUMotion.respecting(reduceMotion, RUMotion.digit), value: value)
+                .foregroundColor(drift ? Ink.amber : Ink.accentSoft)
+            Text(label)
+                .font(RUFont.sans(.micro, weight: .bold)).tracking(1.5)
+                .foregroundColor(drift ? Ink.amber : Ink.label)
+        }
+        .frame(maxWidth: .infinity)
+        .animation(RUMotion.respecting(reduceMotion, RUMotion.snap), value: drift)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(spoken)
     }
 
     private func liveMetric(_ value: String, _ label: String, _ color: Color) -> some View {

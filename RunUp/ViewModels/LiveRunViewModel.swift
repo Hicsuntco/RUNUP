@@ -68,18 +68,14 @@ final class LiveRunViewModel {
     private var autoPauseCycleStartDistanceKm: Double = 0
     private var runtimeAutoPauseDisabled = false
 
-    /// Real-time pace-zone alerts: a rolling window (real distance covered over the last
-    /// `paceWindowSeconds`) compared against the session's target pace — reacts to her CURRENT
-    /// effort, unlike the whole-run average `paceLabel` shows, which barely moves late in a run.
-    private var paceWindowStartDistanceKm: Double = 0
-    private var paceWindowStartElapsed: Double = 0
+    /// L'allure récente — la fenêtre glissante de `PaceWindow`, où vit la règle. Elle alimente
+    /// désormais DEUX choses au lieu d'une : la consigne vocale, comme avant, et le chiffre
+    /// affiché sous ALLURE, qui montrait jusqu'ici la moyenne de toute la course et pouvait donc
+    /// rester immobile pendant que le coach disait « accélère ».
+    private var paceWindow = PaceWindow.State()
     private var lastPaceAlertAtElapsed: Double = -.infinity
-    private static let paceWindowSeconds: Double = 30
     private static let paceAlertMinElapsedSeconds: Double = 180
     private static let paceAlertCooldownSeconds: Double = 90
-    /// A real coaching tolerance, not a hair-trigger — normal stride-to-stride pace noise
-    /// shouldn't nag her every 30 seconds.
-    private static let paceAlertToleranceSecPerKm: Double = 20
     /// Nil until a real, recent (last 90s) HealthKit sample comes in — no Watch/HR strap paired
     /// or streaming means this genuinely has no live reading, which is different from "0 bpm" and
     /// shouldn't be displayed as a number at all. Was previously a fabricated sine-wave formula
@@ -169,14 +165,104 @@ final class LiveRunViewModel {
         case .cooldown: return String(localized: "RETOUR AU CALME")
         }
     }
+    /// L'allure cible du jour est-elle la consigne de CET instant ?
+    ///
+    /// Non pendant l'échauffement, la récupération et le retour au calme — et l'écran de course
+    /// l'ignorait : il affichait « ÉCHAUFFEMENT » en surtitre et, juste en dessous, l'allure des
+    /// répétitions en gros et en accent, c'est-à-dire la consigne de courir son échauffement à
+    /// l'allure de son travail. La donnée existait déjà ici, à l'usage de l'alerte vocale, qui
+    /// se tait sur ces segments pour exactement cette raison.
+    var isTargetEffortNow: Bool { isInTargetEffortSegment }
+
+    /// Où elle en est DANS le segment en cours, de 0 à 1 — `nil` quand la question n'a pas de
+    /// réponse.
+    ///
+    /// L'écran annonçait « RÉP. 3/5 » et rien d'autre : la coureuse savait quelle répétition elle
+    /// courait, jamais s'il lui restait cinquante mètres ou quatre cents. C'est pourtant la seule
+    /// information que la machine à segments possède déjà et ne disait pas — elle connaît la
+    /// condition exacte de fin de chaque segment, puisque c'est elle qui la surveille à chaque
+    /// seconde dans `advanceIntervalSegmentIfNeeded()`.
+    ///
+    /// Le retour au calme vaut `nil` : il n'a pas de longueur prévue, il s'arrête quand elle
+    /// arrête. Une barre qui se remplirait vers une fin inventée vaudrait moins que rien.
+    var segmentProgress: Double? {
+        guard let currentSegment, let structure = session.intervalStructure else { return nil }
+        switch currentSegment {
+        case .warmup:
+            return Self.fraction(elapsedSeconds - segmentStartElapsed, of: Self.warmupSeconds)
+        case .rep:
+            return Self.fraction(distanceKm - segmentStartDistanceKm, of: structure.repKm)
+        case .recovery:
+            return Self.fraction(elapsedSeconds - segmentStartElapsed, of: Self.recoverySeconds)
+        case .cooldown:
+            return nil
+        }
+    }
+
+    /// Ce qu'il reste du segment, dans l'unité dont il dépend vraiment : des mètres pour une
+    /// répétition (qui se termine sur la distance), un temps pour l'échauffement et la
+    /// récupération (qui se terminent sur le chrono). Afficher un temps restant sur une
+    /// répétition serait une prédiction, pas une mesure.
+    var segmentRemainingLabel: String? {
+        guard let currentSegment, let structure = session.intervalStructure else { return nil }
+        switch currentSegment {
+        case .warmup:
+            return Self.remainingTime(Self.warmupSeconds - (elapsedSeconds - segmentStartElapsed))
+        case .rep:
+            let metres = (structure.repKm - (distanceKm - segmentStartDistanceKm)) * 1000
+            return String(localized: "\(max(0, Int(metres.rounded()))) m")
+        case .recovery:
+            return Self.remainingTime(Self.recoverySeconds - (elapsedSeconds - segmentStartElapsed))
+        case .cooldown:
+            return nil
+        }
+    }
+
+    private static func fraction(_ done: Double, of total: Double) -> Double? {
+        guard total > 0 else { return nil }
+        return min(max(done / total, 0), 1)
+    }
+
+    private static func remainingTime(_ seconds: Double) -> String {
+        PaceModel.formatDuration(max(0, seconds.rounded()))
+    }
+
     // Same 62 kcal/km estimate as `markTodaySessionDone` — two different constants for the same
     // approximation meant a GPS run and a manual run disagreed on identical distances.
     var kcal: Double { distanceKm * 62 }
 
+    /// La moyenne de toute la sortie. Elle garde sa place là où elle veut dire quelque chose —
+    /// le `RunRecord`, le récap, la Live Activity — mais plus sur l'écran de course.
     var paceLabel: String {
         guard distanceKm > 0.05 else { return "--:--" }
         let secPerKm = elapsedSeconds / distanceKm
         return AdaptivePlanEngine.fmt(secPerKm)
+    }
+
+    /// Ce que l'écran de course affiche sous ALLURE : l'allure des trente dernières secondes.
+    ///
+    /// Avant les dix premières secondes, la fenêtre ne dit rien et la moyenne de la course EST
+    /// l'allure récente — on la montre donc, sans mentir. Après, les deux divergent et c'est la
+    /// récente qui compte : c'est celle qu'elle peut corriger.
+    var recentPaceLabel: String {
+        guard let secPerKm = PaceWindow.secPerKm(paceWindow, minimumSeconds: PaceWindow.displayMinimumSeconds) else {
+            return paceLabel
+        }
+        return AdaptivePlanEngine.fmt(secPerKm)
+    }
+
+    /// L'allure récente face à la cible du jour.
+    ///
+    /// `unknown` pendant l'échauffement, la récupération et le retour au calme : ces segments
+    /// sont VOULUS hors allure cible (voir `isInTargetEffortSegment`), et faire passer le chiffre
+    /// à l'ambre pendant un footing de récupération serait reprocher à la coureuse d'avoir suivi
+    /// la consigne.
+    var paceStanding: PaceWindow.Standing {
+        guard isInTargetEffortSegment else { return .unknown }
+        return PaceWindow.standing(
+            secPerKm: PaceWindow.secPerKm(paceWindow, minimumSeconds: PaceWindow.displayMinimumSeconds),
+            target: PaceModel.parseSecPerKm(session.pace)
+        )
     }
 
     init(profile: UserProfile, healthKit: HealthKitService) {
@@ -217,6 +303,8 @@ final class LiveRunViewModel {
 
     func start() {
         startedAt = Date()
+        paceWindow = PaceWindow.State()
+        lastPaceAlertAtElapsed = -.infinity
         autoPauseState = AutoPause.State()
         autoPauseCyclesWithNoDistance = 0
         autoPauseCycleStartDistanceKm = 0
@@ -274,6 +362,10 @@ final class LiveRunViewModel {
             return
         }
         elapsedSeconds = max(0, Date().timeIntervalSince(startedAt) - accumulatedPauseSeconds)
+        // Un échantillon par seconde de course. Les pauses ne sont pas échantillonnées — ce
+        // `guard` plus haut rend la main — donc la fenêtre décrit bien trente secondes COURUES,
+        // et une pause de cinq minutes au feu rouge ne vient pas y écraser l'allure.
+        PaceWindow.record(&paceWindow, elapsed: elapsedSeconds, km: distanceKm)
         let currentKm = Int(distanceKm)
         if currentKm > lastSplitKm {
             splitSecondsPerKm.append(elapsedSeconds - lastSplitElapsedSeconds)
@@ -365,30 +457,32 @@ final class LiveRunViewModel {
         return false
     }
 
-    /// Compares real recent pace (distance actually covered in the last `paceWindowSeconds`)
-    /// against the session's target and speaks a nudge when she's meaningfully off it — the
-    /// audio equivalent of glancing at the pace number, for when she isn't looking at the screen.
+    /// Dit à voix haute ce que le chiffre à l'écran vient de montrer : l'allure récente s'est
+    /// écartée de la cible — l'équivalent sonore du coup d'œil, pour les moments où elle ne
+    /// regarde pas l'écran.
+    ///
+    /// La comparaison est exactement celle de `paceStanding`, sur la même fenêtre et la même
+    /// tolérance. C'est tout l'intérêt : la voix ne peut plus contredire l'écran.
     private func checkPaceAlert() {
-        defer {
-            if elapsedSeconds - paceWindowStartElapsed >= Self.paceWindowSeconds {
-                paceWindowStartDistanceKm = distanceKm
-                paceWindowStartElapsed = elapsedSeconds
-            }
-        }
         guard profile.paceAlertsEnabled,
               elapsedSeconds >= Self.paceAlertMinElapsedSeconds,
               isInTargetEffortSegment,
-              elapsedSeconds - paceWindowStartElapsed >= Self.paceWindowSeconds,
-              elapsedSeconds - lastPaceAlertAtElapsed >= Self.paceAlertCooldownSeconds,
-              let targetSecPerKm = PaceModel.parseSecPerKm(session.pace)
+              elapsedSeconds - lastPaceAlertAtElapsed >= Self.paceAlertCooldownSeconds
         else { return }
-        let windowDistanceKm = distanceKm - paceWindowStartDistanceKm
-        guard windowDistanceKm > 0.05 else { return }
-        let recentSecPerKm = (elapsedSeconds - paceWindowStartElapsed) / windowDistanceKm
-        let delta = recentSecPerKm - targetSecPerKm
-        guard abs(delta) > Self.paceAlertToleranceSecPerKm else { return }
-        lastPaceAlertAtElapsed = elapsedSeconds
-        voiceCoach?.announce(delta > 0 ? "Accélère un peu, tu es sous ton allure cible." : "Ralentis légèrement, tu vas plus vite que ton allure cible.")
+        let standing = PaceWindow.standing(
+            secPerKm: PaceWindow.secPerKm(paceWindow, minimumSeconds: PaceWindow.alertMinimumSeconds),
+            target: PaceModel.parseSecPerKm(session.pace)
+        )
+        switch standing {
+        case .unknown, .onTarget:
+            return
+        case .tooSlow:
+            lastPaceAlertAtElapsed = elapsedSeconds
+            voiceCoach?.announce("Accélère un peu, tu es sous ton allure cible.")
+        case .tooFast:
+            lastPaceAlertAtElapsed = elapsedSeconds
+            voiceCoach?.announce("Ralentis légèrement, tu vas plus vite que ton allure cible.")
+        }
     }
 
     /// A genuine stop held for `AutoPause.delaySeconds` (red light, water fountain) — pauses the

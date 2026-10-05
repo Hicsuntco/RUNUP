@@ -366,6 +366,23 @@
         }
       }
     },
+    "%@, allure cible %@ par kilomètre": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, target pace %2$@ per kilometre"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, ritmo objetivo %2$@ por kilómetro"
+          }
+        }
+      }
+    },
     "%@, aujourd'hui": {
       "extractionState": "manual",
       "localizations": {
@@ -379,6 +396,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@, hoy"
+          }
+        }
+      }
+    },
+    "%@, cible %@ par kilomètre": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, target %2$@ per kilometre"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, objetivo %2$@ por kilómetro"
           }
         }
       }
@@ -413,6 +447,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@, descanso"
+          }
+        }
+      }
+    },
+    "%@, reste %@, allure cible %@ par kilomètre": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$@ left, target pace %3$@ per kilometre"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, quedan %2$@, ritmo objetivo %3$@ por kilómetro"
+          }
+        }
+      }
+    },
+    "%@, reste %@, cible %@ par kilomètre": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$@ left, target %3$@ per kilometre"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, quedan %2$@, objetivo %3$@ por kilómetro"
           }
         }
       }
@@ -775,6 +843,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld km en %@"
+          }
+        }
+      }
+    },
+    "%lld m": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld m"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld m"
           }
         }
       }
@@ -2159,6 +2244,23 @@
         }
       }
     },
+    "ACCÉLÈRE": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SPEED UP"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ACELERA"
+          }
+        }
+      }
+    },
     "AJOUTER UNE PHOTO": {
       "localizations": {
         "en": {
@@ -2807,6 +2909,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ritmo"
+          }
+        }
+      }
+    },
+    "Allure %@ par kilomètre": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pace %@ per kilometre"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ritmo %@ por kilómetro"
+          }
+        }
+      }
+    },
+    "Allure %@ par kilomètre, accélère": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pace %@ per kilometre, speed up"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ritmo %@ por kilómetro, acelera"
+          }
+        }
+      }
+    },
+    "Allure %@ par kilomètre, ralentis": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pace %@ per kilometre, ease off"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ritmo %@ por kilómetro, afloja"
           }
         }
       }
@@ -4031,6 +4184,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "ESTA NOCHE · %@"
+          }
+        }
+      }
+    },
+    "CIBLE": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TARGET"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OBJETIVO"
           }
         }
       }
@@ -13797,6 +13967,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "¿Salir del club?"
+          }
+        }
+      }
+    },
+    "RALENTIS": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EASE OFF"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AFLOJA"
           }
         }
       }

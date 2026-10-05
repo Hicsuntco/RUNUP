@@ -39,6 +39,15 @@ enum RUMotion {
     /// Le long voyage : un tracé de course qui se redessine en entier.
     static let draw = Animation.timingCurve(0.22, 0.61, 0.36, 1, duration: 1.45)
 
+    /// Un chiffre qui change tout seul : chrono, distance, allure.
+    ///
+    /// À part, et volontairement hors de la famille à ressorts. Un ressort fait dépasser le
+    /// glyphe au-dessus de sa ligne avant de le reposer ; sur un chrono qui change une fois par
+    /// seconde, ce dépassement devient un tic permanent dans le coin de l'œil. Et 200 ms est le
+    /// plafond : au-delà, la transition du chiffre suivant commence avant la fin de la
+    /// précédente et le chrono passe la course entier à trembler.
+    static let digit = Animation.easeOut(duration: 0.18)
+
     /// L'écart entre deux éléments d'une même série.
     ///
     /// 55 ms. En dessous, la cascade se lit comme un seul mouvement flou ; au-dessus, on ATTEND le

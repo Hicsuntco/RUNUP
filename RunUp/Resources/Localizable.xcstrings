@@ -3445,6 +3445,22 @@
         }
       }
     },
+    "Aujourd'hui, c'est %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today is %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoy toca %@."
+          }
+        }
+      }
+    },
     "Autoriser l'accès aux contacts": {
       "extractionState": "manual",
       "localizations": {
@@ -8967,6 +8983,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Llevo años entrenando en serio"
+          }
+        }
+      }
+    },
+    "Je peux te répondre vraiment, mais il me faut RUNUP Plus. Le coach lit ton programme, ta forme et tes dernières sorties avant de te répondre — c'est ce qui fait la différence avec une réponse générique.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I can give you a real answer, but I need RUNUP Plus. The coach reads your plan, your form and your recent runs before replying — that's what makes it different from a generic answer."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedo darte una respuesta de verdad, pero necesito RUNUP Plus. El coach lee tu plan, tu forma y tus últimas salidas antes de responder: eso marca la diferencia con una respuesta genérica."
           }
         }
       }

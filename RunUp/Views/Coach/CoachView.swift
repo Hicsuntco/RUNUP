@@ -32,6 +32,13 @@ struct CoachView: View {
     /// n'a pas, ce qui vaut mieux que n'importe quel argumentaire à sa place.
     private var coachLocked: Bool { !subscriptions.unlocks(.coach) }
 
+    /// Ce qu'une personne sans abonnement vient d'écrire. VOLONTAIREMENT NON ENREGISTRÉ.
+    ///
+    /// Rien de cet échange ne part au serveur et rien n'entre dans `ChatMessage` : il n'y a pas de
+    /// réponse à produire, donc pas d'appel à payer, et le jour où elle s'abonne son fil démarre
+    /// vierge au lieu de s'ouvrir sur une publicité qu'elle a déjà lue.
+    @State private var demandeVerrouillee: String?
+
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -65,10 +72,18 @@ struct CoachView: View {
                                 typingIndicator
                             }
 
-                            if !coachLocked {
-                                FlowChips(chips: chips) { send($0) }
-                                    .padding(.vertical, 4)
+                            // L'échange verrouillé : sa question, puis la réponse qui explique
+                            // ce qu'il manque pour y répondre.
+                            if let demande = demandeVerrouillee {
+                                lockedAskBubble(demande)
+                                lockedReplyBubble
                             }
+
+                            // Les suggestions restent, verrouillées ou non. Elles sont le chemin
+                            // le plus court vers la question — donc, sans abonnement, vers la
+                            // réponse qui dit ce que l'abonnement apporte.
+                            FlowChips(chips: chips) { send($0) }
+                                .padding(.vertical, 4)
                         }
                         .padding(.horizontal, 18)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -84,18 +99,14 @@ struct CoachView: View {
                     }
                 }
             }
-            if coachLocked {
-                PlusLockCard(feature: .coach)
-                    .padding(.horizontal, RUSpacing.pagePadding)
-                    // La barre d'onglets FLOTTE au-dessus des écrans — `RootTabView` l'empile dans
-                    // un ZStack, elle ne pousse rien. Chaque écran paie donc lui-même sa garde au
-                    // sol. Cette branche-ci payait 12 points : la barre tranchait le bouton
-                    // « Découvrir RUNUP Plus » en deux et recouvrait entièrement la ligne qui dit
-                    // ce qui reste gratuit — sur le seul écran dont le rôle est de vendre.
-                    .padding(.bottom, RUSpacing.tabBarBottomInset + RUSpacing.tabBarHeight + 14)
-            } else {
-                inputBar
-            }
+            // PLUS DE BANDEAU À LA PLACE DE LA SAISIE. Il la REMPLAÇAIT : on voyait l'écran du
+            // coach sans jamais pouvoir lui parler, et l'argumentaire occupait le tiers bas d'un
+            // écran déjà vide aux quatre cinquièmes.
+            //
+            // La saisie reste ouverte à tout le monde, et c'est LA RÉPONSE qui dit ce qui manque.
+            // On ne lit plus une promesse À CÔTÉ d'une conversation : on fait le geste, et on voit
+            // exactement où il s'arrête.
+            inputBar
         }
         .background(RUColor.pageBackground)
         .onAppear {
@@ -107,7 +118,9 @@ struct CoachView: View {
     /// the real `readiness` score (even a low one) and regardless of whether any real data backed
     /// it at all — gated on `hasReadinessData` so it's honest instead.
     private var welcomeMessage: String {
-        let sessionPart = String(localized: "J'ai relevé ta séance à \(profile.todaySession.displayTitle).")
+        // « J'ai relevé ta séance à Repos. » — la phrase ne veut rien dire en français, et c'est
+        // la deuxième du premier message que lit quelqu'un qui découvre le coach.
+        let sessionPart = String(localized: "Aujourd'hui, c'est \(profile.todaySession.displayTitle).")
         guard profile.hasReadinessData else {
             return String(localized: "Salut \(profile.name) 👋 \(sessionPart) Une question avant de te lancer ?")
         }
@@ -252,6 +265,42 @@ struct CoachView: View {
         .accessibilityElement(children: .combine)
     }
 
+    /// Sa question à elle, dans l'échange verrouillé. Même dessin que les bulles persistées —
+    /// `bubble(for:)` attend un `ChatMessage`, et celui-ci n'existe volontairement pas.
+    private func lockedAskBubble(_ text: String) -> some View {
+        HStack {
+            Spacer(minLength: 40)
+            Text(text)
+                .font(RUFont.sans(.label))
+                .foregroundColor(RUColor.onRose)
+                .lineSpacing(3)
+                .padding(12)
+                .background(RUColor.rose, in: BubbleShape(tailCorner: .topRight))
+        }
+    }
+
+    /// La réponse du coach à qui n'a pas souscrit : la même bulle que les autres, et un bouton.
+    ///
+    /// Une bulle plutôt qu'une carte d'offre, parce que c'est le coach qui parle — il dit ce qui
+    /// lui manque pour répondre, dans sa voix et à sa place dans le fil. Une carte d'offre posée
+    /// sous la conversation aurait été quelqu'un d'autre qui parle par-dessus lui.
+    private var lockedReplyBubble: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Je peux te répondre vraiment, mais il me faut RUNUP Plus. Le coach lit ton programme, ta forme et tes dernières sorties avant de te répondre — c'est ce qui fait la différence avec une réponse générique.")
+                    .font(RUFont.sans(.label))
+                    .foregroundColor(RUColor.textPrimary)
+                    .lineSpacing(3)
+                Button("Découvrir RUNUP Plus") { appState.plusPrompt = .coach }
+                    .buttonStyle(AnyButtonStyleBox(SecondaryButtonStyle()))
+            }
+            .padding(12)
+            .background(RUColor.card, in: BubbleShape(tailCorner: .topLeft))
+            .overlay(BubbleShape(tailCorner: .topLeft).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+            Spacer(minLength: 24)
+        }
+    }
+
     private func coachBubble(_ text: String) -> some View {
         HStack {
             Text(text)
@@ -331,6 +380,16 @@ struct CoachView: View {
     }
 
     private func send(_ text: String) {
+        // Sans abonnement, rien ne part : pas d'appel au modèle, pas d'enregistrement. La bulle
+        // d'en face est écrite ici.
+        guard !coachLocked else {
+            let propre = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !propre.isEmpty else { return }
+            vm?.draft = ""
+            withAnimation { demandeVerrouillee = propre }
+            Analytics.shared.track(.coachMessageSent, ["thread_length": .int(0)])
+            return
+        }
         // Only the fact that a message was sent, and how deep into the conversation it was — never
         // the message itself. The coach is the one place in this app where what she types is
         // genuinely private (PRIVACY_POLICY.md promises those messages are never stored on our

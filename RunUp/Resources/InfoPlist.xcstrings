@@ -130,6 +130,12 @@
             "state": "translated",
             "value": "RunUp compara tus contactos con las cuentas existentes para decirte quién ya usa la app. Las direcciones se convierten en huellas ilegibles en tu teléfono antes de enviarse — tu agenda nunca sale de él, y no se conserva nada."
           }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RunUp compare tes contacts aux comptes existants pour te dire qui utilise déjà l'app. Les adresses sont transformées en empreintes illisibles sur ton téléphone avant l'envoi — ton carnet d'adresses n'en sort jamais, et rien n'est conservé."
+          }
         }
       }
     }

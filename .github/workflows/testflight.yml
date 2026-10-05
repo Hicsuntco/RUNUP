@@ -255,6 +255,13 @@ jobs:
       # sort EN FRANÇAIS chez tout le monde. Ça ne se voit qu'en lançant l'app dans une autre
       # langue, sur l'écran concerné — autant dire jamais. L'audit en a trouvé cinq d'un coup,
       # dont deux écrites le jour même par quelqu'un qui corrigeait justement ce défaut.
+      # Une demande d'autorisation non traduite ne casse rien : l'app compile, les tests passent,
+      # l'envoi réussit. Xcode écrit simplement le NOM DE LA CLÉ dans le .lproj manquant, et le
+      # dialogue système affiche « NSContactsUsageDescription » à qui a son téléphone dans cette
+      # langue. Apple l'a renvoyé en ITMS-90738 sur la build 1158, après la livraison.
+      - name: Vérifier que les demandes d'autorisation sont écrites partout
+        run: python3 ci_scripts/check_infoplist.py
+
       - name: Vérifier que tout texte affiché est traduisible
         run: python3 ci_scripts/check_strings.py
 

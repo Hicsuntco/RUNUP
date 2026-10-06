@@ -1394,7 +1394,8 @@ struct ClubView: View {
             guard let current = feed.firstIndex(where: { $0.id == item.id }) else { return }
             feed[current].kudoedByMe = wasKudoed
             feed[current].kudos += wasKudoed ? 1 : -1
-            appState.toast(String(localized: "Kudos non envoyé — vérifie ta connexion."))
+            // Un kudos perdu parce que la session a expiré n'a rien à voir avec le réseau.
+            appState.toast(ClubServiceError.phrase(pour: error))
         }
     }
 

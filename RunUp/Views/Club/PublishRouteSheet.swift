@@ -264,7 +264,7 @@ struct PublishRouteSheet: View {
                 dismiss()
             } catch {
                 isPublishing = false
-                errorMessage = String(localized: "La publication a échoué — vérifie ta connexion et réessaie.")
+                errorMessage = ClubServiceError.phrase(pour: error)
             }
         }
     }

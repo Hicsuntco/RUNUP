@@ -12354,6 +12354,23 @@
         }
       }
     },
+    "Pas de connexion — réessaie quand tu auras du réseau.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No connection — try again when you're back online."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin conexión: inténtalo de nuevo cuando tengas red."
+          }
+        }
+      }
+    },
     "Pas de course prévue — hydrate-toi bien et dors un peu plus si tu peux.": {
       "localizations": {
         "en": {
@@ -14098,6 +14115,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "RUNUP construye tu programa, lo ajusta cada semana según tu forma, y te exige justo lo necesario — nunca más, nunca menos."
+          }
+        }
+      }
+    },
+    "RUNUP ne répond pas pour l'instant — réessaie dans un moment.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RUNUP isn't responding right now — try again in a moment."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RUNUP no responde ahora mismo: inténtalo de nuevo en un momento."
           }
         }
       }
@@ -17323,6 +17357,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tu semana está lista"
+          }
+        }
+      }
+    },
+    "Ta session a expiré — reconnecte-toi.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your session has expired — sign in again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu sesión ha caducado: vuelve a iniciar sesión."
           }
         }
       }

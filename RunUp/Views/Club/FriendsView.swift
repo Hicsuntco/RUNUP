@@ -11,6 +11,9 @@ struct FriendsView: View {
 
     @State private var isLoading = true
     @State private var errorMessage: String?
+    /// Faux tant que `api/friends/list` n'a pas répondu. Tout ce qui décrit le COMPTE — le
+    /// réglage « Compte privé » en tête — en dépend : voir `privacyRow`.
+    @State private var listeRecue = false
     @State private var isPrivate = false
     @State private var following: [PublicUser] = []
     @State private var followers: [PublicUser] = []
@@ -21,7 +24,10 @@ struct FriendsView: View {
     @State private var query = ""
     @State private var searchResults: [PublicUser] = []
     @State private var isSearching = false
-    @State private var searchFailed = false
+    /// Le message d'échec de la recherche, ou `nil`. Un booléen ne pouvait porter qu'une seule
+    /// explication — et c'était la même devinette qu'ailleurs sur cet écran : « vérifie ta
+    /// connexion », y compris quand la session a expiré. Voir `ClubServiceError.phrase(pour:)`.
+    @State private var searchError: String?
     @State private var searchTask: Task<Void, Never>?
     @State private var isMatchingContacts = false
     @State private var contactsDenied = false
@@ -71,17 +77,36 @@ struct FriendsView: View {
                         // Les demandes en attente passent avant le réglage "Compte privé" : ce
                         // sont des actions qui attendent une réponse, pas un paramètre.
                         if !incomingRequests.isEmpty { requestsCard }
-                        privacyRow
+                        // SEULEMENT si la liste a répondu.
+                        //
+                        // `isPrivate` vaut `false` au départ, et n'est écrit que par un chargement
+                        // réussi. Quand l'appel échouait, cette carte affirmait donc « Compte
+                        // privé : désactivé — tout le monde peut te suivre sans validation » à
+                        // quelqu'un dont le compte est peut-être privé : l'app annonçait le
+                        // contraire de la vérité sur un réglage de confidentialité. Et
+                        // l'interrupteur restait actif, donc un appui envoyait au serveur
+                        // l'inverse de ce qu'il fallait, calculé sur une valeur jamais reçue.
+                        if listeRecue { privacyRow }
                         feedSection
                     }
                 }
 
                 if let errorMessage {
-                    HStack(spacing: 6) {
-                        Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 11))
-                        Text(errorMessage).font(RUFont.sans(.small))
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 11))
+                            Text(errorMessage)
+                                .font(RUFont.sans(.small))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .foregroundColor(RUColor.rose)
+                        // Le seul moyen de réessayer était de tirer l'écran vers le bas — un
+                        // geste que rien n'annonce, sur un écran qui vient justement de dire que
+                        // quelque chose n'a pas marché.
+                        Button("Réessayer") { Task { await load() } }
+                            .font(RUFont.sans(.small, weight: .bold))
+                            .foregroundColor(RUColor.rose2)
                     }
-                    .foregroundColor(RUColor.rose)
                 }
             }
             .padding(.horizontal, RUSpacing.pagePadding)
@@ -260,7 +285,7 @@ struct FriendsView: View {
         }
 
         isMatchingContacts = true
-        searchFailed = false
+        searchError = nil
         defer { isMatchingContacts = false }
 
         do {
@@ -269,7 +294,7 @@ struct FriendsView: View {
         } catch ContactMatcher.Failure.denied {
             contactsDenied = true
         } catch {
-            searchFailed = true
+            searchError = ClubServiceError.phrase(pour: error)
         }
     }
 
@@ -308,9 +333,10 @@ struct FriendsView: View {
         VStack(spacing: 6) {
             if isSearching && searchResults.isEmpty {
                 ProgressView().frame(maxWidth: .infinity).padding(.vertical, 20)
-            } else if searchFailed {
-                Text("Recherche impossible — vérifie ta connexion.")
+            } else if let searchError {
+                Text(searchError)
                     .font(RUFont.sans(.body)).foregroundColor(RUColor.rose)
+                    .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity).padding(.vertical, 20)
             } else if searchResults.isEmpty {
                 Text("Personne ne porte ce nom.")
@@ -483,7 +509,10 @@ struct FriendsView: View {
         // avatars compris, dont l'écrasante majorité hors écran.
         LazyVStack(alignment: .leading, spacing: 8) {
             RUCardHeader(icon: "bolt.fill", tint: RUColor.rose, title: "Fil d'activité")
-            if feed.isEmpty && !isLoading {
+            // `errorMessage == nil` : « Personne à suivre pour l'instant » est une AFFIRMATION
+            // sur le contenu du compte, et l'app n'a pas le droit de la faire quand elle vient
+            // d'échouer à le lire. Les deux s'affichaient ensemble, et se contredisaient.
+            if feed.isEmpty && !isLoading && errorMessage == nil {
                 if following.isEmpty {
                     // « Suis quelqu'un pour voir ses séances ici » était une phrase sans issue :
                     // elle décrivait le manque et renvoyait implicitement au champ de recherche
@@ -531,27 +560,36 @@ struct FriendsView: View {
     // MARK: Networking
 
     private func load() async {
-        guard auth.isSignedIn else { return }
+        guard auth.isSignedIn else {
+            // Sans ça, `isLoading` ne redescendait jamais et un compte déconnecté restait sur la
+            // carte de chargement indéfiniment.
+            isLoading = false
+            return
+        }
         errorMessage = nil
-        async let listAttempt = try? await clubService.fetchFriendsList()
-        async let feedAttempt = try? await clubService.fetchFriendsFeed()
-        let (listResult, feedResult) = await (listAttempt, feedAttempt)
+        async let listAttempt = clubService.fetchFriendsList()
+        async let feedAttempt = clubService.fetchFriendsFeed()
 
-        if let listResult {
-            isPrivate = listResult.isPrivate
-            following = listResult.following
-            followers = listResult.followers
-            incomingRequests = listResult.incomingRequests
-        } else {
-            errorMessage = String(localized: "Impossible de charger tes amis — vérifie ta connexion.")
+        var echec: Error?
+        do {
+            let liste = try await listAttempt
+            isPrivate = liste.isPrivate
+            following = liste.following
+            followers = liste.followers
+            incomingRequests = liste.incomingRequests
+            listeRecue = true
+        } catch {
+            echec = error
         }
-        if let feedResult {
-            feed = feedResult
-        } else if errorMessage == nil {
-            errorMessage = String(localized: "Impossible de charger le fil d'activité — vérifie ta connexion.")
+        do {
+            feed = try await feedAttempt
+        } catch {
+            if echec == nil { echec = error }
         }
+        if let echec { errorMessage = ClubServiceError.phrase(pour: echec) }
         isLoading = false
     }
+
 
     private func scheduleSearch(_ text: String) {
         searchTask?.cancel()
@@ -559,11 +597,11 @@ struct FriendsView: View {
         guard trimmed.count >= 2 else {
             searchResults = []
             isSearching = false
-            searchFailed = false
+            searchError = nil
             return
         }
         isSearching = true
-        searchFailed = false
+        searchError = nil
         searchTask = Task {
             try? await Task.sleep(for: .milliseconds(300))
             guard !Task.isCancelled else { return }
@@ -578,7 +616,7 @@ struct FriendsView: View {
                 guard !Task.isCancelled else { return }
                 await MainActor.run {
                     isSearching = false
-                    searchFailed = true
+                    searchError = ClubServiceError.phrase(pour: error)
                 }
             }
         }
@@ -669,7 +707,9 @@ struct FriendsView: View {
             guard let current = feed.firstIndex(where: { $0.id == item.id }) else { return }
             feed[current].kudoedByMe = wasKudoed
             feed[current].kudos += wasKudoed ? 1 : -1
-            appState.toast(String(localized: "Kudos non envoyé — vérifie ta connexion."))
+            // Le même refus de deviner : un kudos perdu parce que la session a expiré n'a rien
+            // à voir avec le réseau, et la phrase envoyait vérifier le wifi.
+            appState.toast(ClubServiceError.phrase(pour: error))
         }
     }
 

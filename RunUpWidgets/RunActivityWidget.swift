@@ -150,12 +150,8 @@ struct RunActivityWidget: Widget {
         if let reference = state.timerReference, !state.isPaused, !state.isEnded {
             Text(timerInterval: reference...Date.distantFuture, countsDown: false)
         } else {
-            Text(formatDuration(state.elapsedSeconds))
+            Text(TimeFormat.horloge(state.elapsedSeconds))
         }
     }
 
-    private func formatDuration(_ seconds: Double) -> String {
-        let s = max(0, Int(seconds))
-        return String(format: "%d:%02d", s / 60, s % 60)
-    }
 }

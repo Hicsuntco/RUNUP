@@ -55,20 +55,16 @@ final class WatchWorkoutManager: NSObject {
     /// motion-based estimate.
     private let locationManager = CLLocationManager()
 
+    // Les deux mises en forme passaient par des copies écrites ici — la cinquième et la sixième
+    // du projet. Voir `TimeFormat` : une seule règle pour le téléphone, le widget et la montre.
     var paceLabel: String {
         let km = distanceMeters / 1000
         guard km > 0.05 else { return "--:--" }
-        let secPerKm = elapsedSeconds / km
-        let total = Int(secPerKm.rounded())
-        return "\(total / 60):\(String(format: "%02d", total % 60))"
+        return TimeFormat.allure(secondesParKm: elapsedSeconds / km)
     }
 
     var elapsedLabel: String {
-        let total = Int(elapsedSeconds.rounded())
-        let h = total / 3600
-        let m = (total % 3600) / 60
-        let s = total % 60
-        return h > 0 ? "\(h):\(String(format: "%02d", m)):\(String(format: "%02d", s))" : "\(m):\(String(format: "%02d", s))"
+        TimeFormat.horloge(elapsedSeconds)
     }
 
     private static let readTypes: Set<HKObjectType> = {

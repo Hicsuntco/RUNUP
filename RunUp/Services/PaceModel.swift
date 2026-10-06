@@ -56,11 +56,7 @@ enum PaceModel {
     }
 
     static func formatDuration(_ seconds: Double) -> String {
-        let total = Int(seconds.rounded())
-        let h = total / 3600
-        let m = (total % 3600) / 60
-        let s = total % 60
-        return h > 0 ? "\(h):\(String(format: "%02d", m)):\(String(format: "%02d", s))" : "\(m):\(String(format: "%02d", s))"
+        TimeFormat.horloge(seconds)
     }
 
     /// A `RunRecord.avgPace` string ("m:ss") → seconds/km — shared by every screen that averages
@@ -76,9 +72,7 @@ enum PaceModel {
     /// `formatDuration` above, which formats a single pace/split as "m:ss". Shared by `StatsView`'s
     /// and `WeeklyRecapView`'s "temps total" tiles.
     static func formatTotalDuration(_ seconds: Int) -> String {
-        let h = seconds / 3600
-        let m = (seconds % 3600) / 60
-        return h > 0 ? "\(h)h\(String(format: "%02d", m))" : "\(m) min"
+        TimeFormat.compacte(seconds)
     }
 
     /// Seconds-per-km at "threshold" — the anchor every other zone is a percentage offset of.
@@ -173,7 +167,6 @@ enum PaceModel {
     /// une durée. Un temps total se formate avec `formatDuration`, sans quoi une sortie longue de
     /// 95 minutes s'écrit « 95:00 » au lieu de « 1:35:00 ».
     static func paceText(_ secondsPerKm: Double) -> String {
-        let total = Int(secondsPerKm.rounded())
-        return "\(total / 60):\(String(format: "%02d", total % 60))"
+        TimeFormat.allure(secondesParKm: secondsPerKm)
     }
 }

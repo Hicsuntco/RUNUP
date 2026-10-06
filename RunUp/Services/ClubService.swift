@@ -245,9 +245,7 @@ struct FeedItem: Decodable, Identifiable {
     /// « 48 min », « 1 h 12 » — la durée telle qu'on la dit, pas un chronomètre à la seconde.
     var durationDisplay: String? {
         guard let durationSeconds, durationSeconds > 0 else { return nil }
-        let minutes = durationSeconds / 60
-        if minutes < 60 { return "\(minutes) min" }
-        return "\(minutes / 60) h \(String(format: "%02d", minutes % 60))"
+        return TimeFormat.parle(durationSeconds)
     }
 }
 
@@ -336,6 +334,32 @@ struct ClubService {
     var auth: AuthService
     private static let baseURL = URL(string: "https://runup-nu.vercel.app")!
 
+    /// Les gestes délibérés du Club, et la liste fermée de ce qui en est un.
+    ///
+    /// Ici plutôt que dans chaque vue : ce service est le passage obligé de tous les appels du
+    /// Club, donc un geste ne peut pas être ajouté demain en oubliant de le compter — alors
+    /// qu'une vue nouvelle n'a aucune raison de penser à l'analytique. Et compté APRÈS l'appel
+    /// réussi : un kudos qui n'est jamais arrivé au serveur n'a pas eu lieu.
+    ///
+    /// Ce qui n'y figure pas, et pourquoi, est écrit en entier sur `Analytics.EventName
+    /// .clubActionTaken` — en deux mots : ni les publications automatiques (elles partent après
+    /// chaque course et mesureraient l'app, pas le Club), ni les suppressions, ni les gestes de
+    /// sécurité (un club qu'on fuit paraîtrait vivant).
+    private enum Geste: String {
+        case kudos
+        case commentaire = "comment"
+        case itineraireRendu = "route_published"
+        case itineraireGarde = "route_saved"
+        case defi = "challenge_created"
+        case sortie = "event_created"
+        case jySerai = "event_rsvp"
+        case abonnement = "follow"
+    }
+
+    private func compte(_ geste: Geste) {
+        Analytics.shared.track(.clubActionTaken, ["kind": .string(geste.rawValue)])
+    }
+
     func fetchBoard() async throws -> ClubBoard {
         try await send(path: "api/clubs/mine", method: "GET")
     }
@@ -360,11 +384,13 @@ struct ClubService {
     func createChallenge(clientId: UUID = UUID(), title: String, targetKm: Double, endDate: Date) async throws -> ClubChallenge {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
-        return try await send(
+        let challenge: ClubChallenge = try await send(
             path: "api/clubs/createChallenge",
             method: "POST",
             body: ["clientId": clientId.uuidString, "title": title, "targetKm": targetKm, "endDate": formatter.string(from: endDate)]
         )
+        compte(.defi)
+        return challenge
     }
 
     /// Proposes a sortie de groupe — the server auto-RSVPs the creator and pushes the club.
@@ -376,12 +402,17 @@ struct ClubService {
             "startsAt": ISO8601DateFormatter().string(from: startsAt),
         ]
         if let location, !location.isEmpty { body["location"] = location }
-        return try await send(path: "api/clubs/createEvent", method: "POST", body: body)
+        let event: ClubEvent = try await send(path: "api/clubs/createEvent", method: "POST", body: body)
+        compte(.sortie)
+        return event
     }
 
     /// Toggles "J'y serai" — returns the new state + the fresh count.
     func toggleEventRsvp(eventId: String) async throws -> (going: Bool, count: Int) {
         let response: RsvpResponse = try await send(path: "api/clubs/rsvpEvent", method: "POST", body: ["eventId": eventId])
+        // Une bascule : seule la montée compte. Se désinscrire d'une sortie n'est pas un geste
+        // d'usage, et compter les deux sens donnerait deux points à qui hésite.
+        if response.going { compte(.jySerai) }
         return (response.going, response.count)
     }
 
@@ -411,6 +442,7 @@ struct ClubService {
     @discardableResult
     func toggleKudos(activityId: String) async throws -> Bool {
         let response: KudosResponse = try await send(path: "api/activities/kudos", method: "POST", body: ["activityId": activityId])
+        if response.kudoed { compte(.kudos) }
         return response.kudoed
     }
 
@@ -422,7 +454,9 @@ struct ClubService {
 
     @discardableResult
     func postComment(activityId: String, text: String) async throws -> CommentItem {
-        try await send(path: "api/activities/comments", method: "POST", body: ["activityId": activityId, "text": text])
+        let comment: CommentItem = try await send(path: "api/activities/comments", method: "POST", body: ["activityId": activityId, "text": text])
+        compte(.commentaire)
+        return comment
     }
 
     /// Renomme sa propre sortie, lui met une note, ou lui retire son tracé.
@@ -511,6 +545,7 @@ struct ClubService {
         let response: RoutePublishResponse = try await send(
             path: "api/activities/routePublish", method: "POST", body: body
         )
+        compte(.itineraireRendu)
         return response.id
     }
 
@@ -544,6 +579,7 @@ struct ClubService {
             path: "api/activities/routeSave", method: "POST",
             body: ["routeId": routeId, "saved": saved]
         )
+        if saved { compte(.itineraireGarde) }
         return response.savesCount
     }
 
@@ -642,6 +678,9 @@ struct ClubService {
     @discardableResult
     func followUser(userId: String) async throws -> String {
         let response: FollowStatusResponse = try await send(path: "api/friends/follow", method: "POST", body: ["userId": userId])
+        // Compté même quand le compte est privé et que la demande reste en attente : le geste a
+        // été fait, et c'est lui qu'on mesure, pas la réponse de l'autre.
+        compte(.abonnement)
         return response.status
     }
 

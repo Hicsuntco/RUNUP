@@ -93,6 +93,42 @@ final class Analytics: @unchecked Sendable {
         case coachMessageSent = "coach_message_sent"
         case clubCreated = "club_created"
         case clubJoined = "club_joined"
+        /// Un geste DÉLIBÉRÉ dans le Club, avec `kind` = lequel.
+        ///
+        /// # LA QUESTION QU'IL EXISTE POUR RÉPONDRE
+        ///
+        /// L'audit a chiffré le Club à seize pour cent de l'app — cinq mille lignes, un serveur,
+        /// une modération — et a buté sur l'essentiel : sa valeur dépend du nombre de gens
+        /// dedans, et personne ne savait s'il y en avait. Les deux seuls événements du Club,
+        /// `club_created` et `club_joined`, mesurent l'ENTRÉE. Aucun ne dit si on y revient, ni
+        /// si on y fait quoi que ce soit. Un club de douze personnes où personne ne s'encourage
+        /// et un club de douze personnes vivant produisent exactement les mêmes chiffres.
+        ///
+        /// La décision — l'étoffer, le réduire, le sortir — ne se prend pas à l'opinion. Le
+        /// commentaire de `screen_viewed` juste en dessous le dit déjà, pour un déplacement
+        /// d'onglet : « un changement de navigation qu'on ne sait pas mesurer se défend à
+        /// l'opinion, et c'est exactement ce qui s'est passé ici. » Même situation, enjeu plus
+        /// gros.
+        ///
+        /// # POURQUOI LES PUBLICATIONS AUTOMATIQUES N'EN FONT PAS PARTIE
+        ///
+        /// C'est le piège de cette mesure, et il la renverse entièrement. `postClubActivity`
+        /// part TOUT SEUL : après chaque course validée au débrief, et à chaque triplé
+        /// d'objectifs du jour. Le compter donnerait un Club qui paraît florissant dès que des
+        /// gens courent — c'est-à-dire la mesure de l'app, pas celle du Club. Les retirer n'est
+        /// donc pas une omission, c'est tout l'intérêt : ce compteur ne retient que ce que
+        /// quelqu'un a décidé de faire PARCE QUE les autres sont là. Un kudos, un commentaire,
+        /// un itinéraire publié ou gardé, un défi, une sortie de groupe, un « j'y serai », un
+        /// abonnement à quelqu'un.
+        ///
+        /// Les suppressions et les gestes de sécurité en sont absents pour la raison symétrique :
+        /// un club qu'on quitte, une sortie qu'on annule, quelqu'un qu'on bloque ou signale, ce
+        /// n'est pas de l'usage. Les compter ferait paraître vivant un club dont on s'enfuit.
+        ///
+        /// Ne transporte QUE `kind`, pris dans une liste fermée : pas d'identifiant d'activité,
+        /// pas d'identifiant d'itinéraire, pas celui de la personne suivie. Un compteur de
+        /// gestes, pas un journal social.
+        case clubActionTaken = "club_action_taken"
         /// Quel écran est ouvert, avec `screen` = le `rawValue` d'`AppScreen`. Ajouté quand le
         /// Profil a remplacé Club en 5e onglet : ce déplacement descend la couche sociale d'un
         /// niveau, et sans cet événement on ne pouvait ni confirmer ni infirmer que ça lui coûte

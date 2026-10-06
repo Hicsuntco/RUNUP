@@ -599,7 +599,14 @@ final class LiveRunViewModel {
         let state = RunActivityAttributes.ContentState(
             distanceKm: distanceKm,
             elapsedSeconds: elapsedSeconds,
-            paceLabel: paceLabel,
+            // L'allure RÉCENTE, la même que l'écran de course — pas la moyenne de la sortie.
+            //
+            // L'écran verrouillé se regarde en courant, exactement comme l'écran de l'app : y
+            // montrer un autre chiffre que celui de l'app rejouerait, une surface plus loin, le
+            // défaut qu'on vient de réparer. Le dernier état, lui, garde la moyenne — voir
+            // `endLiveActivity` : une course finie se résume par son allure moyenne, et à cet
+            // instant il n'y a plus de « récent ».
+            paceLabel: recentPaceLabel,
             isPaused: isPaused,
             timerReference: isPaused ? nil : Date(timeIntervalSinceNow: -elapsedSeconds)
         )

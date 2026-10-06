@@ -274,6 +274,13 @@ jobs:
           cd ci_scripts && python3 test_a11y.py
           cd .. && python3 ci_scripts/check_a11y.py
 
+      # `club_action_taken` existe pour décider du sort du Club sur des chiffres. Il a un point de
+      # rupture silencieux : le jour où quelqu'un compte aussi la publication automatique — celle
+      # qui part après chaque course — le compteur mesure l'app et plus le Club, il monte, et ça
+      # ressemble à une bonne nouvelle.
+      - name: Vérifier que le compteur du Club ne compte que des gestes délibérés
+        run: python3 ci_scripts/check_club_metrics.py
+
       # Les tests tournent AVANT la signature, sur simulateur, donc sans certificat : un échec
       # coûte cinq minutes de machine au lieu de la construction complète. Et surtout,
       # `RouteSharingPrivacyTests` vérifie que les 300 premiers et derniers mètres d'un tracé

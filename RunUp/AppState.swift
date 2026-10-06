@@ -288,7 +288,7 @@ final class AppState {
         guard let toutes = try? modelContext.fetch(FetchDescriptor<RunRecord>()) else { return }
         let libre = String(localized: "Séance libre")
         var renommees = 0
-        for course in toutes where course.sessionKind == .rest && course.title != libre {
+        for course in toutes where course.title != libre && Self.estUnJourDeRepos(course) {
             course.title = libre
             renommees += 1
         }
@@ -296,6 +296,21 @@ final class AppState {
             guard (try? modelContext.save()) != nil else { return }
         }
         UserDefaults.standard.set(true, forKey: cle)
+    }
+
+    /// Deux critères, parce que le champ qui sert au premier n'a pas toujours existé.
+    ///
+    /// `sessionKind` est arrivé le 16 août 2026 : les courses enregistrées avant valent `nil`, et
+    /// s'arrêter au type laisserait les plus anciennes — justement celles qui traînent depuis le
+    /// plus longtemps — avec leur titre absurde.
+    ///
+    /// Pour celles-là, et pour elles seulement, le TEXTE est fiable : la traduction à l'écriture
+    /// est arrivée par le même changement, donc le titre d'une course antérieure est resté
+    /// français. C'est exactement le repli que documente déjà `RunRecord.sessionKind` pour le
+    /// comptage des séances. Et personne n'intitule « Repos » une course de sept kilomètres.
+    private static func estUnJourDeRepos(_ course: RunRecord) -> Bool {
+        if let kind = course.sessionKind { return kind == .rest }
+        return course.title == "Repos"
     }
 
     private func recoverInterruptedRunIfNeeded() {

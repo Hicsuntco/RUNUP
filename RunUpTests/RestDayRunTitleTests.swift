@@ -65,4 +65,12 @@ final class RestDayRunTitleTests: XCTestCase {
         XCTAssertEqual(AdaptivePlanEngine.restSession.kind, .rest)
         XCTAssertEqual(AdaptivePlanEngine.restSession.durationMinutes, 0)
     }
+
+    /// Le titre français de la séance de repos est le repli de la réparation pour les courses
+    /// antérieures à `SessionKind` (16 août 2026), qui n'ont pas de type et dont le titre est
+    /// donc resté français. S'il changeait ici sans que la réparation le sache, les plus
+    /// anciennes resteraient intitulées « Repos » pour toujours.
+    func testLeTitreFrancaisDeLaSeanceDeReposEstBienCeluiQueLaReparationCherche() {
+        XCTAssertEqual(AdaptivePlanEngine.restSession.title, "Repos")
+    }
 }

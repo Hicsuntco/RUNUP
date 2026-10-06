@@ -90,6 +90,8 @@ on:
       - "ci_scripts/asc.py"
       - "ci_scripts/screenshots.py"
       - ".github/workflows/appstore.yml"
+      # Éteindre Xcode Cloud ne touche pas au binaire non plus.
+      - ".github/workflows/xcode-cloud.yml"
       - "appstore/**"
       - "privacy.html"
       - "design_handoff_runup_app/**"
@@ -280,6 +282,14 @@ jobs:
       # ressemble à une bonne nouvelle.
       - name: Vérifier que le compteur du Club ne compte que des gestes délibérés
         run: python3 ci_scripts/check_club_metrics.py
+
+      # La même liste d'événements existe en Swift et en JavaScript, dans deux déploiements, sans
+      # compilateur entre les deux. Quand elles ont divergé, onze événements sur vingt-quatre
+      # étaient jetés — dont l'entonnoir d'abonnement en entier — et la panne était silencieuse
+      # des deux côtés : l'app recevait un 200, la table ne gardait rien, et le tableau de bord
+      # rendait zéro comme si personne n'utilisait la fonctionnalité.
+      - name: Vérifier que le client et le serveur connaissent les mêmes événements
+        run: python3 ci_scripts/check_events.py
 
       # Les tests tournent AVANT la signature, sur simulateur, donc sans certificat : un échec
       # coûte cinq minutes de machine au lieu de la construction complète. Et surtout,

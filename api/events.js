@@ -42,6 +42,38 @@ const KNOWN_EVENTS = new Set([
   // `AppScreen.rawValue` — une quinzaine de valeurs possibles, donc agrégeable, sans identifiant
   // de contenu ni durée.
   'screen_viewed',
+  // ── CES ONZE NOMS MANQUAIENT, ET LE CLIENT LES ENVOYAIT DEPUIS DES MOIS ──────────────────────
+  //
+  // Le commentaire en tête de cette liste dit qu'ajouter un nom est « un acte délibéré ». C'est
+  // vrai, et c'est précisément par là que la liste s'est cassée : le côté client a été écrit,
+  // relu et livré sans que personne n'ait à revenir ici. Les événements partaient, l'app ne
+  // voyait aucune erreur (une réponse 200, `rejected` dans un corps que personne ne lit), et la
+  // boucle plus bas les comptait un par un dans le vide.
+  //
+  // Le plus coûteux est l'entonnoir d'abonnement. Il a été ajouté côté client pour une raison
+  // écrite noir sur blanc dans `Analytics.swift` : « rien ne disait si personne ne paye parce que
+  // personne n'atteint le mur de paiement, parce qu'on le voit et qu'on repart, ou parce que
+  // l'achat casse. Ce sont trois maladies différentes, avec trois remèdes opposés. » Les huit
+  // événements censés les distinguer n'ont jamais atteint cette table. La question est restée
+  // exactement aussi ouverte qu'avant, et personne ne pouvait le deviner en lisant le client.
+  //
+  // `ci_scripts/check_events.py` compare désormais cette liste à l'énumération Swift dans les
+  // deux sens. C'est une duplication entre deux langages, sans compilateur pour la tenir : la
+  // seule chose qui pouvait la garder juste était une machine.
+  'paywall_shown',
+  'paywall_plan_selected',
+  'purchase_started',
+  'purchase_completed',
+  'purchase_cancelled',
+  'purchase_failed',
+  'restore_tapped',
+  'paywall_products_unavailable',
+  'session_moved',
+  'account_switched_fresh',
+  // Les gestes délibérés du Club — le seul moyen de savoir si un club est vivant ou seulement
+  // rejoint. Voir `Analytics.EventName.clubActionTaken` : sa prop unique `kind` est prise dans
+  // une liste fermée de huit valeurs, sans identifiant d'activité, d'itinéraire ni de personne.
+  'club_action_taken',
 ]);
 
 // A real day of heavy use is a few dozen events across a handful of flushes; the client also caps

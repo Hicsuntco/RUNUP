@@ -180,6 +180,7 @@ final class AppState {
             self?.reconcileProfileOwner(with: user)
         }
         Task { self.recoverInterruptedRunIfNeeded() }
+        Task { self.renommerLesCoursesDuJourDeRepos() }
     }
 
     // MARK: - À qui appartient ce téléphone
@@ -268,6 +269,35 @@ final class AppState {
     /// l'empiler dans `pendingDebriefs`, et laisser la feuille de debrief s'ouvrir depuis la
     /// racine. Elle valide son ressenti et la course entre dans le programme comme n'importe
     /// quelle autre.
+    /// Renomme les sorties DÉJÀ enregistrées sous le titre d'un jour de repos.
+    ///
+    /// `buildRunRecord` empêche désormais d'en écrire de nouvelles, mais il ne touche pas à
+    /// celles qui sont sur le téléphone — et « Repos · 7,4 km · 45:18 » est une ligne qui se
+    /// contredit dans sa propre largeur. Elle ne se répare pas toute seule.
+    ///
+    /// LE CRITÈRE EST `sessionKind`, PAS LE TEXTE. Le titre est stocké traduit : chercher « Repos »
+    /// raterait exactement les mêmes lignes sur un téléphone anglais ou espagnol, et c'est le
+    /// genre de correctif qui marche chez soi et nulle part ailleurs. Une course avec une vraie
+    /// distance ne peut de toute façon pas être une séance de repos.
+    ///
+    /// Une fois par installation : ce n'est pas une règle, c'est une réparation. Le marqueur est
+    /// posé APRÈS l'enregistrement — une réparation interrompue doit pouvoir recommencer.
+    private func renommerLesCoursesDuJourDeRepos() {
+        let cle = "repair.restDayRunTitles.v1"
+        guard !UserDefaults.standard.bool(forKey: cle) else { return }
+        guard let toutes = try? modelContext.fetch(FetchDescriptor<RunRecord>()) else { return }
+        let libre = String(localized: "Séance libre")
+        var renommees = 0
+        for course in toutes where course.sessionKind == .rest && course.title != libre {
+            course.title = libre
+            renommees += 1
+        }
+        if renommees > 0 {
+            guard (try? modelContext.save()) != nil else { return }
+        }
+        UserDefaults.standard.set(true, forKey: cle)
+    }
+
     private func recoverInterruptedRunIfNeeded() {
         guard let snapshot = LiveRunSnapshotStore.loadRecoverable() else { return }
         // Consommé tout de suite : quoi qu'il advienne ensuite, cette course ne doit pas être
@@ -306,10 +336,10 @@ final class AppState {
             avgHeartRate: 0,
             elevationGainM: Int(snapshot.elevationGainMeters.rounded()),
             realSplitSeconds: snapshot.splitSecondsPerKm,
-            route: snapshot.route
+            route: snapshot.route,
+            sessionKind: snapshot.sessionKind
         )
         record.date = snapshot.startedAt
-        record.sessionKind = snapshot.sessionKind
         modelContext.insert(record)
         // La course EXISTE : la séance est faite, que le ressenti soit donné ou non. Voir
         // `AdaptivePlanEngine.markSessionDone`.
@@ -706,7 +736,11 @@ final class AppState {
         // Une course faite existe, qu'il y ait eu ou non une séance au plan ce jour-là. Seule la
         // durée SAISIE reste obligatoire : c'est elle qui fait l'enregistrement.
         guard durationMinutes > 0 else { return }
-        let titre = session.durationMinutes > 0 ? session.title : String(localized: "Séance libre")
+        // `displayTitle` et non `title` : `title` est le libellé français interne. Et le repli
+        // « Séance libre » n'est plus écrit ici — `buildRunRecord` le pose pour les quatre
+        // chemins, à partir du `kind`. Celui-ci reste parce qu'une séance sans durée n'a pas non
+        // plus de titre à donner, même quand son `kind` n'est pas `.rest` (HYROX, renfo).
+        let titre = session.durationMinutes > 0 ? session.displayTitle : String(localized: "Séance libre")
         let elapsedSeconds = Double(durationMinutes * 60)
         // Voir `Calories`, où la règle vit seule : la distance quand elle est connue, la durée
         // en dernier recours.
@@ -716,12 +750,12 @@ final class AppState {
             elapsedSeconds: elapsedSeconds,
             distanceKm: distanceKm,
             kcal: kcal,
-            avgHeartRate: 0
+            avgHeartRate: 0,
+            // Le type de la séance suit la course : c'est ce qui permet au fil du club de
+            // refabriquer sa phrase dans la langue de qui la lit (voir `FeedItem.localizedText`).
+            // Nil pour un plan enregistré avant `SessionKind`.
+            sessionKind: session.kind
         )
-        // Le type de la séance suit la course : c'est ce qui permet au fil du club de refabriquer
-        // sa phrase dans la langue de qui la lit (voir `FeedItem.localizedText`). Nil pour un plan
-        // enregistré avant `SessionKind`.
-        record.sessionKind = session.kind
         // Deliberately NOT inserted into SwiftData here — `DebriefSheet` inserts it on VALIDER.
         // Inserting up front meant dismissing the debrief sheet without validating left a phantom
         // synthetic run in History/Stats for a session that was never actually confirmed done.

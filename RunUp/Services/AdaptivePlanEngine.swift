@@ -885,6 +885,23 @@ enum AdaptivePlanEngine {
     /// actually ran, not a formula-shaped curve. Falls back to that formula only for the
     /// no-GPS "Marquer comme faite" path, where there's no real per-km data to derive splits
     /// from at all (and that record's splits are never shown in the UI either way).
+    /// `sessionKind` est pris ICI plutôt qu'affecté après coup par chaque appelant, et il décide
+    /// de deux choses au lieu d'une.
+    ///
+    /// UN JOUR DE REPOS N'A PAS DE TITRE DE COURSE. Courir un jour de repos est pourtant
+    /// parfaitement normal — c'est même ce que fait la plupart des gens qui suivent un plan — et
+    /// l'historique écrivait alors « Repos · 7,4 km · 45:18 », une ligne qui se contredit
+    /// elle-même dans sa propre largeur. Le titre venait de la séance PRÉVUE, et la séance prévue
+    /// ce jour-là était « Repos ».
+    ///
+    /// La règle existait déjà, à un seul endroit : `markTodaySessionDone` écrivait
+    /// `durationMinutes > 0 ? title : « Séance libre »`. Les trois autres chemins qui fabriquent
+    /// un relevé — la course au GPS, la montre, la récupération d'une app tuée — ne l'avaient
+    /// pas. Encore la même vérité écrite à un endroit sur quatre.
+    ///
+    /// Elle vit donc ici, sur le seul constructeur de relevé de l'app, où aucun chemin ne peut
+    /// l'oublier. Et `record.sessionKind` est posé dans la foulée : c'était une deuxième ligne
+    /// à ne pas oublier, chez chaque appelant, pour la même information.
     static func buildRunRecord(
         title: String,
         elapsedSeconds: Double,
@@ -893,7 +910,8 @@ enum AdaptivePlanEngine {
         avgHeartRate: Int,
         elevationGainM: Int = 0,
         realSplitSeconds: [Double]? = nil,
-        route: [RunRecord.RoutePoint] = []
+        route: [RunRecord.RoutePoint] = [],
+        sessionKind: SessionKind? = nil
     ) -> RunRecord {
         // No minimum clamps — the old `max(0.4, distanceKm)` fabricated 400 m for a HYROX/renfo
         // session logged without distance, and padded accidental 50 m starts into "real" runs
@@ -909,7 +927,7 @@ enum AdaptivePlanEngine {
         // insight falls back to its generic line.
         let splits: [String] = (realSplitSeconds ?? []).map { PaceModel.paceText(max(0, $0)) }
         return RunRecord(
-            title: title,
+            title: sessionKind == .rest ? String(localized: "Séance libre") : title,
             distanceKm: dist,
             durationSeconds: Int(t),
             avgPace: avgPace,
@@ -917,7 +935,8 @@ enum AdaptivePlanEngine {
             kcal: Int(kcal.rounded()),
             elevationGainM: elevationGainM,
             splits: splits,
-            route: route
+            route: route,
+            sessionKind: sessionKind
         )
     }
 

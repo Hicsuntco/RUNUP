@@ -649,12 +649,13 @@ final class LiveRunViewModel {
             realSplitSeconds: splitSecondsPerKm,
             route: zip(location.route, location.routeAltitudes).map { coord, altitude in
                 RunRecord.RoutePoint(lat: coord.latitude, lng: coord.longitude, altitude: altitude)
-            }
+            },
+            // Le type de séance suit la course dans son relevé : `title` est du texte affiché,
+            // donc traduit, et tout ce qui voudrait en déduire quelque chose (le badge fractionné
+            // du club) doit lire ce champ-ci. Passé au constructeur, qui s'en sert aussi pour
+            // refuser d'intituler une course « Repos ».
+            sessionKind: session.kind
         )
-        // Le type de séance suit la course dans son relevé : `title` est du texte affiché, donc
-        // traduit, et tout ce qui voudrait en déduire quelque chose (le badge fractionné du club)
-        // doit lire ce champ-ci.
-        record.sessionKind = session.kind
         // DATÉE À SON DÉPART, PAS À SON ARRIVÉE. `buildRunRecord` laisse `date` à `.now`,
         // c'est-à-dire l'instant de ce `stop()`. Les trois autres façons de créer un relevé
         // rétrodatent déjà — la montre, la récupération d'app tuée, l'import Santé — et la course

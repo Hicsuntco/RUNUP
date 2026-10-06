@@ -128,9 +128,9 @@ final class WatchSessionService: NSObject {
             elapsedSeconds: payload.elapsedSeconds,
             distanceKm: payload.distanceKm,
             kcal: payload.kcal,
-            avgHeartRate: payload.avgHeartRate
+            avgHeartRate: payload.avgHeartRate,
+            sessionKind: payload.sessionKind.flatMap(SessionKind.init(rawValue:))
         )
-        if let raw = payload.sessionKind { record.sessionKind = SessionKind(rawValue: raw) }
         // Dated when she actually ran, not when the queued transfer finally arrived — a run
         // finished Saturday in airplane mode must not appear as a Sunday run in History.
         if let startedAtEpoch = payload.startedAtEpoch {

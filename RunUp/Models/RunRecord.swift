@@ -76,7 +76,10 @@ final class RunRecord {
         splits: [String] = [],
         route: [RoutePoint] = [],
         stravaActivityId: Int? = nil,
-        healthWorkoutID: UUID? = nil
+        healthWorkoutID: UUID? = nil,
+        /// Posé par l'initialiseur plutôt qu'après coup : c'est lui qui décide aussi du titre
+        /// quand la séance du jour était un repos. Voir `AdaptivePlanEngine.buildRunRecord`.
+        sessionKind: SessionKind? = nil
     ) {
         self.date = date
         self.title = title
@@ -90,6 +93,7 @@ final class RunRecord {
         self.route = route
         self.stravaActivityId = stravaActivityId
         self.healthWorkoutID = healthWorkoutID
+        self.sessionKind = sessionKind
     }
 }
 

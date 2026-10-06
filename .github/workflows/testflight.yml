@@ -94,6 +94,11 @@ on:
       - ".github/workflows/xcode-cloud.yml"
       - "appstore/**"
       - "privacy.html"
+      # La page d'assistance de la fiche App Store. Elle vivait sur `main` SEULEMENT — donc une
+      # copie de cet arbre vers `main` la supprimait, et avec elle l'URL d'assistance qu'Apple
+      # exige. Elle est maintenant des deux côtés ; cette ligne lui évite de payer une machine
+      # macOS quand on y corrige une phrase.
+      - "support.html"
       - "design_handoff_runup_app/**"
       # Les captures brutes, les accroches et le composeur qui les assemble : tout ce dossier
       # sert à FABRIQUER la fiche App Store, rien n'y entre dans le binaire. Déposer six photos

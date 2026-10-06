@@ -280,25 +280,39 @@ async function handleRemoveFollower(req, res, userId) {
   res.status(200).json({ ok: true });
 }
 
+// LES TROIS SEULES LECTURES DU DÉPÔT SANS PLAFOND, et elles servent l'écran Amis, ouvert souvent.
+// Le quota de suivi est de 150 par jour, donc un compte d'un an peut suivre des dizaines de
+// milliers de personnes — et rien ne borne le nombre d'abonnés. La réponse grossissait sans limite,
+// chaque ligne pouvant porter un avatar en base64 hérité de plusieurs centaines de kilo-octets.
+//
+// `avatar_data` n'est plus renvoyée quand une URL existe : le client lit l'URL en priorité, donc
+// c'était du poids mort sur chaque ligne. Elle reste servie pour les comptes anciens qui n'ont que
+// ça, sans quoi leur photo disparaîtrait.
 async function handleList(req, res, userId) {
   const { rows: meRows } = await sql`SELECT is_private FROM users WHERE id = ${userId}`;
   const { rows: following } = await sql`
-    SELECT u.id, u.name, u.last_name, u.username, u.avatar_data, u.avatar_url, u.is_private
+    SELECT u.id, u.name, u.last_name, u.username, u.avatar_url, u.is_private,
+           CASE WHEN u.avatar_url IS NULL THEN u.avatar_data END AS avatar_data
     FROM follows f JOIN users u ON u.id = f.followee_id
     WHERE f.follower_id = ${userId} AND f.status = 'accepted'
     ORDER BY u.name ASC
+    LIMIT 500
   `;
   const { rows: followers } = await sql`
-    SELECT u.id, u.name, u.last_name, u.username, u.avatar_data, u.avatar_url, u.is_private
+    SELECT u.id, u.name, u.last_name, u.username, u.avatar_url, u.is_private,
+           CASE WHEN u.avatar_url IS NULL THEN u.avatar_data END AS avatar_data
     FROM follows f JOIN users u ON u.id = f.follower_id
     WHERE f.followee_id = ${userId} AND f.status = 'accepted'
     ORDER BY u.name ASC
+    LIMIT 500
   `;
   const { rows: incoming } = await sql`
-    SELECT u.id, u.name, u.last_name, u.username, u.avatar_data, u.avatar_url, u.is_private
+    SELECT u.id, u.name, u.last_name, u.username, u.avatar_url, u.is_private,
+           CASE WHEN u.avatar_url IS NULL THEN u.avatar_data END AS avatar_data
     FROM follows f JOIN users u ON u.id = f.follower_id
     WHERE f.followee_id = ${userId} AND f.status = 'pending'
     ORDER BY f.created_at ASC
+    LIMIT 500
   `;
   res.status(200).json({
     isPrivate: meRows[0]?.is_private || false,
@@ -318,6 +332,12 @@ async function handleFeed(req, res, userId) {
     SELECT a.id, a.text, a.created_at, u.name, u.id AS user_id, u.avatar_data, u.avatar_url,
            a.distance_km, a.duration_seconds, a.avg_pace, a.elevation_gain_m, a.is_personal_record,
            a.content_key,
+           -- MÊME CARTE, MÊMES CHAMPS. Les deux fils sont décodés par le MÊME type côté app, et
+           -- celui-ci ne sélectionnait ni le tracé, ni le titre, ni la note, ni la date
+           -- d'édition : la même sortie s'affichait avec sa carte et son titre dans l'onglet
+           -- Club, et nue dans l'onglet Amis. Aucune erreur nulle part — les champs sont
+           -- optionnels au décodage, donc l'absence passait inaperçue.
+           a.route_preview, a.title, a.note, a.edited_at,
            (SELECT COUNT(*)::int FROM activity_kudos k WHERE k.activity_id = a.id) AS kudos,
            EXISTS(SELECT 1 FROM activity_kudos k WHERE k.activity_id = a.id AND k.user_id = ${userId}) AS kudoed_by_me,
            (SELECT COUNT(*)::int FROM activity_comments c WHERE c.activity_id = a.id) AS comments_count
@@ -325,6 +345,7 @@ async function handleFeed(req, res, userId) {
     JOIN users u ON u.id = a.user_id
     JOIN follows f ON f.follower_id = ${userId} AND f.followee_id = a.user_id AND f.status = 'accepted'
     WHERE a.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+      AND a.user_id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
     ORDER BY a.created_at DESC
     LIMIT 50
   `;
@@ -336,6 +357,10 @@ async function handleFeed(req, res, userId) {
       avatarBase64: r.avatar_data || null,
       avatarUrl: r.avatar_url || null,
       text: r.text,
+      title: r.title || null,
+      note: r.note || null,
+      editedAt: r.edited_at || null,
+      routePreview: r.route_preview || null,
       createdAt: r.created_at,
       ...activityMetrics(r),
       kudos: r.kudos,

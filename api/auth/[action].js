@@ -76,17 +76,27 @@ async function handleApple(req, res) {
       `;
       user = rows[0];
     } catch (e) {
-      // She signed up with email/password using her iCloud address, then tapped "Sign in with
-      // Apple" (non-hidden email): the email UNIQUE constraint fires. Apple's signed token proves
-      // she controls that email, so LINK the accounts instead of 500-ing forever.
+      // ON NE LIE PLUS AUTOMATIQUEMENT, ET C'EST UNE CORRECTION DE SÉCURITÉ.
+      //
+      // Le raisonnement d'origine était : « le jeton signé d'Apple prouve qu'elle contrôle cette
+      // adresse, donc on rattache ». Il prouve bien ça. Ce qu'il ne prouve pas, c'est que la
+      // personne qui a créé le compte MOT DE PASSE portant cette adresse était elle — et
+      // l'inscription ne vérifie aucune adresse, faute d'envoi d'e-mail.
+      //
+      // L'attaque tient en deux temps. Quelqu'un s'inscrit avec l'adresse iCloud d'une autre
+      // personne et un mot de passe qu'il choisit ; le compte a `apple_sub IS NULL`. Plus tard,
+      // la vraie propriétaire installe l'app et touche « Se connecter avec Apple » — le chemin
+      // sans friction. L'ancien code rattachait alors SON identité Apple au compte de
+      // l'attaquant. Elle ne voyait rien d'anormal : elle était connectée, avec son prénom. Lui
+      // gardait son mot de passe, donc un accès permanent à ses sorties, ses tracés, son club et
+      // ses amis, avec la possibilité de publier en son nom.
+      //
+      // Refuser coûte un détour à un cas légitime — elle doit se connecter avec son mot de passe
+      // — et ferme le détournement. Le rattachement reviendra le jour où il partira d'une session
+      // DÉJÀ authentifiée (« lier Apple à mon compte », dans les réglages), ou le jour où
+      // l'inscription vérifiera les adresses.
       if (String(e.message).includes('users_email_key') && claims.email) {
-        const { rows } = await sql`
-          UPDATE users SET apple_sub = ${claims.sub}
-          WHERE email = ${claims.email} AND apple_sub IS NULL
-          RETURNING id, name, last_name, username, xp_total, referral_code
-        `;
-        user = rows[0];
-        if (!user) return res.status(409).json({ error: 'email_taken' });
+        return res.status(409).json({ error: 'email_has_password_account' });
       } else {
         throw e;
       }
@@ -127,7 +137,7 @@ async function handleSignup(req, res) {
   if (!(await underDailyCap('signup:' + ip, 30))) return res.status(429).json({ error: 'too_many_attempts' });
 
   const normalizedEmail = String(email).trim().toLowerCase().slice(0, 254);
-  const { rows: existing } = await sql`SELECT id FROM users WHERE email = ${normalizedEmail}`;
+  const { rows: existing } = await sql`SELECT id FROM users WHERE lower(email) = ${normalizedEmail}`;
   if (existing.length > 0) return res.status(409).json({ error: 'email_taken' });
 
   const passwordHash = await bcrypt.hash(password, 12);
@@ -178,7 +188,7 @@ async function handleLogin(req, res) {
   } catch { /* counter must never take login down with it */ }
 
   const normalizedEmail = String(email).trim().toLowerCase();
-  const { rows } = await sql`SELECT id, name, last_name, username, xp_total, password_hash, referral_code FROM users WHERE email = ${normalizedEmail}`;
+  const { rows } = await sql`SELECT id, name, last_name, username, xp_total, password_hash, referral_code FROM users WHERE lower(email) = ${normalizedEmail}`;
   const user = rows[0];
   // Same "invalid_credentials" whether the email doesn't exist or the password's wrong — doesn't
   // confirm to a caller which emails have an account.

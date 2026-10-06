@@ -1,0 +1,73 @@
+# Éteindre la deuxième chaîne de construction.
+#
+# Deux chaînes archivent ce projet : GitHub Actions, qui porte tout, et Xcode Cloud, qui construit
+# en parallèle. Elles ne peuvent pas alterner — chaque build consomme un numéro, et deux numéros
+# pour le même commit rendent la file TestFlight illisible — et les deux sont facturées.
+#
+# # POURQUOI UN WORKFLOW À PART, ET PAS UNE ENTRÉE DANS « App Store »
+#
+# `appstore.yml` est le bon endroit, mais son menu ne peut pas servir ici : GitHub ne lit la
+# définition d'un `workflow_dispatch` que sur la branche par défaut, et `main` ne contient que le
+# serveur. Une action ajoutée au menu depuis une branche de travail n'existe donc pas pour qui la
+# déclenche. Ce fichier-ci se déclenche sur un `push`, ce qui marche depuis n'importe quelle
+# branche.
+#
+# # IL NE PEUT PAS PARTIR TOUT SEUL
+#
+# Le filtre `paths` ne contient que ce fichier : il ne s'exécute que quand on le modifie
+# LUI-MÊME. Un commit ailleurs dans le dépôt, même dans `ci_scripts/asc.py`, ne le réveille pas.
+# Pour s'en servir : changer `MODE` ci-dessous et pousser.
+#
+#   MODE: etat    → ne touche à rien, liste les workflows Xcode Cloud et leur état
+#   MODE: couper  → éteint chaque workflow actif (`isEnabled: false`)
+#
+# Rien n'est supprimé dans les deux cas : `asc.py xcode-cloud-on` rallume tout.
+
+name: Xcode Cloud
+
+on:
+  push:
+    paths:
+      - ".github/workflows/xcode-cloud.yml"
+  workflow_dispatch:
+
+concurrency: xcode-cloud
+
+jobs:
+  xcode-cloud:
+    runs-on: ubuntu-latest
+    env:
+      # ── LE SEUL RÉGLAGE ──────────────────────────────────────────────────────────────────────
+      MODE: couper
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Vérifier les secrets
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          set -euo pipefail
+          for n in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8; do
+            if [ -z "${!n:-}" ]; then
+              echo "::error::Le secret $n est vide ou absent."
+              exit 1
+            fi
+          done
+          printf '%s' "$ASC_KEY_P8" | base64 -d > "$RUNNER_TEMP/asc.p8"
+          chmod 600 "$RUNNER_TEMP/asc.p8"
+          head -1 "$RUNNER_TEMP/asc.p8" | grep -q "BEGIN PRIVATE KEY"
+
+      - name: Exécuter
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          export ASC_KEY_PATH="$RUNNER_TEMP/asc.p8"
+          case "$MODE" in
+            etat)   python3 ci_scripts/asc.py xcode-cloud ;;
+            couper) python3 ci_scripts/asc.py xcode-cloud --off ;;
+            *) echo "::error::MODE inconnu : $MODE (attendu : etat ou couper)"; exit 1 ;;
+          esac

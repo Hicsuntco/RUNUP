@@ -411,6 +411,106 @@ def cmd_ci(_):
             print()
 
 
+def _annoter(ligne: str):
+    """Affiche, et répète en annotation GitHub quand on tourne dans un workflow.
+
+    Les logs d'une exécution GitHub Actions sont servis depuis un stockage que le client `gh` de
+    cette session ne contacte pas : une commande peut réussir sans que son résultat soit lisible
+    autrement qu'à l'œil, dans le navigateur. Les ANNOTATIONS, elles, se lisent par l'API. Cette
+    commande est donc la seule du fichier à en émettre — c'est la seule dont on a besoin de
+    rapporter le résultat ailleurs que sous les yeux de quelqu'un.
+    """
+    print(ligne)
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        plat = ligne.replace("\n", " ").replace("%", "%25").replace("\r", "")
+        print(f"::notice::{plat}")
+
+
+def cmd_xcode_cloud(args):
+    """L'état de Xcode Cloud, et de quoi l'éteindre.
+
+    # POURQUOI CETTE COMMANDE
+
+    Deux chaînes de construction tournent sur ce projet : GitHub Actions, qui porte tout, et
+    Xcode Cloud, qui archive en parallèle. Elles ne peuvent pas alterner — chaque build consomme
+    un numéro, et deux numéros différents pour le même commit rendent la file TestFlight
+    illisible — et les deux sont facturées. L'audit l'a signalé ; il n'y avait pas de moyen de le
+    régler sans ouvrir App Store Connect à la main.
+
+    # ÉTEINDRE PLUTÔT QUE SUPPRIMER
+
+    `--off` désactive chaque workflow (`isEnabled: false`), il ne supprime RIEN. La configuration
+    reste entière, les exécutions passées restent consultables, et `--on` rallume. Supprimer le
+    produit Xcode Cloud ferait la même économie de façon irréversible, pour un gain nul : une
+    chaîne éteinte ne construit pas et ne facture pas. Entre deux actions au même effet, on prend
+    celle qui se défait.
+    """
+    try:
+        produits = call("GET", "ciProducts?limit=20")["data"]
+    except SystemExit:
+        sys.exit("Cette clé d'API n'a pas accès à Xcode Cloud (rôle insuffisant). "
+                 "→ App Store Connect → Xcode Cloud, à la main.")
+
+    miens = [p for p in produits
+             if (p["attributes"].get("name") or "").upper().startswith("RUNUP")] or produits
+    if not miens:
+        _annoter("Aucun produit Xcode Cloud sur ce compte — rien à éteindre.")
+        return
+
+    total_actifs = 0
+    for produit in miens:
+        nom = produit["attributes"].get("name")
+        workflows = call("GET", f"ciProducts/{produit['id']}/workflows?limit=50")["data"]
+        actifs = [w for w in workflows if w["attributes"].get("isEnabled")]
+        total_actifs += len(actifs)
+        _annoter(f"Produit « {nom} » : {len(workflows)} workflow(s), {len(actifs)} actif(s).")
+        for w in workflows:
+            a = w["attributes"]
+            _annoter(f"  — « {a.get('name')} » : {'ACTIF' if a.get('isEnabled') else 'éteint'}"
+                     + (" (verrouillé)" if a.get("isLockedForEditing") else ""))
+
+    if not args.off:
+        if total_actifs:
+            _annoter(f"{total_actifs} workflow(s) actif(s). Relancer avec --off pour les éteindre.")
+        else:
+            _annoter("Tout est déjà éteint : Xcode Cloud ne construit plus et ne facture plus.")
+        return
+
+    if not total_actifs:
+        _annoter("Rien à faire, tout était déjà éteint.")
+        return
+
+    for produit in miens:
+        workflows = call("GET", f"ciProducts/{produit['id']}/workflows?limit=50")["data"]
+        for w in workflows:
+            a = w["attributes"]
+            if not a.get("isEnabled"):
+                continue
+            if a.get("isLockedForEditing"):
+                _annoter(f"  ! « {a.get('name')} » est verrouillé pour édition — à éteindre à la main.")
+                continue
+            call("PATCH", f"ciWorkflows/{w['id']}", {"data": {
+                "type": "ciWorkflows", "id": w["id"], "attributes": {"isEnabled": False}
+            }})
+            _annoter(f"  × « {a.get('name')} » éteint.")
+    _annoter("Xcode Cloud éteint. Rien n'est supprimé : `--on` rallume.")
+
+
+def cmd_xcode_cloud_on(args):
+    """Rallume ce que `--off` a éteint."""
+    produits = call("GET", "ciProducts?limit=20")["data"]
+    miens = [p for p in produits
+             if (p["attributes"].get("name") or "").upper().startswith("RUNUP")] or produits
+    for produit in miens:
+        for w in call("GET", f"ciProducts/{produit['id']}/workflows?limit=50")["data"]:
+            if w["attributes"].get("isEnabled") or w["attributes"].get("isLockedForEditing"):
+                continue
+            call("PATCH", f"ciWorkflows/{w['id']}", {"data": {
+                "type": "ciWorkflows", "id": w["id"], "attributes": {"isEnabled": True}
+            }})
+            _annoter(f"  ✓ « {w['attributes'].get('name')} » rallumé.")
+
+
 def cmd_create_version(args):
     aid, _ = app_id()
     existing = call("GET", f"apps/{aid}/appStoreVersions?filter[versionString]={args.version}")["data"]
@@ -947,6 +1047,11 @@ def main():
     sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("status").set_defaults(func=cmd_status)
     sub.add_parser("ci").set_defaults(func=cmd_ci)
+    xc = sub.add_parser("xcode-cloud")
+    xc.add_argument("--off", action="store_true",
+                    help="éteindre chaque workflow actif (réversible, rien n'est supprimé)")
+    xc.set_defaults(func=cmd_xcode_cloud)
+    sub.add_parser("xcode-cloud-on").set_defaults(func=cmd_xcode_cloud_on)
     c = sub.add_parser("create-version"); c.add_argument("version"); c.set_defaults(func=cmd_create_version)
     m = sub.add_parser("push-metadata"); m.add_argument("version")
     m.add_argument("--dry-run", action="store_true"); m.set_defaults(func=cmd_push_metadata)

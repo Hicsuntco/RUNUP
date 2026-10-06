@@ -176,6 +176,9 @@ extension AppState {
     func discardPendingClubActivities() {
         outbox = []
         pendingActivityCount = 0
+        // Plus rien en attente, donc plus rien de bloqué : sans ça, la bannière disparaissait en
+        // laissant derrière elle un blocage qui n'avait plus d'objet.
+        pendingActivityBlocker = nil
     }
 
     /// Syncs the observable count from the real outbox — called on every enqueue/success above,
@@ -193,8 +196,31 @@ extension AppState {
             try await service.postActivity(clientId: pending.clientId, type: pending.type, text: pending.text, xpEarned: pending.xpEarned, contentKey: pending.contentKey, metrics: pending.metrics ?? .none, trace: pending.trace ?? [])
             outbox.removeAll { $0.clientId == pending.clientId }
             pendingActivityCount = outbox.count
+            pendingActivityBlocker = nil
         } catch {
-            // Left in the outbox — picked up again next time `retryPendingClubActivities()` runs.
+            // L'entrée reste en file — elle sera reprise au prochain
+            // `retryPendingClubActivities()`. Mais la CAUSE, elle, n'est plus jetée : voir
+            // `AppState.BlocageEnvoi`. Sans elle, la bannière promettait une nouvelle tentative
+            // « bientôt » y compris quand aucune ne pouvait aboutir.
+            pendingActivityBlocker = Self.blocage(pour: error)
+        }
+    }
+
+    /// Ce qui empêche la file de partir, en une des trois formes que la bannière sait dire.
+    private static func blocage(pour erreur: Error) -> BlocageEnvoi {
+        guard let club = erreur as? ClubServiceError else {
+            // Un échec d'encodage ou de décodage : ni le réseau ni la session.
+            return .serveur
+        }
+        switch club {
+        case .notSignedIn:
+            return .session
+        case .badResponse(let code, _) where code == 401 || code == 403:
+            return .session
+        case .badResponse:
+            return .serveur
+        case .network:
+            return .reseau
         }
     }
 }

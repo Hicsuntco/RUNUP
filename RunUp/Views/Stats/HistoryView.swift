@@ -127,6 +127,24 @@ struct HistoryView: View {
     /// in the background, but nothing ever told her that, or let her force it. Doesn't call out
     /// which specific run is affected (the outbox tracks payloads, not a link back to a
     /// `RunRecord`) — a single "N en attente" banner is the honest scope of what's knowable here.
+    /// Ce que la bannière a le droit de promettre.
+    ///
+    /// Elle disait « nouvelle tentative automatique bientôt » quelle que soit la panne. C'est vrai
+    /// pour un réseau coupé et faux pour une session expirée : là, toutes les tentatives du monde
+    /// échoueront, la file restera pleine, et la bannière ne partira jamais. Elle promettait donc
+    /// de régler toute seule la seule chose qu'elle ne pouvait pas régler — et taisait la seule
+    /// chose à faire.
+    private var raisonDeLAttente: String {
+        switch appState.pendingActivityBlocker {
+        case .session:
+            return String(localized: "Elles restent sur ton téléphone, rien n'est perdu — mais ta session a expiré : reconnecte-toi pour les publier.")
+        case .serveur:
+            return String(localized: "Elles restent sur ton téléphone, rien n'est perdu — RUNUP ne répond pas, nouvelle tentative plus tard.")
+        case .reseau, .none:
+            return String(localized: "Elles restent sur ton téléphone, rien n'est perdu — nouvelle tentative automatique bientôt.")
+        }
+    }
+
     private var pendingSyncBanner: some View {
         HStack(spacing: 12) {
             Image(systemName: "exclamationmark.triangle.fill")
@@ -140,9 +158,10 @@ struct HistoryView: View {
                      : String(localized: "\(appState.pendingActivityCount) courses pas encore synchronisées"))
                     .font(RUFont.sans(.label, weight: .semibold))
                     .foregroundColor(RUColor.textPrimary)
-                Text("Elles restent sur ton téléphone, rien n'est perdu — nouvelle tentative automatique bientôt.")
+                Text(raisonDeLAttente)
                     .font(RUFont.sans(.small))
                     .foregroundColor(RUColor.text2)
+                    .fixedSize(horizontal: false, vertical: true)
                 Button(action: {
                     Haptics.selection()
                     appState.retryPendingClubActivities()

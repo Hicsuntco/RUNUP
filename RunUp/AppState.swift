@@ -38,6 +38,23 @@ final class AppState {
     /// real "still syncing" banner instead of a run's XP/feed entry silently never arriving with
     /// no visible sign anything went wrong.
     var pendingActivityCount: Int = 0
+    /// POURQUOI la file ne part pas, quand elle ne part pas.
+    ///
+    /// La bannière de l'historique promettait « nouvelle tentative automatique bientôt » dans
+    /// tous les cas, parce que `attemptPost` attrapait toutes les erreurs sans jamais regarder
+    /// laquelle. Or il y en a une où aucune tentative ne peut aboutir : un jeton expiré ne
+    /// guérit pas en réessayant. La file rejouait donc indéfiniment, la bannière restait, et la
+    /// seule chose à faire — se reconnecter — n'était écrite nulle part.
+    var pendingActivityBlocker: BlocageEnvoi?
+
+    enum BlocageEnvoi: Equatable {
+        /// Le jeton est refusé. Rien ne partira tant qu'elle ne s'est pas reconnectée.
+        case session
+        /// Pas de réseau. Réessayer finira par marcher.
+        case reseau
+        /// Le serveur a répondu autre chose qu'un oui. Plus tard, peut-être.
+        case serveur
+    }
     /// Consumed once by `SocialView.onAppear` then reset — lets `ProfileView`'s "Amis" card land
     /// directly on the Friends segment instead of `SocialView`'s own default ("Mon club"), without
     /// giving `mode` a second, competing source of truth (`@AppStorage`/a `UserProfile` field)

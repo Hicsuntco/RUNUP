@@ -7290,6 +7290,40 @@
         }
       }
     },
+    "Elles restent sur ton téléphone, rien n'est perdu — RUNUP ne répond pas, nouvelle tentative plus tard.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "They're safe on your phone — RUNUP isn't responding, we'll try again later."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Están a salvo en tu teléfono: RUNUP no responde, se reintentará más tarde."
+          }
+        }
+      }
+    },
+    "Elles restent sur ton téléphone, rien n'est perdu — mais ta session a expiré : reconnecte-toi pour les publier.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "They're safe on your phone — but your session has expired: sign in again to publish them."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Están a salvo en tu teléfono, pero tu sesión ha caducado: vuelve a iniciar sesión para publicarlas."
+          }
+        }
+      }
+    },
     "Elles restent sur ton téléphone, rien n'est perdu — nouvelle tentative automatique bientôt.": {
       "extractionState": "manual",
       "localizations": {

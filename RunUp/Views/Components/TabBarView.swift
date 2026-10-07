@@ -112,6 +112,27 @@ struct TabBarView: View {
         .accessibilityAddTraits(on ? .isSelected : [])
     }
 
+    /// Appuyé. Rend ce que `PressableStyle` rendait, puisque ce contrôle n'est plus un `Button`.
+    @State private var runPressed = false
+
+    /// Vrai quand l'appui long vient de basculer la discipline.
+    ///
+    /// SwiftUI n'impose aucune durée MAXIMALE à un `TapGesture` : après un appui long, le
+    /// relâchement peut aussi être livré comme un tap, et on partirait en course dans la seconde
+    /// où l'on vient de passer au vélo. Ce drapeau avale ce tap-là. Il est remis à faux au DÉBUT
+    /// de chaque pression, donc un appui long qui ne serait pas suivi d'un tap ne peut pas manger
+    /// le départ suivant — le défaut qu'on aurait créé en le remettant à faux dans le tap seul.
+    @State private var disciplineJustToggled = false
+
+    /// Le nom de l'action d'accessibilité, calculé ici et pas en ligne : `accessibilityAction`
+    /// a une surcharge `LocalizedStringKey` et une surcharge `StringProtocol`, et un ternaire de
+    /// deux littéraux entre les deux est exactement le genre d'inférence qui ne se découvre qu'au
+    /// bout d'un quart d'heure de compilation. Un `String` explicite dans un `Text` ne laisse
+    /// aucun choix au compilateur.
+    private var toggleActionName: String {
+        discipline == .bike ? "Passer à la course" : "Passer au vélo"
+    }
+
     /// Le bouton central, CONTENU dans la barre.
     ///
     /// Il a été essayé en débordement — rond agrandi, remonté au-dessus du bord — pour réparer un
@@ -122,52 +143,87 @@ struct TabBarView: View {
     /// 40 + 3 + le libellé ≈ 54 dans une barre de 56 : il rentre, avec sa marge, et il ne peut
     /// plus être coupé — ni flotter. Le `clipShape` reste retiré du `body` malgré tout : il
     /// rognait par principe ce qui dépassait, et ce piège n'a aucune raison d'être remis en place.
+    ///
+    /// Et ce n'est plus un `Button` — c'est le correctif de l'appui long.
+    ///
+    /// `Button` + `.onLongPressGesture` sur la même vue est un faux ami : le reconnaisseur du
+    /// bouton remporte l'arbitrage, l'appui long ne part jamais. L'option vélo était donc
+    /// inatteignable, alors que tout le reste était en place. Un tap et un appui long posés tous
+    /// les deux sur une vue ordinaire, eux, cohabitent — le long échoue si l'on relâche avant
+    /// 0,45 s, le tap n'a donc rien à lui disputer.
+    ///
+    /// Ce qu'un `Button` donnait gratuitement est rendu à la main : le retour visuel à l'appui
+    /// (`pressing:`), et l'accessibilité — trait de bouton, action par défaut, et une action
+    /// NOMMÉE pour la bascule, qui vaut mieux qu'un appui long pour qui navigue à VoiceOver.
     private var runButton: some View {
-        Button(action: onStartRun) {
-            VStack(spacing: 3) {
-                Circle()
-                    .fill(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom))
-                    .frame(width: 40, height: 40)
-                    // Le triangle reste, quelle que soit la discipline : il dit « ça démarre »,
-                    // et c'est la seule chose que ce rond ait jamais eu à dire. C'est le libellé
-                    // en dessous qui porte le vélo — changer les deux ferait un bouton différent
-                    // au lieu du même bouton dans un autre mode.
-                    .overlay(Image(systemName: "play.fill").foregroundColor(RUColor.onRose).font(.system(size: 14)))
-                    // 0,55 de rose sur 14 points de flou : le bouton RUN ne se posait pas sur
-                    // la barre, il l'éclairait. Ramené à une ombre qui le décolle sans le faire
-                    // rayonner — c'est un bouton, pas une lampe.
-                    .shadow(color: .black.opacity(RUColor.isLight ? 0 : 0.45), radius: 10, x: 0, y: 5)
-                Text(discipline == .bike ? "VÉLO" : "RUN")
-                    .font(RUFont.sans(.micro, weight: .bold))
-                    .tracking(1)
-                    .foregroundColor(RUColor.rose2)
-                    .contentTransition(.opacity)
-            }
-            // Même défaut que les onglets, sur le bouton le plus utilisé de l'app : le rond fait
-            // 40 pt, le creux qui le sépare de « RUN » ne répondait pas, et l'ensemble n'atteignait
-            // la hauteur réglementaire par aucun côté. La cible monte à 44 sans que le rond grossisse.
-            // Deux appels, pas un : `frame` a une surcharge à dimensions fixes et une à bornes,
-            // et `width:` ne peut pas voisiner avec `minHeight:` dans la même. La largeur est
-            // fixe, la hauteur est un plancher.
-            .frame(width: 60)
-            .frame(minHeight: 44)
-            .contentShape(Rectangle())
+        VStack(spacing: 3) {
+            Circle()
+                .fill(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom))
+                .frame(width: 40, height: 40)
+                // Le triangle reste, quelle que soit la discipline : il dit « ça démarre »,
+                // et c'est la seule chose que ce rond ait jamais eu à dire. C'est le libellé
+                // en dessous qui porte le vélo — changer les deux ferait un bouton différent
+                // au lieu du même bouton dans un autre mode.
+                .overlay(Image(systemName: "play.fill").foregroundColor(RUColor.onRose).font(.system(size: 14)))
+                // 0,55 de rose sur 14 points de flou : le bouton RUN ne se posait pas sur
+                // la barre, il l'éclairait. Ramené à une ombre qui le décolle sans le faire
+                // rayonner — c'est un bouton, pas une lampe.
+                .shadow(color: .black.opacity(RUColor.isLight ? 0 : 0.45), radius: 10, x: 0, y: 5)
+            Text(discipline == .bike ? "VÉLO" : "RUN")
+                .font(RUFont.sans(.micro, weight: .bold))
+                .tracking(1)
+                .foregroundColor(RUColor.rose2)
+                .contentTransition(.opacity)
         }
-        .buttonStyle(PressableStyle())
+        // Même défaut que les onglets, sur le bouton le plus utilisé de l'app : le rond fait
+        // 40 pt, le creux qui le sépare de « RUN » ne répondait pas, et l'ensemble n'atteignait
+        // la hauteur réglementaire par aucun côté. La cible monte à 44 sans que le rond grossisse.
+        // Deux appels, pas un : `frame` a une surcharge à dimensions fixes et une à bornes,
+        // et `width:` ne peut pas voisiner avec `minHeight:` dans la même. La largeur est
+        // fixe, la hauteur est un plancher.
+        .frame(width: 60)
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
+        .scaleEffect(runPressed ? 0.96 : 1)
+        .opacity(runPressed ? 0.88 : 1)
+        .animation(.easeOut(duration: 0.12), value: runPressed)
+        .onTapGesture {
+            if disciplineJustToggled {
+                disciplineJustToggled = false
+                return
+            }
+            onStartRun()
+        }
         // L'appui long bascule la discipline. Posé sur le bouton plutôt qu'ailleurs parce qu'il
         // n'y a qu'un seul endroit où l'on décide de partir : y ajouter un deuxième geste coûte
         // moins qu'un réglage à aller chercher, et l'appui simple reste à un seul geste pour la
         // course, qui est l'écrasante majorité des départs.
-        .onLongPressGesture(minimumDuration: 0.45) {
+        .onLongPressGesture(minimumDuration: 0.45, pressing: { pressing in
+            runPressed = pressing
+            if pressing { disciplineJustToggled = false }
+        }, perform: {
             guard canToggleDiscipline else { return }
+            disciplineJustToggled = true
             Haptics.impact(.medium)
             onToggleDiscipline()
-        }
+        })
         .animation(RUMotion.snap, value: discipline)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
         .accessibilityLabel(discipline == .bike ? "Démarrer une sortie vélo" : "Démarrer une course")
         .accessibilityHint(!canToggleDiscipline ? ""
                            : (discipline == .bike ? "Appui long pour revenir à la course"
                                                   : "Appui long pour passer au vélo"))
+        .accessibilityAction {
+            onStartRun()
+        }
+        // Une action nommée, pas seulement l'appui long : maintenir 0,45 s est un geste que
+        // VoiceOver ne transmet pas tel quel, et le rotor d'actions est la façon dont ses
+        // utilisateurs découvrent ce qu'une vue sait faire.
+        .accessibilityAction(named: Text(toggleActionName)) {
+            guard canToggleDiscipline else { return }
+            onToggleDiscipline()
+        }
     }
 }
 

@@ -45,10 +45,15 @@ final class RunRecord {
     /// Courir ou rouler. Voir `Discipline` : son absence rendait fausses, en silence, les treize
     /// agrégations qui somment des relevés.
     ///
-    /// Valeur par défaut `.run`, et c'est exact et non pas commode : tous les relevés écrits
-    /// avant ce champ sont des courses, l'app ne savait rien faire d'autre. Une migration légère
-    /// SwiftData les remplira donc avec la bonne valeur.
-    var discipline: Discipline = .run
+    /// Valeur par défaut `Discipline.run`, et c'est exact et non pas commode : tous les relevés
+    /// écrits avant ce champ sont des courses, l'app ne savait rien faire d'autre. Une migration
+    /// légère SwiftData les remplira donc avec la bonne valeur.
+    ///
+    /// Écrite en entier, et pas `.run` : la macro `@Model` exige une valeur par défaut
+    /// pleinement qualifiée, et la forme courte échoue à la compilation avec « A default value
+    /// requires a fully qualified domain named value ». La contrainte vient de la macro, pas de
+    /// Swift — ailleurs dans l'app, `.run` passerait.
+    var discipline: Discipline = Discipline.run
     var route: [RoutePoint] = []
     /// Non-nil only for a run imported from Strava (see `StravaService.importActivities`) — lets
     /// re-importing skip activities already pulled in, instead of duplicating History on every

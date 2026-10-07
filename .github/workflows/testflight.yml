@@ -326,11 +326,27 @@ jobs:
             exit 1
           fi
           echo "→ Simulateur : $UDID"
+          # La sortie est conservée pour pouvoir en extraire les erreurs ci-dessous. Sans ça, un
+          # build raté ne dit RIEN depuis l'API GitHub : les logs sont servis par un stockage
+          # séparé que tous les clients ne contactent pas, et l'annotation se réduit à « exit
+          # code 65 ». Deux corrections ont été poussées à l'aveugle avant qu'on s'en aperçoive.
+          set +e
           xcodebuild test \
             -project RunUp.xcodeproj \
             -scheme RunUp \
             -destination "id=$UDID" \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee "$RUNNER_TEMP/tests.log"
+          CODE=${PIPESTATUS[0]}
+          set -e
+          if [ "$CODE" -ne 0 ]; then
+            echo "────────── erreurs de compilation ──────────"
+            # Les vingt premières lignes « error: », remontées en annotations — c'est la seule
+            # forme de sortie que l'API rend lisible.
+            grep -E "error:|XCTAssert.* failed|failed -" "$RUNNER_TEMP/tests.log" \
+              | sed -E 's/^.*\/([^/]+\.swift)/\1/' | sort -u | head -20 \
+              | while IFS= read -r L; do echo "::error::$L"; done
+            exit "$CODE"
+          fi
 
       # Le certificat de distribution vit dans un trousseau JETABLE, créé ici et détruit à la fin
       # du job (voir la dernière étape). Il n'est jamais ajouté au trousseau par défaut de la

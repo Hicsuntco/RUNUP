@@ -56,13 +56,14 @@ enum AutoPause {
         static func pour(_ discipline: Discipline) -> Seuils {
             switch discipline {
             case .run:
-                return Seuils(pause: pauseSpeedThreshold,
-                              reprise: resumeSpeedThreshold,
-                              eloignement: resumeDisplacementMeters)
+                // Qualifiées : un type imbriqué ne voit pas les membres de celui qui l'entoure.
+                return Seuils(pause: AutoPause.pauseSpeedThreshold,
+                              reprise: AutoPause.resumeSpeedThreshold,
+                              eloignement: AutoPause.resumeDisplacementMeters)
             case .bike:
                 // 3 m/s ≈ 11 km/h : au-dessus, on roule vraiment, on ne pousse pas son vélo.
                 // 60 m : deux à trois secondes de roulage, et bien au-delà de toute dérive GPS.
-                return Seuils(pause: pauseSpeedThreshold, reprise: 3.0, eloignement: 60)
+                return Seuils(pause: AutoPause.pauseSpeedThreshold, reprise: 3.0, eloignement: 60)
             }
         }
     }

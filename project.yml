@@ -289,6 +289,9 @@ targets:
       # d'elles, celle du widget, avait raté la correction du « 95:00 ». Une seule règle pour les
       # trois cibles, et testée depuis la cible iOS.
       - path: RunUp/Shared/TimeFormat.swift
+      # `TimeFormat` référence `Discipline` pour choisir entre allure et vitesse : sans ce
+      # fichier, la montre ne compile pas.
+      - path: RunUp/Shared/Discipline.swift
     resources:
       - path: RunUpWatch/Assets.xcassets
       - path: RunUp/Resources/Fonts

@@ -19463,6 +19463,23 @@
         }
       }
     },
+    "Vélo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cycling"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ciclismo"
+          }
+        }
+      }
+    },
     "Vérification de ton abonnement…": {
       "extractionState": "manual",
       "localizations": {

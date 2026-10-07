@@ -2,6 +2,14 @@ import Foundation
 
 /// Ce qu'on a fait : courir, ou rouler.
 ///
+/// # OÙ VIT CE FICHIER, ET POURQUOI
+///
+/// Dans `Shared`, et pas dans `Models`, parce que `TimeFormat` le référence — et `TimeFormat`
+/// est compilé par les trois cibles : l'app, le widget et la montre. Laissé dans `Models`, que
+/// ces deux-là ne compilent pas, il faisait échouer leur construction sur un type introuvable.
+/// Ce fichier ne dépend donc de rien d'autre que Foundation ; le filtre sur les tableaux de
+/// relevés, lui, parle de `RunRecord` et reste dans `Models`.
+///
 /// # POURQUOI CE TYPE EXISTE, ET POURQUOI IL EST DANGEREUX DE L'OUBLIER
 ///
 /// Jusqu'ici l'app n'avait qu'une discipline, donc aucun endroit n'avait à le dire. Treize
@@ -64,21 +72,4 @@ enum Discipline: String, Codable, Equatable, CaseIterable {
     /// Les deux disciplines comptent pour la série et les anneaux du jour : elles mesurent
     /// l'ASSIDUITÉ, pas le kilométrage de course. Quelqu'un qui roule une heure n'a pas rien fait.
     var countsTowardStreak: Bool { true }
-}
-
-extension Array where Element == RunRecord {
-    /// LE SEUL PASSAGE pour agréger des relevés.
-    ///
-    /// Écrire `runs.reduce(0) { $0 + $1.distanceKm }` était juste tant qu'il n'y avait qu'une
-    /// discipline, et devient faux sans prévenir le jour où il y en a deux. Passer par ici force
-    /// à répondre à la question « de quoi parle ce total ? » — et `check_disciplines.py` refuse
-    /// les sommes qui ne sont pas passées par là.
-    func only(_ discipline: Discipline) -> [RunRecord] {
-        filter { $0.discipline == discipline }
-    }
-
-    /// Quand le total porte bien sur TOUT, disciplines confondues — l'assiduité, la série, le
-    /// nombre de jours actifs. Explicite exprès : « toutes » doit être une décision écrite, pas
-    /// l'absence de décision.
-    var allDisciplines: [RunRecord] { self }
 }

@@ -46,10 +46,18 @@ final class AppState {
     ///
     /// Il PERSISTE quand même d'un lancement à l'autre : quelqu'un qui part à vélo trois fois
     /// par semaine ne doit pas re-basculer à chaque fois.
-    var runDiscipline: Discipline = .run {
-        didSet { UserDefaults.standard.set(runDiscipline.rawValue, forKey: Self.runDisciplineKey) }
-    }
+    ///
+    /// Écrite par `setRunDiscipline(_:)` et pas par un `didSet` : les propriétés d'un type
+    /// `@Observable` sont réécrites par la macro, et faire dépendre une écriture sur disque d'un
+    /// observateur dans ce contexte est le genre d'hypothèse qu'on ne vérifie qu'en production.
+    /// Une méthode fait les deux, et aucun appelant ne peut en oublier la moitié.
+    private(set) var runDiscipline: Discipline = .run
     private static let runDisciplineKey = "run.discipline.v1"
+
+    func setRunDiscipline(_ discipline: Discipline) {
+        runDiscipline = discipline
+        UserDefaults.standard.set(discipline.rawValue, forKey: Self.runDisciplineKey)
+    }
 
     var pendingActivityCount: Int = 0
     /// POURQUOI la file ne part pas, quand elle ne part pas.

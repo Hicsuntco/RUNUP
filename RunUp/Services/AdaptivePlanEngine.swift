@@ -911,7 +911,10 @@ enum AdaptivePlanEngine {
         elevationGainM: Int = 0,
         realSplitSeconds: [Double]? = nil,
         route: [RunRecord.RoutePoint] = [],
-        sessionKind: SessionKind? = nil
+        sessionKind: SessionKind? = nil,
+        /// Courir ou rouler. Par défaut `.run` : les trois chemins qui ne la passent pas — la
+        /// reprise d'une app tuée, la montre, l'import Santé — ne produisent que des courses.
+        discipline: Discipline = .run
     ) -> RunRecord {
         // No minimum clamps — the old `max(0.4, distanceKm)` fabricated 400 m for a HYROX/renfo
         // session logged without distance, and padded accidental 50 m starts into "real" runs
@@ -936,7 +939,8 @@ enum AdaptivePlanEngine {
             elevationGainM: elevationGainM,
             splits: splits,
             route: route,
-            sessionKind: sessionKind
+            sessionKind: sessionKind,
+            discipline: discipline
         )
     }
 

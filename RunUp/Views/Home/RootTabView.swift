@@ -63,7 +63,7 @@ struct RootTabView: View {
                     },
                     discipline: appState.runDiscipline,
                     onToggleDiscipline: {
-                        appState.runDiscipline = appState.runDiscipline == .run ? .bike : .run
+                        appState.setRunDiscipline(appState.runDiscipline == .run ? .bike : .run)
                     },
                     // Pas pendant une course : on ne change pas de discipline au milieu d'une
                     // sortie, et un appui long qui ne fait rien vaut mieux qu'un qui touche à un

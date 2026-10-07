@@ -285,7 +285,11 @@ def cmd_status(_):
             raw = (b["attributes"].get("version") or "").strip()
             return int(raw) if raw.isdigit() else -1
         builds.sort(key=build_number, reverse=True)
-        print(f"  Dernières builds envoyées sur TestFlight ({len(builds)} au total) :")
+        # `_annoter` plutôt que `print` : les logs d'une exécution GitHub sont servis par un
+        # stockage séparé que tous les clients ne contactent pas, donc cette liste — la seule qui
+        # réponde à « est-ce que ce que je viens de pousser est arrivé ? » — était invisible
+        # autrement qu'à l'œil, dans un navigateur. Les annotations, elles, se lisent par l'API.
+        _annoter(f"Dernières builds sur TestFlight ({len(builds)} au total) :")
         for b in builds[:8]:
             a = b["attributes"]
             uploaded = (a.get("uploadedDate") or "")[:16].replace("T", " à ")
@@ -293,8 +297,8 @@ def cmd_status(_):
             expired = " (expirée)" if a.get("expired") else ""
             rel = b.get("relationships", {}).get("preReleaseVersion", {}).get("data") or {}
             train = trains.get(rel.get("id")) or "?"
-            print(f"    build {a.get('version', '?'):>6}   version {train:<6} "
-                  f"{uploaded} UTC   {state}{expired}")
+            _annoter(f"  build {a.get('version', '?'):>6}   version {train:<6} "
+                     f"{uploaded} UTC   {state}{expired}")
         print()
     elif builds is not None:
         print("  Aucune build envoyée.\n")

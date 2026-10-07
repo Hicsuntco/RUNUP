@@ -42,18 +42,39 @@ final class RunRecord {
     /// leur titre, lui, est resté français.
     var sessionKind: SessionKind? = nil
 
-    /// Courir ou rouler. Voir `Discipline` : son absence rendait fausses, en silence, les treize
-    /// agrégations qui somment des relevés.
+    /// Courir ou rouler, STOCKÉ EN TEXTE ET OPTIONNEL. Lire `discipline` juste en dessous.
     ///
-    /// Valeur par défaut `Discipline.run`, et c'est exact et non pas commode : tous les relevés
-    /// écrits avant ce champ sont des courses, l'app ne savait rien faire d'autre. Une migration
-    /// légère SwiftData les remplira donc avec la bonne valeur.
+    /// # CE QUI A PLANTÉ, ET POURQUOI C'ÉTAIT INÉVITABLE
     ///
-    /// Écrite en entier, et pas `.run` : la macro `@Model` exige une valeur par défaut
-    /// pleinement qualifiée, et la forme courte échoue à la compilation avec « A default value
-    /// requires a fully qualified domain named value ». La contrainte vient de la macro, pas de
-    /// Swift — ailleurs dans l'app, `.run` passerait.
-    var discipline: Discipline = Discipline.run
+    /// La première version écrivait `var discipline: Discipline = Discipline.run`, non
+    /// optionnelle avec une valeur par défaut. Elle compilait, les tests passaient, et le build
+    /// plantait au lancement chez toute personne ayant déjà des données.
+    ///
+    /// Le mécanisme est traître parce que le filet de sécurité ne se déclenche pas : la
+    /// migration légère RÉUSSIT, elle ajoute bien la colonne. Mais elle l'ajoute à NULL sur
+    /// toutes les lignes existantes — une valeur par défaut écrite en Swift ne remplit pas le
+    /// magasin. Au premier accès, décoder NULL dans une propriété non optionnelle est fatal, et
+    /// l'accueil lit les courses dès le lancement. `PersistenceController` ne voit rien : il
+    /// n'attrape que l'échec d'OUVERTURE du magasin, qui n'a pas eu lieu.
+    ///
+    /// Les six autres propriétés ajoutées à ce fichier au fil du temps — `sessionKind`,
+    /// `stravaActivityId`, `healthWorkoutID`, `shoeID`, `debriefedAt` — sont toutes optionnelles.
+    /// Ce n'était pas un hasard de style.
+    ///
+    /// Le texte brut plutôt que l'énumération optionnelle : l'absence et la valeur illisible se
+    /// traitent alors au même endroit, et aucun appelant n'a à manipuler un optionnel.
+    var disciplineRaw: String? = nil
+
+    /// La discipline, toujours définie. Une ligne sans valeur est une course — par construction,
+    /// puisque l'app ne savait rien faire d'autre quand elle a été écrite (voir
+    /// `Discipline.legacy`). Une valeur illisible retombe sur la même règle plutôt que de
+    /// propager un optionnel dans cinquante appelants.
+    ///
+    /// Calculée, donc non persistée : c'est `disciplineRaw` qui va sur le disque.
+    var discipline: Discipline {
+        get { disciplineRaw.flatMap(Discipline.init(rawValue:)) ?? .legacy }
+        set { disciplineRaw = newValue.rawValue }
+    }
     var route: [RoutePoint] = []
     /// Non-nil only for a run imported from Strava (see `StravaService.importActivities`) — lets
     /// re-importing skip activities already pulled in, instead of duplicating History on every
@@ -108,7 +129,9 @@ final class RunRecord {
         self.stravaActivityId = stravaActivityId
         self.healthWorkoutID = healthWorkoutID
         self.sessionKind = sessionKind
-        self.discipline = discipline
+        // Écrite explicitement : un relevé créé aujourd'hui sait de quoi il parle, et seules les
+        // lignes antérieures au champ retombent sur `Discipline.legacy`.
+        self.disciplineRaw = discipline.rawValue
     }
 }
 

@@ -43,6 +43,10 @@ struct ProfileView: View {
 
                 if !auth.isSignedIn {
                     signInPrompt
+                } else if auth.sessionRejected {
+                    // AVANT le chargement : tant que le jeton est refusé, les cartes sociales ne
+                    // rendront rien et tourneraient indéfiniment.
+                    sessionExpiredPrompt
                 } else if isLoadingSocial {
                     loadingSocialCard
                 } else {
@@ -388,6 +392,33 @@ struct ProfileView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 28)
+        .ruCard()
+    }
+
+    /// SE RECONNECTER SANS SE DÉCONNECTER.
+    ///
+    /// Le bouton « SE CONNECTER » de `signInPrompt` ne s'affiche que si `!isSignedIn`. Or une
+    /// session expirée laisse `isSignedIn` à vrai — l'app a toujours un jeton, c'est le serveur
+    /// qui n'en veut plus. Le bouton était donc invisible exactement quand il servait, et le seul
+    /// chemin restant était « Se déconnecter » dans Plus de réglages.
+    ///
+    /// Ce qui coûtait cher : la déconnexion vide la file des sorties en attente
+    /// (`discardPendingClubActivities`). Récupérer sa session revenait donc à abandonner ses
+    /// publications non envoyées. Ici, `SignInView` pose un jeton frais par `authenticate()`, qui
+    /// ne passe jamais par `signOut()` — la file est intacte, et `retryPendingClubActivities`
+    /// la reprend à la prochaine ouverture du Club.
+    private var sessionExpiredPrompt: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            RUCardHeader(icon: "person.badge.clock", tint: RUColor.amberText, title: "Session expirée")
+            Text("Ta session de trente jours est arrivée au bout. Tes données sont intactes — reconnecte-toi pour retrouver ton club, tes amis et publier les sorties en attente.")
+                .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
+                .fixedSize(horizontal: false, vertical: true)
+            Button("ME RECONNECTER") { showSignIn = true }
+                .buttonStyle(PrimaryButtonStyle())
+                .padding(.top, 2)
+        }
+        .padding(RUSpacing.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .ruCard()
     }
 

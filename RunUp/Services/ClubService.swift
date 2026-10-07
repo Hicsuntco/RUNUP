@@ -792,8 +792,15 @@ struct ClubService {
         }
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             let status = (response as? HTTPURLResponse)?.statusCode ?? -1
+            // Le seul endroit de l'app par où passent tous les appels authentifiés au Club, donc
+            // le seul où un jeton refusé peut être constaté une fois pour toutes. Voir
+            // `AuthService.sessionRejected` : on l'observe, on n'efface rien.
+            if status == 401 || status == 403 { await auth.markSessionRejected() }
             throw ClubServiceError.badResponse(status, String(data: data, encoding: .utf8) ?? "")
         }
+
+        // Le jeton a servi : s'il avait été refusé plus tôt, ce n'est plus vrai.
+        await auth.markSessionAccepted()
 
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = Self.serverDateStrategy

@@ -10368,6 +10368,23 @@
         }
       }
     },
+    "ME RECONNECTER": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SIGN IN AGAIN"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VOLVER A ENTRAR"
+          }
+        }
+      }
+    },
     "MEILLEURE ALLURE": {
       "localizations": {
         "en": {
@@ -15694,6 +15711,23 @@
         }
       }
     },
+    "Session expirée": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session expired"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesión caducada"
+          }
+        }
+      }
+    },
     "Si cette paire n'est pas neuve, indique les km déjà dessus.": {
       "localizations": {
         "en": {
@@ -17408,6 +17442,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tu sesión ha caducado: vuelve a iniciar sesión."
+          }
+        }
+      }
+    },
+    "Ta session de trente jours est arrivée au bout. Tes données sont intactes — reconnecte-toi pour retrouver ton club, tes amis et publier les sorties en attente.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your thirty-day session has run out. Your data is untouched — sign in again to get your club and friends back, and to publish the runs still waiting."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu sesión de treinta días ha llegado a su fin. Tus datos están intactos: vuelve a iniciar sesión para recuperar tu club y tus amigos, y publicar las salidas pendientes."
           }
         }
       }

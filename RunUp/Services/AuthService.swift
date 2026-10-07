@@ -45,6 +45,39 @@ final class AuthService {
     private(set) var currentUser: AuthenticatedUser?
     private(set) var token: String?
 
+    /// LE SERVEUR A REFUSÉ NOTRE JETON.
+    ///
+    /// L'app ne l'apprenait jamais. Les sessions durent trente jours et rien ne les renouvelle —
+    /// `refreshMe()` rafraîchit l'UTILISATRICE, pas le jeton — donc au bout d'un mois tout le
+    /// monde est déconnecté sans le savoir : l'app garde un jeton qu'elle croit valide,
+    /// `isSignedIn` reste vrai, chaque appel au Club rend 401, et rien ne le dit. L'écran Amis
+    /// accusait le réseau, la file de l'historique promettait de réessayer.
+    ///
+    /// CE DRAPEAU N'EFFACE RIEN. Il n'est qu'une observation, et c'est délibéré : effacer le
+    /// jeton d'office sur un 401 ferait déconnecter tout le monde le jour où le serveur en rend
+    /// un à tort, et la déconnexion vide la file des sorties en attente. Le pire cas ici est une
+    /// carte « reconnecte-toi » affichée pour rien.
+    private(set) var sessionRejected = false
+
+    /// Appelé quand une réponse 401/403 arrive alors qu'on croyait avoir une session.
+    ///
+    /// Sans jeton, un 401 est la réponse NORMALE et ne veut rien dire : on ne lève le drapeau que
+    /// lorsqu'on en avait un à présenter.
+    func markSessionRejected() {
+        guard token != nil else { return }
+        sessionRejected = true
+    }
+
+    /// Le serveur vient d'accepter notre jeton : le refus précédent n'a plus d'objet.
+    ///
+    /// Sans ce pendant, un seul 401 passager — un redéploiement du serveur, une panne d'une
+    /// seconde — laissait la carte « ta session a expiré » affichée pour toujours, alors que tout
+    /// remarchait. Un drapeau qu'on ne sait que lever est un drapeau qui finit par mentir.
+    func markSessionAccepted() {
+        guard sessionRejected else { return }
+        sessionRejected = false
+    }
+
     /// Appelé juste avant que la session ne soit effacée, sur les DEUX chemins de déconnexion
     /// (le bouton des réglages et la suppression de compte, qui appelle `signOut()`). Posé par
     /// `AppState.init` pour vider la file d'activités en attente : sans ça, les sorties d'un
@@ -142,6 +175,9 @@ final class AuthService {
         onSignOut?()
         token = nil
         currentUser = nil
+        // Plus de jeton, donc plus de jeton refusé : sans ça, la carte « ta session a expiré »
+        // survivait à la déconnexion et s'affichait à côté du bouton « SE CONNECTER ».
+        sessionRejected = false
         KeychainService.deleteToken()
     }
 
@@ -169,6 +205,10 @@ final class AuthService {
         token = decoded.token
         currentUser = decoded.user
         KeychainService.saveToken(decoded.token)
+        // Un jeton frais : le refus précédent n'a plus d'objet. Noter qu'on arrive ici SANS être
+        // passé par `signOut()` — c'est ce qui permet de se reconnecter sans vider la file des
+        // sorties en attente.
+        sessionRejected = false
         onAuthenticated?(decoded.user)
     }
 

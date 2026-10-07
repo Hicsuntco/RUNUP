@@ -42,10 +42,11 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     /// rouge, elle est repartie, que l'appareil sache dire à quelle vitesse ou non.
     private(set) var metersSincePause: Double = 0
     private var pauseAnchor: CLLocation?
-    /// Sum of positive altitude deltas between consecutive fixes with a trustworthy
-    /// `verticalAccuracy` — real GPS-derived elevation gain, not the flat 0 `RunRecord` used to
-    /// always ship with (nothing tracked altitude at all).
-    private(set) var elevationGainMeters: Double = 0
+    /// Le dénivelé positif, mesuré par `ElevationGain` — qui existe parce que la somme naïve des
+    /// écarts positifs qu'on faisait ici redressait le bruit GPS et inventait des centaines de
+    /// mètres sur une sortie plate. Tout le raisonnement est dans ce fichier-là.
+    private var elevation = ElevationGain()
+    var elevationGainMeters: Double { elevation.metres }
 
     /// Horizontal accuracy above this (meters) is treated as an unstable fix.
     private let unstableAccuracyThreshold: CLLocationAccuracy = 30
@@ -90,7 +91,7 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         route = []
         routeAltitudes = []
         distanceMeters = 0
-        elevationGainMeters = 0
+        elevation.remetAZero()
         lastLocation = nil
         hasFix = false
         currentSpeedMetersPerSecond = nil
@@ -104,6 +105,8 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     func resume() {
         isAccumulating = true
         lastLocation = nil
+        // Comme `lastLocation` : l'écart d'altitude par-dessus la pause n'est pas de la sortie.
+        elevation.reprend()
         pauseAnchor = nil
         metersSincePause = 0
         applyBackgroundUpdatesIfAuthorized()
@@ -168,6 +171,23 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         for loc in locations {
             guard loc.horizontalAccuracy >= 0, loc.horizontalAccuracy < 65 else { continue }
 
+            // AVANT les gardes de distance, et c'est voulu.
+            //
+            // Le dénivelé tient son propre historique — lissage, bande morte, référence retenue —
+            // et ne demande pas le fix précédent. Le placer derrière le plancher de bruit
+            // HORIZONTAL le priverait justement des fixes des montées raides : à deux km/h, huit
+            // mètres de déplacement prennent quatorze secondes, donc une mesure d'altitude tous
+            // les quatorze secondes là où le D+ est la mesure de la sortie. Le retard du lissage
+            // deviendrait alors une perte réelle à chaque sommet.
+            //
+            // Ce que ce plancher protège, c'est la DISTANCE, et c'est une autre question que
+            // « cette altitude est-elle fiable ». Les mélanger est exactement le couplage qui a
+            // produit le défaut que `ElevationGain` corrige. Debout immobile, c'est la bande morte
+            // qui ne compte rien — c'est son travail, et elle est calibrée à quatre écarts-types.
+            elevation.ajoute(altitude: loc.altitude,
+                             precisionVerticale: loc.verticalAccuracy,
+                             instant: loc.timestamp)
+
             if let last = lastLocation {
                 let meters = loc.distance(from: last)
                 let dt = loc.timestamp.timeIntervalSince(last.timestamp)
@@ -192,17 +212,14 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
                 let noiseFloor = max(loc.horizontalAccuracy, last.horizontalAccuracy, 8)
                 guard meters > noiseFloor else { continue }
                 distanceMeters += meters
-                // Vertical accuracy is typically much worse than horizontal — negative means
-                // invalid, and a loose 20m threshold keeps out the worst GPS altitude noise
-                // without discarding every real fix.
-                if loc.verticalAccuracy >= 0, loc.verticalAccuracy < 20 {
-                    let delta = loc.altitude - last.altitude
-                    if delta > 0 { elevationGainMeters += delta }
-                }
             }
             lastLocation = loc
             route.append(loc.coordinate)
-            routeAltitudes.append(loc.verticalAccuracy >= 0 && loc.verticalAccuracy < 20 ? loc.altitude : nil)
+            // Le même seuil de confiance que le calcul de dénivelé, et pas un second nombre écrit
+            // à côté : c'est la même question posée de la même façon — cette altitude est-elle
+            // digne de foi ?
+            let altitudeFiable = loc.verticalAccuracy >= 0 && loc.verticalAccuracy < ElevationGain.precisionVerticaleMax
+            routeAltitudes.append(altitudeFiable ? loc.altitude : nil)
         }
     }
 

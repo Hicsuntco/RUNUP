@@ -63,6 +63,50 @@ def _(): attendu("// Écrire runs.reduce(0) { $0 + $1.distanceKm } était juste 
 @cas_test("une somme sur autre chose qu'un relevé n'est pas regardée")
 def _(): attendu("let t = paniers.reduce(0) { $0 + $1.prix }", 0, "hors sujet")
 
+# ── Les drapeaux de `Discipline` ──────────────────────────────────────────────────────────────
+
+def drapeaux(src, n, nom):
+    t = ck.drapeaux_fautifs(src)
+    assert len(t) == n, f"{nom} : {n} attendu(s), {len(t)} trouvé(s) → {t}"
+
+@cas_test("un drapeau écrit `self == .run` est signalé")
+def _(): drapeaux("    var wearsShoes: Bool { self == .run }", 1, "égalité")
+
+@cas_test("un drapeau écrit `self != .bike` est signalé aussi")
+def _(): drapeaux("    var usesPacePerKm: Bool { self != .bike }", 1, "inégalité")
+
+@cas_test("un `contains(self)` est la même décision implicite")
+def _(): drapeaux("    var aPied: Bool { [.run, .trail].contains(self) }", 1, "contains")
+
+@cas_test("un drapeau sur plusieurs lignes est signalé")
+def _(): drapeaux("    var wearsShoes: Bool {\n        self == .run\n    }", 1, "multi-lignes")
+
+@cas_test("un `switch` exhaustif passe")
+def _(): drapeaux("""    var wearsShoes: Bool {
+        switch self {
+        case .run, .trail: return true
+        case .bike: return false
+        }
+    }""", 0, "switch")
+
+@cas_test("un drapeau constant passe")
+def _(): drapeaux("    var countsTowardStreak: Bool { true }", 0, "constante")
+
+@cas_test("une comparaison citée dans un commentaire ne compte pas")
+def _(): drapeaux("    /// Il était écrit `self == .run`, et c'était le défaut.\n    var wearsShoes: Bool {\n        switch self {\n        case .run: return true\n        case .bike: return false\n        }\n    }", 0, "commentaire")
+
+@cas_test("une propriété qui n'est pas un booléen n'est pas regardée")
+def _(): drapeaux('    var title: String { self == .run ? "Course" : "Vélo" }', 0, "non booléen")
+
+@cas_test("deux drapeaux fautifs sont signalés tous les deux")
+def _(): drapeaux("    var a: Bool { self == .run }\n    var b: Bool { self != .bike }", 2, "deux")
+
+@cas_test("le vrai fichier `Discipline.swift` est propre")
+def _():
+    src = (ck.RACINE / ck.FICHIER_DISCIPLINE).read_text()
+    drapeaux(src, 0, "fichier réel")
+    assert len(ck.drapeaux(src)) >= 5, f"5 drapeaux attendus au moins, {len(ck.drapeaux(src))} vus"
+
 def main():
     echecs = 0
     for nom, f in cas:

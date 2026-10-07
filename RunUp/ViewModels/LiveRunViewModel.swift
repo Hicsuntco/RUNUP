@@ -160,6 +160,14 @@ final class LiveRunViewModel {
     /// tait, plutôt que d'annoncer « RÉP. 2/5 · foulée relâchée » à une cycliste.
     var suitLePlan: Bool { discipline.completesRunningPlan }
 
+    /// L'allure CIBLE du jour a-t-elle un sens ici, et la voix peut-elle la réclamer ?
+    ///
+    /// Distinct de `suitLePlan`, et c'est le trail qui l'a rendu nécessaire : une sortie trail
+    /// remplit bien la case du jour, mais 5:10/km n'y veut rien dire — la même foulée donne 4:20
+    /// sur le plat et 9:30 dans une montée à 15 %. Tout ce qui JUGE l'allure passe par ce
+    /// drapeau-ci ; tout ce qui décrit la séance reste sur `suitLePlan`.
+    var viseUneAllure: Bool { discipline.followsPaceTargets }
+
     var segmentLabel: String? {
         guard suitLePlan else { return nil }
         guard let currentSegment, let reps = session.intervalStructure?.reps else { return nil }
@@ -182,7 +190,7 @@ final class LiveRunViewModel {
     /// répétitions en gros et en accent, c'est-à-dire la consigne de courir son échauffement à
     /// l'allure de son travail. La donnée existait déjà ici, à l'usage de l'alerte vocale, qui
     /// se tait sur ces segments pour exactement cette raison.
-    var isTargetEffortNow: Bool { suitLePlan && isInTargetEffortSegment }
+    var isTargetEffortNow: Bool { viseUneAllure && isInTargetEffortSegment }
 
     /// Où elle en est DANS le segment en cours, de 0 à 1 — `nil` quand la question n'a pas de
     /// réponse.
@@ -293,7 +301,7 @@ final class LiveRunViewModel {
     /// à l'ambre pendant un footing de récupération serait reprocher à la coureuse d'avoir suivi
     /// la consigne.
     var paceStanding: PaceWindow.Standing {
-        guard suitLePlan, isInTargetEffortSegment else { return .unknown }
+        guard viseUneAllure, isInTargetEffortSegment else { return .unknown }
         return PaceWindow.standing(
             secPerKm: PaceWindow.secPerKm(paceWindow, minimumSeconds: PaceWindow.displayMinimumSeconds),
             target: PaceModel.parseSecPerKm(session.pace)
@@ -505,7 +513,7 @@ final class LiveRunViewModel {
     /// qu'une voix dans les oreilles. L'écran peut donc dire ACCÉLÈRE sans que le coach parle ;
     /// jamais l'inverse.
     private func checkPaceAlert() {
-        guard suitLePlan,
+        guard viseUneAllure,
               profile.paceAlertsEnabled,
               elapsedSeconds >= Self.paceAlertMinElapsedSeconds,
               isInTargetEffortSegment,

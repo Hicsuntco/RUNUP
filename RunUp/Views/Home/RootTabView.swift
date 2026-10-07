@@ -62,8 +62,11 @@ struct RootTabView: View {
                         else { appState.startRun(appState.runDiscipline) }
                     },
                     discipline: appState.runDiscipline,
+                    // Un CYCLE, plus une bascule : course → vélo → trail → course. L'ordre est
+                    // celui de `Discipline.allCases`, et `next` le calcule, donc une discipline de
+                    // plus entre dans le cycle sans qu'on revienne ici.
                     onToggleDiscipline: {
-                        appState.setRunDiscipline(appState.runDiscipline == .run ? .bike : .run)
+                        appState.setRunDiscipline(appState.runDiscipline.next)
                     },
                     // Pas pendant une course : on ne change pas de discipline au milieu d'une
                     // sortie, et un appui long qui ne fait rien vaut mieux qu'un qui touche à un

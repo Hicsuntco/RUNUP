@@ -217,8 +217,30 @@ final class HealthKitService {
     /// `distanceCycling`.
     func saveRun(_ discipline: Discipline = .run, start: Date, end: Date, duration: TimeInterval,
                  distanceKm: Double, kcal: Double) async throws {
+        // Le type de séance ET la grandeur de distance décidés ENSEMBLE, dans un seul `switch`.
+        //
+        // Ils étaient deux ternaires `discipline == .bike ?` à quatre-vingts lignes d'écart, et ces
+        // deux-là doivent être d'accord : un échantillon `.distanceCycling` posé sur une séance
+        // `.running` donnerait une course sans distance et des kilomètres de vélo sans séance, dans
+        // Santé, chez elle, sans rien à rejouer. Appariés, ils ne peuvent plus diverger.
+        //
+        // Le trail part en `.running` : HealthKit n'a PAS de type « trail running » — vérifié, il
+        // n'en existe aucun dans `HKWorkoutActivityType`. Et c'est ce qu'il faut de toute façon :
+        // une sortie trail doit rejoindre l'historique de course, les anneaux et les tendances de
+        // Fitness. `.hiking` l'en sortirait, pour un mot.
+        let typeDeSeance: HKWorkoutActivityType
+        let grandeurDistance: HKQuantityTypeIdentifier
+        switch discipline {
+        case .run, .trail:
+            typeDeSeance = .running
+            grandeurDistance = .distanceWalkingRunning
+        case .bike:
+            typeDeSeance = .cycling
+            grandeurDistance = .distanceCycling
+        }
+
         let configuration = HKWorkoutConfiguration()
-        configuration.activityType = discipline == .bike ? .cycling : .running
+        configuration.activityType = typeDeSeance
         configuration.locationType = .outdoor
 
         let builder = HKWorkoutBuilder(healthStore: store, configuration: configuration, device: .local())
@@ -235,7 +257,6 @@ final class HealthKitService {
                 end: end
             ))
         }
-        let grandeurDistance: HKQuantityTypeIdentifier = discipline == .bike ? .distanceCycling : .distanceWalkingRunning
         if distanceKm > 0, let distanceType = HKObjectType.quantityType(forIdentifier: grandeurDistance) {
             samples.append(HKQuantitySample(
                 type: distanceType,

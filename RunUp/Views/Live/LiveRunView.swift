@@ -159,9 +159,7 @@ struct LiveRunView: View {
                 FrostedBackButton { appState.go(.home) }
                 HStack(spacing: 6) {
                     liveDot
-                    Text(vm?.isAutoPaused == true ? "PAUSE AUTO"
-                         : (vm?.isPaused == true ? "EN PAUSE"
-                            : (vm?.discipline == .bike ? "VÉLO · EN DIRECT" : "EN DIRECT")))
+                    Text(libelleEtat)
                         .font(RUFont.display(11)).tracking(2).foregroundColor(Ink.accentSoft)
                 }
                 .padding(.horizontal, 12).padding(.vertical, 7)
@@ -278,6 +276,26 @@ struct LiveRunView: View {
     }
 
     /// Y a-t-il quelque chose à dire, à cet instant, que le chrono ne dit pas ?
+    /// L'état de la séance, dans la pastille du haut.
+    ///
+    /// Un `switch` plutôt que le ternaire à trois étages qu'il remplace : la troisième discipline
+    /// en aurait fait un à quatre, et la forme avait déjà atteint sa limite de lisibilité. Le
+    /// `?? .run` évite d'avoir à filtrer un optionnel dans un `switch` sur une énumération — la
+    /// course est l'état par défaut de cet écran de toute façon.
+    ///
+    /// La course ne se nomme pas : « EN DIRECT » seul, parce que c'est le cas ordinaire et que
+    /// « COURSE · EN DIRECT » n'ajouterait rien. Les deux autres se nomment, parce que l'écran est
+    /// le même et que rien d'autre, à cet endroit, ne distingue une sortie vélo d'un footing.
+    private var libelleEtat: LocalizedStringKey {
+        if vm?.isAutoPaused == true { return "PAUSE AUTO" }
+        if vm?.isPaused == true { return "EN PAUSE" }
+        switch vm?.discipline ?? .run {
+        case .run: return "EN DIRECT"
+        case .bike: return "VÉLO · EN DIRECT"
+        case .trail: return "TRAIL · EN DIRECT"
+        }
+    }
+
     private var hasInstruction: Bool {
         // Rien à vélo : la séance du jour est une séance de course, son allure cible ne
         // s'adresse pas à quelqu'un sur une selle.

@@ -124,13 +124,28 @@ struct TabBarView: View {
     /// le départ suivant — le défaut qu'on aurait créé en le remettant à faux dans le tap seul.
     @State private var disciplineJustToggled = false
 
-    /// Le nom de l'action d'accessibilité, calculé ici et pas en ligne : `accessibilityAction`
-    /// a une surcharge `LocalizedStringKey` et une surcharge `StringProtocol`, et un ternaire de
-    /// deux littéraux entre les deux est exactement le genre d'inférence qui ne se découvre qu'au
-    /// bout d'un quart d'heure de compilation. Un `String` explicite dans un `Text` ne laisse
-    /// aucun choix au compilateur.
+    /// Ce que fait l'appui simple, dit en entier — « Démarrer une sortie trail ».
+    private var startLabel: LocalizedStringKey {
+        switch discipline {
+        case .run: return "Démarrer une course"
+        case .bike: return "Démarrer une sortie vélo"
+        case .trail: return "Démarrer une sortie trail"
+        }
+    }
+
+    /// Le nom de l'action d'accessibilité : celui de la discipline SUIVANTE, pas de l'actuelle.
+    ///
+    /// Calculé ici et pas en ligne : `accessibilityAction` a une surcharge `LocalizedStringKey` et
+    /// une surcharge `StringProtocol`, et un ternaire de littéraux entre les deux est exactement
+    /// le genre d'inférence qui ne se découvre qu'au bout d'un quart d'heure de compilation. Un
+    /// `String` explicite dans un `Text` ne laisse aucun choix au compilateur.
+    ///
+    /// Et il passe par `String(localized:)`, ce que la première version ne faisait pas : un
+    /// `String` nu dans `Text(_:)` est pris au mot, sans passer par le catalogue. Le nom de
+    /// l'action serait resté en français sur un téléphone anglais, et aucun contrôle ne l'aurait
+    /// vu — `check_strings` lit les littéraux affichés, et celui-là ne l'était plus.
     private var toggleActionName: String {
-        discipline == .bike ? "Passer à la course" : "Passer au vélo"
+        discipline.next.switchToLabel
     }
 
     /// Le bouton central, CONTENU dans la barre.
@@ -169,7 +184,7 @@ struct TabBarView: View {
                 // la barre, il l'éclairait. Ramené à une ombre qui le décolle sans le faire
                 // rayonner — c'est un bouton, pas une lampe.
                 .shadow(color: .black.opacity(RUColor.isLight ? 0 : 0.45), radius: 10, x: 0, y: 5)
-            Text(discipline == .bike ? "VÉLO" : "RUN")
+            Text(discipline.tabLabel)
                 .font(RUFont.sans(.micro, weight: .bold))
                 .tracking(1)
                 .foregroundColor(RUColor.rose2)
@@ -210,10 +225,11 @@ struct TabBarView: View {
         .animation(RUMotion.snap, value: discipline)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
-        .accessibilityLabel(discipline == .bike ? "Démarrer une sortie vélo" : "Démarrer une course")
-        .accessibilityHint(!canToggleDiscipline ? ""
-                           : (discipline == .bike ? "Appui long pour revenir à la course"
-                                                  : "Appui long pour passer au vélo"))
+        .accessibilityLabel(startLabel)
+        // Plus le nom de la discipline suivante, mais le geste : à trois disciplines l'appui long
+        // ne mène plus à UNE destination, il fait tourner. C'est l'action nommée juste en dessous
+        // qui dit où l'on va, et elle, elle se met à jour toute seule.
+        .accessibilityHint(canToggleDiscipline ? "Appui long pour changer de discipline" : "")
         .accessibilityAction {
             onStartRun()
         }

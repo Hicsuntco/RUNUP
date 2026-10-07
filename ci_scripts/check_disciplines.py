@@ -97,8 +97,67 @@ def lignes_fautives(source):
     return out
 
 
+# ── Les drapeaux de `Discipline` : un `switch`, jamais un `==` ─────────────────────────────────
+
+FICHIER_DISCIPLINE = "RunUp/Shared/Discipline.swift"
+
+# `var nomDuDrapeau: Bool {` — seules les propriétés booléennes calculées sont regardées.
+_DRAPEAU = re.compile(r"^\s*var\s+(\w+)\s*:\s*Bool\s*\{")
+# `self == .run`, `self != .bike`, `[.run, .trail].contains(self)` : trois façons d'écrire la même
+# décision implicite, trois façons de la rendre fausse en silence à la discipline suivante.
+_COMPARAISON = re.compile(r"self\s*[!=]=\s*\.|\bcontains\(self\)")
+
+
+def _sans_commentaires(source):
+    """Les `//` et les `///` deviennent du vide — un drapeau CITÉ dans une explication n'est pas
+    un drapeau écrit. C'est le défaut qu'avait `check_a11y.py` à sa première version."""
+    return re.sub(r"//[^\n]*", "", source)
+
+
+def _corps(lignes, depart):
+    """Le corps de la propriété qui commence à `lignes[depart]`, accolades équilibrées."""
+    niveau, corps = 0, []
+    for ligne in lignes[depart:]:
+        niveau += ligne.count("{") - ligne.count("}")
+        corps.append(ligne)
+        if niveau <= 0:
+            break
+    return "\n".join(corps)
+
+
+def drapeaux(source):
+    """Tous les drapeaux booléens de `Discipline` : `(ligne, nom, corps)`."""
+    lignes = _sans_commentaires(source).split("\n")
+    trouves = []
+    for i, ligne in enumerate(lignes):
+        m = _DRAPEAU.match(ligne)
+        if m:
+            trouves.append((i + 1, m.group(1), _corps(lignes, i)))
+    return trouves
+
+
+def drapeaux_fautifs(source):
+    """Les drapeaux de `Discipline` qui décident par comparaison au lieu d'un `switch`.
+
+    `var wearsShoes: Bool { self == .run }` est juste tant qu'il n'y a que la course et le vélo, et
+    devient faux SANS QUE RIEN NE COMPILE EN ROUGE à la troisième discipline : le trail serait
+    arrivé avec `wearsShoes` à faux, `completesRunningPlan` à faux et `usesPacePerKm` à faux — une
+    discipline à pied qui n'use pas de chaussures, ne coche aucune séance et s'affiche en km/h.
+    Aucune erreur, aucune alerte, juste un mode qui ne marche pas.
+
+    Un `switch` sans `default` déplace la décision au seul endroit qui la prend correctement : le
+    compilateur. C'est ce que cette règle rend obligatoire.
+    """
+    return [(ligne, nom, " ".join(corps.split())[:108])
+            for ligne, nom, corps in drapeaux(source)
+            if "switch" not in corps and _COMPARAISON.search(corps)]
+
+
 def main():
     fautifs, lus = [], 0
+    source_discipline = (RACINE / FICHIER_DISCIPLINE).read_text()
+    fautifs_drapeaux = drapeaux_fautifs(source_discipline)
+    nb_drapeaux = len(drapeaux(source_discipline))
     for dossier in DOSSIERS:
         for f in sorted((RACINE / dossier).rglob("*.swift")):
             if f.name in EXEMPTS:
@@ -114,7 +173,18 @@ def main():
         print("\nAjoute `.only(.run)` — ou `.allDisciplines` si le total porte vraiment sur tout,")
         print("ce qui est une décision à écrire et pas un défaut. Voir `Discipline`.")
         return 1
+    if fautifs_drapeaux:
+        print(f"{len(fautifs_drapeaux)} drapeau(x) de `Discipline` décident par comparaison :\n")
+        for ligne, nom, extrait in fautifs_drapeaux:
+            print(f"  {FICHIER_DISCIPLINE}:{ligne}  `{nom}`")
+            print(f"    {extrait}")
+        print("\nÉcris-les en `switch` sans `default`. Un `self == .run` est juste aujourd'hui et")
+        print("devient faux en silence à la discipline suivante — sans une seule erreur de")
+        print("compilation. Un `switch` exhaustif fait échouer la construction jusqu'à ce que")
+        print("quelqu'un ait répondu pour la nouvelle discipline. Voir `Discipline`.")
+        return 1
     print(f"Disciplines : {lus} fichiers lus, toutes les agrégations de relevés sont explicites.")
+    print(f"              {nb_drapeaux} drapeaux de `Discipline` décident par `switch`.")
     return 0
 
 

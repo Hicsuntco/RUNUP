@@ -109,9 +109,12 @@ final class DisciplineTests: XCTestCase {
                        Calories.estimate(distanceKm: 10, durationMinutes: 60), accuracy: 0.001)
     }
 
-    /// Être arrêtée, c'est être arrêtée, à pied comme sur une selle — mais REPARTIR n'a pas le
-    /// même seuil : 1,3 m/s, c'est une marche rapide, et une cycliste y repasse au moindre coup
-    /// de pédale dans un embouteillage.
+    /// Entre la course et le vélo : être arrêtée, c'est être arrêtée — mais REPARTIR n'a pas le
+    /// même seuil, 1,3 m/s étant une marche rapide qu'une cycliste repasse au moindre coup de
+    /// pédale dans un embouteillage.
+    ///
+    /// Le trail fait exception sur le seuil de PAUSE, et il a sa propre série de tests plus bas :
+    /// dans une pente raide, avancer vraiment se fait sous 0,6 m/s.
     func testLesSeuilsDeRepriseDifferentMaisPasCeluiDePause() {
         let course = AutoPause.Seuils.pour(.run), velo = AutoPause.Seuils.pour(.bike)
         XCTAssertEqual(course.pause, velo.pause)
@@ -134,5 +137,83 @@ final class DisciplineTests: XCTestCase {
         XCTAssertTrue(AutoPause.shouldResume(speed: 1.5, metersSincePause: 0))
         XCTAssertTrue(AutoPause.shouldResume(speed: nil, metersSincePause: 30))
         XCTAssertFalse(AutoPause.shouldResume(speed: nil, metersSincePause: 10))
+    }
+
+    // MARK: - Le trail
+
+    /// Le trail est de la COURSE : il use les chaussures et il coche la séance du jour. C'est tout
+    /// l'inverse du vélo, et c'est ce qu'un `self == .run` aurait silencieusement inversé.
+    func testLeTrailEstDeLaCourse() {
+        XCTAssertTrue(Discipline.trail.wearsShoes)
+        XCTAssertTrue(Discipline.trail.completesRunningPlan)
+        XCTAssertTrue(Discipline.trail.countsTowardStreak)
+        XCTAssertTrue(Discipline.trail.usesPacePerKm)
+    }
+
+    /// Mais il ne VISE pas d'allure, et c'est la distinction que le trail a rendue nécessaire :
+    /// 5:10/km ne veut rien dire quand la même foulée donne 4:20 sur le plat et 9:30 dans une
+    /// montée à 15 %. Un seul booléen aurait donné, au choix, une sortie trail qui ne compte pas
+    /// dans le plan, ou une voix qui annonce « trop lente » pendant toute l'ascension.
+    func testLeTrailCocheLaSeanceSansViserDAllure() {
+        XCTAssertTrue(Discipline.trail.completesRunningPlan)
+        XCTAssertFalse(Discipline.trail.followsPaceTargets)
+        // La course, elle, fait les deux — et le vélo ni l'un ni l'autre.
+        XCTAssertTrue(Discipline.run.completesRunningPlan)
+        XCTAssertTrue(Discipline.run.followsPaceTargets)
+        XCTAssertFalse(Discipline.bike.completesRunningPlan)
+        XCTAssertFalse(Discipline.bike.followsPaceTargets)
+    }
+
+    /// Marcher une montée raide n'est pas une interruption. À 15 % de pente, avancer se fait à
+    /// deux kilomètres-heure, soit 0,55 m/s — juste SOUS le seuil de pause de la route. L'app se
+    /// serait mise en pause toute seule sur la portion la plus dure de la sortie.
+    func testMarcherUneMonteeRaideNeDeclenchePasLaPause() {
+        let trail = AutoPause.Seuils.pour(.trail)
+        XCTAssertLessThan(trail.pause, 0.55,
+                          "Deux km/h en montée doivent rester au-dessus du seuil de pause")
+        XCTAssertLessThan(trail.pause, AutoPause.Seuils.pour(.run).pause)
+    }
+
+    /// Et une relance au pas lève la pause : en trail, marcher EST une progression.
+    func testUneRelanceAuPasLevueLaPauseEnTrail() {
+        let trail = AutoPause.Seuils.pour(.trail)
+        XCTAssertTrue(AutoPause.shouldResume(speed: 1.1, metersSincePause: 0, seuils: trail))
+        XCTAssertFalse(AutoPause.shouldResume(speed: 1.1, metersSincePause: 0,
+                                              seuils: AutoPause.Seuils.pour(.run)))
+    }
+
+    /// Le cycle de l'appui long : course → vélo → trail → course. Il se calcule sur `allCases`,
+    /// donc une discipline de plus s'y insère sans qu'on touche au calcul — et ce test le dira.
+    func testLeCycleDesDisciplinesBoucle() {
+        var vue: [Discipline] = []
+        var courante = Discipline.run
+        for _ in 0..<Discipline.allCases.count {
+            vue.append(courante)
+            courante = courante.next
+        }
+        XCTAssertEqual(Set(vue), Set(Discipline.allCases),
+                       "Le cycle doit passer par TOUTES les disciplines")
+        XCTAssertEqual(courante, .run, "et revenir à son point de départ")
+    }
+
+    /// Une sortie trail entre dans la distance COURUE — contrairement au vélo. C'est l'autre
+    /// moitié de `only(_:)` : il ne s'agit pas d'exclure tout ce qui n'est pas `.run`.
+    func testLeTrailEntreDansLaDistanceCourue() {
+        let releves = [releve(.run, km: 10, secondes: 3000, allure: "5:00"),
+                       releve(.trail, km: 12, secondes: 5400, allure: "7:30"),
+                       releve(.bike, km: 40, secondes: 4800, allure: "1:12")]
+        let aPied = releves.filter(\.discipline.wearsShoes)
+        XCTAssertEqual(aPied.map(\.distanceKm).reduce(0, +), 22, accuracy: 0.001)
+    }
+
+    /// Chaque discipline a un libellé, une icône et une phrase de bascule. Aucune ne doit se
+    /// retrouver avec une chaîne vide parce qu'un `switch` a été complété à moitié.
+    func testChaqueDisciplineEstNommeePartout() {
+        for discipline in Discipline.allCases {
+            XCTAssertFalse(discipline.title.isEmpty, "\(discipline) n'a pas de titre")
+            XCTAssertFalse(discipline.tabLabel.isEmpty, "\(discipline) n'a pas de libellé court")
+            XCTAssertFalse(discipline.sfSymbol.isEmpty, "\(discipline) n'a pas d'icône")
+            XCTAssertFalse(discipline.switchToLabel.isEmpty, "\(discipline) n'a pas de phrase de bascule")
+        }
     }
 }

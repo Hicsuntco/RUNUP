@@ -46,8 +46,12 @@ enum AutoPause {
     /// à vingt-cinq à l'heure, donc la deuxième preuve de reprise ne prouve plus rien — elle se
     /// déclencherait sur la dérive GPS d'un vélo immobile à un feu.
     ///
-    /// Le seuil de PAUSE, lui, ne bouge pas : être arrêtée, c'est être arrêtée, à pied comme sur
-    /// une selle.
+    /// Le seuil de PAUSE bouge aussi, mais pour une seule discipline : en trail. Sur route comme
+    /// sur une selle, être arrêtée c'est être arrêtée, et 0,6 m/s le dit bien. Dans une montée à
+    /// 15 %, avancer VRAIMENT se fait à deux kilomètres-heure — soit 0,55 m/s, juste en dessous
+    /// du seuil. L'app se mettrait donc en pause toute seule au milieu de l'ascension, c'est-à-dire
+    /// sur la portion la plus dure de la sortie, et la coureuse retrouverait un chrono arrêté et
+    /// un dénivelé tronqué précisément là où elle a fourni le plus d'effort.
     struct Seuils: Equatable {
         var pause: Double
         var reprise: Double
@@ -64,6 +68,19 @@ enum AutoPause {
                 // 3 m/s ≈ 11 km/h : au-dessus, on roule vraiment, on ne pousse pas son vélo.
                 // 60 m : deux à trois secondes de roulage, et bien au-delà de toute dérive GPS.
                 return Seuils(pause: AutoPause.pauseSpeedThreshold, reprise: 3.0, eloignement: 60)
+            case .trail:
+                // 0,3 m/s ≈ 1,1 km/h : plus lent que toute progression vers l'avant, y compris une
+                // marche de randonnée dans une pente raide. C'est ce qui empêche la pause de se
+                // déclencher dans une montée qu'on gravit en marchant — ce qui est de la course en
+                // trail, pas une interruption.
+                //
+                // 1,0 m/s pour la reprise : marcher, en trail, EST une progression. Exiger
+                // 1,3 m/s ferait tenir la pause pendant une relance au pas.
+                //
+                // L'éloignement reste à 25 m : sous les arbres, c'est la preuve de reprise la plus
+                // fiable des deux, puisque `CLLocation.speed` est justement ce qui devient
+                // indisponible sous le couvert.
+                return Seuils(pause: 0.3, reprise: 1.0, eloignement: AutoPause.resumeDisplacementMeters)
             }
         }
     }

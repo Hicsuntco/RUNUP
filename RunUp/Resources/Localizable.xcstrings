@@ -3355,6 +3355,23 @@
         }
       }
     },
+    "Appui long pour changer de discipline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press and hold to change discipline"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantén pulsado para cambiar de disciplina"
+          }
+        }
+      }
+    },
     "Appui long pour passer au vélo": {
       "extractionState": "manual",
       "localizations": {
@@ -7029,6 +7046,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Empezar una carrera"
+          }
+        }
+      }
+    },
+    "Démarrer une sortie trail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start a trail run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar una salida de trail"
           }
         }
       }
@@ -12635,6 +12669,40 @@
         }
       }
     },
+    "Passer au trail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch to trail"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar a trail"
+          }
+        }
+      }
+    },
+    "Passer au vélo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch to cycling"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar a ciclismo"
+          }
+        }
+      }
+    },
     "Passer en mode course libre": {
       "localizations": {
         "en": {
@@ -12647,6 +12715,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cambiar a modo carrera libre"
+          }
+        }
+      }
+    },
+    "Passer à la course": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch to running"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar a carrera"
           }
         }
       }
@@ -17221,6 +17306,40 @@
         }
       }
     },
+    "TRAIL": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TRAIL"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TRAIL"
+          }
+        }
+      }
+    },
+    "TRAIL · EN DIRECT": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TRAIL · LIVE"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TRAIL · EN VIVO"
+          }
+        }
+      }
+    },
     "Ta charge d'entraînement": {
       "localizations": {
         "en": {
@@ -18690,6 +18809,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Trazado de la ruta"
+          }
+        }
+      }
+    },
+    "Trail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trail"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trail"
           }
         }
       }

@@ -43,6 +43,16 @@ enum Calories {
         switch discipline {
         case .run:  return estimate(distanceKm: distanceKm, durationMinutes: durationMinutes)
         case .bike: return Double(durationMinutes) * perCyclingMinute
+        // Le trail compte comme la course : même coût par kilomètre.
+        //
+        // C'est SOUS-ESTIMÉ, et sciemment. Monter cent mètres coûte environ soixante-cinq
+        // kilocalories à une personne de soixante-dix kilos, donc une sortie à 800 m de D+ brûle
+        // dans les cinq cents kilocalories de plus que la même distance à plat. Les intégrer
+        // voudrait dire faire entrer le dénivelé dans cette estimation, donc dans sa signature et
+        // dans chacun de ses appels. Cette estimation n'est pas là pour être juste — elle est là
+        // pour ne pas être absurde (voir l'en-tête du fichier) ; la rendre plus fine est un
+        // chantier à part, qui se fait entier ou pas du tout.
+        case .trail: return estimate(distanceKm: distanceKm, durationMinutes: durationMinutes)
         }
     }
 

@@ -5,6 +5,16 @@ struct TabBarView: View {
     var selected: AppScreen
     var onSelect: (AppScreen) -> Void
     var onStartRun: () -> Void
+    /// La discipline que le bouton lancera. Il la PORTE à l'écran — c'est ce qui rend l'appui
+    /// long découvrable : on ne cherche pas un geste caché, on constate que le bouton a changé.
+    var discipline: Discipline = .run
+    /// Appui long : bascule course ↔ vélo.
+    var onToggleDiscipline: () -> Void = {}
+    /// Faux pendant une course : on ne change pas de discipline au milieu d'une sortie. Un
+    /// booléen séparé plutôt qu'une closure optionnelle — un ternaire qui rend `nil` ou une
+    /// fermeture est une inférence que Swift refuse selon le contexte, et ce n'est pas le genre
+    /// de risque à prendre quand chaque compilation coûte un quart d'heure.
+    var canToggleDiscipline: Bool = true
 
     /// Le 5e onglet est PROFIL, pas Club — c'est ce que porte la maquette (`#i-profile` /
     /// « Profil » dans son `.tabbar`), et c'est ce qui défait le dédoublement qu'on avait :
@@ -118,15 +128,20 @@ struct TabBarView: View {
                 Circle()
                     .fill(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom))
                     .frame(width: 40, height: 40)
+                    // Le triangle reste, quelle que soit la discipline : il dit « ça démarre »,
+                    // et c'est la seule chose que ce rond ait jamais eu à dire. C'est le libellé
+                    // en dessous qui porte le vélo — changer les deux ferait un bouton différent
+                    // au lieu du même bouton dans un autre mode.
                     .overlay(Image(systemName: "play.fill").foregroundColor(RUColor.onRose).font(.system(size: 14)))
                     // 0,55 de rose sur 14 points de flou : le bouton RUN ne se posait pas sur
                     // la barre, il l'éclairait. Ramené à une ombre qui le décolle sans le faire
                     // rayonner — c'est un bouton, pas une lampe.
                     .shadow(color: .black.opacity(RUColor.isLight ? 0 : 0.45), radius: 10, x: 0, y: 5)
-                Text("RUN")
+                Text(discipline == .bike ? "VÉLO" : "RUN")
                     .font(RUFont.sans(.micro, weight: .bold))
                     .tracking(1)
                     .foregroundColor(RUColor.rose2)
+                    .contentTransition(.opacity)
             }
             // Même défaut que les onglets, sur le bouton le plus utilisé de l'app : le rond fait
             // 40 pt, le creux qui le sépare de « RUN » ne répondait pas, et l'ensemble n'atteignait
@@ -139,6 +154,20 @@ struct TabBarView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())
+        // L'appui long bascule la discipline. Posé sur le bouton plutôt qu'ailleurs parce qu'il
+        // n'y a qu'un seul endroit où l'on décide de partir : y ajouter un deuxième geste coûte
+        // moins qu'un réglage à aller chercher, et l'appui simple reste à un seul geste pour la
+        // course, qui est l'écrasante majorité des départs.
+        .onLongPressGesture(minimumDuration: 0.45) {
+            guard canToggleDiscipline else { return }
+            Haptics.impact(.medium)
+            onToggleDiscipline()
+        }
+        .animation(RUMotion.snap, value: discipline)
+        .accessibilityLabel(discipline == .bike ? "Démarrer une sortie vélo" : "Démarrer une course")
+        .accessibilityHint(!canToggleDiscipline ? ""
+                           : (discipline == .bike ? "Appui long pour revenir à la course"
+                                                  : "Appui long pour passer au vélo"))
     }
 }
 

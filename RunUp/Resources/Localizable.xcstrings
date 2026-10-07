@@ -3355,6 +3355,40 @@
         }
       }
     },
+    "Appui long pour passer au vélo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press and hold to switch to cycling"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantén pulsado para cambiar a ciclismo"
+          }
+        }
+      }
+    },
+    "Appui long pour revenir à la course": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press and hold to switch back to running"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantén pulsado para volver a correr"
+          }
+        }
+      }
+    },
     "Appuie pour la définir par défaut": {
       "localizations": {
         "en": {
@@ -6978,6 +7012,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "¿Ya tienes cuenta? Inicia sesión"
+          }
+        }
+      }
+    },
+    "Démarrer une course": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start a run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar una carrera"
+          }
+        }
+      }
+    },
+    "Démarrer une sortie vélo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start a bike ride"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar una salida en bici"
           }
         }
       }
@@ -19251,6 +19319,23 @@
         }
       }
     },
+    "VITESSE": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SPEED"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VELOCIDAD"
+          }
+        }
+      }
+    },
     "VOIR LE CALENDRIER": {
       "localizations": {
         "en": {
@@ -19330,6 +19415,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Visible para todos, no solo para tu club."
+          }
+        }
+      }
+    },
+    "Vitesse %@ kilomètres par heure": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speed %@ kilometres per hour"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Velocidad %@ kilómetros por hora"
           }
         }
       }
@@ -19459,6 +19561,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ya no verán la actividad del otro, y esto elimina cualquier seguimiento entre ustedes."
+          }
+        }
+      }
+    },
+    "VÉLO": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BIKE"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BICI"
+          }
+        }
+      }
+    },
+    "VÉLO · EN DIRECT": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CYCLING · LIVE"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CICLISMO · EN VIVO"
           }
         }
       }

@@ -37,6 +37,20 @@ final class AppState {
     /// sync by `ClubActivityOutbox` itself on every enqueue/success/retry so History can show a
     /// real "still syncing" banner instead of a run's XP/feed entry silently never arriving with
     /// no visible sign anything went wrong.
+    /// Ce que le bouton RUN lancera. Appui long dessus pour basculer, appui long pour revenir.
+    ///
+    /// DANS LES RÉGLAGES SYSTÈME, PAS DANS LE PROFIL. C'est un mode d'interface, pas une donnée
+    /// d'entraînement : il n'a rien à faire dans la base, il n'a pas à être sauvegardé ni
+    /// synchronisé, et le profil est un `@Model` — y ajouter une propriété de type personnalisé
+    /// est précisément ce qui a fait planter le build 1177 au lancement.
+    ///
+    /// Il PERSISTE quand même d'un lancement à l'autre : quelqu'un qui part à vélo trois fois
+    /// par semaine ne doit pas re-basculer à chaque fois.
+    var runDiscipline: Discipline = .run {
+        didSet { UserDefaults.standard.set(runDiscipline.rawValue, forKey: Self.runDisciplineKey) }
+    }
+    private static let runDisciplineKey = "run.discipline.v1"
+
     var pendingActivityCount: Int = 0
     /// POURQUOI la file ne part pas, quand elle ne part pas.
     ///
@@ -178,6 +192,12 @@ final class AppState {
         }
         auth.onAuthenticated = { [weak self] user in
             self?.reconcileProfileOwner(with: user)
+        }
+        // Avant toute chose dans l'interface : le bouton RUN doit s'afficher d'emblée dans la
+        // discipline choisie la dernière fois, pas basculer sous les yeux après coup.
+        if let brut = UserDefaults.standard.string(forKey: Self.runDisciplineKey),
+           let reprise = Discipline(rawValue: brut) {
+            runDiscipline = reprise
         }
         Task { self.recoverInterruptedRunIfNeeded() }
         Task { self.renommerLesCoursesDuJourDeRepos() }
@@ -645,7 +665,11 @@ final class AppState {
         self.screen = screen
     }
 
-    func startRun() {
+    /// `discipline` par défaut `.run` : les deux autres entrées — la carte de séance de
+    /// l'accueil et la feuille de détail — lancent la séance PRÉVUE, qui est toujours une course.
+    /// Seul le bouton RUN de la barre d'onglets est une entrée libre, et c'est lui qui passe
+    /// autre chose.
+    func startRun(_ discipline: Discipline = .run) {
         // Guard here (not per call site) so every entry point — Home's session card, the session
         // detail sheet, the tab bar's resume pill — is protected from silently overwriting an
         // in-progress run's LiveRunViewModel (which would orphan its timer/location task with no
@@ -654,7 +678,7 @@ final class AppState {
             screen = .live
             return
         }
-        let vm = LiveRunViewModel(profile: profile, healthKit: healthKit)
+        let vm = LiveRunViewModel(profile: profile, healthKit: healthKit, discipline: discipline)
         liveRun = vm
         vm.start()
         // Placed after the guard above, so a tap on an already-running session (the tab bar's
@@ -662,7 +686,11 @@ final class AppState {
         // one the activation metric — an install that never reaches this line is an install that
         // never became a runner, and nothing else in the app could tell us that.
         Analytics.shared.trackOnce(.firstRunStarted)
-        Analytics.shared.track(.runStarted, ["session": .string(profile.todaySession.title)])
+        // La discipline part avec l'événement : sans elle, le jour où des gens roulent, « combien
+        // de sorties démarrées » cesse de vouloir dire quelque chose — c'est la même panne
+        // silencieuse que les agrégations, un étage plus loin.
+        Analytics.shared.track(.runStarted, ["session": .string(profile.todaySession.title),
+                                             "discipline": .string(discipline.rawValue)])
         screen = .live
     }
 

@@ -15,6 +15,10 @@ import ActivityKit
 @Observable
 final class LiveRunViewModel {
     let location = LocationService()
+    /// Courir ou rouler. Figée au départ comme la séance : elle décide des seuils de pause
+    /// automatique, de l'estimation de dépense, de l'unité affichée, du type écrit dans Santé —
+    /// et de tout ce que le plan raconte, qui n'a aucun sens à vélo.
+    let discipline: Discipline
     private let profile: UserProfile
     private let healthKit: HealthKitService
     /// Set in `start()`, not at init — the view model can exist briefly before the run begins,
@@ -151,7 +155,13 @@ final class LiveRunViewModel {
 
     /// Chip text for the Live overlay — nil when there's no real structure to narrate, in which
     /// case the UI shows nothing rather than a guess.
+    /// Le plan de RUNUP est un plan de course : ses segments, ses allures cibles et ses
+    /// consignes vocales n'ont rien à dire à quelqu'un sur un vélo. Tout ce qui en descend se
+    /// tait, plutôt que d'annoncer « RÉP. 2/5 · foulée relâchée » à une cycliste.
+    var suitLePlan: Bool { discipline.completesRunningPlan }
+
     var segmentLabel: String? {
+        guard suitLePlan else { return nil }
         guard let currentSegment, let reps = session.intervalStructure?.reps else { return nil }
         // Les quatre libellés étaient des littéraux français nus. Les clés existent pourtant dans
         // le catalogue depuis toujours : c'est `String(localized:)` qui manquait, et rien ne le
@@ -172,7 +182,7 @@ final class LiveRunViewModel {
     /// répétitions en gros et en accent, c'est-à-dire la consigne de courir son échauffement à
     /// l'allure de son travail. La donnée existait déjà ici, à l'usage de l'alerte vocale, qui
     /// se tait sur ces segments pour exactement cette raison.
-    var isTargetEffortNow: Bool { isInTargetEffortSegment }
+    var isTargetEffortNow: Bool { suitLePlan && isInTargetEffortSegment }
 
     /// Où elle en est DANS le segment en cours, de 0 à 1 — `nil` quand la question n'a pas de
     /// réponse.
@@ -186,6 +196,7 @@ final class LiveRunViewModel {
     /// Le retour au calme vaut `nil` : il n'a pas de longueur prévue, il s'arrête quand elle
     /// arrête. Une barre qui se remplirait vers une fin inventée vaudrait moins que rien.
     var segmentProgress: Double? {
+        guard suitLePlan else { return nil }
         guard let currentSegment, let structure = session.intervalStructure else { return nil }
         switch currentSegment {
         case .warmup:
@@ -204,6 +215,7 @@ final class LiveRunViewModel {
     /// récupération (qui se terminent sur le chrono). Afficher un temps restant sur une
     /// répétition serait une prédiction, pas une mesure.
     var segmentRemainingLabel: String? {
+        guard suitLePlan else { return nil }
         guard let currentSegment, let structure = session.intervalStructure else { return nil }
         switch currentSegment {
         case .warmup:
@@ -229,7 +241,9 @@ final class LiveRunViewModel {
 
     // Voir `Calories` : la constante était écrite ici, dans `AddRunSheet` et dans `AppState`,
     // chacune avec un commentaire demandant aux deux autres de rester d'accord.
-    var kcal: Double { Calories.estimate(distanceKm: distanceKm) }
+    var kcal: Double {
+        Calories.estimate(discipline, distanceKm: distanceKm, durationMinutes: Int(elapsedSeconds / 60))
+    }
 
     /// La moyenne de toute la sortie. Elle garde sa place là où elle veut dire quelque chose —
     /// le `RunRecord`, le récap, la Live Activity — mais plus sur l'écran de course.
@@ -251,6 +265,27 @@ final class LiveRunViewModel {
         return PaceModel.paceText(secPerKm)
     }
 
+    /// Ce que l'écran de course affiche en grand : une allure au kilomètre en courant, une
+    /// vitesse en kilomètres par heure à vélo.
+    ///
+    /// « 2:28/km » est juste à vélo et illisible — personne ne pense sa sortie comme ça. C'est
+    /// `TimeFormat.rythme` qui tranche, en un seul endroit, pour que deux écrans ne puissent pas
+    /// décrire la même sortie dans deux unités.
+    var rythmeRecent: String {
+        let recent = PaceWindow.secPerKm(paceWindow, minimumSeconds: PaceWindow.displayMinimumSeconds)
+        let moyenne: Double? = distanceKm > 0.05 ? elapsedSeconds / distanceKm : nil
+        guard let secondes = recent ?? moyenne, secondes > 0 else {
+            return discipline.usesPacePerKm ? "--:--" : "—"
+        }
+        return TimeFormat.rythme(discipline, secondesParKm: secondes).valeur
+    }
+
+    /// Le libellé sous ce chiffre. Il devient le verbe du coach quand elle s'écarte de la cible
+    /// — mais seulement en courant, puisque le plan ne vise rien à vélo.
+    var rythmeLibelle: String {
+        discipline.usesPacePerKm ? String(localized: "ALLURE") : String(localized: "VITESSE")
+    }
+
     /// L'allure récente face à la cible du jour.
     ///
     /// `unknown` pendant l'échauffement, la récupération et le retour au calme : ces segments
@@ -258,16 +293,17 @@ final class LiveRunViewModel {
     /// à l'ambre pendant un footing de récupération serait reprocher à la coureuse d'avoir suivi
     /// la consigne.
     var paceStanding: PaceWindow.Standing {
-        guard isInTargetEffortSegment else { return .unknown }
+        guard suitLePlan, isInTargetEffortSegment else { return .unknown }
         return PaceWindow.standing(
             secPerKm: PaceWindow.secPerKm(paceWindow, minimumSeconds: PaceWindow.displayMinimumSeconds),
             target: PaceModel.parseSecPerKm(session.pace)
         )
     }
 
-    init(profile: UserProfile, healthKit: HealthKitService) {
+    init(profile: UserProfile, healthKit: HealthKitService, discipline: Discipline = .run) {
         self.profile = profile
         self.healthKit = healthKit
+        self.discipline = discipline
         let name = profile.name
         // Une constante locale, PAS `self.session` : dans un initialiseur, lire une propriété de
         // `self` avant que toutes les propriétés stockées ne soient posées est interdit — et `cues`
@@ -393,7 +429,8 @@ final class LiveRunViewModel {
         checkPaceAlert()
         if AutoPause.tick(&autoPauseState,
                           speed: location.currentSpeedMetersPerSecond,
-                          enabled: profile.autoPauseEnabled && !runtimeAutoPauseDisabled) {
+                          enabled: profile.autoPauseEnabled && !runtimeAutoPauseDisabled,
+                          seuils: AutoPause.Seuils.pour(discipline)) {
             autoPause()
         }
         // Every 5s, not every tick — ActivityKit updates are meant to be occasional, not a
@@ -468,7 +505,8 @@ final class LiveRunViewModel {
     /// qu'une voix dans les oreilles. L'écran peut donc dire ACCÉLÈRE sans que le coach parle ;
     /// jamais l'inverse.
     private func checkPaceAlert() {
-        guard profile.paceAlertsEnabled,
+        guard suitLePlan,
+              profile.paceAlertsEnabled,
               elapsedSeconds >= Self.paceAlertMinElapsedSeconds,
               isInTargetEffortSegment,
               elapsedSeconds - lastPaceAlertAtElapsed >= Self.paceAlertCooldownSeconds
@@ -518,7 +556,8 @@ final class LiveRunViewModel {
     /// Vraie reprise du mouvement, par l'une ou l'autre des deux mesures — voir `AutoPause`.
     private var movementResumed: Bool {
         AutoPause.shouldResume(speed: location.currentSpeedMetersPerSecond,
-                               metersSincePause: location.metersSincePause)
+                               metersSincePause: location.metersSincePause,
+                               seuils: AutoPause.Seuils.pour(discipline))
     }
 
     private func resumeFromAutoPause() {
@@ -638,7 +677,7 @@ final class LiveRunViewModel {
         voiceCoach?.stop()
         location.stop()
         let record = AdaptivePlanEngine.buildRunRecord(
-            title: session.displayTitle,
+            title: suitLePlan ? session.displayTitle : discipline.title,
             elapsedSeconds: elapsedSeconds,
             distanceKm: distanceKm,
             kcal: kcal,
@@ -653,8 +692,10 @@ final class LiveRunViewModel {
             // Le type de séance suit la course dans son relevé : `title` est du texte affiché,
             // donc traduit, et tout ce qui voudrait en déduire quelque chose (le badge fractionné
             // du club) doit lire ce champ-ci. Passé au constructeur, qui s'en sert aussi pour
-            // refuser d'intituler une course « Repos ».
-            sessionKind: session.kind
+            // refuser d'intituler une course « Repos ». Nil à vélo : la séance du jour est une
+            // séance de course, elle ne décrit pas ce qui vient d'être fait.
+            sessionKind: suitLePlan ? session.kind : nil,
+            discipline: discipline
         )
         // DATÉE À SON DÉPART, PAS À SON ARRIVÉE. `buildRunRecord` laisse `date` à `.now`,
         // c'est-à-dire l'instant de ce `stop()`. Les trois autres façons de créer un relevé

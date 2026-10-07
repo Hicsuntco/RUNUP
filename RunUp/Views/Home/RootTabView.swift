@@ -58,8 +58,17 @@ struct RootTabView: View {
                     selected: tabSelection,
                     onSelect: { appState.go($0) },
                     onStartRun: {
-                        if appState.isRunActive { appState.go(.live) } else { appState.startRun() }
-                    }
+                        if appState.isRunActive { appState.go(.live) }
+                        else { appState.startRun(appState.runDiscipline) }
+                    },
+                    discipline: appState.runDiscipline,
+                    onToggleDiscipline: {
+                        appState.runDiscipline = appState.runDiscipline == .run ? .bike : .run
+                    },
+                    // Pas pendant une course : on ne change pas de discipline au milieu d'une
+                    // sortie, et un appui long qui ne fait rien vaut mieux qu'un qui touche à un
+                    // relevé déjà commencé.
+                    canToggleDiscipline: !appState.isRunActive
                 )
                 .padding(.horizontal, RUSpacing.tabBarSideInset)
                 .padding(.bottom, RUSpacing.tabBarBottomInset)

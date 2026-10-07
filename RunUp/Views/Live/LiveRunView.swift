@@ -159,7 +159,9 @@ struct LiveRunView: View {
                 FrostedBackButton { appState.go(.home) }
                 HStack(spacing: 6) {
                     liveDot
-                    Text(vm?.isAutoPaused == true ? "PAUSE AUTO" : (vm?.isPaused == true ? "EN PAUSE" : "EN DIRECT"))
+                    Text(vm?.isAutoPaused == true ? "PAUSE AUTO"
+                         : (vm?.isPaused == true ? "EN PAUSE"
+                            : (vm?.discipline == .bike ? "VÉLO · EN DIRECT" : "EN DIRECT")))
                         .font(RUFont.display(11)).tracking(2).foregroundColor(Ink.accentSoft)
                 }
                 .padding(.horizontal, 12).padding(.vertical, 7)
@@ -277,6 +279,9 @@ struct LiveRunView: View {
 
     /// Y a-t-il quelque chose à dire, à cet instant, que le chrono ne dit pas ?
     private var hasInstruction: Bool {
+        // Rien à vélo : la séance du jour est une séance de course, son allure cible ne
+        // s'adresse pas à quelqu'un sur une selle.
+        guard vm?.suitLePlan ?? true else { return false }
         let pace = appState.profile.todaySession.pace
         return !pace.isEmpty && pace != "—" && pace != "--:--"
     }
@@ -587,16 +592,19 @@ struct LiveRunView: View {
         switch standing {
         case .tooSlow: label = String(localized: "ACCÉLÈRE")
         case .tooFast: label = String(localized: "RALENTIS")
-        case .onTarget, .unknown: label = String(localized: "ALLURE")
+        case .onTarget, .unknown: label = vm?.rythmeLibelle ?? String(localized: "ALLURE")
         }
-        let value = vm?.recentPaceLabel ?? "--:--"
+        let value = vm?.rythmeRecent ?? "--:--"
         // Pas le libellé affiché : « Allure 8:32 par kilomètre, ALLURE » est ce que donnerait sa
         // reprise telle quelle.
         let spoken: String
         switch standing {
         case .tooSlow: spoken = String(localized: "Allure \(value) par kilomètre, accélère")
         case .tooFast: spoken = String(localized: "Allure \(value) par kilomètre, ralentis")
-        case .onTarget, .unknown: spoken = String(localized: "Allure \(value) par kilomètre")
+        case .onTarget, .unknown:
+            spoken = vm?.discipline.usesPacePerKm ?? true
+                ? String(localized: "Allure \(value) par kilomètre")
+                : String(localized: "Vitesse \(value) kilomètres par heure")
         }
         return VStack(spacing: 2) {
             Text(value).displayStyle(26)

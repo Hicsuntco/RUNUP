@@ -51,7 +51,11 @@ final class HealthKitService {
     private static let writeTypes: Set<HKSampleType> = [
         HKObjectType.workoutType(),
         HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!,
-        HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning)!
+        HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning)!,
+        // Le vélo a sa propre grandeur, et sans cette autorisation l'échantillon est REFUSÉ par
+        // HealthKit — l'enregistrement part, ne lève rien de visible, et la sortie arrive dans
+        // Santé sans distance. Une fonctionnalité qui ne marche pas sans jamais le dire.
+        HKObjectType.quantityType(forIdentifier: .distanceCycling)!
     ]
 
     func requestAuthorization() async throws {
@@ -200,9 +204,21 @@ final class HealthKitService {
     ///
     /// La position exacte demanderait de conserver les horodatages de pause jusqu'ici, ce que
     /// `RunRecord` ne fait pas. C'est le vrai correctif, et il est ailleurs.
-    func saveRun(start: Date, end: Date, duration: TimeInterval, distanceKm: Double, kcal: Double) async throws {
+    /// `discipline` décide de DEUX choses, et la seconde sort de l'app.
+    ///
+    /// Le type de séance, d'abord : une sortie vélo rangée en « course à pied » dans Santé est
+    /// fausse pour toujours, et c'est l'app qui l'a écrite.
+    ///
+    /// Et surtout le type de la mesure de distance. Jusqu'ici elle partait en
+    /// `distanceWalkingRunning`, la grandeur « distance marche + course » que lisent les anneaux
+    /// d'Apple, l'app Forme et toutes les autres apps du téléphone. Y verser quarante kilomètres
+    /// de vélo ne salit pas les chiffres de RUNUP : ça salit ceux de tout le monde, hors de
+    /// notre portée, et personne ne saurait d'où ça vient. Le vélo a sa propre grandeur,
+    /// `distanceCycling`.
+    func saveRun(_ discipline: Discipline = .run, start: Date, end: Date, duration: TimeInterval,
+                 distanceKm: Double, kcal: Double) async throws {
         let configuration = HKWorkoutConfiguration()
-        configuration.activityType = .running
+        configuration.activityType = discipline == .bike ? .cycling : .running
         configuration.locationType = .outdoor
 
         let builder = HKWorkoutBuilder(healthStore: store, configuration: configuration, device: .local())
@@ -219,7 +235,8 @@ final class HealthKitService {
                 end: end
             ))
         }
-        if distanceKm > 0, let distanceType = HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning) {
+        let grandeurDistance: HKQuantityTypeIdentifier = discipline == .bike ? .distanceCycling : .distanceWalkingRunning
+        if distanceKm > 0, let distanceType = HKObjectType.quantityType(forIdentifier: grandeurDistance) {
             samples.append(HKQuantitySample(
                 type: distanceType,
                 quantity: HKQuantity(unit: .meterUnit(with: .kilo), doubleValue: distanceKm),

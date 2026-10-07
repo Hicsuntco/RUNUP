@@ -41,6 +41,14 @@ final class RunRecord {
     /// comptage retombe sur l'ancienne recherche de texte — qui reste juste pour elles, puisque
     /// leur titre, lui, est resté français.
     var sessionKind: SessionKind? = nil
+
+    /// Courir ou rouler. Voir `Discipline` : son absence rendait fausses, en silence, les treize
+    /// agrégations qui somment des relevés.
+    ///
+    /// Valeur par défaut `.run`, et c'est exact et non pas commode : tous les relevés écrits
+    /// avant ce champ sont des courses, l'app ne savait rien faire d'autre. Une migration légère
+    /// SwiftData les remplira donc avec la bonne valeur.
+    var discipline: Discipline = .run
     var route: [RoutePoint] = []
     /// Non-nil only for a run imported from Strava (see `StravaService.importActivities`) — lets
     /// re-importing skip activities already pulled in, instead of duplicating History on every
@@ -79,7 +87,8 @@ final class RunRecord {
         healthWorkoutID: UUID? = nil,
         /// Posé par l'initialiseur plutôt qu'après coup : c'est lui qui décide aussi du titre
         /// quand la séance du jour était un repos. Voir `AdaptivePlanEngine.buildRunRecord`.
-        sessionKind: SessionKind? = nil
+        sessionKind: SessionKind? = nil,
+        discipline: Discipline = .run
     ) {
         self.date = date
         self.title = title
@@ -94,6 +103,7 @@ final class RunRecord {
         self.stravaActivityId = stravaActivityId
         self.healthWorkoutID = healthWorkoutID
         self.sessionKind = sessionKind
+        self.discipline = discipline
     }
 }
 

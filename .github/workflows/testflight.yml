@@ -296,6 +296,15 @@ jobs:
       - name: Vérifier que le client et le serveur connaissent les mêmes événements
         run: python3 ci_scripts/check_events.py
 
+      # Une somme sur des relevés doit dire de quelle discipline elle parle. Sans ça, la première
+      # sortie vélo entre dans la distance courue, emporte le record d'allure que personne ne
+      # reprendra, use les chaussures et coche la séance de course du jour — sans qu'une seule
+      # ligne ne casse ni qu'un seul écran ne vire au rouge.
+      - name: Vérifier que les agrégations distinguent les disciplines
+        run: |
+          cd ci_scripts && python3 test_disciplines.py
+          cd .. && python3 ci_scripts/check_disciplines.py
+
       # Les tests tournent AVANT la signature, sur simulateur, donc sans certificat : un échec
       # coûte cinq minutes de machine au lieu de la construction complète. Et surtout,
       # `RouteSharingPrivacyTests` vérifie que les 300 premiers et derniers mètres d'un tracé

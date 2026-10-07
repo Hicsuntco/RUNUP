@@ -486,7 +486,7 @@ final class AppState {
         guard !imported.isEmpty else { return }
         pendingDebriefs.append(contentsOf: imported)
 
-        let distance = String(format: "%.1f", locale: Locale.current, imported.reduce(0) { $0 + $1.distanceKm })
+        let distance = String(format: "%.1f", locale: Locale.current, imported.only(.run).reduce(0) { $0 + $1.distanceKm })
         notify(
             icon: "❤️",
             colorHex: 0xFF3B6B,

@@ -24,7 +24,30 @@ enum Calories {
     /// la même hypothèse, exprimée dans l'unité qui reste disponible.
     static let perMinuteWithoutDistance: Double = 7
 
+    /// À VÉLO, C'EST LA DURÉE QUI COMPTE, PAS LA DISTANCE.
+    ///
+    /// En courant, chaque kilomètre coûte à peu près la même chose : on porte son poids, on ne
+    /// roule pas. À vélo non — une descente de cinq kilomètres ne coûte rien, et les cinq
+    /// kilomètres de la montée coûtent dix fois plus. Appliquer un tarif au kilomètre à une
+    /// sortie vélo donnerait un chiffre faux dans un sens ou dans l'autre selon le profil du
+    /// terrain, et le même chiffre pour une sortie plate tranquille et pour un col.
+    ///
+    /// Neuf kcal la minute : l'ordre de grandeur d'une sortie de loisir soutenue. Aussi
+    /// approximatif que le reste de ce fichier, et assumé — mais approximatif sur la bonne
+    /// grandeur.
+    static let perCyclingMinute: Double = 9
+
+    /// La règle, par discipline. `durationMinutes` n'est plus un dernier recours à vélo : c'est
+    /// la mesure principale.
+    static func estimate(_ discipline: Discipline, distanceKm: Double, durationMinutes: Int) -> Double {
+        switch discipline {
+        case .run:  return estimate(distanceKm: distanceKm, durationMinutes: durationMinutes)
+        case .bike: return Double(durationMinutes) * perCyclingMinute
+        }
+    }
+
     /// La distance d'abord, parce qu'elle est mesurée ; la durée seulement en dernier recours.
+    /// Course uniquement — voir la variante par discipline ci-dessus.
     static func estimate(distanceKm: Double, durationMinutes: Int) -> Double {
         distanceKm > 0 ? distanceKm * perKm : Double(durationMinutes) * perMinuteWithoutDistance
     }

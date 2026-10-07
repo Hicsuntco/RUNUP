@@ -55,7 +55,9 @@ struct RecapView: View {
     /// long run's pace by comparison quirk) or raw distance. Never true against an empty history:
     /// there's nothing to have beaten yet, so a first-ever run is just a first run, not a record.
     private func isPersonalRecord(_ run: RunRecord) -> Bool {
-        let priorRuns = allRuns.filter { $0 !== run }
+        // Dans la MÊME discipline : à 25 km/h, la première sortie vélo battrait d'un coup le
+        // record d'allure et celui de distance, et aucune course ne les reprendrait jamais.
+        let priorRuns = allRuns.only(run.discipline).filter { $0 !== run }
         let priorBestPace = priorRuns.filter { $0.distanceKm >= 2 }.compactMap { PaceModel.parseSecPerKm($0.avgPace) }.min()
         let priorBestDistance = priorRuns.map(\.distanceKm).max() ?? 0
         var isPaceRecord = false
@@ -72,7 +74,10 @@ struct RecapView: View {
     private func isRoutePersonalRecord(_ run: RunRecord) -> Bool {
         guard let first = run.route.first, run.distanceKm >= 1, let pace = PaceModel.parseSecPerKm(run.avgPace) else { return false }
         let startLocation = CLLocation(latitude: first.lat, longitude: first.lng)
-        let similarRuns = allRuns.filter { other in
+        // Dans la même discipline : une sortie vélo partie du même trottoir, sur une distance
+        // voisine, passerait le test de « même itinéraire » et raflerait le record à 25 km/h —
+        // qu'aucune course ne reprendrait jamais.
+        let similarRuns = allRuns.only(run.discipline).filter { other in
             guard other !== run, let otherFirst = other.route.first, other.distanceKm > 0 else { return false }
             let start = CLLocation(latitude: otherFirst.lat, longitude: otherFirst.lng)
             guard startLocation.distance(from: start) < 150 else { return false }

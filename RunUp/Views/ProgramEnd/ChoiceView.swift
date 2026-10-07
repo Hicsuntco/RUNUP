@@ -12,7 +12,7 @@ struct ChoiceView: View {
     private var totalKm: Int {
         // Just the run records — `profile.runValue` is today's km, already inside `runs`, so
         // adding it double-counted today's distance in the end-of-program bilan.
-        Int(runs.reduce(0) { $0 + $1.distanceKm })
+        Int(runs.only(.run).reduce(0) { $0 + $1.distanceKm })
     }
 
     var body: some View {

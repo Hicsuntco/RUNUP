@@ -22,14 +22,14 @@ struct WeeklyRecapView: View {
 
     private var lastWeekKm: Double {
         let lastWeekRange = AdaptivePlanEngine.currentWeekRange(from: (Calendar.current.date(byAdding: .day, value: -7, to: .now) ?? .now))
-        return allRuns.filter { lastWeekRange.contains($0.date) }.reduce(0) { $0 + $1.distanceKm }
+        return allRuns.only(.run).filter { lastWeekRange.contains($0.date) }.reduce(0) { $0 + $1.distanceKm }
     }
 
-    private var totalKm: Double { weekRuns.reduce(0) { $0 + $1.distanceKm } }
-    private var totalDurationSeconds: Int { weekRuns.reduce(0) { $0 + $1.durationSeconds } }
+    private var totalKm: Double { weekRuns.only(.run).reduce(0) { $0 + $1.distanceKm } }
+    private var totalDurationSeconds: Int { weekRuns.only(.run).reduce(0) { $0 + $1.durationSeconds } }
 
     private var avgPaceSecPerKm: Double? {
-        let paces = weekRuns.compactMap { PaceModel.parseSecPerKm($0.avgPace) }
+        let paces = weekRuns.only(.run).compactMap { PaceModel.parseSecPerKm($0.avgPace) }
         guard !paces.isEmpty else { return nil }
         return paces.reduce(0, +) / Double(paces.count)
     }
@@ -60,15 +60,15 @@ struct WeeklyRecapView: View {
     /// falls back to a distance record. Nil, not a fabricated one, when neither happened.
     private var weekRecord: (label: String, value: String)? {
         let priorRuns = allRuns.filter { !weekRange.contains($0.date) }
-        let priorBestPace = priorRuns.compactMap { PaceModel.parseSecPerKm($0.avgPace) }.min()
+        let priorBestPace = priorRuns.only(.run).compactMap { PaceModel.parseSecPerKm($0.avgPace) }.min()
         let thisWeekBestPaceRun = weekRuns
             .compactMap { run -> (RunRecord, Double)? in PaceModel.parseSecPerKm(run.avgPace).map { (run, $0) } }
             .min(by: { $0.1 < $1.1 })
         if let priorBestPace, let (run, pace) = thisWeekBestPaceRun, pace < priorBestPace {
             return (String(localized: "Nouveau record d'allure"), String(localized: "\(PaceModel.formatDuration(pace))/km sur \(String(format: "%.1f", locale: Locale.current, run.distanceKm)) km"))
         }
-        let priorBestDistance = priorRuns.map(\.distanceKm).max() ?? 0
-        if let longest = weekRuns.max(by: { $0.distanceKm < $1.distanceKm }), longest.distanceKm > priorBestDistance {
+        let priorBestDistance = priorRuns.only(.run).map(\.distanceKm).max() ?? 0
+        if let longest = weekRuns.only(.run).max(by: { $0.distanceKm < $1.distanceKm }), longest.distanceKm > priorBestDistance {
             return (String(localized: "Nouveau record de distance"), String(format: "%.1f km", locale: Locale.current, longest.distanceKm))
         }
         return nil

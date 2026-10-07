@@ -251,7 +251,7 @@ struct ProfileView: View {
 
     // MARK: - Real stats row
 
-    private var totalKm: Double { runs.reduce(0) { $0 + $1.distanceKm } }
+    private var totalKm: Double { runs.only(.run).reduce(0) { $0 + $1.distanceKm } }
 
     /// Number of real, permanent badges earned — `profile.seenBadgeKeys` (see `ClubView`) already
     /// tracks exactly this set (every earned key gets appended there the moment `ClubView` next

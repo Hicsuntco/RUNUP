@@ -685,7 +685,7 @@ struct HomeView: View {
         let thisWeekStart = AdaptivePlanEngine.currentWeekRange().lowerBound
         guard let weekStart = cal.date(byAdding: .weekOfYear, value: -weeksAgo, to: thisWeekStart) else { return 0 }
         let range = AdaptivePlanEngine.currentWeekRange(from: weekStart)
-        return runs.filter { range.contains($0.date) }.reduce(0) { $0 + $1.distanceKm }
+        return runs.only(.run).filter { range.contains($0.date) }.reduce(0) { $0 + $1.distanceKm }
     }
 
     /// Légende verticale `.ring-legend` de la maquette (pastille · nom de l'objectif · valeur

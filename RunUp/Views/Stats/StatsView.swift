@@ -91,8 +91,8 @@ struct StatsView: View {
     // MARK: Summary — at-a-glance totals, the numbers a "progression" tab was otherwise missing
     // entirely (it jumped straight to trend/prediction cards with nothing grounding them).
 
-    private var totalDistanceKm: Double { runs.reduce(0) { $0 + $1.distanceKm } }
-    private var totalDurationSeconds: Int { runs.reduce(0) { $0 + $1.durationSeconds } }
+    private var totalDistanceKm: Double { runs.only(.run).reduce(0) { $0 + $1.distanceKm } }
+    private var totalDurationSeconds: Int { runs.only(.run).reduce(0) { $0 + $1.durationSeconds } }
 
     /// La grille des références : quatre tuiles à deux par rangée, chacune avec son en-tête, son
     /// chiffre et son unité — au lieu d'UNE carte pleine largeur découpée en quatre colonnes par
@@ -243,12 +243,12 @@ struct StatsView: View {
         return runs.filter { range.contains($0.date) }
     }
 
-    private var thisWeekKm: Double { thisWeekRuns.reduce(0) { $0 + $1.distanceKm } }
+    private var thisWeekKm: Double { thisWeekRuns.only(.run).reduce(0) { $0 + $1.distanceKm } }
 
     private var lastWeekKm: Double {
         let thisWeekStart = AdaptivePlanEngine.currentWeekRange().lowerBound
         guard let lastWeekStart = Calendar.current.date(byAdding: .day, value: -7, to: thisWeekStart) else { return 0 }
-        return runs.filter { $0.date >= lastWeekStart && $0.date < thisWeekStart }.reduce(0) { $0 + $1.distanceKm }
+        return runs.only(.run).filter { $0.date >= lastWeekStart && $0.date < thisWeekStart }.reduce(0) { $0 + $1.distanceKm }
     }
 
     private var weekCard: some View {
@@ -294,7 +294,7 @@ struct StatsView: View {
     }
 
     private var recentPacesSecPerKm: [Double] {
-        chartRuns.compactMap { PaceModel.parseSecPerKm($0.avgPace) }
+        chartRuns.only(.run).compactMap { PaceModel.parseSecPerKm($0.avgPace) }
     }
 
     /// Index of the chart point that's her all-time best pace (same ≥1 km floor `bestPaceSecPerKm`
@@ -336,7 +336,7 @@ struct StatsView: View {
               let previousStart = cal.date(byAdding: .day, value: -selectedRange.days, to: start)
         else { return nil }
         let window = runs.filter { $0.date >= previousStart && $0.date < start }
-        return average(of: window.compactMap { PaceModel.parseSecPerKm($0.avgPace) })
+        return average(of: window.only(.run).compactMap { PaceModel.parseSecPerKm($0.avgPace) })
     }
 
     private func average(of values: [Double]) -> Double? {
@@ -509,7 +509,7 @@ struct StatsView: View {
 
     // MARK: Personal records — real bests pulled from history, not shown anywhere before this
 
-    private var longestRun: RunRecord? { runs.max(by: { $0.distanceKm < $1.distanceKm }) }
+    private var longestRun: RunRecord? { runs.only(.run).max(by: { $0.distanceKm < $1.distanceKm }) }
 
     private var bestPaceSecPerKm: Double? {
         runs.compactMap { run -> Double? in

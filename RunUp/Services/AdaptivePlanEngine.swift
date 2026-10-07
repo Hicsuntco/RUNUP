@@ -967,6 +967,11 @@ enum AdaptivePlanEngine {
     /// enregistrée le lundi cocherait le dimanche À VENIR. Le cas devient courant avec l'import
     /// depuis Santé, qui remonte plusieurs jours en arrière.
     static func markSessionDone(for run: RunRecord, profile: UserProfile) {
+        // Tant qu'il n'existe pas de plan triathlon, le plan est un plan de COURSE : une sortie
+        // vélo n'a aucune de ses cases à cocher. Sans ce garde, rouler le mardi validait la
+        // séance de fractionné du mardi, et le moteur adaptait la semaine suivante sur une
+        // séance qui n'a jamais eu lieu.
+        guard run.discipline.completesRunningPlan else { return }
         let runDay = weekdayIndex(for: run.date)
         if currentWeekRange().contains(run.date) {
             profile.weekStrip = profile.weekStrip.map { day in
@@ -1041,7 +1046,9 @@ enum AdaptivePlanEngine {
     /// using the same "gap of ≤3 days doesn't break the chain" rule `applyDebrief` uses (real
     /// rest days shouldn't zero out a streak). Call after any History edit — add or delete.
     static func recomputeStreak(profile: UserProfile, currentRuns: [RunRecord]) {
-        let recomputed = Streak.recompute(runDays: currentRuns.map(\.date))
+        // `allDisciplines`, et c'est une décision : la série compte les jours où elle s'est
+        // entraînée, pas les kilomètres courus. Une sortie vélo en fait partie.
+        let recomputed = Streak.recompute(runDays: currentRuns.allDisciplines.map(\.date))
         profile.streak = recomputed.count
         profile.lastStreakDate = recomputed.lastDay
     }

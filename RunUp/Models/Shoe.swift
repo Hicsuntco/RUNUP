@@ -43,6 +43,7 @@ final class Shoe {
     /// .recomputeStreak`: a running total that's incremented by hand goes stale the moment a run
     /// gets deleted or reassigned, while deriving it fresh is honest by construction.
     func totalKm(runs: [RunRecord]) -> Double {
-        startDistanceKm + runs.filter { $0.shoeID == id }.reduce(0) { $0 + $1.distanceKm }
+        // Une paire de chaussures ne s'use pas à vélo.
+        startDistanceKm + runs.only(.run).filter { $0.shoeID == id }.reduce(0) { $0 + $1.distanceKm }
     }
 }

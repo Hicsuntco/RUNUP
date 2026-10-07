@@ -71,6 +71,29 @@ enum TimeFormat {
         return h > 0 ? "\(h) h \(String(format: "%02d", m))" : "\(m) min"
     }
 
+    /// « 24,3 » — des kilomètres par heure, à partir de secondes par kilomètre.
+    ///
+    /// Le pendant de `allure`, pour les disciplines où l'allure au kilomètre ne se lit pas.
+    /// « 2:28/km » est juste à vélo, et illisible : personne ne pense sa sortie comme ça. Une
+    /// décimale, parce que l'unité est grande — l'entier seul perdrait les écarts qui comptent.
+    ///
+    /// Rend « — » plutôt que l'infini quand il n'y a pas encore d'allure : un zéro au
+    /// dénominateur est une absence de mesure, pas une vitesse nulle.
+    static func vitesse(secondesParKm: Double) -> String {
+        guard secondesParKm > 0 else { return "—" }
+        let kmh = 3600 / secondesParKm
+        return String(format: "%.1f", locale: Locale.current, kmh)
+    }
+
+    /// Ce que la discipline donne à lire, et son unité. Un seul endroit décide — sans quoi
+    /// chaque écran choisirait, et deux écrans finiraient par ne pas dire la même chose de la
+    /// même sortie.
+    static func rythme(_ discipline: Discipline, secondesParKm: Double) -> (valeur: String, unite: String) {
+        discipline.usesPacePerKm
+            ? (allure(secondesParKm: secondesParKm), "/KM")
+            : (vitesse(secondesParKm: secondesParKm), "KM/H")
+    }
+
     /// La même chose, resserrée : « 3h28 ». Pour une tuile de statistique, où la largeur est
     /// comptée. Voir l'en-tête : la coexistence des deux est un choix en attente, pas un oubli.
     static func compacte(_ secondes: Int) -> String {

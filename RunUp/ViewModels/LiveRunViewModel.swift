@@ -706,6 +706,6 @@ final class LiveRunViewModel {
     /// excluded via `duration`) — start/end alone would tell Santé a 30-min run with a 15-min
     /// coffee pause was a 45-min workout.
     func saveToHealthKit(_ record: RunRecord) {
-        Task { try? await healthKit.saveRun(start: startedAt, end: endedAt, duration: Double(record.durationSeconds), distanceKm: record.distanceKm, kcal: Double(record.kcal)) }
+        Task { try? await healthKit.saveRun(record.discipline, start: startedAt, end: endedAt, duration: Double(record.durationSeconds), distanceKm: record.distanceKm, kcal: Double(record.kcal)) }
     }
 }

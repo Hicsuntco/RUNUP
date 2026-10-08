@@ -49,6 +49,32 @@ struct RaceGoalView: View {
         return plan
     }
 
+    /// La stratégie du jour J des formats qui n'ont PAS de tableau d'allure au kilomètre, ou nil
+    /// pour une course de route — qui, elle, en a un vrai.
+    ///
+    /// Deux formats la prennent, pour la même raison et pas pour la même : un HYROX n'est pas une
+    /// course continue, et un ultra-trail n'a pas d'allure cible. Dans les deux cas, un découpage
+    /// « 1-20 km / 21-75 km / 76-99 km / Sprint final » serait un tableau d'une fausse précision
+    /// sur une épreuve qui ne se court pas comme ça. « Sprint final » au centième kilomètre d'un
+    /// 100 miles est même l'inverse d'un conseil.
+    private var strategieStructurelle: [(String, String)]? {
+        switch profile.goalId {
+        case .hyrox: return hyroxStrategy
+        case .ultraTrail: return ultraStrategy
+        default: return nil
+        }
+    }
+
+    /// Ce qui décide d'un ultra, et aucune de ces quatre lignes n'est une allure.
+    private var ultraStrategy: [(String, String)] {
+        [
+            (String(localized: "Les deux premières heures"), String(localized: "plus lentement que ton envie — en ultra personne ne gagne au départ, beaucoup y perdent")),
+            (String(localized: "Les montées"), String(localized: "marche les raides : au-delà d'une certaine pente, marcher coûte moins et va aussi vite. Ce n'est pas un renoncement, c'est la technique")),
+            (String(localized: "Les descentes"), String(localized: "elles décident de l'état de tes quadriceps à mi-course — se retenir tôt est ce qui rend la fin possible")),
+            (String(localized: "Manger et boire"), String(localized: "à chaque ravitaillement, pas quand le corps réclame : quand il réclame, il est déjà trop tard"))
+        ]
+    }
+
     /// Real structural race-day guidance for HYROX — no fake per-km split table (the format isn't
     /// a continuous run), but real pace/effort advice grounded in what actually determines a HYROX
     /// result: running under accumulated station fatigue, not raw running speed alone.
@@ -60,12 +86,28 @@ struct RaceGoalView: View {
         ]
     }
 
-    /// Only `.race`/`.hyrox` have a real race day with a distance/chrono to pace against — for
-    /// `.progress`/`.restart`/`.weight`/`.health` this screen used to show a "JOURS" countdown to
-    /// nothing, a fabricated "ALLURE" from `PaceModel`'s generic threshold, and a full race-day
-    /// pacing table built on a hardcoded 10 km fallback (`?? 10` above) — all meaningless for a
-    /// goal with no actual race.
-    private var hasRealRaceDay: Bool { profile.goalId == .race || profile.goalId == .hyrox }
+    /// Only goals that periodize toward a date have a real race day with a distance/chrono to
+    /// pace against — for `.progress`/`.restart`/`.weight`/`.health` this screen used to show a
+    /// "JOURS" countdown to nothing, a fabricated "ALLURE" from `PaceModel`'s generic threshold,
+    /// and a full race-day pacing table built on a hardcoded 10 km fallback (`?? 10` above) — all
+    /// meaningless for a goal with no actual race.
+    ///
+    /// `periodiseVersUneDate` et non une liste écrite ici : cette ligne portait `== .race ||
+    /// == .hyrox`, donc une préparation d'ultra-trail — qui a pourtant une date, une distance et
+    /// un dossard — voyait le compte à rebours d'un objectif ouvert.
+    private var hasRealRaceDay: Bool { profile.goalId.periodiseVersUneDate }
+
+    /// Le dénivelé de la course, pour la troisième tuile d'un ultra.
+    ///
+    /// C'est LUI et non une allure. Pour un 100 km en vingt heures, « 12:00 /km » est un nombre
+    /// juste et inutile : personne ne court un ultra à une allure cible, et l'afficher sous le
+    /// mot ALLURE invite à la viser. Le D+ est ce qu'on relit avant de partir.
+    private var deniveleLabel: String? {
+        guard let d = profile.raceElevationGainM, d > 0 else { return nil }
+        // L'unité est dans la VALEUR et non dans l'étiquette : « D+ » s'écrit pareil dans les
+        // trois langues de l'app, donc l'étiquette n'a rien à traduire.
+        return "\(d) m"
+    }
 
     private var goalTitle: String {
         profile.goalDisplay.contains("·") ? String(profile.goalDisplay.split(separator: "·").first ?? "").trimmingCharacters(in: .whitespaces) : profile.goalDisplay
@@ -86,7 +128,11 @@ struct RaceGoalView: View {
                     HStack(spacing: 10) {
                         tile(profile.daysUntilRace.map(String.init) ?? "—", String(localized: "JOUR\((profile.daysUntilRace ?? 2) > 1 ? "S" : "")"), highlighted: true)
                         tile(goalTarget, "OBJECTIF", highlighted: false)
-                        tile(targetPaceLabel, "ALLURE", highlighted: false)
+                        if let deniveleLabel {
+                            tile(deniveleLabel, "D+", highlighted: false)
+                        } else {
+                            tile(targetPaceLabel, "ALLURE", highlighted: false)
+                        }
                     }
                 } else {
                     HStack(spacing: 10) {
@@ -145,15 +191,15 @@ struct RaceGoalView: View {
                     }
                     .padding(RUSpacing.cardPadding)
                     .ruCard()
-                } else if profile.goalId == .hyrox {
+                } else if let strategie = strategieStructurelle {
                     RUCardHeader(icon: "flag.checkered", tint: RUColor.rose2, title: "Stratégie · jour J")
                     VStack(spacing: 6) {
-                        ForEach(hyroxStrategy.indices, id: \.self) { i in
+                        ForEach(strategie.indices, id: \.self) { i in
                             HStack(spacing: 12) {
                                 RoundedRectangle(cornerRadius: RUSpacing.radiusBar).fill(RUColor.text4).frame(width: 3, height: 30)
                                 VStack(alignment: .leading, spacing: 1) {
-                                    Text(hyroxStrategy[i].0).font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                                    Text(hyroxStrategy[i].1).font(RUFont.sans(.small)).foregroundColor(RUColor.text2).lineSpacing(2)
+                                    Text(strategie[i].0).font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                                    Text(strategie[i].1).font(RUFont.sans(.small)).foregroundColor(RUColor.text2).lineSpacing(2)
                                 }
                                 Spacer()
                             }

@@ -406,7 +406,12 @@ enum AdaptivePlanEngine {
         var taperWeeks: Int
 
         static func compute(goal: GoalType, raceDate: Date?, from startDate: Date) -> ProgramShape {
-            guard goal == .race || goal == .hyrox, let raceDate, raceDate > startDate else {
+            // `goal.periodiseVersUneDate` et non une liste écrite ici : cette ligne portait
+            // `goal == .race || goal == .hyrox`, et l'ultra-trail n'y avait jamais été ajouté.
+            // Son plan retombait donc sur la branche ouverte ci-dessous — zéro semaine de base,
+            // zéro de spécifique, zéro d'affûtage — c'est-à-dire un plan d'ultra sans bloc
+            // spécifique et sans affûtage, alors que le moteur savait produire les deux.
+            guard goal.periodiseVersUneDate, let raceDate, raceDate > startDate else {
                 return ProgramShape(totalWeeks: nil, baseWeeks: 0, specificWeeks: 0, taperWeeks: 0)
             }
             // Same Monday-week anchoring as `elapsedWeeks` in `refreshProgramForCurrentDate` —
@@ -530,6 +535,15 @@ enum AdaptivePlanEngine {
         /// La structure en répétitions, quand l'archétype en a une. Elle était jusqu'ici déduite
         /// du titre par expression régulière, donc perdue dès qu'on traduisait le titre.
         var intervals: IntervalStructure? = nil
+        /// Cette séance doit-elle tomber LE LENDEMAIN de la sortie longue ?
+        ///
+        /// Vrai pour un seul archétype de tout le moteur : le second jour d'un enchaînement
+        /// d'ultra. Sa raison d'être est de partir sur des jambes déjà entamées — ce qui n'a
+        /// aucun sens quatre jours plus tard. Sans ce drapeau il tombait dans le lot des séances
+        /// distribuées positionnellement, donc « Enchaînement · jour 2 » pouvait se poser un
+        /// mardi, trois jours avant le jour 1. La séance signature de l'ultra, rendue absurde
+        /// par l'ordre des jours.
+        var followsLongRun: Bool = false
         /// L'adaptation posée sur CET archétype — blessure, phase du cycle, allègement du coach.
         /// Recopiée telle quelle dans la séance produite ; voir `WorkoutSession.adaptationNote`
         /// pour ce que ce champ répare.
@@ -671,21 +685,89 @@ enum AdaptivePlanEngine {
         let effortCourse = tempsDeffortCourse(profile)
         let densite = UltraTrail.densite(km: profile.effectiveRaceDistanceKm ?? 0,
                                          denivelePositifM: Double(profile.raceElevationGainM ?? 0))
+        // L'enchaînement demande DEUX conditions, et la seconde n'est pas dans le modèle d'effort :
+        // il faut que l'épreuve le justifie, ET que la semaine de la coureuse puisse le porter.
+        // Sans le second test, on prescrivait un « enchaînement » à quelqu'un dont les jours de
+        // course sont lundi / mercredi / vendredi / dimanche : deux sorties longues séparées de
+        // deux jours de repos, c'est-à-dire tout le contraire de ce que la séance veut produire.
         let enchaine = UltraTrail.demandeUnEnchainement(tempsDeffortCourseSecondes: effortCourse)
+            && jumelageEnchainement(runningDays: profile.runningDays,
+                                    preferredLongRunDay: profile.preferredLongRunDay) != nil
 
-        /// La cible de la sortie longue, en MINUTES, rampée sur le bloc.
-        func longueMinutes(_ bloc: UltraTrail.Bloc, premiereSemaine: Int, derniereSemaine: Int) -> Int {
+        // MARK: La sortie longue, rampée — et les deux blocs RACCORDÉS
+
+        // Les bornes de chaque bloc, une fois pour toutes. `max(…, 1)` parce qu'un plan à courte
+        // échéance met zéro semaine de base : la borne doit rester un intervalle valide même
+        // quand le bloc est vide, sinon `buildWeekPosition` reçoit une plage inversée.
+        let premiereBase = 1
+        let derniereBase = max(shape.baseWeeks, 1)
+        let premiereSpec = shape.baseWeeks + 1
+        let derniereSpec = shape.baseWeeks + max(shape.specificWeeks, 1)
+
+        /// La durée rampée, en secondes, pour une semaine donnée d'un bloc donné.
+        func rampe(_ bloc: UltraTrail.Bloc, depart: Double,
+                   premiere: Int, derniere: Int, semaine: Int) -> Double {
             let cible = UltraTrail.cibleSortieLongueSecondes(tempsDeffortCourseSecondes: effortCourse,
                                                              bloc: bloc)
-            // On part des deux tiers de la cible du bloc : le premier week-end d'un bloc n'est pas
-            // son dernier, et commencer à la cible supprimerait toute la progression.
-            let depart = max(UltraTrail.Bloc.affutage.plancherSecondes, cible * 0.66)
-            let pos = buildWeekPosition(week: weekNumber,
-                                        blockFirstWeek: premiereSemaine,
-                                        blockLastWeek: max(premiereSemaine, derniereSemaine))
-            let rampee = rampedLongRunKm(start: depart, target: cible,
-                                         weekInBlock: pos.index, blockWeeks: pos.count)
-            return max(20, Int((rampee / 60).rounded()))
+            let pos = buildWeekPosition(week: semaine,
+                                        blockFirstWeek: premiere,
+                                        blockLastWeek: max(premiere, derniere))
+            return rampedLongRunKm(start: depart, target: cible,
+                                   weekInBlock: pos.index, blockWeeks: pos.count)
+        }
+
+        // Le bloc de base part des deux tiers de sa cible : son premier week-end n'est pas son
+        // dernier, et commencer à la cible supprimerait toute la progression.
+        let departBase = max(UltraTrail.Bloc.affutage.plancherSecondes,
+                             UltraTrail.cibleSortieLongueSecondes(tempsDeffortCourseSecondes: effortCourse,
+                                                                  bloc: .base) * 0.66)
+
+        // ET LE SPÉCIFIQUE REPART D'OÙ LA BASE S'EST ARRÊTÉE. Pas des deux tiers de SA cible, qui
+        // était la première version et qui ouvrait une falaise : la rampe ne dépasse jamais
+        // +10 %/semaine À L'INTÉRIEUR d'un bloc, donc la base finit souvent SOUS sa cible
+        // nominale — et le spécifique repartait alors d'une valeur supérieure à celle de la
+        // semaine précédente. Pour une base de deux semaines de charge, ça faisait +38 % du
+        // dernier week-end de base au premier du spécifique, soit précisément le saut que toute
+        // cette rampe existe pour interdire.
+        //
+        // On demande donc à la rampe de base ce qu'elle vaut UNE SEMAINE APRÈS la fin du bloc :
+        // `buildWeekPosition` borne l'index au dernier pas, donc c'est exactement la valeur
+        // atteinte au dernier week-end de base. Les deux blocs se raccordent par construction, et
+        // `AdaptivePlanEngineSafetyTests` l'exige sur toutes les échéances.
+        let finDeLaBase = rampe(.base, depart: departBase,
+                                premiere: premiereBase, derniere: derniereBase,
+                                semaine: derniereBase + 1)
+
+        /// La cible de la sortie longue, en MINUTES, pour la semaine en cours d'un bloc donné.
+        func longueMinutes(_ bloc: UltraTrail.Bloc) -> Int {
+            let secondes: Double
+            switch bloc {
+            case .base:
+                secondes = rampe(.base, depart: departBase,
+                                 premiere: premiereBase, derniere: derniereBase, semaine: weekNumber)
+            case .specifique:
+                secondes = rampe(.specifique, depart: finDeLaBase,
+                                 premiere: premiereSpec, derniere: derniereSpec, semaine: weekNumber)
+            case .affutage:
+                // L'affûtage ne rampe pas : sa cible est une RÉDUCTION de celle du spécifique, et
+                // `rampedLongRunKm` rend la cible telle quelle quand elle est sous le départ.
+                // Une sortie longue constante et courte sur deux ou trois semaines est exactement
+                // ce qu'on veut — on ne construit plus, on arrive frais.
+                secondes = UltraTrail.cibleSortieLongueSecondes(tempsDeffortCourseSecondes: effortCourse,
+                                                                bloc: .affutage)
+            }
+            return max(20, Int((secondes / 60).rounded()))
+        }
+
+        /// La charge RÉELLEMENT portée cette semaine-là, en minutes — ce dont une décharge doit
+        /// se déduire. Une valeur fixe ferait tomber une préparation de 100 km de cinq heures à
+        /// une heure : ce n'est plus un cutback, c'est une semaine perdue qu'il faudra regrimper.
+        func longuePorteeCetteSemaine() -> Int {
+            if weekNumber <= shape.baseWeeks { return longueMinutes(.base) }
+            if weekNumber <= shape.baseWeeks + shape.specificWeeks { return longueMinutes(.specifique) }
+            // Plan sans date de course : `trainingBlock` alterne base et décharge sans bornes de
+            // bloc à reconstruire. La cible de base est la seule définie — on s'y réfère.
+            return longueMinutes(.base)
         }
 
         /// Le D+ à annoncer pour une séance d'une durée donnée, d'après la densité de la course.
@@ -706,7 +788,7 @@ enum AdaptivePlanEngine {
 
         switch block {
         case .base:
-            let longue = longueMinutes(.base, premiereSemaine: 1, derniereSemaine: max(shape.baseWeeks, 1))
+            let longue = longueMinutes(.base)
             return [
                 SessionArchetype(role: .easy, title: "Footing d'endurance", subtitle: "le fond de la préparation — relâché, en terrain varié", pace: zones.easy, zone: "Z2", baseDuration: 40, kind: .ultraEnduranceFooting),
                 SessionArchetype(role: .speed, title: "Côtes longues", subtitle: "montées de 3 à 5 min — marcher dedans n'est pas un échec, c'est la technique", pace: zones.threshold, zone: "Z3", baseDuration: 45, kind: .ultraHillRepeats, intervals: IntervalStructure(reps: 5, repMeters: 600, recoveryMeters: 600)),
@@ -715,9 +797,7 @@ enum AdaptivePlanEngine {
             ]
 
         case .specifique:
-            let premiere = shape.baseWeeks + 1
-            let derniere = shape.baseWeeks + max(shape.specificWeeks, 1)
-            let longue = longueMinutes(.specifique, premiereSemaine: premiere, derniereSemaine: derniere)
+            let longue = longueMinutes(.specifique)
             var seances: [SessionArchetype] = [
                 SessionArchetype(role: .speed, title: "Descente technique", subtitle: "ce qui détruit les quadriceps le jour J, et la seule qualité qu'un plan de route ignore", pace: zones.easy, zone: "Z2-3", baseDuration: 50, kind: .ultraDescentWork),
                 SessionArchetype(role: .easy, title: "Footing d'endurance", subtitle: "le socle aérobie — ni une séance au rabais, ni une séance dure", pace: zones.easy, zone: "Z2", baseDuration: 45, kind: .ultraEnduranceFooting),
@@ -726,25 +806,36 @@ enum AdaptivePlanEngine {
             if enchaine {
                 let second = Int(UltraTrail.secondJourSecondes(premierJourSecondes: Double(longue) * 60) / 60)
                 seances.append(SessionArchetype(role: .longRun, title: "Enchaînement · jour 1", subtitle: sousTitre("la sortie longue du week-end — demain tu repars dessus", minutes: longue), pace: zones.easy, zone: "Z2", baseDuration: longue, kind: .ultraBackToBackDay1))
-                seances.append(SessionArchetype(role: .easy, title: "Enchaînement · jour 2", subtitle: "sur des jambes entamées : c'est la seconde moitié de ta course, en répétition", pace: zones.easy, zone: "Z2", baseDuration: max(30, second), kind: .ultraBackToBackDay2))
+                seances.append(SessionArchetype(role: .easy, title: "Enchaînement · jour 2", subtitle: "sur des jambes entamées : c'est la seconde moitié de ta course, en répétition", pace: zones.easy, zone: "Z2", baseDuration: max(30, second), kind: .ultraBackToBackDay2, followsLongRun: true))
             } else {
                 seances.append(SessionArchetype(role: .longRun, title: "Sortie longue spécifique", subtitle: sousTitre("la densité de dénivelé de ta course, sur ta distance à toi", minutes: longue), pace: zones.easy, zone: "Z2", baseDuration: longue, kind: .ultraSpecificLongRun))
             }
             return seances
 
         case .affutage:
-            // `totalWeeks` est optionnel — un plan sans date de course ne périodise pas. L'affûtage
-            // n'arrive de toute façon jamais dans ce cas-là, mais la borne doit exister : on la
-            // reconstruit depuis les trois blocs plutôt que de déballer un optionnel par un `!`.
-            let derniereSemaine = shape.totalWeeks
-                ?? (shape.baseWeeks + shape.specificWeeks + max(shape.taperWeeks, 1))
-            let longue = longueMinutes(.affutage,
-                                       premiereSemaine: shape.baseWeeks + shape.specificWeeks + 1,
-                                       derniereSemaine: derniereSemaine)
+            let longue = longueMinutes(.affutage)
             return [
                 SessionArchetype(role: .easy, title: "Footing d'entretien", subtitle: "relâché, court — on ne construit plus rien, on garde les jambes", pace: zones.easy, zone: "Z2", baseDuration: 30, kind: .ultraTaperFooting),
                 SessionArchetype(role: .speed, title: "Rappel de terrain", subtitle: "un peu de dénivelé, aucune fatigue à accumuler", pace: zones.easy, zone: "Z2", baseDuration: 35, kind: .ultraTerrainReminder),
                 SessionArchetype(role: .longRun, title: "Sortie longue en terrain", subtitle: sousTitre("la dernière vraie sortie — courte, pour arriver frais", minutes: longue), pace: zones.easy, zone: "Z2", baseDuration: longue, kind: .ultraLongRun)
+            ]
+
+        case .deload:
+            // LE BLOC QUI MANQUAIT, ET LE PLAN NE COMPILAIT PAS SANS LUI. Une décharge tombe
+            // toutes les quatre semaines dans un build périodisé (voir `trainingBlock`), donc
+            // elle arrive deux ou trois fois dans une préparation d'ultra — et plus souvent que
+            // n'importe où ailleurs elle y a un sens, parce que c'est l'objectif de la liste qui
+            // laisse les traces les plus longues.
+            //
+            // Elle se déduit de la charge RÉELLEMENT portée, à 65 %, comme sur route. Les deux
+            // autres séances tombent à l'endurance pure : une semaine de décharge qui garde une
+            // séance de côtes ou de descente n'est pas une décharge, et la descente est de loin
+            // ce qui laisse le plus de dégâts musculaires de la semaine.
+            let allegee = max(40, Int((Double(longuePorteeCetteSemaine()) * 0.65).rounded()))
+            return [
+                SessionArchetype(role: .easy, title: "Footing récup", subtitle: "coupe le volume, écoute tes jambes — pas de dénivelé cette semaine", pace: zones.easy, zone: "Z1-2", baseDuration: 25, kind: .recoveryFooting),
+                SessionArchetype(role: .easy, title: "Marche rapide en côte", subtitle: "la seule séance de terrain de la semaine, et elle ne coûte presque rien aux jambes", pace: "—", zone: "Z2", baseDuration: 35, kind: .ultraPowerHike),
+                SessionArchetype(role: .longRun, title: "Sortie longue allégée", subtitle: sousTitre("aucune pression de durée cette semaine", minutes: allegee), pace: zones.easy, zone: "Z2", baseDuration: allegee, kind: .easedLongRun)
             ]
         }
     }
@@ -885,6 +976,34 @@ enum AdaptivePlanEngine {
         return result
     }
 
+    /// Les deux jours d'un enchaînement de week-end, ou `nil` quand la semaine de la coureuse ne
+    /// peut pas le porter.
+    ///
+    /// # DEUX JOURS CALENDAIRES CONSÉCUTIFS, PAS DEUX JOURS DE COURSE CONSÉCUTIFS
+    ///
+    /// C'est toute la difficulté, et la première version s'y est trompée. Avec des jours de course
+    /// lundi / mercredi / vendredi / dimanche — la répartition la plus courante — « le jour de
+    /// course suivant » après dimanche n'existe pas, et « le précédent » est vendredi : on aurait
+    /// prescrit un « enchaînement » dont les deux moitiés sont séparées de deux jours de repos.
+    /// C'est-à-dire deux sorties longues dans la semaine, ce qui est la façon classique de se
+    /// blesser en préparant un ultra, sous le nom de la séance censée l'éviter.
+    ///
+    /// Alors on exige le lendemain, au sens du calendrier. Quand la semaine ne l'offre pas, il n'y
+    /// a pas d'enchaînement : le bloc spécifique retombe sur une sortie longue ordinaire. Mieux
+    /// vaut une séance de moins qu'une séance qui n'est pas celle qu'elle annonce.
+    ///
+    /// On n'ajoute SURTOUT pas le jour manquant : les jours de course sont ce qu'elle a dit
+    /// pouvoir tenir, et le moteur n'en invente nulle part ailleurs.
+    static func jumelageEnchainement(runningDays: [Int], preferredLongRunDay: Int?) -> (longue: Int, lendemain: Int)? {
+        let jours = Set(runningDays)
+        guard let choisi = preferredLongRunDay.flatMap({ jours.contains($0) ? $0 : nil }) ?? jours.max() else { return nil }
+        if jours.contains(choisi + 1) { return (choisi, choisi + 1) }
+        // Le jour choisi est le dernier du couple : la longue glisse à la veille. C'est le cas le
+        // plus fréquent — un dimanche choisi pour la sortie longue, avec le samedi disponible.
+        if jours.contains(choisi - 1) { return (choisi - 1, choisi) }
+        return nil
+    }
+
     /// Builds the full 7-day plan for a given week: archetypes come from the training block
     /// (itself derived from `ProgramShape`, so it reflects the real weeks-until-race or the
     /// open-ended deload cycle), paces from `PaceModel` (seeded from the user's real target time/
@@ -909,9 +1028,28 @@ enum AdaptivePlanEngine {
         }
         let sortedRunDays = profile.runningDays.sorted()
 
-        let longRunDay = profile.preferredLongRunDay.flatMap { sortedRunDays.contains($0) ? $0 : nil } ?? sortedRunDays.max()
+        let jourChoisi = profile.preferredLongRunDay.flatMap { sortedRunDays.contains($0) ? $0 : nil } ?? sortedRunDays.max()
         let longTemplate = templates.first { $0.role == .longRun }
-        let otherTemplates = templates.filter { $0.role != .longRun }
+
+        // L'ENCHAÎNEMENT DU WEEK-END, ET POURQUOI IL LUI FAUT UN TRAITEMENT À PART.
+        //
+        // « Enchaînement · jour 2 » n'est pas une séance parmi d'autres : toute sa raison d'être
+        // est de partir sur des jambes entamées par la veille. Distribuée positionnellement comme
+        // le reste, elle pouvait tomber un mardi — trois jours AVANT le jour 1. La séance
+        // signature de l'ultra, rendue absurde par l'ordre des jours.
+        //
+        // Elle tombe donc sur le LENDEMAIN calendaire de la sortie longue, et `jumelageEnchainement`
+        // dit lequel des deux jours porte laquelle — en refusant le couple quand la semaine ne
+        // l'offre pas. L'archétype n'est de toute façon produit que dans ce cas-là (voir
+        // `ultraTrailArchetypes`) ; le test ici n'est qu'une ceinture.
+        let followUpTemplate = templates.first { $0.followsLongRun }
+        let couple = followUpTemplate == nil ? nil : jumelageEnchainement(
+            runningDays: sortedRunDays, preferredLongRunDay: profile.preferredLongRunDay
+        )
+        let longRunDay = couple?.longue ?? jourChoisi
+        let lendemainDay = couple?.lendemain
+
+        let otherTemplates = templates.filter { $0.role != .longRun && !$0.followsLongRun }
         // The fallback when the weekly quality budget is spent. Prefers a real `.easy` archetype
         // from the block; blocks that genuinely have none (HYROX technique work) fall back to
         // whatever is available rather than inventing a session that doesn't belong to the block.
@@ -931,6 +1069,8 @@ enum AdaptivePlanEngine {
             var archetype: SessionArchetype
             if weekday == longRunDay, let longTemplate {
                 archetype = longTemplate
+            } else if weekday == lendemainDay, let followUpTemplate {
+                archetype = followUpTemplate
             } else if !otherTemplates.isEmpty {
                 archetype = otherTemplates[otherIndex % otherTemplates.count]
                 otherIndex += 1
@@ -1370,6 +1510,10 @@ enum AdaptivePlanEngine {
         var chrono: String?
         var raceDate: Date?
         var runningDays: [Int]
+        /// Le D+ de la course visée, pour un ultra. Sans lui, `tempsDeffortCourse` retombe sur une
+        /// course plate et tout le plan d'ultra se dimensionne en kilomètres de route — le défaut
+        /// exact que le kilomètre-effort existe pour corriger.
+        var raceElevationGainM: Int? = nil
     }
 
     // MARK: Le coach écrit dans le programme
@@ -1513,9 +1657,16 @@ enum AdaptivePlanEngine {
     static func startNewProgram(_ result: NewGoalResult, profile: UserProfile) {
         profile.goalId = result.goal
         profile.raceDistance = result.distance
+        // La distance libre d'un programme PRÉCÉDENT n'a plus rien à faire ici : l'assistant de
+        // nouvel objectif ne propose que des formats nommés, et laisser « Trail 22 km » traîner
+        // ferait parler `effectiveRaceDistanceKm` d'une course qui n'existe plus.
+        profile.raceDistanceCustom = nil
         profile.raceChrono = result.chrono
-        profile.raceDate = result.goal == .race ? result.raceDate : nil
-        profile.goalDisplay = goalDisplay(goal: result.goal, distance: result.distance, custom: nil, chrono: result.chrono)
+        // `periodiseVersUneDate` et non `== .race` : un ultra-trail a une date de course, et la
+        // lui effacer ici aurait rendu son plan ouvert — donc sans spécifique ni affûtage.
+        profile.raceDate = result.goal.periodiseVersUneDate ? result.raceDate : nil
+        profile.raceElevationGainM = result.goal == .ultraTrail ? result.raceElevationGainM : nil
+        profile.goalDisplay = goalDisplay(goal: result.goal, distance: result.distance, custom: nil, chrono: result.chrono, denivele: profile.raceElevationGainM)
         profile.runningDays = result.runningDays
         profile.preferredLongRunDay = result.runningDays.max()
         profile.programPhase = .active

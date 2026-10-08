@@ -79,6 +79,13 @@ enum PaceModel {
     /// Priority: real race target time > best recent performance (parsed opportunistically) >
     /// declared experience level.
     private static func referenceThresholdPace(for profile: UserProfile) -> Double {
+        // `== .race` ET PAS « tout objectif qui a un chrono ». C'est volontaire, et c'est le genre
+        // de condition qu'on « corrige » en croyant bien faire : un temps d'ultra passé dans
+        // Riegel donne une absurdité. Cent kilomètres en vingt heures se projette sur un 10 km en
+        // 1 h 45, soit une allure seuil de 9:00/km — et toutes les zones du plan en découleraient.
+        // Riegel vaut d'un 5 km à un marathon, pas d'un 100 miles à un 10 km : un ultra se finit
+        // en marchant les montées, ce qui ne dit rien de la vitesse de quiconque. Un objectif
+        // d'ultra garde donc l'ancrage par meilleure perf récente, puis par niveau déclaré.
         if profile.goalId == .race,
            let chrono = profile.raceChrono,
            let km = profile.effectiveRaceDistanceKm,
@@ -122,6 +129,13 @@ enum PaceModel {
         case 2:
             switch distance {
             case .k5, .k10: return Double(parts[0] * 60 + parts[1])
+            // EN ULTRA, « 13:00 » EST TREIZE HEURES. Le repli ci-dessous tranche sur
+            // `parts[0] >= 10` → des minutes, ce qui était juste tant qu'aucun format de la liste
+            // ne dépassait dix heures. Depuis les quatre formats d'ultra, il lisait « 13:00 »,
+            // « 20:00 », « 24:00 », « 36:00 », « 44:00 » — les deux tiers des temps proposés —
+            // comme des minutes, donc une allure de huit secondes au kilomètre sur cent bornes.
+            case .ultra50, .ultra80, .ultra100, .ultra100M:
+                return Double(parts[0] * 3600 + parts[1] * 60)
             default:
                 // "1:45" for a semi/marathon is H:MM — but a custom distance's "45:00" is MM:SS,
                 // and the old blanket H:MM read that as 45 HOURS (→ absurd "162:00 /km" plans).

@@ -10491,6 +10491,38 @@
         }
       }
     },
+    "Les descentes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The descents"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las bajadas"
+          }
+        }
+      }
+    },
+    "Les deux premières heures": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The first two hours"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las dos primeras horas"
+          }
+        }
+      }
+    },
     "Les formules n'ont pas pu être chargées.": {
       "extractionState": "manual",
       "localizations": {
@@ -10504,6 +10536,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se han podido cargar los planes."
+          }
+        }
+      }
+    },
+    "Les montées": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The climbs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las subidas"
           }
         }
       }
@@ -10735,6 +10783,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mi carrera en RunUp"
+          }
+        }
+      }
+    },
+    "Manger et boire": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eating and drinking"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comer y beber"
           }
         }
       }
@@ -20705,6 +20769,22 @@
         }
       }
     },
+    "elles décident de l'état de tes quadriceps à mi-course — se retenir tôt est ce qui rend la fin possible": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "they decide the state of your quads at halfway — holding back early is what makes the finish possible"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "deciden el estado de tus cuádriceps a mitad de carrera: contenerse pronto es lo que hace posible el final"
+          }
+        }
+      }
+    },
     "en amélioration": {
       "extractionState": "manual",
       "localizations": {
@@ -21213,6 +21293,22 @@
         }
       }
     },
+    "marche les raides : au-delà d'une certaine pente, marcher coûte moins et va aussi vite. Ce n'est pas un renoncement, c'est la technique": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "walk the steep ones: past a certain gradient, walking costs less and goes just as fast. It isn't giving up, it's the technique"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "camina las empinadas: pasada cierta pendiente, caminar cuesta menos y va igual de rápido. No es rendirse, es la técnica"
+          }
+        }
+      }
+    },
     "membre actif": {
       "localizations": {
         "en": {
@@ -21389,6 +21485,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "pico de forma estimado, ritmo según lo previsto (ovulación)"
+          }
+        }
+      }
+    },
+    "plus lentement que ton envie — en ultra personne ne gagne au départ, beaucoup y perdent": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "slower than you want to go — in an ultra nobody wins at the start, plenty lose there"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "más despacio de lo que te apetece: en un ultra nadie gana en la salida, muchos pierden allí"
           }
         }
       }
@@ -24248,6 +24360,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ser constante"
+          }
+        }
+      }
+    },
+    "à chaque ravitaillement, pas quand le corps réclame : quand il réclame, il est déjà trop tard": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "at every aid station, not when your body asks: by the time it asks, it's already too late"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "en cada avituallamiento, no cuando el cuerpo lo pide: cuando lo pide, ya es demasiado tarde"
           }
         }
       }

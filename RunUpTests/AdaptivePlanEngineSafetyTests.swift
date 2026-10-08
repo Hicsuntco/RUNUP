@@ -32,12 +32,14 @@ final class AdaptivePlanEngineSafetyTests: XCTestCase {
         goal: GoalType,
         distance: RaceDistance?,
         weeksUntilRace: Int,
-        runningDays: [Int] = [0, 2, 4, 6]
+        runningDays: [Int] = [0, 2, 4, 6],
+        elevationM: Int? = nil
     ) -> UserProfile {
         let profile = UserProfile(name: "Test")
         profile.goalId = goal
         profile.level = .intermediaire
         profile.raceDistance = distance
+        profile.raceElevationGainM = elevationM
         profile.runningDays = runningDays
         profile.preferredLongRunDay = runningDays.max()
         let start = Date()
@@ -360,5 +362,316 @@ final class AdaptivePlanEngineSafetyTests: XCTestCase {
                 "Une course à J\(offsetDays) ne peut pas périodiser un plan — il doit rester ouvert"
             )
         }
+    }
+
+    // MARK: - Ultra-trail : les mêmes garde-fous, dans une autre unité
+
+    /// Les quatre épreuves qui couvrent le monde de l'ultra : du 50 km de montagne au 100 miles,
+    /// plus un format long mais PLAT, qui ne doit pas déclencher les mêmes séances.
+    private static let coursesDultra: [(nom: String, distance: RaceDistance, dplus: Int, semaines: Int)] = [
+        ("50 km / 3 000 m", .ultra50, 3000, 14),
+        ("80 km / 4 000 m", .ultra80, 4000, 16),
+        ("100 km / 6 000 m", .ultra100, 6000, 18),
+        ("100 miles / 10 000 m", .ultra100M, 10000, 20),
+        ("50 km roulant / 500 m", .ultra50, 500, 14)
+    ]
+
+    /// Les types de séance qui SONT la sortie longue d'une semaine d'ultra.
+    ///
+    /// On la retrouve par son `kind` et non par le jour de la semaine : quand la course demande un
+    /// enchaînement, le couple de jours peut glisser d'un cran, donc la longue ne tombe pas
+    /// forcément sur le jour préféré. `.ultraNightRun` en est volontairement exclue — elle est
+    /// classée dans la famille « sortie longue » pour sa couleur, mais c'est une séance d'une
+    /// heure à durée fixe, pas la charge de la semaine.
+    private static let sortiesLonguesDultra: Set<SessionKind> = [
+        .ultraLongRun, .ultraSpecificLongRun, .ultraBackToBackDay1, .easedLongRun
+    ]
+
+    @MainActor
+    private func ultraLongRunMinutes(week: Int, profile: UserProfile) -> Int? {
+        AdaptivePlanEngine.generateWeekSessions(weekNumber: week, tier: 1, profile: profile)
+            .compactMap(\.session)
+            .filter { seance in seance.kind.map { Self.sortiesLonguesDultra.contains($0) } ?? false }
+            .map(\.durationMinutes)
+            .max()
+    }
+
+    /// LE DÉFAUT LE PLUS COÛTEUX DE TOUT L'OBJECTIF, ET IL ÉTAIT INVISIBLE.
+    ///
+    /// `ProgramShape.compute` ne périodisait que `.race` et `.hyrox` — la liste était écrite en
+    /// dur au milieu de la fonction. Un objectif d'ultra-trail tombait donc dans la branche
+    /// « programme ouvert » : zéro semaine de base, zéro de spécifique, zéro d'affûtage, et un
+    /// cycle base/décharge qui tourne indéfiniment.
+    ///
+    /// Les onze séances d'ultra existaient, le moteur savait les produire, et il n'en servait
+    /// jamais que deux blocs sur quatre. Pas de bloc spécifique, donc aucune sortie longue
+    /// spécifique, aucun enchaînement du week-end, aucune sortie de nuit. Et pas d'affûtage : un
+    /// ultra abordé fatiguée.
+    @MainActor
+    func testUltraPlanActuallyPeriodizesTowardTheRaceDate() {
+        XCTAssertTrue(GoalType.ultraTrail.periodiseVersUneDate, "Un ultra-trail a une ligne d'arrivée")
+
+        for course in Self.coursesDultra {
+            let profile = makeProfile(goal: .ultraTrail, distance: course.distance,
+                                      weeksUntilRace: course.semaines, elevationM: course.dplus)
+            let s = shape(for: profile)
+            guard let total = s.totalWeeks else {
+                XCTFail("\(course.nom) : un ultra avec une date doit produire un plan de longueur finie")
+                continue
+            }
+            XCTAssertEqual(s.baseWeeks + s.specificWeeks + s.taperWeeks, total,
+                           "\(course.nom) : les blocs doivent couvrir exactement le plan")
+            XCTAssertGreaterThanOrEqual(s.baseWeeks, 1, "\(course.nom) : il faut un bloc de base")
+            XCTAssertGreaterThanOrEqual(s.specificWeeks, 1, "\(course.nom) : il faut un bloc spécifique")
+            XCTAssertGreaterThanOrEqual(s.taperWeeks, 1, "\(course.nom) : un ultra sans affûtage s'aborde fatiguée")
+        }
+    }
+
+    /// La rampe est la même qu'ailleurs — elle ne sait pas ce qu'elle rampe — mais il fallait
+    /// encore lui donner la bonne quantité, et RACCORDER les deux blocs.
+    ///
+    /// Le défaut que ce test verrouille : le bloc spécifique repartait des deux tiers de SA
+    /// cible, pas de là où la base s'était arrêtée. Comme la rampe ne dépasse jamais +10 %/semaine
+    /// à l'intérieur d'un bloc, la base finit souvent sous sa cible nominale — et le premier
+    /// week-end du spécifique sautait alors de plus de 30 % d'un coup.
+    @MainActor
+    func testUltraLongRunNeverJumpsMoreThanFifteenPercentBetweenLoadWeeks() {
+        for course in Self.coursesDultra {
+            let profile = makeProfile(goal: .ultraTrail, distance: course.distance,
+                                      weeksUntilRace: course.semaines, elevationM: course.dplus)
+            let s = shape(for: profile)
+            let buildWeeks = s.baseWeeks + s.specificWeeks
+            guard buildWeeks >= 2 else { continue }
+
+            // Charge contre charge seulement : revenir au build après une décharge n'est pas un
+            // pas de progression, c'est un retour à une charge déjà encaissée.
+            let loadWeeks = (1...buildWeeks).filter {
+                AdaptivePlanEngine.trainingBlock(forWeek: $0, shape: s) != .deload
+            }
+            let durees = loadWeeks.compactMap { ultraLongRunMinutes(week: $0, profile: profile) }
+            XCTAssertEqual(durees.count, loadWeeks.count,
+                           "\(course.nom) : sortie longue manquante sur une semaine de charge")
+
+            for i in durees.indices.dropLast() {
+                let avant = durees[i]
+                let apres = durees[i + 1]
+                guard avant > 0 else { continue }
+                let croissance = (Double(apres) - Double(avant)) / Double(avant)
+                XCTAssertLessThanOrEqual(
+                    croissance, 0.15,
+                    "\(course.nom) : la sortie longue bondit de \(Int(croissance * 100))% entre S\(loadWeeks[i]) (\(avant) min) et S\(loadWeeks[i + 1]) (\(apres) min)"
+                )
+            }
+        }
+    }
+
+    /// Une décharge se déduit de la charge RÉELLEMENT portée. Le bloc n'existait pas du tout —
+    /// `ultraTrailArchetypes` ne traitait que base / spécifique / affûtage — et une valeur fixe
+    /// aurait fait tomber une préparation de 100 km de cinq heures à une heure : ce n'est plus un
+    /// cutback, c'est une semaine perdue qu'il faudra regrimper.
+    @MainActor
+    func testUltraDeloadBacksOffWithoutDetraining() {
+        var vues = 0
+        for course in Self.coursesDultra {
+            let profile = makeProfile(goal: .ultraTrail, distance: course.distance,
+                                      weeksUntilRace: course.semaines, elevationM: course.dplus)
+            let s = shape(for: profile)
+            let buildWeeks = s.baseWeeks + s.specificWeeks
+            let deloads = (2...max(2, buildWeeks)).filter {
+                $0 <= buildWeeks && AdaptivePlanEngine.trainingBlock(forWeek: $0, shape: s) == .deload
+            }
+            for semaine in deloads {
+                guard let allegee = ultraLongRunMinutes(week: semaine, profile: profile),
+                      let avant = ultraLongRunMinutes(week: semaine - 1, profile: profile), avant > 0
+                else { continue }
+                vues += 1
+                let ratio = Double(allegee) / Double(avant)
+                XCTAssertLessThan(ratio, 1.0, "\(course.nom) : S\(semaine) est une décharge et ne réduit rien")
+                XCTAssertGreaterThan(
+                    ratio, 0.45,
+                    "\(course.nom) : la décharge de S\(semaine) coupe à \(Int(ratio * 100))% — c'est du désentraînement"
+                )
+            }
+        }
+        XCTAssertGreaterThan(vues, 0, "Aucune semaine de décharge vérifiée : le test ne prouve rien")
+    }
+
+    /// L'affûtage doit ALLÉGER. La première version du modèle d'effort portait un plancher commun
+    /// aux trois blocs, et pour une course courte l'affûtage prescrivait alors la même sortie
+    /// longue que le bloc de base. Ici on le vérifie sur les séances réellement produites, pas
+    /// sur le modèle en isolation.
+    @MainActor
+    func testUltraTaperIsLighterThanEverythingThatPrecedesIt() {
+        for course in Self.coursesDultra {
+            let profile = makeProfile(goal: .ultraTrail, distance: course.distance,
+                                      weeksUntilRace: course.semaines, elevationM: course.dplus)
+            let s = shape(for: profile)
+            guard let total = s.totalWeeks else { continue }
+            let buildWeeks = s.baseWeeks + s.specificWeeks
+            guard buildWeeks >= 1, total > buildWeeks else { continue }
+
+            guard let plusLongueDuBuild = (1...buildWeeks).compactMap({ ultraLongRunMinutes(week: $0, profile: profile) }).max() else {
+                return XCTFail("\(course.nom) : aucune sortie longue sur le build")
+            }
+            for semaine in (buildWeeks + 1)...total {
+                guard let affutage = ultraLongRunMinutes(week: semaine, profile: profile) else {
+                    return XCTFail("\(course.nom) : S\(semaine) est en affûtage et n'a pas de sortie longue")
+                }
+                XCTAssertLessThan(
+                    affutage, plusLongueDuBuild,
+                    "\(course.nom) : l'affûtage de S\(semaine) (\(affutage) min) n'allège pas le build (\(plusLongueDuBuild) min)"
+                )
+            }
+        }
+    }
+
+    /// Le plafond de deux séances dures par semaine vaut aussi en ultra — et les côtes et la
+    /// descente y sont bien comptées comme dures (voir `SessionKind.family`), parce que les
+    /// ranger ailleurs les ferait passer sous ce garde-fou.
+    ///
+    /// Compté par FAMILLE et non par titre : les libellés sont traduits, donc une assertion sur
+    /// « Fractionné » ne vaut que sur un simulateur en français (voir `FeedLocalizationTests`).
+    @MainActor
+    func testUltraNeverMoreThanTwoQualitySessionsInAWeek() {
+        for course in Self.coursesDultra {
+            let profile = makeProfile(goal: .ultraTrail, distance: course.distance,
+                                      weeksUntilRace: course.semaines, elevationM: course.dplus,
+                                      runningDays: [0, 1, 2, 4, 5, 6])
+            let s = shape(for: profile)
+            guard let total = s.totalWeeks else { continue }
+
+            for semaine in 1...total {
+                let dures = AdaptivePlanEngine.generateWeekSessions(weekNumber: semaine, tier: 1, profile: profile)
+                    .compactMap(\.session)
+                    .filter { $0.family == .intervals || $0.family == .tempo }
+                    .count
+                XCTAssertLessThanOrEqual(
+                    dures, 2,
+                    "\(course.nom) : S\(semaine) programme \(dures) séances dures — plafond à 2"
+                )
+            }
+        }
+    }
+
+    /// Chaque semaine de build garde au moins une séance d'endurance pure hors sortie longue. En
+    /// ultra, le socle aérobie EST la préparation ; une semaine qui n'est que du dénivelé et de la
+    /// descente n'en construit pas.
+    @MainActor
+    func testUltraBuildWeeksAlwaysIncludeAnEnduranceSession() {
+        let profile = makeProfile(goal: .ultraTrail, distance: .ultra100, weeksUntilRace: 18,
+                                  elevationM: 6000, runningDays: [0, 2, 4, 5, 6])
+        let s = shape(for: profile)
+        let buildWeeks = s.baseWeeks + s.specificWeeks
+
+        for semaine in 1...buildWeeks {
+            let seances = AdaptivePlanEngine.generateWeekSessions(weekNumber: semaine, tier: 1, profile: profile)
+                .compactMap(\.session)
+            XCTAssertTrue(
+                seances.contains { $0.family == .endurance || $0.family == .recovery },
+                "S\(semaine) ne contient aucune séance d'endurance ou de récupération"
+            )
+        }
+    }
+
+    // MARK: - L'enchaînement du week-end
+
+    /// LA SÉANCE SIGNATURE DE L'ULTRA, ET LA SEULE DU MOTEUR QUI DÉPEND DE L'ORDRE DES JOURS.
+    ///
+    /// « Enchaînement · jour 2 » n'existe que pour partir sur des jambes entamées par la veille.
+    /// Distribuée positionnellement comme les autres séances, elle pouvait tomber un mardi — trois
+    /// jours AVANT le jour 1. Ce test exige les deux jours calendaires consécutifs, dans cet ordre,
+    /// sur les séances réellement produites.
+    @MainActor
+    func testUltraBackToBackLandsOnTwoConsecutiveCalendarDays() {
+        let profile = makeProfile(goal: .ultraTrail, distance: .ultra100, weeksUntilRace: 18,
+                                  elevationM: 6000, runningDays: [0, 2, 4, 5, 6])
+        let s = shape(for: profile)
+        let premiereSpec = s.baseWeeks + 1
+        let derniereSpec = s.baseWeeks + s.specificWeeks
+        var vues = 0
+
+        for semaine in premiereSpec...derniereSpec
+        where AdaptivePlanEngine.trainingBlock(forWeek: semaine, shape: s) == .specifique {
+            let jours = AdaptivePlanEngine.generateWeekSessions(weekNumber: semaine, tier: 1, profile: profile)
+            let jour1 = jours.first { $0.session.flatMap(\.kind) == .ultraBackToBackDay1 }?.weekday
+            let jour2 = jours.first { $0.session.flatMap(\.kind) == .ultraBackToBackDay2 }?.weekday
+            guard let jour1, let jour2 else {
+                XCTFail("S\(semaine) : un 100 km avec 6 000 m de D+ doit porter un enchaînement")
+                continue
+            }
+            vues += 1
+            XCTAssertEqual(jour2, jour1 + 1, "S\(semaine) : le jour 2 doit être le LENDEMAIN du jour 1")
+
+            // Et il doit être plus court : deux sorties longues égales deux jours de suite est la
+            // façon classique de se blesser en préparant un ultra.
+            let d1 = jours.first { $0.weekday == jour1 }?.session?.durationMinutes ?? 0
+            let d2 = jours.first { $0.weekday == jour2 }?.session?.durationMinutes ?? 0
+            XCTAssertLessThan(d2, d1, "S\(semaine) : le jour 2 (\(d2) min) ne doit pas égaler le jour 1 (\(d1) min)")
+            // Il ne doit pas non plus être symbolique : sous la moitié, la fatigue n'est plus le
+            // sujet et la séance ne répète plus rien.
+            XCTAssertGreaterThan(Double(d2) / Double(max(d1, 1)), 0.4, "S\(semaine) : le jour 2 est trop court pour répéter quoi que ce soit")
+        }
+        XCTAssertGreaterThan(vues, 0, "Aucune semaine spécifique vérifiée : le test ne prouve rien")
+    }
+
+    /// Et l'inverse, qui est le vrai piège : une semaine SANS deux jours consécutifs ne doit pas
+    /// recevoir d'enchaînement du tout. Avec lundi / mercredi / vendredi / dimanche — la
+    /// répartition la plus courante — « le jour de course suivant » n'existe pas après dimanche
+    /// et « le précédent » est vendredi : on aurait prescrit deux sorties longues séparées de deux
+    /// jours de repos, sous le nom de la séance censée l'éviter.
+    @MainActor
+    func testUltraBackToBackIsWithheldWhenTheWeekCannotCarryIt() {
+        XCTAssertNil(
+            AdaptivePlanEngine.jumelageEnchainement(runningDays: [0, 2, 4, 6], preferredLongRunDay: 6),
+            "Lundi/mercredi/vendredi/dimanche n'offre aucun couple de jours consécutifs"
+        )
+        XCTAssertEqual(
+            AdaptivePlanEngine.jumelageEnchainement(runningDays: [0, 1, 3, 5, 6], preferredLongRunDay: 6)?.longue, 5,
+            "Un samedi disponible fait glisser la longue à la veille"
+        )
+        XCTAssertEqual(
+            AdaptivePlanEngine.jumelageEnchainement(runningDays: [0, 1, 3, 5, 6], preferredLongRunDay: 5)?.lendemain, 6,
+            "Un dimanche disponible accueille le second jour"
+        )
+        XCTAssertNil(
+            AdaptivePlanEngine.jumelageEnchainement(runningDays: [3], preferredLongRunDay: 3),
+            "Un seul jour de course ne porte aucun enchaînement"
+        )
+
+        let profile = makeProfile(goal: .ultraTrail, distance: .ultra100, weeksUntilRace: 18,
+                                  elevationM: 6000, runningDays: [0, 2, 4, 6])
+        let s = shape(for: profile)
+        guard let total = s.totalWeeks else { return XCTFail("Un ultra doit périodiser") }
+
+        for semaine in 1...total {
+            let kinds = AdaptivePlanEngine.generateWeekSessions(weekNumber: semaine, tier: 1, profile: profile)
+                .compactMap { $0.session?.kind }
+            XCTAssertFalse(kinds.contains(.ultraBackToBackDay1), "S\(semaine) : enchaînement prescrit sur une semaine qui ne peut pas le porter")
+            XCTAssertFalse(kinds.contains(.ultraBackToBackDay2), "S\(semaine) : jour 2 d'enchaînement orphelin en S\(semaine)")
+        }
+    }
+
+    /// Un trail court n'a pas besoin d'apprendre à repartir sur des jambes mortes : sous quatre
+    /// heures d'effort, prescrire un enchaînement coûte un week-end entier pour rien — et c'est le
+    /// genre de séance qu'on saute une fois puis toujours.
+    @MainActor
+    func testShortTrailGetsAnOrdinaryLongRunInsteadOfABackToBack() {
+        let profile = makeProfile(goal: .ultraTrail, distance: .other, weeksUntilRace: 12,
+                                  elevationM: 900, runningDays: [0, 2, 4, 5, 6])
+        profile.raceDistanceCustom = "Trail 22 km"
+        let s = shape(for: profile)
+        let premiereSpec = s.baseWeeks + 1
+        let derniereSpec = s.baseWeeks + s.specificWeeks
+
+        var vues = 0
+        for semaine in premiereSpec...derniereSpec
+        where AdaptivePlanEngine.trainingBlock(forWeek: semaine, shape: s) == .specifique {
+            let kinds = AdaptivePlanEngine.generateWeekSessions(weekNumber: semaine, tier: 1, profile: profile)
+                .compactMap { $0.session?.kind }
+            vues += 1
+            XCTAssertFalse(kinds.contains(.ultraBackToBackDay1), "Un trail de 22 km n'a pas besoin d'un enchaînement (S\(semaine))")
+            XCTAssertTrue(kinds.contains(.ultraSpecificLongRun), "Il doit recevoir une sortie longue spécifique à la place (S\(semaine))")
+        }
+        XCTAssertGreaterThan(vues, 0, "Aucune semaine spécifique vérifiée : le test ne prouve rien")
     }
 }

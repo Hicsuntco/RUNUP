@@ -11,6 +11,9 @@ struct NewGoalWizardView: View {
     @State private var distance: RaceDistance = .k10
     @State private var chrono: String = RaceDistance.k10.chronoPresets[1]
     @State private var raceDate = Calendar.current.date(byAdding: .day, value: 60, to: .now)!
+    /// Le D+ de la course, saisi en texte libre — même champ, mêmes règles qu'à l'inscription :
+    /// vide et zéro sont la même réponse, « je ne sais pas ».
+    @State private var raceElevationGain: String = ""
     @State private var days: Set<Int> = [1, 2, 4, 6]
     @State private var building = false
     @State private var buildPct: Double = 0
@@ -19,6 +22,21 @@ struct NewGoalWizardView: View {
     private static let buildDuration: Double = 2.2
 
     private let goals: [GoalType] = GoalType.allCases.filter { $0 != .restart && $0.estProposable }
+
+    /// L'étape « ta course » sert à la course ET à l'ultra — un ultra-trail EST une course, avec
+    /// une question de plus. Sans ce branchement, choisir « Préparer un ultra-trail » ici sautait
+    /// directement aux jours de la semaine : ni distance, ni date, ni dénivelé. Le plan produit
+    /// n'avait alors aucune ligne d'arrivée à viser, donc ni bloc spécifique ni affûtage.
+    private var estCourseOuUltra: Bool { goal == .race || goal == .ultraTrail }
+
+    /// Les formats à proposer, selon l'objectif. « Autre distance » n'en fait pas partie : cet
+    /// assistant n'a pas de champ de texte libre, contrairement à l'inscription.
+    private var formats: [RaceDistance] { RaceDistance.choix(pour: goal).filter { $0 != .other } }
+
+    /// Le D+ exigé pour un ultra, et seulement pour lui — même règle qu'à l'inscription.
+    private var deniveleManquant: Bool {
+        goal == .ultraTrail && (Int(raceElevationGain.trimmingCharacters(in: .whitespaces)) ?? 0) <= 0
+    }
 
     @Environment(SubscriptionService.self) private var subscriptions
 
@@ -61,7 +79,7 @@ struct NewGoalWizardView: View {
 
                 switch step {
                 case 0: goalStep
-                case 1 where goal == .race: raceStep
+                case 1 where estCourseOuUltra: raceStep
                 default: daysStep
                 }
             }
@@ -75,10 +93,21 @@ struct NewGoalWizardView: View {
             ForEach(goals) { g in
                 SelectableCard(selected: goal == g, emoji: g.emoji, title: g.title, subtitle: nil) { goal = g }
             }
-            Button("CONTINUER") { step = goal == .race ? 1 : 2 }
+            Button("CONTINUER") { step = estCourseOuUltra ? 1 : 2 }
                 .buttonStyle(PrimaryButtonStyle(isDisabled: goal == nil))
                 .disabled(goal == nil)
                 .padding(.top, 8)
+        }
+        // Sur le VStack et non sur chaque carte : posé dans le `ForEach`, ce modificateur serait
+        // installé une fois par objectif et se déclencherait autant de fois à chaque choix.
+        //
+        // Les formats d'ultra et ceux de route ne se mélangent jamais : garder « 10 km »
+        // sélectionné après avoir choisi l'ultra-trail aurait fait construire une préparation de
+        // cent kilomètres de montagne sur dix kilomètres de route.
+        .onChange(of: goal) { _, nouveau in
+            guard let premier = RaceDistance.choix(pour: nouveau).first else { return }
+            distance = premier
+            chrono = premier.chronoPresets[safe: 1] ?? ""
         }
     }
 
@@ -86,8 +115,8 @@ struct NewGoalWizardView: View {
         VStack(alignment: .leading, spacing: 0) {
             EyebrowLabel(text: "Distance", color: RUColor.text3).padding(.bottom, 10)
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                ForEach([RaceDistance.k5, .k10, .semi, .marathon], id: \.self) { d in
-                    Button(action: { distance = d; chrono = d.chronoPresets[1] }) {
+                ForEach(formats, id: \.self) { d in
+                    Button(action: { distance = d; chrono = d.chronoPresets[safe: 1] ?? "" }) {
                         Text(d.label).displayStyle(20).foregroundColor(distance == d ? RUColor.rose2 : RUColor.textPrimary)
                             .frame(maxWidth: .infinity).padding(.vertical, 16)
                             .background(distance == d ? RUColor.card2 : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
@@ -96,6 +125,10 @@ struct NewGoalWizardView: View {
                     .buttonStyle(PressableStyle())
                     .accessibilityAddTraits(distance == d ? .isSelected : [])
                 }
+            }
+            if goal == .ultraTrail {
+                EyebrowLabel(text: "Le dénivelé positif", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
+                ObTextField(placeholder: "Ex. 4000", text: $raceElevationGain, keyboard: .numberPad)
             }
             EyebrowLabel(text: "Chrono visé", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
             ChipFlowLayout {
@@ -117,7 +150,8 @@ struct NewGoalWizardView: View {
             .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
             Button("CONTINUER") { step = 2 }
-                .buttonStyle(PrimaryButtonStyle())
+                .buttonStyle(PrimaryButtonStyle(isDisabled: deniveleManquant))
+                .disabled(deniveleManquant)
                 .padding(.top, 20)
         }
     }
@@ -178,7 +212,14 @@ struct NewGoalWizardView: View {
     }
 
     private func finish() {
-        let result = AdaptivePlanEngine.NewGoalResult(goal: goal ?? .health, distance: goal == .race ? distance : nil, chrono: goal == .race ? chrono : nil, raceDate: goal == .race ? raceDate : nil, runningDays: Array(days))
+        let result = AdaptivePlanEngine.NewGoalResult(
+            goal: goal ?? .health,
+            distance: estCourseOuUltra ? distance : nil,
+            chrono: estCourseOuUltra ? chrono : nil,
+            raceDate: estCourseOuUltra ? raceDate : nil,
+            runningDays: Array(days),
+            raceElevationGainM: goal == .ultraTrail ? Int(raceElevationGain.trimmingCharacters(in: .whitespaces)) : nil
+        )
         AdaptivePlanEngine.startNewProgram(result, profile: appState.profile)
         NotificationService.shared.rescheduleDailyReminder(for: appState.profile)
         Haptics.success()

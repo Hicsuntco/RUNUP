@@ -48,18 +48,43 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
 
     /// Cet objectif est-il proposable à l'inscription ?
     ///
-    /// FAUX TANT QU'IL N'A PAS DE PLAN DERRIÈRE LUI. L'ultra-trail arrive en plusieurs morceaux :
-    /// le modèle d'effort, puis l'objectif et ses questions, puis les séances, puis le branchement
-    /// dans le moteur. Entre le deuxième et le quatrième, le choisir donnerait un plan de ROUTE
-    /// dimensionné en kilomètres plats — c'est-à-dire exactement le défaut que tout ce travail
-    /// existe pour corriger, servi sous le nom qui promet le contraire.
+    /// LE ROBINET D'UN OBJECTIF LIVRÉ EN PLUSIEURS MORCEAUX. L'ultra-trail est arrivé en cinq
+    /// temps — le modèle d'effort, l'objectif et ses questions, les onze séances, les garde-fous,
+    /// le jour J. Entre le deuxième et le quatrième, le choisir aurait donné un plan de ROUTE
+    /// dimensionné en kilomètres plats : exactement le défaut que tout ce travail existe pour
+    /// corriger, servi sous le nom qui promet le contraire. Mieux vaut un objectif absent qu'un
+    /// objectif qui ment, donc il était retenu ici.
     ///
-    /// Mieux vaut un objectif absent qu'un objectif qui ment. Ce drapeau disparaît quand le moteur
-    /// sait répondre.
+    /// Plus rien n'est retenu aujourd'hui. Le robinet reste : c'est par lui que passera le
+    /// prochain objectif construit par morceaux, et une liste qui se filtre dit à qui la lit
+    /// qu'un objectif peut exister dans le modèle sans être encore offert.
     var estProposable: Bool {
         switch self {
-        case .race, .progress, .restart, .weight, .health, .hyrox: return true
-        case .ultraTrail: return false
+        case .race, .progress, .restart, .weight, .health, .hyrox, .ultraTrail: return true
+        }
+    }
+
+    /// Cet objectif se périodise-t-il vers une DATE ?
+    ///
+    /// # CE QUE CETTE PROPRIÉTÉ RÉPARE
+    ///
+    /// La liste était écrite en dur au milieu de `ProgramShape.compute` : `goal == .race ||
+    /// goal == .hyrox`. L'ultra-trail n'y figurait pas, donc son plan tombait dans la branche
+    /// « programme ouvert » : zéro semaine de base, zéro de spécifique, zéro d'affûtage, et un
+    /// cycle base/décharge qui tourne indéfiniment.
+    ///
+    /// Autrement dit : les onze séances d'ultra existaient, le moteur savait les produire, et il
+    /// n'en servait jamais que deux blocs sur quatre — parce que personne ne lui avait dit que cet
+    /// objectif avait une ligne d'arrivée. Pas de bloc spécifique, donc aucune sortie longue
+    /// spécifique, aucun enchaînement du week-end, aucune sortie de nuit, aucun affûtage. Un plan
+    /// d'ultra sans affûtage, c'est une course qu'on aborde fatiguée.
+    ///
+    /// La liste vit désormais sur le type, pour que l'oubli ne puisse plus se répéter en silence :
+    /// ajouter un objectif à date force à répondre ici.
+    var periodiseVersUneDate: Bool {
+        switch self {
+        case .race, .hyrox, .ultraTrail: return true
+        case .progress, .restart, .weight, .health: return false
         }
     }
 

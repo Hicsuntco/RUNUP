@@ -149,4 +149,46 @@ final class UltraTrailTests: XCTestCase {
         XCTAssertTrue(UltraTrail.demandeUnEnchainement(tempsDeffortCourseSecondes: effort(50, 2_000)))
         XCTAssertFalse(UltraTrail.demandeUnEnchainement(tempsDeffortCourseSecondes: effort(25, 1_000)))
     }
+
+    // MARK: Les temps proposés, et comment ils se relisent
+
+    /// « 13:00 » POUR UN 100 KM EST TREIZE HEURES, PAS TREIZE MINUTES.
+    ///
+    /// `PaceModel.parseChrono` tranchait sur `parts[0] >= 10` → des minutes, avec en commentaire
+    /// « aucun vrai chrono de course ne commence à 10 heures ou plus ». C'était vrai tant que la
+    /// liste s'arrêtait au marathon. Depuis les quatre formats d'ultra, les deux tiers des temps
+    /// que l'app PROPOSE ELLE-MÊME tombaient du mauvais côté : 13:00, 15:00, 16:00, 18:00, 20:00,
+    /// 24:00, 30:00, 36:00, 44:00. Un 100 km en vingt heures se relisait en vingt minutes, soit
+    /// douze secondes au kilomètre.
+    ///
+    /// Le test balaie tous les temps réellement proposés, pour que l'ajout d'un format ne puisse
+    /// pas rouvrir le trou en silence.
+    func testTousLesTempsDultraSeRelisentEnHeures() {
+        for format in [RaceDistance.ultra50, .ultra80, .ultra100, .ultra100M] {
+            guard let km = format.km else { return XCTFail("\(format) doit connaître sa distance") }
+            for preset in format.chronoPresets {
+                guard let secondes = PaceModel.parseChronoSeconds(preset, distance: format) else {
+                    return XCTFail("\(format.label) : « \(preset) » est illisible")
+                }
+                // Un temps d'ultra ne descend pas sous quatre heures et ne dépasse pas deux jours.
+                XCTAssertGreaterThanOrEqual(secondes, 4 * 3600,
+                                            "\(format.label) : « \(preset) » relu en \(Int(secondes / 60)) min")
+                XCTAssertLessThanOrEqual(secondes, 48 * 3600,
+                                         "\(format.label) : « \(preset) » relu en \(secondes / 3600) h")
+                // Et l'allure moyenne qui en découle doit rester celle d'un humain en montagne.
+                let allure = secondes / km
+                XCTAssertGreaterThan(allure, 150, "\(format.label) : « \(preset) » donne \(Int(allure)) s/km")
+                XCTAssertLessThan(allure, 1200, "\(format.label) : « \(preset) » donne \(Int(allure)) s/km")
+            }
+        }
+    }
+
+    /// Et les formats de route gardent exactement leur lecture d'avant — un semi en « 1:40 » est
+    /// une heure quarante, un 10 km en « 42:00 » est quarante-deux minutes.
+    func testLesFormatsDeRouteGardentLeurLecture() {
+        XCTAssertEqual(PaceModel.parseChronoSeconds("42:00", distance: .k10), 42 * 60)
+        XCTAssertEqual(PaceModel.parseChronoSeconds("1:40", distance: .semi), 100 * 60)
+        XCTAssertEqual(PaceModel.parseChronoSeconds("3:30", distance: .marathon), 210 * 60)
+        XCTAssertEqual(PaceModel.parseChronoSeconds("45:00", distance: .other), 45 * 60)
+    }
 }

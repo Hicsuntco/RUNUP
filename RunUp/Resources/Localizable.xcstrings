@@ -880,6 +880,23 @@
         }
       }
     },
+    "%lld m de D+": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld m of elevation gain"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld m de desnivel"
+          }
+        }
+      }
+    },
     "%lld membre": {
       "extractionState": "manual",
       "localizations": {
@@ -19639,6 +19656,23 @@
         }
       }
     },
+    "Vitesse moyenne": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Average speed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Velocidad media"
+          }
+        }
+      }
+    },
     "Voir l'analyse approfondie": {
       "localizations": {
         "en": {
@@ -20837,6 +20871,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "km totales"
+          }
+        }
+      }
+    },
+    "km/h": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "km/h"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "km/h"
           }
         }
       }

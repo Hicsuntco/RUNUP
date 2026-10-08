@@ -49,6 +49,16 @@ DECIDE = re.compile(r'\.only\(|\.onFoot\b|\.allDisciplines\b')
 # de la somme. Sans ça le contrôle refuserait du code juste, ce qui est la pire chose qu'une
 # barrière puisse faire : on finit par la contourner.
 DEFINITION = re.compile(r'\b(?:let|var)\s+(\w+)\s*(?::[^=]+)?=\s*(.+)$')
+
+# `private var runsOnFoot: [RunRecord] { runs.onFoot }` — la même idée, écrite en propriété
+# calculée plutôt qu'en variable locale. La première version ne la voyait pas, faute de `=`, et
+# refusait donc une grille de statistiques parfaitement explicite : le filtre était sur la ligne
+# du dessus, pas sur celle de la somme.
+#
+# Le `}` ancré en fin de ligne est ce qui borne la lecture à une propriété d'UNE seule ligne. Une
+# propriété sur plusieurs lignes reste non résolue, donc refusée — c'est le sens prudent : mieux
+# vaut réclamer un filtre explicite que de croire en avoir trouvé un.
+DEFINITION_CALCULEE = re.compile(r'\b(?:let|var)\s+(\w+)\s*:[^={]+\{\s*(.+?)\s*\}\s*$')
 RECEVEUR = re.compile(r'\b(\w+)\s*$')
 
 
@@ -76,7 +86,10 @@ def lignes_fautives(source):
     lignes = source.splitlines()
     definitions = {}
     for ligne in lignes:
-        m = DEFINITION.search(ligne.strip())
+        nue = ligne.strip()
+        if nue.startswith("//"):
+            continue
+        m = DEFINITION.search(nue) or DEFINITION_CALCULEE.search(nue)
         if m:
             definitions.setdefault(m.group(1), m.group(2))
 

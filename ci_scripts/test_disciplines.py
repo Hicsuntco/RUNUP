@@ -60,6 +60,29 @@ def _():
 def _():
     attendu("let total = runs.only(.run)\n    .reduce(0) { $0 + $1.distanceKm }", 0, "chaîne sur deux lignes")
 
+@cas_test("un filtre posé sur une propriété calculée vaut pour la somme plus bas")
+def _(): attendu("    private var aPied: [RunRecord] { runs.onFoot }\n"
+                 "    private var total: Double { aPied.reduce(0) { $0 + $1.distanceKm } }", 0,
+                 "propriété calculée")
+
+@cas_test("et à travers deux propriétés calculées")
+def _(): attendu("    private var velo: [RunRecord] { runs.only(.bike) }\n"
+                 "    private var longues: [RunRecord] { velo }\n"
+                 "    private var total: Int { longues.reduce(0) { $0 + $1.durationSeconds } }", 0,
+                 "deux niveaux")
+
+@cas_test("une propriété calculée SANS filtre ne sauve rien")
+def _(): attendu("    private var toutes: [RunRecord] { runs }\n"
+                 "    private var x: Double { 0 }\n"
+                 "    private var total: Double { toutes.reduce(0) { $0 + $1.distanceKm } }", 1,
+                 "sans filtre")
+
+@cas_test("une définition citée dans un commentaire ne définit rien")
+def _(): attendu("    // private var aPied: [RunRecord] { runs.onFoot }\n"
+                 "    private var x: Double { 0 }\n"
+                 "    private var total: Double { aPied.reduce(0) { $0 + $1.distanceKm } }", 1,
+                 "définition commentée")
+
 @cas_test("une somme citée dans un commentaire ne compte pas")
 def _(): attendu("// Écrire runs.reduce(0) { $0 + $1.distanceKm } était juste avant.", 0, "commentaire")
 

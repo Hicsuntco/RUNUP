@@ -68,6 +68,7 @@ struct StatsView: View {
                 // s'intercalait pleine largeur entre les totaux et la semaine, coupant l'écran
                 // d'analyse en deux avec un lien.
                 if runs.isEmpty { firstDayBanner } else { summaryGrid }
+                bikeCard
                 weekCard
                 paceCard
 
@@ -91,8 +92,11 @@ struct StatsView: View {
     // MARK: Summary — at-a-glance totals, the numbers a "progression" tab was otherwise missing
     // entirely (it jumped straight to trend/prediction cards with nothing grounding them).
 
-    private var totalDistanceKm: Double { runs.onFoot.reduce(0) { $0 + $1.distanceKm } }
-    private var totalDurationSeconds: Int { runs.onFoot.reduce(0) { $0 + $1.durationSeconds } }
+    /// Les sorties À PIED — route et trail. Calculé une fois : les trois tuiles de la grille
+    /// parlent du même ensemble, et c'est exactement ce qui n'allait pas avant.
+    private var runsOnFoot: [RunRecord] { runs.onFoot }
+    private var totalDistanceKm: Double { runsOnFoot.reduce(0) { $0 + $1.distanceKm } }
+    private var totalDurationSeconds: Int { runsOnFoot.reduce(0) { $0 + $1.durationSeconds } }
 
     /// La grille des références : quatre tuiles à deux par rangée, chacune avec son en-tête, son
     /// chiffre et son unité — au lieu d'UNE carte pleine largeur découpée en quatre colonnes par
@@ -133,10 +137,14 @@ struct StatsView: View {
                            title: "Distance totale",
                            value: String(format: "%.0f", totalDistanceKm), unit: "km",
                            footnote: nil, progress: nil)
+                // `onFoot` et non `runs` : la tuile d'à côté annonce une distance à pied, et
+                // cette tuile-ci comptait TOUTES les sorties, vélo compris. « 42 km · 15 sorties »
+                // décrivait alors deux ensembles différents sur la même ligne — le genre de
+                // chiffre qu'on ne peut pas réconcilier en le regardant.
                 RUStatTile(icon: "figure.run", tint: RUColor.violet,
                            title: "Sorties",
-                           value: "\(runs.count)",
-                           unit: runs.count > 1 ? "sorties" : "sortie",
+                           value: "\(runsOnFoot.count)",
+                           unit: runsOnFoot.count > 1 ? "sorties" : "sortie",
                            footnote: nil, progress: nil)
             }
             HStack(spacing: 10) {
@@ -150,6 +158,77 @@ struct StatsView: View {
                            value: "\(profile.streak)",
                            unit: profile.streak > 1 ? "jours" : "jour",
                            footnote: nil, progress: nil)
+            }
+        }
+    }
+
+    // MARK: Vélo — ses propres totaux, à côté et jamais mélangés
+
+    private var bikeRuns: [RunRecord] { runs.only(.bike) }
+    private var bikeDistanceKm: Double { bikeRuns.reduce(0) { $0 + $1.distanceKm } }
+    private var bikeDurationSeconds: Int { bikeRuns.reduce(0) { $0 + $1.durationSeconds } }
+    private var bikeElevationM: Int { bikeRuns.reduce(0) { $0 + $1.elevationGainM } }
+
+    /// La vitesse moyenne de TOUTES les sorties réunies, et non la moyenne des vitesses.
+    ///
+    /// Les deux ne donnent pas le même nombre, et seule la première veut dire quelque chose : une
+    /// moyenne de vitesses pèse une sortie de dix minutes autant qu'une de trois heures. Ici, les
+    /// kilomètres sont rapportés aux heures qu'ils ont vraiment coûté.
+    ///
+    /// Elle passe par `TimeFormat.vitesse` plutôt que par sa propre division : la conversion
+    /// secondes-par-km → km/h est écrite une seule fois dans l'app, et l'écran de course en direct
+    /// lit la même.
+    private var bikeAverageSpeed: String {
+        guard bikeDistanceKm > 0, bikeDurationSeconds > 0 else { return "—" }
+        return TimeFormat.vitesse(secondesParKm: Double(bikeDurationSeconds) / bikeDistanceKm)
+    }
+
+    /// N'apparaît QUE s'il y a eu au moins une sortie vélo.
+    ///
+    /// Une section de zéros est pire qu'une section absente : elle occupe la place d'un écran
+    /// d'analyse pour annoncer qu'il n'y a rien à analyser, et elle le fait chez les gens qui ne
+    /// rouleront jamais — c'est-à-dire la plupart, dans une app de course à pied.
+    @ViewBuilder private var bikeCard: some View {
+        if !bikeRuns.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                // Un titre, parce que la grille du dessus n'en a pas : sans lui, quatre tuiles de
+                // plus se liraient comme la suite des totaux de course, et un total de vélo pris
+                // pour un total de course est précisément ce qu'on cherche à empêcher.
+                RUCardHeader(icon: "bicycle", tint: RUColor.cyan, title: "Vélo")
+                VStack(spacing: 10) {
+                    HStack(spacing: 10) {
+                        RUStatTile(icon: "ruler", tint: RUColor.cyan,
+                                   title: "Distance",
+                                   value: String(format: "%.0f", bikeDistanceKm), unit: "km",
+                                   footnote: nil, progress: nil)
+                        RUStatTile(icon: "bicycle", tint: RUColor.cyan,
+                                   title: "Sorties",
+                                   value: "\(bikeRuns.count)",
+                                   unit: bikeRuns.count > 1 ? "sorties" : "sortie",
+                                   footnote: nil, progress: nil)
+                    }
+                    HStack(spacing: 10) {
+                        RUStatTile(icon: "clock", tint: RUColor.cyan,
+                                   title: "Temps cumulé",
+                                   value: PaceModel.formatTotalDuration(bikeDurationSeconds),
+                                   unit: nil, footnote: nil, progress: nil)
+                        // La VITESSE, pas l'allure — « 2:30/km » à vélo est juste et illisible.
+                        // C'est la même règle que `Discipline.usesPacePerKm` applique à l'écran
+                        // de course ; elle vaut ici pour la même raison.
+                        RUStatTile(icon: "speedometer", tint: RUColor.cyan,
+                                   title: "Vitesse moyenne",
+                                   value: bikeAverageSpeed, unit: "km/h",
+                                   // `String(localized:)` et non une interpolation nue : le
+                                   // composant passe la note par `LocalizedStringKey`, qui
+                                   // chercherait « 320 m de D+ » — une clé qui n'existera jamais.
+                                   // La phrase resterait en français sur un téléphone anglais, et
+                                   // `check_strings` ne la verrait pas, puisqu'elle n'est pas un
+                                   // littéral affiché.
+                                   footnote: bikeElevationM > 0
+                                       ? String(localized: "\(bikeElevationM) m de D+") : nil,
+                                   progress: nil)
+                    }
+                }
             }
         }
     }

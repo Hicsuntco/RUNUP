@@ -28,13 +28,7 @@ enum AuthServiceError: Error {
     case notSignedIn
 }
 
-/// Talks to RunUp's account backend — the same Vercel project as the coach proxy (see
-/// `api/auth/*.js`, `api/me.js`, `api/account/[action].js`). Holds the signed-in user + session
-/// token (Keychain-backed, so it survives relaunches) so `ClubService` and `ClubView` can tell
-/// whether there's a real account behind the Club tab. Signing in is scoped to Club only — the
-/// rest of the app works fully offline, no account required.
-///
-/// `/// Le nom de l'en-tête par lequel le serveur renvoie un jeton frais.
+/// Le nom de l'en-tête par lequel le serveur renvoie un jeton frais.
 ///
 /// HORS de `AuthService`, et c'est délibéré : cette classe est isolée sur l'acteur principal,
 /// donc ses membres statiques le sont aussi, et `ClubService.send` — qui doit lire cet en-tête —
@@ -49,7 +43,13 @@ enum SessionRenewal {
     static let header = "X-RunUp-Session-Renewed"
 }
 
-@MainActor` : `currentUser` et `token` sont observés par SwiftUI, et `onSignOut` ci-dessous
+/// Talks to RunUp's account backend — the same Vercel project as the coach proxy (see
+/// `api/auth/*.js`, `api/me.js`, `api/account/[action].js`). Holds the signed-in user + session
+/// token (Keychain-backed, so it survives relaunches) so `ClubService` and `ClubView` can tell
+/// whether there's a real account behind the Club tab. Signing in is scoped to Club only — the
+/// rest of the app works fully offline, no account required.
+///
+/// `@MainActor` : `currentUser` et `token` sont observés par SwiftUI, et `onSignOut` ci-dessous
 /// est une fermeture fournie par `AppState` (lui-même isolé sur l'acteur principal). Sans cette
 /// annotation, `signOut()` pouvait appeler cette fermeture — donc muter l'état de l'app et son
 /// contexte SwiftData — depuis n'importe quel fil. Les `await URLSession` restent, eux, hors du

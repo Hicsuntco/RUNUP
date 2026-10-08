@@ -121,12 +121,40 @@ struct WeatherAdviceService {
         if calendrier.isDate(jour, inSameDayAs: maintenant) {
             return profile.todaySession.durationMinutes > 0
         }
-        let index = AdaptivePlanEngine.weekdayIndex(for: jour)
-        guard calendrier.isDate(jour, equalTo: maintenant, toGranularity: .weekOfYear) else {
+        let index = AdaptivePlanEngine.weekdayIndex(for: jour, calendrier: calendrier)
+        guard Self.memeSemaineDePlan(jour, maintenant, calendrier) else {
             return profile.runningDays.contains(index)
         }
         let prevue = profile.weekSessions.first { $0.weekday == index }?.session
         return (prevue?.durationMinutes ?? 0) > 0
+    }
+
+    /// Deux dates tombent-elles dans la même semaine DE PLAN ?
+    ///
+    /// # POURQUOI PAS `isDate(_:equalTo:toGranularity: .weekOfYear)`
+    ///
+    /// Parce que cette granularité suit `Calendar.firstWeekday`, qui dépend de la LANGUE de
+    /// l'appareil. En France la semaine commence le lundi et la réponse tombait juste ; aux
+    /// États-Unis elle commence le dimanche, donc un dimanche et le lundi suivant sont déclarés
+    /// dans la même semaine. Le conseil du dimanche soir allait alors chercher le lundi dans le
+    /// plan de la semaine en cours — c'est-à-dire le lundi PASSÉ, la séance d'il y a six jours —
+    /// exactement le défaut que ce code existe pour éviter, et seulement pour une partie des
+    /// gens. C'est la pire forme : juste chez soi, faux ailleurs.
+    ///
+    /// La semaine du plan, elle, va TOUJOURS du lundi au dimanche : `weekSessions` est indexé par
+    /// `weekdayIndex`, qui vaut 0 le lundi quelle que soit la langue. On compare donc des lundis,
+    /// calculés par cette même fonction — la question « quelle semaine » reçoit ainsi la même
+    /// réponse que la question « quel jour », ce qui est la seule façon qu'elles ne se
+    /// contredisent pas.
+    static func memeSemaineDePlan(_ une: Date, _ autre: Date, _ calendrier: Calendar) -> Bool {
+        guard let lundiDUne = lundiDeLaSemaine(une, calendrier),
+              let lundiDeLAutre = lundiDeLaSemaine(autre, calendrier) else { return false }
+        return lundiDUne == lundiDeLAutre
+    }
+
+    private static func lundiDeLaSemaine(_ jour: Date, _ calendrier: Calendar) -> Date? {
+        let index = AdaptivePlanEngine.weekdayIndex(for: jour, calendrier: calendrier)
+        return calendrier.date(byAdding: .day, value: -index, to: calendrier.startOfDay(for: jour))
     }
 
     /// Le conseil en mémoire, relu depuis ses deux `rawValue`. Les deux doivent être là : un seul

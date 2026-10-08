@@ -93,20 +93,20 @@ final class WeatherBackgroundRefreshTests: XCTestCase {
     /// encore générée : le chercher dans `weekSessions` rendrait le lundi PASSÉ, c'est-à-dire la
     /// séance d'il y a six jours. C'est l'intention déclarée qui doit répondre.
     ///
-    /// `Calendar.current` ici et non le calendrier UTC des autres tests, et c'est nécessaire :
-    /// `AdaptivePlanEngine.weekdayIndex(for:)` se sert de `Calendar.current` en interne. Mêler les
-    /// deux rendrait ce test dépendant du fuseau de la machine qui l'exécute — un jour de la
-    /// semaine calculé dans un fuseau et comparé dans un autre finit par se décaler d'un cran, et
-    /// l'échec n'arriverait que sur certaines machines.
+    /// Tout en UTC, `weekdayIndex` compris : ce test a d'abord été écrit avec `Calendar.current`
+    /// et il a échoué en intégration continue. La machine n'est pas en français, la semaine y
+    /// commence le dimanche, et `isDate(equalTo:toGranularity: .weekOfYear)` déclarait donc le
+    /// dimanche et le lundi suivant dans la même semaine. L'échec était réel : c'est le code de
+    /// production qui se trompait, pas le test — voir `memeSemaineDePlan`.
     func testUnJourDeLaSemaineSuivanteSeLitDansLesJoursDeCourse() {
-        let courant = Calendar.current
+        let courant = cal
         // Un dimanche, et le lendemain est donc un lundi de la semaine d'après.
         var dimanche = courant.date(bySettingHour: 20, minute: 0, second: 0, of: jour)!
-        while AdaptivePlanEngine.weekdayIndex(for: dimanche) != 6 {
+        while AdaptivePlanEngine.weekdayIndex(for: dimanche, calendrier: cal) != 6 {
             dimanche = courant.date(byAdding: .day, value: 1, to: dimanche)!
         }
         let lundi = courant.date(byAdding: .day, value: 1, to: dimanche)!
-        XCTAssertEqual(AdaptivePlanEngine.weekdayIndex(for: lundi), 0)
+        XCTAssertEqual(AdaptivePlanEngine.weekdayIndex(for: lundi, calendrier: cal), 0)
 
         // Le plan de la semaine en cours est VIDE partout : s'il était consulté, la réponse
         // serait « non » et le conseil du dimanche soir ne partirait jamais.
@@ -122,10 +122,10 @@ final class WeatherBackgroundRefreshTests: XCTestCase {
     /// Un autre jour de la MÊME semaine, lui, se lit dans le plan généré — c'est la séance qui
     /// sera réellement proposée, décalages de la semaine compris.
     func testUnAutreJourDeLaMemeSemaineSeLitDansLePlan() {
-        let courant = Calendar.current
+        let courant = cal
         // Un lundi, pour que mardi soit sûrement dans la même semaine.
         var lundi = courant.date(bySettingHour: 8, minute: 0, second: 0, of: jour)!
-        while AdaptivePlanEngine.weekdayIndex(for: lundi) != 0 {
+        while AdaptivePlanEngine.weekdayIndex(for: lundi, calendrier: cal) != 0 {
             lundi = courant.date(byAdding: .day, value: 1, to: lundi)!
         }
         let mardi = courant.date(byAdding: .day, value: 1, to: lundi)!
@@ -142,6 +142,39 @@ final class WeatherBackgroundRefreshTests: XCTestCase {
         let mercredi = courant.date(byAdding: .day, value: 2, to: lundi)!
         XCTAssertFalse(WeatherAdviceService.courtElle(le: mercredi, qui, maintenant: lundi,
                                                        calendrier: courant))
+    }
+
+    // MARK: - La semaine du plan ne dépend pas de la langue
+
+    /// LE DÉFAUT QUE LA CI A ATTRAPÉ, isolé ici.
+    ///
+    /// `isDate(_:equalTo:toGranularity: .weekOfYear)` suit `Calendar.firstWeekday`, qui dépend de
+    /// la langue de l'appareil. En français la semaine commence le lundi et la réponse tombait
+    /// juste ; en anglais américain elle commence le dimanche, et un dimanche se retrouvait dans
+    /// la même semaine que le lundi SUIVANT. Le conseil du dimanche soir allait alors chercher le
+    /// lundi dans le plan de la semaine en cours, c'est-à-dire la séance d'il y a six jours.
+    ///
+    /// Ce test tourne les deux semaines, dimanche-first et lundi-first, et exige la même réponse.
+    func testLaSemaineDuPlanVaTonjoursDuLundiAuDimanche() {
+        for premierJour in [1, 2] {   // 1 = dimanche, 2 = lundi
+            var calendrier = Calendar(identifier: .gregorian)
+            calendrier.timeZone = TimeZone(secondsFromGMT: 0)!
+            calendrier.firstWeekday = premierJour
+
+            var dimanche = calendrier.date(bySettingHour: 20, minute: 0, second: 0, of: jour)!
+            while AdaptivePlanEngine.weekdayIndex(for: dimanche, calendrier: calendrier) != 6 {
+                dimanche = calendrier.date(byAdding: .day, value: 1, to: dimanche)!
+            }
+            let lundiSuivant = calendrier.date(byAdding: .day, value: 1, to: dimanche)!
+            let samediAvant = calendrier.date(byAdding: .day, value: -1, to: dimanche)!
+
+            XCTAssertFalse(
+                WeatherAdviceService.memeSemaineDePlan(dimanche, lundiSuivant, calendrier),
+                "premierJour=\(premierJour) : un dimanche et le lundi SUIVANT sont deux semaines")
+            XCTAssertTrue(
+                WeatherAdviceService.memeSemaineDePlan(dimanche, samediAvant, calendrier),
+                "premierJour=\(premierJour) : un samedi et le dimanche suivant sont la même")
+        }
     }
 
     // MARK: - La mémoire, relue depuis le profil

@@ -379,8 +379,13 @@ enum AdaptivePlanEngine {
     /// parce qu'imputer une course au bon jour demande le jour de LA COURSE, pas celui du moment
     /// où on la valide — les deux diffèrent sur une sortie à cheval sur minuit, et sur une course
     /// reçue de la montre puis validée le lendemain.
-    static func weekdayIndex(for date: Date) -> Int {
-        (Calendar.current.component(.weekday, from: date) + 5) % 7
+    ///
+    /// Le calendrier est un paramètre, avec `.current` par défaut, pour qu'un appelant qui
+    /// raisonne sur un autre calendrier n'ait pas à récrire la formule chez lui. Elle doit rester
+    /// écrite une seule fois : c'est elle qui définit ce que « lundi » veut dire dans toute l'app,
+    /// et deux copies finiraient par donner deux semaines différentes.
+    static func weekdayIndex(for date: Date, calendrier: Calendar = .current) -> Int {
+        (calendrier.component(.weekday, from: date) + 5) % 7
     }
 
     // MARK: Periodization

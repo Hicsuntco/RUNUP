@@ -348,11 +348,27 @@ jobs:
           CODE=${PIPESTATUS[0]}
           set -e
           if [ "$CODE" -ne 0 ]; then
-            echo "────────── erreurs de compilation ──────────"
-            # Les vingt premières lignes « error: », remontées en annotations — c'est la seule
-            # forme de sortie que l'API rend lisible.
-            grep -E "error:|XCTAssert.* failed|failed -" "$RUNNER_TEMP/tests.log" \
-              | sed -E 's/^.*\/([^/]+\.swift)/\1/' | sort -u | head -20 \
+            echo "────────── ce qui a échoué ──────────"
+            LOG="$RUNNER_TEMP/tests.log"
+            # LE BRUIT D'EXÉCUTION D'ABORD, et ce n'est pas un détail de confort.
+            #
+            # CoreData et les journaux de l'app écrivent « error: » par centaines sans qu'aucune
+            # soit une erreur de construction. Et le `sort -u` de la version précédente les faisait
+            # GAGNER : une ligne commençant par une date trie avant une ligne commençant par un nom
+            # de fichier, donc les vingt annotations étaient vingt lignes d'horodatage CoreData et
+            # la vraie cause n'apparaissait pas du tout. Un build raté redevenait muet, ce que cette
+            # extraction existe précisément pour empêcher.
+            grep -vE "CoreData: error:|^[0-9]{4}-[0-9]{2}-[0-9]{2} |\[error\]" "$LOG" > "$LOG.propre" || true
+            # Par ORDRE D'UTILITÉ, et sans retrier : erreurs de compilation, échecs de test,
+            # édition de liens, puis le verdict. `awk` déduplique en gardant l'ordre, là où
+            # `sort -u` l'aurait détruit une seconde fois.
+            {
+              grep -hE "\.swift:[0-9]+:[0-9]+: (error|fatal error):" "$LOG.propre" || true
+              grep -hE "\.swift:[0-9]+: error:" "$LOG.propre" || true
+              grep -hE "^(ld|clang|swiftc|xcodebuild): error:|error: linker command failed" "$LOG.propre" || true
+              grep -hE "Test Case .* failed|Testing cancelled" "$LOG.propre" || true
+              grep -hE "^\*\* (TEST|BUILD) [A-Z]+ \*\*" "$LOG.propre" || true
+            } | sed -E 's#^.*/([^/]+\.swift)#\1#' | awk '!vu[$0]++' | head -25 \
               | while IFS= read -r L; do echo "::error::$L"; done
             exit "$CODE"
           fi

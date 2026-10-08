@@ -154,6 +154,19 @@ final class Analytics: @unchecked Sendable {
         /// monte, c'est que des téléphones changent de mains — ou, plus probablement, que
         /// quelqu'un se trompe de compte à la connexion et qu'il faut regarder pourquoi.
         case accountSwitchedFresh = "account_switched_fresh"
+        /// Un message météo est parti : conseil, rectification ou démenti.
+        ///
+        /// SA RAISON D'ÊTRE EST `source`. Le conseil peut arriver par deux chemins : l'ouverture
+        /// de l'app, ou un réveil en arrière-plan accordé par iOS. Le second est le seul qui tient
+        /// la promesse « la veille, sans rien ouvrir » — et c'est aussi le seul dont on ne peut
+        /// RIEN savoir autrement. iOS décide seul s'il accorde ces réveils, ne le signale pas, et
+        /// ne s'en explique jamais. Sans cet événement, « est-ce que ça marche » resterait une
+        /// question sans réponse ; avec lui, il suffit de compter les `source=background`.
+        ///
+        /// `nature` et `target` disent si la rectification sert vraiment, et si les conseils
+        /// arrivent bien la veille plutôt que le jour même. Trois propriétés à très faible
+        /// cardinalité, aucune donnée de lieu, aucune heure.
+        case weatherAdviceSent = "weather_advice_sent"
 
         // MARK: L'entonnoir d'abonnement
         //

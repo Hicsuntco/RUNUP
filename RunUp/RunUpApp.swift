@@ -5,7 +5,10 @@ import UIKit
 @main
 struct RunUpApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    let container = PersistenceController.makeContainer()
+    /// LE conteneur partagé, et non un neuf : le réveil météo en arrière-plan lit et écrit le même
+    /// profil depuis le même processus. Deux conteneurs sur le même fichier, ce sont deux
+    /// contextes qui s'ignorent et une écriture qui écrase l'autre en silence.
+    let container = PersistenceController.partage
 
     var body: some Scene {
         WindowGroup {
@@ -20,6 +23,16 @@ struct RunUpApp: App {
 /// equivalent — so this stays a thin pass-through into `NotificationService` rather than growing
 /// any app logic of its own.
 final class AppDelegate: NSObject, UIApplicationDelegate {
+    /// L'enregistrement de la tâche d'arrière-plan doit se faire AVANT la fin du lancement —
+    /// Apple l'exige, et le manquer fait tomber le processus. C'est la seule raison pour laquelle
+    /// cette ligne est ici et pas dans une vue : aucune vue n'est garantie d'avoir paru à temps,
+    /// et sur un lancement EN ARRIÈRE-PLAN aucune ne paraît du tout.
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions options: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        WeatherBackgroundRefresh.enregistrer()
+        return true
+    }
+
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         NotificationService.shared.handleDeviceToken(deviceToken)
     }
@@ -82,6 +95,11 @@ private struct RootView: View {
             if newPhase == .active {
                 appState?.refreshProgramForCurrentDate()
                 appState?.retryPendingClubActivities()
+                // Redemandé à chaque passage au premier plan : une tâche d'arrière-plan ne se
+                // répète pas d'elle-même, et une demande remplace la précédente plutôt que de
+                // s'empiler. C'est la deuxième des deux seules façons de la réarmer, l'autre
+                // étant la fin de son exécution.
+                WeatherBackgroundRefresh.programmerLaProchaine()
                 // Debounced to one per real session inside `Analytics` — glancing at a
                 // notification and coming back is not a second visit.
                 Analytics.shared.trackAppOpenedIfNewSession()

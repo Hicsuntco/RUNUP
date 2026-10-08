@@ -83,6 +83,15 @@ enum PersistenceController {
         return false
     }
 
+    /// LE conteneur du processus, créé une seule fois.
+    ///
+    /// `makeContainer()` en fabrique un neuf à chaque appel, et c'était sans conséquence tant
+    /// qu'il n'y avait qu'un appelant. Le réveil en arrière-plan en est un second : deux
+    /// `ModelContainer` ouverts sur le même fichier, ce sont deux contextes qui s'ignorent, et une
+    /// écriture d'un côté qui écrase celle de l'autre sans que rien ne le signale. L'app et son
+    /// réveil sont le même processus — ils doivent voir la même mémoire.
+    static let partage: ModelContainer = makeContainer()
+
     static func makeContainer() -> ModelContainer {
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {

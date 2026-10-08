@@ -470,119 +470,15 @@ final class AppState {
     /// service ne les écarte pas.
     /// « Il va pleuvoir demain soir, prévois ta séance demain midi. »
     ///
-    /// # COMMENT UN CONSEIL ARRIVE LA VEILLE
-    ///
-    /// Pas en programmant la notification plus tôt — c'est impossible : son texte est figé au
-    /// moment où on la programme, donc une notification posée ce soir pour demain 8 h devrait
-    /// décrire une pluie dont la prévision n'existe pas encore.
-    ///
-    /// Il arrive en REGARDANT plus loin. `WeatherAdvice.jourAConseiller` répond « aujourd'hui »
-    /// tant que le créneau habituel n'a pas commencé, et « demain » dès qu'il est entamé. Pour
-    /// quelqu'un qui court le soir, dès 17 h le prochain conseil utile porte sur demain soir :
-    /// l'app ouverte à 20 h le donne, et c'est le conseil de la veille. Aucune heure butoir n'a
-    /// été nécessaire — le bon repère n'est pas l'heure qu'il est, c'est l'heure à laquelle elle
-    /// court.
-    ///
-    /// # ET COMMENT IL SE RECTIFIE
-    ///
-    /// Une prévision à vingt heures d'échéance bouge. Un conseil de la veille qu'on ne peut pas
-    /// corriger vaut donc moins que pas de conseil : il envoie courir à midi un jour où c'est
-    /// finalement midi qui est pourri. D'où la mémoire (`weatherAdviceDay` et les deux créneaux
-    /// sur `UserProfile`) et `WeatherAdvice.annonce`, qui compare ce qu'on sait maintenant à ce
-    /// qu'on a dit. Une rectification au plus par jour : quatre messages contradictoires sont la
-    /// façon exacte dont on perd un interrupteur pour toujours.
-    ///
-    /// Quatre portes avant d'aller chercher quoi que ce soit, dans cet ordre : l'interrupteur, un
-    /// jour sans séance, le délai de garde, et l'autorisation de notifier. Chacune évite un appel
-    /// réseau et une demande de position, et la dernière évite surtout d'aller chercher une
-    /// prévision pour une notification qui ne partira pas.
+    /// Le corps est parti dans `WeatherAdviceService`, et pour une raison précise : il a
+    /// maintenant DEUX appelants, et un seul des deux a un `AppState`. `WeatherBackgroundRefresh`
+    /// est réveillé par iOS sans interface, or `AppState` est construit dans l'`onAppear` de
+    /// `RootView`, qui ne se produit pas dans ce cas-là. Une méthode privée d'ici aurait été
+    /// inatteignable depuis le seul chemin qui fait arriver la notification sans qu'on ouvre
+    /// l'app — c'est-à-dire depuis le chemin qui tient la promesse.
     private func conseillerUnAutreCreneauSiPluie() async {
-        guard profile.weatherAlertsEnabled else { return }
-
-        let creneauHabituel = WeatherAdvice.Slot.from(profile.preferredTimeOfDay)
-        let jourVise = WeatherAdvice.jourAConseiller(usual: creneauHabituel)
-        // Un jour sans séance n'a rien à déplacer.
-        guard Self.courtElle(le: jourVise, profile) else { return }
-        // Le délai de garde, et non plus « un seul par jour » : il faut laisser passer la
-        // rectification, qui est tout l'intérêt d'un conseil donné la veille. Deux heures
-        // suffisent à écarter le seul cas vraiment fâcheux — un conseil et son démenti à quelques
-        // minutes d'écart, qui se lisent comme une app qui s'affole.
-        if let dernier = profile.lastWeatherAdviceDate,
-           Date.now.timeIntervalSince(dernier) < Self.delaiEntreDeuxMessagesMeteo { return }
-        guard await NotificationService.shared.isAuthorized() else { return }
-
-        // Le départ de la dernière course sert de repli quand la position ponctuelle n'aboutit
-        // pas — on court presque toujours du même endroit, et deux kilomètres d'écart ne changent
-        // pas la réponse à « est-ce qu'il va pleuvoir à 18 h ».
-        let borne = Calendar.current.date(byAdding: .month, value: -3, to: .now) ?? .distantPast
-        var descripteur = FetchDescriptor<RunRecord>(
-            predicate: #Predicate { $0.date > borne },
-            sortBy: [SortDescriptor(\RunRecord.date, order: .reverse)])
-        descripteur.fetchLimit = 10
-        let recentes = (try? modelContext.fetch(descripteur)) ?? []
-        let repli = recentes.compactMap { $0.route.first }.first
-            .map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lng) }
-
-        let heures = await weather.hours(pour: jourVise, fallback: repli)
-        let dejaDit = WeatherAdvice.DejaDit(
-            jour: profile.weatherAdviceDay,
-            conseil: Self.conseilEnMemoire(profile),
-            rectifiee: profile.weatherAdviceAmended)
-        let annonce = WeatherAdvice.annonce(pour: jourVise, hours: heures,
-                                            usual: creneauHabituel, dejaDit: dejaDit)
-
-        // La mémoire se met à jour MÊME SANS ANNONCE : « on a regardé demain, il n'y avait rien à
-        // dire » est une information. Sans elle, une pluie qui apparaît ensuite serait annoncée
-        // comme un premier conseil, et surtout une pluie qui DISPARAÎT ne serait jamais démentie.
-        Self.enregistrer(WeatherAdvice.memoire(apres: annonce, pour: jourVise, dejaDit: dejaDit),
-                         dans: profile)
-        guard let annonce else { return }
-
-        profile.lastWeatherAdviceDate = .now
-        NotificationService.shared.postWeatherAnnonce(
-            annonce, pourDemain: !Calendar.current.isDateInToday(jourVise))
-    }
-
-    /// Deux heures entre deux messages météo, quel que soit leur contenu.
-    private static let delaiEntreDeuxMessagesMeteo: TimeInterval = 2 * 3600
-
-    /// Est-ce qu'elle court ce jour-là ?
-    ///
-    /// Trois réponses, parce que la question n'a pas la même source selon le jour :
-    ///
-    /// - **Aujourd'hui** : `todaySession`, qui est la séance réellement posée, décalages compris.
-    /// - **Un autre jour de CETTE semaine** : `weekSessions`, le plan généré de la semaine.
-    /// - **Un jour de la semaine SUIVANTE** : `runningDays`, l'intention déclarée. Et c'est le cas
-    ///   qui compte le plus ici — un dimanche soir, le jour visé est un lundi qui n'est pas encore
-    ///   généré. Chercher ce lundi dans `weekSessions` rendrait le lundi PASSÉ, c'est-à-dire la
-    ///   séance d'il y a six jours, et un dimanche soir sur deux donnerait la mauvaise réponse.
-    private static func courtElle(le jour: Date, _ profile: UserProfile,
-                                  calendrier: Calendar = .current) -> Bool {
-        if calendrier.isDate(jour, inSameDayAs: .now) {
-            return profile.todaySession.durationMinutes > 0
-        }
-        let index = AdaptivePlanEngine.weekdayIndex(for: jour)
-        guard calendrier.isDate(jour, equalTo: .now, toGranularity: .weekOfYear) else {
-            return profile.runningDays.contains(index)
-        }
-        let prevue = profile.weekSessions.first { $0.weekday == index }?.session
-        return (prevue?.durationMinutes ?? 0) > 0
-    }
-
-    /// Le conseil en mémoire, relu depuis ses deux `rawValue`. Les deux doivent être là : un seul
-    /// créneau ne décrit pas un conseil, qui est toujours un déplacement de l'un vers l'autre.
-    private static func conseilEnMemoire(_ profile: UserProfile) -> WeatherAdvice.Advice? {
-        guard let eviter = profile.weatherAdviceAvoidRaw.flatMap(WeatherAdvice.Slot.init(rawValue:)),
-              let preferer = profile.weatherAdvicePreferRaw.flatMap(WeatherAdvice.Slot.init(rawValue:))
-        else { return nil }
-        return WeatherAdvice.Advice(avoid: eviter, prefer: preferer)
-    }
-
-    private static func enregistrer(_ memoire: WeatherAdvice.DejaDit, dans profile: UserProfile) {
-        profile.weatherAdviceDay = memoire.jour
-        profile.weatherAdviceAvoidRaw = memoire.conseil?.avoid.rawValue
-        profile.weatherAdvicePreferRaw = memoire.conseil?.prefer.rawValue
-        profile.weatherAdviceAmended = memoire.rectifiee
+        let service = WeatherAdviceService(modelContext: modelContext, weather: weather)
+        await service.conseiller(profile: profile, source: .app)
     }
 
     private func importRunsFromHealth() async {

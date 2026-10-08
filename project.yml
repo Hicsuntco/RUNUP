@@ -101,6 +101,15 @@ targets:
         # exists — an unused background mode is an App Review 2.5.4 flag.
         UIBackgroundModes:
           - location
+          # Le réveil météo (`WeatherBackgroundRefresh`). Sans ce mode, `BGTaskScheduler.submit`
+          # lève et le conseil n'arrive qu'à l'ouverture de l'app — donc jamais « la veille » chez
+          # quelqu'un qui ne l'ouvre pas le soir.
+          - fetch
+        # Doit contenir À L'IDENTIQUE l'identifiant de `WeatherBackgroundRefresh`. Un identifiant
+        # absent de cette liste fait LEVER UNE EXCEPTION à l'enregistrement, pendant le lancement :
+        # l'app ne démarre pas du tout. Les deux écritures ne peuvent donc pas diverger en silence.
+        BGTaskSchedulerPermittedIdentifiers:
+          - com.hicsuntco.runup.weather-refresh
         # Lets `LiveRunViewModel` start a Live Activity (Lock Screen + Dynamic Island) for the
         # in-progress run — see `RunActivityAttributes` (Shared/) and `RunActivityWidget`
         # (RunUpWidgets/). `FrequentUpdates` avoids the system throttling `Activity.update` calls

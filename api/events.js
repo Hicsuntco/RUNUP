@@ -42,6 +42,12 @@ const KNOWN_EVENTS = new Set([
   // `AppScreen.rawValue` — une quinzaine de valeurs possibles, donc agrégeable, sans identifiant
   // de contenu ni durée.
   'screen_viewed',
+  // Un message météo parti. Sa propriété `source` distingue l'ouverture de l'app d'un réveil en
+  // arrière-plan accordé par iOS — et c'est le SEUL moyen de savoir si ces réveils se produisent :
+  // iOS décide seul, ne le signale pas, et ne s'en explique jamais. Sans ce nom ici, l'événement
+  // partirait dans le vide et la question resterait sans réponse, exactement comme l'entonnoir
+  // d'abonnement plus bas.
+  'weather_advice_sent',
   // ── CES ONZE NOMS MANQUAIENT, ET LE CLIENT LES ENVOYAIT DEPUIS DES MOIS ──────────────────────
   //
   // Le commentaire en tête de cette liste dit qu'ajouter un nom est « un acte délibéré ». C'est

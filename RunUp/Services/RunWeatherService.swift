@@ -42,8 +42,24 @@ final class RunWeatherService: NSObject, CLLocationManagerDelegate {
     /// Une fenêtre glissante répondait à « que va-t-il se passer dans les prochaines heures » ; la
     /// question est « que va-t-il se passer DEMAIN ENTRE 17 ET 20 H », et elle se borne par un
     /// jour civil. WeatherKit donne une dizaine de jours à l'heure, demain y est largement.
-    func hours(pour jour: Date, fallback: CLLocationCoordinate2D?) async -> [WeatherAdvice.Hour] {
-        guard let point = await position(fallback: fallback) else { return [] }
+    ///
+    /// `demanderLaPosition` est faux quand l'app a été réveillée en arrière-plan. Avec une
+    /// autorisation « pendant l'utilisation », une demande ponctuelle depuis un processus sans
+    /// interface n'a aucune raison d'aboutir — l'app n'est pas « en cours d'utilisation » — et
+    /// l'attendre consommerait le peu de temps accordé au réveil. Le repli suffit : on court
+    /// presque toujours du même endroit.
+    func hours(pour jour: Date, fallback: CLLocationCoordinate2D?,
+               demanderLaPosition: Bool = true) async -> [WeatherAdvice.Hour] {
+        // Un `if` et non un ternaire : une branche contient un `await`, l'autre un `map`, et un
+        // ternaire qui mêle les deux est le genre d'inférence qui ne se découvre qu'au bout d'un
+        // quart d'heure de compilation.
+        let depart: CLLocation?
+        if demanderLaPosition {
+            depart = await position(fallback: fallback)
+        } else {
+            depart = fallback.map { CLLocation(latitude: $0.latitude, longitude: $0.longitude) }
+        }
+        guard let point = depart else { return [] }
         do {
             let previsions = try await WeatherKit.WeatherService.shared.weather(
                 for: point, including: .hourly)

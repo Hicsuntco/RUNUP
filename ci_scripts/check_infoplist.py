@@ -70,6 +70,59 @@ def cles_declarees() -> set:
     return cles
 
 
+SOURCE_TACHE = RACINE / "RunUp" / "Services" / "WeatherBackgroundRefresh.swift"
+
+
+def identifiants_de_taches_incoherents() -> list:
+    """Les identifiants de tâches d'arrière-plan doivent être écrits à l'identique des deux côtés.
+
+    `BGTaskScheduler.register` LÈVE UNE EXCEPTION si l'identifiant demandé n'est pas dans
+    `BGTaskSchedulerPermittedIdentifiers`. Et comme l'enregistrement a lieu pendant le lancement —
+    Apple l'exige — une divergence ne donne pas une fonctionnalité en panne : elle donne une app
+    qui ne démarre pas. Sur un build déjà envoyé à TestFlight, ça s'est déjà payé une fois.
+
+    La chaîne Swift et la liste du projet sont la même valeur écrite deux fois, dans deux langages,
+    dans deux fichiers. Exactement la forme de duplication que `check_events.py` surveille déjà
+    entre le client et le serveur, avec la même conséquence : silencieuse jusqu'au moment où elle
+    ne l'est plus du tout.
+    """
+    if not SOURCE_TACHE.exists():
+        return []
+    swift = SOURCE_TACHE.read_text(encoding="utf-8")
+    declares = set(re.findall(r'static let identifiant\s*=\s*"([^"]+)"', swift))
+    if not declares:
+        return ["WeatherBackgroundRefresh.swift n'expose plus d'`identifiant` : "
+                "ce contrôle ne surveille plus rien, corrige-le ou retire-le."]
+
+    # Lu ligne à ligne et non par une expression régulière sur le bloc entier : la première
+    # version attrapait « in-progress » dans un commentaire voisin et déclarait une incohérence
+    # qui n'existait pas. Une barrière qui refuse du code juste finit contournée.
+    permis = set()
+    dans_le_bloc = False
+    for ligne in PROJET.read_text(encoding="utf-8").split("\n"):
+        nue = ligne.strip()
+        if nue.startswith("BGTaskSchedulerPermittedIdentifiers:"):
+            dans_le_bloc = True
+            continue
+        if not dans_le_bloc:
+            continue
+        if not nue or nue.startswith("#"):
+            continue
+        if nue.startswith("- "):
+            permis.add(nue[2:].strip().strip('"\''))
+        else:
+            break
+
+    problemes = []
+    for identifiant in sorted(declares - permis):
+        problemes.append(f"« {identifiant} » est enregistré par le Swift mais absent de "
+                         f"BGTaskSchedulerPermittedIdentifiers : l'app LÈVERA au lancement.")
+    for identifiant in sorted(permis - declares):
+        problemes.append(f"« {identifiant} » est autorisé dans project.yml mais plus aucun Swift "
+                         f"ne l'enregistre : du mode d'arrière-plan réclamé pour rien.")
+    return problemes
+
+
 def main() -> int:
     catalogue = json.loads(CATALOGUE.read_text(encoding="utf-8"))
     source = catalogue.get("sourceLanguage", "fr")
@@ -95,6 +148,8 @@ def main() -> int:
             elif len(valeur) < LONGUEUR_MINIMALE:
                 erreurs.append(f"{cle} — « {langue} » ne fait que {len(valeur)} caractères "
                                f"({valeur!r}) : ça n'explique pas pourquoi l'app demande l'accès.")
+
+    erreurs += identifiants_de_taches_incoherents()
 
     declarees = cles_declarees()
     traduites = set(chaines)

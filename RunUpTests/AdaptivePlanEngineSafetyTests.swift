@@ -32,8 +32,8 @@ final class AdaptivePlanEngineSafetyTests: XCTestCase {
         goal: GoalType,
         distance: RaceDistance?,
         weeksUntilRace: Int,
-        runningDays: [Int] = [0, 2, 4, 6],
-        elevationM: Int? = nil
+        elevationM: Int? = nil,
+        runningDays: [Int] = [0, 2, 4, 6]
     ) -> UserProfile {
         let profile = UserProfile(name: "Test")
         profile.goalId = goal
@@ -369,11 +369,11 @@ final class AdaptivePlanEngineSafetyTests: XCTestCase {
     /// Les quatre épreuves qui couvrent le monde de l'ultra : du 50 km de montagne au 100 miles,
     /// plus un format long mais PLAT, qui ne doit pas déclencher les mêmes séances.
     private static let coursesDultra: [(nom: String, distance: RaceDistance, dplus: Int, semaines: Int)] = [
-        ("50 km / 3 000 m", .ultra50, 3000, 14),
-        ("80 km / 4 000 m", .ultra80, 4000, 16),
-        ("100 km / 6 000 m", .ultra100, 6000, 18),
-        ("100 miles / 10 000 m", .ultra100M, 10000, 20),
-        ("50 km roulant / 500 m", .ultra50, 500, 14)
+        (nom: "50 km / 3 000 m", distance: RaceDistance.ultra50, dplus: 3000, semaines: 14),
+        (nom: "80 km / 4 000 m", distance: RaceDistance.ultra80, dplus: 4000, semaines: 16),
+        (nom: "100 km / 6 000 m", distance: RaceDistance.ultra100, dplus: 6000, semaines: 18),
+        (nom: "100 miles / 10 000 m", distance: RaceDistance.ultra100M, dplus: 10000, semaines: 20),
+        (nom: "50 km roulant / 500 m", distance: RaceDistance.ultra50, dplus: 500, semaines: 14)
     ]
 
     /// Les types de séance qui SONT la sortie longue d'une semaine d'ultra.
@@ -384,16 +384,19 @@ final class AdaptivePlanEngineSafetyTests: XCTestCase {
     /// classée dans la famille « sortie longue » pour sa couleur, mais c'est une séance d'une
     /// heure à durée fixe, pas la charge de la semaine.
     private static let sortiesLonguesDultra: Set<SessionKind> = [
-        .ultraLongRun, .ultraSpecificLongRun, .ultraBackToBackDay1, .easedLongRun
+        SessionKind.ultraLongRun, SessionKind.ultraSpecificLongRun,
+        SessionKind.ultraBackToBackDay1, SessionKind.easedLongRun
     ]
 
     @MainActor
     private func ultraLongRunMinutes(week: Int, profile: UserProfile) -> Int? {
-        AdaptivePlanEngine.generateWeekSessions(weekNumber: week, tier: 1, profile: profile)
-            .compactMap(\.session)
-            .filter { seance in seance.kind.map { Self.sortiesLonguesDultra.contains($0) } ?? false }
-            .map(\.durationMinutes)
-            .max()
+        var plusLongue: Int?
+        for jour in AdaptivePlanEngine.generateWeekSessions(weekNumber: week, tier: 1, profile: profile) {
+            guard let seance = jour.session, let kind = seance.kind,
+                  Self.sortiesLonguesDultra.contains(kind) else { continue }
+            plusLongue = max(plusLongue ?? 0, seance.durationMinutes)
+        }
+        return plusLongue
     }
 
     /// LE DÉFAUT LE PLUS COÛTEUX DE TOUT L'OBJECTIF, ET IL ÉTAIT INVISIBLE.
@@ -456,11 +459,10 @@ final class AdaptivePlanEngineSafetyTests: XCTestCase {
                 let avant = durees[i]
                 let apres = durees[i + 1]
                 guard avant > 0 else { continue }
-                let croissance = (Double(apres) - Double(avant)) / Double(avant)
-                XCTAssertLessThanOrEqual(
-                    croissance, 0.15,
-                    "\(course.nom) : la sortie longue bondit de \(Int(croissance * 100))% entre S\(loadWeeks[i]) (\(avant) min) et S\(loadWeeks[i + 1]) (\(apres) min)"
-                )
+                let croissance: Double = (Double(apres) - Double(avant)) / Double(avant)
+                let pourcent: Int = Int(croissance * 100)
+                let message = "\(course.nom) : +\(pourcent)% entre S\(loadWeeks[i]) et S\(loadWeeks[i + 1]) (\(avant) → \(apres) min)"
+                XCTAssertLessThanOrEqual(croissance, 0.15, message)
             }
         }
     }
@@ -541,10 +543,12 @@ final class AdaptivePlanEngineSafetyTests: XCTestCase {
             guard let total = s.totalWeeks else { continue }
 
             for semaine in 1...total {
-                let dures = AdaptivePlanEngine.generateWeekSessions(weekNumber: semaine, tier: 1, profile: profile)
-                    .compactMap(\.session)
-                    .filter { $0.family == .intervals || $0.family == .tempo }
-                    .count
+                let familles: [SessionFamily] = AdaptivePlanEngine
+                    .generateWeekSessions(weekNumber: semaine, tier: 1, profile: profile)
+                    .compactMap { jour in jour.session?.family }
+                let dures: Int = familles.filter { famille in
+                    famille == SessionFamily.intervals || famille == SessionFamily.tempo
+                }.count
                 XCTAssertLessThanOrEqual(
                     dures, 2,
                     "\(course.nom) : S\(semaine) programme \(dures) séances dures — plafond à 2"
@@ -564,12 +568,12 @@ final class AdaptivePlanEngineSafetyTests: XCTestCase {
         let buildWeeks = s.baseWeeks + s.specificWeeks
 
         for semaine in 1...buildWeeks {
-            let seances = AdaptivePlanEngine.generateWeekSessions(weekNumber: semaine, tier: 1, profile: profile)
-                .compactMap(\.session)
-            XCTAssertTrue(
-                seances.contains { $0.family == .endurance || $0.family == .recovery },
-                "S\(semaine) ne contient aucune séance d'endurance ou de récupération"
-            )
+            let familles: [SessionFamily] = AdaptivePlanEngine
+                .generateWeekSessions(weekNumber: semaine, tier: 1, profile: profile)
+                .compactMap { jour in jour.session?.family }
+            let aDuFond: Bool = familles.contains(SessionFamily.endurance)
+                || familles.contains(SessionFamily.recovery)
+            XCTAssertTrue(aDuFond, "S\(semaine) ne contient aucune séance d'endurance ou de récupération")
         }
     }
 
@@ -593,23 +597,34 @@ final class AdaptivePlanEngineSafetyTests: XCTestCase {
         for semaine in premiereSpec...derniereSpec
         where AdaptivePlanEngine.trainingBlock(forWeek: semaine, shape: s) == .specifique {
             let jours = AdaptivePlanEngine.generateWeekSessions(weekNumber: semaine, tier: 1, profile: profile)
-            let jour1 = jours.first { $0.session.flatMap(\.kind) == .ultraBackToBackDay1 }?.weekday
-            let jour2 = jours.first { $0.session.flatMap(\.kind) == .ultraBackToBackDay2 }?.weekday
-            guard let jour1, let jour2 else {
+            var jour1: Int?
+            var jour2: Int?
+            var duree1 = 0
+            var duree2 = 0
+            for jour in jours {
+                guard let seance = jour.session, let kind = seance.kind else { continue }
+                if kind == .ultraBackToBackDay1 {
+                    jour1 = jour.weekday
+                    duree1 = seance.durationMinutes
+                } else if kind == .ultraBackToBackDay2 {
+                    jour2 = jour.weekday
+                    duree2 = seance.durationMinutes
+                }
+            }
+            guard let premier = jour1, let second = jour2 else {
                 XCTFail("S\(semaine) : un 100 km avec 6 000 m de D+ doit porter un enchaînement")
                 continue
             }
             vues += 1
-            XCTAssertEqual(jour2, jour1 + 1, "S\(semaine) : le jour 2 doit être le LENDEMAIN du jour 1")
+            XCTAssertEqual(second, premier + 1, "S\(semaine) : le jour 2 doit être le LENDEMAIN du jour 1")
 
             // Et il doit être plus court : deux sorties longues égales deux jours de suite est la
-            // façon classique de se blesser en préparant un ultra.
-            let d1 = jours.first { $0.weekday == jour1 }?.session?.durationMinutes ?? 0
-            let d2 = jours.first { $0.weekday == jour2 }?.session?.durationMinutes ?? 0
-            XCTAssertLessThan(d2, d1, "S\(semaine) : le jour 2 (\(d2) min) ne doit pas égaler le jour 1 (\(d1) min)")
-            // Il ne doit pas non plus être symbolique : sous la moitié, la fatigue n'est plus le
-            // sujet et la séance ne répète plus rien.
-            XCTAssertGreaterThan(Double(d2) / Double(max(d1, 1)), 0.4, "S\(semaine) : le jour 2 est trop court pour répéter quoi que ce soit")
+            // façon classique de se blesser en préparant un ultra. Mais pas symbolique non plus :
+            // sous la moitié, la fatigue n'est plus le sujet et la séance ne répète plus rien.
+            let message = "S\(semaine) : jour 1 = \(duree1) min, jour 2 = \(duree2) min"
+            XCTAssertLessThan(duree2, duree1, message)
+            let part: Double = Double(duree2) / Double(max(duree1, 1))
+            XCTAssertGreaterThan(part, 0.4, message)
         }
         XCTAssertGreaterThan(vues, 0, "Aucune semaine spécifique vérifiée : le test ne prouve rien")
     }
@@ -644,10 +659,13 @@ final class AdaptivePlanEngineSafetyTests: XCTestCase {
         guard let total = s.totalWeeks else { return XCTFail("Un ultra doit périodiser") }
 
         for semaine in 1...total {
-            let kinds = AdaptivePlanEngine.generateWeekSessions(weekNumber: semaine, tier: 1, profile: profile)
-                .compactMap { $0.session?.kind }
-            XCTAssertFalse(kinds.contains(.ultraBackToBackDay1), "S\(semaine) : enchaînement prescrit sur une semaine qui ne peut pas le porter")
-            XCTAssertFalse(kinds.contains(.ultraBackToBackDay2), "S\(semaine) : jour 2 d'enchaînement orphelin en S\(semaine)")
+            let kinds: [SessionKind] = AdaptivePlanEngine
+                .generateWeekSessions(weekNumber: semaine, tier: 1, profile: profile)
+                .compactMap { jour in jour.session?.kind }
+            XCTAssertFalse(kinds.contains(SessionKind.ultraBackToBackDay1),
+                           "S\(semaine) : enchaînement prescrit sur une semaine qui ne peut pas le porter")
+            XCTAssertFalse(kinds.contains(SessionKind.ultraBackToBackDay2),
+                           "S\(semaine) : jour 2 d'enchaînement orphelin")
         }
     }
 
@@ -666,11 +684,14 @@ final class AdaptivePlanEngineSafetyTests: XCTestCase {
         var vues = 0
         for semaine in premiereSpec...derniereSpec
         where AdaptivePlanEngine.trainingBlock(forWeek: semaine, shape: s) == .specifique {
-            let kinds = AdaptivePlanEngine.generateWeekSessions(weekNumber: semaine, tier: 1, profile: profile)
-                .compactMap { $0.session?.kind }
+            let kinds: [SessionKind] = AdaptivePlanEngine
+                .generateWeekSessions(weekNumber: semaine, tier: 1, profile: profile)
+                .compactMap { jour in jour.session?.kind }
             vues += 1
-            XCTAssertFalse(kinds.contains(.ultraBackToBackDay1), "Un trail de 22 km n'a pas besoin d'un enchaînement (S\(semaine))")
-            XCTAssertTrue(kinds.contains(.ultraSpecificLongRun), "Il doit recevoir une sortie longue spécifique à la place (S\(semaine))")
+            XCTAssertFalse(kinds.contains(SessionKind.ultraBackToBackDay1),
+                           "Un trail de 22 km n'a pas besoin d'un enchaînement (S\(semaine))")
+            XCTAssertTrue(kinds.contains(SessionKind.ultraSpecificLongRun),
+                          "Il doit recevoir une sortie longue spécifique à la place (S\(semaine))")
         }
         XCTAssertGreaterThan(vues, 0, "Aucune semaine spécifique vérifiée : le test ne prouve rien")
     }

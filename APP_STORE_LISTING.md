@@ -117,16 +117,23 @@ Et une course arrivée d'Apple Santé, ou récupérée après un plantage, compt
 
 ## Mots-clés (100 caractères max, séparés par des virgules sans espace)
 ```
-running,entrainement,fractionné,gratuit,marathon,semi,10km,trail,jogging,footing,allure,debutant
+running,entrainement,fractionné,gratuit,marathon,semi,10km,trail,ultra,hyrox,footing,allure,debutant
 ```
 
 Aucun de ces mots n'apparaît dans le nom ni dans le sous-titre : Apple indexe déjà tous les mots du
 titre et du sous-titre, et les répéter ici ne fait que consommer des caractères sans ajouter une
 seule requête. C'est ce que faisait l'ancienne liste — `course`, `coach` et `coureuse` (même racine
 que `course`) y étaient tous déjà couverts par « RUNUP : Coach de Course » / « Ton coach personnel
-de course ». Les 33 caractères récupérés servent maintenant à des termes réellement nouveaux
-(`trail`, `jogging`, `footing`, `allure`, `parcours`). Séparateur : virgule seule, sans espace — un espace
-après la virgule compte dans les 100 caractères et n'apporte rien.
+de course ». Les caractères récupérés servent à des termes réellement nouveaux. Séparateur : virgule
+seule, sans espace — un espace après la virgule compte dans les 100 caractères et n'apporte rien.
+
+`ultra` et `hyrox` ont pris la place de `jogging`. Apple assemble lui-même les mots-clés en
+expressions, donc `ultra` + `trail` couvre « ultra trail » et « trail ultra » sans qu'il faille
+écrire la paire : cinq caractères achètent une requête entière. Et ces deux termes-là désignent
+maintenant quelque chose de réel dans l'app — un plan d'ultra qui compte en kilomètres-effort, un
+plan HYROX avec ses stations — là où `jogging` faisait doublon avec `running` et `footing`, déjà
+présents tous les deux. `hyrox` est en plus une requête à forte intention et à concurrence quasi
+nulle : personne ne la cherche par hasard.
 
 ---
 
@@ -213,7 +220,7 @@ And a run that arrives from Apple Health, or is recovered after a crash, now cou
 
 ## Keywords (100 characters max, comma-separated, no spaces)
 ```
-run,5k,10k,half,marathon,pace,tracker,gps,interval,free,jog,fitness,beginner,routes,race,training
+run,5k,10k,half,marathon,pace,tracker,gps,interval,free,ultra,hyrox,beginner,routes,race,training
 ```
 
 None of these repeats a word from the name or subtitle — Apple already indexes every word in both,
@@ -304,7 +311,7 @@ Y una carrera que llega de Apple Salud, o que se recupera tras un fallo, cuenta 
 
 ## Palabras clave (100 caracteres máx., separadas por comas sin espacios)
 ```
-correr,maraton,10k,media,ritmo,entrenamiento,gratis,gps,series,principiante,trote,rutas,carrera
+correr,maraton,10k,media,ritmo,entrenamiento,gratis,gps,series,principiante,trail,ultra,hyrox,rutas
 ```
 
 Ninguna repite una palabra del nombre ni del subtítulo: Apple ya indexa todas las palabras de

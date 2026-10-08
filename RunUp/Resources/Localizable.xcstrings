@@ -8110,6 +8110,23 @@
         }
       }
     },
+    "Finalement, pas de pluie": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No rain after all"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al final, no va a llover"
+          }
+        }
+      }
+    },
     "Footing": {
       "localizations": {
         "en": {
@@ -9860,6 +9877,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "El reloj, el widget y el seguimiento GPS"
+          }
+        }
+      }
+    },
+    "La météo a changé": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The forecast changed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El tiempo ha cambiado"
           }
         }
       }
@@ -13898,6 +13932,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Te avisa en voz alta si te desvías de tu ritmo objetivo."
+          }
+        }
+      }
+    },
+    "Prévois ta séance %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan your session %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planifica tu sesión %@."
           }
         }
       }
@@ -18453,6 +18504,23 @@
         }
       }
     },
+    "Ton créneau %@ devrait être sec.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your %@ slot should stay dry."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu franja %@ debería estar seca."
+          }
+        }
+      }
+    },
     "Ton département": {
       "localizations": {
         "en": {
@@ -20293,6 +20361,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "carrera libre"
+          }
+        }
+      }
+    },
+    "demain matin": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tomorrow morning"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mañana por la mañana"
+          }
+        }
+      }
+    },
+    "demain midi": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tomorrow at midday"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mañana al mediodía"
+          }
+        }
+      }
+    },
+    "demain soir": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tomorrow evening"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mañana por la tarde"
           }
         }
       }

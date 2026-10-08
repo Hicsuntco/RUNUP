@@ -2,7 +2,7 @@ import Foundation
 import CoreLocation
 import WeatherKit
 
-/// Les prévisions horaires du jour, pour décider si la séance doit changer d'heure.
+/// Les prévisions horaires d'un jour, pour décider si la séance doit changer d'heure.
 ///
 /// # POURQUOI CE SERVICE EST AUSSI PETIT
 ///
@@ -33,16 +33,24 @@ final class RunWeatherService: NSObject, CLLocationManagerDelegate {
         manager.desiredAccuracy = kCLLocationAccuracyKilometer
     }
 
-    /// Les heures de prévision du jour, ou un tableau vide — et un tableau vide n'est PAS du beau
-    /// temps : `WeatherAdvice` refuse de conseiller quoi que ce soit sans prévisions.
-    func hoursToday(fallback: CLLocationCoordinate2D?) async -> [WeatherAdvice.Hour] {
+    /// Les heures de prévision d'un JOUR DONNÉ, ou un tableau vide — et un tableau vide n'est PAS
+    /// du beau temps : `WeatherAdvice` refuse de conseiller quoi que ce soit sans prévisions.
+    ///
+    /// Le jour est un paramètre, et c'est ce qui permet au conseil d'arriver la veille. La version
+    /// d'avant prenait de maintenant à « maintenant plus vingt-quatre heures », ce qui recouvrait
+    /// la journée en cours et un bout de la suivante — donc jamais la soirée de demain en entier.
+    /// Une fenêtre glissante répondait à « que va-t-il se passer dans les prochaines heures » ; la
+    /// question est « que va-t-il se passer DEMAIN ENTRE 17 ET 20 H », et elle se borne par un
+    /// jour civil. WeatherKit donne une dizaine de jours à l'heure, demain y est largement.
+    func hours(pour jour: Date, fallback: CLLocationCoordinate2D?) async -> [WeatherAdvice.Hour] {
         guard let point = await position(fallback: fallback) else { return [] }
         do {
             let previsions = try await WeatherKit.WeatherService.shared.weather(
                 for: point, including: .hourly)
-            let finDuJour = Calendar.current.date(byAdding: .day, value: 1, to: .now) ?? .now
+            let debutDuJour = Calendar.current.startOfDay(for: jour)
+            let finDuJour = Calendar.current.date(byAdding: .day, value: 1, to: debutDuJour) ?? jour
             return previsions.forecast
-                .filter { $0.date >= .now.addingTimeInterval(-3600) && $0.date <= finDuJour }
+                .filter { $0.date >= debutDuJour && $0.date < finDuJour }
                 .map {
                     WeatherAdvice.Hour(
                         date: $0.date,

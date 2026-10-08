@@ -1,6 +1,6 @@
 import Foundation
 
-/// « Il va pleuvoir ce soir, va courir plutôt ce midi. »
+/// « Il va pleuvoir demain soir, prévois ta séance demain midi. »
 ///
 /// # CE QUE CE FICHIER EST, ET CE QU'IL N'EST PAS
 ///
@@ -120,20 +120,28 @@ enum WeatherAdvice {
         calendrier.date(bySettingHour: slot.heures.lowerBound, minute: 0, second: 0, of: jour)
     }
 
-    /// Le conseil du jour, ou `nil` — et `nil` est la réponse la plus fréquente, par construction.
-    static func advise(hours: [Hour], usual: Slot, now: Date = .now,
+    /// Le conseil pour un jour donné, ou `nil` — et `nil` est la réponse la plus fréquente, par
+    /// construction.
+    ///
+    /// `jour` vaut `now` par défaut, ce qui est le comportement d'origine : conseiller la journée
+    /// en cours. Le passer explicitement permet de parler de DEMAIN — c'est tout ce qui manquait
+    /// pour qu'un conseil puisse arriver la veille. Rien d'autre ne change : les trois conditions
+    /// sont les mêmes, et le préavis se mesure toujours depuis `now`, donc un conseil pour demain
+    /// le satisfait d'office.
+    static func advise(hours: [Hour], usual: Slot, now: Date = .now, jour: Date? = nil,
                        calendrier: Calendar = .current) -> Advice? {
-        guard let pluieHabituelle = pluie(surLe: usual, hours, jour: now, calendrier: calendrier),
+        let vise = jour ?? now
+        guard let pluieHabituelle = pluie(surLe: usual, hours, jour: vise, calendrier: calendrier),
               pluieHabituelle >= pluieProbable else { return nil }
 
         // Le créneau habituel est-il encore devant nous ? S'il est passé, il n'y a rien à éviter :
         // soit elle a déjà couru, soit la journée est faite.
-        guard let debutHabituel = debut(usual, jour: now, calendrier: calendrier),
+        guard let debutHabituel = debut(usual, jour: vise, calendrier: calendrier),
               debutHabituel > now else { return nil }
 
         let candidats = Slot.allCases.filter { $0 != usual }.compactMap { slot -> (Slot, Double)? in
-            guard let p = pluie(surLe: slot, hours, jour: now, calendrier: calendrier),
-                  let debutCandidat = debut(slot, jour: now, calendrier: calendrier),
+            guard let p = pluie(surLe: slot, hours, jour: vise, calendrier: calendrier),
+                  let debutCandidat = debut(slot, jour: vise, calendrier: calendrier),
                   debutCandidat.timeIntervalSince(now) >= preavisMinimum
             else { return nil }
             return (slot, p)
@@ -143,8 +151,8 @@ enum WeatherAdvice {
         // se suit mieux qu'un qui fait attendre neuf heures.
         guard let (meilleur, pluieMeilleure) = candidats.min(by: { gauche, droite in
             if gauche.1 != droite.1 { return gauche.1 < droite.1 }
-            let dg = debut(gauche.0, jour: now, calendrier: calendrier) ?? .distantFuture
-            let dd = debut(droite.0, jour: now, calendrier: calendrier) ?? .distantFuture
+            let dg = debut(gauche.0, jour: vise, calendrier: calendrier) ?? .distantFuture
+            let dd = debut(droite.0, jour: vise, calendrier: calendrier) ?? .distantFuture
             return dg < dd
         }) else { return nil }
 
@@ -152,5 +160,117 @@ enum WeatherAdvice {
               pluieHabituelle - pluieMeilleure >= ecartFranc else { return nil }
 
         return Advice(avoid: usual, prefer: meilleur)
+    }
+
+    // MARK: De quel jour parle-t-on
+
+    /// Le prochain jour sur lequel un conseil a du sens : aujourd'hui tant que le créneau habituel
+    /// n'a pas commencé, demain dès qu'il est entamé.
+    ///
+    /// C'EST CE CALCUL QUI FAIT ARRIVER LE CONSEIL LA VEILLE, et il n'a pas fallu d'heure butoir
+    /// pour ça. Pour quelqu'un qui court le soir, dès 17 h le créneau du jour est entamé : le
+    /// prochain conseil utile porte donc sur demain soir, et une app ouverte à 20 h le donne. Pour
+    /// quelqu'un qui court le matin, le basculement a lieu à 7 h — elle apprend la météo de demain
+    /// matin dès la fin de sa séance d'aujourd'hui, soit presque vingt-quatre heures de préavis.
+    ///
+    /// Une heure fixe — « après 18 h, parle de demain » — aurait été fausse pour les deux : trop
+    /// tard pour la coureuse du soir, qui part à 17 h, et absurdement tard pour celle du matin.
+    /// Le bon repère n'est pas l'heure qu'il est, c'est l'heure à laquelle ELLE court.
+    static func jourAConseiller(usual: Slot, now: Date = .now,
+                                calendrier: Calendar = .current) -> Date {
+        guard let debutDuJour = debut(usual, jour: now, calendrier: calendrier),
+              debutDuJour > now else {
+            return calendrier.date(byAdding: .day, value: 1, to: now) ?? now
+        }
+        return now
+    }
+
+    // MARK: Ce qu'on a déjà dit
+
+    /// L'état de ce qui a été annoncé, pour ne pas le répéter et pour savoir quoi rectifier.
+    struct DejaDit: Equatable {
+        /// Le jour dont parlait la dernière annonce. `nil` : on n'a jamais rien dit.
+        ///
+        /// `= nil` écrit, et pas seulement déduit du point d'interrogation : c'est ce qui garantit
+        /// que l'initialiseur par membre offre un défaut pour ce champ, donc que `DejaDit()` sans
+        /// argument compile. Trois caractères contre un aller-retour de CI d'un quart d'heure.
+        var jour: Date? = nil
+        /// Le conseil annoncé ce jour-là. `nil` avec un `jour` non nil veut dire « on a regardé,
+        /// il n'y avait rien à dire » — et c'est une information, pas une absence : elle évite de
+        /// re-notifier le même conseil, et permet de reconnaître un changement.
+        var conseil: Advice? = nil
+        /// Une rectification a déjà été envoyée pour ce jour-là.
+        var rectifiee: Bool = false
+    }
+
+    /// Ce qu'il y a à annoncer.
+    enum Annonce: Equatable {
+        /// Première parole sur ce jour : « il va pleuvoir demain soir, cours plutôt demain midi ».
+        case conseil(Advice)
+        /// On avait conseillé un créneau, ce n'est plus le bon.
+        case rectification(Advice)
+        /// On avait annoncé de la pluie sur un créneau, il n'y en aura pas. Le créneau rendu est
+        /// celui qu'on avait dit d'éviter — c'est lui qu'elle peut reprendre.
+        case annulation(Slot)
+    }
+
+    /// Faut-il dire quelque chose, et quoi ?
+    ///
+    /// # POURQUOI LA RECTIFICATION EST LIMITÉE À UNE
+    ///
+    /// Une prévision à vingt heures d'échéance bouge. Sans limite, une journée hésitante
+    /// enverrait quatre messages contradictoires, et c'est la façon exacte dont on perd un
+    /// interrupteur pour toujours — le défaut contre lequel tout l'en-tête de ce fichier met en
+    /// garde. Une annonce, au plus une rectification, puis silence : la rectification est ce qui
+    /// rend le conseil de la veille fiable, pas un abonnement aux variations du ciel.
+    ///
+    /// Et il n'y a pas de rectification sans conseil préalable. Dire « finalement il ne pleut
+    /// plus » à quelqu'un à qui on n'a jamais annoncé de pluie serait absurde ; dire « ça a
+    /// changé » quand rien n'avait été dit, c'est juste un conseil, et c'est ce qui est rendu.
+    static func annonce(pour jour: Date, hours: [Hour], usual: Slot, dejaDit: DejaDit,
+                        now: Date = .now, calendrier: Calendar = .current) -> Annonce? {
+        let nouveau = advise(hours: hours, usual: usual, now: now, jour: jour,
+                             calendrier: calendrier)
+        let memeJour = dejaDit.jour.map { calendrier.isDate($0, inSameDayAs: jour) } ?? false
+
+        guard memeJour else {
+            // Un jour neuf : ce qu'on avait dit sur le précédent ne pèse plus rien.
+            return nouveau.map { Annonce.conseil($0) }
+        }
+        guard !dejaDit.rectifiee else { return nil }
+        guard let ancien = dejaDit.conseil else {
+            // On avait regardé sans rien trouver à dire. Si la pluie arrive maintenant, c'est une
+            // première annonce sur ce jour, pas une rectification.
+            return nouveau.map { Annonce.conseil($0) }
+        }
+        guard let nouveau else { return .annulation(ancien.avoid) }
+        return ancien == nouveau ? nil : .rectification(nouveau)
+    }
+
+    /// Ce qu'il faut retenir après une annonce — ou après avoir regardé sans rien dire.
+    ///
+    /// Pure, et séparée de l'envoi, parce que c'est la partie où l'on se trompe. Trois champs à
+    /// tenir d'accord, quatre issues possibles, et une erreur ne se verrait pas tout de suite :
+    /// elle se verrait une semaine plus tard, sous la forme d'une rectification qui n'arrive
+    /// jamais ou d'un conseil répété tous les matins. `AppState` ne fait plus que recopier ce
+    /// qu'elle rend.
+    static func memoire(apres annonce: Annonce?, pour jour: Date, dejaDit: DejaDit,
+                        calendrier: Calendar = .current) -> DejaDit {
+        guard let annonce else {
+            // Rien dit. On note tout de même qu'on a REGARDÉ ce jour-là : sans cette trace, un
+            // changement de prévision plus tard serait indistinguable d'un premier conseil, et la
+            // rectification n'existerait pas. Si le jour était déjà le bon, on ne touche à rien —
+            // écraser effacerait ce qu'on avait annoncé.
+            let memeJour = dejaDit.jour.map { calendrier.isDate($0, inSameDayAs: jour) } ?? false
+            return memeJour ? dejaDit : DejaDit(jour: jour, conseil: nil, rectifiee: false)
+        }
+        switch annonce {
+        case .conseil(let advice):
+            return DejaDit(jour: jour, conseil: advice, rectifiee: false)
+        case .rectification(let advice):
+            return DejaDit(jour: jour, conseil: advice, rectifiee: true)
+        case .annulation:
+            return DejaDit(jour: jour, conseil: nil, rectifiee: true)
+        }
     }
 }

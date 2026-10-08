@@ -36,9 +36,37 @@ final class UserProfile {
     /// personne n'a encore vue est le meilleur moyen de la faire refuser — et d'emporter le suivi
     /// GPS avec elle.
     var weatherAlertsEnabled: Bool = true
-    /// Le jour du dernier conseil envoyé. Un par jour au maximum : deux messages le même matin
-    /// pour la même averse, et l'interrupteur est coupé pour toujours.
+    /// L'instant du dernier message météo envoyé, quel qu'il soit.
+    ///
+    /// Sert de délai de garde : deux messages à quelques minutes d'écart pour la même averse — un
+    /// conseil puis sa rectification — se lisent comme une app qui s'affole. Le détail de QUOI a
+    /// été dit, et sur quel jour, est dans les trois champs ci-dessous.
     var lastWeatherAdviceDate: Date? = nil
+
+    /// # CE QUE LA DERNIÈRE ANNONCE MÉTÉO A DIT, ET SUR QUEL JOUR
+    ///
+    /// Sans ça, un conseil ne peut être donné qu'une fois et jamais corrigé : l'app n'a aucun
+    /// moyen de savoir qu'elle a annoncé de la pluie pour demain soir, donc aucun moyen de dire
+    /// « finalement c'est sec » quand la prévision tourne. C'est exactement ce qui manquait pour
+    /// qu'un conseil de la veille soit fiable — un conseil qu'on ne peut pas rectifier vaut
+    /// moins que pas de conseil.
+    ///
+    /// LES TROIS SONT OPTIONNELS, ET CE N'EST PAS UN HASARD. Une propriété non optionnelle d'un
+    /// type personnalisé avec une valeur par défaut Swift fait PLANTER l'app au lancement :
+    /// la migration légère ajoute la colonne à `NULL`, et décoder `NULL` dans un non-optionnel
+    /// est fatal au premier accès. C'est arrivé une fois, en production, avec `discipline`. Les
+    /// créneaux sont donc stockés par leur `rawValue` — des `String?`, que SwiftData sait rendre
+    /// vides sans rien casser. Voir `ci_scripts/check_model_defaults.py`.
+    ///
+    /// `weatherAdviceDay` non nil avec les deux créneaux à `nil` est une information, pas un
+    /// trou : « on a regardé ce jour-là, il n'y avait rien à dire ».
+    var weatherAdviceDay: Date? = nil
+    var weatherAdviceAvoidRaw: String? = nil
+    var weatherAdvicePreferRaw: String? = nil
+    /// Une rectification a déjà été envoyée pour `weatherAdviceDay`. Une seule par jour : une
+    /// prévision à vingt heures d'échéance bouge, et quatre messages contradictoires sont la
+    /// façon exacte dont on perd un interrupteur pour toujours.
+    var weatherAdviceAmended: Bool = false
     var cycleTrackingEnabled: Bool = false
     /// Est-ce que la phase estimée est TRANSMISE AU COACH — donc à un service tiers ?
     ///

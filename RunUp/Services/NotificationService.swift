@@ -210,28 +210,57 @@ final class NotificationService: NSObject {
         await center.notificationSettings().authorizationStatus == .authorized
     }
 
-    /// « Il va pleuvoir ce soir. Ta séance passerait mieux ce midi. »
+    /// « Il va pleuvoir demain soir. Prévois ta séance demain midi. »
     ///
-    /// Immédiate, et non programmée : le texte d'une notification est figé au moment où on la
-    /// programme, donc une notification posée hier ne peut pas parler de la pluie d'aujourd'hui.
-    /// Elle part quand la prévision arrive, c'est-à-dire quand l'app s'ouvre — ce qu'elle fait
-    /// tous les jours chez quelqu'un qui suit un programme.
-    func postWeatherAdvice(_ advice: WeatherAdvice.Advice) {
-        let quand = Self.moment(advice.avoid)
-        let plutot = Self.moment(advice.prefer)
-        postImmediateNotification(
-            title: String(localized: "Il va pleuvoir \(quand)"),
-            body: String(localized: "Ta séance passerait mieux \(plutot).")
-        )
+    /// # POURQUOI C'EST IMMÉDIAT ALORS QUE ÇA PARLE DE DEMAIN
+    ///
+    /// Le texte d'une notification est figé au moment où on la PROGRAMME. Une notification posée
+    /// pour demain 8 h ne peut donc pas parler de la pluie de demain : il faudrait en écrire le
+    /// texte aujourd'hui, à partir d'une prévision qui n'existe pas encore.
+    ///
+    /// Le conseil de la veille ne s'obtient pas en programmant plus tôt, il s'obtient en REGARDANT
+    /// plus loin — la prévision de demain, lue aujourd'hui, annoncée tout de suite. C'est pour ça
+    /// que `WeatherAdvice.jourAConseiller` existe, et c'est pour ça que celle-ci reste immédiate.
+    ///
+    /// `pourDemain` ne change que les mots : « demain soir » au lieu de « ce soir ». Les deux
+    /// phrases sont des clés entières, jamais assemblées — l'ordre des mots ne survit pas au
+    /// passage en espagnol.
+    func postWeatherAnnonce(_ annonce: WeatherAdvice.Annonce, pourDemain: Bool) {
+        switch annonce {
+        case .conseil(let advice):
+            postImmediateNotification(
+                title: String(localized: "Il va pleuvoir \(Self.moment(advice.avoid, demain: pourDemain))"),
+                // « Prévois » pour demain, « passerait mieux » pour aujourd'hui : on ne demande pas
+                // la même chose. Aujourd'hui on propose de bouger une séance ; la veille, on
+                // propose de la poser au bon endroit, ce qui ne coûte rien.
+                body: pourDemain
+                    ? String(localized: "Prévois ta séance \(Self.moment(advice.prefer, demain: true)).")
+                    : String(localized: "Ta séance passerait mieux \(Self.moment(advice.prefer, demain: false)).")
+            )
+        case .rectification(let advice):
+            postImmediateNotification(
+                title: String(localized: "La météo a changé"),
+                body: String(localized: "Ta séance passerait mieux \(Self.moment(advice.prefer, demain: pourDemain)).")
+            )
+        case .annulation(let slot):
+            postImmediateNotification(
+                title: String(localized: "Finalement, pas de pluie"),
+                body: String(localized: "Ton créneau \(Self.moment(slot, demain: pourDemain)) devrait être sec.")
+            )
+        }
     }
 
-    /// « ce matin », « ce midi », « ce soir » — traduits, et jamais construits par concaténation :
-    /// l'ordre des mots d'une phrase ne survit pas au passage en espagnol.
-    private static func moment(_ slot: WeatherAdvice.Slot) -> String {
-        switch slot {
-        case .morning: return String(localized: "ce matin")
-        case .noon: return String(localized: "ce midi")
-        case .evening: return String(localized: "ce soir")
+    /// « ce matin » / « demain matin » — traduits, et jamais construits par concaténation :
+    /// l'ordre des mots d'une phrase ne survit pas au passage en espagnol, et « demain » moins
+    /// que tout le reste.
+    private static func moment(_ slot: WeatherAdvice.Slot, demain: Bool) -> String {
+        switch (slot, demain) {
+        case (.morning, false): return String(localized: "ce matin")
+        case (.noon, false): return String(localized: "ce midi")
+        case (.evening, false): return String(localized: "ce soir")
+        case (.morning, true): return String(localized: "demain matin")
+        case (.noon, true): return String(localized: "demain midi")
+        case (.evening, true): return String(localized: "demain soir")
         }
     }
 

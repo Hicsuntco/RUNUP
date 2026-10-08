@@ -85,6 +85,16 @@ enum TimeFormat {
         return String(format: "%.1f", locale: Locale.current, kmh)
     }
 
+    /// « 7,42 » — deux décimales, et le séparateur décimal de la langue de l'appareil.
+    ///
+    /// Écrit trois fois en `String(format:)` avant d'atterrir ici : deux fois dans la Live
+    /// Activity, une dans le widget d'accueil. Trois formatages de la même distance, dans deux
+    /// cibles, et rien pour les tenir d'accord — c'est précisément ce que ce fichier existe pour
+    /// éviter.
+    static func distance(km: Double) -> String {
+        String(format: "%.2f", locale: .current, max(0, km))
+    }
+
     /// Ce que la discipline donne à lire, et son unité. Un seul endroit décide — sans quoi
     /// chaque écran choisirait, et deux écrans finiraient par ne pas dire la même chose de la
     /// même sortie.

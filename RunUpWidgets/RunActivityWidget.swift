@@ -24,7 +24,7 @@ struct RunActivityWidget: Widget {
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(String(format: "%.2f", locale: .current, context.state.distanceKm))
+                        Text(TimeFormat.distance(km: context.state.distanceKm))
                             .font(DisplayFont.font(24))
                             .foregroundColor(.white)
                         Text(verbatim: "km").font(.custom("\(DisplayFont.family)-Bold", size: 10.5)).tracking(0.2).foregroundColor(.white.opacity(0.55))
@@ -80,7 +80,7 @@ struct RunActivityWidget: Widget {
             }
 
             HStack {
-                metric(value: String(format: "%.2f", locale: .current, context.state.distanceKm), label: "km")
+                metric(value: TimeFormat.distance(km: context.state.distanceKm), label: "km")
                 Spacer(minLength: 8)
                 // « Allure » était écrit en dur, sous un chiffre qui est des kilomètres-heure dès
                 // qu'on roule. `Discipline` décide, et c'est la même décision que l'écran de

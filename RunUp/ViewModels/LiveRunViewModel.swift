@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import ActivityKit
+import WidgetKit
 
 /// Drives the Live Run screen: real elapsed time + GPS distance (via `LocationService`), coach
 /// voice cues at scripted timestamps, and real GPS-instability detection. Ported from the
@@ -46,6 +47,7 @@ final class LiveRunViewModel {
     private var accumulatedPauseSeconds: Double = 0
     private var pauseBeganAt: Date?
     private var lastActivityPush = Date.distantPast
+    private var lastWidgetPush = Date.distantPast
     private var lastSnapshotWrite = Date.distantPast
     private static let snapshotIntervalSeconds: Double = 10
 
@@ -369,6 +371,7 @@ final class LiveRunViewModel {
             }
         }
         startLiveActivity()
+        publishWidgetRun()
         // Les deux tâches héritent de l'isolation `@MainActor` : `tick()` et `pollHeartRate()`
         // s'exécutent donc sur le fil principal sans `MainActor.run` explicite. `weak self` est
         // relu à chaque tour plutôt que capturé fort pour la durée du sommeil, pour que le modèle
@@ -442,6 +445,17 @@ final class LiveRunViewModel {
         // Every 5s, not every tick — ActivityKit updates are meant to be occasional, not a
         // per-second stream (the chrono ticks itself via `timerReference`; these pushes only
         // refresh distance/pace).
+        // Quatre-vingt-dix secondes, et non cinq comme la Live Activity : un widget d'écran
+        // d'accueil ne se recharge pas quand il veut. WidgetKit en ratione quelques dizaines par
+        // jour, et une sortie d'une heure republiée toutes les cinq secondes les épuiserait en
+        // trois minutes — après quoi le widget se figerait pour le reste de la journée, y compris
+        // une fois la course finie. Le chrono, lui, avance tout seul (voir
+        // `LiveRunWidgetSnapshot`), donc ces republications ne portent que la distance et le
+        // rythme.
+        if Date().timeIntervalSince(lastWidgetPush) >= 90 {
+            lastWidgetPush = Date()
+            publishWidgetRun()
+        }
         if Date().timeIntervalSince(lastActivityPush) >= 5 {
             lastActivityPush = Date()
             updateLiveActivity()
@@ -557,6 +571,7 @@ final class LiveRunViewModel {
             showCue("Pause automatique — reprends dès que tu es prête, ou continue à marcher pour repartir.")
         }
         updateLiveActivity()
+        publishWidgetRun()
     }
 
     /// Vraie reprise du mouvement, par l'une ou l'autre des deux mesures — voir `AutoPause`.
@@ -577,6 +592,7 @@ final class LiveRunViewModel {
         location.resume()
         Haptics.impact(.light)
         updateLiveActivity()
+        publishWidgetRun()
     }
 
     /// Polls HealthKit for a genuinely recent heart-rate sample every 5s — separate from `tick()`
@@ -630,6 +646,7 @@ final class LiveRunViewModel {
             location.resume()
         }
         updateLiveActivity()
+        publishWidgetRun()
     }
 
     private func startLiveActivity() {
@@ -639,6 +656,32 @@ final class LiveRunViewModel {
                                                disciplineRaw: discipline.rawValue)
         let state = RunActivityAttributes.ContentState(distanceKm: 0, elapsedSeconds: 0, paceLabel: "--:--", isPaused: false, timerReference: Date())
         liveActivity = try? Activity.request(attributes: attributes, content: ActivityContent(state: state, staleDate: .now + 60), pushType: nil)
+    }
+
+    /// Écrit l'état de la course là où le widget de l'écran d'accueil peut le lire.
+    ///
+    /// Appelée au départ, à chaque pause et reprise, et toutes les quatre-vingt-dix secondes —
+    /// les trois premiers parce qu'ils changent ce qui est AFFICHÉ et non seulement ce qui est
+    /// compté : un chrono qui continue d'avancer sur l'écran d'accueil pendant une pause est un
+    /// mensonge que rien ne viendrait corriger avant la republication suivante.
+    private func publishWidgetRun() {
+        LiveRunWidgetSnapshot.save(LiveRunWidgetSnapshot(
+            startedAt: Date(timeIntervalSinceNow: -elapsedSeconds),
+            elapsedSeconds: elapsedSeconds,
+            isPaused: isPaused,
+            distanceKm: distanceKm,
+            rythmeValeur: rythmeRecent,
+            sessionTitle: suitLePlan ? session.displayTitle : discipline.title,
+            disciplineRaw: discipline.rawValue,
+            publishedAt: .now))
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    /// Efface la course du widget. À l'arrêt, et tout de suite : sans ça l'écran d'accueil
+    /// garderait une course en cours un quart d'heure après la ligne d'arrivée.
+    private func clearWidgetRun() {
+        LiveRunWidgetSnapshot.clear()
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     private func updateLiveActivity() {
@@ -680,6 +723,7 @@ final class LiveRunViewModel {
     /// correctly refused to keep it and told her nothing was recorded.
     func stop() -> RunRecord {
         endLiveActivity()
+        clearWidgetRun()
         timerTask?.cancel()
         heartRatePollTask?.cancel()
         voiceCoach?.stop()

@@ -6047,6 +6047,23 @@
         }
       }
     },
+    "Course en cours, %@ kilomètres": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run in progress, %@ kilometres"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carrera en curso, %@ kilómetros"
+          }
+        }
+      }
+    },
     "Course importée": {
       "extractionState": "manual",
       "localizations": {

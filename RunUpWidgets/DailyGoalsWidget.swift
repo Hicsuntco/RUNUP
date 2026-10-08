@@ -4,6 +4,14 @@ import SwiftUI
 struct DailyGoalsEntry: TimelineEntry {
     let date: Date
     let snapshot: DailyGoalsSnapshot
+    /// La course en cours, s'il y en a une ET qu'elle est encore fraîche à `date`.
+    ///
+    /// Décidé à la construction de l'entrée et non à l'affichage : une entrée de widget est une
+    /// image figée pour un INSTANT donné, et le `timeline` en pose une dans le futur, juste après
+    /// la péremption. C'est ce qui fait revenir l'anneau tout seul même si plus aucun rechargement
+    /// n'est accordé — sans quoi la péremption aurait eu besoin, pour s'appliquer, de la chose
+    /// même dont son absence est le symptôme.
+    var course: LiveRunWidgetSnapshot? = nil
 }
 
 struct DailyGoalsProvider: TimelineProvider {
@@ -35,6 +43,23 @@ struct DailyGoalsProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<DailyGoalsEntry>) -> Void) {
         let snapshot = DailyGoalsSnapshot.load() ?? .empty
+
+        // UNE COURSE EN COURS PREND TOUTE LA PLACE. Annoncer « 2/3 bouclés » pendant qu'elle
+        // court, c'est répondre à une question que personne ne pose à ce moment-là.
+        if let course = LiveRunWidgetSnapshot.load(), course.estFraiche(a: .now) {
+            completion(Timeline(
+                entries: [
+                    DailyGoalsEntry(date: .now, snapshot: snapshot, course: course),
+                    // Et l'anneau revient de lui-même à la péremption. Cette seconde entrée est
+                    // tout l'intérêt du procédé : elle n'a besoin d'aucun rechargement pour
+                    // s'afficher, donc une app tuée en pleine sortie ne laisse pas un chrono
+                    // tourner indéfiniment sur l'écran d'accueil.
+                    DailyGoalsEntry(date: course.perimeeA, snapshot: snapshot)
+                ],
+                policy: .after(course.perimeeA)))
+            return
+        }
+
         let entry = DailyGoalsEntry(date: .now, snapshot: snapshot)
         // The app calls `WidgetCenter.shared.reloadAllTimelines()` itself the moment anything
         // actually changes (`AppState.publishWidgetSnapshot`) — this hourly fallback only covers
@@ -145,6 +170,7 @@ struct DailyGoalsWidgetView: View {
     /// La date de l'entrée : un rendu de widget est une image figée, `.now` au moment où le corps
     /// s'évalue n'est pas la bonne horloge.
     var entryDate: Date = .now
+    var course: LiveRunWidgetSnapshot? = nil
 
     private static let weekdayFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -198,12 +224,120 @@ struct DailyGoalsWidgetView: View {
 
     var body: some View {
         Group {
-            switch family {
-            case .systemMedium: mediumBody
-            default: smallBody
+            if let course {
+                // `widgetURL` et non un `Link` : sur un widget, c'est la zone entière qui doit
+                // répondre. Pendant une course on touche son écran d'accueil en bougeant, parfois
+                // avec un gant — viser une pastille serait le mauvais geste à proposer.
+                runBody(course)
+                    .widgetURL(URL(string: "runup://live"))
+            } else {
+                switch family {
+                case .systemMedium: mediumBody
+                default: smallBody
+                }
             }
         }
-        .containerBackground(for: .widget) { bg }
+        .containerBackground(for: .widget) { course == nil ? bg : runBackground }
+    }
+
+    // MARK: Une course en cours
+
+    /// Le fond passe à l'accent : c'est ce qui fait qu'on reconnaît l'état de l'écran d'accueil
+    /// sans lire un mot. Un widget d'app de course qui garde son fond ordinaire pendant qu'on
+    /// court ne ressemble à rien de ce que font les autres.
+    private var runBackground: Color { colors.count > 1 ? colors[1] : colors.first ?? .black }
+
+    @ViewBuilder private func runBody(_ course: LiveRunWidgetSnapshot) -> some View {
+        switch family {
+        case .systemMedium: runMedium(course)
+        default: runSmall(course)
+        }
+    }
+
+    /// Le chrono, et rien qui lui dispute la place.
+    ///
+    /// `Text(timerInterval:)` et non une valeur republiée : le système le fait avancer lui-même,
+    /// sans rechargement et sans réveiller l'app. C'est la seule façon qu'un widget d'écran
+    /// d'accueil ait un chrono juste — WidgetKit ne rationne que les rechargements, pas
+    /// l'écoulement du temps.
+    @ViewBuilder private func chrono(_ course: LiveRunWidgetSnapshot, size: CGFloat) -> some View {
+        if course.isPaused {
+            // En pause, le temps est FIGÉ. Un chrono auto-porté continuerait d'avancer, et rien
+            // ne viendrait le démentir avant la republication suivante — quatre-vingt-dix
+            // secondes de mensonge, sur le chiffre le plus regardé de l'écran.
+            Text(TimeFormat.horloge(course.elapsedSeconds))
+                .font(.custom("\(DisplayFont.family)-Bold", size: size))
+                .monospacedDigit()
+        } else {
+            Text(timerInterval: course.startedAt...Date.distantFuture, countsDown: false)
+                .font(.custom("\(DisplayFont.family)-Bold", size: size))
+                .monospacedDigit()
+        }
+    }
+
+    private func runEyebrow(_ course: LiveRunWidgetSnapshot) -> some View {
+        HStack(spacing: 5) {
+            Circle()
+                .fill(Color.white.opacity(course.isPaused ? 0.45 : 1))
+                .frame(width: 6, height: 6)
+            Text(course.isPaused ? "EN PAUSE" : "EN COURS")
+                .font(.custom("\(DisplayFont.family)-Bold", size: 9.5))
+                .tracking(1.2)
+        }
+        .foregroundColor(.white.opacity(0.85))
+    }
+
+    private func runMetric(_ valeur: String, _ unite: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 3) {
+            Text(valeur)
+                .font(.custom("\(DisplayFont.family)-Bold", size: 17))
+                .monospacedDigit()
+                .foregroundColor(.white)
+            Text(verbatim: unite)
+                .font(.custom("\(DisplayFont.family)-SemiBold", size: 9.5))
+                .foregroundColor(.white.opacity(0.6))
+        }
+    }
+
+    private func runSmall(_ course: LiveRunWidgetSnapshot) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            runEyebrow(course)
+            Spacer(minLength: 0)
+            chrono(course, size: 30).foregroundColor(.white)
+            runMetric(TimeFormat.distance(km: course.distanceKm), "km")
+            Spacer(minLength: 0)
+        }
+        .padding(13)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text("Course en cours, \(TimeFormat.distance(km: course.distanceKm)) kilomètres"))
+    }
+
+    private func runMedium(_ course: LiveRunWidgetSnapshot) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .top) {
+                runEyebrow(course)
+                Spacer(minLength: 6)
+                Text(course.sessionTitle)
+                    .font(.custom("\(DisplayFont.family)-SemiBold", size: 10.5))
+                    .foregroundColor(.white.opacity(0.7))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            Spacer(minLength: 4)
+            chrono(course, size: 40).foregroundColor(.white)
+            Spacer(minLength: 4)
+            HStack(spacing: 18) {
+                runMetric(TimeFormat.distance(km: course.distanceKm), "km")
+                // L'unité vient de la discipline : « /km » à pied, « km/h » à vélo. Le même
+                // défaut avait été trouvé deux fois sur l'écran verrouillé, écrit en dur.
+                runMetric(course.rythmeValeur, course.discipline.rythmeUnite)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text("Course en cours, \(TimeFormat.distance(km: course.distanceKm)) kilomètres"))
     }
 
     /// Petit : l'anneau, et un seul chiffre sous lui.
@@ -337,7 +471,7 @@ struct DailyGoalsWidget: Widget {
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: DailyGoalsProvider()) { entry in
-            DailyGoalsWidgetView(snapshot: entry.snapshot, entryDate: entry.date)
+            DailyGoalsWidgetView(snapshot: entry.snapshot, entryDate: entry.date, course: entry.course)
         }
         .configurationDisplayName("Objectifs du jour")
         .description(Text("Ta séance, tes calories actives et tes pas, d'un coup d'œil."))

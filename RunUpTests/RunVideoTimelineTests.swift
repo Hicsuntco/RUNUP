@@ -181,6 +181,64 @@ final class RunVideoTimelineTests: XCTestCase {
         XCTAssertEqual(derniere.denivelePositifM ?? -1, 240, accuracy: 0.001)
     }
 
+    /// `fractionDuTrace` est ce qu'on passe à `DrawnRoute.progress`, et c'est une part de
+    /// LONGUEUR, pas de points.
+    ///
+    /// La distinction n'est pas théorique : `DrawnRoute` coupe son chemin avec `trimmedPath`, qui
+    /// mesure une longueur. Lui donner une part de points ferait avancer la tête par bonds — vite
+    /// en ligne droite où le GPS sème peu de points, au ralenti dans les virages où il en sème
+    /// trois fois plus.
+    func testLaFractionDuTraceVaDeZeroAUnSansJamaisReculer() {
+        let run = dixKilometres(splits: splitsAvecCote)
+        guard let rendu = RunVideoTimeline.pour(run, images: 120) else {
+            return XCTFail("pas de vidéo")
+        }
+        guard let premiere = rendu.instants.first, let derniere = rendu.instants.last else {
+            return XCTFail("déroulé vide")
+        }
+        XCTAssertEqual(premiere.fractionDuTrace, 0, accuracy: 0.001)
+        XCTAssertEqual(derniere.fractionDuTrace, 1, accuracy: 0.001)
+        for (avant, apres) in zip(rendu.instants, rendu.instants.dropFirst()) {
+            XCTAssertGreaterThanOrEqual(apres.fractionDuTrace, avant.fractionDuTrace - 0.0001)
+            XCTAssertLessThanOrEqual(apres.fractionDuTrace, 1)
+        }
+    }
+
+    /// Et elle suit la LONGUEUR, pas les points : sur un tracé dont la seconde moitié porte dix
+    /// fois plus de points que la première — ce que fait un GPS dans un dédale de ruelles — la
+    /// fraction à mi-parcours doit rester proche de 0,5, pas tomber à 0,09.
+    func testLaFractionSuitLaLongueurEtNonLeNombreDePoints() {
+        // Mille mètres : 10 points espacés de 100 m, puis 100 points espacés de 10 m.
+        let lat = 48.8566
+        let lng = 2.3522
+        let metresParDegre = 111_320.0 * cos(lat * .pi / 180)
+        var route: [RunRecord.RoutePoint] = []
+        var parcouru = 0.0
+        for _ in 0..<40 {
+            route.append(.init(lat: lat, lng: lng + parcouru / metresParDegre, altitude: nil))
+            parcouru += 100
+        }
+        for _ in 0..<400 {
+            route.append(.init(lat: lat, lng: lng + parcouru / metresParDegre, altitude: nil))
+            parcouru += 10
+        }
+        let run = RunRecord(title: "Ruelles", distanceKm: parcouru / 1000, durationSeconds: 2400,
+                            avgPace: "5:00", avgHeartRate: 150, kcal: 400, route: route)
+        guard let rendu = RunVideoTimeline.pour(run, images: 200) else {
+            return XCTFail("pas de vidéo")
+        }
+        // L'image dont la fraction dépasse la moitié pour la première fois.
+        guard let miParcours = rendu.instants.first(where: { $0.fractionDuTrace >= 0.5 }) else {
+            return XCTFail("la fraction n'atteint jamais la moitié")
+        }
+        let partDesPoints = Double(miParcours.pointsDessines) / Double(rendu.route.count)
+        // La moitié de la LONGUEUR tombe juste après la portion clairsemée, donc moins d'un
+        // dixième des points est dessiné. Si la fraction suivait les points, cette part vaudrait
+        // la moitié — c'est exactement ce que l'assertion exclut.
+        XCTAssertLessThan(partDesPoints, 0.2,
+                          "à mi-longueur, \(Int(partDesPoints * 100))% des points sont dessinés")
+    }
+
     // MARK: Les distances et le dénivelé
 
     func testLesDistancesCumuleesPartentDeZeroEtMontent() {

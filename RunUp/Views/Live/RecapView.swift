@@ -371,7 +371,7 @@ struct RecapView: View {
             .frame(maxHeight: .infinity, alignment: .top)
             VStack(alignment: .leading, spacing: 3) {
                 EyebrowLabel(text: "✓ Séance terminée", color: RUColor.lime)
-                Text(run.title).displayStyle(26).foregroundColor(RUColor.textPrimary)
+                Text(verbatim: run.titreAffiche).displayStyle(26).foregroundColor(RUColor.textPrimary)
             }
             .padding(.horizontal, 18)
             .padding(.bottom, 14)

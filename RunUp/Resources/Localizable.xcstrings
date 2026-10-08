@@ -10978,6 +10978,22 @@
         }
       }
     },
+    "M D+": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "M ELEV"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "M D+"
+          }
+        }
+      }
+    },
     "M'Y RENDRE": {
       "localizations": {
         "en": {

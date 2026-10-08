@@ -57,6 +57,14 @@ enum RunVideoTimeline {
         /// fiables pour qu'un chiffre intermédiaire soit vrai. Nul n'oblige à afficher un nombre
         /// à chaque image ; afficher un faux, si.
         var denivelePositifM: Double?
+        /// La part du tracé à dessiner, de 0 à 1 — exactement ce que `DrawnRoute.progress` attend.
+        ///
+        /// C'EST UNE PART DE LONGUEUR, PAS DE POINTS, et la distinction n'est pas théorique :
+        /// `DrawnRoute` coupe son chemin avec `trimmedPath`, qui mesure une longueur. Lui donner
+        /// `pointsDessines / total` ferait avancer la tête par bonds — vite là où les points sont
+        /// clairsemés, en ligne droite, et au ralenti dans les virages où le GPS en sème trois
+        /// fois plus. Le calcul vit ici, avec les distances cumulées qu'il faut pour le faire.
+        var fractionDuTrace: Double
     }
 
     struct Rendu {
@@ -173,6 +181,7 @@ enum RunVideoTimeline {
         guard routeRognee.count > 1, images >= 2, metresTotaux > 0, secondesTotales > 0 else { return [] }
 
         let cumul = distancesCumulees(routeRognee)
+        let longueurDuTrace = cumul[cumul.count - 1]
         let deniveles = denivelesCumules(routeRognee,
                                          intervalleSecondes: secondesTotales / Double(routeRognee.count))
         // Le temps de course atteint à chaque point du tracé dessiné.
@@ -194,7 +203,8 @@ enum RunVideoTimeline {
                 pointsDessines: point,
                 metres: teteRogneeM + cumul[point - 1],
                 secondes: t,
-                denivelePositifM: deniveles?[point - 1]
+                denivelePositifM: deniveles?[point - 1],
+                fractionDuTrace: longueurDuTrace > 0 ? cumul[point - 1] / longueurDuTrace : 0
             ))
         }
 
@@ -205,7 +215,8 @@ enum RunVideoTimeline {
             secondes: secondesTotales,
             // Toujours le chiffre enregistré, même quand les images précédentes n'en montraient
             // aucun : c'est la valeur de la course, et la dernière image est faite pour la dire.
-            denivelePositifM: denivelePositifTotalM
+            denivelePositifM: denivelePositifTotalM,
+            fractionDuTrace: 1
         )
         return instants
     }

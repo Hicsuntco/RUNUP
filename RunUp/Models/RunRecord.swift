@@ -71,6 +71,18 @@ final class RunRecord {
     /// propager un optionnel dans cinquante appelants.
     ///
     /// Calculée, donc non persistée : c'est `disciplineRaw` qui va sur le disque.
+    /// Le titre à AFFICHER, dans la langue courante.
+    ///
+    /// Même règle que `WorkoutSession.displayTitle`, et pour le même défaut : `title` est le
+    /// libellé FRANÇAIS de l'archétype, écrit au moment de l'enregistrement. Il sortait tel quel
+    /// sur l'écran de fin de course et dans la vidéo partagée — donc en français pour une
+    /// utilisatrice anglaise ou espagnole. `sessionKind` porte l'identité indépendante de la
+    /// langue ; le texte enregistré reste le repli des sorties antérieures à ce champ.
+    var titreAffiche: String {
+        guard let sessionKind else { return title }
+        return String(localized: String.LocalizationValue(sessionKind.titleKey))
+    }
+
     var discipline: Discipline {
         get { disciplineRaw.flatMap(Discipline.init(rawValue:)) ?? .legacy }
         set { disciplineRaw = newValue.rawValue }

@@ -101,6 +101,6 @@ enum UltraRaceDay {
     /// la plupart des grands trails l'exigent au contrôle du sac, et une frontale qui s'éteint en
     /// descente technique arrête la course.
     static func frontales(tempsDeffortSecondes: Double) -> Int {
-        nuit(tempsDeffortSecondes) == .aucune ? 0 : 2
+        nuit(tempsDeffortSecondes: tempsDeffortSecondes) == Nuit.aucune ? 0 : 2
     }
 }

@@ -7,7 +7,14 @@ design, description écran par écran, prototype de référence).
 
 ## Fonctionnalités
 
-- Onboarding multi-étapes adaptatif selon l'objectif (course, progression, perte de poids, reprise, forme)
+- Onboarding multi-étapes adaptatif selon l'objectif — sept au total : course, progression, perte
+  de poids, reprise, forme, HYROX et ultra-trail. Les trois derniers posent leurs propres questions
+  (division, dénivelé) et produisent leurs propres séances
+- Trois disciplines : course à pied, vélo et trail — l'app adapte ses mesures, ses libellés et ses
+  totaux à celle en cours
+- Deux plans qui ne sont pas des plans de route : HYROX (course compromise + stations) et
+  ultra-trail (kilomètre-effort, côtes, descente technique, enchaînement du week-end, sortie de
+  nuit — et un écran du jour J pour le ravitaillement, le matériel et la nuit)
 - Accueil avec anneaux d'activité, séance du jour, plan de 9 semaines
 - Suivi de course en direct avec MapKit + CoreLocation (vraie géolocalisation)
 - Coach IA conversationnel branché sur l'API Anthropic (Claude), via un proxy serveur — aucune clé

@@ -264,7 +264,7 @@ struct PublishRouteSheet: View {
                 dismiss()
             } catch {
                 isPublishing = false
-                errorMessage = ClubServiceError.phrase(pour: error)
+                errorMessage = PanneReseau.phrase(pour: error)
             }
         }
     }

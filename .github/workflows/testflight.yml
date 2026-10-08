@@ -327,6 +327,16 @@ jobs:
           cd ci_scripts && python3 test_model_defaults.py
           cd .. && python3 ci_scripts/check_model_defaults.py
 
+      # « Vérifie ta connexion » était affiché pour une session expirée comme pour un serveur en
+      # panne, depuis onze écrans. C'est la pire des trois pannes à deviner : c'est la seule que la
+      # personne peut vérifier d'un coup d'œil, et sur un téléphone au wifi plein elle n'apprend
+      # rien sur la panne et beaucoup sur l'app. Le compilateur n'empêche pas de retaper la phrase
+      # à la main ; ce contrôle, si.
+      - name: Vérifier qu'aucun écran n'invente de panne de réseau
+        run: |
+          cd ci_scripts && python3 test_reseau.py
+          cd .. && python3 ci_scripts/check_reseau.py
+
       # Les tests tournent AVANT la signature, sur simulateur, donc sans certificat : un échec
       # coûte cinq minutes de machine au lieu de la construction complète. Et surtout,
       # `RouteSharingPrivacyTests` vérifie que les 300 premiers et derniers mètres d'un tracé

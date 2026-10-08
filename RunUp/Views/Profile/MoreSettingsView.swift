@@ -613,7 +613,7 @@ struct MoreSettingsView: View {
         } catch ClubServiceError.badResponse(422, _) {
             identityError = String(localized: "Ce nom n'est pas autorisé — choisis-en un autre.")
         } catch {
-            identityError = String(localized: "Impossible d'enregistrer — vérifie ta connexion.")
+            identityError = PanneReseau.phrase(pour: error)
         }
         isSavingIdentity = false
     }

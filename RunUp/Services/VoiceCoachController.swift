@@ -174,9 +174,16 @@ final class VoiceCoachController: NSObject {
                     profile: profile
                 )
                 self.speak(reply)
+            } catch CoachServiceError.refused {
+                // UN REFUS N'EST PAS UNE PANNE, et il arrive en HTTP 200. L'annoncer « vérifie ta
+                // connexion » envoyait reposer trois fois une question qui ne passera jamais — et
+                // c'est le coach à qui on parle de douleurs et de poids. L'écrit le distinguait
+                // déjà (voir `CoachViewModel`) ; la voix, non.
+                self.state = .idle
+                self.reportError(String(localized: "Le coach n'a pas pu répondre à ça — reformule autrement."))
             } catch {
                 self.state = .idle
-                self.reportError(String(localized: "Le coach n'a pas pu répondre — vérifie ta connexion."))
+                self.reportError(String(localized: "Le coach n'a pas pu répondre — \(PanneReseau.motif(pour: error))."))
             }
         }
     }

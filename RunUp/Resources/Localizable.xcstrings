@@ -1061,6 +1061,22 @@
         }
       }
     },
+    "%lld min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min"
+          }
+        }
+      }
+    },
     "%lld min prévues": {
       "localizations": {
         "en": {
@@ -5982,38 +5998,6 @@
         }
       }
     },
-    "Connexion coupée — le coach n'a pas pu répondre. Réessaie dans un instant.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connection lost — the coach couldn't answer. Try again in a moment."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Conexión perdida: el entrenador no pudo responder. Inténtalo en un momento."
-          }
-        }
-      }
-    },
-    "Connexion impossible — vérifie ta connexion internet.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connection failed — check your internet connection."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Conexión fallida — revisa tu conexión a internet."
-          }
-        }
-      }
-    },
     "Connexion à Apple Santé impossible, réessaie plus tard.": {
       "localizations": {
         "en": {
@@ -9071,22 +9055,6 @@
         }
       }
     },
-    "Impossible d'enregistrer — vérifie ta connexion.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't save — check your connection."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se pudo guardar — comprueba tu conexión."
-          }
-        }
-      }
-    },
     "Impossible d'enregistrer, réessaie.": {
       "localizations": {
         "en": {
@@ -9151,54 +9119,6 @@
         }
       }
     },
-    "Impossible de charger le club — vérifie ta connexion.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't load the club — check your connection."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se pudo cargar el club — comprueba tu conexión."
-          }
-        }
-      }
-    },
-    "Impossible de charger le fil d'activité — vérifie ta connexion.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't load the activity feed — check your connection."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se pudo cargar el muro de actividad — comprueba tu conexión."
-          }
-        }
-      }
-    },
-    "Impossible de charger le fil d'activité.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't load the activity feed."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se pudo cargar el muro de actividad."
-          }
-        }
-      }
-    },
     "Impossible de charger les commentaires.": {
       "localizations": {
         "en": {
@@ -9215,18 +9135,18 @@
         }
       }
     },
-    "Impossible de charger les itinéraires — vérifie ta connexion.": {
+    "Impossible de charger les itinéraires — %@.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couldn't load the routes — check your connection."
+            "value": "Couldn't load the routes — %@."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No se pudieron cargar las rutas: revisa tu conexión."
+            "value": "No se han podido cargar las rutas: %@."
           }
         }
       }
@@ -10517,6 +10437,22 @@
         }
       }
     },
+    "Le coach n'a pas pu répondre à ça — reformule autrement.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The coach couldn't answer that — try rephrasing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El entrenador no ha podido responder a eso: reformúlalo."
+          }
+        }
+      }
+    },
     "Le coach n'a pas pu répondre à ça. Reformule autrement — et si c'est une douleur qui dure, parles-en à un médecin.": {
       "localizations": {
         "en": {
@@ -10533,18 +10469,18 @@
         }
       }
     },
-    "Le coach n'a pas pu répondre — vérifie ta connexion.": {
+    "Le coach n'a pas pu répondre — %@.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The coach couldn't answer — check your connection."
+            "value": "The coach couldn't answer — %@."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El entrenador no pudo responder: revisa tu conexión."
+            "value": "El entrenador no ha podido responder: %@."
           }
         }
       }
@@ -13665,34 +13601,34 @@
         }
       }
     },
-    "Photo enregistrée, mais pas encore visible du club — vérifie ta connexion.": {
+    "Photo enregistrée, mais pas encore visible du club — %@.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Photo saved, but not yet visible to the club — check your connection."
+            "value": "Photo saved, but not visible to the club yet — %@."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Foto guardada, pero aún no visible para el club — comprueba tu conexión."
+            "value": "Foto guardada, pero aún no visible para el club: %@."
           }
         }
       }
     },
-    "Photo supprimée localement, mais toujours visible du club — vérifie ta connexion.": {
+    "Photo supprimée localement, mais toujours visible du club — %@.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Photo removed locally, but still visible to the club — check your connection."
+            "value": "Photo removed locally, but the club can still see it — %@."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Foto eliminada localmente, pero aún visible para el club — comprueba tu conexión."
+            "value": "Foto eliminada localmente, pero el club sigue viéndola: %@."
           }
         }
       }
@@ -15038,6 +14974,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "RUNUP construye tu programa, lo ajusta cada semana según tu forma, y te exige justo lo necesario — nunca más, nunca menos."
+          }
+        }
+      }
+    },
+    "RUNUP ne répond pas pour l'instant": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RUNUP isn't responding right now"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RUNUP no responde ahora mismo"
           }
         }
       }
@@ -22159,6 +22111,22 @@
         }
       }
     },
+    "pas de connexion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no connection"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sin conexión"
+          }
+        }
+      }
+    },
     "phases": {
       "extractionState": "manual",
       "localizations": {
@@ -24481,6 +24449,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "tu carrera"
+          }
+        }
+      }
+    },
+    "ta session a expiré": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "your session has expired"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tu sesión ha caducado"
           }
         }
       }

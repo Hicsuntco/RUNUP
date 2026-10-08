@@ -303,7 +303,7 @@ struct SignInView: View {
         } catch AuthServiceError.badResponse(422, _) {
             errorMessage = String(localized: "Ce prénom n'est pas autorisé — choisis-en un autre.")
         } catch {
-            errorMessage = String(localized: "Connexion impossible — vérifie ta connexion internet.")
+            errorMessage = PanneReseau.phrase(pour: error)
         }
         isLoading = false
     }
@@ -345,7 +345,7 @@ struct SignInView: View {
         } catch ClubServiceError.badResponse(400, _) {
             usernameError = String(localized: "Pseudo invalide — lettres minuscules, chiffres, underscore, 3 à 20 caractères.")
         } catch {
-            usernameError = String(localized: "Impossible d'enregistrer — vérifie ta connexion.")
+            usernameError = PanneReseau.phrase(pour: error)
         }
         isSavingUsername = false
     }

@@ -228,7 +228,7 @@ struct ProfileView: View {
         } catch {
             // The local photo is already saved (see above) — only the club-visible copy failed to
             // sync, worth telling her since it silently used to just never reach other members.
-            appState.toast(String(localized: "Photo enregistrée, mais pas encore visible du club — vérifie ta connexion."))
+            appState.toast(String(localized: "Photo enregistrée, mais pas encore visible du club — \(PanneReseau.motif(pour: error))."))
         }
     }
 
@@ -245,7 +245,7 @@ struct ProfileView: View {
             // the server (and every other club member's leaderboard/feed/comments view) still
             // shows the old one until this actually lands, and without this she'd have no signal
             // that the removal didn't take.
-            appState.toast(String(localized: "Photo supprimée localement, mais toujours visible du club — vérifie ta connexion."))
+            appState.toast(String(localized: "Photo supprimée localement, mais toujours visible du club — \(PanneReseau.motif(pour: error))."))
         }
     }
 

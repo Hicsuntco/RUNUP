@@ -316,39 +316,12 @@ enum ClubServiceError: Error {
     case badResponse(Int, String)
     case notSignedIn
 
-    /// CE QUE L'ÉCRAN A LE DROIT DE DIRE, selon ce qui a vraiment échoué.
+    /// La phrase à afficher vit sur `PanneReseau`, et non ici.
     ///
-    /// Les trois cas ci-dessus décrivent trois pannes sans rapport, avec trois remèdes opposés :
-    /// une session expirée se règle en se reconnectant, un serveur qui refuse en attendant, une
-    /// absence de réseau en changeant d'endroit. Les écrans les attrapaient pourtant avec un
-    /// `try?` — qui efface la cause — puis affichaient tous la même phrase : « vérifie ta
-    /// connexion ».
-    ///
-    /// C'est la pire des trois à deviner, parce que c'est la seule que la personne peut vérifier
-    /// d'un coup d'œil. Affichée sur un téléphone au wifi plein, elle n'apprend rien sur la panne
-    /// et beaucoup sur l'app — et elle envoie chercher là où il n'y a rien.
-    ///
-    /// Ici plutôt que dans chaque vue : l'erreur SAIT ce qu'elle est, l'écran ne peut que le
-    /// supposer. C'est aussi l'argument exact de `isObjectionableContent` juste en dessous, dont
-    /// ce champ est la généralisation.
-    static func phrase(pour erreur: Error) -> String {
-        guard let club = erreur as? ClubServiceError else {
-            // Un échec de décodage : le serveur a répondu quelque chose que cette version de
-            // l'app ne sait pas lire. Ce n'est ni le réseau ni la session, et nommer l'un des
-            // deux enverrait chercher très loin d'où ça se passe.
-            return String(localized: "RUNUP ne répond pas pour l'instant — réessaie dans un moment.")
-        }
-        switch club {
-        case .notSignedIn:
-            return String(localized: "Ta session a expiré — reconnecte-toi.")
-        case .badResponse(let code, _) where code == 401 || code == 403:
-            return String(localized: "Ta session a expiré — reconnecte-toi.")
-        case .badResponse:
-            return String(localized: "RUNUP ne répond pas pour l'instant — réessaie dans un moment.")
-        case .network:
-            return String(localized: "Pas de connexion — réessaie quand tu auras du réseau.")
-        }
-    }
+    /// Elle y a déménagé parce que les trois services — Club, authentification, coach — portent
+    /// chacun les mêmes formes d'erreur, et qu'un classificateur qui ne connaît qu'une seule des
+    /// trois énumérations renvoie « RUNUP ne répond pas » pour une vraie coupure de réseau
+    /// survenue sur les deux autres. C'était le cas de cette fonction.
 
     /// Le texte a été refusé par le filtre de contenu, et non par une panne.
     ///

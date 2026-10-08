@@ -45,7 +45,12 @@ import json, pathlib, re, sys
 
 RACINE = pathlib.Path(__file__).resolve().parent.parent
 CATALOGUE = RACINE / "RunUp/Resources/Localizable.xcstrings"
-DOSSIERS = ["RunUp/Views", "RunUp/ViewModels", "RunUpWidgets", "RunUpWatch"]
+# TOUT `RunUp/`, ET PAS SEULEMENT LES VUES. La liste s'arrêtait à `Views` et `ViewModels`, donc
+# une chaîne affichée écrite dans un service ou un modèle n'était pas contrôlée du tout —
+# `RestoreOutcome.message`, les libellés de `SessionKind`, les phrases de panne réseau. Elles
+# sortaient en français en anglais et en espagnol sans que rien ne le dise. Le trou ne coûtait
+# que quatre chaînes le jour où on l'a fermé ; il aurait grandi à chaque service nouveau.
+DOSSIERS = ["RunUp", "RunUpWidgets", "RunUpWatch"]
 
 # Les ouvertures qui précèdent un littéral traduit. Le littéral lui-même est lu par `lire_litteral`
 # et non par une expression régulière : une interpolation peut contenir sa propre chaîne — par
@@ -152,6 +157,14 @@ def deswiftifie(brut: str) -> str:
     return "".join(out)
 
 
+# Les substituants qu'Apple écrit dans le catalogue là où la source porte une interpolation.
+# `%1$@` AUTANT QUE `%@` : dès qu'une chaîne en porte deux, Apple les NUMÉROTE, parce que l'ordre
+# des mots change d'une langue à l'autre. Sans le préfixe positionnel ici, « Aimé par %1$@ et
+# %2$lld autres » n'était pas reconnu comme une clé à substituants et le contrôle se plaignait
+# d'une clé parfaitement présente.
+SUBSTITUANT = re.compile(r"%(\d+\$)?(@|lld|ld|d|f|\.\d+f)")
+
+
 def motif_de(cle: str) -> re.Pattern:
     """La clé, ses interpolations remplacées par un joker."""
     return re.compile("^" + ".+".join(re.escape(m) for m in morceaux_fixes(cle)) + "$")
@@ -205,8 +218,16 @@ def main() -> int:
                         if cle in cles:
                             continue
                         if "\\(" in cle:
+                            # LA CLÉ TROUVÉE DOIT ELLE AUSSI PORTER UN SUBSTITUANT, et c'est un
+                            # faux positif qui a coûté une livraison. Le joker `.+` de `motif_de`
+                            # acceptait n'importe quelle clé PLUS PRÉCISE : la source
+                            # « Impossible de charger les itinéraires — \(motif). » était déclarée
+                            # couverte par « Impossible de charger les itinéraires — vérifie ta
+                            # connexion. », qui était l'ancienne phrase en dur qu'on venait
+                            # justement de remplacer. À l'exécution, la vraie clé est
+                            # « … — %@. » : absente du catalogue, donc du français en anglais.
                             motif = motif_de(cle)
-                            if any(motif.match(k) for k in cles):
+                            if any(motif.match(k) and SUBSTITUANT.search(k) for k in cles):
                                 continue
                         chemin = f.relative_to(RACINE)
                         manquantes.append((f"{chemin}:{n}", cle))

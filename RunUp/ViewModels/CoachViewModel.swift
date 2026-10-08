@@ -120,7 +120,10 @@ final class CoachViewModel {
                 if case CoachServiceError.refused = error {
                     message = String(localized: "Le coach n'a pas pu répondre à ça. Reformule autrement — et si c'est une douleur qui dure, parles-en à un médecin.")
                 } else {
-                    message = String(localized: "Connexion coupée — le coach n'a pas pu répondre. Réessaie dans un instant.")
+                    // « Connexion coupée » affirmait une panne de réseau pour un serveur en
+                    // panne comme pour une session expirée — les deux seules autres façons dont
+                    // cet appel échoue. Voir `PanneReseau`.
+                    message = String(localized: "Le coach n'a pas pu répondre — \(PanneReseau.motif(pour: error)).")
                 }
                 modelContext.insert(ChatMessage(role: .error, text: message))
                 isTyping = false

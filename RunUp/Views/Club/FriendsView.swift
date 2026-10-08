@@ -26,7 +26,7 @@ struct FriendsView: View {
     @State private var isSearching = false
     /// Le message d'échec de la recherche, ou `nil`. Un booléen ne pouvait porter qu'une seule
     /// explication — et c'était la même devinette qu'ailleurs sur cet écran : « vérifie ta
-    /// connexion », y compris quand la session a expiré. Voir `ClubServiceError.phrase(pour:)`.
+    /// connexion », y compris quand la session a expiré. Voir `PanneReseau.phrase(pour:)`.
     @State private var searchError: String?
     @State private var searchTask: Task<Void, Never>?
     @State private var isMatchingContacts = false
@@ -294,7 +294,7 @@ struct FriendsView: View {
         } catch ContactMatcher.Failure.denied {
             contactsDenied = true
         } catch {
-            searchError = ClubServiceError.phrase(pour: error)
+            searchError = PanneReseau.phrase(pour: error)
         }
     }
 
@@ -586,7 +586,7 @@ struct FriendsView: View {
         } catch {
             if echec == nil { echec = error }
         }
-        if let echec { errorMessage = ClubServiceError.phrase(pour: echec) }
+        if let echec { errorMessage = PanneReseau.phrase(pour: echec) }
         isLoading = false
     }
 
@@ -616,7 +616,7 @@ struct FriendsView: View {
                 guard !Task.isCancelled else { return }
                 await MainActor.run {
                     isSearching = false
-                    searchError = ClubServiceError.phrase(pour: error)
+                    searchError = PanneReseau.phrase(pour: error)
                 }
             }
         }
@@ -709,7 +709,7 @@ struct FriendsView: View {
             feed[current].kudos += wasKudoed ? 1 : -1
             // Le même refus de deviner : un kudos perdu parce que la session a expiré n'a rien
             // à voir avec le réseau, et la phrase envoyait vérifier le wifi.
-            appState.toast(ClubServiceError.phrase(pour: error))
+            appState.toast(PanneReseau.phrase(pour: error))
         }
     }
 

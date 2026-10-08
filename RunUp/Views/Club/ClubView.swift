@@ -1217,37 +1217,62 @@ struct ClubView: View {
         // the ~5s wait before this tab showed anything (the create/join form sat there the whole
         // time). None of them actually depends on another's result, so firing them concurrently
         // cuts the wait to the slowest single request instead of the sum of all three.
+        // `Result` ET NON `try?`, ET C'EST TOUT L'OBJET DU CORRECTIF. `try?` efface la cause :
+        // les deux branches d'erreur ci-dessous n'avaient plus qu'un `nil` à interpréter, donc
+        // elles affirmaient « vérifie ta connexion » pour une session expirée comme pour un
+        // serveur en panne. Voir `PanneReseau`.
         async let meAttempt = try? await auth.refreshMe()
-        async let boardAttempt = try? await clubService.fetchBoard()
-        async let feedAttempt = try? await clubService.fetchFeed()
+        async let boardAttempt = chargeBoard()
+        async let feedAttempt = chargeFeed()
         let (_, boardResult, feedResult) = await (meAttempt, boardAttempt, feedAttempt)
 
-        if let boardResult {
-            board = boardResult
-            appState.cachedClubBoard = boardResult
+        switch boardResult {
+        case .success(let chargé):
+            board = chargé
+            appState.cachedClubBoard = chargé
             syncBadgesIfNeeded()
             syncWeeklyTargetIfNeeded()
-        } else if appState.cachedClubBoard == nil {
+        case .failure(let echec):
             // Only surface the error when there's nothing already on screen to fall back to — a
             // background refresh failing quietly behind still-valid cached content beats replacing
             // it with an error banner over data that was fine a moment ago.
-            errorMessage = String(localized: "Impossible de charger le club — vérifie ta connexion.")
+            if appState.cachedClubBoard == nil {
+                errorMessage = PanneReseau.phrase(pour: echec)
+            }
         }
         // Piggyback a kudos check on every Club tab open, not just when switching to the
         // "Fil d'activité" segment — otherwise a new kudos notification only ever surfaces if she
         // happens to tap into the feed specifically.
-        if let feedResult {
-            feed = feedResult
-            appState.cachedClubFeed = feedResult
-            notifyNewKudos(in: feedResult)
-            notifyNewComments(in: feedResult)
-        } else if errorMessage == nil, appState.cachedClubFeed == nil {
+        switch feedResult {
+        case .success(let chargé):
+            feed = chargé
+            appState.cachedClubFeed = chargé
+            notifyNewKudos(in: chargé)
+            notifyNewComments(in: chargé)
+        case .failure(let echec):
             // Board can still have loaded fine while this alone failed — without this, a failed
             // feed fetch left `feed` empty with zero indication, so "Fil d'activité" read as a
             // genuinely empty club instead of a failed load.
-            errorMessage = String(localized: "Impossible de charger le fil d'activité — vérifie ta connexion.")
+            if errorMessage == nil, appState.cachedClubFeed == nil {
+                errorMessage = PanneReseau.phrase(pour: echec)
+            }
         }
         isLoading = false
+    }
+
+    /// Les deux chargements, rendus en `Result` pour garder la CAUSE de l'échec.
+    ///
+    /// Deux petites fonctions plutôt qu'un `do`/`catch` autour de chaque `async let` : `async let`
+    /// veut une expression, et les deux appels doivent rester lancés en parallèle — c'est ce qui
+    /// fait que l'onglet Club s'ouvre en un aller-retour et non deux.
+    private func chargeBoard() async -> Result<ClubBoard, Error> {
+        do { return .success(try await clubService.fetchBoard()) }
+        catch { return .failure(error) }
+    }
+
+    private func chargeFeed() async -> Result<[FeedItem], Error> {
+        do { return .success(try await clubService.fetchFeed()) }
+        catch { return .failure(error) }
     }
 
     private func loadFeed() async {
@@ -1256,7 +1281,7 @@ struct ClubView: View {
             notifyNewKudos(in: feed)
             notifyNewComments(in: feed)
         } catch {
-            errorMessage = String(localized: "Impossible de charger le fil d'activité.")
+            errorMessage = PanneReseau.phrase(pour: error)
         }
     }
 
@@ -1395,7 +1420,7 @@ struct ClubView: View {
             feed[current].kudoedByMe = wasKudoed
             feed[current].kudos += wasKudoed ? 1 : -1
             // Un kudos perdu parce que la session a expiré n'a rien à voir avec le réseau.
-            appState.toast(ClubServiceError.phrase(pour: error))
+            appState.toast(PanneReseau.phrase(pour: error))
         }
     }
 

@@ -21,7 +21,9 @@ struct RouteDiscoveryView: View {
     @State private var searchedRegion: MKCoordinateRegion?
     @State private var routes: [SharedRoute] = []
     @State private var isLoading = false
-    @State private var loadFailed = false
+    /// Le MOTIF de l'échec et non un simple drapeau : « vérifie ta connexion » était affiché
+    /// pour une session expirée comme pour un serveur en panne. Voir `PanneReseau`.
+    @State private var loadError: String?
     @State private var selected: SharedRoute?
     @State private var filter: DistanceFilter = .all
     @State private var permission = LocationPermission()
@@ -208,8 +210,8 @@ struct RouteDiscoveryView: View {
     private var listSection: some View {
         if isLoading && routes.isEmpty {
             centeredMessage(String(localized: "Recherche des itinéraires…"))
-        } else if loadFailed {
-            centeredMessage(String(localized: "Impossible de charger les itinéraires — vérifie ta connexion."))
+        } else if let loadError {
+            centeredMessage(String(localized: "Impossible de charger les itinéraires — \(loadError)."))
         } else if routes.isEmpty {
             // Un vide honnête : sur une carte vierge, la bonne action est de publier, pas de
             // réessayer.
@@ -242,7 +244,7 @@ struct RouteDiscoveryView: View {
     private func search() async {
         guard let region = visibleRegion ?? camera.region else { return }
         isLoading = true
-        loadFailed = false
+        loadError = nil
         // Une marge de 20 % au-delà de ce qui est dessiné : un itinéraire dont le départ tombe
         // juste hors cadre reste pertinent, et ça évite qu'un micro-déplacement fasse apparaître
         // et disparaître des tracés.
@@ -261,7 +263,7 @@ struct RouteDiscoveryView: View {
             routes = found
             searchedRegion = region
         } catch {
-            loadFailed = true
+            loadError = PanneReseau.motif(pour: error)
         }
         isLoading = false
     }

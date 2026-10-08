@@ -18,7 +18,7 @@ struct NewGoalWizardView: View {
     @State private var buildFinished = false
     private static let buildDuration: Double = 2.2
 
-    private let goals: [GoalType] = GoalType.allCases.filter { $0 != .restart }
+    private let goals: [GoalType] = GoalType.allCases.filter { $0 != .restart && $0.estProposable }
 
     @Environment(SubscriptionService.self) private var subscriptions
 

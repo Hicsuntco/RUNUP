@@ -16,6 +16,11 @@ private struct OnboardingDraft: Codable {
     var goal: GoalType?
     var distance: RaceDistance?
     var customDistance: String
+    /// Optionnel et non `String` avec défaut : la synthèse de `Codable` n'utilise PAS les
+    /// valeurs par défaut quand une clé manque, donc un brouillon écrit par la version
+    /// précédente ferait échouer tout le décodage — et quelqu'un perdrait son inscription en
+    /// cours à la mise à jour.
+    var raceElevationGain: String?
     var chrono: String?
     var isCustomChrono: Bool
     var raceDate: Date?
@@ -54,6 +59,7 @@ extension OnboardingViewModel {
         goal = draft.goal
         distance = draft.distance
         customDistance = draft.customDistance
+        raceElevationGain = draft.raceElevationGain ?? ""
         chrono = draft.chrono
         isCustomChrono = draft.isCustomChrono
         raceDate = draft.raceDate
@@ -85,7 +91,8 @@ extension OnboardingViewModel {
         guard !showWelcome else { return }
         let draft = OnboardingDraft(
             showWelcome: showWelcome, step: step, name: name, birthdate: birthdate, sex: sex, goal: goal,
-            distance: distance, customDistance: customDistance, chrono: chrono, isCustomChrono: isCustomChrono,
+            distance: distance, customDistance: customDistance, raceElevationGain: raceElevationGain,
+            chrono: chrono, isCustomChrono: isCustomChrono,
             raceDate: raceDate, hyroxDivision: hyroxDivision, weightNow: weightNow, weightTarget: weightTarget,
             height: height, focusArea: focusArea, bestRecentPerf: bestRecentPerf, lastRanRecency: lastRanRecency,
             weeklyTimeBudget: weeklyTimeBudget, preferredTimeOfDay: preferredTimeOfDay, injuryArea: injuryArea,

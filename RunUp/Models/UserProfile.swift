@@ -86,6 +86,14 @@ final class UserProfile {
     // MARK: Goal-specific deep-dive fields (only the relevant subset is populated)
     var raceDistance: RaceDistance?
     var raceDistanceCustom: String?
+    /// Le dénivelé positif de la course visée, en mètres. Demandé pour l'ultra-trail et pour
+    /// lui seul : c'est le second nombre sans lequel « 80 km » ne décrit pas une course de
+    /// montagne. Il commande toute la dimension du plan — voir `UltraTrail`.
+    ///
+    /// Optionnel, comme toute propriété ajoutée à un `@Model` : la migration légère ajoute la
+    /// colonne à NULL, et un non-optionnel ferait planter l'app au lancement. Voir
+    /// `ci_scripts/check_model_defaults.py`.
+    var raceElevationGainM: Int? = nil
     var raceChrono: String?
     var raceDate: Date?
     var weightNowKg: Double?

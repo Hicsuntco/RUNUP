@@ -69,7 +69,7 @@ struct OnboardingContainerView: View {
         case 1: BirthdateStepView(vm: vm) { advance() }
         case 2: GoalStepView(vm: vm) { advance() }
         case 3:
-            if vm.isRace {
+            if vm.isCourseOuUltra {
                 RaceDetailsStepView(vm: vm) { advance() }
             } else if vm.isHyrox {
                 HyroxDetailsStepView(vm: vm) { advance() }
@@ -107,7 +107,7 @@ struct OnboardingContainerView: View {
         case 0: return "name"
         case 1: return "birthdate"
         case 2: return "goal"
-        case 3: return vm.isRace ? "race_details" : (vm.isHyrox ? "hyrox_details" : "deep_dive")
+        case 3: return vm.isCourseOuUltra ? "race_details" : (vm.isHyrox ? "hyrox_details" : "deep_dive")
         case 4: return "wellbeing"
         case 5: return "running_days"
         case 6: return "level"

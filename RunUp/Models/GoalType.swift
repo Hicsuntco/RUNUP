@@ -2,7 +2,7 @@ import Foundation
 
 /// The 6 onboarding objectives. See README § Onboarding step 3.
 enum GoalType: String, Codable, CaseIterable, Identifiable {
-    case race, progress, restart, weight, health, hyrox
+    case race, progress, restart, weight, health, hyrox, ultraTrail
 
     var id: String { rawValue }
 
@@ -18,6 +18,7 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         case .weight: return String(localized: "Perdre du poids")
         case .health: return String(localized: "Rester en forme")
         case .hyrox: return String(localized: "Préparer un HYROX")
+        case .ultraTrail: return String(localized: "Préparer un ultra-trail")
         }
     }
 
@@ -29,6 +30,7 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         case .weight: return String(localized: "Un programme qui allie course et rééquilibrage alimentaire")
         case .health: return String(localized: "Une routine régulière qui tient dans ta semaine")
         case .hyrox: return String(localized: "8 × 1 km de course + stations fonctionnelles — un vrai plan hybride")
+        case .ultraTrail: return String(localized: "Dénivelé, descente technique et sorties enchaînées — un plan qui compte en heures")
         }
     }
 
@@ -40,6 +42,24 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         case .weight: return "🔥"
         case .health: return "⚡"
         case .hyrox: return "🏋️"
+        case .ultraTrail: return "⛰️"
+        }
+    }
+
+    /// Cet objectif est-il proposable à l'inscription ?
+    ///
+    /// FAUX TANT QU'IL N'A PAS DE PLAN DERRIÈRE LUI. L'ultra-trail arrive en plusieurs morceaux :
+    /// le modèle d'effort, puis l'objectif et ses questions, puis les séances, puis le branchement
+    /// dans le moteur. Entre le deuxième et le quatrième, le choisir donnerait un plan de ROUTE
+    /// dimensionné en kilomètres plats — c'est-à-dire exactement le défaut que tout ce travail
+    /// existe pour corriger, servi sous le nom qui promet le contraire.
+    ///
+    /// Mieux vaut un objectif absent qu'un objectif qui ment. Ce drapeau disparaît quand le moteur
+    /// sait répondre.
+    var estProposable: Bool {
+        switch self {
+        case .race, .progress, .restart, .weight, .health, .hyrox: return true
+        case .ultraTrail: return false
         }
     }
 
@@ -52,6 +72,10 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         case .restart: return 5
         case .health: return 3
         case .hyrox: return 6
+        // Sept jours : c'est l'épreuve qui laisse les traces les plus longues de la liste.
+        // Un ultra ne se récupère pas en quatre jours, et proposer de repartir trop tôt est
+        // le meilleur moyen de transformer une belle course en blessure.
+        case .ultraTrail: return 7
         }
     }
 }
@@ -104,6 +128,10 @@ enum ExperienceLevel: String, Codable, CaseIterable, Identifiable {
 
 enum RaceDistance: String, Codable, CaseIterable, Identifiable {
     case k5, k10, semi, marathon, other
+    // Les quatre formats d'ultra. Séparés des distances de route et JAMAIS mélangés à l'écran :
+    // proposer « 5 km » à quelqu'un qui prépare un 100 miles, ou « 100 km » à quelqu'un qui
+    // prépare son premier 10, c'est faire relire toute la grille pour rien.
+    case ultra50, ultra80, ultra100, ultra100M
 
     var id: String { rawValue }
 
@@ -114,7 +142,23 @@ enum RaceDistance: String, Codable, CaseIterable, Identifiable {
         case .semi: return String(localized: "Semi")
         case .marathon: return String(localized: "Marathon")
         case .other: return String(localized: "Autre distance")
+        case .ultra50: return "50 km"
+        case .ultra80: return "80 km"
+        case .ultra100: return "100 km"
+        case .ultra100M: return "100 miles"
         }
+    }
+
+    /// Les distances à proposer pour un objectif donné.
+    ///
+    /// `allCases` ne convient plus depuis qu'il y a des formats d'ultra : la grille montrerait
+    /// « 5 km » à quelqu'un qui prépare un 100 miles. Deux listes, chacune complète pour son
+    /// monde, et « Autre distance » dans les deux — c'est par là que passent l'Ekiden, le trail
+    /// de 22 km et le 110 km qui n'est dans aucune liste.
+    static func choix(pour objectif: GoalType?) -> [RaceDistance] {
+        objectif == .ultraTrail
+            ? [.ultra50, .ultra80, .ultra100, .ultra100M, .other]
+            : [.k5, .k10, .semi, .marathon, .other]
     }
 
     var chronoPresets: [String] {
@@ -124,6 +168,13 @@ enum RaceDistance: String, Codable, CaseIterable, Identifiable {
         case .semi: return ["1:40", "1:50", "2:00", "2:15"]
         case .marathon: return ["3:30", "3:50", "4:15", "4:45"]
         case .other: return []
+        // Des temps de FINISSEUR, pas des objectifs de performance : en ultra, la question
+        // n'est pas « combien » mais « est-ce que j'arrive au bout ». Les fourchettes sont
+        // celles d'un parcours de montagne ordinaire pour chaque format.
+        case .ultra50: return ["6:00", "7:30", "9:00", "11:00"]
+        case .ultra80: return ["10:00", "12:00", "15:00", "18:00"]
+        case .ultra100: return ["13:00", "16:00", "20:00", "24:00"]
+        case .ultra100M: return ["24:00", "30:00", "36:00", "44:00"]
         }
     }
 
@@ -138,6 +189,12 @@ enum RaceDistance: String, Codable, CaseIterable, Identifiable {
         case .k10: return 10
         case .semi: return 21.0975
         case .marathon: return 42.195
+        case .ultra50: return 50
+        case .ultra80: return 80
+        case .ultra100: return 100
+        // 100 miles. La valeur exacte, pas 160 : c'est elle qui alimente le temps d'effort, et
+        // un kilomètre d'écart sur un format pareil vaut dix minutes debout.
+        case .ultra100M: return 160.934
         case .other: return nil
         }
     }

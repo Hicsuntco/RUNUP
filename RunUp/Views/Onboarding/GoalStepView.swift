@@ -10,7 +10,7 @@ struct GoalStepView: View {
             ScrollView {
                 ObTitle(eyebrow: String(localized: "Étape 2 · \(who)"), title: "POURQUOI TU COURS ?", subtitle: "C'est la base de tout ton programme.")
                 VStack(spacing: 8) {
-                    ForEach(GoalType.allCases) { goal in
+                    ForEach(GoalType.allCases.filter(\.estProposable)) { goal in
                         SelectableCard(
                             selected: vm.goal == goal,
                             emoji: goal.emoji,

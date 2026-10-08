@@ -24,6 +24,9 @@ final class OnboardingViewModel {
     // Step 3 — race branch
     var distance: RaceDistance?
     var customDistance = ""
+    /// Le D+ de la course, saisi en mètres. Une chaîne et non un `Int` : c'est un champ de
+    /// texte, et l'état d'un champ de texte à moitié rempli n'est pas un nombre.
+    var raceElevationGain = ""
     var chrono: String?
     var isCustomChrono = false
     var raceDate: Date?
@@ -73,6 +76,17 @@ final class OnboardingViewModel {
 
     var isRace: Bool { goal == .race }
     var isHyrox: Bool { goal == .hyrox }
+    var isUltra: Bool { goal == .ultraTrail }
+    /// L'étape « ta course » sert aux deux : un ultra-trail EST une course, avec une question
+    /// de plus. Lui faire un écran séparé aurait dupliqué la distance, le chrono et la date
+    /// pour un seul champ de différence.
+    var isCourseOuUltra: Bool { isRace || isUltra }
+    /// Le D+ saisi, quand c'en est un. Zéro et le vide sont la même réponse ici : « je ne sais
+    /// pas », auquel cas le plan retombe sur une course plate.
+    var raceElevationGainM: Int? {
+        let brut = Int(raceElevationGain.trimmingCharacters(in: .whitespaces))
+        return (brut ?? 0) > 0 ? brut : nil
+    }
 
     var age: Int? {
         guard let birthdate else { return nil }
@@ -90,7 +104,7 @@ final class OnboardingViewModel {
         case 0: return !name.trimmingCharacters(in: .whitespaces).isEmpty
         case 1: return birthdate != nil && sex != nil
         case 2: return goal != nil
-        case 3: return isRace ? raceStepValid : (isHyrox ? hyroxStepValid : deepDiveValid)
+        case 3: return isCourseOuUltra ? raceStepValid : (isHyrox ? hyroxStepValid : deepDiveValid)
         // Injury/cycle fields are always optional — a real, known injury/blessure worth flagging
         // is the exception, not the rule, so requiring an answer here would just add friction for
         // the common case of "nothing to report."
@@ -106,6 +120,11 @@ final class OnboardingViewModel {
         guard let distance else { return false }
         if distance == .other && customDistance.trimmingCharacters(in: .whitespaces).isEmpty { return false }
         let hasChrono = isCustomChrono ? !(chrono ?? "").isEmpty : chrono != nil
+        // Le dénivelé est EXIGÉ pour un ultra, et seulement pour lui. Sans ce nombre, le plan ne
+        // peut pas calculer un temps d'effort, donc il retomberait sur des kilomètres plats —
+        // c'est-à-dire sur le défaut que tout l'objectif existe pour corriger. Mieux vaut une
+        // question de plus qu'un plan faux.
+        if isUltra && raceElevationGainM == nil { return false }
         return hasChrono && raceDate != nil
     }
 
@@ -141,10 +160,11 @@ final class OnboardingViewModel {
             birthdate: birthdate,
             sex: sex,
             goal: goal ?? .health,
-            raceDistance: isRace ? distance : nil,
-            raceDistanceCustom: isRace ? customDistance : nil,
-            raceChrono: isRace ? chrono : (isHyrox ? chrono : nil),
-            raceDate: isRace ? raceDate : (isHyrox ? raceDate : nil),
+            raceDistance: isCourseOuUltra ? distance : nil,
+            raceDistanceCustom: isCourseOuUltra ? customDistance : nil,
+            raceElevationGainM: isUltra ? raceElevationGainM : nil,
+            raceChrono: isCourseOuUltra ? chrono : (isHyrox ? chrono : nil),
+            raceDate: isCourseOuUltra ? raceDate : (isHyrox ? raceDate : nil),
             hyroxDivision: isHyrox ? hyroxDivision?.rawValue : nil,
             runningDays: Array(runningDays),
             preferredLongRunDay: effectiveLongRunDay,

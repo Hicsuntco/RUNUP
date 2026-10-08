@@ -1755,6 +1755,40 @@
         }
       }
     },
+    "100 km": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100 km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100 km"
+          }
+        }
+      }
+    },
+    "100 miles": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100 miles"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100 millas"
+          }
+        }
+      }
+    },
     "1000 km cumulés": {
       "extractionState": "manual",
       "localizations": {
@@ -2048,6 +2082,23 @@
         }
       }
     },
+    "50 km": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "50 km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "50 km"
+          }
+        }
+      }
+    },
     "50 km cumulés": {
       "extractionState": "manual",
       "localizations": {
@@ -2257,6 +2308,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "8,2"
+          }
+        }
+      }
+    },
+    "80 km": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "80 km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "80 km"
           }
         }
       }
@@ -7117,6 +7185,23 @@
         }
       }
     },
+    "Dénivelé, descente technique et sorties enchaînées — un plan qui compte en heures": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elevation, technical descent and back-to-back runs — a plan measured in hours"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desnivel, bajada técnica y salidas encadenadas — un plan que se cuenta en horas"
+          }
+        }
+      }
+    },
     "Départ contrôlé": {
       "localizations": {
         "en": {
@@ -7787,6 +7872,23 @@
         }
       }
     },
+    "Ex. 110 km, Diagonale des Fous…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E.g. 110 km, Western States…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ej. 110 km, Transgrancanaria…"
+          }
+        }
+      }
+    },
     "Ex. 200 km avant l'été": {
       "localizations": {
         "en": {
@@ -7799,6 +7901,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ej. 200 km antes del verano"
+          }
+        }
+      }
+    },
+    "Ex. 4000": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E.g. 4000"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ej. 4000"
           }
         }
       }
@@ -9865,6 +9984,23 @@
         }
       }
     },
+    "La distance ET le dénivelé — c'est le second qui décide du plan.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The distance AND the elevation — the second one is what shapes the plan."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La distancia Y el desnivel — es el segundo el que decide el plan."
+          }
+        }
+      }
+    },
     "La distance est facultative — laisse-la vide pour une séance de renforcement ou un tapis sans compteur.": {
       "extractionState": "manual",
       "localizations": {
@@ -10205,6 +10341,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "El dibujo del recorrido desaparece del muro. El inicio y el final de tu carrera nunca se enviaron."
+          }
+        }
+      }
+    },
+    "Le dénivelé positif": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total elevation gain"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El desnivel positivo"
           }
         }
       }
@@ -13920,6 +14073,23 @@
         }
       }
     },
+    "Préparer un ultra-trail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Train for an ultra-trail"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparar un ultra-trail"
+          }
+        }
+      }
+    },
     "Préparer une course": {
       "extractionState": "manual",
       "localizations": {
@@ -14095,6 +14265,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "¿QUÉ HYROX?"
+          }
+        }
+      }
+    },
+    "QUEL ULTRA ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WHICH ULTRA?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿QUÉ ULTRA?"
           }
         }
       }
@@ -18812,6 +18999,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tu programa, tu entrenador y tus estadísticas. Sin que falte nada."
+          }
+        }
+      }
+    },
+    "Ton ultra": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your ultra"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu ultra"
           }
         }
       }

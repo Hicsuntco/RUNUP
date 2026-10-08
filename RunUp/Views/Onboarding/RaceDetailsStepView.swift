@@ -11,10 +11,13 @@ struct RaceDetailsStepView: View {
     var body: some View {
         ObScreen {
             ScrollView {
-                ObTitle(eyebrow: "Étape 3 · ta course", title: "QUELLE COURSE ?", subtitle: "Route, trail, obstacle… précise ce que tu prépares.")
+                ObTitle(eyebrow: "Étape 3 · ta course",
+                        title: vm.isUltra ? "QUEL ULTRA ?" : "QUELLE COURSE ?",
+                        subtitle: vm.isUltra ? "La distance ET le dénivelé — c'est le second qui décide du plan."
+                                             : "Route, trail, obstacle… précise ce que tu prépares.")
 
                 LazyVGrid(columns: columns, spacing: 8) {
-                    ForEach(RaceDistance.allCases) { d in
+                    ForEach(RaceDistance.choix(pour: vm.goal)) { d in
                         Button(action: { vm.selectDistance(d) }) {
                             Text(d.label)
                                 .displayStyle(d == .other ? 16 : 22)
@@ -32,8 +35,23 @@ struct RaceDetailsStepView: View {
                 .padding(.top, 20)
 
                 if vm.distance == .other {
-                    ObTextField(placeholder: "Ex. Trail 22 km, Ekiden, 15 km…", text: $vm.customDistance)
+                    ObTextField(placeholder: vm.isUltra ? "Ex. 110 km, Diagonale des Fous…"
+                                                        : "Ex. Trail 22 km, Ekiden, 15 km…",
+                                text: $vm.customDistance)
                         .padding(.top, 12)
+                }
+
+                // LE SECOND NOMBRE. « 80 km » ne décrit pas une course de montagne ; « 80 km et
+                // 4 000 m de D+ » si. C'est lui qui donne le temps d'effort, donc toute la
+                // dimension du plan — sans lui on retomberait sur des kilomètres plats,
+                // c'est-à-dire sur le défaut que cet objectif existe pour corriger.
+                if vm.isUltra {
+                    EyebrowLabel(text: "Le dénivelé positif", color: RUColor.text3)
+                        .padding(.top, 22).padding(.bottom, 10)
+                    // `keyboard:` et non le modificateur `.keyboardType` : `ObTextField` porte
+                    // déjà ce réglage en paramètre, et il l'applique au `TextField` lui-même.
+                    ObTextField(placeholder: "Ex. 4000", text: $vm.raceElevationGain,
+                                keyboard: .numberPad)
                 }
 
                 if vm.distance != nil {

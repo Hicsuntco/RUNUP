@@ -22,6 +22,7 @@ enum AdaptivePlanEngine {
         var goal: GoalType
         var raceDistance: RaceDistance?
         var raceDistanceCustom: String?
+        var raceElevationGainM: Int?
         var raceChrono: String?
         var raceDate: Date?
         var hyroxDivision: String?
@@ -52,6 +53,7 @@ enum AdaptivePlanEngine {
         profile.goalId = result.goal
         profile.raceDistance = result.raceDistance
         profile.raceDistanceCustom = result.raceDistanceCustom
+        profile.raceElevationGainM = result.raceElevationGainM
         profile.raceChrono = result.raceChrono
         profile.raceDate = result.raceDate
         profile.hyroxDivision = result.hyroxDivision
@@ -71,7 +73,7 @@ enum AdaptivePlanEngine {
         profile.cycleTrackingEnabled = result.cycleTrackingEnabled
         profile.lastPeriodStartDate = result.lastPeriodStartDate
         profile.averageCycleLengthDays = result.averageCycleLengthDays
-        profile.goalDisplay = goalDisplay(goal: result.goal, distance: result.raceDistance, custom: result.raceDistanceCustom, chrono: result.raceChrono, hyroxDivision: result.hyroxDivision)
+        profile.goalDisplay = goalDisplay(goal: result.goal, distance: result.raceDistance, custom: result.raceDistanceCustom, chrono: result.raceChrono, hyroxDivision: result.hyroxDivision, denivele: result.raceElevationGainM)
         profile.onboarded = true
         profile.programPhase = .active
         profile.weekNumber = 1
@@ -866,7 +868,7 @@ enum AdaptivePlanEngine {
         }
     }
 
-    private static func goalDisplay(goal: GoalType, distance: RaceDistance?, custom: String?, chrono: String?, hyroxDivision: String? = nil) -> String {
+    private static func goalDisplay(goal: GoalType, distance: RaceDistance?, custom: String?, chrono: String?, hyroxDivision: String? = nil, denivele: Int? = nil) -> String {
         switch goal {
         case .race:
             let label = distance == .other ? (custom?.isEmpty == false ? custom! : "Ta course") : (distance?.label ?? "Ta course")
@@ -880,6 +882,15 @@ enum AdaptivePlanEngine {
             let divisionLabel = hyroxDivision.flatMap { HyroxDivision(rawValue: $0)?.title }
             let chronoLabel = (chrono?.isEmpty ?? true) ? "finir" : chrono!
             return divisionLabel.map { "HYROX \($0) · \(chronoLabel)" } ?? "HYROX · \(chronoLabel)"
+        case .ultraTrail:
+            // Le dénivelé figure dans le titre de l'objectif, et il n'y est pas pour décorer :
+            // « 80 km » ne décrit pas une course de montagne, « 80 km · 4 000 m D+ » si. C'est le
+            // second nombre qui dit ce qu'on prépare, et il doit se voir là où l'on relit son
+            // objectif.
+            let label = distance == .other ? (custom?.isEmpty == false ? custom! : "Ton ultra") : (distance?.label ?? "Ton ultra")
+            let chronoLabel = (chrono?.isEmpty ?? true) ? "finir" : chrono!
+            guard let denivele, denivele > 0 else { return "\(label) · \(chronoLabel)" }
+            return "\(label) · \(denivele) m D+ · \(chronoLabel)"
         }
     }
 

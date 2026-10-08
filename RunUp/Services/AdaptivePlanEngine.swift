@@ -652,7 +652,12 @@ enum AdaptivePlanEngine {
     /// structure/technique/effort, which stays true across seasons and skill levels instead of
     /// risking a stale or wrong "real" number.
     /// Le temps d'effort de la course visée, en secondes. Zéro quand on ne prépare pas d'ultra.
-    private static func tempsDeffortCourse(_ profile: UserProfile) -> Double {
+    ///
+    /// Interne et non privé : l'écran du jour J en a besoin pour ramener les fourchettes de
+    /// `UltraRaceDay` à CETTE course — un total de glucides, un nombre de prises, des litres. Le
+    /// recalculer là-bas aurait voulu dire garder deux fois la même formule, et c'est celle dont
+    /// dépend toute la dimension du plan.
+    static func tempsDeffortCourse(_ profile: UserProfile) -> Double {
         let km = profile.effectiveRaceDistanceKm ?? 0
         let dplus = Double(profile.raceElevationGainM ?? 0)
         return UltraTrail.tempsDeffortSecondes(km: km, denivelePositifM: dplus,
@@ -799,7 +804,7 @@ enum AdaptivePlanEngine {
         case .specifique:
             let longue = longueMinutes(.specifique)
             var seances: [SessionArchetype] = [
-                SessionArchetype(role: .speed, title: "Descente technique", subtitle: "ce qui détruit les quadriceps le jour J, et la seule qualité qu'un plan de route ignore", pace: zones.easy, zone: "Z2-3", baseDuration: 50, kind: .ultraDescentWork),
+                SessionArchetype(role: .speed, title: "Descente technique", subtitle: "ce qui détruit les quadriceps le jour J, et la seule qualité qu'un plan de route ignore", pace: zones.easy, zone: "Z2-3", baseDuration: 50, kind: .ultraDescentWork, intervals: IntervalStructure(reps: 4, repMeters: 1200, recoveryMeters: 1200)),
                 SessionArchetype(role: .easy, title: "Footing d'endurance", subtitle: "le socle aérobie — ni une séance au rabais, ni une séance dure", pace: zones.easy, zone: "Z2", baseDuration: 45, kind: .ultraEnduranceFooting),
                 SessionArchetype(role: .easy, title: "Sortie de nuit", subtitle: "à la frontale, en terrain — découvrir ça le jour J est une mauvaise surprise évitable", pace: zones.easy, zone: "Z2", baseDuration: 60, kind: .ultraNightRun)
             ]

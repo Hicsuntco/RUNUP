@@ -178,10 +178,14 @@ enum SessionKind: String, Codable, Equatable, CaseIterable {
             return .tempo
 
         case .lightIntervals, .vo2maxIntervals, .racePaceReminder, .freeRunLightIntervals,
-             // Les côtes et la descente sont des séances de QUALITÉ : répétées, dures, et elles
-             // comptent dans le plafond de deux séances dures par semaine. Les ranger ailleurs
-             // les ferait passer sous ce garde-fou — trois séances dures par semaine est
-             // exactement ce qu'il existe pour empêcher.
+             // Les côtes et la descente d'ultra sont des séances en répétitions, structure à
+             // l'appui : elles appartiennent donc ici, et `isIntervalWorkout` doit le dire en
+             // même temps — l'invariant que `SessionFamilyTests` vérifie, et que la première
+             // version de ces onze séances avait cassé.
+             //
+             // Ce n'est PAS ce qui les fait compter dans le plafond de deux séances dures par
+             // semaine : ce plafond passe par `SessionArchetype.role`, pas par la famille. La
+             // famille porte la couleur, et rien d'autre.
              .ultraHillRepeats, .ultraDescentWork:
             return .intervals
 
@@ -199,7 +203,14 @@ enum SessionKind: String, Codable, Equatable, CaseIterable {
 
     var isIntervalWorkout: Bool {
         switch self {
-        case .lightIntervals, .vo2maxIntervals, .racePaceReminder, .freeRunLightIntervals:
+        case .lightIntervals, .vo2maxIntervals, .racePaceReminder, .freeRunLightIntervals,
+             // Les côtes et les descentes d'ultra SONT des séances en répétitions, et elles
+             // portent toutes deux une `IntervalStructure` : cinq montées de 600 m pour les
+             // unes, quatre descentes de 1 200 m avec la remontée en récupération pour les
+             // autres. L'écran Live doit donc les guider segment par segment comme un
+             // fractionné — c'est ainsi qu'on les fait sur le terrain, et c'est ce que les
+             // deux classifications doivent dire ensemble (voir `SessionFamilyTests`).
+             .ultraHillRepeats, .ultraDescentWork:
             return true
         default:
             return false

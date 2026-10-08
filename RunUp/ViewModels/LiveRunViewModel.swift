@@ -290,9 +290,7 @@ final class LiveRunViewModel {
 
     /// Le libellé sous ce chiffre. Il devient le verbe du coach quand elle s'écarte de la cible
     /// — mais seulement en courant, puisque le plan ne vise rien à vélo.
-    var rythmeLibelle: String {
-        discipline.usesPacePerKm ? String(localized: "ALLURE") : String(localized: "VITESSE")
-    }
+    var rythmeLibelle: String { discipline.rythmeLabelMajuscules }
 
     /// L'allure récente face à la cible du jour.
     ///
@@ -636,7 +634,9 @@ final class LiveRunViewModel {
 
     private func startLiveActivity() {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
-        let attributes = RunActivityAttributes(sessionTitle: session.displayTitle, plannedDurationMinutes: session.durationMinutes)
+        let attributes = RunActivityAttributes(sessionTitle: session.displayTitle,
+                                               plannedDurationMinutes: session.durationMinutes,
+                                               disciplineRaw: discipline.rawValue)
         let state = RunActivityAttributes.ContentState(distanceKm: 0, elapsedSeconds: 0, paceLabel: "--:--", isPaused: false, timerReference: Date())
         liveActivity = try? Activity.request(attributes: attributes, content: ActivityContent(state: state, staleDate: .now + 60), pushType: nil)
     }

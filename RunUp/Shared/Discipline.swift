@@ -115,6 +115,34 @@ enum Discipline: String, Codable, Equatable, CaseIterable {
         }
     }
 
+    /// Le nom de la mesure de rythme : « Allure » à pied, « Vitesse » à vélo.
+    ///
+    /// Ici et pas dans l'écran de course, parce que la Live Activity en a besoin aussi — et elle
+    /// vit dans une extension, un processus séparé qui ne peut rien lire de l'app. Elle affichait
+    /// « Allure » sur une sortie vélo, sous un chiffre qui était des kilomètres-heure.
+    ///
+    /// Deux propriétés et non une capitalisation à la volée : `uppercased()` dépend de la langue,
+    /// et les deux casses sont deux clés distinctes du catalogue depuis toujours. Elles sont
+    /// voisines ici, donc la décision reste à un seul endroit même si le rendu en a deux.
+    var rythmeLabel: String {
+        usesPacePerKm ? String(localized: "Allure") : String(localized: "Vitesse")
+    }
+
+    var rythmeLabelMajuscules: String {
+        usesPacePerKm ? String(localized: "ALLURE") : String(localized: "VITESSE")
+    }
+
+    /// L'unité du rythme. Pas traduite — « km » et « h » sont les mêmes symboles partout.
+    ///
+    /// En minuscules ici, parce que c'est la forme la plus employée ; `TimeFormat.rythme` la met
+    /// en capitales pour l'écran de course. `uppercased()` dépend bien de la langue, mais ces
+    /// deux chaînes ne contiennent aucune lettre que le turc traite à part — c'est le `i` qui pose
+    /// problème, et il n'y en a pas.
+    ///
+    /// L'île dynamique écrivait « /km » en dur, sous un chiffre devenu des kilomètres-heure dès
+    /// qu'on roule. Deuxième endroit à le faire, après le libellé juste au-dessus.
+    var rythmeUnite: String { usesPacePerKm ? "/km" : "km/h" }
+
     /// Les chaussures de course ne s'usent pas à vélo. Elles s'usent en trail — plus vite, même.
     var wearsShoes: Bool {
         switch self {

@@ -89,6 +89,44 @@ final class DisciplineTests: XCTestCase {
         XCTAssertEqual(Double(velo.valeur.replacingOccurrences(of: ",", with: ".")) ?? 0, 24, accuracy: 0.05)
     }
 
+    /// Le libellé et l'unité sont maintenant portés par la discipline, parce que la Live Activity
+    /// en a besoin : c'est une extension, un processus séparé qui ne peut rien lire de l'app. Elle
+    /// écrivait « Allure » et « /km » EN DUR, sous un chiffre devenu des kilomètres-heure dès
+    /// qu'on roule.
+    func testChaqueDisciplineNommeSaMesureDeRythme() {
+        XCTAssertEqual(Discipline.run.rythmeLabel, "Allure")
+        XCTAssertEqual(Discipline.run.rythmeUnite, "/km")
+        XCTAssertEqual(Discipline.bike.rythmeLabel, "Vitesse")
+        XCTAssertEqual(Discipline.bike.rythmeUnite, "km/h")
+        // Le trail se lit en allure comme la route : l'allure y est erratique, mais c'est bien
+        // une allure, et la convertir en km/h ne la rendrait pas plus lisible.
+        XCTAssertEqual(Discipline.trail.rythmeLabel, "Allure")
+        XCTAssertEqual(Discipline.trail.rythmeUnite, "/km")
+    }
+
+    /// Et `TimeFormat` ne recopie plus l'unité : il met celle de la discipline en capitales. Deux
+    /// écritures d'un même symbole finissent toujours par diverger.
+    func testLUniteDeTimeFormatEstCelleDeLaDiscipline() {
+        for discipline in Discipline.allCases {
+            XCTAssertEqual(TimeFormat.rythme(discipline, secondesParKm: 300).unite,
+                           discipline.rythmeUnite.uppercased(),
+                           "\(discipline) : l'unité doit venir de la discipline")
+        }
+    }
+
+    /// La Live Activity porte la discipline dans ses ATTRIBUTS — fixée au départ, elle ne change
+    /// pas en cours de sortie. Et elle est optionnelle : une activité démarrée par la version
+    /// précédente de l'app n'a pas la clé, et doit se décoder quand même.
+    func testLaLiveActivitySaitDeQuelleDisciplineElleParle() {
+        let velo = RunActivityAttributes(sessionTitle: "Sortie", plannedDurationMinutes: 60,
+                                         disciplineRaw: Discipline.bike.rawValue)
+        XCTAssertEqual(velo.discipline, .bike)
+        XCTAssertEqual(velo.discipline.rythmeLabel, "Vitesse")
+
+        let ancienne = RunActivityAttributes(sessionTitle: "Sortie", plannedDurationMinutes: 60)
+        XCTAssertEqual(ancienne.discipline, .run, "sans discipline écrite, c'est une course")
+    }
+
     /// Pas d'allure, pas de vitesse — et surtout pas l'infini qu'une division par zéro donnerait.
     func testSansAllureIlNyAPasDeVitesse() {
         XCTAssertEqual(TimeFormat.vitesse(secondesParKm: 0), "—")

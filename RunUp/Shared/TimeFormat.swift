@@ -89,9 +89,11 @@ enum TimeFormat {
     /// chaque écran choisirait, et deux écrans finiraient par ne pas dire la même chose de la
     /// même sortie.
     static func rythme(_ discipline: Discipline, secondesParKm: Double) -> (valeur: String, unite: String) {
-        discipline.usesPacePerKm
-            ? (allure(secondesParKm: secondesParKm), "/KM")
-            : (vitesse(secondesParKm: secondesParKm), "KM/H")
+        // L'unité vient de `Discipline`, qui est le seul endroit à l'écrire : l'île dynamique en
+        // a besoin aussi, et elle l'avait recopiée — en dur, et sans jamais changer de discipline.
+        (discipline.usesPacePerKm ? allure(secondesParKm: secondesParKm)
+                                  : vitesse(secondesParKm: secondesParKm),
+         discipline.rythmeUnite.uppercased())
     }
 
     /// La même chose, resserrée : « 3h28 ». Pour une tuile de statistique, où la largeur est

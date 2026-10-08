@@ -30,4 +30,21 @@ struct RunActivityAttributes: ActivityAttributes {
     /// shows genuine "how far into the session" rather than a fabricated distance target. 0 for a
     /// rest-day/free-run session with no real plan behind it; the widget hides the bar then.
     var plannedDurationMinutes: Int = 0
+
+    /// La discipline de la sortie, par sa `rawValue`.
+    ///
+    /// DANS LES ATTRIBUTS ET NON DANS L'ÉTAT : elle est fixée au départ et ne change plus — on ne
+    /// passe pas du vélo à la course au milieu d'une sortie. C'est exactement ce que cette moitié
+    /// du type est faite pour porter.
+    ///
+    /// OPTIONNELLE, et c'est ce qui compte. La synthèse de `Codable` n'utilise PAS les valeurs par
+    /// défaut quand une clé manque : un champ non optionnel ferait échouer le décodage d'une
+    /// activité démarrée par la version précédente, donc une mise à jour de l'app pendant une
+    /// sortie figerait l'écran verrouillé. Un `String?` se décode par `decodeIfPresent` et rend
+    /// `nil`. Même raisonnement, et même forme, que `RunRecord.disciplineRaw`.
+    var disciplineRaw: String? = nil
+
+    var discipline: Discipline {
+        disciplineRaw.flatMap(Discipline.init(rawValue:)) ?? .legacy
+    }
 }

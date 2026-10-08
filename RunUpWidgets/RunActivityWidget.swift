@@ -33,7 +33,7 @@ struct RunActivityWidget: Widget {
                 DynamicIslandExpandedRegion(.trailing) {
                     VStack(alignment: .trailing, spacing: 2) {
                         Text(context.state.paceLabel).font(DisplayFont.font(18)).foregroundColor(.white)
-                        Text(verbatim: "/km").font(.custom("\(DisplayFont.family)-Bold", size: 10.5)).tracking(0.2).foregroundColor(.white.opacity(0.55))
+                        Text(verbatim: context.attributes.discipline.rythmeUnite).font(.custom("\(DisplayFont.family)-Bold", size: 10.5)).tracking(0.2).foregroundColor(.white.opacity(0.55))
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
@@ -82,7 +82,10 @@ struct RunActivityWidget: Widget {
             HStack {
                 metric(value: String(format: "%.2f", locale: .current, context.state.distanceKm), label: "km")
                 Spacer(minLength: 8)
-                metric(value: context.state.paceLabel, label: "Allure")
+                // « Allure » était écrit en dur, sous un chiffre qui est des kilomètres-heure dès
+                // qu'on roule. `Discipline` décide, et c'est la même décision que l'écran de
+                // course prend — elle vit dans `Shared`, que cette extension compile aussi.
+                metric(value: context.state.paceLabel, label: context.attributes.discipline.rythmeLabel)
                 Spacer(minLength: 8)
                 VStack(alignment: .trailing, spacing: 1) {
                     elapsedText(context.state)

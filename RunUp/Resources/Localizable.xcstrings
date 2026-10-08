@@ -19623,6 +19623,23 @@
         }
       }
     },
+    "Vitesse": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Velocidad"
+          }
+        }
+      }
+    },
     "Vitesse %@ kilomètres par heure": {
       "extractionState": "manual",
       "localizations": {

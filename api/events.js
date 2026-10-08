@@ -80,6 +80,11 @@ const KNOWN_EVENTS = new Set([
   // rejoint. Voir `Analytics.EventName.clubActionTaken` : sa prop unique `kind` est prise dans
   // une liste fermée de huit valeurs, sans identifiant d'activité, d'itinéraire ni de personne.
   'club_action_taken',
+  // Une vidéo de course fabriquée. La seule question que cette fonctionnalité pose : est-ce que
+  // quelqu'un s'en sert ? Elle coûte une douzaine de secondes de calcul sur le téléphone et un
+  // bouton de plus sur l'écran de fin de course — deux choses qu'on retire sans regret si la
+  // réponse est non. Sa prop unique (`discipline`) vaut « run », « bike » ou « trail ».
+  'run_video_made',
 ]);
 
 // A real day of heavy use is a few dozen events across a handful of flushes; the client also caps

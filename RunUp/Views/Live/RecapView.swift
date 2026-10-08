@@ -40,6 +40,16 @@ struct RecapView: View {
     private static let shareCardAspect: CGFloat = 360.0 / 640.0
     @State private var showPublishRoute = false
 
+    // MARK: La vidéo de la course
+    //
+    /// Le fichier fabriqué, quand il l'est. Un fichier temporaire : la feuille de partage le
+    /// recopie où il faut.
+    @State private var videoURL: URL?
+    @State private var videoAvancement: Double = 0
+    /// Gardée pour pouvoir l'ANNULER en quittant l'écran. Trois cent soixante rasterisations
+    /// continueraient sinon à tourner derrière un écran que personne ne regarde plus.
+    @State private var videoEnCours: Task<Void, Never>?
+
     private var run: RunRecord? { historicalRun ?? appState.lastRun }
     private var isHistorical: Bool { historicalRun != nil }
 
@@ -229,6 +239,15 @@ struct RecapView: View {
                                 .disabled(true)
                                 .opacity(0.5)
                             }
+                            // LA VIDÉO, AU MÊME RANG QUE LA CARTE. C'est le même geste avec
+                            // deux sorties, pas un geste rare comme l'export GPX — et c'est la
+                            // seule des deux qu'on poste en story. La rangée discrète en dessous
+                            // reste à deux liens : trois y auraient fait trois tiers de largeur,
+                            // où « Exporter en GPX » ne tient pas.
+                            if peutFaireUneVideo {
+                                boutonVideo(for: run)
+                            }
+
                             // Deux actions SECONDAIRES, en une rangée discrète — plus deux
                             // boutons pleine largeur. L'écran finissait sur une pile de quatre
                             // boutons majuscules du même poids : partager la carte, exporter le
@@ -299,6 +318,11 @@ struct RecapView: View {
                     renderShareCard(for: run)
                 }
             }
+            // Trois cent soixante rasterisations continueraient à tourner derrière un écran que
+            // personne ne regarde plus, et `ImageRenderer` vit sur l'acteur principal : ce serait
+            // dix secondes d'écran qui répond mal, pour un fichier que personne n'attend. Le
+            // rendu sait s'annuler (voir `RunVideoRenderer`), il suffisait de le lui demander.
+            .onDisappear { videoEnCours?.cancel() }
         } else {
             Color.clear.onAppear { closeRecap() }
         }
@@ -408,6 +432,81 @@ struct RecapView: View {
     /// to just be there, fully formed, before the entrance transition even settled.
     /// Une action de bas de section, au registre d'un lien : icône, libellé, 44 pt de frappe —
     /// aucun chrome. La forme dit le rang.
+    /// Y a-t-il de quoi faire une vidéo ?
+    ///
+    /// Le MÊME test que la publication d'itinéraire juste au-dessus, et pour la même raison : un
+    /// bouton qui ouvrirait un échec « ce parcours est trop court » serait une fausse promesse.
+    /// On ne construit pas le déroulé pour le savoir — il rejouerait le dénivelé sur six cents
+    /// points à chaque évaluation du corps de la vue.
+    private var peutFaireUneVideo: Bool {
+        run.durationSeconds > 0 && run.distanceKm > 0
+            && RouteGeometry.shareablePayload(run.route) != nil
+    }
+
+    /// Trois états, un seul bouton : à faire, en train de se faire, à partager.
+    @ViewBuilder
+    private func boutonVideo(for run: RunRecord) -> some View {
+        if let videoURL {
+            ShareLink(item: videoURL) {
+                HStack(spacing: 8) {
+                    Image(systemName: "play.rectangle.fill")
+                    Text("PARTAGER LA VIDÉO")
+                }
+            }
+            .buttonStyle(SecondaryButtonStyle())
+        } else if videoEnCours != nil {
+            VStack(spacing: 8) {
+                Button(action: {}) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "film")
+                        Text("JE FABRIQUE TA VIDÉO…")
+                    }
+                }
+                .buttonStyle(SecondaryButtonStyle())
+                .disabled(true)
+                // L'anneau d'une barre : l'avancement est réel, image par image, et c'est la
+                // seule chose qui dise que l'app travaille plutôt qu'elle ne bloque.
+                LinearBar(fraction: videoAvancement, color: RUColor.rose, height: 6)
+            }
+        } else {
+            Button {
+                Haptics.selection()
+                lanceLaVideo(for: run)
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "film")
+                    Text("FAIRE MA VIDÉO")
+                }
+            }
+            .buttonStyle(SecondaryButtonStyle())
+        }
+    }
+
+    private func lanceLaVideo(for run: RunRecord) {
+        videoAvancement = 0
+        // `@MainActor in`, comme le rendu de la carte juste au-dessus : `RunVideoRenderer` y est
+        // isolé, et c'est là que vivent les `@State` qu'on écrit en chemin. Sans l'annotation,
+        // la tâche n'hérite pas de l'acteur et chaque ligne après un `await` serait ailleurs.
+        videoEnCours = Task { @MainActor in
+            do {
+                let url = try await RunVideoRenderer.fabrique(run) { part in
+                    videoAvancement = part
+                }
+                videoURL = url
+                Haptics.success()
+                Analytics.shared.track(.runVideoMade, [
+                    "discipline": .string(run.discipline.rawValue)
+                ])
+            } catch RunVideoRenderer.Echec.annulee {
+                // Elle a quitté l'écran : rien à dire, et surtout pas une alerte sur un écran
+                // qu'elle ne regarde plus.
+            } catch {
+                appState.toast(String(localized: "La vidéo n'a pas pu être fabriquée — réessaie."))
+            }
+            videoEnCours = nil
+        }
+    }
+
     private func quietAction(icon: String, title: String) -> some View {
         HStack(spacing: 6) {
             Image(systemName: icon).font(.system(size: 12, weight: .semibold))

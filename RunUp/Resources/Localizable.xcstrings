@@ -8243,6 +8243,22 @@
         }
       }
     },
+    "FAIRE MA VIDÉO": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MAKE MY VIDEO"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CREAR MI VÍDEO"
+          }
+        }
+      }
+    },
     "FAIT": {
       "localizations": {
         "en": {
@@ -9554,6 +9570,22 @@
         }
       }
     },
+    "JE FABRIQUE TA VIDÉO…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MAKING YOUR VIDEO…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ESTOY CREANDO TU VÍDEO…"
+          }
+        }
+      }
+    },
     "JE ME SENS PRÊTE, PASSER LA RÉCUPÉRATION": {
       "localizations": {
         "en": {
@@ -10320,6 +10352,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "La chaqueta se pone ANTES de entrar al avituallamiento, no después. Diez minutos sentada sin abrigo cuestan una hora de recalentarse."
+          }
+        }
+      }
+    },
+    "La vidéo n'a pas pu être fabriquée — réessaie.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The video couldn't be made — try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha podido crear el vídeo: inténtalo de nuevo."
           }
         }
       }
@@ -12717,6 +12765,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "COMPARTIR ESTA RUTA"
+          }
+        }
+      }
+    },
+    "PARTAGER LA VIDÉO": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SHARE THE VIDEO"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "COMPARTIR EL VÍDEO"
           }
         }
       }

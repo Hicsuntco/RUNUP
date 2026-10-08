@@ -129,6 +129,21 @@ final class Analytics: @unchecked Sendable {
         /// pas d'identifiant d'itinéraire, pas celui de la personne suivie. Un compteur de
         /// gestes, pas un journal social.
         case clubActionTaken = "club_action_taken"
+        /// Une vidéo de course fabriquée.
+        ///
+        /// La seule question que cette fonctionnalité pose : est-ce que quelqu'un s'en sert ?
+        /// Elle coûte une douzaine de secondes de calcul sur le téléphone et un bouton de plus
+        /// sur l'écran de fin de course — deux choses qu'on retire sans regret si la réponse est
+        /// non, et qu'on travaille si la réponse est oui.
+        ///
+        /// Le PARTAGE lui-même n'est pas mesurable : `ShareLink` ne dit jamais si la feuille a
+        /// abouti, ni où. Mieux vaut un seul chiffre honnête — « faite » — qu'un second qu'on
+        /// devinerait.
+        ///
+        /// Ne transporte QUE la discipline, pour savoir si c'est un geste de coureuse, de
+        /// cycliste ou de traileuse. Pas d'identifiant de sortie, pas de distance, rien qui
+        /// rattache la vidéo à un parcours.
+        case runVideoMade = "run_video_made"
         /// Quel écran est ouvert, avec `screen` = le `rawValue` d'`AppScreen`. Ajouté quand le
         /// Profil a remplacé Club en 5e onglet : ce déplacement descend la couche sociale d'un
         /// niveau, et sans cet événement on ne pouvait ni confirmer ni infirmer que ça lui coûte

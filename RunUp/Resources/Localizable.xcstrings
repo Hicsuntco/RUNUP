@@ -3355,19 +3355,19 @@
         }
       }
     },
-    "Appui long pour choisir la discipline": {
+    "Appui long puis glisse le doigt pour choisir la discipline": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Press and hold to choose the discipline"
+            "value": "Press and hold, then slide your finger to choose the discipline"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mantén pulsado para elegir la disciplina"
+            "value": "Mantén pulsado y desliza el dedo para elegir la disciplina"
           }
         }
       }

@@ -8,8 +8,20 @@ struct TabBarView: View {
     /// La discipline que le bouton lancera. Il la PORTE à l'écran, et c'est ce qui reste de la
     /// bascule d'origine : le libellé dit « TRAIL », donc on sait ce qui part sans rien ouvrir.
     var discipline: Discipline = .run
-    /// Appui long : ouvre le petit panneau de choix, qui vit dans `RootTabView`.
-    var onChooseDiscipline: () -> Void = {}
+    /// Le cadran est-il ouvert ? LU, jamais écrit ici.
+    ///
+    /// L'état vit dans `RootTabView`, qui dessine le cadran. Le garder aussi ici en donnerait deux
+    /// copies, et deux copies d'un même booléen divergent toujours par le même chemin : un appui
+    /// à côté referme le cadran chez l'un et pas chez l'autre, et le geste suivant part dans la
+    /// mauvaise branche sans que rien ne l'explique.
+    var dialOpen: Bool = false
+    /// L'appui long a duré : il faut ouvrir le cadran.
+    var onOpenDial: () -> Void = {}
+    /// Le doigt bouge, cadran ouvert. Le déplacement est compté depuis le centre du bouton, ce qui
+    /// est précisément le repère de la géométrie de `DisciplineDial`.
+    var onDialDrag: (CGSize) -> Void = { _ in }
+    /// Le doigt se lève. C'est le moment où l'on choisit — ou pas.
+    var onDialEnd: (CGSize) -> Void = { _ in }
     /// Faux pendant une course : on ne change pas de discipline au milieu d'une sortie. Un
     /// booléen séparé plutôt qu'une closure optionnelle — un ternaire qui rend `nil` ou une
     /// fermeture est une inférence que Swift refuse selon le contexte, et ce n'est pas le genre
@@ -115,20 +127,36 @@ struct TabBarView: View {
     /// Appuyé. Rend ce que `PressableStyle` rendait, puisque ce contrôle n'est plus un `Button`.
     @State private var runPressed = false
 
-    /// Vrai quand l'appui long vient d'ouvrir le panneau de choix.
+    /// Combien de temps il faut maintenir avant que le cadran ne s'ouvre.
+    private static let dureeAppuiLong: Duration = .milliseconds(450)
+    /// En dessous, un appui qui se lève est un APPUI et non un glissement avorté. Sans cette
+    /// borne, un doigt qui balaie l'écran en passant sur le bouton lancerait une course.
+    private static let toleranceDAppui: CGFloat = 12
+
+    /// Un appui est en cours. Sert à reconnaître le PREMIER `onChanged` d'un geste : `DragGesture`
+    /// en envoie des dizaines, et seul le premier doit armer le minuteur d'ouverture.
+    @State private var appuiEnCours = false
+    /// Le minuteur d'ouverture. Annulé si le doigt se lève avant la fin — c'est ce qui distingue
+    /// un appui d'un maintien.
+    @State private var ouvertureEnCours: Task<Void, Never>?
+
+    /// Arme l'ouverture du cadran. Annulée par `onEnded` si le doigt se lève avant la fin — c'est
+    /// toute la différence entre un appui, qui lance une course, et un maintien, qui ouvre le
+    /// choix.
     ///
-    /// SwiftUI n'impose aucune durée MAXIMALE à un `TapGesture` : après un appui long, le
-    /// relâchement peut aussi être livré comme un tap. Ce drapeau avale ce tap-là.
-    ///
-    /// Il compte PLUS qu'avant. Du temps de la bascule, le tap de trop faisait partir une course
-    /// juste après un changement de discipline — fâcheux. Maintenant, l'appui simple sur ce bouton
-    /// REFERME le panneau (c'est ce qu'on vise pour annuler), donc un tap livré après l'appui long
-    /// refermerait le panneau dans l'instant où il s'ouvre : le geste n'aurait plus aucun effet
-    /// visible, et il paraîtrait simplement cassé.
-    ///
-    /// Remis à faux au DÉBUT de chaque pression, pas dans le tap : un appui long qui ne serait pas
-    /// suivi d'un tap ne peut donc pas manger le geste suivant.
-    @State private var panneauVientDOuvrir = false
+    /// `@MainActor` écrit explicitement : la tâche touche à de l'état de vue et déclenche un
+    /// retour haptique, et ni l'un ni l'autre ne se fait depuis un fil quelconque.
+    private func armerLOuverture() {
+        ouvertureEnCours = Task { @MainActor in
+            try? await Task.sleep(for: Self.dureeAppuiLong)
+            guard !Task.isCancelled, canChooseDiscipline else { return }
+            // Le bouton se détend au moment où le cadran sort : le doigt ne le quitte pas, mais
+            // ce n'est plus lui qu'on appuie, c'est le cadran qu'on vise.
+            runPressed = false
+            Haptics.impact(.medium)
+            onOpenDial()
+        }
+    }
 
     /// Ce que fait l'appui simple, dit en entier — « Démarrer une sortie trail ».
     private var startLabel: LocalizedStringKey {
@@ -209,43 +237,69 @@ struct TabBarView: View {
         .scaleEffect(runPressed ? 0.96 : 1)
         .opacity(runPressed ? 0.88 : 1)
         .animation(.easeOut(duration: 0.12), value: runPressed)
-        .onTapGesture {
-            if panneauVientDOuvrir {
-                panneauVientDOuvrir = false
-                return
-            }
-            onStartRun()
-        }
-        // L'appui long bascule la discipline. Posé sur le bouton plutôt qu'ailleurs parce qu'il
-        // n'y a qu'un seul endroit où l'on décide de partir : y ajouter un deuxième geste coûte
-        // moins qu'un réglage à aller chercher, et l'appui simple reste à un seul geste pour la
-        // course, qui est l'écrasante majorité des départs.
-        .onLongPressGesture(minimumDuration: 0.45, pressing: { pressing in
-            runPressed = pressing
-            if pressing { panneauVientDOuvrir = false }
-        }, perform: {
-            guard canChooseDiscipline else { return }
-            panneauVientDOuvrir = true
-            Haptics.impact(.medium)
-            onChooseDiscipline()
-        })
+        // UN SEUL GESTE POUR TOUT, ET C'EST LE TROISIÈME ESSAI.
+        //
+        // D'abord `Button` + `.onLongPressGesture` : le reconnaisseur du bouton remportait
+        // l'arbitrage et l'appui long ne partait jamais. Puis `.onTapGesture` +
+        // `.onLongPressGesture`, qui marchait — mais `TapGesture` n'a aucune durée MAXIMALE, donc
+        // le relâchement d'un maintien pouvait aussi arriver comme un tap, et il fallait un
+        // drapeau pour l'avaler.
+        //
+        // Maintenant il faut en plus suivre le doigt APRÈS l'appui long, sans qu'il se lève. La
+        // composition documentée pour ça est `LongPressGesture().sequenced(before: DragGesture())`,
+        // et elle aurait sans doute marché — mais elle fait dépendre quatre comportements de la
+        // façon dont SwiftUI enchaîne deux reconnaisseurs, c'est-à-dire de ce qui a déjà échoué
+        // deux fois ici, sur un code que je ne peux pas essayer avant un quart d'heure de
+        // compilation.
+        //
+        // Un `DragGesture(minimumDistance: 0)` voit tout : le doigt qui se pose, chacun de ses
+        // déplacements, et le moment où il se lève. La durée de l'appui n'est alors plus un
+        // reconnaisseur à composer mais un minuteur qu'on arme et qu'on annule — trois lignes
+        // dont chaque branche est écrite ici.
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { valeur in
+                    if !appuiEnCours {
+                        appuiEnCours = true
+                        runPressed = true
+                        // Pas de minuteur si le cadran est DÉJÀ ouvert : ce nouvel appui sert à en
+                        // sortir, ou à viser un rond sans avoir à re-maintenir.
+                        if !dialOpen { armerLOuverture() }
+                    }
+                    if dialOpen { onDialDrag(valeur.translation) }
+                }
+                .onEnded { valeur in
+                    appuiEnCours = false
+                    runPressed = false
+                    ouvertureEnCours?.cancel()
+                    ouvertureEnCours = nil
+                    if dialOpen {
+                        onDialEnd(valeur.translation)
+                    } else if hypot(valeur.translation.width, valeur.translation.height)
+                                < Self.toleranceDAppui {
+                        onStartRun()
+                    }
+                }
+        )
         .animation(RUMotion.snap, value: discipline)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel(startLabel)
-        // Plus le nom de la discipline suivante, mais le geste : à trois disciplines l'appui long
-        // ne mène plus à UNE destination, il fait tourner. C'est l'action nommée juste en dessous
-        // qui dit où l'on va, et elle, elle se met à jour toute seule.
-        .accessibilityHint(canChooseDiscipline ? "Appui long pour choisir la discipline" : "")
+        // Le GESTE, pas une destination : le cadran montre les trois, c'est lui qui dit où l'on
+        // va. Et il faut le décrire en entier — « appui long » seul laisserait croire qu'il suffit
+        // de relâcher, alors que relâcher sans bouger annule.
+        .accessibilityHint(canChooseDiscipline
+                           ? "Appui long puis glisse le doigt pour choisir la discipline" : "")
         .accessibilityAction {
             onStartRun()
         }
-        // Une action nommée, pas seulement l'appui long : maintenir 0,45 s est un geste que
-        // VoiceOver ne transmet pas tel quel, et le rotor d'actions est la façon dont ses
-        // utilisateurs découvrent ce qu'une vue sait faire.
+        // L'action nommée ouvre le cadran SANS aucun glissement, et c'est sa raison d'être : ni
+        // le maintien de 0,45 s ni le glissement qui le suit ne sont transmis par VoiceOver. Le
+        // rotor d'actions est la façon dont ses utilisateurs découvrent ce qu'une vue sait faire,
+        // et les trois ronds restent des boutons qu'on atteint ensuite un par un.
         .accessibilityAction(named: Text(choixActionName)) {
             guard canChooseDiscipline else { return }
-            onChooseDiscipline()
+            onOpenDial()
         }
     }
 }

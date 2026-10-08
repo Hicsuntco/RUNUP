@@ -18,6 +18,14 @@ struct RootTabView: View {
     /// piège de `clipShape` que le bouton RUN a déjà coûté une fois.
     @State private var choixDisciplineOuvert = false
 
+    /// Où en est le doigt, compté depuis le centre du bouton RUN.
+    ///
+    /// Ici et pas dans la barre, parce que c'est ici qu'on dessine le cadran : le rond mis en
+    /// avant se déduit de ce déplacement par `DisciplineDial.option(pour:)`, et la barre ne fait
+    /// que rapporter ce que le doigt lui dit. Remis à zéro à chaque relâchement, ce qui suffit à
+    /// éteindre la mise en avant — zéro est sous la zone morte.
+    @State private var glissement: CGSize = .zero
+
     /// Quel onglet la barre affiche comme actif — ce n'est pas toujours l'écran courant. Depuis
     /// que Profil est le 5e onglet, Club et Amis (`SocialView`) sont des destinations SOUS le
     /// Profil, ouvertes par ses deux cartes. Sans cette translation, entrer dans son club
@@ -47,6 +55,7 @@ struct RootTabView: View {
     private var typesText: Bool { appState.screen == .coach || appState.screen == .club }
 
     private func fermerLeChoix() {
+        glissement = .zero
         withAnimation(RUMotion.snap) { choixDisciplineOuvert = false }
     }
 
@@ -79,15 +88,25 @@ struct RootTabView: View {
             }
 
             if showBar && choixDisciplineOuvert {
-                DisciplinePicker(selection: appState.runDiscipline) { discipline in
+                DisciplineDialView(selection: appState.runDiscipline,
+                                   visee: DisciplineDial.option(pour: glissement)) { discipline in
                     appState.setRunDiscipline(discipline)
                     fermerLeChoix()
                 }
-                // La même hauteur que `RunInProgressPill` : les deux se posent juste au-dessus de
-                // la barre, et il n'y a aucune raison qu'ils ne flottent pas au même étage.
-                .padding(.bottom, RUSpacing.tabBarBottomInset + RUSpacing.tabBarHeight + 14)
-                // Il SORT du bouton : il grandit depuis le bas, là où le doigt est encore posé.
-                .transition(.scale(scale: 0.86, anchor: .bottom).combined(with: .opacity))
+                // CENTRÉ SUR LE BOUTON RUN, pas posé au-dessus de la barre. Toute la géométrie
+                // du cadran — les trois angles, le rayon, la direction du doigt — part du centre
+                // du bouton, et le dessin doit partir du même point : un demi-écart ici ferait
+                // viser les ronds de travers.
+                //
+                // Dans une pile alignée en bas, un enfant de hauteur H avec P de marge basse a son
+                // CENTRE à P + H/2 du bas. On veut ce centre au centre du bouton, soit à la marge
+                // de la barre plus une demi-hauteur de barre : d'où la soustraction. Elle rend un
+                // nombre négatif — le cadre dépasse sous l'écran — et c'est sans effet, cette
+                // moitié basse ne contient rien.
+                .padding(.bottom, RUSpacing.tabBarBottomInset + RUSpacing.tabBarHeight / 2
+                         - DisciplineDial.hauteurCadran / 2)
+                // Il SORT du bouton : il s'ouvre depuis le point où le doigt est encore posé.
+                .transition(.scale(scale: 0.6, anchor: .bottom).combined(with: .opacity))
             }
 
             if showBar {
@@ -95,18 +114,30 @@ struct RootTabView: View {
                     selected: tabSelection,
                     onSelect: { appState.go($0) },
                     onStartRun: {
-                        // Un appui simple pendant que le panneau est ouvert le referme, sans
-                        // partir en course : le bouton est alors ce qu'on vise pour annuler.
-                        if choixDisciplineOuvert { fermerLeChoix() }
-                        else if appState.isRunActive { appState.go(.live) }
+                        if appState.isRunActive { appState.go(.live) }
                         else { appState.startRun(appState.runDiscipline) }
                     },
                     discipline: appState.runDiscipline,
-                    // L'appui long OUVRE le choix, il ne bascule plus. À trois disciplines, une
-                    // bascule demandait de maintenir deux fois pour atteindre le trail, à
-                    // l'aveugle : un geste qu'on apprend par cœur au lieu de le lire.
-                    onChooseDiscipline: {
+                    dialOpen: choixDisciplineOuvert,
+                    onOpenDial: {
+                        glissement = .zero
                         withAnimation(RUMotion.snap) { choixDisciplineOuvert = true }
+                    },
+                    // Sans animation : c'est le doigt qui mène, et une animation sur une valeur
+                    // qui change soixante fois par seconde ne fait que retarder le rond mis en
+                    // avant par rapport à là où le doigt est vraiment. Les ronds, eux, animent
+                    // leur propre changement d'état.
+                    onDialDrag: { glissement = $0 },
+                    // LE CHOIX SE FAIT AU RELÂCHEMENT. Un déplacement qui ne vise rien — le doigt
+                    // n'a pas bougé, il est parti vers le bas, ou beaucoup trop loin — referme le
+                    // cadran sans rien changer. C'est l'annulation, et elle n'a pas besoin d'être
+                    // expliquée : on tire vers le bas, à l'opposé de l'ouverture.
+                    onDialEnd: { translation in
+                        if let choisie = DisciplineDial.option(pour: translation) {
+                            Haptics.selection()
+                            appState.setRunDiscipline(choisie)
+                        }
+                        fermerLeChoix()
                     },
                     // Pas pendant une course : on ne change pas de discipline au milieu d'une
                     // sortie, et un appui long qui ne fait rien vaut mieux qu'un qui touche à un

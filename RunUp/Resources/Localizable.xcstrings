@@ -22953,6 +22953,512 @@
         }
       }
     },
+    "session.ultra_back_to_back_day_1.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "la sortie longue du week-end — demain tu repars dessus"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the weekend long run — tomorrow you go again on top of it"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "la salida larga del fin de semana — mañana sales otra vez encima"
+          }
+        }
+      }
+    },
+    "session.ultra_back_to_back_day_1.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enchaînement · jour 1"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back-to-back · day 1"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encadenado · día 1"
+          }
+        }
+      }
+    },
+    "session.ultra_back_to_back_day_2.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sur des jambes entamées : c'est la seconde moitié de ta course, en répétition"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on tired legs: this is the second half of your race, rehearsed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "con las piernas tocadas: es la segunda mitad de tu carrera, ensayada"
+          }
+        }
+      }
+    },
+    "session.ultra_back_to_back_day_2.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enchaînement · jour 2"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back-to-back · day 2"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encadenado · día 2"
+          }
+        }
+      }
+    },
+    "session.ultra_descent_work.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ce qui détruit les quadriceps le jour J, et la seule qualité qu'un plan de route ignore"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "what destroys your quads on race day, and the one quality a road plan never trains"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lo que destroza los cuádriceps el día D, y la única cualidad que un plan de asfalto ignora"
+          }
+        }
+      }
+    },
+    "session.ultra_descent_work.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descente technique"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Technical descent"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bajada técnica"
+          }
+        }
+      }
+    },
+    "session.ultra_endurance_footing.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "le fond de la préparation — relâché, en terrain varié"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the backbone of the block — relaxed, on varied ground"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "la base del bloque — suelto, en terreno variado"
+          }
+        }
+      }
+    },
+    "session.ultra_endurance_footing.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Footing d'endurance"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Endurance run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rodaje de resistencia"
+          }
+        }
+      }
+    },
+    "session.ultra_hill_repeats.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "montées de 3 à 5 min — marcher dedans n'est pas un échec, c'est la technique"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3-5 min climbs — hiking them isn't failing, it's the technique"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "subidas de 3 a 5 min — andar no es fracasar, es la técnica"
+          }
+        }
+      }
+    },
+    "session.ultra_hill_repeats.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Côtes longues"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Long hill repeats"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuestas largas"
+          }
+        }
+      }
+    },
+    "session.ultra_long_run.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "du temps debout, pas des kilomètres — avec le dénivelé de ta course"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "time on feet, not kilometres — with your race's elevation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tiempo de pie, no kilómetros — con el desnivel de tu carrera"
+          }
+        }
+      }
+    },
+    "session.ultra_long_run.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sortie longue en terrain"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Long run on terrain"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salida larga en terreno"
+          }
+        }
+      }
+    },
+    "session.ultra_night_run.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "à la frontale, en terrain — découvrir ça le jour J est une mauvaise surprise évitable"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "head torch, real trail — finding this out on race day is an avoidable surprise"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "con frontal, en terreno — descubrirlo el día D es una mala sorpresa evitable"
+          }
+        }
+      }
+    },
+    "session.ultra_night_run.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sortie de nuit"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Night run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salida nocturna"
+          }
+        }
+      }
+    },
+    "session.ultra_power_hike.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "au-delà d'une certaine pente, marcher est plus rapide et moins coûteux — ça s'apprend"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "past a certain gradient, hiking is faster and cheaper — and it is a skill"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a partir de cierta pendiente, andar es más rápido y menos costoso — y se aprende"
+          }
+        }
+      }
+    },
+    "session.ultra_power_hike.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marche rapide en côte"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power hiking"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcha rápida en subida"
+          }
+        }
+      }
+    },
+    "session.ultra_specific_long_run.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "la densité de dénivelé de ta course, sur ta distance à toi"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "your race's elevation density, over your own distance"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "la densidad de desnivel de tu carrera, en tu propia distancia"
+          }
+        }
+      }
+    },
+    "session.ultra_specific_long_run.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sortie longue spécifique"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Specific long run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salida larga específica"
+          }
+        }
+      }
+    },
+    "session.ultra_taper_footing.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "relâché, court — on ne construit plus rien, on garde les jambes"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "relaxed, short — nothing left to build, just keep the legs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "suelto, corto — ya no se construye nada, se mantienen las piernas"
+          }
+        }
+      }
+    },
+    "session.ultra_taper_footing.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Footing d'entretien"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maintenance run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rodaje de mantenimiento"
+          }
+        }
+      }
+    },
+    "session.ultra_terrain_reminder.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "un peu de dénivelé, aucune fatigue à accumuler"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a little elevation, no fatigue to accumulate"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "un poco de desnivel, ninguna fatiga que acumular"
+          }
+        }
+      }
+    },
+    "session.ultra_terrain_reminder.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rappel de terrain"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terrain reminder"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordatorio de terreno"
+          }
+        }
+      }
+    },
     "session.vo2max_intervals.subtitle": {
       "extractionState": "manual",
       "localizations": {

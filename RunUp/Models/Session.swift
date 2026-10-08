@@ -91,6 +91,38 @@ enum SessionKind: String, Codable, Equatable, CaseIterable {
     case hyroxRecoveryFooting = "hyrox_recovery_footing"
     case hyroxLightFunctional = "hyrox_light_functional"
     case hyroxCompromisedRunLight2 = "hyrox_compromised_run_light_2"
+    // ── Ultra-trail ───────────────────────────────────────────────────────────────────────────
+    //
+    // Onze séances qui n'existaient nulle part dans le moteur, parce qu'aucune d'elles n'a de
+    // sens sur route. Elles se comptent en TEMPS et en dénivelé, jamais en kilomètres : voir
+    // `UltraTrail`.
+    case ultraEnduranceFooting = "ultra_endurance_footing"
+    /// Les côtes longues : l'effort répété en montée, qui construit ce que le plat ne construit
+    /// pas. Marcher dedans n'est pas un échec, c'est la technique.
+    case ultraHillRepeats = "ultra_hill_repeats"
+    /// La marche rapide en côte. LA compétence que personne n'entraîne et que tout le monde
+    /// emploie : au-delà d'une certaine pente, marcher est plus rapide et moins coûteux que
+    /// courir, et ça s'apprend.
+    case ultraPowerHike = "ultra_power_hike"
+    case ultraLongRun = "ultra_long_run"
+    /// La descente technique. C'est elle qui détruit les quadriceps et qui décide de la seconde
+    /// moitié d'un ultra — et c'est la seule qualité qu'un plan de route ne travaille jamais,
+    /// puisque sur bitume on descend en roulant.
+    case ultraDescentWork = "ultra_descent_work"
+    case ultraSpecificLongRun = "ultra_specific_long_run"
+    /// L'enchaînement du week-end, en deux séances distinctes : repartir le dimanche sur des
+    /// jambes entamées reproduit la seconde moitié de l'épreuve, que rien d'autre ne reproduit
+    /// sans courir huit heures d'affilée.
+    case ultraBackToBackDay1 = "ultra_back_to_back_day_1"
+    case ultraBackToBackDay2 = "ultra_back_to_back_day_2"
+    /// La sortie de nuit, à la frontale. Un ultra se court dans le noir ; découvrir le jour J
+    /// qu'on ne sait pas lire un sentier à la lampe est une mauvaise surprise évitable.
+    case ultraNightRun = "ultra_night_run"
+    case ultraTaperFooting = "ultra_taper_footing"
+    /// Le rappel de terrain de l'affûtage : court, un peu de dénivelé, rien à construire. Les
+    /// jambes gardent la mémoire du sol sans accumuler de fatigue.
+    case ultraTerrainReminder = "ultra_terrain_reminder"
+
     case rest = "rest"
     case comeback = "comeback"
     case freeRunMaintenance = "free_run_maintenance"
@@ -136,16 +168,26 @@ enum SessionKind: String, Codable, Equatable, CaseIterable {
 
         case .easyFooting, .enduranceFooting, .maintenanceFooting, .shortRun, .stridesFooting,
              .hyroxBaseFooting, .hyroxMaintenanceFooting, .freeRunMaintenance, .freeRunDiscovery,
-             .comeback:
+             .comeback,
+             // Les footings d'ultra sont de l'endurance, pas autre chose : ce qui les distingue
+             // est le terrain, pas la filière.
+             .ultraEnduranceFooting, .ultraTaperFooting, .ultraTerrainReminder, .ultraPowerHike:
             return .endurance
 
         case .tempoRun, .hyroxTempoSled:
             return .tempo
 
-        case .lightIntervals, .vo2maxIntervals, .racePaceReminder, .freeRunLightIntervals:
+        case .lightIntervals, .vo2maxIntervals, .racePaceReminder, .freeRunLightIntervals,
+             // Les côtes et la descente sont des séances de QUALITÉ : répétées, dures, et elles
+             // comptent dans le plafond de deux séances dures par semaine. Les ranger ailleurs
+             // les ferait passer sous ce garde-fou — trois séances dures par semaine est
+             // exactement ce qu'il existe pour empêcher.
+             .ultraHillRepeats, .ultraDescentWork:
             return .intervals
 
-        case .longRun, .specificLongRun, .easedLongRun:
+        case .longRun, .specificLongRun, .easedLongRun,
+             .ultraLongRun, .ultraSpecificLongRun, .ultraBackToBackDay1, .ultraBackToBackDay2,
+             .ultraNightRun:
             return .longRun
 
         case .hyroxTechnique, .hyroxTechniquePro, .hyroxIntenseCircuit, .hyroxIntenseCircuitPro,

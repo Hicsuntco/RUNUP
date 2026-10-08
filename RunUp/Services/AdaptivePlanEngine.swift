@@ -637,6 +637,118 @@ enum AdaptivePlanEngine {
     /// never states a precise competition kg figure (see `HyroxDivision`) — sessions describe
     /// structure/technique/effort, which stays true across seasons and skill levels instead of
     /// risking a stale or wrong "real" number.
+    /// Le temps d'effort de la course visée, en secondes. Zéro quand on ne prépare pas d'ultra.
+    private static func tempsDeffortCourse(_ profile: UserProfile) -> Double {
+        let km = profile.effectiveRaceDistanceKm ?? 0
+        let dplus = Double(profile.raceElevationGainM ?? 0)
+        return UltraTrail.tempsDeffortSecondes(km: km, denivelePositifM: dplus,
+                                               allureFacileSecParKm: PaceModel.zones(for: profile).easySecPerKm)
+    }
+
+    /// Les séances d'un plan d'ultra-trail.
+    ///
+    /// # CE QUI CHANGE PAR RAPPORT À UN PLAN DE ROUTE
+    ///
+    /// Tout se compte en TEMPS. `UltraTrail` donne la cible de la sortie longue en secondes à
+    /// partir du temps d'effort de la course, et la rampe de progression — la même que partout,
+    /// elle ne sait pas ce qu'elle rampe — la fait monter sans jamais dépasser +10 % par semaine.
+    /// Le garde-fou anti-blessure s'applique donc tel quel, dans l'unité qui convient.
+    ///
+    /// Trois qualités que la route n'entraîne jamais y apparaissent : les côtes longues, où
+    /// MARCHER est la technique et non un échec ; la descente technique, qui détruit les
+    /// quadriceps le jour J et qu'on ne peut pas travailler sur bitume ; et l'enchaînement du
+    /// week-end, qui est la seule façon de répéter la seconde moitié d'une épreuve sans la courir.
+    ///
+    /// # POURQUOI L'ENCHAÎNEMENT N'EST PAS TOUJOURS LÀ
+    ///
+    /// Sous quatre heures d'effort, l'épreuve ne demande pas d'apprendre à repartir sur des jambes
+    /// mortes — un trail de montagne de 25 km se prépare avec des sorties longues ordinaires.
+    /// Prescrire un enchaînement à quelqu'un qui n'en a pas besoin lui coûte un week-end entier
+    /// pour rien, et c'est le genre de séance qu'on saute une fois puis toujours.
+    private static func ultraTrailArchetypes(for block: TrainingBlock, profile: UserProfile,
+                                             weekNumber: Int, shape: ProgramShape) -> [SessionArchetype] {
+        let zones = PaceModel.zones(for: profile)
+        let effortCourse = tempsDeffortCourse(profile)
+        let densite = UltraTrail.densite(km: profile.effectiveRaceDistanceKm ?? 0,
+                                         denivelePositifM: Double(profile.raceElevationGainM ?? 0))
+        let enchaine = UltraTrail.demandeUnEnchainement(tempsDeffortCourseSecondes: effortCourse)
+
+        /// La cible de la sortie longue, en MINUTES, rampée sur le bloc.
+        func longueMinutes(_ bloc: UltraTrail.Bloc, premiereSemaine: Int, derniereSemaine: Int) -> Int {
+            let cible = UltraTrail.cibleSortieLongueSecondes(tempsDeffortCourseSecondes: effortCourse,
+                                                             bloc: bloc)
+            // On part des deux tiers de la cible du bloc : le premier week-end d'un bloc n'est pas
+            // son dernier, et commencer à la cible supprimerait toute la progression.
+            let depart = max(UltraTrail.Bloc.affutage.plancherSecondes, cible * 0.66)
+            let pos = buildWeekPosition(week: weekNumber,
+                                        blockFirstWeek: premiereSemaine,
+                                        blockLastWeek: max(premiereSemaine, derniereSemaine))
+            let rampee = rampedLongRunKm(start: depart, target: cible,
+                                         weekInBlock: pos.index, blockWeeks: pos.count)
+            return max(20, Int((rampee / 60).rounded()))
+        }
+
+        /// Le D+ à annoncer pour une séance d'une durée donnée, d'après la densité de la course.
+        /// En mètres, arrondi à la cinquantaine : annoncer « 847 m » serait une précision que
+        /// personne ne peut viser sur un terrain réel.
+        func deniveleTexte(minutes: Int) -> String {
+            let kmApproximatifs = Double(minutes) * 60 / max(1, zones.easySecPerKm)
+            let brut = UltraTrail.deniveleSortieLongueM(densiteCourseMParKm: densite,
+                                                        kmDeLaSortie: kmApproximatifs)
+            let arrondi = Int((brut / 50).rounded()) * 50
+            return arrondi > 0 ? String(localized: "\(arrondi) m D+") : ""
+        }
+
+        func sousTitre(_ base: String, minutes: Int) -> String {
+            let d = deniveleTexte(minutes: minutes)
+            return d.isEmpty ? base : "\(base) · \(d)"
+        }
+
+        switch block {
+        case .base:
+            let longue = longueMinutes(.base, premiereSemaine: 1, derniereSemaine: max(shape.baseWeeks, 1))
+            return [
+                SessionArchetype(role: .easy, title: "Footing d'endurance", subtitle: "le fond de la préparation — relâché, en terrain varié", pace: zones.easy, zone: "Z2", baseDuration: 40, kind: .ultraEnduranceFooting),
+                SessionArchetype(role: .speed, title: "Côtes longues", subtitle: "montées de 3 à 5 min — marcher dedans n'est pas un échec, c'est la technique", pace: zones.threshold, zone: "Z3", baseDuration: 45, kind: .ultraHillRepeats, intervals: IntervalStructure(reps: 5, repMeters: 600, recoveryMeters: 600)),
+                SessionArchetype(role: .easy, title: "Marche rapide en côte", subtitle: "au-delà d'une certaine pente, marcher est plus rapide et moins coûteux — ça s'apprend", pace: "—", zone: "Z2", baseDuration: 50, kind: .ultraPowerHike),
+                SessionArchetype(role: .longRun, title: "Sortie longue en terrain", subtitle: sousTitre("du temps debout, pas des kilomètres", minutes: longue), pace: zones.easy, zone: "Z2", baseDuration: longue, kind: .ultraLongRun)
+            ]
+
+        case .specifique:
+            let premiere = shape.baseWeeks + 1
+            let derniere = shape.baseWeeks + max(shape.specificWeeks, 1)
+            let longue = longueMinutes(.specifique, premiereSemaine: premiere, derniereSemaine: derniere)
+            var seances: [SessionArchetype] = [
+                SessionArchetype(role: .speed, title: "Descente technique", subtitle: "ce qui détruit les quadriceps le jour J, et la seule qualité qu'un plan de route ignore", pace: zones.easy, zone: "Z2-3", baseDuration: 50, kind: .ultraDescentWork),
+                SessionArchetype(role: .easy, title: "Footing d'endurance", subtitle: "le socle aérobie — ni une séance au rabais, ni une séance dure", pace: zones.easy, zone: "Z2", baseDuration: 45, kind: .ultraEnduranceFooting),
+                SessionArchetype(role: .easy, title: "Sortie de nuit", subtitle: "à la frontale, en terrain — découvrir ça le jour J est une mauvaise surprise évitable", pace: zones.easy, zone: "Z2", baseDuration: 60, kind: .ultraNightRun)
+            ]
+            if enchaine {
+                let second = Int(UltraTrail.secondJourSecondes(premierJourSecondes: Double(longue) * 60) / 60)
+                seances.append(SessionArchetype(role: .longRun, title: "Enchaînement · jour 1", subtitle: sousTitre("la sortie longue du week-end — demain tu repars dessus", minutes: longue), pace: zones.easy, zone: "Z2", baseDuration: longue, kind: .ultraBackToBackDay1))
+                seances.append(SessionArchetype(role: .easy, title: "Enchaînement · jour 2", subtitle: "sur des jambes entamées : c'est la seconde moitié de ta course, en répétition", pace: zones.easy, zone: "Z2", baseDuration: max(30, second), kind: .ultraBackToBackDay2))
+            } else {
+                seances.append(SessionArchetype(role: .longRun, title: "Sortie longue spécifique", subtitle: sousTitre("la densité de dénivelé de ta course, sur ta distance à toi", minutes: longue), pace: zones.easy, zone: "Z2", baseDuration: longue, kind: .ultraSpecificLongRun))
+            }
+            return seances
+
+        case .affutage:
+            // `totalWeeks` est optionnel — un plan sans date de course ne périodise pas. L'affûtage
+            // n'arrive de toute façon jamais dans ce cas-là, mais la borne doit exister : on la
+            // reconstruit depuis les trois blocs plutôt que de déballer un optionnel par un `!`.
+            let derniereSemaine = shape.totalWeeks
+                ?? (shape.baseWeeks + shape.specificWeeks + max(shape.taperWeeks, 1))
+            let longue = longueMinutes(.affutage,
+                                       premiereSemaine: shape.baseWeeks + shape.specificWeeks + 1,
+                                       derniereSemaine: derniereSemaine)
+            return [
+                SessionArchetype(role: .easy, title: "Footing d'entretien", subtitle: "relâché, court — on ne construit plus rien, on garde les jambes", pace: zones.easy, zone: "Z2", baseDuration: 30, kind: .ultraTaperFooting),
+                SessionArchetype(role: .speed, title: "Rappel de terrain", subtitle: "un peu de dénivelé, aucune fatigue à accumuler", pace: zones.easy, zone: "Z2", baseDuration: 35, kind: .ultraTerrainReminder),
+                SessionArchetype(role: .longRun, title: "Sortie longue en terrain", subtitle: sousTitre("la dernière vraie sortie — courte, pour arriver frais", minutes: longue), pace: zones.easy, zone: "Z2", baseDuration: longue, kind: .ultraLongRun)
+            ]
+        }
+    }
+
     private static func hyroxArchetypes(for block: TrainingBlock, profile: UserProfile) -> [SessionArchetype] {
         let zones = PaceModel.zones(for: profile)
         let division = profile.hyroxDivision.flatMap { HyroxDivision(rawValue: $0) } ?? .open
@@ -783,9 +895,18 @@ enum AdaptivePlanEngine {
     static func generateWeekSessions(weekNumber: Int, tier: Int, profile: UserProfile) -> [PlannedDay] {
         let shape = ProgramShape.compute(goal: profile.goalId, raceDate: profile.raceDate, from: profile.programStartDate ?? .now)
         let block = trainingBlock(forWeek: weekNumber, shape: shape)
-        let templates = profile.goalId == .hyrox
-            ? hyroxArchetypes(for: block, profile: profile)
-            : archetypes(for: block, profile: profile, weekNumber: weekNumber, shape: shape)
+        // Un `switch` et non deux ternaires imbriqués : à trois familles de plan, une chaîne de
+        // ternaires devient une énigme, et c'est la ligne qui décide de TOUT ce qu'on fera courir.
+        let templates: [SessionArchetype]
+        switch profile.goalId {
+        case .hyrox:
+            templates = hyroxArchetypes(for: block, profile: profile)
+        case .ultraTrail:
+            templates = ultraTrailArchetypes(for: block, profile: profile,
+                                             weekNumber: weekNumber, shape: shape)
+        default:
+            templates = archetypes(for: block, profile: profile, weekNumber: weekNumber, shape: shape)
+        }
         let sortedRunDays = profile.runningDays.sorted()
 
         let longRunDay = profile.preferredLongRunDay.flatMap { sortedRunDays.contains($0) ? $0 : nil } ?? sortedRunDays.max()

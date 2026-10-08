@@ -93,15 +93,31 @@ final class DisciplineTests: XCTestCase {
     /// en a besoin : c'est une extension, un processus séparé qui ne peut rien lire de l'app. Elle
     /// écrivait « Allure » et « /km » EN DUR, sous un chiffre devenu des kilomètres-heure dès
     /// qu'on roule.
+    ///
+    /// LES LIBELLÉS NE SONT PAS COMPARÉS À DU FRANÇAIS. La première version de ce test exigeait
+    /// « Allure » et « Vitesse », et elle a échoué en intégration continue : le simulateur tourne
+    /// en anglais, donc `String(localized:)` rend « Pace » et « Speed ». Le code était juste, le
+    /// test était écrit depuis un seul pays — la même faute que la comparaison de semaines, qui a
+    /// déjà coûté un build dans cette session.
+    ///
+    /// Ce qui se vérifie ici est la RÈGLE, pas sa traduction : la route et le trail disent la même
+    /// chose, le vélo dit autre chose, et personne ne dit rien. Les unités, elles, ne passent pas
+    /// par le catalogue — « km » est « km » partout — donc elles se comparent au mot près.
     func testChaqueDisciplineNommeSaMesureDeRythme() {
-        XCTAssertEqual(Discipline.run.rythmeLabel, "Allure")
         XCTAssertEqual(Discipline.run.rythmeUnite, "/km")
-        XCTAssertEqual(Discipline.bike.rythmeLabel, "Vitesse")
         XCTAssertEqual(Discipline.bike.rythmeUnite, "km/h")
         // Le trail se lit en allure comme la route : l'allure y est erratique, mais c'est bien
         // une allure, et la convertir en km/h ne la rendrait pas plus lisible.
-        XCTAssertEqual(Discipline.trail.rythmeLabel, "Allure")
         XCTAssertEqual(Discipline.trail.rythmeUnite, "/km")
+
+        XCTAssertEqual(Discipline.trail.rythmeLabel, Discipline.run.rythmeLabel,
+                       "le trail et la route mesurent la même chose")
+        XCTAssertNotEqual(Discipline.bike.rythmeLabel, Discipline.run.rythmeLabel,
+                          "le vélo ne mesure pas une allure")
+        for discipline in Discipline.allCases {
+            XCTAssertFalse(discipline.rythmeLabel.isEmpty, "\(discipline) sans libellé")
+            XCTAssertFalse(discipline.rythmeLabelMajuscules.isEmpty, "\(discipline) sans capitales")
+        }
     }
 
     /// Et `TimeFormat` ne recopie plus l'unité : il met celle de la discipline en capitales. Deux
@@ -121,7 +137,8 @@ final class DisciplineTests: XCTestCase {
         let velo = RunActivityAttributes(sessionTitle: "Sortie", plannedDurationMinutes: 60,
                                          disciplineRaw: Discipline.bike.rawValue)
         XCTAssertEqual(velo.discipline, .bike)
-        XCTAssertEqual(velo.discipline.rythmeLabel, "Vitesse")
+        XCTAssertEqual(velo.discipline.rythmeUnite, "km/h",
+                       "c'est ce que l'île dynamique écrira sous le chiffre")
 
         let ancienne = RunActivityAttributes(sessionTitle: "Sortie", plannedDurationMinutes: 60)
         XCTAssertEqual(ancienne.discipline, .run, "sans discipline écrite, c'est une course")

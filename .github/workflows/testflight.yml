@@ -289,6 +289,12 @@ jobs:
       # processus séparés qui ne peuvent pas lire l'objet en mémoire de l'app. En oublier une ne
       # casse rien : ça donne juste un widget d'une autre couleur que l'écran d'accueil, ce qui
       # ressemble à un choix et n'est jamais signalé.
+      # Le nom de l'en-tête de renouvellement est écrit côté client et côté serveur. S'ils
+      # divergent, le serveur renouvelle dans le vide et elle se fait déconnecter tous les mois,
+      # sans que le symptôme ressemble en rien à sa cause.
+      - name: Vérifier que la session se renouvelle des deux côtés
+        run: python3 ci_scripts/check_session.py
+
       - name: Vérifier que la couleur de marque est la même partout
         run: python3 ci_scripts/check_accent.py
 

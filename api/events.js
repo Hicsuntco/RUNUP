@@ -101,7 +101,7 @@ module.exports = withErrorHandling(async function handler(req, res) {
   // Optional on purpose (see the file header) — `null` here is a normal, expected pre-signup
   // caller, not a rejection. `.catch` mirrors api/coach.js: a JWKS/DB hiccup while verifying must
   // degrade this call to anonymous, never 500 it.
-  const userId = await requireAuth(req).catch(() => null);
+  const userId = await requireAuth(req, res).catch(() => null);
 
   // Same key shape as the coach's limiter: the account when there is one, the caller's IP
   // otherwise, since anonymous use is the point of this endpoint. Fails open (see

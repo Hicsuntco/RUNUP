@@ -32,7 +32,11 @@ require.cache[dbPath] = {
   },
 };
 
-const { signSession, requireAuth, verifiedSessionClaims } = require('../lib/auth');
+const {
+  signSession, requireAuth, verifiedSessionClaims,
+  shouldRenewSession, sessionStartOf, RENEWAL_HEADER,
+  SESSION_LIFETIME_DAYS, ABSOLUTE_SESSION_DAYS,
+} = require('../lib/auth');
 const { SignJWT } = require('jose');
 
 const bearer = (token) => ({ headers: { authorization: `Bearer ${token}` } });
@@ -129,4 +133,150 @@ test('les claims portent bien l’identifiant demandé', async () => {
   const claims = await verifiedSessionClaims(bearer(token));
   assert.equal(claims.sub, 'abc-123');
   assert.ok(claims.exp > Math.floor(Date.now() / 1000), 'le jeton doit expirer dans le futur');
+});
+
+// ─── Le renouvellement glissant ───────────────────────────────────────────────────────────────
+//
+// Il décide tout seul, sur chaque requête authentifiée, s'il faut renvoyer un jeton neuf. Deux
+// façons de se tromper, et les deux sont silencieuses : ne jamais renouveler déconnecte quelqu'un
+// tous les mois sans que personne ne sache pourquoi, et renouveler sans plafond rend un jeton volé
+// éternel pour qui s'en sert.
+
+const JOUR = 86400;
+const maintenant = () => Math.floor(Date.now() / 1000);
+
+/// Un jeu de claims comme en produit `signSession` : émis il y a `ageJours`, valable 30 jours à
+/// partir de là, et appartenant à une session commencée il y a `sessionJours`.
+function claims({ ageJours, sessionJours = null }) {
+  const t = maintenant();
+  return {
+    sub: 'user-42',
+    iat: t - ageJours * JOUR,
+    exp: t - ageJours * JOUR + SESSION_LIFETIME_DAYS * JOUR,
+    sid: t - (sessionJours ?? ageJours) * JOUR,
+  };
+}
+
+test('un jeton neuf ne se renouvelle pas', () => {
+  assert.equal(shouldRenewSession(claims({ ageJours: 1 })), false);
+});
+
+test('un jeton passé à mi-vie se renouvelle', () => {
+  assert.equal(shouldRenewSession(claims({ ageJours: 16 })), true);
+});
+
+test('la bascule se fait bien à la moitié de la vie du jeton', () => {
+  const avant = claims({ ageJours: 0 });
+  const t = maintenant();
+  // Exactement la moitié restante : pas encore. Une seconde de moins : oui.
+  avant.exp = t + (SESSION_LIFETIME_DAYS * JOUR) / 2;
+  assert.equal(shouldRenewSession(avant, t), false);
+  avant.exp = t + (SESSION_LIFETIME_DAYS * JOUR) / 2 - 1;
+  assert.equal(shouldRenewSession(avant, t), true);
+});
+
+// LE PLAFOND. Sans lui, un jeton volé dont le voleur se sert se renouvelle à l'infini.
+test('au-delà du plafond absolu, plus aucun renouvellement', () => {
+  const vieux = claims({ ageJours: 20, sessionJours: ABSOLUTE_SESSION_DAYS + 1 });
+  assert.equal(shouldRenewSession(vieux), false);
+});
+
+test('juste en deçà du plafond, le renouvellement a encore lieu', () => {
+  const presque = claims({ ageJours: 20, sessionJours: ABSOLUTE_SESSION_DAYS - 1 });
+  assert.equal(shouldRenewSession(presque), true);
+});
+
+test('un jeton déjà expiré ne ressuscite pas', () => {
+  const mort = claims({ ageJours: SESSION_LIFETIME_DAYS + 1 });
+  assert.equal(shouldRenewSession(mort), false);
+});
+
+test('des claims absents ou sans expiration ne renouvellent rien', () => {
+  assert.equal(shouldRenewSession(null), false);
+  assert.equal(shouldRenewSession({ sub: 'x' }), false);
+});
+
+// Les jetons émis avant que `sid` n'existe : leur plafond court depuis leur propre émission, et
+// surtout PAS depuis maintenant — sinon il se repousserait à chaque renouvellement et le plafond
+// ne plafonnerait rien.
+test('un jeton sans `sid` fait courir son plafond depuis sa date d’émission', () => {
+  const t = maintenant();
+  assert.equal(sessionStartOf({ iat: t - 10 * JOUR }), t - 10 * JOUR);
+  const ancien = { sub: 'u', iat: t - (ABSOLUTE_SESSION_DAYS + 5) * JOUR, exp: t + JOUR };
+  assert.equal(shouldRenewSession(ancien, t), false, 'un vieux jeton sans sid ne se renouvelle pas');
+});
+
+test('`signSession` pose un début de session, et le recopie quand on le lui donne', async () => {
+  const frais = await verifiedSessionClaims(bearer(await signSession('user-42')));
+  assert.ok(Number.isFinite(frais.sid), 'un jeton neuf porte un `sid`');
+  assert.ok(Math.abs(frais.sid - maintenant()) < 5, '`sid` vaut maintenant à la connexion');
+
+  const debut = maintenant() - 40 * JOUR;
+  const renouvele = await verifiedSessionClaims(bearer(await signSession('user-42', debut)));
+  assert.equal(renouvele.sid, debut, 'le renouvellement garde le début d’origine');
+  assert.ok(renouvele.exp > maintenant() + 29 * JOUR, 'et repart pour 30 jours');
+});
+
+// Le bout qui relie la décision à la réponse HTTP.
+//
+// `signSession` donne toujours trente jours, donc il ne peut pas produire un jeton proche de
+// l'expiration : celui-ci est signé à la main avec la même clé, pour que l'assertion « l'en-tête
+// est posé » porte vraiment sur quelque chose. Un test qui n'exerce pas le cas qu'il annonce est
+// pire que pas de test — il fait croire que la ligne est couverte.
+async function jetonExpirantDans(secondes, { sid = null } = {}) {
+  const { SignJWT } = require('jose');
+  const t = maintenant();
+  return await new SignJWT({ sub: 'user-42', sid: sid ?? t })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setJti('jti-de-test')
+    .setIssuedAt(t)
+    .setExpirationTime(t + secondes)
+    .sign(new TextEncoder().encode(process.env.RUNUP_SESSION_SECRET));
+}
+
+test('`requireAuth` pose l’en-tête quand le jeton a passé la mi-vie', async () => {
+  const entetes = {};
+  const res = { headersSent: false, setHeader: (k, v) => { entetes[k] = v; } };
+
+  const presqueExpire = await jetonExpirantDans(2 * JOUR);
+  assert.equal(await requireAuth(bearer(presqueExpire), res), 'user-42');
+  const renouvele = entetes[RENEWAL_HEADER];
+  assert.ok(typeof renouvele === 'string' && renouvele.length > 20, 'un jeton doit être renvoyé');
+
+  // Et ce jeton-là est utilisable, porte le même début de session, et repart pour trente jours.
+  const neufClaims = await verifiedSessionClaims(bearer(renouvele));
+  assert.equal(neufClaims.sub, 'user-42');
+  assert.ok(neufClaims.exp > maintenant() + 29 * JOUR, 'le jeton rendu repart pour 30 jours');
+});
+
+test('un jeton neuf ne fait poser aucun en-tête', async () => {
+  const entetes = {};
+  const res = { headersSent: false, setHeader: (k, v) => { entetes[k] = v; } };
+  assert.equal(await requireAuth(bearer(await signSession('user-42')), res), 'user-42');
+  assert.equal(entetes[RENEWAL_HEADER], undefined);
+});
+
+// Le plafond, vu depuis la route : une session trop ancienne cesse d'être prolongée même quand
+// son jeton est à bout de souffle. C'est là que le voleur s'arrête.
+test('passé le plafond, la route ne renouvelle plus rien', async () => {
+  const entetes = {};
+  const res = { headersSent: false, setHeader: (k, v) => { entetes[k] = v; } };
+  const vieilleSession = await jetonExpirantDans(
+    2 * JOUR, { sid: maintenant() - (ABSOLUTE_SESSION_DAYS + 1) * JOUR });
+  assert.equal(await requireAuth(bearer(vieilleSession), res), 'user-42',
+               'la session reste valable jusqu’à son expiration');
+  assert.equal(entetes[RENEWAL_HEADER], undefined, 'mais elle n’est plus prolongée');
+});
+
+test('sans `res`, l’authentification fonctionne toujours', async () => {
+  const presqueExpire = await jetonExpirantDans(2 * JOUR);
+  assert.equal(await requireAuth(bearer(presqueExpire)), 'user-42');
+  assert.equal(await requireAuth(bearer(presqueExpire), null), 'user-42');
+});
+
+test('un jeton refusé ne pose jamais d’en-tête', async () => {
+  const entetes = {};
+  const res = { headersSent: false, setHeader: (k, v) => { entetes[k] = v; } };
+  assert.equal(await requireAuth({ headers: {} }, res), null);
+  assert.equal(entetes[RENEWAL_HEADER], undefined);
 });

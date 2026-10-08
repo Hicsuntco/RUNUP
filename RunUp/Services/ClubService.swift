@@ -801,6 +801,10 @@ struct ClubService {
 
         // Le jeton a servi : s'il avait été refusé plus tôt, ce n'est plus vrai.
         await auth.markSessionAccepted()
+        // Et s'il approchait de sa fin, le serveur vient d'en joindre un neuf. L'en-tête est lu
+        // ICI, hors de l'acteur principal, et seule la chaîne y saute : `HTTPURLResponse` est une
+        // classe qui ne traverse pas les acteurs, une `String?` oui.
+        await auth.adopt(renewedToken: http.value(forHTTPHeaderField: SessionRenewal.header))
 
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = Self.serverDateStrategy

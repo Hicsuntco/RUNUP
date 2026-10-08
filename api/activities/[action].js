@@ -17,7 +17,7 @@ const ALLOWED_TYPES = new Set(['run', 'strength', 'badge']);
 const REFERRAL_REWARD_XP = 100;
 
 module.exports = withErrorHandling(async function handler(req, res) {
-  const userId = await requireAuth(req);
+  const userId = await requireAuth(req, res);
   if (!userId) return res.status(401).json({ error: 'unauthorized' });
 
   switch (req.query.action) {

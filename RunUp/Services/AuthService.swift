@@ -34,7 +34,22 @@ enum AuthServiceError: Error {
 /// whether there's a real account behind the Club tab. Signing in is scoped to Club only — the
 /// rest of the app works fully offline, no account required.
 ///
-/// `@MainActor` : `currentUser` et `token` sont observés par SwiftUI, et `onSignOut` ci-dessous
+/// `/// Le nom de l'en-tête par lequel le serveur renvoie un jeton frais.
+///
+/// HORS de `AuthService`, et c'est délibéré : cette classe est isolée sur l'acteur principal,
+/// donc ses membres statiques le sont aussi, et `ClubService.send` — qui doit lire cet en-tête —
+/// vit volontairement en dehors pour garder le réseau hors du fil principal. Une constante au
+/// niveau du fichier n'appartient à aucun acteur et se lit de partout.
+///
+/// ÉCRIT DEUX FOIS, ici et dans `lib/auth.js`. Une divergence ne casserait rien de visible : le
+/// serveur renouvellerait dans le vide, le client ne verrait jamais le jeton neuf, et elle se
+/// ferait déconnecter tous les mois sans que personne ne puisse dire pourquoi. C'est
+/// `ci_scripts/check_session.py` qui tient les deux écritures ensemble.
+enum SessionRenewal {
+    static let header = "X-RunUp-Session-Renewed"
+}
+
+@MainActor` : `currentUser` et `token` sont observés par SwiftUI, et `onSignOut` ci-dessous
 /// est une fermeture fournie par `AppState` (lui-même isolé sur l'acteur principal). Sans cette
 /// annotation, `signOut()` pouvait appeler cette fermeture — donc muter l'état de l'app et son
 /// contexte SwiftData — depuis n'importe quel fil. Les `await URLSession` restent, eux, hors du
@@ -63,6 +78,28 @@ final class AuthService {
     ///
     /// Sans jeton, un 401 est la réponse NORMALE et ne veut rien dire : on ne lève le drapeau que
     /// lorsqu'on en avait un à présenter.
+    /// Adopte le jeton que le serveur vient de renvoyer, s'il en a renvoyé un.
+    ///
+    /// # LE RENOUVELLEMENT GLISSANT, VU DU TÉLÉPHONE
+    ///
+    /// Un jeton vit trente jours. Passé la moitié, toute requête authentifiée en rapporte un neuf
+    /// dans un en-tête : on le range, et la session ne s'interrompt jamais pour quelqu'un qui se
+    /// sert de l'app. Le serveur refuse de renouveler au-delà de quatre-vingt-dix jours de session
+    /// — c'est son affaire, le client n'a rien à décider là-dessus et n'a donc pas à le savoir.
+    ///
+    /// L'ANCIEN JETON RESTE VALABLE. On ne le révoque pas, on ne le remplace que localement : si
+    /// cette écriture-ci échoue, ou si l'app est tuée dans la seconde, l'ancien continue de
+    /// marcher jusqu'à son expiration. Un renouvellement manqué coûte un aller-retour de plus, pas
+    /// une déconnexion.
+    func adopt(renewedToken: String?) {
+        guard let renewedToken, !renewedToken.isEmpty, renewedToken != token else { return }
+        // Pas de `onAuthenticated` ici : l'utilisatrice est la MÊME, la session continue. Ce
+        // rappel sert à réconcilier un changement de compte, et le déclencher sur chaque
+        // renouvellement rejouerait cette réconciliation pour rien.
+        token = renewedToken
+        KeychainService.saveToken(renewedToken)
+    }
+
     func markSessionRejected() {
         guard token != nil else { return }
         sessionRejected = true
@@ -224,6 +261,11 @@ final class AuthService {
             let status = (response as? HTTPURLResponse)?.statusCode ?? -1
             throw AuthServiceError.badResponse(status, String(data: data, encoding: .utf8) ?? "")
         }
+        // Chaque réponse authentifiée peut rapporter un jeton frais. Les deux chemins réseau de
+        // l'app doivent le lire — celui-ci et celui de `ClubService` — sinon le renouvellement
+        // n'aurait lieu que sur une partie des appels, ce qui est la façon la plus confuse de
+        // marcher à moitié.
+        adopt(renewedToken: http.value(forHTTPHeaderField: SessionRenewal.header))
         return try JSONDecoder().decode(T.self, from: data)
     }
 }

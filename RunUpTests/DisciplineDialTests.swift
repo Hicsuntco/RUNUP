@@ -79,6 +79,26 @@ final class DisciplineDialTests: XCTestCase {
         XCTAssertNotNil(DisciplineDial.option(pour: doigt(90, a: DisciplineDial.porteeMaximale - 1)))
     }
 
+    // MARK: - Le cadran tient dans l'écran
+
+    /// LE DÉFAUT VU SUR UNE CAPTURE : les deux ronds latéraux passaient sous la barre d'onglets,
+    /// qui est dessinée au-dessus d'eux. Leur bord inférieur tombait 5,7 points SOUS le haut de
+    /// la barre — on n'en voyait qu'une calotte.
+    ///
+    /// C'était de l'arithmétique, et ça n'aurait donc jamais dû dépendre de l'œil de quelqu'un
+    /// sur une capture d'écran. Huit points de marge : assez pour que le rond se détache de la
+    /// barre, et pas seulement pour qu'il la touche sans la croiser.
+    func testLesRondsNePassentPasSousLaBarre() {
+        XCTAssertGreaterThanOrEqual(DisciplineDial.margeAuDessusDeLaBarre, 8,
+                                    "le rond le plus bas doit dégager le haut de la barre")
+    }
+
+    /// Et il tient en largeur sur le plus petit iPhone encore sous iOS 17 — 375 points, moins une
+    /// marge de 12 de chaque côté. Un cadran qui déborde ne se verrait que sur ces appareils-là.
+    func testLeCadranTientSurLePlusPetitEcran() {
+        XCTAssertLessThanOrEqual(DisciplineDial.largeurCadran, 375 - 24)
+    }
+
     // MARK: - Où les ronds sont dessinés
 
     /// Le dessin et le geste doivent parler du même cadran : un rond posé à un endroit et visé à

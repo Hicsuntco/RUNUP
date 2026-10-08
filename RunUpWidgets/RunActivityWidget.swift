@@ -14,7 +14,7 @@ import SwiftUI
 /// the session's *planned duration* — the one real "how far in am I" number a `WorkoutSession`
 /// actually tracks (there's no distance target to show honestly; sessions are duration-based).
 struct RunActivityWidget: Widget {
-    private static let accent = Color(hex: 0xFF0F5B)
+    private static let accent = Color(hex: 0xFF0A78)
     private static let bg = Color.black
 
     var body: some WidgetConfiguration {

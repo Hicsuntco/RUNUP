@@ -285,6 +285,13 @@ jobs:
       # rupture silencieux : le jour où quelqu'un compte aussi la publication automatique — celle
       # qui part après chaque course — le compteur mesure l'app et plus le Club, il monte, et ça
       # ressemble à une bonne nouvelle.
+      # La couleur de marque est recopiée dans le widget, la montre et la Live Activity — trois
+      # processus séparés qui ne peuvent pas lire l'objet en mémoire de l'app. En oublier une ne
+      # casse rien : ça donne juste un widget d'une autre couleur que l'écran d'accueil, ce qui
+      # ressemble à un choix et n'est jamais signalé.
+      - name: Vérifier que la couleur de marque est la même partout
+        run: python3 ci_scripts/check_accent.py
+
       - name: Vérifier que le compteur du Club ne compte que des gestes délibérés
         run: python3 ci_scripts/check_club_metrics.py
 

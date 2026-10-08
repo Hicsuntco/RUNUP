@@ -154,11 +154,11 @@ struct DailyGoalsBarsView: View {
                 // `animatableData` — needs to interpolate for this to animate smoothly).
                 //
                 // Le départ était `color.darkened(0.28)`, et c'est ce qui rendait l'anneau terne :
-                // en clair, l'arc « calories » partait de `#A60A3B`, un bordeaux. Un objectif
+                // en clair, l'arc « calories » partait d'un bordeaux. Un objectif
                 // ATTEINT révèle tout le balayage, donc cette bouillie restait affichée en
                 // permanence sur une bonne moitié de l'arc — l'inverse de ce que l'effet
                 // cherchait. Le dégradé va maintenant de l'accent vers sa version la plus vive
-                // (`#E60E52` → `#FF0050`) : lumineux d'un bout à l'autre, et le sens « ça
+                // (`#F50D7A` → `#FF007F`) : lumineux d'un bout à l'autre, et le sens « ça
                 // s'éclaire en se remplissant » est conservé.
                 Circle()
                     .trim(from: seg.trimStart, to: fillEnd)

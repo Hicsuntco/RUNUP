@@ -15,8 +15,17 @@ import SwiftUI
 enum DisciplineDial {
 
     /// La distance du centre du bouton à celui de chaque rond.
-    static let rayon: CGFloat = 86
-    static let tailleRond: CGFloat = 54
+    ///
+    /// 110 et non 86, et ce n'est pas une question de goût : à 86, les deux ronds latéraux
+    /// passaient SOUS la barre d'onglets, qui est dessinée au-dessus d'eux. Leur bord inférieur
+    /// tombait à 62 points du bas de l'écran quand le haut de la barre est à 68 — ils étaient
+    /// recouverts, et on ne voyait d'eux qu'une calotte.
+    ///
+    /// `DisciplineDialTests.testLesRondsNePassentPasSousLaBarre` tient maintenant cette marge :
+    /// c'est de l'arithmétique, donc ça se vérifie sans appareil, et ça n'aurait jamais dû
+    /// dépendre de l'œil de quelqu'un sur une capture d'écran.
+    static let rayon: CGFloat = 110
+    static let tailleRond: CGFloat = 62
 
     /// En dessous, on considère que le doigt n'a pas bougé.
     ///
@@ -33,17 +42,32 @@ enum DisciplineDial {
 
     /// L'angle de chaque rond, en degrés, zéro à droite et quatre-vingt-dix en haut.
     ///
-    /// 145, 90 et 35 : course à gauche, vélo en haut, trail à droite — l'ordre de lecture, et
+    /// 140, 90 et 40 : course à gauche, vélo en haut, trail à droite — l'ordre de lecture, et
     /// l'ordre de `Discipline.allCases`. Fixes, et c'est le point : la course est TOUJOURS à
     /// gauche, donc le geste s'apprend et finit par se faire sans regarder. Un ordre qui dépendrait
     /// de la discipline courante — l'active au centre, par exemple — rendrait chaque geste
     /// différent du précédent.
+    ///
+    /// L'éventail est un peu plus resserré qu'avant (145/35), ce qui monte les deux ronds
+    /// latéraux : c'est la moitié de ce qui les sort de dessous la barre d'onglets, l'autre étant
+    /// le rayon. Les resserrer davantage les rapprocherait du rond du haut au point de les
+    /// confondre au doigt.
     static func angle(_ discipline: Discipline) -> Double {
         switch discipline {
-        case .run: return 145
+        case .run: return 140
         case .bike: return 90
-        case .trail: return 35
+        case .trail: return 40
         }
+    }
+
+    /// De combien le rond le plus bas dépasse le haut de la barre d'onglets.
+    ///
+    /// Le centre du cadran est celui du bouton RUN, à mi-hauteur de la barre : le haut de la
+    /// barre est donc à `tabBarHeight / 2` au-dessus de ce centre. Un rond est visible en entier
+    /// si son bord inférieur passe au-dessus de cette ligne.
+    static var margeAuDessusDeLaBarre: CGFloat {
+        let plusBas = Discipline.allCases.map { -position($0).y }.min() ?? 0
+        return plusBas - tailleRond / 2 - RUSpacing.tabBarHeight / 2
     }
 
     /// La taille du cadre qui contient le cadran, libellé compris.
@@ -172,7 +196,7 @@ struct DisciplineDialView: View {
             onSelect(discipline)
         } label: {
             Image(systemName: discipline.sfSymbol)
-                .font(.system(size: 20, weight: actif ? .semibold : .regular))
+                .font(.system(size: 23, weight: actif ? .semibold : .regular))
                 .foregroundColor(actif ? RUColor.onRose : RUColor.text2)
                 .frame(width: DisciplineDial.tailleRond, height: DisciplineDial.tailleRond)
                 .background {

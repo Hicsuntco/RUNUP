@@ -14,14 +14,14 @@ struct AccentTheme: Identifiable, Equatable {
     let tail: Color
 
     static let all: [AccentTheme] = [
-        AccentTheme(id: "rose", name: "Rose", primary: Color(hex: 0xFF0F5B), light: Color(hex: 0xFF4D7D), tail: Color(hex: 0x7C5CFF)),
-        AccentTheme(id: "violet", name: "Violet", primary: Color(hex: 0x7C5CFF), light: Color(hex: 0xA78BFF), tail: Color(hex: 0xFF0F5B)),
+        AccentTheme(id: "rose", name: "Rose", primary: Color(hex: 0xFF0A78), light: Color(hex: 0xFF4D9E), tail: Color(hex: 0x7C5CFF)),
+        AccentTheme(id: "violet", name: "Violet", primary: Color(hex: 0x7C5CFF), light: Color(hex: 0xA78BFF), tail: Color(hex: 0xFF0A78)),
         AccentTheme(id: "bleu", name: "Bleu", primary: Color(hex: 0x3D8BFF), light: Color(hex: 0x8AB8FF), tail: Color(hex: 0x7C5CFF)),
         AccentTheme(id: "cyan", name: "Cyan", primary: Color(hex: 0x2FD9C4), light: Color(hex: 0x7CF0E4), tail: Color(hex: 0x3D8BFF)),
         AccentTheme(id: "lime", name: "Lime", primary: Color(hex: 0x9FE83D), light: Color(hex: 0xDFFF8C), tail: Color(hex: 0x2FD9C4)),
-        AccentTheme(id: "amber", name: "Ambre", primary: Color(hex: 0xFFB03D), light: Color(hex: 0xFFD08A), tail: Color(hex: 0xFF4D7D)),
+        AccentTheme(id: "amber", name: "Ambre", primary: Color(hex: 0xFFB03D), light: Color(hex: 0xFFD08A), tail: Color(hex: 0xFF4D9E)),
         AccentTheme(id: "corail", name: "Corail", primary: Color(hex: 0xFF5A3D), light: Color(hex: 0xFF9478), tail: Color(hex: 0xFFB03D)),
-        AccentTheme(id: "magenta", name: "Magenta", primary: Color(hex: 0xE0399B), light: Color(hex: 0xFF7ACB), tail: Color(hex: 0x7C5CFF))
+        AccentTheme(id: "magenta", name: "Magenta", primary: Color(hex: 0xD633B8), light: Color(hex: 0xF07ADB), tail: Color(hex: 0x7C5CFF))
     ]
 
     static let defaultID = "rose"
@@ -30,41 +30,61 @@ struct AccentTheme: Identifiable, Equatable {
         all.first { $0.id == ThemeStore.shared.themeID } ?? all[0]
     }
 
-    /// Les valeurs claires que la maquette fixe À LA MAIN pour la palette de marque.
+    /// Les trois valeurs claires de la palette de marque, fixées À LA MAIN.
     ///
-    /// Depuis que `darkened()` multiplie au lieu de soustraire, la dérivation retombe d'elle-même
-    /// sur les valeurs de la maquette pour `primary` (#E60E52) et `tail` (#7053E6). Le troisième,
-    /// `light` — le token `rose2` — ne suit aucune règle : la maquette y déclare `#F0356F`, une
-    /// version à la fois plus sombre ET plus saturée de `#FF4D7D`, choisie à l'œil. Aucune
-    /// formule ne la produit, donc elle est écrite ici.
+    /// Elles venaient de la maquette, et `tail` (#7053E6) en vient toujours. Les deux roses, non :
+    /// la maquette les donnait à la teinte 341, et c'est précisément cette teinte qui a été
+    /// changée. Aucune formule ne les produit — ni la dérivation par assombrissement, ni la
+    /// descente au seuil de contraste — donc elles sont écrites ici.
+    ///
+    /// # LE ROSE A CHANGÉ DE TEINTE, ET VOICI POURQUOI CE N'EST PAS L'ESSAI QUI AVAIT ÉCHOUÉ
+    ///
+    /// La famille était à la teinte 341 — un rose qui tire sur le rouge. Elle a été jugée
+    /// « vieille » : juste, le rouge y domine et la rend sourde plutôt que vive.
+    ///
+    /// UN PREMIER ESSAI AVAIT DÉJÀ ÉCHOUÉ, et il faut le garder en tête. On avait remonté le rose
+    /// clair de `#E60E52` à `#FF0F5B` — la VALEUR du mode sombre, à teinte inchangée — pour gagner
+    /// en éclat. Sur un vrai téléphone, le résultat a été jugé pire : à la teinte 341, monter la
+    /// valeur fait virer à l'orangé au lieu de paraître vif, parce que c'est le canal rouge, déjà
+    /// saturé, qui prend tout. Le contraste y était pour quelque chose — 3,84:1 contre 4,62:1 —
+    /// mais c'est le rendu qui avait tranché.
+    ///
+    /// Ce changement-ci va dans une AUTRE direction : la teinte, pas la valeur. Toute la famille
+    /// descend de 341 à ~332, vers le magenta, et la saturation monte au maximum. C'est là que
+    /// vivent les roses qu'on perçoit comme fluo — le bleu qu'on ajoute éloigne du rouge sans
+    /// alourdir, alors que monter la valeur à teinte constante ne faisait que délaver vers
+    /// l'orangé.
+    ///
+    /// | jeton                | avant     | après     | contraste sur blanc |
+    /// |----------------------|-----------|-----------|---------------------|
+    /// | clair `primary`      | `#E60E52` | `#F50D7A` | 4,62 → **4,02**     |
+    /// | clair `light`/rose2  | `#F0356F` | `#FF1F85` | 3,86 → **3,63**     |
+    /// | sombre `primary`     | `#FF0F5B` | `#FF0A78` | —                   |
+    /// | sombre `light`       | `#FF4D7D` | `#FF4D9E` | —                   |
+    ///
+    /// Les deux valeurs claires perdent du contraste, et c'est le prix assumé de l'éclat. Elles
+    /// restent au-dessus du plancher de 3,5 documenté plus bas, et `primary` reste au-dessus du
+    /// 3,84 de l'essai refusé. Si celui-ci devait être refusé à son tour, LA LEÇON À EN TIRER
+    /// SERAIT QUE CE N'EST PAS UNE QUESTION DE TEINTE NON PLUS — et il faudra alors chercher
+    /// ailleurs que dans l'accent, comme le disait déjà la note précédente.
+    ///
+    /// `light` (le token `rose2`) reste le plus ÉCLATANT des deux : il sert à 74 endroits —
+    /// l'anneau d'objectifs, l'onglet actif, le libellé RUN, les métriques de l'écran de course —
+    /// et tous veulent de l'éclat. Il avait été passé une fois à une teinte profonde au motif
+    /// qu'elle resterait lisible en petit texte : c'était une erreur de lecture du jeton, et
+    /// l'assombrir revenait à réintroduire la fadeur à l'endroit précis d'où elle venait.
+    ///
+    /// LE NUANCIER « MAGENTA » A BOUGÉ AVEC. Il était à la teinte 325, à sept degrés du nouveau
+    /// rose : deux pastilles presque identiques dans le sélecteur de thème. Il descend à 311,
+    /// franchement vers le violet, ce qui rend les deux choix de nouveau distincts. Ce n'est pas
+    /// une amélioration du magenta, c'est la réparation de ce que le déplacement du rose lui
+    /// faisait.
     ///
     /// Seule la palette « rose » figure dans cette table : c'est la seule dont la maquette
-    /// définisse une déclinaison claire. Les sept autres suivent la règle multiplicative, qui
-    /// conserve leur teinte.
-    /// Le rose clair est `#E60E52`, la valeur de la maquette.
-    ///
-    /// Il avait été remplacé par `#FF0F5B`, celui du mode sombre, pour gagner en éclat. Vu sur un
-    /// vrai téléphone, le résultat a été jugé pire : sur un fond blanc, ce rose-là vire au fluo et
-    /// tire vers l'orangé au lieu de paraître vif. Le contraste y était aussi pour quelque chose —
-    /// 3,84:1 contre 4,62:1 — mais c'est le rendu qui a tranché, pas la mesure.
-    ///
-    /// À retenir pour la prochaine fois : la fadeur de ce mode clair ne venait pas de la
-    /// saturation de l'accent. Le chercher là était une erreur de diagnostic.
-    ///
-    /// `light` (le token `rose2`) reste ÉCLATANT, `#F0356F` — la valeur de la maquette, 3,86:1,
-    /// soit exactement le contraste du rose principal.
-    ///
-    /// Il avait été passé à `#D40B4A`, une teinte profonde, au motif qu'elle resterait lisible en
-    /// petit texte. C'était une erreur de lecture du jeton : `rose2` est employé à 74 endroits —
-    /// l'anneau d'objectifs, l'onglet actif, le libellé RUN, les métriques de l'écran de course —
-    /// et tous veulent de l'éclat. L'assombrir revenait à réintroduire la fadeur à l'endroit
-    /// précis d'où elle venait, sous couvert de l'améliorer.
-    ///
-    /// Seule la palette « rose » est traitée ainsi. Les sept autres gardent la dérivation par
-    /// assombrissement : lime, ambre et cyan à pleine intensité seraient illisibles sur blanc,
-    /// leurs teintes étant intrinsèquement claires.
+    /// définisse une déclinaison claire à la main. Les sept autres suivent la règle
+    /// multiplicative, qui conserve leur teinte.
     private static let mockupLightPalettes: [String: (primary: Color, light: Color, tail: Color)] = [
-        "rose": (Color(hex: 0xE60E52), Color(hex: 0xF0356F), Color(hex: 0x7053E6))
+        "rose": (Color(hex: 0xF50D7A), Color(hex: 0xFF1F85), Color(hex: 0x7053E6))
     ]
 
     /// Le seuil de contraste que les accents doivent atteindre sur du blanc.

@@ -7,14 +7,14 @@ import SwiftUI
 /// from anyway. Keep in sync by hand if `AccentTheme.all`'s hex values ever change.
 enum WidgetAccentPalette {
     private static let swatches: [String: (primary: UInt32, light: UInt32, tail: UInt32)] = [
-        "rose": (0xFF0F5B, 0xFF4D7D, 0x7C5CFF),
-        "violet": (0x7C5CFF, 0xA78BFF, 0xFF0F5B),
+        "rose": (0xFF0A78, 0xFF4D9E, 0x7C5CFF),
+        "violet": (0x7C5CFF, 0xA78BFF, 0xFF0A78),
         "bleu": (0x3D8BFF, 0x8AB8FF, 0x7C5CFF),
         "cyan": (0x2FD9C4, 0x7CF0E4, 0x3D8BFF),
         "lime": (0x9FE83D, 0xDFFF8C, 0x2FD9C4),
-        "amber": (0xFFB03D, 0xFFD08A, 0xFF4D7D),
+        "amber": (0xFFB03D, 0xFFD08A, 0xFF4D9E),
         "corail": (0xFF5A3D, 0xFF9478, 0xFFB03D),
-        "magenta": (0xE0399B, 0xFF7ACB, 0x7C5CFF)
+        "magenta": (0xD633B8, 0xF07ADB, 0x7C5CFF)
     ]
 
     /// [rose2, rose, violet], in that order — same order `DailyGoalsBarsView.fillColors` returns

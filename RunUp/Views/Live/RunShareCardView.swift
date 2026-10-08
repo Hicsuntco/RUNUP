@@ -48,7 +48,7 @@ struct RunShareCardView: View {
         switch textColor {
         case .blanc: return AnyShapeStyle(Color.white)
         case .noir: return AnyShapeStyle(Color(hex: 0x0E0E14))
-        case .runup: return AnyShapeStyle(LinearGradient(colors: [Color(hex: 0xFF3D7F), Color(hex: 0x8A5CFF)], startPoint: .leading, endPoint: .trailing))
+        case .runup: return AnyShapeStyle(LinearGradient(colors: [Color(hex: 0xFF3D9A), Color(hex: 0x8A5CFF)], startPoint: .leading, endPoint: .trailing))
         }
     }
 
@@ -57,7 +57,7 @@ struct RunShareCardView: View {
         switch textColor {
         case .blanc: return .white.opacity(0.9)
         case .noir: return Color(hex: 0x0E0E14).opacity(0.9)
-        case .runup: return Color(hex: 0xFF3D7F)
+        case .runup: return Color(hex: 0xFF3D9A)
         }
     }
 
@@ -165,7 +165,7 @@ struct RunShareCardView: View {
                 .modifier(OutlinedTextShadow(light: outlineIsLight))
                 // A whisper of rose around white, a restrained one on the gradient style, none on
                 // black — tuned down twice from the original 0.3, which read as too much.
-                .shadow(color: Color(hex: 0xFF0F5B).opacity(roseGlowOpacity), radius: 20)
+                .shadow(color: Color(hex: 0xFF0A78).opacity(roseGlowOpacity), radius: 20)
         }
         .frame(maxWidth: .infinity)
     }
@@ -211,7 +211,7 @@ struct RunShareCardView: View {
             for p in points.dropFirst() { path.addLine(to: p) }
 
             let gradient = GraphicsContext.Shading.linearGradient(
-                Gradient(colors: [Color(hex: 0xFF3D7F), Color(hex: 0x8A5CFF)]),
+                Gradient(colors: [Color(hex: 0xFF3D9A), Color(hex: 0x8A5CFF)]),
                 startPoint: first,
                 endPoint: last
             )

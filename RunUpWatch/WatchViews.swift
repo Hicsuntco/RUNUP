@@ -8,10 +8,10 @@ private enum WTheme {
     // gradient "scoreboard" treatment the widgets and Live Activity moved to.
     static let bg = Color.black
     static let card = Color(hex: 0x191922)
-    // Alignés sur `AccentTheme` côté app (rose #FF0F5B, violet #7C5CFF, lime #C8FF3D). La montre
+    // Alignés sur `AccentTheme` côté app (rose #FF0A78, violet #7C5CFF, lime #C8FF3D). La montre
     // portait #FF3D7F, #8A5CFF et #C8F542 — un écart faible, réel, et justifié nulle part : le
     // même rose n'était pas le même d'un écran à l'autre.
-    static let rose = Color(hex: 0xFF0F5B)
+    static let rose = Color(hex: 0xFF0A78)
     static let violet = Color(hex: 0x7C5CFF)
     static let lime = Color(hex: 0xC8FF3D)
     static let text2 = Color.white.opacity(0.62)

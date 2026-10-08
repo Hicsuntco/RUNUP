@@ -108,7 +108,25 @@ extension RouteGeometry {
     /// confidentialité choisie par l'utilisatrice, pas un rognage plus agressif.
     static func trimmedForSharing(_ route: [RunRecord.RoutePoint],
                                   meters: Double = sharingTrimMeters) -> [RunRecord.RoutePoint] {
-        guard route.count > 1, meters > 0 else { return route.count > 1 ? route : [] }
+        guard let bornes = sharingBounds(route, meters: meters) else {
+            return route.count > 1 && meters <= 0 ? route : []
+        }
+        return Array(route[bornes.start...bornes.end])
+    }
+
+    /// Les indices du premier et du dernier point CONSERVÉS par le rognage, ou `nil` quand il ne
+    /// reste rien.
+    ///
+    /// La coupe elle-même, extraite de `trimmedForSharing` pour avoir UN SEUL endroit qui la
+    /// décide. La vidéo d'une course a besoin de savoir à quelle distance du départ réel commence
+    /// le tracé qu'elle dessine — sans ça, son compteur de kilomètres partirait de zéro là où la
+    /// coureuse était déjà à trois cents mètres, et tout le reste serait décalé d'autant.
+    ///
+    /// Recalculer la coupe là-bas aurait été une seconde écriture de la règle de confidentialité
+    /// la plus importante de cette app. Les deux appelants lisent donc la même fonction.
+    static func sharingBounds(_ route: [RunRecord.RoutePoint],
+                              meters: Double = sharingTrimMeters) -> (start: Int, end: Int)? {
+        guard route.count > 1, meters > 0 else { return nil }
 
         // Premier indice dont la distance cumulée depuis le départ dépasse le seuil.
         var accumulated = 0.0
@@ -125,8 +143,8 @@ extension RouteGeometry {
             if accumulated >= meters { endIndex = i - 1; break }
         }
 
-        guard startIndex < endIndex else { return [] }
-        return Array(route[startIndex...endIndex])
+        guard startIndex < endIndex else { return nil }
+        return (startIndex, endIndex)
     }
 
     /// Un tracé publiable, ou `nil` si ce parcours ne doit pas l'être.

@@ -30,6 +30,18 @@ struct SessionDetailSheet: View {
             return hyroxSteps(title: title, warmup: warmup, cooldown: cooldown)
         }
 
+        // Les séances d'ultra, de même, ne sont pas des séances de route : une côte où l'on MARCHE
+        // et une descente répétée tomberaient toutes deux dans « Course continue », avec une
+        // allure cible qui ne veut rien dire sur l'une ni sur l'autre.
+        //
+        // Et contrairement à la branche HYROX juste au-dessus, ce classement-ci lit `kind` et non
+        // le titre : les `kind` sont arrivés avec les séances d'ultra, et c'est l'identité
+        // indépendante de la langue. Classer par sous-chaîne française quand un champ dédié
+        // existe, c'est reconduire une faiblesse qu'on n'est plus obligé de porter.
+        if appState.profile.goalId == .ultraTrail, let kind = session.kind {
+            return ultraSteps(kind: kind, warmup: warmup, cooldown: cooldown)
+        }
+
         if session.isIntervalSession {
             return [
                 warmup,
@@ -78,6 +90,62 @@ struct SessionDetailSheet: View {
         // "Fonctionnel HYROX" / "Rappel technique stations" — a standalone circuit, no running
         // warmup/cooldown shape fits (the circuit itself includes the movement prep).
         return [(String(localized: "Circuit fonctionnel"), String(localized: "\(session.durationMinutes)′ · \(session.zone) · stations enchaînées, technique avant charge"), RUColor.rose)]
+    }
+
+    /// Le découpage des séances d'ultra, par `kind`.
+    ///
+    /// Trois d'entre elles n'ont AUCUN équivalent sur route, et c'est pour ça qu'elles existent :
+    /// la côte où marcher est la technique, la descente qui prépare les quadriceps du jour J, et
+    /// le second jour d'un enchaînement, qui se court précisément sur des jambes déjà entamées.
+    ///
+    /// Les sorties longues portent en plus la consigne de ravitaillement — et elles la portent ICI
+    /// parce que c'est l'écran qu'on lit avant de partir. Dire « teste ton alimentation en sortie
+    /// longue » dans un écran d'objectif qu'on ouvre une fois, c'est ne pas le dire.
+    private func ultraSteps(kind: SessionKind, warmup: (String, String, Color),
+                            cooldown: (String, String, Color)) -> [(String, String, Color)] {
+        let ravitaillement = (
+            String(localized: "Ravitaillement"),
+            String(localized: "une prise toutes les \(UltraRaceDay.minutesEntreDeuxPrises) min, à la montre — c'est la séance où tu testes ce que tu mangeras le jour J"),
+            RUColor.lime
+        )
+
+        switch kind {
+        case .ultraHillRepeats:
+            return [
+                warmup,
+                (String(localized: "Côtes de 3 à 5 min"), String(localized: "\(session.zone) · marche dès que la pente l'impose : en ultra c'est la technique, pas un échec"), RUColor.rose),
+                cooldown
+            ]
+        case .ultraDescentWork:
+            return [
+                warmup,
+                (String(localized: "Descentes répétées"), String(localized: "monte tranquille, descends en contrôle · ce sont tes quadriceps qu'on prépare, pas un chrono"), RUColor.rose),
+                cooldown
+            ]
+        case .ultraPowerHike:
+            return [(String(localized: "Marche rapide en côte"), String(localized: "\(session.durationMinutes)′ · le cardio doit monter autant qu'en courant · tes bâtons si tu en auras le jour J"), RUColor.rose)]
+        case .ultraNightRun:
+            return [(String(localized: "À la frontale"), String(localized: "\(session.durationMinutes)′ · en terrain, avec LES DEUX frontales du jour J · le faisceau écrase le relief, tu iras moins vite"), RUColor.cyan)]
+        case .ultraLongRun, .ultraSpecificLongRun, .easedLongRun:
+            return [
+                (String(localized: "Temps debout"), String(localized: "\(session.durationMinutes)′ · \(session.zone) · c'est la durée qui compte, pas la distance"), RUColor.rose),
+                ravitaillement
+            ]
+        case .ultraBackToBackDay1:
+            return [
+                (String(localized: "Temps debout"), String(localized: "\(session.durationMinutes)′ · \(session.zone) · demain tu repars dessus, donc garde-en"), RUColor.rose),
+                ravitaillement
+            ]
+        case .ultraBackToBackDay2:
+            return [
+                (String(localized: "Sur les jambes de la veille"), String(localized: "\(session.durationMinutes)′ · \(session.zone) · c'est la seconde moitié de ta course, en répétition — et elle doit être inconfortable"), RUColor.rose),
+                ravitaillement
+            ]
+        default:
+            // Footings d'endurance, d'entretien, rappel de terrain, récup : tout l'effort est la
+            // cible, il n'y a pas de bloc à distinguer.
+            return [(String(localized: "Course continue"), "\(session.durationMinutes)′ · \(session.pace) /km · \(session.zone)", RUColor.rose)]
+        }
     }
 
     /// Pulls the exact "N × distance" straight from the archetype's own title (e.g. "5 × 500 m",

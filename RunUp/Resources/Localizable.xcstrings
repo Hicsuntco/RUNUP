@@ -316,6 +316,22 @@
         }
       }
     },
+    "%@ · marche dès que la pente l'impose : en ultra c'est la technique, pas un échec": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · walk as soon as the gradient calls for it: in an ultra that's the technique, not a failure"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · camina en cuanto la pendiente lo pida: en un ultra es la técnica, no un fracaso"
+          }
+        }
+      }
+    },
     "%@ · semaine %lld": {
       "extractionState": "manual",
       "localizations": {
@@ -1492,6 +1508,54 @@
         }
       }
     },
+    "%lld′ · %@ · c'est la durée qui compte, pas la distance": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld′ · %@ · it's the duration that counts, not the distance"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld′ · %@ · lo que cuenta es la duración, no la distancia"
+          }
+        }
+      }
+    },
+    "%lld′ · %@ · c'est la seconde moitié de ta course, en répétition — et elle doit être inconfortable": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld′ · %@ · this is the second half of your race, rehearsed — and it's meant to feel uncomfortable"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld′ · %@ · es la segunda mitad de tu carrera, ensayada, y tiene que resultar incómoda"
+          }
+        }
+      }
+    },
+    "%lld′ · %@ · demain tu repars dessus, donc garde-en": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld′ · %@ · tomorrow you go again on these legs, so keep something back"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld′ · %@ · mañana vuelves a salir con estas piernas, así que guarda algo"
+          }
+        }
+      }
+    },
     "%lld′ · %@ · stations enchaînées, technique avant charge": {
       "localizations": {
         "en": {
@@ -1504,6 +1568,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld′ · %@ · estaciones encadenadas, técnica antes que carga"
+          }
+        }
+      }
+    },
+    "%lld′ · en terrain, avec LES DEUX frontales du jour J · le faisceau écrase le relief, tu iras moins vite": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld′ · on terrain, with BOTH of your race-day headlamps · the beam flattens the ground, you'll go slower"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld′ · en terreno, con LOS DOS frontales del día de la carrera · el haz aplana el relieve, irás más despacio"
+          }
+        }
+      }
+    },
+    "%lld′ · le cardio doit monter autant qu'en courant · tes bâtons si tu en auras le jour J": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld′ · your heart rate should climb as much as when running · bring your poles if you'll have them on race day"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld′ · el pulso debe subir igual que corriendo · tus bastones si los llevarás el día de la carrera"
           }
         }
       }
@@ -4141,6 +4237,38 @@
         }
       }
     },
+    "Bois par petites gorgées, souvent. Un demi-litre avalé d'un coup au ravitaillement ressort au premier raidillon.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Small sips, often. Half a litre downed at an aid station comes back up on the first steep pitch."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pequeños sorbos, a menudo. Medio litro de golpe en el avituallamiento vuelve a salir en la primera rampa."
+          }
+        }
+      }
+    },
+    "Bonnet et gants dès que la nuit est possible. On a froid à l'arrêt, pas en mouvement.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hat and gloves as soon as night is on the cards. You get cold standing still, not moving."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gorro y guantes en cuanto la noche sea posible. El frío llega al pararse, no en movimiento."
+          }
+        }
+      }
+    },
     "Bravo %@": {
       "localizations": {
         "en": {
@@ -4594,6 +4722,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lo que lee"
+          }
+        }
+      }
+    },
+    "Ce que le plan ne te dit pas, et qui décide autant": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What the plan doesn't tell you, and that matters just as much"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo que el plan no te dice, y decide igual"
           }
         }
       }
@@ -6266,6 +6410,22 @@
         }
       }
     },
+    "Couverture de survie et sifflet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Survival blanket and whistle."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manta de supervivencia y silbato."
+          }
+        }
+      }
+    },
     "Créer": {
       "localizations": {
         "en": {
@@ -6412,6 +6572,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ciclo reajustado a hoy"
+          }
+        }
+      }
+    },
+    "Côtes de 3 à 5 min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 to 5 min climbs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuestas de 3 a 5 min"
           }
         }
       }
@@ -6726,6 +6902,70 @@
         }
       }
     },
+    "Des bâtons si tu t'en sers — et seulement si tu t'en es servi à l'entraînement.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poles if you use them — and only if you've used them in training."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bastones si los usas, y solo si los has usado entrenando."
+          }
+        }
+      }
+    },
+    "Descentes répétées": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeated descents"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bajadas repetidas"
+          }
+        }
+      }
+    },
+    "Deux frontales, et des piles de rechange pour chacune.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Two headlamps, with spare batteries for each."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dos frontales, con pilas de repuesto para cada una."
+          }
+        }
+      }
+    },
+    "Deux frontales, parce qu'une frontale qui s'éteint en descente technique arrête la course — et parce que la plupart des grands trails les exigent au contrôle du sac.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Two headlamps, because one that dies on a technical descent ends the race — and because most big trail races require both at kit check."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dos frontales, porque uno que se apaga en una bajada técnica termina la carrera, y porque la mayoría de los grandes trails los exigen en el control."
+          }
+        }
+      }
+    },
     "Dim": {
       "extractionState": "manual",
       "localizations": {
@@ -6885,6 +7125,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Espalda"
+          }
+        }
+      }
+    },
+    "Du salé dès la première heure. Six heures de sucré, personne ne les tient — et c'est le dégoût, pas la faim, qui fait arrêter de manger.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Something savoury from the first hour. Nobody gets through six hours of sweet — and it's disgust, not hunger, that makes people stop eating."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algo salado desde la primera hora. Seis horas de dulce nadie las aguanta, y es el asco, no el hambre, lo que hace dejar de comer."
           }
         }
       }
@@ -8421,6 +8677,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pro de las series"
+          }
+        }
+      }
+    },
+    "G DE GLUCIDES / H": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "G OF CARBS / H"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "G DE CARBOHIDRATOS / H"
           }
         }
       }
@@ -10034,6 +10306,22 @@
         }
       }
     },
+    "La liste qui compte est celle de **ta** course : l'organisation la publie, et la contrôle au départ. Celle-ci est le socle commun des grands trails — pars de là, puis relis la leur.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The list that counts is **your** race's: the organisers publish it, and check it at the start. This one is what the big trail races have in common — start here, then read theirs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La lista que cuenta es la de **tu** carrera: la organización la publica y la revisa en la salida. Esta es el fondo común de los grandes trails: empieza aquí y luego lee la suya."
+          }
+        }
+      }
+    },
     "La montre, le widget et le suivi GPS": {
       "extractionState": "manual",
       "localizations": {
@@ -10096,6 +10384,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "La sesión se interrumpió: inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "La veste s'enfile AVANT d'entrer au ravitaillement, pas après. Dix minutes assise sans se couvrir coûtent une heure à se réchauffer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The jacket goes on BEFORE you walk into the aid station, not after. Ten minutes sitting uncovered costs an hour of warming back up."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La chaqueta se pone ANTES de entrar al avituallamiento, no después. Diez minutos sentada sin abrigo cuestan una hora de recalentarse."
           }
         }
       }
@@ -10328,6 +10632,22 @@
         }
       }
     },
+    "Le creux de trois à cinq heures du matin est physiologique, pas un mauvais jour. Mange chaud, marche, remets-toi en mouvement : ça passe.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The three-to-five a.m. low is physiological, not a bad day. Eat something warm, walk, get moving again: it passes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El bajón de las tres a las cinco de la mañana es fisiológico, no un mal día. Come algo caliente, camina, vuelve a moverte: pasa."
+          }
+        }
+      }
+    },
     "Le dessin du parcours disparaît du fil. Le début et la fin de ta course n'y ont jamais été envoyés.": {
       "extractionState": "manual",
       "localizations": {
@@ -10362,6 +10682,22 @@
         }
       }
     },
+    "Le faisceau écrase le relief : tu verras moins bien tes pieds, donc tu iras moins vite. C'est normal, et ça ne dit rien de ta forme.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The beam flattens the ground: you'll see your feet less well, so you'll go slower. That's normal, and it says nothing about your form."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El haz aplana el relieve: verás peor tus pies, así que irás más despacio. Es normal, y no dice nada de tu forma."
+          }
+        }
+      }
+    },
     "Le grand chiffre": {
       "localizations": {
         "en": {
@@ -10374,6 +10710,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "El número grande"
+          }
+        }
+      }
+    },
+    "Le jour J": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Race day"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El día de la carrera"
           }
         }
       }
@@ -10771,6 +11123,38 @@
         }
       }
     },
+    "MG DE SEL / H": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MG OF SODIUM / H"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MG DE SAL / H"
+          }
+        }
+      }
+    },
+    "ML DE BOISSON / H": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ML OF FLUID / H"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ML DE BEBIDA / H"
+          }
+        }
+      }
+    },
     "Ma course sur RunUp": {
       "localizations": {
         "en": {
@@ -10833,6 +11217,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Maratón"
+          }
+        }
+      }
+    },
+    "Marche rapide en côte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uphill power hike"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcha rápida en cuesta"
           }
         }
       }
@@ -14691,6 +15091,38 @@
         }
       }
     },
+    "Ravitaillement": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuelling"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avituallamiento"
+          }
+        }
+      }
+    },
+    "Ravitaillement, matériel, la nuit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuelling, kit, the night"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avituallamiento, material, la noche"
+          }
+        }
+      }
+    },
     "Recherche des itinéraires…": {
       "localizations": {
         "en": {
@@ -15346,6 +15778,22 @@
         }
       }
     },
+    "Rien de nouveau le jour J. Ce que tu mangeras en course, tu l'as déjà mangé en sortie longue — c'est aussi à ça qu'elles servent.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing new on race day. Whatever you'll eat in the race, you've already eaten on a long run — that's part of what they're for."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nada nuevo el día de la carrera. Lo que comas en carrera ya lo has comido en una tirada larga: también sirven para eso."
+          }
+        }
+      }
+    },
     "Rien de nouveau à importer.": {
       "localizations": {
         "en": {
@@ -15951,6 +16399,22 @@
         }
       }
     },
+    "Selon l'heure du départ, **tu peux finir de nuit**. Et une frontale qu'on n'a jamais sortie est exactement le matériel qui manque.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Depending on the start time, **you may finish at night**. And a headlamp you've never taken out is exactly the kit that goes missing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Según la hora de salida, **puedes acabar de noche**. Y un frontal que nunca has sacado es justo el material que falta."
+          }
+        }
+      }
+    },
     "Semaine %lld": {
       "extractionState": "manual",
       "localizations": {
@@ -16388,6 +16852,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Noche"
+          }
+        }
+      }
+    },
+    "Soit à peu près **%lld prises**, et **%@ à %@ litres** de boisson.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That's roughly **%lld feeds**, and **%@ to %@ litres** of fluid."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es decir unas **%lld tomas**, y **%@ a %@ litros** de bebida."
           }
         }
       }
@@ -17006,6 +17486,22 @@
         }
       }
     },
+    "Sur les jambes de la veille": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On yesterday's legs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Con las piernas de ayer"
+          }
+        }
+      }
+    },
     "Sur ta dernière course": {
       "localizations": {
         "en": {
@@ -17034,6 +17530,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "En tus últimas %lld carreras"
+          }
+        }
+      }
+    },
+    "Sur une estimation de **%lld h d'effort**, il te faudra **%lld à %lld g de glucides**.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At an estimated **%lld h of effort**, you'll need **%lld to %lld g of carbs**."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Con una estimación de **%lld h de esfuerzo**, necesitarás **%lld a %lld g de carbohidratos**."
           }
         }
       }
@@ -17708,6 +18220,22 @@
         }
       }
     },
+    "Ta course devrait tenir dans le jour — emporte une frontale quand même : un départ matinal, un sous-bois ou deux heures de plus que prévu suffisent.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your race should fit inside daylight — take a headlamp anyway: an early start, dense woodland or two hours more than planned is enough."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu carrera debería caber en el día, pero lleva un frontal igual: una salida temprana, un bosque cerrado o dos horas más de lo previsto bastan."
+          }
+        }
+      }
+    },
     "Ta dernière sortie remonte à": {
       "localizations": {
         "en": {
@@ -17986,6 +18514,22 @@
         }
       }
     },
+    "Ta sortie de nuit du bloc spécifique existe pour que rien de tout ça ne soit une découverte.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The night run in your specific block exists so that none of this is a discovery."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La salida nocturna de tu bloque específico existe para que nada de esto sea un descubrimiento."
+          }
+        }
+      }
+    },
     "Ta séance du jour t'attend : %@ (%lld′).": {
       "localizations": {
         "en": {
@@ -18146,6 +18690,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tiempo total"
+          }
+        }
+      }
+    },
+    "Temps debout": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time on feet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiempo de pie"
           }
         }
       }
@@ -19183,6 +19743,22 @@
         }
       }
     },
+    "Trois choses décident d'un ultra, et aucune n'est ton entraînement. Elles se préparent — et elles se testent sur tes sorties longues, jamais le jour J.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Three things decide an ultra, and none of them is your training. They can be prepared — and they get tested on your long runs, never on race day."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tres cosas deciden un ultra, y ninguna es tu entrenamiento. Se preparan, y se prueban en tus tiradas largas, nunca el día de la carrera."
+          }
+        }
+      }
+    },
     "Trop dur": {
       "extractionState": "manual",
       "localizations": {
@@ -19398,6 +19974,22 @@
         }
       }
     },
+    "Téléphone chargé, en mode économie d'énergie, avec les numéros de l'organisation.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phone charged, in low-power mode, with the organisers' numbers saved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teléfono cargado, en modo de bajo consumo, con los números de la organización."
+          }
+        }
+      }
+    },
     "Un bug, une idée, un truc qui t'a gênée — ça part par mail.": {
       "localizations": {
         "en": {
@@ -19464,6 +20056,22 @@
         }
       }
     },
+    "Un gobelet pliable : il n'y en a plus sur les ravitaillements.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A collapsible cup: aid stations don't hand them out any more."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un vaso plegable: ya no hay en los avituallamientos."
+          }
+        }
+      }
+    },
     "Un jour de moins": {
       "extractionState": "manual",
       "localizations": {
@@ -19494,6 +20102,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Un día más"
+          }
+        }
+      }
+    },
+    "Un litre d'eau au minimum, en contenance embarquée.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At least one litre of water carrying capacity."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un litro de agua como mínimo, en capacidad que lleves encima."
           }
         }
       }
@@ -19661,6 +20285,22 @@
         }
       }
     },
+    "Une bande adhésive élastique — elle répare une cheville, une chaussure et un bâton.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elastic adhesive tape — it fixes an ankle, a shoe and a pole."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una venda adhesiva elástica: arregla un tobillo, una zapatilla y un bastón."
+          }
+        }
+      }
+    },
     "Une demande devra être acceptée avant qu'on puisse te suivre.": {
       "localizations": {
         "en": {
@@ -19725,6 +20365,22 @@
         }
       }
     },
+    "Une prise toutes les %lld minutes, à la montre. « Manger régulièrement » ne se fait pas : une consigne sans horloge ne tient pas quand on est fatiguée.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One feed every %lld minutes, by the watch. \"Eat regularly\" doesn't get done: an instruction without a clock doesn't survive fatigue."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una toma cada %lld minutos, con reloj. «Comer con regularidad» no se cumple: una indicación sin horario no aguanta el cansancio."
+          }
+        }
+      }
+    },
     "Une routine régulière qui tient dans ta semaine": {
       "extractionState": "manual",
       "localizations": {
@@ -19738,6 +20394,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Una rutina constante que cabe en tu semana"
+          }
+        }
+      }
+    },
+    "Une réserve alimentaire que tu ne touches pas : elle est là pour l'heure où tout le reste est fini.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A food reserve you don't touch: it's there for the hour when everything else is gone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una reserva de comida que no tocas: está para la hora en que todo lo demás se ha acabado."
           }
         }
       }
@@ -19771,6 +20443,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Una salida por punto"
+          }
+        }
+      }
+    },
+    "Une veste imperméable à capuche — une membrane, pas un coupe-vent. C'est le point le plus souvent recalé au contrôle.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A waterproof jacket with a hood — a membrane, not a windbreaker. It's the item most often turned away at kit check."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una chaqueta impermeable con capucha: una membrana, no un cortavientos. Es lo que más se rechaza en el control."
           }
         }
       }
@@ -21387,6 +22075,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "editado"
+          }
+        }
+      }
+    },
+    "monte tranquille, descends en contrôle · ce sont tes quadriceps qu'on prépare, pas un chrono": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "climb easy, descend under control · it's your quads we're preparing, not a time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sube tranquila, baja con control · preparamos tus cuádriceps, no un tiempo"
           }
         }
       }
@@ -23846,6 +24550,22 @@
         }
       }
     },
+    "une prise toutes les %lld min, à la montre — c'est la séance où tu testes ce que tu mangeras le jour J": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "one feed every %lld min, by the watch — this is the session where you test what you'll eat on race day"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "una toma cada %lld min, con reloj: esta es la sesión en la que pruebas lo que comerás el día de la carrera"
+          }
+        }
+      }
+    },
     "vise %@ /km sur chaque segment, même sous fatigue — pas l'allure d'un 8 km isolé": {
       "localizations": {
         "en": {
@@ -23945,6 +24665,22 @@
         }
       }
     },
+    "À cette durée d'effort, aucun départ en matinée ne te fait finir avant la nuit : **tu courras de nuit**, c'est acquis.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At that effort duration, no morning start gets you home before dark: **you will run at night**, that much is settled."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Con esa duración de esfuerzo, ninguna salida por la mañana te hace acabar antes de la noche: **correrás de noche**, eso está hecho."
+          }
+        }
+      }
+    },
     "À faire": {
       "localizations": {
         "en": {
@@ -23957,6 +24693,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Por hacer"
+          }
+        }
+      }
+    },
+    "À la frontale": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By headlamp"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Con frontal"
           }
         }
       }

@@ -6,6 +6,7 @@ import SwiftUI
 struct RaceGoalView: View {
     @Environment(AppState.self) private var appState
     private var profile: UserProfile { appState.profile }
+    @State private var jourJOuvert = false
 
     private var shape: AdaptivePlanEngine.ProgramShape {
         AdaptivePlanEngine.ProgramShape.compute(goal: profile.goalId, raceDate: profile.raceDate, from: profile.programStartDate ?? .now)
@@ -208,6 +209,30 @@ struct RaceGoalView: View {
                             .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                         }
                     }
+                    // LES TROIS AUTRES QUESTIONS, CELLES QUE LE PLAN NE POSE PAS. Un ultra se perd
+                    // au ventre, au contrôle du sac et à trois heures du matin bien plus souvent
+                    // qu'aux jambes, et aucune des quatre lignes ci-dessus n'en parle.
+                    if profile.goalId == .ultraTrail {
+                        Button { jourJOuvert = true } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "list.bullet.clipboard")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(RUColor.violet)
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text("Ravitaillement, matériel, la nuit")
+                                        .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                                    Text("Ce que le plan ne te dit pas, et qui décide autant")
+                                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
+                                }
+                                Spacer(minLength: 0)
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 13, weight: .semibold)).foregroundColor(RUColor.text3)
+                            }
+                            .padding(RUSpacing.cardPadding)
+                            .ruCard()
+                        }
+                        .buttonStyle(PressableStyle())
+                    }
                 } else {
                     RUCardHeader(icon: "speedometer", tint: RUColor.rose2, title: "Stratégie d'allure · jour J")
                     VStack(spacing: 6) {
@@ -233,6 +258,10 @@ struct RaceGoalView: View {
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.top, 8)
             .padding(.bottom, 130)
+        }
+        .sheet(isPresented: $jourJOuvert) {
+            UltraRaceDaySheet(tempsDeffortSecondes: AdaptivePlanEngine.tempsDeffortCourse(profile))
+                .runUpSheetStyle()
         }
     }
 

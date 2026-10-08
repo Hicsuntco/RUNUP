@@ -244,7 +244,7 @@ struct RecapView: View {
                             // seule des deux qu'on poste en story. La rangée discrète en dessous
                             // reste à deux liens : trois y auraient fait trois tiers de largeur,
                             // où « Exporter en GPX » ne tient pas.
-                            if peutFaireUneVideo {
+                            if peutFaireUneVideo(run) {
                                 boutonVideo(for: run)
                             }
 
@@ -438,7 +438,9 @@ struct RecapView: View {
     /// bouton qui ouvrirait un échec « ce parcours est trop court » serait une fausse promesse.
     /// On ne construit pas le déroulé pour le savoir — il rejouerait le dénivelé sur six cents
     /// points à chaque évaluation du corps de la vue.
-    private var peutFaireUneVideo: Bool {
+    /// En paramètre et non lu sur `self` : `run` est OPTIONNEL ici — c'est la dernière course ou
+    /// celle de l'historique — et le corps de la vue l'a déjà déballé là où ce test sert.
+    private func peutFaireUneVideo(_ run: RunRecord) -> Bool {
         run.durationSeconds > 0 && run.distanceKm > 0
             && RouteGeometry.shareablePayload(run.route) != nil
     }

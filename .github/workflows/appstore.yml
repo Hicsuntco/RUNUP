@@ -22,6 +22,7 @@ on:
           - pousser-la-fiche-essai
           - pousser-la-fiche
           - composer-les-captures
+          - assembler-l-apercu
           - etat-des-builds
           - soumettre-essai
           - soumettre
@@ -48,6 +49,11 @@ on:
           - fr-FR
           - en-US
           - es-ES
+      debut:
+        description: "Secondes à sauter au début de l'enregistrement (pour assembler-l-apercu)"
+        required: false
+        type: string
+        default: "0"
       branche:
         description: "Branche où lire la fiche et le script"
         required: true
@@ -73,7 +79,7 @@ jobs:
       # plus bas. Un secret vide se crée sans bruit — `gh secret set` accepte une entrée vide —
       # et c'est déjà arrivé deux fois sur ce dépôt.
       - name: Vérifier les secrets
-        if: inputs.action != 'composer-les-captures'
+        if: inputs.action != 'composer-les-captures' && inputs.action != 'assembler-l-apercu'
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
@@ -94,7 +100,7 @@ jobs:
           echo "Trois secrets présents, clé décodable."
 
       - name: Installer la clé d'API
-        if: inputs.action != 'composer-les-captures'
+        if: inputs.action != 'composer-les-captures' && inputs.action != 'assembler-l-apercu'
         env:
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
         run: |
@@ -106,11 +112,22 @@ jobs:
         if: inputs.action == 'composer-les-captures'
         run: python3 -m pip install --quiet Pillow
 
+      # ffmpeg est déjà sur les runners Ubuntu. On le vérifie quand même, et on éprouve d'abord le
+      # découpage : un aperçu refusé par App Store Connect ne dit pas laquelle des cinq
+      # contraintes a sauté, alors autant que les décisions qui y mènent soient testées.
+      - name: Vérifier le découpage de l'aperçu
+        if: inputs.action == 'assembler-l-apercu'
+        run: |
+          set -euo pipefail
+          ffmpeg -version | head -1
+          cd ci_scripts && python3 test_apercu.py
+
       - name: Exécuter
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           VERSION: ${{ inputs.version }}
+          DEBUT: ${{ inputs.debut }}
           LANGUE: ${{ inputs.langue }}
           BUILD: ${{ inputs.build }}
           WHAT: ${{ inputs.action }}
@@ -127,6 +144,7 @@ jobs:
             pousser-la-fiche-essai)   python3 ci_scripts/asc.py push-metadata "$VERSION" --dry-run ;;
             pousser-la-fiche)         python3 ci_scripts/asc.py push-metadata "$VERSION" ;;
             composer-les-captures)    python3 ci_scripts/screenshots.py "$LANGUE" ;;
+            assembler-l-apercu)       python3 ci_scripts/apercu.py --debut "${DEBUT:-0}" ;;
             etat-des-builds)          python3 ci_scripts/asc.py ci ;;
             soumettre-essai)          python3 ci_scripts/asc.py submit "$VERSION" $BUILD_OPT --dry-run ;;
             soumettre)                python3 ci_scripts/asc.py submit "$VERSION" $BUILD_OPT ;;
@@ -136,6 +154,14 @@ jobs:
             codes-promo-creer)        python3 ci_scripts/asc.py promo-create ;;
             *) echo "::error::Action inconnue : $WHAT"; exit 1 ;;
           esac
+
+      - name: Récupérer l'aperçu
+        if: inputs.action == 'assembler-l-apercu'
+        uses: actions/upload-artifact@v4
+        with:
+          name: apercu
+          path: appstore/apercu/out/apercu.mp4
+          if-no-files-found: error
 
       - name: Récupérer les captures
         if: inputs.action == 'composer-les-captures'

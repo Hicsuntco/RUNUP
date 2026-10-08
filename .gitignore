@@ -35,5 +35,10 @@ RunUpWidgets/RunUpWidgets.entitlements
 # sources sont les captures brutes et les accroches, et le résultat se récupère en artefact du run.
 appstore/out/
 
+# Assemblé par `ci_scripts/apercu.py` à partir de l'enregistrement déposé dans `appstore/apercu/`.
+# Même raison : la sortie se refait d'une commande, et un `.mp4` de cinquante mégaoctets par
+# tentative ferait grossir le dépôt pour rien.
+appstore/apercu/out/
+
 # Un .pyc de `asc.py` avait été committé par mégarde ; il est retiré ici.
 __pycache__/

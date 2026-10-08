@@ -209,6 +209,7 @@ final class AppState {
         }
         Task { self.recoverInterruptedRunIfNeeded() }
         Task { self.renommerLesCoursesDuJourDeRepos() }
+        Task { self.recalculerLeDenivelePositif() }
     }
 
     // MARK: - À qui appartient ce téléphone
@@ -321,6 +322,49 @@ final class AppState {
             renommees += 1
         }
         if renommees > 0 {
+            guard (try? modelContext.save()) != nil else { return }
+        }
+        UserDefaults.standard.set(true, forKey: cle)
+    }
+
+    /// Recalcule le dénivelé positif des sorties DÉJÀ enregistrées.
+    ///
+    /// `ElevationGain` empêche désormais d'en écrire de faux, mais il ne touche pas à ce qui est
+    /// sur le téléphone. Et l'ancien calcul ne se trompait pas de quelques pour cent : il sommait
+    /// chaque écart d'altitude positif entre deux fixes GPS, c'est-à-dire la moitié positive d'un
+    /// bruit symétrique, et fabriquait deux mille mètres de D+ sur une heure d'immobilité. Toutes
+    /// les sorties de l'historique portent ce chiffre-là. Le badge « 300 m de D+ » du Club s'est
+    /// décerné dessus.
+    ///
+    /// Les altitudes du tracé sont la MÊME suite de nombres que celle sur laquelle l'ancien total
+    /// a été calculé — `ElevationGain.rejoue(altitudes:intervalleSecondes:)` explique pourquoi en
+    /// détail. Ce n'est donc pas une estimation rétrospective, c'est le même calcul refait.
+    ///
+    /// Trois refus, et chacun compte :
+    ///
+    /// - **Pas de tracé, ou moins de dix altitudes connues.** Une sortie saisie à la main, importée
+    ///   de Santé ou marquée « faite » sans GPS n'a rien à rejouer. Elle garde sa valeur plutôt que
+    ///   d'en recevoir une tirée de trois points — et surtout, elle ne se fait pas remettre à zéro.
+    /// - **Un résultat qui monterait.** Voir `RunRecord.deniveleRecalcule` : le défaut ne peut que
+    ///   sur-compter, donc un rejeu qui propose davantage est un rejeu qui se trompe.
+    /// - **Un résultat identique.** Rien à écrire, donc rien d'écrit.
+    ///
+    /// Une fois par installation, et le marqueur est posé APRÈS l'enregistrement — une réparation
+    /// interrompue doit pouvoir recommencer. Exactement comme celle des titres au-dessus.
+    ///
+    /// CE QU'ELLE NE RÉPARE PAS : les itinéraires déjà PUBLIÉS au Club. Leur dénivelé est parti
+    /// sur le serveur avec le reste, et il y reste. Rien ici ne peut l'atteindre.
+    private func recalculerLeDenivelePositif() {
+        let cle = "repair.elevationGain.v1"
+        guard !UserDefaults.standard.bool(forKey: cle) else { return }
+        guard let toutes = try? modelContext.fetch(FetchDescriptor<RunRecord>()) else { return }
+        var corrigees = 0
+        for course in toutes {
+            guard let recalcule = course.deniveleRecalcule else { continue }
+            course.elevationGainM = recalcule
+            corrigees += 1
+        }
+        if corrigees > 0 {
             guard (try? modelContext.save()) != nil else { return }
         }
         UserDefaults.standard.set(true, forKey: cle)

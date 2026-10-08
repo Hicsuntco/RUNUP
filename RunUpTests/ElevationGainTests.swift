@@ -48,6 +48,13 @@ final class ElevationGainTests: XCTestCase {
         }
     }
 
+    /// Typées explicitement, et pas écrites en littéral à l'appel : `Array(repeating: 100, count:)`
+    /// dans un contexte `[Double?]` demande de promouvoir un littéral entier en `Double` puis en
+    /// `Optional`, et une inférence de ce genre ne se découvre qu'au bout d'un quart d'heure de
+    /// compilation sur une machine de CI.
+    private let altitudePlate: Double? = 100
+    private let sansAltitude: Double? = nil
+
     private let depart = Date(timeIntervalSince1970: 1_700_000_000)
     private func instant(_ secondes: Double) -> Date { depart.addingTimeInterval(secondes) }
 
@@ -232,5 +239,130 @@ final class ElevationGainTests: XCTestCase {
         XCTAssertGreaterThan(denivele.metres, 90)
         denivele.remetAZero()
         XCTAssertEqual(denivele.metres, 0, accuracy: 0.001)
+    }
+
+    // MARK: - Le rejeu d'un tracé déjà enregistré
+
+    /// Rejouer un tracé plat et bruité ne rend rien, là où l'ancien calcul rendait un demi-
+    /// kilomètre sur cinq cents points. C'est la réparation de l'historique, mesurée.
+    func testRejouerUnTracePlatNeRendRien() {
+        var bruit = Bruit()
+        var trace: [Double?] = []
+        for _ in 0..<500 { trace.append(100 + bruit.metres(ecartType: 2.0)) }
+
+        let rejoue = ElevationGain.rejoue(altitudes: trace, intervalleSecondes: 2)
+        XCTAssertEqual(rejoue ?? -1, 0, accuracy: 0.001)
+        XCTAssertGreaterThan(ancienCalcul(trace.compactMap { $0 }), 400)
+    }
+
+    func testRejouerUneVraieMonteeLaGarde() {
+        var bruit = Bruit()
+        var trace: [Double?] = []
+        var altitude = 100.0
+        for _ in 0..<400 {
+            altitude += 0.5
+            trace.append(altitude + bruit.metres(ecartType: 2.0))
+        }
+        // 196 pour 200 m réels, contre 540 à l'ancien calcul.
+        XCTAssertEqual(ElevationGain.rejoue(altitudes: trace, intervalleSecondes: 2) ?? -1,
+                       196, accuracy: 5)
+        XCTAssertGreaterThan(ancienCalcul(trace.compactMap { $0 }), 450)
+    }
+
+    /// Les trous font avancer l'horloge sans livrer de mesure — donc la borne de plausibilité se
+    /// relâche pendant un trou, ce qui est exactement quand l'altitude a le droit d'avoir changé.
+    func testUnTraceTroueSeRejoueQuandMeme() {
+        var bruit = Bruit()
+        var trace: [Double?] = []
+        for i in 0..<300 {
+            // La condition AVANT le tirage : un trou ne consomme pas de bruit. C'est ce qui rend
+            // cette suite reproductible à l'identique.
+            if i % 3 == 0 {
+                trace.append(nil)
+            } else {
+                trace.append(100 + bruit.metres(ecartType: 2.0))
+            }
+        }
+        XCTAssertEqual(ElevationGain.rejoue(altitudes: trace, intervalleSecondes: 2) ?? -1,
+                       0, accuracy: 0.001)
+    }
+
+    func testUnTraceTropCourtNeSeRejouePas() {
+        let neuf = Array(repeating: altitudePlate, count: ElevationGain.minimumPourRejouer - 1)
+        XCTAssertNil(ElevationGain.rejoue(altitudes: neuf, intervalleSecondes: 2))
+
+        let dix = Array(repeating: altitudePlate, count: ElevationGain.minimumPourRejouer)
+        XCTAssertNotNil(ElevationGain.rejoue(altitudes: dix, intervalleSecondes: 2))
+    }
+
+    func testUnTraceSansAucuneAltitudeNeSeRejouePas() {
+        XCTAssertNil(ElevationGain.rejoue(altitudes: Array(repeating: sansAltitude, count: 50),
+                                          intervalleSecondes: 2))
+    }
+
+    func testUnIntervalleNulNeSeRejouePas() {
+        let trace = Array(repeating: altitudePlate, count: 50)
+        XCTAssertNil(ElevationGain.rejoue(altitudes: trace, intervalleSecondes: 0))
+    }
+
+    // MARK: - Ce que la réparation accepte de réécrire
+
+    private func course(denivele: Int, trace: [Double?], duree: Int = 1000) -> RunRecord {
+        RunRecord(title: "Sortie", distanceKm: 10, durationSeconds: duree,
+                  avgPace: "5:00", avgHeartRate: 0, kcal: 0, elevationGainM: denivele,
+                  route: trace.map { RunRecord.RoutePoint(lat: 45, lng: 5, altitude: $0) })
+    }
+
+    func testUneSortieAuDenivelleGonfleEstCorrigee() {
+        var bruit = Bruit()
+        var trace: [Double?] = []
+        for _ in 0..<500 { trace.append(100 + bruit.metres(ecartType: 2.0)) }
+
+        // 547 : ce que l'ancien calcul aurait écrit sur ce tracé-là.
+        let sortie = course(denivele: 547, trace: trace)
+        XCTAssertEqual(sortie.deniveleRecalcule, 0)
+    }
+
+    /// LE GARDE-FOU. Le défaut ne peut que sur-compter, donc un rejeu qui proposerait DAVANTAGE
+    /// que la valeur enregistrée serait un rejeu en désaccord avec l'original — un défaut dans mon
+    /// code, pas une sortie plus montagneuse qu'on ne croyait. Dans ce cas on ne touche à rien :
+    /// une réparation doit pouvoir rater en ne faisant rien plutôt qu'en inventant du dénivelé.
+    func testUneReparationNeFaitJamaisMonterLeDenivele() {
+        var trace: [Double?] = []
+        var altitude = 100.0
+        for _ in 0..<400 {
+            altitude += 0.5
+            trace.append(altitude)
+        }
+        // Le tracé monte vraiment de 200 m, mais la sortie n'en déclare que 10. On n'y touche pas.
+        XCTAssertNil(course(denivele: 10, trace: trace).deniveleRecalcule)
+    }
+
+    /// Un dénivelé nul ne peut pas baisser. Sorti avant même de décoder le tracé : c'est ce qui
+    /// rend la réparation gratuite sur les sorties saisies à la main.
+    func testUneSortieSansDeniveleNestPasTouchee() {
+        var trace: [Double?] = []
+        var altitude = 100.0
+        for _ in 0..<400 {
+            altitude += 0.5
+            trace.append(altitude)
+        }
+        XCTAssertNil(course(denivele: 0, trace: trace).deniveleRecalcule)
+    }
+
+    func testUneSortieSansTraceNestPasTouchee() {
+        XCTAssertNil(course(denivele: 420, trace: []).deniveleRecalcule)
+    }
+
+    /// Une sortie saisie à la main ou importée de Santé n'a que quelques points, ou aucun. Elle
+    /// garde sa valeur — et surtout, elle ne se fait pas remettre à zéro.
+    func testUneSortieAuTraceTropCourtNestPasTouchee() {
+        let court = Array(repeating: altitudePlate, count: 4)
+        XCTAssertNil(course(denivele: 420, trace: court).deniveleRecalcule)
+    }
+
+    func testUneSortieSansDureeNestPasTouchee() {
+        let trace = Array(repeating: altitudePlate, count: 50)
+        XCTAssertNil(course(denivele: 420, trace: trace, duree: 0).deniveleRecalcule)
     }
 }

@@ -40,6 +40,9 @@ def _():
 @cas_test("une somme explicite passe")
 def _(): attendu("let total = runs.only(.run).reduce(0) { $0 + $1.distanceKm }", 0, "only sur la ligne")
 
+@cas_test("« à pied » est une décision valable")
+def _(): attendu("let total = runs.onFoot.reduce(0) { $0 + $1.distanceKm }", 0, "onFoot")
+
 @cas_test("« toutes disciplines » est une décision valable")
 def _(): attendu("let jours = runs.allDisciplines.map(\\.date)\nlet t = runs.allDisciplines.reduce(0) { $0 + $1.durationSeconds }", 0, "allDisciplines")
 

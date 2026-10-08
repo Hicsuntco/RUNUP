@@ -44,6 +44,6 @@ final class Shoe {
     /// gets deleted or reassigned, while deriving it fresh is honest by construction.
     func totalKm(runs: [RunRecord]) -> Double {
         // Une paire de chaussures ne s'use pas à vélo.
-        startDistanceKm + runs.only(.run).filter { $0.shoeID == id }.reduce(0) { $0 + $1.distanceKm }
+        startDistanceKm + runs.onFoot.filter { $0.shoeID == id }.reduce(0) { $0 + $1.distanceKm }
     }
 }

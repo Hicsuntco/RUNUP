@@ -184,12 +184,33 @@ final class DisciplineTests: XCTestCase {
 
     /// Une sortie trail entre dans la distance COURUE — contrairement au vélo. C'est l'autre
     /// moitié de `only(_:)` : il ne s'agit pas d'exclure tout ce qui n'est pas `.run`.
+    ///
+    /// LE DÉFAUT QUE `onFoot` CORRIGE. Les quinze agrégations de l'app disaient `.only(.run)`,
+    /// et c'était juste tant que la seule autre discipline était le vélo : « de la course » et
+    /// « pas du vélo » désignaient le même ensemble. Le trail les sépare, et il est arrivé en ne
+    /// comptant NULLE PART — ni dans la distance du mois, ni dans les statistiques, ni dans les
+    /// badges, ni dans l'usure des chaussures. Pendant que `Discipline.trail.wearsShoes`
+    /// affirmait le contraire, deux fichiers plus loin.
     func testLeTrailEntreDansLaDistanceCourue() {
         let releves = [releve(.run, km: 10, secondes: 3000, allure: "5:00"),
                        releve(.trail, km: 12, secondes: 5400, allure: "7:30"),
                        releve(.bike, km: 40, secondes: 4800, allure: "1:12")]
-        let aPied = releves.filter(\.discipline.wearsShoes)
-        XCTAssertEqual(aPied.map(\.distanceKm).reduce(0, +), 22, accuracy: 0.001)
+        XCTAssertEqual(releves.onFoot.map(\.distanceKm).reduce(0, +), 22, accuracy: 0.001,
+                       "la route et le trail, pas le vélo")
+        XCTAssertEqual(releves.only(.run).map(\.distanceKm).reduce(0, +), 10, accuracy: 0.001,
+                       "`only(.run)` reste la route seule — c'est ce qu'il faut pour l'allure")
+        XCTAssertEqual(releves.allDisciplines.count, 3)
+    }
+
+    /// Les chaussures s'usent en trail. Le drapeau le disait déjà ; plus personne ne le
+    /// contredit.
+    func testLesChaussuresSUsentEnTrail() {
+        let chaussure = Shoe(name: "Test", startDistanceKm: 0)
+        let releves = [releve(.run, km: 10, secondes: 3000, allure: "5:00"),
+                       releve(.trail, km: 12, secondes: 5400, allure: "7:30"),
+                       releve(.bike, km: 40, secondes: 4800, allure: "1:12")]
+        for r in releves { r.shoeID = chaussure.id }
+        XCTAssertEqual(chaussure.totalKm(runs: releves), 22, accuracy: 0.001)
     }
 
     /// Chaque discipline a un libellé, une icône et une phrase de bascule. Aucune ne doit se

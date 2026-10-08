@@ -39,7 +39,10 @@ AGREGATIONS = [
     re.compile(r'\.(max|min)\(by:\s*\{\s*\$0\.(distanceKm|durationSeconds|elevationGainM|kcal)\b'),
     re.compile(r'\.compactMap\s*[({].*parseSecPerKm\(\$0\.avgPace\)'),
 ]
-DECIDE = re.compile(r'\.only\(|\.allDisciplines\b')
+# Les trois façons de DIRE de quoi un total parle. `.onFoot` est arrivé avec le trail : « de la
+# course » et « pas du vélo » ont cessé de désigner le même ensemble, et les quinze agrégations qui
+# disaient `.only(.run)` se sont mises à exclure le trail sans que personne ne l'ait décidé.
+DECIDE = re.compile(r'\.only\(|\.onFoot\b|\.allDisciplines\b')
 
 
 # `let courses = runs.only(.run)` — le filtre vit souvent sur une variable, pas sur la ligne

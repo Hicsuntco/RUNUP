@@ -28,7 +28,7 @@ enum ClubBadgeEngine {
         let earlyRun = runs.contains { Calendar.current.component(.hour, from: $0.date) < 7 }
         let nightRun = runs.contains { Calendar.current.component(.hour, from: $0.date) >= 21 }
         // Des badges de COURSE : trois cents mètres de dénivelé à vélo ne valent pas les mêmes.
-        let courses = runs.only(.run)
+        let courses = runs.onFoot
         let totalElevation = courses.reduce(0) { $0 + $1.elevationGainM }
         let totalDistance = courses.reduce(0) { $0 + $1.distanceKm }
         let longestRun = courses.map(\.distanceKm).max() ?? 0

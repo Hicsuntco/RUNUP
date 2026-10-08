@@ -3355,53 +3355,19 @@
         }
       }
     },
-    "Appui long pour changer de discipline": {
+    "Appui long pour choisir la discipline": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Press and hold to change discipline"
+            "value": "Press and hold to choose the discipline"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mantén pulsado para cambiar de disciplina"
-          }
-        }
-      }
-    },
-    "Appui long pour passer au vélo": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Press and hold to switch to cycling"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mantén pulsado para cambiar a ciclismo"
-          }
-        }
-      }
-    },
-    "Appui long pour revenir à la course": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Press and hold to switch back to running"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mantén pulsado para volver a correr"
+            "value": "Mantén pulsado para elegir la disciplina"
           }
         }
       }
@@ -5132,6 +5098,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tobillo"
+          }
+        }
+      }
+    },
+    "Choisir la discipline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose discipline"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir disciplina"
           }
         }
       }

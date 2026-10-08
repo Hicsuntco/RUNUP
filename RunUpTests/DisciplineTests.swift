@@ -182,20 +182,6 @@ final class DisciplineTests: XCTestCase {
                                               seuils: AutoPause.Seuils.pour(.run)))
     }
 
-    /// Le cycle de l'appui long : course → vélo → trail → course. Il se calcule sur `allCases`,
-    /// donc une discipline de plus s'y insère sans qu'on touche au calcul — et ce test le dira.
-    func testLeCycleDesDisciplinesBoucle() {
-        var vue: [Discipline] = []
-        var courante = Discipline.run
-        for _ in 0..<Discipline.allCases.count {
-            vue.append(courante)
-            courante = courante.next
-        }
-        XCTAssertEqual(Set(vue), Set(Discipline.allCases),
-                       "Le cycle doit passer par TOUTES les disciplines")
-        XCTAssertEqual(courante, .run, "et revenir à son point de départ")
-    }
-
     /// Une sortie trail entre dans la distance COURUE — contrairement au vélo. C'est l'autre
     /// moitié de `only(_:)` : il ne s'agit pas d'exclure tout ce qui n'est pas `.run`.
     func testLeTrailEntreDansLaDistanceCourue() {
@@ -208,6 +194,10 @@ final class DisciplineTests: XCTestCase {
 
     /// Chaque discipline a un libellé, une icône et une phrase de bascule. Aucune ne doit se
     /// retrouver avec une chaîne vide parce qu'un `switch` a été complété à moitié.
+    ///
+    /// Et ce test porte plus loin qu'il n'y paraît depuis que le panneau de choix existe : il
+    /// dessine une ligne par `Discipline.allCases`, donc une discipline ajoutée sans libellé
+    /// s'afficherait comme une case vide et touchable.
     func testChaqueDisciplineEstNommeePartout() {
         for discipline in Discipline.allCases {
             XCTAssertFalse(discipline.title.isEmpty, "\(discipline) n'a pas de titre")

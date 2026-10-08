@@ -10,6 +10,14 @@ struct RootTabView: View {
         appState.screen != .live && appState.screen != .recap
     }
 
+    /// Le petit panneau de choix de discipline est-il ouvert ?
+    ///
+    /// Ici et pas dans `TabBarView` : le panneau se dessine AU-DESSUS de la barre, donc dans cette
+    /// pile-ci, à côté de `RunInProgressPill`. Le mettre dans la barre l'enfermerait dans une
+    /// capsule de 56 points de haut, et il faudrait le faire déborder — ce qui est précisément le
+    /// piège de `clipShape` que le bouton RUN a déjà coûté une fois.
+    @State private var choixDisciplineOuvert = false
+
     /// Quel onglet la barre affiche comme actif — ce n'est pas toujours l'écran courant. Depuis
     /// que Profil est le 5e onglet, Club et Amis (`SocialView`) sont des destinations SOUS le
     /// Profil, ouvertes par ses deux cartes. Sans cette translation, entrer dans son club
@@ -38,6 +46,10 @@ struct RootTabView: View {
     /// champ de recherche ou de code d'invitation.
     private var typesText: Bool { appState.screen == .coach || appState.screen == .club }
 
+    private func fermerLeChoix() {
+        withAnimation(RUMotion.snap) { choixDisciplineOuvert = false }
+    }
+
     var body: some View {
         ZStack(alignment: .bottom) {
             RUColor.bg.ignoresSafeArea()
@@ -53,25 +65,53 @@ struct RootTabView: View {
                 .padding(.bottom, RUSpacing.tabBarBottomInset + RUSpacing.tabBarHeight + 14)
             }
 
+            // L'ATTRAPE-CLIC, sous le panneau et au-dessus de tout le reste. Sans lui, refermer
+            // le panneau demanderait de viser le bouton une seconde fois, et un appui n'importe où
+            // ailleurs partirait dans l'écran du dessous — on ouvrirait une carte de séance en
+            // croyant annuler. `Color.clear` ne suffit pas : une vue transparente ne reçoit rien
+            // tant qu'elle n'a pas de forme à toucher.
+            if choixDisciplineOuvert {
+                Color.black.opacity(0.001)
+                    .ignoresSafeArea()
+                    .contentShape(Rectangle())
+                    .onTapGesture { fermerLeChoix() }
+                    .accessibilityHidden(true)
+            }
+
+            if showBar && choixDisciplineOuvert {
+                DisciplinePicker(selection: appState.runDiscipline) { discipline in
+                    appState.setRunDiscipline(discipline)
+                    fermerLeChoix()
+                }
+                // La même hauteur que `RunInProgressPill` : les deux se posent juste au-dessus de
+                // la barre, et il n'y a aucune raison qu'ils ne flottent pas au même étage.
+                .padding(.bottom, RUSpacing.tabBarBottomInset + RUSpacing.tabBarHeight + 14)
+                // Il SORT du bouton : il grandit depuis le bas, là où le doigt est encore posé.
+                .transition(.scale(scale: 0.86, anchor: .bottom).combined(with: .opacity))
+            }
+
             if showBar {
                 TabBarView(
                     selected: tabSelection,
                     onSelect: { appState.go($0) },
                     onStartRun: {
-                        if appState.isRunActive { appState.go(.live) }
+                        // Un appui simple pendant que le panneau est ouvert le referme, sans
+                        // partir en course : le bouton est alors ce qu'on vise pour annuler.
+                        if choixDisciplineOuvert { fermerLeChoix() }
+                        else if appState.isRunActive { appState.go(.live) }
                         else { appState.startRun(appState.runDiscipline) }
                     },
                     discipline: appState.runDiscipline,
-                    // Un CYCLE, plus une bascule : course → vélo → trail → course. L'ordre est
-                    // celui de `Discipline.allCases`, et `next` le calcule, donc une discipline de
-                    // plus entre dans le cycle sans qu'on revienne ici.
-                    onToggleDiscipline: {
-                        appState.setRunDiscipline(appState.runDiscipline.next)
+                    // L'appui long OUVRE le choix, il ne bascule plus. À trois disciplines, une
+                    // bascule demandait de maintenir deux fois pour atteindre le trail, à
+                    // l'aveugle : un geste qu'on apprend par cœur au lieu de le lire.
+                    onChooseDiscipline: {
+                        withAnimation(RUMotion.snap) { choixDisciplineOuvert = true }
                     },
                     // Pas pendant une course : on ne change pas de discipline au milieu d'une
                     // sortie, et un appui long qui ne fait rien vaut mieux qu'un qui touche à un
                     // relevé déjà commencé.
-                    canToggleDiscipline: !appState.isRunActive
+                    canChooseDiscipline: !appState.isRunActive
                 )
                 .padding(.horizontal, RUSpacing.tabBarSideInset)
                 .padding(.bottom, RUSpacing.tabBarBottomInset)
@@ -95,6 +135,13 @@ struct RootTabView: View {
             // pour qu'il ne puisse plus rien casser s'il revenait par un autre chemin.
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
                                             to: nil, from: nil, for: nil)
+            // Et le panneau de choix de discipline se referme. Il est posé dans la pile ci-dessus,
+            // pas dans la barre : sans ça il survivrait à la navigation et resterait ouvert
+            // au-dessus d'un autre écran. Ici plutôt que dans un second `onChange` sur la même
+            // valeur — deux abonnements à un même changement se lisent comme deux règles alors
+            // qu'il n'y en a qu'une : « on a changé d'écran, range ce qui appartenait au
+            // précédent. »
+            choixDisciplineOuvert = false
             Analytics.shared.track(.screenViewed, ["screen": .string(screen.rawValue)])
         }
         .sheet(isPresented: Binding(get: { appState.sessionDetailPresented }, set: { appState.sessionDetailPresented = $0 })) {

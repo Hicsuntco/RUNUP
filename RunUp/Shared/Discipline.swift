@@ -91,17 +91,6 @@ enum Discipline: String, Codable, Equatable, CaseIterable {
         }
     }
 
-    /// La suivante dans le cycle de l'appui long.
-    ///
-    /// Calculée sur `allCases`, donc l'ordre du cycle est l'ordre de déclaration et une discipline
-    /// de plus s'y insère sans qu'on touche à ce calcul. Le `?? self` ne peut pas arriver — une
-    /// valeur est toujours dans `allCases` — mais il évite d'écrire un `!` pour le prouver.
-    var next: Discipline {
-        let toutes = Self.allCases
-        guard let rang = toutes.firstIndex(of: self) else { return self }
-        return toutes[(rang + 1) % toutes.count]
-    }
-
     var sfSymbol: String {
         switch self {
         case .run: return "figure.run"

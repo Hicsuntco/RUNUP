@@ -5,16 +5,16 @@ struct TabBarView: View {
     var selected: AppScreen
     var onSelect: (AppScreen) -> Void
     var onStartRun: () -> Void
-    /// La discipline que le bouton lancera. Il la PORTE à l'écran — c'est ce qui rend l'appui
-    /// long découvrable : on ne cherche pas un geste caché, on constate que le bouton a changé.
+    /// La discipline que le bouton lancera. Il la PORTE à l'écran, et c'est ce qui reste de la
+    /// bascule d'origine : le libellé dit « TRAIL », donc on sait ce qui part sans rien ouvrir.
     var discipline: Discipline = .run
-    /// Appui long : bascule course ↔ vélo.
-    var onToggleDiscipline: () -> Void = {}
+    /// Appui long : ouvre le petit panneau de choix, qui vit dans `RootTabView`.
+    var onChooseDiscipline: () -> Void = {}
     /// Faux pendant une course : on ne change pas de discipline au milieu d'une sortie. Un
     /// booléen séparé plutôt qu'une closure optionnelle — un ternaire qui rend `nil` ou une
     /// fermeture est une inférence que Swift refuse selon le contexte, et ce n'est pas le genre
     /// de risque à prendre quand chaque compilation coûte un quart d'heure.
-    var canToggleDiscipline: Bool = true
+    var canChooseDiscipline: Bool = true
 
     /// Le 5e onglet est PROFIL, pas Club — c'est ce que porte la maquette (`#i-profile` /
     /// « Profil » dans son `.tabbar`), et c'est ce qui défait le dédoublement qu'on avait :
@@ -115,14 +115,20 @@ struct TabBarView: View {
     /// Appuyé. Rend ce que `PressableStyle` rendait, puisque ce contrôle n'est plus un `Button`.
     @State private var runPressed = false
 
-    /// Vrai quand l'appui long vient de basculer la discipline.
+    /// Vrai quand l'appui long vient d'ouvrir le panneau de choix.
     ///
     /// SwiftUI n'impose aucune durée MAXIMALE à un `TapGesture` : après un appui long, le
-    /// relâchement peut aussi être livré comme un tap, et on partirait en course dans la seconde
-    /// où l'on vient de passer au vélo. Ce drapeau avale ce tap-là. Il est remis à faux au DÉBUT
-    /// de chaque pression, donc un appui long qui ne serait pas suivi d'un tap ne peut pas manger
-    /// le départ suivant — le défaut qu'on aurait créé en le remettant à faux dans le tap seul.
-    @State private var disciplineJustToggled = false
+    /// relâchement peut aussi être livré comme un tap. Ce drapeau avale ce tap-là.
+    ///
+    /// Il compte PLUS qu'avant. Du temps de la bascule, le tap de trop faisait partir une course
+    /// juste après un changement de discipline — fâcheux. Maintenant, l'appui simple sur ce bouton
+    /// REFERME le panneau (c'est ce qu'on vise pour annuler), donc un tap livré après l'appui long
+    /// refermerait le panneau dans l'instant où il s'ouvre : le geste n'aurait plus aucun effet
+    /// visible, et il paraîtrait simplement cassé.
+    ///
+    /// Remis à faux au DÉBUT de chaque pression, pas dans le tap : un appui long qui ne serait pas
+    /// suivi d'un tap ne peut donc pas manger le geste suivant.
+    @State private var panneauVientDOuvrir = false
 
     /// Ce que fait l'appui simple, dit en entier — « Démarrer une sortie trail ».
     private var startLabel: LocalizedStringKey {
@@ -133,19 +139,20 @@ struct TabBarView: View {
         }
     }
 
-    /// Le nom de l'action d'accessibilité : celui de la discipline SUIVANTE, pas de l'actuelle.
+    /// Le nom de l'action d'accessibilité. Il ne nomme plus une destination mais le panneau :
+    /// c'est lui qui liste les trois disciplines, et chacune de ses lignes porte son propre nom.
     ///
     /// Calculé ici et pas en ligne : `accessibilityAction` a une surcharge `LocalizedStringKey` et
-    /// une surcharge `StringProtocol`, et un ternaire de littéraux entre les deux est exactement
-    /// le genre d'inférence qui ne se découvre qu'au bout d'un quart d'heure de compilation. Un
-    /// `String` explicite dans un `Text` ne laisse aucun choix au compilateur.
+    /// une surcharge `StringProtocol`, et un littéral entre les deux est exactement le genre
+    /// d'inférence qui ne se découvre qu'au bout d'un quart d'heure de compilation. Un `String`
+    /// explicite dans un `Text` ne laisse aucun choix au compilateur.
     ///
-    /// Et il passe par `String(localized:)`, ce que la première version ne faisait pas : un
-    /// `String` nu dans `Text(_:)` est pris au mot, sans passer par le catalogue. Le nom de
-    /// l'action serait resté en français sur un téléphone anglais, et aucun contrôle ne l'aurait
-    /// vu — `check_strings` lit les littéraux affichés, et celui-là ne l'était plus.
-    private var toggleActionName: String {
-        discipline.next.switchToLabel
+    /// Et il passe par `String(localized:)` : un `String` nu dans `Text(_:)` est pris au mot, sans
+    /// passer par le catalogue. Le nom de l'action serait resté en français sur un téléphone
+    /// anglais, et aucun contrôle ne l'aurait vu — `check_strings` lit les littéraux AFFICHÉS, et
+    /// celui-là ne l'est plus.
+    private var choixActionName: String {
+        String(localized: "Choisir la discipline")
     }
 
     /// Le bouton central, CONTENU dans la barre.
@@ -203,8 +210,8 @@ struct TabBarView: View {
         .opacity(runPressed ? 0.88 : 1)
         .animation(.easeOut(duration: 0.12), value: runPressed)
         .onTapGesture {
-            if disciplineJustToggled {
-                disciplineJustToggled = false
+            if panneauVientDOuvrir {
+                panneauVientDOuvrir = false
                 return
             }
             onStartRun()
@@ -215,12 +222,12 @@ struct TabBarView: View {
         // course, qui est l'écrasante majorité des départs.
         .onLongPressGesture(minimumDuration: 0.45, pressing: { pressing in
             runPressed = pressing
-            if pressing { disciplineJustToggled = false }
+            if pressing { panneauVientDOuvrir = false }
         }, perform: {
-            guard canToggleDiscipline else { return }
-            disciplineJustToggled = true
+            guard canChooseDiscipline else { return }
+            panneauVientDOuvrir = true
             Haptics.impact(.medium)
-            onToggleDiscipline()
+            onChooseDiscipline()
         })
         .animation(RUMotion.snap, value: discipline)
         .accessibilityElement(children: .combine)
@@ -229,16 +236,16 @@ struct TabBarView: View {
         // Plus le nom de la discipline suivante, mais le geste : à trois disciplines l'appui long
         // ne mène plus à UNE destination, il fait tourner. C'est l'action nommée juste en dessous
         // qui dit où l'on va, et elle, elle se met à jour toute seule.
-        .accessibilityHint(canToggleDiscipline ? "Appui long pour changer de discipline" : "")
+        .accessibilityHint(canChooseDiscipline ? "Appui long pour choisir la discipline" : "")
         .accessibilityAction {
             onStartRun()
         }
         // Une action nommée, pas seulement l'appui long : maintenir 0,45 s est un geste que
         // VoiceOver ne transmet pas tel quel, et le rotor d'actions est la façon dont ses
         // utilisateurs découvrent ce qu'une vue sait faire.
-        .accessibilityAction(named: Text(toggleActionName)) {
-            guard canToggleDiscipline else { return }
-            onToggleDiscipline()
+        .accessibilityAction(named: Text(choixActionName)) {
+            guard canChooseDiscipline else { return }
+            onChooseDiscipline()
         }
     }
 }

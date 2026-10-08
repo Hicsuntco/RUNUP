@@ -57,19 +57,54 @@ SUB_MARGIN = 150
 # s'arrête sur « aucune capture » devant un dossier plein.
 SUFFIXES = {".png", ".jpg", ".jpeg"}
 
-# La palette de marque, reprise telle quelle de `AccentTheme.swift` (id « rose »). Le dégradé va
-# du rose primaire vers le « tail » violet, exactement comme les dégradés de l'app.
-ROSE = (0xFF, 0x0F, 0x5B)
-VIOLET = (0x7C, 0x5C, 0xFF)
-INK = (0x0B, 0x0B, 0x0F)
+# LA PALETTE DE MARQUE EST LUE, PLUS RECOPIÉE.
+#
+# Elle ne l'était même pas : ce fichier portait bien un `ROSE` et un `VIOLET`, écrits deux fois
+# avec deux valeurs différentes — et ni l'un ni l'autre n'était LU. Le dégradé réellement dessiné
+# par `scene()` était trois littéraux à part, réglés à la main le jour où le châssis est né et
+# jamais retouchés depuis. Quand le rose de marque a changé de teinte, les quatre copies Swift ont
+# suivi (`check_accent.py` les tient ensemble) ; ce fichier-ci, non — et c'est lui qui fabrique la
+# seule surface que les gens voient AVANT d'installer.
+#
+# Plutôt que d'en faire une cinquième copie à surveiller, on lit la source. Une copie qui n'existe
+# pas ne peut pas dériver. L'import marche parce que `check_accent` ne dépend que de la
+# bibliothèque standard et que les deux fichiers sont voisins — c'est déjà ainsi que
+# `test_accent.py` l'utilise.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import check_accent as accents  # noqa: E402
+
+
+def _rgb(hexa: str) -> tuple:
+    """« 0xff0a78 » → (255, 10, 120)."""
+    v = int(hexa, 16)
+    return (v >> 16 & 0xFF, v >> 8 & 0xFF, v & 0xFF)
+
+
+def _sombre(rgb: tuple, facteur: float) -> tuple:
+    return tuple(max(0, min(255, round(c * facteur))) for c in rgb)
+
+
+def _clair(rgb: tuple, part: float) -> tuple:
+    return tuple(round(c + (255 - c) * part) for c in rgb)
+
+
+# Les trois couleurs du nuancier « rose » : le primaire, sa variante claire, et la queue violette
+# des dégradés. Exactement ce que l'app affiche.
+_PALETTE = accents.nuanciers(accents.SOURCE.read_text(encoding="utf-8"))["rose"]
+PRIMAIRE = _rgb(_PALETTE[0])
+CLAIR = _rgb(_PALETTE[1])
+QUEUE = _rgb(_PALETTE[2])
+
+# L'encre du fond. Pas un accent, donc absente d'`AccentTheme` — et la valeur qui s'appliquait
+# vraiment était celle du SECOND bloc de constantes, plus bas, qui écrasait silencieusement le
+# premier. Les deux blocs sont fondus en un seul.
+INK = (10, 10, 14)
 
 
 # --- Le châssis -------------------------------------------------------------------------------
-#
 # Proportions relevées sur un iPhone 16 Pro Max : dalle de 430 × 932 pt, coins de 55 pt, îlot
 # dynamique de 125 × 36 pt posé à 11 pt du bord haut. Tout est exprimé en fraction de la LARGEUR
 # de la dalle, pour que le cadre reste juste à n'importe quelle échelle de rendu.
-#
 # Le rayon des coins est le détail qui décide de tout : à 5 % de la largeur on obtient une carte
 # aux angles adoucis, à 12,8 % on obtient un téléphone.
 SCREEN_RADIUS = 55 / 430
@@ -94,10 +129,6 @@ RAIL = [
 # touches de volume ; à droite le bouton latéral, plus long et décalé vers le bas.
 BUTTONS_LEFT = [(0.128, 0.165), (0.196, 0.258), (0.272, 0.334)]
 BUTTONS_RIGHT = [(0.210, 0.305)]
-
-INK = (10, 10, 14)
-ROSE = (0xFF, 0x0F, 0x5B)
-VIOLET = (0x7C, 0x5C, 0xFF)
 
 
 def natural(name: str) -> list:
@@ -163,9 +194,18 @@ def scene() -> Image.Image:
     par son ombre seule ; une zone plus claire derrière ses coins hauts lui donne un relief que
     l'ombre ne suffit pas à produire.
     """
-    canvas = linear(CANVAS, [(0.0, (255, 26, 100)), (0.55, (222, 30, 120)), (1.0, (110, 82, 255))])
+    # Le dégradé va du rose de marque à son violet, tous deux lus dans le nuancier. Le seul nombre
+    # réglé à la main qui reste est la DENSITÉ de l'arrêt du milieu : il ne porte pas de teinte,
+    # donc un changement de rose le traverse sans qu'on y touche. L'ancienne version assombrissait
+    # aussi le violet du bas, ce qui le désaturait — le nuancier en donne un meilleur.
+    canvas = linear(CANVAS, [(0.0, PRIMAIRE),
+                             (0.55, _sombre(PRIMAIRE, 0.87)),
+                             (1.0, QUEUE)])
     canvas = canvas.convert("RGBA")
-    canvas.alpha_composite(glow((2200, 2200), (255, 140, 190), 0.45), (-455, -300))
+    # Le halo, tiré de la variante CLAIRE du nuancier et éclairci encore : c'est un reflet, pas un
+    # aplat. Il valait (255, 140, 190) en dur, soit exactement l'ancien rose clair éclairci de
+    # 40 % — la même main, le même jour, la même teinte restée en arrière.
+    canvas.alpha_composite(glow((2200, 2200), _clair(CLAIR, 0.40), 0.45), (-455, -300))
     return canvas.convert("RGB")
 
 

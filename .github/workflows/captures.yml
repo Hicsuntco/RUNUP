@@ -236,13 +236,23 @@ jobs:
             echo
           done
 
+      # UN ENVIRONNEMENT VIRTUEL, PAS UN `pip install` NU.
+      #
+      # `python3 -m pip install pillow` est maintenant REFUSÉ sur les runners macOS :
+      # « error: externally-managed-environment » (PEP 668). Le Python de Homebrew protège ses
+      # paquets, et l'exécution 5 est morte là — après avoir produit les dix-huit captures, à la
+      # toute dernière étape. `--break-system-packages` passerait, au prix d'abîmer
+      # l'installation Homebrew du runner ; un environnement virtuel ne touche à rien.
+      #
+      # `--system-site-packages` pour ne pas réinstaller ce qui est déjà là.
       - name: Composer les images finales
         run: |
           set -euo pipefail
-          python3 -m pip install --quiet --upgrade pillow
+          python3 -m venv --system-site-packages "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/python" -m pip install --quiet --upgrade pillow
           for langue in ${{ steps.quoi.outputs.langues }}; do
             echo "──────────── $langue ────────────"
-            python3 ci_scripts/screenshots.py "$langue"
+            "$RUNNER_TEMP/venv/bin/python" ci_scripts/screenshots.py "$langue"
           done
 
       # Les brutes ET les composées. Les premières pour pouvoir juger ce que la machine a vu, les

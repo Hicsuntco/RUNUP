@@ -108,9 +108,17 @@ jobs:
           printf '%s' "$ASC_KEY_P8" | base64 -d > "$RUNNER_TEMP/asc.p8"
           chmod 600 "$RUNNER_TEMP/asc.p8"
 
+      # Le même piège que dans `captures.yml` : `pip install` dans le Python du système est
+      # refusé (PEP 668, « externally-managed-environment »). L'environnement virtuel est posé
+      # DEVANT le PATH des étapes suivantes, pour que les `python3 …` d'après y trouvent Pillow
+      # sans avoir à nommer un chemin.
       - name: Installer Pillow
         if: inputs.action == 'composer-les-captures'
-        run: python3 -m pip install --quiet Pillow
+        run: |
+          set -euo pipefail
+          python3 -m venv --system-site-packages "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/python" -m pip install --quiet Pillow
+          echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
 
       # ffmpeg est déjà sur les runners Ubuntu. On le vérifie quand même, et on éprouve d'abord le
       # découpage : un aperçu refusé par App Store Connect ne dit pas laquelle des cinq

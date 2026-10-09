@@ -6,7 +6,10 @@ une image composée — fond de marque, accroche, téléphone qui déborde du ca
 la seconde à partir de la première, et tourne depuis l'onglet Actions comme le reste, pour ne
 pas avoir à ouvrir un terminal.
 
-    Entrée  : appstore/raw/1.png … 6.png   (captures prises sur l'iPhone)
+    Entrée  : appstore/raw/<langue>/1-accueil.png … 6-stats.png
+                                           (prises par `RunUpUITests.CapturesUITests`, une
+                                           série par langue ; à défaut de dossier de langue,
+                                           les fichiers posés à la racine de `raw/`)
               appstore/captions.json       (les accroches, par langue)
     Sortie  : appstore/out/<langue>/1.png … (1290 × 2796, prêtes pour App Store Connect)
 

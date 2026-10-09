@@ -32,13 +32,16 @@ name: Captures App Store
 # tant que ce fichier n'est que sur une branche de travail, le bouton n'existe pas et l'API
 # répond 404.
 #
-# En attendant, il part sur les DEUX FICHIERS dont le changement justifie de tout refaire : ce
-# workflow lui-même, et les accroches. Modifier une accroche sans régénérer les images laisse en
-# ligne une série qui ne dit plus ce que le dépôt dit — et c'est exactement comme ça que les six
-# captures publiées se sont retrouvées à dater du 30 août.
+# En attendant, il part sur les fichiers dont le changement justifie de tout refaire : ce workflow,
+# les accroches, et les trois fichiers qui n'existent que pour ces images — le profil de
+# démonstration, le test qui photographie, le script qui compose. Modifier l'un d'eux sans
+# régénérer les images laisse en ligne une série qui ne dit plus ce que le dépôt dit — et c'est
+# exactement comme ça que les six captures publiées se sont retrouvées à dater du 30 août.
 #
-# Le déclencheur est étroit : aucun autre chemin ne démarre un simulateur, donc une correction de
-# code ne paie jamais ces vingt minutes.
+# Le déclencheur reste étroit : aucun autre chemin ne démarre un simulateur, donc une correction
+# de code ordinaire ne paie jamais ces vingt minutes. C'est un compromis assumé — une correction
+# dans `ClubView` change ce que la capture montre sans la relancer, et il faut alors toucher l'un
+# des cinq, ou attendre le bouton « Run workflow » une fois ce fichier sur la branche par défaut.
 #
 # PAS D'ÉTIQUETTE `captures-*`, et c'est une correction. La première version en avait une — mais
 # un `push` qui déclare `tags:` SANS `branches:` ne part QUE sur une étiquette : la règle de
@@ -51,6 +54,13 @@ on:
     paths:
       - ".github/workflows/captures.yml"
       - "appstore/captions.json"
+      # Les trois fichiers qui n'existent QUE pour ces images : le profil de démonstration, le
+      # test qui photographie, et le script qui compose. Les toucher sans refaire les captures
+      # laisse en ligne une série qui ne correspond plus à ce que le dépôt produit — c'est
+      # exactement ce qui a fait dater les six captures publiées du 30 août.
+      - "RunUp/Services/CaptureSeed.swift"
+      - "RunUpUITests/**"
+      - "ci_scripts/screenshots.py"
   workflow_dispatch:
     inputs:
       langues:

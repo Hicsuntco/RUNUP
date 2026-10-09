@@ -197,6 +197,22 @@ final class AuthService {
 
     var isSignedIn: Bool { token != nil }
 
+    #if DEBUG
+    /// Une session de démonstration, pour les captures d'écran — et rien d'autre.
+    ///
+    /// Le jeton n'est PAS rangé dans le trousseau : il ne vaut que pour ce processus, et il ne
+    /// vaut rien face au serveur. C'est suffisant, parce que `ClubView` ne va justement pas
+    /// interroger le serveur quand `Demonstration.enCours` (voir `loadIfSignedIn`) : le club
+    /// qu'elle affiche est celui que `CaptureSeed` a posé en cache.
+    ///
+    /// Sans ça, l'écran du Club montrait « Le Club, c'est mieux à plusieurs » et un bouton SE
+    /// CONNECTER, sous une accroche qui promet « Tu ne cours jamais seule ».
+    func poserUneSessionDeDemonstration(_ utilisatrice: AuthenticatedUser) {
+        token = "demonstration"
+        currentUser = utilisatrice
+    }
+    #endif
+
     /// `lastName` is sent separately from `name` (not pre-joined) so the server can store it as
     /// real, structured `last_name` — Apple only ever provides both on this account's very first
     /// sign-in, so this is the one chance to capture it at all.

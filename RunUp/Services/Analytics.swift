@@ -307,6 +307,15 @@ final class Analytics: @unchecked Sendable {
     // MARK: - Everything below runs on `queue`
 
     private func enqueue(_ event: QueuedEvent) {
+        // Les captures d'écran ne sont pas une utilisatrice. Dix-huit lancements par exécution,
+        // sur une machine de CI, dans un profil inventé : laissés passer, ils écriraient dans
+        // les vraies statistiques de l'app des ouvertures que personne n'a faites — et il y a
+        // déjà une ligne de test à y supprimer à la main. Voir `Demonstration`.
+        //
+        // Ici plutôt que dans `track` : `trackOnce` et `trackAppOpenedIfNewSession` ne passent
+        // pas par `track`, et c'est justement la seconde qui tire au lancement — donc celle
+        // qu'un garde posé là-haut aurait laissée passer.
+        guard !Demonstration.enCours else { return }
         buffer.append(event)
         if buffer.count > Self.maxBufferedEvents {
             buffer.removeFirst(buffer.count - Self.maxBufferedEvents)

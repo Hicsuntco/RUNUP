@@ -114,8 +114,15 @@ final class SubscriptionService {
     /// La décision vit dans `Entitlement`, sous test, plutôt qu'ici où elle serait mêlée à
     /// StoreKit et invérifiable autrement qu'en achetant vraiment un abonnement.
     func unlocks(_ feature: PlusFeature) -> Bool {
-        Entitlement.unlocks(feature, isSubscribed: isSubscribed, canSell: canSell,
-                            estAdmin: estAdmin)
+        // En démonstration, tout est ouvert : une capture de l'App Store doit montrer le
+        // produit, pas son verrou. « Un plan qui s'adapte » surmontait un graphique FLOUTÉ.
+        //
+        // Ici et pas dans `Entitlement` : là-bas vivent les règles du droit d'accès, qui
+        // décident pour de vraies personnes et se testent comme telles. Le mode démonstration
+        // n'est pas une règle de droit, c'est l'absence de StoreKit dans un simulateur.
+        if Demonstration.enCours { return true }
+        return Entitlement.unlocks(feature, isSubscribed: isSubscribed, canSell: canSell,
+                                   estAdmin: estAdmin)
     }
 
     /// Un compte de la maison, tel que le SERVEUR l'a dit.

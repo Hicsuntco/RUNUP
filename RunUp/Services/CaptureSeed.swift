@@ -85,6 +85,14 @@ enum CaptureSeed {
         // Les chiffres du jour. Ils ne viennent pas d'Apple Santé ici — personne n'a marché dans
         // un simulateur — donc ils sont posés directement, aux valeurs d'une vraie journée
         // ordinaire : les anneaux de « Ta journée » doivent être bien remplis sans l'être tous.
+        // LA DATE DE REMISE À ZÉRO, D'ABORD — sinon les trois lignes qui suivent ne valent rien.
+        //
+        // `refreshProgramForCurrentDate`, appelée dès que la scène devient active, passe par
+        // `resetDailyGoalsIfNewDay` : si `lastDailyResetDay` n'est pas aujourd'hui, elle remet
+        // `runValue`, `stepsToday` et `activeCaloriesToday` à zéro. C'est exactement ce qui est
+        // arrivé — l'accroche « Trois objectifs par jour » surmontait trois zéros, et l'anneau
+        // de l'accueil affichait 0/3 sur un profil qui venait de poser 9 240 pas.
+        profil.lastDailyResetDay = Calendar.current.startOfDay(for: maintenant)
         profil.runValue = 8.4
         // Deux anneaux pleins et un presque : une journée qui respire, et qui laisse voir à quoi
         // sert l'écran. Trois anneaux pleins ne montrent plus l'écart entre fait et à faire.
@@ -171,6 +179,17 @@ enum CaptureSeed {
 
         etat.cachedClubBoard = try? decodeur.decode(ClubBoard.self, from: Data(tableau.utf8))
         etat.cachedClubFeed = try? decodeur.decode([FeedItem].self, from: Data(fil.utf8))
+
+        // Le cache ne suffit pas : `ClubView` affiche son écran de connexion AVANT de le
+        // regarder. Une session de démonstration ouvre la porte ; elle ne vaut que pour ce
+        // processus, n'est pas rangée dans le trousseau, et ne sert jamais à parler au serveur —
+        // `loadIfSignedIn` ne l'appelle pas en démonstration.
+        //
+        // Le XP est celui du profil et celui du classement : trois nombres identiques, trois
+        // endroits, et c'est la seule capture où l'incohérence se verrait d'un coup d'œil.
+        etat.auth.poserUneSessionDeDemonstration(
+            AuthenticatedUser(id: "1", name: "Charlotte", xpTotal: 4_180, referralCode: "CHARLOTTE")
+        )
     }
 
     /// Une conversation courte, et qui montre ce que le coach sait faire : il a LU les séances.

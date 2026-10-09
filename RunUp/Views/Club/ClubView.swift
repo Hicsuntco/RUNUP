@@ -1214,6 +1214,16 @@ struct ClubView: View {
         if let cachedFeed = appState.cachedClubFeed {
             feed = cachedFeed
         }
+        // EN DÉMONSTRATION, LE CACHE EST TOUT.
+        //
+        // Il n'y a pas de serveur en face d'un simulateur : les trois requêtes ci-dessous
+        // échoueraient, et l'écran afficherait une ligne d'erreur en rose sous le classement —
+        // dans la capture, en bonne place. Le club posé par `CaptureSeed` est déjà là, complet ;
+        // il n'y a rien à aller chercher. Voir `Demonstration`.
+        if Demonstration.enCours {
+            isLoading = false
+            return
+        }
         errorMessage = nil
         // These three requests used to run one after another (refreshMe → fetchBoard → feed),
         // each paying its own network/cold-start latency on top of the last — the real cause of

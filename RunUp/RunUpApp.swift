@@ -109,6 +109,9 @@ private struct RootView: View {
                 // y réveiller un faux profil. Voir `CaptureSeed`.
                 #if DEBUG
                 if CaptureSeed.demande {
+                    // En PREMIER, avant la moindre vue : trois services consultent ce drapeau
+                    // dès leur première question. Voir `Demonstration`.
+                    Demonstration.commencer()
                     // Santé est coupée AVANT que quoi que ce soit ne la touche : la construction
                     // des captures n'est pas signée, donc elle n'a pas le droit HealthKit, et le
                     // premier appel tuait le processus. Voir `HealthKitService.desactiver()`.

@@ -13,7 +13,7 @@ const REPORT_TARGET_TYPES = new Set(['user', 'club', 'activity', 'comment', 'rou
 
 module.exports = withErrorHandling(async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
-  const userId = await requireAuth(req);
+  const userId = await requireAuth(req, res);
   if (!userId) return res.status(401).json({ error: 'unauthorized' });
 
   switch (req.query.action) {

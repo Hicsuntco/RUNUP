@@ -169,3 +169,96 @@ SELECT etape, personnes FROM (
   FROM events WHERE name = 'paywall_products_unavailable' AND created_at > now() - interval '90 days'
 ) f
 ORDER BY rang;
+
+
+-- ═════════════════════════════════════════════════════════════════════════════════════════════
+-- 0. D'ABORD : RETIRER LA LIGNE DE SYNTHÈSE
+-- ═════════════════════════════════════════════════════════════════════════════════════════════
+--
+-- Numéroté zéro parce qu'il passe AVANT les autres, et pas par ordre d'importance : cette ligne
+-- fausse la réponse de tous les blocs ci-dessus.
+--
+-- `00000000-0000-4000-8000-000000000000` n'est pas un identifiant que l'app produit. C'est un
+-- `anonymous_id` posé à la main pour éprouver les requêtes de ce fichier — un jeu d'essai dont la
+-- réponse était connue d'avance, inséré en production parce que c'est là que les requêtes
+-- tournent. Il a fait son travail, et il compte désormais comme une personne dans chaque
+-- `COUNT(DISTINCT …)`.
+--
+-- Sur une base jeune, une personne inventée sur dix déplace un pourcentage de dix points.
+--
+-- Regarder d'abord ce qui va partir : on ne supprime pas en production sans avoir lu.
+SELECT name, COUNT(*) AS lignes, MIN(created_at)::date AS premiere, MAX(created_at)::date AS derniere
+FROM events
+WHERE anonymous_id = '00000000-0000-4000-8000-000000000000'
+GROUP BY 1
+ORDER BY 1;
+
+-- Puis supprimer. Vérifié sur un jeu d'essai contenant deux lignes de synthèse (un conseil météo
+-- et une étape d'onboarding) parmi huit lignes réelles : rend bien `DELETE 2`, et le bloc 5
+-- ci-dessous repasse de 4 personnes à 3.
+DELETE FROM events WHERE anonymous_id = '00000000-0000-4000-8000-000000000000';
+
+
+-- ═════════════════════════════════════════════════════════════════════════════════════════════
+-- 5. iOS RÉVEILLE-T-IL VRAIMENT L'APP POUR LA MÉTÉO
+-- ═════════════════════════════════════════════════════════════════════════════════════════════
+--
+-- LA question que le conseil météo de la veille laisse ouverte, et elle ne se répond pas en
+-- relisant le code.
+--
+-- Le conseil doit arriver LA VEILLE au soir, pour qu'on puisse organiser son lendemain. Donner
+-- cette information le matin même ne sert plus à rien : la journée est déjà prise. Or une app iOS
+-- ne décide pas de s'exécuter : elle demande un réveil (`BGAppRefreshTask`) et le système accorde
+-- ou n'accorde pas, selon la batterie, l'habitude d'usage et son humeur propre. Personne ne peut
+-- l'affirmer depuis le code — et un simulateur, qui accorde tout, prouve le contraire de ce qu'on
+-- cherche.
+--
+-- D'où la distinction portée par l'événement : `source = 'background'` est un conseil envoyé par
+-- un réveil système, `source = 'app'` un conseil envoyé parce que quelqu'un a ouvert l'app. Seule
+-- la première colonne dit que la fonctionnalité existe.
+--
+-- COMMENT LIRE, dans cet ordre :
+--
+-- 1. **Pas de ligne `background` du tout** → iOS ne réveille jamais l'app. La fonctionnalité
+--    s'est silencieusement réduite à « quand tu ouvres l'app », c'est-à-dire exactement ce
+--    qu'elle existait pour dépasser. Il faut alors changer de mécanisme, pas attendre.
+-- 2. **Une ligne `background`, mais `pour_demain` à zéro** → les réveils arrivent, mais jamais
+--    dans la fenêtre du soir. C'est le créneau de `WeatherBackgroundRefresh.prochainReveil` qu'il
+--    faut déplacer, pas le mécanisme.
+-- 3. **`jours` bien plus petit que le nombre de jours écoulés** → les réveils sont accordés, mais
+--    rarement. Le conseil de la veille devient une loterie, et c'est pire qu'une absence : on
+--    apprend à ne pas compter dessus.
+--
+-- Il faut quelques jours de données : un réveil par jour au mieux, et iOS met du temps à
+-- apprendre les habitudes d'une app neuve. Une lecture faite le lendemain du déploiement ne
+-- prouve rien.
+--
+-- Vérifié sur un jeu d'essai à réponse connue — 4 conseils par ouverture sur 3 jours pour 3
+-- personnes dont 2 pour demain, et 3 conseils par réveil sur 3 jours pour 2 personnes dont 2
+-- pour demain : rend exactement ça.
+SELECT COALESCE(props->>'source', '(absente)')                   AS origine,
+       COUNT(DISTINCT COALESCE(user_id::text, anonymous_id))      AS personnes,
+       COUNT(*)                                                   AS annonces,
+       COUNT(DISTINCT created_at::date)                           AS jours,
+       COUNT(*) FILTER (WHERE props->>'target' = 'tomorrow')      AS pour_demain,
+       MIN(created_at)::date                                      AS premiere,
+       MAX(created_at)::date                                      AS derniere
+FROM events
+WHERE name = 'weather_advice_sent'
+  AND created_at > now() - interval '90 days'
+GROUP BY 1
+ORDER BY 1;
+
+-- Et le détail de ce que les réveils ont envoyé, quand il y en a. `nature` dit si le conseil de
+-- la veille a tenu : `advice` est un premier conseil, `amended` une rectification de dernière
+-- minute, `cancelled` un démenti. Une majorité de `amended` et `cancelled` sur `background`
+-- voudrait dire que la prévision de la veille au soir n'est pas assez fiable pour être annoncée
+-- aussi tôt — un résultat qu'aucune relecture de code ne donnera.
+SELECT COALESCE(props->>'source', '(absente)') AS origine,
+       COALESCE(props->>'nature', '(absente)') AS nature,
+       COUNT(*)                                AS annonces
+FROM events
+WHERE name = 'weather_advice_sent'
+  AND created_at > now() - interval '90 days'
+GROUP BY 1, 2
+ORDER BY 1, 2;

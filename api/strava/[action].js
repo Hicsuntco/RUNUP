@@ -7,7 +7,7 @@ const { withErrorHandling } = require('../../lib/http');
 const { exchangeCodeForTokens, validAccessToken, fetchRecentRuns } = require('../../lib/strava');
 
 module.exports = withErrorHandling(async function handler(req, res) {
-  const userId = await requireAuth(req);
+  const userId = await requireAuth(req, res);
   if (!userId) return res.status(401).json({ error: 'unauthorized' });
 
   switch (req.query.action) {

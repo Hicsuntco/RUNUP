@@ -203,7 +203,7 @@ module.exports = withErrorHandling(async function handler(req, res) {
   // anonymous use). Fails open on a DB hiccup — a broken rate limiter should degrade to "coach
   // still works", not "coach is down".
   try {
-    const userId = await requireAuth(req).catch(() => null);
+    const userId = await requireAuth(req, res).catch(() => null);
     const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
     const key = userId ? `u:${userId}` : `ip:${ip}`;
     const { rows } = await sql`

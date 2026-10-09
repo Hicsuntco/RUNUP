@@ -42,6 +42,12 @@ const KNOWN_EVENTS = new Set([
   // `AppScreen.rawValue` — une quinzaine de valeurs possibles, donc agrégeable, sans identifiant
   // de contenu ni durée.
   'screen_viewed',
+  // Un message météo parti. Sa propriété `source` distingue l'ouverture de l'app d'un réveil en
+  // arrière-plan accordé par iOS — et c'est le SEUL moyen de savoir si ces réveils se produisent :
+  // iOS décide seul, ne le signale pas, et ne s'en explique jamais. Sans ce nom ici, l'événement
+  // partirait dans le vide et la question resterait sans réponse, exactement comme l'entonnoir
+  // d'abonnement plus bas.
+  'weather_advice_sent',
   // ── CES ONZE NOMS MANQUAIENT, ET LE CLIENT LES ENVOYAIT DEPUIS DES MOIS ──────────────────────
   //
   // Le commentaire en tête de cette liste dit qu'ajouter un nom est « un acte délibéré ». C'est
@@ -74,6 +80,11 @@ const KNOWN_EVENTS = new Set([
   // rejoint. Voir `Analytics.EventName.clubActionTaken` : sa prop unique `kind` est prise dans
   // une liste fermée de huit valeurs, sans identifiant d'activité, d'itinéraire ni de personne.
   'club_action_taken',
+  // Une vidéo de course fabriquée. La seule question que cette fonctionnalité pose : est-ce que
+  // quelqu'un s'en sert ? Elle coûte une douzaine de secondes de calcul sur le téléphone et un
+  // bouton de plus sur l'écran de fin de course — deux choses qu'on retire sans regret si la
+  // réponse est non. Sa prop unique (`discipline`) vaut « run », « bike » ou « trail ».
+  'run_video_made',
 ]);
 
 // A real day of heavy use is a few dozen events across a handful of flushes; the client also caps
@@ -95,7 +106,7 @@ module.exports = withErrorHandling(async function handler(req, res) {
   // Optional on purpose (see the file header) — `null` here is a normal, expected pre-signup
   // caller, not a rejection. `.catch` mirrors api/coach.js: a JWKS/DB hiccup while verifying must
   // degrade this call to anonymous, never 500 it.
-  const userId = await requireAuth(req).catch(() => null);
+  const userId = await requireAuth(req, res).catch(() => null);
 
   // Same key shape as the coach's limiter: the account when there is one, the caller's IP
   // otherwise, since anonymous use is the point of this endpoint. Fails open (see

@@ -10,7 +10,7 @@ const { underDailyCap } = require('../../lib/rateLimit');
 const { containsObjectionableContent } = require('../../lib/moderation');
 
 module.exports = withErrorHandling(async function handler(req, res) {
-  const userId = await requireAuth(req);
+  const userId = await requireAuth(req, res);
   if (!userId) return res.status(401).json({ error: 'unauthorized' });
 
   switch (req.query.action) {

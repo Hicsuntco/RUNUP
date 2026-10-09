@@ -9,7 +9,7 @@ const { sendPushToUsers } = require('../../lib/apns');
 const { underDailyCap } = require('../../lib/rateLimit');
 
 module.exports = withErrorHandling(async function handler(req, res) {
-  const userId = await requireAuth(req);
+  const userId = await requireAuth(req, res);
   if (!userId) return res.status(401).json({ error: 'unauthorized' });
 
   switch (req.query.action) {

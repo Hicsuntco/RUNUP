@@ -52,13 +52,30 @@ struct MoreSettingsView: View {
                         accountCard
                     }
 
-                    // LA FICHE DE LA MAISON, ET UNIQUEMENT POUR LA MAISON.
+                    // LA FICHE DE LA MAISON, ET PRESQUE UNIQUEMENT POUR LA MAISON.
                     //
-                    // La condition est `isAdmin`, qui vient du SERVEUR. Montrer cette entrée à
-                    // tout le monde serait sans danger — la fiche ne commande rien — mais elle
-                    // parle de variables d'environnement et de listes d'adresses, c'est-à-dire
-                    // d'un sujet qui n'existe pas pour qui se contente de courir.
-                    if appState.auth.currentUser?.isAdmin == true {
+                    // La condition était `isAdmin` seul, et c'était un cercle fermé : la fiche
+                    // existe pour afficher l'ADRESSE QUE LE SERVEUR VOIT — la seule à inscrire
+                    // dans `RUNUP_ADMIN_EMAILS`, parce que « Se connecter avec Apple » peut
+                    // l'avoir créée sous un `…@privaterelay.appleid.com` que personne ne devine.
+                    // Mais on ne pouvait l'ouvrir qu'une fois déjà dans la liste. Deux de ses
+                    // trois états — « aucune liste » et « pas dans la liste » — étaient donc
+                    // inatteignables, y compris celui qui explique quoi faire.
+                    //
+                    // Seconde condition : tant qu'AUCUNE liste n'existe côté serveur. Cette
+                    // fenêtre se referme d'elle-même à la minute où la variable est posée, et
+                    // elle est sans danger pendant qu'elle dure — la fiche ne commande rien,
+                    // elle lit. Ce qu'elle coûte, c'est une entrée hors sujet dans les réglages
+                    // de qui se contente de courir, et seulement avant la toute première
+                    // configuration.
+                    //
+                    // « Pas dans la liste » reste inatteignable depuis ici, et c'est voulu :
+                    // à ce moment-là une liste existe, et personne hors de la maison n'a à lire
+                    // comment on y entre. Le cas « j'ai inscrit la mauvaise adresse et je suis
+                    // dehors » n'est pas pour autant sans issue : l'adresse que le serveur voit
+                    // est affichée dans la carte « Compte » juste au-dessus, pour tout le monde.
+                    if appState.auth.currentUser?.isAdmin == true
+                        || appState.auth.currentUser?.adminListConfigured == false {
                         sectionTitle("La maison")
                         adminCard
                     }
@@ -517,6 +534,30 @@ struct MoreSettingsView: View {
                 }
                 .padding(.horizontal, 14).padding(.vertical, 13)
                 Divider().background(RUColor.line)
+                // L'ADRESSE DU COMPTE, TELLE QUE LE SERVEUR LA VOIT.
+                //
+                // Ce n'est pas un détail d'administration : avec « Se connecter avec Apple »,
+                // on peut choisir de MASQUER son adresse, et le compte est alors créé sous un
+                // `…@privaterelay.appleid.com` que personne ne connaît. Deux téléphones, deux
+                // façons de se connecter, et on se retrouve avec deux comptes sans savoir
+                // lequel est lequel — c'est exactement ce qui est arrivé sur Hukaia.
+                //
+                // L'app ne la demande qu'à l'inscription et ne la remontre jamais. Elle est
+                // affichée ici parce que c'est la seule réponse à « sous quel compte suis-je ? »,
+                // et sélectionnable parce qu'on a parfois besoin de la recopier.
+                if let adresse = user.email, !adresse.isEmpty {
+                    HStack(alignment: .firstTextBaseline) {
+                        rowIcon("envelope")
+                        Text(verbatim: adresse)
+                            .font(RUFont.mono(13)).foregroundColor(RUColor.text2)
+                            .textSelection(.enabled)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 14).padding(.vertical, 13)
+                    Divider().background(RUColor.line)
+                }
             }
             identityEditor
             Divider().background(RUColor.line)

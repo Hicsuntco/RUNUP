@@ -164,6 +164,10 @@ struct TabBarView: View {
         case .run: return "Démarrer une course"
         case .bike: return "Démarrer une sortie vélo"
         case .trail: return "Démarrer une sortie trail"
+        // Inatteignable : le cadran ne propose que `Discipline.demarrables`, et la nage n'en est
+        // pas. Le libellé est juste quand même — une phrase fausse posée « en attendant » est
+        // celle que VoiceOver finit par lire un jour.
+        case .swim: return "Démarrer une nage"
         }
     }
 

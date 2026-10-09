@@ -37,6 +37,21 @@ enum Calories {
     /// grandeur.
     static let perCyclingMinute: Double = 9
 
+    /// EN BASSIN, LA DISTANCE EST ENCORE PLUS TROMPEUSE QU'À VÉLO.
+    ///
+    /// À vélo, c'est le terrain qui fausse le kilomètre. En natation, c'est la TECHNIQUE : deux
+    /// personnes qui nagent le même kilomètre en quarante minutes n'ont pas fourni le même
+    /// effort du tout, et celle qui nage mal en fournit beaucoup plus. Un tarif au kilomètre
+    /// donnerait le même chiffre aux deux, et il serait faux pour les deux.
+    ///
+    /// Dix kcal la minute : la natation est l'une des activités les plus coûteuses à la minute,
+    /// au-dessus du vélo de loisir. Aussi approximatif que le reste de ce fichier, et assumé —
+    /// mais approximatif sur la bonne grandeur.
+    ///
+    /// Et en pratique, cette estimation ne sert presque jamais pour une nage : une nage arrive
+    /// par Apple Santé, qui porte déjà les kilocalories mesurées au poignet. C'est le repli, pas
+    /// la mesure.
+
     /// La règle, par discipline. `durationMinutes` n'est plus un dernier recours à vélo : c'est
     /// la mesure principale.
     static func estimate(_ discipline: Discipline, distanceKm: Double, durationMinutes: Int) -> Double {
@@ -53,6 +68,8 @@ enum Calories {
         // pour ne pas être absurde (voir l'en-tête du fichier) ; la rendre plus fine est un
         // chantier à part, qui se fait entier ou pas du tout.
         case .trail: return estimate(distanceKm: distanceKm, durationMinutes: durationMinutes)
+        // Comme le vélo : la durée, pas la distance. Voir `perSwimmingMinute` juste au-dessus.
+        case .swim: return Double(durationMinutes) * perSwimmingMinute
         }
     }
 

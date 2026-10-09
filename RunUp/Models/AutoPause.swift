@@ -81,6 +81,19 @@ enum AutoPause {
                 // fiable des deux, puisque `CLLocation.speed` est justement ce qui devient
                 // indisponible sous le couvert.
                 return Seuils(pause: 0.3, reprise: 1.0, eloignement: AutoPause.resumeDisplacementMeters)
+            case .swim:
+                // AUCUNE PAUSE AUTOMATIQUE, ET C'EST ÉCRIT DANS LES NOMBRES.
+                //
+                // La pause se décide sur la vitesse GPS, et il n'y a pas de GPS sous l'eau :
+                // aucun chemin de l'app n'atteint cette branche, puisque la natation ne se
+                // démarre pas depuis le téléphone (voir `Discipline.seDemarreDepuisLeTelephone`).
+                //
+                // Elle doit répondre quand même, et la réponse juste est « jamais ». Un seuil de
+                // reprise infini n'arme jamais la règle — `tick` exige `speed > reprise` avant de
+                // compter quoi que ce soit — donc elle rend toujours faux. Rendre les seuils de
+                // la course aurait été plus court et faux : si cette branche devenait un jour
+                // atteignable, elle mettrait une nageuse en pause toutes les cinq secondes.
+                return Seuils(pause: 0, reprise: .infinity, eloignement: .infinity)
             }
         }
     }

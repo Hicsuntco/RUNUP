@@ -7375,6 +7375,22 @@
         }
       }
     },
+    "Démarrer une nage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start a swim"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar una natación"
+          }
+        }
+      }
+    },
     "Démarrer une sortie trail": {
       "extractionState": "manual",
       "localizations": {

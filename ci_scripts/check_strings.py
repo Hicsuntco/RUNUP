@@ -104,6 +104,56 @@ def lire_litteral(ligne: str, debut: int):
     return None
 
 
+# Un membre dont le TYPE est `LocalizedStringKey` : ses littéraux sont des clés, sans qu'aucun
+# `Text("…")` ni `String(localized:)` n'apparaisse.
+_CLE_LOCALISEE = re.compile(
+    r"^\s*(?:private\s+|static\s+|public\s+|internal\s+)*"
+    r"(?:var\s+\w+\s*:\s*LocalizedStringKey|func\s+\w+\s*\([^)]*\)\s*->\s*LocalizedStringKey)\s*\{")
+
+
+def litteraux_des_cles_localisees(source: str):
+    """Les littéraux posés dans un membre de type `LocalizedStringKey` : `(ligne, clé)`.
+
+    # LA TROISIÈME ZONE AVEUGLE DE CE CONTRÔLE
+
+    `OUVERTURES` cherche `Text("…")`, `String(localized: "…")` et `LocalizedStringKey("…")`. Mais
+    un `switch` dans `var startLabel: LocalizedStringKey` rend ses libellés en littéraux NUS :
+
+        case .trail: return "Démarrer une sortie trail"
+
+    C'est bien une clé du catalogue — SwiftUI la résout comme telle — et aucun des trois motifs ne
+    la voit. Les trois libellés de ce membre-là n'y étaient que parce que celui qui les a écrits
+    s'en est souvenu ; le quatrième, non, et rien ne l'a signalé.
+
+    On lit donc le corps de ces membres par équilibre d'accolades, et tout littéral qui s'y trouve
+    compte. `lire_litteral` et pas une expression régulière, pour la même raison qu'ailleurs : une
+    interpolation peut contenir sa propre chaîne.
+    """
+    lignes = source.split("\n")
+    trouves = []
+    i = 0
+    while i < len(lignes):
+        if not _CLE_LOCALISEE.match(lignes[i]):
+            i += 1
+            continue
+        profondeur = 0
+        for n in range(i, len(lignes)):
+            nue = lignes[n].strip()
+            if not nue.startswith("//"):
+                for m in re.finditer(r'"', lignes[n]):
+                    lu = lire_litteral(lignes[n], m.end())
+                    if lu is not None:
+                        trouves.append((n + 1, deswiftifie(lu[0])))
+                        break
+                profondeur += lignes[n].count("{") - lignes[n].count("}")
+            if n > i and profondeur <= 0:
+                i = n + 1
+                break
+        else:
+            break
+    return trouves
+
+
 def cles_du_catalogue():
     data = json.loads(CATALOGUE.read_text(encoding="utf-8"))
     return set(data["strings"].keys())
@@ -231,6 +281,16 @@ def main() -> int:
                                 continue
                         chemin = f.relative_to(RACINE)
                         manquantes.append((f"{chemin}:{n}", cle))
+            # Et les membres typés `LocalizedStringKey`, que les trois ouvertures ne voient pas.
+            for n, cle in litteraux_des_cles_localisees(texte):
+                fixe = "".join(morceaux_fixes(cle))
+                if not any(c.isalpha() for c in fixe) or cle in cles:
+                    continue
+                if "\\(" in cle:
+                    motif = motif_de(cle)
+                    if any(motif.match(k) and SUBSTITUANT.search(k) for k in cles):
+                        continue
+                manquantes.append((f"{f.relative_to(RACINE)}:{n}", cle))
 
     if not manquantes:
         print(f"Catalogue : {len(cles)} clés, aucune chaîne affichée n'en manque.")

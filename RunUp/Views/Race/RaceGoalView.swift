@@ -7,9 +7,30 @@ struct RaceGoalView: View {
     @Environment(AppState.self) private var appState
     private var profile: UserProfile { appState.profile }
     @State private var jourJOuvert = false
+    @State private var jourJTriathlonOuvert = false
 
     private var shape: AdaptivePlanEngine.ProgramShape {
         AdaptivePlanEngine.ProgramShape.compute(goal: profile.goalId, raceDate: profile.raceDate, from: profile.programStartDate ?? .now)
+    }
+
+    private var formatDuTriathlon: TriathlonFormat? {
+        profile.triathlonFormat.flatMap(TriathlonFormat.init(rawValue:))
+    }
+
+    /// Le temps visé d'un triathlon, en minutes.
+    ///
+    /// Lu ICI et pas par `PaceModel.parseChronoSeconds` : celui-là décide de l'unité d'après la
+    /// DISTANCE de course, et un triathlon n'en a pas — `raceDistance` est nil pour cet objectif.
+    /// Il aurait donc lu « 2:35 » comme deux minutes trente-cinq.
+    ///
+    /// Le format est toujours « H:MM », celui des quatre jeux de temps de finisseur. Tout le
+    /// reste — « finir », un texte libre mal formé — rend zéro, et l'écran se tait au lieu
+    /// d'afficher des totaux calculés sur rien.
+    private var minutesVisees: Int {
+        guard let chrono = profile.raceChrono else { return 0 }
+        let bouts = chrono.split(separator: ":").compactMap { Int($0) }
+        guard bouts.count == 2, bouts[0] >= 0, (0..<60).contains(bouts[1]) else { return 0 }
+        return bouts[0] * 60 + bouts[1]
     }
 
     /// Real target pace (seconds/km) implied by the goal chrono over the goal distance — falls
@@ -233,6 +254,33 @@ struct RaceGoalView: View {
                         }
                         .buttonStyle(PressableStyle())
                     }
+                    // LA MÊME PORTE POUR LE TRIATHLON, et pour la même raison : le plan dit quoi
+                    // faire cette semaine, et rien de la JOURNÉE. Un triathlon se perd au ventre
+                    // — on ne mange pas dans l'eau, et tout ce qu'il faudra pour la course se
+                    // prend sur le vélo — et en transition, qui pèse près d'un dixième d'un
+                    // format court.
+                    if profile.goalId == .triathlon, let format = formatDuTriathlon {
+                        Button { jourJTriathlonOuvert = true } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "list.bullet.clipboard")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(RUColor.violet)
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text("Ravitaillement, transitions, combinaison")
+                                        .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                                    Text("Ce que le plan ne te dit pas, et qui décide autant")
+                                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
+                                }
+                                Spacer(minLength: 0)
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 13, weight: .semibold)).foregroundColor(RUColor.text3)
+                            }
+                            .padding(RUSpacing.cardPadding)
+                            .ruCard()
+                        }
+                        .buttonStyle(PressableStyle())
+                        .accessibilityHint(Text(format.resume))
+                    }
                 } else {
                     RUCardHeader(icon: "speedometer", tint: RUColor.rose2, title: "Stratégie d'allure · jour J")
                     VStack(spacing: 6) {
@@ -262,6 +310,12 @@ struct RaceGoalView: View {
         .sheet(isPresented: $jourJOuvert) {
             UltraRaceDaySheet(tempsDeffortSecondes: AdaptivePlanEngine.tempsDeffortCourse(profile))
                 .runUpSheetStyle()
+        }
+        .sheet(isPresented: $jourJTriathlonOuvert) {
+            if let format = formatDuTriathlon {
+                TriathlonRaceDaySheet(format: format, minutesVisees: minutesVisees)
+                    .runUpSheetStyle()
+            }
         }
     }
 

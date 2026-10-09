@@ -4892,6 +4892,23 @@
         }
       }
     },
+    "Ce qui se prépare, en revanche : nager dedans avant le jour J. Elle serre, elle gêne la respiration, et elle change la position dans l'eau. Et l'enlever vite s'apprend — c'est la moitié de T1.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What you can prepare: swimming in it before race day. It's tight, it restricts your breathing, and it changes your position in the water. And taking it off fast is a skill — it's half of T1."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo que sí se prepara: nadar con él antes del día de la carrera. Aprieta, dificulta la respiración, y cambia la posición en el agua. Y quitárselo rápido se aprende — es la mitad de T1."
+          }
+        }
+      }
+    },
     "Ce signalement sera examiné. Merci de préciser ce qui pose problème.": {
       "localizations": {
         "en": {
@@ -7069,6 +7086,23 @@
         }
       }
     },
+    "Deux minutes gagnées là, c'est deux minutes de chrono sans un battement de cœur de plus. Pose ton matériel dans l'ordre où tu le prendras, répète-le une fois, et tu ne chercheras rien le jour J.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Two minutes saved there are two minutes off the clock without a single extra heartbeat. Lay your kit out in the order you'll pick it up, rehearse it once, and you'll be hunting for nothing on race day."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dos minutos ganados ahí son dos minutos de crono sin un latido más. Coloca tu material en el orden en que lo cogerás, ensáyalo una vez, y no buscarás nada el día de la carrera."
+          }
+        }
+      }
+    },
     "Dim": {
       "extractionState": "manual",
       "localizations": {
@@ -7883,6 +7917,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Desaparecerá del muro del club, junto con sus aplausos y comentarios. Tu XP se mantiene."
+          }
+        }
+      }
+    },
+    "Elle est obligatoire en dessous d'une certaine température d'eau, et INTERDITE au-dessus d'une autre. Les deux seuils dépendent de la fédération, du format et de l'année : ils se lisent au briefing, et nulle part ailleurs.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It is mandatory below a certain water temperature, and BANNED above another. Both thresholds depend on the federation, the format and the year: you read them at the race briefing, and nowhere else."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es obligatorio por debajo de cierta temperatura del agua, y PROHIBIDO por encima de otra. Ambos umbrales dependen de la federación, el formato y el año: se leen en el briefing, y en ningún otro sitio."
           }
         }
       }
@@ -8963,6 +9014,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "G DE CARBOHIDRATOS / H"
+          }
+        }
+      }
+    },
+    "G DE GLUCIDES SUR LE VÉLO": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "G OF CARBS ON THE BIKE"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "G DE CARBOHIDRATOS EN LA BICI"
           }
         }
       }
@@ -10529,6 +10597,23 @@
         }
       }
     },
+    "La combinaison": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The wetsuit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El neopreno"
+          }
+        }
+      }
+    },
     "La distance ET le dénivelé — c'est le second qui décide du plan.": {
       "extractionState": "manual",
       "localizations": {
@@ -10642,6 +10727,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "El tiempo ha cambiado"
+          }
+        }
+      }
+    },
+    "La natation ne permet aucun ravitaillement, et la combinaison comprime l'estomac. Ta nutrition commence à la sortie de l'eau — alors qu'une partie de l'effort est déjà faite.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swimming allows no fuelling at all, and the wetsuit compresses your stomach. Your nutrition starts when you leave the water — with part of the effort already behind you."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La natación no permite ninguna alimentación, y el neopreno comprime el estómago. Tu nutrición empieza al salir del agua — con parte del esfuerzo ya hecho."
           }
         }
       }
@@ -11201,6 +11303,23 @@
         }
       }
     },
+    "Le vélo prend à peu près la moitié de la journée — plus que les deux autres réunies sur un format long. C'est lui qui décide de ce que tu auras dans les jambes en descendant de selle.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The bike takes roughly half the day — more than the other two combined on a long format. It decides what your legs will have left when you step off the saddle."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La bici ocupa aproximadamente la mitad del día — más que las otras dos juntas en un formato largo. Ella decide lo que te quedará en las piernas al bajarte del sillín."
+          }
+        }
+      }
+    },
     "Les %lld premiers et derniers mètres sont retirés avant l'envoi : personne ne verra d'où tu es partie ni où tu es rentrée. C'est le tracé ci-dessus qui sera publié, pas celui que tu as couru.": {
       "localizations": {
         "en": {
@@ -11311,6 +11430,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Las sesiones ya hechas no se mueven."
+          }
+        }
+      }
+    },
+    "Les transitions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transitions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las transiciones"
           }
         }
       }
@@ -11574,6 +11710,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "ML DE BEBIDA / H"
+          }
+        }
+      }
+    },
+    "ML À EMBARQUER": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ML TO CARRY"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ML PARA LLEVAR"
           }
         }
       }
@@ -13229,6 +13382,23 @@
         }
       }
     },
+    "On ne mange pas dans l'eau": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can't eat in the water"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En el agua no se come"
+          }
+        }
+      }
+    },
     "On sort courir ?": {
       "localizations": {
         "en": {
@@ -13307,6 +13477,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "¿EN QUÉ PUNTO ESTÁS?"
+          }
+        }
+      }
+    },
+    "Où passe la journée": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where the day goes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A dónde va el día"
           }
         }
       }
@@ -15812,6 +15999,23 @@
         }
       }
     },
+    "Ravitaillement, transitions, combinaison": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuelling, transitions, wetsuit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentación, transiciones, neopreno"
+          }
+        }
+      }
+    },
     "Recherche des itinéraires…": {
       "localizations": {
         "en": {
@@ -18274,6 +18478,40 @@
         }
       }
     },
+    "Sur un format court, les transitions pèsent près d'un dixième de la journée. C'est là que ce format se gagne, et c'est la seule partie qui ne coûte aucune condition physique.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On a short format, transitions are close to a tenth of the day. That's where this format is won, and it's the only part that costs no fitness at all."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En un formato corto, las transiciones pesan casi una décima parte del día. Ahí se gana este formato, y es la única parte que no cuesta ninguna condición física."
+          }
+        }
+      }
+    },
+    "Sur un format long, les transitions pèsent peu : le temps est ailleurs. Elles méritent quand même d'être répétées une fois — non pour le chrono, mais pour ne pas découvrir fatiguée qu'on a oublié quelque chose.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On a long format, transitions count for little: the time is elsewhere. They're still worth rehearsing once — not for the clock, but so you don't discover, exhausted, that you forgot something."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En un formato largo, las transiciones pesan poco: el tiempo está en otra parte. Aun así merecen ensayarse una vez — no por el crono, sino para no descubrir, agotada, que has olvidado algo."
+          }
+        }
+      }
+    },
     "Sur une estimation de **%lld h d'effort**, il te faudra **%lld à %lld g de glucides**.": {
       "localizations": {
         "en": {
@@ -18765,6 +19003,23 @@
         }
       }
     },
+    "T1 et T2": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "T1 and T2"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "T1 y T2"
+          }
+        }
+      }
+    },
     "TA DATE DE NAISSANCE ?": {
       "localizations": {
         "en": {
@@ -18873,6 +19128,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "TU RITMO IDEAL"
+          }
+        }
+      }
+    },
+    "TOUT CE QUI SERA NÉCESSAIRE POUR LA COURSE SE PREND SUR LE VÉLO. Pas idéalement : c'est la règle. À pied, après des heures de selle, l'estomac refuse presque tout — et c'est pour ça qu'on peut bien nager, bien rouler, et s'arrêter de courir.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EVERYTHING THE RUN WILL NEED IS TAKEN ON THE BIKE. Not ideally — that's the rule. On foot, after hours in the saddle, the stomach refuses almost everything — which is why you can swim well, ride well, and stop running."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TODO LO QUE NECESITARÁ LA CARRERA SE TOMA EN LA BICI. No idealmente: es la regla. A pie, tras horas en el sillín, el estómago rechaza casi todo — y por eso se puede nadar bien, pedalear bien, y dejar de correr."
           }
         }
       }
@@ -20496,6 +20768,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Trail"
+          }
+        }
+      }
+    },
+    "Transitions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transitions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transiciones"
+          }
+        }
+      }
+    },
+    "Trois choses décident d'un triathlon, et aucune n'est ton entraînement. Elles se préparent — et elles se testent à l'entraînement, jamais le jour J.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Three things decide a triathlon, and none of them is your training. They can be prepared — and they get tested in training, never on race day."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tres cosas deciden un triatlón, y ninguna es tu entrenamiento. Se preparan — y se prueban entrenando, nunca el día de la carrera."
           }
         }
       }

@@ -1658,6 +1658,16 @@ enum AdaptivePlanEngine {
         /// course plate et tout le plan d'ultra se dimensionne en kilomètres de route — le défaut
         /// exact que le kilomètre-effort existe pour corriger.
         var raceElevationGainM: Int? = nil
+        /// Le format du triathlon visé, et ce qu'elle nage aujourd'hui.
+        ///
+        /// Ils manquaient, et c'est ce qui a tenu l'objectif fermé jusqu'ici : cet assistant
+        /// liste les objectifs `estProposable` exactement comme l'inscription, donc ouvrir le
+        /// triathlon l'y faisait apparaître sans ses deux questions. Le plan se serait construit
+        /// sans format — donc sans distance de natation, sans temps d'effort, et avec le niveau
+        /// de natation nul, c'est-à-dire au repli le plus prudent pour quelqu'un qui nage
+        /// peut-être très bien.
+        var triathlonFormat: String? = nil
+        var nageNiveau: String? = nil
     }
 
     // MARK: Le coach écrit dans le programme
@@ -1810,7 +1820,13 @@ enum AdaptivePlanEngine {
         // lui effacer ici aurait rendu son plan ouvert — donc sans spécifique ni affûtage.
         profile.raceDate = result.goal.periodiseVersUneDate ? result.raceDate : nil
         profile.raceElevationGainM = result.goal == .ultraTrail ? result.raceElevationGainM : nil
-        profile.goalDisplay = goalDisplay(goal: result.goal, distance: result.distance, custom: nil, chrono: result.chrono, denivele: profile.raceElevationGainM)
+        // EFFACÉS QUAND L'OBJECTIF N'EST PLUS UN TRIATHLON, comme le dénivelé juste au-dessus.
+        // Passer d'un triathlon à un 10 km en laissant « olympique » derrière ferait lire au
+        // moteur un format qui ne décrit plus rien — et `goalDisplay` afficherait « 10 km »
+        // au-dessus d'un plan dimensionné sur une épreuve abandonnée.
+        profile.triathlonFormat = result.goal == .triathlon ? result.triathlonFormat : nil
+        profile.nageNiveau = result.goal == .triathlon ? result.nageNiveau : nil
+        profile.goalDisplay = goalDisplay(goal: result.goal, distance: result.distance, custom: nil, chrono: result.chrono, denivele: profile.raceElevationGainM, triathlonFormat: profile.triathlonFormat)
         profile.runningDays = result.runningDays
         profile.preferredLongRunDay = result.runningDays.max()
         profile.programPhase = .active

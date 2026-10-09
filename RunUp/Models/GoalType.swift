@@ -63,20 +63,27 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
     /// corriger, servi sous le nom qui promet le contraire. Mieux vaut un objectif absent qu'un
     /// objectif qui ment, donc il était retenu ici.
     ///
-    /// LE TRIATHLON EST RETENU ICI, ET C'EST LE ROBINET QUI SERT.
+    /// LE TRIATHLON EST OUVERT, ET VOICI CE QUI DEVAIT ÊTRE VRAI AVANT.
     ///
-    /// Il est livré en six temps : la natation comme discipline, l'import depuis la montre, la
-    /// saisie à la main, cet objectif et ses quatre formats, les séances — dont l'enchaînement
-    /// vélo→course —, puis les garde-fous. Le choisir maintenant donnerait un plan de COURSE
-    /// portant le nom « triathlon » : aucune natation, aucun vélo, aucune transition, et
+    /// Il est arrivé en six temps, et il est resté retenu ici pendant cinq d'entre eux : la
+    /// natation comme discipline, l'import depuis la montre, la saisie à la main, l'objectif et
+    /// ses quatre formats, les séances. Le choisir avant la cinquième aurait donné un plan de
+    /// COURSE portant le nom « triathlon » — aucune natation, aucun vélo, aucune transition, et
     /// trois quarts de la préparation absents sans qu'une seule ligne ne le signale.
     ///
-    /// Mieux vaut un objectif absent qu'un objectif qui ment. Il s'ouvrira en 6/6, quand le plan
-    /// contiendra vraiment les trois disciplines.
+    /// Il s'ouvre maintenant parce que les deux surfaces qui le proposent savent demander son
+    /// format ET le niveau de natation : l'inscription et l'assistant de nouvel objectif. La
+    /// seconde était le piège — elle lit cette propriété exactement comme la première, donc
+    /// ouvrir l'objectif l'y faisait apparaître sans ses deux questions. Un test le réclamait,
+    /// et c'est en le faisant échouer qu'on a su qu'il fallait reprendre l'assistant.
+    ///
+    /// Le robinet reste. C'est par lui que passera le prochain objectif construit par morceaux,
+    /// et une liste qui se filtre dit à qui la lit qu'un objectif peut exister dans le modèle
+    /// sans être encore offert.
     var estProposable: Bool {
         switch self {
-        case .race, .progress, .restart, .weight, .health, .hyrox, .ultraTrail: return true
-        case .triathlon: return false
+        case .race, .progress, .restart, .weight, .health, .hyrox, .ultraTrail, .triathlon:
+            return true
         }
     }
 
@@ -104,6 +111,27 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         // l'enchaînement vélo→course est la dernière chose à relâcher.
         case .race, .hyrox, .ultraTrail, .triathlon: return true
         case .progress, .restart, .weight, .health: return false
+        }
+    }
+
+    /// LE NOMBRE MINIMAL DE JOURS PAR SEMAINE QUE CET OBJECTIF EXIGE.
+    ///
+    /// Deux pour tout ce qui se court : c'est peu, et c'est assumé — quelqu'un qui ne peut donner
+    /// que deux séances mérite un plan plutôt qu'un refus.
+    ///
+    /// TROIS POUR LE TRIATHLON, et ce n'est pas une préférence. Une semaine à deux jours ne peut
+    /// pas contenir trois disciplines : il en manquerait forcément une, et ce serait la natation
+    /// — celle qui arrive en dernier dans l'ordre de priorité des séances, et celle dont
+    /// l'absence ne se verrait nulle part puisque l'app ne la mesure pas. Un plan de triathlon
+    /// sans natation porterait le nom du format et n'en préparerait que deux tiers.
+    ///
+    /// Ce nombre vivait en littéral dans QUATRE endroits — l'inscription, l'écran des jours,
+    /// l'assistant de nouvel objectif et les réglages du programme. Il ne pouvait donc pas
+    /// dépendre de l'objectif, et la question ne s'était jamais posée. Elle se pose ici.
+    var joursMinimumParSemaine: Int {
+        switch self {
+        case .race, .progress, .restart, .weight, .health, .hyrox, .ultraTrail: return 2
+        case .triathlon: return 3
         }
     }
 

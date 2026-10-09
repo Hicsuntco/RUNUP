@@ -5498,6 +5498,23 @@
         }
       }
     },
+    "Choisis au moins 3 jours — un triathlon a trois disciplines": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick at least 3 days — a triathlon has three disciplines"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige al menos 3 días — un triatlón tiene tres disciplinas"
+          }
+        }
+      }
+    },
     "Choisis ton pseudo": {
       "localizations": {
         "en": {

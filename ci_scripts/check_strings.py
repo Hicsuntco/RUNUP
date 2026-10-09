@@ -396,6 +396,34 @@ def seances_sans_libelle(source: str, catalogue):
     return trous
 
 
+# ── UNE CINQUIÈME ZONE AVEUGLE, CONNUE ET NON GARDÉE ──────────────────────────────────────────
+#
+#     Text(vm.jours < vm.minimum
+#          ? "Choisis au moins 3 jours"
+#          : "\(vm.jours) jours / semaine")
+#
+# `OUVERTURES` cherche `Text(` IMMÉDIATEMENT suivi d'un guillemet. Un ternaire qui respire sur
+# trois lignes met donc ses littéraux hors de portée. Trouvée en se faisant prendre : cette
+# phrase-là a été écrite sous cette forme et le contrôle l'a laissée passer sans un mot.
+#
+# ELLE N'EST PAS GARDÉE, ET C'EST UN CHOIX. La règle a été écrite, essayée, et retirée : lire les
+# littéraux du premier niveau d'un `Text(…)` étalé demande de distinguer un `(` d'appel d'un `(`
+# de groupement, de sauter les littéraux imbriqués dans une interpolation, et d'exclure
+# `Text(verbatim:)`. Les deux versions tentées réclamaient entre cinq et dix-huit chaînes dont
+# presque toutes étaient fausses — des « %.1f km » passés à `String(format:)`, des morceaux de
+# ternaires lus de travers.
+#
+# Ce contrôle bloque CHAQUE construction du dépôt. Une barrière qui refuse du code juste y coûte
+# plus cher qu'ailleurs : elle n'a aucun moyen d'être ignorée, donc elle finit désactivée, et on
+# perd les quatre règles qui marchent avec celle qui ne marche pas. Mieux vaut une zone aveugle
+# documentée qu'un garde qui crie au loup.
+#
+# LA PARADE EN ATTENDANT : écrire le littéral collé à `Text(`. Une phrase qui change selon une
+# condition se pose dans un membre typé `LocalizedStringKey?` — zone déjà gardée, règle 3 — ce qui
+# est de toute façon plus lisible qu'un ternaire à deux étages dans une vue.
+
+
+
 def sans_traduction():
     """Les clés du catalogue auxquelles il manque l'anglais ou l'espagnol.
 
@@ -483,7 +511,7 @@ def main() -> int:
                     if any(motif.match(k) and SUBSTITUANT.search(k) for k in cles):
                         continue
                 manquantes.append((f"{f.relative_to(RACINE)}:{n}", cle))
-            # Et les littéraux confiés à un paramètre typé `LocalizedStringKey`.
+            # Et les littéraux confiés à un paramètre que le composant localise lui-même.
             for n, cle in litteraux_des_parametres_localises(texte, table):
                 fixe = "".join(morceaux_fixes(cle))
                 if not any(c.isalpha() for c in fixe) or cle in cles:

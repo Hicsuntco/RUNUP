@@ -85,6 +85,11 @@ final class OnboardingViewModel {
     var isHyrox: Bool { goal == .hyrox }
     var isUltra: Bool { goal == .ultraTrail }
     var isTriathlon: Bool { goal == .triathlon }
+
+    /// Le nombre de jours que l'objectif choisi exige. Deux tant qu'aucun objectif n'est encore
+    /// choisi : l'étape des jours vient après celle de l'objectif, donc ce repli n'est atteint
+    /// que par un brouillon incomplet.
+    var joursMinimum: Int { goal?.joursMinimumParSemaine ?? 2 }
     /// L'étape « ta course » sert aux deux : un ultra-trail EST une course, avec une question
     /// de plus. Lui faire un écran séparé aurait dupliqué la distance, le chrono et la date
     /// pour un seul champ de différence.
@@ -121,7 +126,10 @@ final class OnboardingViewModel {
         // is the exception, not the rule, so requiring an answer here would just add friction for
         // the common case of "nothing to report."
         case 4: return true
-        case 5: return runningDays.count >= 2 && runningDaysTouched
+        // Le minimum vient de l'OBJECTIF, pas d'un littéral : un triathlon en exige trois,
+        // parce qu'une semaine à deux jours ne peut pas contenir trois disciplines. Voir
+        // `GoalType.joursMinimumParSemaine`.
+        case 5: return runningDays.count >= joursMinimum && runningDaysTouched
         case 6: return levelTouched
         case 7: return true
         default: return true

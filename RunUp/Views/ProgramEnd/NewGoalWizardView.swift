@@ -14,6 +14,14 @@ struct NewGoalWizardView: View {
     /// Le D+ de la course, saisi en texte libre — même champ, mêmes règles qu'à l'inscription :
     /// vide et zéro sont la même réponse, « je ne sais pas ».
     @State private var raceElevationGain: String = ""
+    /// Le format du triathlon, et ce qu'elle nage aujourd'hui.
+    ///
+    /// Le format a une valeur par défaut — l'olympique, le plus couru — et le niveau de natation
+    /// n'en a PAS, volontairement : c'est ce qui le rend obligatoire. Même règle qu'à
+    /// l'inscription, et pour la même raison (voir `NiveauDeNage`) : c'est la seule réponse de
+    /// cet écran dont une valeur supposée peut faire du mal.
+    @State private var triathlonFormat: TriathlonFormat = .olympique
+    @State private var nageNiveau: NiveauDeNage?
     @State private var days: Set<Int> = [1, 2, 4, 6]
     @State private var building = false
     @State private var buildPct: Double = 0
@@ -28,6 +36,14 @@ struct NewGoalWizardView: View {
     /// directement aux jours de la semaine : ni distance, ni date, ni dénivelé. Le plan produit
     /// n'avait alors aucune ligne d'arrivée à viser, donc ni bloc spécifique ni affûtage.
     private var estCourseOuUltra: Bool { goal == .race || goal == .ultraTrail }
+    private var estTriathlon: Bool { goal == .triathlon }
+    /// Le minimum exigé par l'objectif en cours de choix. Voir `GoalType.joursMinimumParSemaine`.
+    private var minimumJours: Int { goal?.joursMinimumParSemaine ?? 2 }
+    /// Les trois objectifs qui ont une deuxième étape. `periodiseVersUneDate` dit presque la
+    /// même chose et pas tout à fait : HYROX a une date et n'a jamais eu d'étape ici, son format
+    /// étant fixe. Garder les deux notions distinctes évite de donner au triathlon la mauvaise
+    /// étape le jour où HYROX en gagnerait une.
+    private var aUneDeuxiemeEtape: Bool { estCourseOuUltra || estTriathlon }
 
     /// Les formats à proposer, selon l'objectif. « Autre distance » n'en fait pas partie : cet
     /// assistant n'a pas de champ de texte libre, contrairement à l'inscription.
@@ -37,6 +53,11 @@ struct NewGoalWizardView: View {
     private var deniveleManquant: Bool {
         goal == .ultraTrail && (Int(raceElevationGain.trimmingCharacters(in: .whitespaces)) ?? 0) <= 0
     }
+
+    /// Le niveau de natation exigé pour un triathlon, et seulement pour lui — même forme que le
+    /// dénivelé juste au-dessus, et même raison : sans ce nombre le plan ne peut pas dimensionner
+    /// la seule discipline qu'il ne saura jamais mesurer.
+    private var nageManquante: Bool { estTriathlon && nageNiveau == nil }
 
     @Environment(SubscriptionService.self) private var subscriptions
 
@@ -80,6 +101,7 @@ struct NewGoalWizardView: View {
                 switch step {
                 case 0: goalStep
                 case 1 where estCourseOuUltra: raceStep
+                case 1 where estTriathlon: triathlonStep
                 default: daysStep
                 }
             }
@@ -93,7 +115,7 @@ struct NewGoalWizardView: View {
             ForEach(goals) { g in
                 SelectableCard(selected: goal == g, emoji: g.emoji, title: g.title, subtitle: nil) { goal = g }
             }
-            Button("CONTINUER") { step = estCourseOuUltra ? 1 : 2 }
+            Button("CONTINUER") { step = aUneDeuxiemeEtape ? 1 : 2 }
                 .buttonStyle(PrimaryButtonStyle(isDisabled: goal == nil))
                 .disabled(goal == nil)
                 .padding(.top, 8)
@@ -105,6 +127,13 @@ struct NewGoalWizardView: View {
         // sélectionné après avoir choisi l'ultra-trail aurait fait construire une préparation de
         // cent kilomètres de montagne sur dix kilomètres de route.
         .onChange(of: goal) { _, nouveau in
+            // Le triathlon ne se mesure pas en distances de course : son chrono vient du FORMAT.
+            // Sans cette branche, choisir « triathlon » laissait un temps de 10 km sélectionné,
+            // et le plan se serait affûté vers 47 minutes pour une épreuve de trois heures.
+            if nouveau == .triathlon {
+                chrono = triathlonFormat.chronoPresets[safe: 1] ?? ""
+                return
+            }
             guard let premier = RaceDistance.choix(pour: nouveau).first else { return }
             distance = premier
             chrono = premier.chronoPresets[safe: 1] ?? ""
@@ -156,6 +185,83 @@ struct NewGoalWizardView: View {
         }
     }
 
+    /// L'étape du triathlon : format → ce qu'elle nage aujourd'hui → chrono → date.
+    ///
+    /// Même forme que `raceStep` — une grille, un chrono, une date — avec une question de plus,
+    /// qui est la plus importante des quatre. Les trois distances sont le sous-titre de chaque
+    /// format : c'est ce qui l'identifie sans employer de marque déposée (voir
+    /// `TriathlonFormat`).
+    private var triathlonStep: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            EyebrowLabel(text: "Format", color: RUColor.text3).padding(.bottom, 10)
+            VStack(spacing: 8) {
+                ForEach(TriathlonFormat.allCases) { f in
+                    SelectableCard(selected: triathlonFormat == f, emoji: nil, title: f.title, subtitle: f.resume) {
+                        triathlonFormat = f
+                        chrono = f.chronoPresets[safe: 1] ?? ""
+                    }
+                }
+            }
+
+            EyebrowLabel(text: "Aujourd'hui, tu nages combien sans t'arrêter ?", color: RUColor.text3)
+                .padding(.top, 20).padding(.bottom, 10)
+            VStack(spacing: 8) {
+                ForEach(NiveauDeNage.allCases) { n in
+                    SelectableCard(selected: nageNiveau == n, emoji: nil, title: n.title, subtitle: n.subtitle) {
+                        nageNiveau = n
+                    }
+                }
+            }
+
+            if let avertissement {
+                Text(avertissement)
+                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text2).lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(13)
+                    .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                    .padding(.top, 10)
+            }
+
+            EyebrowLabel(text: "Chrono visé", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
+            ChipFlowLayout {
+                ForEach(triathlonFormat.chronoPresets, id: \.self) { t in
+                    SelectableChip(label: t, selected: chrono == t) { chrono = t }
+                }
+            }
+
+            EyebrowLabel(text: "Date de l'épreuve", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
+            DatePicker(
+                "",
+                selection: $raceDate,
+                in: Calendar.current.date(byAdding: .day, value: 1, to: .now)!...,
+                displayedComponents: .date
+            )
+            .datePickerStyle(.compact)
+            .labelsHidden()
+            .colorScheme(RUColor.colorScheme)
+            .padding(13)
+            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+
+            Button("CONTINUER") { step = 2 }
+                .buttonStyle(PrimaryButtonStyle(isDisabled: nageManquante))
+                .disabled(nageManquante)
+                .padding(.top, 20)
+        }
+    }
+
+    /// La phrase qui dit l'écart entre le format et ce qu'elle nage, quand il y en a un.
+    /// Identique à celle de l'inscription, et pour la même raison : on donne le nombre, pas un
+    /// avis. Voir `TriathlonDetailsStepView.avertissement`.
+    private var avertissement: LocalizedStringKey? {
+        guard let niveau = nageNiveau, niveau.ecartNotable(pour: triathlonFormat) else { return nil }
+        guard let metres = niveau.metresEnContinu else {
+            return "La natation partira de zéro, et c'est très bien — mais apprendre à durer dans l'eau demande un bassin et quelqu'un sur le bord, pas une case de plus dans un plan. Le programme construira le vélo et la course, et montera la natation prudemment."
+        }
+        return "\(triathlonFormat.nageMetres) m le jour J, contre \(metres) m aujourd'hui. Le plan montera progressivement, et la natation sera la discipline qui prend le plus de place dans ta semaine."
+    }
+
     private var daysStep: some View {
         VStack(alignment: .leading, spacing: 0) {
             EyebrowLabel(text: "Tes jours de course", color: RUColor.text3).padding(.bottom, 10)
@@ -173,8 +279,10 @@ struct NewGoalWizardView: View {
                 }
             }
             Button("CONSTRUIRE MON PROGRAMME") { building = true }
-                .buttonStyle(PrimaryButtonStyle(isDisabled: days.count < 2))
-                .disabled(days.count < 2)
+                // Le minimum vient de l'objectif CHOISI ICI, et pas de celui en cours : c'est
+                // le nouveau plan qu'on dimensionne. Un triathlon en exige trois.
+                .buttonStyle(PrimaryButtonStyle(isDisabled: days.count < minimumJours))
+                .disabled(days.count < minimumJours)
                 .padding(.top, 20)
         }
     }
@@ -215,10 +323,17 @@ struct NewGoalWizardView: View {
         let result = AdaptivePlanEngine.NewGoalResult(
             goal: goal ?? .health,
             distance: estCourseOuUltra ? distance : nil,
-            chrono: estCourseOuUltra ? chrono : nil,
-            raceDate: estCourseOuUltra ? raceDate : nil,
+            // Le chrono et la date appartiennent aussi au triathlon — il a une ligne d'arrivée,
+            // donc un affûtage à caler dessus. Les lui refuser aurait rendu son plan OUVERT :
+            // ni bloc spécifique, ni affûtage, donc aucun enchaînement vélo→course et aucune
+            // séance de transition. Exactement le défaut que `periodiseVersUneDate` décrit pour
+            // l'ultra-trail, reproduit un objectif plus loin.
+            chrono: aUneDeuxiemeEtape ? chrono : nil,
+            raceDate: aUneDeuxiemeEtape ? raceDate : nil,
             runningDays: Array(days),
-            raceElevationGainM: goal == .ultraTrail ? Int(raceElevationGain.trimmingCharacters(in: .whitespaces)) : nil
+            raceElevationGainM: goal == .ultraTrail ? Int(raceElevationGain.trimmingCharacters(in: .whitespaces)) : nil,
+            triathlonFormat: estTriathlon ? triathlonFormat.rawValue : nil,
+            nageNiveau: estTriathlon ? nageNiveau?.rawValue : nil
         )
         AdaptivePlanEngine.startNewProgram(result, profile: appState.profile)
         NotificationService.shared.rescheduleDailyReminder(for: appState.profile)

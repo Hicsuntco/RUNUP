@@ -33,13 +33,13 @@ struct RunningDaysStepView: View {
                 }
                 .padding(.top, 22)
 
-                Text(vm.runningDays.count < 2 ? "Choisis au moins 2 jours pour progresser" : "\(vm.runningDays.count) jours / semaine — bon rythme")
+                Text(phraseDesJours)
                     .font(RUFont.sans(.body))
-                    .foregroundColor(vm.runningDays.count < 2 ? RUColor.amber : RUColor.text2)
+                    .foregroundColor(vm.runningDays.count < vm.joursMinimum ? RUColor.amber : RUColor.text2)
                     .frame(maxWidth: .infinity)
                     .padding(.top, 14)
 
-                if vm.runningDays.count >= 2 {
+                if vm.runningDays.count >= vm.joursMinimum {
                     EyebrowLabel(text: "Jour de ta sortie longue", color: RUColor.text3).padding(.top, 20)
                     Text("Le plan y calera toujours ta séance la plus longue de la semaine.")
                         .font(RUFont.sans(.small)).foregroundColor(RUColor.text3).padding(.top, 2)
@@ -65,5 +65,31 @@ struct RunningDaysStepView: View {
             }
             ObNext(disabled: !vm.canProceed(fromStep: 5), action: onNext)
         }
+    }
+
+    /// LE MINIMUM DÉPEND DE L'OBJECTIF, et la phrase le dit avec son nombre.
+    ///
+    /// Elle annonçait « au moins 2 jours » à tout le monde, le nombre écrit en dur dans la
+    /// chaîne. Un triathlon en exige trois — une semaine à deux jours ne peut pas contenir trois
+    /// disciplines, et il manquerait la natation. La phrase aurait donc réclamé deux jours
+    /// pendant que le bouton restait gris.
+    ///
+    /// Trois clés distinctes plutôt qu'une phrase à trou : « au moins 2 jours » et « au moins
+    /// 3 jours » ne se traduisent pas en glissant un chiffre dans la même structure selon la
+    /// langue, et la seconde a sa propre raison à donner.
+    ///
+    /// ÉCRITE DANS UN MEMBRE ET PAS DANS LE `Text`, pour une raison de barrière et non de style :
+    /// `check_strings.py` ne voit pas un littéral posé dans un `Text(…)` qui s'étale sur
+    /// plusieurs lignes, et il a laissé passer la première version de cette phrase sans un mot.
+    /// Un membre typé `LocalizedStringKey`, lui, est lu. Voir le commentaire de ce contrôle sur
+    /// sa cinquième zone aveugle.
+    private var phraseDesJours: LocalizedStringKey {
+        guard vm.runningDays.count < vm.joursMinimum else {
+            return "\(vm.runningDays.count) jours / semaine — bon rythme"
+        }
+        if vm.joursMinimum >= 3 {
+            return "Choisis au moins 3 jours — un triathlon a trois disciplines"
+        }
+        return "Choisis au moins 2 jours pour progresser"
     }
 }

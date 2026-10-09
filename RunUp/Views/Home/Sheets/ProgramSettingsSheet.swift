@@ -7,6 +7,9 @@ struct ProgramSettingsSheet: View {
     @State private var days: Set<Int> = []
     @State private var goal: String = ""
 
+    /// Le minimum exigé par l'objectif en cours. Voir `GoalType.joursMinimumParSemaine`.
+    private var minimumJours: Int { appState.profile.goalId.joursMinimumParSemaine }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
@@ -54,8 +57,11 @@ struct ProgramSettingsSheet: View {
                     appState.toast(String(localized: "Programme mis à jour"))
                     dismiss()
                 }
-                .buttonStyle(PrimaryButtonStyle(isDisabled: days.count < 2))
-                .disabled(days.count < 2)
+                // Le minimum vient de l'objectif EN COURS : réduire un plan de triathlon à deux
+                // jours par cet écran-là aurait contourné la règle posée à l'inscription, et
+                // produit une semaine à laquelle il manque une discipline.
+                .buttonStyle(PrimaryButtonStyle(isDisabled: days.count < minimumJours))
+                .disabled(days.count < minimumJours)
                 .padding(.top, 18)
             }
             .padding(.horizontal, 18)

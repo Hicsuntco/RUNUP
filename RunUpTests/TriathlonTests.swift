@@ -164,37 +164,42 @@ final class TriathlonTests: XCTestCase {
 
     // MARK: L'objectif
 
-    /// L'objectif est RETENU, et il le reste jusqu'à ce que le plan contienne les trois
-    /// disciplines.
+    /// L'objectif est OUVERT, et les deux surfaces qui le proposent savent le construire.
     ///
-    /// Le choisir aujourd'hui donnerait un plan de course portant le nom « triathlon » : aucune
-    /// natation, aucun vélo, aucune transition. Mieux vaut un objectif absent qu'un objectif qui
-    /// mente.
-    func testLeTriathlonNEstPasEncoreProposable() {
-        XCTAssertFalse(GoalType.triathlon.estProposable)
-        XCTAssertFalse(GoalType.allCases.filter(\.estProposable).contains(.triathlon))
-        // Les sept autres, eux, sont bien offerts.
-        XCTAssertEqual(GoalType.allCases.filter(\.estProposable).count,
-                       GoalType.allCases.count - 1)
+    /// Il est resté retenu pendant cinq des six lots. Le fil à la patte qui tenait cette porte
+    /// — un test qui exigeait `estProposable == false` tant que l'assistant de nouvel objectif
+    /// ne savait pas demander le format — a fait son travail : c'est en le faisant échouer qu'on
+    /// a su qu'il fallait reprendre `NewGoalWizardView`, qui liste les objectifs exactement comme
+    /// l'inscription. Il est remplacé par ce qui doit rester vrai maintenant.
+    func testLeTriathlonEstProposableEtConstructible() {
+        XCTAssertTrue(GoalType.triathlon.estProposable)
+        XCTAssertEqual(GoalType.allCases.filter(\.estProposable).count, GoalType.allCases.count,
+                       "un objectif est retenu : si c'est voulu, dis-le ici")
+        // Les deux champs que l'assistant doit savoir remplir. Sans eux, choisir le triathlon
+        // par cette porte-là construirait un plan sans format.
+        var resultat = AdaptivePlanEngine.NewGoalResult(
+            goal: .triathlon, distance: nil, chrono: "2:35", raceDate: .now, runningDays: [0, 2, 4]
+        )
+        resultat.triathlonFormat = TriathlonFormat.olympique.rawValue
+        resultat.nageNiveau = NiveauDeNage.plus1500.rawValue
+        XCTAssertEqual(resultat.triathlonFormat, "olympique")
+        XCTAssertEqual(resultat.nageNiveau, "plus1500")
     }
 
-    /// LE FIL À LA PATTE. Le jour où l'objectif s'ouvre, ce test échoue — et il doit échouer.
+    /// Un triathlon exige TROIS jours par semaine, et pas deux.
     ///
-    /// `NewGoalWizardView` (l'assistant de nouvel objectif, après la fin d'un programme) liste
-    /// `allCases.filter(\.estProposable)` exactement comme l'inscription. Retourner
-    /// `estProposable` fera donc apparaître le triathlon dans DEUX surfaces, et l'assistant ne
-    /// sait demander ni le format ni le niveau de natation : son `NewGoalResult` n'a pas ces
-    /// champs. Le plan serait construit sans format.
-    ///
-    /// Ce test est là pour que cet oubli soit impossible : en 6/6, il faudra d'abord donner à
-    /// l'assistant ses deux questions, puis supprimer ce test avec l'assertion ci-dessus.
-    func testOuvrirLObjectifObligeAReprendreLAssistantDeNouvelObjectif() {
-        XCTAssertFalse(
-            GoalType.triathlon.estProposable,
-            "Le triathlon vient d'être ouvert. `NewGoalWizardView` le propose donc aussi, "
-            + "et son `NewGoalResult` ne porte ni le format ni le niveau de natation : "
-            + "ajoute-les là-bas AVANT de supprimer ce test."
-        )
+    /// Ce n'est pas une préférence. Une semaine à deux jours ne peut pas contenir trois
+    /// disciplines : il en manquerait forcément une, et ce serait la natation — la dernière dans
+    /// l'ordre de priorité des séances, et celle dont l'absence ne se verrait nulle part
+    /// puisque l'app ne la mesure pas.
+    func testUnTriathlonExigeTroisJoursParSemaine() {
+        XCTAssertEqual(GoalType.triathlon.joursMinimumParSemaine, 3)
+        for objectif in GoalType.allCases where objectif != .triathlon {
+            XCTAssertEqual(objectif.joursMinimumParSemaine, 2, "\(objectif)")
+        }
+        for objectif in GoalType.allCases {
+            XCTAssertGreaterThanOrEqual(objectif.joursMinimumParSemaine, 2, "\(objectif)")
+        }
     }
 
     /// Il se périodise vers une date, comme les trois autres objectifs à date.

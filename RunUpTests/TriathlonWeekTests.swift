@@ -159,13 +159,7 @@ final class TriathlonWeekTests: XCTestCase {
             let bloc = AdaptivePlanEngine.trainingBlock(forWeek: week, shape: forme)
             guard bloc != .deload else { continue }
             semainesVerifiees += 1
-            var minutes: [Discipline: Int] = [:]
-            let semaine = AdaptivePlanEngine.generateWeekSessions(weekNumber: week, tier: 1, profile: profile)
-                .compactMap { $0.session }
-            for session in semaine {
-                guard let kind = session.kind, let premiere = kind.disciplines.first else { continue }
-                minutes[premiere, default: 0] += session.durationMinutes
-            }
+            let minutes = minutesParDiscipline(profile, week: week)
             let velo = minutes[.bike] ?? 0
             XCTAssertGreaterThan(velo, minutes[.swim] ?? 0, "s\(week) \(bloc.rawValue) : \(minutes)")
             XCTAssertGreaterThan(velo, minutes[.run] ?? 0, "s\(week) \(bloc.rawValue) : \(minutes)")
@@ -270,6 +264,151 @@ final class TriathlonWeekTests: XCTestCase {
             AdaptivePlanEngine.markSessionDone(for: releve(discipline), profile: profile)
             XCTAssertTrue(profile.weekSessions[jour].completed, "\(discipline)")
         }
+    }
+
+    // MARK: Les garde-fous
+
+    /// UN PLAN DE TRIATHLON A UN BLOC SPÉCIFIQUE ET UN AFFÛTAGE.
+    ///
+    /// C'est le défaut qui a coûté à l'ultra-trail l'intégralité de son bloc spécifique et de son
+    /// affûtage : son objectif ne figurait pas dans la liste écrite en dur qui décidait quels
+    /// plans se périodisent, donc il tombait dans la branche « programme ouvert » — zéro semaine
+    /// de base, zéro de spécifique, zéro d'affûtage. Les onze séances d'ultra existaient, le
+    /// moteur savait les produire, et il n'en servait jamais que deux blocs sur quatre.
+    ///
+    /// Pour un triathlon, ce serait pire : sans bloc spécifique il n'y a aucun enchaînement
+    /// vélo→course, et sans affûtage aucune séance de transition. Les deux séances qui font la
+    /// différence le jour J, absentes, sans une ligne qui casse.
+    func testUnPlanDeTriathlonAUnBlocSpecifiqueEtUnAffutage() {
+        let profile = makeProfile(weeksUntilRace: 12)
+        let forme = AdaptivePlanEngine.ProgramShape.compute(
+            goal: profile.goalId, raceDate: profile.raceDate,
+            from: profile.programStartDate ?? .now
+        )
+        XCTAssertNotNil(forme.totalWeeks, "le plan est ouvert : pas de ligne d'arrivée")
+        XCTAssertGreaterThan(forme.specificWeeks, 0, "aucune semaine spécifique")
+        XCTAssertGreaterThan(forme.taperWeeks, 0, "aucune semaine d'affûtage")
+    }
+
+    /// AUCUNE DISCIPLINE NE BONDIT D'UNE SEMAINE DE CONSTRUCTION À LA SUIVANTE.
+    ///
+    /// La règle du ~10 % par semaine est la raison d'être de la rampe de la sortie longue, et
+    /// elle vaut pour les trois disciplines. Le plafond est posé à +40 % et non à +10 % parce
+    /// qu'un changement de bloc change aussi la NATURE de la séance longue — une sortie vélo de
+    /// 90 minutes devient un enchaînement de 80 — ce qui est une substitution, pas une
+    /// progression. En pratique le pire bond mesuré est de +7 %.
+    ///
+    /// LES SEMAINES DE DÉCHARGE SONT EXCLUES DE LA COMPARAISON, et ce n'est pas une facilité.
+    /// Une semaine de décharge est volontairement légère, donc la semaine qui la suit remonte
+    /// forcément — ×2,6 sur le vélo, mesuré. La comparer à sa voisine reviendrait à interdire la
+    /// décharge elle-même. Le moteur fait déjà exactement cette distinction pour la rampe de la
+    /// sortie longue (voir `buildWeekPosition` : « une semaine de décharge ne doit pas consommer
+    /// un pas de la progression »), et c'est la même ici.
+    ///
+    /// La première version de ce test comparait tout à tout et échouait sur ce bond-là. C'est le
+    /// test qui avait tort.
+    func testAucuneDisciplineNeBonditEntreDeuxSemainesDeConstruction() {
+        let profile = makeProfile(runningDays: [0, 2, 4, 6], weeksUntilRace: 12)
+        let forme = AdaptivePlanEngine.ProgramShape.compute(
+            goal: profile.goalId, raceDate: profile.raceDate,
+            from: profile.programStartDate ?? .now
+        )
+        var precedent: [Discipline: Int] = [:]
+        var comparaisons = 0
+        for week in 1...12 {
+            guard AdaptivePlanEngine.trainingBlock(forWeek: week, shape: forme) != .deload else { continue }
+            let minutes = minutesParDiscipline(profile, week: week)
+            for (discipline, total) in minutes {
+                guard let avant = precedent[discipline], avant > 0 else { continue }
+                comparaisons += 1
+                XCTAssertLessThan(Double(total) / Double(avant), 1.4,
+                                  "s\(week) \(discipline) : \(avant) → \(total) minutes")
+            }
+            precedent = minutes
+        }
+        XCTAssertGreaterThan(comparaisons, 10, "trop peu de comparaisons pour conclure")
+    }
+
+    /// Et une semaine de décharge décharge VRAIMENT : moins de minutes que la semaine d'avant.
+    ///
+    /// L'autre moitié de la règle ci-dessus. Exclure les semaines de décharge d'une comparaison
+    /// ne doit pas revenir à ne jamais les vérifier — c'est ainsi qu'un bloc « récup » plus
+    /// chargé que le bloc qu'il allège passerait inaperçu, défaut qu'`UltraTrailTests` a déjà
+    /// eu à corriger sur l'affûtage.
+    func testUneSemaineDeDechargeDechargeVraiment() {
+        let profile = makeProfile(runningDays: [0, 2, 4, 6], weeksUntilRace: 12)
+        let forme = AdaptivePlanEngine.ProgramShape.compute(
+            goal: profile.goalId, raceDate: profile.raceDate,
+            from: profile.programStartDate ?? .now
+        )
+        var verifiees = 0
+        for week in 2...12 {
+            guard AdaptivePlanEngine.trainingBlock(forWeek: week, shape: forme) == .deload else { continue }
+            let avant = minutesParDiscipline(profile, week: week - 1).values.reduce(0, +)
+            let pendant = minutesParDiscipline(profile, week: week).values.reduce(0, +)
+            verifiees += 1
+            XCTAssertLessThan(pendant, avant, "s\(week) : décharge de \(avant) à \(pendant) minutes")
+        }
+        XCTAssertGreaterThan(verifiees, 0, "aucune semaine de décharge dans un plan de douze")
+    }
+
+    private func minutesParDiscipline(_ profile: UserProfile, week: Int) -> [Discipline: Int] {
+        var minutes: [Discipline: Int] = [:]
+        let semaine = AdaptivePlanEngine.generateWeekSessions(weekNumber: week, tier: 1, profile: profile)
+            .compactMap { $0.session }
+        for session in semaine {
+            guard let kind = session.kind, let premiere = kind.disciplines.first else { continue }
+            minutes[premiere, default: 0] += session.durationMinutes
+        }
+        return minutes
+    }
+
+    /// LE CHEMIN DE LA SECONDE PORTE, DE BOUT EN BOUT.
+    ///
+    /// L'assistant de nouvel objectif construit un plan directement, sans passer par
+    /// l'inscription. C'est lui qui a tenu l'objectif fermé cinq lots durant : il liste les
+    /// objectifs exactement comme l'inscription, donc ouvrir le triathlon l'y faisait apparaître
+    /// sans ses deux questions. Ce test parcourt ce chemin-là et vérifie que le plan produit
+    /// contient bien de la natation.
+    func testUnPlanConstruitParLAssistantContientDeLaNatation() {
+        let profile = UserProfile(name: "Test")
+        container.mainContext.insert(profile)
+        var resultat = AdaptivePlanEngine.NewGoalResult(
+            goal: .triathlon,
+            distance: nil,
+            chrono: "2:35",
+            raceDate: Calendar.current.date(byAdding: .weekOfYear, value: 12, to: .now),
+            runningDays: [0, 2, 4, 6]
+        )
+        resultat.triathlonFormat = TriathlonFormat.olympique.rawValue
+        resultat.nageNiveau = NiveauDeNage.plus1500.rawValue
+        AdaptivePlanEngine.startNewProgram(resultat, profile: profile)
+
+        XCTAssertEqual(profile.triathlonFormat, "olympique", "le format n'a pas été écrit")
+        XCTAssertEqual(profile.nageNiveau, "plus1500", "le niveau de natation n'a pas été écrit")
+        XCTAssertNotNil(profile.raceDate, "la date a été effacée : le plan serait ouvert")
+
+        let nages = profile.weekSessions.compactMap { $0.session?.kind }
+            .filter { $0.disciplines == [.swim] }
+        XCTAssertFalse(nages.isEmpty, "le plan construit par l'assistant n'a aucune natation")
+    }
+
+    /// Et repartir sur un objectif de course EFFACE le format du triathlon.
+    ///
+    /// Le laisser derrière ferait lire au moteur un format qui ne décrit plus rien, et
+    /// `goalDisplay` afficherait « 10 km » au-dessus d'un plan dimensionné sur une épreuve
+    /// abandonnée. Même règle que le dénivelé d'ultra, qui a le même piège.
+    func testRepartirSurUneCourseEffaceLeFormatDuTriathlon() {
+        let profile = makeProfile()
+        XCTAssertEqual(profile.triathlonFormat, "olympique")
+        let resultat = AdaptivePlanEngine.NewGoalResult(
+            goal: .race, distance: .k10, chrono: "47:30",
+            raceDate: Calendar.current.date(byAdding: .weekOfYear, value: 10, to: .now),
+            runningDays: [0, 2, 4]
+        )
+        AdaptivePlanEngine.startNewProgram(resultat, profile: profile)
+        XCTAssertNil(profile.triathlonFormat, "le format du triathlon a survécu au changement")
+        XCTAssertNil(profile.nageNiveau, "le niveau de natation a survécu au changement")
     }
 
     /// LE REPLI N'A PAS CHANGÉ POUR UN PLAN SANS `kind`.

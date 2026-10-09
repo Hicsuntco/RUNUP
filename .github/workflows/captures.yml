@@ -1,0 +1,152 @@
+# Les captures de la fiche App Store, fabriquées par la machine.
+#
+# Onglet **Actions** → **Captures App Store** → **Run workflow**.
+#
+# ─── CE QU'IL REMPLACE ──────────────────────────────────────────────────────────────────────────
+#
+# Dix-huit captures prises à la main sur un téléphone — six écrans, trois langues — à refaire à
+# chaque changement d'accent, de police ou de mise en page. En pratique ça veut dire qu'on ne les
+# refait pas : les six en ligne dataient du 30 août, portaient l'ancien rose, et seules quatre des
+# six existaient, en français seulement.
+#
+# ─── CE QU'IL FAIT ──────────────────────────────────────────────────────────────────────────────
+#
+# 1. Construit l'app en DÉBOGAGE pour un simulateur. C'est la condition de tout : l'état de
+#    démonstration vit sous `#if DEBUG` (voir `CaptureSeed`), donc une construction Release
+#    photographierait l'écran d'inscription.
+# 2. Lance `RunUpUITests` une fois par langue. Le test ouvre l'app six fois, chaque fois
+#    directement sur l'écran voulu, et écrit le PNG sur le disque de la machine.
+# 3. Compose les six images finales par langue avec `ci_scripts/screenshots.py` — fond de marque,
+#    châssis, accroche — et publie tout en artefact téléchargeable.
+#
+# AUCUN SECRET N'EST NÉCESSAIRE. Rien n'est signé, rien n'est envoyé à Apple : on construit pour
+# un simulateur et on produit des images. C'est aussi pour ça que ce workflow est séparé de
+# `testflight.yml`, qui lui en demande neuf.
+
+name: Captures App Store
+
+on:
+  workflow_dispatch:
+    inputs:
+      langues:
+        description: "Langues à produire, séparées par des espaces"
+        required: true
+        type: string
+        default: "fr-FR en-US es-ES"
+      simulateur:
+        description: "Le simulateur à photographier (sa taille décide de celle des captures)"
+        required: true
+        type: string
+        default: "iPhone 16 Pro Max"
+
+jobs:
+  captures:
+    runs-on: macos-26
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Choisir Xcode
+        run: |
+          set -euo pipefail
+          latest=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          echo "→ Xcode retenu : $latest"
+          sudo xcode-select -s "$latest"
+          xcodebuild -version
+
+      - name: Installer XcodeGen
+        run: brew install xcodegen
+
+      # Le même script que TestFlight, pour que les deux chaînes produisent le même projet. Sans
+      # secret ici : il se contente d'avertir que le coach répondra 401, ce qui n'a aucune
+      # importance pour une capture — l'écran du coach est peuplé par l'état de démonstration.
+      - name: Préparer le projet
+        run: sh ci_scripts/prepare_project.sh
+
+      - name: Trouver le simulateur
+        id: sim
+        run: |
+          set -euo pipefail
+          nom="${{ inputs.simulateur }}"
+          # `-j` puis `jq` plutôt qu'un `grep` sur la sortie lisible : celle-ci change de forme
+          # d'une version de Xcode à l'autre, et un `grep` qui ne trouve rien donne un identifiant
+          # vide, donc une commande `xcodebuild` qui part sur le mauvais appareil sans rien dire.
+          udid=$(xcrun simctl list devices available -j \
+            | jq -r --arg n "$nom" '[.devices[][] | select(.name == $n)] | .[0].udid // empty')
+          if [ -z "$udid" ]; then
+            echo "✗ Simulateur « $nom » introuvable. Disponibles :"
+            xcrun simctl list devices available | grep -E "iPhone|iPad" || true
+            exit 1
+          fi
+          echo "→ $nom : $udid"
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+
+      # Construit UNE fois, pour les trois langues. `build-for-testing` sépare la construction de
+      # l'exécution : sans ça, chaque langue recompilerait l'app entière, soit trois fois le même
+      # travail pour trois lancements qui ne diffèrent que par un argument.
+      - name: Construire pour les tests
+        run: |
+          set -euo pipefail
+          xcodebuild build-for-testing \
+            -project RunUp.xcodeproj \
+            -scheme Captures \
+            -configuration Debug \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -derivedDataPath build/captures \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Photographier, langue par langue
+        run: |
+          set -euo pipefail
+          for langue in ${{ inputs.langues }}; do
+            echo "──────────── $langue ────────────"
+            dossier="$PWD/appstore/raw/$langue"
+            rm -rf "$dossier"
+            mkdir -p "$dossier"
+            # Le simulateur est remis à zéro entre deux langues : l'app garde son profil d'un
+            # lancement à l'autre, et `CaptureSeed` vide bien la base — mais la LANGUE, elle, est
+            # mise en cache par le système au premier lancement. Sans effacement, les trois séries
+            # sortiraient dans la langue de la première.
+            xcrun simctl shutdown "${{ steps.sim.outputs.udid }}" || true
+            xcrun simctl erase "${{ steps.sim.outputs.udid }}"
+            xcrun simctl boot "${{ steps.sim.outputs.udid }}"
+            xcrun simctl bootstatus "${{ steps.sim.outputs.udid }}" -b
+            # LE PRÉFIXE `TEST_RUNNER_` N'EST PAS DÉCORATIF. Le test tourne dans un
+            # processus du SIMULATEUR, qui n'hérite pas de l'environnement du shell :
+            # poser `RUNUP_LANG=…` devant `xcodebuild` ne le ferait arriver nulle part, et le
+            # test lirait `nil` sans se plaindre — trois séries identiques en français, et
+            # aucune erreur pour le dire. `xcodebuild` transmet en revanche toute variable
+            # nommée `TEST_RUNNER_X` au lanceur, sous le nom `X`.
+            TEST_RUNNER_RUNUP_LANG="$langue" \
+            TEST_RUNNER_RUNUP_CAPTURES_DIR="$dossier" \
+              xcodebuild test-without-building \
+                -project RunUp.xcodeproj \
+                -scheme Captures \
+                -destination "id=${{ steps.sim.outputs.udid }}" \
+                -derivedDataPath build/captures \
+                CODE_SIGNING_ALLOWED=NO
+            echo "→ $(ls -1 "$dossier" | wc -l | tr -d ' ') capture(s) dans appstore/raw/$langue"
+            ls -1 "$dossier"
+          done
+
+      - name: Composer les images finales
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet --upgrade pillow
+          for langue in ${{ inputs.langues }}; do
+            echo "──────────── $langue ────────────"
+            python3 ci_scripts/screenshots.py "$langue"
+          done
+
+      # Les brutes ET les composées. Les premières pour pouvoir juger ce que la machine a vu, les
+      # secondes pour les déposer telles quelles dans App Store Connect.
+      - name: Publier les captures
+        uses: actions/upload-artifact@v4
+        with:
+          name: captures-app-store
+          path: |
+            appstore/raw/**
+            appstore/out/**
+          if-no-files-found: error
+          retention-days: 30

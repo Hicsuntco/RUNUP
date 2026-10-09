@@ -384,3 +384,45 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.hicsuntco.runup.tests
         GENERATE_INFOPLIST_FILE: YES
+
+  # Les captures de la fiche App Store, prises par la machine sur un simulateur.
+  #
+  # CIBLE SÉPARÉE ET SURTOUT SCHÉMA SÉPARÉ (voir `schemes:` en bas de ce fichier). L'attacher au
+  # schéma `RunUp` aurait fait tourner six lancements de simulateur à CHAQUE envoi sur TestFlight :
+  # quelques minutes de plus par build, et surtout un test d'interface — la catégorie de test la
+  # plus capricieuse qui soit — capable de bloquer une livraison parce qu'une animation a mis une
+  # demi-seconde de trop. Les captures se demandent, elles ne s'imposent pas.
+  RunUpUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: RunUpUITests
+    dependencies:
+      - target: RunUp
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.hicsuntco.runup.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: RunUp
+
+# Le schéma des captures, à part.
+#
+# `xcodebuild test -scheme Captures` ne construit et ne lance QUE ce qu'il faut pour photographier
+# l'app. Le schéma `RunUp`, lui, ne connaît que `RunUpTests` et continue de livrer sur TestFlight
+# sans jamais démarrer un simulateur de plus.
+schemes:
+  Captures:
+    build:
+      targets:
+        # `run` en plus de `test` : un test d'interface INSTALLE puis LANCE l'app, ce n'est pas
+        # une cible qu'on se contente de compiler.
+        RunUp: [run, test]
+        RunUpUITests: [test]
+    test:
+      # Debug, et c'est la condition de tout : `CaptureSeed` vit sous `#if DEBUG`, donc une
+      # construction Release ne contient pas le faux profil et photographierait l'écran
+      # d'inscription.
+      config: Debug
+      targets:
+        - RunUpUITests

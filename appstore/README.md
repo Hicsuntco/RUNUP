@@ -8,7 +8,31 @@ composée — fond de marque, accroche, téléphone qui déborde du cadre.
 `ci_scripts/screenshots.py` fabrique la seconde à partir de la première, et tourne depuis
 l'onglet **Actions**, pour ne pas avoir à ouvrir un terminal.
 
-## Ce qu'il y a à faire
+## La façon courte : la machine les prend toute seule
+
+Onglet **Actions** → **Captures App Store** → **Run workflow**. Rien à préparer, aucun secret,
+aucun téléphone. Une vingtaine de minutes plus tard, un artefact `captures-app-store` contient
+les six brutes ET les six composées, dans les trois langues.
+
+Ce qui se passe pendant ce temps : un simulateur est démarré, l'app y est installée en
+**débogage** et lancée six fois — une par écran, chaque fois directement sur le bon, sans
+navigation. L'état montré vient de `CaptureSeed`, posé par le vrai chemin d'inscription : une
+préparation de 10 km à six semaines de la course, seize sorties d'historique dont les allures
+descendent de 5:38 à 5:06, une série de 23 jours, un fil de club et une conversation avec le
+coach. Puis le simulateur est effacé et on recommence dans la langue suivante.
+
+`CaptureSeed` vit **entièrement sous `#if DEBUG`** : la construction envoyée à l'App Store n'en
+contient pas une ligne, donc aucun argument de lancement ne peut y réveiller un faux profil.
+
+Ce que la machine ne sait pas faire : juger. Les images sortent d'un artefact, pas de l'App
+Store — il faut les regarder avant de les déposer.
+
+## La façon longue : à la main, sur un téléphone
+
+Elle reste valable, et c'est la seule qui montre ta vraie vie plutôt qu'une démonstration. Il
+suffit de déposer les captures dans `appstore/raw/<langue>/` en les nommant par leur rang.
+
+## Ce qu'il y a à faire, dans les deux cas
 
 1. **Remplir l'app.** Une capture d'un écran vide ne vend rien. Cinq ou six sorties, de durées
    et d'allures différentes, suffisent à ce que les graphiques et les objectifs aient l'air

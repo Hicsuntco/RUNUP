@@ -54,6 +54,18 @@ private struct RootView: View {
     /// doesn't recreate it on background/foreground), so this never re-shows the splash just from
     /// backgrounding the app, only from a real relaunch.
     @State private var showSplash = true
+    /// L'écran d'ouverture est SAUTÉ pour les captures.
+    ///
+    /// Il dure le temps qu'il faut pour être joli, et c'est précisément le temps pendant lequel
+    /// un test d'interface croit l'app prête et photographie un logo. Attendre sa disparition
+    /// dans le test marcherait aussi, et ferait dépendre dix-huit captures d'une animation.
+    private static var sauteLOuverture: Bool {
+        #if DEBUG
+        return CaptureSeed.demande
+        #else
+        return false
+        #endif
+    }
     /// Raised once, after the splash, when the on-disk SwiftData store refused to open and
     /// `PersistenceController` fell back to a throwaway in-memory one (see `StoreState` there).
     /// Deliberately an alert rather than an `appState.toast` — the toast auto-dismisses in 2.2s
@@ -68,7 +80,7 @@ private struct RootView: View {
                 ContentRouterView()
                     .environment(appState)
             }
-            if showSplash {
+            if showSplash && !Self.sauteLOuverture {
                 SplashView(onFinished: {
                     showSplash = false
                     storeFailureAlertPresented = PersistenceController.isUsingFallbackStore
@@ -85,7 +97,33 @@ private struct RootView: View {
         }
         .onAppear {
             if appState == nil {
+                // LES CAPTURES DE L'APP STORE, ET RIEN D'AUTRE.
+                //
+                // Le drapeau pose un état de démonstration AVANT que `AppState` ne lise le
+                // profil — sinon `AppState.init` en créerait un vide, et le poser après aurait
+                // laissé l'écran d'inscription paraître une fraction de seconde, assez pour
+                // qu'une capture la prenne.
+                //
+                // Tout le mécanisme est sous `#if DEBUG` : la construction envoyée à l'App Store
+                // ne contient pas une ligne de ce bloc, donc aucun argument de lancement ne peut
+                // y réveiller un faux profil. Voir `CaptureSeed`.
+                #if DEBUG
+                if CaptureSeed.demande {
+                    CaptureSeed.poser(dans: modelContext)
+                }
+                #endif
                 appState = AppState(modelContext: modelContext)
+                #if DEBUG
+                if CaptureSeed.demande, let etat = appState {
+                    // Le club vit dans un cache EN MÉMOIRE sur `AppState`, donc il ne peut être
+                    // posé qu'une fois celui-ci construit — contrairement au reste, qui est en
+                    // base et doit y être avant.
+                    CaptureSeed.poserLeClub(dans: etat)
+                }
+                if let ecran = CaptureSeed.ecranDemande {
+                    appState?.go(ecran)
+                }
+                #endif
             }
             // Cold launch never fires the `scenePhase` handler below (there's no previous phase to
             // transition from), so this is the only place a launch-time open is counted.

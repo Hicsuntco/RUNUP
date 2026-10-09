@@ -186,20 +186,56 @@ def _():
     assert "swim" in lus and "run" in lus, f"cas lus : {sorted(lus)}"
     assert len(lus) >= 4, f"au moins 4 disciplines attendues, {len(lus)} lues"
 
+# Les quatre `switch` qui ont réellement tué une construction, recopiés tels qu'ils étaient.
+#
+# Figés en littéral et PAS relus dans l'historique git. La première version de ce test faisait
+# `git show HEAD~2:…`, ce qui a deux défauts : un clone peu profond n'a pas cet objet, et surtout
+# la position du commit change à chaque commit — le test est passé en local, puis a échoué dans la
+# minute où la correction a été commitée, parce que `HEAD` désignait désormais le code corrigé.
+# Un cas de test ne doit pas dépendre d'où l'on se trouve dans l'histoire.
+MORTS = [
+    ("LiveRunView 292", """    private var libelleEtat: LocalizedStringKey {
+        switch vm?.discipline ?? .run {
+        case .run: return "EN DIRECT"
+        case .bike: return "VÉLO · EN DIRECT"
+        case .trail: return "TRAIL · EN DIRECT"
+        }
+    }"""),
+    ("Calories 43", """    static func estimate(_ discipline: Discipline, distanceKm: Double, durationMinutes: Int) -> Double {
+        switch discipline {
+        case .run:  return estimate(distanceKm: distanceKm, durationMinutes: durationMinutes)
+        case .bike: return Double(durationMinutes) * perCyclingMinute
+        case .trail: return estimate(distanceKm: distanceKm, durationMinutes: durationMinutes)
+        }
+    }"""),
+    ("AutoPause 61", """        static func pour(_ discipline: Discipline) -> Seuils {
+            switch discipline {
+            case .run: return Seuils(pause: 0.6, reprise: 1.2, eloignement: 12)
+            case .bike: return Seuils(pause: 1.2, reprise: 2.4, eloignement: 25)
+            case .trail: return Seuils(pause: 0.4, reprise: 0.9, eloignement: 18)
+            }
+        }"""),
+    ("TabBarView 163", """    private var libelle: String {
+        switch discipline {
+        case .run: return "Démarrer une course"
+        case .bike: return "Démarrer une sortie vélo"
+        case .trail: return "Démarrer une sortie trail"
+        }
+    }"""),
+]
+
 @cas_test("les quatre constructions mortes sur ce défaut auraient été attrapées ici")
 def _():
-    import subprocess
-    cas = ck.cas_de_discipline((ck.RACINE / ck.FICHIER_DISCIPLINE).read_text())
-    for rev, f, ligne in [("HEAD", "RunUp/Views/Live/LiveRunView.swift", 292),
-                          ("HEAD~2", "RunUp/Models/Calories.swift", 43),
-                          ("HEAD~2", "RunUp/Models/AutoPause.swift", 61),
-                          ("HEAD~2", "RunUp/Views/Components/TabBarView.swift", 163)]:
-        src = subprocess.run(["git", "show", f"{rev}:{f}"], cwd=ck.RACINE,
-                             capture_output=True, text=True).stdout
-        if not src:
-            continue  # l'historique n'est pas toujours là (clone peu profond) : pas un échec
-        t = ck.switchs_non_exhaustifs(src, cas)
-        assert (ligne, ["swim"]) in t, f"{f}:{ligne} non attrapé → {t}"
+    for nom, source in MORTS:
+        t = ck.switchs_non_exhaustifs(source, QUATRE)
+        assert [absents for _, absents in t] == [["swim"]], f"{nom} non attrapé → {t}"
+
+@cas_test("les quatre, une fois corrigées, passent")
+def _():
+    for nom, source in MORTS:
+        corrige = source.replace("case .trail:", 'case .swim: return nil\n        case .trail:')
+        t = ck.switchs_non_exhaustifs(corrige, QUATRE)
+        assert t == [], f"{nom} refusé alors qu'il est corrigé → {t}"
 
 @cas_test("le vrai code est exhaustif partout")
 def _():

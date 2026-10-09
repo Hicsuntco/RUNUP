@@ -337,6 +337,16 @@ jobs:
           cd ci_scripts && python3 test_healthkit.py
           cd .. && python3 ci_scripts/check_healthkit.py
 
+      # Le club de démonstration des captures d'écran est du JSON écrit à la main, décodé dans
+      # des structures Swift qui, elles, bougent. Il lui manquait trois champs non optionnels :
+      # le décodage échouait en entier, le cache restait vide, et l'écran du Club montrait
+      # « Créer un club » sous l'accroche « Tu ne cours jamais seule ». Rien ne plantait, le
+      # workflow était vert, et seule la relecture de l'image l'a révélé — après vingt minutes.
+      - name: Vérifier que le club de démonstration se décode
+        run: |
+          cd ci_scripts && python3 test_captures_seed.py
+          cd .. && python3 ci_scripts/check_captures_seed.py
+
       # Le build 1177 a planté au lancement chez tout le monde sur une ligne qui compilait et
       # dont les tests passaient : une propriété de type personnalisé, non optionnelle, ajoutée à
       # un modèle SwiftData. La migration réussit, ajoute la colonne à NULL, et le premier accès

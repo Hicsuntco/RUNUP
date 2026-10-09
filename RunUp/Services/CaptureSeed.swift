@@ -145,15 +145,27 @@ enum CaptureSeed {
             formateur.string(from: maintenant.addingTimeInterval(-Double(heures) * 3600))
         }
 
+        func ilYAJours(_ jours: Int) -> String { ilYA(jours * 24) }
+
         let tableau = """
         {
           "club": { "id": "demo", "name": "Les Foulées du Canal", "inviteCode": "CANAL", "memberCount": 18 },
           "leaderboard": [
-            { "id": "1", "name": "Charlotte", "xp": 4180, "rank": 1, "isMe": true, "bio": "Objectif 10 km sous 47:30" },
-            { "id": "2", "name": "Inès", "xp": 3940, "rank": 2, "isMe": false },
-            { "id": "3", "name": "Margaux", "xp": 3610, "rank": 3, "isMe": false },
-            { "id": "4", "name": "Sarah", "xp": 3180, "rank": 4, "isMe": false },
-            { "id": "5", "name": "Lina", "xp": 2870, "rank": 5, "isMe": false }
+            { "id": "1", "name": "Charlotte", "xp": 4180, "rank": 1, "isMe": true,
+              "bio": "Objectif 10 km sous 47:30", "joinedAt": "\(ilYAJours(214))",
+              "activitiesCount": 16, "badgeKeys": ["firstRun", "tenRuns", "streak7", "distance50"] },
+            { "id": "2", "name": "Inès", "xp": 3940, "rank": 2, "isMe": false,
+              "joinedAt": "\(ilYAJours(301))", "activitiesCount": 14,
+              "badgeKeys": ["firstRun", "tenRuns", "earlyRun"] },
+            { "id": "3", "name": "Margaux", "xp": 3610, "rank": 3, "isMe": false,
+              "joinedAt": "\(ilYAJours(168))", "activitiesCount": 12,
+              "badgeKeys": ["firstRun", "tenRuns", "interval3"] },
+            { "id": "4", "name": "Sarah", "xp": 3180, "rank": 4, "isMe": false,
+              "joinedAt": "\(ilYAJours(96))", "activitiesCount": 9,
+              "badgeKeys": ["firstRun", "weekendWarrior"] },
+            { "id": "5", "name": "Lina", "xp": 2870, "rank": 5, "isMe": false,
+              "joinedAt": "\(ilYAJours(41))", "activitiesCount": 6,
+              "badgeKeys": ["firstRun"] }
           ]
         }
         """
@@ -177,8 +189,23 @@ enum CaptureSeed {
         ]
         """
 
-        etat.cachedClubBoard = try? decodeur.decode(ClubBoard.self, from: Data(tableau.utf8))
-        etat.cachedClubFeed = try? decodeur.decode([FeedItem].self, from: Data(fil.utf8))
+        // UN ÉCHEC BRUYANT, ET C'EST VOULU.
+        //
+        // C'était `try?`. Le tableau ci-dessus ne portait ni `joinedAt`, ni `activitiesCount`,
+        // ni `badgeKeys` — trois champs NON optionnels de `LeaderboardRow` — donc le décodage
+        // échouait, le cache restait nil, et l'écran du Club montrait son formulaire « Créer un
+        // club » sous une accroche qui parle du fil du club. Rien ne l'a dit : le `?` avait
+        // avalé l'erreur, et il a fallu une exécution complète et une relecture de l'image pour
+        // s'en apercevoir.
+        //
+        // Ce code n'existe qu'en débogage et ne tourne que dans le simulateur des captures.
+        // Mieux vaut qu'il s'arrête net, avec la raison, que de livrer une image fausse.
+        do {
+            etat.cachedClubBoard = try decodeur.decode(ClubBoard.self, from: Data(tableau.utf8))
+            etat.cachedClubFeed = try decodeur.decode([FeedItem].self, from: Data(fil.utf8))
+        } catch {
+            preconditionFailure("Le club de démonstration ne se décode pas : \(error)")
+        }
 
         // Le cache ne suffit pas : `ClubView` affiche son écran de connexion AVANT de le
         // regarder. Une session de démonstration ouvre la porte ; elle ne vaut que pour ce

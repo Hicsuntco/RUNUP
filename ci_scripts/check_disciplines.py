@@ -238,6 +238,22 @@ def switchs_non_exhaustifs(source, cas_connus):
     distingue un `switch` sur une discipline d'un `switch` sur une énumération qui aurait, par
     hasard, un cas du même nom. Un motif étranger suffit à écarter le bloc — le sens prudent,
     puisque se tromper ici reviendrait à refuser du code juste.
+
+    # LA LIMITE DE CETTE HEURISTIQUE, ET POURQUOI ELLE TIENT ICI
+
+    Elle ne lit pas le TYPE sur lequel porte le `switch` : elle compare des noms de cas. Un
+    `switch` sur une autre énumération dont les cas seraient un sous-ensemble strict de ceux de
+    `Discipline` serait donc réclamé à tort.
+
+    Ça n'arrive pas pour `Discipline`, parce que `run`, `bike`, `trail` et `swim` sont des noms
+    distinctifs : rien d'autre dans ce dépôt ne s'appelle comme ça. Mais la même règle appliquée
+    à une énumération aux noms banals se tromperait aussitôt — essayée sur `TrainingBlock`
+    (`base`, `specifique`, `affutage`, `deload`), elle a réclamé quatre `switch` qui portaient
+    en réalité sur `UltraTrail.Bloc`, une énumération de trois cas aux trois mêmes noms.
+
+    Donc : si quelqu'un étend ce contrôle à une autre énumération, il lui faudra lire le type et
+    pas seulement les noms. Pour `Discipline`, les noms suffisent — et le laisser plus simple
+    qu'il n'a besoin de l'être est préférable à un analyseur de types approximatif.
     """
     manques = []
     for ligne, cas, defaut in _blocs_switch(source):

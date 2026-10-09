@@ -181,4 +181,19 @@ enum NiveauDeNage: String, Codable, CaseIterable, Identifiable {
         guard let metres = metresEnContinu else { return true }
         return format.nageMetres > metres * 3
     }
+
+    /// Peut-on lui prescrire une nage CONTINUE, et un fractionné en bassin ?
+    ///
+    /// Quatre cents mètres d'affilée, c'est le seuil à partir duquel « nage vingt minutes sans
+    /// t'arrêter » est une consigne et non un danger. En dessous, la séance de natation du plan
+    /// reste `triSwimLearn` : des longueurs courtes, autant de pauses qu'il faut, et le temps
+    /// dans l'eau comme seul objectif.
+    ///
+    /// C'EST LE SEUL ENDROIT DE L'APP OÙ UNE RÉPONSE D'INSCRIPTION EMPÊCHE UNE SÉANCE D'EXISTER.
+    /// Partout ailleurs une réponse module une durée ou une allure. Ici elle interdit, parce que
+    /// la séance interdite se fait seule au milieu d'un bassin et que l'app ne verra rien si elle
+    /// se passe mal.
+    var peutEnchainerUneSerie: Bool {
+        (metresEnContinu ?? 0) >= 400
+    }
 }

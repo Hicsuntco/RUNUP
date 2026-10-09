@@ -885,6 +885,83 @@ enum AdaptivePlanEngine {
         return adjustForWellbeing(base, profile: profile)
     }
 
+    /// LA PREMIÈRE SEMAINE DE CETTE APP QUI N'EST PAS UNE SEMAINE DE COURSE.
+    ///
+    /// # CE QUI DÉCIDE DE LA FORME
+    ///
+    /// Le vélo est de loin la plus longue des trois épreuves — 180 km contre 42 sur une longue
+    /// distance — donc c'est lui qui porte la séance longue. La natation est la plus courte et
+    /// la plus technique, donc elle revient le plus souvent et jamais longtemps. Et la séance qui
+    /// définit le triathlon n'est aucune des trois : c'est l'enchaînement vélo→course, qui
+    /// devient la séance longue du bloc spécifique parce que c'est elle qu'il faut avoir répétée.
+    ///
+    /// # LE NOMBRE DE SÉANCES SUIT LES JOURS QU'ELLE A CHOISIS
+    ///
+    /// Le distributeur fait tourner `otherTemplates` positionnellement : avec quatre jours, elle
+    /// voit la longue plus les trois premiers « autres ». L'ORDRE DE CE TABLEAU EST DONC UN
+    /// ORDRE DE PRIORITÉ, et il est choisi pour qu'une semaine de trois jours contienne quand
+    /// même les trois disciplines. Trois jours restent minces pour un triathlon ; le dire est
+    /// l'affaire des garde-fous, pas de cette fonction.
+    ///
+    /// # CE QUE LE NIVEAU DE NATATION INTERDIT
+    ///
+    /// En dessous de quatre cents mètres d'affilée, la séance de natation du plan reste
+    /// « durer dans l'eau » et le fractionné en bassin n'est JAMAIS prescrit. Voir
+    /// `NiveauDeNage.peutEnchainerUneSerie` : c'est le seul endroit de l'app où une réponse
+    /// d'inscription empêche une séance d'exister, et c'est voulu.
+    private static func triathlonArchetypes(for block: TrainingBlock, profile: UserProfile) -> [SessionArchetype] {
+        let zones = PaceModel.zones(for: profile)
+        // Le repli prudent et non le plus courant : une réponse absente ne doit pas autoriser
+        // plus d'eau que la réponse la plus timide. En pratique il est inatteignable — la
+        // question est obligatoire à l'inscription — mais un repli d'inscription qui se trompe
+        // du côté dangereux est exactement le genre de ligne qu'on écrit une fois et qu'on ne
+        // relit jamais.
+        let niveau = profile.nageNiveau.flatMap { NiveauDeNage(rawValue: $0) } ?? .moins200
+        let nageDeFond: SessionKind = niveau.peutEnchainerUneSerie ? .triSwimEndurance : .triSwimLearn
+        let nageDeQualite: SessionKind = niveau.peutEnchainerUneSerie ? .triSwimIntervals : .triSwimLearn
+        let dureeDeNage = niveau.peutEnchainerUneSerie ? 40 : 30
+
+        let base: [SessionArchetype]
+        switch block {
+        case .base:
+            base = [
+                SessionArchetype(role: .longRun, title: "Vélo · endurance", subtitle: "longue, régulière, sans forcer — le vélo est la plus longue des trois épreuves", pace: "—", zone: "Z2", baseDuration: 90, kind: .triBikeEndurance),
+                SessionArchetype(role: .easy, title: "Natation · endurance", subtitle: "nage continue, souffle régulier", pace: "—", zone: "Z2", baseDuration: dureeDeNage, kind: nageDeFond),
+                SessionArchetype(role: .easy, title: "Footing d'endurance", subtitle: "la course reste la course — elle garde sa place dans la semaine", pace: zones.easy, zone: "Z2", baseDuration: 40, kind: .enduranceFooting),
+                SessionArchetype(role: .speed, title: "Vélo · seuil", subtitle: "des blocs soutenus — on gagne du temps là sans en perdre pour la suite", pace: "—", zone: "Z3", baseDuration: 55, kind: .triBikeThreshold)
+            ]
+        case .specifique:
+            base = [
+                // L'enchaînement prend la place de la séance longue, et c'est tout le bloc
+                // spécifique : ce qui se répète ici est la JOURNÉE, pas une discipline.
+                SessionArchetype(role: .longRun, title: "Enchaînement vélo → course", subtitle: "descendre du vélo et partir courir tout de suite — les premiers kilomètres ne ressemblent à rien d'autre", pace: zones.marathon, zone: "Z3", baseDuration: 80, kind: .triBrick),
+                SessionArchetype(role: .speed, title: "Natation · fractionné", subtitle: "séries courtes, récupération au mur", pace: "—", zone: "Z3-4", baseDuration: dureeDeNage, kind: nageDeQualite),
+                SessionArchetype(role: .easy, title: "Vélo · endurance", subtitle: "le volume du vélo ne baisse pas pendant le bloc spécifique", pace: "—", zone: "Z2", baseDuration: 75, kind: .triBikeEndurance),
+                SessionArchetype(role: .speed, title: "Tempo run", subtitle: "allure soutenue sur jambes fraîches — l'autre moitié du travail d'allure", pace: zones.threshold, zone: "Z3", baseDuration: 40, kind: .tempoRun),
+                SessionArchetype(role: .easy, title: "Natation · technique", subtitle: "éducatifs — en natation, le geste fait plus de différence que la condition", pace: "—", zone: "Technique", baseDuration: 30, kind: .triSwimTechnique)
+            ]
+        case .affutage:
+            base = [
+                SessionArchetype(role: .longRun, title: "Enchaînement · allure de course", subtitle: "le même enchaînement, aux allures du jour J — la répétition générale", pace: zones.marathon, zone: "Z3", baseDuration: 50, kind: .triBrickRace),
+                // L'eau libre est ICI et pas dans le bloc spécifique : courte, sans fatigue à
+                // accumuler, elle sert à vérifier la combinaison et à se rappeler qu'on sait
+                // viser sans ligne au fond. C'est exactement ce qu'un affûtage peut se permettre.
+                SessionArchetype(role: .easy, title: "Natation · eau libre", subtitle: "vérifier la combinaison et le repérage — courte, et jamais seule", pace: "—", zone: "Z2", baseDuration: 30, kind: .triOpenWater),
+                SessionArchetype(role: .easy, title: "Transitions · T1 et T2", subtitle: "deux minutes gagnées ici valent une séance de seuil", pace: "—", zone: "Technique", baseDuration: 25, kind: .triTransitions),
+                SessionArchetype(role: .easy, title: "Footing d'entretien", subtitle: "relâché, rien à construire", pace: zones.easy, zone: "Z2", baseDuration: 25, kind: .maintenanceFooting)
+            ]
+        case .deload:
+            base = [
+                SessionArchetype(role: .longRun, title: "Vélo · endurance", subtitle: "volume réduit, aucune intensité", pace: "—", zone: "Z1-2", baseDuration: 60, kind: .triBikeEndurance),
+                SessionArchetype(role: .easy, title: "Natation · technique", subtitle: "le bassin est l'endroit le plus doux de la semaine de récup", pace: "—", zone: "Technique", baseDuration: 30, kind: .triSwimTechnique),
+                SessionArchetype(role: .easy, title: "Footing récup", subtitle: "coupe le volume, écoute ton corps", pace: zones.easy, zone: "Z1-2", baseDuration: 22, kind: .recoveryFooting),
+                SessionArchetype(role: .easy, title: "Natation · endurance", subtitle: "nage facile, sans chrono", pace: "—", zone: "Z2", baseDuration: dureeDeNage, kind: nageDeFond)
+            ]
+        }
+
+        return adjustForWellbeing(base, profile: profile)
+    }
+
     /// Real, human-readable label for the raw onboarding id — `CoachService` used to interpolate
     /// the raw id ("knee") straight into the coach's system prompt instead of this.
     static func injuryLabel(_ id: String) -> String {
@@ -1032,6 +1109,8 @@ enum AdaptivePlanEngine {
         case .ultraTrail:
             templates = ultraTrailArchetypes(for: block, profile: profile,
                                              weekNumber: weekNumber, shape: shape)
+        case .triathlon:
+            templates = triathlonArchetypes(for: block, profile: profile)
         default:
             templates = archetypes(for: block, profile: profile, weekNumber: weekNumber, shape: shape)
         }
@@ -1071,6 +1150,25 @@ enum AdaptivePlanEngine {
         let maxQualityPerWeek = 2
         var qualityUsed = 0
 
+        // LE PLAFOND NE COMPTE QUE CE QUI PÈSE SUR LES JAMBES.
+        //
+        // Il existe contre une cause précise : trois ou quatre séances intenses EN COURANT dans
+        // la même semaine, c'est-à-dire trois ou quatre fois le même impact sur les mêmes
+        // tendons. Il a toujours compté « les séances de rôle `.speed` », ce qui revenait au
+        // même tant que toutes les séances du moteur se couraient.
+        //
+        // Un plan de triathlon en met trois d'un coup : fractionné en bassin, seuil à vélo,
+        // tempo à pied. Les compter ensemble aurait fait remplacer le seuil vélo par une nage
+        // facile — en invoquant un risque de blessure à la course que ni le bassin ni la selle
+        // ne font courir. Le propre des trois disciplines est justement de répartir la charge
+        // sur des tissus différents ; un plafond qui l'ignore annule la raison d'être du format.
+        //
+        // La question posée est donc « est-ce que cette séance se fait chaussée ? », lue sur la
+        // séance elle-même (voir `SessionKind.disciplines`) et non sur une liste écrite ici.
+        func peseSurLesJambes(_ a: SessionArchetype) -> Bool {
+            a.kind.disciplines.contains { $0.wearsShoes }
+        }
+
         var otherIndex = 0
         return (0..<7).map { weekday in
             guard sortedRunDays.contains(weekday) else { return PlannedDay(weekday: weekday, session: nil) }
@@ -1083,7 +1181,7 @@ enum AdaptivePlanEngine {
             } else if !otherTemplates.isEmpty {
                 archetype = otherTemplates[otherIndex % otherTemplates.count]
                 otherIndex += 1
-                if archetype.role == .speed {
+                if archetype.role == .speed, peseSurLesJambes(archetype) {
                     if qualityUsed >= maxQualityPerWeek, let easyTemplate {
                         archetype = easyTemplate
                     } else {
@@ -1264,12 +1362,27 @@ enum AdaptivePlanEngine {
     /// enregistrée le lundi cocherait le dimanche À VENIR. Le cas devient courant avec l'import
     /// depuis Santé, qui remonte plusieurs jours en arrière.
     static func markSessionDone(for run: RunRecord, profile: UserProfile) {
-        // Tant qu'il n'existe pas de plan triathlon, le plan est un plan de COURSE : une sortie
-        // vélo n'a aucune de ses cases à cocher. Sans ce garde, rouler le mardi validait la
-        // séance de fractionné du mardi, et le moteur adaptait la semaine suivante sur une
-        // séance qui n'a jamais eu lieu.
-        guard run.discipline.completesRunningPlan else { return }
+        // LA QUESTION PART DE LA SÉANCE, PLUS DE LA DISCIPLINE.
+        //
+        // Elle partait de la discipline — `run.discipline.completesRunningPlan` — et c'était
+        // juste tant que le plan était un plan de course : une sortie vélo n'avait aucune de ses
+        // cases à cocher. Sans ce garde, rouler le mardi validait le fractionné du mardi, et le
+        // moteur adaptait la semaine suivante sur une séance qui n'a jamais eu lieu.
+        //
+        // Un plan de triathlon renverse la question. « Est-ce que ça coche le plan de course »
+        // n'a plus de sens dans une semaine qui contient trois disciplines : rouler DOIT cocher
+        // la séance de vélo du mardi, et nager ne doit cocher que la natation. C'est la séance
+        // du jour qu'il faut interroger, et elle sait répondre — voir
+        // `SessionKind.estCompleteePar(_:)`.
+        //
+        // Le repli quand la journée n'a pas de `kind` (un plan enregistré avant que ce champ
+        // existe) est l'ancienne règle, mot pour mot : ces plans-là sont tous des plans de
+        // course, et c'est la bonne réponse pour eux.
         let runDay = weekdayIndex(for: run.date)
+        let seanceDuJour = profile.weekSessions.first { $0.weekday == runDay }?.session?.kind
+        let coche = seanceDuJour.map { $0.estCompleteePar(run.discipline) }
+            ?? run.discipline.completesRunningPlan
+        guard coche else { return }
         if currentWeekRange().contains(run.date) {
             profile.weekStrip = profile.weekStrip.map { day in
                 var d = day

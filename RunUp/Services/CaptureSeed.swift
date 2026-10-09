@@ -197,5 +197,80 @@ enum CaptureSeed {
             )
         }
     }
+
+    /// Une préparation de 10 km en cours : une date devant soi, un chrono visé, quatre jours par
+    /// semaine. C'est l'objectif le plus choisi, et celui dont toutes les accroches parlent.
+    private static func resultat(maintenant: Date) -> AdaptivePlanEngine.OnboardingResult {
+        let calendrier = Calendar.current
+        return AdaptivePlanEngine.OnboardingResult(
+            name: "Charlotte",
+            birthdate: calendrier.date(byAdding: .year, value: -31, to: maintenant),
+            sex: "female",
+            goal: .race,
+            raceDistance: .k10,
+            raceDistanceCustom: nil,
+            raceElevationGainM: nil,
+            raceChrono: "47:30",
+            // Six semaines devant : assez pour que le plan soit en plein bloc spécifique, donc
+            // que l'écran du plan montre autre chose que des footings de base.
+            raceDate: calendrier.date(byAdding: .weekOfYear, value: 6, to: maintenant),
+            hyroxDivision: nil,
+            triathlonFormat: nil,
+            nageNiveau: nil,
+            runningDays: [0, 2, 4, 6],
+            preferredLongRunDay: 6,
+            level: .intermediaire,
+            connectedSources: [.apple],
+            weightNowKg: nil,
+            weightTargetKg: nil,
+            heightCm: nil,
+            focusArea: nil,
+            bestRecentPerf: "10 km en 49:12",
+            lastRanRecency: nil,
+            injuryArea: nil,
+            weeklyTimeBudget: nil,
+            preferredTimeOfDay: nil,
+            cycleTrackingEnabled: false,
+            lastPeriodStartDate: nil,
+            averageCycleLengthDays: 28
+        )
+    }
+
+    /// Huit semaines d'historique, qui PROGRESSENT.
+    ///
+    /// L'écran des statistiques trace une courbe d'allure : un historique où toutes les sorties
+    /// se valent y dessine une ligne plate, c'est-à-dire la capture la moins convaincante qu'une
+    /// app d'entraînement puisse publier. Les allures descendent donc de 5:50 à 5:06 au fil des
+    /// semaines, avec du bruit — une courbe parfaitement lisse ne ressemble à personne.
+    private static func historique(maintenant: Date) -> [RunRecord] {
+        let calendrier = Calendar.current
+        // (jours en arrière, km, secondes/km, type de séance)
+        let sorties: [(Int, Double, Double, SessionKind)] = [
+            (2, 8.1, 318, .enduranceFooting), (4, 6.0, 306, .tempoRun),
+            (6, 14.2, 330, .longRun), (9, 7.5, 320, .easyFooting),
+            (11, 9.0, 310, .vo2maxIntervals), (13, 13.0, 334, .longRun),
+            (16, 7.2, 324, .enduranceFooting), (18, 8.6, 314, .tempoRun),
+            (20, 12.4, 338, .longRun), (23, 6.8, 328, .easyFooting),
+            (25, 8.0, 318, .vo2maxIntervals), (27, 11.8, 342, .longRun),
+            (31, 6.5, 332, .enduranceFooting), (34, 10.5, 346, .longRun),
+            (38, 6.0, 338, .easyFooting), (41, 9.6, 350, .longRun),
+        ]
+        return sorties.map { jours, km, secParKm, kind in
+            let releve = AdaptivePlanEngine.buildRunRecord(
+                title: "Sortie",
+                elapsedSeconds: km * secParKm,
+                distanceKm: km,
+                kcal: Calories.estimate(.run, distanceKm: km, durationMinutes: Int(km * secParKm / 60)),
+                avgHeartRate: 148,
+                elevationGainM: Int(km * 6),
+                sessionKind: kind
+            )
+            releve.date = calendrier.date(byAdding: .day, value: -jours, to: maintenant) ?? maintenant
+            // Déjà débriefées : une course en attente de ressenti ouvre une feuille modale au
+            // lancement, qui viendrait se poser au milieu de la capture.
+            releve.debriefedAt = releve.date
+            return releve
+        }
+    }
 }
 #endif

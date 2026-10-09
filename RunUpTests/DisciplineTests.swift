@@ -202,7 +202,7 @@ final class DisciplineTests: XCTestCase {
         XCTAssertTrue(Discipline.trail.wearsShoes)
         XCTAssertTrue(Discipline.trail.completesRunningPlan)
         XCTAssertTrue(Discipline.trail.countsTowardStreak)
-        XCTAssertTrue(Discipline.trail.usesPacePerKm)
+        XCTAssertTrue(Discipline.trail.seLitEnAllure)
     }
 
     /// Mais il ne VISE pas d'allure, et c'est la distinction que le trail a rendue nécessaire :
@@ -255,6 +255,68 @@ final class DisciplineTests: XCTestCase {
         XCTAssertEqual(releves.only(.run).map(\.distanceKm).reduce(0, +), 10, accuracy: 0.001,
                        "`only(.run)` reste la route seule — c'est ce qu'il faut pour l'allure")
         XCTAssertEqual(releves.allDisciplines.count, 3)
+    }
+
+    // MARK: - La natation
+
+    /// UN NAGEUR SE LIT AUX CENT MÈTRES, JAMAIS AU KILOMÈTRE.
+    ///
+    /// C'est ce qu'un booléen ne savait pas dire : `usesPacePerKm` n'avait que deux réponses, et
+    /// la nage en demande une troisième. Vrai, et l'unité affichée devenait « /km » sur un
+    /// chiffre qui est aux cent mètres ; faux, et la nage s'affichait en kilomètres-heure.
+    ///
+    /// La valeur est comparée, pas seulement l'unité : c'est la division par dix qui fait tout le
+    /// travail, et une unité juste sur un chiffre au kilomètre serait le pire des deux mondes.
+    func testLaNageSeLitEnMinutesAuxCentMetres() {
+        XCTAssertEqual(Discipline.swim.rythmeUnite, "/100 m")
+        XCTAssertTrue(Discipline.swim.seLitEnAllure, "une nage est une allure, pas une vitesse")
+
+        // 1 150 s/km, soit 115 s aux cent mètres : l'allure d'une nageuse ordinaire.
+        let lu = TimeFormat.rythme(.swim, secondesParKm: 1150)
+        XCTAssertEqual(lu.valeur, "1:55")
+        XCTAssertEqual(lu.unite, "/100 M")
+        // La même allure au kilomètre s'écrirait « 19:10 » — juste, et illisible pour un nageur.
+        XCTAssertEqual(TimeFormat.rythme(.run, secondesParKm: 1150).valeur, "19:10")
+
+        // Les trois unités sont trois unités : deux disciplines qui rendraient la même ne
+        // justifieraient pas l'énumération.
+        let unites = Set([Discipline.run, .bike, .swim].map(\.rythmeUnite))
+        XCTAssertEqual(unites.count, 3)
+    }
+
+    /// Et elle ne compte nulle part où la course compte.
+    ///
+    /// Le défaut que `Discipline` existe pour empêcher, dans sa version natation : quarante
+    /// longueurs entrant dans la distance courue du mois, une paire de chaussures vieillissant
+    /// au chlore, et la séance de course du jour cochée par une heure de bassin.
+    func testLaNageNeCompteNullePartOuLaCourseCompte() {
+        XCTAssertFalse(Discipline.swim.wearsShoes)
+        XCTAssertFalse(Discipline.swim.completesRunningPlan)
+        XCTAssertFalse(Discipline.swim.followsPaceTargets)
+        // Mais elle compte pour l'assiduité : une heure de bassin n'est pas rien.
+        XCTAssertTrue(Discipline.swim.countsTowardStreak)
+
+        let releves = [releve(.run, km: 10, secondes: 3000, allure: "5:00"),
+                       releve(.trail, km: 12, secondes: 5400, allure: "7:30"),
+                       releve(.swim, km: 2, secondes: 2400, allure: "20:00")]
+        XCTAssertEqual(releves.onFoot.map(\.distanceKm).reduce(0, +), 22, accuracy: 0.001,
+                       "les deux kilomètres nagés n'entrent pas dans la distance courue")
+        XCTAssertTrue(releves.only(.swim).count == 1, "mais ils se retrouvent par leur discipline")
+    }
+
+    /// Elle ne se démarre pas depuis le téléphone, et c'est le cadran qui lit ce drapeau.
+    ///
+    /// Il n'y a pas de GPS sous l'eau, le téléphone n'entre pas dans le bassin, et une longueur
+    /// ne se compte qu'au poignet. Une nage entre par Apple Santé ou à la main — et un bouton qui
+    /// démarrerait une course ne mesurant rien est le genre de chose qu'on découvre au bord d'un
+    /// bassin, maillot mouillé.
+    func testSeulesLesDisciplinesSuiviesParGPSSeDemarrent() {
+        for discipline in Discipline.allCases {
+            XCTAssertEqual(discipline.seDemarreDepuisLeTelephone, discipline != .swim,
+                           "\(discipline)")
+        }
+        XCTAssertEqual(Discipline.demarrables, [.run, .bike, .trail])
+        XCTAssertFalse(Discipline.demarrables.contains(.swim))
     }
 
     /// Les chaussures s'usent en trail. Le drapeau le disait déjà ; plus personne ne le

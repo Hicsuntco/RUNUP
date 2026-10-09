@@ -44,14 +44,17 @@ final class DisciplineDialTests: XCTestCase {
         }
     }
 
-    /// Et les trois sont atteignables : un cadran dont un rond ne serait jamais choisi serait un
-    /// cadran à deux ronds avec un décor.
-    func testLesTroisDisciplinesSontAtteignables() {
+    /// Et toutes les disciplines du cadran sont atteignables : un cadran dont un rond ne serait
+    /// jamais choisi serait un cadran à deux ronds avec un décor.
+    ///
+    /// `demarrables` et non `allCases` depuis que la natation existe : elle est dans
+    /// l'énumération et n'a pas de rond, parce qu'on ne lance pas un bassin depuis une poche.
+    func testToutesLesDisciplinesDuCadranSontAtteignables() {
         var vues = Set<Discipline>()
         for degres in stride(from: 0.0, through: 180.0, by: 1.0) {
             if let option = DisciplineDial.option(pour: doigt(degres)) { vues.insert(option) }
         }
-        XCTAssertEqual(vues, Set(Discipline.allCases))
+        XCTAssertEqual(vues, Set(Discipline.demarrables))
     }
 
     // MARK: - Les trois façons de ne rien choisir
@@ -105,8 +108,10 @@ final class DisciplineDialTests: XCTestCase {
     /// un autre serait un cadran qui ment. On vérifie donc que la direction de chaque rond est
     /// bien celle qui le choisit.
     func testChaqueRondEstViseParSaPropreDirection() {
-        for discipline in Discipline.allCases {
-            let centre = DisciplineDial.position(discipline)
+        for discipline in Discipline.demarrables {
+            guard let centre = DisciplineDial.position(discipline) else {
+                return XCTFail("\(discipline) est démarrable et devrait avoir une position")
+            }
             let versLeRond = CGSize(width: centre.x, height: centre.y)
             XCTAssertEqual(DisciplineDial.option(pour: versLeRond), discipline,
                            "glisser vers le rond \(discipline) doit choisir \(discipline)")
@@ -114,21 +119,56 @@ final class DisciplineDialTests: XCTestCase {
     }
 
     func testLesRondsSontSurLArcEtAuDessusDuBouton() {
-        for discipline in Discipline.allCases {
-            let p = DisciplineDial.position(discipline)
+        for discipline in Discipline.demarrables {
+            guard let p = DisciplineDial.position(discipline) else {
+                return XCTFail("\(discipline) est démarrable et devrait avoir une position")
+            }
             XCTAssertEqual(hypot(p.x, p.y), DisciplineDial.rayon, accuracy: 0.001)
             XCTAssertLessThan(p.y, 0, "\(discipline) doit être AU-DESSUS du bouton")
         }
     }
 
-    /// Course à gauche, vélo au centre, trail à droite — l'ordre de lecture, et celui de
-    /// `Discipline.allCases`. Fixe, donc le geste s'apprend et finit par se faire sans regarder.
+    /// Course à gauche, vélo au centre, trail à droite — l'ordre de lecture. Fixe, donc le geste
+    /// s'apprend et finit par se faire sans regarder.
     func testLOrdreDesRondsEstCeluiDeLaLecture() {
-        let course = DisciplineDial.position(.run)
-        let velo = DisciplineDial.position(.bike)
-        let trail = DisciplineDial.position(.trail)
+        guard let course = DisciplineDial.position(.run),
+              let velo = DisciplineDial.position(.bike),
+              let trail = DisciplineDial.position(.trail)
+        else { return XCTFail("les trois disciplines du cadran doivent avoir une position") }
         XCTAssertLessThan(course.x, velo.x)
         XCTAssertLessThan(velo.x, trail.x)
         XCTAssertEqual(velo.x, 0, accuracy: 0.001, "le vélo est droit au-dessus du bouton")
+    }
+
+    // MARK: - Ce que le cadran ne doit PAS proposer
+
+    /// LA NATATION N'A PAS DE ROND, ET AUCUN GESTE NE DOIT LA CHOISIR.
+    ///
+    /// Elle est entrée dans `Discipline` parce qu'un triathlon en a besoin, et elle ne se démarre
+    /// pas depuis le téléphone : il n'y a pas de GPS sous l'eau. Un quatrième rond aurait donc
+    /// lancé une course qui ne mesure rien — et c'est le genre de bouton qu'on ne découvre qu'en
+    /// le touchant, au bord d'un bassin.
+    ///
+    /// On balaie tout le demi-cercle, au degré près et sur toute la portée : AUCUNE direction ne
+    /// doit rendre une discipline qui ne se démarre pas.
+    func testAucunGesteNeChoisitUneDisciplineQuiNeSeDemarrePas() {
+        XCTAssertNil(DisciplineDial.position(.swim), "la nage n'a pas de place sur le cadran")
+        XCTAssertNil(DisciplineDial.angle(.swim))
+        XCTAssertFalse(Discipline.demarrables.contains(.swim))
+        // Et elle est bien dans l'énumération : sans ça, ce test passerait pour la mauvaise raison.
+        XCTAssertTrue(Discipline.allCases.contains(.swim))
+
+        for degre in 0...180 {
+            for rayon in [DisciplineDial.zoneMorte + 1, DisciplineDial.rayon,
+                          DisciplineDial.porteeMaximale - 1] {
+                let radians = Double(degre) * .pi / 180
+                let translation = CGSize(width: rayon * CGFloat(cos(radians)),
+                                         height: -rayon * CGFloat(sin(radians)))
+                if let choisie = DisciplineDial.option(pour: translation) {
+                    XCTAssertTrue(choisie.seDemarreDepuisLeTelephone,
+                                  "\(degre)° à \(Int(rayon)) pt choisit \(choisie), qui ne se démarre pas")
+                }
+            }
+        }
     }
 }

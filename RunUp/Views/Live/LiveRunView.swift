@@ -620,7 +620,7 @@ struct LiveRunView: View {
         case .tooSlow: spoken = String(localized: "Allure \(value) par kilomètre, accélère")
         case .tooFast: spoken = String(localized: "Allure \(value) par kilomètre, ralentis")
         case .onTarget, .unknown:
-            spoken = vm?.discipline.usesPacePerKm ?? true
+            spoken = vm?.discipline.seLitEnAllure ?? true
                 ? String(localized: "Allure \(value) par kilomètre")
                 : String(localized: "Vitesse \(value) kilomètres par heure")
         }

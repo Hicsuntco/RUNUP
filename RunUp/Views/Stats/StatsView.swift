@@ -213,7 +213,7 @@ struct StatsView: View {
                                    value: PaceModel.formatTotalDuration(bikeDurationSeconds),
                                    unit: nil, footnote: nil, progress: nil)
                         // La VITESSE, pas l'allure — « 2:30/km » à vélo est juste et illisible.
-                        // C'est la même règle que `Discipline.usesPacePerKm` applique à l'écran
+                        // C'est la même règle que `Discipline.seLitEnAllure` applique à l'écran
                         // de course ; elle vaut ici pour la même raison.
                         RUStatTile(icon: "speedometer", tint: RUColor.cyan,
                                    title: "Vitesse moyenne",

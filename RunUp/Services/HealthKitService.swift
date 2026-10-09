@@ -237,6 +237,14 @@ final class HealthKitService {
         case .bike:
             typeDeSeance = .cycling
             grandeurDistance = .distanceCycling
+        // La nage n'arrive jamais ici aujourd'hui : rien ne l'enregistre dans l'app, et une
+        // sortie importée de Santé n'y est pas réécrite. L'appariement est quand même JUSTE,
+        // parce qu'une réponse fausse posée « en attendant » est celle qu'on ne relit plus —
+        // et `.distanceSwimming` sur une séance `.running` donnerait, chez elle, des longueurs
+        // sans séance et une séance sans distance.
+        case .swim:
+            typeDeSeance = .swimming
+            grandeurDistance = .distanceSwimming
         }
 
         let configuration = HKWorkoutConfiguration()

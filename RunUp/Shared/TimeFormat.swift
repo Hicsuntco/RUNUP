@@ -79,6 +79,16 @@ enum TimeFormat {
     ///
     /// Rend « — » plutôt que l'infini quand il n'y a pas encore d'allure : un zéro au
     /// dénominateur est une absence de mesure, pas une vitesse nulle.
+    /// « 1:55 » pour une nage — des minutes aux CENT MÈTRES.
+    ///
+    /// Un dixième de l'allure au kilomètre, et c'est tout : la chaîne qui mesure une sortie rend
+    /// des secondes par kilomètre quelle que soit la discipline, parce qu'elle ne sait diviser
+    /// qu'une distance par un temps. La conversion se fait donc ici, au moment d'écrire — un seul
+    /// endroit, comme l'unité juste à côté.
+    static func allureParCentMetres(secondesParKm: Double) -> String {
+        allure(secondesParKm: max(0, secondesParKm) / 10)
+    }
+
     static func vitesse(secondesParKm: Double) -> String {
         guard secondesParKm > 0 else { return "—" }
         let kmh = 3600 / secondesParKm
@@ -101,9 +111,13 @@ enum TimeFormat {
     static func rythme(_ discipline: Discipline, secondesParKm: Double) -> (valeur: String, unite: String) {
         // L'unité vient de `Discipline`, qui est le seul endroit à l'écrire : l'île dynamique en
         // a besoin aussi, et elle l'avait recopiée — en dur, et sans jamais changer de discipline.
-        (discipline.usesPacePerKm ? allure(secondesParKm: secondesParKm)
-                                  : vitesse(secondesParKm: secondesParKm),
-         discipline.rythmeUnite.uppercased())
+        let valeur: String
+        switch discipline.rythme {
+        case .allureParKm: valeur = allure(secondesParKm: secondesParKm)
+        case .allureParCentMetres: valeur = allureParCentMetres(secondesParKm: secondesParKm)
+        case .vitesse: valeur = vitesse(secondesParKm: secondesParKm)
+        }
+        return (valeur, discipline.rythmeUnite.uppercased())
     }
 
     /// La même chose, resserrée : « 3h28 ». Pour une tuile de statistique, où la largeur est

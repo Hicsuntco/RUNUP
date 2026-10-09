@@ -285,7 +285,7 @@ final class LiveRunViewModel {
         let recent = PaceWindow.secPerKm(paceWindow, minimumSeconds: PaceWindow.displayMinimumSeconds)
         let moyenne: Double? = distanceKm > 0.05 ? elapsedSeconds / distanceKm : nil
         guard let secondes = recent ?? moyenne, secondes > 0 else {
-            return discipline.usesPacePerKm ? "--:--" : "—"
+            return discipline.seLitEnAllure ? "--:--" : "—"
         }
         return TimeFormat.rythme(discipline, secondesParKm: secondes).valeur
     }

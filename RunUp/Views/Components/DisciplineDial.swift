@@ -52,11 +52,18 @@ enum DisciplineDial {
     /// latéraux : c'est la moitié de ce qui les sort de dessous la barre d'onglets, l'autre étant
     /// le rayon. Les resserrer davantage les rapprocherait du rond du haut au point de les
     /// confondre au doigt.
-    static func angle(_ discipline: Discipline) -> Double {
+    ///
+    /// `nil` POUR UNE DISCIPLINE QUI NE SE DÉMARRE PAS. La natation est entrée dans
+    /// `Discipline` et n'a pas sa place ici : on ne lance pas un bassin depuis une poche. Lui
+    /// inventer un angle aurait été plus simple et faux — un nombre jamais lu, qui le reste
+    /// jusqu'au jour où quelqu'un l'emploie. `nil` est la seule réponse qui ne mente pas, et le
+    /// compilateur la réclame partout où un angle servait.
+    static func angle(_ discipline: Discipline) -> Double? {
         switch discipline {
         case .run: return 140
         case .bike: return 90
         case .trail: return 40
+        case .swim: return nil
         }
     }
 
@@ -66,7 +73,7 @@ enum DisciplineDial {
     /// barre est donc à `tabBarHeight / 2` au-dessus de ce centre. Un rond est visible en entier
     /// si son bord inférieur passe au-dessus de cette ligne.
     static var margeAuDessusDeLaBarre: CGFloat {
-        let plusBas = Discipline.allCases.map { -position($0).y }.min() ?? 0
+        let plusBas = Discipline.demarrables.compactMap { position($0)?.y }.map { -$0 }.min() ?? 0
         return plusBas - tailleRond / 2 - RUSpacing.tabBarHeight / 2
     }
 
@@ -84,8 +91,9 @@ enum DisciplineDial {
 
     /// Où dessiner un rond, relativement au CENTRE du cadran — qui est aussi celui du bouton RUN.
     /// L'ordonnée est négative vers le haut, comme partout en SwiftUI.
-    static func position(_ discipline: Discipline) -> CGPoint {
-        let radians = angle(discipline) * .pi / 180
+    static func position(_ discipline: Discipline) -> CGPoint? {
+        guard let degres = angle(discipline) else { return nil }
+        let radians = degres * .pi / 180
         // Converti explicitement : `rayon` est un `CGFloat` et `cos` rend un `Double`. Swift sait
         // les mêler, mais une inférence qui marche « en général » n'a pas sa place dans du code
         // qu'on ne peut essayer qu'après un quart d'heure de compilation.
@@ -114,8 +122,12 @@ enum DisciplineDial {
         // positif, sinon tout le demi-cercle est à l'envers.
         let degres = Double(atan2(-translation.height, translation.width)) * 180 / .pi
         guard degres >= 0 else { return nil }
-        return Discipline.allCases.min {
-            abs(angle($0) - degres) < abs(angle($1) - degres)
+        // `demarrables`, pas `allCases` : un doigt ne peut pas viser ce que le cadran ne montre
+        // pas, et `option` est ce qui décide de la discipline avec laquelle une course démarre.
+        return Discipline.demarrables.min { a, b in
+            guard let angleA = angle(a) else { return false }
+            guard let angleB = angle(b) else { return true }
+            return abs(angleA - degres) < abs(angleB - degres)
         }
     }
 }
@@ -141,7 +153,7 @@ struct DisciplineDialView: View {
     var body: some View {
         ZStack {
             arc
-            ForEach(Discipline.allCases, id: \.self) { discipline in
+            ForEach(Discipline.demarrables, id: \.self) { discipline in
                 rond(discipline)
             }
             libelle
@@ -219,8 +231,11 @@ struct DisciplineDialView: View {
         .buttonStyle(PressableStyle())
         // Le décalage est posé ICI et non sur l'appel : il appartient au rond, pas à la boucle qui
         // les énumère, et le calculer une fois évite de demander deux fois la même position.
-        .offset(x: DisciplineDial.position(discipline).x,
-                y: DisciplineDial.position(discipline).y)
+        // `.zero` est inatteignable : `rond` n'est appelé que pour `Discipline.demarrables`, et
+        // toute discipline démarrable a un angle. Le repli existe parce qu'une vue ne peut pas
+        // lever d'exception, pas parce que le cas peut arriver.
+        .offset(x: DisciplineDial.position(discipline)?.x ?? 0,
+                y: DisciplineDial.position(discipline)?.y ?? 0)
         .accessibilityLabel(discipline == selection ? discipline.title : discipline.switchToLabel)
         .accessibilityAddTraits(.isButton)
         .accessibilityAddTraits(discipline == selection ? .isSelected : [])

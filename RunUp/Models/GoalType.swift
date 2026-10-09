@@ -1,6 +1,11 @@
 import Foundation
 
-/// The 6 onboarding objectives. See README § Onboarding step 3.
+/// Les SEPT objectifs de l'inscription, dans l'ordre où l'étape 2 les affiche.
+///
+/// Six à l'origine, puis HYROX, puis l'ultra-trail — et le commentaire disait encore six, en
+/// renvoyant à une section du README qui n'existe plus. La liste qui fait foi est celle de
+/// `GoalStepView`, qui lit `allCases` filtré par `estProposable` : l'ordre de déclaration
+/// ci-dessous EST l'ordre à l'écran.
 enum GoalType: String, Codable, CaseIterable, Identifiable {
     case race, progress, restart, weight, health, hyrox, ultraTrail
 

@@ -11941,6 +11941,38 @@
         }
       }
     },
+    "NAGE": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SWIM"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NADO"
+          }
+        }
+      }
+    },
+    "Natation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swim"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Natación"
+          }
+        }
+      }
+    },
     "Ne plus suivre": {
       "localizations": {
         "en": {
@@ -13416,6 +13448,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cambiar a carrera"
+          }
+        }
+      }
+    },
+    "Passer à la natation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch to swimming"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar a natación"
           }
         }
       }

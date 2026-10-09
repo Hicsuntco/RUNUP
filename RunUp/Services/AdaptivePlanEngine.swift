@@ -1281,7 +1281,22 @@ enum AdaptivePlanEngine {
     }
 
     static func applyDebrief(rpe: RPE, run: RunRecord, profile: UserProfile) -> String {
-        profile.runValue = min(profile.runGoal, ((profile.runValue + run.distanceKm) * 100).rounded() / 100)
+        // `runValue` EST une distance COURUE — « Distance run today », lue par le classement du
+        // club et par le bilan de fin de programme. Elle n'acceptait aucune condition, donc
+        // quarante kilomètres de vélo y entraient tels quels : un chiffre de course gonflé par
+        // une discipline qui n'en est pas une, en tête d'un classement entre coureuses.
+        //
+        // Trouvé en relisant ce chemin pour la natation, et le défaut existait déjà pour le vélo
+        // depuis que le vélo existe. C'est exactement la panne que l'en-tête de `Discipline`
+        // décrit : rien ne casse, rien ne s'affiche en rouge, le nombre devient faux.
+        //
+        // `wearsShoes` plutôt que `completesRunningPlan` : la question n'est pas « est-ce que ça
+        // coche la séance du jour » mais « est-ce que ces kilomètres ont été parcourus à pied ».
+        // Le trail répond oui aux deux, le vélo non aux deux, et les deux questions resteront
+        // distinctes — voir `followsPaceTargets` pour le précédent.
+        if run.discipline.wearsShoes {
+            profile.runValue = min(profile.runGoal, ((profile.runValue + run.distanceKm) * 100).rounded() / 100)
+        }
         // La séance est imputée au jour de la COURSE, pas au jour où le debrief est validé.
         //
         // Les deux coïncident presque toujours, sauf précisément quand ça compte : une course

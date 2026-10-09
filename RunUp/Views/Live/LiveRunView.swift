@@ -284,8 +284,13 @@ struct LiveRunView: View {
     /// course est l'état par défaut de cet écran de toute façon.
     ///
     /// La course ne se nomme pas : « EN DIRECT » seul, parce que c'est le cas ordinaire et que
-    /// « COURSE · EN DIRECT » n'ajouterait rien. Les deux autres se nomment, parce que l'écran est
-    /// le même et que rien d'autre, à cet endroit, ne distingue une sortie vélo d'un footing.
+    /// « COURSE · EN DIRECT » n'ajouterait rien. Les autres se nomment, parce que l'écran est le
+    /// même et que rien d'autre, à cet endroit, ne distingue une sortie vélo d'un footing.
+    ///
+    /// La nage ne peut pas arriver ici — elle ne se démarre pas depuis le téléphone, voir
+    /// `Discipline.seDemarreDepuisLeTelephone`. Son libellé est écrit quand même, et il est vrai :
+    /// le jour où un compteur de longueurs existerait, cet écran n'aurait pas à être retouché, et
+    /// en attendant le compilateur n'a pas à se faire taire avec un `default`.
     private var libelleEtat: LocalizedStringKey {
         if vm?.isAutoPaused == true { return "PAUSE AUTO" }
         if vm?.isPaused == true { return "EN PAUSE" }
@@ -293,6 +298,7 @@ struct LiveRunView: View {
         case .run: return "EN DIRECT"
         case .bike: return "VÉLO · EN DIRECT"
         case .trail: return "TRAIL · EN DIRECT"
+        case .swim: return "NAGE · EN DIRECT"
         }
     }
 

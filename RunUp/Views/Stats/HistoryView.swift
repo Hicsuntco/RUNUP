@@ -114,7 +114,9 @@ struct HistoryView: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(PressableStyle())
-            .accessibilityLabel("Ajouter une course")
+            // « Une séance » : la feuille ajoute aussi des nages et des sorties vélo, et c'est
+            // la seule phrase que VoiceOver lise de ce bouton.
+            .accessibilityLabel("Ajouter une séance")
         }
         .padding(.horizontal, RUSpacing.pagePadding)
         .padding(.top, 8)

@@ -24,7 +24,7 @@ Toute ligne qui agrège un champ de `RunRecord` doit passer par `.only(<discipli
 `.allDisciplines` — ce dernier étant une décision écrite (« ce total porte bien sur tout »), pas
 l'absence de décision. Voir `Discipline` pour le raisonnement complet.
 """
-import pathlib, re, sys
+import json, pathlib, re, sys
 
 RACINE = pathlib.Path(__file__).resolve().parent.parent
 DOSSIERS = ["RunUp/Views", "RunUp/Services", "RunUp/Models", "RunUp/ViewModels", "RunUp/Shared"]
@@ -169,11 +169,149 @@ def drapeaux_fautifs(source):
             if "switch" not in corps and _COMPARAISON.search(corps)]
 
 
+# ── Les `switch` sur une discipline : tous les cas, ou aucun `default` ─────────────────────────
+#
+# Cette règle ne cherche pas un défaut de logique : elle cherche une erreur de COMPILATION, avant
+# que l'intégration continue ne la trouve. Elle existe parce que trois constructions de suite sont
+# mortes là-dessus — `Calories`, `AutoPause`, `TabBarView`, puis `LiveRunView` — chacune pour un
+# `switch` que l'ajout d'une discipline avait rendu non exhaustif, et chacune au prix d'un
+# aller-retour de quinze minutes pour une ligne.
+#
+# Le compilateur fait ce travail mieux que ce script. Il le fait seulement beaucoup plus tard, et
+# un seul fichier à la fois : il s'arrête au premier et ne dit rien des quatre suivants. Ici on
+# les voit tous d'un coup, en une seconde, sur la machine où on écrit.
+#
+# Rien ici n'autorise un `default` : un `switch` sur une discipline qui en a un passe ce contrôle
+# et reste le défaut que `drapeaux_fautifs` décrit — faux en silence à la discipline suivante.
+# Cette règle ne regarde que l'exhaustivité, et laisse l'autre dire ce qu'elle a à dire.
+
+DOSSIERS_SWITCH = ["RunUp", "RunUpWidgets", "RunUpWatch"]
+_CAS_ENUM = re.compile(r"^\s*case\s+(\w+)\s*=", re.M)
+
+
+def cas_de_discipline(source):
+    """Les noms de cas déclarés par l'énumération `Discipline`, lus à la source."""
+    return set(_CAS_ENUM.findall(source))
+
+
+def _blocs_switch(source):
+    """`(ligne, cas cités au premier niveau, le bloc a-t-il un `default`)` pour chaque `switch`.
+
+    Les motifs sont relevés au seul premier niveau d'accolades du bloc : un `switch` imbriqué sur
+    une AUTRE énumération, à l'intérieur, ne doit pas verser ses cas dans ceux du bloc extérieur.
+    """
+    texte = _sans_commentaires(source)
+    out = []
+    for m in re.finditer(r"\bswitch\b[^\n{]*\{", texte):
+        depart = texte.index("{", m.start())
+        niveau, fin = 0, len(texte)
+        for j in range(depart, len(texte)):
+            if texte[j] == "{":
+                niveau += 1
+            elif texte[j] == "}":
+                niveau -= 1
+                if niveau == 0:
+                    fin = j
+                    break
+        cas, defaut = set(), False
+        niveau = 0
+        for c in re.finditer(r"[{}]|\bcase\s+((?:\.\w+\s*,\s*)*\.\w+)|\bdefault\s*:", texte[depart:fin]):
+            jeton = c.group(0)
+            if jeton == "{":
+                niveau += 1
+            elif jeton == "}":
+                niveau -= 1
+            elif niveau != 1:
+                continue
+            elif jeton.startswith("default"):
+                defaut = True
+            else:
+                cas.update(n.strip().lstrip(".") for n in c.group(1).split(","))
+        out.append((texte[:m.start()].count("\n") + 1, cas, defaut))
+    return out
+
+
+def switchs_non_exhaustifs(source, cas_connus):
+    """Les `switch` sur une discipline auxquels il manque un cas.
+
+    Un bloc n'est retenu que si TOUS ses motifs sont des cas de `Discipline` : c'est ce qui
+    distingue un `switch` sur une discipline d'un `switch` sur une énumération qui aurait, par
+    hasard, un cas du même nom. Un motif étranger suffit à écarter le bloc — le sens prudent,
+    puisque se tromper ici reviendrait à refuser du code juste.
+    """
+    manques = []
+    for ligne, cas, defaut in _blocs_switch(source):
+        if defaut or not cas or not cas <= cas_connus:
+            continue
+        absents = cas_connus - cas
+        if absents:
+            manques.append((ligne, sorted(absents)))
+    return manques
+
+
+# ── Les types de séance proposés à la saisie doivent être traduits ─────────────────────────────
+#
+# `check_strings.py` ne peut PAS voir ceux-là, et ce n'est pas un défaut de sa part : il lit des
+# littéraux posés dans un `Text(...)` ou un `LocalizedStringKey("...")`. Ici les chaînes vivent
+# dans un tableau, et c'est une VARIABLE qui est passée au catalogue —
+# `Button(LocalizedStringKey(t))`. Aucune analyse de littéraux ne peut relier les deux.
+#
+# Sans ce contrôle, ajouter une discipline avec sa liste de types de séance ne déclenche rien, et
+# la liste sort en français dans les deux autres langues — un menu « Sortie vélo / Home trainer »
+# au milieu d'une app en anglais. C'est le défaut exact que `check_strings` existe pour empêcher,
+# qui passe par la seule porte qu'il ne peut pas garder.
+
+CATALOGUE = "RunUp/Resources/Localizable.xcstrings"
+LANGUES = ("en", "es")
+# `var typesDeSeanceSaisis: [String] { ... }` — le tableau est pris en entier, puis ses chaînes.
+_LISTE_TYPES = re.compile(r"var\s+typesDeSeanceSaisis\s*:\s*\[String\]\s*\{(.+?)\n    \}", re.S)
+_CHAINE = re.compile(r'"([^"\\]*)"')
+
+
+def types_de_seance(source):
+    """Toutes les chaînes des listes de types de séance de `Discipline`."""
+    m = _LISTE_TYPES.search(_sans_commentaires(source))
+    if not m:
+        return []
+    return _CHAINE.findall(m.group(1))
+
+
+def types_non_traduits(source, catalogue):
+    """Ceux qui manquent au catalogue, ou qui y sont sans l'une des deux traductions."""
+    absents = []
+    for chaine in types_de_seance(source):
+        entree = catalogue.get(chaine)
+        if entree is None:
+            absents.append((chaine, "absent du catalogue"))
+            continue
+        loc = entree.get("localizations", {})
+        manque = [l for l in LANGUES
+                  if not loc.get(l, {}).get("stringUnit", {}).get("value")]
+        if manque:
+            absents.append((chaine, "sans " + " ni ".join(manque)))
+    return absents
+
+
 def main():
     fautifs, lus = [], 0
     source_discipline = (RACINE / FICHIER_DISCIPLINE).read_text()
     fautifs_drapeaux = drapeaux_fautifs(source_discipline)
     nb_drapeaux = len(drapeaux(source_discipline))
+    cas_connus = cas_de_discipline(source_discipline)
+    catalogue = json.loads((RACINE / CATALOGUE).read_text())["strings"]
+    non_traduits = types_non_traduits(source_discipline, catalogue)
+    nb_types = len(types_de_seance(source_discipline))
+    troues, lus_switch = [], 0
+    for dossier in DOSSIERS_SWITCH:
+        racine = RACINE / dossier
+        if not racine.exists():
+            continue
+        for f in sorted(racine.rglob("*.swift")):
+            if f.name in EXEMPTS:
+                continue
+            lus_switch += 1
+            for ligne, absents in switchs_non_exhaustifs(f.read_text(), cas_connus):
+                troues.append((f.relative_to(RACINE), ligne, absents))
     for dossier in DOSSIERS:
         for f in sorted((RACINE / dossier).rglob("*.swift")):
             if f.name in EXEMPTS:
@@ -181,6 +319,23 @@ def main():
             lus += 1
             for ligne, extrait in lignes_fautives(f.read_text()):
                 fautifs.append((f.relative_to(RACINE), ligne, extrait))
+    if non_traduits:
+        print(f"{len(non_traduits)} type(s) de séance proposé(s) à la saisie ne sont pas traduits :\n")
+        for chaine, pourquoi in non_traduits:
+            print(f"  « {chaine} » — {pourquoi}")
+        print(f"\nAjoute-les à {CATALOGUE} avec leurs deux traductions. `check_strings.py` ne")
+        print("peut pas les voir : ils sont passés au catalogue par une variable, pas écrits en")
+        print("littéral. Sans ça le menu sort en français en anglais et en espagnol.")
+        return 1
+    if troues:
+        print(f"{len(troues)} `switch` sur une discipline ne sont pas exhaustifs :\n")
+        for chemin, ligne, absents in troues:
+            print(f"  {chemin}:{ligne}")
+            print(f"    il manque : {', '.join('.' + c for c in absents)}")
+        print("\nLe compilateur dirait la même chose, dans quinze minutes et un fichier à la")
+        print("fois. Réponds pour chaque cas manquant — pas avec un `default`, qui rendrait la")
+        print("réponse fausse en silence à la discipline suivante. Voir `Discipline`.")
+        return 1
     if fautifs:
         print(f"{len(fautifs)} agrégation(s) ne disent pas de quelle discipline elles parlent :\n")
         for chemin, ligne, extrait in fautifs:
@@ -201,6 +356,9 @@ def main():
         return 1
     print(f"Disciplines : {lus} fichiers lus, toutes les agrégations de relevés sont explicites.")
     print(f"              {nb_drapeaux} drapeaux de `Discipline` décident par `switch`.")
+    print(f"              {lus_switch} fichiers balayés, aucun `switch` sur une discipline troué")
+    print(f"              ({len(cas_connus)} disciplines : {', '.join('.' + c for c in sorted(cas_connus))}).")
+    print(f"              {nb_types} types de séance proposés à la saisie, tous traduits.")
     return 0
 
 

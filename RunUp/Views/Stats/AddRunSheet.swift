@@ -10,6 +10,19 @@ import UIKit
 /// Laid out as one grouped list of icon + label + trailing-value rows (same shape
 /// `MoreSettingsView` uses) rather than a stack of separate labelled cards — a single native-
 /// feeling form instead of several small ones.
+///
+/// # ELLE N'AJOUTE PLUS SEULEMENT DES COURSES
+///
+/// C'est le deuxième des deux chemins par lesquels une nage entre dans l'app — l'autre étant
+/// Apple Santé (voir `HealthRunImport`). Il compte autant que lui : une piscine municipale ne
+/// donne pas de fichier, une montre reste au vestiaire, et « quarante minutes, 1500 m » est tout
+/// ce dont on se souvient en sortant. Sans cette feuille, une nageuse sans montre n'aurait
+/// aucune façon de faire exister sa séance.
+///
+/// Tout ce qui dépend de la discipline est lu sur `Discipline` et nulle part ici : l'unité de
+/// saisie (une nage se dit en MÈTRES), le plafond, l'exemple en filigrane, la liste des types de
+/// séance, le tarif en kilocalories, et le fait qu'une paire de chaussures n'a rien à voir avec
+/// un bassin. Cette feuille ne sait pas ce qu'est une nage ; elle sait demander à la discipline.
 struct AddRunSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
@@ -18,19 +31,15 @@ struct AddRunSheet: View {
     @Query(filter: #Predicate<Shoe> { $0.retiredAt == nil }) private var activeShoes: [Shoe]
 
     @State private var date = Date.now
-    @State private var title = Self.titles[0]
+    @State private var discipline: Discipline = .run
+    @State private var title = Discipline.run.typesDeSeanceSaisis[0]
     @State private var distanceText = ""
     @State private var durationMinutesText = ""
     @State private var selectedShoeID: UUID?
 
-    private static let titles = ["Footing", "Sortie longue", "Fractionné", "Tempo run", "Autre"]
-
-    /// Plafonds volontairement larges — le record du monde du 24 h est à ~320 km, et une sortie
-    /// ne dure pas plus d'une journée. Ils n'existent pas pour juger la performance mais pour
-    /// borner ce qui descend ensuite dans les records, la charge d'entraînement et le graphe
-    /// d'allure : une seule saisie à 5000 km les fausse durablement, sans moyen de comprendre
-    /// pourquoi.
-    private static let maxDistanceKm: Double = 500
+    /// Le plafond de distance vit sur `Discipline` : il est dans l'unité de la saisie, et une
+    /// nage ne se borne pas au même nombre qu'une sortie vélo. Celui de la durée est commun —
+    /// une séance ne dure pas plus d'une journée, quelle que soit la discipline.
     private static let maxDurationMinutes: Double = 1440
 
     /// `Double(_:)` accepte « 1e30 », « inf » et « nan » — pas seulement ce qu'un clavier
@@ -49,8 +58,14 @@ struct AddRunSheet: View {
     }
     private var isValid: Bool {
         guard let distance, let durationMinutes else { return false }
-        return distance > 0 && distance <= Self.maxDistanceKm
+        return distance > 0 && distance <= discipline.distanceMaximaleSaisie
             && durationMinutes > 0 && durationMinutes <= Self.maxDurationMinutes
+    }
+
+    /// La distance en kilomètres — l'unité de `RunRecord`. `distance` est ce qu'elle a TAPÉ, dans
+    /// l'unité que la discipline demande ; les deux ne sont égales que hors du bassin.
+    private var distanceKm: Double? {
+        distance.map { discipline.kilometres(depuisLaSaisie: $0) }
     }
     private var selectedShoeName: String {
         activeShoes.first { $0.id == selectedShoeID }?.name ?? String(localized: "Aucune")
@@ -62,19 +77,25 @@ struct AddRunSheet: View {
                 VStack(alignment: .leading, spacing: 20) {
                     EyebrowLabel(text: "Informations générales", color: RUColor.text3)
                     VStack(spacing: 0) {
+                        disciplineRow
+                        Divider().background(RUColor.line)
                         dateRow
                         Divider().background(RUColor.line)
                         typeRow
                         Divider().background(RUColor.line)
-                        numRow(icon: "ruler", label: "Distance", value: $distanceText, unit: "km", placeholder: "8,2")
+                        numRow(icon: "ruler", label: "Distance", value: $distanceText,
+                               unit: discipline.uniteDeSaisieLabel,
+                               placeholder: discipline.exempleDeDistance)
                         Divider().background(RUColor.line)
                         numRow(icon: "clock", label: "Durée", value: $durationMinutesText, unit: "min", placeholder: "45")
                     }
                     .ruCard()
 
                     // Only shown once she's actually added a pair — no point cluttering this form
-                    // with a picker for a feature she isn't using.
-                    if !activeShoes.isEmpty {
+                    // with a picker for a feature she isn't using. Et jamais hors de la course à
+                    // pied : une paire de chaussures ne vieillit pas dans un bassin ni sur une
+                    // selle, donc la question ne se pose pas. Voir `Discipline.wearsShoes`.
+                    if !activeShoes.isEmpty, discipline.wearsShoes {
                         EyebrowLabel(text: "Chaussures", color: RUColor.text3)
                         VStack(spacing: 0) {
                             shoeRow
@@ -85,7 +106,8 @@ struct AddRunSheet: View {
                 .padding(18)
             }
             .background(RUColor.pageBackground)
-            .navigationTitle("Ajouter une course")
+            // « Une séance » et non « une course » : cette feuille ajoute aussi des nages.
+            .navigationTitle("Ajouter une séance")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -104,9 +126,13 @@ struct AddRunSheet: View {
         // `isValid` garde déjà le bouton, mais on revérifie ici : c'est la seule barrière entre
         // une valeur saisie et une conversion en entier qui termine le processus si elle déborde.
         // Une garde en double sur ce chemin coûte une ligne.
-        guard isValid, let distance, let durationMinutes else { return }
+        guard isValid, let distanceKm, let durationMinutes else { return }
         let seconds = durationMinutes * 60
-        let secPerKm = seconds / distance
+        // Toujours des secondes AU KILOMÈTRE, pour toutes les disciplines — c'est l'unité de
+        // stockage de `avgPace`, et `TimeFormat.rythme(_:secondesParKm:)` la relit dans celle que
+        // la discipline affiche : au kilomètre à pied, aux cent mètres en bassin, en km/h à vélo.
+        // Convertir ici donnerait deux unités dans le même champ selon qui l'a écrit.
+        let secPerKm = seconds / distanceKm
         let run = RunRecord(
             date: date,
             // Traduit à l'ÉCRITURE. Le menu affiche « Long run », et la ligne d'historique
@@ -114,7 +140,7 @@ struct AddRunSheet: View {
             // ne consulte jamais le catalogue — et ne doit pas le consulter, ce champ portant
             // aussi du texte libre venu de Strava.
             title: String(localized: String.LocalizationValue(title)),
-            distanceKm: distance,
+            distanceKm: distanceKm,
             durationSeconds: Int(seconds),
             avgPace: PaceModel.paceText(secPerKm),
             // 0 = "no real reading" — HistoryView hides the FC line rather than show a fake 0bpm.
@@ -122,9 +148,20 @@ struct AddRunSheet: View {
             // Une approximation plate et assumée (aucune fréquence cardiaque réelle derrière) —
             // mieux que 0 kcal après une vraie sortie. Voir `Calories` : le même tarif que la
             // course au GPS, pour que les deux ne divergent pas sur une distance identique.
-            kcal: Int(Calories.estimate(distanceKm: distance).rounded())
+            //
+            // Par discipline, parce que le kilomètre ne coûte pas la même chose partout : à vélo
+            // c'est le terrain qui le fausse, en bassin c'est la technique. Sans ça, 1500 m de
+            // nage valaient 93 kcal — le tarif d'un kilomètre et demi de footing, pour trois
+            // quarts d'heure d'effort.
+            kcal: Int(Calories.estimate(discipline, distanceKm: distanceKm,
+                                        durationMinutes: Int(durationMinutes.rounded())).rounded()),
+            discipline: discipline
         )
-        run.shoeID = selectedShoeID
+        // Aucune paire attachée hors de la course à pied, même si un choix traînait dans l'état
+        // de la vue : la ligne est masquée pour les autres disciplines, mais changer de
+        // discipline APRÈS avoir choisi une paire laissait la sélection derrière, et la nage
+        // aurait vieilli les chaussures de deux kilomètres par bassin.
+        run.shoeID = discipline.wearsShoes ? selectedShoeID : nil
         modelContext.insert(run)
         // `runs` won't reflect the insert until the next @Query update cycle, so the current
         // set is computed by hand rather than read back immediately — same pattern as HistoryView's delete.
@@ -156,13 +193,65 @@ struct AddRunSheet: View {
         .frame(minHeight: 48)
     }
 
+    /// Le choix de la discipline, en tête de formulaire — avant la date, parce qu'il commande
+    /// tout ce qui suit : l'unité du champ de distance, la liste des types de séance, la présence
+    /// de la ligne « chaussures ».
+    ///
+    /// Les quatre disciplines sont proposées, y compris celles qui se démarrent depuis le
+    /// téléphone : le premier usage de cette feuille est précisément d'avoir oublié d'appuyer sur
+    /// « démarrer ». Voir `Discipline.saisissables`, qui n'est pas `demarrables`.
+    private var disciplineRow: some View {
+        HStack {
+            rowIcon(discipline.sfSymbol)
+            Text("Discipline").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
+            Spacer()
+            Menu {
+                ForEach(Discipline.saisissables, id: \.self) { d in
+                    Button {
+                        choisir(d)
+                    } label: {
+                        Label(d.title, systemImage: d.sfSymbol)
+                    }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Text(discipline.title)
+                    Image(systemName: "chevron.up.chevron.down").font(.system(size: 10, weight: .semibold))
+                }
+                .font(RUFont.sans(.emphasis, weight: .medium))
+                .foregroundColor(RUColor.text2)
+            }
+        }
+        .padding(.horizontal, 14)
+        .frame(minHeight: 48)
+    }
+
+    /// Changer de discipline remet le type de séance à zéro, et VIDE LA DISTANCE.
+    ///
+    /// Le type, parce qu'il n'appartient pas à la nouvelle liste : « Footing » resterait affiché
+    /// sous « Natation », et serait écrit tel quel dans l'historique.
+    ///
+    /// La distance, parce que le nombre tapé ne veut plus rien dire : « 1500 » saisi en mètres
+    /// pour une nage devient mille cinq cents KILOMÈTRES si on passe à la course sans y toucher,
+    /// et « 8,2 » devient huit mètres de bassin. Le plafond de la nouvelle discipline attraperait
+    /// le premier cas et bloquerait le bouton — mais pas le second, qui s'enregistrerait
+    /// tranquillement. Vider est la seule réponse juste : aucune valeur ne survit à un changement
+    /// d'unité.
+    private func choisir(_ nouvelle: Discipline) {
+        guard nouvelle != discipline else { return }
+        let changeDUnite = nouvelle.uniteDeSaisie != discipline.uniteDeSaisie
+        discipline = nouvelle
+        title = nouvelle.typesDeSeanceSaisis[0]
+        if changeDUnite { distanceText = "" }
+    }
+
     private var typeRow: some View {
         HStack {
             rowIcon("list.bullet")
             Text("Type de séance").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
             Spacer()
             Menu {
-                ForEach(Self.titles, id: \.self) { t in
+                ForEach(discipline.typesDeSeanceSaisis, id: \.self) { t in
                     // `Button(t)` avec un `String` ne passe jamais par le catalogue (seul
                     // l'initialiseur `LocalizedStringKey` le fait) : le menu restait en français
                     // alors que la ligne repliée juste en dessous, elle, se traduisait.

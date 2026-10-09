@@ -280,4 +280,111 @@ enum Discipline: String, Codable, Equatable, CaseIterable {
     static var demarrables: [Discipline] {
         allCases.filter(\.seDemarreDepuisLeTelephone)
     }
+
+    // MARK: Saisir une séance à la main
+
+    /// L'unité dans laquelle une distance se SAISIT — qui n'est pas celle dans laquelle elle se
+    /// stocke.
+    ///
+    /// UNE NAGE NE SE DIT PAS EN KILOMÈTRES. Personne ne sort du bassin en ayant fait
+    /// « 1,5 km » : on a fait 1500 m, ou trente longueurs. Demander des kilomètres à quelqu'un
+    /// qui pense en mètres est le genre de détail qui transforme une saisie de deux secondes en
+    /// division mentale, et qui produit des « 1500 » dans un champ qui attendait « 1,5 » — soit
+    /// une nage de mille cinq cents kilomètres dans l'historique.
+    ///
+    /// Le stockage, lui, ne change pas : `RunRecord.distanceKm` est en kilomètres pour tout le
+    /// monde. C'est la SAISIE qui s'adapte, et `kilometres(depuisLaSaisie:)` fait la conversion
+    /// au seul endroit qui la connaît.
+    enum UniteDeSaisie: Equatable {
+        case kilometres
+        case metres
+    }
+
+    var uniteDeSaisie: UniteDeSaisie {
+        switch self {
+        case .run, .bike, .trail: return .kilometres
+        case .swim: return .metres
+        }
+    }
+
+    var uniteDeSaisieLabel: String {
+        switch uniteDeSaisie {
+        case .kilometres: return String(localized: "km")
+        case .metres: return String(localized: "m")
+        }
+    }
+
+    /// Ce que vaut, en kilomètres, le nombre qu'elle vient de taper.
+    func kilometres(depuisLaSaisie valeur: Double) -> Double {
+        switch uniteDeSaisie {
+        case .kilometres: return valeur
+        case .metres: return valeur / 1000
+        }
+    }
+
+    /// Le plafond de la saisie, DANS L'UNITÉ DE LA SAISIE.
+    ///
+    /// Il n'existe pas pour juger une performance mais pour borner ce qui descend ensuite dans
+    /// les records, la charge et les graphes : une seule ligne à 5000 les fausse durablement, et
+    /// sans moyen de comprendre pourquoi. Volontairement large — le record du monde du 24 h est à
+    /// ~320 km à pied, et autour de 900 à vélo.
+    var distanceMaximaleSaisie: Double {
+        switch self {
+        case .run, .trail: return 500
+        case .bike: return 1000
+        // Vingt-cinq kilomètres : la traversée de la Manche en fait trente-cinq, et personne ne
+        // la saisit à la main depuis une feuille d'ajout rapide.
+        case .swim: return 25_000
+        }
+    }
+
+    /// L'exemple posé en filigrane dans le champ de distance — dans l'unité de la saisie.
+    var exempleDeDistance: String {
+        switch self {
+        case .run: return "8,2"
+        case .trail: return "18"
+        case .bike: return "45"
+        case .swim: return "1500"
+        }
+    }
+
+    /// Les types de séance proposés à la saisie, le premier étant celui par défaut.
+    ///
+    /// Une liste PAR DISCIPLINE, parce qu'une seule liste est fausse pour trois d'entre elles :
+    /// « Footing » ne veut rien dire en bassin, « Home trainer » ne veut rien dire à pied. Les
+    /// chaînes sont en français et traduites à l'écriture, comme ailleurs dans cette feuille —
+    /// voir `AddRunSheet.save`.
+    var typesDeSeanceSaisis: [String] {
+        switch self {
+        case .run: return ["Footing", "Sortie longue", "Fractionné", "Tempo run", "Autre"]
+        case .trail: return ["Sortie trail", "Sortie longue", "Côtes", "Autre"]
+        case .bike: return ["Sortie vélo", "Sortie longue", "Home trainer", "Côtes", "Autre"]
+        // « Nage » et non « Nage libre » : en français, « nage libre » désigne le CRAWL, pas une
+        // séance sans structure. Le premier élément est le choix par défaut, et il doit vouloir
+        // dire « une nage, sans plus de précision » — pas imposer un style.
+        case .swim: return ["Nage", "Endurance", "Technique", "Eau libre", "Autre"]
+        }
+    }
+
+    /// L'ordre dans lequel les disciplines se proposent à la saisie : les deux qui se font à pied
+    /// d'abord, puis les deux autres.
+    ///
+    /// Écrit en `switch` plutôt qu'en liste littérale pour la même raison que `demarrables` est
+    /// un filtre : une discipline de plus ne peut pas disparaître du sélecteur en silence. Une
+    /// liste écrite à la main l'aurait simplement oubliée, sans une seule erreur de compilation.
+    private var rangDeSaisie: Int {
+        switch self {
+        case .run: return 0
+        case .trail: return 1
+        case .bike: return 2
+        case .swim: return 3
+        }
+    }
+
+    /// Toutes les disciplines se saisissent à la main — y compris celles qui se démarrent depuis
+    /// le téléphone : on oublie d'appuyer sur « démarrer », et c'est même le premier usage de
+    /// cette feuille.
+    static var saisissables: [Discipline] {
+        allCases.sorted { $0.rangDeSaisie < $1.rangDeSaisie }
+    }
 }

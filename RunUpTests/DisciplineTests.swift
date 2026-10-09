@@ -344,4 +344,109 @@ final class DisciplineTests: XCTestCase {
             XCTAssertFalse(discipline.switchToLabel.isEmpty, "\(discipline) n'a pas de phrase de bascule")
         }
     }
+
+    // MARK: La saisie à la main
+
+    /// UNE NAGE SE SAISIT EN MÈTRES, ET SE STOCKE EN KILOMÈTRES.
+    ///
+    /// Les deux unités sont le cœur du sujet : `RunRecord.distanceKm` est en kilomètres pour
+    /// toutes les disciplines, et le champ de saisie demande des mètres pour une seule. Si la
+    /// conversion n'avait pas lieu, « 1500 » saisi pour une nage deviendrait mille cinq cents
+    /// kilomètres dans l'historique, dans les records et dans le classement du club.
+    func testUneNageSeSaisitEnMetresEtSeStockeEnKilometres() {
+        XCTAssertEqual(Discipline.swim.uniteDeSaisie, .metres)
+        XCTAssertEqual(Discipline.swim.kilometres(depuisLaSaisie: 1500), 1.5)
+
+        for discipline in [Discipline.run, .trail, .bike] {
+            XCTAssertEqual(discipline.uniteDeSaisie, .kilometres, "\(discipline) se saisit en km")
+            // Hors du bassin, la conversion est l'identité : ce que l'on tape est ce qui est
+            // stocké, et c'est ce qui rend l'ancienne feuille juste pour ces trois-là.
+            XCTAssertEqual(discipline.kilometres(depuisLaSaisie: 8.2), 8.2)
+        }
+    }
+
+    /// L'allure d'une nage, bout à bout : la saisie, le stockage, puis l'affichage.
+    ///
+    /// 1500 m en 40 minutes. `avgPace` stocke des secondes AU KILOMÈTRE pour tout le monde
+    /// (1600 s, soit « 26:40 »), et c'est `TimeFormat` qui le relit aux cent mètres en bassin —
+    /// 2:40/100 m, l'unité dans laquelle une nageuse pense. Le test tient les deux ensemble
+    /// parce que c'est leur accord qui est fragile, pas chacun pris à part.
+    func testLAllureDUneNageTraverseLaSaisieEtLAffichage() {
+        let metres: Double = 1500
+        let km = Discipline.swim.kilometres(depuisLaSaisie: metres)
+        let secondes: Double = 40 * 60
+        let secondesParKm = secondes / km
+        XCTAssertEqual(secondesParKm, 1600, accuracy: 0.001)
+        XCTAssertEqual(Discipline.swim.rythme, .allureParCentMetres)
+        XCTAssertEqual(TimeFormat.allureParCentMetres(secondesParKm: secondesParKm), "2:40")
+    }
+
+    /// Le plafond de saisie est dans l'unité de la saisie — sinon il ne borne rien.
+    ///
+    /// 1500 est une nage ordinaire et une distance de course impossible. Un plafond unique en
+    /// kilomètres aurait, au choix, refusé la nage ou accepté une course de 1500 km.
+    func testLePlafondDeSaisieEstDansLUniteDeLaSaisie() {
+        XCTAssertGreaterThan(Discipline.swim.distanceMaximaleSaisie, 1500)
+        XCTAssertLessThan(Discipline.run.distanceMaximaleSaisie, 1500)
+        // Et le vélo va plus loin qu'une course : ~900 km sur 24 h, contre ~320 à pied.
+        XCTAssertGreaterThan(Discipline.bike.distanceMaximaleSaisie,
+                             Discipline.run.distanceMaximaleSaisie)
+        for discipline in Discipline.allCases {
+            XCTAssertGreaterThan(discipline.distanceMaximaleSaisie, 0,
+                                 "\(discipline) n'a pas de plafond de saisie")
+        }
+    }
+
+    /// Toutes les disciplines se saisissent, et chacune a de quoi remplir le formulaire.
+    ///
+    /// `saisissables` n'est pas `demarrables` : la natation ne se démarre pas depuis le téléphone
+    /// et se saisit quand même — c'est même, avec Apple Santé, l'une des deux seules façons
+    /// qu'elle a d'exister. Le compte est vérifié contre `allCases` pour qu'une discipline de
+    /// plus ne puisse pas manquer au sélecteur en silence.
+    func testToutesLesDisciplinesSeSaisissent() {
+        XCTAssertEqual(Set(Discipline.saisissables), Set(Discipline.allCases))
+        XCTAssertEqual(Discipline.saisissables.count, Discipline.allCases.count)
+        XCTAssertTrue(Discipline.saisissables.contains(.swim))
+        XCTAssertFalse(Discipline.demarrables.contains(.swim))
+        for discipline in Discipline.saisissables {
+            XCTAssertFalse(discipline.typesDeSeanceSaisis.isEmpty,
+                           "\(discipline) ne propose aucun type de séance")
+            XCTAssertFalse(discipline.exempleDeDistance.isEmpty,
+                           "\(discipline) n'a pas d'exemple de distance")
+            XCTAssertFalse(discipline.uniteDeSaisieLabel.isEmpty,
+                           "\(discipline) n'a pas d'unité de saisie")
+        }
+    }
+
+    /// Aucun type de séance n'est proposé sous deux disciplines à qui il ne convient pas.
+    ///
+    /// « Footing » sous « Natation » serait écrit tel quel dans l'historique. Le test ne juge pas
+    /// le vocabulaire — il vérifie seulement que les quatre listes sont bien distinctes, c'est-à-
+    /// dire qu'aucune n'a été copiée d'une autre sans être relue.
+    func testChaqueDisciplineAPropreListeDeTypes() {
+        XCTAssertFalse(Discipline.swim.typesDeSeanceSaisis.contains("Footing"))
+        XCTAssertFalse(Discipline.bike.typesDeSeanceSaisis.contains("Footing"))
+        XCTAssertFalse(Discipline.run.typesDeSeanceSaisis.contains("Home trainer"))
+        XCTAssertNotEqual(Discipline.run.typesDeSeanceSaisis, Discipline.swim.typesDeSeanceSaisis)
+        XCTAssertNotEqual(Discipline.bike.typesDeSeanceSaisis, Discipline.swim.typesDeSeanceSaisis)
+        // Le dernier élément est partout « Autre » : la porte de sortie existe dans les quatre.
+        for discipline in Discipline.allCases {
+            XCTAssertEqual(discipline.typesDeSeanceSaisis.last, "Autre",
+                           "\(discipline) n'offre pas de type « Autre »")
+        }
+    }
+
+    /// Le tarif en kilocalories d'une nage passe par la DURÉE, pas par la distance.
+    ///
+    /// 1500 m en 40 minutes : 400 kcal à la minute, contre 93 au tarif du kilomètre de course.
+    /// Un facteur quatre, qui descendrait ensuite dans les anneaux du jour et dans le bilan.
+    func testUneNageSeCompteALaMinuteEtPasAuKilometre() {
+        let parLaDuree = Calories.estimate(.swim, distanceKm: 1.5, durationMinutes: 40)
+        XCTAssertEqual(parLaDuree, 400, accuracy: 0.001)
+        XCTAssertGreaterThan(parLaDuree, Calories.estimate(distanceKm: 1.5, durationMinutes: 40) * 3)
+        // Et la durée est la seule mesure : une nage sans distance connue vaut quand même ses
+        // 400 kcal, parce que quarante minutes d'eau sont quarante minutes d'eau.
+        XCTAssertEqual(Calories.estimate(.swim, distanceKm: 0, durationMinutes: 40), 400,
+                       accuracy: 0.001)
+    }
 }

@@ -133,6 +133,143 @@ def _():
     drapeaux(src, 0, "fichier réel")
     assert len(ck.drapeaux(src)) >= 5, f"5 drapeaux attendus au moins, {len(ck.drapeaux(src))} vus"
 
+# ── L'exhaustivité des `switch` ───────────────────────────────────────────────────────────────
+#
+# Les quatre cas « réels » reproduisent les quatre constructions mortes sur ce défaut. Les cas de
+# tolérance comptent davantage : cette règle balaie 174 fichiers, et si elle refusait un `switch`
+# juste, elle serait désactivée dans la semaine.
+
+QUATRE = {"run", "bike", "trail", "swim"}
+
+def troue(src, attendu, nom, cas=QUATRE):
+    t = ck.switchs_non_exhaustifs(src, cas)
+    manques = sorted(m for _, absents in t for m in absents)
+    assert manques == sorted(attendu), f"{nom} : {sorted(attendu)} attendu, {manques} trouvé → {t}"
+
+@cas_test("un `switch` sur une discipline à qui il manque un cas est signalé")
+def _(): troue("switch d {\ncase .run: return 1\ncase .bike: return 2\ncase .trail: return 3\n}",
+               ["swim"], "un manque")
+
+@cas_test("deux cas manquants sont tous les deux nommés")
+def _(): troue("switch d {\ncase .run: return 1\ncase .bike: return 2\n}",
+               ["swim", "trail"], "deux manques")
+
+@cas_test("des cas groupés sur une même ligne comptent chacun")
+def _(): troue("switch d {\ncase .run, .trail: return 1\ncase .bike: return 2\n}",
+               ["swim"], "groupés")
+
+@cas_test("un `switch` exhaustif passe")
+def _(): troue("switch d {\ncase .run: return 1\ncase .bike: return 2\n"
+               "case .trail: return 3\ncase .swim: return 4\n}", [], "exhaustif")
+
+@cas_test("un `switch` avec `default` n'est pas de son ressort")
+def _(): troue("switch d {\ncase .run: return 1\ndefault: return 0\n}", [], "default")
+
+@cas_test("un `switch` sur une autre énumération est laissé tranquille")
+def _(): troue("switch kind {\ncase .run: return 1\ncase .walk: return 2\n}", [], "autre énumération")
+
+@cas_test("un `switch` imbriqué ne verse pas ses cas dans celui du dessus")
+def _(): troue("switch d {\ncase .run:\n  switch effort {\n  case .facile: return 1\n"
+               "  case .dur: return 2\n  }\ncase .bike: return 3\ncase .trail: return 4\n"
+               "case .swim: return 5\n}", [], "imbriqué")
+
+@cas_test("un `switch` cité dans un commentaire n'en est pas un")
+def _(): troue("// switch d { case .run: return 1 }\n/// case .bike: return 2", [], "commentaire")
+
+@cas_test("un `switch` sur un tuple de disciplines n'est pas lu comme une discipline")
+def _(): troue("switch (a, b) {\ncase (.run, .bike): return 1\ndefault: return 0\n}", [], "tuple")
+
+@cas_test("les cas de `Discipline` sont lus à la source, pas écrits en dur")
+def _():
+    src = (ck.RACINE / ck.FICHIER_DISCIPLINE).read_text()
+    lus = ck.cas_de_discipline(src)
+    assert "swim" in lus and "run" in lus, f"cas lus : {sorted(lus)}"
+    assert len(lus) >= 4, f"au moins 4 disciplines attendues, {len(lus)} lues"
+
+@cas_test("les quatre constructions mortes sur ce défaut auraient été attrapées ici")
+def _():
+    import subprocess
+    cas = ck.cas_de_discipline((ck.RACINE / ck.FICHIER_DISCIPLINE).read_text())
+    for rev, f, ligne in [("HEAD", "RunUp/Views/Live/LiveRunView.swift", 292),
+                          ("HEAD~2", "RunUp/Models/Calories.swift", 43),
+                          ("HEAD~2", "RunUp/Models/AutoPause.swift", 61),
+                          ("HEAD~2", "RunUp/Views/Components/TabBarView.swift", 163)]:
+        src = subprocess.run(["git", "show", f"{rev}:{f}"], cwd=ck.RACINE,
+                             capture_output=True, text=True).stdout
+        if not src:
+            continue  # l'historique n'est pas toujours là (clone peu profond) : pas un échec
+        t = ck.switchs_non_exhaustifs(src, cas)
+        assert (ligne, ["swim"]) in t, f"{f}:{ligne} non attrapé → {t}"
+
+@cas_test("le vrai code est exhaustif partout")
+def _():
+    cas = ck.cas_de_discipline((ck.RACINE / ck.FICHIER_DISCIPLINE).read_text())
+    troues = []
+    for dossier in ck.DOSSIERS_SWITCH:
+        racine = ck.RACINE / dossier
+        if not racine.exists():
+            continue
+        for f in sorted(racine.rglob("*.swift")):
+            if f.name in ck.EXEMPTS:
+                continue
+            for ligne, absents in ck.switchs_non_exhaustifs(f.read_text(), cas):
+                troues.append(f"{f.relative_to(ck.RACINE)}:{ligne} {absents}")
+    assert not troues, f"{len(troues)} `switch` troué(s) : {troues[:5]}"
+
+
+# ── Les types de séance, et leurs traductions ─────────────────────────────────────────────────
+
+SOURCE_TYPES = """
+    var typesDeSeanceSaisis: [String] {
+        switch self {
+        case .run: return ["Footing", "Autre"]
+        // « Côtes » cité ici n'est pas une entrée de la liste.
+        case .bike: return ["Sortie vélo"]
+        case .trail: return ["Sortie trail"]
+        case .swim: return ["Nage"]
+        }
+    }
+"""
+
+@cas_test("les types de séance sont lus dans les quatre listes")
+def _():
+    lus = ck.types_de_seance(SOURCE_TYPES)
+    assert lus == ["Footing", "Autre", "Sortie vélo", "Sortie trail", "Nage"], lus
+
+def _traduit(mot):
+    return {"localizations": {l: {"stringUnit": {"value": mot}} for l in ck.LANGUES}}
+
+@cas_test("un type absent du catalogue est signalé, et lui seul")
+def _():
+    catalogue = {c: _traduit(c) for c in ["Footing", "Autre", "Sortie vélo", "Sortie trail"]}
+    t = ck.types_non_traduits(SOURCE_TYPES, catalogue)
+    assert [c for c, _ in t] == ["Nage"], t
+
+@cas_test("un type présent mais sans traduction anglaise est signalé")
+def _():
+    entree = {"localizations": {"es": {"stringUnit": {"value": "Natación"}}}}
+    t = ck.types_non_traduits('var typesDeSeanceSaisis: [String] {\ncase .swim: return ["Nage"]\n    }',
+                              {"Nage": entree})
+    assert len(t) == 1 and "en" in t[0][1], t
+
+@cas_test("un type traduit dans les deux langues passe")
+def _():
+    entree = {"localizations": {"en": {"stringUnit": {"value": "Swim"}},
+                                "es": {"stringUnit": {"value": "Natación"}}}}
+    t = ck.types_non_traduits('var typesDeSeanceSaisis: [String] {\ncase .swim: return ["Nage"]\n    }',
+                              {"Nage": entree})
+    assert t == [], t
+
+@cas_test("le vrai `Discipline.swift` a ses types tous traduits, un par discipline au moins")
+def _():
+    import json
+    src = (ck.RACINE / ck.FICHIER_DISCIPLINE).read_text()
+    catalogue = json.loads((ck.RACINE / ck.CATALOGUE).read_text())["strings"]
+    t = ck.types_non_traduits(src, catalogue)
+    assert t == [], f"non traduits : {t}"
+    assert len(ck.types_de_seance(src)) >= len(ck.cas_de_discipline(src)), "une liste est vide"
+
+
 def main():
     echecs = 0
     for nom, f in cas:

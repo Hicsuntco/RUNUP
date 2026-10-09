@@ -3045,6 +3045,23 @@
         }
       }
     },
+    "Ajouter une séance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a session"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir una sesión"
+          }
+        }
+      }
+    },
     "Ajouter une séance déjà faite": {
       "extractionState": "manual",
       "localizations": {
@@ -6560,6 +6577,23 @@
         }
       }
     },
+    "Côtes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hills"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuestas"
+          }
+        }
+      }
+    },
     "Côtes de 3 à 5 min": {
       "localizations": {
         "en": {
@@ -6980,6 +7014,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Domingo"
+          }
+        }
+      }
+    },
+    "Discipline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discipline"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disciplina"
           }
         }
       }
@@ -7620,6 +7671,23 @@
         }
       }
     },
+    "Eau libre": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open water"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aguas abiertas"
+          }
+        }
+      }
+    },
     "Effacer": {
       "localizations": {
         "en": {
@@ -7978,6 +8046,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aún %lld pasos para completar tu objetivo — ¿un pequeño paseo?"
+          }
+        }
+      }
+    },
+    "Endurance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Endurance"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resistencia"
           }
         }
       }
@@ -8904,6 +8989,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Historial y segmentos"
+          }
+        }
+      }
+    },
+    "Home trainer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indoor trainer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rodillo"
           }
         }
       }
@@ -11985,6 +12087,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "NADO"
+          }
+        }
+      }
+    },
+    "NAGE · EN DIRECT": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SWIM · LIVE"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NATACIÓN · EN VIVO"
+          }
+        }
+      }
+    },
+    "Nage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swim"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Natación"
           }
         }
       }
@@ -17065,6 +17201,40 @@
         }
       }
     },
+    "Sortie trail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trail run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salida de trail"
+          }
+        }
+      }
+    },
+    "Sortie vélo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bike ride"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salida en bici"
+          }
+        }
+      }
+    },
     "Sorties": {
       "extractionState": "manual",
       "localizations": {
@@ -18736,6 +18906,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Altura"
+          }
+        }
+      }
+    },
+    "Technique": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Technique"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Técnica"
           }
         }
       }
@@ -22105,6 +22292,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "lútea"
+          }
+        }
+      }
+    },
+    "m": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "m"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "m"
           }
         }
       }

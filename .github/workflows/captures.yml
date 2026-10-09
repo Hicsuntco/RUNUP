@@ -199,6 +199,32 @@ jobs:
             ls -1 "$dossier"
           done
 
+      # DIRE POURQUOI, PLUTÔT QUE DE DEVINER.
+      #
+      # Deux séries ont été diagnostiquées à l'aveugle — « Lost connection to the application »,
+      # puis « crashed in <external symbol> » — en raisonnant sur ce que le code POURRAIT faire.
+      # Le simulateur écrit pourtant un rapport de plantage complet sur le disque de la machine,
+      # avec la pile d'appels et la ligne fautive. Il suffisait de le lire.
+      - name: Dire ce qui a planté
+        if: failure()
+        run: |
+          set +e
+          echo "────────── rapports de plantage ──────────"
+          dossier=~/Library/Logs/DiagnosticReports
+          rapports=$(ls -t "$dossier"/RunUp*.ips 2>/dev/null | head -2)
+          if [ -z "$rapports" ]; then
+            echo "(aucun rapport pour RunUp dans $dossier)"
+            ls -t "$dossier" 2>/dev/null | head -10
+          fi
+          for r in $rapports; do
+            echo "── $r"
+            # Les .ips font plusieurs milliers de lignes de registres et de bibliothèques
+            # chargées. Ce qui sert tient dans les cent premières : le type d'exception, la
+            # raison, et le haut de la pile du fil fautif.
+            head -c 20000 "$r"
+            echo
+          done
+
       - name: Composer les images finales
         run: |
           set -euo pipefail

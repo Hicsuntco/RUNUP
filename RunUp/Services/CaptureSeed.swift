@@ -59,8 +59,24 @@ enum CaptureSeed {
     @MainActor
     @discardableResult
     static func poser(dans contexte: ModelContext, maintenant: Date = .now) -> UserProfile {
-        try? contexte.delete(model: RunRecord.self)
-        try? contexte.delete(model: UserProfile.self)
+        // ON VIDE EN ALLANT CHERCHER, PAS EN LOT.
+        //
+        // `ModelContext.delete(model:)` supprime tout d'un type en une fois, et c'était la
+        // première écriture. Elle fait un effacement par lot, dont le contexte en mémoire n'a
+        // pas forcément connaissance tout de suite — et l'app plantait au lancement sous ce
+        // drapeau, deux séries de suite, sans que rien d'autre n'ait changé.
+        //
+        // Récupérer puis supprimer un par un est l'API ordinaire, celle que le reste de l'app
+        // emploie partout. Le coût est nul : il y a un profil, une poignée de messages et
+        // seize relevés.
+        //
+        // Les messages aussi, et c'est nécessaire depuis que le simulateur n'est plus effacé
+        // entre deux langues : sans ça, six lancements par langue empileraient dix-huit fois la
+        // même conversation.
+        vider(UserProfile.self, dans: contexte)
+        vider(RunRecord.self, dans: contexte)
+        vider(ChatMessage.self, dans: contexte)
+        try? contexte.save()
 
         let profil = UserProfile(name: "Charlotte")
         contexte.insert(profil)
@@ -86,6 +102,12 @@ enum CaptureSeed {
         }
         try? contexte.save()
         return profil
+    }
+
+    private static func vider<T: PersistentModel>(_ type: T.Type, dans contexte: ModelContext) {
+        for objet in (try? contexte.fetch(FetchDescriptor<T>())) ?? [] {
+            contexte.delete(objet)
+        }
     }
 
     /// LE CLUB ET LE COACH NE PASSENT PAS PAR LE RÉSEAU, ET C'EST LE CŒUR DU PROBLÈME.

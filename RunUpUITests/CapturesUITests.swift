@@ -26,27 +26,31 @@ import XCTest
 /// au rapport — utile en local, inexploitable par un script.
 final class CapturesUITests: XCTestCase {
 
-    /// L'ordre EST celui des accroches de `appstore/captions.json`, et les noms portent leur
-    /// rang : `screenshots.py` apparie par le chiffre de tête, pas par la position dans le
-    /// dossier. Un écran qui manque ne décale donc pas les cinq autres.
-    private static let ecrans: [(rang: Int, ecran: String, nom: String)] = [
-        (1, "prog", "accueil"),
-        (2, "plan", "plan"),
-        (3, "coach", "coach"),
-        (4, "club", "club"),
-        (5, "rings", "journee"),
-        (6, "stats", "stats"),
-    ]
+    // L'ordre EST celui des accroches de `appstore/captions.json`, et les noms portent leur
+    // rang : `screenshots.py` apparie par le chiffre de tête, pas par la position dans le
+    // dossier. Un écran qui manque ne décale donc pas les cinq autres.
 
     override func setUpWithError() throws {
         continueAfterFailure = true
     }
 
-    func testCaptures() throws {
-        for (rang, ecran, nom) in Self.ecrans {
-            prendre(rang: rang, ecran: ecran, nom: nom)
-        }
-    }
+    // UNE MÉTHODE PAR ÉCRAN, ET C'EST UNE CORRECTION.
+    //
+    // La première version les prenait dans une boucle, à l'intérieur d'un seul `testCaptures`.
+    // Le commentaire d'en-tête promettait « six lancements indépendants : si l'un échoue, les
+    // cinq autres sortent quand même » — c'était faux. Une seule méthode est un seul cas de
+    // test : l'app a planté sur le premier écran, et les cinq suivants n'ont jamais été tentés.
+    //
+    // XCTest, lui, isole vraiment deux méthodes : il relance l'app, repart à zéro, et rapporte
+    // les échecs séparément. La promesse est maintenant tenue par la structure plutôt que par le
+    // commentaire — et un plantage sur le club n'empêche plus d'avoir les statistiques.
+
+    func test1Accueil() { prendre(rang: 1, ecran: "prog", nom: "accueil") }
+    func test2Plan() { prendre(rang: 2, ecran: "plan", nom: "plan") }
+    func test3Coach() { prendre(rang: 3, ecran: "coach", nom: "coach") }
+    func test4Club() { prendre(rang: 4, ecran: "club", nom: "club") }
+    func test5Journee() { prendre(rang: 5, ecran: "rings", nom: "journee") }
+    func test6Stats() { prendre(rang: 6, ecran: "stats", nom: "stats") }
 
     private func prendre(rang: Int, ecran: String, nom: String) {
         let app = XCUIApplication()

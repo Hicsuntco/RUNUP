@@ -441,9 +441,47 @@ def sans_traduction():
     return trous
 
 
+def cles_positionnelles():
+    """Les CLÉS du catalogue qui portent un marqueur positionnel — `%1$@` au lieu de `%@`.
+
+    POURQUOI C'EST UNE FAUTE, ET POURQUOI ELLE NE SE VOIT PAS.
+
+    Une clé de catalogue n'est pas choisie : elle est CALCULÉE à l'exécution, par
+    `String.LocalizationValue`, à partir de la phrase interpolée. Pour
+    `String(localized: "Aimé par \\(list) et \\(nombre) autres")` elle vaut
+    `Aimé par %@ et %lld autres` — jamais `%1$@`. Une entrée écrite à la main avec des
+    positions n'est donc JAMAIS trouvée : la recherche échoue, et Foundation retombe sur la
+    clé elle-même, c'est-à-dire sur le FRANÇAIS, avec les valeurs quand même insérées.
+
+    C'est arrivé, et seule une capture d'écran l'a montré : « Aimé par Charlotte, Margaux, and
+    Sarah et 4 autres » — la liste jointe en anglais à l'intérieur d'une phrase restée
+    française. Rien ne plante, le catalogue est « entièrement traduit », et toutes les
+    anglophones et hispanophones lisent du français sous chaque activité du club.
+
+    Les marqueurs positionnels restent légitimes dans une TRADUCTION, qui peut avoir besoin de
+    réordonner les arguments. C'est la clé, et elle seule, qui ne peut pas en porter.
+    """
+    catalogue = json.loads(CATALOGUE.read_text(encoding="utf-8"))["strings"]
+    return [cle for cle in catalogue if re.search(r"%\d+\$", cle)]
+
+
 def main() -> int:
     cles = cles_du_catalogue()
     catalogue = json.loads(CATALOGUE.read_text(encoding="utf-8"))["strings"]
+    if positionnelles := cles_positionnelles():
+        print(f"{len(positionnelles)} clé(s) du catalogue portent un marqueur positionnel :\n",
+              file=sys.stderr)
+        for cle in positionnelles:
+            print(f"  « {cle} »", file=sys.stderr)
+        print("\nUne clé est CALCULÉE à l'exécution depuis la phrase interpolée, et elle ne",
+              file=sys.stderr)
+        print("porte jamais de position : `%@`, pas `%1$@`. Une clé positionnelle n'est donc",
+              file=sys.stderr)
+        print("jamais trouvée — l'app affiche la clé, c'est-à-dire le FRANÇAIS, à tout le monde.",
+              file=sys.stderr)
+        print("\nRenomme la clé sans positions. La TRADUCTION, elle, a le droit d'en porter.",
+              file=sys.stderr)
+        return 1
     seances = seances_sans_libelle((RACINE / FICHIER_SEANCES).read_text(encoding="utf-8"), catalogue)
     if seances:
         print(f"{len(seances)} libellé(s) de séance manquant(s) :\n", file=sys.stderr)

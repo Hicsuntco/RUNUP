@@ -521,11 +521,28 @@ struct DayStatus: Codable, Equatable, Identifiable {
     /// relue de la base.
     var displayLetter: String { DayStatus.letters[min(max(weekday, 0), DayStatus.letters.count - 1)] }
 
-    /// Dérivées des noms complets, et non écrites en dur : « L M M J V S D » n'est juste qu'en
-    /// français et en espagnol. L'initiale du nom traduit donne la bonne lettre dans chaque
-    /// langue (M T W T F S S en anglais) sans avoir à maintenir une seconde liste — et sans clé
-    /// de catalogue ambiguë, deux jours partageant la même initiale.
-    static let letters = DayStatus.fullNames.map { String($0.prefix(1)).uppercased() }
+    /// Les initiales que la LANGUE utilise vraiment, et non la première lettre du nom complet.
+    ///
+    /// La version précédente prenait `String(nomComplet.prefix(1))`. C'est juste en français
+    /// (L M M J V S D) et en anglais (M T W T F S S), et FAUX en espagnol : « miércoles »
+    /// commence par un M, mais l'espagnol écrit X pour le distinguer de « martes ». La bande
+    /// de la semaine affichait donc L M M J V S D à des hispanophones — deux M identiques là
+    /// où leur calendrier, leur agenda et leur téléphone écrivent M puis X.
+    ///
+    /// `veryShortWeekdaySymbols` est exactement cette liste, telle que CLDR la définit pour
+    /// chaque langue. Elle commence TOUJOURS par dimanche, quel que soit le premier jour de la
+    /// semaine local, d'où le décalage : nos index comptent à partir de lundi.
+    ///
+    /// Le repli sur l'ancien calcul n'est pas décoratif — une liste de la mauvaise taille
+    /// planterait l'accueil, et une initiale imparfaite vaut mieux qu'un écran qui ne s'ouvre
+    /// pas.
+    static let letters: [String] = {
+        let symboles = DateFormatter().veryShortWeekdaySymbols ?? []
+        guard symboles.count == 7 else {
+            return DayStatus.fullNames.map { String($0.prefix(1)).uppercased() }
+        }
+        return (0..<7).map { symboles[($0 + 1) % 7].uppercased() }
+    }()
     /// Mardi/Mercredi share the same letter — VoiceOver needs the real name behind a day button,
     /// not just its ambiguous glyph.
     static let fullNames = [

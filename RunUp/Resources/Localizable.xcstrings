@@ -2999,36 +2999,36 @@
         }
       }
     },
-    "Aimé par %1$@ et %2$lld autres": {
+    "Aimé par %@ et %lld autres": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Liked by %1$@ and %2$lld others"
+            "value": "Liked by %@ and %lld others"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le gustó a %1$@ y %2$lld más"
+            "value": "Le gustó a %@ y %lld más"
           }
         }
       }
     },
-    "Aimé par %1$@ et une autre personne": {
+    "Aimé par %@ et une autre personne": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Liked by %1$@ and one other"
+            "value": "Liked by %@ and one other"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le gustó a %1$@ y otra persona"
+            "value": "Le gustó a %@ y otra persona"
           }
         }
       }

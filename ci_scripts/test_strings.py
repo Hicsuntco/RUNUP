@@ -235,6 +235,24 @@ def _():
     # `RunRecord(title:)` stocke le titre français du relevé — il ne doit jamais être réclamé.
     assert "title" not in table.get("RunRecord", set()), "RunRecord.title réclamé à tort"
 
+@cas_test("aucune clé du catalogue ne porte de marqueur positionnel")
+def _():
+    # `Aimé par %1$@ et %2$lld autres` était écrite à la main avec des positions. La clé
+    # calculée à l'exécution vaut `Aimé par %@ et %lld autres` : la recherche échouait, et
+    # toutes les anglophones lisaient « Aimé par Charlotte, Margaux, and Sarah et 4 autres ».
+    assert ck.cles_positionnelles() == [], ck.cles_positionnelles()
+
+
+@cas_test("la règle attrape bien une clé positionnelle, et laisse passer la traduction")
+def _():
+    import re as _re
+    motif = _re.compile(r"%\d+\$")
+    assert motif.search("Aimé par %1$@ et %2$lld autres")
+    assert not motif.search("Aimé par %@ et %lld autres")
+    # Une TRADUCTION a le droit de réordonner : la règle ne regarde que les clés.
+    assert motif.search("Von %2$lld Leuten, darunter %1$@")
+
+
 @cas_test("le vrai catalogue est complet et entièrement traduit")
 def _():
     assert ck.main() == 0, "check_strings.py refuse le dépôt"

@@ -194,7 +194,7 @@ enum CaptureSeed {
             "avgPace": "5:38", "elevationGainM": 86, "isPersonalRecord": false,
             "contentKey": "long_run", "kudos": 7, "kudoedByMe": true, "commentsCount": 2,
             "kudosNames": ["Charlotte", "Margaux", "Sarah"],
-            "lastComment": { "name": "Charlotte", "text": "Belle allure sur la fin !" },
+            "lastComment": { "name": "Charlotte", "text": "\(commentaire())" },
             "routePreview": [
               [48.88120, 2.36900], [48.88433, 2.37412], [48.88739, 2.37922],
               [48.89030, 2.38427], [48.89303, 2.38924], [48.89557, 2.39413],
@@ -294,6 +294,23 @@ enum CaptureSeed {
                 "Le fractionné de mardi m'a paru très dur, j'ai fini à l'agonie. Je m'inquiète pour le 10 km ?",
                 "Tu as tenu les six répétitions à 4:38, soit plus vite que l'allure cible — finir dur sur une séance comme celle-là est le signe qu'elle était bien calibrée, pas qu'elle était trop dure. Tes trois dernières sorties longues ont gagné vingt secondes au kilomètre. Garde la séance de jeudi en Z2, et on retrouve de la vitesse samedi."
             )
+        }
+    }
+
+    /// Le commentaire du fil, dans la langue de la capture.
+    ///
+    /// Même raison que `echange()` juste au-dessus : c'est du texte libre, que rien dans l'app
+    /// ne sait retraduire. Le reste du fil passe par `contentKey` et se refabrique tout seul —
+    /// « a couru 6,0 km · Fractionné VMA » devient « ran 6.0 km · VO2max intervals » sans que
+    /// la graine n'ait à le savoir. Une phrase écrite par quelqu'un, non.
+    ///
+    /// Et ça s'est vu : la série anglaise affichait « Belle allure sur la fin ! » sous une
+    /// carte par ailleurs entièrement traduite.
+    private static func commentaire() -> String {
+        switch Locale.current.language.languageCode?.identifier {
+        case "en": return "Great pace on the last stretch!"
+        case "es": return "¡Qué ritmo en el tramo final!"
+        default: return "Belle allure sur la fin !"
         }
     }
 

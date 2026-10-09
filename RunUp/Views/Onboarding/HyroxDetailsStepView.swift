@@ -10,7 +10,11 @@ struct HyroxDetailsStepView: View {
     var body: some View {
         ObScreen {
             ScrollView {
-                ObTitle(eyebrow: "Étape 3 · ton HYROX", title: "QUEL HYROX ?", subtitle: "8 × 1 km de course, 8 stations fonctionnelles — le format ne change pas, ta préparation si.")
+                // L'en-tête vient de l'objectif, comme pour les sept autres — voir
+                // `GoalType.etapePromesse`. Il était écrit ici, et les quatre objectifs sans
+                // date n'avaient alors rien d'équivalent.
+                ObTitle(eyebrow: GoalType.hyrox.etapeEyebrow, title: GoalType.hyrox.etapeTitre,
+                        subtitle: GoalType.hyrox.etapePromesse)
 
                 EyebrowLabel(text: "Division", color: RUColor.text3)
                     .padding(.top, 20).padding(.bottom, 10)

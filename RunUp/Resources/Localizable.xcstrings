@@ -4536,6 +4536,23 @@
         }
       }
     },
+    "COMBIEN DE TEMPS ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HOW MUCH TIME?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿CUÁNTO TIEMPO?"
+          }
+        }
+      }
+    },
     "COMMENCER": {
       "localizations": {
         "en": {
@@ -10614,6 +10631,23 @@
         }
       }
     },
+    "La course et l'assiette, dans un seul plan.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running and your plate, in one plan."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La carrera y el plato, en un solo plan."
+          }
+        }
+      }
+    },
     "La distance ET le dénivelé — c'est le second qui décide du plan.": {
       "extractionState": "manual",
       "localizations": {
@@ -11222,6 +11256,23 @@
         }
       }
     },
+    "Le plan part d'aujourd'hui, pas d'où tu étais avant.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The plan starts from today, not from where you used to be."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El plan parte de hoy, no de donde estabas antes."
+          }
+        }
+      }
+    },
     "Le plan prévoyait du repos — ta sortie compte quand même.": {
       "localizations": {
         "en": {
@@ -11234,6 +11285,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tu plan preveía descanso — tu salida cuenta igualmente."
+          }
+        }
+      }
+    },
+    "Le plan se cale sur ton agenda. Pas l'inverse.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The plan fits your calendar. Not the other way round."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El plan se adapta a tu agenda. No al revés."
           }
         }
       }
@@ -14029,6 +14097,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sin fecha fija para este tipo de objetivo — el programa ajusta tu volumen semana tras semana para que la carga siga siendo sostenible en el tiempo."
+          }
+        }
+      }
+    },
+    "Pas de dossard en vue ? Tu n'en as pas besoin pour progresser.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No race coming up? You don't need one to improve."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Sin dorsal a la vista? No lo necesitas para progresar."
           }
         }
       }
@@ -19036,6 +19121,23 @@
         }
       }
     },
+    "TA DERNIÈRE SORTIE": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YOUR LAST RUN"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TU ÚLTIMA SALIDA"
+          }
+        }
+      }
+    },
     "TA PRIORITÉ": {
       "localizations": {
         "en": {
@@ -19179,6 +19281,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "TRAIL · EN VIVO"
+          }
+        }
+      }
+    },
+    "TU VEUX QUOI, AU JUSTE ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WHAT ARE YOU AFTER?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿QUÉ BUSCAS, EXACTAMENTE?"
           }
         }
       }
@@ -19620,6 +19739,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Altura"
+          }
+        }
+      }
+    },
+    "Taille (facultatif)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Height (optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Altura (opcional)"
           }
         }
       }
@@ -23338,6 +23474,23 @@
         }
       }
     },
+    "requis": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "required"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "obligatorio"
+          }
+        }
+      }
+    },
     "récupération": {
       "extractionState": "manual",
       "localizations": {
@@ -26544,6 +26697,40 @@
         }
       }
     },
+    "Étape 3 · ta dernière sortie": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 3 · your last run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 3 · tu última salida"
+          }
+        }
+      }
+    },
+    "Étape 3 · ta priorité": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 3 · your focus"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 3 · tu prioridad"
+          }
+        }
+      }
+    },
     "Étape 3 · ton HYROX": {
       "localizations": {
         "en": {
@@ -26556,6 +26743,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Paso 3 · tu HYROX"
+          }
+        }
+      }
+    },
+    "Étape 3 · ton point de départ": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 3 · your starting point"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 3 · tu punto de partida"
+          }
+        }
+      }
+    },
+    "Étape 3 · ton temps": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 3 · your time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 3 · tu tiempo"
           }
         }
       }
@@ -26573,6 +26794,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Paso 3 · tu triatlón"
+          }
+        }
+      }
+    },
+    "Étape 3 · ton ultra": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 3 · your ultra"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 3 · tu ultra"
           }
         }
       }

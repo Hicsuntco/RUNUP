@@ -21,7 +21,9 @@ struct TriathlonDetailsStepView: View {
     var body: some View {
         ObScreen {
             ScrollView {
-                ObTitle(eyebrow: "Étape 3 · ton triathlon", title: "QUEL TRIATHLON ?", subtitle: "Nager, rouler, courir — dans cet ordre, et fatiguée de la précédente à chaque fois.")
+                ObTitle(eyebrow: GoalType.triathlon.etapeEyebrow,
+                        title: GoalType.triathlon.etapeTitre,
+                        subtitle: GoalType.triathlon.etapePromesse)
 
                 EyebrowLabel(text: "Format", color: RUColor.text3)
                     .padding(.top, 20).padding(.bottom, 10)

@@ -167,7 +167,10 @@ final class OnboardingViewModel {
 
     private var deepDiveValid: Bool {
         switch goal {
-        case .weight: return !weightNow.isEmpty && !weightTarget.isEmpty && !height.isEmpty
+        // La taille n'est plus exigée : elle n'enrichit qu'une phrase du contexte envoyé au
+        // coach, qui sait déjà écrire « ? » quand elle manque. Bloquer l'étape sur une
+        // troisième mesure corporelle était de la friction sans contrepartie.
+        case .weight: return !weightNow.isEmpty && !weightTarget.isEmpty
         case .progress: return focusArea != nil
         case .restart: return lastRanRecency != nil
         case .health: return weeklyTimeBudget != nil && preferredTimeOfDay != nil

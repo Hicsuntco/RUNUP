@@ -6,15 +6,20 @@ struct RaceDetailsStepView: View {
     @Bindable var vm: OnboardingViewModel
     var onNext: () -> Void
 
+    /// L'écran sert la course ET l'ultra-trail — un ultra EST une course, avec une question de
+    /// plus. Le repli sur `.race` n'est pas atteignable : on n'arrive ici qu'avec un objectif.
+    private var objectif: GoalType { vm.goal ?? .race }
+
     private let columns = [GridItem(.flexible()), GridItem(.flexible())]
 
     var body: some View {
         ObScreen {
             ScrollView {
-                ObTitle(eyebrow: "Étape 3 · ta course",
-                        title: vm.isUltra ? "QUEL ULTRA ?" : "QUELLE COURSE ?",
-                        subtitle: vm.isUltra ? "La distance ET le dénivelé — c'est le second qui décide du plan."
-                                             : "Route, trail, obstacle… précise ce que tu prépares.")
+                // Le ternaire disparaît : la course et l'ultra-trail sont DEUX objectifs, et
+                // chacun porte déjà son en-tête. Le surtitre, lui, était commun aux deux — donc
+                // « Étape 3 · ta course » s'affichait au-dessus de « QUEL ULTRA ? ».
+                ObTitle(eyebrow: objectif.etapeEyebrow, title: objectif.etapeTitre,
+                        subtitle: objectif.etapePromesse)
 
                 LazyVGrid(columns: columns, spacing: 8) {
                     ForEach(RaceDistance.choix(pour: vm.goal)) { d in
@@ -46,8 +51,25 @@ struct RaceDetailsStepView: View {
                 // dimension du plan — sans lui on retomberait sur des kilomètres plats,
                 // c'est-à-dire sur le défaut que cet objectif existe pour corriger.
                 if vm.isUltra {
-                    EyebrowLabel(text: "Le dénivelé positif", color: RUColor.text3)
-                        .padding(.top, 22).padding(.bottom, 10)
+                    // LA PASTILLE « REQUIS » EST LE CORRECTIF, PAS LA DÉCORATION.
+                    //
+                    // Ce champ bloque le bouton « Continuer » (voir `raceStepValid`), et rien ne
+                    // le disait. Le bouton restait gris au milieu d'un écran dont tout le reste
+                    // était rempli, sans un mot pour expliquer lequel des quatre champs manquait
+                    // — un cul-de-sac silencieux sur le seul champ de tout l'onboarding qui soit
+                    // à la fois obligatoire et inhabituel.
+                    HStack(spacing: 8) {
+                        EyebrowLabel(text: "Le dénivelé positif", color: RUColor.text3)
+                        Text("requis")
+                            .font(RUFont.sans(.micro, weight: .bold))
+                            .foregroundColor(vm.raceElevationGainM == nil ? RUColor.amber : RUColor.text3)
+                            .padding(.horizontal, 7).padding(.vertical, 3)
+                            .overlay(Capsule().stroke(
+                                vm.raceElevationGainM == nil ? RUColor.amber : RUColor.line,
+                                lineWidth: RUSpacing.hairline))
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.top, 22).padding(.bottom, 10)
                     // `keyboard:` et non le modificateur `.keyboardType` : `ObTextField` porte
                     // déjà ce réglage en paramètre, et il l'applique au `TextField` lui-même.
                     ObTextField(placeholder: "Ex. 4000", text: $vm.raceElevationGain,

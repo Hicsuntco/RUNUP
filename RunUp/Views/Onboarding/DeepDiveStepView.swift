@@ -1,25 +1,31 @@
 import SwiftUI
 import UIKit
 
-/// Step 3 for non-race goals — branches by `goal` (weight/progress/restart/health). Mirrors the
-/// `!isRace` branch of step 3 in onboarding.jsx.
+/// Étape 3 des objectifs sans date — progresser, reprendre, perdre du poids, rester en forme.
+///
+/// # CE N'EST PLUS UN ÉCRAN GÉNÉRIQUE
+///
+/// Les quatre partageaient un seul en-tête : « Étape 3 · sur mesure », et le sous-titre « Plus
+/// on en sait, plus le plan colle à ta réalité » — une phrase vraie de n'importe quelle question
+/// de n'importe quelle app. L'étape 3 est pourtant la première chose qu'on voit APRÈS avoir dit
+/// ce qu'on veut : c'est elle qui répond « j'ai compris », et elle répondait « sur mesure » à
+/// quelqu'un qui venait de choisir « reprendre sans se blesser ».
+///
+/// L'en-tête vient maintenant de l'objectif lui-même (voir `GoalType.etapePromesse`), comme pour
+/// la course, HYROX et le triathlon, qui avaient le leur depuis le début. Le corps de l'écran,
+/// lui, reste branché ici : ce sont quatre jeux de questions différents, et les réunir dans une
+/// vue par objectif aurait dupliqué quatre fois la même coquille pour un champ de différence.
 struct DeepDiveStepView: View {
     @Bindable var vm: OnboardingViewModel
     var onNext: () -> Void
 
-    private var title: String {
-        switch vm.goal {
-        case .weight: return "TON POINT DE DÉPART"
-        case .progress: return "TA PRIORITÉ"
-        case .restart: return "AVANT DE REPRENDRE"
-        default: return "TON RYTHME IDÉAL"
-        }
-    }
-
     var body: some View {
         ObScreen {
             ScrollView {
-                ObTitle(eyebrow: "Étape 3 · sur mesure", title: title, subtitle: "Plus on en sait, plus le plan colle à ta réalité.")
+                if let goal = vm.goal {
+                    ObTitle(eyebrow: goal.etapeEyebrow, title: goal.etapeTitre,
+                            subtitle: goal.etapePromesse)
+                }
 
                 switch vm.goal {
                 case .weight: weightFields
@@ -38,7 +44,14 @@ struct DeepDiveStepView: View {
                 NumField(label: "Poids actuel", value: $vm.weightNow, unit: "kg", placeholder: "70")
                 NumField(label: "Poids visé", value: $vm.weightTarget, unit: "kg", placeholder: "64")
             }
-            NumField(label: "Taille", value: $vm.height, unit: "cm", placeholder: "168")
+            // LA TAILLE EST FACULTATIVE, ET ELLE NE L'ÉTAIT PAS.
+            //
+            // Elle bloquait l'étape au même titre que les deux poids, alors qu'elle ne sert qu'à
+            // enrichir UNE phrase du contexte envoyé au coach — lequel sait déjà écrire « ? »
+            // quand elle manque (voir `CoachService`). Exiger une troisième mesure corporelle
+            // pour avancer, sur l'objectif dont l'étape est déjà la plus intime, était le genre
+            // de friction qu'on ne remarque pas en l'écrivant et qu'on subit en la remplissant.
+            NumField(label: "Taille (facultatif)", value: $vm.height, unit: "cm", placeholder: "168")
             Text("Ton coach adapte ses conseils course et nutrition à ton objectif — sans jamais sacrifier ta forme.")
                 .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
         }

@@ -114,6 +114,79 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         }
     }
 
+    // MARK: L'étape qui suit le choix
+
+    /// # UNE FOIS L'OBJECTIF CHOISI, L'ÉTAPE SUIVANTE LUI APPARTIENT
+    ///
+    /// Trois objectifs avaient déjà leur écran, avec leur surtitre, leur question et leur
+    /// promesse : la course, HYROX, le triathlon. Les QUATRE AUTRES partageaient un seul écran
+    /// générique — même surtitre « Étape 3 · sur mesure », même sous-titre « Plus on en sait,
+    /// plus le plan colle à ta réalité », pour quatre objectifs qui n'ont rien à voir.
+    ///
+    /// Ce n'est pas un détail d'habillage. L'étape 3 est la première chose qu'on voit APRÈS
+    /// avoir dit ce qu'on veut, et c'est elle qui répond « j'ai compris ». Un écran qui dit
+    /// « sur mesure » à quelqu'un qui vient de choisir « reprendre en douceur » dit exactement
+    /// le contraire de ce que la phrase promet.
+    ///
+    /// Les trois propriétés vivent ici plutôt que dans les quatre vues, pour la même raison que
+    /// tout le reste de ce fichier : un objectif de plus ne compilera pas tant qu'il n'aura pas
+    /// répondu, au lieu de retomber en silence sur le texte générique de quelqu'un d'autre.
+    var etapeEyebrow: String {
+        switch self {
+        case .race: return String(localized: "Étape 3 · ta course")
+        case .progress: return String(localized: "Étape 3 · ta priorité")
+        case .restart: return String(localized: "Étape 3 · ta dernière sortie")
+        case .weight: return String(localized: "Étape 3 · ton point de départ")
+        case .health: return String(localized: "Étape 3 · ton temps")
+        case .hyrox: return String(localized: "Étape 3 · ton HYROX")
+        case .ultraTrail: return String(localized: "Étape 3 · ton ultra")
+        case .triathlon: return String(localized: "Étape 3 · ton triathlon")
+        }
+    }
+
+    var etapeTitre: String {
+        switch self {
+        case .race: return String(localized: "QUELLE COURSE ?")
+        case .progress: return String(localized: "TU VEUX QUOI, AU JUSTE ?")
+        case .restart: return String(localized: "TA DERNIÈRE SORTIE")
+        case .weight: return String(localized: "TON POINT DE DÉPART")
+        case .health: return String(localized: "COMBIEN DE TEMPS ?")
+        case .hyrox: return String(localized: "QUEL HYROX ?")
+        case .ultraTrail: return String(localized: "QUEL ULTRA ?")
+        case .triathlon: return String(localized: "QUEL TRIATHLON ?")
+        }
+    }
+
+    /// LA PROMESSE, ET PAS UNE DESCRIPTION.
+    ///
+    /// Chacune dit ce que le plan FERA de la réponse qu'on s'apprête à donner, et pourquoi la
+    /// question est posée. « Plus on en sait, plus le plan colle à ta réalité » ne disait rien
+    /// de tel : c'était vrai de n'importe quelle question de n'importe quelle app.
+    ///
+    /// Les quatre nouvelles sont écrites sur le même patron que les trois qui existaient — une
+    /// affirmation, puis sa conséquence. « Le plan part d'aujourd'hui. Pas d'où tu étais avant »
+    /// répond à l'inquiétude exacte de quelqu'un qui reprend après un an.
+    var etapePromesse: String {
+        switch self {
+        case .race:
+            return String(localized: "Route, trail, obstacle… précise ce que tu prépares.")
+        case .progress:
+            return String(localized: "Pas de dossard en vue ? Tu n'en as pas besoin pour progresser.")
+        case .restart:
+            return String(localized: "Le plan part d'aujourd'hui, pas d'où tu étais avant.")
+        case .weight:
+            return String(localized: "La course et l'assiette, dans un seul plan.")
+        case .health:
+            return String(localized: "Le plan se cale sur ton agenda. Pas l'inverse.")
+        case .hyrox:
+            return String(localized: "8 × 1 km de course, 8 stations fonctionnelles — le format ne change pas, ta préparation si.")
+        case .ultraTrail:
+            return String(localized: "La distance ET le dénivelé — c'est le second qui décide du plan.")
+        case .triathlon:
+            return String(localized: "Nager, rouler, courir — dans cet ordre, et fatiguée de la précédente à chaque fois.")
+        }
+    }
+
     /// LE NOMBRE MINIMAL DE JOURS PAR SEMAINE QUE CET OBJECTIF EXIGE.
     ///
     /// Deux pour tout ce qui se court : c'est peu, et c'est assumé — quelqu'un qui ne peut donner

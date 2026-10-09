@@ -24542,6 +24542,466 @@
         }
       }
     },
+    "session.tri_bike_endurance.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Longue, régulière, sans forcer. Le vélo est de loin la plus longue des trois épreuves : c'est lui qui doit prendre le plus de place."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Long, steady, no straining. The bike is by far the longest of the three legs — it should take the most room."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Larga, constante, sin forzar. La bici es de lejos la más larga de las tres pruebas: debe ocupar el mayor espacio."
+          }
+        }
+      }
+    },
+    "session.tri_bike_endurance.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vélo · endurance"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bike · endurance"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bici · resistencia"
+          }
+        }
+      }
+    },
+    "session.tri_bike_threshold.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Des blocs soutenus à allure de course. C'est ici qu'on gagne du temps sans en perdre pour la suite."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sustained blocks at race effort. This is where you gain time without paying for it later."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloques sostenidos a ritmo de carrera. Aquí se gana tiempo sin perderlo después."
+          }
+        }
+      }
+    },
+    "session.tri_bike_threshold.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vélo · seuil"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bike · threshold"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bici · umbral"
+          }
+        }
+      }
+    },
+    "session.tri_brick.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descendre du vélo et partir courir tout de suite. Les premiers kilomètres ne ressemblent à rien d'autre, et c'est la seule façon de les connaître avant le jour J."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off the bike and straight into the run. Those first kilometres feel like nothing else, and this is the only way to know them before race day."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bajar de la bici y salir a correr de inmediato. Esos primeros kilómetros no se parecen a nada, y es la única forma de conocerlos antes del día de la carrera."
+          }
+        }
+      }
+    },
+    "session.tri_brick.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enchaînement vélo → course"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brick: bike → run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlace bici → carrera"
+          }
+        }
+      }
+    },
+    "session.tri_brick_race.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le même enchaînement, aux allures du jour J. La répétition générale, et la dernière chose à relâcher à l'affûtage."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The same brick, at race pace. The dress rehearsal, and the last thing to ease off during the taper."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El mismo enlace, a ritmo de carrera. El ensayo general, y lo último que se suelta en la puesta a punto."
+          }
+        }
+      }
+    },
+    "session.tri_brick_race.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enchaînement · allure de course"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brick · race pace"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlace · ritmo de carrera"
+          }
+        }
+      }
+    },
+    "session.tri_open_water.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pas de mur, pas de ligne au fond. Relever la tête pour viser s'apprend — et jamais seule."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No wall, no line on the bottom. Lifting your head to sight takes practice — and never alone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin muro, sin línea en el fondo. Levantar la cabeza para orientarse se aprende — y nunca sola."
+          }
+        }
+      }
+    },
+    "session.tri_open_water.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Natation · eau libre"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swim · open water"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Natación · aguas abiertas"
+          }
+        }
+      }
+    },
+    "session.tri_swim_endurance.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nage continue, souffle régulier. C'est elle qui rend la distance du jour J possible."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuous swim, steady breathing. This is what makes race-day distance possible."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nado continuo, respiración constante. Es lo que hace posible la distancia del día de la carrera."
+          }
+        }
+      }
+    },
+    "session.tri_swim_endurance.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Natation · endurance"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swim · endurance"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Natación · resistencia"
+          }
+        }
+      }
+    },
+    "session.tri_swim_intervals.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Des séries courtes, récupération au mur. Le rythme de course s'apprend au chronomètre, pas à la sensation."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Short sets, recovery at the wall. Race rhythm is learned on the clock, not by feel."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Series cortas, recuperación en el muro. El ritmo de carrera se aprende con el cronómetro, no por sensación."
+          }
+        }
+      }
+    },
+    "session.tri_swim_intervals.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Natation · fractionné"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swim · intervals"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Natación · series"
+          }
+        }
+      }
+    },
+    "session.tri_swim_learn.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Des longueurs courtes, et autant de pauses qu'il faut. Ce qui compte est le temps passé dans l'eau, pas la distance."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Short lengths, and as many breaks as you need. What counts is time in the water, not distance."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Largos cortos, y tantas pausas como necesites. Lo que cuenta es el tiempo en el agua, no la distancia."
+          }
+        }
+      }
+    },
+    "session.tri_swim_learn.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durer dans l'eau"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lasting in the water"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durar en el agua"
+          }
+        }
+      }
+    },
+    "session.tri_swim_technique.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Éducatifs et longueurs courtes. En natation, la technique fait plus de différence que la condition physique — c'est la seule des trois où c'est vrai."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drills and short lengths. In swimming, technique matters more than fitness — the only one of the three where that's true."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ejercicios y largos cortos. En natación, la técnica importa más que la condición física — la única de las tres donde eso es cierto."
+          }
+        }
+      }
+    },
+    "session.tri_swim_technique.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Natation · technique"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swim · technique"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Natación · técnica"
+          }
+        }
+      }
+    },
+    "session.tri_transitions.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sortir de l'eau, enfiler, partir. Deux minutes gagnées ici valent une séance de seuil, et presque personne ne les travaille."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Out of the water, kit on, go. Two minutes saved here are worth a threshold session, and almost nobody practises them."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salir del agua, equiparse, salir. Dos minutos ganados aquí valen una sesión de umbral, y casi nadie los entrena."
+          }
+        }
+      }
+    },
+    "session.tri_transitions.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transitions · T1 et T2"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transitions · T1 and T2"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transiciones · T1 y T2"
+          }
+        }
+      }
+    },
     "session.ultra_back_to_back_day_1.subtitle": {
       "extractionState": "manual",
       "localizations": {

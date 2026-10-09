@@ -171,6 +171,59 @@ def _():
     assert lignes == {"A": 2, "B": 3}, lignes
 
 
+# ── Les libellés de séance ────────────────────────────────────────────────────────────────────
+
+SOURCE_SEANCES = '''
+    case easyFooting = "easy_footing"
+    case triBrick = "tri_brick"
+'''
+
+def _trio(mot):
+    return {"localizations": {l: {"stringUnit": {"value": mot}}
+                              for l in ck.LANGUES_SEANCE}}
+
+def _catalogue_complet():
+    c = {}
+    for brut in ("easy_footing", "tri_brick"):
+        for suffixe in ("title", "subtitle"):
+            c[f"session.{brut}.{suffixe}"] = _trio(brut)
+    return c
+
+@cas_test("les types de séance sont lus à la source")
+def _():
+    lus = ck.types_de_seance(SOURCE_SEANCES)
+    assert lus == ["easy_footing", "tri_brick"], lus
+
+@cas_test("un type de séance complet dans les trois langues passe")
+def _(): assert ck.seances_sans_libelle(SOURCE_SEANCES, _catalogue_complet()) == []
+
+@cas_test("un sous-titre de séance absent est signalé")
+def _():
+    c = _catalogue_complet(); del c["session.tri_brick.subtitle"]
+    t = ck.seances_sans_libelle(SOURCE_SEANCES, c)
+    assert [cle for cle, _ in t] == ["session.tri_brick.subtitle"], t
+
+@cas_test("un libellé de séance sans FRANÇAIS est signalé")
+def _():
+    # Le cas qui distingue cette règle de toutes les autres : ailleurs la clé EST le français.
+    # Ici, sans `fr`, l'app affiche « session.tri_brick.title » — y compris en français.
+    c = _catalogue_complet()
+    c["session.tri_brick.title"] = {"localizations": {
+        "en": {"stringUnit": {"value": "Brick"}},
+        "es": {"stringUnit": {"value": "Enlace"}}}}
+    t = ck.seances_sans_libelle(SOURCE_SEANCES, c)
+    assert len(t) == 1 and "fr" in t[0][1], t
+
+@cas_test("les 53 types de séance du vrai dépôt sont tous titrés")
+def _():
+    import json
+    src = (ck.RACINE / ck.FICHIER_SEANCES).read_text(encoding="utf-8")
+    catalogue = json.loads(ck.CATALOGUE.read_text(encoding="utf-8"))["strings"]
+    t = ck.seances_sans_libelle(src, catalogue)
+    assert t == [], f"{len(t)} trous : {t[:4]}"
+    assert len(ck.types_de_seance(src)) >= 50, len(ck.types_de_seance(src))
+
+
 # ── Le vrai dépôt ─────────────────────────────────────────────────────────────────────────────
 
 @cas_test("la table du vrai code voit les composants d'onboarding, et pas `RunRecord`")

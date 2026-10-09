@@ -354,6 +354,48 @@ def litteraux_des_parametres_localises(source: str, table):
     return trouves
 
 
+# ── Chaque type de séance doit avoir son titre et son sous-titre, dans les TROIS langues ───────
+#
+# `SessionKind.titleKey` compose « session.<brut>.title ». Ce n'est pas du français : c'est un
+# identifiant. Donc si la clé manque au catalogue, SwiftUI affiche l'identifiant — « plan du
+# jour : session.tri_brick.title ». Pas un mot de français en anglais, comme ailleurs : une
+# chaîne technique, en évidence, sur l'écran le plus regardé de l'app.
+#
+# Et le FRANÇAIS compte ici, contrairement à toutes les autres clés de ce fichier. Partout
+# ailleurs la clé EST le français, donc une entrée sans `fr` sort correctement en français. Pour
+# celles-ci, sans `fr`, elle sort en « session.tri_brick.title » — y compris pour quelqu'un dont
+# le téléphone est en français, c'est-à-dire pour elle.
+#
+# Dix types de séance viennent d'être ajoutés d'un coup. Aucune barrière ne regardait ça.
+
+FICHIER_SEANCES = "RunUp/Models/Session.swift"
+_SEANCE = re.compile(r'^\s*case \w+ = "([^"]+)"', re.M)
+LANGUES_SEANCE = ("fr", "en", "es")
+
+
+def types_de_seance(source: str):
+    """Les valeurs brutes de `SessionKind`, dans l'ordre de déclaration."""
+    return _SEANCE.findall(source)
+
+
+def seances_sans_libelle(source: str, catalogue):
+    """`(clé, ce qui manque)` pour chaque titre ou sous-titre de séance incomplet."""
+    trous = []
+    for brut in types_de_seance(source):
+        for suffixe in ("title", "subtitle"):
+            cle = f"session.{brut}.{suffixe}"
+            entree = catalogue.get(cle)
+            if entree is None:
+                trous.append((cle, "absente du catalogue"))
+                continue
+            loc = entree.get("localizations", {})
+            absentes = [l for l in LANGUES_SEANCE
+                        if not loc.get(l, {}).get("stringUnit", {}).get("value")]
+            if absentes:
+                trous.append((cle, "sans " + " ni ".join(absentes)))
+    return trous
+
+
 def sans_traduction():
     """Les clés du catalogue auxquelles il manque l'anglais ou l'espagnol.
 
@@ -373,6 +415,17 @@ def sans_traduction():
 
 def main() -> int:
     cles = cles_du_catalogue()
+    catalogue = json.loads(CATALOGUE.read_text(encoding="utf-8"))["strings"]
+    seances = seances_sans_libelle((RACINE / FICHIER_SEANCES).read_text(encoding="utf-8"), catalogue)
+    if seances:
+        print(f"{len(seances)} libellé(s) de séance manquant(s) :\n", file=sys.stderr)
+        for cle, pourquoi in seances:
+            print(f"  {cle} — {pourquoi}", file=sys.stderr)
+        print("\nUne clé de séance n'est PAS du français : c'est un identifiant. Absente, l'app",
+              file=sys.stderr)
+        print("affiche « session.tri_brick.title » sur l'écran du plan — en français aussi.",
+              file=sys.stderr)
+        return 1
     trous = sans_traduction()
     fichiers = [f for d in DOSSIERS for f in sorted((RACINE / d).rglob("*.swift"))]
     # La table est construite sur TOUT le code avant la première vérification : un type déclaré
@@ -446,7 +499,9 @@ def main() -> int:
     manquantes = sorted(set(manquantes))
 
     if not manquantes:
+        nb = len(types_de_seance((RACINE / FICHIER_SEANCES).read_text(encoding="utf-8")))
         print(f"Catalogue : {len(cles)} clés, aucune chaîne affichée n'en manque.")
+        print(f"            {nb} types de séance, tous titrés dans les trois langues.")
         return 0
 
     print(f"{len(manquantes)} chaîne(s) affichée(s) absente(s) du catalogue :\n", file=sys.stderr)

@@ -123,6 +123,41 @@ enum SessionKind: String, Codable, Equatable, CaseIterable {
     /// jambes gardent la mémoire du sol sans accumuler de fatigue.
     case ultraTerrainReminder = "ultra_terrain_reminder"
 
+    // ── Triathlon ─────────────────────────────────────────────────────────────────────────────
+    //
+    // Dix séances, et c'est la première fois que le plan de cette app contient autre chose que
+    // de la course à pied. La course, elle, réutilise les types qui existent déjà — un footing
+    // d'endurance est un footing d'endurance, qu'on prépare un 10 km ou un olympique, et lui
+    // écrire un jumeau n'aurait dupliqué que des traductions.
+    //
+    // CE QUI N'EXISTAIT PAS, C'EST DE SAVOIR DE QUELLE DISCIPLINE PARLE UNE SÉANCE. Le plan
+    // était implicitement un plan de course : aucune séance n'avait à le dire. Voir
+    // `disciplines` plus bas — c'est l'ajout structurel de ce lot, et c'est lui qui permet à la
+    // natation d'apparaître dans une semaine.
+
+    /// Pour qui ne nage pas encore, ou presque pas. L'objectif est le TEMPS DANS L'EAU, pas la
+    /// distance : des longueurs courtes et autant de pauses qu'il faut. C'est la séance qui rend
+    /// les autres possibles, et la seule que `NiveauDeNage.pasEncore` autorise au départ.
+    case triSwimLearn = "tri_swim_learn"
+    /// En natation, la technique fait plus de différence que la condition physique — c'est la
+    /// seule des trois disciplines où c'est vrai, et c'est pour ça qu'elle a sa propre séance.
+    case triSwimTechnique = "tri_swim_technique"
+    case triSwimEndurance = "tri_swim_endurance"
+    case triSwimIntervals = "tri_swim_intervals"
+    /// L'eau libre : pas de mur pour se reposer, pas de ligne au fond pour aller droit. Relever
+    /// la tête pour viser s'apprend, et une épreuve en lac se perd souvent là.
+    case triOpenWater = "tri_open_water"
+    case triBikeEndurance = "tri_bike_endurance"
+    case triBikeThreshold = "tri_bike_threshold"
+    /// LA SÉANCE QUI DÉFINIT LE TRIATHLON. Descendre du vélo et partir courir tout de suite :
+    /// les premiers kilomètres ne ressemblent à rien de ce qu'on connaît, et c'est la seule
+    /// chose qu'un plan de trois disciplines séparées ne construit jamais.
+    case triBrick = "tri_brick"
+    case triBrickRace = "tri_brick_race"
+    /// Deux minutes gagnées en transition valent une séance de seuil, et personne ne les
+    /// travaille. Ça se fait sur un parking, avec un vélo et des chaussures.
+    case triTransitions = "tri_transitions"
+
     case rest = "rest"
     case comeback = "comeback"
     case freeRunMaintenance = "free_run_maintenance"
@@ -171,10 +206,18 @@ enum SessionKind: String, Codable, Equatable, CaseIterable {
              .comeback,
              // Les footings d'ultra sont de l'endurance, pas autre chose : ce qui les distingue
              // est le terrain, pas la filière.
-             .ultraEnduranceFooting, .ultraTaperFooting, .ultraTerrainReminder, .ultraPowerHike:
+             .ultraEnduranceFooting, .ultraTaperFooting, .ultraTerrainReminder, .ultraPowerHike,
+             // La natation et le vélo d'endurance sont de l'endurance : ce qui les distingue est
+             // le milieu, pas la filière. Et apprendre à durer dans l'eau est de l'endurance
+             // avant d'être quoi que ce soit d'autre.
+             .triSwimLearn, .triSwimEndurance, .triOpenWater, .triBikeEndurance:
             return .endurance
 
-        case .tempoRun, .hyroxTempoSled:
+        case .tempoRun, .hyroxTempoSled,
+             // Le seuil à vélo est du tempo, et l'enchaînement aux allures du jour J aussi : on
+             // y tient une intensité soutenue sans récupération, ce qui est la définition de
+             // cette famille et pas celle du fractionné.
+             .triBikeThreshold, .triBrick, .triBrickRace:
             return .tempo
 
         case .lightIntervals, .vo2maxIntervals, .racePaceReminder, .freeRunLightIntervals,
@@ -186,7 +229,13 @@ enum SessionKind: String, Codable, Equatable, CaseIterable {
              // Ce n'est PAS ce qui les fait compter dans le plafond de deux séances dures par
              // semaine : ce plafond passe par `SessionArchetype.role`, pas par la famille. La
              // famille porte la couleur, et rien d'autre.
-             .ultraHillRepeats, .ultraDescentWork:
+             .ultraHillRepeats, .ultraDescentWork,
+             // Un fractionné en bassin est un fractionné : dix fois cent mètres, récupération au
+             // mur. Il ne porte PAS d'`IntervalStructure` pour autant — cette structure décrit
+             // des mètres mesurés au GPS, et il n'y a pas de GPS sous l'eau. L'écran de course
+             // ne le verra jamais de toute façon : une nage ne se démarre pas depuis le
+             // téléphone (voir `Discipline.seDemarreDepuisLeTelephone`).
+             .triSwimIntervals:
             return .intervals
 
         case .longRun, .specificLongRun, .easedLongRun,
@@ -196,9 +245,104 @@ enum SessionKind: String, Codable, Equatable, CaseIterable {
 
         case .hyroxTechnique, .hyroxTechniquePro, .hyroxIntenseCircuit, .hyroxIntenseCircuitPro,
              .hyroxCompromisedRun3, .hyroxCompromisedRun6, .hyroxCompromisedRunLight2,
-             .hyroxStationsReminder, .hyroxLightSimulation, .hyroxLightFunctional:
+             .hyroxStationsReminder, .hyroxLightSimulation, .hyroxLightFunctional,
+             // La technique de nage et les transitions : hors de l'axe d'effort, comme le
+             // renforcement HYROX. Ce qu'on y travaille n'est pas une filière énergétique, c'est
+             // un geste — et dans les deux cas, c'est là que se trouvent les minutes les moins
+             // chères de toute la préparation.
+             .triSwimTechnique, .triTransitions:
             return .functional
         }
+    }
+
+    /// DE QUOI CETTE SÉANCE EST FAITE, dans l'ordre où on la fait.
+    ///
+    /// # L'HYPOTHÈSE QUI N'ÉTAIT ÉCRITE NULLE PART
+    ///
+    /// Le plan de cette app a toujours été un plan de COURSE. Aucune séance n'avait donc à dire
+    /// sa discipline : il n'y en avait qu'une. Le vélo et le trail sont arrivés comme des façons
+    /// d'ENREGISTRER une sortie, pas comme des choses que le plan prescrit — et la question ne
+    /// s'est pas posée.
+    ///
+    /// Elle se pose avec le triathlon, parce qu'une semaine y contient trois disciplines et que
+    /// « la séance du jour » n'est plus forcément une course. Sans cette propriété, une nage
+    /// prescrite un mardi serait indistinguable d'un footing : même carte, même libellé de
+    /// durée, et une case qui se cocherait en courant.
+    ///
+    /// # L'ENCHAÎNEMENT EN PORTE DEUX, DANS L'ORDRE
+    ///
+    /// `[.bike, .run]`, et pas l'inverse : tout le sens de la séance est dans cet ordre-là.
+    /// Un tableau et non une valeur unique parce que réduire un enchaînement à l'une de ses deux
+    /// moitiés serait écrire la moitié de la séance.
+    ///
+    /// # LES SÉANCES D'ULTRA SONT DU TRAIL, ET LE DISENT ENFIN
+    ///
+    /// Elles l'ont toujours été — « côtes longues », « descente technique », « sortie de nuit ».
+    /// Elles se déclaraient course faute d'avoir où dire autre chose. Attention : ce que la
+    /// séance EST et ce qui la COCHE sont deux questions différentes, et confondre les deux ici
+    /// aurait fait qu'un footing sur route ne valide plus une journée de préparation d'ultra.
+    /// Voir `estCompleteePar(_:)` juste en dessous.
+    var disciplines: [Discipline] {
+        switch self {
+        case .rest:
+            return []
+
+        case .easyFooting, .lightIntervals, .longRun, .vo2maxIntervals, .tempoRun,
+             .enduranceFooting, .specificLongRun, .maintenanceFooting, .racePaceReminder,
+             .shortRun, .recoveryFooting, .stridesFooting, .easedLongRun,
+             .comeback, .freeRunMaintenance, .freeRunLightIntervals, .freeRunDiscovery:
+            return [.run]
+
+        // HYROX : huit kilomètres de course et huit stations. La course est la seule discipline
+        // que cette app sache nommer là-dedans — le renforcement n'en est pas une au sens de
+        // `Discipline`, et lui en inventer une pour l'occasion serait ajouter un mode qui ne
+        // mesure rien.
+        case .hyroxBaseFooting, .hyroxTechnique, .hyroxTechniquePro, .hyroxIntenseCircuit,
+             .hyroxIntenseCircuitPro, .hyroxCompromisedRun3, .hyroxCompromisedRun6,
+             .hyroxCompromisedRunLight2, .hyroxTempoSled, .hyroxMaintenanceFooting,
+             .hyroxStationsReminder, .hyroxLightSimulation, .hyroxRecoveryFooting,
+             .hyroxLightFunctional:
+            return [.run]
+
+        case .ultraEnduranceFooting, .ultraHillRepeats, .ultraPowerHike, .ultraLongRun,
+             .ultraDescentWork, .ultraSpecificLongRun, .ultraBackToBackDay1,
+             .ultraBackToBackDay2, .ultraNightRun, .ultraTaperFooting, .ultraTerrainReminder:
+            return [.trail]
+
+        case .triSwimLearn, .triSwimTechnique, .triSwimEndurance, .triSwimIntervals,
+             .triOpenWater:
+            return [.swim]
+
+        case .triBikeEndurance, .triBikeThreshold:
+            return [.bike]
+
+        // L'ordre EST la séance. Et les transitions se travaillent avec un vélo et des
+        // chaussures, sur un parking : T1 au sens du matériel, T2 au sens du départ à pied.
+        case .triBrick, .triBrickRace, .triTransitions:
+            return [.bike, .run]
+        }
+    }
+
+    /// Enregistrer une sortie dans CETTE discipline coche-t-il cette séance ?
+    ///
+    /// # POURQUOI CE N'EST PAS `disciplines.contains(_:)`
+    ///
+    /// Parce que ce que la séance EST et ce qui la COCHE ne sont pas la même question, et que
+    /// les confondre casse un cas réel : une préparation d'ultra dont les séances sont du trail
+    /// se fait en grande partie sur route — c'est même ce que fait tout le monde en semaine. Un
+    /// `contains` strict aurait laissé « à faire » une journée faite, et le moteur aurait adapté
+    /// la semaine suivante sur une séance qui a bien eu lieu.
+    ///
+    /// La règle est donc : la même discipline, ou n'importe quelle discipline CHAUSSÉE quand la
+    /// séance en demande une. Courir valide une séance de trail, et le trail valide une séance
+    /// de course — les deux se font avec les mêmes jambes et les mêmes chaussures.
+    ///
+    /// Nager, non. Rouler, non. C'est la généralisation de `Discipline.completesRunningPlan`, à
+    /// ceci près qu'elle part désormais de la SÉANCE et non de la discipline : « est-ce que ça
+    /// coche le plan de course » n'a plus de sens dans un plan qui contient trois disciplines.
+    func estCompleteePar(_ discipline: Discipline) -> Bool {
+        if disciplines.contains(discipline) { return true }
+        return discipline.wearsShoes && disciplines.contains { $0.wearsShoes }
     }
 
     var isIntervalWorkout: Bool {
@@ -210,7 +354,11 @@ enum SessionKind: String, Codable, Equatable, CaseIterable {
              // autres. L'écran Live doit donc les guider segment par segment comme un
              // fractionné — c'est ainsi qu'on les fait sur le terrain, et c'est ce que les
              // deux classifications doivent dire ensemble (voir `SessionFamilyTests`).
-             .ultraHillRepeats, .ultraDescentWork:
+             .ultraHillRepeats, .ultraDescentWork,
+             // Le fractionné en bassin, pour que `family == .intervals` et ce drapeau disent la
+             // même chose — l'invariant que `SessionFamilyTests` vérifie. Sans structure
+             // associée : voir le commentaire dans `family`.
+             .triSwimIntervals:
             return true
         default:
             return false

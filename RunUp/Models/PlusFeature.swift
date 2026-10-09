@@ -119,10 +119,21 @@ enum Entitlement {
         sharedDefaults?.set(active, forKey: cacheKey)
     }
 
-    static func unlocks(_ feature: PlusFeature, isSubscribed: Bool?, canSell: Bool) -> Bool {
+    /// `estAdmin` ouvre tout. C'EST LE SERVEUR QUI LE DIT, et c'est toute la différence.
+    ///
+    /// Un compte de la maison a le plan complet sans payer. Le droit n'est pas décidé ici : il
+    /// arrive dans la réponse de `api/me`, à partir de l'adresse que la BASE porte et d'une liste
+    /// qui vit dans l'environnement du serveur. L'app ne fait que lire un booléen qu'elle ne sait
+    /// pas fabriquer.
+    ///
+    /// Hukaia a fait l'inverse, et l'a écrit dans son propre code : l'exemption s'y lisait dans
+    /// `localStorage`, et une ligne dans la console suffisait à tout déverrouiller, à vie.
+    static func unlocks(_ feature: PlusFeature, isSubscribed: Bool?, canSell: Bool,
+                        estAdmin: Bool = false) -> Bool {
         _ = feature // Aucune fonctionnalité n'a de régime particulier aujourd'hui — mais la
                     // signature le permet sans avoir à retoucher les appelants le jour où l'une
                     // d'elles passe du gratuit au payant, ou l'inverse.
+        if estAdmin { return true }
         if isSubscribed == true { return true }
         if !canSell { return true }
         return isSubscribed ?? true

@@ -13,6 +13,7 @@ struct MoreSettingsView: View {
     private var profile: UserProfile { appState.profile }
     private var clubService: ClubService { ClubService(auth: appState.auth) }
 
+    @State private var ficheAdminOuverte = false
     @State private var showDeleteAccountConfirm = false
     @State private var isDeletingAccount = false
     @State private var usernameText = ""
@@ -51,6 +52,17 @@ struct MoreSettingsView: View {
                         accountCard
                     }
 
+                    // LA FICHE DE LA MAISON, ET UNIQUEMENT POUR LA MAISON.
+                    //
+                    // La condition est `isAdmin`, qui vient du SERVEUR. Montrer cette entrée à
+                    // tout le monde serait sans danger — la fiche ne commande rien — mais elle
+                    // parle de variables d'environnement et de listes d'adresses, c'est-à-dire
+                    // d'un sujet qui n'existe pas pour qui se contente de courir.
+                    if appState.auth.currentUser?.isAdmin == true {
+                        sectionTitle("La maison")
+                        adminCard
+                    }
+
                     // « Bêta » était juste tant que l'app se testait entre proches. Elle se vend
                     // maintenant par abonnement : lire « Bêta » dans les réglages d'une app qu'on
                     // vient de payer, c'est lire « ce n'est pas fini », et c'est le genre de mot
@@ -75,12 +87,37 @@ struct MoreSettingsView: View {
                 usernameText = appState.auth.currentUser?.username ?? ""
                 lastNameText = appState.auth.currentUser?.lastName ?? ""
             }
+            .sheet(isPresented: $ficheAdminOuverte) {
+                AdminSheet().runUpSheetStyle(detents: [.large])
+            }
         }
         .preferredColorScheme(RUColor.colorScheme)
     }
 
     private func sectionTitle(_ text: String) -> some View {
         EyebrowLabel(text: text, color: RUColor.text3)
+    }
+
+    private var adminCard: some View {
+        Button { ficheAdminOuverte = true } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "key.horizontal")
+                    .font(.system(size: 15, weight: .semibold)).foregroundColor(RUColor.violet)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Fiche admin")
+                        .font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                    Text("Le compte, ses droits, et ce que le serveur en dit")
+                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold)).foregroundColor(RUColor.text3)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 12)
+            .frame(minHeight: 48)
+            .ruCard()
+        }
+        .buttonStyle(PressableStyle())
     }
 
     private var programCard: some View {

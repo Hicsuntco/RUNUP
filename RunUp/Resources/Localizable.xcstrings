@@ -2656,6 +2656,23 @@
         }
       }
     },
+    "Abonnement App Store": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Store subscription"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suscripción App Store"
+          }
+        }
+      }
+    },
     "Abonnements": {
       "localizations": {
         "en": {
@@ -2880,6 +2897,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "¿Adaptar el plan a tu ciclo?"
+          }
+        }
+      }
+    },
+    "Adresse": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Address"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dirección"
           }
         }
       }
@@ -3827,6 +3861,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Todavía no hay carreras — termina una salida o añade una manualmente."
+          }
+        }
+      }
+    },
+    "Aucune liste de comptes de la maison côté serveur. Crée la variable d'environnement RUNUP_ADMIN_EMAILS sur Vercel, avec l'adresse affichée ci-dessous, puis redéploie.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No house-account list on the server. Create the RUNUP_ADMIN_EMAILS environment variable on Vercel, with the address shown below, then redeploy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay lista de cuentas de la casa en el servidor. Crea la variable de entorno RUNUP_ADMIN_EMAILS en Vercel, con la dirección que se muestra abajo, y vuelve a desplegar."
           }
         }
       }
@@ -5108,6 +5159,57 @@
         }
       }
     },
+    "Cette adresse n'est pas dans la liste des comptes de la maison. Ajoute celle affichée ci-dessous à RUNUP_ADMIN_EMAILS sur Vercel — c'est la seule que le serveur reconnaîtra.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This address isn't in the house-account list. Add the one shown below to RUNUP_ADMIN_EMAILS on Vercel — it's the only one the server will recognise."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta dirección no está en la lista de cuentas de la casa. Añade la que se muestra abajo a RUNUP_ADMIN_EMAILS en Vercel — es la única que el servidor reconocerá."
+          }
+        }
+      }
+    },
+    "Cette fiche ne commande rien : elle montre ce que le serveur répond. Un droit qu'on pourrait s'accorder depuis l'app ne serait pas un droit, ce serait un interrupteur.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This card controls nothing: it shows what the server answers. A right you could grant yourself from the app wouldn't be a right, it would be a switch."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta ficha no controla nada: muestra lo que responde el servidor. Un derecho que pudieras concederte desde la app no sería un derecho, sería un interruptor."
+          }
+        }
+      }
+    },
+    "Cette installation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This install"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta instalación"
+          }
+        }
+      }
+    },
     "Cette paire dépasse %lld km — pense à la changer bientôt.": {
       "extractionState": "manual",
       "localizations": {
@@ -5953,6 +6055,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cuenta"
+          }
+        }
+      }
+    },
+    "Compte de la maison": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "House account"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuenta de la casa"
+          }
+        }
+      }
+    },
+    "Compte de la maison reconnu. Le plan complet est ouvert, sans abonnement.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "House account recognised. The full plan is unlocked, without a subscription."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuenta de la casa reconocida. El plan completo está desbloqueado, sin suscripción."
           }
         }
       }
@@ -8892,6 +9028,23 @@
         }
       }
     },
+    "Fiche admin": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Admin card"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ficha admin"
+          }
+        }
+      }
+    },
     "Fil d'activité": {
       "localizations": {
         "en": {
@@ -9361,6 +9514,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ocho semanas de carga de un vistazo, para ver venir el sobreentrenamiento antes de lesionarte."
+          }
+        }
+      }
+    },
+    "Identifiant": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identifier"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identificador"
           }
         }
       }
@@ -10833,6 +11003,23 @@
         }
       }
     },
+    "La maison": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The house"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La casa"
+          }
+        }
+      }
+    },
     "La montre, le widget et le suivi GPS": {
       "extractionState": "manual",
       "localizations": {
@@ -11243,6 +11430,40 @@
         }
       }
     },
+    "Le compte connecté": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The signed-in account"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cuenta conectada"
+          }
+        }
+      }
+    },
+    "Le compte, ses droits, et ce que le serveur en dit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The account, its rights, and what the server says about them"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cuenta, sus derechos, y lo que dice el servidor"
+          }
+        }
+      }
+    },
     "Le creux de trois à cinq heures du matin est physiologique, pas un mauvais jour. Mange chaud, marche, remets-toi en mouvement : ça passe.": {
       "localizations": {
         "en": {
@@ -11588,6 +11809,23 @@
         }
       }
     },
+    "Les droits": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rights"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los derechos"
+          }
+        }
+      }
+    },
     "Les formules n'ont pas pu être chargées.": {
       "extractionState": "manual",
       "localizations": {
@@ -11684,6 +11922,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Libre"
+          }
+        }
+      }
+    },
+    "Liste configurée côté serveur": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List configured server-side"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lista configurada en el servidor"
           }
         }
       }
@@ -12969,6 +13224,23 @@
         }
       }
     },
+    "Nom": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre"
+          }
+        }
+      }
+    },
     "Nom (facultatif)": {
       "localizations": {
         "en": {
@@ -14189,6 +14461,23 @@
         }
       }
     },
+    "Pas de compte connecté sur cet appareil. Les droits de la maison suivent le compte, pas le téléphone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No account signed in on this device. House rights follow the account, not the phone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna cuenta conectada en este dispositivo. Los derechos de la casa siguen a la cuenta, no al teléfono."
+          }
+        }
+      }
+    },
     "Pas de connexion — réessaie quand tu auras du réseau.": {
       "extractionState": "manual",
       "localizations": {
@@ -14824,6 +15113,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Momento de recuperación"
+          }
+        }
+      }
+    },
+    "Plan complet ouvert": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full plan unlocked"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan completo desbloqueado"
           }
         }
       }
@@ -17842,6 +18148,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Siete días gratis. Después, todo el programa, sin que falte nada."
+          }
+        }
+      }
+    },
+    "Serveur": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servidor"
           }
         }
       }
@@ -22068,6 +22391,23 @@
         }
       }
     },
+    "Version": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versión"
+          }
+        }
+      }
+    },
     "Visible par tout le monde, pas juste ton club.": {
       "localizations": {
         "en": {
@@ -22528,6 +22868,23 @@
         }
       }
     },
+    "actif": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "active"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "activa"
+          }
+        }
+      }
+    },
     "adapté à ta %@ sensible · impact réduit": {
       "extractionState": "manual",
       "localizations": {
@@ -22608,6 +22965,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "aligerado (fase menstrual)"
+          }
+        }
+      }
+    },
+    "aucun": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "none"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ninguna"
           }
         }
       }
@@ -23089,6 +23463,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "frecuencia cardíaca media %lld"
+          }
+        }
+      }
+    },
+    "inconnue du serveur": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unknown to the server"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "desconocida para el servidor"
           }
         }
       }
@@ -23600,6 +23991,23 @@
         }
       }
     },
+    "non": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no"
+          }
+        }
+      }
+    },
     "objectif": {
       "localizations": {
         "en": {
@@ -23628,6 +24036,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "o"
+          }
+        }
+      }
+    },
+    "oui": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "yes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sí"
           }
         }
       }
@@ -23676,6 +24101,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "sin conexión"
+          }
+        }
+      }
+    },
+    "pas encore vérifié": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not checked yet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "aún no verificada"
           }
         }
       }

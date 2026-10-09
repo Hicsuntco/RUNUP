@@ -20,6 +20,53 @@ struct AuthenticatedUser: Codable, Equatable {
     /// A chosen, unique handle — nil until she sets one. The only fully reliable way to find one
     /// specific person by search, same reasoning as `lastName`.
     var username: String?
+    /// L'adresse du compte, telle que le SERVEUR la voit.
+    ///
+    /// L'app ne la connaît pas autrement : elle est saisie à l'inscription et jamais relue, et
+    /// « Se connecter avec Apple » peut créer le compte sous un `…@privaterelay.appleid.com`
+    /// que personne ne devine. La fiche admin l'affiche pour qu'on sache quelle adresse inscrire
+    /// dans la liste des comptes de la maison — voir `lib/admin.js`.
+    var email: String?
+    /// Un compte de la maison. DÉCIDÉ PAR LE SERVEUR, jamais ici.
+    ///
+    /// `= false` et décodé en tolérant : un serveur antérieur à ce champ ne le renvoie pas, et
+    /// un `decode` strict ferait échouer tout le décodage — donc déconnecterait tout le monde
+    /// pendant la fenêtre où l'app est déployée et le serveur pas encore.
+    var isAdmin: Bool = false
+    /// Y a-t-il seulement une liste de comptes de la maison ? « Tu n'es pas dedans » et « il n'y
+    /// en a pas » se ressemblent à l'écran et se corrigent à deux endroits différents.
+    var adminListConfigured: Bool = false
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, xpTotal, referralCode, lastName, username, email, isAdmin, adminListConfigured
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        xpTotal = try c.decode(Int.self, forKey: .xpTotal)
+        referralCode = try c.decodeIfPresent(String.self, forKey: .referralCode)
+        lastName = try c.decodeIfPresent(String.self, forKey: .lastName)
+        username = try c.decodeIfPresent(String.self, forKey: .username)
+        email = try c.decodeIfPresent(String.self, forKey: .email)
+        isAdmin = try c.decodeIfPresent(Bool.self, forKey: .isAdmin) ?? false
+        adminListConfigured = try c.decodeIfPresent(Bool.self, forKey: .adminListConfigured) ?? false
+    }
+
+    init(id: String, name: String, xpTotal: Int, referralCode: String? = nil,
+         lastName: String? = nil, username: String? = nil, email: String? = nil,
+         isAdmin: Bool = false, adminListConfigured: Bool = false) {
+        self.id = id
+        self.name = name
+        self.xpTotal = xpTotal
+        self.referralCode = referralCode
+        self.lastName = lastName
+        self.username = username
+        self.email = email
+        self.isAdmin = isAdmin
+        self.adminListConfigured = adminListConfigured
+    }
 }
 
 enum AuthServiceError: Error {
@@ -136,6 +183,14 @@ final class AuthService {
 
     private static let baseURL = URL(string: "https://runup-nu.vercel.app")!
 
+    /// L'hôte auquel cette installation parle, pour la fiche admin — et rien d'autre.
+    ///
+    /// `baseURL` reste privée : une URL exposée est une URL qu'on finit par utiliser pour
+    /// fabriquer une requête ailleurs, et toutes les requêtes de ce service passent par ici
+    /// précisément pour que l'en-tête d'autorisation ne puisse pas être oublié. Seul le NOM
+    /// sort, et il ne sert qu'à être lu.
+    static var hoteDuServeur: String { baseURL.host() ?? baseURL.absoluteString }
+
     init() {
         token = KeychainService.loadToken()
     }
@@ -168,7 +223,9 @@ final class AuthService {
         let decoded: MeResponse = try await send(request)
         let user = AuthenticatedUser(
             id: decoded.id, name: decoded.name, xpTotal: decoded.xpTotal, referralCode: decoded.referralCode,
-            lastName: decoded.lastName, username: decoded.username
+            lastName: decoded.lastName, username: decoded.username, email: decoded.email,
+            isAdmin: decoded.isAdmin ?? false,
+            adminListConfigured: decoded.adminListConfigured ?? false
         )
         currentUser = user
         onAuthenticated?(user)
@@ -283,6 +340,12 @@ private struct MeResponse: Decodable {
     var clubId: String?
     var lastName: String?
     var username: String?
+    /// Optionnels, donc absents sans erreur sur un serveur antérieur à ces champs. La fenêtre
+    /// entre un déploiement de l'app et celui du serveur n'est jamais nulle, et un `decode`
+    /// strict y déconnecterait tout le monde.
+    var email: String?
+    var isAdmin: Bool?
+    var adminListConfigured: Bool?
 }
 
 private struct OkResponse: Decodable {

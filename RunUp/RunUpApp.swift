@@ -234,6 +234,19 @@ private struct ContentRouterView: View {
         }
         .environment(subscriptions)
         .task { await subscriptions.start() }
+        // LE DROIT DE LA MAISON SUIT LE COMPTE CONNECTÉ, ET SEULEMENT LUI.
+        //
+        // `AuthService` apprend qui est là — au lancement par `api/me`, et à chaque connexion —
+        // et c'est la seule source. Le service d'abonnement ne va pas le chercher : il le reçoit,
+        // pour ne pas faire dépendre tout le paywall de l'état de connexion (hors ligne,
+        // `currentUser` est nil alors que le droit, lui, n'a pas changé).
+        //
+        // `onChange` et pas seulement au lancement : la connexion arrive après, et une
+        // déconnexion doit refermer la porte dans la seconde.
+        .onChange(of: appState.auth.currentUser?.isAdmin) { _, estAdmin in
+            subscriptions.appliquerAdmin(estAdmin ?? false)
+        }
+        .task { subscriptions.appliquerAdmin(appState.auth.currentUser?.isAdmin ?? false) }
     }
 
 }

@@ -114,7 +114,23 @@ final class SubscriptionService {
     /// La décision vit dans `Entitlement`, sous test, plutôt qu'ici où elle serait mêlée à
     /// StoreKit et invérifiable autrement qu'en achetant vraiment un abonnement.
     func unlocks(_ feature: PlusFeature) -> Bool {
-        Entitlement.unlocks(feature, isSubscribed: isSubscribed, canSell: canSell)
+        Entitlement.unlocks(feature, isSubscribed: isSubscribed, canSell: canSell,
+                            estAdmin: estAdmin)
+    }
+
+    /// Un compte de la maison, tel que le SERVEUR l'a dit.
+    ///
+    /// Recopié depuis `AuthService.currentUser` plutôt que lu à travers lui : ce service est
+    /// consulté par une trentaine d'écrans, et lui donner une dépendance vers l'authentification
+    /// ferait dépendre tout le paywall de l'état de connexion — y compris hors ligne, où
+    /// `currentUser` peut être nil alors que le droit, lui, n'a pas changé.
+    ///
+    /// Posé par `AuthService.onAuthenticated`, et remis à faux à la déconnexion.
+    private(set) var estAdmin = false
+
+    func appliquerAdmin(_ actif: Bool) {
+        guard estAdmin != actif else { return }
+        estAdmin = actif
     }
 
     /// L'état d'abonnement, relu depuis les droits courants plutôt que mémorisé.

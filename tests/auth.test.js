@@ -280,3 +280,68 @@ test('un jeton refusé ne pose jamais d’en-tête', async () => {
   assert.equal(await requireAuth({ headers: {} }, res), null);
   assert.equal(entetes[RENEWAL_HEADER], undefined);
 });
+
+// ─── Les comptes de la maison ────────────────────────────────────────────────────────────────
+
+const { estAdmin, listeConfiguree } = require('../lib/admin');
+
+function avecListe(valeur, corps) {
+  const avant = process.env.RUNUP_ADMIN_EMAILS;
+  process.env.RUNUP_ADMIN_EMAILS = valeur;
+  try { corps(); } finally {
+    if (avant === undefined) delete process.env.RUNUP_ADMIN_EMAILS;
+    else process.env.RUNUP_ADMIN_EMAILS = avant;
+  }
+}
+
+test("sans liste, personne n'est admin", () => {
+  // Un droit qui s'accorde tout seul quand une configuration manque est la plus mauvaise des
+  // portes : c'est celle qui s'ouvre précisément le jour où on a oublié quelque chose.
+  avecListe('', () => {
+    assert.equal(listeConfiguree(), false);
+    assert.equal(estAdmin('qui.que.ce.soit@exemple.com'), false);
+    assert.equal(estAdmin(''), false);
+    assert.equal(estAdmin(null), false);
+    assert.equal(estAdmin(undefined), false);
+  });
+});
+
+test("la casse ne retire pas le droit", () => {
+  // La base a un index unique sur `lower(email)` : deux casses sont déjà le même compte. Les
+  // traiter autrement ici ferait qu'une majuscule à l'inscription retirerait l'accès.
+  avecListe('Chef@Exemple.COM', () => {
+    assert.equal(estAdmin('chef@exemple.com'), true);
+    assert.equal(estAdmin('CHEF@EXEMPLE.COM'), true);
+    assert.equal(estAdmin(' chef@exemple.com '), true);
+  });
+});
+
+test("plusieurs adresses, parce qu'un compte Apple en crée une autre", () => {
+  // Le défaut qu'Hukaia a vécu : une seule adresse codée en dur, et le péage s'est refermé sur
+  // la personne qui a écrit l'app — son iPhone s'était connecté avec Apple, sous une autre
+  // adresse. RUNUP a la même porte, et Apple peut en plus masquer l'adresse derrière un relais.
+  avecListe('a@exemple.com, b@exemple.fr ,c@privaterelay.appleid.com', () => {
+    assert.equal(listeConfiguree(), true);
+    assert.equal(estAdmin('a@exemple.com'), true);
+    assert.equal(estAdmin('b@exemple.fr'), true);
+    assert.equal(estAdmin('c@privaterelay.appleid.com'), true);
+    assert.equal(estAdmin('d@exemple.com'), false);
+  });
+});
+
+test("une liste qui n'est que des virgules ne configure rien", () => {
+  avecListe(' , ,, ', () => {
+    assert.equal(listeConfiguree(), false);
+    assert.equal(estAdmin(''), false);
+  });
+});
+
+test("la liste est relue à chaque appel", () => {
+  // Elle n'est pas figée au chargement du module : changer la variable sur Vercel prend effet au
+  // prochain démarrage de fonction, sans redéploiement du code.
+  avecListe('un@exemple.com', () => assert.equal(estAdmin('un@exemple.com'), true));
+  avecListe('deux@exemple.com', () => {
+    assert.equal(estAdmin('un@exemple.com'), false);
+    assert.equal(estAdmin('deux@exemple.com'), true);
+  });
+});

@@ -33,34 +33,84 @@ enum HealthRunImport {
         return lastImport.addingTimeInterval(-overlap)
     }
 
+    /// Une sortie DÉJÀ enregistrée, réduite à ce dont le dédoublonnage a besoin.
+    struct Deja: Equatable {
+        var date: Date
+        var discipline: Discipline
+
+        init(date: Date, discipline: Discipline = .run) {
+            self.date = date
+            self.discipline = discipline
+        }
+    }
+
     /// Ce qui mérite d'entrer dans l'historique, parmi ce que Santé a rendu.
     ///
-    /// `existingDates` sont les dates des courses déjà enregistrées, quelle qu'en soit l'origine :
-    /// une sortie faite avec le bouton RUN est écrite dans Santé par l'app elle-même, et le filtre
-    /// par source du service devrait suffire — mais il ne couvre pas le cas où la même sortie a
-    /// aussi été enregistrée par une montre tierce portée en même temps.
+    /// `deja` sont les sorties déjà enregistrées, quelle qu'en soit l'origine : une sortie faite
+    /// avec le bouton RUN est écrite dans Santé par l'app elle-même, et le filtre par source du
+    /// service devrait suffire — mais il ne couvre pas le cas où la même sortie a aussi été
+    /// enregistrée par une montre tierce portée en même temps.
+    ///
+    /// # LE DÉDOUBLONNAGE EST PAR DISCIPLINE, ET C'EST LE TRIATHLON QUI L'A RÉVÉLÉ
+    ///
+    /// Il comparait les horaires sans regarder ce qui avait été fait. C'était juste tant que
+    /// l'import ne ramenait que des courses : deux courses à cinq minutes d'intervalle SONT la
+    /// même course, écrite deux fois par deux sources.
+    ///
+    /// Deux disciplines différentes à cinq minutes d'intervalle, non. C'est un enchaînement — la
+    /// séance qui définit le triathlon : on sort de l'eau, on enfourche, on court. Les trois se
+    /// suivent à quelques dizaines de secondes, et l'ancienne règle n'en gardait qu'une seule, en
+    /// jetant les deux autres sans rien dire. Le plan aurait compté une séance sur trois, et
+    /// l'entraînement le plus dur de la semaine aurait été celui qui compte le moins.
     static func selecting(_ found: [HealthKitService.ImportedRun],
                           knownIDs: Set<UUID>,
-                          existingDates: [Date]) -> [HealthKitService.ImportedRun] {
-        var keptDates = existingDates
+                          deja: [Deja]) -> [HealthKitService.ImportedRun] {
+        var keptDates: [Discipline: [Date]] = [:]
+        for d in deja { keptDates[d.discipline, default: []].append(d.date) }
         var kept: [HealthKitService.ImportedRun] = []
         for run in found.sorted(by: { $0.start < $1.start }) {
             guard !knownIDs.contains(run.id) else { continue }
-            guard isARun(run) else { continue }
-            guard !keptDates.contains(where: { abs($0.timeIntervalSince(run.start)) < sameRunWindow }) else { continue }
+            guard estUneSeance(run) else { continue }
+            let memeDiscipline = keptDates[run.discipline] ?? []
+            guard !memeDiscipline.contains(where: { abs($0.timeIntervalSince(run.start)) < sameRunWindow }) else { continue }
             kept.append(run)
-            keptDates.append(run.start)
+            keptDates[run.discipline, default: []].append(run.start)
         }
         return kept
     }
 
-    /// Un entraînement ouvert puis refermé n'est pas une course. Sans ce filtre, chaque faux départ
-    /// ajouterait une ligne vide à l'historique et une demande de ressenti pour zéro kilomètre.
+    /// En dessous de cette durée, une nage sans distance n'est pas une nage.
+    ///
+    /// Cinq minutes. Au-delà, personne n'ouvre un entraînement par erreur et le laisse tourner.
+    static let dureeMinimaleNage: TimeInterval = 300
+
+    /// Un entraînement ouvert puis refermé n'est pas une séance. Sans ce filtre, chaque faux
+    /// départ ajouterait une ligne vide à l'historique et une demande de ressenti pour zéro
+    /// kilomètre.
     ///
     /// Les seuils sont bas exprès : une minute et trois cents mètres écartent les manipulations,
     /// pas les vraies sorties courtes. Ce n'est pas à l'import de juger qu'une course de dix
     /// minutes ne compte pas.
-    static func isARun(_ run: HealthKitService.ImportedRun) -> Bool {
-        run.durationSeconds > 60 && run.distanceKm > 0.3
+    ///
+    /// # ET CE SEUIL N'EST PAS LE MÊME EN BASSIN
+    ///
+    /// Trois cents mètres ne sont rien à pied — c'est une manipulation. En natation, c'est un
+    /// échauffement : une séance de 300 m existe, et elle compte.
+    ///
+    /// Surtout, UNE NAGE PEUT NE PORTER AUCUNE DISTANCE. Une montre qui ne connaît pas la
+    /// longueur du bassin, un nageur qui n'a pas réglé la sienne, une traversée en eau libre sans
+    /// GPS : la séance a duré quarante minutes et Santé rend zéro mètre. C'est une vraie nage, et
+    /// la règle de la course la jetterait. Pour un plan de triathlon, c'est précisément la séance
+    /// qu'il faut compter — c'est la DURÉE qui construit, pas le métrage.
+    static func estUneSeance(_ seance: HealthKitService.ImportedRun) -> Bool {
+        switch seance.discipline {
+        case .run, .trail, .bike:
+            return seance.durationSeconds > 60 && seance.distanceKm > 0.3
+        case .swim:
+            // Assez longue pour être une séance, même sans un mètre mesuré — ou mesurée, et alors
+            // cent mètres suffisent à écarter la manipulation.
+            return seance.durationSeconds >= dureeMinimaleNage
+                || (seance.durationSeconds > 60 && seance.distanceKm > 0.1)
+        }
     }
 }

@@ -485,7 +485,7 @@ final class AppState {
         guard profile.connectedSources.contains(.apple) else { return }
 
         let since = HealthRunImport.window(lastImport: profile.lastHealthRunImport)
-        let found = await healthKit.runWorkouts(since: since)
+        let found = await healthKit.seancesImportables(since: since)
         // Écrite même quand rien n'est trouvé : sinon la fenêtre du premier passage recommencerait
         // à sept jours à chaque ouverture, pour rien.
         profile.lastHealthRunImport = .now
@@ -501,13 +501,17 @@ final class AppState {
         let selected = HealthRunImport.selecting(
             found,
             knownIDs: Set(existing.compactMap(\.healthWorkoutID)),
-            existingDates: existing.map(\.date)
+            // La discipline voyage avec la date : le dédoublonnage est par discipline depuis
+            // qu'un enchaînement peut poser deux séances à cinq minutes d'intervalle.
+            deja: existing.map { HealthRunImport.Deja(date: $0.date, discipline: $0.discipline) }
         )
 
         var imported: [RunRecord] = []
         for run in selected {
             let record = AdaptivePlanEngine.buildRunRecord(
-                title: String(localized: "Course importée"),
+                title: run.discipline == .swim
+                    ? String(localized: "Nage importée")
+                    : String(localized: "Course importée"),
                 elapsedSeconds: run.durationSeconds,
                 distanceKm: run.distanceKm,
                 kcal: run.kcal,
@@ -517,7 +521,8 @@ final class AppState {
                 // carte de fil avec une image et une carte sans : une course venue d'une Garmin
                 // arrivait jusqu'ici sans dessin, alors que le parcours était bien là, rangé à
                 // côté de la séance.
-                route: run.route
+                route: run.route,
+                discipline: run.discipline
             )
             record.date = run.start
             record.healthWorkoutID = run.id
@@ -529,14 +534,21 @@ final class AppState {
         guard !imported.isEmpty else { return }
         pendingDebriefs.append(contentsOf: imported)
 
-        let distance = String(format: "%.1f", locale: Locale.current, imported.onFoot.reduce(0) { $0 + $1.distanceKm })
+        // LES KILOMÈTRES COURUS, ET SEULEMENT S'IL Y EN A. Le texte annonçait un kilométrage
+        // tiré de `onFoot`, qui exclut la natation à juste titre — mais un import ne ramenant que
+        // des nages aurait donc annoncé « 0,0 km qui ne comptaient pas encore », sur une
+        // notification déclenchée par des séances bien réelles.
+        let courus = imported.onFoot.reduce(0) { $0 + $1.distanceKm }
+        let distance = String(format: "%.1f", locale: Locale.current, courus)
         notify(
             icon: "❤️",
             colorHex: 0xFF3B6B,
             title: imported.count == 1
                 ? String(localized: "Sortie récupérée dans Santé")
                 : String(localized: "\(imported.count) sorties récupérées dans Santé"),
-            text: String(localized: "\(distance) km qui ne comptaient pas encore dans ton programme. Valide ton ressenti pour les y faire entrer.")
+            text: courus > 0
+                ? String(localized: "\(distance) km qui ne comptaient pas encore dans ton programme. Valide ton ressenti pour les y faire entrer.")
+                : String(localized: "Elles ne comptaient pas encore dans ton programme. Valide ton ressenti pour les y faire entrer.")
         )
     }
 

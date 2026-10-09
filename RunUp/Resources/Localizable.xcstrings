@@ -7750,6 +7750,22 @@
         }
       }
     },
+    "Elles ne comptaient pas encore dans ton programme. Valide ton ressenti pour les y faire entrer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "They didn't count towards your plan yet. Rate how they felt to bring them in."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía no contaban en tu plan. Valora cómo te sentiste para incorporarlas."
+          }
+        }
+      }
+    },
     "Elles restent sur ton téléphone, rien n'est perdu — RUNUP ne répond pas, nouvelle tentative plus tard.": {
       "extractionState": "manual",
       "localizations": {
@@ -11969,6 +11985,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "NADO"
+          }
+        }
+      }
+    },
+    "Nage importée": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imported swim"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Natación importada"
           }
         }
       }

@@ -20,7 +20,7 @@ final class HealthKitService {
             HKObjectType.quantityType(forIdentifier: .stepCount)!,
             HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!,
             // Les courses enregistrées ailleurs — une Garmin, une Coros, l'app Exercice d'une
-            // Apple Watch — et la distance qu'elles portent. Voir `runWorkouts`.
+            // Apple Watch — et la distance qu'elles portent. Voir `seancesImportables`.
             //
             // Comme pour les types d'écriture plus bas : une utilisatrice déjà connectée sera
             // redemandée une fois, pour ces deux-là.
@@ -318,6 +318,15 @@ final class HealthKitService {
         /// implémentations d'une même règle finissent toujours par diverger. `nil` quand la source
         /// n'a rien écrit : une absence de mesure, pas un zéro.
         var elevationGainM: Int?
+        /// La discipline, déduite du type d'entraînement de Santé.
+        ///
+        /// Par défaut `.run`, et ce défaut compte : tous les bancs d'essai de la règle d'import
+        /// parlent de courses, et les obliger à l'écrire ne dirait rien de plus.
+        ///
+        /// EN DERNIER DANS LA STRUCTURE, et pas par hasard : l'initialiseur engendré suit l'ordre
+        /// de déclaration, et l'appelant passe déjà `route` puis `elevationGainM`. Déclarée au
+        /// milieu, elle aurait forcé à réécrire cet appel — ou à le laisser ne plus compiler.
+        var discipline: Discipline = .run
     }
 
     /// Les courses écrites dans Santé par QUELQU'UN D'AUTRE que RUNUP, depuis une date donnée.
@@ -338,14 +347,33 @@ final class HealthKitService {
     /// être écrite par deux sources (la montre ET l'application du fabricant) et que ces deux-là
     /// ne sont ni l'une ni l'autre RUNUP.
     ///
-    /// # Seulement la course à pied
+    /// # LA COURSE ET LA NAGE, ET PAS LE VÉLO
     ///
-    /// `.running` uniquement : ni marche, ni vélo, ni rando. Le programme est un programme de
-    /// course, et compter une sortie à vélo comme une séance donnerait un plan faux plutôt qu'un
-    /// plan vide.
-    func runWorkouts(since: Date) async -> [ImportedRun] {
+    /// Ce n'était que `.running`, avec cette raison : « le programme est un programme de course,
+    /// et compter une sortie à vélo comme une séance donnerait un plan faux ». La raison a changé
+    /// de forme — `Discipline.completesRunningPlan` empêche désormais une autre discipline de
+    /// cocher une case de course — mais la liste reste courte, et pour une raison plus nette.
+    ///
+    /// **Cet import existe pour ce que l'app NE SAIT PAS mesurer elle-même.** Une course faite
+    /// avec une Garmin, parce que RUNUP n'était pas lancée. Une nage, parce qu'on ne suit pas un
+    /// bassin depuis une poche et qu'il n'y a pas de GPS sous l'eau : c'est le seul chemin par
+    /// lequel une nage peut entrer, avec la saisie à la main.
+    ///
+    /// Le vélo, lui, se démarre dans l'app. L'aller chercher dans Santé ramènerait aussi les
+    /// trajets domicile-travail de qui met sa montre en mode vélo pour aller au bureau — et un
+    /// plan de triathlon qui compterait vingt minutes de ville comme une séance serait faux dans
+    /// le sens le plus difficile à repérer : celui où tout a l'air fait.
+    private static let aImporter: [(type: HKWorkoutActivityType,
+                                    discipline: Discipline,
+                                    distance: HKQuantityTypeIdentifier)] = [
+        (.running, .run, .distanceWalkingRunning),
+        (.swimming, .swim, .distanceSwimming),
+    ]
+
+    func seancesImportables(since: Date) async -> [ImportedRun] {
         let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
-            HKQuery.predicateForWorkouts(with: .running),
+            NSCompoundPredicate(orPredicateWithSubpredicates:
+                Self.aImporter.map { HKQuery.predicateForWorkouts(with: $0.type) }),
             HKQuery.predicateForSamples(withStart: since, end: .now, options: .strictStartDate),
             NSCompoundPredicate(notPredicateWithSubpredicate: HKQuery.predicateForObjects(from: HKSource.default()))
         ])
@@ -364,7 +392,12 @@ final class HealthKitService {
             // (c'est le cas des montres), une requête sur l'intervalle sinon. La seconde coûte un
             // aller-retour par course, ce qui est acceptable : il n'y en a qu'une poignée par
             // import, et zéro les jours où rien de neuf n'est arrivé.
-            guard let distanceType = HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning),
+            // LA GRANDEUR DE DISTANCE SUIT LA DISCIPLINE. Une nage ne porte pas de
+            // `.distanceWalkingRunning` : elle porte `.distanceSwimming`, et lire la mauvaise
+            // rendrait `nil`, donc une nage de deux kilomètres importée à zéro — un relevé dont
+            // rien à l'écran ne dirait qu'il est faux.
+            guard let entree = Self.aImporter.first(where: { $0.type == workout.workoutActivityType }),
+                  let distanceType = HKObjectType.quantityType(forIdentifier: entree.distance),
                   let energyType = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned),
                   let heartType = HKObjectType.quantityType(forIdentifier: .heartRate) else { continue }
 
@@ -388,7 +421,8 @@ final class HealthKitService {
                 kcal: kcal ?? 0,
                 avgHeartRate: Int((bpm ?? 0).rounded()),
                 route: await route(for: workout),
-                elevationGainM: ascent(of: workout)
+                elevationGainM: ascent(of: workout),
+                discipline: entree.discipline
             ))
         }
         return runs

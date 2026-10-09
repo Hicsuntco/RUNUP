@@ -51,6 +51,7 @@ enum Calories {
     /// Et en pratique, cette estimation ne sert presque jamais pour une nage : une nage arrive
     /// par Apple Santé, qui porte déjà les kilocalories mesurées au poignet. C'est le repli, pas
     /// la mesure.
+    static let perSwimmingMinute: Double = 10
 
     /// La règle, par discipline. `durationMinutes` n'est plus un dernier recours à vélo : c'est
     /// la mesure principale.

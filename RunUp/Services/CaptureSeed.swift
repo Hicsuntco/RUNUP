@@ -169,13 +169,56 @@ enum CaptureSeed {
           ]
         }
         """
+        // UNE SEULE DES TROIS SORTIES PORTE UN TRACÉ, ET C'EST VOLONTAIRE.
+        //
+        // L'accroche promet « ses sorties, ses routes » : il en faut au moins un, sinon le mot
+        // « routes » ne correspond à rien de visible. Les trois en porter un serait faux dans
+        // l'autre sens — une sortie sur tapis, une montre sans GPS, un tracé retiré après coup :
+        // `ActivityFeedRow` sait afficher les deux formes de carte, et le fil d'un vrai club
+        // mélange les deux.
+        //
+        // Le tracé est une boucle le long d'un canal, aller par une rive et retour par l'autre.
+        // Sa boîte fait cinq kilomètres de côté, ce qui est la bonne échelle pour les 12,4 km
+        // annoncés par la ligne au-dessus — un aller-retour, pas une ligne droite.
         let fil = """
         [
           { "id": "a", "userId": "2", "name": "Inès", "text": "a couru 12,4 km · Sortie longue",
             "createdAt": "\(ilYA(3))", "distanceKm": 12.4, "durationSeconds": 4190,
             "avgPace": "5:38", "elevationGainM": 86, "isPersonalRecord": false,
             "contentKey": "long_run", "kudos": 7, "kudoedByMe": true, "commentsCount": 2,
-            "kudosNames": ["Charlotte", "Margaux", "Sarah"] },
+            "kudosNames": ["Charlotte", "Margaux", "Sarah"],
+            "lastComment": { "name": "Charlotte", "text": "Belle allure sur la fin !" },
+            "routePreview": [
+            {"lat": 48.88120, "lng": 2.36900},
+            {"lat": 48.88433, "lng": 2.37412},
+            {"lat": 48.88739, "lng": 2.37922},
+            {"lat": 48.89030, "lng": 2.38427},
+            {"lat": 48.89303, "lng": 2.38924},
+            {"lat": 48.89557, "lng": 2.39413},
+            {"lat": 48.89796, "lng": 2.39893},
+            {"lat": 48.90026, "lng": 2.40362},
+            {"lat": 48.90253, "lng": 2.40822},
+            {"lat": 48.90486, "lng": 2.41273},
+            {"lat": 48.90732, "lng": 2.41717},
+            {"lat": 48.90996, "lng": 2.42155},
+            {"lat": 48.91278, "lng": 2.42590},
+            {"lat": 48.91791, "lng": 2.42728},
+            {"lat": 48.92135, "lng": 2.43087},
+            {"lat": 48.92204, "lng": 2.43532},
+            {"lat": 48.92000, "lng": 2.43891},
+            {"lat": 48.91626, "lng": 2.44029},
+            {"lat": 48.91229, "lng": 2.43463},
+            {"lat": 48.90836, "lng": 2.42895},
+            {"lat": 48.90454, "lng": 2.42325},
+            {"lat": 48.90084, "lng": 2.41750},
+            {"lat": 48.89728, "lng": 2.41170},
+            {"lat": 48.89385, "lng": 2.40584},
+            {"lat": 48.89050, "lng": 2.39992},
+            {"lat": 48.88721, "lng": 2.39393},
+            {"lat": 48.88390, "lng": 2.38789},
+            {"lat": 48.88054, "lng": 2.38178},
+            {"lat": 48.87707, "lng": 2.37563}
+            ] },
           { "id": "b", "userId": "3", "name": "Margaux", "text": "a couru 6,0 km · Fractionné",
             "createdAt": "\(ilYA(9))", "distanceKm": 6.0, "durationSeconds": 1764,
             "avgPace": "4:54", "isPersonalRecord": true,

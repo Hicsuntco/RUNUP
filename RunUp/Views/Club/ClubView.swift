@@ -10,7 +10,12 @@ struct ClubView: View {
     @Environment(AppState.self) private var appState
     @Query(sort: \RunRecord.date, order: .reverse) private var runs: [RunRecord]
 
-    @State private var tab: Tab = .overview
+    /// L'APERÇU EST LE BON ONGLET POUR DE VRAIES GENS, ET LE MAUVAIS POUR UNE CAPTURE.
+    ///
+    /// Il montre les kilomètres du club cette semaine, le défi en cours et les sorties de
+    /// groupe prévues — trois choses qu'un club inventé n'a pas, donc trois états vides sous
+    /// une accroche qui parle du fil du club. Le fil, lui, est plein. Voir `Demonstration`.
+    @State private var tab: Tab = Demonstration.enCours ? .feed : .overview
     @State private var board = ClubBoard(club: nil, leaderboard: [])
     @State private var feed: [FeedItem] = []
     // Starts true (not false) so the very first render — before `.task` below has had a chance to

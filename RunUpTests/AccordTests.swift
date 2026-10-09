@@ -38,31 +38,22 @@ final class AccordTests: XCTestCase {
         XCTAssertEqual(Accord.selon(f: "partie", m: "parti"), "parti")
     }
 
-    /// LES NIVEAUX S'ACCORDENT, ET C'EST LE CAS LE PLUS VISIBLE.
+    /// CE QUI N'EST PAS TESTÉ ICI, ET POURQUOI.
     ///
-    /// Ces trois mots sont une carte qu'on touche pour se décrire, à l'étape qui suit la question
-    /// du genre. Se voir proposer « Débutante » juste après avoir répondu « Homme » est la forme
-    /// la plus directe de « cette app ne t'a pas écouté ».
-    func testLesNiveauxSAccordent() {
-        AccordStore.shared.genre = .feminin
-        XCTAssertEqual(ExperienceLevel.debutante.title, "Débutante")
-        XCTAssertEqual(ExperienceLevel.confirmee.title, "Confirmée")
-        AccordStore.shared.genre = .masculin
-        XCTAssertEqual(ExperienceLevel.debutante.title, "Débutant")
-        XCTAssertEqual(ExperienceLevel.confirmee.title, "Confirmé")
-    }
-
-    /// « Intermédiaire » est épicène : les deux genres lisent le même mot, et c'est juste.
+    /// La première version de ce fichier vérifiait que `ExperienceLevel.debutante.title` vaut
+    /// « Débutante » au féminin et « Débutant » au masculin. Elle a échoué en intégration
+    /// continue, et elle avait tort : LE SIMULATEUR DE CI TOURNE EN ANGLAIS. `String(localized:)`
+    /// y rend « Beginner » dans les deux cas — l'anglais ne s'accorde pas, c'est tout le point.
     ///
-    /// Le test existe pour qu'on ne lui invente pas une seconde forme le jour où l'on passera en
-    /// revue les trois ensemble — « Intermédiaire » et « Intermédiaire » dans un `Accord.selon`
-    /// seraient deux clés de catalogue pour un seul mot, à traduire deux fois.
-    func testLeNiveauEpiceneResteUnSeulMot() {
-        AccordStore.shared.genre = .feminin
-        let auFeminin = ExperienceLevel.intermediaire.title
-        AccordStore.shared.genre = .masculin
-        XCTAssertEqual(ExperienceLevel.intermediaire.title, auFeminin)
-    }
+    /// Un test ne peut donc pas juger le MOT rendu : il dépend de la langue de la machine qui
+    /// l'exécute. Il peut juger le MÉCANISME, et c'est ce que fait ce fichier — le magasin, la
+    /// fonction de choix, la lecture du sexe, et le fait que l'inscription pose le genre
+    /// immédiatement. Tout cela est vrai dans n'importe quelle langue.
+    ///
+    /// L'autre moitié — « chaque phrase accordée passe bien par le mécanisme » — est gardée par
+    /// `check_accord.py`, qui lit le CODE SOURCE et ne dépend donc d'aucune langue d'exécution.
+    /// C'est lui qui refuserait un « Débutante » écrit en dur, et lui qui a trouvé les trois
+    /// phrases oubliées. Les deux ensemble couvrent la règle ; aucun des deux ne la couvre seul.
 
     /// CHAQUE NIVEAU GARDE UN LIBELLÉ, DANS LES DEUX GENRES.
     ///

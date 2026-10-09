@@ -180,6 +180,9 @@ final class AppState {
         // backgrounded/foregrounded the app at least once, which for a lot of real days never
         // happens at all.
         Task { await self.checkSameDayAdjustment() }
+        // Le lancement à froid ne passe pas par `onChange(of: scenePhase)`, pour la même raison
+        // que la ligne au-dessus : il n'y a pas de phase précédente d'où venir.
+        rafraichirLeCompte()
         // A Live Activity left over from a killed/crashed app is an orphan by definition
         // (`liveRun` doesn't survive relaunch) — end it instead of leaving a frozen "in-progress"
         // run on the Lock Screen for hours.
@@ -657,6 +660,39 @@ final class AppState {
     // la `Task` atterrissait, puis mutait le profil SwiftData et insérait des notifications depuis
     // un fil de fond — plantages intermittents et écritures perdues à chaque synchro. Les `await`
     // HealthKit, eux, continuent de s'exécuter hors du fil principal.
+    /// Redemande au serveur QUI est connectée.
+    ///
+    /// # LE TROU QU'ELLE BOUCHE
+    ///
+    /// `AuthService.init` ne lit que le JETON, dans le trousseau. `currentUser` — le nom,
+    /// l'adresse, le code de parrainage, les droits de la maison — n'est jamais persisté : il
+    /// vaut `nil` à chaque lancement, et seules trois choses le remplissaient, toutes
+    /// déclenchées par un geste précis. Ouvrir l'onglet Club. Se connecter. Enregistrer son
+    /// pseudo.
+    ///
+    /// Autrement dit : qui lançait l'app et allait droit dans Profil → Plus de réglages lisait
+    /// une carte « Compte » sans nom ni adresse, et ne voyait NI la section « Parraine un ami »
+    /// — qui a besoin du code — NI celle de la maison. Pas une panne, pas un message : deux
+    /// sections simplement absentes, qui réapparaissaient si on était passé par le Club d'abord.
+    ///
+    /// # POURQUOI À CHAQUE RETOUR AU PREMIER PLAN, ET PAS SEULEMENT AU LANCEMENT
+    ///
+    /// Parce que la réponse change sans que l'app y soit pour quelque chose : le XP bouge quand
+    /// le club bouge, et `isAdmin` bascule le jour où une variable est posée côté serveur. Une
+    /// requête GET de quelques centaines d'octets, au même moment que les trois autres choses
+    /// que cette transition déclenche déjà.
+    ///
+    /// Silencieuse en cas d'échec, et c'est délibéré : hors ligne, l'app garde ce qu'elle avait
+    /// et n'a rien à dire. Un 401, lui, est déjà traité par `AuthService` — voir
+    /// `sessionRejected`, qui n'efface rien et se contente d'observer.
+    func rafraichirLeCompte() {
+        // Le harnais des captures pose une session factice, qu'aucun serveur ne reconnaît :
+        // cette requête rendrait 401 et ferait lever le drapeau « reconnecte-toi » au milieu
+        // d'une capture d'écran. Voir `Demonstration`.
+        guard !Demonstration.enCours, auth.isSignedIn else { return }
+        Task { _ = try? await auth.refreshMe() }
+    }
+
     private func syncDailyGoalsFromHealthKit() async {
         guard profile.connectedSources.contains(.apple) else { return }
         // Santé connectée mais injoignable : on ne touche à RIEN. Les deux lignes plus bas

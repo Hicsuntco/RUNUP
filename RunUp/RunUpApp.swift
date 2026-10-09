@@ -140,6 +140,8 @@ private struct RootView: View {
             if newPhase == .active {
                 appState?.refreshProgramForCurrentDate()
                 appState?.retryPendingClubActivities()
+                // Qui est connectée, et avec quels droits. Voir `AppState.rafraichirLeCompte`.
+                appState?.rafraichirLeCompte()
                 // Redemandé à chaque passage au premier plan : une tâche d'arrière-plan ne se
                 // répète pas d'elle-même, et une demande remplace la précédente plutôt que de
                 // s'empiler. C'est la deuxième des deux seules façons de la réarmer, l'autre

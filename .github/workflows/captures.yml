@@ -32,14 +32,23 @@ name: Captures App Store
 # tant que ce fichier n'est que sur une branche de travail, le bouton n'existe pas et l'API
 # répond 404.
 #
-# L'étiquette comble ce trou. `git tag captures-1 && git push origin captures-1` lance la série
-# depuis n'importe quelle branche, sans rien déployer. Elle reste utile après la fusion : elle
-# nomme la série, et on retrouve des mois plus tard à quel commit correspondaient les six images
-# publiées.
+# Deux filets pour y suppléer en attendant :
+#
+# UNE ÉTIQUETTE `captures-*`, qui nomme la série au passage — on retrouve des mois plus tard à
+# quel commit correspondaient les six images publiées.
+#
+# ET LES DEUX FICHIERS DONT LE CHANGEMENT JUSTIFIE DE TOUT REFAIRE : ce workflow lui-même, et les
+# accroches. Modifier une accroche sans régénérer les images laisse en ligne une série qui ne dit
+# plus ce que le dépôt dit — et c'est exactement comme ça que les six captures publiées se sont
+# retrouvées à dater du 30 août. Le déclencheur est étroit : aucun autre chemin ne démarre un
+# simulateur, donc une correction de code ne paie jamais ces vingt minutes.
 on:
   push:
     tags:
       - "captures-*"
+    paths:
+      - ".github/workflows/captures.yml"
+      - "appstore/captions.json"
   workflow_dispatch:
     inputs:
       langues:

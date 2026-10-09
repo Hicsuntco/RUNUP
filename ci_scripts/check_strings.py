@@ -106,9 +106,13 @@ def lire_litteral(ligne: str, debut: int):
 
 # Un membre dont le TYPE est `LocalizedStringKey` : ses littéraux sont des clés, sans qu'aucun
 # `Text("…")` ni `String(localized:)` n'apparaisse.
+# Le `\?` compte : un membre peut rendre `LocalizedStringKey?` — « il n'y a rien à dire ici » est
+# une réponse courante, et `nil` l'exprime mieux qu'une chaîne vide. Sans lui, les deux phrases
+# d'avertissement de l'écran du triathlon n'étaient pas réclamées.
 _CLE_LOCALISEE = re.compile(
     r"^\s*(?:private\s+|static\s+|public\s+|internal\s+)*"
-    r"(?:var\s+\w+\s*:\s*LocalizedStringKey|func\s+\w+\s*\([^)]*\)\s*->\s*LocalizedStringKey)\s*\{")
+    r"(?:var\s+\w+\s*:\s*LocalizedStringKey\??"
+    r"|func\s+\w+\s*\([^)]*\)\s*->\s*LocalizedStringKey\??)\s*\{")
 
 
 def litteraux_des_cles_localisees(source: str):
@@ -220,6 +224,136 @@ def motif_de(cle: str) -> re.Pattern:
     return re.compile("^" + ".+".join(re.escape(m) for m in morceaux_fixes(cle)) + "$")
 
 
+# ── La QUATRIÈME zone aveugle : un littéral confié à un paramètre qui sera localisé ───────────
+#
+#     ObTitle(eyebrow: "Étape 3 · ton triathlon", title: "QUEL TRIATHLON ?")
+#
+# Aucun `Text(`, aucun `String(localized:`, aucun membre typé. Et pourtant ce sont des clés :
+# `ObTitle` rend son `title` par `Text(LocalizedStringKey(title))`, donc SwiftUI les résout au
+# catalogue. Sept chaînes de l'écran du triathlon sont passées par là sans que rien ne le
+# signale, et les mêmes chaînes de l'écran HYROX d'à côté n'y sont que parce que quelqu'un s'en
+# est souvenu.
+#
+# LA RÈGLE EST LIÉE À CE QUE LE TYPE FAIT DE SON PARAMÈTRE, PAS AU NOM DU PARAMÈTRE. N'importe
+# quel `title:` ne compte pas : `buildRunRecord(title: "Test")` prend un `String` qu'il stocke
+# tel quel, et le titre français d'un relevé n'a rien à faire au catalogue. Un paramètre ne
+# compte que si sa déclaration dit `LocalizedStringKey`, OU si le corps du type le passe
+# lui-même à `LocalizedStringKey(…)` ou à `String.LocalizationValue(…)`. C'est le geste de
+# localisation qui est détecté, à l'endroit où il est écrit.
+
+_TYPE = re.compile(r"^\s*(?:@\w+\s+)*(?:public\s+|private\s+|internal\s+|final\s+)*"
+                   r"(?:struct|class|enum)\s+(\w+)")
+_PARAM_LOCALISE = re.compile(r"\b(\w+)\s*:\s*LocalizedStringKey\b")
+# `var eyebrow: String`, `let title: String`, `var subtitle: String? = nil`, ou la même chose en
+# paramètre d'initialiseur — les quatre formes sous lesquelles une étiquette arrive.
+# `re.M` est indispensable et pas décoratif : sans lui, `$` ne vaut qu'à la fin du FICHIER, donc
+# seules les déclarations suivies d'un `=` ou d'une virgule étaient vues. `var title: String` tout
+# seul en fin de ligne — la forme la plus courante — passait à travers, et la première version de
+# cette règle n'a attrapé qu'une étiquette sur sept.
+_PARAM_TEXTE = re.compile(r"\b(?:var|let)?\s*(\w+)\s*:\s*String\??(?:\s*=|\s*,|\s*\)|\s*$)", re.M)
+
+
+def parametres_localises(sources):
+    """{type: {étiquettes qui finiront dans le catalogue}}.
+
+    Deux pas : on découpe chaque fichier par type déclaré, puis on demande à chaque type ce
+    qu'il fait de ses `String`. Le découpage est une heuristique — un type court jusqu'au type
+    suivant — et il suffit : ces composants font quinze lignes.
+    """
+    table, corpus = {}, {}
+    for texte in sources:
+        blocs, courant, lignes = [], None, []
+        for ligne in texte.split("\n"):
+            m = _TYPE.match(ligne)
+            if m:
+                if courant:
+                    blocs.append((courant, "\n".join(lignes)))
+                courant, lignes = m.group(1), []
+            if courant is not None:
+                lignes.append(ligne)
+        if courant:
+            blocs.append((courant, "\n".join(lignes)))
+
+        for nom, corps in blocs:
+            sans = re.sub(r"//[^\n]*", "", corps)
+            etiquettes = set(_PARAM_LOCALISE.findall(sans))
+            for champ in set(_PARAM_TEXTE.findall(sans)):
+                if champ in etiquettes:
+                    continue
+                localise = (re.search(r"LocalizedStringKey\(\s*" + re.escape(champ) + r"\s*\)", sans)
+                            or re.search(r"LocalizationValue\(\s*" + re.escape(champ) + r"\s*\)", sans))
+                if localise:
+                    etiquettes.add(champ)
+            if etiquettes:
+                table.setdefault(nom, set()).update(etiquettes)
+            corpus[nom] = sans
+
+    # ── Le relais : une étiquette passée à une AUTRE étiquette localisée ───────────────────────
+    #
+    # `ObTitle` ne localise pas son `eyebrow` lui-même : il le transmet à
+    # `EyebrowLabel(text: eyebrow)`, et c'est `EyebrowLabel` qui appelle le catalogue. Un pas de
+    # plus, et la règle le perdait : « Étape 3 · ton triathlon » n'était pas réclamée, alors que
+    # c'est précisément une chaîne qui sortirait en français.
+    #
+    # On ferme donc la table sur elle-même : tant qu'un tour ajoute une étiquette, on refait un
+    # tour. Le point fixe est atteint en deux ou trois passes sur ce code, et la boucle ne peut
+    # pas tourner indéfiniment — elle ne fait qu'ajouter à des ensembles finis.
+    for _ in range(6):
+        ajout = False
+        for nom, sans in corpus.items():
+            for cible, etiquettes in list(table.items()):
+                for etiquette in etiquettes:
+                    for relais in re.finditer(
+                        r"\b" + re.escape(cible) + r"\s*\([^)]*?\b"
+                        + re.escape(etiquette) + r"\s*:\s*(\w+)\b", sans):
+                        champ = relais.group(1)
+                        if champ in table.get(nom, set()):
+                            continue
+                        # Seulement si c'est bien un `String` déclaré du type — sinon on
+                        # retiendrait une variable locale, qui n'est pas une étiquette d'appel.
+                        if champ in set(_PARAM_TEXTE.findall(sans)):
+                            table.setdefault(nom, set()).add(champ)
+                            ajout = True
+        if not ajout:
+            break
+    return table
+
+
+def litteraux_des_parametres_localises(source: str, table):
+    """Les littéraux confiés à une de ces étiquettes : `(ligne, clé)`.
+
+    La lecture va de la parenthèse ouvrante de l'appel à sa fermante, parenthèses et accolades
+    équilibrées — un appel s'étale souvent sur plusieurs lignes, et une closure passée en dernier
+    argument ne doit pas emporter la lecture jusqu'au bout du fichier.
+    """
+    trouves = []
+    for nom, etiquettes in table.items():
+        for m in re.finditer(r"\b" + re.escape(nom) + r"\s*\(", source):
+            depart = source.index("(", m.start())
+            niveau, fin = 0, None
+            for j in range(depart, len(source)):
+                c = source[j]
+                if c in "([{":
+                    niveau += 1
+                elif c in ")]}":
+                    niveau -= 1
+                    if niveau == 0:
+                        fin = j
+                        break
+            if fin is None:
+                continue
+            appel = source[depart:fin]
+            for a in re.finditer(r'\b(\w+)\s*:\s*(?=")', appel):
+                if a.group(1) not in etiquettes:
+                    continue
+                lu = lire_litteral(appel[a.end():], 1)
+                if lu is None:
+                    continue
+                ligne = source[:depart + a.start()].count("\n") + 1
+                trouves.append((ligne, deswiftifie(lu[0])))
+    return trouves
+
+
 def sans_traduction():
     """Les clés du catalogue auxquelles il manque l'anglais ou l'espagnol.
 
@@ -240,6 +374,11 @@ def sans_traduction():
 def main() -> int:
     cles = cles_du_catalogue()
     trous = sans_traduction()
+    fichiers = [f for d in DOSSIERS for f in sorted((RACINE / d).rglob("*.swift"))]
+    # La table est construite sur TOUT le code avant la première vérification : un type déclaré
+    # dans un fichier est appelé depuis un autre, et une table construite fichier par fichier
+    # n'aurait vu aucun appel.
+    table = parametres_localises([f.read_text(encoding="utf-8") for f in fichiers])
     if trous:
         print(f"{len(trous)} traduction(s) manquante(s) au catalogue :\n", file=sys.stderr)
         for cle, langue in trous[:20]:
@@ -248,8 +387,8 @@ def main() -> int:
             print(f"  … et {len(trous) - 20} autres", file=sys.stderr)
         return 1
     manquantes = []
-    for dossier in DOSSIERS:
-        for f in sorted((RACINE / dossier).rglob("*.swift")):
+    if True:
+        for f in fichiers:
             texte = f.read_text(encoding="utf-8")
             for n, ligne in enumerate(texte.splitlines(), 1):
                 nue = ligne.strip()
@@ -291,6 +430,20 @@ def main() -> int:
                     if any(motif.match(k) and SUBSTITUANT.search(k) for k in cles):
                         continue
                 manquantes.append((f"{f.relative_to(RACINE)}:{n}", cle))
+            # Et les littéraux confiés à un paramètre typé `LocalizedStringKey`.
+            for n, cle in litteraux_des_parametres_localises(texte, table):
+                fixe = "".join(morceaux_fixes(cle))
+                if not any(c.isalpha() for c in fixe) or cle in cles:
+                    continue
+                if "\\(" in cle:
+                    motif = motif_de(cle)
+                    if any(motif.match(k) and SUBSTITUANT.search(k) for k in cles):
+                        continue
+                manquantes.append((f"{f.relative_to(RACINE)}:{n}", cle))
+
+    # Deux chemins peuvent nommer la même chaîne au même endroit (un membre typé qui est AUSSI
+    # dans un appel localisé) : on ne la réclame qu'une fois.
+    manquantes = sorted(set(manquantes))
 
     if not manquantes:
         print(f"Catalogue : {len(cles)} clés, aucune chaîne affichée n'en manque.")

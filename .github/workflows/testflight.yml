@@ -270,7 +270,9 @@ jobs:
         run: python3 ci_scripts/check_infoplist.py
 
       - name: Vérifier que tout texte affiché est traduisible
-        run: python3 ci_scripts/check_strings.py
+        run: |
+          cd ci_scripts && python3 test_strings.py
+          cd .. && python3 ci_scripts/check_strings.py
 
       # Une commande dont le libellé est une icône ne s'annonce pas : VoiceOver dit « bouton », et
       # rien d'autre. Les siennes sont nommées une par une, et aucune n'est oubliée — cette

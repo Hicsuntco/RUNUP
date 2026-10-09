@@ -1,13 +1,13 @@
 import Foundation
 
-/// Les SEPT objectifs de l'inscription, dans l'ordre où l'étape 2 les affiche.
+/// Les objectifs de l'inscription, dans l'ordre où l'étape 2 les affiche.
 ///
-/// Six à l'origine, puis HYROX, puis l'ultra-trail — et le commentaire disait encore six, en
-/// renvoyant à une section du README qui n'existe plus. La liste qui fait foi est celle de
-/// `GoalStepView`, qui lit `allCases` filtré par `estProposable` : l'ordre de déclaration
-/// ci-dessous EST l'ordre à l'écran.
+/// Six à l'origine, puis HYROX, puis l'ultra-trail, puis le triathlon — et le commentaire a
+/// annoncé « six » pendant deux ajouts, en renvoyant à une section du README qui n'existe plus.
+/// Il ne compte donc plus : la liste qui fait foi est celle de `GoalStepView`, qui lit `allCases`
+/// filtré par `estProposable`, et l'ordre de déclaration ci-dessous EST l'ordre à l'écran.
 enum GoalType: String, Codable, CaseIterable, Identifiable {
-    case race, progress, restart, weight, health, hyrox, ultraTrail
+    case race, progress, restart, weight, health, hyrox, ultraTrail, triathlon
 
     var id: String { rawValue }
 
@@ -24,6 +24,7 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         case .health: return String(localized: "Rester en forme")
         case .hyrox: return String(localized: "Préparer un HYROX")
         case .ultraTrail: return String(localized: "Préparer un ultra-trail")
+        case .triathlon: return String(localized: "Préparer un triathlon")
         }
     }
 
@@ -36,6 +37,7 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         case .health: return String(localized: "Une routine régulière qui tient dans ta semaine")
         case .hyrox: return String(localized: "8 × 1 km de course + stations fonctionnelles — un vrai plan hybride")
         case .ultraTrail: return String(localized: "Dénivelé, descente technique et sorties enchaînées — un plan qui compte en heures")
+        case .triathlon: return String(localized: "Nager, rouler, courir — et surtout enchaîner les trois")
         }
     }
 
@@ -48,6 +50,7 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         case .health: return "⚡"
         case .hyrox: return "🏋️"
         case .ultraTrail: return "⛰️"
+        case .triathlon: return "🏊"
         }
     }
 
@@ -60,12 +63,20 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
     /// corriger, servi sous le nom qui promet le contraire. Mieux vaut un objectif absent qu'un
     /// objectif qui ment, donc il était retenu ici.
     ///
-    /// Plus rien n'est retenu aujourd'hui. Le robinet reste : c'est par lui que passera le
-    /// prochain objectif construit par morceaux, et une liste qui se filtre dit à qui la lit
-    /// qu'un objectif peut exister dans le modèle sans être encore offert.
+    /// LE TRIATHLON EST RETENU ICI, ET C'EST LE ROBINET QUI SERT.
+    ///
+    /// Il est livré en six temps : la natation comme discipline, l'import depuis la montre, la
+    /// saisie à la main, cet objectif et ses quatre formats, les séances — dont l'enchaînement
+    /// vélo→course —, puis les garde-fous. Le choisir maintenant donnerait un plan de COURSE
+    /// portant le nom « triathlon » : aucune natation, aucun vélo, aucune transition, et
+    /// trois quarts de la préparation absents sans qu'une seule ligne ne le signale.
+    ///
+    /// Mieux vaut un objectif absent qu'un objectif qui ment. Il s'ouvrira en 6/6, quand le plan
+    /// contiendra vraiment les trois disciplines.
     var estProposable: Bool {
         switch self {
         case .race, .progress, .restart, .weight, .health, .hyrox, .ultraTrail: return true
+        case .triathlon: return false
         }
     }
 
@@ -88,7 +99,10 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
     /// ajouter un objectif à date force à répondre ici.
     var periodiseVersUneDate: Bool {
         switch self {
-        case .race, .hyrox, .ultraTrail: return true
+        // Le triathlon a une date, et il en a plus besoin que les autres : l'affûtage d'une
+        // épreuve à trois disciplines ne consiste pas à réduire un volume mais trois, et
+        // l'enchaînement vélo→course est la dernière chose à relâcher.
+        case .race, .hyrox, .ultraTrail, .triathlon: return true
         case .progress, .restart, .weight, .health: return false
         }
     }
@@ -106,6 +120,11 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         // Un ultra ne se récupère pas en quatre jours, et proposer de repartir trop tôt est
         // le meilleur moyen de transformer une belle course en blessure.
         case .ultraTrail: return 7
+        // Six jours, comme une course sur route — mais pour une raison différente : ce n'est pas
+        // la distance qui laisse des traces, c'est d'avoir tenu trois disciplines dans la même
+        // journée. Un format long tire plus que ça ; c'est le plan de la préparation suivante
+        // qui s'en charge, pas ce compteur-là.
+        case .triathlon: return 6
         }
     }
 }

@@ -73,6 +73,8 @@ struct OnboardingContainerView: View {
                 RaceDetailsStepView(vm: vm) { advance() }
             } else if vm.isHyrox {
                 HyroxDetailsStepView(vm: vm) { advance() }
+            } else if vm.isTriathlon {
+                TriathlonDetailsStepView(vm: vm) { advance() }
             } else {
                 DeepDiveStepView(vm: vm) { advance() }
             }
@@ -100,14 +102,19 @@ struct OnboardingContainerView: View {
     }
 
     /// Mirrors the `currentStep` switch above, including its branch at step 3 (the deep-dive
-    /// question differs by goal, and lumping the three together would hide a drop-off specific to
-    /// one of them).
+    /// question differs by goal, and lumping the four together would hide a drop-off specific to
+    /// one of them — et celle du triathlon est la plus susceptible d'en avoir une : c'est la
+    /// seule qui demande un aveu, « je ne nage pas encore »).
     private func stepName(_ step: Int) -> String {
         switch step {
         case 0: return "name"
         case 1: return "birthdate"
         case 2: return "goal"
-        case 3: return vm.isCourseOuUltra ? "race_details" : (vm.isHyrox ? "hyrox_details" : "deep_dive")
+        case 3:
+            if vm.isCourseOuUltra { return "race_details" }
+            if vm.isHyrox { return "hyrox_details" }
+            if vm.isTriathlon { return "triathlon_details" }
+            return "deep_dive"
         case 4: return "wellbeing"
         case 5: return "running_days"
         case 6: return "level"

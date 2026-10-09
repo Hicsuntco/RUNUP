@@ -32,6 +32,13 @@ final class OnboardingViewModel {
     var raceDate: Date?
     // Step 3 — HYROX branch (reuses `chrono`/`raceDate` above for target finish time/event date)
     var hyroxDivision: HyroxDivision?
+    // Step 3 — branche triathlon. Réutilise `chrono` (le temps visé) et `raceDate` (la date de
+    // l'épreuve) comme HYROX : les deux veulent dire exactement la même chose ici.
+    var triathlonFormat: TriathlonFormat?
+    /// Ce qu'elle nage en continu AUJOURD'HUI. Sans valeur par défaut, volontairement : c'est la
+    /// seule question de l'inscription dont une réponse supposée peut faire du mal, et « 1500 m
+    /// et plus » pré-cochée serait une réponse supposée. Voir `NiveauDeNage`.
+    var nageNiveau: NiveauDeNage?
     // Step 3 — non-race branches
     var weightNow = ""
     var weightTarget = ""
@@ -77,6 +84,7 @@ final class OnboardingViewModel {
     var isRace: Bool { goal == .race }
     var isHyrox: Bool { goal == .hyrox }
     var isUltra: Bool { goal == .ultraTrail }
+    var isTriathlon: Bool { goal == .triathlon }
     /// L'étape « ta course » sert aux deux : un ultra-trail EST une course, avec une question
     /// de plus. Lui faire un écran séparé aurait dupliqué la distance, le chrono et la date
     /// pour un seul champ de différence.
@@ -104,7 +112,11 @@ final class OnboardingViewModel {
         case 0: return !name.trimmingCharacters(in: .whitespaces).isEmpty
         case 1: return birthdate != nil && sex != nil
         case 2: return goal != nil
-        case 3: return isCourseOuUltra ? raceStepValid : (isHyrox ? hyroxStepValid : deepDiveValid)
+        case 3:
+            if isCourseOuUltra { return raceStepValid }
+            if isHyrox { return hyroxStepValid }
+            if isTriathlon { return triathlonStepValid }
+            return deepDiveValid
         // Injury/cycle fields are always optional — a real, known injury/blessure worth flagging
         // is the exception, not the rule, so requiring an answer here would just add friction for
         // the common case of "nothing to report."
@@ -133,6 +145,18 @@ final class OnboardingViewModel {
         return hasChrono && raceDate != nil && hyroxDivision != nil
     }
 
+    /// Le format ET le niveau de natation sont exigés, et le niveau n'a pas de valeur par
+    /// défaut — c'est ce qui le rend obligatoire. Le chrono et la date, comme pour HYROX.
+    ///
+    /// Exiger le niveau de natation est le pendant d'exiger le dénivelé pour un ultra (voir
+    /// `raceStepValid`) : sans ce nombre, le plan ne peut pas dimensionner la seule discipline
+    /// qu'il ne saura jamais mesurer. Mieux vaut une question de plus qu'un plan faux — et ici,
+    /// qu'un plan qui envoie quelqu'un nager 1500 m sans l'avoir demandé.
+    private var triathlonStepValid: Bool {
+        let hasChrono = isCustomChrono ? !(chrono ?? "").isEmpty : chrono != nil
+        return hasChrono && raceDate != nil && triathlonFormat != nil && nageNiveau != nil
+    }
+
     private var deepDiveValid: Bool {
         switch goal {
         case .weight: return !weightNow.isEmpty && !weightTarget.isEmpty && !height.isEmpty
@@ -141,6 +165,15 @@ final class OnboardingViewModel {
         case .health: return weeklyTimeBudget != nil && preferredTimeOfDay != nil
         default: return true
         }
+    }
+
+    /// Choisir un format pré-remplit le chrono, comme `selectDistance` le fait pour une course.
+    /// Le deuxième preset et non le premier : le premier est une belle performance, le deuxième
+    /// est le temps que fait la plupart des gens qui finissent.
+    func selectTriathlonFormat(_ f: TriathlonFormat) {
+        triathlonFormat = f
+        chrono = f.chronoPresets[safe: 1]
+        isCustomChrono = false
     }
 
     func selectDistance(_ d: RaceDistance) {
@@ -163,9 +196,15 @@ final class OnboardingViewModel {
             raceDistance: isCourseOuUltra ? distance : nil,
             raceDistanceCustom: isCourseOuUltra ? customDistance : nil,
             raceElevationGainM: isUltra ? raceElevationGainM : nil,
-            raceChrono: isCourseOuUltra ? chrono : (isHyrox ? chrono : nil),
-            raceDate: isCourseOuUltra ? raceDate : (isHyrox ? raceDate : nil),
+            // Les trois objectifs à date partagent ces deux champs : la course et l'ultra par
+            // `isCourseOuUltra`, HYROX et le triathlon chacun pour soi. `periodiseVersUneDate`
+            // dit la même chose en une propriété, et c'est elle qu'il faudra lire le jour où un
+            // quatrième arrive — cette chaîne de ternaires a déjà atteint sa limite.
+            raceChrono: (goal?.periodiseVersUneDate ?? false) ? chrono : nil,
+            raceDate: (goal?.periodiseVersUneDate ?? false) ? raceDate : nil,
             hyroxDivision: isHyrox ? hyroxDivision?.rawValue : nil,
+            triathlonFormat: isTriathlon ? triathlonFormat?.rawValue : nil,
+            nageNiveau: isTriathlon ? nageNiveau?.rawValue : nil,
             runningDays: Array(runningDays),
             preferredLongRunDay: effectiveLongRunDay,
             level: level,

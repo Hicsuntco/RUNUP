@@ -913,6 +913,23 @@
         }
       }
     },
+    "%lld m le jour J, contre %lld m aujourd'hui. Le plan montera progressivement, et la natation sera la discipline qui prend le plus de place dans ta semaine.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld m on race day, against %2$lld m today. The plan will build up gradually, and swimming will be the discipline that takes the most room in your week."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld m el día de la carrera, frente a %2$lld m hoy. El plan subirá progresivamente, y la natación será la disciplina que más espacio ocupe en tu semana."
+          }
+        }
+      }
+    },
     "%lld membre": {
       "extractionState": "manual",
       "localizations": {
@@ -1950,6 +1967,23 @@
         }
       }
     },
+    "1500 m et plus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1500 m or more"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1500 m o más"
+          }
+        }
+      }
+    },
     "1A": {
       "localizations": {
         "en": {
@@ -2124,6 +2158,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "últimas 4 semanas"
+          }
+        }
+      }
+    },
+    "400 à 800 m": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "400 to 800 m"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "400 a 800 m"
           }
         }
       }
@@ -3841,6 +3892,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hoy toca %@."
+          }
+        }
+      }
+    },
+    "Aujourd'hui, tu nages combien sans t'arrêter ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How far can you swim today without stopping?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cuánto nadas hoy sin parar?"
           }
         }
       }
@@ -8246,6 +8314,40 @@
         }
       }
     },
+    "Ex. 1:22:00": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "e.g. 1:22:00"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ej. 1:22:00"
+          }
+        }
+      }
+    },
+    "Ex. 1:52:00": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "e.g. 1:52:00"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ej. 1:52:00"
+          }
+        }
+      }
+    },
     "Ex. 200 km avant l'été": {
       "localizations": {
         "en": {
@@ -8258,6 +8360,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ej. 200 km antes del verano"
+          }
+        }
+      }
+    },
+    "Ex. 2:48:00": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "e.g. 2:48:00"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ej. 2:48:00"
           }
         }
       }
@@ -8665,6 +8784,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rodaje suave"
+          }
+        }
+      }
+    },
+    "Format": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Format"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Formato"
           }
         }
       }
@@ -9852,6 +9988,23 @@
         }
       }
     },
+    "Je ne nage pas encore": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I don't swim yet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía no nado"
+          }
+        }
+      }
+    },
     "Je peux te répondre vraiment, mais il me faut RUNUP Plus. Le coach lit ton programme, ta forme et tes dernières sorties avant de te répondre — c'est ce qui fait la différence avec une réponse générique.": {
       "localizations": {
         "en": {
@@ -9912,6 +10065,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Te escucho…"
+          }
+        }
+      }
+    },
+    "Je tiens une vraie série sans m'arrêter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I can hold a real set without stopping"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aguanto una serie real sin parar"
           }
         }
       }
@@ -10376,6 +10546,23 @@
         }
       }
     },
+    "La distance olympique ne me fait pas peur": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The olympic distance doesn't scare me"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La distancia olímpica no me asusta"
+          }
+        }
+      }
+    },
     "La forme du plan": {
       "localizations": {
         "en": {
@@ -10438,6 +10625,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "El tiempo ha cambiado"
+          }
+        }
+      }
+    },
+    "La natation partira de zéro, et c'est très bien — mais apprendre à durer dans l'eau demande un bassin et quelqu'un sur le bord, pas une case de plus dans un plan. Le programme construira le vélo et la course, et montera la natation prudemment.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swimming will start from scratch, and that's fine — but learning to last in the water takes a pool and someone on the edge, not one more box in a plan. The program will build the bike and the run, and raise the swimming carefully."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La natación partirá de cero, y está muy bien — pero aprender a durar en el agua requiere una piscina y alguien en el borde, no una casilla más en un plan. El programa construirá la bici y la carrera, y subirá la natación con prudencia."
+          }
+        }
+      }
+    },
+    "La nuit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The night"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La noche"
           }
         }
       }
@@ -10848,6 +11069,23 @@
         }
       }
     },
+    "Le matériel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gear"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El material"
+          }
+        }
+      }
+    },
     "Le plan complet": {
       "extractionState": "manual",
       "localizations": {
@@ -10909,6 +11147,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "El programa se basa en esto — siempre podrás mover una sesión."
+          }
+        }
+      }
+    },
+    "Le ravitaillement": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuelling"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La alimentación"
           }
         }
       }
@@ -11105,6 +11360,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ubicación denegada: abrir Ajustes"
+          }
+        }
+      }
+    },
+    "Longue distance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Long distance"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Larga distancia"
           }
         }
       }
@@ -11910,6 +12182,23 @@
         }
       }
     },
+    "Moins de 200 m d'affilée": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Under 200 m without stopping"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menos de 200 m seguidos"
+          }
+        }
+      }
+    },
     "Mon adhésion": {
       "localizations": {
         "en": {
@@ -12137,6 +12426,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Natación importada"
+          }
+        }
+      }
+    },
+    "Nager, rouler, courir — dans cet ordre, et fatiguée de la précédente à chaque fois.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swim, bike, run — in that order, and tired from the last one every time."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nadar, pedalear, correr — en ese orden, y cansada de la anterior cada vez."
+          }
+        }
+      }
+    },
+    "Nager, rouler, courir — et surtout enchaîner les trois": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swim, bike, run — and above all, link the three"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nadar, pedalear, correr — y sobre todo enlazar los tres"
           }
         }
       }
@@ -12834,6 +13157,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Objetivos · %lld/%lld"
+          }
+        }
+      }
+    },
+    "Olympique": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olympic"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olímpico"
+          }
+        }
+      }
+    },
+    "On commencera par apprendre à durer dans l'eau": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We'll start by learning to last in the water"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezaremos por aprender a durar en el agua"
           }
         }
       }
@@ -14785,6 +15142,23 @@
         }
       }
     },
+    "Préparer un triathlon": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Train for a triathlon"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparar un triatlón"
+          }
+        }
+      }
+    },
     "Préparer un ultra-trail": {
       "extractionState": "manual",
       "localizations": {
@@ -14981,6 +15355,23 @@
         }
       }
     },
+    "QUEL TRIATHLON ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WHICH TRIATHLON?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿QUÉ TRIATLÓN?"
+          }
+        }
+      }
+    },
     "QUEL ULTRA ?": {
       "extractionState": "manual",
       "localizations": {
@@ -15107,6 +15498,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alguien que llegue a la zona verá tu recorrido y podrá seguirlo."
+          }
+        }
+      }
+    },
+    "Quelques longueurs, avec des pauses": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A few lengths, with breaks"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algunos largos, con pausas"
           }
         }
       }
@@ -17410,6 +17818,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Parciales por km"
+          }
+        }
+      }
+    },
+    "Sprint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprint"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprint"
           }
         }
       }
@@ -25348,6 +25773,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Paso 3 · tu HYROX"
+          }
+        }
+      }
+    },
+    "Étape 3 · ton triathlon": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 3 · your triathlon"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 3 · tu triatlón"
           }
         }
       }

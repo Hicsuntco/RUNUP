@@ -25,6 +25,12 @@ private struct OnboardingDraft: Codable {
     var isCustomChrono: Bool
     var raceDate: Date?
     var hyroxDivision: HyroxDivision?
+    /// Optionnels, comme `raceElevationGain` juste au-dessus et pour la même raison — avec une
+    /// nuance qui compte : un `Optional` est décodé par `decodeIfPresent`, donc une clé absente
+    /// vaut `nil` au lieu de faire échouer TOUT le décodage. Un brouillon écrit par la version
+    /// d'avant le triathlon se relit donc sans perdre une seule réponse.
+    var triathlonFormat: TriathlonFormat?
+    var nageNiveau: NiveauDeNage?
     var weightNow: String
     var weightTarget: String
     var height: String
@@ -64,6 +70,8 @@ extension OnboardingViewModel {
         isCustomChrono = draft.isCustomChrono
         raceDate = draft.raceDate
         hyroxDivision = draft.hyroxDivision
+        triathlonFormat = draft.triathlonFormat
+        nageNiveau = draft.nageNiveau
         weightNow = draft.weightNow
         weightTarget = draft.weightTarget
         height = draft.height
@@ -93,7 +101,9 @@ extension OnboardingViewModel {
             showWelcome: showWelcome, step: step, name: name, birthdate: birthdate, sex: sex, goal: goal,
             distance: distance, customDistance: customDistance, raceElevationGain: raceElevationGain,
             chrono: chrono, isCustomChrono: isCustomChrono,
-            raceDate: raceDate, hyroxDivision: hyroxDivision, weightNow: weightNow, weightTarget: weightTarget,
+            raceDate: raceDate, hyroxDivision: hyroxDivision,
+            triathlonFormat: triathlonFormat, nageNiveau: nageNiveau,
+            weightNow: weightNow, weightTarget: weightTarget,
             height: height, focusArea: focusArea, bestRecentPerf: bestRecentPerf, lastRanRecency: lastRanRecency,
             weeklyTimeBudget: weeklyTimeBudget, preferredTimeOfDay: preferredTimeOfDay, injuryArea: injuryArea,
             cycleTrackingEnabled: cycleTrackingEnabled, lastPeriodStartDate: lastPeriodStartDate,

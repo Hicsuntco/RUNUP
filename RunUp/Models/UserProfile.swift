@@ -110,6 +110,20 @@ final class UserProfile {
     /// they mean the same thing for a HYROX goal; `PaceModel.referenceThresholdPace`'s
     /// `.race`-only guard already keeps `raceChrono` from being misparsed as a running-race split.
     var hyroxDivision: String? = nil
+    /// « sprint » | « olympique » | « half » | « longueDistance » — peuplé seulement quand
+    /// `goalId == .triathlon`. Comme HYROX, il réutilise `raceDate` (la date de l'épreuve) et
+    /// `raceChrono` (le temps visé) plutôt que d'ouvrir des champs parallèles qui voudraient dire
+    /// la même chose. Les trois distances ne sont PAS stockées : elles découlent du format, et un
+    /// format stocké à côté de ses propres distances est une occasion de les voir diverger.
+    var triathlonFormat: String? = nil
+    /// « pasEncore » | « moins200 » | « jusqua800 » | « plus1500 » — ce qu'elle nageait en
+    /// continu au moment de l'inscription.
+    ///
+    /// Stocké, et pas déduit, parce que rien ne permet de le déduire : l'app ne voit aucune nage
+    /// en direct, et une nage importée depuis Santé dit une distance totale, pas si elle a été
+    /// faite d'une traite. C'est la seule réponse de l'inscription que le plan ne pourra pas
+    /// corriger tout seul — voir `NiveauDeNage`, qui explique pourquoi elle compte autant.
+    var nageNiveau: String? = nil
 
     // MARK: Goal display (free text summary shown across the app, e.g. "10 km · 47:30")
     var goalDisplay: String
@@ -337,6 +351,8 @@ final class UserProfile {
         self.weeklyTimeBudget = nil
         self.preferredTimeOfDay = nil
         self.hyroxDivision = nil
+        self.triathlonFormat = nil
+        self.nageNiveau = nil
         self.goalDisplay = String(localized: "Rester en forme")
         self.weekNumber = 1
         self.programStartDate = .now

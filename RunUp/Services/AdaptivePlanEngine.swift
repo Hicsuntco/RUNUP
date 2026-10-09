@@ -26,6 +26,8 @@ enum AdaptivePlanEngine {
         var raceChrono: String?
         var raceDate: Date?
         var hyroxDivision: String?
+        var triathlonFormat: String?
+        var nageNiveau: String?
         var runningDays: [Int]
         /// Which weekday (0=Monday...6=Sunday) carries the long run — chosen at onboarding, see
         /// `OnboardingViewModel.effectiveLongRunDay`.
@@ -57,6 +59,8 @@ enum AdaptivePlanEngine {
         profile.raceChrono = result.raceChrono
         profile.raceDate = result.raceDate
         profile.hyroxDivision = result.hyroxDivision
+        profile.triathlonFormat = result.triathlonFormat
+        profile.nageNiveau = result.nageNiveau
         profile.runningDays = result.runningDays
         profile.preferredLongRunDay = result.preferredLongRunDay
         profile.level = result.level
@@ -73,7 +77,7 @@ enum AdaptivePlanEngine {
         profile.cycleTrackingEnabled = result.cycleTrackingEnabled
         profile.lastPeriodStartDate = result.lastPeriodStartDate
         profile.averageCycleLengthDays = result.averageCycleLengthDays
-        profile.goalDisplay = goalDisplay(goal: result.goal, distance: result.raceDistance, custom: result.raceDistanceCustom, chrono: result.raceChrono, hyroxDivision: result.hyroxDivision, denivele: result.raceElevationGainM)
+        profile.goalDisplay = goalDisplay(goal: result.goal, distance: result.raceDistance, custom: result.raceDistanceCustom, chrono: result.raceChrono, hyroxDivision: result.hyroxDivision, denivele: result.raceElevationGainM, triathlonFormat: result.triathlonFormat)
         profile.onboarded = true
         profile.programPhase = .active
         profile.weekNumber = 1
@@ -1134,7 +1138,7 @@ enum AdaptivePlanEngine {
         }
     }
 
-    private static func goalDisplay(goal: GoalType, distance: RaceDistance?, custom: String?, chrono: String?, hyroxDivision: String? = nil, denivele: Int? = nil) -> String {
+    private static func goalDisplay(goal: GoalType, distance: RaceDistance?, custom: String?, chrono: String?, hyroxDivision: String? = nil, denivele: Int? = nil, triathlonFormat: String? = nil) -> String {
         switch goal {
         case .race:
             let label = distance == .other ? (custom?.isEmpty == false ? custom! : "Ta course") : (distance?.label ?? "Ta course")
@@ -1157,6 +1161,13 @@ enum AdaptivePlanEngine {
             let chronoLabel = (chrono?.isEmpty ?? true) ? "finir" : chrono!
             guard let denivele, denivele > 0 else { return "\(label) · \(chronoLabel)" }
             return "\(label) · \(denivele) m D+ · \(chronoLabel)"
+        case .triathlon:
+            // Le FORMAT, pas les trois distances : « Triathlon olympique · 2:35 » tient sur une
+            // ligne d'accueil, « 1500 m · 40 km · 10 km · 2:35 » non. Les trois distances sont
+            // là où l'on choisit son format, pas là où l'on relit son objectif tous les matins.
+            let chronoLabel = (chrono?.isEmpty ?? true) ? "finir" : chrono!
+            let format = triathlonFormat.flatMap { TriathlonFormat(rawValue: $0)?.title }
+            return format.map { "Triathlon \($0) · \(chronoLabel)" } ?? "Triathlon · \(chronoLabel)"
         }
     }
 

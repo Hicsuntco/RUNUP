@@ -59,17 +59,24 @@ final class CapturesUITests: XCTestCase {
         }
         app.launch()
 
-        // Une attente sur un élément plutôt qu'un `sleep` : l'app est prête quand elle a dessiné
-        // quelque chose, et ce moment-là n'a pas de durée fixe. Le repli au bout de huit secondes
-        // photographie quand même — une capture ratée se voit, une capture absente ne se voit pas.
-        _ = app.wait(for: .runningForeground, timeout: 8)
-        let dessine = app.descendants(matching: .any).firstMatch.waitForExistence(timeout: 8)
-        if !dessine {
-            XCTFail("\(nom) : l'app n'a rien dessiné en huit secondes")
-        }
-        // Les animations d'entrée de `ContentRouterView` durent moins d'une demi-seconde ; une
-        // seconde laisse la marge sans allonger les dix-huit lancements de façon sensible.
-        Thread.sleep(forTimeInterval: 1.0)
+        // ON NE DEMANDE PAS L'ARBRE D'ACCESSIBILITÉ. C'est ce qui a tué le premier essai.
+        //
+        // La version précédente attendait `app.descendants(matching: .any).firstMatch`, pour ne
+        // pas photographier trop tôt. Cette requête-là exige un INSTANTANÉ COMPLET de tous les
+        // éléments de l'écran : sur une vue SwiftUI dense — l'accueil, ses anneaux, sa bande de
+        // semaine et ses cartes — elle a fait perdre la connexion à l'app, qui est morte sans
+        // même laisser de rapport de plantage. Quarante secondes de lancement pour un écran
+        // qu'on ne photographiera jamais.
+        //
+        // Or `XCUIScreen.main.screenshot()` photographie L'ÉCRAN, pas l'app : il n'a besoin
+        // d'aucun élément, d'aucun arbre, et il marche même si l'app vient de mourir. La seule
+        // chose à attendre est donc que l'app soit au premier plan, ce que le système sait dire
+        // sans rien inspecter.
+        _ = app.wait(for: .runningForeground, timeout: 30)
+        // Puis on laisse la première image se poser. Les animations d'entrée de
+        // `ContentRouterView` durent moins d'une demi-seconde ; deux secondes laissent la marge
+        // sur une machine chargée sans peser sur les dix-huit lancements.
+        Thread.sleep(forTimeInterval: 2.0)
 
         let capture = XCUIScreen.main.screenshot()
         let piece = XCTAttachment(screenshot: capture)

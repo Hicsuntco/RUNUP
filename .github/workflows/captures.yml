@@ -156,6 +156,15 @@ jobs:
             -derivedDataPath build/captures \
             CODE_SIGNING_ALLOWED=NO
 
+      # Démarré UNE fois, avant la boucle : trois démarrages à froid coûtaient six minutes pour
+      # rien. `|| true` sur l'extinction, parce qu'éteindre un appareil déjà éteint est une
+      # erreur pour `simctl` et pas pour nous.
+      - name: Démarrer le simulateur
+        run: |
+          set -euo pipefail
+          xcrun simctl boot "${{ steps.sim.outputs.udid }}" || true
+          xcrun simctl bootstatus "${{ steps.sim.outputs.udid }}" -b || true
+
       - name: Photographier, langue par langue
         run: |
           set -euo pipefail
@@ -164,14 +173,14 @@ jobs:
             dossier="$PWD/appstore/raw/$langue"
             rm -rf "$dossier"
             mkdir -p "$dossier"
-            # Le simulateur est remis à zéro entre deux langues : l'app garde son profil d'un
-            # lancement à l'autre, et `CaptureSeed` vide bien la base — mais la LANGUE, elle, est
-            # mise en cache par le système au premier lancement. Sans effacement, les trois séries
-            # sortiraient dans la langue de la première.
-            xcrun simctl shutdown "${{ steps.sim.outputs.udid }}" || true
-            xcrun simctl erase "${{ steps.sim.outputs.udid }}"
-            xcrun simctl boot "${{ steps.sim.outputs.udid }}"
-            xcrun simctl bootstatus "${{ steps.sim.outputs.udid }}" -b
+            # PAS D'EFFACEMENT ENTRE DEUX LANGUES, et c'est une correction.
+            #
+            # Le premier essai effaçait et redémarrait le simulateur à chaque langue, au cas où
+            # le système garderait la langue en cache. Il la garde — mais `-AppleLanguages` est
+            # passé en ARGUMENT DE LANCEMENT, ce qui la remplace pour ce processus-là seulement
+            # et rend l'effacement inutile. Il coûtait une minute cinquante par langue, se
+            # terminait sur un état de démarrage douteux, et l'app, elle, vide sa propre base à
+            # chaque lancement (voir `CaptureSeed.poser`).
             # LE PRÉFIXE `TEST_RUNNER_` N'EST PAS DÉCORATIF. Le test tourne dans un
             # processus du SIMULATEUR, qui n'hérite pas de l'environnement du shell :
             # poser `RUNUP_LANG=…` devant `xcodebuild` ne le ferait arriver nulle part, et le

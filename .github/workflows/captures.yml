@@ -237,6 +237,18 @@ jobs:
             echo "(aucun rapport pour RunUp dans $dossier)"
             ls -t "$dossier" 2>/dev/null | head -10
           fi
+          # LE MESSAGE D'UN `fatalError` N'EST PAS DANS LE RAPPORT .ips.
+          #
+          # Le rapport donne la pile — `_assertionFailure` ← `CaptureSeed.poserLeClub`, ligne
+          # 250 — et c'est déjà beaucoup. Mais la PHRASE, celle qui nomme le champ fautif, part
+          # sur la sortie d'erreur, donc dans le journal du simulateur. Sans elle il a fallu
+          # relire le décodeur à la main pour trouver que le tracé voyageait en paires.
+          echo "────────── journal du simulateur ──────────"
+          xcrun simctl spawn "${{ steps.sim.outputs.udid }}" log show \
+            --last 10m --style compact \
+            --predicate 'processImagePath CONTAINS "RunUp"' 2>/dev/null \
+            | grep -iE "fatal error|precondition|assert" | head -20 || true
+
           for r in $rapports; do
             echo "── $r"
             # Les .ips font plusieurs milliers de lignes de registres et de bibliothèques

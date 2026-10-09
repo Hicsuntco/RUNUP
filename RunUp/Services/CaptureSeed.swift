@@ -180,6 +180,13 @@ enum CaptureSeed {
         // Le tracé est une boucle le long d'un canal, aller par une rive et retour par l'autre.
         // Sa boîte fait cinq kilomètres de côté, ce qui est la bonne échelle pour les 12,4 km
         // annoncés par la ligne au-dessus — un aller-retour, pas une ligne droite.
+        //
+        // IL VOYAGE EN PAIRES `[lat, lng]`, PAS EN OBJETS `{"lat":…, "lng":…}`.
+        //
+        // C'est la forme que la base stocke et que le serveur renvoie telle quelle, et
+        // `FeedItem.init(from:)` décode un `[[Double]]`. Je l'avais écrit en objets : le
+        // décodage du fil ENTIER tombait sur une erreur de type. Le `preconditionFailure`
+        // ci-dessous l'a dit tout de suite, au lieu de livrer une sixième image fausse.
         let fil = """
         [
           { "id": "a", "userId": "2", "name": "Inès", "text": "a couru 12,4 km · Sortie longue",
@@ -189,35 +196,16 @@ enum CaptureSeed {
             "kudosNames": ["Charlotte", "Margaux", "Sarah"],
             "lastComment": { "name": "Charlotte", "text": "Belle allure sur la fin !" },
             "routePreview": [
-            {"lat": 48.88120, "lng": 2.36900},
-            {"lat": 48.88433, "lng": 2.37412},
-            {"lat": 48.88739, "lng": 2.37922},
-            {"lat": 48.89030, "lng": 2.38427},
-            {"lat": 48.89303, "lng": 2.38924},
-            {"lat": 48.89557, "lng": 2.39413},
-            {"lat": 48.89796, "lng": 2.39893},
-            {"lat": 48.90026, "lng": 2.40362},
-            {"lat": 48.90253, "lng": 2.40822},
-            {"lat": 48.90486, "lng": 2.41273},
-            {"lat": 48.90732, "lng": 2.41717},
-            {"lat": 48.90996, "lng": 2.42155},
-            {"lat": 48.91278, "lng": 2.42590},
-            {"lat": 48.91791, "lng": 2.42728},
-            {"lat": 48.92135, "lng": 2.43087},
-            {"lat": 48.92204, "lng": 2.43532},
-            {"lat": 48.92000, "lng": 2.43891},
-            {"lat": 48.91626, "lng": 2.44029},
-            {"lat": 48.91229, "lng": 2.43463},
-            {"lat": 48.90836, "lng": 2.42895},
-            {"lat": 48.90454, "lng": 2.42325},
-            {"lat": 48.90084, "lng": 2.41750},
-            {"lat": 48.89728, "lng": 2.41170},
-            {"lat": 48.89385, "lng": 2.40584},
-            {"lat": 48.89050, "lng": 2.39992},
-            {"lat": 48.88721, "lng": 2.39393},
-            {"lat": 48.88390, "lng": 2.38789},
-            {"lat": 48.88054, "lng": 2.38178},
-            {"lat": 48.87707, "lng": 2.37563}
+              [48.88120, 2.36900], [48.88433, 2.37412], [48.88739, 2.37922],
+              [48.89030, 2.38427], [48.89303, 2.38924], [48.89557, 2.39413],
+              [48.89796, 2.39893], [48.90026, 2.40362], [48.90253, 2.40822],
+              [48.90486, 2.41273], [48.90732, 2.41717], [48.90996, 2.42155],
+              [48.91278, 2.42590], [48.91791, 2.42728], [48.92135, 2.43087],
+              [48.92204, 2.43532], [48.92000, 2.43891], [48.91626, 2.44029],
+              [48.91229, 2.43463], [48.90836, 2.42895], [48.90454, 2.42325],
+              [48.90084, 2.41750], [48.89728, 2.41170], [48.89385, 2.40584],
+              [48.89050, 2.39992], [48.88721, 2.39393], [48.88390, 2.38789],
+              [48.88054, 2.38178], [48.87707, 2.37563]
             ] },
           { "id": "b", "userId": "3", "name": "Margaux", "text": "a couru 6,0 km · Fractionné",
             "createdAt": "\(ilYA(9))", "distanceKm": 6.0, "durationSeconds": 1764,

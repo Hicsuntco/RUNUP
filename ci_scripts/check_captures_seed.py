@@ -17,9 +17,11 @@ sans démarrer de simulateur.
 La règle : chaque ligne du classement de démonstration porte tous les champs non optionnels de
 `LeaderboardRow`, et chaque badge qu'elle cite existe dans `ClubBadgeCatalog`.
 
-CE QUE CE TEST NE COUVRE PAS. `FeedItem` décode à la main, en tolérant l'absence de presque
-tous ses champs (voir son `init(from:)`) : une liste de champs obligatoires n'y voudrait rien
-dire, et l'inventer ici ferait échouer le test sur du JSON parfaitement valide.
+`FeedItem`, lui, décode à la main : la liste de ses champs ne dit rien de ce qu'il exige. On lit
+donc son `init(from:)` — les clés prises par un `decode` strict sont obligatoires, celles prises
+par `decodeIfPresent` ne le sont pas — et on contrôle à part la forme du tracé, qui voyage en
+paires `[lat, lng]` et NON en objets. Écrit en objets, il faisait tomber le fil entier sur une
+erreur de type ; c'est la deuxième faute de ce JSON que la machine a attrapée à ma place.
 """
 
 import json
@@ -33,6 +35,8 @@ GRAINE = RACINE / "RunUp" / "Services" / "CaptureSeed.swift"
 CATALOGUE = RACINE / "RunUp" / "Models" / "ClubBadgeCatalog.swift"
 
 CHAMP = re.compile(r"^    var (\w+):\s*([^\n/]+?)\s*$", re.M)
+# `try c.decode(String.self, forKey: .id)` — strict. `decodeIfPresent` ne compte pas.
+STRICT = re.compile(r"c\.decode\([^)]*forKey:\s*\.(\w+)\)")
 
 
 def champs_obligatoires(texte, nom):
@@ -51,6 +55,44 @@ def champs_obligatoires(texte, nom):
         return None
     return {nom_champ for nom_champ, type_ in CHAMP.findall(corps)
             if not type_.endswith("?") and "=" not in type_}
+
+
+def champs_stricts(texte, nom):
+    """Les clés qu'un `init(from:)` écrit à la main décode SANS tolérance.
+
+    La liste des propriétés ne sert à rien ici : `isPersonalRecord` n'est pas optionnel et
+    pourtant son absence est tolérée, `kudosNames` non plus et pourtant elle retombe sur `[]`.
+    Seul le corps du décodeur dit la vérité.
+    """
+    m = re.search(rf"^struct {nom}\b[^\n]*\{{$", texte, re.M)
+    if m is None:
+        raise SystemExit(f"structure {nom} introuvable dans {SERVICE.name}")
+    fin = texte.index("\n}\n", m.end())
+    debut = texte.index("init(from decoder", m.end())
+    return set(STRICT.findall(texte[debut:fin]))
+
+
+def manques_du_fil(fil, stricts):
+    """[(où, ce qui manque)] pour les activités de démonstration."""
+    trouves = []
+    for i, item in enumerate(fil):
+        qui = item.get("name", f"activité {i + 1}")
+        absents = stricts - set(item)
+        if absents:
+            trouves.append((qui, f"champs absents : {', '.join(sorted(absents))}"))
+        trace = item.get("routePreview")
+        if trace is None:
+            continue
+        # `FeedItem.init(from:)` décode un `[[Double]]`, et un objet y lève une erreur de TYPE
+        # — qui fait tomber le fil entier, pas seulement le tracé.
+        if not all(isinstance(p, list) and len(p) == 2
+                   and all(isinstance(c, (int, float)) for c in p) for p in trace):
+            trouves.append((qui, "le tracé doit être des paires [lat, lng], pas des objets"))
+        elif len(trace) < 2:
+            # En dessous de deux points, `init(from:)` le jette en silence : pas une erreur,
+            # mais un tracé écrit pour rien, et une carte vide là où on en attendait une.
+            trouves.append((qui, f"tracé de {len(trace)} point — il en faut au moins deux"))
+    return trouves
 
 
 def litteral(texte, variable):
@@ -91,12 +133,16 @@ def manques(tableau, obligatoires_club, obligatoires_ligne, badges):
 
 def main():
     service = SERVICE.read_text(encoding="utf-8")
-    tableau = litteral(GRAINE.read_text(encoding="utf-8"), "tableau")
+    graine = GRAINE.read_text(encoding="utf-8")
+    tableau = litteral(graine, "tableau")
+    fil = litteral(graine, "fil")
     obligatoires_club = champs_obligatoires(service, "ClubInfo")
     obligatoires_ligne = champs_obligatoires(service, "LeaderboardRow")
     badges = badges_connus()
 
-    if fautes := manques(tableau, obligatoires_club, obligatoires_ligne, badges):
+    fautes = manques(tableau, obligatoires_club, obligatoires_ligne, badges)
+    fautes += manques_du_fil(fil, champs_stricts(service, "FeedItem"))
+    if fautes:
         print("Le club de démonstration ne se décodera pas :\n", file=sys.stderr)
         for qui, quoi in fautes:
             print(f"  {qui} — {quoi}", file=sys.stderr)
@@ -108,8 +154,10 @@ def main():
         return 1
 
     lignes = len(tableau.get("leaderboard", []))
+    traces = sum(1 for a in fil if a.get("routePreview"))
     print(f"Club de démonstration : {lignes} lignes de classement, tous les champs obligatoires")
     print(f"                        de LeaderboardRow présents, {len(badges)} badges au catalogue.")
+    print(f"                        {len(fil)} activités au fil, dont {traces} avec un tracé en paires.")
     return 0
 
 

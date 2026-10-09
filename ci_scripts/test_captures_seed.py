@@ -86,6 +86,57 @@ def _():
     assert "bio" not in ligne and "avatarUrl" not in ligne, ligne
 
 
+# Le fil, tel qu'il était quand le tracé a fait tomber tout le décodage.
+FIL_OBJETS = [{
+    "id": "a", "userId": "2", "name": "Inès", "text": "a couru 12,4 km",
+    "createdAt": "2026-01-01T00:00:00Z", "kudos": 7, "kudoedByMe": True, "commentsCount": 2,
+    "routePreview": [{"lat": 48.8812, "lng": 2.369}, {"lat": 48.8843, "lng": 2.3741}],
+}]
+FIL_PAIRES = [dict(FIL_OBJETS[0], routePreview=[[48.8812, 2.369], [48.8843, 2.3741]])]
+STRICTS_FIL = {"id", "userId", "name", "text", "createdAt", "kudos", "kudoedByMe",
+               "commentsCount"}
+
+
+@cas_test("un tracé écrit en objets est refusé")
+def _():
+    fautes = ck.manques_du_fil(FIL_OBJETS, STRICTS_FIL)
+    assert len(fautes) == 1 and "paires" in fautes[0][1], fautes
+
+
+@cas_test("un tracé écrit en paires passe")
+def _():
+    assert ck.manques_du_fil(FIL_PAIRES, STRICTS_FIL) == []
+
+
+@cas_test("une activité SANS tracé passe — la plupart n'en ont pas")
+def _():
+    sans = [{k: v for k, v in FIL_PAIRES[0].items() if k != "routePreview"}]
+    assert ck.manques_du_fil(sans, STRICTS_FIL) == []
+
+
+@cas_test("un tracé d'un seul point est refusé : init(from:) le jette en silence")
+def _():
+    court = [dict(FIL_PAIRES[0], routePreview=[[48.8812, 2.369]])]
+    fautes = ck.manques_du_fil(court, STRICTS_FIL)
+    assert len(fautes) == 1 and "deux" in fautes[0][1], fautes
+
+
+@cas_test("une clé décodée strictement et absente est nommée")
+def _():
+    sans_kudos = [{k: v for k, v in FIL_PAIRES[0].items() if k != "kudos"}]
+    fautes = ck.manques_du_fil(sans_kudos, STRICTS_FIL)
+    assert len(fautes) == 1 and "kudos" in fautes[0][1], fautes
+
+
+@cas_test("les clés strictes sont lues dans le vrai init(from:) de FeedItem")
+def _():
+    stricts = ck.champs_stricts(ck.SERVICE.read_text(encoding="utf-8"), "FeedItem")
+    assert {"id", "text", "createdAt", "kudos"} <= stricts, stricts
+    # Tolérées par `decodeIfPresent` : elles ne doivent PAS être exigées.
+    for souple in ("distanceKm", "avgPace", "isPersonalRecord", "kudosNames", "lastComment"):
+        assert souple not in stricts, f"{souple} exigé à tort : {stricts}"
+
+
 @cas_test("une structure qui décode à la main est exclue, pas devinée")
 def _():
     service = ck.SERVICE.read_text(encoding="utf-8")

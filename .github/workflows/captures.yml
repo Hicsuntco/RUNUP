@@ -32,20 +32,22 @@ name: Captures App Store
 # tant que ce fichier n'est que sur une branche de travail, le bouton n'existe pas et l'API
 # répond 404.
 #
-# Deux filets pour y suppléer en attendant :
+# En attendant, il part sur les DEUX FICHIERS dont le changement justifie de tout refaire : ce
+# workflow lui-même, et les accroches. Modifier une accroche sans régénérer les images laisse en
+# ligne une série qui ne dit plus ce que le dépôt dit — et c'est exactement comme ça que les six
+# captures publiées se sont retrouvées à dater du 30 août.
 #
-# UNE ÉTIQUETTE `captures-*`, qui nomme la série au passage — on retrouve des mois plus tard à
-# quel commit correspondaient les six images publiées.
+# Le déclencheur est étroit : aucun autre chemin ne démarre un simulateur, donc une correction de
+# code ne paie jamais ces vingt minutes.
 #
-# ET LES DEUX FICHIERS DONT LE CHANGEMENT JUSTIFIE DE TOUT REFAIRE : ce workflow lui-même, et les
-# accroches. Modifier une accroche sans régénérer les images laisse en ligne une série qui ne dit
-# plus ce que le dépôt dit — et c'est exactement comme ça que les six captures publiées se sont
-# retrouvées à dater du 30 août. Le déclencheur est étroit : aucun autre chemin ne démarre un
-# simulateur, donc une correction de code ne paie jamais ces vingt minutes.
+# PAS D'ÉTIQUETTE `captures-*`, et c'est une correction. La première version en avait une — mais
+# un `push` qui déclare `tags:` SANS `branches:` ne part QUE sur une étiquette : la règle de
+# GitHub, et la raison pour laquelle le premier essai n'a rien lancé du tout. Garder un
+# déclencheur qu'on ne peut pas essayer depuis ici serait garder une promesse non vérifiée.
 on:
   push:
-    tags:
-      - "captures-*"
+    branches:
+      - "**"
     paths:
       - ".github/workflows/captures.yml"
       - "appstore/captions.json"

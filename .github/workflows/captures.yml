@@ -145,6 +145,17 @@ jobs:
       # Construit UNE fois, pour les trois langues. `build-for-testing` sépare la construction de
       # l'exécution : sans ça, chaque langue recompilerait l'app entière, soit trois fois le même
       # travail pour trois lancements qui ne diffèrent que par un argument.
+      # `CODE_SIGNING_ALLOWED=NO` N'EST PAS GRATUIT, et ça a coûté quatre exécutions.
+      #
+      # Sans signature, le binaire ne porte AUCUN droit — pas de `com.apple.developer.healthkit`
+      # en particulier. Or `HKSource.default()` ne renvoie pas d'erreur Swift dans ce cas : il
+      # lève une exception Objective-C, que Swift ne peut pas rattraper, et le processus meurt
+      # sur SIGABRT une seconde après le lancement. Le test voyait « Lost connection to the
+      # application » et rien d'autre.
+      #
+      # `HealthKitService.desactiver()`, tiré par le harnais de captures, est la parade. Si une
+      # autre bibliothèque système se met un jour à exiger un droit, ce sera le même symptôme,
+      # et l'étape « Dire ce qui a planté » plus bas est le seul endroit où le lire.
       - name: Construire pour les tests
         run: |
           set -euo pipefail

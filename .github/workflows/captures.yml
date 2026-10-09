@@ -59,10 +59,10 @@ on:
         type: string
         default: "fr-FR en-US es-ES"
       simulateur:
-        description: "Le simulateur à photographier (sa taille décide de celle des captures)"
+        description: "Le simulateur — « auto » prend le plus grand iPhone Pro Max disponible"
         required: true
         type: string
-        default: "iPhone 16 Pro Max"
+        default: "auto"
 
 jobs:
   captures:
@@ -98,8 +98,20 @@ jobs:
           langues="${{ inputs.langues }}"
           simulateur="${{ inputs.simulateur }}"
           echo "langues=${langues:-fr-FR en-US es-ES}" >> "$GITHUB_OUTPUT"
-          echo "simulateur=${simulateur:-iPhone 16 Pro Max}" >> "$GITHUB_OUTPUT"
+          echo "simulateur=${simulateur:-auto}" >> "$GITHUB_OUTPUT"
 
+      # LE NOM DU SIMULATEUR NE DOIT PAS ÊTRE ÉCRIT EN DUR, ET LE PREMIER ESSAI L'ÉTAIT.
+      #
+      # Il demandait un « iPhone 16 Pro Max » ; le runner n'avait que des 17, et la série s'est
+      # arrêtée à cette ligne. Un an plus tard il n'aura que des 18, et elle s'arrêterait de
+      # nouveau au même endroit — pour une raison qui n'a rien à voir avec l'app.
+      #
+      # On cherche donc le PLUS GRAND iPhone Pro Max disponible, quel que soit son numéro. C'est
+      # la bonne question de toute façon : Apple ne demande plus qu'une taille de capture, celle
+      # du plus grand iPhone. « Le plus grand » est ce qu'on veut ; un numéro ne l'est jamais.
+      #
+      # Un nom explicite reste prioritaire quand on en passe un par le bouton — pour photographier
+      # un petit écran, par exemple — et il échoue bruyamment s'il n'existe pas.
       - name: Trouver le simulateur
         id: sim
         run: |
@@ -108,11 +120,23 @@ jobs:
           # `-j` puis `jq` plutôt qu'un `grep` sur la sortie lisible : celle-ci change de forme
           # d'une version de Xcode à l'autre, et un `grep` qui ne trouve rien donne un identifiant
           # vide, donc une commande `xcodebuild` qui part sur le mauvais appareil sans rien dire.
-          udid=$(xcrun simctl list devices available -j \
-            | jq -r --arg n "$nom" '[.devices[][] | select(.name == $n)] | .[0].udid // empty')
+          liste=$(xcrun simctl list devices available -j)
+          if [ "$nom" = "auto" ]; then
+            # Trié par le NUMÉRO du modèle et pas par le nom : « iPhone 9 Pro Max » passerait
+            # après « iPhone 17 Pro Max » en ordre alphabétique.
+            choisi=$(echo "$liste" | jq -c '
+              [.devices[][] | select(.name | test("^iPhone [0-9]+ Pro Max$"))]
+              | sort_by(.name | capture("iPhone (?<n>[0-9]+)") | .n | tonumber)
+              | last // empty')
+            nom=$(echo "$choisi" | jq -r '.name // empty')
+            udid=$(echo "$choisi" | jq -r '.udid // empty')
+          else
+            udid=$(echo "$liste" | jq -r --arg n "$nom" \
+              '[.devices[][] | select(.name == $n)] | .[0].udid // empty')
+          fi
           if [ -z "$udid" ]; then
             echo "✗ Simulateur « $nom » introuvable. Disponibles :"
-            xcrun simctl list devices available | grep -E "iPhone|iPad" || true
+            echo "$liste" | jq -r '.devices[][].name' | sort -u
             exit 1
           fi
           echo "→ $nom : $udid"

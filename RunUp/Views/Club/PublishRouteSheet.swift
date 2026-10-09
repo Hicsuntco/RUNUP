@@ -177,7 +177,9 @@ struct PublishRouteSheet: View {
                 .foregroundColor(RUColor.rose)
             // Le chiffre est repris de la constante, pas recopié : si le rognage change un jour,
             // cette phrase ne peut pas devenir un mensonge.
-            Text("Les \(Int(RouteGeometry.sharingTrimMeters)) premiers et derniers mètres sont retirés avant l'envoi : personne ne verra d'où tu es partie ni où tu es rentrée. C'est le tracé ci-dessus qui sera publié, pas celui que tu as couru.")
+            Text(verbatim: Accord.selon(
+                f: String(localized: "Les \(Int(RouteGeometry.sharingTrimMeters)) premiers et derniers mètres sont retirés avant l'envoi : personne ne verra d'où tu es partie ni où tu es rentrée. C'est le tracé ci-dessus qui sera publié, pas celui que tu as couru."),
+                m: String(localized: "Les \(Int(RouteGeometry.sharingTrimMeters)) premiers et derniers mètres sont retirés avant l'envoi : personne ne verra d'où tu es parti ni où tu es rentré. C'est le tracé ci-dessus qui sera publié, pas celui que tu as couru.")))
                 .font(RUFont.sans(.label))
                 .foregroundColor(RUColor.text2)
         }

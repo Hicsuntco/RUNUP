@@ -52,6 +52,12 @@ enum AdaptivePlanEngine {
         profile.name = result.name.isEmpty ? "Toi" : result.name
         profile.birthdate = result.birthdate
         profile.sex = result.sex
+        // POSÉ ICI ET PAS SEULEMENT AU LANCEMENT. `AppState.init` miroite le genre depuis le
+        // profil, mais il a déjà tourné quand l'inscription se termine : sans cette ligne, la
+        // toute première session après l'inscription s'adresserait au féminin à quelqu'un qui
+        // vient de répondre « Homme », et il faudrait relancer l'app pour que ça se corrige.
+        // C'est exactement le moment où l'on regarde si l'app a écouté.
+        AccordStore.shared.genre = Genre.depuis(sexe: result.sex)
         profile.goalId = result.goal
         profile.raceDistance = result.raceDistance
         profile.raceDistanceCustom = result.raceDistanceCustom

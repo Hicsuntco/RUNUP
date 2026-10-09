@@ -474,7 +474,8 @@ struct MoreSettingsView: View {
             if let user = appState.auth.currentUser {
                 HStack {
                     rowIcon("person.crop.circle")
-                    Text("Connectée en tant que \(user.name)").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                    Text(verbatim: Accord.selon(f: String(localized: "Connectée en tant que \(user.name)"),
+                                                m: String(localized: "Connecté en tant que \(user.name)"))).font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
                     Spacer()
                 }
                 .padding(.horizontal, 14).padding(.vertical, 13)

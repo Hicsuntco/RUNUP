@@ -29,7 +29,7 @@ struct CoachView: View {
     /// affichée traduite.
     private let chips = [
         String(localized: "Adapte ma semaine"),
-        String(localized: "Je suis fatiguée"),
+        Accord.selon(f: String(localized: "Je suis fatiguée"), m: String(localized: "Je suis fatigué")),
         String(localized: "Conseils nutrition"),
         String(localized: "Analyse ma dernière sortie")
     ]

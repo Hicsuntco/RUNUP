@@ -183,7 +183,9 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         case .ultraTrail:
             return String(localized: "La distance ET le dénivelé — c'est le second qui décide du plan.")
         case .triathlon:
-            return String(localized: "Nager, rouler, courir — dans cet ordre, et fatiguée de la précédente à chaque fois.")
+            return Accord.selon(
+                f: String(localized: "Nager, rouler, courir — dans cet ordre, et fatiguée de la précédente à chaque fois."),
+                m: String(localized: "Nager, rouler, courir — dans cet ordre, et fatigué de la précédente à chaque fois."))
         }
     }
 
@@ -259,11 +261,17 @@ enum ExperienceLevel: String, Codable, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    /// « Intermédiaire » est épicène, les deux autres non — et ces trois mots sont une carte
+    /// qu'on touche pour se décrire. Se voir proposer « Débutante » quand on a répondu « Homme »
+    /// à la question d'avant est la forme la plus directe de « cette app ne t'a pas écouté ».
     var title: String {
         switch self {
-        case .debutante: return String(localized: "Débutante")
-        case .intermediaire: return String(localized: "Intermédiaire")
-        case .confirmee: return String(localized: "Confirmée")
+        case .debutante:
+            return Accord.selon(f: String(localized: "Débutante"), m: String(localized: "Débutant"))
+        case .intermediaire:
+            return String(localized: "Intermédiaire")
+        case .confirmee:
+            return Accord.selon(f: String(localized: "Confirmée"), m: String(localized: "Confirmé"))
         }
     }
 

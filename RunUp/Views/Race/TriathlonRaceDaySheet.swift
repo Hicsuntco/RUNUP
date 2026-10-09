@@ -164,7 +164,9 @@ struct TriathlonRaceDaySheet: View {
     private var phraseDesTransitions: LocalizedStringKey {
         TriathlonRaceDay.transitionsDecisives(format)
             ? "Sur un format court, les transitions pèsent près d'un dixième de la journée. C'est là que ce format se gagne, et c'est la seule partie qui ne coûte aucune condition physique."
-            : "Sur un format long, les transitions pèsent peu : le temps est ailleurs. Elles méritent quand même d'être répétées une fois — non pour le chrono, mais pour ne pas découvrir fatiguée qu'on a oublié quelque chose."
+            : LocalizedStringKey(Accord.selon(
+                f: String(localized: "Sur un format long, les transitions pèsent peu : le temps est ailleurs. Elles méritent quand même d'être répétées une fois — non pour le chrono, mais pour ne pas découvrir fatiguée qu'on a oublié quelque chose."),
+                m: String(localized: "Sur un format long, les transitions pèsent peu : le temps est ailleurs. Elles méritent quand même d'être répétées une fois — non pour le chrono, mais pour ne pas découvrir fatigué qu'on a oublié quelque chose.")))
     }
 
     // MARK: La combinaison

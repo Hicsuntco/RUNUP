@@ -25,7 +25,21 @@
 
 name: Captures App Store
 
+# DEUX FAÇONS DE LE DÉCLENCHER, ET LA SECONDE N'EST PAS UN CAPRICE.
+#
+# `workflow_dispatch` est le bouton « Run workflow » de l'onglet Actions — c'est celle qui sert
+# au quotidien. GitHub ne l'affiche que pour les workflows présents sur la branche PAR DÉFAUT :
+# tant que ce fichier n'est que sur une branche de travail, le bouton n'existe pas et l'API
+# répond 404.
+#
+# L'étiquette comble ce trou. `git tag captures-1 && git push origin captures-1` lance la série
+# depuis n'importe quelle branche, sans rien déployer. Elle reste utile après la fusion : elle
+# nomme la série, et on retrouve des mois plus tard à quel commit correspondaient les six images
+# publiées.
 on:
+  push:
+    tags:
+      - "captures-*"
   workflow_dispatch:
     inputs:
       langues:
@@ -64,11 +78,22 @@ jobs:
       - name: Préparer le projet
         run: sh ci_scripts/prepare_project.sh
 
+      # Les valeurs par défaut des entrées ne s'appliquent QU'AU bouton : un déclenchement par
+      # étiquette les laisse vides, et `xcodebuild -destination "id="` partirait sur rien.
+      - name: Choisir langues et simulateur
+        id: quoi
+        run: |
+          set -euo pipefail
+          langues="${{ inputs.langues }}"
+          simulateur="${{ inputs.simulateur }}"
+          echo "langues=${langues:-fr-FR en-US es-ES}" >> "$GITHUB_OUTPUT"
+          echo "simulateur=${simulateur:-iPhone 16 Pro Max}" >> "$GITHUB_OUTPUT"
+
       - name: Trouver le simulateur
         id: sim
         run: |
           set -euo pipefail
-          nom="${{ inputs.simulateur }}"
+          nom="${{ steps.quoi.outputs.simulateur }}"
           # `-j` puis `jq` plutôt qu'un `grep` sur la sortie lisible : celle-ci change de forme
           # d'une version de Xcode à l'autre, et un `grep` qui ne trouve rien donne un identifiant
           # vide, donc une commande `xcodebuild` qui part sur le mauvais appareil sans rien dire.
@@ -99,7 +124,7 @@ jobs:
       - name: Photographier, langue par langue
         run: |
           set -euo pipefail
-          for langue in ${{ inputs.langues }}; do
+          for langue in ${{ steps.quoi.outputs.langues }}; do
             echo "──────────── $langue ────────────"
             dossier="$PWD/appstore/raw/$langue"
             rm -rf "$dossier"
@@ -134,7 +159,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m pip install --quiet --upgrade pillow
-          for langue in ${{ inputs.langues }}; do
+          for langue in ${{ steps.quoi.outputs.langues }}; do
             echo "──────────── $langue ────────────"
             python3 ci_scripts/screenshots.py "$langue"
           done

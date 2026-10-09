@@ -315,6 +315,13 @@ jobs:
       # sortie vélo entre dans la distance courue, emporte le record d'allure que personne ne
       # reprendra, use les chaussures et coche la séance de course du jour — sans qu'une seule
       # ligne ne casse ni qu'un seul écran ne vire au rouge.
+      # Une phrase qui s'accorde en genre doit exister dans les DEUX formes. Un homme à qui
+      # l'app répond « tu es seule dans ce club » n'a pas affaire à une voix : il a affaire à une
+      # app qui ne l'a pas écouté. Et une phrase mal accordée ne casse rien, ne lève aucune
+      # alerte, et ne se voit que par la personne à qui elle s'adresse mal.
+      - name: Vérifier que les phrases accordées ont leurs deux formes
+        run: python3 ci_scripts/check_accord.py
+
       - name: Vérifier que les agrégations distinguent les disciplines
         run: |
           cd ci_scripts && python3 test_disciplines.py

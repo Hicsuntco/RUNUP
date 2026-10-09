@@ -33,7 +33,8 @@ struct DebriefSheet: View {
             return String(localized: "Séance solide 💪 Ton dernier kilomètre était ton plus rapide — tu avais encore du jus.")
         }
         if paces.first == minPace {
-            return String(localized: "Séance solide 💪 Tu es partie fort et tu as tenu jusqu'au bout.")
+            return Accord.selon(f: String(localized: "Séance solide 💪 Tu es partie fort et tu as tenu jusqu'au bout."),
+                                m: String(localized: "Séance solide 💪 Tu es parti fort et tu as tenu jusqu'au bout."))
         }
         return String(localized: "Séance solide 💪 Allure plutôt régulière du début à la fin.")
     }

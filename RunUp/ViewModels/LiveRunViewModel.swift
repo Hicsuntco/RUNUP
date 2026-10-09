@@ -334,7 +334,8 @@ final class LiveRunViewModel {
             cues = [
                 (6, String(localized: "C'est parti \(name). Départ tranquille, laisse le corps se mettre en route.")),
                 (120, String(localized: "Trouve ton rythme de croisière : vise \(targetPace), foulée relâchée.")),
-                (360, String(localized: "Beau rythme, reste régulière — c'est la constance qui paie 👊")),
+                (360, Accord.selon(f: String(localized: "Beau rythme, reste régulière — c'est la constance qui paie 👊"),
+                                   m: String(localized: "Beau rythme, reste régulier — c'est la constance qui paie 👊"))),
                 (720, String(localized: "Mi-séance, tu gères parfaitement. Garde ta cadence.")),
                 (1080, String(localized: "Dernière partie — finis proprement, sans t'arracher 🔥"))
             ]
@@ -568,7 +569,9 @@ final class LiveRunViewModel {
             runtimeAutoPauseDisabled = true
             showCue(String(localized: "Pause auto désactivée pour cette course — le GPS ne détecte pas ton déplacement. Utilise le bouton pause toi-même."))
         } else {
-            showCue("Pause automatique — reprends dès que tu es prête, ou continue à marcher pour repartir.")
+            showCue(Accord.selon(
+                f: String(localized: "Pause automatique — reprends dès que tu es prête, ou continue à marcher pour repartir."),
+                m: String(localized: "Pause automatique — reprends dès que tu es prêt, ou continue à marcher pour repartir.")))
         }
         updateLiveActivity()
         publishWidgetRun()

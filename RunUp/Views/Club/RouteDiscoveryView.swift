@@ -215,7 +215,9 @@ struct RouteDiscoveryView: View {
         } else if routes.isEmpty {
             // Un vide honnête : sur une carte vierge, la bonne action est de publier, pas de
             // réessayer.
-            centeredMessage(String(localized: "Personne n'a encore partagé d'itinéraire par ici. Publie le tien après ta prochaine sortie et tu seras la première."))
+            centeredMessage(Accord.selon(
+                f: String(localized: "Personne n'a encore partagé d'itinéraire par ici. Publie le tien après ta prochaine sortie et tu seras la première."),
+                m: String(localized: "Personne n'a encore partagé d'itinéraire par ici. Publie le tien après ta prochaine sortie et tu seras le premier.")))
         } else {
             ScrollView {
                 LazyVStack(spacing: 10) {

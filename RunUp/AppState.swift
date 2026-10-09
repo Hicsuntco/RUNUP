@@ -157,6 +157,10 @@ final class AppState {
         NotificationCenter.default.addObserver(forName: .NSCalendarDayChanged, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.refreshProgramForCurrentDate() }
         }
+        // Le genre, miroité comme le thème et pour la même raison : les phrases qui s'accordent
+        // vivent dans des vues, des services et des modèles, et faire descendre le profil
+        // jusqu'à chacune n'aurait servi qu'à ça. Voir `Accord`.
+        AccordStore.shared.genre = Genre.depuis(sexe: self.profile.sex)
         ThemeStore.shared.themeID = self.profile.accentThemeID
         ThemeStore.shared.isLightMode = self.profile.isLightMode
         NotificationService.shared.rescheduleDailyReminder(for: self.profile)

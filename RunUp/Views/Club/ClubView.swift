@@ -1090,7 +1090,8 @@ struct ClubView: View {
                         .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
                         .frame(maxWidth: .infinity).padding(.vertical, 12)
                 } else if globalBoard.entries.isEmpty {
-                    Text("Personne n'a encore couru cette semaine — sois la première !")
+                    Text(verbatim: Accord.selon(f: String(localized: "Personne n'a encore couru cette semaine — sois la première !"),
+                                                m: String(localized: "Personne n'a encore couru cette semaine — sois le premier !")))
                         .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
                         .frame(maxWidth: .infinity).padding(.vertical, 20)
                 } else {
@@ -1138,7 +1139,8 @@ struct ClubView: View {
                 // plusieurs, la phrase d'origine est juste : il n'y a qu'à courir.
                 if let club = board.club, club.memberCount <= 1 {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Tu es seule dans \(club.name)")
+                        Text(verbatim: Accord.selon(f: String(localized: "Tu es seule dans \(club.name)"),
+                                                    m: String(localized: "Tu es seul dans \(club.name)")))
                             .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                         Text("Un club prend vie à plusieurs — classement, défis, sorties de groupe. Partage le code, ceux qui l'ont te rejoignent directement.")
                             .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
@@ -1169,7 +1171,8 @@ struct ClubView: View {
                     .padding(RUSpacing.cardPadding)
                     .ruCard()
                 } else {
-                    Text("Personne n'a encore rien posté — sois la première !")
+                    Text(verbatim: Accord.selon(f: String(localized: "Personne n'a encore rien posté — sois la première !"),
+                                                m: String(localized: "Personne n'a encore rien posté — sois le premier !")))
                         .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
                         .frame(maxWidth: .infinity).padding(.vertical, 20)
                 }

@@ -60,7 +60,9 @@ struct UltraRaceDaySheet: View {
             }
 
             puces([
-                String(localized: "Une prise toutes les \(UltraRaceDay.minutesEntreDeuxPrises) minutes, à la montre. « Manger régulièrement » ne se fait pas : une consigne sans horloge ne tient pas quand on est fatiguée."),
+                Accord.selon(
+                    f: String(localized: "Une prise toutes les \(UltraRaceDay.minutesEntreDeuxPrises) minutes, à la montre. « Manger régulièrement » ne se fait pas : une consigne sans horloge ne tient pas quand on est fatiguée."),
+                    m: String(localized: "Une prise toutes les \(UltraRaceDay.minutesEntreDeuxPrises) minutes, à la montre. « Manger régulièrement » ne se fait pas : une consigne sans horloge ne tient pas quand on est fatigué.")),
                 String(localized: "Du salé dès la première heure. Six heures de sucré, personne ne les tient — et c'est le dégoût, pas la faim, qui fait arrêter de manger."),
                 String(localized: "Bois par petites gorgées, souvent. Un demi-litre avalé d'un coup au ravitaillement ressort au premier raidillon."),
                 String(localized: "Rien de nouveau le jour J. Ce que tu mangeras en course, tu l'as déjà mangé en sortie longue — c'est aussi à ça qu'elles servent.")
@@ -110,7 +112,9 @@ struct UltraRaceDaySheet: View {
             puces([
                 String(localized: "Deux frontales, parce qu'une frontale qui s'éteint en descente technique arrête la course — et parce que la plupart des grands trails les exigent au contrôle du sac."),
                 String(localized: "Le creux de trois à cinq heures du matin est physiologique, pas un mauvais jour. Mange chaud, marche, remets-toi en mouvement : ça passe."),
-                String(localized: "La veste s'enfile AVANT d'entrer au ravitaillement, pas après. Dix minutes assise sans se couvrir coûtent une heure à se réchauffer."),
+                Accord.selon(
+                    f: String(localized: "La veste s'enfile AVANT d'entrer au ravitaillement, pas après. Dix minutes assise sans se couvrir coûtent une heure à se réchauffer."),
+                    m: String(localized: "La veste s'enfile AVANT d'entrer au ravitaillement, pas après. Dix minutes assis sans se couvrir coûtent une heure à se réchauffer.")),
                 String(localized: "Le faisceau écrase le relief : tu verras moins bien tes pieds, donc tu iras moins vite. C'est normal, et ça ne dit rien de ta forme."),
                 String(localized: "Ta sortie de nuit du bloc spécifique existe pour que rien de tout ça ne soit une découverte.")
             ])

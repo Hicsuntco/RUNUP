@@ -3734,6 +3734,23 @@
         }
       }
     },
+    "Aucun commentaire pour l'instant — sois le premier !": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No comments yet — be the first!"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no hay comentarios — ¡sé el primero!"
+          }
+        }
+      }
+    },
     "Aucun défi en cours pour l'instant.": {
       "localizations": {
         "en": {
@@ -4124,6 +4141,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Base, específico, afinamiento: un plan real según la fecha de tu carrera, de 4 a 20 semanas."
+          }
+        }
+      }
+    },
+    "Beau rythme, reste régulier — c'est la constance qui paie 👊": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good rhythm, stay steady — consistency is what pays 👊"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buen ritmo, mantente constante — la constancia es lo que paga 👊"
           }
         }
       }
@@ -5989,6 +6023,23 @@
         }
       }
     },
+    "Confirmé": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advanced"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avanzado"
+          }
+        }
+      }
+    },
     "Confirmée": {
       "extractionState": "manual",
       "localizations": {
@@ -6082,6 +6133,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Conectar"
+          }
+        }
+      }
+    },
+    "Connecté en tant que %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed in as %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectado como %@"
           }
         }
       }
@@ -7427,6 +7495,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Desbloqueado"
+          }
+        }
+      }
+    },
+    "Débutant": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beginner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Principiante"
           }
         }
       }
@@ -10139,6 +10224,23 @@
         }
       }
     },
+    "Je suis fatigué": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I'm tired"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estoy cansado"
+          }
+        }
+      }
+    },
     "Je suis fatiguée": {
       "localizations": {
         "en": {
@@ -10848,6 +10950,23 @@
         }
       }
     },
+    "La veste s'enfile AVANT d'entrer au ravitaillement, pas après. Dix minutes assis sans se couvrir coûtent une heure à se réchauffer.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The jacket goes on BEFORE you walk into the aid station, not after. Ten minutes sitting uncovered costs an hour of warming back up."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La chaqueta se pone ANTES de entrar al avituallamiento, no después. Diez minutos sentado sin abrigarse cuestan una hora de recuperar el calor."
+          }
+        }
+      }
+    },
     "La veste s'enfile AVANT d'entrer au ravitaillement, pas après. Dix minutes assise sans se couvrir coûtent une heure à se réchauffer.": {
       "localizations": {
         "en": {
@@ -11384,6 +11503,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "La bici ocupa aproximadamente la mitad del día — más que las otras dos juntas en un formato largo. Ella decide lo que te quedará en las piernas al bajarte del sillín."
+          }
+        }
+      }
+    },
+    "Les %lld premiers et derniers mètres sont retirés avant l'envoi : personne ne verra d'où tu es parti ni où tu es rentré. C'est le tracé ci-dessus qui sera publié, pas celui que tu as couru.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The first and last %lld metres are removed before upload: nobody will see where you set off from or came home to. What gets published is the route above, not the one you ran."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los primeros y últimos %lld metros se recortan antes de enviar: nadie verá de dónde saliste ni dónde volviste. Se publica el trazado de arriba, no el que corriste."
           }
         }
       }
@@ -12664,6 +12800,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Natación importada"
+          }
+        }
+      }
+    },
+    "Nager, rouler, courir — dans cet ordre, et fatigué de la précédente à chaque fois.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swim, bike, run — in that order, and tired from the last one every time."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nadar, pedalear, correr — en ese orden, y cansado de la anterior cada vez."
           }
         }
       }
@@ -14331,6 +14484,23 @@
         }
       }
     },
+    "Pause automatique — reprends dès que tu es prêt, ou continue à marcher pour repartir.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto pause — resume whenever you're ready, or keep walking to start again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausa automática — reanuda cuando estés listo, o sigue caminando para continuar."
+          }
+        }
+      }
+    },
     "Pause automatique — reprends dès que tu es prête, ou continue à marcher pour repartir.": {
       "localizations": {
         "en": {
@@ -14413,6 +14583,23 @@
         }
       }
     },
+    "Personne n'a encore couru cette semaine — sois le premier !": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No one has run this week yet — be the first!"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nadie ha corrido aún esta semana — ¡sé el primero!"
+          }
+        }
+      }
+    },
     "Personne n'a encore partagé d'itinéraire par ici. Publie le tien après ta prochaine sortie et tu seras la première.": {
       "localizations": {
         "en": {
@@ -14425,6 +14612,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Todavía nadie ha compartido una ruta por aquí. Publica la tuya después de tu próxima salida y serás la primera."
+          }
+        }
+      }
+    },
+    "Personne n'a encore partagé d'itinéraire par ici. Publie le tien après ta prochaine sortie et tu seras le premier.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nobody has shared a route around here yet. Publish yours after your next run and you'll be the first."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nadie ha compartido una ruta por aquí todavía. Publica la tuya tras tu próxima salida y serás el primero."
           }
         }
       }
@@ -14457,6 +14661,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Todavía nadie ha publicado nada — ¡sé la primera!"
+          }
+        }
+      }
+    },
+    "Personne n'a encore rien posté — sois le premier !": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No one has posted anything yet — be the first!"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nadie ha publicado nada aún — ¡sé el primero!"
           }
         }
       }
@@ -18580,6 +18801,23 @@
         }
       }
     },
+    "Sur un format long, les transitions pèsent peu : le temps est ailleurs. Elles méritent quand même d'être répétées une fois — non pour le chrono, mais pour ne pas découvrir fatigué qu'on a oublié quelque chose.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On a long format, transitions count for little: the time is elsewhere. They're still worth rehearsing once — not for the clock, but so you don't discover, exhausted, that you forgot something."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En un formato largo, las transiciones pesan poco: el tiempo está en otra parte. Aun así merecen ensayarse una vez — no por el crono, sino para no descubrir, agotado, que has olvidado algo."
+          }
+        }
+      }
+    },
     "Sur un format long, les transitions pèsent peu : le temps est ailleurs. Elles méritent quand même d'être répétées une fois — non pour le chrono, mais pour ne pas découvrir fatiguée qu'on a oublié quelque chose.": {
       "extractionState": "manual",
       "localizations": {
@@ -18885,6 +19123,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sesión sólida 💪 Tu último kilómetro fue el más rápido — todavía te quedaban fuerzas."
+          }
+        }
+      }
+    },
+    "Séance solide 💪 Tu es parti fort et tu as tenu jusqu'au bout.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solid session 💪 You started strong and held on all the way to the end."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesión sólida 💪 Saliste fuerte y aguantaste hasta el final."
           }
         }
       }
@@ -21107,6 +21362,23 @@
         }
       }
     },
+    "Tu es seul dans %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're on your own in %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estás solo en %@"
+          }
+        }
+      }
+    },
     "Tu es seule dans %@": {
       "extractionState": "manual",
       "localizations": {
@@ -21560,6 +21832,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Una foto del lugar (opcional)"
+          }
+        }
+      }
+    },
+    "Une prise toutes les %lld minutes, à la montre. « Manger régulièrement » ne se fait pas : une consigne sans horloge ne tient pas quand on est fatigué.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One feed every %lld minutes, by the watch. \"Eat regularly\" doesn't get done: an instruction without a clock doesn't survive fatigue."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una toma cada %lld minutos, con reloj. «Comer con regularidad» no se hace: una consigna sin reloj no aguanta cuando estás cansado."
           }
         }
       }
@@ -26923,6 +27212,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Paso 7 · tus datos"
+          }
+        }
+      }
+    },
+    "Être régulier": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stay consistent"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ser constante"
           }
         }
       }

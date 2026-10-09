@@ -58,11 +58,27 @@ struct DeepDiveStepView: View {
         .padding(.top, 20)
     }
 
+    private var prioritesPossibles: [(String, String)] {
+        [
+            ("speed", String(localized: "Aller plus vite")),
+            ("endurance", String(localized: "Tenir plus longtemps")),
+            ("consistency", Accord.selon(f: String(localized: "Être régulière"),
+                                         m: String(localized: "Être régulier"))),
+            ("trail", String(localized: "Dénivelé / trail")),
+        ]
+    }
+
     private var progressFields: some View {
         VStack(alignment: .leading, spacing: 0) {
             EyebrowLabel(text: "Ta priorité", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
             ChipFlowLayout {
-                ForEach([("speed", "Aller plus vite"), ("endurance", "Tenir plus longtemps"), ("consistency", "Être régulière"), ("trail", "Dénivelé / trail")], id: \.0) { id, label in
+                // Les libellés sont RÉSOLUS ici et non laissés en littéraux : « Être régulière »
+                // s'accorde avec la personne, et seule une chaîne déjà choisie peut porter le bon
+                // accord. Les trois autres passent par `String(localized:)` pour la même raison —
+                // un mélange de littéraux et de chaînes résolues dans le même tableau donnerait
+                // un type hétérogène, et surtout une liste dont la moitié se traduit au moment de
+                // l'affichage et l'autre pas.
+                ForEach(prioritesPossibles, id: \.0) { id, label in
                     SelectableChip(label: label, selected: vm.focusArea == id) { vm.focusArea = id }
                 }
             }

@@ -30,7 +30,8 @@ struct ActivityCommentsSheet: View {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 12) {
                             if comments.isEmpty {
-                                Text("Aucun commentaire pour l'instant — sois la première !")
+                                Text(verbatim: Accord.selon(f: String(localized: "Aucun commentaire pour l'instant — sois la première !"),
+                                                            m: String(localized: "Aucun commentaire pour l'instant — sois le premier !")))
                                     .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
                                     .frame(maxWidth: .infinity).padding(.vertical, 30)
                             }

@@ -327,6 +327,16 @@ jobs:
           cd ci_scripts && python3 test_disciplines.py
           cd .. && python3 ci_scripts/check_disciplines.py
 
+      # `HKSource.default()` lève une exception Objective-C — que Swift ne peut PAS rattraper —
+      # quand le binaire tourne sans le droit HealthKit. La construction des captures d'écran
+      # n'est pas signée : l'app y mourait au lancement, quatre exécutions de suite, avec un
+      # rapport de plantage qu'il fallait aller chercher dans le simulateur. Un coupe-circuit
+      # règle le cas ; ce test garantit qu'aucune porte d'entrée ajoutée demain ne le contourne.
+      - name: Vérifier qu'aucun appel à Santé ne contourne le coupe-circuit
+        run: |
+          cd ci_scripts && python3 test_healthkit.py
+          cd .. && python3 ci_scripts/check_healthkit.py
+
       # Le build 1177 a planté au lancement chez tout le monde sur une ligne qui compilait et
       # dont les tests passaient : une propriété de type personnalisé, non optionnelle, ajoutée à
       # un modèle SwiftData. La migration réussit, ajoute la colonne à NULL, et le premier accès

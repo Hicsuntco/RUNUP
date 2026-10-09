@@ -12,7 +12,32 @@ final class HealthKitService {
 
     private(set) var isAuthorized = false
 
-    static var isHealthDataAvailable: Bool { HKHealthStore.isHealthDataAvailable() }
+    /// Coupe-circuit de processus — voir `desactiver()`.
+    nonisolated(unsafe) private static var desactivee = false
+
+    /// Rend le service inerte pour toute la durée du processus. Appelé par le harnais de
+    /// captures d'écran, et par rien d'autre.
+    ///
+    /// Pourquoi ça existe : `HKSource.default()` — appelé deux fois ici, pour écarter des sommes
+    /// ce que RUNUP a elle-même écrit — ne renvoie PAS d'erreur Swift quand le binaire n'a pas le
+    /// droit `com.apple.developer.healthkit`. Il lève une exception Objective-C, que Swift ne
+    /// peut pas rattraper : ni `try`, ni `if let`, ni aucun garde-fou du langage. Le processus
+    /// meurt sur SIGABRT.
+    ///
+    /// Les captures se construisent avec `CODE_SIGNING_ALLOWED=NO`, donc sans aucun droit, et
+    /// l'app mourait une seconde après le lancement — `+[HKSource
+    /// _uncachedDefaultSourceWithEntitlements:]`, thread 3, avant même le premier écran.
+    /// `AppState.syncDailyGoalsFromHealthKit()` y arrivait parce que le profil de démonstration
+    /// déclare Apple Santé connecté.
+    ///
+    /// La seule parade possible est de ne pas appeler. Et il n'y a rien à perdre : un simulateur
+    /// n'a aucune donnée de santé à lire.
+    static func desactiver() { desactivee = true }
+
+    /// `false` aussi quand le coupe-circuit est tiré — c'est ce qui éteint, d'un seul geste,
+    /// toutes les portes d'entrée ci-dessous. `ci_scripts/check_healthkit.py` vérifie qu'aucune
+    /// n'oublie de passer par là.
+    static var isHealthDataAvailable: Bool { !desactivee && HKHealthStore.isHealthDataAvailable() }
 
     private static let readTypes: Set<HKObjectType> = {
         var types: Set<HKObjectType> = [
@@ -101,6 +126,7 @@ final class HealthKitService {
     /// the "Pas" daily goal; a reasonable proxy since a single run is a small fraction of most
     /// days' total steps, and RunRecord doesn't store precise start/end timestamps to subtract by.
     func stepsToday() async -> Double {
+        guard Self.isHealthDataAvailable else { return 0 }
         guard let type = HKObjectType.quantityType(forIdentifier: .stepCount) else { return 0 }
         return await sum(type: type, unit: .count(), on: .now)
     }
@@ -113,6 +139,7 @@ final class HealthKitService {
     /// day she logs a run, and a Garmin (or any other) watch's own Health-sync app contributes the
     /// rest for the days it's worn.
     func activeCaloriesToday() async -> Double {
+        guard Self.isHealthDataAvailable else { return 0 }
         guard let type = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else { return 0 }
         return await sum(type: type, unit: .kilocalorie(), on: .now)
     }
@@ -122,11 +149,13 @@ final class HealthKitService {
     /// "Ta journée" day browser (`RingsView`) so a past day's ring isn't limited to what's in
     /// History (which only ever had actual runs, never the steps/calories side).
     func steps(on date: Date) async -> Double {
+        guard Self.isHealthDataAvailable else { return 0 }
         guard let type = HKObjectType.quantityType(forIdentifier: .stepCount) else { return 0 }
         return await sum(type: type, unit: .count(), on: date)
     }
 
     func activeCalories(on date: Date) async -> Double {
+        guard Self.isHealthDataAvailable else { return 0 }
         guard let type = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else { return 0 }
         return await sum(type: type, unit: .kilocalorie(), on: date)
     }
@@ -136,6 +165,7 @@ final class HealthKitService {
     /// "the last sample ever" so a stale reading from hours/days ago (no Watch worn right now)
     /// correctly returns `nil` instead of being displayed as if it were current.
     func latestHeartRate(maxAge: TimeInterval = 90) async -> Double? {
+        guard Self.isHealthDataAvailable else { return nil }
         guard let type = HKObjectType.quantityType(forIdentifier: .heartRate) else { return nil }
         let predicate = HKQuery.predicateForSamples(withStart: Date().addingTimeInterval(-maxAge), end: .now)
         let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
@@ -156,6 +186,7 @@ final class HealthKitService {
     /// (no Watch/sleep tracking used, or she never actually slept with her phone/Watch nearby that
     /// night), since 0 would read as "she didn't sleep at all" rather than "no data".
     func lastNightSleepHours() async -> Double? {
+        guard Self.isHealthDataAvailable else { return nil }
         guard let type = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else { return nil }
         let cal = Calendar.current
         guard let end = cal.date(bySettingHour: 12, minute: 0, second: 0, of: .now),
@@ -217,6 +248,7 @@ final class HealthKitService {
     /// `distanceCycling`.
     func saveRun(_ discipline: Discipline = .run, start: Date, end: Date, duration: TimeInterval,
                  distanceKm: Double, kcal: Double) async throws {
+        guard Self.isHealthDataAvailable else { return }
         // Le type de séance ET la grandeur de distance décidés ENSEMBLE, dans un seul `switch`.
         //
         // Ils étaient deux ternaires `discipline == .bike ?` à quatre-vingts lignes d'écart, et ces
@@ -371,6 +403,7 @@ final class HealthKitService {
     ]
 
     func seancesImportables(since: Date) async -> [ImportedRun] {
+        guard Self.isHealthDataAvailable else { return [] }
         let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
             NSCompoundPredicate(orPredicateWithSubpredicates:
                 Self.aImporter.map { HKQuery.predicateForWorkouts(with: $0.type) }),

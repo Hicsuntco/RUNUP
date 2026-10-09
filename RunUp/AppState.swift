@@ -659,6 +659,12 @@ final class AppState {
     // HealthKit, eux, continuent de s'exécuter hors du fil principal.
     private func syncDailyGoalsFromHealthKit() async {
         guard profile.connectedSources.contains(.apple) else { return }
+        // Santé connectée mais injoignable : on ne touche à RIEN. Les deux lignes plus bas
+        // ÉCRIVENT dans le profil ce que HealthKit répond, et un service inerte répond zéro —
+        // les deux anneaux du jour seraient remis à plat par une synchro qui n'a rien lu. Lire
+        // zéro et « ne pas pouvoir lire » ne sont pas la même chose, et seule la première mérite
+        // d'être enregistrée.
+        guard HealthKitService.isHealthDataAvailable else { return }
         // Idempotent (only the first call registers) — placed here, on the sync path itself, so
         // observation starts whenever Santé is connected: at launch, and right after she connects
         // it in onboarding/Profil. The observer fires on new steps/calories samples — including

@@ -17,6 +17,15 @@ import Foundation
 /// donc la seule qui vaille d'être testée : un objectif oublié, une pastille vide, un `-0 kg`.
 /// Une vue SwiftUI ne se teste pas sur un simulateur de CI sans coût ; une fonction qui prend un
 /// `OnboardingViewModel` et rend des chaînes, oui.
+///
+/// # ET IL VIT À CÔTÉ DU MODÈLE DE VUE, PAS DANS `Shared/`
+///
+/// `RunUp/Shared` paraît le bon dossier pour « du calcul sans interface », et c'en est un piège :
+/// ce dossier est compilé EN ENTIER dans l'extension de widgets (voir `project.yml`), qui ne
+/// connaît ni `OnboardingViewModel` ni `GoalType`. Un fichier posé là ne casse donc pas l'app —
+/// il casse une cible qui n'a rien demandé, avec un « cannot find type in scope » qui ne parle
+/// pas de la vraie raison. `Shared/` veut dire « partagé avec la montre et les widgets », pas
+/// « sans interface ».
 enum PlanRecap {
     /// Au plus cinq pastilles : au-delà, la rangée passe à trois lignes et l'écran cesse d'être
     /// lisible d'un coup d'œil — or c'est tout ce qu'on lui demande.

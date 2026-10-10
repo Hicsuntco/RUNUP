@@ -676,19 +676,16 @@ def cmd_push_screenshots(args):
     if not dossier.is_dir():
         sys.exit(f"{dossier} n'existe pas. Compose les images d'abord, ou passe --dir.")
 
-    aid, _ = app_id()
-    versions = call("GET", f"apps/{aid}/appStoreVersions?filter[versionString]={args.version}")["data"]
-    if not versions:
-        sys.exit(f"Version {args.version} introuvable. → create-version {args.version} d'abord.")
-    vid = versions[0]["id"]
-    localisations = {l["attributes"]["locale"]: l["id"]
-                     for l in call("GET", f"appStoreVersions/{vid}/appStoreVersionLocalizations")["data"]}
-
+    # LE DOSSIER EST LU AVANT QU'ON PARLE À APPLE, et c'est délibéré. Un essai dont la version
+    # n'existe pas encore doit quand même DIRE ce qu'il enverrait : les tailles, les types
+    # d'appareil, l'ordre des six images. C'est l'essentiel de ce qu'un essai sert à vérifier,
+    # et le premier passage l'a perdu — « Version 3.1 introuvable », et rien d'autre, alors que
+    # les dix-huit images étaient là, lues et prêtes.
     langues = sorted(d for d in dossier.iterdir() if d.is_dir())
     if not langues:
         sys.exit(f"Aucun dossier de langue dans {dossier}.")
 
-    total = 0
+    prevu = []
     for langue in langues:
         images = sorted((f for f in langue.iterdir()
                          if f.is_file() and f.suffix.lower() == ".png"),
@@ -702,19 +699,27 @@ def cmd_push_screenshots(args):
         taille = tailles.pop()
         if taille not in TYPES_PAR_TAILLE:
             sys.exit(f"Taille {taille[0]}×{taille[1]} inconnue d'Apple — rien n'a été envoyé.")
-        type_affichage = TYPES_PAR_TAILLE[taille]
+        prevu.append((langue.name, images, taille, TYPES_PAR_TAILLE[taille]))
+        print(f"  {langue.name} : {len(images)} image(s) {taille[0]}×{taille[1]} "
+              f"→ {TYPES_PAR_TAILLE[taille]} ({', '.join(f.name for f in images)})")
 
-        if langue.name not in localisations:
-            sys.exit(f"La version {args.version} n'a pas de localisation {langue.name}."
+    total = sum(len(i) for _, i, _, _ in prevu)
+    aid, _ = app_id()
+    versions = call("GET", f"apps/{aid}/appStoreVersions?filter[versionString]={args.version}")["data"]
+    if not versions:
+        sys.exit(f"\nVersion {args.version} introuvable. → create-version {args.version} d'abord.")
+    vid = versions[0]["id"]
+    localisations = {l["attributes"]["locale"]: l["id"]
+                     for l in call("GET", f"appStoreVersions/{vid}/appStoreVersionLocalizations")["data"]}
+
+    for nom, images, taille, type_affichage in prevu:
+        if nom not in localisations:
+            sys.exit(f"La version {args.version} n'a pas de localisation {nom}."
                      f"  → push-metadata {args.version} d'abord.")
-
         if args.dry_run:
-            print(f"  {langue.name} : {len(images)} image(s) {taille[0]}×{taille[1]} "
-                  f"→ {type_affichage} ({', '.join(f.name for f in images)})")
-            total += len(images)
             continue
 
-        set_id = jeu_de_captures(localisations[langue.name], type_affichage)
+        set_id = jeu_de_captures(localisations[nom], type_affichage)
         anciennes = call("GET", f"appScreenshotSets/{set_id}/appScreenshots")["data"]
         for vieille in anciennes:
             call("DELETE", f"appScreenshots/{vieille['id']}")
@@ -724,9 +729,8 @@ def cmd_push_screenshots(args):
         # plus cher qu'une image manquante.
         call("PATCH", f"appScreenshotSets/{set_id}/relationships/appScreenshots",
              {"data": [{"type": "appScreenshots", "id": i} for i in envoyees]})
-        print(f"  {langue.name} : {len(anciennes)} remplacée(s) par {len(envoyees)} "
+        print(f"  {nom} : {len(anciennes)} remplacée(s) par {len(envoyees)} "
               f"en {taille[0]}×{taille[1]} ({type_affichage})")
-        total += len(envoyees)
 
     if args.dry_run:
         print(f"\n(--dry-run : {total} image(s) prêtes, rien n'a été envoyé)")

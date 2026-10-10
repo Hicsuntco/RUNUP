@@ -566,6 +566,170 @@ def cmd_push_metadata(args):
         print("\n(--dry-run : rien n'a été envoyé)")
 
 
+# ── Les captures d'écran ──────────────────────────────────────────────────────────────────────
+
+# La taille d'une image décide du « type d'affichage » sous lequel App Store Connect la range.
+# Se tromper ne donne pas une erreur claire : l'image part, et elle apparaît sous le mauvais
+# appareil dans la fiche. La table est donc explicite, et une taille inconnue ARRÊTE la commande
+# plutôt que de deviner.
+TYPES_PAR_TAILLE = {
+    (1320, 2868): "APP_IPHONE_69",   # iPhone 16/17 Pro Max
+    (1290, 2796): "APP_IPHONE_67",   # iPhone 15/16 Pro Max — ce que produit screenshots.py
+    (1284, 2778): "APP_IPHONE_67",
+    (1242, 2688): "APP_IPHONE_65",
+    (1242, 2208): "APP_IPHONE_55",
+    (2064, 2752): "APP_IPAD_PRO_3GEN_129",
+    (2048, 2732): "APP_IPAD_PRO_3GEN_129",
+}
+
+
+def taille_png(chemin: pathlib.Path):
+    """(largeur, hauteur) lues dans l'en-tête IHDR, sans Pillow.
+
+    Ce script tourne dans des exécutions qui n'installent rien — `asc.py status` ne doit pas
+    dépendre d'une bibliothèque d'images. Les seize premiers octets d'un PNG suffisent : la
+    signature, puis la longueur et le nom du premier bloc, puis deux entiers de 32 bits.
+    """
+    with chemin.open("rb") as f:
+        tete = f.read(24)
+    if len(tete) < 24 or tete[:8] != b"\x89PNG\r\n\x1a\n" or tete[12:16] != b"IHDR":
+        sys.exit(f"{chemin.name} n'est pas un PNG lisible.")
+    return int.from_bytes(tete[16:20], "big"), int.from_bytes(tete[20:24], "big")
+
+
+def ordre_naturel(nom: str):
+    """« 2.png » avant « 10.png ». Un tri alphabétique colle la mauvaise image au mauvais rang."""
+    return [int(p) if p.isdigit() else p.lower() for p in re.split(r"(\d+)", nom)]
+
+
+def televerser(operation: dict, octets: bytes) -> None:
+    """Un morceau de fichier, vers l'URL que l'API vient de donner.
+
+    `call()` ne convient pas ici : il poserait l'en-tête d'autorisation d'App Store Connect sur
+    une requête qui part chez un hébergeur de fichiers, et un Content-Type JSON sur des octets
+    d'image. Apple donne les en-têtes à poser, et il ne faut poser QUE ceux-là.
+    """
+    requete = urllib.request.Request(operation["url"], data=octets,
+                                     method=operation.get("method", "PUT"))
+    for entete in operation.get("requestHeaders") or []:
+        requete.add_header(entete["name"], entete["value"])
+    try:
+        with urllib.request.urlopen(requete) as r:
+            r.read()
+    except urllib.error.HTTPError as e:
+        sys.exit(f"HTTP {e.code} en téléversant un morceau : {e.read().decode()[:300]}")
+
+
+def jeu_de_captures(loc_id: str, type_affichage: str) -> str:
+    """L'identifiant du jeu de captures pour ce type d'appareil, créé au besoin."""
+    for jeu in call("GET", f"appStoreVersionLocalizations/{loc_id}/appScreenshotSets")["data"]:
+        if jeu["attributes"]["screenshotDisplayType"] == type_affichage:
+            return jeu["id"]
+    cree = call("POST", "appScreenshotSets", {"data": {
+        "type": "appScreenshotSets",
+        "attributes": {"screenshotDisplayType": type_affichage},
+        "relationships": {"appStoreVersionLocalization": {
+            "data": {"type": "appStoreVersionLocalizations", "id": loc_id}}}}})
+    return cree["data"]["id"]
+
+
+def envoyer_une_capture(set_id: str, chemin: pathlib.Path) -> str:
+    """Réserve, téléverse, confirme. Rend l'identifiant de la capture créée.
+
+    Trois temps, et les trois sont obligatoires : Apple ne reçoit pas un fichier, il donne des
+    emplacements où écrire puis attend qu'on lui dise que c'est fini. Sans la confirmation
+    finale, la capture reste dans la fiche à l'état incomplet et la soumission est refusée —
+    sans que rien n'ait échoué visiblement.
+    """
+    octets = chemin.read_bytes()
+    reserve = call("POST", "appScreenshots", {"data": {
+        "type": "appScreenshots",
+        "attributes": {"fileName": chemin.name, "fileSize": len(octets)},
+        "relationships": {"appScreenshotSet": {
+            "data": {"type": "appScreenshotSets", "id": set_id}}}}})["data"]
+
+    for operation in reserve["attributes"].get("uploadOperations") or []:
+        debut = operation["offset"]
+        televerser(operation, octets[debut:debut + operation["length"]])
+
+    # La somme de contrôle porte sur le fichier ENTIER, pas sur le dernier morceau.
+    call("PATCH", f"appScreenshots/{reserve['id']}", {"data": {
+        "type": "appScreenshots", "id": reserve["id"],
+        "attributes": {"uploaded": True,
+                       "sourceFileChecksum": hashlib.md5(octets).hexdigest()}}})
+    return reserve["id"]
+
+
+def cmd_push_screenshots(args):
+    """Remplace les captures d'une version par le contenu de `appstore/out/<langue>/`.
+
+    REMPLACE, ET NE COMPLÈTE PAS. Un jeu accepte dix captures au plus : envoyer six de plus à
+    chaque passage remplirait le jeu au deuxième et le ferait refuser au troisième, avec en
+    prime un mélange d'anciennes et de nouvelles images dans la fiche. Les anciennes sont donc
+    supprimées d'abord — c'est le même geste qu'à la main, dans le même ordre.
+    """
+    dossier = ROOT / args.dir
+    if not dossier.is_dir():
+        sys.exit(f"{dossier} n'existe pas. Compose les images d'abord, ou passe --dir.")
+
+    aid, _ = app_id()
+    versions = call("GET", f"apps/{aid}/appStoreVersions?filter[versionString]={args.version}")["data"]
+    if not versions:
+        sys.exit(f"Version {args.version} introuvable. → create-version {args.version} d'abord.")
+    vid = versions[0]["id"]
+    localisations = {l["attributes"]["locale"]: l["id"]
+                     for l in call("GET", f"appStoreVersions/{vid}/appStoreVersionLocalizations")["data"]}
+
+    langues = sorted(d for d in dossier.iterdir() if d.is_dir())
+    if not langues:
+        sys.exit(f"Aucun dossier de langue dans {dossier}.")
+
+    total = 0
+    for langue in langues:
+        images = sorted((f for f in langue.iterdir()
+                         if f.is_file() and f.suffix.lower() == ".png"),
+                        key=lambda f: ordre_naturel(f.name))
+        if not images:
+            print(f"  {langue.name} : aucune image, ignoré")
+            continue
+        tailles = {taille_png(f) for f in images}
+        if len(tailles) > 1:
+            sys.exit(f"{langue.name} mélange {len(tailles)} tailles d'image : {sorted(tailles)}")
+        taille = tailles.pop()
+        if taille not in TYPES_PAR_TAILLE:
+            sys.exit(f"Taille {taille[0]}×{taille[1]} inconnue d'Apple — rien n'a été envoyé.")
+        type_affichage = TYPES_PAR_TAILLE[taille]
+
+        if langue.name not in localisations:
+            sys.exit(f"La version {args.version} n'a pas de localisation {langue.name}."
+                     f"  → push-metadata {args.version} d'abord.")
+
+        if args.dry_run:
+            print(f"  {langue.name} : {len(images)} image(s) {taille[0]}×{taille[1]} "
+                  f"→ {type_affichage} ({', '.join(f.name for f in images)})")
+            total += len(images)
+            continue
+
+        set_id = jeu_de_captures(localisations[langue.name], type_affichage)
+        anciennes = call("GET", f"appScreenshotSets/{set_id}/appScreenshots")["data"]
+        for vieille in anciennes:
+            call("DELETE", f"appScreenshots/{vieille['id']}")
+        envoyees = [envoyer_une_capture(set_id, f) for f in images]
+        # L'ORDRE EST POSÉ EXPLICITEMENT, et pas laissé à l'ordre de création. C'est la seule
+        # chose que les gens voient avant d'installer : une accroche sur la mauvaise image coûte
+        # plus cher qu'une image manquante.
+        call("PATCH", f"appScreenshotSets/{set_id}/relationships/appScreenshots",
+             {"data": [{"type": "appScreenshots", "id": i} for i in envoyees]})
+        print(f"  {langue.name} : {len(anciennes)} remplacée(s) par {len(envoyees)} "
+              f"en {taille[0]}×{taille[1]} ({type_affichage})")
+        total += len(envoyees)
+
+    if args.dry_run:
+        print(f"\n(--dry-run : {total} image(s) prêtes, rien n'a été envoyé)")
+    else:
+        print(f"\n{total} capture(s) en ligne sur la version {args.version}.")
+
+
 def builds_for(aid: str, version: str):
     """Les builds envoyées SUR CETTE CHAÎNE DE VERSION, la plus récente d'abord.
 
@@ -1066,6 +1230,10 @@ def main():
     s.add_argument("--replace", action="store_true",
                    help="retirer la version de la file de revue pour lui changer sa build")
     s.add_argument("--dry-run", action="store_true"); s.set_defaults(func=cmd_submit)
+    ps = sub.add_parser("push-screenshots"); ps.add_argument("version")
+    ps.add_argument("--dir", default="appstore/out",
+                    help="dossier contenant un sous-dossier par langue (défaut : appstore/out)")
+    ps.add_argument("--dry-run", action="store_true"); ps.set_defaults(func=cmd_push_screenshots)
     g = sub.add_parser("promo"); g.set_defaults(func=cmd_promo)
     gc = sub.add_parser("promo-create")
     gc.add_argument("--dry-run", action="store_true"); gc.set_defaults(func=cmd_promo_creer)

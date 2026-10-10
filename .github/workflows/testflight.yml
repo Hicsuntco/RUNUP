@@ -347,6 +347,12 @@ jobs:
           cd ci_scripts && python3 test_captures_seed.py
           cd .. && python3 ci_scripts/check_captures_seed.py
 
+      # Une capture rangée sous le mauvais type d'appareil n'échoue pas : elle apparaît au
+      # mauvais endroit dans la fiche, et on l'apprend en la regardant. La taille de l'image
+      # est ce qui décide, et elle se lit dans l'en-tête du PNG — donc ça se teste sans réseau.
+      - name: Vérifier ce que l'envoi des captures décide hors ligne
+        run: cd ci_scripts && python3 test_asc_captures.py
+
       # Le build 1177 a planté au lancement chez tout le monde sur une ligne qui compilait et
       # dont les tests passaient : une propriété de type personnalisé, non optionnelle, ajoutée à
       # un modèle SwiftData. La migration réussit, ajoute la colonne à NULL, et le premier accès

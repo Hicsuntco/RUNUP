@@ -18,12 +18,14 @@ import Foundation
 /// 2. **L'allure s'arrondissait ou se tronquait selon l'écran.** Trois copies arrondissaient, une
 ///    tronquait. Même nombre, une seconde d'écart.
 ///
-/// Ces deux-là sont des défauts, et ils sont réparés. Il reste une troisième divergence qui n'en
-/// est PAS une, et c'est pourquoi `parle` et `compacte` coexistent ci-dessous : la même durée
-/// s'écrit « 3 h 28 » sur l'accueil et dans le fil du club, « 3h28 » dans les statistiques. Les
-/// deux formes sont défendables et aucune n'est un accident. Les unifier ici changerait des
-/// pixels sur des écrans que personne n'a regardés en le décidant — alors les deux restent,
-/// nommées, au même endroit, et le choix se fait maintenant en voyant les deux.
+/// Ces deux-là sont des défauts, et ils sont réparés. Il en restait une troisième qui n'en était
+/// pas un : `parle` écrivait « 3 h 28 » sur l'accueil et dans le fil du club, `compacte` écrivait
+/// « 3h28 » dans les statistiques. Les deux formes étaient défendables, et ce fichier les gardait
+/// côte à côte en attendant qu'on les voie pour décider.
+///
+/// C'EST DÉCIDÉ : une seule forme, resserrée — `duree`. « 3h28 » partout, et « 3hr28 » en
+/// anglais, parce que « h » seul n'y est pas le symbole de l'heure. Les deux fonctions n'en font
+/// plus qu'une, et les cinq appels pointent dessus.
 ///
 /// # CE QUI N'EST PAS ICI
 ///
@@ -60,15 +62,38 @@ enum TimeFormat {
             : "\(m):\(String(format: "%02d", s))"
     }
 
-    /// « 3 h 28 », ou « 46 min ». La durée telle qu'on la DIT, pas un chronomètre.
+    /// Le symbole de l'heure, dans la langue de l'appareil.
     ///
-    /// Jamais « 0 h 46 » : ce serait exact et illisible, l'œil compte les zéros avant de lire le
-    /// nombre.
-    static func parle(_ secondes: Int) -> String {
+    /// # POURQUOI CE N'EST PAS UNE CLÉ DE CATALOGUE
+    ///
+    /// Parce que la clé serait « h ». Un caractère, sans contexte, qui voudrait dire tout et
+    /// rien dans une liste de seize cents phrases — et qui entrerait en collision avec le
+    /// premier « h » qu'on écrirait ailleurs. Le catalogue est fait pour des phrases ; ceci est
+    /// un symbole d'unité, et il en existe exactement deux formes.
+    ///
+    /// La langue est un PARAMÈTRE et non une lecture de `Locale.current` à l'intérieur : c'est
+    /// ce qui rend la règle vérifiable. Le simulateur de l'intégration continue tourne en
+    /// anglais, donc un test qui lirait la langue courante affirmerait « hr » ici et « h » sur
+    /// la machine de quelqu'un d'autre.
+    static func symboleHeure(langue: String?) -> String {
+        langue == "en" ? "hr" : "h"
+    }
+
+    /// « 3h28 », ou « 46 min ». La durée d'une sortie, d'une semaine, d'un bloc.
+    ///
+    /// Jamais « 0h46 » : ce serait exact et illisible, l'œil compte les zéros avant de lire le
+    /// nombre. Les minutes, elles, sont toujours sur deux chiffres dès qu'une heure les précède
+    /// — « 3h8 » se lit comme trois heures huit, et il faut une seconde pour comprendre.
+    ///
+    /// `min` n'est pas traduit, et c'est juste : c'est le symbole de la minute dans les trois
+    /// langues de l'app. L'heure, elle, ne l'est pas — d'où `symboleHeure`.
+    static func duree(_ secondes: Int) -> String {
         let total = max(0, secondes)
         let h = total / 3600
         let m = (total % 3600) / 60
-        return h > 0 ? "\(h) h \(String(format: "%02d", m))" : "\(m) min"
+        guard h > 0 else { return "\(m) min" }
+        let symbole = symboleHeure(langue: Locale.current.language.languageCode?.identifier)
+        return "\(h)\(symbole)\(String(format: "%02d", m))"
     }
 
     /// « 24,3 » — des kilomètres par heure, à partir de secondes par kilomètre.
@@ -120,12 +145,4 @@ enum TimeFormat {
         return (valeur, discipline.rythmeUnite.uppercased())
     }
 
-    /// La même chose, resserrée : « 3h28 ». Pour une tuile de statistique, où la largeur est
-    /// comptée. Voir l'en-tête : la coexistence des deux est un choix en attente, pas un oubli.
-    static func compacte(_ secondes: Int) -> String {
-        let total = max(0, secondes)
-        let h = total / 3600
-        let m = (total % 3600) / 60
-        return h > 0 ? "\(h)h\(String(format: "%02d", m))" : "\(m) min"
-    }
 }

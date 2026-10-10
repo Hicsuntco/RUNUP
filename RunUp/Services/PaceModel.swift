@@ -72,7 +72,7 @@ enum PaceModel {
     /// `formatDuration` above, which formats a single pace/split as "m:ss". Shared by `StatsView`'s
     /// and `WeeklyRecapView`'s "temps total" tiles.
     static func formatTotalDuration(_ seconds: Int) -> String {
-        TimeFormat.compacte(seconds)
+        TimeFormat.duree(seconds)
     }
 
     /// Seconds-per-km at "threshold" — the anchor every other zone is a percentage offset of.

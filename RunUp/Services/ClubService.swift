@@ -245,7 +245,7 @@ struct FeedItem: Decodable, Identifiable {
     /// « 48 min », « 1 h 12 » — la durée telle qu'on la dit, pas un chronomètre à la seconde.
     var durationDisplay: String? {
         guard let durationSeconds, durationSeconds > 0 else { return nil }
-        return TimeFormat.parle(durationSeconds)
+        return TimeFormat.duree(durationSeconds)
     }
 }
 

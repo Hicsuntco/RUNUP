@@ -37,8 +37,7 @@ final class TimeFormatTests: XCTestCase {
     func testAucuneDureeNegative() {
         XCTAssertEqual(TimeFormat.horloge(-10), "0:00")
         XCTAssertEqual(TimeFormat.allure(secondesParKm: -10), "0:00")
-        XCTAssertEqual(TimeFormat.parle(-10), "0 min")
-        XCTAssertEqual(TimeFormat.compacte(-10), "0 min")
+        XCTAssertEqual(TimeFormat.duree(-10), "0 min")
     }
 
     // MARK: - L'allure
@@ -55,23 +54,57 @@ final class TimeFormatTests: XCTestCase {
         XCTAssertEqual(TimeFormat.horloge(5700), "1:35:00")
     }
 
-    // MARK: - La durée telle qu'on la dit
+    // MARK: - La durée
 
-    func testLaDureeParleeNeCommenceJamaisParZeroHeure() {
-        XCTAssertEqual(TimeFormat.parle(46 * 60), "46 min")
-        XCTAssertEqual(TimeFormat.parle(3 * 3600 + 28 * 60), "3 h 28")
-        XCTAssertEqual(TimeFormat.parle(3600 + 60), "1 h 01")
-        XCTAssertFalse(TimeFormat.parle(46 * 60).contains("0 h"))
+    /// LE SYMBOLE SE TESTE PAR SON PARAMÈTRE, PAS PAR LA LANGUE COURANTE.
+    ///
+    /// Le simulateur de l'intégration continue tourne en ANGLAIS. Un test qui lirait
+    /// `Locale.current` affirmerait donc « hr » ici et « h » sur la machine de quelqu'un
+    /// d'autre — un test qui dépend de la langue de celui qui l'exécute ne vérifie rien. C'est
+    /// exactement pour ça que `symboleHeure` prend la langue en argument.
+    func testLeSymboleDeLHeureDependDeLaLangue() {
+        XCTAssertEqual(TimeFormat.symboleHeure(langue: "en"), "hr")
+        XCTAssertEqual(TimeFormat.symboleHeure(langue: "fr"), "h")
+        XCTAssertEqual(TimeFormat.symboleHeure(langue: "es"), "h")
+        // Langue inconnue ou absente : « h », le symbole international.
+        XCTAssertEqual(TimeFormat.symboleHeure(langue: nil), "h")
+        XCTAssertEqual(TimeFormat.symboleHeure(langue: "de"), "h")
     }
 
-    /// Les deux formes coexistent EXPRÈS, et la différence est exactement l'espacement — pas une
-    /// valeur. Si l'une des deux se mettait à arrondir autrement, deux écrans montreraient deux
-    /// durées pour la même course.
-    func testLesDeuxFormesNeDifferentQueParLEspacement() {
-        for secondes in [0, 59, 60, 3599, 3600, 5700, 12345, 86399] {
-            let serree = TimeFormat.compacte(secondes).replacingOccurrences(of: " ", with: "")
-            let espacee = TimeFormat.parle(secondes).replacingOccurrences(of: " ", with: "")
-            XCTAssertEqual(serree, espacee, "Désaccord à \(secondes) s.")
+    /// La FORME, et non les lettres : la langue décide du symbole, pas ce test.
+    func testLaDureeNeCommenceJamaisParZeroHeure() {
+        // Sous l'heure, aucun symbole d'heure n'apparaît — donc la chaîne est la même partout.
+        XCTAssertEqual(TimeFormat.duree(46 * 60), "46 min")
+        XCTAssertEqual(TimeFormat.duree(0), "0 min")
+
+        let troisHeures = TimeFormat.duree(3 * 3600 + 28 * 60)
+        XCTAssertTrue(troisHeures.hasPrefix("3"), troisHeures)
+        XCTAssertTrue(troisHeures.hasSuffix("28"), troisHeures)
+        // Resserrée : plus d'espace autour du symbole, c'est tout l'objet de la fusion.
+        XCTAssertFalse(troisHeures.contains(" "), troisHeures)
+
+        // Les minutes sur deux chiffres dès qu'une heure les précède : « 1h1 » se lit mal.
+        XCTAssertTrue(TimeFormat.duree(3600 + 60).hasSuffix("01"), TimeFormat.duree(3600 + 60))
+        // Et jamais de « 0h » en tête pour une durée qui n'atteint pas l'heure.
+        XCTAssertFalse(TimeFormat.duree(46 * 60).hasPrefix("0"), TimeFormat.duree(46 * 60))
+    }
+
+    /// La fusion ne doit pas avoir changé une VALEUR, seulement une mise en forme. Les heures et
+    /// les minutes sortantes sont comparées aux nombres attendus, langue par langue.
+    func testLaFusionNAPasChangeLesNombres() {
+        for (secondes, heures, minutes) in [(3600, 1, 0), (5700, 1, 35), (12345, 3, 25),
+                                            (86399, 23, 59)] {
+            let rendu = TimeFormat.duree(secondes)
+            // « hr » d'abord, et on s'arrête au premier trouvé : « 1hr35 » contient aussi « h »,
+            // et couper dessus donnerait « r35 » pour les minutes. Le test passerait en français
+            // et échouerait en anglais, c'est-à-dire sur la machine qui l'exécute vraiment.
+            guard let symbole = ["hr", "h"].first(where: { rendu.contains($0) }) else {
+                return XCTFail("« \(rendu) » ne porte aucun symbole d'heure à \(secondes) s.")
+            }
+            let morceaux = rendu.components(separatedBy: symbole)
+            XCTAssertEqual(morceaux.first, "\(heures)", "Heures fausses à \(secondes) s.")
+            XCTAssertEqual(morceaux.last, String(format: "%02d", minutes),
+                           "Minutes fausses à \(secondes) s.")
         }
     }
 
@@ -80,6 +113,6 @@ final class TimeFormatTests: XCTestCase {
     func testPaceModelNeGardeAucuneCopie() {
         XCTAssertEqual(PaceModel.paceText(299.6), TimeFormat.allure(secondesParKm: 299.6))
         XCTAssertEqual(PaceModel.formatDuration(5700), TimeFormat.horloge(5700))
-        XCTAssertEqual(PaceModel.formatTotalDuration(5700), TimeFormat.compacte(5700))
+        XCTAssertEqual(PaceModel.formatTotalDuration(5700), TimeFormat.duree(5700))
     }
 }

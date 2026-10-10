@@ -761,7 +761,7 @@ struct HomeView: View {
     ///
     /// Un « 0 h 46 » serait exact et illisible : l'œil compte les zéros avant de lire le nombre.
     private func dureeCourte(_ secondes: Int) -> String {
-        TimeFormat.parle(secondes)
+        TimeFormat.duree(secondes)
     }
 
     /// Un chiffre, son unité, son nom. `verbatim` pour la valeur : un nombre formaté n'est pas

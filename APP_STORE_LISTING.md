@@ -67,8 +67,11 @@ Un vrai coach personnel qui connaît ton objectif, ton historique et ta forme du
 UN PROGRAMME QUI VIT AVEC TOI — RUNUP PLUS
 Après chaque course, donne ton ressenti (RPE) — le programme ajuste la difficulté des semaines suivantes. Base, spécifique, affûtage : un vrai plan périodisé calé sur la date de ta course, de 4 à 20 semaines selon le temps qu'il te reste. Sans date de course (progresser, perdre du poids, reprendre en douceur, rester en forme), il tourne en continu avec ses semaines de décharge. Nuit trop courte ou séance de la veille trop dure ? La séance du jour s'allège d'elle-même.
 
+HYROX, ULTRA, TRIATHLON — RUNUP PLUS
+Trois préparations entières, pas des variantes du plan de course. HYROX : les huit stations et leurs transitions. Ultra : dénivelé, marche rapide, nuit. Triathlon : natation, vélo et enchaînements, du sprint à la longue distance.
+
 SUIVI DE COURSE EN DIRECT
-Carte et tracé en temps réel, allure, fréquence cardiaque, calories. Chaque sortie part dans Apple Santé, s'exporte en GPX, et se partage en carte visuelle avec ton tracé.
+Carte et tracé en temps réel, allure, fréquence cardiaque, calories. Chaque sortie part dans Apple Santé, s'exporte en GPX, et se partage en carte avec ton tracé.
 
 APPLE WATCH
 Lance ta course depuis ta montre, sans emporter ton iPhone : fréquence cardiaque au poignet, distance et calories en direct. Chaque course terminée au poignet revient sur le téléphone avec son bilan. Avec RUNUP Plus, ta séance du jour est poussée sur la montre.
@@ -77,18 +80,18 @@ STATS QUI COMPTENT VRAIMENT
 Tendance d'allure, records personnels, carte de tes parcours, usure des chaussures. Avec RUNUP Plus : prédictions sur 5 km, 10 km, semi et marathon, et charge d'entraînement sur 8 semaines.
 
 OÙ COURIR QUAND TU NE CONNAIS PAS L'ENDROIT
-Tu débarques dans une ville et tu ne sais pas où courir ? La carte montre les itinéraires publiés autour de toi, avec distance, dénivelé et souvent une photo. Tes propres sorties se partagent en deux gestes — et les 300 premiers et derniers mètres sont retirés avant l'envoi : personne ne verra d'où tu es partie ni où tu es rentrée.
+Tu débarques dans une ville et tu ne sais pas où courir ? La carte montre les itinéraires publiés autour de toi, avec distance, dénivelé et souvent une photo. Partage les tiennes en deux gestes : les 300 premiers et derniers mètres sont retirés avant l'envoi, personne ne verra d'où tu pars ni où tu rentres.
 
 CLUB & COMMUNAUTÉ
-Classement de la semaine et classement général, défis de club, sorties de groupe, fil d'activité et badges. Et si tu préfères suivre quelques personnes plutôt qu'un club entier, un fil d'amis fait exactement ça.
+Classements de la semaine et général, défis de club, sorties de groupe, fil d'activité et badges. Et si tu préfères suivre quelques personnes plutôt qu'un club entier, un fil d'amis fait exactement ça.
 
 FIN DE PROGRAMME, PAS FIN DE L'HISTOIRE — RUNUP PLUS
-À la fin de ton programme : récupération encadrée, puis nouvel objectif ou mode course libre sans plan fixe.
+À la fin : récupération encadrée, puis nouvel objectif ou course libre sans plan fixe.
 
-Nécessite iOS 17 ou version ultérieure. La connexion à Apple Santé est optionnelle, mais affine la forme du jour. Le Club demande un compte ; tout le reste de l'app fonctionne sans.
+La connexion à Apple Santé est optionnelle, mais affine la forme du jour. Le Club demande un compte ; tout le reste de l'app fonctionne sans.
 
 ABONNEMENT RUNUP PLUS
-RUNUP fonctionne sans abonnement, sans limite de temps. RUNUP Plus débloque le programme et le coach, après 7 jours d'essai gratuit.
+RUNUP fonctionne sans abonnement. RUNUP Plus débloque le programme et le coach, après 7 jours d'essai gratuit.
 • Mensuel — 6,99 € par mois
 • Annuel — 39,99 € par an (soit 3,33 € par mois)
 Renouvellement automatique, résiliable à tout moment depuis les réglages de ton compte Apple.
@@ -117,7 +120,7 @@ Et une course arrivée d'Apple Santé, ou récupérée après un plantage, compt
 
 ## Mots-clés (100 caractères max, séparés par des virgules sans espace)
 ```
-running,entrainement,fractionné,gratuit,marathon,semi,10km,trail,ultra,hyrox,footing,allure,debutant
+running,entrainement,fractionné,gratuit,marathon,semi,10km,trail,ultra,hyrox,debutant,triathlon
 ```
 
 Aucun de ces mots n'apparaît dans le nom ni dans le sous-titre : Apple indexe déjà tous les mots du
@@ -126,6 +129,15 @@ seule requête. C'est ce que faisait l'ancienne liste — `course`, `coach` et `
 que `course`) y étaient tous déjà couverts par « RUNUP : Coach de Course » / « Ton coach personnel
 de course ». Les caractères récupérés servent à des termes réellement nouveaux. Séparateur : virgule
 seule, sans espace — un espace après la virgule compte dans les 100 caractères et n'apporte rien.
+
+`triathlon` a pris la place de `footing` et d'`allure`. C'était le seul des trois nouveaux plans
+qu'aucune des trois listes ne portait : quelqu'un qui cherche « triathlon » ne pouvait pas tomber
+sur l'app, alors que la préparation existe en entier — quatre formats, de la natation à
+l'enchaînement vélo-course. `allure` seul est une requête faible, personne ne cherche « allure »
+pour trouver une app, et `footing` recouvre ce que `running` et le mot « Course » du titre
+attrapent déjà. En anglais c'est `routes` qui a cédé la place, en espagnol `ritmo` et `rutas` : la
+carte d'itinéraires est une vraie fonctionnalité, mais pas une requête, et la description la
+décrit mieux qu'un mot-clé ne la cherche.
 
 `ultra` et `hyrox` ont pris la place de `jogging`. Apple assemble lui-même les mots-clés en
 expressions, donc `ultra` + `trail` couvre « ultra trail » et « trail ultra » sans qu'il faille
@@ -170,6 +182,9 @@ A personal coach who knows your goal, your history and how today is going. Ask a
 A PLAN THAT LIVES WITH YOU — RUNUP PLUS
 After every run, rate how hard it felt (RPE) — the plan adjusts the difficulty of the weeks ahead. Base, specific, taper: a genuinely periodised plan built around your race date, 4 to 20 weeks depending on how long you have. With no race date (getting faster, losing weight, easing back in, staying fit), it runs continuously with built-in cutback weeks. Short night, or yesterday's session too brutal? Today's session eases off on its own.
 
+HYROX, ULTRA, TRIATHLON — RUNUP PLUS
+Three full preparations, not variations on the running plan. HYROX: the eight stations and their transitions. Ultra: elevation, fast hiking, running at night. Triathlon: swimming, cycling and brick sessions, from sprint to long distance.
+
 LIVE RUN TRACKING
 Real-time map and route, pace, heart rate, calories. Every run is saved to Apple Health, exports as GPX, and shares as a card with your route on it.
 
@@ -188,7 +203,7 @@ Weekly and all-time leaderboards, club challenges, group runs, an activity feed 
 THE END OF A PLAN ISN'T THE END — RUNUP PLUS
 When your plan finishes: a guided recovery block, then a new goal or free-run mode with no fixed plan at all.
 
-Requires iOS 17 or later. Connecting Apple Health is optional but recommended for a more accurate daily readiness score. The Club needs an account; everything else works without one.
+Connecting Apple Health is optional but recommended for a more accurate daily readiness score. The Club needs an account; everything else works without one.
 
 RUNUP PLUS SUBSCRIPTION
 RUNUP works without a subscription, with no time limit. RUNUP Plus unlocks the plan and the coach, after a 7-day free trial.
@@ -220,7 +235,7 @@ And a run that arrives from Apple Health, or is recovered after a crash, now cou
 
 ## Keywords (100 characters max, comma-separated, no spaces)
 ```
-run,5k,10k,half,marathon,pace,tracker,gps,interval,free,ultra,hyrox,beginner,routes,race,training
+run,5k,10k,half,marathon,pace,tracker,gps,interval,free,ultra,hyrox,beginner,race,training,triathlon
 ```
 
 None of these repeats a word from the name or subtitle — Apple already indexes every word in both,
@@ -261,6 +276,9 @@ Un entrenador personal que conoce tu objetivo, tu historial y cómo llevas el d�
 UN PLAN QUE VIVE CONTIGO — RUNUP PLUS
 Después de cada salida, valora lo dura que te resultó (RPE) — el plan ajusta la dificultad de las semanas siguientes. Base, específico, puesta a punto: un plan realmente periodizado alrededor de la fecha de tu carrera, de 4 a 20 semanas según el tiempo que te quede. Sin fecha de carrera (progresar, perder peso, volver poco a poco, mantenerte en forma), sigue de forma continua con sus semanas de descarga. ¿Mala noche, o sesión de ayer demasiado dura? La sesión de hoy se aligera sola.
 
+HYROX, ULTRA, TRIATLÓN — RUNUP PLUS
+Tres preparaciones enteras, no variantes del plan de carrera. HYROX: las ocho estaciones y sus transiciones. Ultra: desnivel, marcha rápida, noche. Triatlón: natación, ciclismo y transiciones, del sprint a la larga distancia.
+
 SEGUIMIENTO EN DIRECTO
 Mapa y recorrido en tiempo real, ritmo, frecuencia cardíaca y calorías. Cada salida se guarda en Apple Salud, se exporta en GPX y se comparte como tarjeta con tu recorrido.
 
@@ -271,15 +289,15 @@ ESTADÍSTICAS QUE SIRVEN PARA ALGO
 Tendencia de ritmo, récords personales, un mapa con todos tus recorridos y control del desgaste de tus zapatillas. Con RUNUP Plus: predicciones de tiempo en 5 km, 10 km, media y maratón, y ocho semanas de carga de entrenamiento.
 
 DÓNDE CORRER CUANDO NO CONOCES EL SITIO
-¿Llegas a una ciudad nueva y no sabes por dónde correr? El mapa muestra las rutas publicadas por otros corredores a tu alrededor, con su distancia, su desnivel y muchas veces una foto del lugar. Filtra por longitud, guarda las que te apetezcan, abre el inicio en Mapas. Compartir tus propias salidas son dos toques — y los primeros y últimos 300 metros se recortan antes de enviar nada: nadie verá de dónde saliste ni dónde volviste.
+¿Llegas a una ciudad nueva y no sabes por dónde correr? El mapa muestra las rutas publicadas a tu alrededor, con distancia, desnivel y muchas veces una foto. Comparte las tuyas en dos toques: los primeros y últimos 300 metros se recortan antes de enviar, nadie verá de dónde saliste ni dónde volviste.
 
 CLUB Y COMUNIDAD
 Clasificación semanal y general, retos de club, quedadas, muro de actividad e insignias. Y si prefieres seguir a unas pocas personas en vez de a un club entero, hay un muro de amigos.
 
 QUE ACABE EL PLAN NO ES EL FINAL — RUNUP PLUS
-Al terminar tu plan: un bloque de recuperación guiado y, después, un nuevo objetivo o modo carrera libre sin plan fijo.
+Al terminar: un bloque de recuperación guiado y, después, un nuevo objetivo o carrera libre sin plan fijo.
 
-Requiere iOS 17 o posterior. Conectar Apple Salud es opcional, pero afina la forma del día. El Club necesita una cuenta; todo lo demás funciona sin ella.
+Conectar Apple Salud es opcional, pero afina la forma del día. El Club necesita una cuenta; todo lo demás funciona sin ella.
 
 SUSCRIPCIÓN RUNUP PLUS
 RUNUP funciona sin suscripción y sin límite de tiempo. RUNUP Plus desbloquea el plan y el entrenador, tras 7 días de prueba gratis.
@@ -311,7 +329,7 @@ Y una carrera que llega de Apple Salud, o que se recupera tras un fallo, cuenta 
 
 ## Palabras clave (100 caracteres máx., separadas por comas sin espacios)
 ```
-correr,maraton,10k,media,ritmo,entrenamiento,gratis,gps,series,principiante,trail,ultra,hyrox,rutas
+correr,maraton,10k,media,entrenamiento,gratis,gps,series,principiante,trail,ultra,hyrox,triatlon
 ```
 
 Ninguna repite una palabra del nombre ni del subtítulo: Apple ya indexa todas las palabras de

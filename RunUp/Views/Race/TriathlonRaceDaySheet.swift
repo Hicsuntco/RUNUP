@@ -75,7 +75,7 @@ struct TriathlonRaceDaySheet: View {
                     .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
             }
             Spacer(minLength: 0)
-            Text(verbatim: TimeFormat.compacte(minutes * 60))
+            Text(verbatim: TimeFormat.duree(minutes * 60))
                 .font(RUFont.display(18)).foregroundColor(RUColor.textPrimary)
         }
         .padding(.horizontal, 14).padding(.vertical, 10)
@@ -95,7 +95,7 @@ struct TriathlonRaceDaySheet: View {
                     .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
             }
             Spacer(minLength: 0)
-            Text(verbatim: TimeFormat.compacte(r.transitions * 60))
+            Text(verbatim: TimeFormat.duree(r.transitions * 60))
                 .font(RUFont.display(18)).foregroundColor(RUColor.textPrimary)
         }
         .padding(.horizontal, 14).padding(.vertical, 10)

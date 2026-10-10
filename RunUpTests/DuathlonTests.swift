@@ -201,6 +201,68 @@ final class DuathlonTests: XCTestCase {
         XCTAssertGreaterThan(d.recoveryDays, 0)
     }
 
+    // MARK: - Le format, de l'inscription jusqu'à la base
+
+    /// LE FORMAT SURVIT AU TRAJET. C'est tout ce que cette étape ajoute, et c'est ce qui a tenu
+    /// le triathlon fermé cinq lots durant : un objectif dont le format n'arrive pas en base
+    /// construit un plan sans distances, sans temps d'effort, sans rien.
+    func testLeFormatArriveJusquAuProfil() {
+        let profil = UserProfile(name: "Test")
+        AdaptivePlanEngine.applyOnboarding(resultatDuathlon(format: "standard"), to: profil)
+        XCTAssertEqual(profil.duathlonFormat, "standard")
+        XCTAssertEqual(profil.goalId, .duathlon)
+    }
+
+    /// Le libellé relu partout — Profil, Stats, en-tête du plan — porte le FORMAT et le chrono.
+    /// Sans format il resterait « Duathlon · 2:25 », ce qui est juste mais muet.
+    func testLeLibelleDeLObjectifPorteLeFormatEtLeChrono() {
+        let profil = UserProfile(name: "Test")
+        AdaptivePlanEngine.applyOnboarding(resultatDuathlon(format: "standard"), to: profil)
+        XCTAssertTrue(profil.goalDisplay.contains("2:25"), profil.goalDisplay)
+        XCTAssertTrue(profil.goalDisplay.contains(DuathlonFormat.standard.title), profil.goalDisplay)
+        // Et jamais le libellé d'un autre objectif : c'est le repli silencieux qu'on évite.
+        XCTAssertFalse(profil.goalDisplay.contains("Triathlon"), profil.goalDisplay)
+    }
+
+    /// Un format absent ne doit pas faire tomber le libellé entier. Quelqu'un qui reprend un
+    /// brouillon d'avant cette étape n'en a pas.
+    func testSansFormatLeLibelleTientQuandMeme() {
+        let profil = UserProfile(name: "Test")
+        AdaptivePlanEngine.applyOnboarding(resultatDuathlon(format: nil), to: profil)
+        XCTAssertFalse(profil.goalDisplay.isEmpty)
+        XCTAssertTrue(profil.goalDisplay.contains("2:25"), profil.goalDisplay)
+    }
+
+    /// CHANGER D'OBJECTIF EFFACE LE FORMAT. Sans ça, quelqu'un qui passe du duathlon au 10 km
+    /// garderait un format de duathlon en base, que le prochain plan relirait.
+    func testChangerDObjectifEffaceLeFormat() {
+        let profil = UserProfile(name: "Test")
+        AdaptivePlanEngine.applyOnboarding(resultatDuathlon(format: "standard"), to: profil)
+        XCTAssertEqual(profil.duathlonFormat, "standard")
+
+        var versLaCourse = AdaptivePlanEngine.NewGoalResult(
+            goal: .race, distance: .k10, chrono: "47:30", raceDate: .now, runningDays: [0, 2, 4]
+        )
+        versLaCourse.duathlonFormat = nil
+        AdaptivePlanEngine.startNewProgram(versLaCourse, profile: profil)
+        XCTAssertNil(profil.duathlonFormat, "le format du duathlon a survécu au changement")
+    }
+
+    private func resultatDuathlon(format: String?) -> AdaptivePlanEngine.OnboardingResult {
+        AdaptivePlanEngine.OnboardingResult(
+            name: "Test", birthdate: nil, sex: "female", goal: .duathlon,
+            raceDistance: nil, raceDistanceCustom: nil, raceElevationGainM: nil,
+            raceChrono: "2:25", raceDate: Calendar.current.date(byAdding: .weekOfYear, value: 10, to: .now),
+            hyroxDivision: nil,
+            triathlonFormat: nil, nageNiveau: nil, duathlonFormat: format,
+            runningDays: [0, 2, 4], preferredLongRunDay: 4, level: .intermediaire,
+            connectedSources: [], weightNowKg: nil, weightTargetKg: nil, heightCm: nil,
+            focusArea: nil, bestRecentPerf: nil, lastRanRecency: nil, injuryArea: nil,
+            weeklyTimeBudget: nil, preferredTimeOfDay: nil,
+            cycleTrackingEnabled: false, lastPeriodStartDate: nil, averageCycleLengthDays: 28
+        )
+    }
+
     private func correspondant(_ nom: String, _ objectif: GoalType) -> String {
         switch nom {
         case "title": return objectif.title

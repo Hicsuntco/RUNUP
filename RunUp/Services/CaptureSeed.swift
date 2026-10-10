@@ -333,6 +333,7 @@ enum CaptureSeed {
             hyroxDivision: nil,
             triathlonFormat: nil,
             nageNiveau: nil,
+            duathlonFormat: nil,
             runningDays: [0, 2, 4, 6],
             preferredLongRunDay: 6,
             level: .intermediaire,

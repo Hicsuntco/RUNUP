@@ -39,6 +39,9 @@ final class OnboardingViewModel {
     /// seule question de l'inscription dont une réponse supposée peut faire du mal, et « 1500 m
     /// et plus » pré-cochée serait une réponse supposée. Voir `NiveauDeNage`.
     var nageNiveau: NiveauDeNage?
+    // Step 3 — branche duathlon. Même réutilisation de `chrono` et `raceDate`, et UN SEUL
+    // champ : il n'y a pas de question de vélo à poser. Voir `DuathlonFormat`.
+    var duathlonFormat: DuathlonFormat?
     // Step 3 — non-race branches
     var weightNow = ""
     var weightTarget = ""
@@ -85,6 +88,7 @@ final class OnboardingViewModel {
     var isHyrox: Bool { goal == .hyrox }
     var isUltra: Bool { goal == .ultraTrail }
     var isTriathlon: Bool { goal == .triathlon }
+    var isDuathlon: Bool { goal == .duathlon }
 
     /// Le nombre de jours que l'objectif choisi exige. Deux tant qu'aucun objectif n'est encore
     /// choisi : l'étape des jours vient après celle de l'objectif, donc ce repli n'est atteint
@@ -121,6 +125,7 @@ final class OnboardingViewModel {
             if isCourseOuUltra { return raceStepValid }
             if isHyrox { return hyroxStepValid }
             if isTriathlon { return triathlonStepValid }
+            if isDuathlon { return duathlonStepValid }
             return deepDiveValid
         // Injury/cycle fields are always optional — a real, known injury/blessure worth flagging
         // is the exception, not the rule, so requiring an answer here would just add friction for
@@ -165,6 +170,21 @@ final class OnboardingViewModel {
         return hasChrono && raceDate != nil && triathlonFormat != nil && nageNiveau != nil
     }
 
+    /// TROIS RÉPONSES, PAS QUATRE. Le format, un chrono, une date.
+    ///
+    /// Rien sur le vélo, et c'est le seul écart avec le triathlon juste au-dessus : la question
+    /// de natation y est obligatoire parce que le plan ne pourra jamais la corriger tout seul.
+    /// Le vélo, l'app le mesure — distance, durée, cardio — donc une réponse approximative se
+    /// rattrape à la première sortie. Une question qui ne change pas une décision ne vaut pas
+    /// une étape.
+    ///
+    /// La lecture du chrono est la MÊME qu'au triathlon, délibérément : « Mon propre temps »
+    /// laisse le champ libre, et un `chrono != nil` seul laisserait passer une chaîne vide.
+    private var duathlonStepValid: Bool {
+        let hasChrono = isCustomChrono ? !(chrono ?? "").isEmpty : chrono != nil
+        return hasChrono && raceDate != nil && duathlonFormat != nil
+    }
+
     private var deepDiveValid: Bool {
         switch goal {
         // La taille n'est plus exigée : elle n'enrichit qu'une phrase du contexte envoyé au
@@ -183,6 +203,14 @@ final class OnboardingViewModel {
     /// est le temps que fait la plupart des gens qui finissent.
     func selectTriathlonFormat(_ f: TriathlonFormat) {
         triathlonFormat = f
+        chrono = f.chronoPresets[safe: 1]
+        isCustomChrono = false
+    }
+
+    /// Même geste pour le duathlon, et le même deuxième preset : le premier est une belle
+    /// performance, le deuxième est le temps que fait la plupart des gens qui finissent.
+    func selectDuathlonFormat(_ f: DuathlonFormat) {
+        duathlonFormat = f
         chrono = f.chronoPresets[safe: 1]
         isCustomChrono = false
     }
@@ -216,6 +244,7 @@ final class OnboardingViewModel {
             hyroxDivision: isHyrox ? hyroxDivision?.rawValue : nil,
             triathlonFormat: isTriathlon ? triathlonFormat?.rawValue : nil,
             nageNiveau: isTriathlon ? nageNiveau?.rawValue : nil,
+            duathlonFormat: isDuathlon ? duathlonFormat?.rawValue : nil,
             runningDays: Array(runningDays),
             preferredLongRunDay: effectiveLongRunDay,
             level: level,

@@ -31,6 +31,10 @@ private struct OnboardingDraft: Codable {
     /// d'avant le triathlon se relit donc sans perdre une seule réponse.
     var triathlonFormat: TriathlonFormat?
     var nageNiveau: NiveauDeNage?
+    /// Même raison optionnelle : un brouillon écrit avant le duathlon se relit sans perdre une
+    /// réponse, parce que `decodeIfPresent` rend `nil` pour une clé absente au lieu de faire
+    /// échouer tout le décodage.
+    var duathlonFormat: DuathlonFormat?
     var weightNow: String
     var weightTarget: String
     var height: String
@@ -72,6 +76,7 @@ extension OnboardingViewModel {
         hyroxDivision = draft.hyroxDivision
         triathlonFormat = draft.triathlonFormat
         nageNiveau = draft.nageNiveau
+        duathlonFormat = draft.duathlonFormat
         weightNow = draft.weightNow
         weightTarget = draft.weightTarget
         height = draft.height
@@ -103,6 +108,7 @@ extension OnboardingViewModel {
             chrono: chrono, isCustomChrono: isCustomChrono,
             raceDate: raceDate, hyroxDivision: hyroxDivision,
             triathlonFormat: triathlonFormat, nageNiveau: nageNiveau,
+            duathlonFormat: duathlonFormat,
             weightNow: weightNow, weightTarget: weightTarget,
             height: height, focusArea: focusArea, bestRecentPerf: bestRecentPerf, lastRanRecency: lastRanRecency,
             weeklyTimeBudget: weeklyTimeBudget, preferredTimeOfDay: preferredTimeOfDay, injuryArea: injuryArea,

@@ -28,6 +28,7 @@ enum AdaptivePlanEngine {
         var hyroxDivision: String?
         var triathlonFormat: String?
         var nageNiveau: String?
+        var duathlonFormat: String?
         var runningDays: [Int]
         /// Which weekday (0=Monday...6=Sunday) carries the long run — chosen at onboarding, see
         /// `OnboardingViewModel.effectiveLongRunDay`.
@@ -66,6 +67,7 @@ enum AdaptivePlanEngine {
         profile.raceDate = result.raceDate
         profile.hyroxDivision = result.hyroxDivision
         profile.triathlonFormat = result.triathlonFormat
+        profile.duathlonFormat = result.duathlonFormat
         profile.nageNiveau = result.nageNiveau
         profile.runningDays = result.runningDays
         profile.preferredLongRunDay = result.preferredLongRunDay
@@ -83,7 +85,7 @@ enum AdaptivePlanEngine {
         profile.cycleTrackingEnabled = result.cycleTrackingEnabled
         profile.lastPeriodStartDate = result.lastPeriodStartDate
         profile.averageCycleLengthDays = result.averageCycleLengthDays
-        profile.goalDisplay = goalDisplay(goal: result.goal, distance: result.raceDistance, custom: result.raceDistanceCustom, chrono: result.raceChrono, hyroxDivision: result.hyroxDivision, denivele: result.raceElevationGainM, triathlonFormat: result.triathlonFormat)
+        profile.goalDisplay = goalDisplay(goal: result.goal, distance: result.raceDistance, custom: result.raceDistanceCustom, chrono: result.raceChrono, hyroxDivision: result.hyroxDivision, denivele: result.raceElevationGainM, triathlonFormat: result.triathlonFormat, duathlonFormat: result.duathlonFormat)
         profile.onboarded = true
         profile.programPhase = .active
         profile.weekNumber = 1
@@ -1265,7 +1267,7 @@ enum AdaptivePlanEngine {
     /// correction serait de recalculer à l'affichage depuis l'objectif stocké — mais ce champ
     /// est aussi LIBREMENT MODIFIABLE dans les réglages du programme, donc il ne peut pas être
     /// purement dérivé. C'est un chantier à part, écrit ici plutôt que passé sous silence.
-    private static func goalDisplay(goal: GoalType, distance: RaceDistance?, custom: String?, chrono: String?, hyroxDivision: String? = nil, denivele: Int? = nil, triathlonFormat: String? = nil) -> String {
+    private static func goalDisplay(goal: GoalType, distance: RaceDistance?, custom: String?, chrono: String?, hyroxDivision: String? = nil, denivele: Int? = nil, triathlonFormat: String? = nil, duathlonFormat: String? = nil) -> String {
         switch goal {
         case .race:
             let defaut = String(localized: "Ta course")
@@ -1298,11 +1300,13 @@ enum AdaptivePlanEngine {
             let format = triathlonFormat.flatMap { TriathlonFormat(rawValue: $0)?.title }
             return format.map { "Triathlon \($0) · \(chronoLabel)" } ?? "Triathlon · \(chronoLabel)"
         case .duathlon:
-            // Sans son format pour l'instant : le champ qui le stockera arrive à l'étape
-            // suivante. Mieux vaut « Duathlon · 2:25 » que rien, et surtout mieux que de
-            // retomber en silence sur le libellé d'un autre objectif.
+            // Le FORMAT et pas les trois distances, pour la même raison qu'au triathlon :
+            // « Duathlon Standard · 2:25 » tient sur une ligne d'accueil, « 10 km · 40 km ·
+            // 5 km · 2:25 » non.
             let chronoLabel = (chrono?.isEmpty ?? true) ? String(localized: "finir") : chrono!
-            return "\(String(localized: "Duathlon")) · \(chronoLabel)"
+            let nom = String(localized: "Duathlon")
+            let format = duathlonFormat.flatMap { DuathlonFormat(rawValue: $0)?.title }
+            return format.map { "\(nom) \($0) · \(chronoLabel)" } ?? "\(nom) · \(chronoLabel)"
         }
     }
 
@@ -1705,6 +1709,9 @@ enum AdaptivePlanEngine {
         /// peut-être très bien.
         var triathlonFormat: String? = nil
         var nageNiveau: String? = nil
+        /// Le format du duathlon visé. Un seul champ, pas deux comme le triathlon : il n'y a
+        /// pas de question de natation à poser, et donc rien à oublier de demander ici.
+        var duathlonFormat: String? = nil
     }
 
     // MARK: Le coach écrit dans le programme
@@ -1862,8 +1869,9 @@ enum AdaptivePlanEngine {
         // moteur un format qui ne décrit plus rien — et `goalDisplay` afficherait « 10 km »
         // au-dessus d'un plan dimensionné sur une épreuve abandonnée.
         profile.triathlonFormat = result.goal == .triathlon ? result.triathlonFormat : nil
+        profile.duathlonFormat = result.goal == .duathlon ? result.duathlonFormat : nil
         profile.nageNiveau = result.goal == .triathlon ? result.nageNiveau : nil
-        profile.goalDisplay = goalDisplay(goal: result.goal, distance: result.distance, custom: nil, chrono: result.chrono, denivele: profile.raceElevationGainM, triathlonFormat: profile.triathlonFormat)
+        profile.goalDisplay = goalDisplay(goal: result.goal, distance: result.distance, custom: nil, chrono: result.chrono, denivele: profile.raceElevationGainM, triathlonFormat: profile.triathlonFormat, duathlonFormat: profile.duathlonFormat)
         profile.runningDays = result.runningDays
         profile.preferredLongRunDay = result.runningDays.max()
         profile.programPhase = .active

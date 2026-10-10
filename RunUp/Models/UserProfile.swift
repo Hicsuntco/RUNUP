@@ -116,6 +116,15 @@ final class UserProfile {
     /// la même chose. Les trois distances ne sont PAS stockées : elles découlent du format, et un
     /// format stocké à côté de ses propres distances est une occasion de les voir diverger.
     var triathlonFormat: String? = nil
+    /// « sprint » | « standard » | « moyenneDistance » | « longueDistance » — peuplé seulement
+    /// quand `goalId == .duathlon`. Même logique que `triathlonFormat` juste au-dessus : il
+    /// réutilise `raceDate` et `raceChrono`, et les trois distances ne sont PAS stockées
+    /// puisqu'elles découlent du format.
+    ///
+    /// Il n'a PAS de compagnon « niveau de vélo », contrairement au triathlon qui en a un pour
+    /// la natation. Voir `DuathlonFormat` : le vélo ne met personne en danger, et l'app le
+    /// mesure — le plan se corrige donc tout seul au lieu de devoir le demander.
+    var duathlonFormat: String? = nil
     /// « pasEncore » | « moins200 » | « jusqua800 » | « plus1500 » — ce qu'elle nageait en
     /// continu au moment de l'inscription.
     ///

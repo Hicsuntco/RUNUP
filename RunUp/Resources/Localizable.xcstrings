@@ -11613,6 +11613,23 @@
         }
       }
     },
+    "Le jour J, tu reprendras à pied pour %@ après %@ de vélo. C'est cette seconde course que le plan prépare — c'est elle qui décide de la journée, et elle ne ressemble pas au même nombre de kilomètres à froid.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On race day you'll set off running again for %@ after %@ on the bike. That second run is what the plan is built for — it decides your day, and it feels nothing like the same distance on fresh legs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El día de la prueba volverás a correr %@ después de %@ en bici. Esa segunda carrera es la que prepara el plan — es la que decide tu día, y no se parece en nada a los mismos kilómetros en frío."
+          }
+        }
+      }
+    },
     "Le matériel": {
       "extractionState": "manual",
       "localizations": {

@@ -132,7 +132,11 @@ enum DuathlonFormat: String, Codable, CaseIterable, Identifiable {
     }
 
     /// « 20 km », « 2,5 km » — le zéro décimal inutile tombe, la virgule suit la langue.
-    private static func km(_ valeur: Double) -> String {
+    ///
+    /// Interne et non privée : l'écran d'inscription écrit la même phrase avec les mêmes
+    /// nombres, et une seconde mise en forme à côté finirait par en diverger — « 2.5 km » d'un
+    /// côté, « 2,5 km » de l'autre, sur le même écran.
+    static func km(_ valeur: Double) -> String {
         let arrondi = (valeur * 10).rounded() / 10
         return arrondi == arrondi.rounded()
             ? String(format: "%.0f km", locale: Locale.current, arrondi)

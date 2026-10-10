@@ -75,6 +75,8 @@ struct OnboardingContainerView: View {
                 HyroxDetailsStepView(vm: vm) { advance() }
             } else if vm.isTriathlon {
                 TriathlonDetailsStepView(vm: vm) { advance() }
+            } else if vm.isDuathlon {
+                DuathlonDetailsStepView(vm: vm) { advance() }
             } else {
                 DeepDiveStepView(vm: vm) { advance() }
             }
@@ -114,6 +116,7 @@ struct OnboardingContainerView: View {
             if vm.isCourseOuUltra { return "race_details" }
             if vm.isHyrox { return "hyrox_details" }
             if vm.isTriathlon { return "triathlon_details" }
+            if vm.isDuathlon { return "duathlon_details" }
             return "deep_dive"
         case 4: return "wellbeing"
         case 5: return "running_days"

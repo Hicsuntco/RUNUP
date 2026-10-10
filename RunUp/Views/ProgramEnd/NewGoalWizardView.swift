@@ -21,6 +21,9 @@ struct NewGoalWizardView: View {
     /// l'inscription, et pour la même raison (voir `NiveauDeNage`) : c'est la seule réponse de
     /// cet écran dont une valeur supposée peut faire du mal.
     @State private var triathlonFormat: TriathlonFormat = .olympique
+    /// Le format du duathlon. Pas de compagnon « niveau de vélo » : l'app mesure le vélo,
+    /// donc il n'y a rien à demander dessus. Voir `DuathlonFormat`.
+    @State private var duathlonFormat: DuathlonFormat = .standard
     @State private var nageNiveau: NiveauDeNage?
     @State private var days: Set<Int> = [1, 2, 4, 6]
     @State private var building = false
@@ -37,13 +40,14 @@ struct NewGoalWizardView: View {
     /// n'avait alors aucune ligne d'arrivée à viser, donc ni bloc spécifique ni affûtage.
     private var estCourseOuUltra: Bool { goal == .race || goal == .ultraTrail }
     private var estTriathlon: Bool { goal == .triathlon }
+    private var estDuathlon: Bool { goal == .duathlon }
     /// Le minimum exigé par l'objectif en cours de choix. Voir `GoalType.joursMinimumParSemaine`.
     private var minimumJours: Int { goal?.joursMinimumParSemaine ?? 2 }
     /// Les trois objectifs qui ont une deuxième étape. `periodiseVersUneDate` dit presque la
     /// même chose et pas tout à fait : HYROX a une date et n'a jamais eu d'étape ici, son format
     /// étant fixe. Garder les deux notions distinctes évite de donner au triathlon la mauvaise
     /// étape le jour où HYROX en gagnerait une.
-    private var aUneDeuxiemeEtape: Bool { estCourseOuUltra || estTriathlon }
+    private var aUneDeuxiemeEtape: Bool { estCourseOuUltra || estTriathlon || estDuathlon }
 
     /// Les formats à proposer, selon l'objectif. « Autre distance » n'en fait pas partie : cet
     /// assistant n'a pas de champ de texte libre, contrairement à l'inscription.
@@ -102,6 +106,7 @@ struct NewGoalWizardView: View {
                 case 0: goalStep
                 case 1 where estCourseOuUltra: raceStep
                 case 1 where estTriathlon: triathlonStep
+                case 1 where estDuathlon: duathlonStep
                 default: daysStep
                 }
             }
@@ -132,6 +137,11 @@ struct NewGoalWizardView: View {
             // et le plan se serait affûté vers 47 minutes pour une épreuve de trois heures.
             if nouveau == .triathlon {
                 chrono = triathlonFormat.chronoPresets[safe: 1] ?? ""
+            }
+            // Même raison pour le duathlon : son chrono vient du FORMAT, pas d'une distance de
+            // course. Sans cette branche, le choisir laisserait un temps de 10 km sélectionné.
+            if nouveau == .duathlon {
+                chrono = duathlonFormat.chronoPresets[safe: 1] ?? ""
                 return
             }
             guard let premier = RaceDistance.choix(pour: nouveau).first else { return }
@@ -181,6 +191,53 @@ struct NewGoalWizardView: View {
             Button("CONTINUER") { step = 2 }
                 .buttonStyle(PrimaryButtonStyle(isDisabled: deniveleManquant))
                 .disabled(deniveleManquant)
+                .padding(.top, 20)
+        }
+    }
+
+    /// L'ÉTAPE DU DUATHLON : format → chrono → date. Trois questions, pas quatre.
+    ///
+    /// C'est ici que le triathlon s'est fait prendre : cet assistant liste les objectifs
+    /// `estProposable` exactement comme l'inscription, donc ouvrir le robinet sans lui donner
+    /// son étape y aurait fait apparaître le duathlon sans sa question de format — et le plan
+    /// se serait construit sans distances ni temps d'effort, sous le bon nom.
+    ///
+    /// Rien sur le vélo, pour la raison écrite partout dans ce lot : l'app le mesure.
+    private var duathlonStep: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            EyebrowLabel(text: "Format", color: RUColor.text3).padding(.bottom, 10)
+            VStack(spacing: 8) {
+                ForEach(DuathlonFormat.allCases) { f in
+                    SelectableCard(selected: duathlonFormat == f, emoji: nil, title: f.title, subtitle: f.resume) {
+                        duathlonFormat = f
+                        chrono = f.chronoPresets[safe: 1] ?? ""
+                    }
+                }
+            }
+
+            EyebrowLabel(text: "Chrono visé", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
+            ChipFlowLayout {
+                ForEach(duathlonFormat.chronoPresets, id: \.self) { t in
+                    SelectableChip(label: t, selected: chrono == t) { chrono = t }
+                }
+            }
+
+            EyebrowLabel(text: "Date de l'épreuve", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
+            DatePicker(
+                "",
+                selection: $raceDate,
+                in: Calendar.current.date(byAdding: .day, value: 1, to: .now)!...,
+                displayedComponents: .date
+            )
+            .datePickerStyle(.compact)
+            .labelsHidden()
+            .colorScheme(RUColor.colorScheme)
+            .padding(13)
+            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+
+            Button("CONTINUER") { step = 2 }
+                .buttonStyle(PrimaryButtonStyle())
                 .padding(.top, 20)
         }
     }
@@ -333,7 +390,8 @@ struct NewGoalWizardView: View {
             runningDays: Array(days),
             raceElevationGainM: goal == .ultraTrail ? Int(raceElevationGain.trimmingCharacters(in: .whitespaces)) : nil,
             triathlonFormat: estTriathlon ? triathlonFormat.rawValue : nil,
-            nageNiveau: estTriathlon ? nageNiveau?.rawValue : nil
+            nageNiveau: estTriathlon ? nageNiveau?.rawValue : nil,
+            duathlonFormat: estDuathlon ? duathlonFormat.rawValue : nil
         )
         AdaptivePlanEngine.startNewProgram(result, profile: appState.profile)
         NotificationService.shared.rescheduleDailyReminder(for: appState.profile)

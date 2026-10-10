@@ -158,16 +158,28 @@ final class DuathlonTests: XCTestCase {
 
     // MARK: - L'objectif, et le robinet qui le retient
 
-    /// LE DUATHLON NE DOIT PAS ÊTRE PROPOSABLE TANT QU'IL N'EST PAS ENTIER.
+    /// L'OBJECTIF EST OUVERT, et les deux surfaces qui le proposent savent le construire.
     ///
-    /// Ce test est le robinet lui-même. Il tombera le jour où l'objectif s'ouvrira, et c'est
-    /// voulu : il faudra alors le retourner sciemment, en ayant vérifié que les six étapes sont
-    /// là. C'est exactement ce qui a sauvé l'ultra et le triathlon d'être offerts à moitié —
-    /// un plan de COURSE portant le nom d'une épreuve à deux disciplines.
-    func testLeDuathlonResteRetenuTantQuIlNEstPasEntier() {
-        XCTAssertFalse(GoalType.duathlon.estProposable,
-                       "Le duathlon s'ouvre — vérifie que l'inscription ET l'assistant de "
-                       + "nouvel objectif savent demander son format, et retourne ce test.")
+    /// Ce test était le robinet : il exigeait `estProposable == false` tant que l'assistant de
+    /// nouvel objectif ne savait pas demander le format. Il a fait son travail — c'est en le
+    /// retournant sciemment, après avoir donné son étape à l'assistant, que l'objectif s'est
+    /// ouvert. Il est remplacé par ce qui doit rester vrai maintenant.
+    func testLeDuathlonEstProposableEtConstructible() {
+        XCTAssertTrue(GoalType.duathlon.estProposable)
+
+        // Le champ que l'assistant doit savoir remplir. Sans lui, choisir le duathlon par
+        // cette porte-là construirait un plan sans format — donc sans distances, sans temps
+        // d'effort, et sans la seule chose qui distingue les quatre formats entre eux.
+        var resultat = AdaptivePlanEngine.NewGoalResult(
+            goal: .duathlon, distance: nil, chrono: "2:25", raceDate: .now, runningDays: [0, 2, 4]
+        )
+        resultat.duathlonFormat = DuathlonFormat.standard.rawValue
+        XCTAssertEqual(resultat.duathlonFormat, "standard")
+
+        let profil = UserProfile(name: "Test")
+        AdaptivePlanEngine.startNewProgram(resultat, profile: profil)
+        XCTAssertEqual(profil.duathlonFormat, "standard", "le format n'a pas été écrit")
+        XCTAssertNotNil(profil.raceDate, "la date a été effacée : le plan serait ouvert")
     }
 
     /// Les objectifs DÉJÀ ouverts le restent. Ajouter un cas à une énumération est le genre de

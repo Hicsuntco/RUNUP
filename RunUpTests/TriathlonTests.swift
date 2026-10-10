@@ -181,9 +181,7 @@ final class TriathlonTests: XCTestCase {
     /// L'assertion d'avant comptait : `filter(\.estProposable).count == allCases.count`. Elle
     /// disait « un objectif est retenu : si c'est voulu, dis-le ici » — et c'est exactement ce
     /// qu'elle a fait quand le duathlon est arrivé. Voici l'endroit où le dire.
-    private static let retenusVolontairement: [GoalType: String] = [
-        .duathlon: "arrive en six lots — à ce jour, le modèle de formats seul. Voir DuathlonTests.",
-    ]
+    private static let retenusVolontairement: [GoalType: String] = [:]
 
     func testLeTriathlonEstProposableEtConstructible() {
         XCTAssertTrue(GoalType.triathlon.estProposable)

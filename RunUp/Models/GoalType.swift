@@ -85,15 +85,20 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
     /// sans être encore offert.
     var estProposable: Bool {
         switch self {
-        case .race, .progress, .restart, .weight, .health, .hyrox, .ultraTrail, .triathlon:
+        // LE DUATHLON EST OUVERT, ET VOICI CE QUI DEVAIT ÊTRE VRAI AVANT.
+        //
+        // Il est arrivé en six lots et il est resté retenu pendant cinq : le modèle des quatre
+        // formats, l'objectif lui-même, le format qui voyage jusqu'en base, l'écran
+        // d'inscription, les séances. Le choisir avant le cinquième aurait donné un plan de
+        // COURSE portant le nom « duathlon » — pas un kilomètre de vélo, pas un enchaînement.
+        //
+        // Il s'ouvre maintenant parce que les DEUX surfaces qui le proposent savent demander
+        // son format : l'inscription et l'assistant de nouvel objectif. La seconde est le
+        // piège, et le triathlon y est tombé avant lui — elle lit cette propriété exactement
+        // comme la première.
+        case .race, .progress, .restart, .weight, .health, .hyrox, .ultraTrail, .triathlon,
+             .duathlon:
             return true
-        // LE DUATHLON EST RETENU, et ce commentaire vaut engagement : il s'ouvrira quand les
-        // six étapes seront là, pas avant. À ce jour il n'a que son modèle de formats. Le
-        // choisir maintenant donnerait un plan de COURSE portant le nom « duathlon » — pas un
-        // kilomètre de vélo, pas un enchaînement, c'est-à-dire précisément l'épreuve qui fait
-        // finir le second parcours en marchant, absente du plan censé la préparer.
-        case .duathlon:
-            return false
         }
     }
 

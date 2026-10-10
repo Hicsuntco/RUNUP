@@ -4536,6 +4536,23 @@
         }
       }
     },
+    "C'est la raison d'être de la répétition générale du bloc d'affûtage : course → vélo → course, une fois, pour sentir ce que ça fait avant que ça compte.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That's what the dress rehearsal in the taper block is for: run → bike → run, once, to feel it before it counts."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para eso está el ensayo general del bloque de puesta a punto: carrera → bici → carrera, una vez, para sentirlo antes de que cuente."
+          }
+        }
+      }
+    },
     "C'est normal, tu viens de commencer": {
       "extractionState": "manual",
       "localizations": {
@@ -7358,6 +7375,23 @@
         }
       }
     },
+    "Deux transitions, et aucune combinaison à retirer : elles sont plus courtes qu'en triathlon, et elles ne sont jamais là que ta journée se joue. Deux ou trois pour cent du total, pas davantage.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Two transitions, and no wetsuit to peel off: they're shorter than in a triathlon, and they're never where your day is decided. Two or three per cent of the total, no more."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dos transiciones, y ningún neopreno que quitarse: son más cortas que en triatlón, y nunca es ahí donde se decide tu día. Un dos o tres por ciento del total, no más."
+          }
+        }
+      }
+    },
     "Dim": {
       "extractionState": "manual",
       "localizations": {
@@ -7933,6 +7967,23 @@
         }
       }
     },
+    "Départ, ravitaillement, transitions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The start, fuelling, transitions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La salida, avituallamiento, transiciones"
+          }
+        }
+      }
+    },
     "Département ou numéro": {
       "localizations": {
         "en": {
@@ -8239,6 +8290,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Se queda en tu historial, pero ya no se propondrá por defecto en tus próximas carreras."
+          }
+        }
+      }
+    },
+    "Elles méritent quand même d'être répétées une fois — non pour le chrono, mais pour ne pas découvrir en pleine course qu'on a oublié quelque chose. T1 surtout : on y arrive déjà essoufflé, et c'est là qu'on enfile un casque à l'envers.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "They're still worth rehearsing once — not for the clock, but so you don't find out mid-race that you forgot something. T1 especially: you arrive already out of breath, and that's where helmets go on backwards."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aun así merece la pena ensayarlas una vez — no por el crono, sino para no descubrir en plena carrera que te has olvidado algo. Sobre todo T1: llegas ya sin aliento, y ahí es donde el casco se pone al revés."
+          }
+        }
+      }
+    },
+    "Elles méritent quand même d'être répétées une fois — non pour le chrono, mais pour ne pas découvrir en pleine course qu'on a oublié quelque chose. T1 surtout : on y arrive déjà essoufflée, et c'est là qu'on enfile un casque à l'envers.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "They're still worth rehearsing once — not for the clock, but so you don't find out mid-race that you forgot something. T1 especially: you arrive already out of breath, and that's where helmets go on backwards."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aun así merece la pena ensayarlas una vez — no por el crono, sino para no descubrir en plena carrera que te has olvidado algo. Sobre todo T1: llegas ya sin aliento, y ahí es donde el casco se pone al revés."
           }
         }
       }
@@ -10921,6 +11006,23 @@
         }
       }
     },
+    "LA FACTURE N'ARRIVE PAS TOUT DE SUITE. Elle arrive à la seconde course, et elle ne se renégocie pas : on ne rattrape pas sur la fin d'un duathlon ce qu'on a dépensé au début. Pars plus doucement que ce qui te semble juste.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "THE BILL DOESN'T COME STRAIGHT AWAY. It comes on the second run, and there's no renegotiating it: you don't make up at the end of a duathlon what you spent at the start. Go out slower than feels right."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LA FACTURA NO LLEGA ENSEGUIDA. Llega en la segunda carrera, y no se renegocia: en un duatlón no se recupera al final lo que se gastó al principio. Sal más suave de lo que te parece justo."
+          }
+        }
+      }
+    },
     "La barre de progression suit toujours la durée de la séance, quel que soit le grand chiffre — c'est le seul objectif qu'une séance porte.": {
       "localizations": {
         "en": {
@@ -11152,6 +11254,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "La noche"
+          }
+        }
+      }
+    },
+    "La première course": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The first run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La primera carrera"
           }
         }
       }
@@ -11775,6 +11894,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "El seguimiento de tus carreras, tu historial y el Club siguen siendo gratis."
+          }
+        }
+      }
+    },
+    "Le vélo est la seule fenêtre": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The bike is your only window"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La bici es tu única ventana"
+          }
+        }
+      }
+    },
+    "Le vélo prend plus de la moitié de la journée, mais la seconde course est aussi longue que la première — parfois bien plus. Tout ce que tu auras pris d'avance avant comptera contre toi là.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The bike takes more than half the day, but the second run is as long as the first — sometimes much longer. Any time you banked earlier will be charged back to you there."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La bici ocupa más de la mitad del día, pero la segunda carrera es tan larga como la primera — a veces mucho más. Todo lo que hayas ganado antes te lo cobrarán ahí."
+          }
+        }
+      }
+    },
+    "Le vélo prend près de la moitié de la journée, et la seconde course à peine un sixième. Elle est courte : c'est ce qui donne envie de partir vite sur la première, et c'est l'erreur.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The bike takes nearly half the day, and the second run barely a sixth. It's short — which is what makes you want to go out fast on the first one, and that's the mistake."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La bici ocupa casi la mitad del día, y la segunda carrera apenas una sexta parte. Es corta: eso es lo que da ganas de salir rápido en la primera, y ahí está el error."
           }
         }
       }
@@ -17419,6 +17589,23 @@
         }
       }
     },
+    "Rien avant : la première course se fait à vide, et c'est sans conséquence, elle est courte. Rien après non plus — à pied, sur un estomac déjà secoué, presque tout est refusé.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing before: the first run is done on empty, and that's fine, it's short. Nothing after either — on foot, on a stomach already shaken up, almost everything gets refused."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nada antes: la primera carrera se hace en vacío, y no pasa nada, es corta. Nada después tampoco — corriendo, con el estómago ya revuelto, casi todo se rechaza."
+          }
+        }
+      }
+    },
     "Rien de nouveau aujourd'hui": {
       "extractionState": "manual",
       "localizations": {
@@ -21557,6 +21744,23 @@
         }
       }
     },
+    "Tout ce dont la seconde course aura besoin se prend sur la selle. Pas idéalement : c'est la règle. Et ça se teste à l'entraînement, sur les enchaînements — jamais le jour J.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything the second run will need is taken on the bike. Not ideally: that's the rule. And it gets tested in training, on your brick sessions — never on race day."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todo lo que la segunda carrera vaya a necesitar se toma sobre la bici. No idealmente: es la regla. Y se prueba en los entrenamientos, en las transiciones — nunca el día de la prueba."
+          }
+        }
+      }
+    },
     "Tout effacer": {
       "extractionState": "manual",
       "localizations": {
@@ -21922,6 +22126,40 @@
         }
       }
     },
+    "Tu seras frais, en groupe, et cinq ou dix kilomètres ne font pas peur quand c'est ta distance d'entraînement. C'est exactement pour ça que presque tout le monde part trop vite.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You'll be fresh, in a pack, and five or ten kilometres hold no fear when that's your training distance. Which is exactly why almost everyone goes out too fast."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estarás fresco, en grupo, y cinco o diez kilómetros no asustan cuando es tu distancia de entrenamiento. Justo por eso casi todo el mundo sale demasiado rápido."
+          }
+        }
+      }
+    },
+    "Tu seras fraîche, en groupe, et cinq ou dix kilomètres ne font pas peur quand c'est ta distance d'entraînement. C'est exactement pour ça que presque tout le monde part trop vite.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You'll be fresh, in a pack, and five or ten kilometres hold no fear when that's your training distance. Which is exactly why almost everyone goes out too fast."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estarás fresca, en grupo, y cinco o diez kilómetros no asustan cuando es tu distancia de entrenamiento. Justo por eso casi todo el mundo sale demasiado rápido."
+          }
+        }
+      }
+    },
     "Type de séance": {
       "localizations": {
         "en": {
@@ -22016,6 +22254,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Un dorsal a la vista — construimos el plan para el día de la carrera"
+          }
+        }
+      }
+    },
+    "Un duathlon se décide sur ses premiers kilomètres, et la facture arrive deux heures plus tard. Ce qui suit ne se joue pas aux jambes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A duathlon is decided in its first few kilometres, and the bill arrives two hours later. None of what follows is about your legs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un duatlón se decide en sus primeros kilómetros, y la factura llega dos horas después. Nada de lo que sigue se juega en las piernas."
           }
         }
       }

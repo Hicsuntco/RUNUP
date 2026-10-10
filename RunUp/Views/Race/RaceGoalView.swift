@@ -8,6 +8,7 @@ struct RaceGoalView: View {
     private var profile: UserProfile { appState.profile }
     @State private var jourJOuvert = false
     @State private var jourJTriathlonOuvert = false
+    @State private var jourJDuathlonOuvert = false
 
     private var shape: AdaptivePlanEngine.ProgramShape {
         AdaptivePlanEngine.ProgramShape.compute(goal: profile.goalId, raceDate: profile.raceDate, from: profile.programStartDate ?? .now)
@@ -15,6 +16,10 @@ struct RaceGoalView: View {
 
     private var formatDuTriathlon: TriathlonFormat? {
         profile.triathlonFormat.flatMap(TriathlonFormat.init(rawValue:))
+    }
+
+    private var formatDuDuathlon: DuathlonFormat? {
+        profile.duathlonFormat.flatMap(DuathlonFormat.init(rawValue:))
     }
 
     /// Le temps visé d'un triathlon, en minutes.
@@ -281,6 +286,33 @@ struct RaceGoalView: View {
                         .buttonStyle(PressableStyle())
                         .accessibilityHint(Text(format.resume))
                     }
+
+                    // Le même bouton pour le duathlon, et pour la même raison : le plan dit
+                    // quoi faire cette semaine, jamais comment se passe la journée. Un
+                    // duathlon se perd sur ses premiers kilomètres, et ça ne s'apprend dans
+                    // aucune séance.
+                    if profile.goalId == .duathlon, let format = formatDuDuathlon {
+                        Button { jourJDuathlonOuvert = true } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "list.bullet.clipboard")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(RUColor.violet)
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text("Départ, ravitaillement, transitions")
+                                        .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                                    Text("Ce que le plan ne te dit pas, et qui décide autant")
+                                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
+                                }
+                                Spacer(minLength: 0)
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 13, weight: .semibold)).foregroundColor(RUColor.text3)
+                            }
+                            .padding(RUSpacing.cardPadding)
+                            .ruCard()
+                        }
+                        .buttonStyle(PressableStyle())
+                        .accessibilityHint(Text(format.resume))
+                    }
                 } else {
                     RUCardHeader(icon: "speedometer", tint: RUColor.rose2, title: "Stratégie d'allure · jour J")
                     VStack(spacing: 6) {
@@ -314,6 +346,12 @@ struct RaceGoalView: View {
         .sheet(isPresented: $jourJTriathlonOuvert) {
             if let format = formatDuTriathlon {
                 TriathlonRaceDaySheet(format: format, minutesVisees: minutesVisees)
+                    .runUpSheetStyle()
+            }
+        }
+        .sheet(isPresented: $jourJDuathlonOuvert) {
+            if let format = formatDuDuathlon {
+                DuathlonRaceDaySheet(format: format, minutesVisees: minutesVisees)
                     .runUpSheetStyle()
             }
         }

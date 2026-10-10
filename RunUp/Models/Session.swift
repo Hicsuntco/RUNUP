@@ -158,6 +158,20 @@ enum SessionKind: String, Codable, Equatable, CaseIterable {
     /// travaille. Ça se fait sur un parking, avec un vélo et des chaussures.
     case triTransitions = "tri_transitions"
 
+    /// LA SÉANCE QUI DÉFINIT LE DUATHLON, et qui n'existe dans aucune autre discipline :
+    /// courir, rouler, courir encore.
+    ///
+    /// Ce n'est pas un enchaînement vélo→course avec un échauffement devant. La première
+    /// course change tout ce qui suit : on monte sur le vélo avec une fréquence cardiaque déjà
+    /// haute, on en descend plus entamée, et la seconde course se négocie sur des jambes qui
+    /// ont déjà donné deux fois. Qui ne l'a jamais fait part trop vite sur la première et
+    /// marche sur la seconde — c'est l'erreur la plus courante de la discipline, et elle ne
+    /// s'apprend qu'en la vivant à l'entraînement.
+    ///
+    /// Elle est réservée à l'affûtage : elle coûte cher, et sa valeur est d'être une
+    /// RÉPÉTITION GÉNÉRALE, pas un volume de plus.
+    case duaRunBikeRun = "dua_run_bike_run"
+
     case rest = "rest"
     case comeback = "comeback"
     case freeRunMaintenance = "free_run_maintenance"
@@ -217,7 +231,10 @@ enum SessionKind: String, Codable, Equatable, CaseIterable {
              // Le seuil à vélo est du tempo, et l'enchaînement aux allures du jour J aussi : on
              // y tient une intensité soutenue sans récupération, ce qui est la définition de
              // cette famille et pas celle du fractionné.
-             .triBikeThreshold, .triBrick, .triBrickRace:
+             .triBikeThreshold, .triBrick, .triBrickRace,
+             // Course → vélo → course aux allures du jour J : un effort soutenu et continu,
+             // sans récupération. C'est la définition du tempo, pas celle du fractionné.
+             .duaRunBikeRun:
             return .tempo
 
         case .lightIntervals, .vo2maxIntervals, .racePaceReminder, .freeRunLightIntervals,
@@ -320,6 +337,12 @@ enum SessionKind: String, Codable, Equatable, CaseIterable {
         // chaussures, sur un parking : T1 au sens du matériel, T2 au sens du départ à pied.
         case .triBrick, .triBrickRace, .triTransitions:
             return [.bike, .run]
+        // Les deux mêmes disciplines, dans un ordre qui commence et finit à pied. L'ordre
+        // n'est pas représentable ici — `disciplines` dit CE QUI est fait, pas dans quel sens —
+        // et c'est sans conséquence : les deux servent à savoir quelle séance une sortie
+        // enregistrée valide, et une course comme un tour de vélo valident celle-ci.
+        case .duaRunBikeRun:
+            return [.run, .bike]
         }
     }
 

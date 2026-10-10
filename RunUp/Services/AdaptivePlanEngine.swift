@@ -970,6 +970,71 @@ enum AdaptivePlanEngine {
         return adjustForWellbeing(base, profile: profile)
     }
 
+    /// Les séances d'un duathlon, bloc par bloc.
+    ///
+    /// # CE QUI LE DISTINGUE DU TRIATHLON, EN UNE LIGNE
+    ///
+    /// La SORTIE LONGUE RESTE UNE COURSE pendant tout le bloc de base, là où le triathlon la
+    /// donne au vélo. Ce n'est pas une préférence : un duathlon se court à 51 % de son temps
+    /// d'effort contre 33 % pour un triathlon olympique (voir `DuathlonFormat.partCourue`).
+    /// Donner la séance la plus longue au vélo, comme pour le triathlon, sous-entraînerait
+    /// précisément l'épreuve qui décide de la journée.
+    ///
+    /// Le vélo n'est pas pour autant un figurant : il prend une séance d'endurance dans chaque
+    /// bloc et une séance de seuil dans le spécifique, parce que c'est là qu'on gagne du temps
+    /// sans en perdre pour la course qui suit.
+    ///
+    /// # POURQUOI LES SÉANCES DE VÉLO S'APPELLENT ENCORE `tri…`
+    ///
+    /// `SessionKind.triBikeEndurance` et ses voisines ont été écrites pour le triathlon, et
+    /// leur identifiant est historique — il est ÉCRIT EN BASE, donc le renommer rendrait
+    /// illisibles les séances déjà enregistrées. Un vélo d'endurance est un vélo d'endurance
+    /// quelle que soit l'épreuve qui l'a fait naître ; ce qui compte est `disciplines`, et il
+    /// dit `[.bike]` pour tout le monde.
+    ///
+    /// Une seule séance est vraiment nouvelle : `duaRunBikeRun`, qui n'existe dans aucune
+    /// autre discipline.
+    private static func duathlonArchetypes(for block: TrainingBlock, profile: UserProfile) -> [SessionArchetype] {
+        let zones = PaceModel.zones(for: profile)
+
+        let base: [SessionArchetype]
+        switch block {
+        case .base:
+            base = [
+                SessionArchetype(role: .longRun, title: "Sortie longue", subtitle: "la course reste la plus longue séance de la semaine — c'est elle qui porte les deux tiers de la journée", pace: zones.easy, zone: "Z2", baseDuration: 70, kind: .longRun),
+                SessionArchetype(role: .easy, title: "Vélo · endurance", subtitle: "durer sur la selle, sans forcer — le vélo se construit avant de se durcir", pace: "—", zone: "Z2", baseDuration: 75, kind: .triBikeEndurance),
+                SessionArchetype(role: .speed, title: "Fractionné léger", subtitle: "de la vitesse sur jambes fraîches, pendant qu'on peut encore se le permettre", pace: zones.interval, zone: "Z4", baseDuration: 40, kind: .lightIntervals),
+                SessionArchetype(role: .easy, title: "Footing d'endurance", subtitle: "le volume à pied, tranquille", pace: zones.easy, zone: "Z2", baseDuration: 40, kind: .enduranceFooting)
+            ]
+        case .specifique:
+            base = [
+                // L'enchaînement prend la place de la séance longue, exactement comme au
+                // triathlon : ce qui se répète dans un bloc spécifique est la JOURNÉE.
+                SessionArchetype(role: .longRun, title: "Enchaînement vélo → course", subtitle: "descendre du vélo et partir courir tout de suite — les premiers kilomètres ne ressemblent à rien d'autre", pace: zones.marathon, zone: "Z3", baseDuration: 80, kind: .triBrick),
+                SessionArchetype(role: .speed, title: "Vélo · seuil", subtitle: "des blocs soutenus — on gagne du temps là sans en perdre pour la course d'après", pace: "—", zone: "Z3", baseDuration: 55, kind: .triBikeThreshold),
+                SessionArchetype(role: .speed, title: "Tempo run", subtitle: "l'allure du jour J sur jambes fraîches — l'autre moitié du travail", pace: zones.threshold, zone: "Z3", baseDuration: 40, kind: .tempoRun),
+                SessionArchetype(role: .easy, title: "Footing d'endurance", subtitle: "le volume à pied ne baisse pas pendant le bloc spécifique", pace: zones.easy, zone: "Z2", baseDuration: 40, kind: .enduranceFooting)
+            ]
+        case .affutage:
+            base = [
+                // La répétition générale, et elle n'arrive QU'ICI : elle coûte cher, et sa
+                // valeur est d'être vécue une fois avant le jour J, pas d'ajouter du volume.
+                SessionArchetype(role: .longRun, title: "Course → vélo → course", subtitle: "la répétition générale — pars plus doucement que tu ne crois sur la première", pace: zones.marathon, zone: "Z3", baseDuration: 60, kind: .duaRunBikeRun),
+                SessionArchetype(role: .easy, title: "Transitions · T1 et T2", subtitle: "deux minutes gagnées ici valent une séance de seuil", pace: "—", zone: "Technique", baseDuration: 25, kind: .triTransitions),
+                SessionArchetype(role: .speed, title: "Rappel d'allure", subtitle: "quelques minutes au rythme du jour J, juste pour s'en souvenir", pace: zones.marathon, zone: "Z3", baseDuration: 30, kind: .racePaceReminder),
+                SessionArchetype(role: .easy, title: "Footing d'entretien", subtitle: "relâché, rien à construire", pace: zones.easy, zone: "Z2", baseDuration: 25, kind: .maintenanceFooting)
+            ]
+        case .deload:
+            base = [
+                SessionArchetype(role: .longRun, title: "Vélo · endurance", subtitle: "volume réduit, aucune intensité — la selle est plus douce que le bitume", pace: "—", zone: "Z1-2", baseDuration: 60, kind: .triBikeEndurance),
+                SessionArchetype(role: .easy, title: "Footing récup", subtitle: "coupe le volume, écoute ton corps", pace: zones.easy, zone: "Z1-2", baseDuration: 22, kind: .recoveryFooting),
+                SessionArchetype(role: .easy, title: "Footing d'endurance", subtitle: "facile, sans chrono", pace: zones.easy, zone: "Z2", baseDuration: 35, kind: .enduranceFooting)
+            ]
+        }
+
+        return adjustForWellbeing(base, profile: profile)
+    }
+
     /// Real, human-readable label for the raw onboarding id — `CoachService` used to interpolate
     /// the raw id ("knee") straight into the coach's system prompt instead of this.
     static func injuryLabel(_ id: String) -> String {
@@ -1119,6 +1184,8 @@ enum AdaptivePlanEngine {
                                              weekNumber: weekNumber, shape: shape)
         case .triathlon:
             templates = triathlonArchetypes(for: block, profile: profile)
+        case .duathlon:
+            templates = duathlonArchetypes(for: block, profile: profile)
         default:
             templates = archetypes(for: block, profile: profile, weekNumber: weekNumber, shape: shape)
         }

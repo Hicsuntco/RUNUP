@@ -24556,6 +24556,52 @@
         }
       }
     },
+    "session.dua_run_bike_run.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "la répétition générale — pars plus doucement que tu ne crois sur la première"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the full dress rehearsal — start the first run slower than you think"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "el ensayo general — sal más suave de lo que crees en la primera"
+          }
+        }
+      }
+    },
+    "session.dua_run_bike_run.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Course → vélo → course"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run → bike → run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carrera → bici → carrera"
+          }
+        }
+      }
+    },
     "session.eased_long_run.subtitle": {
       "extractionState": "manual",
       "localizations": {

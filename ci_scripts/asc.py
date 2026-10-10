@@ -668,7 +668,11 @@ def cmd_push_screenshots(args):
     prime un mélange d'anciennes et de nouvelles images dans la fiche. Les anciennes sont donc
     supprimées d'abord — c'est le même geste qu'à la main, dans le même ordre.
     """
-    dossier = ROOT / args.dir
+    # Relatif au dépôt, ou absolu tel quel : le workflow dépose les images dans un dossier
+    # temporaire, parce que `appstore/raw/fr-FR/` porte encore quatre captures versionnées et
+    # qu'une extraction par-dessus échoue sur « file exists ».
+    demande = pathlib.Path(args.dir)
+    dossier = demande if demande.is_absolute() else ROOT / demande
     if not dossier.is_dir():
         sys.exit(f"{dossier} n'existe pas. Compose les images d'abord, ou passe --dir.")
 

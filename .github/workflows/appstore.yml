@@ -156,9 +156,14 @@ jobs:
             echo "→ dernière exécution réussie : $RUN"
           fi
           [ -n "$RUN" ] && [ "$RUN" != "null" ] || { echo "::error::Aucune exécution de captures trouvée"; exit 1; }
-          gh run download "$RUN" --repo "${{ github.repository }}" --name captures-app-store --dir appstore
+          # DANS UN DOSSIER NEUF, ET PAS DANS LA COPIE DE TRAVAIL. `appstore/raw/fr-FR/` porte
+          # encore quatre captures prises à la main et versionnées : l'extraction tombait
+          # dessus avec « error extracting raw/fr-FR/1-accueil.png: file exists ».
+          rm -rf "$RUNNER_TEMP/captures"
+          gh run download "$RUN" --repo "${{ github.repository }}" --name captures-app-store \
+            --dir "$RUNNER_TEMP/captures"
           echo "→ dossiers reçus :"
-          ls -1 appstore/out
+          ls -1 "$RUNNER_TEMP/captures/out"
 
       - name: Exécuter
         env:
@@ -182,8 +187,8 @@ jobs:
             pousser-la-fiche-essai)   python3 ci_scripts/asc.py push-metadata "$VERSION" --dry-run ;;
             pousser-la-fiche)         python3 ci_scripts/asc.py push-metadata "$VERSION" ;;
             composer-les-captures)    python3 ci_scripts/screenshots.py "$LANGUE" ;;
-            pousser-les-captures-essai) python3 ci_scripts/asc.py push-screenshots "$VERSION" --dry-run ;;
-            pousser-les-captures)     python3 ci_scripts/asc.py push-screenshots "$VERSION" ;;
+            pousser-les-captures-essai) python3 ci_scripts/asc.py push-screenshots "$VERSION" --dir "$RUNNER_TEMP/captures/out" --dry-run ;;
+            pousser-les-captures)     python3 ci_scripts/asc.py push-screenshots "$VERSION" --dir "$RUNNER_TEMP/captures/out" ;;
             assembler-l-apercu)       python3 ci_scripts/apercu.py --debut "${DEBUT:-0}" ;;
             etat-des-builds)          python3 ci_scripts/asc.py ci ;;
             soumettre-essai)          python3 ci_scripts/asc.py submit "$VERSION" $BUILD_OPT --dry-run ;;

@@ -7,7 +7,7 @@ import Foundation
 /// Il ne compte donc plus : la liste qui fait foi est celle de `GoalStepView`, qui lit `allCases`
 /// filtré par `estProposable`, et l'ordre de déclaration ci-dessous EST l'ordre à l'écran.
 enum GoalType: String, Codable, CaseIterable, Identifiable {
-    case race, progress, restart, weight, health, hyrox, ultraTrail, triathlon
+    case race, progress, restart, weight, health, hyrox, ultraTrail, triathlon, duathlon
 
     var id: String { rawValue }
 
@@ -25,6 +25,7 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         case .hyrox: return String(localized: "Préparer un HYROX")
         case .ultraTrail: return String(localized: "Préparer un ultra-trail")
         case .triathlon: return String(localized: "Préparer un triathlon")
+        case .duathlon: return String(localized: "Préparer un duathlon")
         }
     }
 
@@ -38,6 +39,7 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         case .hyrox: return String(localized: "8 × 1 km de course + stations fonctionnelles — un vrai plan hybride")
         case .ultraTrail: return String(localized: "Dénivelé, descente technique et sorties enchaînées — un plan qui compte en heures")
         case .triathlon: return String(localized: "Nager, rouler, courir — et surtout enchaîner les trois")
+        case .duathlon: return String(localized: "Courir, rouler, courir — et tenir la seconde course")
         }
     }
 
@@ -51,6 +53,7 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         case .hyrox: return "🏋️"
         case .ultraTrail: return "⛰️"
         case .triathlon: return "🏊"
+        case .duathlon: return "🚴"
         }
     }
 
@@ -84,6 +87,13 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         switch self {
         case .race, .progress, .restart, .weight, .health, .hyrox, .ultraTrail, .triathlon:
             return true
+        // LE DUATHLON EST RETENU, et ce commentaire vaut engagement : il s'ouvrira quand les
+        // six étapes seront là, pas avant. À ce jour il n'a que son modèle de formats. Le
+        // choisir maintenant donnerait un plan de COURSE portant le nom « duathlon » — pas un
+        // kilomètre de vélo, pas un enchaînement, c'est-à-dire précisément l'épreuve qui fait
+        // finir le second parcours en marchant, absente du plan censé la préparer.
+        case .duathlon:
+            return false
         }
     }
 
@@ -109,7 +119,7 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         // Le triathlon a une date, et il en a plus besoin que les autres : l'affûtage d'une
         // épreuve à trois disciplines ne consiste pas à réduire un volume mais trois, et
         // l'enchaînement vélo→course est la dernière chose à relâcher.
-        case .race, .hyrox, .ultraTrail, .triathlon: return true
+        case .race, .hyrox, .ultraTrail, .triathlon, .duathlon: return true
         case .progress, .restart, .weight, .health: return false
         }
     }
@@ -141,6 +151,7 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         case .hyrox: return String(localized: "Étape 3 · ton HYROX")
         case .ultraTrail: return String(localized: "Étape 3 · ton ultra")
         case .triathlon: return String(localized: "Étape 3 · ton triathlon")
+        case .duathlon: return String(localized: "Étape 3 · ton duathlon")
         }
     }
 
@@ -154,6 +165,7 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         case .hyrox: return String(localized: "QUEL HYROX ?")
         case .ultraTrail: return String(localized: "QUEL ULTRA ?")
         case .triathlon: return String(localized: "QUEL TRIATHLON ?")
+        case .duathlon: return String(localized: "QUEL DUATHLON ?")
         }
     }
 
@@ -186,6 +198,8 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
             return Accord.selon(
                 f: String(localized: "Nager, rouler, courir — dans cet ordre, et fatiguée de la précédente à chaque fois."),
                 m: String(localized: "Nager, rouler, courir — dans cet ordre, et fatigué de la précédente à chaque fois."))
+        case .duathlon:
+            return String(localized: "Courir, rouler, courir — et c'est la seconde course qui décide de la journée.")
         }
     }
 
@@ -207,6 +221,14 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         switch self {
         case .race, .progress, .restart, .weight, .health, .hyrox, .ultraTrail: return 2
         case .triathlon: return 3
+        // DEUX POUR LE DUATHLON, ET PAS TROIS COMME LE TRIATHLON. La raison du trois était la
+        // natation : une semaine à deux jours ne peut pas contenir trois disciplines, et c'est
+        // toujours la nage qui saute — celle que l'app ne mesure pas, donc dont l'absence ne se
+        // voit nulle part. Ici il n'y a que deux disciplines, et l'enchaînement vélo→course les
+        // porte TOUTES LES DEUX dans une seule séance. Une semaine à deux jours tient donc un
+        // vrai duathlon : une séance de qualité à pied, un enchaînement. Rien ne disparaît en
+        // silence, et l'app voit les deux.
+        case .duathlon: return 2
         }
     }
 
@@ -228,6 +250,10 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         // journée. Un format long tire plus que ça ; c'est le plan de la préparation suivante
         // qui s'en charge, pas ce compteur-là.
         case .triathlon: return 6
+        // Cinq jours : moins qu'un triathlon, parce que la journée est plus courte et qu'il y
+        // manque une discipline. Mais pas trois non plus — deux courses sur des jambes déjà
+        // chargées laissent aux cuisses ce qu'une seule ne laisse pas.
+        case .duathlon: return 5
         }
     }
 }

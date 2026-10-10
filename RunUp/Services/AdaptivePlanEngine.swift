@@ -1242,36 +1242,67 @@ enum AdaptivePlanEngine {
         }
     }
 
+    /// Le libellé de l'objectif, tel qu'il est ÉCRIT EN BASE et relu partout ensuite — Profil,
+    /// Stats, l'en-tête du plan, l'écran objectif.
+    ///
+    /// # ONZE MOTS FRANÇAIS QUI PARTAIENT À TOUT LE MONDE
+    ///
+    /// « Progresser », « Reprise en douceur », « Perte de poids », « Ta course », « Ton ultra »,
+    /// « finir » : des littéraux NUS, sans `String(localized:)`. Une anglophone lisait donc
+    /// « Objectif Reprise en douceur → » dans ses statistiques et « Your program · Progresser »
+    /// en haut de son plan. Rien ne plantait, le catalogue se disait complet — il l'était, ces
+    /// phrases n'y avaient simplement jamais été demandées.
+    ///
+    /// Le défaut se voyait d'autant moins que le même fichier localise correctement juste à
+    /// côté : `UserProfile` pose `String(localized: "Rester en forme")` comme valeur par défaut
+    /// du même champ. Localisé d'un côté, pas de l'autre, pour la même chaîne.
+    ///
+    /// # CE QUE ÇA NE RÉPARE PAS, ET QU'IL FAUT SAVOIR
+    ///
+    /// Le résultat est PERSISTÉ. Il est donc figé dans la langue de l'app au moment de
+    /// l'inscription : un téléphone passé en anglais après coup gardera son libellé français,
+    /// exactement comme `DayStatus.letter` le faisait pour les initiales des jours. La vraie
+    /// correction serait de recalculer à l'affichage depuis l'objectif stocké — mais ce champ
+    /// est aussi LIBREMENT MODIFIABLE dans les réglages du programme, donc il ne peut pas être
+    /// purement dérivé. C'est un chantier à part, écrit ici plutôt que passé sous silence.
     private static func goalDisplay(goal: GoalType, distance: RaceDistance?, custom: String?, chrono: String?, hyroxDivision: String? = nil, denivele: Int? = nil, triathlonFormat: String? = nil) -> String {
         switch goal {
         case .race:
-            let label = distance == .other ? (custom?.isEmpty == false ? custom! : "Ta course") : (distance?.label ?? "Ta course")
-            let chronoLabel = (chrono?.isEmpty ?? true) ? "finir" : chrono!
+            let defaut = String(localized: "Ta course")
+            let label = distance == .other ? (custom?.isEmpty == false ? custom! : defaut) : (distance?.label ?? defaut)
+            let chronoLabel = (chrono?.isEmpty ?? true) ? String(localized: "finir") : chrono!
             return "\(label) · \(chronoLabel)"
-        case .progress: return "Progresser"
-        case .restart: return "Reprise en douceur"
-        case .weight: return "Perte de poids"
-        case .health: return "Rester en forme"
+        case .progress: return String(localized: "Progresser")
+        case .restart: return String(localized: "Reprise en douceur")
+        case .weight: return String(localized: "Perte de poids")
+        case .health: return String(localized: "Rester en forme")
         case .hyrox:
             let divisionLabel = hyroxDivision.flatMap { HyroxDivision(rawValue: $0)?.title }
-            let chronoLabel = (chrono?.isEmpty ?? true) ? "finir" : chrono!
+            let chronoLabel = (chrono?.isEmpty ?? true) ? String(localized: "finir") : chrono!
             return divisionLabel.map { "HYROX \($0) · \(chronoLabel)" } ?? "HYROX · \(chronoLabel)"
         case .ultraTrail:
             // Le dénivelé figure dans le titre de l'objectif, et il n'y est pas pour décorer :
             // « 80 km » ne décrit pas une course de montagne, « 80 km · 4 000 m D+ » si. C'est le
             // second nombre qui dit ce qu'on prépare, et il doit se voir là où l'on relit son
             // objectif.
-            let label = distance == .other ? (custom?.isEmpty == false ? custom! : "Ton ultra") : (distance?.label ?? "Ton ultra")
-            let chronoLabel = (chrono?.isEmpty ?? true) ? "finir" : chrono!
+            let defaut = String(localized: "Ton ultra")
+            let label = distance == .other ? (custom?.isEmpty == false ? custom! : defaut) : (distance?.label ?? defaut)
+            let chronoLabel = (chrono?.isEmpty ?? true) ? String(localized: "finir") : chrono!
             guard let denivele, denivele > 0 else { return "\(label) · \(chronoLabel)" }
             return "\(label) · \(denivele) m D+ · \(chronoLabel)"
         case .triathlon:
             // Le FORMAT, pas les trois distances : « Triathlon olympique · 2:35 » tient sur une
             // ligne d'accueil, « 1500 m · 40 km · 10 km · 2:35 » non. Les trois distances sont
             // là où l'on choisit son format, pas là où l'on relit son objectif tous les matins.
-            let chronoLabel = (chrono?.isEmpty ?? true) ? "finir" : chrono!
+            let chronoLabel = (chrono?.isEmpty ?? true) ? String(localized: "finir") : chrono!
             let format = triathlonFormat.flatMap { TriathlonFormat(rawValue: $0)?.title }
             return format.map { "Triathlon \($0) · \(chronoLabel)" } ?? "Triathlon · \(chronoLabel)"
+        case .duathlon:
+            // Sans son format pour l'instant : le champ qui le stockera arrive à l'étape
+            // suivante. Mieux vaut « Duathlon · 2:25 » que rien, et surtout mieux que de
+            // retomber en silence sur le libellé d'un autre objectif.
+            let chronoLabel = (chrono?.isEmpty ?? true) ? String(localized: "finir") : chrono!
+            return "\(String(localized: "Duathlon")) · \(chronoLabel)"
         }
     }
 

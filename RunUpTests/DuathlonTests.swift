@@ -155,4 +155,60 @@ final class DuathlonTests: XCTestCase {
         XCTAssertEqual(DuathlonFormat.allCases.map(\.rawValue),
                        ["sprint", "standard", "moyenneDistance", "longueDistance"])
     }
+
+    // MARK: - L'objectif, et le robinet qui le retient
+
+    /// LE DUATHLON NE DOIT PAS ÊTRE PROPOSABLE TANT QU'IL N'EST PAS ENTIER.
+    ///
+    /// Ce test est le robinet lui-même. Il tombera le jour où l'objectif s'ouvrira, et c'est
+    /// voulu : il faudra alors le retourner sciemment, en ayant vérifié que les six étapes sont
+    /// là. C'est exactement ce qui a sauvé l'ultra et le triathlon d'être offerts à moitié —
+    /// un plan de COURSE portant le nom d'une épreuve à deux disciplines.
+    func testLeDuathlonResteRetenuTantQuIlNEstPasEntier() {
+        XCTAssertFalse(GoalType.duathlon.estProposable,
+                       "Le duathlon s'ouvre — vérifie que l'inscription ET l'assistant de "
+                       + "nouvel objectif savent demander son format, et retourne ce test.")
+    }
+
+    /// Les objectifs DÉJÀ ouverts le restent. Ajouter un cas à une énumération est le genre de
+    /// geste qui referme un robinet d'à côté sans qu'on s'en aperçoive.
+    func testAjouterLeDuathlonNARienFermeDAutre() {
+        for objectif in GoalType.allCases where objectif != .duathlon {
+            XCTAssertTrue(objectif.estProposable, "\(objectif.rawValue) s'est refermé")
+        }
+    }
+
+    /// Un duathlon a une DATE : sans ça son plan tombe dans la branche « programme ouvert » —
+    /// zéro semaine de base, zéro de spécifique, zéro d'affûtage. C'est le défaut exact que
+    /// l'ultra a connu, et `periodiseVersUneDate` existe pour qu'il ne se répète pas.
+    func testLeDuathlonSePeriodiseVersUneDate() {
+        XCTAssertTrue(GoalType.duathlon.periodiseVersUneDate)
+    }
+
+    /// Chaque propriété de `GoalType` doit AVOIR RÉPONDU pour le duathlon. Le compilateur
+    /// l'impose pour les `switch` exhaustifs ; ce test attrape l'autre moitié — une branche
+    /// ajoutée à la va-vite qui rendrait la chaîne vide ou recopierait celle du triathlon.
+    func testLeDuathlonARepondu() {
+        let d = GoalType.duathlon
+        for (nom, valeur) in [("title", d.title), ("subtitle", d.subtitle), ("emoji", d.emoji),
+                              ("etapeEyebrow", d.etapeEyebrow), ("etapeTitre", d.etapeTitre),
+                              ("etapePromesse", d.etapePromesse)] {
+            XCTAssertFalse(valeur.isEmpty, "\(nom) est vide")
+            XCTAssertNotEqual(valeur, correspondant(nom, .triathlon),
+                              "\(nom) recopie celui du triathlon")
+        }
+        XCTAssertGreaterThanOrEqual(d.joursMinimumParSemaine, 2)
+        XCTAssertGreaterThan(d.recoveryDays, 0)
+    }
+
+    private func correspondant(_ nom: String, _ objectif: GoalType) -> String {
+        switch nom {
+        case "title": return objectif.title
+        case "subtitle": return objectif.subtitle
+        case "emoji": return objectif.emoji
+        case "etapeEyebrow": return objectif.etapeEyebrow
+        case "etapeTitre": return objectif.etapeTitre
+        default: return objectif.etapePromesse
+        }
+    }
 }

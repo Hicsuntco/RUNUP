@@ -6502,6 +6502,40 @@
         }
       }
     },
+    "Courir, rouler, courir — et c'est la seconde course qui décide de la journée.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run, ride, run — and it's the second run that decides the day."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correr, pedalear, correr — y es la segunda carrera la que decide el día."
+          }
+        }
+      }
+    },
+    "Courir, rouler, courir — et tenir la seconde course": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run, ride, run — and hold on through the second run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correr, pedalear, correr — y aguantar la segunda carrera"
+          }
+        }
+      }
+    },
     "Cours quand tu veux": {
       "localizations": {
         "en": {
@@ -7516,6 +7550,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Algo salado desde la primera hora. Seis horas de dulce nadie las aguanta, y es el asco, no el hambre, lo que hace dejar de comer."
+          }
+        }
+      }
+    },
+    "Duathlon": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duathlon"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duatlón"
           }
         }
       }
@@ -15037,6 +15088,23 @@
         }
       }
     },
+    "Perte de poids": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weight loss"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pérdida de peso"
+          }
+        }
+      }
+    },
     "Phase actuelle estimée : %@": {
       "localizations": {
         "en": {
@@ -15975,6 +16043,23 @@
         }
       }
     },
+    "Préparer un duathlon": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Train for a duathlon"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparar un duatlón"
+          }
+        }
+      }
+    },
     "Préparer un triathlon": {
       "extractionState": "manual",
       "localizations": {
@@ -16168,6 +16253,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Publicar la ruta"
+          }
+        }
+      }
+    },
+    "QUEL DUATHLON ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WHICH DUATHLON?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿QUÉ DUATLÓN?"
           }
         }
       }
@@ -17033,6 +17135,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Volver con calma, sin lesionarse"
+          }
+        }
+      }
+    },
+    "Reprise en douceur": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Easing back in"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelta poco a poco"
           }
         }
       }
@@ -23452,6 +23571,23 @@
         }
       }
     },
+    "finir": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "finish"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "terminar"
+          }
+        }
+      }
+    },
     "folliculaire": {
       "localizations": {
         "en": {
@@ -27508,6 +27644,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Paso 3 · tu HYROX"
+          }
+        }
+      }
+    },
+    "Étape 3 · ton duathlon": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 3 · your duathlon"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 3 · tu duatlón"
           }
         }
       }

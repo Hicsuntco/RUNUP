@@ -12,7 +12,7 @@ struct WellbeingFieldsView: View {
         VStack(alignment: .leading, spacing: 0) {
             EyebrowLabel(text: "Une douleur ou blessure à surveiller ?", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
             ChipFlowLayout {
-                ForEach([("none", "Aucune"), ("knee", "Genou"), ("ankle", "Cheville"), ("back", "Dos"), ("other", "Autre")], id: \.0) { id, label in
+                ForEach(OnboardingChoices.blessures, id: \.0) { id, label in
                     SelectableChip(label: label, selected: vm.injuryArea == id) { vm.injuryArea = id }
                 }
             }

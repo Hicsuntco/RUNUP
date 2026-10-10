@@ -58,16 +58,6 @@ struct DeepDiveStepView: View {
         .padding(.top, 20)
     }
 
-    private var prioritesPossibles: [(String, String)] {
-        [
-            ("speed", String(localized: "Aller plus vite")),
-            ("endurance", String(localized: "Tenir plus longtemps")),
-            ("consistency", Accord.selon(f: String(localized: "Être régulière"),
-                                         m: String(localized: "Être régulier"))),
-            ("trail", String(localized: "Dénivelé / trail")),
-        ]
-    }
-
     private var progressFields: some View {
         VStack(alignment: .leading, spacing: 0) {
             EyebrowLabel(text: "Ta priorité", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
@@ -78,7 +68,7 @@ struct DeepDiveStepView: View {
                 // un mélange de littéraux et de chaînes résolues dans le même tableau donnerait
                 // un type hétérogène, et surtout une liste dont la moitié se traduit au moment de
                 // l'affichage et l'autre pas.
-                ForEach(prioritesPossibles, id: \.0) { id, label in
+                ForEach(OnboardingChoices.priorites, id: \.0) { id, label in
                     SelectableChip(label: label, selected: vm.focusArea == id) { vm.focusArea = id }
                 }
             }
@@ -91,7 +81,7 @@ struct DeepDiveStepView: View {
         VStack(alignment: .leading, spacing: 0) {
             EyebrowLabel(text: "Ta dernière sortie remonte à", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
             ChipFlowLayout {
-                ForEach([("1m", "Moins d'1 mois"), ("6m", "1 à 6 mois"), ("1y", "6 mois à 1 an"), ("1y+", "Plus d'1 an")], id: \.0) { id, label in
+                ForEach(OnboardingChoices.recences, id: \.0) { id, label in
                     SelectableChip(label: label, selected: vm.lastRanRecency == id) { vm.lastRanRecency = id }
                 }
             }
@@ -102,13 +92,13 @@ struct DeepDiveStepView: View {
         VStack(alignment: .leading, spacing: 0) {
             EyebrowLabel(text: "Temps que tu veux y consacrer / semaine", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
             ChipFlowLayout {
-                ForEach([("1h", "Moins d'1h"), ("2h", "1 à 2h"), ("3h", "2 à 3h"), ("3h+", "Plus de 3h")], id: \.0) { id, label in
+                ForEach(OnboardingChoices.budgetsHebdo, id: \.0) { id, label in
                     SelectableChip(label: label, selected: vm.weeklyTimeBudget == id) { vm.weeklyTimeBudget = id }
                 }
             }
             EyebrowLabel(text: "Ton moment préféré pour courir", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
             ChipFlowLayout {
-                ForEach([("morning", "Matin"), ("noon", "Midi"), ("evening", "Soir"), ("varies", "Ça varie")], id: \.0) { id, label in
+                ForEach(OnboardingChoices.momentsDeLaJournee, id: \.0) { id, label in
                     SelectableChip(label: label, selected: vm.preferredTimeOfDay == id) { vm.preferredTimeOfDay = id }
                 }
             }

@@ -67,6 +67,23 @@
         }
       }
     },
+    "%@ / semaine": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ / week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ / semana"
+          }
+        }
+      }
+    },
     "%@ /km entre les blocs · %@ · enchaîne course et mouvement, sans repos complet": {
       "localizations": {
         "en": {
@@ -811,6 +828,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld días"
+          }
+        }
+      }
+    },
+    "%lld jours / semaine": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld days / week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld días / semana"
           }
         }
       }
@@ -1716,6 +1750,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "-%@ km respecto a la semana pasada"
+          }
+        }
+      }
+    },
+    "-%lld kg": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "-%lld kg"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "-%lld kg"
           }
         }
       }
@@ -4487,6 +4538,23 @@
         }
       }
     },
+    "C'EST PARTI": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LET'S GO"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¡VAMOS!"
+          }
+        }
+      }
+    },
     "C'EST QUOI\nTON PRÉNOM ?": {
       "localizations": {
         "en": {
@@ -4600,6 +4668,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vamos allá %@. Calentamiento suave, quédate en Z2."
+          }
+        }
+      }
+    },
+    "C'est prêt, %@. Ta première séance t'attend.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're all set, %@. Your first session is waiting."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todo listo, %@. Tu primera sesión te espera."
+          }
+        }
+      }
+    },
+    "C'est prêt. Ta première séance t'attend.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're all set. Your first session is waiting."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todo listo. Tu primera sesión te espera."
           }
         }
       }
@@ -6519,6 +6621,23 @@
         }
       }
     },
+    "Courir · Rouler · Courir": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run · Bike · Run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correr · Bici · Correr"
+          }
+        }
+      }
+    },
     "Courir, rouler, courir — et c'est la seconde course qui décide de la journée.": {
       "extractionState": "manual",
       "localizations": {
@@ -6597,6 +6716,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Carrera"
+          }
+        }
+      }
+    },
+    "Course + assiette": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running + eating"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correr + comer"
           }
         }
       }
@@ -7294,6 +7430,23 @@
         }
       }
     },
+    "Dernière sortie : %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last run: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Última salida: %@"
+          }
+        }
+      }
+    },
     "Des bâtons si tu t'en sers — et seulement si tu t'en es servi à l'entraînement.": {
       "localizations": {
         "en": {
@@ -7536,6 +7689,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "División"
+          }
+        }
+      }
+    },
+    "Division %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ division"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "División %@"
           }
         }
       }
@@ -10642,6 +10812,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Día %lld de %lld — el resto se desbloquea mañana."
+          }
+        }
+      }
+    },
+    "Jour J · %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Race day · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Día D · %@"
           }
         }
       }
@@ -14163,6 +14350,23 @@
         }
       }
     },
+    "On surveille : %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Watching: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vigilamos: %@"
+          }
+        }
+      }
+    },
     "On t'enverra un petit rappel pour tes séances 🔔": {
       "localizations": {
         "en": {
@@ -15562,6 +15766,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Peso objetivo"
+          }
+        }
+      }
+    },
+    "Point de départ : %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starting point: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Punto de partida: %@"
           }
         }
       }
@@ -21558,6 +21779,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tu objetivo de tiempo"
+          }
+        }
+      }
+    },
+    "Ton plan": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your plan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu plan"
           }
         }
       }

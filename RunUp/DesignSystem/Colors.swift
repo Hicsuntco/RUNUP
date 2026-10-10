@@ -332,3 +332,40 @@ extension SessionFamily {
         }
     }
 }
+
+/// La couleur d'un objectif, pour l'écran « TON PLAN » qui ferme l'inscription.
+///
+/// Elle vit ici et pas dans `GoalType` pour la même raison que `SessionFamily.tint` juste
+/// au-dessus : `GoalType` doit rester un modèle d'entraînement, lisible et testable sans SwiftUI.
+/// C'est l'interface qui décide de quelle couleur elle l'habille.
+///
+/// # DEUX COULEURS SONT PORTÉES PAR DEUX OBJECTIFS CHACUNE, ET C'EST VOLONTAIRE
+///
+/// La palette des familles de séance est FIXE parce qu'on en compare sept d'un coup, sur une même
+/// semaine : deux familles de la même couleur s'y liraient comme la même chose. Un objectif ne se
+/// compare à rien — on en a UN, et l'écran qui le montre n'en montre pas d'autre. Inventer trois
+/// teintes de plus pour un écran qui n'en affiche jamais qu'une à la fois aurait élargi la palette
+/// de l'app sans que personne ne puisse jamais voir la différence.
+///
+/// La course prend l'accent — c'est l'objectif principal de l'app, et la couleur que l'utilisatrice
+/// choisira plus tard dans Profil → Apparence. Les huit autres prennent des teintes fixes, pour ne
+/// pas changer de couleur avec le thème : le vert d'une reprise en douceur dit quelque chose du
+/// geste, pas de la marque.
+extension GoalType {
+    var tint: Color {
+        switch self {
+        case .race: return RUColor.rose
+        case .progress: return RUColor.azure
+        case .restart: return RUColor.lime
+        case .weight: return RUColor.ember
+        case .health: return RUColor.amber
+        // Les deux hybrides partagent le violet, et les deux épreuves « à plusieurs
+        // disciplines » le bleu : si deux objectifs doivent porter la même teinte, autant que
+        // ce soit ceux qui se ressemblent.
+        case .hyrox: return RUColor.grape
+        case .duathlon: return RUColor.grape
+        case .ultraTrail: return RUColor.cyan
+        case .triathlon: return RUColor.azure
+        }
+    }
+}

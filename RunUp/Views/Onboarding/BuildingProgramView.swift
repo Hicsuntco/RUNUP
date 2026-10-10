@@ -1,11 +1,23 @@
 import SwiftUI
 
-/// Final onboarding step — animated ring + checklist, auto-advances. Mirrors the `built` state
-/// machine (4 timed steps over ~2.9s, then `onDone` at 3.8s) in onboarding.jsx.
+/// Final onboarding step — animated ring + checklist, then the « TON PLAN » recap.
+///
+/// # IL N'ENCHAÎNE PLUS SUR L'ACCUEIL TOUT SEUL
+///
+/// L'anneau se remplissait, « Prêt ! » paraissait une demi-seconde, et l'app s'ouvrait sur
+/// l'accueil — l'inscription se terminait par une temporisation, et les neuf écrans de réponses
+/// n'avaient jamais été relus. Le dernier palier ouvre maintenant `PlanRecapView`, qui attend un
+/// appui : c'est lui qui appelle `onDone`.
+///
+/// La demi-seconde reste, et c'est toujours la même : le temps de voir la coche et de lire
+/// « Prêt ! », sans quoi l'écran changerait au moment précis où il annonce sa réussite.
 struct BuildingProgramView: View {
     @Bindable var vm: OnboardingViewModel
     var onDone: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Posé par le dernier minuteur de `runSequence`, et non dérivé de `buildProgress` : la
+    /// bascule arrive une demi-seconde APRÈS le dernier palier, donc elle a sa propre date.
+    @State private var recapitulatif = false
 
     private var buildSteps: [String] {
         let dayCount = vm.runningDays.count
@@ -43,6 +55,16 @@ struct BuildingProgramView: View {
     }
 
     var body: some View {
+        if recapitulatif {
+            PlanRecapView(vm: vm, onDone: onDone)
+                .transition(.opacity)
+        } else {
+            construction
+                .transition(.opacity)
+        }
+    }
+
+    private var construction: some View {
         ObScreen {
             Spacer()
             VStack(spacing: 22) {
@@ -97,19 +119,13 @@ struct BuildingProgramView: View {
             .padding(.top, 26)
             Spacer()
             VStack(spacing: 4) {
+                // L'annonce des notifications vivait ici, juste sous « Prêt ! ». Elle est
+                // passée sur `PlanRecapView` : c'est désormais lui le dernier écran avant la
+                // boîte de dialogue du système, et une mise en bouche doit se trouver sur
+                // l'écran qu'on est en train de lire quand la demande arrive.
                 Text(buildIsDone ? String(localized: "Prêt !") : buildingLabel)
                     .font(RUFont.sans(.small))
                     .foregroundColor(RUColor.text3)
-                // Shown right before the system notification permission prompt fires (see
-                // `OnboardingContainerView.finish()`) — that dialog used to appear with zero lead-
-                // in, right as she lands on Home, so a blind "Autoriser ?" read as coming from
-                // nowhere. This gives it a reason before it shows up.
-                if buildIsDone {
-                    Text("On t'enverra un petit rappel pour tes séances 🔔")
-                        .font(RUFont.sans(.small))
-                        .foregroundColor(RUColor.text3)
-                        .transition(.opacity)
-                }
             }
             .animation(reduceMotion ? nil : .easeIn(duration: 0.25), value: vm.buildProgress)
             .padding(.bottom, 24)
@@ -134,9 +150,9 @@ struct BuildingProgramView: View {
             }
         }
         // Une demi-seconde après le dernier palier : le temps de voir la coche et de lire
-        // « Prêt ! », sans quoi l'écran s'en va au moment précis où il annonce sa réussite.
+        // « Prêt ! », sans quoi l'écran changerait au moment précis où il annonce sa réussite.
         DispatchQueue.main.asyncAfter(deadline: .now() + step * Double(buildSteps.count) + 0.5) {
-            onDone()
+            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) { recapitulatif = true }
         }
     }
 }

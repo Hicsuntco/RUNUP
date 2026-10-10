@@ -2999,6 +2999,23 @@
         }
       }
     },
+    "Aimé par %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liked by %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le gustó a %@"
+          }
+        }
+      }
+    },
     "Aimé par %@ et %lld autres": {
       "extractionState": "manual",
       "localizations": {
@@ -3029,23 +3046,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Le gustó a %@ y otra persona"
-          }
-        }
-      }
-    },
-    "Aimé par %@": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Liked by %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le gustó a %@"
           }
         }
       }
@@ -12976,6 +12976,23 @@
         }
       }
     },
+    "Moyenne distance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Middle distance"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Media distancia"
+          }
+        }
+      }
+    },
     "Météo  Apple Weather": {
       "extractionState": "manual",
       "localizations": {
@@ -18717,6 +18734,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Específico"
+          }
+        }
+      }
+    },
+    "Standard": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estándar"
           }
         }
       }

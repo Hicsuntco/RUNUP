@@ -28,6 +28,17 @@ final class PlanRecapTests: XCTestCase {
         OnboardingViewModel().clearDraft()
     }
 
+    /// Les CHIFFRES d'une pastille, séparateurs de milliers retirés.
+    ///
+    /// Un nombre interpolé dans une chaîne localisée est GROUPÉ selon la langue : le dénivelé
+    /// saisi « 4000 » s'affiche « 4,000 m elev. » en anglais et « 4 000 m D+ » en français —
+    /// avec une espace insécable étroite, qui n'est même pas celle qu'on taperait. Chercher
+    /// « 4000 » dans la pastille échoue donc partout, et chercher « 4,000 » n'échoue que dans
+    /// une langue sur trois. C'est ce test-ci qui l'a appris, en rouge.
+    private func chiffres(_ pastille: String) -> String {
+        pastille.filter(\.isNumber)
+    }
+
     /// Une inscription minimale, à compléter par chaque test. Le rythme est déjà posé par le
     /// modèle (`runningDays` démarre à quatre jours), donc toute rangée en porte au moins une.
     private func inscription(_ goal: GoalType) -> OnboardingViewModel {
@@ -74,7 +85,7 @@ final class PlanRecapTests: XCTestCase {
 
         let pastilles = PlanRecap.pastilles(vm)
         XCTAssertEqual(pastilles[0], "80 km")
-        XCTAssertTrue(pastilles[1].contains("4000"), pastilles[1])
+        XCTAssertEqual(chiffres(pastilles[1]), "4000", pastilles[1])
         XCTAssertTrue(pastilles[2].contains("12:00"), pastilles[2])
     }
 
@@ -259,7 +270,7 @@ final class PlanRecapTests: XCTestCase {
         let pastilles = PlanRecap.pastilles(vm)
         XCTAssertEqual(pastilles.count, PlanRecap.maximum, "\(pastilles)")
         XCTAssertEqual(pastilles[0], "100 km")
-        XCTAssertTrue(pastilles[1].contains("6000"), pastilles[1])
+        XCTAssertEqual(chiffres(pastilles[1]), "6000", pastilles[1])
         XCTAssertTrue(pastilles[2].contains("20:00"), pastilles[2])
     }
 

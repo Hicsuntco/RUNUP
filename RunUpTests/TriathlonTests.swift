@@ -171,10 +171,31 @@ final class TriathlonTests: XCTestCase {
     /// ne savait pas demander le format — a fait son travail : c'est en le faisant échouer qu'on
     /// a su qu'il fallait reprendre `NewGoalWizardView`, qui liste les objectifs exactement comme
     /// l'inscription. Il est remplacé par ce qui doit rester vrai maintenant.
+    /// LES OBJECTIFS DÉLIBÉRÉMENT RETENUS, ET POURQUOI. Vide quand tous sont ouverts.
+    ///
+    /// Ce n'est pas une exception commode : la liste oblige à ÉCRIRE qu'un objectif est retenu.
+    /// Un objectif fermé par accident — un `case` ajouté à la va-vite qui rend `false` — fait
+    /// toujours échouer le test, parce qu'il n'y figure pas. Et un objectif qu'on ouvre en
+    /// oubliant de l'enlever d'ici le fait échouer aussi, dans l'autre sens.
+    ///
+    /// L'assertion d'avant comptait : `filter(\.estProposable).count == allCases.count`. Elle
+    /// disait « un objectif est retenu : si c'est voulu, dis-le ici » — et c'est exactement ce
+    /// qu'elle a fait quand le duathlon est arrivé. Voici l'endroit où le dire.
+    private static let retenusVolontairement: [GoalType: String] = [
+        .duathlon: "arrive en six lots — à ce jour, le modèle de formats seul. Voir DuathlonTests.",
+    ]
+
     func testLeTriathlonEstProposableEtConstructible() {
         XCTAssertTrue(GoalType.triathlon.estProposable)
-        XCTAssertEqual(GoalType.allCases.filter(\.estProposable).count, GoalType.allCases.count,
-                       "un objectif est retenu : si c'est voulu, dis-le ici")
+        for objectif in GoalType.allCases where !objectif.estProposable {
+            XCTAssertNotNil(Self.retenusVolontairement[objectif],
+                            "\(objectif.rawValue) est retenu sans que personne l'ait dit")
+        }
+        for (objectif, pourquoi) in Self.retenusVolontairement {
+            XCTAssertFalse(objectif.estProposable,
+                           "\(objectif.rawValue) s'est ouvert — retire-le de "
+                           + "retenusVolontairement (\(pourquoi))")
+        }
         // Les deux champs que l'assistant doit savoir remplir. Sans eux, choisir le triathlon
         // par cette porte-là construirait un plan sans format.
         var resultat = AdaptivePlanEngine.NewGoalResult(

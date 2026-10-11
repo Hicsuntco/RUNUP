@@ -120,7 +120,7 @@ struct RaceDetailsStepView: View {
                     }
                 }
             }
-            ObNext(disabled: !vm.canProceed(fromStep: 3), action: onNext)
+            ObNext(disabled: !vm.peutContinuer, action: onNext)
         }
     }
 }

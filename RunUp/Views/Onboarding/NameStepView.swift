@@ -13,7 +13,7 @@ struct NameStepView: View {
                     .padding(.top, 22)
                 Spacer()
             }
-            ObNext(disabled: !vm.canProceed(fromStep: 0), action: onNext)
+            ObNext(disabled: !vm.peutContinuer, action: onNext)
         }
     }
 }

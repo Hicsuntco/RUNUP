@@ -32,6 +32,9 @@ enum AdaptivePlanEngine {
         /// Où elle en est AUJOURD'HUI — les `rawValue` de `VolumeActuel`, `PlusLongueSortie` et
         /// `AllureFooting`. Voir `PointDeDepart.swift` : ce sont elles qui ancrent le plan sur la
         /// personne plutôt que sur la course visée.
+        /// Le temps disponible pour UNE séance, en minutes — voir `TempsDisponible`.
+        var tempsSemaineMin: Int?
+        var tempsWeekEndMin: Int?
         var volumeActuel: String?
         var plusLongueSortie: String?
         var allureFooting: String?
@@ -65,6 +68,8 @@ enum AdaptivePlanEngine {
         // vient de répondre « Homme », et il faudrait relancer l'app pour que ça se corrige.
         // C'est exactement le moment où l'on regarde si l'app a écouté.
         AccordStore.shared.genre = Genre.depuis(sexe: result.sex)
+        profile.tempsSemaineMin = result.tempsSemaineMin
+        profile.tempsWeekEndMin = result.tempsWeekEndMin
         profile.volumeActuel = result.volumeActuel
         profile.plusLongueSortie = result.plusLongueSortie
         profile.allureFooting = result.allureFooting
@@ -1334,6 +1339,28 @@ enum AdaptivePlanEngine {
                 cappedByEase = true
             }
 
+            // LE TEMPS QU'ELLE A DIT AVOIR, le jour où la séance tombe.
+            //
+            // Après le tier et après l'allègement du coach, pour la même raison qu'eux : c'est
+            // la durée RÉELLEMENT AFFICHÉE qu'il s'agit de borner. Une coureuse qui a répondu
+            // « 45 minutes en semaine » ne doit pas voir une séance de 52.
+            //
+            // Le plafond s'applique à la sortie longue comme au reste, y compris quand elle
+            // tombe un jour de semaine. C'est voulu : un plan qui prescrit deux heures à
+            // quelqu'un qui en a quarante-cinq n'est pas un plan exigeant, c'est un plan qu'on
+            // abandonne à la troisième semaine. Le programme fait ce qu'il peut du temps donné,
+            // et c'est au coach de dire, s'il le faut, que l'objectif en demande plus.
+            //
+            // `nil` ne borne rien : un profil créé avant la question garde son plan.
+            var cappedByTime = false
+            if let plafond = TempsDisponible.plafond(jour: weekday,
+                                                     semaine: profile.tempsSemaineMin,
+                                                     weekEnd: profile.tempsWeekEndMin),
+               plafond < duration {
+                duration = plafond
+                cappedByTime = true
+            }
+
             // Une séance raccourcie qui s'annonce « Niveau 3 » est un écran qui se contredit :
             // l'étiquette promet une semaine plus chargée pendant que la durée dit l'inverse.
             // Quand l'allègement mord, c'est lui qui a le dernier mot sur l'étiquette — c'est la
@@ -1341,6 +1368,12 @@ enum AdaptivePlanEngine {
             let adjustment: String?
             if cappedByEase {
                 adjustment = profile.trainingEase?.reason
+            // Même raison qu'au-dessus, et le même raisonnement : une séance raccourcie qui
+            // s'annonce « Niveau 3 » est un écran qui se contredit. Quand c'est son propre temps
+            // qui a mordu, l'étiquette se tait plutôt que de promettre une charge qui n'est pas
+            // là — elle n'a rien à expliquer, la coureuse sait ce qu'elle a répondu.
+            } else if cappedByTime {
+                adjustment = nil
             } else if tier > 1 && !isTaper {
                 adjustment = String(localized: "Niveau \(tier)")
             } else {

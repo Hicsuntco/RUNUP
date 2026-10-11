@@ -40,6 +40,8 @@ private struct OnboardingDraft: Codable {
     var volumeActuel: VolumeActuel?
     var plusLongueSortie: PlusLongueSortie?
     var allureFooting: AllureFooting?
+    var tempsSemaineMin: Int?
+    var tempsWeekEndMin: Int?
     var weightNow: String
     var weightTarget: String
     var height: String
@@ -85,6 +87,8 @@ extension OnboardingViewModel {
         volumeActuel = draft.volumeActuel
         plusLongueSortie = draft.plusLongueSortie
         allureFooting = draft.allureFooting
+        tempsSemaineMin = draft.tempsSemaineMin
+        tempsWeekEndMin = draft.tempsWeekEndMin
         weightNow = draft.weightNow
         weightTarget = draft.weightTarget
         height = draft.height
@@ -119,6 +123,7 @@ extension OnboardingViewModel {
             duathlonFormat: duathlonFormat,
             volumeActuel: volumeActuel, plusLongueSortie: plusLongueSortie,
             allureFooting: allureFooting,
+            tempsSemaineMin: tempsSemaineMin, tempsWeekEndMin: tempsWeekEndMin,
             weightNow: weightNow, weightTarget: weightTarget,
             height: height, focusArea: focusArea, bestRecentPerf: bestRecentPerf, lastRanRecency: lastRanRecency,
             weeklyTimeBudget: weeklyTimeBudget, preferredTimeOfDay: preferredTimeOfDay, injuryArea: injuryArea,

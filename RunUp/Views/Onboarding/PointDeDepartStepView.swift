@@ -92,7 +92,7 @@ struct PointDeDepartStepView: View {
                         .padding(.bottom, 10)
                 }
             }
-            ObNext(disabled: !vm.canProceed(fromStep: 4), action: onNext)
+            ObNext(disabled: !vm.peutContinuer, action: onNext)
         }
     }
 }

@@ -66,7 +66,7 @@ struct HyroxDetailsStepView: View {
                     Text("J-\(days)").font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.rose2).padding(.top, 10)
                 }
             }
-            ObNext(disabled: !vm.canProceed(fromStep: 3), action: onNext)
+            ObNext(disabled: !vm.peutContinuer, action: onNext)
         }
     }
 }

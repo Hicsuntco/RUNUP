@@ -62,8 +62,40 @@ struct RunningDaysStepView: View {
                     }
                     .padding(.top, 10)
                 }
+
+                // LE TEMPS, SUR LE MÊME ÉCRAN QUE LES JOURS. C'est la même question vue de
+                // l'autre côté — quels jours, et combien de temps ces jours-là — et les séparer
+                // aurait fait deux écrans dont le second n'aurait eu aucun sens sans le premier.
+                EyebrowLabel(text: "En semaine, tu as combien de temps pour une séance ?",
+                             color: RUColor.text3)
+                    .padding(.top, 24).padding(.bottom, 10)
+                ChipFlowLayout {
+                    ForEach(TempsDisponible.enSemaine, id: \.self) { minutes in
+                        SelectableChip(label: TempsDisponible.libelle(minutes),
+                                       selected: vm.tempsSemaineMin == minutes) {
+                            vm.tempsSemaineMin = minutes
+                        }
+                    }
+                }
+
+                EyebrowLabel(text: "Et le week-end ?", color: RUColor.text3)
+                    .padding(.top, 22).padding(.bottom, 10)
+                ChipFlowLayout {
+                    ForEach(TempsDisponible.leWeekEnd, id: \.self) { minutes in
+                        SelectableChip(label: TempsDisponible.libelle(minutes),
+                                       selected: vm.tempsWeekEndMin == minutes) {
+                            vm.tempsWeekEndMin = minutes
+                        }
+                    }
+                }
+
+                Text("Aucune séance ne dépassera ce temps-là.")
+                    .font(RUFont.sans(.small))
+                    .foregroundColor(RUColor.text3)
+                    .padding(.top, 8)
+                    .padding(.bottom, 10)
             }
-            ObNext(disabled: !vm.canProceed(fromStep: 5), action: onNext)
+            ObNext(disabled: !vm.peutContinuer, action: onNext)
         }
     }
 

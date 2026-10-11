@@ -267,6 +267,7 @@ final class DuathlonTests: XCTestCase {
             raceChrono: "2:25", raceDate: Calendar.current.date(byAdding: .weekOfYear, value: 10, to: .now),
             hyroxDivision: nil,
             triathlonFormat: nil, nageNiveau: nil, duathlonFormat: format,
+            tempsSemaineMin: nil, tempsWeekEndMin: nil,
             volumeActuel: nil, plusLongueSortie: nil, allureFooting: nil,
             runningDays: [0, 2, 4], preferredLongRunDay: 4, level: .intermediaire,
             connectedSources: [], weightNowKg: nil, weightTargetKg: nil, heightCm: nil,

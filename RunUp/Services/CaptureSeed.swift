@@ -334,6 +334,7 @@ enum CaptureSeed {
             triathlonFormat: nil,
             nageNiveau: nil,
             duathlonFormat: nil,
+            tempsSemaineMin: 60, tempsWeekEndMin: 120,
             volumeActuel: VolumeActuel.troisOuQuatre.rawValue,
             plusLongueSortie: PlusLongueSortie.de10a15.rawValue,
             allureFooting: nil,

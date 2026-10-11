@@ -23,7 +23,7 @@ struct GoalStepView: View {
                 }
                 .padding(.top, 20)
             }
-            ObNext(disabled: !vm.canProceed(fromStep: 2), action: onNext)
+            ObNext(disabled: !vm.peutContinuer, action: onNext)
         }
     }
 }

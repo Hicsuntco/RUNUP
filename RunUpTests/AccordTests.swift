@@ -93,6 +93,7 @@ final class AccordTests: XCTestCase {
             raceDistance: nil, raceDistanceCustom: nil, raceElevationGainM: nil,
             raceChrono: nil, raceDate: nil, hyroxDivision: nil,
             triathlonFormat: nil, nageNiveau: nil, duathlonFormat: nil,
+            tempsSemaineMin: nil, tempsWeekEndMin: nil,
             volumeActuel: nil, plusLongueSortie: nil, allureFooting: nil,
             runningDays: [0, 2, 4], preferredLongRunDay: 4, level: .intermediaire,
             connectedSources: [], weightNowKg: nil, weightTargetKg: nil, heightCm: nil,

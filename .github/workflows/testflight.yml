@@ -373,6 +373,16 @@ jobs:
           cd ci_scripts && python3 test_decodage.py
           cd .. && python3 ci_scripts/check_decodage.py
 
+      # L'inscription décrit ses étapes à TROIS endroits : le switch qui choisit la vue, celui
+      # qui la nomme pour les statistiques, et celui qui décide si on peut la quitter. Insérer
+      # une étape au milieu oblige à décaler les trois ; en oublier un a suffi pour que l'écran
+      # des jours de course valide les réponses de son voisin et laisse passer une semaine à
+      # zéro jour. Ça compilait, les tests passaient, l'écran s'affichait.
+      - name: Vérifier que les étapes de l'inscription sont d'accord entre elles
+        run: |
+          cd ci_scripts && python3 test_etapes.py
+          cd .. && python3 ci_scripts/check_etapes.py
+
       # « Vérifie ta connexion » était affiché pour une session expirée comme pour un serveur en
       # panne, depuis onze écrans. C'est la pire des trois pannes à deviner : c'est la seule que la
       # personne peut vérifier d'un coup d'œil, et sur un téléphone au wifi plein elle n'apprend

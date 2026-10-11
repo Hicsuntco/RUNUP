@@ -4119,6 +4119,23 @@
         }
       }
     },
+    "Aucune séance ne dépassera ce temps-là.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No session will run longer than that."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna sesión durará más que eso."
+          }
+        }
+      }
+    },
     "Aucune séance à déplacer cette semaine.": {
       "extractionState": "manual",
       "localizations": {
@@ -8834,6 +8851,23 @@
         }
       }
     },
+    "En semaine, tu as combien de temps pour une séance ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On a weekday, how much time do you have for a session?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entre semana, ¿cuánto tiempo tienes para una sesión?"
+          }
+        }
+      }
+    },
     "Enchaîne 30 jours de séances sans interruption.": {
       "extractionState": "manual",
       "localizations": {
@@ -9044,6 +9078,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Estimación basada en tu perfil — termina una carrera para una predicción más precisa."
+          }
+        }
+      }
+    },
+    "Et le week-end ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "And at the weekend?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Y el fin de semana?"
           }
         }
       }

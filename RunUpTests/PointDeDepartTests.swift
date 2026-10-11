@@ -173,6 +173,7 @@ final class PointDeDepartTests: XCTestCase {
                     raceDistance: nil, raceDistanceCustom: nil, raceElevationGainM: nil,
                     raceChrono: nil, raceDate: nil, hyroxDivision: nil, triathlonFormat: nil,
                     nageNiveau: nil, duathlonFormat: nil,
+                    tempsSemaineMin: nil, tempsWeekEndMin: nil,
                     volumeActuel: volume, plusLongueSortie: nil, allureFooting: nil,
                     runningDays: [0, 2, 4, 6], preferredLongRunDay: 6, level: .confirmee,
                     connectedSources: [], weightNowKg: nil, weightTargetKg: nil, heightCm: nil,
@@ -266,5 +267,123 @@ final class PerfRecenteTests: XCTestCase {
         for texte in ["", "pas mal", "10 km", "un semi en 1h52", "52:00"] {
             XCTAssertNil(PaceModel.parseFreeformPerf(texte), "« \(texte) » n'aurait pas dû être lu")
         }
+    }
+}
+
+/// Le plan ne prescrit jamais plus de temps qu'elle n'en a dit avoir.
+///
+/// # LA QUESTION EXISTAIT, ET LE PLAN NE LA LISAIT PAS
+///
+/// « Temps que tu veux y consacrer / semaine » était posée à l'objectif « Rester en forme »
+/// depuis le début. Sa réponse n'allait nulle part : `weeklyTimeBudget` n'était lu que par
+/// `CoachService`, pour écrire une phrase dans le contexte envoyé au modèle. Le générateur de
+/// séances ne l'a jamais ouverte — « moins d'1 h par semaine » et « plus de 3 h » donnaient
+/// exactement le même plan, à la minute près.
+@MainActor
+final class TempsDisponibleTests: XCTestCase {
+
+    private var container: ModelContainer!
+
+    override func setUpWithError() throws {
+        container = try ModelContainer(
+            for: UserProfile.self, RunRecord.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+    }
+
+    private func profil(semaine: Int? = nil, weekEnd: Int? = nil) -> UserProfile {
+        let p = UserProfile(name: "Test")
+        p.goalId = .race
+        p.level = .confirmee
+        p.raceDistance = .marathon
+        p.tempsSemaineMin = semaine
+        p.tempsWeekEndMin = weekEnd
+        p.plusLongueSortie = PlusLongueSortie.de15a25.rawValue
+        p.runningDays = [0, 2, 4, 6]
+        p.preferredLongRunDay = 6
+        let start = Date()
+        p.programStartDate = start
+        p.raceDate = Calendar.current.date(byAdding: .weekOfYear, value: 16, to: start)
+        container.mainContext.insert(p)
+        return p
+    }
+
+    private func durees(_ p: UserProfile) -> [(jour: Int, minutes: Int)] {
+        AdaptivePlanEngine.generateWeekSessions(weekNumber: 2, tier: 3, profile: p)
+            .compactMap { jour in jour.session.map { (jour.weekday, $0.durationMinutes) } }
+    }
+
+    /// AUCUNE SÉANCE NE DÉPASSE LE TEMPS DONNÉ — c'est la phrase affichée sous la question, et
+    /// c'est elle que ce test tient.
+    func testAucuneSeanceNeDepasseLeTempsDonne() {
+        let p = profil(semaine: 30, weekEnd: 45)
+        for (jour, minutes) in durees(p) {
+            let plafond = TempsDisponible.estWeekEnd(jour) ? 45 : 30
+            XCTAssertLessThanOrEqual(minutes, plafond, "jour \(jour) : \(minutes) min")
+        }
+    }
+
+    /// Les deux plafonds sont bien DEUX : un mardi et un dimanche ne se ressemblent pas, et
+    /// c'est tout l'intérêt de poser la question deux fois.
+    func testLeWeekEndEtLaSemaineOntChacunLeurPlafond() {
+        let p = profil(semaine: 30, weekEnd: 180)
+        let semaine = durees(p).filter { !TempsDisponible.estWeekEnd($0.jour) }
+        let weekEnd = durees(p).filter { TempsDisponible.estWeekEnd($0.jour) }
+        XCTAssertFalse(semaine.isEmpty)
+        XCTAssertFalse(weekEnd.isEmpty)
+        XCTAssertTrue(semaine.allSatisfy { $0.minutes <= 30 }, "\(semaine)")
+        XCTAssertTrue(weekEnd.contains { $0.minutes > 30 },
+                      "le week-end doit pouvoir dépasser le plafond de la semaine — \(weekEnd)")
+    }
+
+    /// LE PLAFOND MORD APRÈS LE TIER, pas avant. L'appliquer sur la durée de base laisserait le
+    /// palier repasser au-dessus, et une coureuse à qui on a promis 30 minutes en verrait 38.
+    func testLePlafondMordApresLePalier() {
+        for tier in 1...5 {
+            let p = profil(semaine: 30, weekEnd: 45)
+            let semaine = AdaptivePlanEngine.generateWeekSessions(weekNumber: 2, tier: tier, profile: p)
+                .compactMap { jour in jour.session.map { (jour.weekday, $0.durationMinutes) } }
+            for (jour, minutes) in semaine where !TempsDisponible.estWeekEnd(jour) {
+                XCTAssertLessThanOrEqual(minutes, 30, "palier \(tier), jour \(jour)")
+            }
+        }
+    }
+
+    /// UNE SÉANCE RACCOURCIE NE S'ANNONCE PAS « Niveau 3 ». L'étiquette promettrait une charge
+    /// que la durée dément — c'est le même raisonnement que pour l'allègement du coach.
+    func testUneSeanceRaccourcieNeSannoncePasPlusChargee() {
+        let p = profil(semaine: 30, weekEnd: 45)
+        let semaine = AdaptivePlanEngine.generateWeekSessions(weekNumber: 2, tier: 4, profile: p)
+        for jour in semaine {
+            guard let s = jour.session else { continue }
+            let plafond = TempsDisponible.estWeekEnd(jour.weekday) ? 45 : 30
+            if s.durationMinutes >= plafond {
+                XCTAssertNil(s.adjustment, "jour \(jour.weekday) : « \(s.adjustment ?? "")» sur une séance plafonnée")
+            }
+        }
+    }
+
+    /// UN PROFIL QUI N'A PAS RÉPONDU GARDE SON PLAN. Les gens déjà inscrits n'ont jamais vu
+    /// cette question ; leur imposer un plafond les verrait perdre du temps de course du jour
+    /// au lendemain, sans une explication nulle part.
+    func testSansReponseAucunPlafond() {
+        let avec = durees(profil(semaine: 30, weekEnd: 45)).map { $0.minutes }.reduce(0, +)
+        let sans = durees(profil()).map { $0.minutes }.reduce(0, +)
+        XCTAssertGreaterThan(sans, avec)
+    }
+
+    /// Le samedi et le dimanche sont le week-end, le reste ne l'est pas. Un décalage d'un jour
+    /// appliquerait le plafond du dimanche au vendredi.
+    func testLesJoursDuWeekEnd() {
+        XCTAssertEqual((0...6).filter { TempsDisponible.estWeekEnd($0) }, [5, 6])
+    }
+
+    /// Les propositions sont ordonnées, et le week-end va au moins aussi loin que la semaine —
+    /// c'est là que tombe la sortie longue.
+    func testLesPropositionsSontOrdonnees() {
+        XCTAssertEqual(TempsDisponible.enSemaine, TempsDisponible.enSemaine.sorted())
+        XCTAssertEqual(TempsDisponible.leWeekEnd, TempsDisponible.leWeekEnd.sorted())
+        XCTAssertGreaterThanOrEqual(TempsDisponible.leWeekEnd.max() ?? 0,
+                                    TempsDisponible.enSemaine.max() ?? 0)
     }
 }

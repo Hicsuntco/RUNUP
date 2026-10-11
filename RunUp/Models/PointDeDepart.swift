@@ -130,3 +130,38 @@ enum AllureFooting: String, Codable, CaseIterable, Identifiable {
         }
     }
 }
+
+/// Le temps qu'elle a POUR UNE SÉANCE — en semaine, et le week-end.
+///
+/// # LA QUESTION EXISTAIT, ET LE PLAN NE LA LISAIT PAS
+///
+/// « Temps que tu veux y consacrer / semaine » était posée à l'objectif « Rester en forme », et
+/// sa réponse n'allait nulle part : `weeklyTimeBudget` n'était lu que par `CoachService`, pour
+/// écrire une phrase dans le contexte envoyé au modèle. Le générateur de séances ne l'a jamais
+/// ouverte. Quelqu'un qui répondait « moins d'1 h par semaine » recevait exactement le même plan
+/// que quelqu'un qui répondait « plus de 3 h ».
+///
+/// Un total hebdomadaire était de toute façon la mauvaise unité : ce qui empêche de faire une
+/// séance, c'est le temps d'UN jour. Une heure et demie le dimanche et quarante minutes le
+/// mardi, ce n'est pas la même semaine que deux heures réparties n'importe comment.
+///
+/// Deux questions, donc, et deux seulement : le jour de semaine et le week-end. Un plafond par
+/// jour serait plus juste et serait invivable à remplir.
+enum TempsDisponible {
+    /// 0 = lundi … 6 = dimanche, comme partout ailleurs dans l'app.
+    static func estWeekEnd(_ jour: Int) -> Bool { jour >= 5 }
+
+    /// Les propositions, en minutes. Le week-end va plus loin parce que c'est là que tombe la
+    /// sortie longue, et plus bas nulle part : trente minutes restent trente minutes.
+    static let enSemaine = [30, 45, 60, 90]
+    static let leWeekEnd = [45, 60, 90, 120, 180]
+
+    /// « 45 min », « 1h30 » — par le formateur de durée de l'app, pas par une chaîne à traduire.
+    static func libelle(_ minutes: Int) -> String { TimeFormat.duree(minutes * 60) }
+
+    /// Le plafond qui s'applique à une séance tombant ce jour-là, ou `nil` quand rien n'a été
+    /// répondu — auquel cas le plan garde exactement la durée qu'il aurait eue.
+    static func plafond(jour: Int, semaine: Int?, weekEnd: Int?) -> Int? {
+        estWeekEnd(jour) ? weekEnd : semaine
+    }
+}

@@ -28,7 +28,7 @@ struct WellbeingStepView: View {
                     }
                 }
             }
-            ObNext(disabled: !vm.canProceed(fromStep: 4), action: onNext)
+            ObNext(disabled: !vm.peutContinuer, action: onNext)
         }
     }
 }

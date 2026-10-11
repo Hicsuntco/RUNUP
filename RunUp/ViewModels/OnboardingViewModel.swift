@@ -47,6 +47,10 @@ final class OnboardingViewModel {
     var plusLongueSortie: PlusLongueSortie?
     /// Le repli d'allure, demandé seulement quand aucune perf récente n'est donnée.
     var allureFooting: AllureFooting?
+    /// Le temps disponible pour UNE séance, posé avec les jours de course — c'est la même
+    /// question, vue de l'autre côté : quels jours, et combien de temps ces jours-là.
+    var tempsSemaineMin: Int?
+    var tempsWeekEndMin: Int?
     // Step 3 — non-race branches
     var weightNow = ""
     var weightTarget = ""
@@ -121,6 +125,19 @@ final class OnboardingViewModel {
         return max(1, days)
     }
 
+    /// L'ÉTAPE COURANTE PEUT-ELLE ÊTRE QUITTÉE — lue sur le modèle, jamais recopiée.
+    ///
+    /// Chaque écran écrivait son propre numéro : `canProceed(fromStep: 5)` dans la vue des
+    /// jours, 6 dans celle du niveau. Le même nombre vivait donc à deux endroits — ici dans le
+    /// `switch`, et là-bas dans la vue — et il a suffi d'insérer une étape au milieu pour que
+    /// les deux divergent en silence. Trois écrans se sont mis à valider les réponses de leur
+    /// voisin ; celui des jours de course, en particulier, laissait passer une semaine à zéro
+    /// jour, parce qu'il interrogeait une étape qui répond toujours oui.
+    ///
+    /// Rien ne cassait, rien ne compilait de travers, aucun test ne tombait. C'est le propre
+    /// d'un nombre recopié : il reste juste jusqu'au jour où il ne l'est plus.
+    var peutContinuer: Bool { canProceed(fromStep: step) }
+
     func canProceed(fromStep step: Int) -> Bool {
         switch step {
         case 0: return !name.trimmingCharacters(in: .whitespaces).isEmpty
@@ -146,7 +163,11 @@ final class OnboardingViewModel {
         // Le minimum vient de l'OBJECTIF, pas d'un littéral : un triathlon en exige trois,
         // parce qu'une semaine à deux jours ne peut pas contenir trois disciplines. Voir
         // `GoalType.joursMinimumParSemaine`.
+        // Le temps par séance est EXIGÉ, comme les jours : c'est lui qui plafonne chaque
+        // durée du plan, et sans lui le programme repart de ses constantes d'archétype —
+        // c'est-à-dire du défaut que la question existe pour corriger.
         case 6: return runningDays.count >= joursMinimum && runningDaysTouched
+                    && tempsSemaineMin != nil && tempsWeekEndMin != nil
         case 7: return levelTouched
         case 8: return true
         default: return true
@@ -205,7 +226,10 @@ final class OnboardingViewModel {
         case .weight: return !weightNow.isEmpty && !weightTarget.isEmpty
         case .progress: return focusArea != nil
         case .restart: return lastRanRecency != nil
-        case .health: return weeklyTimeBudget != nil && preferredTimeOfDay != nil
+        // Le budget hebdomadaire n'est plus demandé — voir `DeepDiveStepView`. Il reste sur le
+        // modèle et en base : les profils qui l'ont répondu le gardent, et le coach continue de
+        // le lire.
+        case .health: return preferredTimeOfDay != nil
         default: return true
         }
     }
@@ -257,6 +281,8 @@ final class OnboardingViewModel {
             triathlonFormat: isTriathlon ? triathlonFormat?.rawValue : nil,
             nageNiveau: isTriathlon ? nageNiveau?.rawValue : nil,
             duathlonFormat: isDuathlon ? duathlonFormat?.rawValue : nil,
+            tempsSemaineMin: tempsSemaineMin,
+            tempsWeekEndMin: tempsWeekEndMin,
             volumeActuel: volumeActuel?.rawValue,
             plusLongueSortie: plusLongueSortie?.rawValue,
             allureFooting: allureFooting?.rawValue,

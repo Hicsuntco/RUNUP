@@ -93,6 +93,10 @@ final class UserProfile {
     var volumeActuel: String? = nil
     var plusLongueSortie: String? = nil
     var allureFooting: String? = nil
+    /// Le temps disponible POUR UNE SÉANCE, en minutes — voir `TempsDisponible`. Deux valeurs,
+    /// parce qu'un mardi et un dimanche ne se ressemblent pas.
+    var tempsSemaineMin: Int? = nil
+    var tempsWeekEndMin: Int? = nil
 
     // MARK: Goal-specific deep-dive fields (only the relevant subset is populated)
     var raceDistance: RaceDistance?

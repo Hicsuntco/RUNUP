@@ -34,7 +34,7 @@ struct DeepDiveStepView: View {
                 default: healthFields
                 }
             }
-            ObNext(disabled: !vm.canProceed(fromStep: 3), action: onNext)
+            ObNext(disabled: !vm.peutContinuer, action: onNext)
         }
     }
 
@@ -92,12 +92,18 @@ struct DeepDiveStepView: View {
 
     private var healthFields: some View {
         VStack(alignment: .leading, spacing: 0) {
-            EyebrowLabel(text: "Temps que tu veux y consacrer / semaine", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
-            ChipFlowLayout {
-                ForEach(OnboardingChoices.budgetsHebdo, id: \.0) { id, label in
-                    SelectableChip(label: label, selected: vm.weeklyTimeBudget == id) { vm.weeklyTimeBudget = id }
-                }
-            }
+            // LE TOTAL HEBDOMADAIRE N'EST PLUS DEMANDÉ ICI, et c'est un retrait, pas un oubli.
+            //
+            // Sa réponse n'allait nulle part : `weeklyTimeBudget` n'était lu que par
+            // `CoachService`, pour écrire une phrase dans le contexte envoyé au modèle. Le
+            // générateur de séances ne l'a jamais ouverte — quelqu'un qui répondait « moins
+            // d'1 h par semaine » recevait exactement le plan de quelqu'un qui répondait « plus
+            // de 3 h ». Une question qui ne change aucune décision ne mérite pas une étape,
+            // et celle-ci la volait depuis le début.
+            //
+            // Le temps est désormais demandé PAR SÉANCE, à l'étape des jours, et il plafonne
+            // vraiment chaque durée du plan. Le total hebdomadaire s'en déduit : c'est le
+            // nombre de jours, déjà répondu, multiplié par le temps d'un jour.
             EyebrowLabel(text: "Ton moment préféré pour courir", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
             ChipFlowLayout {
                 ForEach(OnboardingChoices.momentsDeLaJournee, id: \.0) { id, label in

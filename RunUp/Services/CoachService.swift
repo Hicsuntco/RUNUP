@@ -237,7 +237,12 @@ enum CoachService {
         if s.shareCyclePhaseWithCoach, let phase = s.cyclePhase {
             extra.append("Phase du cycle estimée : \(phase.rawValue) — adapte le ton (sois indulgent(e) sur l'intensité en phase menstruelle) sans jamais lui dire quoi faire de son corps à sa place.")
         }
-        if let weeklyTime = s.weeklyTimeBudget {
+        // Le temps par SÉANCE a remplacé le total hebdomadaire à l'inscription — ce dernier
+        // n'était lu que par cette ligne, et le générateur de séances l'ignorait (voir
+        // `DeepDiveStepView`). Il reste lu ici pour les profils qui l'avaient répondu.
+        if let semaine = s.tempsSemaineMin, let weekEnd = s.tempsWeekEndMin {
+            extra.append("Temps dispo par séance : \(semaine) min en semaine, \(weekEnd) min le week-end — le plan plafonne déjà ses durées là-dessus. Préfère courir le \(s.preferredTimeOfDay ?? "?").")
+        } else if let weeklyTime = s.weeklyTimeBudget {
             extra.append("Dispo hebdo souhaitée : \(weeklyTime), préfère courir le \(s.preferredTimeOfDay ?? "?").")
         }
         if let age = s.age {

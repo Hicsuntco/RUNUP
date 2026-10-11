@@ -18,7 +18,7 @@ struct LevelStepView: View {
                 }
                 .padding(.top, 20)
             }
-            ObNext(disabled: !vm.canProceed(fromStep: 6), action: onNext)
+            ObNext(disabled: !vm.peutContinuer, action: onNext)
         }
     }
 }

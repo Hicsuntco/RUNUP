@@ -1,5 +1,34 @@
 import Foundation
 
+// ─── LE DÉCODAGE DE CE FICHIER NE DOIT JAMAIS APPELER `decode` ──────────────────────────────
+//
+// `WorkoutSession`, `PlannedDay`, `IntervalStructure` et `DayStatus` ne sont pas des structures
+// ordinaires : elles sont ENREGISTRÉES, à l'intérieur de `UserProfile`, et c'est SwiftData qui
+// les relit. Son décodeur ne se comporte pas comme `JSONDecoder` :
+//
+//   • `decodeIfPresent(_:forKey:)` pour une clé qu'il n'a pas rend `nil`, paisiblement.
+//   • `decode(_:forKey:)` pour une clé qu'il n'a pas ARRÊTE LE PROCESSUS. Pas une erreur qu'on
+//     rattrape — un `EXC_BREAKPOINT` dans SwiftData, sous l'appel. Aucun `try?` posé au-dessus
+//     ne l'intercepte, parce que rien n'est levé.
+//
+// Or le décodeur synthétisé par Swift appelle `decode` pour toute propriété non optionnelle —
+// Y COMPRIS quand elle porte une valeur par défaut écrite sur place. `var completed: Bool =
+// false` se lit comme une tolérance, et n'en est pas une : la valeur par défaut sert au
+// constructeur, jamais au décodage.
+//
+// CE QUE ÇA A COÛTÉ. L'app s'est mise à mourir 0,2 seconde après son lancement, sur TOUTES les
+// versions installables, chez quelqu'un dont le programme enregistré contenait une séance que
+// le décodeur ne savait plus relire. L'accueil demande les séances de la semaine, SwiftData les
+// relit, une clé manque, le processus tombe — et comme la donnée est sur le disque, réinstaller
+// une version antérieure ne change rien. Un plantage qu'aucune mise à jour ne répare.
+//
+// LA RÈGLE, DONC : chaque structure enregistrée ici écrit son `init(from:)` à la main, n'y
+// appelle que `decodeIfPresent`, et donne un repli à chaque champ. Les énumérations passent en
+// plus par `try?` : une valeur brute inconnue, elle, LÈVE — et une app lit forcément un jour des
+// valeurs écrites par une version plus récente qu'elle.
+//
+// `ci_scripts/check_decodage.py` le vérifie, pour toutes les structures enregistrées de l'app.
+
 /// La structure réelle d'une séance en répétitions — extraite du TITRE jusqu'ici, par expression
 /// régulière sur « N × D m ».
 ///
@@ -15,6 +44,27 @@ struct IntervalStructure: Codable, Equatable {
     var recoveryMeters: Int?
 
     var repKm: Double { Double(repMeters) / 1000 }
+
+    /// Une structure sans répétition ni distance ne décrit aucune séance — c'est ce que rend un
+    /// décodage qui n'a rien trouvé, et l'appelant doit pouvoir le distinguer d'un vrai
+    /// fractionné sans avoir à connaître les valeurs de repli.
+    var estVide: Bool { reps <= 0 || repMeters <= 0 }
+
+    init(reps: Int, repMeters: Int, recoveryMeters: Int? = nil) {
+        self.reps = reps
+        self.repMeters = repMeters
+        self.recoveryMeters = recoveryMeters
+    }
+
+    // Voir « LE DÉCODAGE DE CE FICHIER NE DOIT JAMAIS APPELER `decode` » en tête de fichier.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        reps = try c.decodeIfPresent(Int.self, forKey: .reps) ?? 0
+        repMeters = try c.decodeIfPresent(Int.self, forKey: .repMeters) ?? 0
+        recoveryMeters = try c.decodeIfPresent(Int.self, forKey: .recoveryMeters)
+    }
+
+    private enum CodingKeys: String, CodingKey { case reps, repMeters, recoveryMeters }
 }
 
 /// L'identité d'une séance, indépendante de la langue.
@@ -427,6 +477,47 @@ struct WorkoutSession: Codable, Equatable {
     /// note décrit son adaptation. Les mélanger est ce qui a fait perdre la seconde.
     var adaptationNote: String? = nil
 
+    init(title: String, subtitle: String, durationMinutes: Int, pace: String, zone: String,
+         adjustment: String? = nil, kind: SessionKind? = nil,
+         intervals: IntervalStructure? = nil, adaptationNote: String? = nil) {
+        self.title = title
+        self.subtitle = subtitle
+        self.durationMinutes = durationMinutes
+        self.pace = pace
+        self.zone = zone
+        self.adjustment = adjustment
+        self.kind = kind
+        self.intervals = intervals
+        self.adaptationNote = adaptationNote
+    }
+
+    // Voir « LE DÉCODAGE DE CE FICHIER NE DOIT JAMAIS APPELER `decode` » en tête de fichier.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        title = try c.decodeIfPresent(String.self, forKey: .title) ?? ""
+        subtitle = try c.decodeIfPresent(String.self, forKey: .subtitle) ?? ""
+        durationMinutes = try c.decodeIfPresent(Int.self, forKey: .durationMinutes) ?? 0
+        // Le tiret cadratin est ce que le moteur écrit déjà pour une journée sans allure (voir
+        // `AdaptivePlanEngine.restSession`) : un repli qui ressemble à une vraie valeur du
+        // domaine, plutôt qu'une chaîne vide qui laisserait un trou dans la fiche.
+        pace = try c.decodeIfPresent(String.self, forKey: .pace) ?? "—"
+        zone = try c.decodeIfPresent(String.self, forKey: .zone) ?? "—"
+        adjustment = try c.decodeIfPresent(String.self, forKey: .adjustment)
+        // `try?` SUR LES ÉNUMÉRATIONS, et sur elles seules. Un `rawValue` inconnu ne rend pas
+        // nil : il LÈVE. Or une app un peu ancienne lit forcément des valeurs qu'elle ne connaît
+        // pas encore — `dua_run_bike_run` a été ajouté hier, et la version installée la veille
+        // aurait buté dessus. Un type de séance illisible vaut nil : la séance retombe alors sur
+        // son titre enregistré, ce que `displayTitle` sait déjà faire.
+        kind = (try? c.decodeIfPresent(SessionKind.self, forKey: .kind)) ?? nil
+        let lues = try c.decodeIfPresent(IntervalStructure.self, forKey: .intervals)
+        intervals = (lues?.estVide ?? true) ? nil : lues
+        adaptationNote = try c.decodeIfPresent(String.self, forKey: .adaptationNote)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case title, subtitle, durationMinutes, pace, zone, adjustment, kind, intervals, adaptationNote
+    }
+
     /// Le titre à AFFICHER, dans la langue courante. Retombe sur le texte enregistré quand la
     /// séance est antérieure à `kind`.
     var displayTitle: String {
@@ -513,6 +604,22 @@ struct PlannedDay: Codable, Equatable, Identifiable {
     var weekday: Int
     var session: WorkoutSession?
     var completed: Bool = false
+
+    init(weekday: Int, session: WorkoutSession? = nil, completed: Bool = false) {
+        self.weekday = weekday
+        self.session = session
+        self.completed = completed
+    }
+
+    // Voir « LE DÉCODAGE DE CE FICHIER NE DOIT JAMAIS APPELER `decode` » en tête de fichier.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        weekday = try c.decodeIfPresent(Int.self, forKey: .weekday) ?? 0
+        session = try c.decodeIfPresent(WorkoutSession.self, forKey: .session)
+        completed = try c.decodeIfPresent(Bool.self, forKey: .completed) ?? false
+    }
+
+    private enum CodingKeys: String, CodingKey { case weekday, session, completed }
 }
 
 /// One day in the 7-cell week strip on Home.
@@ -587,11 +694,15 @@ struct DayStatus: Codable, Equatable, Identifiable {
         self.date = date
     }
 
+    // CET INITIALISEUR EXISTAIT DÉJÀ, ET IL AVAIT RAISON AVANT TOUT LE MONDE — il a été écrit
+    // pour que `date`, ajouté après coup, ne fasse pas tomber les profils existants. Ses trois
+    // autres lignes appelaient encore `decode` : la même panne les attendait, pour la première
+    // clé qui viendrait à manquer. Voir l'en-tête de ce fichier.
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        weekday = try c.decode(Int.self, forKey: .weekday)
-        letter = try c.decode(String.self, forKey: .letter)
-        state = try c.decode(State.self, forKey: .state)
+        weekday = try c.decodeIfPresent(Int.self, forKey: .weekday) ?? 0
+        letter = try c.decodeIfPresent(String.self, forKey: .letter) ?? ""
+        state = ((try? c.decodeIfPresent(State.self, forKey: .state)) ?? nil) ?? .upcoming
         date = try c.decodeIfPresent(Date.self, forKey: .date) ?? .now
     }
 }

@@ -17,6 +17,30 @@ final class RunRecord {
         /// before this field existed still decodes fine (a non-optional field with no inline
         /// default would fail Codable synthesis against old, key-less JSON).
         var altitude: Double?
+
+        init(lat: Double, lng: Double, altitude: Double? = nil) {
+            self.lat = lat
+            self.lng = lng
+            self.altitude = altitude
+        }
+
+        /// Rien que des `decodeIfPresent` : ce point est ENREGISTRÉ, et le décodeur de SwiftData
+        /// arrête le processus sur un `decode` dont la clé manque. La règle, et la panne qui l'a
+        /// imposée, sont en tête de `Session.swift`.
+        ///
+        /// Zéro est un vrai point du globe, au large du Ghana — un repli qui ment. Mais un tracé
+        /// est toujours lu en entier, pour une carte ou une vignette : rendre `nil` ici
+        /// supposerait de pouvoir retirer un point d'un tableau depuis son propre décodeur, ce
+        /// que Codable ne permet pas. Les consommateurs du tracé écartent déjà les points hors
+        /// du cadre, et un point aberrant vaut mieux qu'un historique illisible.
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            lat = try c.decodeIfPresent(Double.self, forKey: .lat) ?? 0
+            lng = try c.decodeIfPresent(Double.self, forKey: .lng) ?? 0
+            altitude = try c.decodeIfPresent(Double.self, forKey: .altitude)
+        }
+
+        private enum CodingKeys: String, CodingKey { case lat, lng, altitude }
     }
 
     var date: Date

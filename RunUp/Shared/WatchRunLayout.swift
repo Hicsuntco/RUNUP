@@ -108,4 +108,21 @@ struct WatchRunLayout: Codable, Equatable, Sendable {
         self.hero = hero
         self.secondary = secondary
     }
+
+    /// Rien que des `decodeIfPresent`, et `try?` sur les mesures : cette disposition est
+    /// ENREGISTRÉE dans `UserProfile`, et le décodeur de SwiftData arrête le processus sur un
+    /// `decode` dont la clé manque. La règle, et la panne qui l'a imposée, sont en tête de
+    /// `Session.swift`.
+    ///
+    /// Le repli est `standard`, que le commentaire au-dessus annonce déjà comme « le repli de
+    /// tout ce qui ne se décode pas ». Une mesure inconnue — une version plus récente a pu en
+    /// ajouter une — fait tomber la liste entière sur ce défaut plutôt que l'app.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        hero = ((try? c.decodeIfPresent(RunMetric.self, forKey: .hero)) ?? nil) ?? Self.standard.hero
+        let lues = ((try? c.decodeIfPresent([RunMetric].self, forKey: .secondary)) ?? nil) ?? []
+        secondary = lues.isEmpty ? Self.standard.secondary : lues
+    }
+
+    private enum CodingKeys: String, CodingKey { case hero, secondary }
 }

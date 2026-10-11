@@ -362,6 +362,17 @@ jobs:
           cd ci_scripts && python3 test_model_defaults.py
           cd .. && python3 ci_scripts/check_model_defaults.py
 
+      # Le même genre de panne, un étage plus bas, et en pire. Le build 1252 est mort 0,2 seconde
+      # après son lancement chez quelqu'un dont le programme enregistré contenait une séance que
+      # le décodeur ne savait plus relire — et comme la donnée est sur le disque, réinstaller une
+      # version antérieure n'y changeait rien. Le décodeur de SwiftData ARRÊTE LE PROCESSUS sur un
+      # `decode` dont la clé manque, là où `decodeIfPresent` rendrait nil ; et Swift synthétise
+      # `decode` pour toute propriété non optionnelle, valeur par défaut comprise.
+      - name: Vérifier que les structures enregistrées survivent à une clé manquante
+        run: |
+          cd ci_scripts && python3 test_decodage.py
+          cd .. && python3 ci_scripts/check_decodage.py
+
       # « Vérifie ta connexion » était affiché pour une session expirée comme pour un serveur en
       # panne, depuis onze écrans. C'est la pire des trois pannes à deviner : c'est la seule que la
       # personne peut vérifier d'un coup d'œil, et sur un téléphone au wifi plein elle n'apprend

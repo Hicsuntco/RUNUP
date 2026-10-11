@@ -24,6 +24,31 @@ struct TrainingEase: Codable, Equatable, Sendable {
     /// Ce que le coach en a dit. Affiché tel quel sur les séances concernées et dans le fil.
     var reason: String
 
+    init(maxMinutes: Int?, noSpeedWork: Bool, until: Date, reason: String) {
+        self.maxMinutes = maxMinutes
+        self.noSpeedWork = noSpeedWork
+        self.until = until
+        self.reason = reason
+    }
+
+    /// Rien que des `decodeIfPresent` : cette structure est ENREGISTRÉE dans `UserProfile`, et
+    /// le décodeur de SwiftData arrête le processus sur un `decode` dont la clé manque. La règle,
+    /// et la panne qui l'a imposée, sont en tête de `Session.swift`.
+    ///
+    /// Le repli d'`until` est la date de référence, soit le passé le plus lointain représentable :
+    /// un allègement dont on ne sait plus jusqu'à quand il courait est un allègement EXPIRÉ, pas
+    /// un allègement éternel. `isActive` le dira faux dès la première question, et le programme
+    /// reprendra sa pleine charge — ce qui est la bonne erreur des deux.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        maxMinutes = try c.decodeIfPresent(Int.self, forKey: .maxMinutes)
+        noSpeedWork = try c.decodeIfPresent(Bool.self, forKey: .noSpeedWork) ?? false
+        until = try c.decodeIfPresent(Date.self, forKey: .until) ?? Date(timeIntervalSinceReferenceDate: 0)
+        reason = try c.decodeIfPresent(String.self, forKey: .reason) ?? ""
+    }
+
+    private enum CodingKeys: String, CodingKey { case maxMinutes, noSpeedWork, until, reason }
+
     func isActive(on day: Date = .now, calendar: Calendar = .current) -> Bool {
         calendar.startOfDay(for: day) <= calendar.startOfDay(for: until)
     }

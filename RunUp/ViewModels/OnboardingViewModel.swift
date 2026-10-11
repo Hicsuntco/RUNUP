@@ -5,7 +5,7 @@ import Observation
 /// plus a step 4 (injury/cycle) split out of what used to be a combined step 3.
 @Observable
 final class OnboardingViewModel {
-    static let totalSteps = 9
+    static let totalSteps = 10
 
     var showWelcome = true
     var step = 0
@@ -42,6 +42,11 @@ final class OnboardingViewModel {
     // Step 3 — branche duathlon. Même réutilisation de `chrono` et `raceDate`, et UN SEUL
     // champ : il n'y a pas de question de vélo à poser. Voir `DuathlonFormat`.
     var duathlonFormat: DuathlonFormat?
+    // Étape « où tu en es » — posée à TOUS les objectifs, voir `PointDeDepart.swift`.
+    var volumeActuel: VolumeActuel?
+    var plusLongueSortie: PlusLongueSortie?
+    /// Le repli d'allure, demandé seulement quand aucune perf récente n'est donnée.
+    var allureFooting: AllureFooting?
     // Step 3 — non-race branches
     var weightNow = ""
     var weightTarget = ""
@@ -127,16 +132,23 @@ final class OnboardingViewModel {
             if isTriathlon { return triathlonStepValid }
             if isDuathlon { return duathlonStepValid }
             return deepDiveValid
+        // LES DEUX PREMIÈRES SONT EXIGÉES, LA TROISIÈME NON.
+        //
+        // Le volume et la plus longue sortie ancrent le plan ; sans eux il repart de la distance
+        // de la course, c'est-à-dire du défaut que cette étape existe pour corriger. L'allure,
+        // elle, a « Je ne sais pas » dans sa liste : c'est une vraie réponse, et exiger un choix
+        // reviendrait à exiger qu'on invente un chiffre que le plan prendrait au mot.
+        case 4: return volumeActuel != nil && plusLongueSortie != nil
         // Injury/cycle fields are always optional — a real, known injury/blessure worth flagging
         // is the exception, not the rule, so requiring an answer here would just add friction for
         // the common case of "nothing to report."
-        case 4: return true
+        case 5: return true
         // Le minimum vient de l'OBJECTIF, pas d'un littéral : un triathlon en exige trois,
         // parce qu'une semaine à deux jours ne peut pas contenir trois disciplines. Voir
         // `GoalType.joursMinimumParSemaine`.
-        case 5: return runningDays.count >= joursMinimum && runningDaysTouched
-        case 6: return levelTouched
-        case 7: return true
+        case 6: return runningDays.count >= joursMinimum && runningDaysTouched
+        case 7: return levelTouched
+        case 8: return true
         default: return true
         }
     }
@@ -245,6 +257,9 @@ final class OnboardingViewModel {
             triathlonFormat: isTriathlon ? triathlonFormat?.rawValue : nil,
             nageNiveau: isTriathlon ? nageNiveau?.rawValue : nil,
             duathlonFormat: isDuathlon ? duathlonFormat?.rawValue : nil,
+            volumeActuel: volumeActuel?.rawValue,
+            plusLongueSortie: plusLongueSortie?.rawValue,
+            allureFooting: allureFooting?.rawValue,
             runningDays: Array(runningDays),
             preferredLongRunDay: effectiveLongRunDay,
             level: level,

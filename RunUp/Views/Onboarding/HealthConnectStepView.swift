@@ -11,7 +11,7 @@ struct HealthConnectStepView: View {
         ObScreen {
             Spacer()
             ObTitle(
-                eyebrow: "Étape 7 · tes données",
+                eyebrow: "Étape 8 · tes données",
                 title: "CONNECTE TA MONTRE",
                 subtitle: "Pour une forme du jour plus précise — FC, sommeil, sorties passées. Facultatif, tu peux le faire plus tard."
             )

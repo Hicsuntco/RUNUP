@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Hosts the pre-onboarding welcome screen + the 9-step wizard. Mirrors the top-level
+/// Hosts the pre-onboarding welcome screen + the 10-step wizard. Mirrors the top-level
 /// `Onboarding` component in onboarding.jsx.
 struct OnboardingContainerView: View {
     @Environment(AppState.self) private var appState
@@ -80,10 +80,15 @@ struct OnboardingContainerView: View {
             } else {
                 DeepDiveStepView(vm: vm) { advance() }
             }
-        case 4: WellbeingStepView(vm: vm) { advance() }
-        case 5: RunningDaysStepView(vm: vm) { advance() }
-        case 6: LevelStepView(vm: vm) { advance() }
-        case 7: HealthConnectStepView(vm: vm) { advance() }
+        // Une étape pour TOUS les objectifs, entre les questions propres à l'objectif et le
+        // reste. Sa place n'est pas indifférente : elle vient après qu'on a dit ce qu'on veut —
+        // sinon « ta plus longue sortie » tombe avant qu'on sache pourquoi on la demande — et
+        // avant les jours, le niveau et la montre, qui sont des réglages.
+        case 4: PointDeDepartStepView(vm: vm) { advance() }
+        case 5: WellbeingStepView(vm: vm) { advance() }
+        case 6: RunningDaysStepView(vm: vm) { advance() }
+        case 7: LevelStepView(vm: vm) { advance() }
+        case 8: HealthConnectStepView(vm: vm) { advance() }
         default: BuildingProgramView(vm: vm) { finish() }
         }
     }
@@ -118,10 +123,11 @@ struct OnboardingContainerView: View {
             if vm.isTriathlon { return "triathlon_details" }
             if vm.isDuathlon { return "duathlon_details" }
             return "deep_dive"
-        case 4: return "wellbeing"
-        case 5: return "running_days"
-        case 6: return "level"
-        case 7: return "health_connect"
+        case 4: return "point_de_depart"
+        case 5: return "wellbeing"
+        case 6: return "running_days"
+        case 7: return "level"
+        case 8: return "health_connect"
         default: return "building_program"
         }
     }

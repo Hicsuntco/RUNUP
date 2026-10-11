@@ -72,8 +72,10 @@ struct DeepDiveStepView: View {
                     SelectableChip(label: label, selected: vm.focusArea == id) { vm.focusArea = id }
                 }
             }
-            EyebrowLabel(text: "Ta meilleure perf récente (facultatif)", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
-            ObTextField(placeholder: "Ex. 10 km en 52 min", text: $vm.bestRecentPerf)
+            // La meilleure perf récente était posée ICI, et ici seulement — donc pour un
+            // objectif sur neuf. C'est pourtant d'elle que descendent toutes les allures du
+            // plan, quel que soit l'objectif. Elle est passée à l'étape 4, avec les deux autres
+            // questions qui disent où l'on en est. Voir `PointDeDepartStepView`.
         }
     }
 

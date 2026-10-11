@@ -7,7 +7,7 @@ struct RunningDaysStepView: View {
     var body: some View {
         ObScreen {
             ScrollView {
-                ObTitle(eyebrow: "Étape 5 · ton rythme", title: "TES JOURS DE COURSE", subtitle: "Le programme se cale dessus — tu pourras toujours bouger une séance.")
+                ObTitle(eyebrow: "Étape 6 · ton rythme", title: "TES JOURS DE COURSE", subtitle: "Le programme se cale dessus — tu pourras toujours bouger une séance.")
                 // spacing 5, not 7 — on the smallest currently-supported iPhone (375pt), 7 gaps
                 // of 7pt each pushed every square under the 44pt tap-target minimum; 5pt gaps
                 // clear it while still reading as a tight 7-day row.

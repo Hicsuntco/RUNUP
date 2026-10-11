@@ -29,6 +29,12 @@ enum AdaptivePlanEngine {
         var triathlonFormat: String?
         var nageNiveau: String?
         var duathlonFormat: String?
+        /// Où elle en est AUJOURD'HUI — les `rawValue` de `VolumeActuel`, `PlusLongueSortie` et
+        /// `AllureFooting`. Voir `PointDeDepart.swift` : ce sont elles qui ancrent le plan sur la
+        /// personne plutôt que sur la course visée.
+        var volumeActuel: String?
+        var plusLongueSortie: String?
+        var allureFooting: String?
         var runningDays: [Int]
         /// Which weekday (0=Monday...6=Sunday) carries the long run — chosen at onboarding, see
         /// `OnboardingViewModel.effectiveLongRunDay`.
@@ -59,6 +65,9 @@ enum AdaptivePlanEngine {
         // vient de répondre « Homme », et il faudrait relancer l'app pour que ça se corrige.
         // C'est exactement le moment où l'on regarde si l'app a écouté.
         AccordStore.shared.genre = Genre.depuis(sexe: result.sex)
+        profile.volumeActuel = result.volumeActuel
+        profile.plusLongueSortie = result.plusLongueSortie
+        profile.allureFooting = result.allureFooting
         profile.goalId = result.goal
         profile.raceDistance = result.raceDistance
         profile.raceDistanceCustom = result.raceDistanceCustom
@@ -93,7 +102,9 @@ enum AdaptivePlanEngine {
         // Confirmed runners start with more volume than beginners from week 1, instead of
         // everyone starting at the same tier regardless of declared level — level only used to
         // feed the coach's system prompt before this.
-        let tier = startingTier(for: result.level, goal: result.goal, lastRanRecency: result.lastRanRecency)
+        let tier = startingTier(for: result.level, goal: result.goal,
+                                lastRanRecency: result.lastRanRecency,
+                                volumeActuel: result.volumeActuel)
         profile.weekTier = tier
         beginWeek(weekNumber: 1, tier: tier, profile: profile)
     }
@@ -101,18 +112,41 @@ enum AdaptivePlanEngine {
     /// `lastRanRecency` (asked only for the `.restart` goal — "Ta dernière sortie remonte à…")
     /// used to be collected and never read anywhere — a "confirmée" runner off for over a year
     /// isn't at "confirmée" volume anymore, and this goal's whole promise is "Reprise en douceur".
-    private static func startingTier(for level: ExperienceLevel, goal: GoalType? = nil, lastRanRecency: String? = nil) -> Int {
+    private static func startingTier(for level: ExperienceLevel, goal: GoalType? = nil,
+                                     lastRanRecency: String? = nil,
+                                     volumeActuel: String? = nil) -> Int {
         let base: Int
         switch level {
         case .debutante: base = 1
         case .intermediaire: base = 2
         case .confirmee: base = 3
         }
-        guard goal == .restart, let recency = lastRanRecency else { return base }
+        // LE VOLUME ACTUEL PLAFONNE LE NIVEAU DÉCLARÉ, pour tous les objectifs.
+        //
+        // « Confirmée » décrit ce qu'on SAIT faire ; le palier de départ, lui, décide de la
+        // charge de la toute première semaine, et celle-là ne dépend que de ce que les jambes
+        // ont fait le mois dernier. Quelqu'un qui a couru des marathons et ne court plus depuis
+        // six mois est confirmé ET à reprendre de zéro : les deux sont vrais, et seul le second
+        // regarde la semaine 1.
+        //
+        // La question de récence ci-dessous ne couvrait que « (Re)commencer ». Elle reste : elle
+        // dit depuis QUAND, là où le volume dit COMBIEN, et un arrêt d'un an mérite le palier le
+        // plus bas même si l'on a recouru deux fois la semaine dernière.
+        let plafond: Int
+        switch VolumeActuel(rawValue: volumeActuel ?? "") {
+        case .aucune: plafond = 1
+        case .uneOuDeux: plafond = 2
+        case .troisOuQuatre, .cinqEtPlus: plafond = base
+        // Un profil créé avant que la question existe n'a rien répondu, et on ne lui prête pas
+        // une réponse : il garde exactement le comportement qu'il avait.
+        case nil: plafond = base
+        }
+        let depart = min(base, plafond)
+        guard goal == .restart, let recency = lastRanRecency else { return depart }
         switch recency {
         case "1y+": return 1
-        case "1y": return min(base, 2)
-        default: return base // "1m" / "6m" — recent enough that her declared level still holds.
+        case "1y": return min(depart, 2)
+        default: return depart // "1m" / "6m" — recent enough that her declared level still holds.
         }
     }
 
@@ -586,7 +620,24 @@ enum AdaptivePlanEngine {
         // stepping.
         let baseTarget = min(raceKm * 0.55, 14)
         let specTarget = min(raceKm * 0.8, 30)
-        let baseStart = max(5, baseTarget * 0.6)
+        // LE PLAN PART D'ELLE, PLUS DE LA COURSE.
+        //
+        // `baseTarget * 0.6` posait 8,4 km en semaine 1 d'un plan marathon — pour quelqu'un qui
+        // court trois kilomètres comme pour quelqu'un qui en court vingt-cinq. Les +10 % par
+        // semaine de `rampedLongRunKm` sont rigoureux, mais une progression rigoureuse à partir
+        // d'un point de départ faux reste une progression fausse, et c'est du mauvais côté
+        // qu'elle se trompait : trop haut, tout de suite, dès la première semaine.
+        //
+        // Deux kilomètres au plancher : c'est la distance qu'on tient en alternant course et
+        // marche, et le départ de quelqu'un qui ne court pas encore. Aucun plafond en face —
+        // quand sa plus longue sortie dépasse déjà la cible du bloc, `rampedLongRunKm` rend la
+        // cible, donc le bloc de base ne la fait pas reculer, il la tient.
+        //
+        // `nil` garde l'ancien calcul : un profil créé avant la question n'a pas répondu, et lui
+        // prêter une réponse serait inventer la seule chose que cette étape existe pour cesser
+        // d'inventer.
+        let depuisElle = PlusLongueSortie(rawValue: profile.plusLongueSortie ?? "")?.km
+        let baseStart = depuisElle.map { max(2, $0) } ?? max(5, baseTarget * 0.6)
 
         let base: [SessionArchetype]
         switch block {

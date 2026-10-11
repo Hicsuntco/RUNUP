@@ -1853,6 +1853,23 @@
         }
       }
     },
+    "1 à 2 fois par semaine": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 to 2 times a week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 a 2 veces por semana"
+          }
+        }
+      }
+    },
     "1 à 2h": {
       "localizations": {
         "en": {
@@ -1915,6 +1932,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "10 carreras"
+          }
+        }
+      }
+    },
+    "10 à 15 km": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "10 to 15 km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "10 a 15 km"
           }
         }
       }
@@ -2014,6 +2048,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "15 km +"
+          }
+        }
+      }
+    },
+    "15 à 25 km": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "15 to 25 km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "15 a 25 km"
           }
         }
       }
@@ -2128,6 +2179,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "últimos 3 meses"
+          }
+        }
+      }
+    },
+    "3 à 4 fois par semaine": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 to 4 times a week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 a 4 veces por semana"
+          }
+        }
+      }
+    },
+    "3 à 5 km": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 to 5 km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 a 5 km"
           }
         }
       }
@@ -2263,6 +2348,57 @@
         }
       }
     },
+    "5 fois ou plus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5 times or more"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5 veces o más"
+          }
+        }
+      }
+    },
+    "5 à 10 km": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5 to 10 km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5 a 10 km"
+          }
+        }
+      }
+    },
+    "5 à 6 min/km": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5 to 6 min/km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5 a 6 min/km"
+          }
+        }
+      }
+    },
     "5-10′ · Z1 · marche + étirements": {
       "localizations": {
         "en": {
@@ -2342,6 +2478,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "6 meses a 1 año"
+          }
+        }
+      }
+    },
+    "6 à 7 min/km": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6 to 7 min/km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6 a 7 min/km"
           }
         }
       }
@@ -4571,6 +4724,23 @@
         }
       }
     },
+    "C'est d'ici que part ta première sortie longue.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is where your first long run starts from."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De aquí parte tu primera salida larga."
+          }
+        }
+      }
+    },
     "C'est définitif : le tracé ne pourra pas être remis.": {
       "extractionState": "manual",
       "localizations": {
@@ -4702,6 +4872,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Todo listo. Tu primera sesión te espera."
+          }
+        }
+      }
+    },
+    "CE QUE TU COURS DÉJÀ": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WHAT YOU ALREADY RUN"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LO QUE YA CORRES"
           }
         }
       }
@@ -10651,6 +10838,23 @@
         }
       }
     },
+    "Je ne cours pas en ce moment": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I'm not running right now"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ahora mismo no corro"
+          }
+        }
+      }
+    },
     "Je ne nage pas encore": {
       "extractionState": "manual",
       "localizations": {
@@ -10664,6 +10868,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Todavía no nado"
+          }
+        }
+      }
+    },
+    "Je ne sais pas": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I don't know"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No lo sé"
           }
         }
       }
@@ -11987,6 +12208,23 @@
         }
       }
     },
+    "Le plan part d'ici. Pas de ce que tu voudrais courir.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The plan starts here. Not from what you wish you ran."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El plan parte de aquí. No de lo que te gustaría correr."
+          }
+        }
+      }
+    },
     "Le plan prévoyait du repos — ta sortie compte quand même.": {
       "localizations": {
         "en": {
@@ -13249,6 +13487,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Menos de 200 m seguidos"
+          }
+        }
+      }
+    },
+    "Moins de 3 km": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Under 3 km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menos de 3 km"
+          }
+        }
+      }
+    },
+    "Moins de 5 min/km": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Under 5 min/km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menos de 5 min/km"
           }
         }
       }
@@ -15642,6 +15914,23 @@
         }
       }
     },
+    "Plus de 25 km": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Over 25 km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más de 25 km"
+          }
+        }
+      }
+    },
     "Plus de 3h": {
       "localizations": {
         "en": {
@@ -15654,6 +15943,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Más de 3h"
+          }
+        }
+      }
+    },
+    "Plus de 7 min/km": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Over 7 min/km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más de 7 min/km"
           }
         }
       }
@@ -18923,6 +19229,23 @@
         }
       }
     },
+    "Sinon : ton allure sur un footing tranquille": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otherwise: your pace on an easy run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si no: tu ritmo en un rodaje tranquilo"
+          }
+        }
+      }
+    },
     "Soir": {
       "localizations": {
         "en": {
@@ -20668,6 +20991,23 @@
         }
       }
     },
+    "Ta plus longue sortie des 4 dernières semaines": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your longest run in the past 4 weeks"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu salida más larga en las últimas 4 semanas"
+          }
+        }
+      }
+    },
     "Ta première sortie lancera ta série.": {
       "extractionState": "manual",
       "localizations": {
@@ -22065,6 +22405,23 @@
         }
       }
     },
+    "Toutes les allures de ton plan descendent de cette réponse.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every pace in your plan comes from this answer."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todos los ritmos de tu plan salen de esta respuesta."
+          }
+        }
+      }
+    },
     "Tracé de l'itinéraire": {
       "localizations": {
         "en": {
@@ -22228,6 +22585,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Encontrar mis contactos en RUNUP"
+          }
+        }
+      }
+    },
+    "Tu cours combien de fois par semaine, en ce moment ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How many times a week are you running right now?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cuántas veces por semana corres ahora mismo?"
           }
         }
       }
@@ -28289,6 +28663,23 @@
         }
       }
     },
+    "Étape 4 · ton point de départ": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 4 · your starting point"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 4 · tu punto de partida"
+          }
+        }
+      }
+    },
     "Étape 4 · ton rythme": {
       "localizations": {
         "en": {
@@ -28353,6 +28744,23 @@
         }
       }
     },
+    "Étape 5 · un mot sur toi": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 5 · a word about you"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 5 · algo sobre ti"
+          }
+        }
+      }
+    },
     "Étape 6 · tes données": {
       "localizations": {
         "en": {
@@ -28385,6 +28793,23 @@
         }
       }
     },
+    "Étape 6 · ton rythme": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 6 · your rhythm"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 6 · tu ritmo"
+          }
+        }
+      }
+    },
     "Étape 7 · tes données": {
       "localizations": {
         "en": {
@@ -28397,6 +28822,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Paso 7 · tus datos"
+          }
+        }
+      }
+    },
+    "Étape 7 · ton niveau": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 7 · your level"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 7 · tu nivel"
+          }
+        }
+      }
+    },
+    "Étape 8 · tes données": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 8 · your data"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 8 · tus datos"
           }
         }
       }

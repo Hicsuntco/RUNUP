@@ -76,9 +76,34 @@ enum PaceModel {
     }
 
     /// Seconds-per-km at "threshold" — the anchor every other zone is a percentage offset of.
-    /// Priority: real race target time > best recent performance (parsed opportunistically) >
-    /// declared experience level.
+    ///
+    /// # L'ORDRE A CHANGÉ, ET C'EST LE FOND DE L'AFFAIRE
+    ///
+    /// Le temps visé passait en premier. C'est une AMBITION, pas une capacité : quelqu'un qui
+    /// vise 45 min au 10 km et en court 58 recevait un plan entier calé sur 45 — footings trop
+    /// rapides, seuil hors de portée, fractionné intenable. Le plan ne l'emmenait pas vers son
+    /// objectif, il supposait qu'elle y était déjà.
+    ///
+    /// L'ordre est désormais celui d'un entraîneur : ce qu'elle a FAIT, puis ce qu'elle DIT
+    /// faire, puis seulement ce qu'elle VISE, puis ce qu'elle se déclare.
+    ///
+    ///   1. une performance récente réelle — une distance et un temps, donc projetable ;
+    ///   2. l'allure de footing déclarée, le repli de ceux qui n'ont pas de chrono à donner
+    ///      (voir `AllureFooting`) — et ils sont la majorité ;
+    ///   3. le temps visé, pour une course, quand on ne sait rien d'autre : il reste une
+    ///      indication, et il vaut mieux que la quatrième ligne ;
+    ///   4. les trois constantes du niveau déclaré, qui décidaient jusqu'ici du plan de tout le
+    ///      monde sauf des coureurs sur route.
     private static func referenceThresholdPace(for profile: UserProfile) -> Double {
+        if let recent = profile.bestRecentPerf, let parsed = parseFreeformPerf(recent), parsed.seconds > 0 {
+            return thresholdPace(fromPerformanceSeconds: parsed.seconds, km: parsed.km)
+        }
+        // L'allure de footing est une allure FACILE : le seuil se trouve 20 % plus vite, par le
+        // même rapport que `zones` applique dans l'autre sens pour redescendre du seuil au
+        // footing. Un seul coefficient pour les deux sens, qui ne peut donc pas diverger.
+        if let allure = AllureFooting(rawValue: profile.allureFooting ?? "")?.secondesParKm {
+            return min(540, max(150, allure / 1.20))
+        }
         // `== .race` ET PAS « tout objectif qui a un chrono ». C'est volontaire, et c'est le genre
         // de condition qu'on « corrige » en croyant bien faire : un temps d'ultra passé dans
         // Riegel donne une absurdité. Cent kilomètres en vingt heures se projette sur un 10 km en
@@ -92,9 +117,6 @@ enum PaceModel {
            let totalSeconds = parseChrono(chrono, distance: profile.raceDistance),
            totalSeconds > 0 {
             return thresholdPace(fromPerformanceSeconds: totalSeconds, km: km)
-        }
-        if let recent = profile.bestRecentPerf, let parsed = parseFreeformPerf(recent), parsed.seconds > 0 {
-            return thresholdPace(fromPerformanceSeconds: parsed.seconds, km: parsed.km)
         }
         switch profile.level {
         case .debutante: return 330      // ≈ 5:30/km reference

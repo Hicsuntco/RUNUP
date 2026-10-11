@@ -35,6 +35,11 @@ private struct OnboardingDraft: Codable {
     /// réponse, parce que `decodeIfPresent` rend `nil` pour une clé absente au lieu de faire
     /// échouer tout le décodage.
     var duathlonFormat: DuathlonFormat?
+    /// Optionnels, pour la raison écrite plus haut : un brouillon commencé avant cette étape
+    /// se relit sans perdre une seule réponse.
+    var volumeActuel: VolumeActuel?
+    var plusLongueSortie: PlusLongueSortie?
+    var allureFooting: AllureFooting?
     var weightNow: String
     var weightTarget: String
     var height: String
@@ -77,6 +82,9 @@ extension OnboardingViewModel {
         triathlonFormat = draft.triathlonFormat
         nageNiveau = draft.nageNiveau
         duathlonFormat = draft.duathlonFormat
+        volumeActuel = draft.volumeActuel
+        plusLongueSortie = draft.plusLongueSortie
+        allureFooting = draft.allureFooting
         weightNow = draft.weightNow
         weightTarget = draft.weightTarget
         height = draft.height
@@ -109,6 +117,8 @@ extension OnboardingViewModel {
             raceDate: raceDate, hyroxDivision: hyroxDivision,
             triathlonFormat: triathlonFormat, nageNiveau: nageNiveau,
             duathlonFormat: duathlonFormat,
+            volumeActuel: volumeActuel, plusLongueSortie: plusLongueSortie,
+            allureFooting: allureFooting,
             weightNow: weightNow, weightTarget: weightTarget,
             height: height, focusArea: focusArea, bestRecentPerf: bestRecentPerf, lastRanRecency: lastRanRecency,
             weeklyTimeBudget: weeklyTimeBudget, preferredTimeOfDay: preferredTimeOfDay, injuryArea: injuryArea,

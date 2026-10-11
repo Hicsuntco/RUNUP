@@ -83,6 +83,17 @@ final class UserProfile {
     var lastPeriodStartDate: Date? = nil
     var averageCycleLengthDays: Int = 28
 
+    // MARK: Où elle en est AUJOURD'HUI — voir `PointDeDepart.swift`
+    //
+    // Ces trois réponses valent pour tous les objectifs, et ce sont elles qui ancrent le plan
+    // sur la personne plutôt que sur la course visée. Optionnelles, comme toute propriété
+    // ajoutée à un `@Model` (voir `ci_scripts/check_model_defaults.py`) — et `nil` veut dire
+    // quelque chose : un profil créé avant la question garde le comportement d'avant plutôt que
+    // de se voir prêter une réponse qu'il n'a pas donnée.
+    var volumeActuel: String? = nil
+    var plusLongueSortie: String? = nil
+    var allureFooting: String? = nil
+
     // MARK: Goal-specific deep-dive fields (only the relevant subset is populated)
     var raceDistance: RaceDistance?
     var raceDistanceCustom: String?

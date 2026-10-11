@@ -13,7 +13,7 @@ struct WellbeingStepView: View {
         ObScreen {
             ScrollViewReader { proxy in
                 ScrollView {
-                    ObTitle(eyebrow: "Étape 4 · un mot sur toi", title: "AVANT DE CONTINUER", subtitle: "Pour un plan qui colle vraiment à ta réalité.")
+                    ObTitle(eyebrow: "Étape 5 · un mot sur toi", title: "AVANT DE CONTINUER", subtitle: "Pour un plan qui colle vraiment à ta réalité.")
                     WellbeingFieldsView(vm: vm)
                 }
                 // The cycle-tracking date picker + duration stepper only appear once "Oui" is

@@ -718,7 +718,7 @@ enum AdaptivePlanEngine {
             ]
         }
 
-        return adjustForWellbeing(base, profile: profile)
+        return base
     }
 
     /// HYROX-specific archetypes: real running still anchors pace/effort (via `PaceModel`, same as
@@ -867,10 +867,19 @@ enum AdaptivePlanEngine {
             return d.isEmpty ? base : "\(base) · \(d)"
         }
 
+        // UNE SEULE SORTIE, comme les quatre autres familles de plan.
+        //
+        // Ce `switch` rendait ses tableaux directement depuis chacun de ses quatre `case`, et
+        // c'est ainsi que l'ultra-trail est devenu la seule famille à ne jamais passer par
+        // l'ajustement commun (voir `generateWeekSessions`) : une blessure signalée n'allégeait
+        // rien, la phase du cycle n'était pas lue, et l'allègement posé par le coach ne mordait
+        // pas. Un `case` qui rend son tableau lui-même est un `case` qui peut court-circuiter
+        // ce qui vient après lui.
+        let base: [SessionArchetype]
         switch block {
         case .base:
             let longue = longueMinutes(.base)
-            return [
+            base = [
                 SessionArchetype(role: .easy, title: "Footing d'endurance", subtitle: "le fond de la préparation — relâché, en terrain varié", pace: zones.easy, zone: "Z2", baseDuration: 40, kind: .ultraEnduranceFooting),
                 SessionArchetype(role: .speed, title: "Côtes longues", subtitle: "montées de 3 à 5 min — marcher dedans n'est pas un échec, c'est la technique", pace: zones.threshold, zone: "Z3", baseDuration: 45, kind: .ultraHillRepeats, intervals: IntervalStructure(reps: 5, repMeters: 600, recoveryMeters: 600)),
                 SessionArchetype(role: .easy, title: "Marche rapide en côte", subtitle: "au-delà d'une certaine pente, marcher est plus rapide et moins coûteux — ça s'apprend", pace: "—", zone: "Z2", baseDuration: 50, kind: .ultraPowerHike),
@@ -891,11 +900,11 @@ enum AdaptivePlanEngine {
             } else {
                 seances.append(SessionArchetype(role: .longRun, title: "Sortie longue spécifique", subtitle: sousTitre("la densité de dénivelé de ta course, sur ta distance à toi", minutes: longue), pace: zones.easy, zone: "Z2", baseDuration: longue, kind: .ultraSpecificLongRun))
             }
-            return seances
+            base = seances
 
         case .affutage:
             let longue = longueMinutes(.affutage)
-            return [
+            base = [
                 SessionArchetype(role: .easy, title: "Footing d'entretien", subtitle: "relâché, court — on ne construit plus rien, on garde les jambes", pace: zones.easy, zone: "Z2", baseDuration: 30, kind: .ultraTaperFooting),
                 SessionArchetype(role: .speed, title: "Rappel de terrain", subtitle: "un peu de dénivelé, aucune fatigue à accumuler", pace: zones.easy, zone: "Z2", baseDuration: 35, kind: .ultraTerrainReminder),
                 SessionArchetype(role: .longRun, title: "Sortie longue en terrain", subtitle: sousTitre("la dernière vraie sortie — courte, pour arriver frais", minutes: longue), pace: zones.easy, zone: "Z2", baseDuration: longue, kind: .ultraLongRun)
@@ -913,12 +922,14 @@ enum AdaptivePlanEngine {
             // séance de côtes ou de descente n'est pas une décharge, et la descente est de loin
             // ce qui laisse le plus de dégâts musculaires de la semaine.
             let allegee = max(40, Int((Double(longuePorteeCetteSemaine()) * 0.65).rounded()))
-            return [
+            base = [
                 SessionArchetype(role: .easy, title: "Footing récup", subtitle: "coupe le volume, écoute tes jambes — pas de dénivelé cette semaine", pace: zones.easy, zone: "Z1-2", baseDuration: 25, kind: .recoveryFooting),
                 SessionArchetype(role: .easy, title: "Marche rapide en côte", subtitle: "la seule séance de terrain de la semaine, et elle ne coûte presque rien aux jambes", pace: "—", zone: "Z2", baseDuration: 35, kind: .ultraPowerHike),
                 SessionArchetype(role: .longRun, title: "Sortie longue allégée", subtitle: sousTitre("aucune pression de durée cette semaine", minutes: allegee), pace: zones.easy, zone: "Z2", baseDuration: allegee, kind: .easedLongRun)
             ]
         }
+
+        return base
     }
 
     private static func hyroxArchetypes(for block: TrainingBlock, profile: UserProfile) -> [SessionArchetype] {
@@ -954,7 +965,7 @@ enum AdaptivePlanEngine {
             ]
         }
 
-        return adjustForWellbeing(base, profile: profile)
+        return base
     }
 
     /// LA PREMIÈRE SEMAINE DE CETTE APP QUI N'EST PAS UNE SEMAINE DE COURSE.
@@ -1031,7 +1042,7 @@ enum AdaptivePlanEngine {
             ]
         }
 
-        return adjustForWellbeing(base, profile: profile)
+        return base
     }
 
     /// Les séances d'un duathlon, bloc par bloc.
@@ -1096,7 +1107,7 @@ enum AdaptivePlanEngine {
             ]
         }
 
-        return adjustForWellbeing(base, profile: profile)
+        return base
     }
 
     /// Real, human-readable label for the raw onboarding id — `CoachService` used to interpolate
@@ -1285,20 +1296,33 @@ enum AdaptivePlanEngine {
         let block = trainingBlock(forWeek: weekNumber, shape: shape)
         // Un `switch` et non deux ternaires imbriqués : à trois familles de plan, une chaîne de
         // ternaires devient une énigme, et c'est la ligne qui décide de TOUT ce qu'on fera courir.
-        let templates: [SessionArchetype]
+        let brut: [SessionArchetype]
         switch profile.goalId {
         case .hyrox:
-            templates = hyroxArchetypes(for: block, profile: profile)
+            brut = hyroxArchetypes(for: block, profile: profile)
         case .ultraTrail:
-            templates = ultraTrailArchetypes(for: block, profile: profile,
-                                             weekNumber: weekNumber, shape: shape)
+            brut = ultraTrailArchetypes(for: block, profile: profile,
+                                        weekNumber: weekNumber, shape: shape)
         case .triathlon:
-            templates = triathlonArchetypes(for: block, profile: profile)
+            brut = triathlonArchetypes(for: block, profile: profile)
         case .duathlon:
-            templates = duathlonArchetypes(for: block, profile: profile)
+            brut = duathlonArchetypes(for: block, profile: profile)
         default:
-            templates = archetypes(for: block, profile: profile, weekNumber: weekNumber, shape: shape)
+            brut = archetypes(for: block, profile: profile, weekNumber: weekNumber, shape: shape)
         }
+        // L'AJUSTEMENT EST APPLIQUÉ ICI, UNE FOIS, ET PLUS DANS CHAQUE FAMILLE DE PLAN.
+        //
+        // Les cinq fonctions d'archétypes finissaient chacune par `adjustForWellbeing` — et
+        // l'ultra-trail avait oublié de le faire. Personne ne s'en est aperçu, parce que la
+        // différence ne se voit pas : la semaine est pleine, les séances sont justes, rien ne
+        // manque à l'écran. Ce qui manquait, c'était qu'une blessure signalée n'allégeait rien,
+        // que la phase du cycle n'était pas lue, et que l'allègement posé par le coach ne
+        // mordait pas — il pouvait promettre « on lève le pied » sans que la semaine bouge.
+        //
+        // Cinq appels à ne pas oublier, c'est cinq occasions de l'oublier. Il n'y en a plus
+        // qu'un, à l'endroit qui choisit la famille : une sixième famille de plan ne pourra
+        // plus passer à côté sans qu'on l'écrive exprès.
+        let templates = adjustForWellbeing(brut, profile: profile)
         let sortedRunDays = profile.runningDays.sorted()
 
         let jourChoisi = profile.preferredLongRunDay.flatMap { sortedRunDays.contains($0) ? $0 : nil } ?? sortedRunDays.max()

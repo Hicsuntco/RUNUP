@@ -508,6 +508,62 @@ final class ContexteDeVieTests: XCTestCase {
         XCTAssertTrue(Terrain.trail.offreDuRelief)
     }
 
+    // MARK: Le garde-fou qui aurait attrapé l'oubli
+
+    /// CHAQUE FAMILLE DE PLAN ÉCOUTE L'ALLÈGEMENT DU COACH — y compris l'ultra, qui ne
+    /// l'écoutait pas.
+    ///
+    /// Les cinq fonctions d'archétypes finissaient chacune par `adjustForWellbeing`, et
+    /// `ultraTrailArchetypes` avait oublié de le faire. Rien ne le montrait : la semaine était
+    /// pleine, les séances justes, l'écran complet. Simplement, une blessure signalée
+    /// n'allégeait rien, la phase du cycle n'était pas lue, et le coach pouvait promettre « on
+    /// lève le pied cette semaine » sans que la semaine bouge d'une minute.
+    ///
+    /// Le test ne pose AUCUN plafond de durée, volontairement. Le plafond est appliqué ailleurs,
+    /// dans le générateur, donc il aurait fait bouger la semaine même sans l'ajustement — et le
+    /// test serait passé au vert sur le défaut qu'il est censé attraper. Seul « plus de
+    /// fractionné » passe par le chemin oublié.
+    ///
+    /// Balayé sur les neuf objectifs : une sixième famille de plan ne pourra pas se glisser dans
+    /// le `switch` sans passer par là.
+    func testChaqueFamilleDePlanEcouteLallegementDuCoach() throws {
+        for objectif in GoalType.allCases {
+            let sans = profilDeTousObjectifs(objectif)
+            let avec = profilDeTousObjectifs(objectif)
+            avec.trainingEase = TrainingEase(
+                maxMinutes: nil, noSpeedWork: true,
+                until: try XCTUnwrap(Calendar.current.date(byAdding: .day, value: 7, to: .now)),
+                reason: "On lève le pied")
+            let empreinte: (UserProfile) -> [String] = { p in
+                self.seances(p).map { "\($0.kind?.rawValue ?? $0.title)|\($0.durationMinutes)" }
+            }
+            XCTAssertNotEqual(empreinte(sans), empreinte(avec),
+                              "\(objectif) n'écoute pas l'allègement du coach")
+        }
+    }
+
+    /// Un profil renseigné pour n'importe lequel des neuf objectifs — chacun lit ce qui le
+    /// concerne et ignore le reste.
+    private func profilDeTousObjectifs(_ objectif: GoalType) -> UserProfile {
+        let p = UserProfile(name: "Test")
+        p.goalId = objectif
+        p.level = .intermediaire
+        p.raceDistance = objectif == .ultraTrail ? .ultra50 : .marathon
+        p.raceElevationGainM = 2500
+        p.raceChrono = "4:15"
+        p.hyroxDivision = HyroxDivision.open.rawValue
+        p.triathlonFormat = TriathlonFormat.olympique.rawValue
+        p.nageNiveau = NiveauDeNage.jusqua800.rawValue
+        p.duathlonFormat = DuathlonFormat.standard.rawValue
+        p.runningDays = [0, 1, 2, 3, 4, 5, 6]
+        p.preferredLongRunDay = 6
+        let start = Date()
+        p.programStartDate = start
+        p.raceDate = Calendar.current.date(byAdding: .weekOfYear, value: 16, to: start)
+        container.mainContext.insert(p)
+        return p
+    }
+
     // MARK: Les autres sports
 
     /// DEUX SPORTS PORTEURS, UNE SEULE SÉANCE DE QUALITÉ.

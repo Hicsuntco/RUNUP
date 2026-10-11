@@ -349,6 +349,7 @@ enum CaptureSeed {
             bestRecentPerf: "10 km en 49:12",
             lastRanRecency: nil,
             injuryArea: nil,
+            injuryWhen: nil, terrains: [], autresSports: [],
             weeklyTimeBudget: nil,
             preferredTimeOfDay: nil,
             cycleTrackingEnabled: false,

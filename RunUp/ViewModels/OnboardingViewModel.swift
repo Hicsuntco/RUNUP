@@ -63,6 +63,10 @@ final class OnboardingViewModel {
     // Step 4 — shared across every branch (race included): injury is asked regardless of goal,
     // cycle tracking only ever offered when `sex == "female"`.
     var injuryArea: String?
+    /// Depuis quand — posé seulement si une zone a été cochée. Voir `AncienneteBlessure`.
+    var injuryWhen: AncienneteBlessure?
+    var terrains: Set<Terrain> = []
+    var autresSports: Set<AutreSport> = []
     var cycleTrackingEnabled = false
     var lastPeriodStartDate: Date?
     var averageCycleLengthDays = 28
@@ -297,6 +301,9 @@ final class OnboardingViewModel {
             bestRecentPerf: bestRecentPerf.isEmpty ? nil : bestRecentPerf,
             lastRanRecency: lastRanRecency,
             injuryArea: injuryArea,
+            injuryWhen: injuryWhen?.rawValue,
+            terrains: terrains.map(\.rawValue).sorted(),
+            autresSports: autresSports.map(\.rawValue).sorted(),
             weeklyTimeBudget: weeklyTimeBudget,
             preferredTimeOfDay: preferredTimeOfDay,
             cycleTrackingEnabled: sex == "female" && cycleTrackingEnabled,

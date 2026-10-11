@@ -271,7 +271,7 @@ final class DuathlonTests: XCTestCase {
             volumeActuel: nil, plusLongueSortie: nil, allureFooting: nil,
             runningDays: [0, 2, 4], preferredLongRunDay: 4, level: .intermediaire,
             connectedSources: [], weightNowKg: nil, weightTargetKg: nil, heightCm: nil,
-            focusArea: nil, bestRecentPerf: nil, lastRanRecency: nil, injuryArea: nil,
+            focusArea: nil, bestRecentPerf: nil, lastRanRecency: nil, injuryArea: nil, injuryWhen: nil, terrains: [], autresSports: [],
             weeklyTimeBudget: nil, preferredTimeOfDay: nil,
             cycleTrackingEnabled: false, lastPeriodStartDate: nil, averageCycleLengthDays: 28
         )

@@ -97,6 +97,13 @@ final class UserProfile {
     /// parce qu'un mardi et un dimanche ne se ressemblent pas.
     var tempsSemaineMin: Int? = nil
     var tempsWeekEndMin: Int? = nil
+    /// Depuis quand la blessure cochée — `AncienneteBlessure`. `nil` pour les profils créés
+    /// avant la question : ils gardent l'allègement permanent qu'ils avaient.
+    var injuryWhen: String? = nil
+    /// Le terrain disponible et les autres sports — les `rawValue` de `Terrain` et
+    /// `AutreSport`. Vide veut dire « pas répondu », et ne filtre donc rien.
+    var terrains: [String] = []
+    var autresSports: [String] = []
 
     // MARK: Goal-specific deep-dive fields (only the relevant subset is populated)
     var raceDistance: RaceDistance?

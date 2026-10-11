@@ -17,6 +17,49 @@ struct WellbeingFieldsView: View {
                 }
             }
 
+            // « DEPUIS QUAND » NE SE DEMANDE QU'À QUI A COCHÉ UNE ZONE.
+            //
+            // Et elle décide de beaucoup : sans elle, une entorse d'il y a trois ans
+            // raccourcissait de 30 % toute séance de vitesse, chaque semaine, indéfiniment.
+            // Voir `AncienneteBlessure`.
+            if let zone = vm.injuryArea, zone != OnboardingChoices.aucuneBlessure {
+                EyebrowLabel(text: "C'était quand ?", color: RUColor.text3)
+                    .padding(.top, 20).padding(.bottom, 10)
+                ChipFlowLayout {
+                    ForEach(AncienneteBlessure.allCases) { choix in
+                        SelectableChip(label: choix.title, selected: vm.injuryWhen == choix) {
+                            vm.injuryWhen = choix
+                        }
+                    }
+                }
+            }
+
+            // LE TERRAIN. Le plan prescrivait « Côtes longues » sans jamais demander s'il y
+            // avait une côte à moins de vingt kilomètres.
+            EyebrowLabel(text: "Où tu cours, en vrai", color: RUColor.text3)
+                .padding(.top, 20).padding(.bottom, 10)
+            ChipFlowLayout {
+                ForEach(Terrain.allCases) { terrain in
+                    SelectableChip(label: terrain.title, selected: vm.terrains.contains(terrain)) {
+                        if vm.terrains.contains(terrain) { vm.terrains.remove(terrain) }
+                        else { vm.terrains.insert(terrain) }
+                    }
+                }
+            }
+
+            // LES AUTRES SPORTS. Trois séances de renfo par semaine ne laissent pas les mêmes
+            // jambes, et le plan posait ses deux séances de qualité dans tous les cas.
+            EyebrowLabel(text: "Tu fais autre chose à côté ?", color: RUColor.text3)
+                .padding(.top, 20).padding(.bottom, 10)
+            ChipFlowLayout {
+                ForEach(AutreSport.allCases) { sport in
+                    SelectableChip(label: sport.title, selected: vm.autresSports.contains(sport)) {
+                        if vm.autresSports.contains(sport) { vm.autresSports.remove(sport) }
+                        else { vm.autresSports.insert(sport) }
+                    }
+                }
+            }
+
             if vm.sex == "female" {
                 EyebrowLabel(text: "Adapter le programme à ton cycle ?", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
                 ChipFlowLayout {

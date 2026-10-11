@@ -4893,6 +4893,23 @@
         }
       }
     },
+    "C'était quand ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When was it?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cuándo fue?"
+          }
+        }
+      }
+    },
     "CE QUE TU COURS DÉJÀ": {
       "extractionState": "manual",
       "localizations": {
@@ -10145,6 +10162,57 @@
         }
       }
     },
+    "Il y a 3 à 12 mois": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 to 12 months ago"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hace entre 3 y 12 meses"
+          }
+        }
+      }
+    },
+    "Il y a moins de 3 mois": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Less than 3 months ago"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hace menos de 3 meses"
+          }
+        }
+      }
+    },
+    "Il y a plus d'un an": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Over a year ago"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hace más de un año"
+          }
+        }
+      }
+    },
     "Impact sur ton programme": {
       "localizations": {
         "en": {
@@ -13741,6 +13809,23 @@
         }
       }
     },
+    "Muscu / renfo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strength training"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pesas / fuerza"
+          }
+        }
+      }
+    },
     "Météo  Apple Weather": {
       "extractionState": "manual",
       "localizations": {
@@ -14769,6 +14854,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "A dónde va el día"
+          }
+        }
+      }
+    },
+    "Où tu cours, en vrai": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where you actually run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dónde corres de verdad"
           }
         }
       }
@@ -15900,6 +16002,23 @@
         }
       }
     },
+    "Piste d'athlé": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running track"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pista de atletismo"
+          }
+        }
+      }
+    },
     "Place à la récupération": {
       "localizations": {
         "en": {
@@ -15929,6 +16048,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plan completo desbloqueado"
+          }
+        }
+      }
+    },
+    "Plat / route": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flat / road"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Llano / carretera"
           }
         }
       }
@@ -19607,6 +19743,23 @@
         }
       }
     },
+    "Sports co": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Team sports"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deportes de equipo"
+          }
+        }
+      }
+    },
     "Sprint": {
       "extractionState": "manual",
       "localizations": {
@@ -21307,6 +21460,23 @@
         }
       }
     },
+    "Tapis de course": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Treadmill"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cinta de correr"
+          }
+        }
+      }
+    },
     "Technique": {
       "extractionState": "manual",
       "localizations": {
@@ -22506,6 +22676,23 @@
         }
       }
     },
+    "Trail / sentiers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trail / paths"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trail / senderos"
+          }
+        }
+      }
+    },
     "Transitions": {
       "extractionState": "manual",
       "localizations": {
@@ -22752,6 +22939,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Estás sola en %@"
+          }
+        }
+      }
+    },
+    "Tu fais autre chose à côté ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you do anything else alongside?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Haces algo más además de correr?"
           }
         }
       }
@@ -23428,6 +23632,23 @@
         }
       }
     },
+    "Vallonné": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hilly"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Con desnivel"
+          }
+        }
+      }
+    },
     "Ven": {
       "extractionState": "manual",
       "localizations": {
@@ -23773,6 +23994,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "XP"
+          }
+        }
+      }
+    },
+    "Yoga / mobilité": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yoga / mobility"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yoga / movilidad"
           }
         }
       }
@@ -25289,6 +25527,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "ratio de carga %@"
+          }
+        }
+      }
+    },
+    "remplacé — pas de dénivelé près de chez toi": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "swapped — no hills near you"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cambiada — sin desnivel cerca de ti"
           }
         }
       }
@@ -28397,6 +28652,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ha pasado un tiempo…"
+          }
+        }
+      }
+    },
+    "Ça me gêne en ce moment": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It's bothering me right now"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Me molesta ahora mismo"
           }
         }
       }

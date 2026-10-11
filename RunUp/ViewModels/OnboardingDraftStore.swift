@@ -51,6 +51,9 @@ private struct OnboardingDraft: Codable {
     var weeklyTimeBudget: String?
     var preferredTimeOfDay: String?
     var injuryArea: String?
+    var injuryWhen: AncienneteBlessure?
+    var terrains: Set<Terrain>?
+    var autresSports: Set<AutreSport>?
     var cycleTrackingEnabled: Bool
     var lastPeriodStartDate: Date?
     var averageCycleLengthDays: Int
@@ -98,6 +101,9 @@ extension OnboardingViewModel {
         weeklyTimeBudget = draft.weeklyTimeBudget
         preferredTimeOfDay = draft.preferredTimeOfDay
         injuryArea = draft.injuryArea
+        injuryWhen = draft.injuryWhen
+        terrains = draft.terrains ?? []
+        autresSports = draft.autresSports ?? []
         cycleTrackingEnabled = draft.cycleTrackingEnabled
         lastPeriodStartDate = draft.lastPeriodStartDate
         averageCycleLengthDays = draft.averageCycleLengthDays
@@ -127,6 +133,7 @@ extension OnboardingViewModel {
             weightNow: weightNow, weightTarget: weightTarget,
             height: height, focusArea: focusArea, bestRecentPerf: bestRecentPerf, lastRanRecency: lastRanRecency,
             weeklyTimeBudget: weeklyTimeBudget, preferredTimeOfDay: preferredTimeOfDay, injuryArea: injuryArea,
+            injuryWhen: injuryWhen, terrains: terrains, autresSports: autresSports,
             cycleTrackingEnabled: cycleTrackingEnabled, lastPeriodStartDate: lastPeriodStartDate,
             averageCycleLengthDays: averageCycleLengthDays, runningDays: runningDays,
             preferredLongRunDay: preferredLongRunDay, runningDaysTouched: runningDaysTouched,

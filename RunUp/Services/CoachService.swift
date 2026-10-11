@@ -245,6 +245,19 @@ enum CoachService {
         } else if let weeklyTime = s.weeklyTimeBudget {
             extra.append("Dispo hebdo souhaitée : \(weeklyTime), préfère courir le \(s.preferredTimeOfDay ?? "?").")
         }
+        // Le terrain et les autres sports changent déjà le PLAN (séances de relief remplacées,
+        // budget qualité réduit — voir `AdaptivePlanEngine.adjustForWellbeing`). Le coach les
+        // reçoit pour pouvoir en parler, pas pour en décider : sans eux, il conseillerait des
+        // côtes à quelqu'un qui vient de dire qu'il n'en a pas.
+        if !s.terrains.isEmpty {
+            extra.append("Terrain dispo : \(s.terrains.joined(separator: ", ")).")
+        }
+        if !s.autresSports.isEmpty {
+            extra.append("Fait aussi : \(s.autresSports.joined(separator: ", ")) — compte dans sa récupération.")
+        }
+        if let zone = s.injuryArea, zone != "none", let quand = s.injuryWhen {
+            extra.append("Blessure signalée : \(zone), \(quand).")
+        }
         if let age = s.age {
             extra.append("\(age) ans.")
         }

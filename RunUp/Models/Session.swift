@@ -257,6 +257,21 @@ enum SessionKind: String, Codable, Equatable, CaseIterable {
     /// pas tant que sa famille n'aura pas été choisie. C'est voulu : le repli silencieux d'un
     /// `default` donnerait une couleur plausible à une séance mal classée, ce qui est le seul
     /// résultat vraiment coûteux ici.
+    /// Cette séance a-t-elle besoin d'une vraie pente ?
+    ///
+    /// Elle décide d'un remplacement, pas d'un affichage : sans dénivelé près de chez soi, une
+    /// « Côte longue » n'est pas une séance difficile, c'est une séance impossible. Voir
+    /// `Terrain.offreDuRelief` et `AdaptivePlanEngine.adjustForWellbeing`.
+    ///
+    /// La randonnée rapide en fait partie : son objet est de monter. La sortie de nuit et le
+    /// rappel de terrain, non — ce sont une heure et un revêtement, pas une pente.
+    var demandeDuRelief: Bool {
+        switch self {
+        case .ultraHillRepeats, .ultraDescentWork, .ultraPowerHike: return true
+        default: return false
+        }
+    }
+
     var family: SessionFamily {
         switch self {
         case .rest:

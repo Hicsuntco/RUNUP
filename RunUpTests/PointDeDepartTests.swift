@@ -177,7 +177,7 @@ final class PointDeDepartTests: XCTestCase {
                     volumeActuel: volume, plusLongueSortie: nil, allureFooting: nil,
                     runningDays: [0, 2, 4, 6], preferredLongRunDay: 6, level: .confirmee,
                     connectedSources: [], weightNowKg: nil, weightTargetKg: nil, heightCm: nil,
-                    focusArea: nil, bestRecentPerf: nil, lastRanRecency: nil, injuryArea: nil,
+                    focusArea: nil, bestRecentPerf: nil, lastRanRecency: nil, injuryArea: nil, injuryWhen: nil, terrains: [], autresSports: [],
                     weeklyTimeBudget: nil, preferredTimeOfDay: nil,
                     cycleTrackingEnabled: false, lastPeriodStartDate: nil, averageCycleLengthDays: 28),
                 to: p)
@@ -385,5 +385,152 @@ final class TempsDisponibleTests: XCTestCase {
         XCTAssertEqual(TempsDisponible.leWeekEnd, TempsDisponible.leWeekEnd.sorted())
         XCTAssertGreaterThanOrEqual(TempsDisponible.leWeekEnd.max() ?? 0,
                                     TempsDisponible.enSemaine.max() ?? 0)
+    }
+}
+
+/// La blessure, le terrain, les autres sports — les trois réponses qui n'étaient pas posées.
+@MainActor
+final class ContexteDeVieTests: XCTestCase {
+
+    private var container: ModelContainer!
+
+    override func setUpWithError() throws {
+        container = try ModelContainer(
+            for: UserProfile.self, RunRecord.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+    }
+
+    private func profil(zone: String? = nil, quand: AncienneteBlessure? = nil,
+                        terrains: [Terrain] = [], sports: [AutreSport] = [],
+                        objectif: GoalType = .race) -> UserProfile {
+        let p = UserProfile(name: "Test")
+        p.goalId = objectif
+        p.level = .intermediaire
+        p.raceDistance = objectif == .ultraTrail ? .ultra50 : .marathon
+        p.raceElevationGainM = objectif == .ultraTrail ? 2500 : nil
+        p.injuryArea = zone
+        p.injuryWhen = quand?.rawValue
+        p.terrains = terrains.map(\.rawValue)
+        p.autresSports = sports.map(\.rawValue)
+        p.runningDays = [0, 1, 2, 3, 4, 5, 6]
+        p.preferredLongRunDay = 6
+        let start = Date()
+        p.programStartDate = start
+        p.raceDate = Calendar.current.date(byAdding: .weekOfYear, value: 16, to: start)
+        container.mainContext.insert(p)
+        return p
+    }
+
+    private func seances(_ p: UserProfile, semaine: Int = 2) -> [WorkoutSession] {
+        AdaptivePlanEngine.generateWeekSessions(weekNumber: semaine, tier: 2, profile: p)
+            .compactMap(\.session)
+    }
+
+    // MARK: La blessure a une date
+
+    /// UNE ENTORSE D'IL Y A TROIS ANS N'ALLÈGE PLUS LE PLAN POUR TOUJOURS.
+    ///
+    /// L'inscription demandait OÙ, jamais QUAND, et la conséquence était permanente : toute
+    /// séance de vitesse raccourcie de 30 %, chaque semaine, indéfiniment.
+    func testUneVieilleBlessureNAllegePlusLePlan() {
+        let recente = seances(profil(zone: "knee", quand: .enCours))
+            .filter { $0.family == .intervals || $0.family == .tempo }
+        let ancienne = seances(profil(zone: "knee", quand: .plusDUnAn))
+            .filter { $0.family == .intervals || $0.family == .tempo }
+        XCTAssertFalse(recente.isEmpty)
+        XCTAssertFalse(ancienne.isEmpty)
+        XCTAssertLessThan(recente.map(\.durationMinutes).reduce(0, +),
+                          ancienne.map(\.durationMinutes).reduce(0, +))
+    }
+
+    /// Les quatre tranches se partagent en deux, et la frontière est à trois mois.
+    func testTroisMoisEstLaFrontiere() {
+        XCTAssertTrue(AncienneteBlessure.enCours.demandeUneAdaptation)
+        XCTAssertTrue(AncienneteBlessure.moinsDe3Mois.demandeUneAdaptation)
+        XCTAssertFalse(AncienneteBlessure.de3a12Mois.demandeUneAdaptation)
+        XCTAssertFalse(AncienneteBlessure.plusDUnAn.demandeUneAdaptation)
+    }
+
+    /// SANS RÉPONSE, L'ALLÈGEMENT RESTE. C'est le seul endroit de cette série où « pas de
+    /// réponse » penche du côté prudent plutôt que du côté « comme avant » — parce qu'ici les
+    /// deux sont la même chose, et retirer une protection sur un silence serait le mauvais
+    /// arbitrage.
+    func testSansDateLallegementReste() {
+        let sansDate = seances(profil(zone: "knee"))
+            .filter { $0.family == .intervals || $0.family == .tempo }
+            .map(\.durationMinutes).reduce(0, +)
+        let ancienne = seances(profil(zone: "knee", quand: .plusDUnAn))
+            .filter { $0.family == .intervals || $0.family == .tempo }
+            .map(\.durationMinutes).reduce(0, +)
+        XCTAssertLessThan(sansDate, ancienne)
+    }
+
+    // MARK: Le terrain
+
+    /// PAS DE CÔTE PRÈS DE CHEZ ELLE, PAS DE SÉANCE DE CÔTES.
+    ///
+    /// Prescrire une séance infaisable ne rend pas le plan exigeant : il rend la semaine
+    /// incomplète, et c'est la coureuse qui croit avoir échoué.
+    func testSansReliefLesSeancesDeReliefSontRemplacees() {
+        let plate = seances(profil(terrains: [.plat, .piste], objectif: .ultraTrail), semaine: 3)
+        XCTAssertFalse(plate.isEmpty)
+        XCTAssertFalse(plate.contains { $0.kind?.demandeDuRelief == true },
+                       "\(plate.compactMap { $0.kind?.rawValue })")
+    }
+
+    /// Et la semaine garde le même nombre de séances : un remplacement, pas une suppression.
+    func testLeRemplacementNeViedePasLaSemaine() {
+        let avec = seances(profil(terrains: [.trail], objectif: .ultraTrail), semaine: 3).count
+        let sans = seances(profil(terrains: [.plat], objectif: .ultraTrail), semaine: 3).count
+        XCTAssertEqual(avec, sans)
+    }
+
+    /// Le remplacement DIT pourquoi — ce n'est pas une substitution silencieuse.
+    func testLeRemplacementPorteSaRaison() {
+        let plate = seances(profil(terrains: [.plat], objectif: .ultraTrail), semaine: 3)
+        XCTAssertTrue(plate.contains { $0.adaptationNote != nil }, "aucune séance ne dit pourquoi")
+    }
+
+    /// UNE LISTE VIDE NE FILTRE RIEN. Un plan d'ultra sans ses côtes est un plan amputé, et il
+    /// vaut mieux l'amputer sur une réponse que sur un silence.
+    func testSansReponseLeReliefReste() {
+        let muette = seances(profil(objectif: .ultraTrail), semaine: 3)
+        let vallonnee = seances(profil(terrains: [.vallonne], objectif: .ultraTrail), semaine: 3)
+        XCTAssertEqual(muette.compactMap { $0.kind }, vallonnee.compactMap { $0.kind })
+    }
+
+    /// Le tapis n'offre pas de relief, et c'est un arbitrage : sa pente permet les côtes mais
+    /// jamais les descentes, et c'est la descente qui détruit les quadriceps le jour J.
+    func testLeTapisNoffrePasDeRelief() {
+        XCTAssertFalse(Terrain.tapis.offreDuRelief)
+        XCTAssertTrue(Terrain.vallonne.offreDuRelief)
+        XCTAssertTrue(Terrain.trail.offreDuRelief)
+    }
+
+    // MARK: Les autres sports
+
+    /// DEUX SPORTS PORTEURS, UNE SEULE SÉANCE DE QUALITÉ.
+    func testDeuxSportsPorteursReduisentLeBudgetQualite() {
+        let dure: (UserProfile) -> Int = { p in
+            self.seances(p).filter { $0.family == .intervals || $0.family == .tempo }.count
+        }
+        XCTAssertEqual(dure(profil(sports: [.muscu, .sportsCo])), 1)
+        XCTAssertEqual(dure(profil(sports: [.muscu])), 2)
+        XCTAssertEqual(dure(profil()), 2)
+    }
+
+    /// LE VÉLO ET LA NATATION NE COMPTENT PAS — c'est l'impact qui pèse sur les jambes, pas la
+    /// dépense. La même règle que le moteur applique déjà à ses propres séances.
+    func testLeVeloEtLaNatationNeMangentPasLeBudget() {
+        let dure = seances(profil(sports: [.velo, .natation, .yoga]))
+            .filter { $0.family == .intervals || $0.family == .tempo }.count
+        XCTAssertEqual(dure, 2)
+        for sport in [AutreSport.velo, .natation, .yoga] {
+            XCTAssertFalse(sport.peseSurLesJambes, "\(sport)")
+        }
+        for sport in [AutreSport.muscu, .sportsCo] {
+            XCTAssertTrue(sport.peseSurLesJambes, "\(sport)")
+        }
     }
 }

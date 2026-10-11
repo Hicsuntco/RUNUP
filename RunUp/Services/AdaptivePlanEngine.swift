@@ -51,6 +51,11 @@ enum AdaptivePlanEngine {
         var bestRecentPerf: String?
         var lastRanRecency: String?
         var injuryArea: String?
+        /// Depuis quand la blessure, le terrain disponible, les autres sports — les `rawValue`
+        /// de `AncienneteBlessure`, `Terrain` et `AutreSport`.
+        var injuryWhen: String?
+        var terrains: [String]
+        var autresSports: [String]
         var weeklyTimeBudget: String?
         var preferredTimeOfDay: String?
         var cycleTrackingEnabled: Bool
@@ -94,6 +99,9 @@ enum AdaptivePlanEngine {
         profile.bestRecentPerf = result.bestRecentPerf
         profile.lastRanRecency = result.lastRanRecency
         profile.injuryArea = result.injuryArea
+        profile.injuryWhen = result.injuryWhen
+        profile.terrains = result.terrains
+        profile.autresSports = result.autresSports
         profile.weeklyTimeBudget = result.weeklyTimeBudget
         profile.preferredTimeOfDay = result.preferredTimeOfDay
         profile.cycleTrackingEnabled = result.cycleTrackingEnabled
@@ -1115,7 +1123,22 @@ enum AdaptivePlanEngine {
     private static func adjustForWellbeing(_ archetypes: [SessionArchetype], profile: UserProfile) -> [SessionArchetype] {
         var result = archetypes
         let injury = profile.injuryArea
-        let hasInjury = injury != nil && injury != "none"
+        // UNE ENTORSE D'IL Y A TROIS ANS N'ALLÈGE PLUS LE PLAN POUR TOUJOURS.
+        //
+        // L'inscription demandait OÙ, jamais QUAND, et la conséquence était permanente : toute
+        // séance de vitesse raccourcie de 30 %, passée en Z2-3, avec la mention « impact
+        // réduit », chaque semaine, indéfiniment. Quelqu'un qui avait coché « genou » en
+        // pensant à une vieille histoire recevait un plan bridé pour toujours sans jamais
+        // comprendre pourquoi ses séances de qualité n'en étaient pas.
+        //
+        // `nil` continue d'alléger : un profil créé avant la question n'a pas répondu, et le
+        // priver de son allègement sur une absence de réponse serait lui retirer une protection
+        // qu'il n'a pas demandé à perdre. C'est le seul endroit de cette série où « pas de
+        // réponse » penche du côté prudent plutôt que du côté « comme avant » — parce qu'ici
+        // les deux sont la même chose.
+        let blessureRecente = profile.injuryWhen
+            .flatMap(AncienneteBlessure.init(rawValue:))?.demandeUneAdaptation ?? true
+        let hasInjury = injury != nil && injury != "none" && blessureRecente
 
         // L'allègement posé par le coach passe EN PREMIER, et il remplace la séance de vitesse
         // plutôt que de l'alléger : « plus de fractionné » n'est pas « un fractionné plus court ».
@@ -1153,6 +1176,37 @@ enum AdaptivePlanEngine {
                 eased.zone = "Z2-3"
                 eased.baseDuration = Int(Double(a.baseDuration) * 0.7)
                 return eased
+            }
+        }
+
+        // LE RELIEF QU'ELLE N'A PAS.
+        //
+        // « Côtes longues » et « Descente technique » étaient prescrites sans qu'on ait jamais
+        // demandé s'il y avait une côte à moins de vingt kilomètres. Prescrire une séance
+        // infaisable ne rend pas le plan exigeant : il rend la semaine incomplète, et c'est la
+        // coureuse qui croit avoir échoué.
+        //
+        // La séance est REMPLACÉE, pas supprimée : une semaine à trois séances au lieu de
+        // quatre serait une semaine plus légère sans que rien ne le dise. Et le remplacement
+        // porte sa raison dans `adaptationNote`, qui s'affiche sous le titre — ce n'est pas une
+        // substitution silencieuse, c'est une réponse à ce qu'elle vient de répondre.
+        //
+        // Une liste VIDE ne filtre rien : personne n'a répondu, donc on ne retire rien. Un plan
+        // d'ultra sans ses côtes est un plan amputé, et il vaut mieux l'amputer sur une réponse
+        // que sur un silence.
+        let terrains = Set(profile.terrains.compactMap(Terrain.init(rawValue:)))
+        if !terrains.isEmpty, !terrains.contains(where: \.offreDuRelief) {
+            // Le remplaçant ne doit pas demander lui-même du relief, sinon on échange une
+            // séance impossible contre une autre. Le cas n'est pas théorique : la randonnée
+            // rapide d'un plan d'ultra est une séance FACILE dont l'objet est de monter, donc
+            // le premier candidat « facile » du bloc pouvait être exactement ce qu'on retire.
+            let remplacement = result.first { $0.role == .easy && !$0.kind.demandeDuRelief }
+                ?? result.first { $0.role != .longRun && !$0.kind.demandeDuRelief }
+            result = result.map { a in
+                guard a.kind.demandeDuRelief, var substitut = remplacement else { return a }
+                substitut.baseDuration = a.baseDuration
+                substitut.adaptationNote = "remplacé — pas de dénivelé près de chez toi"
+                return substitut
             }
         }
 
@@ -1278,7 +1332,25 @@ enum AdaptivePlanEngine {
         // cycling produced one hard session per available day — 3-4 a week for someone running
         // 4-5 days — which is a known overtraining/injury driver regardless of how good each
         // individual session is. The long run keeps its own role and is never counted here.
-        let maxQualityPerWeek = 2
+        // LE BUDGET QUALITÉ TIENT COMPTE DE CE QU'ELLE FAIT D'AUTRE.
+        //
+        // Deux séances dures par semaine est le plafond d'un plan de course SEUL. Quelqu'un qui
+        // fait de la muscu et du hand à côté en fait quatre, et le moteur n'en savait rien : il
+        // posait ses deux séances de qualité comme si les jambes arrivaient fraîches.
+        //
+        // Le compte ne retient que les sports qui PÈSENT SUR LES JAMBES — la même question que
+        // `peseSurLesJambes` pose déjà aux séances du plan, et la même réponse : c'est l'impact
+        // qui compte, pas la dépense. Le vélo et la natation fatiguent sans marteler, et c'est
+        // précisément ce qui en fait de la récupération active plutôt qu'une charge de plus.
+        //
+        // Il faut DEUX sports porteurs pour descendre à une séance, pas un. Un renforcement
+        // hebdomadaire est une bonne chose pour un coureur, et le punir de l'avoir dit serait
+        // le meilleur moyen qu'il ne le dise plus.
+        let sportsPorteurs = profile.autresSports
+            .compactMap(AutreSport.init(rawValue:))
+            .filter(\.peseSurLesJambes)
+            .count
+        let maxQualityPerWeek = sportsPorteurs >= 2 ? 1 : 2
         var qualityUsed = 0
 
         // LE PLAFOND NE COMPTE QUE CE QUI PÈSE SUR LES JAMBES.

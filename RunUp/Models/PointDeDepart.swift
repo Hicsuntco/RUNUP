@@ -165,3 +165,110 @@ enum TempsDisponible {
         estWeekEnd(jour) ? weekEnd : semaine
     }
 }
+
+/// Depuis quand la blessure — et est-ce qu'elle gêne ENCORE.
+///
+/// # UNE ENTORSE D'IL Y A TROIS ANS ALLÉGEAIT LE PLAN POUR TOUJOURS
+///
+/// L'inscription demandait OÙ, jamais QUAND. Et `adjustForWellbeing` en tirait une conséquence
+/// permanente : toute séance de vitesse raccourcie de 30 %, passée en Z2-3, avec la mention
+/// « impact réduit » — chaque semaine, indéfiniment. Quelqu'un qui avait coché « genou » en
+/// pensant à une vieille histoire recevait un plan bridé pour toujours, sans jamais comprendre
+/// pourquoi ses séances de qualité n'en étaient pas.
+///
+/// Le champ n'est posé que si une zone a été cochée : on ne demande pas « depuis quand » à
+/// quelqu'un qui vient de répondre « aucune ».
+enum AncienneteBlessure: String, Codable, CaseIterable, Identifiable {
+    case enCours, moinsDe3Mois, de3a12Mois, plusDUnAn
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .enCours: return String(localized: "Ça me gêne en ce moment")
+        case .moinsDe3Mois: return String(localized: "Il y a moins de 3 mois")
+        case .de3a12Mois: return String(localized: "Il y a 3 à 12 mois")
+        case .plusDUnAn: return String(localized: "Il y a plus d'un an")
+        }
+    }
+
+    /// Le plan doit-il s'alléger ?
+    ///
+    /// Oui tant que c'est en cours ou récent — trois mois est la borne au-delà de laquelle un
+    /// tissu banal a cicatrisé et où continuer de brider coûte plus que ça ne protège. Au-delà,
+    /// la zone reste connue du coach, qui saura en parler ; elle ne décide plus du programme.
+    var demandeUneAdaptation: Bool {
+        switch self {
+        case .enCours, .moinsDe3Mois: return true
+        case .de3a12Mois, .plusDUnAn: return false
+        }
+    }
+}
+
+/// Le terrain dont elle dispose vraiment.
+///
+/// Le plan prescrivait « Côtes longues » et « Descente technique » sans jamais demander s'il y
+/// avait une côte à moins de vingt kilomètres. Prescrire une séance infaisable ne rend pas le
+/// plan exigeant : il rend la semaine incomplète, et c'est la coureuse qui croit avoir échoué.
+enum Terrain: String, Codable, CaseIterable, Identifiable {
+    case plat, vallonne, piste, trail, tapis
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .plat: return String(localized: "Plat / route")
+        case .vallonne: return String(localized: "Vallonné")
+        case .piste: return String(localized: "Piste d'athlé")
+        case .trail: return String(localized: "Trail / sentiers")
+        case .tapis: return String(localized: "Tapis de course")
+        }
+    }
+
+    /// Ce terrain offre-t-il du dénivelé ?
+    ///
+    /// Le tapis n'en fait PAS partie, et c'est un arbitrage : sa pente permet les côtes mais
+    /// jamais les descentes, et une séance de descente est précisément celle qui détruit les
+    /// quadriceps le jour J. Promettre le relief sur un tapis tiendrait à moitié, ce qui est la
+    /// pire des trois réponses possibles.
+    var offreDuRelief: Bool {
+        switch self {
+        case .vallonne, .trail: return true
+        case .plat, .piste, .tapis: return false
+        }
+    }
+}
+
+/// Ce qu'elle fait d'autre, et qui mange la même récupération.
+///
+/// Rien n'était demandé. Trois séances de renforcement par semaine ne laissent pas les mêmes
+/// jambes qu'un plan de course seul, et le programme en posait deux de qualité dans tous les
+/// cas.
+enum AutreSport: String, Codable, CaseIterable, Identifiable {
+    case muscu, velo, natation, sportsCo, yoga
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .muscu: return String(localized: "Muscu / renfo")
+        case .velo: return String(localized: "Vélo")
+        case .natation: return String(localized: "Natation")
+        case .sportsCo: return String(localized: "Sports co")
+        case .yoga: return String(localized: "Yoga / mobilité")
+        }
+    }
+
+    /// Pèse-t-il sur les jambes comme une séance de qualité en course ?
+    ///
+    /// La même question que `SessionKind.disciplines` pose déjà au plafond hebdomadaire du
+    /// moteur, et la même réponse : ce qui compte est l'IMPACT, pas la dépense. Le vélo et la
+    /// natation fatiguent sans marteler, et c'est exactement ce qui fait d'eux de la
+    /// récupération active plutôt qu'une charge de plus.
+    var peseSurLesJambes: Bool {
+        switch self {
+        case .muscu, .sportsCo: return true
+        case .velo, .natation, .yoga: return false
+        }
+    }
+}

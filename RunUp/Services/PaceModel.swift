@@ -169,23 +169,74 @@ enum PaceModel {
         }
     }
 
-    /// Best-effort parse of a free-text "best recent performance" — only used when confidently
-    /// matched (a plain "Xkm" followed by a time-like token). Anything else falls back to the
-    /// level-based default rather than risk deriving real training paces from a misparse.
-    private static func parseFreeformPerf(_ text: String) -> (km: Double, seconds: Double)? {
-        let lowered = text.lowercased()
-        guard let kmRange = lowered.range(of: #"\d+(\.\d+)?\s?km"#, options: .regularExpression),
-              let km = Double(lowered[kmRange].filter { $0.isNumber || $0 == "." }), km > 0
-        else { return nil }
-        guard let timeRange = lowered.range(of: #"\d{1,2}:\d{2}(:\d{2})?"#, options: .regularExpression) else { return nil }
-        let timeParts = lowered[timeRange].split(separator: ":").compactMap { Int($0) }
-        let seconds: Double
-        switch timeParts.count {
-        case 2: seconds = Double(timeParts[0] * 60 + timeParts[1]) // "52:00" → mm:ss for a recent-perf sentence
-        case 3: seconds = Double(timeParts[0] * 3600 + timeParts[1] * 60 + timeParts[2])
-        default: return nil
+    /// Lecture au mieux d'une « meilleure perf récente » écrite à la main.
+    ///
+    /// # L'EXEMPLE AFFICHÉ PAR L'APP NE PASSAIT PAS SON PROPRE ANALYSEUR
+    ///
+    /// Le champ suggère « Ex. 10 km en 52 min ». L'analyseur, lui, exigeait un temps à DEUX
+    /// POINTS — `\d{1,2}:\d{2}` — donc « 52 min » était rejeté, en silence, et la réponse
+    /// tombait dans l'oubli. Quelqu'un qui recopiait l'exemple mot pour mot n'obtenait rien.
+    ///
+    /// Ça restait discret tant que ce champ n'était qu'un repli sur un objectif sur neuf. Il est
+    /// devenu la PREMIÈRE source de toutes les allures du plan, pour tout le monde : une lecture
+    /// qui rate est désormais un plan entier recalé sur une constante de niveau.
+    ///
+    /// Deux autres manières d'écrire la même chose échouaient aussi, et toutes les deux sont ce
+    /// que le clavier donne naturellement :
+    ///
+    ///   • « 10,5 km » — la VIRGULE décimale française. Le filtre ne gardait que le point, donc
+    ///     « 10,5 » devenait « 105 », et un dix-kilomètres se lisait comme un cent-cinq ;
+    ///   • « 6 miles » — l'app est en anglais aussi, et personne aux États-Unis n'écrit en km.
+    ///
+    /// La prudence d'origine reste : sans une distance ET un temps clairement reconnus, on rend
+    /// `nil` et le plan retombe sur son repli. Mieux vaut ne pas lire que mal lire — c'est de ce
+    /// nombre que descendent les quatre zones.
+    static func parseFreeformPerf(_ text: String) -> (km: Double, seconds: Double)? {
+        let lowered = text.lowercased().replacingOccurrences(of: ",", with: ".")
+
+        // ── La distance ──────────────────────────────────────────────────────────────────
+        guard let distanceRange = lowered.range(of: #"\d+(\.\d+)?\s*(km|k\b|miles?\b|mi\b)"#,
+                                                options: .regularExpression) else { return nil }
+        let morceau = String(lowered[distanceRange])
+        guard let nombre = Double(morceau.filter { $0.isNumber || $0 == "." }), nombre > 0 else { return nil }
+        // `\bmi\b` et `miles?` ne peuvent pas mordre sur « min » — la frontière de mot tombe
+        // avant le « n » — donc « 52 min » ne sera jamais pris pour 52 miles.
+        let enMiles = morceau.contains("mi")
+        let km = enMiles ? nombre * 1.609344 : nombre
+
+        // ── Le temps, cherché APRÈS avoir retiré la distance ─────────────────────────────
+        //
+        // Sans ce retrait, « 10 km en 52 min » offrirait d'abord le « 10 » de la distance à la
+        // recherche d'un nombre de minutes, et rendrait dix minutes au lieu de cinquante-deux.
+        // Une copie avec la distance remplacée, plutôt qu'une suppression sur place : un indice
+        // de chaîne appartient à l'instance qui l'a produit, et le réutiliser pour muter une
+        // autre instance est le genre de construction qui marche jusqu'au jour où elle ne marche
+        // plus.
+        let reste = lowered.replacingCharacters(in: distanceRange, with: " ")
+
+        if let t = reste.range(of: #"\d{1,2}:\d{2}(:\d{2})?"#, options: .regularExpression) {
+            let parts = reste[t].split(separator: ":").compactMap { Int($0) }
+            switch parts.count {
+            // « 52:00 » sur une perf récente se lit mm:ss, pas hh:mm — c'est un chrono de
+            // course, et personne n'écrit une sortie de cinquante-deux heures.
+            case 2: return (km, Double(parts[0] * 60 + parts[1]))
+            case 3: return (km, Double(parts[0] * 3600 + parts[1] * 60 + parts[2]))
+            default: return nil
+            }
         }
-        return (km, seconds)
+        // « 1h05 », « 1 h 05 », « 1hr05 », « 1h » — les minutes sont facultatives.
+        if let t = reste.range(of: #"\d{1,2}\s*h(r|rs|eures?|eure)?\s*\d{0,2}"#, options: .regularExpression) {
+            let nombres = String(reste[t]).split(whereSeparator: { !$0.isNumber }).compactMap { Int($0) }
+            guard let heures = nombres.first else { return nil }
+            let minutes = nombres.count > 1 ? nombres[1] : 0
+            return (km, Double(heures * 3600 + minutes * 60))
+        }
+        // « 52 min », « 52min », « 52 minutes », « 52 mn » — et l'exemple que l'app affiche.
+        if let t = reste.range(of: #"\d{1,3}\s*(min|minutes?|mn)\b"#, options: .regularExpression) {
+            guard let minutes = Int(String(reste[t]).filter(\.isNumber)) else { return nil }
+            return (km, Double(minutes * 60))
+        }
+        return nil
     }
 
     /// « 6:26 » à partir de secondes par kilomètre. LE seul formateur d'allure de l'app.

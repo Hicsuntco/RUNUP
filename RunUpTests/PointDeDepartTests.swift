@@ -189,3 +189,82 @@ final class PointDeDepartTests: XCTestCase {
         XCTAssertEqual(resultat(nil), 3)
     }
 }
+
+/// La lecture d'une « meilleure perf récente » écrite à la main.
+///
+/// # CE QUE CES TESTS ONT TROUVÉ
+///
+/// L'exemple que le champ affiche lui-même — « Ex. 10 km en 52 min » — ne passait pas son
+/// propre analyseur : celui-ci exigeait un temps à deux points, donc « 52 min » était rejeté en
+/// silence. Quelqu'un qui recopiait l'exemple mot pour mot n'obtenait rien.
+///
+/// Ça restait discret tant que ce champ n'était qu'un repli sur un objectif sur neuf. Depuis
+/// qu'il est la première source de TOUTES les allures du plan, une lecture qui rate est un plan
+/// entier recalé sur une constante de niveau — sans un mot nulle part.
+///
+/// Les cas sont écrits dans les trois langues de l'app, parce que c'est dans les trois qu'on
+/// tape cette phrase, et que deux des trois défauts trouvés ici étaient précisément des défauts
+/// de langue : la virgule décimale française et les miles anglais.
+final class PerfRecenteTests: XCTestCase {
+
+    private func lu(_ texte: String, file: StaticString = #filePath, line: UInt = #line)
+    throws -> (km: Double, seconds: Double) {
+        try XCTUnwrap(PaceModel.parseFreeformPerf(texte), "« \(texte) » n'a pas été lu",
+                      file: file, line: line)
+    }
+
+    /// L'EXEMPLE DU CHAMP, DANS LES TROIS LANGUES. C'est le cas qui échouait.
+    func testLexempleAfficheParLeChampEstLu() throws {
+        for texte in ["10 km en 52 min", "10 km in 52 min", "10 km en 52 min"] {
+            let r = try lu(texte)
+            XCTAssertEqual(r.km, 10, accuracy: 0.01, texte)
+            XCTAssertEqual(r.seconds, 3120, accuracy: 1, texte)
+        }
+    }
+
+    /// LE PIÈGE DE L'ORDRE : « 10 km en 52 min » contient deux nombres, et le premier est la
+    /// distance. Chercher les minutes dans la phrase entière rendrait dix minutes.
+    func testLaDistanceNEstPasRelueCommeUnTemps() throws {
+        XCTAssertEqual(try lu("10 km en 52 min").seconds, 3120, accuracy: 1)
+        XCTAssertEqual(try lu("5 km en 25 min").seconds, 1500, accuracy: 1)
+    }
+
+    /// LA VIRGULE DÉCIMALE FRANÇAISE. « 10,5 » devenait « 105 » : un dix-kilomètres se lisait
+    /// comme un cent-cinq, et toutes les allures du plan en découlaient.
+    func testLaVirguleDecimaleEstUneVirgule() throws {
+        XCTAssertEqual(try lu("10,5 km en 55 min").km, 10.5, accuracy: 0.01)
+        XCTAssertEqual(try lu("10.5 km in 55 min").km, 10.5, accuracy: 0.01)
+    }
+
+    /// LES MILES. L'app est en anglais aussi, et personne aux États-Unis n'écrit en kilomètres.
+    func testLesMilesSontConvertis() throws {
+        XCTAssertEqual(try lu("6 miles in 48 min").km, 9.656, accuracy: 0.01)
+        XCTAssertEqual(try lu("6 mi in 48 min").km, 9.656, accuracy: 0.01)
+    }
+
+    /// « min » NE DOIT JAMAIS ÊTRE LU COMME « mi ». La frontière de mot tient, et ce test est là
+    /// pour qu'elle continue de tenir : sans elle, « 52 min » vaudrait 52 miles, soit 84 km.
+    func testMinNestPasMi() throws {
+        XCTAssertEqual(try lu("10 km en 52 min").km, 10, accuracy: 0.01)
+        XCTAssertNil(PaceModel.parseFreeformPerf("52 min"), "pas de distance, donc rien à lire")
+    }
+
+    /// Les écritures du temps qui coexistent dans la vraie vie.
+    func testLesFormesDuTempsQuOnEcritVraiment() throws {
+        XCTAssertEqual(try lu("5 km en 22:30").seconds, 1350, accuracy: 1)
+        XCTAssertEqual(try lu("21,1 km en 1h52").seconds, 6720, accuracy: 1)
+        XCTAssertEqual(try lu("21.1 km in 1:52:00").seconds, 6720, accuracy: 1)
+        XCTAssertEqual(try lu("10 km en 1 heure").seconds, 3600, accuracy: 1)
+        XCTAssertEqual(try lu("10 km in 1 hr 05").seconds, 3900, accuracy: 1)
+        XCTAssertEqual(try lu("10km 52min").seconds, 3120, accuracy: 1)
+        XCTAssertEqual(try lu("10 km en 52 minutes").seconds, 3120, accuracy: 1)
+    }
+
+    /// MIEUX VAUT NE PAS LIRE QUE MAL LIRE. C'est de ce nombre que descendent les quatre zones
+    /// du plan : une lecture hasardeuse coûte plus cher qu'un repli sur le niveau déclaré.
+    func testCeQuOnNeSaitPasLireNEstPasDevine() {
+        for texte in ["", "pas mal", "10 km", "un semi en 1h52", "52:00"] {
+            XCTAssertNil(PaceModel.parseFreeformPerf(texte), "« \(texte) » n'aurait pas dû être lu")
+        }
+    }
+}

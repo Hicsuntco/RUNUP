@@ -453,29 +453,74 @@ struct HomeView: View {
 
     private var planUnlocked: Bool { subscriptions.unlocks(.adaptivePlan) }
 
-    /// L'accueil de qui ne suit pas de programme. Pas un écran dégradé : l'écran d'une app de
-    /// course qui fait très bien ce qu'on attend d'elle — partir courir, et garder la trace.
+    /// L'accueil de qui ne suit pas de programme.
+    ///
+    /// # ELLE NE PROPOSAIT RIEN, ET C'ÉTAIT LE DÉFAUT
+    ///
+    /// « On sort courir ? », tous les jours, indéfiniment. Trois modèles de séance existaient
+    /// dans le moteur, un index était prévu pour les faire tourner, il n'a jamais été
+    /// incrémenté, et la carte n'en montrait de toute façon aucun. Course libre était un
+    /// chronomètre avec un joli fond.
+    ///
+    /// Or quelqu'un qui ne suit pas de plan a BESOIN qu'on lui dise quoi faire aujourd'hui,
+    /// plus encore que quelqu'un qui en suit un : il n'a rien d'autre pour décider. La carte
+    /// porte donc une vraie séance, qui change chaque jour, qui progresse, et qui tient compte
+    /// d'hier et de la forme — voir `CourseLibre`.
+    ///
+    /// LA RAISON EST AFFICHÉE AVEC LA SÉANCE. Une suggestion sans raison est un ordre, et on
+    /// n'obéit pas longtemps à une app ; « Hier c'était dur, aujourd'hui on récupère » se
+    /// discute, donc s'accepte.
     private var freeRunCard: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            EyebrowLabel(text: String(localized: "Aujourd'hui"), color: RUColor.rose)
-            // « Cours quand tu veux » donnait une PERMISSION, et définissait du même coup
-            // l'expérience gratuite par ce qu'elle n'a pas : un coach qui dit quoi faire. Une
-            // question invite au lieu d'autoriser, et elle s'enchaîne avec le bouton juste en
-            // dessous. « Courir » est dit, sinon « on sort ? » se lit comme une soirée.
-            Text("On sort courir ?")
-                .displayStyle(23)
-                .foregroundColor(RUColor.textPrimary)
+        let suggestion = CourseLibre.duJour(profil: profile, courses: runs)
+        let seance = suggestion.seance
+        let repos = seance.durationMinutes == 0
+        return VStack(alignment: .leading, spacing: 0) {
+            sessionTag(repos, family: seance.family)
+            Text(seance.displayTitle)
+                .displayStyle(repos ? 18 : 23)
+                .foregroundColor(repos ? RUColor.text2 : RUColor.textPrimary)
                 .padding(.top, 8)
-            // Énumérait les cinq mesures enregistrées. C'est vrai, et c'est de l'argumentaire :
-            // sur un écran qu'on ouvre pour partir courir, la liste se lit une fois et encombre
-            // les cent fois suivantes. Ce qui compte tient en une ligne.
-            Text("Tout est enregistré, et part dans Apple Santé.")
+            Text(suggestion.raison)
                 .font(RUFont.sans(.small))
                 .foregroundColor(RUColor.text2)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 4)
-            runActionsRow
-                .padding(.top, 15)
+
+            if profile.seanceDoneToday {
+                Text("Séance faite aujourd'hui ✓")
+                    .font(RUFont.sans(.body, weight: .semibold))
+                    .foregroundColor(RUColor.lime)
+                    .padding(.top, 14)
+            } else {
+                // Les chiffres ne s'affichent pas un jour de repos : il n'y a ni durée, ni
+                // allure, ni zone à annoncer, et une rangée de tirets occuperait la meilleure
+                // place de l'écran pour ne rien dire.
+                if !repos {
+                    HStack(alignment: .lastTextBaseline, spacing: 18) {
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("\(seance.durationMinutes)")
+                                .font(RUFont.display(56))
+                                .foregroundColor(RUColor.textPrimary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.6)
+                            Text("minutes")
+                                .font(RUFont.sans(.micro, weight: .medium))
+                                .tracking(0.9)
+                                .textCase(.uppercase)
+                                .foregroundColor(RUColor.text3)
+                        }
+                        MetricColumn(value: seance.pace, label: "Allure", valueSize: 17)
+                        MetricColumn(value: seance.zone, label: "Zone", valueColor: RUColor.rose2, valueSize: 17)
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.top, 10)
+                }
+                // LE BOUTON RESTE, MÊME UN JOUR DE REPOS. C'est une suggestion, pas une porte
+                // fermée : course libre veut dire qu'elle décide, et une app qui propose du
+                // repos en retirant le bouton ne propose plus, elle interdit.
+                runActionsRow
+                    .padding(.top, repos ? 14 : 15)
+            }
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)

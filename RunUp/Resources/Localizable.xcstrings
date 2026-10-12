@@ -865,6 +865,23 @@
         }
       }
     },
+    "%lld jours d'affilée. Aujourd'hui, repos — c'est là que ça progresse.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld days in a row. Today, rest — that's where the progress happens."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld días seguidos. Hoy, descanso: ahí es donde se progresa."
+          }
+        }
+      }
+    },
     "%lld kcal": {
       "localizations": {
         "en": {
@@ -3903,6 +3920,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pulsa, pregunta en voz alta y te responde en los auriculares, sin sacar el teléfono."
+          }
+        }
+      }
+    },
+    "Après ta sortie longue d'hier, on reste très facile.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After yesterday's long run, we keep it very easy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Después de tu salida larga de ayer, vamos muy suave."
           }
         }
       }
@@ -9997,6 +10031,23 @@
         }
       }
     },
+    "Hier c'était dur. Aujourd'hui on récupère, vraiment.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yesterday was hard. Today we recover, properly."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayer fue duro. Hoy toca recuperar, de verdad."
+          }
+        }
+      }
+    },
     "Historique": {
       "localizations": {
         "en": {
@@ -15460,6 +15511,23 @@
         }
       }
     },
+    "Pas de sortie longue depuis une semaine. C'est le bon jour.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No long run for a week. Today's the day."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna salida larga en una semana. Hoy es el día."
+          }
+        }
+      }
+    },
     "Pas de séance prévue — profite-en pour récupérer.": {
       "localizations": {
         "en": {
@@ -16453,6 +16521,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Primera carrera"
+          }
+        }
+      }
+    },
+    "Première sortie : court et facile, on verra après.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First run out: short and easy, we'll see after that."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primera salida: corta y fácil, ya veremos después."
           }
         }
       }
@@ -18365,6 +18450,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nada nuevo que importar."
+          }
+        }
+      }
+    },
+    "Rien de particulier à rattraper. Un footing avec un peu de jus.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing in particular to catch up on. An easy run with a bit of zip."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nada en particular que recuperar. Un rodaje con algo de chispa."
           }
         }
       }
@@ -21114,6 +21216,23 @@
         }
       }
     },
+    "Ta forme est en baisse ces jours-ci. On garde ça tranquille.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your form is dipping these days. Let's keep it quiet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu forma está bajando estos días. Lo dejamos tranquilo."
+          }
+        }
+      }
+    },
     "Ta forme évolue": {
       "localizations": {
         "en": {
@@ -22743,6 +22862,23 @@
         }
       }
     },
+    "Trois jours sans rien de rapide — on met un peu de vitesse.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Three days without anything fast — let's add some speed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tres días sin nada rápido: metemos algo de velocidad."
+          }
+        }
+      }
+    },
     "Trop dur": {
       "extractionState": "manual",
       "localizations": {
@@ -22823,6 +22959,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Encontrar mis contactos en RUNUP"
+          }
+        }
+      }
+    },
+    "Tu as couru hier : footing facile, les jambes travaillent encore.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You ran yesterday: easy run, your legs are still working."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corriste ayer: rodaje suave, las piernas siguen trabajando."
           }
         }
       }
@@ -28636,6 +28789,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ayuda a tu coach a conocerte mejor."
+          }
+        }
+      }
+    },
+    "Ça fait un moment. On repart doucement, sans chrono.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It's been a while. We start again gently, no watch."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hace tiempo. Volvemos poco a poco, sin cronómetro."
           }
         }
       }

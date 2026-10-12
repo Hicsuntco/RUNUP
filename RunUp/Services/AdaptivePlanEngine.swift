@@ -5,11 +5,13 @@ import Foundation
 /// `startNewProgram`). Kept free of SwiftData/SwiftUI so it's easy to reason about and test;
 /// callers (ViewModels) pass in a `UserProfile` to mutate and get back a toast string.
 enum AdaptivePlanEngine {
-    static let freeRunTemplates: [WorkoutSession] = [
-        WorkoutSession(title: "Footing d'entretien", subtitle: "allure confort · reconnecte avec le plaisir de courir", durationMinutes: 35, pace: "5:40", zone: "Z2", adjustment: nil, kind: .freeRunMaintenance),
-        WorkoutSession(title: "Fractionné léger 5 × 500 m", subtitle: "récup 300 m · garde le tonus sans se cramer", durationMinutes: 32, pace: "4:35", zone: "Z3", adjustment: nil, kind: .freeRunLightIntervals, intervals: IntervalStructure(reps: 5, repMeters: 500, recoveryMeters: 300)),
-        WorkoutSession(title: "Sortie découverte", subtitle: "change d'itinéraire, explore un nouveau parcours", durationMinutes: 45, pace: "5:30", zone: "Z2", adjustment: nil, kind: .freeRunDiscovery)
-    ]
+    // `freeRunTemplates` A ÉTÉ RETIRÉ. Trois séances y dormaient, une seule était jamais lue —
+    // `freeRunTemplates.first`, posée une fois en entrant dans le mode — et `freeRunTemplateIndex`,
+    // qui existait pour les faire tourner, n'a jamais été incrémenté nulle part. L'accueil ne
+    // montrait de toute façon aucune des trois.
+    //
+    // La séance du jour en course libre se calcule désormais, à partir de l'historique, de la
+    // forme et du jour. Voir `CourseLibre`.
 
     static let restSession = WorkoutSession(title: "Repos", subtitle: "Jour de repos — laisse ton corps récupérer", durationMinutes: 0, pace: "—", zone: "—", adjustment: nil, kind: .rest)
 
@@ -1920,11 +1922,17 @@ enum AdaptivePlanEngine {
     }
 
     static func chooseFreeRun(_ profile: UserProfile) {
-        let template = freeRunTemplates.first ?? .reprise
+        // La séance posée EN ENTRANT dans le mode, avant qu'un seul historique n'existe pour
+        // elle. L'accueil, lui, recalcule la sienne à chaque ouverture avec les vraies courses ;
+        // celle-ci ne sert qu'aux écrans qui lisent `todaySession` sans passer par là.
+        let template = CourseLibre.duJour(profil: profile, courses: []).seance
         profile.programPhase = .freerun
         profile.goalId = .health
         profile.goalDisplay = "Course libre"
         profile.todaySession = template
+        // Vestige : plus personne ne le lit depuis que la séance du jour se calcule. La colonne
+        // reste en base — retirer une propriété d'un `@Model` est un changement de schéma, et on
+        // ne paie pas ce risque pour un entier que personne ne regarde.
         profile.freeRunTemplateIndex = 0
         // Re-entering course libre later the same day a previous run was already debriefed
         // (e.g. switching out of it and back) must not carry that old completion forward — left

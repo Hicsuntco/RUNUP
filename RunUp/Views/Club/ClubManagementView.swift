@@ -246,7 +246,7 @@ struct ClubMemberProfileView: View {
 
                 bioSection
 
-                HStack(spacing: 20) {
+                RUMetricRow(spacing: 20) {
                     MetricColumn(value: "\(member.xp)", label: "XP")
                     MetricColumn(value: "#\(member.rank)", label: "Rang club", valueColor: RUColor.rose2)
                     MetricColumn(value: "\(member.activitiesCount)", label: "Activités")

@@ -496,7 +496,7 @@ struct HomeView: View {
                 // allure, ni zone à annoncer, et une rangée de tirets occuperait la meilleure
                 // place de l'écran pour ne rien dire.
                 if !repos {
-                    HStack(alignment: .lastTextBaseline, spacing: 18) {
+                    RUMetricRow(spacing: 18) {
                         VStack(alignment: .leading, spacing: 1) {
                             Text("\(seance.durationMinutes)")
                                 .font(RUFont.display(56))
@@ -511,7 +511,6 @@ struct HomeView: View {
                         }
                         MetricColumn(value: seance.pace, label: "Allure", valueSize: 17)
                         MetricColumn(value: seance.zone, label: "Zone", valueColor: RUColor.rose2, valueSize: 17)
-                        Spacer(minLength: 0)
                     }
                     .padding(.top, 10)
                 }
@@ -627,7 +626,7 @@ struct HomeView: View {
                 // `Spacer` au milieu, le 40 et le couple allure/zone se retrouvaient collés aux
                 // deux bords avec un trou au centre : deux blocs qui s'ignorent au lieu d'une
                 // rangée qui se lit.
-                HStack(alignment: .lastTextBaseline, spacing: 18) {
+                RUMetricRow(spacing: 18) {
                     VStack(alignment: .leading, spacing: 1) {
                         Text("\(session.durationMinutes)")
                             .font(RUFont.display(56))
@@ -642,7 +641,6 @@ struct HomeView: View {
                     }
                     MetricColumn(value: session.pace, label: "Allure", valueSize: 17)
                     MetricColumn(value: session.zone, label: "Zone", valueColor: RUColor.rose2, valueSize: 17)
-                    Spacer(minLength: 0)
                 }
                 .padding(.top, 10)
 

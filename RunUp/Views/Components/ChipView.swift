@@ -93,6 +93,56 @@ struct StatChip: View {
     }
 }
 
+/// Une rangée de mesures qui passe EN COLONNE quand elle ne tient plus en largeur.
+///
+/// # CE QUE `Typography.swift` AVAIT DÉJÀ DIAGNOSTIQUÉ, SANS POUVOIR LE RÉSOUDRE
+///
+/// Le système de type plafonne l'agrandissement du texte à 1,6×, et son commentaire explique
+/// pourquoi : au-delà, « les rangées de mesures côte à côte, les tuiles de prédiction, la bande
+/// de la semaine — toutes des mises en page de largeur fixe — ne se dégradent pas, elles
+/// s'effondrent en troncature illisible ». Il ajoute que la vraie réponse « demande un travail
+/// par écran : des `HStack` de mesures qui deviennent des `VStack` au-delà d'un seuil, ce qui
+/// est un changement de mise en page, pas de police — et ce fichier ne peut pas le faire depuis
+/// là où il est ».
+///
+/// Voici ce travail, fait une fois plutôt que par écran.
+///
+/// # `ViewThatFits` PLUTÔT QU'UN SEUIL DE TAILLE DE TEXTE
+///
+/// On aurait pu lire `@Environment(\.dynamicTypeSize)` et basculer au-delà d'une catégorie. Ce
+/// serait un nombre de plus à deviner, et il serait faux : une rangée déborde selon la LARGEUR
+/// DISPONIBLE et la LONGUEUR DES MOTS, pas selon un réglage. « jours de série » en espagnol,
+/// sur un iPhone SE, à taille de texte normale, déborde déjà — et aucune catégorie de Dynamic
+/// Type ne l'annonce.
+///
+/// `ViewThatFits` pose la question dans le bon sens : il essaie la rangée, et prend la colonne
+/// si elle ne rentre pas. La réponse est juste pour toutes les langues, toutes les largeurs et
+/// toutes les tailles de texte, sans qu'aucune constante n'ait à être maintenue.
+struct RUMetricRow<Content: View>: View {
+    var spacing: CGFloat = 20
+    /// L'alignement de la RANGÉE. `.lastTextBaseline` aligne les chiffres sur leur ligne de
+    /// base plutôt que sur le haut de leur boîte — c'est ce qui fait tenir ensemble un 56 et
+    /// deux 17.
+    var alignment: VerticalAlignment = .lastTextBaseline
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: alignment, spacing: spacing) {
+                content
+                // L'espace est REJETÉ AU BOUT, et il mesure zéro : `ViewThatFits` compare la
+                // largeur idéale de la rangée à la place disponible, et un `Spacer` dont le
+                // minimum est nul n'y ajoute rien. Sans ce minimum, la rangée « tiendrait »
+                // toujours, et la colonne ne servirait jamais.
+                Spacer(minLength: 0)
+            }
+            VStack(alignment: .leading, spacing: 12) {
+                content
+            }
+        }
+    }
+}
+
 /// Value + label column — class `.metric` (duration/pace/zone triplets, etc.).
 struct MetricColumn: View {
     var value: String

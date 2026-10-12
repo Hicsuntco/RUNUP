@@ -181,7 +181,7 @@ struct SessionDetailSheet: View {
                         .font(RUFont.sans(.label)).foregroundColor(RUColor.text2).lineSpacing(3)
                         .padding(.top, 16)
                 } else {
-                    HStack(spacing: 16) {
+                    RUMetricRow(spacing: 16) {
                         MetricColumn(value: "\(session.durationMinutes)′", label: "Durée")
                         MetricColumn(value: session.pace, label: "Allure cible")
                         MetricColumn(value: session.zone, label: "Zone", valueColor: RUColor.rose2)

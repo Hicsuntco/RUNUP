@@ -145,6 +145,10 @@ final class AppState {
         }
         AdaptivePlanEngine.refreshProgramForCurrentDate(self.profile)
         AdaptivePlanEngine.resetDailyGoalsIfNewDay(self.profile)
+        // Au lancement À FROID aussi, et pas seulement au retour au premier plan : `scenePhase`
+        // ne transite pas vers `.active` sur un démarrage, donc sans cette ligne la toute
+        // première course de la journée partirait avec la séance de la veille.
+        self.rafraichirLaCourseLibre()
         // The scenePhase→active hook in RunUpApp only catches a real background/foreground
         // transition — an app left open and awake (screen never locked, e.g. plugged in
         // overnight) crosses midnight without ever backgrounding, so the week strip/weekNumber
@@ -570,6 +574,7 @@ final class AppState {
         let previousWeek = profile.weekNumber
         AdaptivePlanEngine.refreshProgramForCurrentDate(profile)
         AdaptivePlanEngine.resetDailyGoalsIfNewDay(profile)
+        rafraichirLaCourseLibre()
         if profile.weekNumber != previousWeek {
             let title = String(localized: "Nouvelle semaine")
             let text = String(localized: "Semaine \(profile.weekNumber) prête, ajustée d'après ta forme de la semaine passée.")
@@ -587,6 +592,37 @@ final class AppState {
         if !profile.connectedSources.contains(.apple) { publishWidgetSnapshot() }
         Task { await syncDailyGoalsFromHealthKit() }
         Task { await checkSameDayAdjustment() }
+    }
+
+    /// LA SÉANCE DU JOUR EN COURSE LIBRE, POSÉE SUR LE PROFIL.
+    ///
+    /// L'accueil calcule sa suggestion lui-même (voir `CourseLibre`), mais il n'est pas le seul
+    /// à la lire : `LiveRunViewModel.start()` prend `profile.todaySession`, et c'est de LÀ que
+    /// sort le type de séance écrit dans le relevé de la course.
+    ///
+    /// Sans cette ligne, la boucle ne se refermait pas. Course libre posait une séance une fois
+    /// pour toutes en entrant dans le mode, donc chaque sortie enregistrée portait le même type,
+    /// pour toujours — et le lendemain, le moteur relisant cet historique n'aurait jamais vu
+    /// passer une seule séance dure. La règle « hier c'était dur, aujourd'hui on récupère » ne
+    /// se serait donc jamais déclenchée, en silence : la suggestion aurait tourné sur ses
+    /// variantes sans jamais répondre à ce qui avait été fait.
+    ///
+    /// Appelée au lancement et à chaque retour au premier plan, c'est-à-dire exactement quand la
+    /// date peut avoir changé — la suggestion, elle, ne bouge pas dans la journée.
+    ///
+    /// La MÊME fonction pure que l'accueil, avec les mêmes entrées : les deux rendent donc la
+    /// même séance, sans qu'aucune des deux n'ait à lire l'autre.
+    private func rafraichirLaCourseLibre() {
+        guard profile.programPhase == .freerun else { return }
+        let borne = Calendar.current.date(byAdding: .day, value: -CourseLibre.fenetreJours, to: .now)
+            ?? .distantPast
+        var descripteur = FetchDescriptor<RunRecord>(
+            predicate: #Predicate { $0.date >= borne },
+            sortBy: [SortDescriptor(\RunRecord.date, order: .reverse)]
+        )
+        descripteur.fetchLimit = 60
+        let courses = (try? modelContext.fetch(descripteur)) ?? []
+        profile.todaySession = CourseLibre.duJour(profil: profile, courses: courses).seance
     }
 
     /// Same-day reactive lightening — a short night or yesterday's brutal RPE eases TODAY's

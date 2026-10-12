@@ -264,3 +264,74 @@ final class CourseLibreTests: XCTestCase {
         XCTAssertEqual(CourseLibre.indexDuJour(dimanche, calendrier), 6)
     }
 }
+
+/// La boucle se referme : ce qu'on propose aujourd'hui se relit demain.
+///
+/// # LE DÉFAUT QUE CE FICHIER EMPÊCHE
+///
+/// Une suggestion n'a de valeur que si la course qui en sort est RELUE pour ce qu'elle était.
+/// Course libre posait une séance une fois pour toutes en entrant dans le mode, donc chaque
+/// sortie enregistrée portait le même type, pour toujours — et le lendemain, le moteur relisant
+/// cet historique n'aurait jamais vu passer une seule séance dure. « Hier c'était dur,
+/// aujourd'hui on récupère » ne se serait jamais déclenché, en silence : la suggestion aurait
+/// tourné sur ses variantes sans jamais répondre à ce qui avait été fait.
+@MainActor
+final class CourseLibreBoucleTests: XCTestCase {
+
+    private let calendrier: Calendar = {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = TimeZone(identifier: "UTC") ?? .gmt
+        return c
+    }()
+    private let aujourdhui = Date(timeIntervalSince1970: 1_800_259_200)
+
+    private func hier(_ kind: SessionKind, minutes: Int = 40) -> RunRecord {
+        let date = calendrier.date(byAdding: .day, value: -1, to: aujourdhui) ?? aujourdhui
+        return RunRecord(date: date, title: "x", distanceKm: 7, durationSeconds: minutes * 60,
+                         avgPace: "6:00", avgHeartRate: 150, kcal: 400, sessionKind: kind)
+    }
+
+    /// UNE SÉANCE DE QUALITÉ PROPOSÉE EST RELUE COMME DURE.
+    func testCeQuOnProposeEnQualiteEstReluCommeDur() {
+        for kind in CourseLibre.variantes(.qualite) {
+            XCTAssertTrue(CourseLibre.Reperes.estDure(hier(kind)), "\(kind) n'est pas relue comme dure")
+        }
+    }
+
+    /// UNE SORTIE LONGUE PROPOSÉE EST RELUE COMME LONGUE, même courue plus court que prévu :
+    /// c'est son TYPE qui la désigne, pas sa durée.
+    func testCeQuOnProposeEnLongueEstReluCommeLong() {
+        for kind in CourseLibre.variantes(.longue) {
+            XCTAssertTrue(CourseLibre.Reperes.estLongue(hier(kind, minutes: 30), typiqueMinutes: 40),
+                          "\(kind) n'est pas relue comme longue")
+        }
+    }
+
+    /// ET L'INVERSE : un footing ne doit pas être pris pour une séance dure, sinon le moteur
+    /// proposerait une récupération après chaque sortie et plus rien ne progresserait.
+    func testUnFootingNestPasPrisPourUneSeanceDure() {
+        let faciles = CourseLibre.variantes(.endurance)
+            + CourseLibre.variantes(.recuperation)
+            + CourseLibre.variantes(.tonique)
+        for kind in faciles {
+            XCTAssertFalse(CourseLibre.Reperes.estDure(hier(kind)), "\(kind) est prise pour une séance dure")
+        }
+    }
+
+    /// LE BOUT DE LA CHAÎNE, en une assertion : une séance de qualité proposée et courue hier
+    /// fait proposer une récupération aujourd'hui.
+    func testUneQualiteCourueHierFaitProposerUneRecuperationAujourdhui() throws {
+        let container = try ModelContainer(
+            for: UserProfile.self, RunRecord.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let p = UserProfile(name: "Test")
+        p.programPhase = .freerun
+        container.mainContext.insert(p)
+
+        for kind in CourseLibre.variantes(.qualite) {
+            let s = CourseLibre.duJour(profil: p, courses: [hier(kind)],
+                                       jour: aujourdhui, calendrier: calendrier)
+            XCTAssertEqual(s.seance.family, .recovery, "après \(kind) : \(s.seance.kind.map(\.rawValue) ?? "—")")
+        }
+    }
+}

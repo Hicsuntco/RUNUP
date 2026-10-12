@@ -118,7 +118,7 @@ struct FriendsView: View {
         .onChange(of: feed.count) { _, count in if count > 0 { feedRevealed = true } }
         .onChange(of: query) { _, newValue in scheduleSearch(newValue) }
         .onChange(of: auth.isSignedIn) { _, signedIn in if signedIn { Task { await load() } } }
-        .sheet(isPresented: $showSignIn) { SignInView() }
+        .sheet(isPresented: $showSignIn) { SignInView().runUpSheetStyle(detents: [.large]) }
         .sheet(item: $peopleSheet) { kind in
             PeopleListSheet(
                 // `PeopleListSheet` reçoit des `String` (titre de navigation, libellé de bouton) :
@@ -159,6 +159,7 @@ struct FriendsView: View {
                     }
                 }
             )
+                .runUpSheetStyle(detents: [.large])
         }
         .confirmationDialog(
             "Signaler",

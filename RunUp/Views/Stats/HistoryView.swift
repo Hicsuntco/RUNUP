@@ -67,7 +67,7 @@ struct HistoryView: View {
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .background(RUColor.pageBackground)
-        .sheet(isPresented: $showAddRun) { AddRunSheet() }
+        .sheet(isPresented: $showAddRun) { AddRunSheet().runUpSheetStyle(detents: [.large]) }
         .sheet(item: $selectedRun) { run in RecapView(historicalRun: run) }
         .alert(
             "Supprimer cette course ?",

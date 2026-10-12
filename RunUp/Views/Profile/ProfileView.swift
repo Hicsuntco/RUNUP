@@ -78,9 +78,11 @@ struct ProfileView: View {
         }
         .sheet(isPresented: $showSettings) {
             SettingsView()
+                .runUpSheetStyle(detents: [.large])
         }
         .sheet(isPresented: $showSignIn) {
             SignInView()
+                .runUpSheetStyle(detents: [.large])
         }
         .sheet(item: $selectedBadge) { badge in
             BadgeDetailView(badge: badge).runUpSheetStyle(detents: [.height(300)])

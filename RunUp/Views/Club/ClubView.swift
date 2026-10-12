@@ -143,6 +143,7 @@ struct ClubView: View {
         }
         .sheet(isPresented: $showSignIn) {
             SignInView()
+                .runUpSheetStyle(detents: [.large])
         }
         .sheet(item: $selectedBadge) { badge in
             BadgeDetailView(badge: badge).runUpSheetStyle(detents: [.height(300)])
@@ -172,6 +173,7 @@ struct ClubView: View {
                     }
                 }
             )
+                .runUpSheetStyle(detents: [.large])
         }
         .onChange(of: auth.isSignedIn) { _, signedIn in
             if signedIn { Task { await loadIfSignedIn() } }

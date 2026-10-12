@@ -60,6 +60,7 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showPaywall) {
             PaywallView(subscriptions: subscriptions, onClose: { showPaywall = false })
+                .runUpSheetStyle(detents: [.large])
         }
     }
 

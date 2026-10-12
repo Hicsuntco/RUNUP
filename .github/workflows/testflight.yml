@@ -383,6 +383,15 @@ jobs:
           cd ci_scripts && python3 test_etapes.py
           cd .. && python3 ci_scripts/check_etapes.py
 
+      # Neuf feuilles sur trente-trois s'ouvraient avec l'habillage du SYSTÈME : fond clair dans
+      # une app sombre, coins à 10 points au lieu de 26, aucune poignée. `runUpSheetStyle`
+      # existait et vingt-quatre feuilles l'appliquaient ; c'est le propre d'un style qu'on pose
+      # à la main de manquer là où personne n'a regardé.
+      - name: Vérifier que toute feuille porte l'habillage de l'app
+        run: |
+          cd ci_scripts && python3 test_feuilles.py
+          cd .. && python3 ci_scripts/check_feuilles.py
+
       # « Vérifie ta connexion » était affiché pour une session expirée comme pour un serveur en
       # panne, depuis onze écrans. C'est la pire des trois pannes à deviner : c'est la seule que la
       # personne peut vérifier d'un coup d'œil, et sur un téléphone au wifi plein elle n'apprend

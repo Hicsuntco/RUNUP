@@ -55,7 +55,7 @@ struct ShoesView: View {
             .padding(.bottom, RUSpacing.tabBarBottomInset + RUSpacing.tabBarHeight + 62)
         }
         .background(RUColor.pageBackground)
-        .sheet(isPresented: $showAddShoe) { AddShoeSheet() }
+        .sheet(isPresented: $showAddShoe) { AddShoeSheet().runUpSheetStyle(detents: [.large]) }
         .alert(
             "Retirer cette paire ?",
             isPresented: Binding(get: { pendingRetire != nil }, set: { if !$0 { pendingRetire = nil } })

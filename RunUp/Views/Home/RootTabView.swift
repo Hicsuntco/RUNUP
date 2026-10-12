@@ -5,6 +5,7 @@ import UIKit
 /// logic in app.jsx (`showBar = !['live','recap'].includes(screen)`).
 struct RootTabView: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var showBar: Bool {
         appState.screen != .live && appState.screen != .recap
@@ -64,7 +65,10 @@ struct RootTabView: View {
             RUColor.bg.ignoresSafeArea()
 
             currentScreen
-                .transition(.opacity.combined(with: .move(edge: .trailing)))
+                // Chaque écran emporte la sienne — voir `AppScreen.transitionDecran`. Celle qui
+                // était écrite ici était symétrique : les deux écrans partaient vers la droite
+                // et se croisaient, la gauche vide.
+                .transition(appState.screen.transitionDecran)
                 .id(appState.screen)
 
             if showBar && appState.isRunActive {
@@ -152,7 +156,14 @@ struct RootTabView: View {
         // la structure de la vue. Un `if` en donnerait deux différentes, et SwiftUI recréerait
         // tout l'arbre — donc l'écran courant — à chaque passage sur le Coach.
         .ignoresSafeArea(.keyboard, edges: typesText ? [] : .bottom)
-        .animation(.easeInOut(duration: 0.25), value: appState.screen)
+        // `RUMotion.settle` — « ce qui arrive à l'écran ». L'animation la plus vue de l'app
+        // était la seule à ne pas passer par le système de mouvement : un `.easeInOut(0.25)`
+        // écrit à la main, c'est-à-dire une courbe qui FREINE là où tout le reste de l'app se
+        // POSE. C'est exactement l'écart que `Motion.swift` existe pour supprimer.
+        //
+        // Et elle respecte « Réduire les animations », ce qu'elle ne faisait pas : la valeur
+        // saute, elle ne s'anime pas plus vite.
+        .animation(RUMotion.respecting(reduceMotion, RUMotion.settle), value: appState.screen)
         // Un seul point d'émission pour toute l'app : chaque écran passe par ce `switch`, donc
         // rien ne peut être oublié ni compté deux fois. `onChange` plutôt qu'un `onAppear` par
         // écran, qui se serait redéclenché à chaque retour de feuille modale.

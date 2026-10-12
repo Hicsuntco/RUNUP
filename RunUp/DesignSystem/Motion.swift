@@ -86,6 +86,56 @@ enum RUMotion {
     }
 }
 
+extension AppScreen {
+    /// La transition de CET écran — celle qu'il joue en entrant, et celle qu'il joue en sortant.
+    ///
+    /// # CE QU'ELLE REMPLACE
+    ///
+    /// `.opacity.combined(with: .move(edge: .trailing))`, posé sur l'écran courant, pour tous
+    /// les écrans, avec un `.easeInOut(duration: 0.25)` écrit à la main — dans l'app dont le
+    /// fichier de mouvement dit, deux cents lignes plus haut, que neuf réglages manuscrits « ne
+    /// forment pas une app, ils forment une collection d'écrans ». C'était l'animation la plus
+    /// vue de toutes, et la seule à ne pas passer par ici.
+    ///
+    /// Elle avait surtout un défaut qu'on ne pardonne pas à une navigation : elle était
+    /// SYMÉTRIQUE. Un `.move(edge: .trailing)` fait entrer par la droite ET sortir par la
+    /// droite, donc les deux écrans se croisaient sur la moitié droite pendant que la gauche
+    /// restait vide.
+    ///
+    /// # LA DIRECTION VIENT DE L'ÉCRAN LUI-MÊME
+    ///
+    /// Chaque vue emporte sa transition : SwiftUI joue celle de l'écran qui ENTRE pour
+    /// l'insertion, et celle de l'écran qui SORT pour le retrait. Il suffit donc que chacune
+    /// réponde pour elle-même, sans que personne n'ait à tenir une pile de navigation :
+    ///
+    ///   • une page ouverte depuis une autre entre par la droite et sort par la droite. Ouvrir
+    ///     l'historique : il arrive de la droite pendant que le profil s'efface sur place. Le
+    ///     refermer : il repart à droite pendant que le profil revient sur place. Le mouvement
+    ///     a un sens dans les deux cas, sans que personne n'ait à savoir lequel on fait.
+    ///
+    ///     Oui, c'est symétrique — et c'est ce qui était reproché à l'ancienne. La différence
+    ///     tient à l'autre moitié du couple : son vis-à-vis est une racine d'onglet, et une
+    ///     racine NE SE DÉPLACE PAS. Rien ne se croise, parce qu'un seul des deux bouge.
+    ///   • un onglet se fond, sans déplacement. Deux onglets sont des VOISINS : les faire
+    ///     glisser l'un derrière l'autre inventerait une profondeur qui n'existe pas.
+    ///
+    /// # ET LE DÉPLACEMENT EST PETIT
+    ///
+    /// 28 points, pas une largeur d'écran. Translater une page entière oblige le système à
+    /// composer deux calques plein cadre pendant toute l'animation — précisément quand il est
+    /// déjà occupé à CONSTRUIRE l'écran qui arrive. Un petit décalage suffit à dire la
+    /// direction, et un fondu masque une image perdue là où un grand glissement l'exhibe.
+    var transitionDecran: AnyTransition {
+        guard !estRacineDOnglet else {
+            return .opacity.combined(with: .scale(scale: 0.98))
+        }
+        return .asymmetric(
+            insertion: .opacity.combined(with: .offset(x: 28)),
+            removal: .opacity.combined(with: .offset(x: 28))
+        )
+    }
+}
+
 extension View {
     /// Les cartes se posent en montant quand elles entrent par le bas de l'écran.
     ///

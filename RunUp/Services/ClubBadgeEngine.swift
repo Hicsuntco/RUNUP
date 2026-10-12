@@ -21,18 +21,45 @@ enum ClubBadgeEngine {
         // anglais ni en espagnol, et ce badge ne se débloquerait jamais. Les courses antérieures
         // au champ n'ont pas de `kind` — pour elles seulement on garde la recherche de texte, qui
         // reste exacte puisque leur titre, lui, est resté français.
-        let intervalRuns = runs.filter { run in
-            if let kind = run.sessionKind { return kind.isIntervalWorkout }
-            return run.title.localizedCaseInsensitiveContains("Fractionné")
-        }.count
-        let earlyRun = runs.contains { Calendar.current.component(.hour, from: $0.date) < 7 }
-        let nightRun = runs.contains { Calendar.current.component(.hour, from: $0.date) >= 21 }
-        // Des badges de COURSE : trois cents mètres de dénivelé à vélo ne valent pas les mêmes.
-        let courses = runs.onFoot
-        let totalElevation = courses.reduce(0) { $0 + $1.elevationGainM }
-        let totalDistance = courses.reduce(0) { $0 + $1.distanceKm }
-        let longestRun = courses.map(\.distanceKm).max() ?? 0
-        let weekendRuns = runs.filter { [1, 7].contains(Calendar.current.component(.weekday, from: $0.date)) }.count
+        // ── SEPT PARCOURS SONT DEVENUS UN, ET LE CALENDRIER SORT DE LA BOUCLE ───────────────
+        //
+        // Cette fonction est lue depuis le `body` de deux écrans — le Profil et le Club — donc
+        // recalculée à CHAQUE évaluation de leur corps, c'est-à-dire plusieurs fois pendant la
+        // transition qui amène l'écran. Elle parcourait l'historique sept fois, et trois de ces
+        // parcours appelaient `Calendar.current` À L'INTÉRIEUR de la boucle.
+        //
+        // `Calendar.current` n'est pas une constante : chaque accès reconstruit un calendrier,
+        // et `component(_:from:)` est l'une des opérations les plus coûteuses de Foundation.
+        // Trois fois par course, sur tout l'historique, plusieurs fois par transition — c'est
+        // du travail sur le fil principal exactement pendant l'animation.
+        //
+        // Un seul parcours, un seul calendrier. Les valeurs produites sont identiques ;
+        // `ClubBadgeEngineTests` le vérifie.
+        let calendrier = Calendar.current
+        var intervalRuns = 0
+        var earlyRun = false
+        var nightRun = false
+        var weekendRuns = 0
+        var totalElevation = 0
+        var totalDistance = 0.0
+        var longestRun = 0.0
+        for run in runs {
+            if run.sessionKind.map(\.isIntervalWorkout)
+                ?? run.title.localizedCaseInsensitiveContains("Fractionné") {
+                intervalRuns += 1
+            }
+            let heure = calendrier.component(.hour, from: run.date)
+            if heure < 7 { earlyRun = true }
+            if heure >= 21 { nightRun = true }
+            let jour = calendrier.component(.weekday, from: run.date)
+            if jour == 1 || jour == 7 { weekendRuns += 1 }
+            // Des badges de COURSE : trois cents mètres de dénivelé à vélo ne valent pas les
+            // mêmes. `onFoot` filtrait l'historique une fois de plus ; le test se fait ici.
+            guard run.discipline.wearsShoes else { continue }
+            totalElevation += run.elevationGainM
+            totalDistance += run.distanceKm
+            longestRun = max(longestRun, run.distanceKm)
+        }
         let earned: [String: Bool] = [
             "streak3": profile.streak >= 3,
             "interval3": intervalRuns >= 3,

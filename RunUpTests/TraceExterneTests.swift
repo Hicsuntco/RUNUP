@@ -44,40 +44,58 @@ final class BancCourseExterne {
 
 // MARK: - Le banc
 
-/// LE BANC D'ESSAI QUI DÉCIDE SI LA MIGRATION DES TRACÉS VAUT SON PRIX.
+/// CE QUI A ÉTÉ MESURÉ, ET POURQUOI LA MIGRATION DES TRACÉS N'A PAS EU LIEU.
 ///
 /// # LA QUESTION
 ///
-/// `RunRecord.route` est un tableau de points GPS rangé DANS la ligne de la course. `LocationService`
-/// ne pose aucun `distanceFilter` et demande `kCLLocationAccuracyBest`, donc il arrive environ un
-/// point par seconde : une sortie de 45 minutes en porte ~2 500, un marathon ~10 000. Et douze
-/// écrans lisent l'historique ENTIER à chaque affichage — kilométrage des chaussures, records
-/// personnels, badges, série : aucun ne peut se contenter d'une fenêtre récente.
+/// `RunRecord.route` est un tableau de points GPS rangé DANS la ligne de la course.
+/// `LocationService` ne pose aucun `distanceFilter` et demande `kCLLocationAccuracyBest`, donc il
+/// arrive environ un point par seconde : une sortie de 45 minutes en porte ~2 500, un marathon
+/// ~10 000. Et douze écrans relisent l'historique ENTIER à chaque affichage — kilométrage des
+/// chaussures, records personnels, badges, série : aucun ne peut se contenter d'une fenêtre
+/// récente. L'hypothèse était donc que chaque ouverture des stats relisait des millions de
+/// coordonnées dont elle n'a aucun usage, et que `@Attribute(.externalStorage)` les sortirait de
+/// la ligne.
 ///
-/// Chaque ouverture des stats relit donc des millions de coordonnées dont elle n'a aucun usage.
-/// `@Attribute(.externalStorage)` est censé sortir ce blob de la ligne et le laisser sur le disque
-/// jusqu'à ce qu'on le demande vraiment.
+/// # LA MESURE (build 266)
 ///
-/// # POURQUOI CE FICHIER NE TOUCHE PAS AU VRAI MODÈLE
+/// 150 sorties de 2 500 points — 375 000 coordonnées, un an et demi à quatre sorties par semaine
+/// — dans deux magasins sur disque, puis le coût de ce que font vraiment les écrans : relire tout
+/// l'historique et n'y lire que des nombres.
 ///
-/// Déplacer le stockage d'une propriété d'un `@Model` est un aller SANS RETOUR : il faut geler le
-/// schéma d'aujourd'hui, en écrire un second, et poser une étape de migration entre les deux (la
-/// marche à suivre est en tête de `RunUpSchemaV1`). Une migration qui échoue chez quelqu'un ne se
-/// répare par aucune mise à jour — la donnée, elle, ne revient pas en arrière.
+///     en ligne  0,019 s        externe  0,016 s        rapport 0,88
 ///
-/// Payer ça sans savoir si le gain existe serait un pari. Les deux `@Model` ci-dessous sont donc
-/// des MAQUETTES, visibles de ce seul fichier de tests, qui reproduisent la forme de `RunRecord`
-/// avec et sans stockage externe. Elles répondent aux deux seules questions qui décident de la
-/// suite :
+/// **Dix-neuf millisecondes.** Et le stockage externe n'en reprend que trois. Le blob quitte bien
+/// la ligne — le test ci-dessous le vérifie sur le disque, fichier par fichier — et ça ne change
+/// presque rien : lire `distanceKm` sur 150 lignes ne paie pas les tracés, quoi qu'on ait supposé.
+/// L'hypothèse était fausse, pas insuffisante.
 ///
-///   1. SwiftData sait-il faire ça sur un tableau encodé — ou seulement sur du `Data` ? C'est le
-///      cas « SwiftData ne sait pas faire ça », et il doit échouer ICI, dans un dossier temporaire,
-///      et pas sur son téléphone.
-///   2. Le gain en lecture est-il réel, et assez grand pour valoir le gel du schéma ?
+/// Et la conclusion ne dépend même pas du rapport : **19 ms est le coût TOTAL** de la lecture,
+/// tracés compris. Même si les tracés en représentaient la totalité, les retirer de la ligne ne
+/// rendrait que 19 ms sur un geste qui en a 16 pour paraître instantané. Il n'y a rien à gagner
+/// là, quelle que soit la part qui leur revient.
 ///
-/// La règle de décision est écrite dans `testLeGainEnLectureJustifieLaMigration` : le stockage
-/// externe doit diviser au moins par deux le coût de lecture de l'historique. En dessous, la
-/// migration ne vaut pas son risque, et ce test le dira en échouant avec les deux mesures.
+/// # LA DÉCISION
+///
+/// Pas de migration. Elle demandait de geler le schéma d'aujourd'hui (cinq modèles, 124
+/// propriétés), d'en écrire un second et de poser une étape entre les deux — un aller sans retour
+/// qu'aucune mise à jour ne répare chez quelqu'un dont la donnée, elle, ne revient pas en
+/// arrière. Pour trois millisecondes.
+///
+/// # CE QUE CE FICHIER GARDE
+///
+/// Deux choses, et c'est pour ça qu'il n'est pas supprimé avec la question qui l'a fait naître :
+///
+///   1. `@Attribute(.externalStorage)` FONCTIONNE sur un tableau encodé, et pas seulement sur du
+///      `Data` — ce n'était pas écrit nulle part, et c'est utile le jour où un vrai blob (une
+///      photo, une vidéo) devra sortir d'une ligne chaude.
+///   2. Relire tout l'historique est bon marché, et doit le rester. Le plafond du second test est
+///      large exprès : il n'est pas là pour mesurer, il est là pour attraper le jour où lire
+///      l'historique coûtera une seconde — et ce jour-là, ce fichier dira tout de suite si les
+///      tracés y sont pour quelque chose.
+///
+/// Les deux maquettes ci-dessus ne touchent à aucun modèle réel : c'est ce qui a permis de
+/// répondre sans rien parier.
 final class TraceExterneTests: XCTestCase {
 
     // MARK: Des tracés qui ressemblent aux vrais
@@ -149,7 +167,34 @@ final class TraceExterneTests: XCTestCase {
         }
     }
 
-    // MARK: 2. Le gain existe-t-il ?
+    // MARK: 2. Le blob quitte-t-il la ligne, et est-ce que ça change quelque chose ?
+
+    /// Le poids réel du magasin : le fichier SQLite ET ses journaux. Sans le `-wal`, un magasin
+    /// qui n'a pas encore été consolidé paraîtrait vide et la comparaison dirait n'importe quoi.
+    private func poidsDuMagasin(_ fichier: URL) throws -> Int {
+        let dossier = fichier.deletingLastPathComponent()
+        let prefixe = fichier.lastPathComponent
+        return try FileManager.default.contentsOfDirectory(atPath: dossier.path)
+            .filter { $0.hasPrefix(prefixe) }
+            .reduce(0) { total, nom in
+                let u = dossier.appendingPathComponent(nom)
+                guard (try? u.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == false
+                else { return total }
+                return total + ((try? u.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0)
+            }
+    }
+
+    /// Le poids de ce que Core Data a posé À CÔTÉ du magasin, dans son dossier `_EXTERNAL_DATA`.
+    private func poidsDesBlobsExternes(_ dossier: URL) -> Int {
+        guard let marche = FileManager.default.enumerator(at: dossier,
+                                                          includingPropertiesForKeys: [.fileSizeKey]) else { return 0 }
+        var total = 0
+        for cas in marche {
+            guard let u = cas as? URL, u.path.contains("_EXTERNAL_DATA") else { continue }
+            total += (try? u.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
+        }
+        return total
+    }
 
     /// Le coût de ce que font vraiment les écrans : relire tout l'historique et n'y lire QUE des
     /// nombres — kilomètres, durées, dates. Jamais le tracé.
@@ -172,7 +217,7 @@ final class TraceExterneTests: XCTestCase {
         return meilleur
     }
 
-    func testLeGainEnLectureJustifieLaMigration() throws {
+    func testLeStockageExterneSortLeBlobDeLaLigneSansChangerLeCoutDeLecture() throws {
         let dossier = try dossierTemporaire()
         defer { try? FileManager.default.removeItem(at: dossier) }
 
@@ -192,36 +237,42 @@ final class TraceExterneTests: XCTestCase {
                 let t = trace(points: points, graine: i)
                 let date = Date(timeIntervalSince1970: 1_700_000_000 + Double(i) * 86_400)
                 a.insert(BancCourseEnLigne(date: date, distanceKm: 8 + Double(i % 20),
-                                       durationSeconds: 2_700, route: t))
+                                           durationSeconds: 2_700, route: t))
                 b.insert(BancCourseExterne(date: date, distanceKm: 8 + Double(i % 20),
-                                       durationSeconds: 2_700, route: t))
+                                           durationSeconds: 2_700, route: t))
             }
             try a.save()
             try b.save()
         }
 
+        // D'ABORD : LE BLOB A-T-IL VRAIMENT QUITTÉ LA LIGNE ?
+        //
+        // Sans cette vérification, la comparaison de temps qui suit ne vaudrait rien : si
+        // SwiftData avait ignoré l'attribut, les deux magasins seraient identiques et le rapport
+        // mesuré ne dirait rien d'autre que le bruit de la machine. C'est la différence entre
+        // « le gain n'existe pas » et « on n'a rien mesuré », et les deux se ressemblent.
+        let blobs = poidsDesBlobsExternes(dossier)
+        let poidsEnLigne = try poidsDuMagasin(fichierEnLigne)
+        let poidsExterne = try poidsDuMagasin(fichierExterne)
+        XCTAssertGreaterThan(
+            blobs, 1_000_000,
+            "Rien dans `_EXTERNAL_DATA` : SwiftData a ignoré `.externalStorage` sur un tableau encodé, "
+            + "donc la comparaison de temps ci-dessous ne mesure rien. Blobs \(blobs) o.")
+        XCTAssertLessThan(
+            poidsExterne, poidsEnLigne / 2,
+            "Le magasin externe n'a pas maigri : \(poidsExterne) o contre \(poidsEnLigne) o en ligne.")
+
+        // ENSUITE : EST-CE QUE ÇA CHANGE QUELQUE CHOSE ? Non — 0,019 s contre 0,016 s au build
+        // 266, soit un rapport de 0,88. Le plafond ci-dessous est volontairement LARGE : il ne
+        // mesure pas, il garde. Lire tout l'historique sans toucher aux tracés doit rester bon
+        // marché, et le jour où ça coûtera une seconde, ce test le dira — avec, juste à côté, la
+        // preuve que les tracés n'y sont pour rien.
         let enLigne = try coutDeLecture(BancCourseEnLigne.self, schemaEnLigne, fichierEnLigne) { $0.distanceKm }
         let externe = try coutDeLecture(BancCourseExterne.self, schemaExterne, fichierExterne) { $0.distanceKm }
-        // Une mesure nulle rendrait un rapport NaN, et `XCTAssertLessThan(NaN, 0.5)` échoue en
-        // accusant le stockage externe de ce qui serait un défaut de la mesure.
-        XCTAssertGreaterThan(enLigne, 0, "La mesure de référence est nulle : rien n'a été mesuré.")
-        let rapport = externe / enLigne
 
-        // LA RÈGLE DE DÉCISION, et l'échec est ici une RÉPONSE, pas une panne : si le stockage
-        // externe ne divise pas au moins par deux le coût de lecture, la migration — gel du
-        // schéma, étape de migration, aller sans retour sur les données de tout le monde — ne
-        // vaut pas son risque, et il faut chercher le gain ailleurs (une fenêtre sur
-        // l'historique, un total de kilométrage entretenu, un `propertiesToFetch`).
-        //
-        // Les deux mesures sont dans le message parce que c'est la seule façon de les lire : les
-        // journaux de tâche ne sont pas téléchargeables, les échecs de test le sont.
-        XCTAssertLessThan(
-            rapport, 0.5,
-            String(format: """
-            Le stockage externe ne gagne pas assez pour justifier la migration. \
-            %ld courses × %ld points : en ligne %.3f s, externe %.3f s, rapport %.2f. \
-            Attendu : moins de 0,50.
-            """, courses, points, enLigne, externe, rapport)
-        )
+        XCTAssertLessThan(enLigne, 1.0, String(format:
+            "Relire %ld courses × %ld points coûte %.3f s avec les tracés dans la ligne.", courses, points, enLigne))
+        XCTAssertLessThan(externe, 1.0, String(format:
+            "Relire %ld courses × %ld points coûte %.3f s avec les tracés hors de la ligne.", courses, points, externe))
     }
 }

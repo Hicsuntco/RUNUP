@@ -44,7 +44,20 @@ struct TabBarView: View {
     ]
 
     var body: some View {
-        HStack(spacing: 0) {
+        // ALIGNÉ SUR LE BAS, ET C'EST CE QUI REDRESSE LES LIBELLÉS.
+        //
+        // Les cinq éléments n'ont pas la même hauteur, et ne peuvent pas l'avoir : un onglet
+        // empile un point de sélection (4), une icône (~21) et son mot ; le bouton RUN empile un
+        // rond de 40 et le sien. Centrés chacun pour soi dans la même barre de 56, leurs mots ne
+        // peuvent tomber à la même hauteur que si l'icône mesurait exactement 29 points. Elle en
+        // mesure 21 : « RUN » se posait donc ~4 points plus bas que « Prog », « Coach », « Stats »
+        // et « Profil ». Un écart petit, visible sur tous les écrans, et garanti par la géométrie
+        // plutôt que par un accident.
+        //
+        // Aligner par le bas fait tomber les cinq mots sur la même ligne SANS fixer aucune
+        // hauteur à la main : le rond, plus grand, monte alors plus haut que les icônes — ce qui
+        // est exactement l'effet voulu pour un bouton central surélevé.
+        HStack(alignment: .bottom, spacing: 0) {
             tabButton(items[0])
             tabButton(items[1])
             runButton
@@ -130,7 +143,11 @@ struct TabBarView: View {
                 pileDonglet(icon: icon, label: label, color: color, on: on, avecLibelle: true)
                 pileDonglet(icon: icon, label: label, color: color, on: on, avecLibelle: false)
             }
-            .frame(maxWidth: .infinity, minHeight: 44)
+            // `alignment: .bottom`, pour la même raison que la pile : ce cadre ne sert qu'à
+            // porter la cible de 44 points, et son alignement par défaut (centré) recentrerait
+            // le contenu dans les 44, donc défirait l'alignement par le bas juste au-dessus dès
+            // que la pile mesure moins que ça.
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .bottom)
             // Sans forme de contact, un `Button` dont le libellé est une pile d'un point, d'une
             // icône et d'un mot n'est touchable QUE sur ces trois formes — les creux entre elles
             // ne répondent pas, et le doigt les traverse. Sur l'accueil, ce qui se trouve juste
@@ -153,6 +170,34 @@ struct TabBarView: View {
         // tint), so a screen-reader user had no way to tell which of Prog/Coach/Stats/Profil was
         // currently selected.
         .accessibilityAddTraits(on ? .isSelected : [])
+    }
+
+    /// La pile du bouton central : le rond, et le libellé de discipline — ou pas. Extraite pour
+    /// la même raison que `pileDonglet` : `ViewThatFits` a besoin de deux variantes à mesurer.
+    private func pileDuBouton(avecLibelle: Bool) -> some View {
+        VStack(spacing: 3) {
+            Circle()
+                .fill(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom))
+                .frame(width: 40, height: 40)
+                // Le triangle reste, quelle que soit la discipline : il dit « ça démarre »,
+                // et c'est la seule chose que ce rond ait jamais eu à dire. C'est le libellé
+                // en dessous qui porte le vélo — changer les deux ferait un bouton différent
+                // au lieu du même bouton dans un autre mode.
+                .overlay(Image(systemName: "play.fill").foregroundColor(RUColor.onRose).font(.system(size: 14)))
+                // 0,55 de rose sur 14 points de flou : le bouton RUN ne se posait pas sur
+                // la barre, il l'éclairait. Ramené à une ombre qui le décolle sans le faire
+                // rayonner — c'est un bouton, pas une lampe.
+                .shadow(color: .black.opacity(RUColor.isLight ? 0 : 0.45), radius: 10, x: 0, y: 5)
+            if avecLibelle {
+                Text(discipline.tabLabel)
+                    .font(RUFont.sans(.micro, weight: .bold))
+                    .tracking(1)
+                    .foregroundColor(RUColor.rose2)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .contentTransition(.opacity)
+            }
+        }
     }
 
     /// Appuyé. Rend ce que `PressableStyle` rendait, puisque ce contrôle n'est plus un `Button`.
@@ -241,33 +286,37 @@ struct TabBarView: View {
     /// (`pressing:`), et l'accessibilité — trait de bouton, action par défaut, et une action
     /// NOMMÉE pour la bascule, qui vaut mieux qu'un appui long pour qui navigue à VoiceOver.
     private var runButton: some View {
-        VStack(spacing: 3) {
-            Circle()
-                .fill(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom))
-                .frame(width: 40, height: 40)
-                // Le triangle reste, quelle que soit la discipline : il dit « ça démarre »,
-                // et c'est la seule chose que ce rond ait jamais eu à dire. C'est le libellé
-                // en dessous qui porte le vélo — changer les deux ferait un bouton différent
-                // au lieu du même bouton dans un autre mode.
-                .overlay(Image(systemName: "play.fill").foregroundColor(RUColor.onRose).font(.system(size: 14)))
-                // 0,55 de rose sur 14 points de flou : le bouton RUN ne se posait pas sur
-                // la barre, il l'éclairait. Ramené à une ombre qui le décolle sans le faire
-                // rayonner — c'est un bouton, pas une lampe.
-                .shadow(color: .black.opacity(RUColor.isLight ? 0 : 0.45), radius: 10, x: 0, y: 5)
-            Text(discipline.tabLabel)
-                .font(RUFont.sans(.micro, weight: .bold))
-                .tracking(1)
-                .foregroundColor(RUColor.rose2)
-                .contentTransition(.opacity)
+        // IL CÈDE COMME LES ONGLETS, et il ne le faisait pas.
+        //
+        // La barre a une hauteur FIXE — `RUSpacing.tabBarHeight`, la même constante que l'encart
+        // réservé en bas de chaque écran : une barre qui grandirait recouvrirait le contenu
+        // puisque l'encart, lui, ne bougerait pas. Le commentaire d'origine calculait « 40 + 3 +
+        // le libellé ≈ 54 dans une barre de 56 : il rentre » — vrai à la taille de texte par
+        // défaut, et seulement là. Le plafond d'agrandissement est passé de 1,6× à 2,0× (voir
+        // `RUFont.maxScale`), ce qui porte le libellé à ~20 points : 40 + 3 + 20 = 63 dans une
+        // barre de 56, et rien ne clipe — le mot sortait simplement de la capsule.
+        //
+        // Les quatre onglets avaient reçu ce traitement et pas lui : ils laissaient tomber leur
+        // libellé quand la place manquait, le bouton central débordait. La discipline reste
+        // annoncée à VoiceOver dans les deux cas (`startLabel`), donc c'est bien la forme qui se
+        // simplifie et pas l'information.
+        ViewThatFits(in: .vertical) {
+            pileDuBouton(avecLibelle: true)
+            pileDuBouton(avecLibelle: false)
         }
-        // Même défaut que les onglets, sur le bouton le plus utilisé de l'app : le rond fait
-        // 40 pt, le creux qui le sépare de « RUN » ne répondait pas, et l'ensemble n'atteignait
-        // la hauteur réglementaire par aucun côté. La cible monte à 44 sans que le rond grossisse.
-        // Deux appels, pas un : `frame` a une surcharge à dimensions fixes et une à bornes,
-        // et `width:` ne peut pas voisiner avec `minHeight:` dans la même. La largeur est
-        // fixe, la hauteur est un plancher.
-        .frame(width: 60)
-        .frame(minHeight: 44)
+        // MÊME LARGEUR QUE LES AUTRES, et c'est le deuxième décalage.
+        //
+        // Il était fixé à 60 quand les quatre onglets se partagent le reste : sur un écran de
+        // 375 points, chaque onglet en prend 75,8 et le centre 60. Les écarts d'icône à icône
+        // devenaient donc 75,8 · 67,9 · 67,9 · 75,8 — les deux voisins du bouton RUN tiraient
+        // de 8 points vers l'intérieur. Cinq largeurs égales rendent les quatre écarts égaux, et
+        // le rond de 40 tient sans peine dans les 72,6 qui lui reviennent.
+        //
+        // La cible de 44 points reste, et par un second appel : `frame` a une surcharge à
+        // dimensions fixes et une à bornes, et les deux familles ne se mélangent pas dans le
+        // même appel.
+        .frame(maxWidth: .infinity)
+        .frame(minHeight: 44, alignment: .bottom)
         .contentShape(Rectangle())
         .scaleEffect(runPressed ? 0.96 : 1)
         .opacity(runPressed ? 0.88 : 1)

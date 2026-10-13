@@ -44,25 +44,39 @@ struct TabBarView: View {
     ]
 
     var body: some View {
-        // ALIGNÉ SUR LE BAS, ET C'EST CE QUI REDRESSE LES LIBELLÉS.
+        // UNE SEULE DÉCISION POUR TOUTE LA BARRE, ET PAS CINQ.
         //
-        // Les cinq éléments n'ont pas la même hauteur, et ne peuvent pas l'avoir : un onglet
-        // empile un point de sélection (4), une icône (~21) et son mot ; le bouton RUN empile un
-        // rond de 40 et le sien. Centrés chacun pour soi dans la même barre de 56, leurs mots ne
-        // peuvent tomber à la même hauteur que si l'icône mesurait exactement 29 points. Elle en
-        // mesure 21 : « RUN » se posait donc ~4 points plus bas que « Prog », « Coach », « Stats »
-        // et « Profil ». Un écart petit, visible sur tous les écrans, et garanti par la géométrie
-        // plutôt que par un accident.
+        // # CE QU'ON VOYAIT
         //
-        // Aligner par le bas fait tomber les cinq mots sur la même ligne SANS fixer aucune
-        // hauteur à la main : le rond, plus grand, monte alors plus haut que les icônes — ce qui
-        // est exactement l'effet voulu pour un bouton central surélevé.
-        HStack(alignment: .bottom, spacing: 0) {
-            tabButton(items[0])
-            tabButton(items[1])
-            runButton
-            tabButton(items[2])
-            tabButton(items[3])
+        // Le libellé de l'onglet SÉLECTIONNÉ disparaissait — « Stats » sur l'écran Stats,
+        // « Profil » sur le profil — pendant que les quatre autres gardaient le leur. Une barre
+        // dépareillée, et qui se dépareillait différemment à chaque navigation.
+        //
+        // # POURQUOI
+        //
+        // Chaque onglet portait son propre `ViewThatFits`, donc décidait POUR LUI SEUL s'il avait
+        // la place d'afficher son mot. Deux choses rendent cette décision différente d'un onglet
+        // à l'autre, et je les avais toutes les deux manquées :
+        //
+        //   • les symboles SF n'ont pas la même hauteur à taille de police égale —
+        //     `person.crop.circle` et `chart.bar` remplissent leur cadre, `list.bullet` non ;
+        //   • l'icône de l'onglet actif est en `.semibold`, les autres en `.regular`, et le gras
+        //     la fait grandir de la fraction de point qui manquait.
+        //
+        // D'où un défaut qui ne frappe QUE l'onglet où l'on se trouve, et seulement pour certains
+        // symboles : la pire forme possible, puisqu'elle ressemble à un bug d'affichage aléatoire.
+        //
+        // # LA RÈGLE MAINTENANT
+        //
+        // La barre entière est la candidate, en trois états : tout le monde a son mot, puis le
+        // bouton RUN cède le sien (le rond et son triangle disent déjà « ça démarre »), puis plus
+        // personne. Un `ViewThatFits` POSÉ ICI ne peut rendre qu'un seul de ces trois états, donc
+        // la barre ne peut plus être dépareillée — quelle que soit la taille du texte, quel que
+        // soit l'onglet actif, quels que soient les symboles choisis demain.
+        ViewThatFits(in: .vertical) {
+            barre(libelles: true, libelleRun: true)
+            barre(libelles: true, libelleRun: false)
+            barre(libelles: false, libelleRun: false)
         }
         .padding(.horizontal, 6)
         .frame(height: RUSpacing.tabBarHeight)
@@ -91,6 +105,31 @@ struct TabBarView: View {
         .shadow(color: .black.opacity(RUColor.isLight ? 0.10 : 0.5), radius: 18, x: 0, y: 8)
     }
 
+    /// Les cinq éléments, dans un état donné. Les trois appels de `body` en sont les trois
+    /// candidats, et c'est `ViewThatFits` qui en retient un — jamais un mélange.
+    private func barre(libelles: Bool, libelleRun: Bool) -> some View {
+        // ALIGNÉ SUR LE BAS, ET C'EST CE QUI MET LES LIBELLÉS SUR UNE MÊME LIGNE.
+        //
+        // Les cinq éléments n'ont pas la même hauteur, et ne peuvent pas l'avoir : un onglet
+        // empile un point de sélection (4), une icône et son mot ; le bouton RUN empile un rond
+        // de 40 et le sien. Centrés chacun pour soi dans la même barre de 56, leurs mots ne
+        // peuvent tomber à la même hauteur que si l'icône mesurait exactement 29 points. Elle en
+        // mesure ~21 : « RUN » se posait donc ~4 points plus bas que « Prog », « Coach »,
+        // « Stats » et « Profil ». Un écart petit, visible sur tous les écrans, et garanti par la
+        // géométrie plutôt que par un accident.
+        //
+        // Aligner par le bas fait tomber les cinq mots sur la même ligne SANS fixer aucune
+        // hauteur à la main : le rond, plus grand, monte alors plus haut que les icônes — ce qui
+        // est exactement l'effet voulu pour un bouton central surélevé.
+        HStack(alignment: .bottom, spacing: 0) {
+            tabButton(items[0], libelle: libelles)
+            tabButton(items[1], libelle: libelles)
+            runButton(libelle: libelleRun)
+            tabButton(items[2], libelle: libelles)
+            tabButton(items[3], libelle: libelles)
+        }
+    }
+
     /// La pile d'un onglet : le point de sélection, l'icône, et le libellé — ou pas.
     private func pileDonglet(icon: String, label: String, color: Color,
                              on: Bool, avecLibelle: Bool) -> some View {
@@ -106,6 +145,20 @@ struct TabBarView: View {
             Image(systemName: icon)
                 .font(.system(size: 18, weight: on ? .semibold : .regular))
                 .foregroundColor(color)
+                // UN CADRE FIXE, ET C'EST LA MOITIÉ DU CORRECTIF.
+                //
+                // À taille de police égale, deux symboles SF n'occupent pas la même hauteur :
+                // `person.crop.circle` remplit son cadre, `list.bullet` est plat. Et le passage
+                // de `.regular` à `.semibold` sur l'onglet actif en rajoute une fraction. Sans
+                // cadre, la pile de chaque onglet avait donc sa propre hauteur, qui changeait en
+                // plus selon l'onglet sélectionné — les icônes ne s'alignaient pas entre elles,
+                // et les mots en dessous non plus.
+                //
+                // 24 points et pas 22 : un symbole de 18 points mesure ~21,5 de haut, et un
+                // cadre plus serré que son contenu ne rogne pas (SwiftUI ne coupe rien par
+                // défaut) mais le laisse déborder — ce qui réintroduirait le décalage qu'on
+                // retire.
+                .frame(height: 24)
             if avecLibelle {
                 Text(LocalizedStringKey(label))
                     .font(RUFont.sans(.micro, weight: .semibold))
@@ -117,7 +170,7 @@ struct TabBarView: View {
         }
     }
 
-    private func tabButton(_ item: (AppScreen, String, String)) -> some View {
+    private func tabButton(_ item: (AppScreen, String, String), libelle: Bool) -> some View {
         let (screen, label, icon) = item
         let on = selected == screen
         // Les onglets inactifs passaient par une valeur codée en dur — noir à 32 % sur des
@@ -128,21 +181,17 @@ struct TabBarView: View {
             Haptics.selection()
             onSelect(screen)
         }) {
-            // LA BARRE NE GRANDIT PAS, SON CONTENU S'ADAPTE.
+            // LA BARRE NE GRANDIT PAS, SON CONTENU S'ADAPTE — mais la décision n'est plus
+            // prise ici. Sa hauteur est une constante partagée : `RUSpacing.tabBarHeight` sert
+            // aussi à calculer l'encart que chaque écran réserve en bas pour ne pas passer
+            // dessous, donc une barre qui grandirait avec le texte recouvrirait le contenu.
+            // C'est bien le CONTENU qui doit céder — mais tous les onglets ENSEMBLE, sinon la
+            // barre se dépareille. Voir `body`.
             //
-            // Sa hauteur est une constante partagée : `RUSpacing.tabBarHeight` sert aussi à
-            // calculer l'encart que chaque écran réserve en bas pour ne pas passer dessous. Une
-            // barre qui grandirait avec le texte recouvrirait donc le contenu, puisque l'encart,
-            // lui, ne bougerait pas. C'est le cas où il faut faire céder le CONTENU.
-            //
-            // Le libellé rétrécit d'abord — jusqu'à 80 %, pas en dessous, sinon on remplace une
-            // troncature par une illisibilité — puis il disparaît si même ça ne suffit pas. Le
-            // nom reste annoncé à VoiceOver dans les deux cas : c'est la forme qui se simplifie,
-            // pas l'information.
-            ViewThatFits(in: .vertical) {
-                pileDonglet(icon: icon, label: label, color: color, on: on, avecLibelle: true)
-                pileDonglet(icon: icon, label: label, color: color, on: on, avecLibelle: false)
-            }
+            // Le libellé rétrécit d'abord jusqu'à 80 %, pas en dessous : sinon on remplace une
+            // troncature par une illisibilité. Le nom reste annoncé à VoiceOver dans tous les
+            // cas — c'est la forme qui se simplifie, pas l'information.
+            pileDonglet(icon: icon, label: label, color: color, on: on, avecLibelle: libelle)
             // `alignment: .bottom`, pour la même raison que la pile : ce cadre ne sert qu'à
             // porter la cible de 44 points, et son alignement par défaut (centré) recentrerait
             // le contenu dans les 44, donc défirait l'alignement par le bas juste au-dessus dès
@@ -172,8 +221,9 @@ struct TabBarView: View {
         .accessibilityAddTraits(on ? .isSelected : [])
     }
 
-    /// La pile du bouton central : le rond, et le libellé de discipline — ou pas. Extraite pour
-    /// la même raison que `pileDonglet` : `ViewThatFits` a besoin de deux variantes à mesurer.
+    /// La pile du bouton central : le rond, et le libellé de discipline — ou pas. Elle ne décide
+    /// pas elle-même : `avecLibelle` descend de `body`, qui tranche pour les cinq éléments à la
+    /// fois. Même règle que `pileDonglet`.
     private func pileDuBouton(avecLibelle: Bool) -> some View {
         VStack(spacing: 3) {
             Circle()
@@ -285,25 +335,23 @@ struct TabBarView: View {
     /// Ce qu'un `Button` donnait gratuitement est rendu à la main : le retour visuel à l'appui
     /// (`pressing:`), et l'accessibilité — trait de bouton, action par défaut, et une action
     /// NOMMÉE pour la bascule, qui vaut mieux qu'un appui long pour qui navigue à VoiceOver.
-    private var runButton: some View {
-        // IL CÈDE COMME LES ONGLETS, et il ne le faisait pas.
+    private func runButton(libelle: Bool) -> some View {
+        // IL CÈDE COMME LES ONGLETS, et il ne le faisait pas — il cède même LE PREMIER.
         //
-        // La barre a une hauteur FIXE — `RUSpacing.tabBarHeight`, la même constante que l'encart
-        // réservé en bas de chaque écran : une barre qui grandirait recouvrirait le contenu
-        // puisque l'encart, lui, ne bougerait pas. Le commentaire d'origine calculait « 40 + 3 +
-        // le libellé ≈ 54 dans une barre de 56 : il rentre » — vrai à la taille de texte par
-        // défaut, et seulement là. Le plafond d'agrandissement est passé de 1,6× à 2,0× (voir
-        // `RUFont.maxScale`), ce qui porte le libellé à ~20 points : 40 + 3 + 20 = 63 dans une
-        // barre de 56, et rien ne clipe — le mot sortait simplement de la capsule.
+        // La barre a une hauteur FIXE, la même constante que l'encart réservé en bas de chaque
+        // écran : une barre qui grandirait recouvrirait le contenu puisque l'encart, lui, ne
+        // bougerait pas. Le commentaire d'origine calculait « 40 + 3 + le libellé ≈ 54 dans une
+        // barre de 56 : il rentre » — vrai à la taille de texte par défaut, et seulement là. Le
+        // plafond d'agrandissement est passé de 1,6× à 2,0× (voir `RUFont.maxScale`), ce qui
+        // porte le libellé à ~20 points : 40 + 3 + 20 = 63 dans une barre de 56, et rien ne clipe
+        // — le mot sortait simplement de la capsule.
         //
-        // Les quatre onglets avaient reçu ce traitement et pas lui : ils laissaient tomber leur
-        // libellé quand la place manquait, le bouton central débordait. La discipline reste
-        // annoncée à VoiceOver dans les deux cas (`startLabel`), donc c'est bien la forme qui se
-        // simplifie et pas l'information.
-        ViewThatFits(in: .vertical) {
-            pileDuBouton(avecLibelle: true)
-            pileDuBouton(avecLibelle: false)
-        }
+        // C'est lui qui lâche son mot avant les autres parce que son rond de 40 points le rend
+        // de loin le plus haut des cinq : garder « RUN » coûterait les quatre autres libellés.
+        // Et c'est le seul dont le mot soit redondant — un rond rose avec un triangle dit déjà
+        // « ça démarre ». La discipline reste annoncée à VoiceOver (`startLabel`), donc c'est
+        // bien la forme qui se simplifie et pas l'information.
+        pileDuBouton(avecLibelle: libelle)
         // MÊME LARGEUR QUE LES AUTRES, et c'est le deuxième décalage.
         //
         // Il était fixé à 60 quand les quatre onglets se partagent le reste : sur un écran de

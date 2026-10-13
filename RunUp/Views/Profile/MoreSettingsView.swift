@@ -80,6 +80,13 @@ struct MoreSettingsView: View {
                         adminCard
                     }
 
+                    // LE FILET SOUS LES DONNÉES. Voir `RunUp/Services/Sauvegarde.swift` : rien
+                    // d'autre ne garde la conversation avec le coach, les ressentis, les
+                    // chaussures, la série ou le programme en cours — Apple Santé n'a que les
+                    // courses.
+                    sectionTitle("Mes données")
+                    CarteDeSauvegarde()
+
                     // « Bêta » était juste tant que l'app se testait entre proches. Elle se vend
                     // maintenant par abonnement : lire « Bêta » dans les réglages d'une app qu'on
                     // vient de payer, c'est lire « ce n'est pas fini », et c'est le genre de mot

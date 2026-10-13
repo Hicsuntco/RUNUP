@@ -563,6 +563,62 @@ final class AppState {
         )
     }
 
+    // MARK: - Sauvegarder, restaurer
+
+    /// La photographie complète de ce que l'app détient. Voir `Sauvegarde.swift` pour ce qui y
+    /// entre, ce qui n'y entre pas, et pourquoi.
+    ///
+    /// Construite ici et pas dans la vue : c'est `AppState` qui tient le contexte, et une vue qui
+    /// irait chercher trois collections elle-même le ferait à chaque recomposition.
+    func construireLaSauvegarde() -> Sauvegarde {
+        let courses = (try? modelContext.fetch(FetchDescriptor<RunRecord>())) ?? []
+        let messages = (try? modelContext.fetch(
+            FetchDescriptor<ChatMessage>(sortBy: [SortDescriptor(\.timestamp)]))) ?? []
+        let chaussures = (try? modelContext.fetch(FetchDescriptor<Shoe>())) ?? []
+        return SauvegardeService.construire(profil: profile, courses: courses,
+                                            messages: messages, chaussures: chaussures)
+    }
+
+    /// Ce qu'une tentative de restauration a donné. Trois issues, trois phrases différentes :
+    /// « le fichier ne se lit pas » et « tes données sont déjà là » demandent deux gestes
+    /// opposés, et les confondre en un « ça n'a pas marché » laisse sans issue.
+    enum IssueDeRestauration: Equatable {
+        case faite(courses: Int, messages: Int, chaussures: Int)
+        case fichierIllisible
+        case baseNonVide
+    }
+
+    func restaurer(depuis url: URL) -> IssueDeRestauration {
+        // Un fichier choisi dans l'app Fichiers arrive hors du bac à sable : sans ces deux
+        // appels, la lecture échoue et la sauvegarde se présenterait comme illisible alors
+        // qu'elle est intacte.
+        let ouvert = url.startAccessingSecurityScopedResource()
+        defer { if ouvert { url.stopAccessingSecurityScopedResource() } }
+
+        guard let sauvegarde = SauvegardeService.lire(url) else { return .fichierIllisible }
+        let dejaLa = (try? modelContext.fetchCount(FetchDescriptor<RunRecord>())) ?? 0
+        do {
+            let compte = try SauvegardeService.restaurer(
+                sauvegarde, dans: modelContext, profil: profile, nombreDeCourses: dejaLa)
+            // Les mêmes suites qu'au lancement, et pour la même raison : le profil restauré
+            // porte un programme, un thème, un genre et des rappels qui ne sont pas ceux que
+            // ces trois services ont en mémoire depuis l'ouverture de l'app.
+            AdaptivePlanEngine.refreshProgramForCurrentDate(profile)
+            rafraichirLaCourseLibre()
+            AccordStore.shared.genre = Genre.depuis(sexe: profile.sex)
+            ThemeStore.shared.themeID = profile.accentThemeID
+            ThemeStore.shared.isLightMode = profile.isLightMode
+            NotificationService.shared.rescheduleDailyReminder(for: profile)
+            screen = .home
+            return .faite(courses: compte.courses, messages: compte.messages,
+                          chaussures: compte.chaussures)
+        } catch SauvegardeService.Echec.baseNonVide {
+            return .baseNonVide
+        } catch {
+            return .fichierIllisible
+        }
+    }
+
     /// Re-checks the program week/phase against the real calendar date — call whenever the app
     /// returns to the foreground so a skipped week or program completion is picked up even if the
     /// user didn't open the app on the exact day it happened.

@@ -5190,6 +5190,22 @@
         }
       }
     },
+    "Ce fichier n'est pas une sauvegarde RUNUP, ou il est abîmé.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This file isn't a RUNUP backup, or it's damaged."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este archivo no es una copia de RUNUP, o está dañado."
+          }
+        }
+      }
+    },
     "Ce message n'est pas autorisé — reformule-le.": {
       "localizations": {
         "en": {
@@ -9380,6 +9396,22 @@
         }
       }
     },
+    "Exporter mes données": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export my data"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportar mis datos"
+          }
+        }
+      }
+    },
     "FAIRE MA VIDÉO": {
       "localizations": {
         "en": {
@@ -10779,6 +10811,22 @@
         }
       }
     },
+    "J'ai déjà une sauvegarde RUNUP": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I already have a RUNUP backup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya tengo una copia de RUNUP"
+          }
+        }
+      }
+    },
     "J'ai relevé ta séance à %@.": {
       "localizations": {
         "en": {
@@ -11551,6 +11599,22 @@
         }
       }
     },
+    "L'app tourne sur un espace temporaire : rien de ce qui est écrit maintenant ne serait gardé. Réinstalle RUNUP, puis restaure ta sauvegarde.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The app is running on temporary storage: nothing written now would be kept. Reinstall RUNUP, then restore your backup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La app funciona en un espacio temporal: nada de lo que se escriba ahora se guardaría. Reinstala RUNUP y luego restaura tu copia."
+          }
+        }
+      }
+    },
     "L'effort ressenti": {
       "localizations": {
         "en": {
@@ -11865,6 +11929,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudo publicar: revisa tu conexión e inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "La sauvegarde n'a pas pu être écrite.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The backup couldn't be written."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo crear la copia."
           }
         }
       }
@@ -12274,6 +12354,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "El haz aplana el relieve: verás peor tus pies, así que irás más despacio. Es normal, y no dice nada de tu forma."
+          }
+        }
+      }
+    },
+    "Le fichier n'a pas pu être écrit.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file couldn't be written."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo escribir el archivo."
           }
         }
       }
@@ -13335,6 +13431,22 @@
         }
       }
     },
+    "Mes données": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My data"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mis datos"
+          }
+        }
+      }
+    },
     "Mes routes": {
       "localizations": {
         "en": {
@@ -14039,6 +14151,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dejar de seguir"
+          }
+        }
+      }
+    },
+    "Ne s'applique qu'à une app qui repart de zéro.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only works on an app starting from scratch."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo funciona en una app que empieza de cero."
           }
         }
       }
@@ -18175,6 +18303,38 @@
         }
       }
     },
+    "Restaurer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurar"
+          }
+        }
+      }
+    },
+    "Restaurer depuis un fichier": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore from a file"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurar desde un archivo"
+          }
+        }
+      }
+    },
     "Restaurer mes achats": {
       "extractionState": "manual",
       "localizations": {
@@ -19008,6 +19168,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Salud y lesiones"
+          }
+        }
+      }
+    },
+    "Sauvegarde": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia de seguridad"
+          }
+        }
+      }
+    },
+    "Sauvegarde enregistrée": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup saved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia guardada"
+          }
+        }
+      }
+    },
+    "Sauvegarde restaurée : %lld courses, %lld messages, %lld paires de chaussures.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup restored: %lld runs, %lld messages, %lld pairs of shoes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia restaurada: %lld carreras, %lld mensajes, %lld pares de zapatillas."
           }
         }
       }
@@ -22023,6 +22231,22 @@
         }
       }
     },
+    "Tes données sont déjà là. Une restauration ne s'applique qu'à une app qui repart de zéro : elle ne sait pas fusionner deux historiques sans risquer d'en perdre.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your data is already here. A restore only works on an app starting from scratch: it can't merge two histories without risking losing part of one."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus datos ya están aquí. Una restauración solo funciona en una app que empieza de cero: no sabe fusionar dos historiales sin riesgo de perder algo."
+          }
+        }
+      }
+    },
     "Tes jours de course": {
       "localizations": {
         "en": {
@@ -23291,6 +23515,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Un duatlón se decide en sus primeros kilómetros, y la factura llega dos horas después. Nada de lo que sigue se juega en las piernas."
+          }
+        }
+      }
+    },
+    "Un fichier à ranger où tu veux. Il contient tout — ton historique, ta conversation avec le coach, tes chaussures, ta série. Il ne part sur aucun serveur.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A file to keep wherever you like. It holds everything — your history, your conversation with the coach, your shoes, your streak. It never goes to a server."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un archivo para guardar donde quieras. Lo contiene todo: tu historial, tu conversación con el coach, tus zapatillas, tu racha. No se envía a ningún servidor."
           }
         }
       }

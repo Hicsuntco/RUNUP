@@ -392,6 +392,16 @@ jobs:
           cd ci_scripts && python3 test_feuilles.py
           cd .. && python3 ci_scripts/check_feuilles.py
 
+      # Rien d'autre ne garde la conversation avec le coach, les ressentis, les chaussures, la
+      # série ou le programme : Apple Santé n'a que les courses. Et un filet se dégrade en
+      # silence — on ajoute un champ au modèle un mardi, la sauvegarde ne le connaît pas, et la
+      # perte ne se voit qu'une fois, au pire moment. Ce contrôle refuse une propriété
+      # enregistrée qui ne serait ni sauvegardée ni déclarée volontairement dehors.
+      - name: Vérifier qu'aucune donnée ne sort du filet de sauvegarde
+        run: |
+          cd ci_scripts && python3 test_sauvegarde.py
+          cd .. && python3 ci_scripts/check_sauvegarde.py
+
       # « Vérifie ta connexion » était affiché pour une session expirée comme pour un serveur en
       # panne, depuis onze écrans. C'est la pire des trois pannes à deviner : c'est la seule que la
       # personne peut vérifier d'un coup d'œil, et sur un téléphone au wifi plein elle n'apprend

@@ -56,8 +56,29 @@ struct WelcomeView: View {
                     }
                     .padding(.horizontal, 26)
                 }
-                ObNext(label: "COMMENCER", action: onStart)
-                    .padding(.horizontal, 22)
+                VStack(spacing: 0) {
+                    // LE SEUL ENDROIT OÙ LA RESTAURATION EST ATTEIGNABLE QUAND ELLE SERT.
+                    //
+                    // Une base vide renvoie à l'inscription : les réglages, où ce bouton a sa
+                    // place logique, sont donc inatteignables précisément le jour où l'on vient
+                    // chercher sa sauvegarde — après une réinstallation, un téléphone neuf, ou un
+                    // magasin perdu. Discret par construction : c'est le geste de quelques
+                    // personnes, pas le chemin normal, et il n'a pas à concurrencer « COMMENCER ».
+                    //
+                    // AU-DESSUS du bouton principal, et pas en dessous : `ObNext` consomme la
+                    // marge basse de l'écran (`safeAreaPadding(.bottom, 24)`), donc tout ce qui
+                    // le suit dans une pile atterrit sous la barre d'accueil.
+                    BoutonDeRestauration {
+                        Text("J'ai déjà une sauvegarde RUNUP")
+                            .font(RUFont.sans(.body, weight: .medium))
+                            .foregroundColor(RUColor.text3)
+                            .padding(.horizontal, 12)
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
+                    }
+                    ObNext(label: "COMMENCER", action: onStart)
+                }
+                .padding(.horizontal, 22)
             }
         }
     }

@@ -143,6 +143,24 @@ struct RUMetricRow<Content: View>: View {
     }
 }
 
+/// Une rangée de TUILES — des blocs de largeur égale, pas des colonnes serrées à gauche.
+///
+/// Même principe que `RUMetricRow` et même raison, avec une différence de mise en page qui
+/// compte : une tuile porte `maxWidth: .infinity` et un fond, donc elle se partage la largeur
+/// au lieu de prendre la sienne. Empilée, elle doit s'étendre sur toute la largeur et non
+/// s'aligner à gauche — d'où une pile distincte plutôt qu'un paramètre de plus.
+struct RUTileRow<Content: View>: View {
+    var spacing: CGFloat = 8
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: spacing) { content }
+            VStack(spacing: spacing) { content }
+        }
+    }
+}
+
 /// Value + label column — class `.metric` (duration/pace/zone triplets, etc.).
 struct MetricColumn: View {
     var value: String

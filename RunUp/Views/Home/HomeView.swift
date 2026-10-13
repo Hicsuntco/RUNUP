@@ -39,6 +39,10 @@ struct HomeView: View {
         )
     }
 
+    /// La taille de la pastille d'état de la bande de semaine, en points, suivant le réglage de
+    /// taille du texte — voir `bandeDeSemaine(avecQuantieme:)`.
+    @ScaledMetric(relativeTo: .body) private var tailleMarqueur: CGFloat = 19
+
     private var profile: UserProfile { appState.profile }
     private var isFreeRun: Bool { profile.programPhase == .freerun }
     private var unreadCount: Int { unreadNotifications.count }
@@ -267,7 +271,27 @@ struct HomeView: View {
     /// Shows the real date number (today circled), not just the bare weekday letter — so it's
     /// unambiguous which real calendar day each cell is, instead of an abstract L/M/M/J/V/S/D
     /// that says nothing about "today" until you count.
+    /// LA BANDE DE LA SEMAINE LAISSE TOMBER LE QUANTIÈME QUAND LE TEXTE EST TROP GRAND.
+    ///
+    /// Sept colonnes sur la largeur d'un téléphone, c'est une quarantaine de points chacune.
+    /// Elles portent une initiale et un nombre à deux chiffres : à taille de texte normale ça
+    /// tient, et à partir d'un certain agrandissement plus rien ne tient — c'est précisément la
+    /// mise en page que `Typography.swift` cite en exemple pour justifier son plafond.
+    ///
+    /// Une semaine a sept jours, on ne peut pas en replier une partie. Ce qui peut céder, c'est
+    /// le QUANTIÈME : l'initiale dit déjà quel jour, la marque dit déjà son état, et la date
+    /// complète reste annoncée à VoiceOver. On perd un repère de confort, pas une information.
+    ///
+    /// `ViewThatFits` et pas un seuil de catégorie, pour la même raison qu'ailleurs : ce qui
+    /// décide est la place, pas le réglage.
     private var weekStrip: some View {
+        ViewThatFits(in: .horizontal) {
+            bandeDeSemaine(avecQuantieme: true)
+            bandeDeSemaine(avecQuantieme: false)
+        }
+    }
+
+    private func bandeDeSemaine(avecQuantieme: Bool) -> some View {
         HStack(spacing: 5) {
             ForEach(profile.weekStrip) { day in
                 // Plus de contour, et un fond pour ceux qui n'en avaient pas.
@@ -327,20 +351,27 @@ struct HomeView: View {
                     Text(day.displayLetter).displayStyle(12).foregroundColor(color)
                     ZStack {
                         if estAujourdhui && day.state != .done {
-                            Circle().stroke(RUColor.rose2, lineWidth: 1.5).frame(width: 19, height: 19)
+                            Circle().stroke(RUColor.rose2, lineWidth: 1.5)
+                                .frame(width: tailleMarqueur, height: tailleMarqueur)
                         }
                         if day.state == .done {
-                            Circle().fill(RUColor.rose).frame(width: 19, height: 19)
+                            Circle().fill(RUColor.rose)
+                                .frame(width: tailleMarqueur, height: tailleMarqueur)
                             Image(systemName: "checkmark")
                                 .font(.system(size: 10, weight: .bold))
                                 .foregroundColor(RUColor.onRose)
-                        } else {
+                        } else if avecQuantieme {
                             Text("\(Calendar.current.component(.day, from: day.date))")
                                 .font(RUFont.sans(.small, weight: estAujourdhui ? .bold : .regular))
                                 .foregroundColor(color)
+                                .lineLimit(1)
+                                .fixedSize()
                         }
                     }
-                    .frame(width: 19, height: 19)
+                    // La marque grandit avec le texte : un anneau de 19 points figé autour d'un
+                    // chiffre qui en fait 18 ne l'entoure plus, il le coupe. `@ScaledMetric`
+                    // suit le même réglage que la police, donc les deux restent proportionnés.
+                    .frame(width: tailleMarqueur, height: tailleMarqueur)
                 }
                 .frame(maxWidth: .infinity)
                 // 11, et non plus 14. La rangée avait été montée à 68 points quand les sept

@@ -618,7 +618,11 @@ struct StatsView: View {
                 Text("Tes records apparaîtront ici après ta première course.")
                     .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
             } else {
-                HStack(spacing: 8) {
+                // Trois tuiles sur un tiers de largeur chacune, dont les libellés font jusqu'à
+                // « MEILLEURE ALLURE » avec 1,5 point d'interlettrage. À taille de texte normale
+                // c'est une rangée ; au-delà, ce sont trois colonnes de mots coupés. Elles
+                // s'empilent plutôt — voir `RUTileRow`.
+                RUTileRow(spacing: 8) {
                     predictionTile("PLUS LONGUE", longestRun.map { String(format: "%.1f km", locale: Locale.current, $0.distanceKm) } ?? "—", highlighted: false)
                     predictionTile("MEILLEURE ALLURE", bestPaceSecPerKm.map { "\(PaceModel.formatDuration($0))/km" } ?? "—", highlighted: false)
                     predictionTile("MEILLEURE SEM.", bestWeekKm > 0 ? String(format: "%.0f km", bestWeekKm) : "—", highlighted: false)
@@ -675,7 +679,7 @@ struct StatsView: View {
             RUCardHeader(icon: "target", tint: RUColor.rose2,
                          title: "Prédiction de course",
                          subtitle: "À partir de ta meilleure perf récente")
-            HStack(spacing: 8) {
+            RUTileRow(spacing: 8) {
                 ForEach(predictionDistances.indices, id: \.self) { i in
                     predictionTile(predictionDistances[i].0, PaceModel.formatDuration(predictedSeconds(forKm: predictionDistances[i].1)), highlighted: i == highlightedPredictionIndex)
                 }

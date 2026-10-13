@@ -39,16 +39,33 @@ import UIKit
 enum RUFont {
     /// Ceiling on how far a design size is allowed to grow, as a multiple of itself.
     ///
-    /// 1.6× is the compromise between the two failure modes above: it covers the whole non-
-    /// accessibility range of the iOS slider (xSmall…xxxLarge tops out at ≈1.35× for `.body`)
-    /// with room to spare, so anyone who simply prefers larger text gets exactly what they asked
-    /// for, while the five accessibility sizes are clamped instead of tripling and shattering the
-    /// dense multi-column cards this app is built out of. It is knowingly NOT full AX support —
-    /// that needs per-screen work (HStacks of metrics becoming VStacks past a threshold, which is
-    /// a layout change per screen, not a font change), and this helper can't do it from here. A
-    /// hard cap that keeps every screen usable is the honest intermediate step; raising this
-    /// number is safe only screen by screen, once those layouts reflow.
-    private static let maxScale: CGFloat = 1.6
+    /// # 1,6× → 2,0×, PARCE QUE LES MISES EN PAGE QUI LE BLOQUAIENT SE RÉORGANISENT MAINTENANT
+    ///
+    /// Le plafond valait 1,6× : il couvrait toute la plage ordinaire du curseur iOS
+    /// (xSmall…xxxLarge culmine à ≈1,35× pour `.body`) et coupait les CINQ tailles
+    /// d'accessibilité, parce qu'au-delà les cartes multi-colonnes de l'app ne se dégradaient
+    /// pas, elles s'effondraient en troncature. Le commentaire d'alors disait ce qu'il faudrait
+    /// pour le lever : « un travail par écran — des `HStack` de mesures qui deviennent des
+    /// `VStack` au-delà d'un seuil ».
+    ///
+    /// Ce travail est fait, et pas avec un seuil :
+    ///
+    ///   • les rangées de mesures (`RUMetricRow`) et les tuiles de records et de prédiction
+    ///     (`RUTileRow`) passent en colonne quand elles ne tiennent plus ;
+    ///   • la bande des sept jours laisse tomber le quantième et garde l'initiale, la marque
+    ///     d'état et la date annoncée à VoiceOver ;
+    ///   • la barre d'onglets laisse tomber ses libellés et garde ses noms accessibles, sans
+    ///     grandir — sa hauteur sert d'encart au bas de chaque écran.
+    ///
+    /// 2,0× COUVRE DEUX DES CINQ TAILLES D'ACCESSIBILITÉ en entier : AX1 (≈1,65×) et AX2
+    /// (≈1,94×). Les trois dernières montent à 2,35×, 2,76× et 3,12× et restent écrêtées.
+    ///
+    /// Le plafond ne disparaît donc pas, et ce n'est pas de la prudence pour la forme : il reste
+    /// dans l'app des mises en page denses que personne n'a encore éprouvées à ces tailles-là.
+    /// Annoncer un support complet en le découvrant faux chez quelqu'un qui en dépend coûte plus
+    /// cher que d'avancer d'un cran et de le dire. Le prochain cran se gagne de la même façon :
+    /// en réorganisant, puis en levant.
+    private static let maxScale: CGFloat = 2.0
 
     /// Turns a design point size into the size actually rendered, honouring the user's text-size
     /// setting up to `maxScale`.

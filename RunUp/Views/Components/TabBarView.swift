@@ -78,6 +78,32 @@ struct TabBarView: View {
         .shadow(color: .black.opacity(RUColor.isLight ? 0.10 : 0.5), radius: 18, x: 0, y: 8)
     }
 
+    /// La pile d'un onglet : le point de sélection, l'icône, et le libellé — ou pas.
+    private func pileDonglet(icon: String, label: String, color: Color,
+                             on: Bool, avecLibelle: Bool) -> some View {
+        VStack(spacing: 5) {
+            Circle()
+                .fill(RUColor.rose)
+                .frame(width: 4, height: 4)
+                .opacity(on ? 1 : 0)
+                .scaleEffect(on ? 1 : 0.3)
+                // Snapped on/off before this — RootTabView already animates the screen swap
+                // itself, but the selection dot one layer down didn't match that with its own.
+                .animation(.easeOut(duration: 0.2), value: on)
+            Image(systemName: icon)
+                .font(.system(size: 18, weight: on ? .semibold : .regular))
+                .foregroundColor(color)
+            if avecLibelle {
+                Text(LocalizedStringKey(label))
+                    .font(RUFont.sans(.micro, weight: .semibold))
+                    .tracking(0.5)
+                    .foregroundColor(color)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+        }
+    }
+
     private func tabButton(_ item: (AppScreen, String, String)) -> some View {
         let (screen, label, icon) = item
         let on = selected == screen
@@ -89,23 +115,20 @@ struct TabBarView: View {
             Haptics.selection()
             onSelect(screen)
         }) {
-            VStack(spacing: 5) {
-                Circle()
-                    .fill(RUColor.rose)
-                    .frame(width: 4, height: 4)
-                    .opacity(on ? 1 : 0)
-                    .scaleEffect(on ? 1 : 0.3)
-                    // Snapped on/off before this — RootTabView already animates the screen swap
-                    // itself (`.animation(.easeInOut(duration: 0.25), value: appState.screen)`),
-                    // but the selection dot one layer down didn't match that with its own.
-                    .animation(.easeOut(duration: 0.2), value: on)
-                Image(systemName: icon)
-                    .font(.system(size: 18, weight: on ? .semibold : .regular))
-                    .foregroundColor(color)
-                Text(LocalizedStringKey(label))
-                    .font(RUFont.sans(.micro, weight: .semibold))
-                    .tracking(0.5)
-                    .foregroundColor(color)
+            // LA BARRE NE GRANDIT PAS, SON CONTENU S'ADAPTE.
+            //
+            // Sa hauteur est une constante partagée : `RUSpacing.tabBarHeight` sert aussi à
+            // calculer l'encart que chaque écran réserve en bas pour ne pas passer dessous. Une
+            // barre qui grandirait avec le texte recouvrirait donc le contenu, puisque l'encart,
+            // lui, ne bougerait pas. C'est le cas où il faut faire céder le CONTENU.
+            //
+            // Le libellé rétrécit d'abord — jusqu'à 80 %, pas en dessous, sinon on remplace une
+            // troncature par une illisibilité — puis il disparaît si même ça ne suffit pas. Le
+            // nom reste annoncé à VoiceOver dans les deux cas : c'est la forme qui se simplifie,
+            // pas l'information.
+            ViewThatFits(in: .vertical) {
+                pileDonglet(icon: icon, label: label, color: color, on: on, avecLibelle: true)
+                pileDonglet(icon: icon, label: label, color: color, on: on, avecLibelle: false)
             }
             .frame(maxWidth: .infinity, minHeight: 44)
             // Sans forme de contact, un `Button` dont le libellé est une pile d'un point, d'une
@@ -117,6 +140,14 @@ struct TabBarView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())
+        // LE NOM EST POSÉ EXPLICITEMENT, ET PLUS SEULEMENT PORTÉ PAR LE LIBELLÉ VISIBLE.
+        //
+        // Tant que le `Text` était toujours là, l'onglet se nommait tout seul. Il peut désormais
+        // disparaître quand le texte est très grand — et un onglet réduit à son icône, sans nom,
+        // s'annonce « bouton ». Soit exactement le défaut que `check_a11y.py` traque ailleurs,
+        // et qu'il n'aurait PAS vu ici : le `Text` est toujours écrit dans le fichier, il n'est
+        // simplement plus toujours rendu.
+        .accessibilityLabel(LocalizedStringKey(label))
         // The only persistent navigation chrome in the app, visible on every screen — without
         // this, VoiceOver conveyed the active tab purely through color (the dot + icon/label
         // tint), so a screen-reader user had no way to tell which of Prog/Coach/Stats/Profil was

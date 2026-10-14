@@ -346,7 +346,76 @@ final class LiveRunViewModel {
         self.session = todaySession
     }
 
+    // MARK: - Le décompte du départ
+
+    /// 3, 2, 1 — et le GPS cherche sa position pendant ce temps-là.
+    ///
+    /// Non nul pendant le décompte, nil le reste du temps. C'est `LiveRunView` qui le dessine.
+    private(set) var decompte: Int?
+
+    /// Combien de secondes. Trois : assez pour ranger le téléphone dans la main, lancer la
+    /// musique, se mettre en position — et assez court pour qu'on ne cherche pas à l'éviter.
+    static let secondesDeDecompte = 3
+
+    private var tacheDeDecompte: Task<Void, Never>?
+
+    /// LE POINT D'ENTRÉE D'UNE COURSE. Remplace l'appel direct à `start()`.
+    ///
+    /// Le décompte existe pour une raison d'usage : on appuie sur RUN, et il faut encore ranger
+    /// le téléphone, démarrer la musique, se placer. Ces secondes-là partaient dans le chrono et
+    /// dans l'allure moyenne, qui commençait donc toujours par une marche.
+    ///
+    /// Et il sert une seconde fois, gratuitement : le GPS est allumé DÈS MAINTENANT, pas à la
+    /// fin du décompte. Une puce GPS met quelques secondes à obtenir une position fiable
+    /// (`hasFix`), et ces secondes-là étaient jusqu'ici prises sur la course — les premiers
+    /// mètres manquaient au tracé. Le décompte les lui donne.
+    ///
+    /// `start()` rappelle `location.start()`, qui REMET À ZÉRO le tracé, la distance et le
+    /// dénivelé : rien de ce qui a été capté pendant le décompte ne compte dans la course. C'est
+    /// exactement ce que fait déjà cette méthode, et c'est pour ça qu'elle peut être appelée deux
+    /// fois sans précaution particulière.
+    func demarrer() {
+        location.requestAuthorization()
+        location.start()
+        decompte = Self.secondesDeDecompte
+        tacheDeDecompte = Task { @MainActor [weak self] in
+            guard let self else { return }
+            for reste in stride(from: Self.secondesDeDecompte, through: 1, by: -1) {
+                decompte = reste
+                Haptics.impact(.light)
+                try? await Task.sleep(for: .seconds(1))
+                if Task.isCancelled { return }
+            }
+            lancerMaintenant()
+        }
+    }
+
+    /// Sauter le décompte, ou arriver au bout. Les deux font la même chose, et c'est voulu : un
+    /// appui sur le décompte ne doit pas démarrer une course différente de celle qui serait
+    /// partie une seconde plus tard.
+    func lancerMaintenant() {
+        guard decompte != nil else { return }
+        tacheDeDecompte?.cancel()
+        tacheDeDecompte = nil
+        decompte = nil
+        Haptics.impact(.medium)
+        start()
+    }
+
+    /// Abandonner avant le départ. Le GPS a été allumé par `demarrer()` ; sans cet appel il
+    /// tournerait jusqu'à la fermeture de l'app, à vider la batterie pour une course qui n'a
+    /// jamais commencé.
+    func annulerLeDecompte() {
+        tacheDeDecompte?.cancel()
+        tacheDeDecompte = nil
+        decompte = nil
+        location.stop()
+    }
+
     func start() {
+        tacheDeDecompte?.cancel()
+        tacheDeDecompte = nil
+        decompte = nil
         startedAt = Date()
         paceWindow = PaceWindow.State()
         lastPaceAlertAtElapsed = -.infinity
@@ -727,6 +796,13 @@ final class LiveRunViewModel {
     func stop() -> RunRecord {
         endLiveActivity()
         clearWidgetRun()
+        // Arrêter une course qui n'a pas encore commencé est un cas réel : on appuie sur RUN, on
+        // se ravise, on remonte. Sans ça le minuteur du décompte survivrait à l'écran et
+        // lancerait la course deux secondes plus tard, sur un modèle que plus personne ne
+        // regarde.
+        tacheDeDecompte?.cancel()
+        tacheDeDecompte = nil
+        decompte = nil
         timerTask?.cancel()
         heartRatePollTask?.cancel()
         voiceCoach?.stop()

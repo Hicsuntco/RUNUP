@@ -133,10 +133,10 @@ struct TabBarView: View {
     /// La pile d'un onglet : le point de sélection, l'icône, et le libellé — ou pas.
     private func pileDonglet(icon: String, label: String, color: Color,
                              on: Bool, avecLibelle: Bool) -> some View {
-        VStack(spacing: 5) {
+        VStack(spacing: Self.ecartDeLaPile) {
             Circle()
                 .fill(RUColor.rose)
-                .frame(width: 4, height: 4)
+                .frame(width: Self.diametreDuPoint, height: Self.diametreDuPoint)
                 .opacity(on ? 1 : 0)
                 .scaleEffect(on ? 1 : 0.3)
                 // Snapped on/off before this — RootTabView already animates the screen swap
@@ -154,11 +154,12 @@ struct TabBarView: View {
                 // plus selon l'onglet sélectionné — les icônes ne s'alignaient pas entre elles,
                 // et les mots en dessous non plus.
                 //
-                // 24 points et pas 22 : un symbole de 18 points mesure ~21,5 de haut, et un
-                // cadre plus serré que son contenu ne rogne pas (SwiftUI ne coupe rien par
-                // défaut) mais le laisse déborder — ce qui réintroduirait le décalage qu'on
-                // retire.
-                .frame(height: 24)
+                // 22 points : un symbole de 18 points mesure ~21,5 de haut, donc le cadre le
+                // contient sans le laisser déborder — un cadre plus serré que son contenu ne
+                // rogne pas (SwiftUI ne coupe rien par défaut), il déborde, ce qui
+                // réintroduirait le décalage qu'on retire. C'était 24 ; voir le calcul de
+                // hauteur en tête de `runButton`, chaque point compte dans une barre de 56.
+                .frame(height: Self.cotesDeLIcone)
             if avecLibelle {
                 Text(LocalizedStringKey(label))
                     .font(RUFont.sans(.micro, weight: .semibold))
@@ -225,15 +226,15 @@ struct TabBarView: View {
     /// pas elle-même : `avecLibelle` descend de `body`, qui tranche pour les cinq éléments à la
     /// fois. Même règle que `pileDonglet`.
     private func pileDuBouton(avecLibelle: Bool) -> some View {
-        VStack(spacing: 3) {
+        VStack(spacing: Self.ecartDuBouton) {
             Circle()
                 .fill(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom))
-                .frame(width: 40, height: 40)
+                .frame(width: Self.diametreDuRond, height: Self.diametreDuRond)
                 // Le triangle reste, quelle que soit la discipline : il dit « ça démarre »,
                 // et c'est la seule chose que ce rond ait jamais eu à dire. C'est le libellé
                 // en dessous qui porte le vélo — changer les deux ferait un bouton différent
                 // au lieu du même bouton dans un autre mode.
-                .overlay(Image(systemName: "play.fill").foregroundColor(RUColor.onRose).font(.system(size: 14)))
+                .overlay(Image(systemName: "play.fill").foregroundColor(RUColor.onRose).font(.system(size: 13)))
                 // 0,55 de rose sur 14 points de flou : le bouton RUN ne se posait pas sur
                 // la barre, il l'éclairait. Ramené à une ombre qui le décolle sans le faire
                 // rayonner — c'est un bouton, pas une lampe.
@@ -335,16 +336,51 @@ struct TabBarView: View {
     /// Ce qu'un `Button` donnait gratuitement est rendu à la main : le retour visuel à l'appui
     /// (`pressing:`), et l'accessibilité — trait de bouton, action par défaut, et une action
     /// NOMMÉE pour la bascule, qui vaut mieux qu'un appui long pour qui navigue à VoiceOver.
+    /// Le diamètre du rond central.
+    ///
+    /// # 40 → 34, ET CE N'EST PAS UN CHOIX ESTHÉTIQUE : C'EST DE L'ARITHMÉTIQUE
+    ///
+    /// La barre mesure 56 points, une constante partagée avec l'encart que chaque écran réserve
+    /// en bas. Le plus haut des cinq éléments décide donc si les libellés tiennent, et c'est le
+    /// bouton central. À la taille de texte par défaut :
+    ///
+    ///     libellé  = 8,5 × 1,25 (`bodySizeFactor`) = 10,6 pt, soit ~13,2 de hauteur de ligne
+    ///     onglet   = 4 (point) + 5 + 22 (icône) + 5 + 13,2  = 49,2
+    ///     bouton   = Ø + 3 + 13,2
+    ///
+    /// À Ø = 40 : **56,2 dans une barre de 56**. Il manquait DEUX DIXIÈMES de point, et comme la
+    /// barre entière passe par un `ViewThatFits`, ce qui dépasse ne déborde plus — il DISPARAÎT.
+    /// Le mot « RUN » n'était donc plus affiché pour personne, à la taille de texte par défaut,
+    /// depuis le build 270. C'est le défaut rapporté par le testeur.
+    ///
+    /// À Ø = 34 : 50,2, soit **5,8 points de marge**. Les libellés ne tombent plus qu'à partir
+    /// d'un texte agrandi d'environ 40 %, ce qui est le comportement voulu — et non à cause d'un
+    /// dixième de point sur une hauteur de ligne que personne ne peut mesurer de tête.
+    ///
+    /// Le rond reste de loin le plus gros élément de la barre (34 contre 22 pour une icône) :
+    /// c'est toujours un bouton central surélevé, et il garde son mot, qui porte la discipline.
+    private static let diametreDuRond: CGFloat = 34
+
+    // LES QUATRE AUTRES NOMBRES DE L'ÉQUATION, NOMMÉS POUR POUVOIR ÊTRE VÉRIFIÉS.
+    //
+    // Ils étaient écrits à la main dans les vues, donc invérifiables autrement qu'en les
+    // additionnant de tête — ce qui s'est trompé deux fois. `ci_scripts/check_barre.py` les lit
+    // ici, lit la hauteur de la barre et la taille du libellé dans leurs fichiers, refait
+    // l'addition et refuse une barre dont les libellés ne tiennent plus à la taille de texte
+    // par défaut.
+    private static let cotesDeLIcone: CGFloat = 22
+    private static let diametreDuPoint: CGFloat = 4
+    private static let ecartDeLaPile: CGFloat = 5
+    private static let ecartDuBouton: CGFloat = 3
+
     private func runButton(libelle: Bool) -> some View {
         // IL CÈDE COMME LES ONGLETS, et il ne le faisait pas — il cède même LE PREMIER.
         //
         // La barre a une hauteur FIXE, la même constante que l'encart réservé en bas de chaque
         // écran : une barre qui grandirait recouvrirait le contenu puisque l'encart, lui, ne
-        // bougerait pas. Le commentaire d'origine calculait « 40 + 3 + le libellé ≈ 54 dans une
-        // barre de 56 : il rentre » — vrai à la taille de texte par défaut, et seulement là. Le
-        // plafond d'agrandissement est passé de 1,6× à 2,0× (voir `RUFont.maxScale`), ce qui
-        // porte le libellé à ~20 points : 40 + 3 + 20 = 63 dans une barre de 56, et rien ne clipe
-        // — le mot sortait simplement de la capsule.
+        // bougerait pas. Le calcul exact — et l'erreur de deux dixièmes de point qui a fait
+        // disparaître le mot « RUN » au build 270 — est écrit sur `diametreDuRond` juste
+        // au-dessus.
         //
         // C'est lui qui lâche son mot avant les autres parce que son rond de 40 points le rend
         // de loin le plus haut des cinq : garder « RUN » coûterait les quatre autres libellés.

@@ -3188,6 +3188,22 @@
         }
       }
     },
+    "Agrandir le tracé": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlarge the route"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ampliar el recorrido"
+          }
+        }
+      }
+    },
     "Aide et retours": {
       "localizations": {
         "en": {
@@ -3904,6 +3920,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Toca para definirlo por defecto"
+          }
+        }
+      }
+    },
+    "Appuie pour partir tout de suite": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap to start right away"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toca para empezar ya"
           }
         }
       }
@@ -8408,6 +8440,22 @@
         }
       }
     },
+    "Départ dans %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starting in %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empieza en %lld"
+          }
+        }
+      }
+    },
     "Départ, ravitaillement, transitions": {
       "extractionState": "manual",
       "localizations": {
@@ -9651,6 +9699,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cerrar"
+          }
+        }
+      }
+    },
+    "Fermer le tracé": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close the route"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar el recorrido"
           }
         }
       }

@@ -10,6 +10,18 @@ struct RunRouteMapView: View {
     var route: [RunRecord.RoutePoint]
     var lineWidth: CGFloat = 4
     var lineColor: Color = RUColor.rose
+    /// Est-ce que la carte se manipule — pincer, déplacer, zoomer ?
+    ///
+    /// `false` PARTOUT SAUF EN PLEIN ÉCRAN, et ce n'est pas de la frilosité. Cette vue sert
+    /// surtout de vignette : une par ligne dans l'historique, une en fond de l'écran de fin. Une
+    /// carte manipulable à ces endroits-là capte le geste de défilement — le doigt qui veut
+    /// remonter la liste déplace la carte sous lui, et la liste ne bouge pas. C'est pour ça que
+    /// `allowsHitTesting(false)` était posé ici dès l'origine.
+    ///
+    /// Le vrai manque n'était donc pas que cette vue soit inerte, c'est qu'aucun écran n'offrait
+    /// la carte EN GRAND. Voir `RouteZoomView` : le geste de défilement n'y existe pas, donc le
+    /// conflit non plus.
+    var interactive: Bool = false
 
     private var coordinates: [CLLocationCoordinate2D] {
         route.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lng) }
@@ -40,12 +52,12 @@ struct RunRouteMapView: View {
         // pass over the route. Shown in a scrolling history list, one row per completed run.
         let coords = coordinates
         if let region = region(for: coords), coords.count > 1 {
-            Map(initialPosition: .region(region), interactionModes: []) {
+            Map(initialPosition: .region(region), interactionModes: interactive ? .all : []) {
                 MapPolyline(coordinates: coords)
                     .stroke(lineColor, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
             }
             .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
-            .allowsHitTesting(false)
+            .allowsHitTesting(interactive)
         }
     }
 }

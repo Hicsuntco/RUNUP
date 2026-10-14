@@ -853,7 +853,9 @@ final class AppState {
         }
         let vm = LiveRunViewModel(profile: profile, healthKit: healthKit, discipline: discipline)
         liveRun = vm
-        vm.start()
+        // `demarrer()` et non `start()` : trois secondes de décompte, pendant lesquelles le GPS
+        // cherche déjà sa position. Voir `LiveRunViewModel.demarrer`.
+        vm.demarrer()
         // Placed after the guard above, so a tap on an already-running session (the tab bar's
         // resume pill) doesn't count as a second run started. `trackOnce` is what makes the first
         // one the activation metric — an install that never reaches this line is an install that

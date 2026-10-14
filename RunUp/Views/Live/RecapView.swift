@@ -17,6 +17,9 @@ struct RecapView: View {
     /// the "DONNER MON RESSENTI" CTA is hidden whenever this is set.
     var historicalRun: RunRecord? = nil
     @State private var showDebrief = false
+    /// Le tracé en grand. Voir `RouteZoomView` : la carte du fond est inerte par nécessité, et
+    /// c'est cette feuille-là qui la rend manipulable sans disputer le défilement.
+    @State private var tracePleinEcran = false
     /// The "instagrammable" share card (route trace + Strava-style stacked stats on a fully
     /// transparent background — see `RunShareCardView`), rendered off-screen once via
     /// `ImageRenderer` shortly after the recap appears — a share sheet needs a ready item to
@@ -304,6 +307,13 @@ struct RecapView: View {
                 DebriefSheet(run: run)
                     .runUpSheetStyle()
             }
+            // `.large` seul : une carte qu'on vient agrandir n'a rien à faire à mi-hauteur, et
+            // le cran intermédiaire rendrait le glissement vers le bas ambigu avec le
+            // déplacement de la carte elle-même.
+            .sheet(isPresented: $tracePleinEcran) {
+                RouteZoomView(run: run)
+                    .runUpSheetStyle(detents: [.large])
+            }
             .onAppear {
                 splitsRevealed = true
                 if recordKind(for: run) != nil { Haptics.success() }
@@ -371,6 +381,30 @@ struct RecapView: View {
             if !run.route.isEmpty {
                 RunRouteMapView(route: run.route)
                     .opacity(0.85)
+                // AGRANDIR LE TRACÉ. La carte du fond est inerte — elle doit l'être, un doigt
+                // posé dessus sert à faire défiler l'écran de fin. Mais jusqu'ici c'était tout ce
+                // qui existait : un aperçu, sans aucun moyen de regarder le parcours de près.
+                //
+                // Un bouton explicite plutôt qu'un appui sur la carte : rien ne signalerait
+                // qu'une image de fond est touchable, et la zone sert déjà au défilement.
+                VStack {
+                    HStack {
+                        Spacer()
+                        Button { tracePleinEcran = true } label: {
+                            Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(RUColor.textPrimary)
+                                .frame(width: 44, height: 44)
+                                .background(.ultraThinMaterial, in: Circle())
+                                .overlay(Circle().stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                                .contentShape(Circle())
+                        }
+                        .buttonStyle(PressableStyle())
+                        .accessibilityLabel(String(localized: "Agrandir le tracé"))
+                    }
+                    Spacer()
+                }
+                .padding(12)
             } else {
                 // No GPS behind this run (manual entry, no-GPS "Marquer comme faite") — a
                 // decorative shape rather than an empty map.

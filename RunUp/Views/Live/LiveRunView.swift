@@ -98,10 +98,60 @@ struct LiveRunView: View {
                 Spacer()
                 metricsPanel
             }
+
+            // LE DÉCOMPTE, PAR-DESSUS TOUT LE RESTE. Voir `LiveRunViewModel.demarrer`.
+            if let reste = vm?.decompte {
+                voileDeDepart(reste)
+            }
         }
         .background(Color(hex: 0x0A0A0E))
         .ignoresSafeArea()
         .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.85), value: topBannerText)
+    }
+
+    /// Trois, deux, un.
+    ///
+    /// Il COUVRE l'écran au lieu de se poser dans un coin, et c'est délibéré : les commandes en
+    /// dessous — mettre en pause, terminer — ne veulent rien dire sur une course qui n'a pas
+    /// commencé, et un appui sur « Terminer » pendant le décompte enregistrerait une sortie de
+    /// zéro seconde.
+    ///
+    /// Un appui n'importe où le saute. C'est la sortie de secours de toute cette fonctionnalité :
+    /// trois secondes imposées à chaque départ, sans moyen de les passer, c'est la fonctionnalité
+    /// qu'on finit par détester. Le chiffre lui-même est donc un bouton plein écran.
+    private func voileDeDepart(_ reste: Int) -> some View {
+        Button { vm?.lancerMaintenant() } label: {
+            ZStack {
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+                    .environment(\.colorScheme, .dark)
+                VStack(spacing: 10) {
+                    Text("\(reste)")
+                        .font(RUFont.display(96))
+                        .foregroundColor(.white)
+                        .monospacedDigit()
+                        // La transition porte le compte à rebours : chaque chiffre entre en
+                        // grandissant et sort en s'effaçant, ce qui se lit comme un décompte et
+                        // non comme un texte qui se remplace.
+                        .transition(reduceMotion ? .opacity
+                                    : .scale(scale: 1.35).combined(with: .opacity))
+                        .id(reste)
+                    Text("Appuie pour partir tout de suite")
+                        .font(RUFont.sans(.small, weight: .medium))
+                        .foregroundColor(.white.opacity(0.7))
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .ignoresSafeArea()
+        .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.7), value: reste)
+        // Le chiffre seul s'annoncerait « 3 ». VoiceOver doit dire ce qui se passe, et ce que
+        // l'appui fait — c'est la seule commande à l'écran pendant ces trois secondes.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(String(localized: "Départ dans \(reste)"))
+        .accessibilityHint(String(localized: "Appuie pour partir tout de suite"))
+        .accessibilityAddTraits(.isButton)
     }
 
     /// Voice coaching takes over the same banner scripted cues already use — a live "je

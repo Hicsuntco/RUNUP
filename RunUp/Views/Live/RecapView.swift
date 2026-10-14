@@ -307,12 +307,18 @@ struct RecapView: View {
                 DebriefSheet(run: run)
                     .runUpSheetStyle()
             }
-            // `.large` seul : une carte qu'on vient agrandir n'a rien à faire à mi-hauteur, et
-            // le cran intermédiaire rendrait le glissement vers le bas ambigu avec le
-            // déplacement de la carte elle-même.
-            .sheet(isPresented: $tracePleinEcran) {
+            // UN ÉCRAN ENTIER, ET PAS UNE FEUILLE. Une feuille se referme en la tirant vers le
+            // bas — c'est tout son intérêt, et c'est exactement le geste qu'on fait pour
+            // déplacer une carte. Les deux se disputeraient le même glissement, et le perdant
+            // serait toujours celui qu'on voulait : tirer la carte vers le bas refermerait
+            // l'écran qu'on vient d'ouvrir.
+            //
+            // Un `fullScreenCover` n'a pas ce geste. La croix est la seule sortie, et c'est ce
+            // que font toutes les apps de cartes. `ci_scripts/check_feuilles.py` l'écrit
+            // d'ailleurs noir sur blanc : les `fullScreenCover` sont hors de son périmètre,
+            // parce qu'ils n'ont ni coin ni poignée à habiller.
+            .fullScreenCover(isPresented: $tracePleinEcran) {
                 RouteZoomView(run: run)
-                    .runUpSheetStyle(detents: [.large])
             }
             .onAppear {
                 splitsRevealed = true
@@ -381,30 +387,6 @@ struct RecapView: View {
             if !run.route.isEmpty {
                 RunRouteMapView(route: run.route)
                     .opacity(0.85)
-                // AGRANDIR LE TRACÉ. La carte du fond est inerte — elle doit l'être, un doigt
-                // posé dessus sert à faire défiler l'écran de fin. Mais jusqu'ici c'était tout ce
-                // qui existait : un aperçu, sans aucun moyen de regarder le parcours de près.
-                //
-                // Un bouton explicite plutôt qu'un appui sur la carte : rien ne signalerait
-                // qu'une image de fond est touchable, et la zone sert déjà au défilement.
-                VStack {
-                    HStack {
-                        Spacer()
-                        Button { tracePleinEcran = true } label: {
-                            Image(systemName: "arrow.up.left.and.arrow.down.right")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundColor(RUColor.textPrimary)
-                                .frame(width: 44, height: 44)
-                                .background(.ultraThinMaterial, in: Circle())
-                                .overlay(Circle().stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
-                                .contentShape(Circle())
-                        }
-                        .buttonStyle(PressableStyle())
-                        .accessibilityLabel(String(localized: "Agrandir le tracé"))
-                    }
-                    Spacer()
-                }
-                .padding(12)
             } else {
                 // No GPS behind this run (manual entry, no-GPS "Marquer comme faite") — a
                 // decorative shape rather than an empty map.
@@ -419,10 +401,38 @@ struct RecapView: View {
                     context.stroke(path, with: .color(RUColor.rose), style: StrokeStyle(lineWidth: 4, lineCap: .round))
                 }
             }
+            // DÉCORATIF, DONC INERTE — et ce n'est pas une précaution de style.
+            //
+            // Un dégradé est une forme pleine : SwiftUI le considère touchable, même là où il
+            // est transparent. Posé au-dessus des autres couches de cette pile, il AVALE donc
+            // les appuis de tout ce qui est dessous. C'est ce qui a rendu le bouton « agrandir
+            // le tracé » parfaitement visible et parfaitement mort : il était dessiné avant ce
+            // voile, donc dessous.
+            //
+            // Le bouton est maintenant dans la rangée du haut, après le voile. Mais le voile ne
+            // doit rien intercepter de toute façon : tout ce qu'on posera ici demain tomberait
+            // dans le même piège.
             LinearGradient(colors: [.clear, RUColor.bg], startPoint: .init(x: 0.5, y: 0.4), endPoint: .init(x: 0.5, y: 1))
+                .allowsHitTesting(false)
+            // La rangée du haut : retour à gauche, agrandir le tracé à droite. Les deux dans le
+            // même `HStack` plutôt qu'empilés séparément — ils partagent la même marge haute,
+            // celle qui dégage la barre d'état, et un second bloc l'aurait redite de son côté.
             HStack {
                 FrostedBackButton { closeRecap() }
                 Spacer()
+                if !run.route.isEmpty {
+                    Button { tracePleinEcran = true } label: {
+                        Image(systemName: "arrow.up.left.and.arrow.down.right")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(RUColor.textPrimary)
+                            .frame(width: 44, height: 44)
+                            .background(.ultraThinMaterial, in: Circle())
+                            .overlay(Circle().stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                            .contentShape(Circle())
+                    }
+                    .buttonStyle(PressableStyle())
+                    .accessibilityLabel(String(localized: "Agrandir le tracé"))
+                }
             }
             .padding(.horizontal, 16)
             .padding(.top, 44)

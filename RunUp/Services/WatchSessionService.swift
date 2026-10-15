@@ -142,6 +142,17 @@ final class WatchSessionService: NSObject {
         // reconnect (a real case: the Watch queues delivery through airplane mode/out-of-range)
         // must not have the second silently overwrite the first's pending debrief.
         appState.modelContext.insert(record)
+        // LA COURSE EXISTE, DONC LA SÉANCE EST FAITE — que le ressenti soit donné ou non.
+        //
+        // Les trois autres chemins qui insèrent un relevé tout de suite le font déjà
+        // (`endLiveRun`, `recoverInterruptedRunIfNeeded`, `importRunsFromHealth`) ; celui de la
+        // montre était le seul à l'oublier. Conséquence : elle court avec sa montre, balaie la
+        // feuille de ressenti qui s'ouvre — un appel, une notification, un geste réflexe — et la
+        // semaine affiche toujours « 1/4 séances » pour une course qui est dans son historique.
+        //
+        // `markSessionDone` est idempotent : la validation du ressenti le rappellera sans rien
+        // compter deux fois.
+        AdaptivePlanEngine.markSessionDone(for: record, profile: appState.profile)
         appState.pendingDebriefs.append(record)
         let distance = String(format: "%.1f", locale: Locale.current, record.distanceKm)
         appState.notify(icon: "⌚", colorHex: 0xFF3B6B, title: String(localized: "Course reçue de ta montre"), text: String(localized: "\(record.title) · \(distance) km — valide ton ressenti pour mettre à jour le programme."))

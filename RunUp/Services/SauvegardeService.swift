@@ -90,6 +90,11 @@ enum SauvegardeService {
         case fichierIllisible
         /// La base contient déjà quelque chose. Voir `peutRestaurer`.
         case baseNonVide
+        /// Tout a été relu, et rien n'a pu être ÉCRIT — un disque plein, typiquement, ce qui est
+        /// le cas courant quand on réinstalle puis réinjecte des centaines de courses avec leurs
+        /// tracés. Distinct des deux autres parce que le geste à faire est distinct : faire de
+        /// la place, et recommencer. Le fichier, lui, est intact.
+        case enregistrementImpossible
     }
 
     /// LA RESTAURATION NE S'APPLIQUE QU'À UNE BASE VIDE, et c'est un refus assumé.
@@ -129,7 +134,15 @@ enum SauvegardeService {
         for c in sauvegarde.courses { contexte.insert(c.enRunRecord()) }
         for m in sauvegarde.messages { contexte.insert(m.enChatMessage()) }
         for ch in sauvegarde.chaussures { contexte.insert(ch.enShoe()) }
-        try? contexte.save()
+        // `try` ET NON `try?`. Les comptes rendus ensuite viennent du FICHIER, pas du magasin :
+        // avaler l'erreur ici ferait annoncer « 212 courses restaurées » alors que rien n'a été
+        // écrit, et l'app se refermerait sur un historique vide. La seule preuve que la personne
+        // a que ça a marché serait fausse, dans l'outil qui existe pour ce moment-là.
+        do {
+            try contexte.save()
+        } catch {
+            throw Echec.enregistrementImpossible
+        }
         return (sauvegarde.courses.count, sauvegarde.messages.count, sauvegarde.chaussures.count)
     }
 

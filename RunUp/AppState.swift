@@ -587,6 +587,8 @@ final class AppState {
         case faite(courses: Int, messages: Int, chaussures: Int)
         case fichierIllisible
         case baseNonVide
+        /// Tout a été relu, rien n'a pu être écrit — disque plein. Le fichier est intact.
+        case enregistrementImpossible
     }
 
     func restaurer(depuis url: URL) -> IssueDeRestauration {
@@ -616,6 +618,8 @@ final class AppState {
                           chaussures: compte.chaussures)
         } catch SauvegardeService.Echec.baseNonVide {
             return .baseNonVide
+        } catch SauvegardeService.Echec.enregistrementImpossible {
+            return .enregistrementImpossible
         } catch {
             return .fichierIllisible
         }

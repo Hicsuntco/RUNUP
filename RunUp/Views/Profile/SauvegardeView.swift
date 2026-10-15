@@ -107,6 +107,18 @@ struct CarteDeSauvegarde: View {
     }
 
     private func preparerLExport() {
+        // LE MÊME REFUS QUE POUR LA RESTAURATION, et il manquait ici.
+        //
+        // `PersistenceController` ouvre un conteneur en mémoire VIDE quand le fichier sur disque
+        // refuse de s'ouvrir. Le jour où l'app annonce « Tes données n'ont pas pu être ouvertes »
+        // est exactement celui où le premier réflexe est de tout sauvegarder — et sans ce
+        // garde-fou, le fichier produit porterait un profil neuf, zéro course, sous un nom daté
+        // parfaitement crédible. Une fausse assurance au pire moment, dans l'outil écrit pour ce
+        // moment-là.
+        if case .inMemoryFallback = PersistenceController.storeState {
+            message = String(localized: "Cette session ne voit pas tes données : l'app tourne sur un espace temporaire. Une sauvegarde faite maintenant serait vide. Relance l'app, ou réinstalle RUNUP.")
+            return
+        }
         let sauvegarde = appState.construireLaSauvegarde()
         guard let data = try? SauvegardeService.encodeur().encode(sauvegarde) else {
             message = String(localized: "La sauvegarde n'a pas pu être écrite.")
@@ -146,6 +158,8 @@ struct BoutonDeRestauration<Label: View>: View {
                     message = String(localized: "Sauvegarde restaurée : \(courses) courses, \(messages) messages, \(chaussures) paires de chaussures.")
                 case .fichierIllisible:
                     message = String(localized: "Ce fichier n'est pas une sauvegarde RUNUP, ou il est abîmé.")
+                case .enregistrementImpossible:
+                    message = String(localized: "Ta sauvegarde a bien été lue, mais rien n'a pu être écrit — il n'y a sans doute plus de place sur ton téléphone. Fais de la place et recommence : le fichier est intact.")
                 case .baseNonVide:
                     message = String(localized: "Tes données sont déjà là. Une restauration ne s'applique qu'à une app qui repart de zéro : elle ne sait pas fusionner deux historiques sans risquer d'en perdre.")
                 }

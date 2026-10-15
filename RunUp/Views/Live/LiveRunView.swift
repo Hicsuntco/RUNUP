@@ -148,6 +148,15 @@ struct LiveRunView: View {
         .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.7), value: reste)
         // Le chiffre seul s'annoncerait « 3 ». VoiceOver doit dire ce qui se passe, et ce que
         // l'appui fait — c'est la seule commande à l'écran pendant ces trois secondes.
+        // MODAL, ET PAS SEULEMENT OPAQUE AU DOIGT.
+        //
+        // Le voile bloque bien le toucher — mais VoiceOver ne navigue pas par le toucher, il
+        // navigue l'arbre. Sans ce trait, les frères de la pile (le panneau de mesures, donc
+        // PAUSE et TERMINER) restent atteignables au balayage pendant le décompte : une
+        // coureuse aveugle pouvait tomber sur « Terminer » et enregistrer une sortie de zéro
+        // seconde. `check_a11y.py` ne peut pas le voir — ces boutons ont tous un nom, et c'est
+        // la seule chose qu'il regarde.
+        .accessibilityAddTraits(.isModal)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(String(localized: "Départ dans \(reste)"))
         .accessibilityHint(String(localized: "Appuie pour partir tout de suite"))

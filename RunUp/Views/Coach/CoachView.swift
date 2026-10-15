@@ -237,6 +237,10 @@ struct CoachView: View {
         .padding(.horizontal, 18)
         .padding(.top, 6)
         .padding(.bottom, 10)
+        // LE TRACÉ EN FOND. Posé APRÈS les marges, donc il déborde par-dessus elles : c'est ce
+        // qui le fait mordre sur les deux bords de l'écran au lieu de s'arrêter au contenu.
+        // Voir `TraceDeFond`, et il ne se montre qu'en habillage teinté.
+        .traceEnFond(appState.traceDeFond, hauteur: 128)
     }
 
     private static let separatorFormatter: DateFormatter = {

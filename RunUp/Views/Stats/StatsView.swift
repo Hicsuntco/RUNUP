@@ -61,6 +61,9 @@ struct StatsView: View {
                     }
                     .buttonStyle(PressableStyle())
                 }
+                // LE TRACÉ EN FOND. Voir `TraceDeFond` : le parcours le plus long de la
+                // quinzaine, agrandi jusqu'à sortir du cadre, et seulement en habillage teinté.
+                .traceEnFond(appState.traceDeFond)
 
                 // Ordre repris de la maquette "Stats" : les totaux, puis les deux cartes de
                 // tendance, puis seulement les deux raccourcis de navigation, réduits à une paire

@@ -101,21 +101,26 @@ Politique de confidentialité : https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## Nouveautés de cette version (4000 caractères max — obligatoire pour une mise à jour)
 ```
-RUNUP regarde le ciel et te dit quand sortir.
+Tes données t'appartiennent, et maintenant tu peux les emporter.
 
-IL PLEUVRA CE SOIR — TU LE SAIS CE MATIN
-Ta séance est prévue à 18 h, et la pluie arrive à 17 h. En ouvrant l'app, RUNUP a déjà comparé le matin, le midi et le soir, heure par heure, et te propose le créneau sec.
+UN FICHIER, CHEZ TOI, QUI CONTIENT TOUT
+Réglages → Mes données → Exporter. Ton historique avec les tracés GPS, ta conversation avec le coach, tes chaussures et leur kilométrage, ta série, ton programme en cours, tes réponses d'inscription. Le fichier va où tu le ranges — iCloud, une clé, un dossier. Il ne part sur aucun serveur.
 
-Il ne parle que quand il a quelque chose à dire. Il faut que ton créneau habituel soit franchement mauvais, qu'un autre moment de la journée soit vraiment sec, que l'écart entre les deux soit net, et qu'il te reste deux heures pour t'organiser. Une alerte par jour au maximum.
+Et il se relit : « J'ai déjà une sauvegarde RUNUP », sur le premier écran, pour un téléphone neuf ou une réinstallation. La restauration ne s'applique qu'à une app qui repart de zéro : elle ne sait pas fusionner deux historiques sans risquer d'en perdre un bout, donc elle ne fait pas semblant.
 
-Quand il pleut toute la journée, il se tait. Tu courras sous la pluie ou pas du tout : te le dire ne changerait que ton humeur.
+UN DÉCOMPTE AVANT DE PARTIR
+3, 2, 1. Le temps de ranger le téléphone, de lancer la musique, de se placer — ces secondes-là partaient dans ton chrono et ton allure moyenne commençait toujours par une marche. Un appui n'importe où le saute.
 
-Ça s'éteint d'un interrupteur, « Prévenir s'il va pleuvoir », et aucune autorisation nouvelle n'est demandée. Prévisions Apple Weather.
+Le GPS, lui, s'allume dès que tu appuies sur RUN. Il cherche sa position pendant le décompte au lieu de la chercher sur tes premiers mètres : le début du tracé ne manque plus.
 
-« À FAIRE » ET « FAITE » NE PEUVENT PLUS S'AFFICHER EN MÊME TEMPS
-L'accueil pouvait se contredire tout seul : le mot « Faite », un arc plein sur l'anneau, et juste en dessous une barre vide. Deux endroits répondaient à la question « la séance est-elle faite ? », et pas de la même façon. Il n'y en a plus qu'un.
+TON PARCOURS EN GRAND
+À la fin d'une course, le tracé n'était qu'un aperçu. Un bouton l'ouvre maintenant en plein écran — pincer, déplacer, regarder où tu es passée.
 
-Et une course arrivée d'Apple Santé, ou récupérée après un plantage, compte désormais tout de suite — sans attendre que tu aies rempli ton ressenti. L'app annonçait « À faire » pour une sortie qu'elle montrait dans ton historique.
+UN NOUVEL HABILLAGE, ET IL SE DÉFAIT AUSSI VITE
+Réglages → Apparence → Habillage. « Teinté » donne à toute l'app la couleur que tu as choisie : le fond la prend, le filet des cartes tombe, et elles se détachent par une ombre de la même teinte. « Classique » reste là, un appui suffit pour revenir.
+
+ET LA BARRE DU BAS
+Le mot sous le bouton central avait disparu, les libellés n'étaient pas sur la même ligne, et les écarts entre icônes n'étaient pas égaux. Les trois sont corrigés.
 ```
 
 ## Mots-clés (100 caractères max, séparés par des virgules sans espace)
@@ -216,21 +221,26 @@ Privacy Policy: https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## What's New in This Version (4000 characters max — required for an update)
 ```
-RUNUP watches the sky and tells you when to go.
+Your data is yours, and now you can take it with you.
 
-IT WILL RAIN TONIGHT — YOU KNOW THIS MORNING
-Your session is set for 6pm, and the rain starts at 5. Open the app and RUNUP has already compared morning, midday and evening, hour by hour, and offers you the dry window.
+ONE FILE, YOURS, HOLDING EVERYTHING
+Settings → My data → Export. Your history with its GPS routes, your conversation with the coach, your shoes and their mileage, your streak, your current programme, your onboarding answers. The file goes wherever you put it — iCloud, a drive, a folder. It never goes to a server.
 
-It only speaks when it has something to say. Your usual slot has to be genuinely bad, another part of the day genuinely dry, the gap between them clear-cut, and you need two hours left to rearrange things. One alert a day, at most.
+And it reads back: "I already have a RUNUP backup", on the very first screen, for a new phone or a reinstall. A restore only applies to an app starting from scratch: it can't merge two histories without risking losing part of one, so it doesn't pretend to.
 
-When it rains all day, it says nothing. You'll run in the rain or not at all: telling you would only change your mood.
+A COUNTDOWN BEFORE YOU GO
+3, 2, 1. Time to put the phone away, start the music, get set — those seconds used to land in your clock, and your average pace always began with a walk. Tap anywhere to skip it.
 
-One switch turns it off — "Warn me if it's going to rain" — and no new permission is requested. Forecasts by Apple Weather.
+The GPS switches on the moment you press RUN. It finds its position during the countdown instead of during your first few metres: the start of your route isn't missing any more.
 
-"TO DO" AND "DONE" CAN NO LONGER SHOW AT ONCE
-The home screen could contradict itself: the word "Done", a full arc on the ring, and right below it an empty bar. Two places answered the question "is the session done?", and not the same way. Now there's only one.
+YOUR ROUTE, FULL SCREEN
+At the end of a run, the route was only a preview. A button now opens it full screen — pinch, pan, see where you went.
 
-And a run that arrives from Apple Health, or is recovered after a crash, now counts straight away — without waiting for you to fill in how it felt. The app was announcing "To do" for a run it was showing in your history.
+A NEW LOOK, AND IT UNDOES JUST AS FAST
+Settings → Appearance → Look. "Tinted" gives the whole app the colour you picked: the background takes it, the hairline border on cards drops away, and they lift off on a shadow of the same hue. "Classic" stays right there, one tap back.
+
+AND THE BOTTOM BAR
+The word under the centre button had vanished, the labels didn't sit on one line, and the gaps between icons weren't even. All three are fixed.
 ```
 
 ## Keywords (100 characters max, comma-separated, no spaces)
@@ -310,21 +320,26 @@ Política de privacidad: https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## Novedades de esta versión (4000 caracteres máx. — obligatorio para una actualización)
 ```
-RUNUP mira el cielo y te dice cuándo salir.
+Tus datos son tuyos, y ahora puedes llevártelos.
 
-ESTA NOCHE LLOVERÁ — LO SABES ESTA MAÑANA
-Tu sesión está prevista a las 18 h y la lluvia llega a las 17. Al abrir la app, RUNUP ya ha comparado la mañana, el mediodía y la tarde, hora por hora, y te propone la ventana seca.
+UN ARCHIVO, EN TU CASA, CON TODO DENTRO
+Ajustes → Mis datos → Exportar. Tu historial con los recorridos GPS, tu conversación con el coach, tus zapatillas y sus kilómetros, tu racha, tu programa actual, tus respuestas del registro. El archivo va donde tú lo guardes — iCloud, una memoria, una carpeta. No se envía a ningún servidor.
 
-Solo habla cuando tiene algo que decir. Tu franja habitual debe estar francamente mal, otro momento del día realmente seco, la diferencia entre ambos clara, y deben quedarte dos horas para reorganizarte. Un aviso al día como máximo.
+Y se vuelve a leer: «Ya tengo una copia de RUNUP», en la primera pantalla, para un móvil nuevo o una reinstalación. La restauración solo se aplica a una app que empieza de cero: no sabe fusionar dos historiales sin arriesgarse a perder parte de uno, así que no finge hacerlo.
 
-Cuando llueve todo el día, se calla. Correrás bajo la lluvia o no correrás: decírtelo solo cambiaría tu humor.
+UNA CUENTA ATRÁS ANTES DE SALIR
+3, 2, 1. El tiempo de guardar el móvil, poner la música, colocarte — esos segundos acababan en tu cronómetro, y tu ritmo medio siempre empezaba caminando. Toca en cualquier sitio para saltarla.
 
-Se apaga con un interruptor, «Avisarme si va a llover», y no se pide ningún permiso nuevo. Previsiones de Apple Weather.
+El GPS se enciende en cuanto pulsas RUN. Busca su posición durante la cuenta atrás en vez de buscarla en tus primeros metros: ya no falta el principio del recorrido.
 
-«POR HACER» Y «HECHA» YA NO PUEDEN APARECER A LA VEZ
-La pantalla de inicio podía contradecirse sola: la palabra «Hecha», un arco lleno en el anillo, y justo debajo una barra vacía. Dos sitios respondían a la pregunta «¿está hecha la sesión?», y no de la misma forma. Ahora solo hay uno.
+TU RECORRIDO EN GRANDE
+Al terminar una carrera, el recorrido era solo una vista previa. Ahora un botón lo abre a pantalla completa — pellizca, desplaza, mira por dónde pasaste.
 
-Y una carrera que llega de Apple Salud, o que se recupera tras un fallo, cuenta ya de inmediato, sin esperar a que rellenes tus sensaciones. La app anunciaba «Por hacer» para una salida que mostraba en tu historial.
+UN NUEVO ASPECTO, Y SE DESHACE IGUAL DE RÁPIDO
+Ajustes → Apariencia → Aspecto. «Teñido» le da a toda la app el color que elegiste: el fondo lo toma, el borde fino de las tarjetas desaparece, y estas se despegan con una sombra del mismo tono. «Clásico» sigue ahí, a un toque de distancia.
+
+Y LA BARRA INFERIOR
+La palabra bajo el botón central había desaparecido, las etiquetas no estaban en la misma línea y los espacios entre iconos no eran iguales. Las tres cosas están corregidas.
 ```
 
 ## Palabras clave (100 caracteres máx., separadas por comas sin espacios)

@@ -12,7 +12,11 @@ struct CardBackground: ViewModifier {
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
                     .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline)
             )
-            // ── PLUS D'OMBRE PORTÉE ──────────────────────────────────────────────────────────
+            // L'OMBRE REVIENT, MAIS SEULEMENT EN HABILLAGE TEINTÉ. `cardShadow` rend `.clear`
+            // en `classique`, donc rien n'est composé de plus pour qui n'a pas basculé — et en
+            // `trace`, c'est elle qui sépare puisque le filet, lui, tombe. Voir `RUColor`.
+            .shadow(color: RUColor.cardShadow, radius: 14, x: 0, y: 6)
+            // ── PLUS D'OMBRE PORTÉE (en habillage classique) ─────────────────────────────────
             //
             // Elle n'existait qu'en clair : les deux couches sont à opacité ZÉRO en sombre, où
             // c'est l'écart de luminosité qui sépare. Une app dont la moitié des thèmes se passe

@@ -217,6 +217,7 @@ enum SauvegardeService {
         if let v = p.paceAlertsEnabled { profil.paceAlertsEnabled = v }
         if let v = p.accentThemeID { profil.accentThemeID = v }
         if let v = p.isLightMode { profil.isLightMode = v }
+        if let v = p.habillageID { profil.habillageID = v }
     }
 }
 
@@ -300,6 +301,7 @@ extension Sauvegarde.Profil {
         paceAlertsEnabled = m.paceAlertsEnabled
         accentThemeID = m.accentThemeID
         isLightMode = m.isLightMode
+        habillageID = m.habillageID
     }
 }
 

@@ -251,6 +251,43 @@ struct SettingsView: View {
 
             Divider().background(RUColor.line)
 
+            // L'HABILLAGE — voir `Habillage`. Posé ICI, entre le mode et la couleur, parce que
+            // c'est le même genre de réglage : il ne change rien à ce que l'app fait, seulement
+            // à sa façon de se présenter. Et il se défait aussi vite qu'il se fait.
+            Text("Habillage").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
+            VStack(spacing: 0) {
+                ForEach(Array(Habillage.allCases.enumerated()), id: \.element.id) { index, h in
+                    if index > 0 { Divider().background(RUColor.line) }
+                    Button { choisirLHabillage(h) } label: {
+                        HStack(spacing: 12) {
+                            apercuDHabillage(h)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(LocalizedStringKey(h.nom))
+                                    .font(RUFont.sans(.emphasis, weight: .medium))
+                                    .foregroundColor(RUColor.textPrimary)
+                                Text(LocalizedStringKey(h.explication))
+                                    .font(RUFont.sans(.small))
+                                    .foregroundColor(RUColor.text3)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            Spacer(minLength: 0)
+                            if Habillage.depuis(profile.habillageID) == h {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundColor(RUColor.rose2)
+                            }
+                        }
+                        .padding(.vertical, 10)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(PressableStyle())
+                    .accessibilityAddTraits(Habillage.depuis(profile.habillageID) == h ? .isSelected : [])
+                }
+            }
+
+            Divider().background(RUColor.line)
+
             Text("Couleur de l'app").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: 4), spacing: 16) {
                 ForEach(AccentTheme.all) { theme in
@@ -300,6 +337,39 @@ struct SettingsView: View {
     private func selectMode(isLight: Bool) {
         profile.isLightMode = isLight
         ThemeStore.shared.isLightMode = isLight
+        appState.publishWidgetSnapshot()
+    }
+
+    /// La vignette : un fond et une carte posée dessus, dans les couleurs que cet habillage
+    /// donnerait. Elle se dessine avec les vraies valeurs de `RUColor` SAUF le fond, qu'il faut
+    /// calculer pour l'habillage NON courant — on ne peut pas montrer l'autre en basculant
+    /// l'app pour la durée d'un aperçu.
+    private func apercuDHabillage(_ h: Habillage) -> some View {
+        let neutre = RUColor.isLight ? Color(hex: 0xF4F3F8) : Color(hex: 0x08070D)
+        let fond = h == .trace
+            ? RUColor.melange(RUColor.rose, sur: neutre, part: RUColor.isLight ? 0.07 : 0.10)
+            : neutre
+        return RoundedRectangle(cornerRadius: 9, style: .continuous)
+            .fill(fond)
+            .frame(width: 44, height: 34)
+            .overlay(
+                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .fill(RUColor.card)
+                    .frame(width: 28, height: 16)
+                    .overlay(RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .stroke(h == .trace ? .clear : RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                    .shadow(color: h == .trace ? RUColor.melange(RUColor.rose, sur: Color(hex: 0x1A162E), part: 0.35).opacity(0.3) : .clear,
+                            radius: 4, x: 0, y: 2)
+            )
+            .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+            .accessibilityHidden(true)
+    }
+
+    private func choisirLHabillage(_ h: Habillage) {
+        profile.habillageID = h.rawValue
+        ThemeStore.shared.habillage = h
+        Haptics.selection()
         appState.publishWidgetSnapshot()
     }
 

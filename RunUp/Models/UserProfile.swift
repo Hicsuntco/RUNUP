@@ -336,6 +336,13 @@ final class UserProfile {
     /// Dark (default) or light app-wide theme — same mirror-into-`ThemeStore` pattern as
     /// `accentThemeID`, see `RUColor`'s theme-aware tokens.
     var isLightMode: Bool = false
+    /// L'habillage choisi — `Habillage.rawValue`. Voir `Habillage` : la direction artistique est
+    /// un réglage, pas un commit, pour qu'en revenir coûte un appui.
+    ///
+    /// Stocké en texte brut et non en énumération, comme `RunRecord.disciplineRaw` : une valeur
+    /// inconnue (un habillage ajouté par une version plus récente, relue par celle qu'on vient de
+    /// réinstaller) retombe sur le classique au lieu de faire planter la lecture du profil.
+    var habillageID: String = Habillage.defaut.rawValue
     /// The kudos count last seen per own posted activity (`FeedItem.id`) — lets `ClubView` notice
     /// when someone new claps for one of your runs and post a real notification for it, instead
     /// of silently refetching the same feed over and over.

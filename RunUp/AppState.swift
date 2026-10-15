@@ -167,6 +167,7 @@ final class AppState {
         AccordStore.shared.genre = Genre.depuis(sexe: self.profile.sex)
         ThemeStore.shared.themeID = self.profile.accentThemeID
         ThemeStore.shared.isLightMode = self.profile.isLightMode
+        ThemeStore.shared.habillage = Habillage.depuis(self.profile.habillageID)
         NotificationService.shared.rescheduleDailyReminder(for: self.profile)
         NotificationService.shared.rescheduleInactivityReminder(for: self.profile)
         NotificationService.shared.scheduleWeeklyRecapReminder(for: self.profile)
@@ -608,6 +609,7 @@ final class AppState {
             AccordStore.shared.genre = Genre.depuis(sexe: profile.sex)
             ThemeStore.shared.themeID = profile.accentThemeID
             ThemeStore.shared.isLightMode = profile.isLightMode
+            ThemeStore.shared.habillage = Habillage.depuis(profile.habillageID)
             NotificationService.shared.rescheduleDailyReminder(for: profile)
             screen = .home
             return .faite(courses: compte.courses, messages: compte.messages,

@@ -46,7 +46,53 @@ enum RUColor {
     ///
     /// La teinte penche très légèrement vers le violet de l'accent plutôt que vers un gris neutre :
     /// un gris pur à côté d'un rose vif prend l'air sale, un gris qui partage sa famille non.
-    static var bg: Color { isLight ? Color(hex: 0xF4F3F8) : Color(hex: 0x08070D) }
+    static var bg: Color {
+        let neutre = isLight ? Color(hex: 0xF4F3F8) : Color(hex: 0x08070D)
+        guard habillage == .trace else { return neutre }
+        // LE SOL PREND LA COULEUR. Voir `Habillage`.
+        //
+        // Une trace, pas un aplat : 7 % en clair, 10 % en sombre. Au-delà, le fond cesse d'être
+        // un fond et se met à concurrencer les cartes posées dessus — et surtout il faudrait
+        // reprendre tous les contrastes de texte, que `check_a11y` tient sur ces valeurs-ci.
+        //
+        // Plus fort en sombre qu'en clair parce qu'une teinte se voit moins sur du presque-noir :
+        // à 7 % des deux côtés, le mode sombre paraîtrait inchangé.
+        return melange(rose, sur: neutre, part: isLight ? 0.07 : 0.10)
+    }
+
+    /// L'habillage courant — voir `Habillage`. Lu comme `isLight` : calculé, jamais stocké.
+    static var habillage: Habillage { ThemeStore.shared.habillage }
+
+    /// Deux couleurs mélangées dans les composantes, `part` de la première sur la seconde.
+    ///
+    /// Par les composantes et non par une superposition d'opacité : `bg` doit rendre UNE couleur
+    /// opaque, pas deux calques. C'est la même technique que `onAccent` juste en dessous, qui
+    /// démonte déjà une `Color` en RVB pour en calculer la luminance.
+    static func melange(_ couleur: Color, sur fond: Color, part: CGFloat) -> Color {
+        var r1: CGFloat = 0, g1: CGFloat = 0, b1: CGFloat = 0, a1: CGFloat = 0
+        var r2: CGFloat = 0, g2: CGFloat = 0, b2: CGFloat = 0, a2: CGFloat = 0
+        UIColor(couleur).getRed(&r1, green: &g1, blue: &b1, alpha: &a1)
+        UIColor(fond).getRed(&r2, green: &g2, blue: &b2, alpha: &a2)
+        let p = min(max(part, 0), 1)
+        return Color(red: Double(r1 * p + r2 * (1 - p)),
+                     green: Double(g1 * p + g2 * (1 - p)),
+                     blue: Double(b1 * p + b2 * (1 - p)))
+    }
+
+    /// L'ombre des cartes, et elle n'existe QUE dans l'habillage teinté.
+    ///
+    /// En `classique`, ce qui sépare une carte de la page est son filet : l'ombre portée a été
+    /// retirée du système de design, et le filet est monté en même temps (voir `CardBackground`).
+    /// Les deux changements n'ont de sens qu'ensemble, et c'est toujours vrai — en `trace` c'est
+    /// l'inverse qui s'applique, le filet tombe et l'ombre revient.
+    ///
+    /// Teintée de l'accent plutôt que grise : une ombre grise sur un sol coloré pose du sale
+    /// dessus. Celle-ci partage sa famille avec le sol qu'elle assombrit.
+    static var cardShadow: Color {
+        guard habillage == .trace else { return .clear }
+        return isLight ? melange(rose, sur: Color(hex: 0x1A162E), part: 0.35).opacity(0.16)
+                       : Color.black.opacity(0.45)
+    }
 
     /// Le fond de PAGE, à poser à la racine d'un écran — un dégradé en clair, une couleur en
     /// sombre.
@@ -202,7 +248,14 @@ enum RUColor {
     ///
     /// `#1A162E` est le gris de la page poussé vers le violet de l'accent — le même raisonnement
     /// que `bg`, qui penche déjà de ce côté plutôt que vers un gris neutre.
-    static var cardBorder: Color { isLight ? Color(hex: 0x1A162E, opacity: 0.10) : Color.clear }
+    static var cardBorder: Color {
+        // En habillage teinté, le filet TOMBE : c'est l'ombre colorée qui sépare (voir
+        // `cardShadow`). Garder les deux donnerait une carte cernée ET flottante, soit deux
+        // réponses à la même question — exactement ce que la suppression de l'ombre avait
+        // corrigé dans l'autre sens.
+        guard habillage != .trace else { return .clear }
+        return isLight ? Color(hex: 0x1A162E, opacity: 0.10) : Color.clear
+    }
 
     /// Mélange opaque de `color` dans `base`, exactement `color-mix(in srgb, color N%, base)` en CSS.
     ///

@@ -143,5 +143,9 @@ final class ThemeStore {
     /// Mirrors `UserProfile.isLightMode` the same way `themeID` mirrors `accentThemeID` — see
     /// `RUColor`'s theme-aware tokens.
     var isLightMode: Bool = false
+    /// Miroir de `UserProfile.habillageID`, exactement comme `themeID` et `isLightMode`
+    /// au-dessus : les jetons de `RUColor` sont calculés, ils lisent cet objet observé, et
+    /// basculer ici redessine l'app entière sans toucher à un seul appelant.
+    var habillage: Habillage = .defaut
     private init() {}
 }

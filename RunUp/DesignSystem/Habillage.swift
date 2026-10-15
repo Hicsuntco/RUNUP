@@ -19,7 +19,7 @@ import SwiftUI
 /// façon dont les surfaces s'en détachent.
 ///
 ///   • `classique` — fond presque blanc ou presque noir, cartes séparées par un filet.
-///   • `trace`     — le sol prend une trace de l'accent courant, le filet tombe, et les cartes se
+///   • `teinte`    — le sol prend une trace de l'accent courant, le filet tombe, et les cartes se
 ///                   détachent par une ombre qui porte la même teinte. Elles flottent sur quelque
 ///                   chose au lieu d'être posées sur du blanc.
 ///
@@ -27,7 +27,18 @@ import SwiftUI
 /// en dérive, donc les huit continuent de fonctionner sans une ligne de plus.
 enum Habillage: String, CaseIterable, Identifiable {
     case classique
-    case trace
+    /// LA VALEUR BRUTE RESTE « trace », ET LE NOM SWIFT N'EST PLUS CELUI-LÀ.
+    ///
+    /// Cet habillage a d'abord porté un tracé GPS en fond d'en-tête, d'où son nom d'origine. Le
+    /// tracé a été retiré — il ne rendait pas — mais sa valeur brute, elle, est écrite dans les
+    /// profils déjà enregistrés ET dans les fichiers de sauvegarde déjà exportés. La renommer
+    /// renverrait silencieusement au classique quiconque avait basculé, et perdrait le réglage
+    /// de toute sauvegarde relue ensuite.
+    ///
+    /// Le nom Swift dit ce que l'habillage EST aujourd'hui ; la valeur brute dit ce qu'il a été
+    /// nommé le jour où on a commencé à l'écrire sur un disque. Les deux n'ont aucune raison de
+    /// se ressembler, et c'est la seconde qui ne doit jamais bouger.
+    case teinte = "trace"
 
     var id: String { rawValue }
 
@@ -42,14 +53,14 @@ enum Habillage: String, CaseIterable, Identifiable {
     var nom: String {
         switch self {
         case .classique: return String(localized: "Classique")
-        case .trace: return String(localized: "Teinté")
+        case .teinte: return String(localized: "Teinté")
         }
     }
 
     var explication: String {
         switch self {
         case .classique: return String(localized: "Fond neutre, cartes au filet fin.")
-        case .trace: return String(localized: "Le fond prend ta couleur, les cartes flottent dessus.")
+        case .teinte: return String(localized: "Le fond prend ta couleur, les cartes flottent dessus.")
         }
     }
 }

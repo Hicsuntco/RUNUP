@@ -149,7 +149,6 @@ final class AppState {
         // ne transite pas vers `.active` sur un démarrage, donc sans cette ligne la toute
         // première course de la journée partirait avec la séance de la veille.
         self.rafraichirLaCourseLibre()
-        self.rafraichirLeTraceDeFond()
         // The scenePhase→active hook in RunUpApp only catches a real background/foreground
         // transition — an app left open and awake (screen never locked, e.g. plugged in
         // overnight) crosses midnight without ever backgrounding, so the week strip/weekNumber
@@ -565,37 +564,6 @@ final class AppState {
         )
     }
 
-    // MARK: - Le tracé de fond
-
-    /// Le parcours qui habille les en-têtes — voir `TraceDeFond`. Vide quand il n'y en a pas,
-    /// et ce cas-là est normal : première semaine, réinstallation, courses saisies à la main.
-    private(set) var traceDeFond: [RunRecord.RoutePoint] = []
-
-    /// Sur quelle fenêtre on cherche. Quatorze jours : assez pour qu'une semaine sans sortie ne
-    /// laisse pas l'en-tête nu, trop court pour qu'un parcours d'il y a six mois s'y installe.
-    private static let joursDuTraceDeFond = 14
-
-    /// LE PLUS LONG DES DEUX DERNIÈRES SEMAINES, et pas le dernier en date.
-    ///
-    /// Le dernier serait plus simple et moins bon : une sortie de vingt minutes autour du pâté
-    /// de maisons donne un gribouillis, et c'est elle qui tiendrait l'écran pendant des jours.
-    /// Le plus long est aussi celui qu'on a envie de revoir.
-    ///
-    /// Décimé à 220 points avant d'être gardé : un tracé d'une heure en compte un bon millier,
-    /// et ce qui est stocké ici est relu à chaque recomposition des écrans qui l'affichent.
-    func rafraichirLeTraceDeFond() {
-        let borne = Calendar.current.date(byAdding: .day, value: -Self.joursDuTraceDeFond, to: .now)
-            ?? .distantPast
-        var descripteur = FetchDescriptor<RunRecord>(
-            predicate: #Predicate { $0.date >= borne },
-            sortBy: [SortDescriptor(\RunRecord.date, order: .reverse)]
-        )
-        descripteur.fetchLimit = 40
-        let courses = (try? modelContext.fetch(descripteur)) ?? []
-        let plusLong = courses.filter { $0.route.count > 1 }.max { $0.distanceKm < $1.distanceKm }
-        traceDeFond = plusLong.map { RouteGeometry.decimatedPoints($0.route, keeping: 220) } ?? []
-    }
-
     // MARK: - Sauvegarder, restaurer
 
     /// La photographie complète de ce que l'app détient. Voir `Sauvegarde.swift` pour ce qui y
@@ -665,7 +633,6 @@ final class AppState {
         AdaptivePlanEngine.refreshProgramForCurrentDate(profile)
         AdaptivePlanEngine.resetDailyGoalsIfNewDay(profile)
         rafraichirLaCourseLibre()
-        rafraichirLeTraceDeFond()
         if profile.weekNumber != previousWeek {
             let title = String(localized: "Nouvelle semaine")
             let text = String(localized: "Semaine \(profile.weekNumber) prête, ajustée d'après ta forme de la semaine passée.")
@@ -921,9 +888,6 @@ final class AppState {
         modelContext.insert(record)
         AdaptivePlanEngine.markSessionDone(for: record, profile: profile)
         lastRun = record
-        // La sortie qui vient d'être enregistrée est peut-être la plus longue de la quinzaine :
-        // l'en-tête doit la porter tout de suite, pas au prochain lancement.
-        rafraichirLeTraceDeFond()
         screen = .recap
         return record
     }

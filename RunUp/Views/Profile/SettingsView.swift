@@ -346,7 +346,7 @@ struct SettingsView: View {
     /// l'app pour la durée d'un aperçu.
     private func apercuDHabillage(_ h: Habillage) -> some View {
         let neutre = RUColor.isLight ? Color(hex: 0xF4F3F8) : Color(hex: 0x08070D)
-        let fond = h == .trace
+        let fond = h == .teinte
             ? RUColor.melange(RUColor.rose, sur: neutre, part: RUColor.isLight ? 0.07 : 0.10)
             : neutre
         return RoundedRectangle(cornerRadius: 9, style: .continuous)
@@ -357,8 +357,8 @@ struct SettingsView: View {
                     .fill(RUColor.card)
                     .frame(width: 28, height: 16)
                     .overlay(RoundedRectangle(cornerRadius: 5, style: .continuous)
-                        .stroke(h == .trace ? .clear : RUColor.cardBorder, lineWidth: RUSpacing.hairline))
-                    .shadow(color: h == .trace ? RUColor.melange(RUColor.rose, sur: Color(hex: 0x1A162E), part: 0.35).opacity(0.3) : .clear,
+                        .stroke(h == .teinte ? .clear : RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                    .shadow(color: h == .teinte ? RUColor.melange(RUColor.rose, sur: Color(hex: 0x1A162E), part: 0.35).opacity(0.3) : .clear,
                             radius: 4, x: 0, y: 2)
             )
             .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous)

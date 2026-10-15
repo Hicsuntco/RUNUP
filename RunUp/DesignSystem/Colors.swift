@@ -48,7 +48,7 @@ enum RUColor {
     /// un gris pur à côté d'un rose vif prend l'air sale, un gris qui partage sa famille non.
     static var bg: Color {
         let neutre = isLight ? Color(hex: 0xF4F3F8) : Color(hex: 0x08070D)
-        guard habillage == .trace else { return neutre }
+        guard habillage == .teinte else { return neutre }
         // LE SOL PREND LA COULEUR. Voir `Habillage`.
         //
         // Une trace, pas un aplat : 7 % en clair, 10 % en sombre. Au-delà, le fond cesse d'être
@@ -89,7 +89,7 @@ enum RUColor {
     /// Teintée de l'accent plutôt que grise : une ombre grise sur un sol coloré pose du sale
     /// dessus. Celle-ci partage sa famille avec le sol qu'elle assombrit.
     static var cardShadow: Color {
-        guard habillage == .trace else { return .clear }
+        guard habillage == .teinte else { return .clear }
         return isLight ? melange(rose, sur: Color(hex: 0x1A162E), part: 0.35).opacity(0.16)
                        : Color.black.opacity(0.45)
     }
@@ -253,7 +253,7 @@ enum RUColor {
         // `cardShadow`). Garder les deux donnerait une carte cernée ET flottante, soit deux
         // réponses à la même question — exactement ce que la suppression de l'ombre avait
         // corrigé dans l'autre sens.
-        guard habillage != .trace else { return .clear }
+        guard habillage != .teinte else { return .clear }
         return isLight ? Color(hex: 0x1A162E, opacity: 0.10) : Color.clear
     }
 

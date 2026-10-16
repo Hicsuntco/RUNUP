@@ -164,17 +164,58 @@ final class HealthKitService {
     /// live-ish reading during a run (see `LiveRunViewModel`). Filtered to `maxAge` rather than
     /// "the last sample ever" so a stale reading from hours/days ago (no Watch worn right now)
     /// correctly returns `nil` instead of being displayed as if it were current.
-    func latestHeartRate(maxAge: TimeInterval = 90) async -> Double? {
-        guard Self.isHealthDataAvailable else { return nil }
-        guard let type = HKObjectType.quantityType(forIdentifier: .heartRate) else { return nil }
-        let predicate = HKQuery.predicateForSamples(withStart: Date().addingTimeInterval(-maxAge), end: .now)
-        let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
-        return await withCheckedContinuation { continuation in
-            let query = HKSampleQuery(sampleType: type, predicate: predicate, limit: 1, sortDescriptors: [sort]) { _, samples, _ in
-                let bpm = (samples?.first as? HKQuantitySample)?.quantity.doubleValue(for: HKUnit(from: "count/min"))
-                continuation.resume(returning: bpm)
+    /// La fréquence cardiaque PENDANT une course : une requête qui reste ouverte, pas une par tour.
+    ///
+    /// # CE QUE FAISAIT LA VERSION PRÉCÉDENTE
+    ///
+    /// `latestHeartRate()` était appelée toutes les cinq secondes pendant toute la course. Chacun
+    /// de ces appels construisait un `HKSampleQuery`, le faisait exécuter par le démon Santé —
+    /// donc un aller-retour entre processus — et triait une fenêtre de 90 secondes pour n'en
+    /// garder qu'un échantillon. Mille quatre cent quarante fois pour une sortie de deux heures,
+    /// sur un chemin où l'app tient déjà le GPS allumé et l'écran éteint : c'est de la batterie
+    /// dépensée à reposer la même question.
+    ///
+    /// `HKAnchoredObjectQuery` est faite pour ça. Elle est exécutée UNE FOIS, garde un signet sur
+    /// ce qu'elle a déjà vu, et son `updateHandler` est rappelé par Santé quand une montre écrit
+    /// un nouvel échantillon. Zéro sondage, et la valeur arrive plus tôt qu'avec un tour de cinq
+    /// secondes.
+    ///
+    /// Le flux se termine quand l'appelant arrête d'écouter — l'annulation de sa tâche suffit — et
+    /// c'est `onTermination` qui rend alors la requête à Santé.
+    func fluxDeFrequenceCardiaque(depuis debut: Date) -> AsyncStream<Double> {
+        AsyncStream { continuation in
+            guard Self.isHealthDataAvailable,
+                  let type = HKObjectType.quantityType(forIdentifier: .heartRate) else {
+                continuation.finish()
+                return
             }
+            // Capturé AVANT la fermeture : `store` appartient à une classe `@Observable`, et le
+            // relire depuis une fermeture `@Sendable` ferait porter à celle-ci une référence à
+            // tout le service.
+            let store = self.store
+            let unite = HKUnit(from: "count/min")
+            // `end: nil` : la course n'est pas finie, et une borne de fin figée au départ
+            // exclurait tous les échantillons à venir — c'est-à-dire tous ceux qui nous
+            // intéressent.
+            let predicate = HKQuery.predicateForSamples(withStart: debut, end: nil,
+                                                        options: .strictStartDate)
+
+            // Santé livre un LOT d'échantillons, pas forcément un seul : on ne garde que le plus
+            // récent, puisque l'écran n'affiche qu'un chiffre.
+            func livrer(_ echantillons: [HKSample]?) {
+                guard let plusRecent = echantillons?
+                    .compactMap({ $0 as? HKQuantitySample })
+                    .max(by: { $0.endDate < $1.endDate }) else { return }
+                continuation.yield(plusRecent.quantity.doubleValue(for: unite))
+            }
+
+            let query = HKAnchoredObjectQuery(type: type, predicate: predicate, anchor: nil,
+                                              limit: HKObjectQueryNoLimit) { _, echantillons, _, _, _ in
+                livrer(echantillons)
+            }
+            query.updateHandler = { _, echantillons, _, _, _ in livrer(echantillons) }
             store.execute(query)
+            continuation.onTermination = { _ in store.stop(query) }
         }
     }
 

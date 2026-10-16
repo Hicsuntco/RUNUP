@@ -96,13 +96,55 @@ enum LiveRunSnapshotStore {
             .appending(path: "liveRunSnapshot.json")
     }
 
+    /// La file d'écriture : une seule, EN SÉRIE, et hors du fil principal.
+    ///
+    /// En série parce que deux écritures concurrentes du même fichier se marcheraient dessus, et
+    /// qu'un instantané plus vieux arrivé en dernier remplacerait un plus récent. `DispatchQueue`
+    /// est en série par défaut : les instantanés s'écrivent donc dans l'ordre où ils ont été pris.
+    private static let fileDEcriture = DispatchQueue(label: "com.hicsuntco.runup.instantane",
+                                                     qos: .utility)
+
+    /// Enregistre l'instantané, sans faire attendre le fil principal.
+    ///
+    /// # CE QUI SE PASSAIT SUR LE FIL PRINCIPAL
+    ///
+    /// L'encodage JSON et l'écriture disque étaient faits sur place, donc sur le fil principal,
+    /// toutes les dix secondes, PENDANT une course. Et l'instantané contient le tracé entier :
+    /// à une position par seconde, une sortie de deux heures finit à sept mille points, soit
+    /// environ 430 ko de JSON à sérialiser et à écrire — à chaque fois, depuis le début. Sur les
+    /// dernières minutes d'une sortie longue, c'est un hoquet régulier sur le seul écran qu'on
+    /// regarde en courant, et c'est aussi la raison qui avait fait choisir un fichier plutôt que
+    /// `UserDefaults` : le volume.
+    ///
+    /// Le fil principal ne garde donc que la prise de l'instantané — des valeurs déjà calculées,
+    /// recopiées dans une structure. L'encodage et l'écriture partent sur la file ci-dessus.
+    ///
+    /// # ET SI L'APP EST TUÉE ENTRE L'ENVOI ET L'ÉCRITURE
+    ///
+    /// La fenêtre de perte passe de dix secondes à dix secondes plus quelques millisecondes : la
+    /// cadence d'écriture a toujours été le vrai compromis, et c'est elle qui décide de ce qu'une
+    /// app tuée perd. Une course en cours tient par ailleurs l'app au premier plan ou en suivi de
+    /// position, donc hors du cas où iOS suspend un processus sans laisser ses blocs se terminer.
+    ///
+    /// # CE QUI RESTE À FAIRE, ET QUI N'EST PAS FAIT ICI
+    ///
+    /// Le VOLUME écrit reste quadratique : chaque écriture resérialise tout le tracé, donc une
+    /// sortie de deux heures écrit en tout quelques dizaines de mégaoctets pour un tracé final de
+    /// 430 ko. La bonne réponse serait un journal du tracé en ajout seul, à côté des compteurs —
+    /// c'est un changement de format, donc du code de reprise à reprendre, et ça ne se glisse pas
+    /// dans une correction de réactivité.
     static func save(_ snapshot: LiveRunSnapshot) {
-        guard let url, let data = try? JSONEncoder().encode(snapshot) else { return }
-        // `.atomic` : l'écriture passe par un fichier temporaire renommé d'un bloc. Une app tuée
-        // au milieu d'une écriture laisserait sinon un JSON tronqué — donc illisible — c'est-à-dire
-        // qu'elle échouerait exactement dans le scénario pour lequel ce fichier existe.
-        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try? data.write(to: url, options: .atomic)
+        guard let url else { return }
+        fileDEcriture.async {
+            guard let data = try? JSONEncoder().encode(snapshot) else { return }
+            // `.atomic` : l'écriture passe par un fichier temporaire renommé d'un bloc. Une app
+            // tuée au milieu d'une écriture laisserait sinon un JSON tronqué — donc illisible —
+            // c'est-à-dire qu'elle échouerait exactement dans le scénario pour lequel ce fichier
+            // existe.
+            try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
+                                                     withIntermediateDirectories: true)
+            try? data.write(to: url, options: .atomic)
+        }
     }
 
     /// L'instantané s'il existe, est lisible, assez récent et assez consistant pour valoir la
@@ -126,8 +168,17 @@ enum LiveRunSnapshotStore {
         return snapshot
     }
 
+    /// Supprime l'instantané — SUR LA MÊME FILE QUE L'ÉCRITURE, et c'est tout l'intérêt.
+    ///
+    /// Depuis que `save` est asynchrone, une suppression faite sur place pourrait passer DEVANT
+    /// une écriture encore en attente : la course serait alors terminée, enregistrée dans
+    /// l'historique, et son instantané réapparaîtrait juste après — l'app proposerait au
+    /// lancement suivant de « récupérer » une sortie déjà rangée. En passant par la même file en
+    /// série, la suppression arrive forcément après les écritures envoyées avant elle.
     static func clear() {
         guard let url else { return }
-        try? FileManager.default.removeItem(at: url)
+        fileDEcriture.async {
+            try? FileManager.default.removeItem(at: url)
+        }
     }
 }

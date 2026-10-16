@@ -16,6 +16,20 @@ struct StatsView: View {
     /// scroll-past-and-ignore.
     @State private var showDeepAnalysis = false
     @State private var selectedRange: StatsRange = .month
+
+    /// Le nombre de courses qui ont un tracé — MÉMORISÉ, parce que le compter DÉCODE les tracés.
+    ///
+    /// C'était une propriété calculée : `runs.filter { $0.route.count > 1 }.count`. `route` n'est
+    /// pas un tableau en mémoire mais un attribut encodé par SwiftData, donc chaque lecture le
+    /// décode — et cette ligne les lit TOUS, uniquement pour savoir lesquels ne sont pas vides.
+    /// Cent cinquante courses représentent environ 375 000 positions : ce décodage était refait à
+    /// chaque passe de `body`, c'est-à-dire à chaque défilement de l'écran Stats, pour afficher un
+    /// seul chiffre dans une tuile de navigation.
+    ///
+    /// `runs.count` comme clé : un tracé est écrit une fois, à l'enregistrement de la course, et
+    /// ne change jamais ensuite. Une course ajoutée ou supprimée refait donc le compte, et rien
+    /// d'autre ne peut le rendre faux.
+    @State private var nombreDeParcoursTraces = 0
     private var profile: UserProfile { appState.profile }
 
     /// Windows for the pace-trend chart — was hardcoded to "last 8 runs" regardless of how far
@@ -86,6 +100,11 @@ struct StatsView: View {
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.top, 8)
             .padding(.bottom, 130)
+        }
+        .task(id: runs.count) {
+            nombreDeParcoursTraces = runs.reduce(into: 0) { total, run in
+                if run.route.count > 1 { total += 1 }
+            }
         }
     }
 
@@ -237,8 +256,6 @@ struct StatsView: View {
     // overlaid on one map, a purely personal "where have I already run" view rather than anything
     // competitive; and the deep-analysis disclosure).
 
-    private var routedRunsCount: Int { runs.filter { $0.route.count > 1 }.count }
-
     /// Les `.stat-quicklinks` de la maquette : les deux seuls éléments de cet écran qui ne sont
     /// pas de l'analyse mais de la navigation (la carte des routes, et le dépliage de l'analyse
     /// approfondie), réunis en une paire de tuiles compactes côte à côte en bas de page. Chacun
@@ -267,8 +284,10 @@ struct StatsView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Mes routes")
                         .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                    Text(routedRunsCount > 0
-                         ? String(localized: "\(routedRunsCount) parcours trackés")
+                    Text(nombreDeParcoursTraces > 0
+                         ? Pluriel.choisir(nombreDeParcoursTraces,
+                                           String(localized: "\(nombreDeParcoursTraces) parcours tracké"),
+                                           String(localized: "\(nombreDeParcoursTraces) parcours trackés"))
                          : String(localized: "Dès ta 1re course trackée"))
                         .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                 }

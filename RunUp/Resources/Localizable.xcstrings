@@ -1418,6 +1418,23 @@
         }
       }
     },
+    "%lld parcours tracké": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld tracked route"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld ruta registrada"
+          }
+        }
+      }
+    },
     "%lld parcours trackés": {
       "extractionState": "manual",
       "localizations": {

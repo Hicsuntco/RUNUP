@@ -10,59 +10,103 @@ struct HeatmapView: View {
     @Environment(AppState.self) private var appState
     @Query(sort: \RunRecord.date, order: .reverse) private var runs: [RunRecord]
 
-    private var runsWithRoute: [RunRecord] { runs.filter { $0.route.count > 1 } }
+    /// Les tracés prêts à dessiner, et le cadrage qui les contient — CALCULÉS UNE FOIS.
+    ///
+    /// # CE QUE COÛTAIT LA VERSION PRÉCÉDENTE, À CHAQUE PASSE DE `body`
+    ///
+    /// Trois parcours complets de toutes les positions enregistrées :
+    ///
+    ///   · `runsWithRoute` lisait `run.route` de chaque course pour en compter les points ;
+    ///   · `allCoords` aplatissait TOUS les tracés en un seul tableau — cent cinquante courses à
+    ///     deux mille cinq cents points font 375 000 `CLLocationCoordinate2D`, soit six mégaoctets
+    ///     alloués — uniquement pour calculer le rectangle englobant ;
+    ///   · le `ForEach` reconvertissait ensuite chaque tracé, un par un.
+    ///
+    /// Et `run.route` n'est pas un tableau en mémoire : c'est un attribut encodé par SwiftData,
+    /// donc chaque lecture le DÉCODE. Une passe de `body` — un défilement, une rotation, un
+    /// changement de thème, n'importe quelle observation qui s'invalide — repayait les trois.
+    ///
+    /// Le cadrage, lui, ne sert qu'une fois : `Map(initialPosition:)` ne le lit qu'au premier
+    /// affichage. Il était recalculé à chaque fois pour être jeté.
+    @State private var parcours: [Parcours] = []
+    @State private var cadrage: MKCoordinateRegion?
 
-    private func region(for coordinates: [CLLocationCoordinate2D]) -> MKCoordinateRegion? {
-        guard let first = coordinates.first else { return nil }
-        var minLat = first.latitude, maxLat = first.latitude
-        var minLng = first.longitude, maxLng = first.longitude
-        for c in coordinates {
-            minLat = min(minLat, c.latitude); maxLat = max(maxLat, c.latitude)
-            minLng = min(minLng, c.longitude); maxLng = max(maxLng, c.longitude)
-        }
-        let center = CLLocationCoordinate2D(latitude: (minLat + maxLat) / 2, longitude: (minLng + maxLng) / 2)
-        let span = MKCoordinateSpan(
-            latitudeDelta: max((maxLat - minLat) * 1.3, 0.01),
-            longitudeDelta: max((maxLng - minLng) * 1.3, 0.01)
-        )
-        return MKCoordinateRegion(center: center, span: span)
+    /// Un tracé, déjà converti en coordonnées de carte.
+    private struct Parcours: Identifiable {
+        let id: PersistentIdentifier
+        let points: [CLLocationCoordinate2D]
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            BackTitleHeaderView(eyebrow: String(localized: "\(runsWithRoute.count) parcours trackés"), title: "Mes routes") {
+            BackTitleHeaderView(eyebrow: Pluriel.choisir(parcours.count,
+                                                         String(localized: "\(parcours.count) parcours tracké"),
+                                                         String(localized: "\(parcours.count) parcours trackés")),
+                                title: "Mes routes") {
                 appState.go(.stats)
             }
             .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.top, 8)
             .padding(.bottom, 8)
 
-            if runsWithRoute.isEmpty {
+            if parcours.isEmpty {
                 Spacer()
                 Text("Aucun parcours GPS enregistré pour l'instant — la carte se remplit après ta première course trackée.")
                     .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
                 Spacer()
-            } else {
-                let allCoords = runsWithRoute.flatMap { run in
-                    run.route.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lng) }
-                }
-                if let region = region(for: allCoords) {
-                    Map(initialPosition: .region(region)) {
-                        ForEach(runsWithRoute) { run in
-                            MapPolyline(coordinates: run.route.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lng) })
-                                // Low opacity so streets run many times layer up into a visibly
-                                // denser trace than a street run only once — the actual "heatmap"
-                                // effect, built entirely from stacking real routes.
-                                .stroke(RUColor.rose.opacity(0.3), style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
-                        }
+            } else if let cadrage {
+                Map(initialPosition: .region(cadrage)) {
+                    ForEach(parcours) { trace in
+                        MapPolyline(coordinates: trace.points)
+                            // Low opacity so streets run many times layer up into a visibly
+                            // denser trace than a street run only once — the actual "heatmap"
+                            // effect, built entirely from stacking real routes.
+                            .stroke(RUColor.rose.opacity(0.3), style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
                     }
-                    .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
-                    .ignoresSafeArea(edges: .bottom)
                 }
+                .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
+                .ignoresSafeArea(edges: .bottom)
             }
         }
         .background(RUColor.pageBackground)
+        // `id: runs.count` : une course ajoutée ou supprimée refait le calcul, le reste ne le
+        // refait pas. Un `onAppear` seul raterait la course enregistrée pendant que cet écran est
+        // ouvert — un `body` à chaque passe la voyait, pour le prix décrit plus haut.
+        .task(id: runs.count) { preparer() }
+    }
+
+    /// L'UNIQUE parcours des positions : il construit les tracés et le rectangle englobant
+    /// ensemble, au lieu d'aplatir tout une seconde fois pour ne garder que quatre nombres.
+    private func preparer() {
+        var minLat = Double.infinity, maxLat = -Double.infinity
+        var minLng = Double.infinity, maxLng = -Double.infinity
+        var traces: [Parcours] = []
+
+        for run in runs {
+            let route = run.route
+            guard route.count > 1 else { continue }
+            var points: [CLLocationCoordinate2D] = []
+            points.reserveCapacity(route.count)
+            for point in route {
+                minLat = min(minLat, point.lat); maxLat = max(maxLat, point.lat)
+                minLng = min(minLng, point.lng); maxLng = max(maxLng, point.lng)
+                points.append(CLLocationCoordinate2D(latitude: point.lat, longitude: point.lng))
+            }
+            traces.append(Parcours(id: run.persistentModelID, points: points))
+        }
+
+        parcours = traces
+        guard !traces.isEmpty, minLat.isFinite, minLng.isFinite else {
+            cadrage = nil
+            return
+        }
+        cadrage = MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: (minLat + maxLat) / 2,
+                                           longitude: (minLng + maxLng) / 2),
+            span: MKCoordinateSpan(latitudeDelta: max((maxLat - minLat) * 1.3, 0.01),
+                                   longitudeDelta: max((maxLng - minLng) * 1.3, 0.01))
+        )
     }
 }

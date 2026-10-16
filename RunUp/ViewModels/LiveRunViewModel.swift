@@ -85,8 +85,21 @@ final class LiveRunViewModel {
     /// Nil until a real, recent (last 90s) HealthKit sample comes in — no Watch/HR strap paired
     /// or streaming means this genuinely has no live reading, which is different from "0 bpm" and
     /// shouldn't be displayed as a number at all. Was previously a fabricated sine-wave formula
-    /// dressed up as a live measurement; polled for real via `pollHeartRate()` instead.
+    /// dressed up as a live measurement; it now arrives from a HealthKit stream that stays open
+    /// for the run (see `HealthKitService.fluxDeFrequenceCardiaque`).
     private(set) var heartRate: Int?
+
+    /// Quand le dernier échantillon est arrivé — c'est ce qui PÉRIME le chiffre.
+    ///
+    /// L'ancienne version interrogeait Santé sur une fenêtre de 90 secondes : une montre qui
+    /// cesse d'émettre — retirée du poignet, batterie vide — rendait donc nil toute seule au bout
+    /// de 90 secondes, et l'écran repassait à « -- ». Un flux, lui, n'envoie rien quand il n'y a
+    /// rien : sans cette date, le dernier chiffre reçu resterait affiché jusqu'à la fin de la
+    /// course, et une fréquence de 148 figée depuis quarante minutes est pire qu'un tiret.
+    private var derniereFrequenceCardiaque: Date?
+
+    /// La même fenêtre que l'ancienne requête, pour que l'écran se comporte à l'identique.
+    private static let frequenceCardiaquePerimeeApres: TimeInterval = 90
     private(set) var coachCue: String?
 
     private var timerTask: Task<Void, Never>?
@@ -453,11 +466,19 @@ final class LiveRunViewModel {
                 self.tick()
             }
         }
+        // UNE requête Santé qui reste ouverte, au lieu d'une toutes les cinq secondes — soit
+        // 1440 pour une sortie de deux heures. Voir `HealthKitService.fluxDeFrequenceCardiaque`.
+        // L'annulation de cette tâche (`stop()`, écran quitté) termine le flux, qui rend la
+        // requête à Santé.
         heartRatePollTask = Task { [weak self] in
-            while !Task.isCancelled {
+            guard let depart = self?.startedAt, let sante = self?.healthKit else { return }
+            for await bpm in sante.fluxDeFrequenceCardiaque(depuis: depart) {
                 guard let self else { return }
-                await self.pollHeartRate()
-                try? await Task.sleep(for: .seconds(5))
+                // Une pause ne fige pas le chiffre à l'écran par accident : elle le laisse tel
+                // quel, et c'est `tick()` qui le périme si plus rien n'arrive.
+                guard !self.isPaused else { continue }
+                self.heartRate = Int(bpm.rounded())
+                self.derniereFrequenceCardiaque = Date()
             }
         }
     }
@@ -490,6 +511,13 @@ final class LiveRunViewModel {
             // Nike Run Club/Strava mark the boundary, and it's the one live moment worth physical
             // feedback (the voice cues cover the rest).
             Haptics.impact(.medium)
+        }
+        // Le chiffre se périme ici, et pas dans le flux : un flux qui n'émet plus n'a par
+        // définition aucun moment où se faire entendre.
+        if let derniere = derniereFrequenceCardiaque,
+           Date().timeIntervalSince(derniere) > Self.frequenceCardiaquePerimeeApres {
+            heartRate = nil
+            derniereFrequenceCardiaque = nil
         }
         persistSnapshotIfDue()
         let t = Int(elapsedSeconds)
@@ -672,13 +700,6 @@ final class LiveRunViewModel {
     /// sample doesn't update that fast anyway. Stays `nil` (not a fabricated number) whenever
     /// nothing recent is available — no paired Watch/HR strap streaming into HealthKit, most
     /// simulators, or HealthKit access never granted.
-    private func pollHeartRate() async {
-        guard !isPaused else { return }
-        if let bpm = await healthKit.latestHeartRate() {
-            self.heartRate = Int(bpm.rounded())
-        }
-    }
-
     /// Real, current run stats handed to `VoiceCoachController` at the moment a voice question is
     /// sent — not the profile-level context `CoachService.systemPrompt` already builds, since
     /// that has no idea a run is even in progress.

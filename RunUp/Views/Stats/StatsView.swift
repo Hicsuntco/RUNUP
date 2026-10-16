@@ -808,8 +808,12 @@ struct StatsView: View {
     /// (the printed ratio could visually contradict what the bars showed).
     /// Le calcul et ses seuils vivent dans `TrainingLoad`, sous test : c'est un marqueur de
     /// blessure, et il n'était vérifiable qu'en accumulant huit semaines de vraies courses.
-    private var acuteChronicRatio: Double? {
-        TrainingLoad.acuteChronicRatio(weeklyKm: weeklyDistances)
+    ///
+    /// Les semaines sont passées EN ARGUMENT et non relues : `weeklyDistances` fait un tour de
+    /// calendrier par course — `currentWeekRange` par relevé — et cette carte le demandait trois
+    /// fois par passe de `body`, pour les mêmes huit nombres. Elle le demande une fois.
+    private func acuteChronicRatio(_ semaines: [Double]) -> Double? {
+        TrainingLoad.acuteChronicRatio(weeklyKm: semaines)
     }
 
     /// La CLÉ, pas une chaîne traduite : `StatChip` la passe à `LocalizedStringKey` et s'en
@@ -825,7 +829,7 @@ struct StatsView: View {
             RUCardHeader(icon: "chart.bar.fill", tint: RUColor.cyan,
                          title: "Charge d'entraînement",
                          subtitle: "Sur 8 semaines") {
-                if let ratio = acuteChronicRatio {
+                if let ratio = acuteChronicRatio(bars) {
                     StatChip(text: loadZoneLabel(ratio),
                               color: TrainingLoad.zone(for: ratio) == .high ? RUColor.amber : RUColor.cyan)
                 }
@@ -857,7 +861,7 @@ struct StatsView: View {
                 HStack {
                     Text("S-7").font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                     Spacer()
-                    if let ratio = acuteChronicRatio {
+                    if let ratio = acuteChronicRatio(bars) {
                         Text("ratio charge \(String(format: "%.1f", locale: Locale.current, ratio))").font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                     }
                     Spacer()

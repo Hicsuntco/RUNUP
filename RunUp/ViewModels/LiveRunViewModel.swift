@@ -455,10 +455,10 @@ final class LiveRunViewModel {
         }
         startLiveActivity()
         publishWidgetRun()
-        // Les deux tâches héritent de l'isolation `@MainActor` : `tick()` et `pollHeartRate()`
-        // s'exécutent donc sur le fil principal sans `MainActor.run` explicite. `weak self` est
-        // relu à chaque tour plutôt que capturé fort pour la durée du sommeil, pour que le modèle
-        // puisse être libéré dès que l'écran disparaît.
+        // Les deux tâches héritent de l'isolation `@MainActor` : leur corps s'exécute donc sur le
+        // fil principal sans `MainActor.run` explicite. `weak self` est relu à chaque tour plutôt
+        // que capturé fort pour la durée de l'attente, pour que le modèle puisse être libéré dès
+        // que l'écran disparaît.
         timerTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
@@ -472,13 +472,23 @@ final class LiveRunViewModel {
         // requête à Santé.
         heartRatePollTask = Task { [weak self] in
             guard let depart = self?.startedAt, let sante = self?.healthKit else { return }
-            for await bpm in sante.fluxDeFrequenceCardiaque(depuis: depart) {
+            // La fenêtre commence AVANT le départ, de la même durée que la péremption : sans ça,
+            // l'écran affiche « -- » jusqu'à ce que la montre écrive son premier échantillon de
+            // la course, alors qu'elle en a écrit un il y a vingt secondes. L'ancienne requête
+            // regardait les 90 dernières secondes à chaque tour ; celle-ci les regarde une fois,
+            // au départ, et c'est le même chiffre qui s'affiche.
+            let fenetre = depart.addingTimeInterval(-Self.frequenceCardiaquePerimeeApres)
+            for await mesure in sante.fluxDeFrequenceCardiaque(depuis: fenetre) {
                 guard let self else { return }
                 // Une pause ne fige pas le chiffre à l'écran par accident : elle le laisse tel
                 // quel, et c'est `tick()` qui le périme si plus rien n'arrive.
                 guard !self.isPaused else { continue }
-                self.heartRate = Int(bpm.rounded())
-                self.derniereFrequenceCardiaque = Date()
+                // Un échantillon déjà périmé à son arrivée — le dernier d'avant le départ, quand
+                // la montre a été reposée — n'a pas à s'afficher.
+                guard Date().timeIntervalSince(mesure.date) <= Self.frequenceCardiaquePerimeeApres
+                else { continue }
+                self.heartRate = Int(mesure.bpm.rounded())
+                self.derniereFrequenceCardiaque = mesure.date
             }
         }
     }

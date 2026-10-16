@@ -182,7 +182,12 @@ final class HealthKitService {
     ///
     /// Le flux se termine quand l'appelant arrête d'écouter — l'annulation de sa tâche suffit — et
     /// c'est `onTermination` qui rend alors la requête à Santé.
-    func fluxDeFrequenceCardiaque(depuis debut: Date) -> AsyncStream<Double> {
+    ///
+    /// Le flux rend la DATE de l'échantillon avec sa valeur : c'est elle qui dit si le chiffre est
+    /// encore frais, et l'instant où il arrive ne le dit pas. Un échantillon écrit par la montre
+    /// avant le départ arrive à la seconde zéro de la course — le prendre pour neuf le ferait
+    /// vivre 90 secondes de plus qu'il ne devrait.
+    func fluxDeFrequenceCardiaque(depuis debut: Date) -> AsyncStream<(bpm: Double, date: Date)> {
         AsyncStream { continuation in
             guard Self.isHealthDataAvailable,
                   let type = HKObjectType.quantityType(forIdentifier: .heartRate) else {
@@ -206,7 +211,8 @@ final class HealthKitService {
                 guard let plusRecent = echantillons?
                     .compactMap({ $0 as? HKQuantitySample })
                     .max(by: { $0.endDate < $1.endDate }) else { return }
-                continuation.yield(plusRecent.quantity.doubleValue(for: unite))
+                continuation.yield((bpm: plusRecent.quantity.doubleValue(for: unite),
+                                    date: plusRecent.endDate))
             }
 
             let query = HKAnchoredObjectQuery(type: type, predicate: predicate, anchor: nil,

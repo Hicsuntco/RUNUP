@@ -527,7 +527,16 @@ struct LiveRunView: View {
                 }
             }
             .accessibilityElement(children: .combine)
-            .accessibilityLabel(String(localized: "Temps \(PaceModel.formatDuration(vm?.elapsedSeconds ?? 0)), distance \(String(format: "%.2f", locale: Locale.current, vm?.distanceKm ?? 0)) kilomètres"))
+            // LE CHIFFRE VA DANS LA VALEUR, PAS DANS LE LIBELLÉ.
+            //
+            // VoiceOver relit un élément quand sa VALEUR change ; il ne relit jamais son libellé.
+            // Les deux nombres les plus regardés de l'app étaient dans le libellé : une coureuse
+            // aveugle les entendait UNE FOIS, au moment où son doigt les touchait, puis plus rien
+            // — pendant une heure de course. `updatesFrequently` dit au système que cet élément
+            // change tout seul, et qu'il doit le resuivre sans attendre un nouveau toucher.
+            .accessibilityLabel(String(localized: "Temps et distance"))
+            .accessibilityValue(String(localized: "\(PaceModel.formatDuration(vm?.elapsedSeconds ?? 0)), \(String(format: "%.2f", locale: Locale.current, vm?.distanceKm ?? 0)) kilomètres"))
+            .accessibilityAddTraits(.updatesFrequently)
 
             HStack(spacing: 10) {
                 paceMetric
@@ -680,14 +689,20 @@ struct LiveRunView: View {
         let value = vm?.rythmeRecent ?? "--:--"
         // Pas le libellé affiché : « Allure 8:32 par kilomètre, ALLURE » est ce que donnerait sa
         // reprise telle quelle.
-        let spoken: String
+        //
+        // Et le NOM d'un côté, le CHIFFRE de l'autre : VoiceOver ne relit que la valeur. Tout dans
+        // le libellé, comme avant, et l'allure était annoncée une fois pour toute la course.
+        let nomParle = vm?.discipline.seLitEnAllure ?? true
+            ? String(localized: "Allure")
+            : String(localized: "Vitesse")
+        let valeurParlee: String
         switch standing {
-        case .tooSlow: spoken = String(localized: "Allure \(value) par kilomètre, accélère")
-        case .tooFast: spoken = String(localized: "Allure \(value) par kilomètre, ralentis")
+        case .tooSlow: valeurParlee = String(localized: "\(value) par kilomètre, accélère")
+        case .tooFast: valeurParlee = String(localized: "\(value) par kilomètre, ralentis")
         case .onTarget, .unknown:
-            spoken = vm?.discipline.seLitEnAllure ?? true
-                ? String(localized: "Allure \(value) par kilomètre")
-                : String(localized: "Vitesse \(value) kilomètres par heure")
+            valeurParlee = vm?.discipline.seLitEnAllure ?? true
+                ? String(localized: "\(value) par kilomètre")
+                : String(localized: "\(value) kilomètres par heure")
         }
         return VStack(spacing: 2) {
             Text(value).displayStyle(26)
@@ -702,7 +717,9 @@ struct LiveRunView: View {
         .frame(maxWidth: .infinity)
         .animation(RUMotion.respecting(reduceMotion, RUMotion.snap), value: drift)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(spoken)
+        .accessibilityLabel(nomParle)
+        .accessibilityValue(valeurParlee)
+        .accessibilityAddTraits(.updatesFrequently)
     }
 
     private func liveMetric(_ value: String, _ label: String, _ color: Color) -> some View {
@@ -714,7 +731,11 @@ struct LiveRunView: View {
         // The screen most glanced at mid-run — was two separate stops ("8:32" then, later,
         // "ALLURE") with no indication which number belonged to which label.
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(label), \(value)")
+        // Le libellé nomme la mesure, la valeur porte le chiffre : sans quoi VoiceOver annonce la
+        // fréquence cardiaque du moment où on l'a touchée, et jamais celle d'après.
+        .accessibilityLabel(label)
+        .accessibilityValue(value)
+        .accessibilityAddTraits(.updatesFrequently)
     }
 }
 

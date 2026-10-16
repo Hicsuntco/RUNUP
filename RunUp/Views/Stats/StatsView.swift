@@ -297,8 +297,12 @@ struct StatsView: View {
                     .font(.system(size: 10, weight: .semibold)).foregroundColor(RUColor.text3)
                     .rotationEffect(.degrees(showDeepAnalysis ? 180 : 0))
                 Spacer(minLength: 0)
+                // `text3` et non `text4` : `text4` est à 20 % d'opacité, soit ~1,5:1 sur le fond
+                // sombre — c'est la couleur des points de séparation et des barres inertes, pas
+                // d'un texte à lire. Cette ligne dit ce que la section contient ; elle était
+                // affichée à un contraste où elle ne se lit pas.
                 Text("Records, charge, prédiction")
-                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text4)
+                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                     .lineLimit(1).minimumScaleFactor(0.8)
             }
             .frame(minHeight: 44)
@@ -651,6 +655,36 @@ struct StatsView: View {
         bestRecentPerformance?.secPerKm ?? PaceModel.zones(for: profile).thresholdSecPerKm
     }
 
+    /// « Objectif 42 km → **12″ à gagner** sur ton objectif. », le gras teinté.
+    ///
+    /// Le gras vient du Markdown de la chaîne traduite, pas d'un `Text` recollé : c'est ce qui
+    /// permet à la phrase de rester entière au catalogue. SwiftUI rend `**…**` en gras de la
+    /// police courante tout seul ; la COULEUR, elle, n'existe pas en Markdown — on la pose sur le
+    /// seul passage que le Markdown a marqué comme fort.
+    private func phraseDObjectif(objectif: String, secondes: Double, couleur: Color) -> Text {
+        // La couleur de base est posée DANS la chaîne, pas par un `.foregroundColor` sur le
+        // `Text` : laquelle des deux l'emporterait sur un passage déjà teinté n'est pas une
+        // question qu'on a envie de se poser depuis une capture d'écran.
+        let brut = secondes >= 0
+            ? String(localized: "Objectif \(objectif) → **en avance de \(Int(secondes))″** sur ton objectif.")
+            : String(localized: "Objectif \(objectif) → **\(Int(-secondes))″ à gagner** sur ton objectif.")
+        guard var phrase = try? AttributedString(markdown: brut) else {
+            // Markdown illisible (une étoile orpheline dans une traduction) : la phrase passe
+            // telle quelle, sans gras. Mieux vaut sans relief que pas de phrase.
+            var repli = AttributedString(brut)
+            repli.foregroundColor = RUColor.text2
+            return Text(repli)
+        }
+        phrase.foregroundColor = RUColor.text2
+        let passagesForts = phrase.runs.filter {
+            $0.inlinePresentationIntent?.contains(.stronglyEmphasized) == true
+        }.map(\.range)
+        for passage in passagesForts {
+            phrase[passage].foregroundColor = couleur
+        }
+        return Text(phrase)
+    }
+
     private func predictedSeconds(forKm targetKm: Double) -> Double {
         PaceModel.projectedPace(fromSecPerKm: predictionReferenceSecPerKm, fromKm: predictionReferenceKm, toKm: targetKm) * targetKm
     }
@@ -692,13 +726,20 @@ struct StatsView: View {
                       let chrono = profile.raceChrono,
                       let targetSeconds = PaceModel.parseChronoSeconds(chrono, distance: profile.raceDistance) {
                 let deltaSeconds = targetSeconds - predictedSeconds(forKm: raceKm)
-                Text("Objectif \(profile.goalDisplay) → ")
-                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
-                    + Text(deltaSeconds >= 0
-                           ? "en avance de \(Int(deltaSeconds))″"
-                           : "\(Int(-deltaSeconds))″ à gagner")
-                        .font(RUFont.sans(.small, weight: .bold)).foregroundColor(deltaSeconds >= 0 ? RUColor.lime : RUColor.amber)
-                    + Text(" sur ton objectif.").font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
+                // UNE PHRASE ENTIÈRE PAR CLÉ, et le gras porté par du Markdown.
+                //
+                // Cette phrase était recollée de trois `Text` : « Objectif %@ → », puis le
+                // chiffre en gras, puis « sur ton objectif. ». Trois clés dont aucune n'est une
+                // phrase, dans un ordre que le français impose aux deux autres langues — « %lld″
+                // ahead » ne se place pas forcément là où le français met son chiffre. Le
+                // traducteur reçoit maintenant la phrase complète, étoiles comprises, et c'est
+                // lui qui décide où va le gras.
+                phraseDObjectif(
+                    objectif: profile.goalDisplay,
+                    secondes: deltaSeconds,
+                    couleur: deltaSeconds >= 0 ? RUColor.lime : RUColor.amber
+                )
+                .font(RUFont.sans(.small))
             }
         }
         .padding(16)

@@ -6,12 +6,12 @@ struct NameStepView: View {
 
     var body: some View {
         ObScreen {
-            VStack(alignment: .leading, spacing: 0) {
-                Spacer()
-                ObTitle(eyebrow: "Pour commencer", title: "C'EST QUOI\nTON PRÉNOM ?", subtitle: "Ton coach va s'adresser à toi — autant se présenter.")
-                ObTextField(placeholder: "Prénom", text: $vm.name)
-                    .padding(.top, 22)
-                Spacer()
+            ObCorps {
+                VStack(alignment: .leading, spacing: 0) {
+                    ObTitle(eyebrow: "Pour commencer", title: "C'EST QUOI\nTON PRÉNOM ?", subtitle: "Ton coach va s'adresser à toi — autant se présenter.")
+                    ObTextField(placeholder: "Prénom", text: $vm.name)
+                        .padding(.top, 22)
+                }
             }
             ObNext(disabled: !vm.peutContinuer, action: onNext)
         }

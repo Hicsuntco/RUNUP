@@ -438,9 +438,8 @@ struct MoreSettingsView: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
 
-                    HStack {
-                        Text("Durée moyenne du cycle").font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
-                        Spacer()
+                    RUReglageRow(libelle: "Durée moyenne du cycle",
+                                 police: RUFont.sans(.body), couleur: RUColor.text2) {
                         Stepper(
                             "\(profile.averageCycleLengthDays) jours",
                             value: Binding(get: { profile.averageCycleLengthDays }, set: { profile.averageCycleLengthDays = $0 }),

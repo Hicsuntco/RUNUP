@@ -28,48 +28,52 @@ struct PlanRecapView: View {
 
     var body: some View {
         ObScreen {
-            Spacer()
-            VStack(spacing: 18) {
-                VStack(spacing: 10) {
-                    EyebrowLabel(text: "Ton plan", color: goal.tint)
-                    // L'emoji de l'objectif, en grand. C'est le même que celui de la carte
-                    // choisie à l'étape 2 : l'écran se referme sur l'image qu'on avait touchée
-                    // pour l'ouvrir.
-                    Text(goal.emoji)
-                        .font(.system(size: 46))
-                        .accessibilityHidden(true)
-                    Text(goal.title)
-                        .displayStyle(29)
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(RUColor.textPrimary)
-                        .lineSpacing(-2)
-                }
-
-                if !pastilles.isEmpty {
-                    ChipFlowLayout(spacing: 8, alignment: .center) {
-                        ForEach(pastilles, id: \.self) { pastille in
-                            // `StatChip` et non une capsule écrite ici : c'est déjà LA pastille
-                            // de statut de l'app, et son fond neutre est une décision prise
-                            // ailleurs — une teinte de la couleur de la pastille rendait sa
-                            // version sale en thème sombre. La couleur reste au texte.
-                            StatChip(text: pastille, color: goal.tint)
-                        }
+            // `ObCorps` et non deux `Spacer` : à deux fois la taille de texte, l'emoji, le titre,
+            // les pastilles et la phrase de clôture dépassent la hauteur de l'écran, les `Spacer`
+            // tombent à zéro et « C'EST PARTI » — le seul bouton qui termine l'inscription —
+            // sortait par le bas, sans défilement pour aller le chercher.
+            ObCorps {
+                VStack(spacing: 18) {
+                    VStack(spacing: 10) {
+                        EyebrowLabel(text: "Ton plan", color: goal.tint)
+                        // L'emoji de l'objectif, en grand. C'est le même que celui de la carte
+                        // choisie à l'étape 2 : l'écran se referme sur l'image qu'on avait touchée
+                        // pour l'ouvrir.
+                        Text(goal.emoji)
+                            .font(.system(size: 46))
+                            .accessibilityHidden(true)
+                        Text(goal.title)
+                            .displayStyle(29)
+                            .multilineTextAlignment(.center)
+                            .foregroundColor(RUColor.textPrimary)
+                            .lineSpacing(-2)
                     }
-                    // Les pastilles ne vont pas jusqu'aux marges : une rangée centrée a besoin
-                    // de respirer sur ses côtés pour se lire comme un bloc, et non comme une
-                    // ligne de texte qui aurait raté son alignement.
-                    .padding(.horizontal, 10)
-                    .accessibilityElement(children: .combine)
-                }
 
-                Text(PlanRecap.cloture(vm))
-                    .font(RUFont.sans(.label))
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(RUColor.text2)
-                    .lineSpacing(3)
-                    .padding(.top, 4)
+                    if !pastilles.isEmpty {
+                        ChipFlowLayout(spacing: 8, alignment: .center) {
+                            ForEach(pastilles, id: \.self) { pastille in
+                                // `StatChip` et non une capsule écrite ici : c'est déjà LA pastille
+                                // de statut de l'app, et son fond neutre est une décision prise
+                                // ailleurs — une teinte de la couleur de la pastille rendait sa
+                                // version sale en thème sombre. La couleur reste au texte.
+                                StatChip(text: pastille, color: goal.tint)
+                            }
+                        }
+                        // Les pastilles ne vont pas jusqu'aux marges : une rangée centrée a besoin
+                        // de respirer sur ses côtés pour se lire comme un bloc, et non comme une
+                        // ligne de texte qui aurait raté son alignement.
+                        .padding(.horizontal, 10)
+                        .accessibilityElement(children: .combine)
+                    }
+
+                    Text(PlanRecap.cloture(vm))
+                        .font(RUFont.sans(.label))
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(RUColor.text2)
+                        .lineSpacing(3)
+                        .padding(.top, 4)
+                }
             }
-            Spacer()
             // Reprise de l'écran de construction, qui la portait avant : elle paraît juste avant
             // que le système ne demande l'autorisation des notifications (voir
             // `OnboardingContainerView.finish()`), pour que la boîte de dialogue ait une raison

@@ -121,15 +121,25 @@ struct PaywallView: View {
                 }
                 .padding(.bottom, -8)
             }
-            HStack(spacing: 8) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 13, weight: .bold))
-                Text("7 jours offerts")
-                    .font(RUFont.sans(.small, weight: .bold))
+            // LA PASTILLE NE PARAÎT QUE S'IL Y A VRAIMENT UN ESSAI, ET POUR CETTE PERSONNE.
+            //
+            // Elle disait « 7 jours offerts » en dur, à tout le monde. Un essai gratuit ne
+            // s'offre qu'UNE FOIS par groupe d'abonnement : quelqu'un qui l'a déjà utilisé et
+            // revient un an plus tard lisait la même promesse et était débité tout de suite.
+            // Voir `SubscriptionService.essaisParProduit`.
+            if let jours = subscriptions.joursDEssaiAnnoncables {
+                HStack(spacing: 8) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 13, weight: .bold))
+                    Text(Pluriel.choisir(jours,
+                                         String(localized: "\(jours) jour offert"),
+                                         String(localized: "\(jours) jours offerts")))
+                        .font(RUFont.sans(.small, weight: .bold))
+                }
+                .foregroundColor(RUColor.onRose)
+                .padding(.horizontal, 12).padding(.vertical, 7)
+                .background(RUColor.onRose.opacity(0.18), in: Capsule())
             }
-            .foregroundColor(RUColor.onRose)
-            .padding(.horizontal, 12).padding(.vertical, 7)
-            .background(RUColor.onRose.opacity(0.18), in: Capsule())
 
             Text(highlighted?.title ?? String(localized: "RUNUP Plus"))
                 .displayStyle(34)
@@ -306,7 +316,7 @@ struct PaywallView: View {
                 if subscriptions.isPurchasing {
                     ProgressView().tint(RUColor.onRose)
                 } else {
-                    Text("Commencer les 7 jours gratuits")
+                    Text(libelleDAchat)
                 }
             }
             .buttonStyle(PrimaryButtonStyle())
@@ -355,12 +365,32 @@ struct PaywallView: View {
 
     /// « 7 jours gratuits, puis 39,99 € par an ». La phrase que la revue cherche, et celle que
     /// l'utilisatrice cherche aussi.
+    ///
+    /// Les sept jours viennent de l'App Store, pas d'ici, et ils disparaissent de la phrase quand
+    /// cette personne n'y a plus droit : « 39,99 € par an », c'est alors exactement ce qui sera
+    /// prélevé. Une promesse d'essai affichée à quelqu'un qui sera débité immédiatement est la
+    /// règle 3.1.2 de la revue, et une mauvaise surprise avant d'être une règle.
     private var priceLine: String? {
         guard let product = selected else { return nil }
         let isYearly = product.id == SubscriptionService.ProductID.yearly
+        guard let jours = subscriptions.joursDEssai(pour: product) else {
+            return isYearly
+                ? String(localized: "\(product.displayPrice) par an")
+                : String(localized: "\(product.displayPrice) par mois")
+        }
         return isYearly
-            ? String(localized: "7 jours gratuits, puis \(product.displayPrice) par an")
-            : String(localized: "7 jours gratuits, puis \(product.displayPrice) par mois")
+            ? String(localized: "\(jours) jours gratuits, puis \(product.displayPrice) par an")
+            : String(localized: "\(jours) jours gratuits, puis \(product.displayPrice) par mois")
+    }
+
+    /// « Commencer les 7 jours gratuits » quand il y a un essai, « S'abonner » sinon.
+    private var libelleDAchat: String {
+        guard let product = selected, let jours = subscriptions.joursDEssai(pour: product) else {
+            return String(localized: "S'abonner")
+        }
+        return Pluriel.choisir(jours,
+                               String(localized: "Commencer le jour gratuit"),
+                               String(localized: "Commencer les \(jours) jours gratuits"))
     }
 
     private func buy() async {

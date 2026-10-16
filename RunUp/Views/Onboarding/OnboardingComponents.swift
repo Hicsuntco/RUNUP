@@ -12,6 +12,53 @@ struct ObScreen<Content: View>: View {
     }
 }
 
+/// Le corps d'un écran d'inscription : centré quand il tient, QUI DÉFILE quand il ne tient plus.
+///
+/// # LE DÉFAUT
+///
+/// Quatre écrans de l'inscription étaient écrits « `Spacer()`, le contenu, `Spacer()`, le
+/// bouton » — une mise en page qui centre joliment… tant que le contenu est plus court que
+/// l'écran. L'app autorise le texte jusqu'à deux fois sa taille (`RUFont.maxScale`). À cette
+/// taille, les deux `Spacer` tombent à zéro, le contenu dépasse, et ce qui est en bas de la pile
+/// sort de l'écran. En bas de `PlanRecapView`, il y a « C'EST PARTI » — le seul bouton qui
+/// termine l'inscription. Autrement dit : quelqu'un qui agrandit le texte pour pouvoir lire
+/// l'app ne pouvait pas finir de s'y inscrire, et rien à l'écran ne lui disait pourquoi.
+///
+/// # POURQUOI UN `ViewThatFits` ET PAS UN `ScrollView` TOUT COURT
+///
+/// Un `ScrollView` prend toute la hauteur offerte et colle son contenu en haut : à la taille de
+/// texte par défaut, les dix écrans d'inscription perdraient leur centrage, pour un défilement
+/// dont personne n'a besoin. Le premier candidat est donc la mise en page actuelle, telle quelle,
+/// et le second la même, qui défile. Le second tient TOUJOURS — c'est ce qui distingue ce
+/// `ViewThatFits` de celui de la barre d'onglets, où un candidat trop haut faisait disparaître
+/// le mot « RUN » faute de solution de repli.
+struct ObCorps<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        ViewThatFits(in: .vertical) {
+            VStack(spacing: 0) {
+                Spacer(minLength: 0)
+                content
+                Spacer(minLength: 0)
+            }
+            ScrollView {
+                // Le `VStack` est OBLIGATOIRE et pas décoratif : `ObCorps` reçoit un
+                // `@ViewBuilder`, donc parfois DEUX vues sœurs (voir `BuildingProgramView`, qui
+                // lui passe l'anneau puis la liste des paliers). Sans conteneur, le `.frame`
+                // s'appliquerait à chacune séparément et l'empilement dépendrait de ce que le
+                // `ScrollView` fait d'un tuple.
+                VStack(spacing: 0) { content }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+            }
+            // Pas de rebond quand il n'y a rien à faire défiler : ce candidat sert aussi aux
+            // tailles de texte intermédiaires, où le contenu dépasse de quelques points.
+            .scrollBounceBehavior(.basedOnSize)
+        }
+    }
+}
+
 struct ObTitle: View {
     var eyebrow: String
     var title: String

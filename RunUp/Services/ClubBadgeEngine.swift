@@ -93,8 +93,10 @@ enum ClubBadgeEngine {
             "distance50": "\(min(Int(totalDistance), 50))/50 km",
             "distance250": "\(min(Int(totalDistance), 250))/250 km",
             "distance1000": "\(min(Int(totalDistance), 1000))/1000 km",
-            "halfMarathonDistance": "\(String(format: "%.1f", min(longestRun, 21)))/21 km",
-            "marathonDistance": "\(String(format: "%.1f", min(longestRun, 42)))/42 km",
+            // `locale:` : sans lui, la progression d'un badge s'écrit « 18.3/21 km » en
+            // français et en espagnol, point décimal compris.
+            "halfMarathonDistance": "\(String(format: "%.1f", locale: Locale.current, min(longestRun, 21)))/21 km",
+            "marathonDistance": "\(String(format: "%.1f", locale: Locale.current, min(longestRun, 42)))/42 km",
             "nightRun": nil,
             "weekendWarrior": "\(min(weekendRuns, 10))/10"
         ]

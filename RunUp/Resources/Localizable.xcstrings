@@ -18,22 +18,6 @@
         }
       }
     },
-    " sur ton objectif.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": " on your goal."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": " en tu objetivo."
-          }
-        }
-      }
-    },
     "% objectif": {
       "extractionState": "manual",
       "localizations": {
@@ -150,6 +134,23 @@
         }
       }
     },
+    "%@ kilomètres par heure": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kilometres per hour"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kilómetros por hora"
+          }
+        }
+      }
+    },
     "%@ km": {
       "localizations": {
         "en": {
@@ -196,6 +197,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ al año"
+          }
+        }
+      }
+    },
+    "%@ par kilomètre": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ per kilometre"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ por kilómetro"
+          }
+        }
+      }
+    },
+    "%@ par kilomètre, accélère": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ per kilometre, speed up"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ por kilómetro, acelera"
+          }
+        }
+      }
+    },
+    "%@ par kilomètre, ralentis": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ per kilometre, ease off"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ por kilómetro, afloja"
           }
         }
       }
@@ -395,6 +447,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ · tú"
+          }
+        }
+      }
+    },
+    "%@, %@ kilomètres": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$@ kilometres"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$@ kilómetros"
           }
         }
       }
@@ -885,6 +954,23 @@
         }
       }
     },
+    "%lld jour offert": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld day free"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld día gratis"
+          }
+        }
+      }
+    },
     "%lld jours": {
       "localizations": {
         "en": {
@@ -947,6 +1033,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld días seguidos. Hoy, descanso: ahí es donde se progresa."
+          }
+        }
+      }
+    },
+    "%lld jours gratuits, puis %@ par an": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld days free, then %2$@ per year"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld días gratis, luego %2$@ al año"
+          }
+        }
+      }
+    },
+    "%lld jours gratuits, puis %@ par mois": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld days free, then %2$@ per month"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld días gratis, luego %2$@ al mes"
+          }
+        }
+      }
+    },
+    "%lld jours offerts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld days free"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld días gratis"
           }
         }
       }
@@ -1808,22 +1945,6 @@
         }
       }
     },
-    "%lld″ à gagner": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld″ to gain"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld″ por ganar"
-          }
-        }
-      }
-    },
     "(Re)commencer": {
       "extractionState": "manual",
       "localizations": {
@@ -2631,57 +2752,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "últimos 7 días"
-          }
-        }
-      }
-    },
-    "7 jours gratuits, puis %@ par an": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "7 days free, then %@ per year"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "7 días gratis, luego %@ al año"
-          }
-        }
-      }
-    },
-    "7 jours gratuits, puis %@ par mois": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "7 days free, then %@ per month"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "7 días gratis, luego %@ al mes"
-          }
-        }
-      }
-    },
-    "7 jours offerts": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "7 days free"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "7 días gratis"
           }
         }
       }
@@ -3532,57 +3602,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ritmo"
-          }
-        }
-      }
-    },
-    "Allure %@ par kilomètre": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pace %@ per kilometre"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ritmo %@ por kilómetro"
-          }
-        }
-      }
-    },
-    "Allure %@ par kilomètre, accélère": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pace %@ per kilometre, speed up"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ritmo %@ por kilómetro, acelera"
-          }
-        }
-      }
-    },
-    "Allure %@ par kilomètre, ralentis": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pace %@ per kilometre, ease off"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ritmo %@ por kilómetro, afloja"
           }
         }
       }
@@ -6501,19 +6520,36 @@
         }
       }
     },
-    "Commencer les 7 jours gratuits": {
+    "Commencer le jour gratuit": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Start the 7 free days"
+            "value": "Start the free day"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Empezar los 7 días gratis"
+            "value": "Empezar el día gratis"
+          }
+        }
+      }
+    },
+    "Commencer les %lld jours gratuits": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start the %lld free days"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar los %lld días gratis"
           }
         }
       }
@@ -15038,18 +15074,36 @@
         }
       }
     },
-    "Objectif %@ → ": {
+    "Objectif %@ → **%lld″ à gagner** sur ton objectif.": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Goal %@ → "
+            "value": "Target %1$@ → **%2$lld″ to gain** on your target."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Objetivo %@ → "
+            "value": "Objetivo %1$@ → **%2$lld″ por ganar** sobre tu objetivo."
+          }
+        }
+      }
+    },
+    "Objectif %@ → **en avance de %lld″** sur ton objectif.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target %1$@ → **%2$lld″ ahead** of your target."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Objetivo %1$@ → **%2$lld″ de adelanto** sobre tu objetivo."
           }
         }
       }
@@ -19259,6 +19313,23 @@
         }
       }
     },
+    "S'abonner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subscribe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suscribirse"
+          }
+        }
+      }
+    },
     "S'affine après ta première séance débriefée.": {
       "localizations": {
         "en": {
@@ -22217,22 +22288,6 @@
         }
       }
     },
-    "Temps %@, distance %@ kilomètres": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Time %1$@, distance %2$@ kilometres"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tiempo %1$@, distancia %2$@ kilómetros"
-          }
-        }
-      }
-    },
     "Temps cumulé": {
       "extractionState": "manual",
       "localizations": {
@@ -22262,6 +22317,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tiempo de pie"
+          }
+        }
+      }
+    },
+    "Temps et distance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time and distance"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiempo y distancia"
           }
         }
       }
@@ -24490,23 +24562,6 @@
         }
       }
     },
-    "Vitesse %@ kilomètres par heure": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Speed %@ kilometres per hour"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Velocidad %@ kilómetros por hora"
-          }
-        }
-      }
-    },
     "Vitesse de croisière": {
       "localizations": {
         "en": {
@@ -25414,22 +25469,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "mejorando"
-          }
-        }
-      }
-    },
-    "en avance de %lld″": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld″ ahead"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld″ de adelanto"
           }
         }
       }

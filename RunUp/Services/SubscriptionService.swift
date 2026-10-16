@@ -56,6 +56,65 @@ final class SubscriptionService {
     private(set) var productsUnavailable = false
     private(set) var isPurchasing = false
 
+    /// Les jours d'essai gratuit RÉELLEMENT offerts, par identifiant de produit — et seulement à
+    /// qui y a droit.
+    ///
+    /// # POURQUOI CE N'EST PAS UNE CONSTANTE
+    ///
+    /// Le paywall écrivait « 7 jours offerts », « Commencer les 7 jours gratuits » et « 7 jours
+    /// gratuits, puis 39,99 € par an » en dur, trois fois. Ce chiffre n'appartient pas à l'app :
+    /// il vit dans App Store Connect, où l'offre d'introduction se règle par produit et peut
+    /// changer sans qu'une ligne de code bouge.
+    ///
+    /// Et surtout, l'essai NE S'OFFRE QU'UNE FOIS par groupe d'abonnement. Quelqu'un qui l'a déjà
+    /// utilisé — l'an dernier, puis résilié — voyait le même bouton « Commencer les 7 jours
+    /// gratuits » et était débité immédiatement. C'est une mauvaise surprise, et c'est aussi la
+    /// règle 3.1.2 de la revue App Store, qui demande que le prix annoncé soit celui qui sera
+    /// prélevé.
+    ///
+    /// `isEligibleForIntroOffer` répond pour CE compte Apple et pour ce groupe d'abonnement.
+    /// Vide = rien à annoncer, et le paywall se replie sur le prix seul.
+    private(set) var essaisParProduit: [String: Int] = [:]
+
+    /// Les jours d'essai à annoncer pour ce produit, ou `nil` s'il n'y en a pas — ou si cette
+    /// personne n'y a plus droit.
+    func joursDEssai(pour product: Product) -> Int? { essaisParProduit[product.id] }
+
+    /// L'essai de la formule mise en avant, pour les textes qui parlent avant tout choix.
+    var joursDEssaiAnnoncables: Int? {
+        products.compactMap { essaisParProduit[$0.id] }.max()
+    }
+
+    private func chargerLesEssais() async {
+        var trouves: [String: Int] = [:]
+        for product in products {
+            guard let abonnement = product.subscription,
+                  let offre = abonnement.introductoryOffer,
+                  offre.paymentMode == .freeTrial else { continue }
+            // La requête d'éligibilité part par produit : elle interroge le groupe d'abonnement
+            // du produit, et les deux formules sont dans le même groupe — mais c'est à StoreKit
+            // de le dire, pas à nous de le supposer.
+            guard await abonnement.isEligibleForIntroOffer else { continue }
+            trouves[product.id] = Self.joursDe(offre.period)
+        }
+        essaisParProduit = trouves
+    }
+
+    /// Une période d'abonnement en jours, pour l'afficher.
+    ///
+    /// Les mois et les années sont approximés — 30 et 365 — et c'est sans conséquence ici : une
+    /// offre d'introduction se règle en jours ou en semaines dans App Store Connect, et un essai
+    /// d'un mois s'annonce « 30 jours » sans que personne n'y trouve à redire.
+    static func joursDe(_ periode: Product.SubscriptionPeriod) -> Int {
+        switch periode.unit {
+        case .day: return periode.value
+        case .week: return periode.value * 7
+        case .month: return periode.value * 30
+        case .year: return periode.value * 365
+        @unknown default: return periode.value
+        }
+    }
+
     init() {
         // Démarré avant tout achat, et jamais annulé tant que l'app vit : c'est par là qu'arrivent
         // les renouvellements, les remboursements, les achats faits sur un autre appareil et les
@@ -90,6 +149,7 @@ final class SubscriptionService {
             products = ProductID.all.compactMap { id in fetched.first { $0.id == id } }
             loadFailed = false
             productsUnavailable = products.isEmpty
+            await chargerLesEssais()
         } catch {
             loadFailed = true
             productsUnavailable = false

@@ -143,6 +143,57 @@ struct RUMetricRow<Content: View>: View {
     }
 }
 
+/// Un libellé de réglage et sa commande : côte à côte quand ils tiennent, l'un sous l'autre sinon.
+///
+/// # LE DÉFAUT
+///
+/// Les trois réglages chiffrés de l'app — objectif de pas, calories actives, durée du cycle —
+/// étaient écrits « `Text`, `Spacer()`, `Stepper().fixedSize()` ». Le `fixedSize` est NÉCESSAIRE :
+/// sans lui, le `Stepper` étire son libellé et pousse ses deux boutons hors de la carte. Mais il
+/// dit aussi « ne me comprime jamais », et la rangée n'a alors plus aucune façon de rétrécir :
+/// à grande taille de texte, « Objectif calories actives » plus « 350 kcal » plus les deux
+/// boutons ne tiennent pas sur une ligne, et c'est le libellé de gauche qui se fait rogner —
+/// donc le seul mot qui dit de quoi il s'agit.
+///
+/// Même réponse que `RUMetricRow`, pour la même raison : `ViewThatFits` essaie la rangée et prend
+/// la colonne si elle ne rentre pas. Aucune catégorie de Dynamic Type à surveiller, et la réponse
+/// reste juste dans les trois langues — « Objetivo de calorías activas » est plus long.
+struct RUReglageRow<Commande: View>: View {
+    /// La CLÉ du libellé, pas sa traduction : le `Text` est construit ici, donc il faut un
+    /// `LocalizedStringKey` — même convention que `MetricColumn` et `RUStatTile`.
+    var libelle: String
+    var police: Font = RUFont.sans(.emphasis, weight: .medium)
+    var couleur: Color = RUColor.textPrimary
+    @ViewBuilder var commande: Commande
+
+    private var texte: some View {
+        Text(LocalizedStringKey(libelle)).font(police).foregroundColor(couleur)
+    }
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 10) {
+                texte
+                // `minLength: 0` : `ViewThatFits` compare la largeur IDÉALE de la rangée à la
+                // place disponible, et un espace dont le minimum est nul n'y ajoute rien. Avec
+                // le minimum par défaut, la rangée « tiendrait » toujours un peu moins, et le
+                // seuil de bascule dépendrait d'une valeur que personne n'a choisie.
+                Spacer(minLength: 0)
+                commande
+            }
+            VStack(alignment: .leading, spacing: 10) {
+                texte
+                // La commande reste à DROITE sous son libellé : empilée à gauche, elle se lirait
+                // comme un second réglage et non comme la valeur de celui-ci.
+                HStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                    commande
+                }
+            }
+        }
+    }
+}
+
 /// Une rangée de TUILES — des blocs de largeur égale, pas des colonnes serrées à gauche.
 ///
 /// Même principe que `RUMetricRow` et même raison, avec une différence de mise en page qui

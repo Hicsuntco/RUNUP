@@ -66,58 +66,58 @@ struct BuildingProgramView: View {
 
     private var construction: some View {
         ObScreen {
-            Spacer()
-            VStack(spacing: 22) {
-                // Le 4 était écrit trois fois, sans lien avec la liste qui décide vraiment du
-                // nombre de paliers. Un cinquième élément ajouté un jour à `buildSteps` aurait
-                // envoyé l'anneau à 125 % et laissé la coche de fin inatteignable.
-                RingView(pct: buildFraction * 100, color: RUColor.rose, size: 110, strokeWidth: 7) {
-                    Text(buildIsDone ? "✓" : "\(Int(buildFraction * 100))%")
-                        .displayStyle(30)
-                        .foregroundColor(buildIsDone ? RUColor.lime : RUColor.textPrimary)
-                }
-                VStack(spacing: 6) {
-                    // A generic "ON CONSTRUIT TON PROGRAMME" was the exact same reveal moment for
-                    // every runner regardless of what she'd just spent 7 steps answering — this
-                    // names who it's for, the same way the checklist below already names her race
-                    // distance and running-day count instead of generic placeholders.
-                    if !vm.name.trimmingCharacters(in: .whitespaces).isEmpty {
-                        EyebrowLabel(text: String(localized: "Pour \(vm.name.trimmingCharacters(in: .whitespaces))"), color: RUColor.rose)
+            ObCorps {
+                VStack(spacing: 22) {
+                    // Le 4 était écrit trois fois, sans lien avec la liste qui décide vraiment du
+                    // nombre de paliers. Un cinquième élément ajouté un jour à `buildSteps` aurait
+                    // envoyé l'anneau à 125 % et laissé la coche de fin inatteignable.
+                    RingView(pct: buildFraction * 100, color: RUColor.rose, size: 110, strokeWidth: 7) {
+                        Text(buildIsDone ? "✓" : "\(Int(buildFraction * 100))%")
+                            .displayStyle(30)
+                            .foregroundColor(buildIsDone ? RUColor.lime : RUColor.textPrimary)
                     }
-                    Text("ON CONSTRUIT\nTON PROGRAMME")
-                        .displayStyle(28)
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(RUColor.textPrimary)
-                        .lineSpacing(-2)
-                }
-            }
-
-            VStack(spacing: 0) {
-                ForEach(buildSteps.indices, id: \.self) { i in
-                    HStack(spacing: 14) {
-                        ZStack {
-                            Circle()
-                                .fill(vm.buildProgress > i ? RUColor.rose : RUColor.card)
-                                .overlay(Circle().stroke(vm.buildProgress > i ? Color.clear : RUColor.line, lineWidth: 1))
-                            if vm.buildProgress > i {
-                                Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundColor(.white)
-                            } else if vm.buildProgress == i {
-                                Circle().fill(RUColor.rose).frame(width: 6, height: 6)
-                            }
+                    VStack(spacing: 6) {
+                        // A generic "ON CONSTRUIT TON PROGRAMME" was the exact same reveal moment for
+                        // every runner regardless of what she'd just spent 7 steps answering — this
+                        // names who it's for, the same way the checklist below already names her race
+                        // distance and running-day count instead of generic placeholders.
+                        if !vm.name.trimmingCharacters(in: .whitespaces).isEmpty {
+                            EyebrowLabel(text: String(localized: "Pour \(vm.name.trimmingCharacters(in: .whitespaces))"), color: RUColor.rose)
                         }
-                        .frame(width: 24, height: 24)
-                        Text(buildSteps[i])
-                            .font(RUFont.sans(.emphasis))
-                            .foregroundColor(vm.buildProgress > i ? RUColor.textPrimary : RUColor.text2)
-                        Spacer()
+                        Text("ON CONSTRUIT\nTON PROGRAMME")
+                            .displayStyle(28)
+                            .multilineTextAlignment(.center)
+                            .foregroundColor(RUColor.textPrimary)
+                            .lineSpacing(-2)
                     }
-                    .padding(.vertical, 13)
-                    .overlay(Divider().background(RUColor.line), alignment: .bottom)
-                    .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: vm.buildProgress)
                 }
+
+                VStack(spacing: 0) {
+                    ForEach(buildSteps.indices, id: \.self) { i in
+                        HStack(spacing: 14) {
+                            ZStack {
+                                Circle()
+                                    .fill(vm.buildProgress > i ? RUColor.rose : RUColor.card)
+                                    .overlay(Circle().stroke(vm.buildProgress > i ? Color.clear : RUColor.line, lineWidth: 1))
+                                if vm.buildProgress > i {
+                                    Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundColor(.white)
+                                } else if vm.buildProgress == i {
+                                    Circle().fill(RUColor.rose).frame(width: 6, height: 6)
+                                }
+                            }
+                            .frame(width: 24, height: 24)
+                            Text(buildSteps[i])
+                                .font(RUFont.sans(.emphasis))
+                                .foregroundColor(vm.buildProgress > i ? RUColor.textPrimary : RUColor.text2)
+                            Spacer()
+                        }
+                        .padding(.vertical, 13)
+                        .overlay(Divider().background(RUColor.line), alignment: .bottom)
+                        .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: vm.buildProgress)
+                    }
+                }
+                .padding(.top, 26)
             }
-            .padding(.top, 26)
-            Spacer()
             VStack(spacing: 4) {
                 // L'annonce des notifications vivait ici, juste sous « Prêt ! ». Elle est
                 // passée sur `PlanRecapView` : c'est désormais lui le dernier écran avant la

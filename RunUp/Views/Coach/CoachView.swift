@@ -172,7 +172,10 @@ struct CoachView: View {
                 tuileLue(nom: "Aujourd'hui", valeur: profile.todaySession.displayTitle, accent: false)
                 if let derniere, derniere.distanceKm > 0 {
                     tuileLue(nom: "Dernière sortie",
-                             valeur: String(format: "%.1f km", derniere.distanceKm)
+                             // `locale:` et pas `String(format:)` nu : sans lui, la virgule
+                             // décimale française devient un point. « 12.4 km » sur l'écran du
+                             // coach, en français.
+                             valeur: String(format: "%.1f km", locale: Locale.current, derniere.distanceKm)
                                  + " · " + PaceModel.paceText(Double(derniere.durationSeconds) / derniere.distanceKm),
                              accent: false)
                 }

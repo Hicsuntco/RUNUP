@@ -446,6 +446,16 @@ jobs:
           cd ci_scripts && python3 test_pluriel.py
           cd .. && python3 ci_scripts/check_pluriel.py
 
+      # `String(format: "%.1f", km)` n'est pas neutre : sans `locale:`, il pose le séparateur
+      # décimal anglais. « 12.4 km » s'affichait donc tel quel en français et en espagnol, deux
+      # langues qui écrivent « 12,4 ». Quatorze des seize appels du dépôt passaient bien la
+      # locale ; deux l'avaient oubliée. La bonne version et la mauvaise se ressemblent trop pour
+      # se relire.
+      - name: Vérifier qu'aucun nombre à virgule n'est formaté sans locale
+        run: |
+          cd ci_scripts && python3 test_decimales.py
+          cd .. && python3 ci_scripts/check_decimales.py
+
       # Les tests tournent AVANT la signature, sur simulateur, donc sans certificat : un échec
       # coûte cinq minutes de machine au lieu de la construction complète. Et surtout,
       # `RouteSharingPrivacyTests` vérifie que les 300 premiers et derniers mètres d'un tracé

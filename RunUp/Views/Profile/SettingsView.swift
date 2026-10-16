@@ -466,9 +466,7 @@ struct SettingsView: View {
     /// those values directly, so editing here immediately reshapes what counts as "done" today.
     private var dailyGoalsCard: some View {
         VStack(spacing: 0) {
-            HStack {
-                Text("Objectif de pas").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
-                Spacer()
+            RUReglageRow(libelle: "Objectif de pas") {
                 Stepper(
                     "\(Int(profile.stepsGoal)) pas",
                     value: Binding(get: { profile.stepsGoal }, set: { profile.stepsGoal = $0 }),
@@ -481,9 +479,7 @@ struct SettingsView: View {
             }
             .padding(.horizontal, 14).padding(.vertical, 13)
             Divider().background(RUColor.line)
-            HStack {
-                Text("Objectif calories actives").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
-                Spacer()
+            RUReglageRow(libelle: "Objectif calories actives") {
                 Stepper(
                     "\(Int(profile.activeCaloriesGoal)) kcal",
                     value: Binding(get: { profile.activeCaloriesGoal }, set: { profile.activeCaloriesGoal = $0 }),

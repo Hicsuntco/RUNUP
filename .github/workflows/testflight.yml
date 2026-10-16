@@ -456,6 +456,16 @@ jobs:
           cd ci_scripts && python3 test_decimales.py
           cd .. && python3 ci_scripts/check_decimales.py
 
+      # `RUColor.text4` vaut 20 % d'opacité — environ 1,5:1 — parce que c'est la couleur des
+      # points médians et des filets inertes. L'audit l'a trouvée sur une vraie phrase : la ligne
+      # qui dit ce que contient la section dépliable des Stats ne se lisait pas. Rien ne pouvait
+      # le signaler, `text4` étant une couleur légitime du système de design : d'où un ensemble
+      # fermé d'emplois justifiés, et la question posée à tout nouvel emploi.
+      - name: Vérifier qu'aucun texte n'est affiché sous le seuil de contraste
+        run: |
+          cd ci_scripts && python3 test_contraste.py
+          cd .. && python3 ci_scripts/check_contraste.py
+
       # Les tests tournent AVANT la signature, sur simulateur, donc sans certificat : un échec
       # coûte cinq minutes de machine au lieu de la construction complète. Et surtout,
       # `RouteSharingPrivacyTests` vérifie que les 300 premiers et derniers mètres d'un tracé

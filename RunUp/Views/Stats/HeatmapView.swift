@@ -31,6 +31,13 @@ struct HeatmapView: View {
     @State private var parcours: [Parcours] = []
     @State private var cadrage: MKCoordinateRegion?
 
+    /// Le calcul a-t-il eu lieu ? Sans ce drapeau, `parcours` est vide à la première passe de
+    /// `body` — avant que `.task` n'ait tourné — et l'écran affichait une demi-seconde
+    /// « Aucun parcours GPS enregistré pour l'instant » en gros au milieu, à quelqu'un qui en a
+    /// cent cinquante. C'est le prix d'un calcul différé, et il se paie avec un état « pas encore
+    /// répondu » distinct de « la réponse est zéro ».
+    @State private var prepare = false
+
     /// Un tracé, déjà converti en coordonnées de carte.
     private struct Parcours: Identifiable {
         let id: PersistentIdentifier
@@ -39,9 +46,11 @@ struct HeatmapView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            BackTitleHeaderView(eyebrow: Pluriel.choisir(parcours.count,
-                                                         String(localized: "\(parcours.count) parcours tracké"),
-                                                         String(localized: "\(parcours.count) parcours trackés")),
+            BackTitleHeaderView(eyebrow: prepare
+                                ? Pluriel.choisir(parcours.count,
+                                                  String(localized: "\(parcours.count) parcours tracké"),
+                                                  String(localized: "\(parcours.count) parcours trackés"))
+                                : String(localized: "Mes parcours"),
                                 title: "Mes routes") {
                 appState.go(.stats)
             }
@@ -49,7 +58,11 @@ struct HeatmapView: View {
             .padding(.top, 8)
             .padding(.bottom, 8)
 
-            if parcours.isEmpty {
+            if !prepare {
+                // Rien, pas un message : le calcul dure le temps d'une image, et une phrase qui
+                // paraît pour disparaître est pire qu'un instant de vide.
+                Spacer()
+            } else if parcours.isEmpty {
                 Spacer()
                 Text("Aucun parcours GPS enregistré pour l'instant — la carte se remplit après ta première course trackée.")
                     .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
@@ -74,7 +87,10 @@ struct HeatmapView: View {
         // `id: runs.count` : une course ajoutée ou supprimée refait le calcul, le reste ne le
         // refait pas. Un `onAppear` seul raterait la course enregistrée pendant que cet écran est
         // ouvert — un `body` à chaque passe la voyait, pour le prix décrit plus haut.
-        .task(id: runs.count) { preparer() }
+        .task(id: runs.count) {
+            preparer()
+            prepare = true
+        }
     }
 
     /// L'UNIQUE parcours des positions : il construit les tracés et le rectangle englobant

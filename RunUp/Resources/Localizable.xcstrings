@@ -13815,6 +13815,23 @@
         }
       }
     },
+    "Mes parcours": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My routes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mis rutas"
+          }
+        }
+      }
+    },
     "Mes routes": {
       "localizations": {
         "en": {

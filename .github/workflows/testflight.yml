@@ -422,6 +422,18 @@ jobs:
           cd ci_scripts && python3 test_reseau.py
           cd .. && python3 ci_scripts/check_reseau.py
 
+      # `RunUp/Shared/` n'est pas une bibliothèque prêtée au widget : le dossier ENTIER est dans
+      # les sources de `RunUpWidgets`, qui ne compile rien d'autre de `RunUp/`. Un fichier posé là
+      # ne voit donc ni les modèles, ni le design system, ni les vues-modèles — mais tout compile
+      # sous les yeux, parce que la cible iOS, elle, voit tout. L'erreur ne tombe que dans la passe
+      # du widget, un quart d'heure après le push, et elle annule le build entier. C'est arrivé
+      # deux fois : `PlanRecap` au build 250, `AccentTheme` au build 278. Ce contrôle refait le
+      # calcul de visibilité depuis `project.yml` en une seconde.
+      - name: Vérifier que RunUp/Shared ne référence aucun type absent des cibles secondaires
+        run: |
+          cd ci_scripts && python3 test_cibles.py
+          cd .. && python3 ci_scripts/check_cibles.py
+
       # Les tests tournent AVANT la signature, sur simulateur, donc sans certificat : un échec
       # coûte cinq minutes de machine au lieu de la construction complète. Et surtout,
       # `RouteSharingPrivacyTests` vérifie que les 300 premiers et derniers mètres d'un tracé

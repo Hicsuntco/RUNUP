@@ -90,7 +90,9 @@ struct DailyGoalsSnapshot: Codable, Equatable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         progress = try c.decodeIfPresent([Double].self, forKey: .progress) ?? []
         streak = try c.decodeIfPresent(Int.self, forKey: .streak) ?? 0
-        accentThemeID = try c.decodeIfPresent(String.self, forKey: .accentThemeID) ?? AccentTheme.defaultID
+        // "rose" est la valeur de AccentTheme.defaultID, recopiee ici : ce fichier est
+        // compile dans la cible RunUpWidgets, qui ne voit pas RunUp/DesignSystem.
+        accentThemeID = try c.decodeIfPresent(String.self, forKey: .accentThemeID) ?? "rose"
         isLightMode = try c.decodeIfPresent(Bool.self, forKey: .isLightMode) ?? false
         dailyGoalsDone = try c.decodeIfPresent(Int.self, forKey: .dailyGoalsDone) ?? 0
         dailyGoalsTotal = try c.decodeIfPresent(Int.self, forKey: .dailyGoalsTotal) ?? 3

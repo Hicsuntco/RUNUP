@@ -90,6 +90,23 @@ final class RunWeatherService: NSObject, CLLocationManagerDelegate {
         let statut = manager.authorizationStatus
         guard statut == .authorizedWhenInUse || statut == .authorizedAlways else { return nil }
         let fraiche = await withCheckedContinuation { (suite: CheckedContinuation<CLLocation?, Never>) in
+            // DEUX DEMANDES QUI SE CHEVAUCHENT ABANDONNAIENT LA PREMIÈRE CONTINUATION.
+            //
+            // `enAttente` est un emplacement unique, et ce service est unique lui aussi. Or le
+            // conseil météo part à chaque passage au premier plan ET au changement de jour : deux
+            // transitions rapprochées — un bandeau de notification tiré puis relâché, le Centre
+            // de contrôle, un coup d'œil au sélecteur d'apps — suffisaient à ce que la seconde
+            // passe écrase la première. La tâche abandonnée restait alors suspendue POUR
+            // TOUJOURS, en retenant le profil et le contexte SwiftData derrière elle.
+            //
+            // `reprendre` ci-dessous protège contre la double REPRISE d'une même continuation ;
+            // rien ne protégeait contre la double DEMANDE. On libère donc l'ancienne avant de
+            // poser la nouvelle : elle rend `nil`, son appelant retombe sur la position de
+            // secours, et plus rien ne reste suspendu.
+            if let abandonnee = enAttente {
+                enAttente = nil
+                abandonnee.resume(returning: nil)
+            }
             enAttente = suite
             manager.requestLocation()
         }

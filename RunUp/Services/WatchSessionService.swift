@@ -115,12 +115,11 @@ final class WatchSessionService: NSObject {
         // wrist run must never become two RunRecords.
         var seen = UserDefaults.standard.stringArray(forKey: Self.seenClientIdsKey) ?? []
         guard !seen.contains(payload.clientId) else { return }
-        seen.append(payload.clientId)
-        if seen.count > 100 { seen.removeFirst(seen.count - 100) }
-        UserDefaults.standard.set(seen, forKey: Self.seenClientIdsKey)
 
         // A tap-started-tap-stopped accident on the wrist (a few seconds, no distance) shouldn't
-        // pollute History — same spirit as the Live screen's own minimum.
+        // pollute History — same spirit as the Live screen's own minimum. Placé AVANT l'écriture
+        // du marqueur : une livraison trop courte ne doit pas consommer l'identifiant, sinon une
+        // vraie course qui réutiliserait le même ne serait jamais reçue.
         guard payload.elapsedSeconds >= 60, payload.distanceKm >= 0.1 else { return }
 
         let record = AdaptivePlanEngine.buildRunRecord(
@@ -153,6 +152,22 @@ final class WatchSessionService: NSObject {
         // `markSessionDone` est idempotent : la validation du ressenti le rappellera sans rien
         // compter deux fois.
         AdaptivePlanEngine.markSessionDone(for: record, profile: appState.profile)
+
+        // LE MARQUEUR EST POSÉ APRÈS L'ENREGISTREMENT, ET PAS AVANT.
+        //
+        // Il l'était avant l'insertion, et aucun `save()` ne suivait : la persistance reposait
+        // sur l'enregistrement automatique de SwiftData. Si le processus mourait entre les deux
+        // — iOS qui récupère de la mémoire pendant une livraison —, l'identifiant restait
+        // durablement marqué « déjà vu », la montre ne redélivrait jamais, et la course était
+        // perdue définitivement.
+        //
+        // C'est la règle que les deux réparations de données énoncent déjà : « une réparation
+        // interrompue doit pouvoir recommencer ». Une livraison interrompue aussi.
+        try? appState.modelContext.save()
+        seen.append(payload.clientId)
+        if seen.count > 100 { seen.removeFirst(seen.count - 100) }
+        UserDefaults.standard.set(seen, forKey: Self.seenClientIdsKey)
+
         appState.pendingDebriefs.append(record)
         let distance = String(format: "%.1f", locale: Locale.current, record.distanceKm)
         appState.notify(icon: "⌚", colorHex: 0xFF3B6B, title: String(localized: "Course reçue de ta montre"), text: String(localized: "\(record.title) · \(distance) km — valide ton ressenti pour mettre à jour le programme."))

@@ -77,6 +77,17 @@ enum PersistenceController {
     /// launch, which is the minimum, not the ceiling.
     private(set) static var storeState: StoreState = .healthy
 
+    /// L'app tourne-t-elle sur le conteneur jetable ?
+    ///
+    /// Nommé parce que la question se pose maintenant à quatre endroits — l'export de la
+    /// sauvegarde, sa restauration, et les deux réparations de données — et qu'un `if case` répété
+    /// quatre fois est une occasion d'en oublier un. C'est précisément ce qui était arrivé :
+    /// l'export n'avait pas le test que la restauration avait.
+    static var enSecours: Bool {
+        if case .inMemoryFallback = storeState { return true }
+        return false
+    }
+
     /// Convenience for the common "should I warn her?" check at a call site that doesn't care why.
     static var isUsingFallbackStore: Bool {
         if case .inMemoryFallback = storeState { return true }

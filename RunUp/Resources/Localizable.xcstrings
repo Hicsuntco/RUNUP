@@ -12834,6 +12834,22 @@
         }
       }
     },
+    "Les anciennes données n'ont pas pu être effacées. Réessaie, ou redémarre l'app.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The previous data couldn't be erased. Try again, or restart the app."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron borrar los datos anteriores. Inténtalo de nuevo o reinicia la app."
+          }
+        }
+      }
+    },
     "Les courses déjà enregistrées avec cette paire garderont leurs autres données, juste sans chaussure associée.": {
       "localizations": {
         "en": {

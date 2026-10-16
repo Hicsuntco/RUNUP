@@ -115,7 +115,7 @@ struct CarteDeSauvegarde: View {
         // garde-fou, le fichier produit porterait un profil neuf, zéro course, sous un nom daté
         // parfaitement crédible. Une fausse assurance au pire moment, dans l'outil écrit pour ce
         // moment-là.
-        if case .inMemoryFallback = PersistenceController.storeState {
+        if PersistenceController.enSecours {
             message = String(localized: "Cette session ne voit pas tes données : l'app tourne sur un espace temporaire. Une sauvegarde faite maintenant serait vide. Relance l'app, ou réinstalle RUNUP.")
             return
         }
@@ -179,7 +179,7 @@ struct BoutonDeRestauration<Label: View>: View {
         // chercher sa sauvegarde. Y restaurer « marcherait » : les 212 courses apparaîtraient, et
         // disparaîtraient à la fermeture de l'app, en laissant croire que le fichier a servi.
         // Le dire ici est la seule façon d'éviter cette perte-là.
-        if case .inMemoryFallback = PersistenceController.storeState {
+        if PersistenceController.enSecours {
             message = String(localized: "L'app tourne sur un espace temporaire : rien de ce qui est écrit maintenant ne serait gardé. Réinstalle RUNUP, puis restaure ta sauvegarde.")
             return
         }

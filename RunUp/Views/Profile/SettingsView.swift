@@ -609,8 +609,22 @@ private struct StravaConnectionRow: View {
         do {
             let runs = try await stravaService.importActivities()
             let existingIds = existingStravaIds()
+            // LE SECOND GARDE-FOU, QUI MANQUAIT. Voir `HealthRunImport.estDejaLa`.
+            //
+            // `stravaActivityId` ne dédoublonne que ce qui vient de Strava. Une course
+            // enregistrée par RUNUP, ou importée d'Apple Santé, n'en porte aucun — et RUNUP
+            // écrit ses courses dans Santé pendant que Strava reçoit les mêmes sorties par la
+            // montre. « Importer mon historique » réinsérait donc l'historique déjà présent.
+            //
+            // L'import Santé a ces deux garde-fous depuis toujours et les documente ; celui-ci
+            // n'en avait qu'un.
+            var deja = coursesDejaConnues(depuis: runs.map(\.date).min())
             var newCount = 0
             for run in runs where !existingIds.contains(run.stravaActivityId) {
+                // La discipline n'est pas transmise par l'import Strava : on compare donc sur
+                // `.run`, qui est ce que `RunRecord` écrira juste en dessous. Comparer sur une
+                // discipline qu'on n'a pas serait pire que ne pas comparer.
+                guard !HealthRunImport.estDejaLa(date: run.date, discipline: .run, deja: deja) else { continue }
                 let record = RunRecord(
                     date: run.date,
                     title: run.title,
@@ -623,6 +637,10 @@ private struct StravaConnectionRow: View {
                     stravaActivityId: run.stravaActivityId
                 )
                 modelContext.insert(record)
+                // Ajoutée à la liste tout de suite : deux activités Strava à trois minutes
+                // d'écart dans le même lot sont la même sortie, et le `@Query` ne verra pas
+                // l'insertion avant la fin de la boucle.
+                deja.append(HealthRunImport.Deja(date: run.date, discipline: .run))
                 newCount += 1
             }
             // LA SÉRIE SE RECALCULE APRÈS TOUT CHANGEMENT D'HISTORIQUE — c'est ce que dit le
@@ -644,6 +662,20 @@ private struct StravaConnectionRow: View {
             errorMessage = String(localized: "Import Strava impossible, réessaie.")
         }
         isImporting = false
+    }
+
+    /// Les sorties déjà en base sur la fenêtre que l'import couvre — date et discipline, rien
+    /// d'autre.
+    ///
+    /// Bornée par la plus ancienne activité du lot : sans borne, le prédicat ramènerait tout
+    /// l'historique, tracés GPS compris, pour n'en garder que deux champs par ligne. C'est le
+    /// défaut que `existingStravaIds` a déjà corrigé juste en dessous, et il n'y a aucune raison
+    /// de le réintroduire ici.
+    private func coursesDejaConnues(depuis borne: Date?) -> [HealthRunImport.Deja] {
+        guard let borne else { return [] }
+        let descripteur = FetchDescriptor<RunRecord>(predicate: #Predicate { $0.date >= borne })
+        let existantes = (try? modelContext.fetch(descripteur)) ?? []
+        return existantes.map { HealthRunImport.Deja(date: $0.date, discipline: $0.discipline) }
     }
 
     /// Les identifiants Strava déjà connus, sans charger tout l'historique.

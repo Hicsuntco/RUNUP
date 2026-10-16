@@ -79,6 +79,23 @@ enum HealthRunImport {
         return kept
     }
 
+    /// LA MÊME RÈGLE, POUR UN SEUL CANDIDAT — et c'est l'import Strava qui en avait besoin.
+    ///
+    /// `selecting` ci-dessus travaille sur les entraînements d'Apple Santé, avec leur type à
+    /// elles. L'import Strava a ses propres objets, et il ne se dédoublonnait donc que sur
+    /// `stravaActivityId` : une course enregistrée par RUNUP, ou venue de Santé, n'en porte
+    /// aucun et lui était invisible. Or RUNUP écrit ses courses dans Santé, et Strava reçoit les
+    /// mêmes sorties par la montre ou l'app du fabricant — « Importer mon historique »
+    /// réinsérait donc l'historique déjà présent, en double. Kilométrage doublé, série fausse,
+    /// records faux, charge d'entraînement fausse.
+    ///
+    /// La règle extraite ici est exactement celle de `selecting` : même discipline, moins de
+    /// cinq minutes d'écart. Extraite plutôt que recopiée, pour que les deux imports ne puissent
+    /// plus diverger — c'est ce qui les avait laissés diverger en premier lieu.
+    static func estDejaLa(date: Date, discipline: Discipline, deja: [Deja]) -> Bool {
+        deja.contains { $0.discipline == discipline && abs($0.date.timeIntervalSince(date)) < sameRunWindow }
+    }
+
     /// En dessous de cette durée, une nage sans distance n'est pas une nage.
     ///
     /// Cinq minutes. Au-delà, personne n'ouvre un entraînement par erreur et le laisse tourner.

@@ -68,10 +68,15 @@ struct PendingClubActivity: Codable, Equatable {
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        clientId = try c.decode(UUID.self, forKey: .clientId)
-        type = try c.decode(String.self, forKey: .type)
-        text = try c.decode(String.self, forKey: .text)
-        xpEarned = try c.decode(Int.self, forKey: .xpEarned)
+        // `decodeIfPresent` partout, y compris sur les quatre champs qui ont toujours existé :
+        // cette file est relue par une version qui n'est pas forcément celle qui l'a écrite, et
+        // une seule entrée illisible faisait échouer la relecture de TOUTE la file — donc perdre
+        // des sorties qui n'étaient jamais parties. Un identifiant neuf vaut mieux qu'une file
+        // vide : l'entrée sera refusée en double par le serveur, pas perdue.
+        clientId = try c.decodeIfPresent(UUID.self, forKey: .clientId) ?? UUID()
+        type = try c.decodeIfPresent(String.self, forKey: .type) ?? "run"
+        text = try c.decodeIfPresent(String.self, forKey: .text) ?? ""
+        xpEarned = try c.decodeIfPresent(Int.self, forKey: .xpEarned) ?? 0
         contentKey = try c.decodeIfPresent(String.self, forKey: .contentKey)
         trace = try c.decodeIfPresent([RunRecord.RoutePoint].self, forKey: .trace)
         if let stored = try c.decodeIfPresent(ActivityMetrics.self, forKey: .metrics) {
@@ -153,6 +158,12 @@ extension AppState {
             trace: RouteGeometry.feedTrace(route)
         )
         outbox.append(pending)
+        // UN PLAFOND, comme le tampon d'`Analytics` en a un. Sans lui, une file qui ne part plus
+        // — pas de réseau pendant un séjour sans données, par exemple — grossit sans fin, et elle
+        // est réécrite en entier dans `UserDefaults` à chaque ajout. On jette les plus ANCIENNES :
+        // une sortie d'il y a trois semaines qui n'est jamais partie n'intéresse plus personne,
+        // celle d'aujourd'hui si.
+        if outbox.count > Self.maxEnFile { outbox.removeFirst(outbox.count - Self.maxEnFile) }
         pendingActivityCount = outbox.count
         Task { await attemptPost(pending) }
     }
@@ -190,6 +201,10 @@ extension AppState {
         pendingActivityCount = outbox.count
     }
 
+    /// Au-delà, les plus anciennes sont abandonnées. Cinquante sorties en attente, c'est déjà
+    /// un mois sans que rien ne parte : le problème n'est plus la file.
+    static let maxEnFile = 50
+
     private func attemptPost(_ pending: PendingClubActivity) async {
         let service = ClubService(auth: auth)
         do {
@@ -198,10 +213,29 @@ extension AppState {
             pendingActivityCount = outbox.count
             pendingActivityBlocker = nil
         } catch {
-            // L'entrée reste en file — elle sera reprise au prochain
-            // `retryPendingClubActivities()`. Mais la CAUSE, elle, n'est plus jetée : voir
-            // `AppState.BlocageEnvoi`. Sans elle, la bannière promettait une nouvelle tentative
-            // « bientôt » y compris quand aucune ne pouvait aboutir.
+            // UN REFUS DÉFINITIF QUITTE LA FILE. Sinon elle y reste pour toujours.
+            //
+            // L'entrée restait en file quelle que soit l'erreur, et `retryPendingClubActivities`
+            // la rejouait à chaque passage au premier plan et à chaque ouverture de l'onglet
+            // Club. Un texte refusé par la modération, ou une clé que ce déploiement du serveur
+            // ne connaît pas, ne passera jamais : la bannière « encore en synchro » restait
+            // affichée indéfiniment et l'app refaisait la même requête perdante sans fin.
+            //
+            // C'est exactement le raisonnement qu'`Analytics` applique déjà à son tampon
+            // d'événements, et qu'il explique : « refusé d'une façon que réessayer ne peut pas
+            // réparer — il doit quitter le tampon ». 429 (trop de requêtes) et 401/403 (session)
+            // sont les exceptions : les deux se réparent, l'une en attendant, l'autre en se
+            // reconnectant.
+            if case ClubServiceError.badResponse(let code, _) = error,
+               (400..<500).contains(code), code != 429, code != 401, code != 403 {
+                outbox.removeAll { $0.clientId == pending.clientId }
+                pendingActivityCount = outbox.count
+                pendingActivityBlocker = nil
+                return
+            }
+            // La CAUSE n'est plus jetée : voir `AppState.BlocageEnvoi`. Sans elle, la bannière
+            // promettait une nouvelle tentative « bientôt » y compris quand aucune ne pouvait
+            // aboutir.
             pendingActivityBlocker = Self.blocage(pour: error)
         }
     }

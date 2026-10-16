@@ -272,11 +272,32 @@ final class AppState {
     /// première installation. C'est bien ce qu'on veut dire par « repartir à neuf ».
     func startFreshForNewAccount() {
         guard let user = profileOwnerConflict else { return }
-        try? modelContext.delete(model: RunRecord.self)
-        try? modelContext.delete(model: ChatMessage.self)
-        try? modelContext.delete(model: AppNotification.self)
-        try? modelContext.delete(model: Shoe.self)
-        modelContext.delete(profile)
+
+        // LES SUPPRESSIONS SONT VÉRIFIÉES, ET LA FEUILLE NE SE REFERME QUE SI ELLES ONT EU LIEU.
+        //
+        // Elles passaient par `try?`, erreur avalée, et la fonction continuait quoi qu'il
+        // arrive : si l'une des quatre échouait, le nouveau compte arrivait sur un historique
+        // rempli des courses de l'ancien propriétaire et sur une conversation qui n'était pas la
+        // sienne. Sans message, sans trace — et l'analytique affirmait que la remise à zéro avait
+        // eu lieu. C'est précisément la fuite que cette fonction existe pour réparer, déplacée
+        // d'un cran.
+        //
+        // Le `save()` explicite compte autant : sans lui, on refermait l'écran bloquant avant
+        // d'avoir la moindre confirmation que le magasin avait suivi.
+        do {
+            try modelContext.delete(model: RunRecord.self)
+            try modelContext.delete(model: ChatMessage.self)
+            try modelContext.delete(model: AppNotification.self)
+            try modelContext.delete(model: Shoe.self)
+            modelContext.delete(profile)
+            try modelContext.save()
+        } catch {
+            // On ne se déconnecte pas tout seul : la personne a demandé à repartir à neuf, pas à
+            // perdre sa session. On lui dit, et on la laisse décider — `cancelAccountSwitch`
+            // reste à portée sur la même feuille.
+            toast(String(localized: "Les anciennes données n'ont pas pu être effacées. Réessaie, ou redémarre l'app."))
+            return
+        }
 
         let fresh = UserProfile()
         fresh.ownerAccountID = user.id
@@ -325,6 +346,17 @@ final class AppState {
     /// posé APRÈS l'enregistrement — une réparation interrompue doit pouvoir recommencer.
     private func renommerLesCoursesDuJourDeRepos() {
         let cle = "repair.restDayRunTitles.v1"
+        // LE MAGASIN DE SECOURS BRÛLERAIT CETTE RÉPARATION POUR TOUJOURS.
+        //
+        // `PersistenceController` ouvre un conteneur en mémoire VIDE quand le fichier sur disque
+        // refuse de s'ouvrir. Le `fetch` rendrait alors zéro ligne, le `save` serait sauté, et le
+        // marqueur serait quand même posé — or il vit dans `UserDefaults`, qui n'est pas dans le
+        // magasin. La réparation serait donc marquée faite sans avoir rien lu, et ne se
+        // relancerait JAMAIS quand le vrai fichier redeviendrait lisible.
+        //
+        // C'est exactement la perte que le chemin de secours promet d'éviter : les données
+        // reviennent après une mise à jour, leurs réparations non.
+        guard !PersistenceController.enSecours else { return }
         guard !UserDefaults.standard.bool(forKey: cle) else { return }
         guard let toutes = try? modelContext.fetch(FetchDescriptor<RunRecord>()) else { return }
         let libre = String(localized: "Séance libre")
@@ -368,6 +400,9 @@ final class AppState {
     /// sur le serveur avec le reste, et il y reste. Rien ici ne peut l'atteindre.
     private func recalculerLeDenivelePositif() {
         let cle = "repair.elevationGain.v1"
+        // Même garde que la réparation précédente : sur le magasin de secours, le marqueur
+        // serait posé sans que rien n'ait été lu, et cette réparation ne se relancerait jamais.
+        guard !PersistenceController.enSecours else { return }
         guard !UserDefaults.standard.bool(forKey: cle) else { return }
         guard let toutes = try? modelContext.fetch(FetchDescriptor<RunRecord>()) else { return }
         var corrigees = 0

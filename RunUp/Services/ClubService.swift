@@ -105,6 +105,32 @@ struct ActivityMetrics: Codable, Equatable {
     var isPersonalRecord: Bool = false
 
     static let none = ActivityMetrics()
+
+    init(distanceKm: Double? = nil, durationSeconds: Int? = nil, avgPace: String? = nil,
+         elevationGainM: Int? = nil, isPersonalRecord: Bool = false) {
+        self.distanceKm = distanceKm
+        self.durationSeconds = durationSeconds
+        self.avgPace = avgPace
+        self.elevationGainM = elevationGainM
+        self.isPersonalRecord = isPersonalRecord
+    }
+
+    /// Décodage tolérant : cette structure est ENREGISTRÉE, dans la file d'envoi au club que
+    /// `PendingClubActivity` range dans `UserDefaults`. Un seul champ non optionnel suffisait à
+    /// faire échouer la relecture de toute la file après une mise à jour qui l'aurait ajouté —
+    /// et une file illisible est une sortie qui ne part jamais. Voir `ci_scripts/check_decodage.py`.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        distanceKm = try c.decodeIfPresent(Double.self, forKey: .distanceKm)
+        durationSeconds = try c.decodeIfPresent(Int.self, forKey: .durationSeconds)
+        avgPace = try c.decodeIfPresent(String.self, forKey: .avgPace)
+        elevationGainM = try c.decodeIfPresent(Int.self, forKey: .elevationGainM)
+        isPersonalRecord = try c.decodeIfPresent(Bool.self, forKey: .isPersonalRecord) ?? false
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case distanceKm, durationSeconds, avgPace, elevationGainM, isPersonalRecord
+    }
 }
 
 struct FeedItem: Decodable, Identifiable {

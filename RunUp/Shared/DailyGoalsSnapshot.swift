@@ -8,6 +8,26 @@ struct WidgetWeekDay: Codable, Equatable {
     var letter: String
     var isDone: Bool
     var isToday: Bool
+
+    init(letter: String, isDone: Bool, isToday: Bool) {
+        self.letter = letter
+        self.isDone = isDone
+        self.isToday = isToday
+    }
+
+    /// Décodage tolérant : l'instantané du widget est écrit par l'app et relu par une AUTRE
+    /// PROCESSUS, qui n'est pas forcément de la même version — l'extension garde la sienne en
+    /// mémoire jusqu'à ce que le système la relance. Une clé ajoutée d'un côté ne doit pas
+    /// rendre l'instantané illisible de l'autre : le widget afficherait alors un écran vide
+    /// jusqu'à la publication suivante. Voir `ci_scripts/check_decodage.py`.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        letter = try c.decodeIfPresent(String.self, forKey: .letter) ?? ""
+        isDone = try c.decodeIfPresent(Bool.self, forKey: .isDone) ?? false
+        isToday = try c.decodeIfPresent(Bool.self, forKey: .isToday) ?? false
+    }
+
+    private enum CodingKeys: String, CodingKey { case letter, isDone, isToday }
 }
 
 /// The tiny slice of `UserProfile` the Home Screen widget needs, mirrored into an App Group
@@ -68,15 +88,15 @@ struct DailyGoalsSnapshot: Codable, Equatable {
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        progress = try c.decode([Double].self, forKey: .progress)
-        streak = try c.decode(Int.self, forKey: .streak)
-        accentThemeID = try c.decode(String.self, forKey: .accentThemeID)
-        isLightMode = try c.decode(Bool.self, forKey: .isLightMode)
-        dailyGoalsDone = try c.decode(Int.self, forKey: .dailyGoalsDone)
-        dailyGoalsTotal = try c.decode(Int.self, forKey: .dailyGoalsTotal)
-        activeCaloriesRemaining = try c.decode(Int.self, forKey: .activeCaloriesRemaining)
-        stepsRemaining = try c.decode(Int.self, forKey: .stepsRemaining)
-        weekStrip = try c.decode([WidgetWeekDay].self, forKey: .weekStrip)
+        progress = try c.decodeIfPresent([Double].self, forKey: .progress) ?? []
+        streak = try c.decodeIfPresent(Int.self, forKey: .streak) ?? 0
+        accentThemeID = try c.decodeIfPresent(String.self, forKey: .accentThemeID) ?? AccentTheme.defaultID
+        isLightMode = try c.decodeIfPresent(Bool.self, forKey: .isLightMode) ?? false
+        dailyGoalsDone = try c.decodeIfPresent(Int.self, forKey: .dailyGoalsDone) ?? 0
+        dailyGoalsTotal = try c.decodeIfPresent(Int.self, forKey: .dailyGoalsTotal) ?? 3
+        activeCaloriesRemaining = try c.decodeIfPresent(Int.self, forKey: .activeCaloriesRemaining) ?? 0
+        stepsRemaining = try c.decodeIfPresent(Int.self, forKey: .stepsRemaining) ?? 0
+        weekStrip = try c.decodeIfPresent([WidgetWeekDay].self, forKey: .weekStrip) ?? []
         isRestDay = try c.decodeIfPresent(Bool.self, forKey: .isRestDay) ?? false
     }
 

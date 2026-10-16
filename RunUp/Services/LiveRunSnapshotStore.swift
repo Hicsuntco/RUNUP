@@ -21,6 +21,55 @@ struct LiveRunSnapshot: Codable {
     /// vaut alors ce que valaient toutes les courses avant `SessionKind`.
     var sessionKind: SessionKind?
     var route: [RunRecord.RoutePoint]
+
+    init(startedAt: Date, updatedAt: Date, accumulatedPauseSeconds: Double, elapsedSeconds: Double,
+         distanceMeters: Double, elevationGainMeters: Double, splitSecondsPerKm: [Double],
+         sessionTitle: String, sessionKind: SessionKind?, route: [RunRecord.RoutePoint]) {
+        self.startedAt = startedAt
+        self.updatedAt = updatedAt
+        self.accumulatedPauseSeconds = accumulatedPauseSeconds
+        self.elapsedSeconds = elapsedSeconds
+        self.distanceMeters = distanceMeters
+        self.elevationGainMeters = elevationGainMeters
+        self.splitSecondsPerKm = splitSecondsPerKm
+        self.sessionTitle = sessionTitle
+        self.sessionKind = sessionKind
+        self.route = route
+    }
+
+    /// LE DÉCODAGE NE DOIT RIEN EXIGER — et c'est une course en cours qui est en jeu.
+    ///
+    /// Swift synthétisait `decode` pour les dix propriétés non optionnelles. L'enchaînement
+    /// réel : une course tourne, iOS tue l'app pour récupérer de la mémoire, iOS installe la
+    /// mise à jour en attente, l'app relance — et la nouvelle version a ajouté un champ. Le
+    /// décodage lève, `loadRecoverable` attrape sous `try?` et appelle `clear()` : le fichier
+    /// est SUPPRIMÉ. La course disparaît sans laisser la moindre trace, ce qui est exactement la
+    /// panne que ce fichier existe pour empêcher.
+    ///
+    /// Même règle qu'en tête de `Session.swift`, pour une raison voisine : ici `JSONDecoder`
+    /// lève au lieu d'arrêter le processus, mais le résultat — la donnée effacée — est pire.
+    /// Les replis sont neutres : une course reprise avec un dénivelé à zéro reste une course
+    /// reprise.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        startedAt = try c.decodeIfPresent(Date.self, forKey: .startedAt) ?? .now
+        updatedAt = try c.decodeIfPresent(Date.self, forKey: .updatedAt) ?? .now
+        accumulatedPauseSeconds = try c.decodeIfPresent(Double.self, forKey: .accumulatedPauseSeconds) ?? 0
+        elapsedSeconds = try c.decodeIfPresent(Double.self, forKey: .elapsedSeconds) ?? 0
+        distanceMeters = try c.decodeIfPresent(Double.self, forKey: .distanceMeters) ?? 0
+        elevationGainMeters = try c.decodeIfPresent(Double.self, forKey: .elevationGainMeters) ?? 0
+        splitSecondsPerKm = try c.decodeIfPresent([Double].self, forKey: .splitSecondsPerKm) ?? []
+        sessionTitle = try c.decodeIfPresent(String.self, forKey: .sessionTitle) ?? ""
+        // `try?` sur l'énumération, et sur elle seule : un `rawValue` inconnu ne rend pas nil,
+        // il LÈVE. Voir `WorkoutSession.init(from:)`, même piège, même parade.
+        sessionKind = (try? c.decodeIfPresent(SessionKind.self, forKey: .sessionKind)) ?? nil
+        route = try c.decodeIfPresent([RunRecord.RoutePoint].self, forKey: .route) ?? []
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case startedAt, updatedAt, accumulatedPauseSeconds, elapsedSeconds, distanceMeters
+        case elevationGainMeters, splitSecondsPerKm, sessionTitle, sessionKind, route
+    }
 }
 
 /// Lit et écrit l'instantané dans un fichier du conteneur de l'app, pas dans `UserDefaults`.

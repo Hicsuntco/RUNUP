@@ -137,9 +137,33 @@ def analyser(sources=None):
     return structures, enums, modeles
 
 
+# LES SURFACES PERSISTÉES HORS SWIFTDATA, NOMMÉES À LA MAIN.
+#
+# Le script partait des classes `@Model` et suivait leurs propriétés. C'est la bonne racine pour
+# le magasin — mais trois choses sont écrites sur le disque SANS passer par lui, et lui étaient
+# donc invisibles :
+#
+#   • `LiveRunSnapshot`   — la course en cours, dans un fichier du conteneur ;
+#   • `PendingClubActivity` — la file d'envoi au club, dans `UserDefaults` ;
+#   • `DailyGoalsSnapshot` — les objectifs du jour, partagés avec le widget.
+#
+# Les deux dernières se défendaient déjà à la main et le documentaient ; la première, non. Et sa
+# panne était la pire des trois : `loadRecoverable` attrape l'échec de décodage sous `try?` et
+# SUPPRIME le fichier. Une course en cours disparaissait donc entièrement à la première mise à
+# jour qui ajoutait un champ — c'est-à-dire exactement ce que ce fichier existe pour empêcher.
+#
+# Elles sont nommées plutôt que devinées : ce qui part sur un disque est une décision, pas une
+# propriété syntaxique, et deviner ferait entrer la moitié du dépôt.
+RACINES_HORS_MAGASIN = [
+    "LiveRunSnapshot",
+    "PendingClubActivity",
+    "DailyGoalsSnapshot",
+]
+
+
 def enregistrees(structures, modeles):
-    """Les structures atteintes depuis une classe `@Model`, de proche en proche."""
-    a_voir = []
+    """Les structures atteintes depuis une racine enregistrée, de proche en proche."""
+    a_voir = list(RACINES_HORS_MAGASIN)
     for body in modeles:
         a_voir.extend(types_cites(body))
     trouvees = set()

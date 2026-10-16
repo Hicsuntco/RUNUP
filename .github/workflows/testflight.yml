@@ -466,6 +466,16 @@ jobs:
           cd ci_scripts && python3 test_contraste.py
           cd .. && python3 ci_scripts/check_contraste.py
 
+      # « Le contenu au milieu, le bouton en bas » centre joliment tant que le contenu est plus
+      # court que l'écran. À deux fois la taille de texte — que l'app autorise — les `Spacer`
+      # tombent à zéro et le bouton sort par le bas. En bas de `PlanRecapView`, c'est
+      # « C'EST PARTI » : quelqu'un qui agrandit le texte pour pouvoir lire l'app ne pouvait pas
+      # finir de s'y inscrire.
+      - name: Vérifier qu'aucun écran d'inscription ne cache son propre bouton
+        run: |
+          cd ci_scripts && python3 test_inscription.py
+          cd .. && python3 ci_scripts/check_inscription.py
+
       # Les tests tournent AVANT la signature, sur simulateur, donc sans certificat : un échec
       # coûte cinq minutes de machine au lieu de la construction complète. Et surtout,
       # `RouteSharingPrivacyTests` vérifie que les 300 premiers et derniers mètres d'un tracé

@@ -554,7 +554,14 @@ private struct StravaConnectionRow: View {
             }
 
             if let importedCount {
-                Text(importedCount == 0 ? "Rien de nouveau à importer." : "\(importedCount) course\(importedCount > 1 ? "s" : "") importée\(importedCount > 1 ? "s" : "").")
+                // Le « s » recollé n'était pas seulement faux hors du français : la clé
+                // cherchée au catalogue était « %lld course%@ importée%@. », et les traductions
+                // devaient donc porter le même bricolage. Deux clés entières à la place.
+                Text(importedCount == 0
+                     ? String(localized: "Rien de nouveau à importer.")
+                     : Pluriel.choisir(importedCount,
+                                       String(localized: "\(importedCount) course importée."),
+                                       String(localized: "\(importedCount) courses importées.")))
                     .font(RUFont.sans(.small)).foregroundColor(RUColor.lime)
             }
             if let errorMessage {

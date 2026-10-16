@@ -38,8 +38,15 @@ struct ChoiceView: View {
                         MetricColumn(value: "\(totalKm)", label: "km parcourus")
                         // Deux clés entières plutôt qu'un « s » recollé : le pluriel ne se fabrique
                         // pas de la même façon dans les trois langues.
-                        MetricColumn(value: "\(profile.weekNumber)", label: profile.weekNumber > 1 ? String(localized: "semaines") : String(localized: "semaine"))
-                        MetricColumn(value: "\(profile.streak)", label: profile.streak > 1 ? String(localized: "jours de série") : String(localized: "jour de série"), valueColor: RUColor.rose2)
+                        MetricColumn(value: "\(profile.weekNumber)",
+                                     label: Pluriel.choisir(profile.weekNumber,
+                                                            String(localized: "semaine"),
+                                                            String(localized: "semaines")))
+                        MetricColumn(value: "\(profile.streak)",
+                                     label: Pluriel.choisir(profile.streak,
+                                                            String(localized: "jour de série"),
+                                                            String(localized: "jours de série")),
+                                     valueColor: RUColor.rose2)
                     }
                 }
                 .padding(16)

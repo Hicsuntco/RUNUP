@@ -590,9 +590,9 @@ final class AppState {
         notify(
             icon: "❤️",
             colorHex: 0xFF3B6B,
-            title: imported.count == 1
-                ? String(localized: "Sortie récupérée dans Santé")
-                : String(localized: "\(imported.count) sorties récupérées dans Santé"),
+            title: Pluriel.choisir(imported.count,
+                String(localized: "Sortie récupérée dans Santé"),
+                String(localized: "\(imported.count) sorties récupérées dans Santé")),
             text: courus > 0
                 ? String(localized: "\(distance) km qui ne comptaient pas encore dans ton programme. Valide ton ressenti pour les y faire entrer.")
                 : String(localized: "Elles ne comptaient pas encore dans ton programme. Valide ton ressenti pour les y faire entrer.")

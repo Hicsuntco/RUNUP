@@ -281,11 +281,16 @@ struct ProfileView: View {
             // série de douze jours s'affichait ici « 12 sem. de suite » — douze semaines.
             statCell(
                 value: "\(profile.streak)",
-                label: profile.streak > 1 ? String(localized: "jours de suite") : String(localized: "jour de suite"),
+                label: Pluriel.choisir(profile.streak,
+                                       String(localized: "jour de suite"),
+                                       String(localized: "jours de suite")),
                 valueColor: profile.streak > 0 ? RUColor.rose : RUColor.textPrimary,
                 icon: profile.streak > 0 ? "flame.fill" : nil
             )
-            statCell(value: "\(badgeCount)", label: badgeCount > 1 ? String(localized: "badges") : String(localized: "badge"))
+            statCell(value: "\(badgeCount)",
+                     label: Pluriel.choisir(badgeCount,
+                                            String(localized: "badge"),
+                                            String(localized: "badges")))
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 2)
@@ -351,7 +356,9 @@ struct ProfileView: View {
             HStack(spacing: 10) {
                 if let total = shape.totalWeeks {
                     firstDayFact(icon: "calendar", value: "\(total)",
-                                 label: total > 1 ? String(localized: "semaines") : String(localized: "semaine"))
+                                 label: Pluriel.choisir(total,
+                                                        String(localized: "semaine"),
+                                                        String(localized: "semaines")))
                     firstDayFact(icon: "square.stack.3d.up.fill", value: "3",
                                  label: String(localized: "phases"))
                 } else {
@@ -537,9 +544,9 @@ struct ProfileView: View {
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 6).padding(.vertical, 2)
                                 .background(RUColor.rose, in: Capsule())
-                                .accessibilityLabel(friendsList.incomingRequests.count > 1
-                                    ? String(localized: "\(friendsList.incomingRequests.count) demandes en attente")
-                                    : String(localized: "\(friendsList.incomingRequests.count) demande en attente"))
+                                .accessibilityLabel(Pluriel.choisir(friendsList.incomingRequests.count,
+                                    String(localized: "\(friendsList.incomingRequests.count) demande en attente"),
+                                    String(localized: "\(friendsList.incomingRequests.count) demandes en attente")))
                         }
                         cardArrow
                     }
@@ -555,10 +562,10 @@ struct ProfileView: View {
                                 }
                             }
                             Text(todaysFriendActivityCount > 0
-                                 ? (todaysFriendActivityCount > 1
-                                    ? String(localized: "\(todaysFriendActivityCount) nouvelles activités aujourd'hui")
-                                    : String(localized: "\(todaysFriendActivityCount) nouvelle activité aujourd'hui"))
-                                 : "Rien de nouveau aujourd'hui")
+                                 ? Pluriel.choisir(todaysFriendActivityCount,
+                                    String(localized: "\(todaysFriendActivityCount) nouvelle activité aujourd'hui"),
+                                    String(localized: "\(todaysFriendActivityCount) nouvelles activités aujourd'hui"))
+                                 : String(localized: "Rien de nouveau aujourd'hui"))
                                 .font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text2)
                         }
                     } else {
@@ -617,9 +624,9 @@ struct ProfileView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Running Club").font(RUFont.sans(.emphasis, weight: .bold)).foregroundColor(RUColor.textPrimary)
                             if let club = board?.club {
-                                Text(club.memberCount > 1
-                                     ? String(localized: "\(club.name) · \(club.memberCount) membres")
-                                     : String(localized: "\(club.name) · \(club.memberCount) membre"))
+                                Text(Pluriel.choisir(club.memberCount,
+                                     String(localized: "\(club.name) · \(club.memberCount) membre"),
+                                     String(localized: "\(club.name) · \(club.memberCount) membres")))
                                     .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                             } else {
                                 Text("Tu n'en as pas encore rejoint").font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
@@ -635,9 +642,10 @@ struct ProfileView: View {
                         HStack(spacing: 4) {
                             Image(systemName: "mappin.circle.fill").font(.system(size: 11)).foregroundColor(RUColor.rose)
                             Text(event.title).font(RUFont.sans(.small, weight: .bold)).foregroundColor(RUColor.rose).lineLimit(1).minimumScaleFactor(0.8)
-                            Text(event.going > 1
-                                 ? String(localized: "— \(event.going) confirmés")
-                                 : String(localized: "— \(event.going) confirmé")).font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
+                            Text(Pluriel.choisir(event.going,
+                                 String(localized: "— \(event.going) confirmé"),
+                                 String(localized: "— \(event.going) confirmés")))
+                                .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                         }
                     } else if board?.club == nil {
                         // La maquette propose ici un aperçu de « 2 clubs près de toi » à

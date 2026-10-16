@@ -36,9 +36,9 @@ struct ClubManagementView: View {
                     challengeSection
 
                     VStack(alignment: .leading, spacing: 10) {
-                        RUCardHeader(title: members.count > 1
-                                     ? String(localized: "\(members.count) membres")
-                                     : String(localized: "\(members.count) membre"))
+                        RUCardHeader(title: Pluriel.choisir(members.count,
+                                                            String(localized: "\(members.count) membre"),
+                                                            String(localized: "\(members.count) membres")))
                         VStack(spacing: 6) {
                             ForEach(members) { member in
                                 NavigationLink(value: member) {

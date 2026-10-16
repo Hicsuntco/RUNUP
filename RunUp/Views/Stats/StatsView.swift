@@ -144,7 +144,7 @@ struct StatsView: View {
                 RUStatTile(icon: "figure.run", tint: RUColor.violet,
                            title: "Sorties",
                            value: "\(runsOnFoot.count)",
-                           unit: runsOnFoot.count > 1 ? "sorties" : "sortie",
+                           unit: Pluriel.choisir(runsOnFoot.count, "sortie", "sorties"),
                            footnote: nil, progress: nil)
             }
             HStack(spacing: 10) {
@@ -156,7 +156,7 @@ struct StatsView: View {
                            tint: profile.streak > 0 ? RUColor.lime : RUColor.text3,
                            title: "Série",
                            value: "\(profile.streak)",
-                           unit: profile.streak > 1 ? "jours" : "jour",
+                           unit: Pluriel.choisir(profile.streak, "jour", "jours"),
                            footnote: nil, progress: nil)
             }
         }
@@ -204,7 +204,7 @@ struct StatsView: View {
                         RUStatTile(icon: "bicycle", tint: RUColor.cyan,
                                    title: "Sorties",
                                    value: "\(bikeRuns.count)",
-                                   unit: bikeRuns.count > 1 ? "sorties" : "sortie",
+                                   unit: Pluriel.choisir(bikeRuns.count, "sortie", "sorties"),
                                    footnote: nil, progress: nil)
                     }
                     HStack(spacing: 10) {
@@ -352,9 +352,9 @@ struct StatsView: View {
                     lastWeekKm: lastWeekKm,
                     footnote: profile.runningDays.isEmpty
                         ? nil
-                        : (thisWeekRuns.count > 1
-                           ? String(localized: "\(thisWeekRuns.count) séances sur \(profile.runningDays.count) prévues")
-                           : String(localized: "\(thisWeekRuns.count) séance sur \(profile.runningDays.count) prévues"))
+                        : Pluriel.choisir(thisWeekRuns.count,
+                           String(localized: "\(thisWeekRuns.count) séance sur \(profile.runningDays.count) prévues"),
+                           String(localized: "\(thisWeekRuns.count) séances sur \(profile.runningDays.count) prévues"))
                 )
             }
             .padding(16)
@@ -481,9 +481,9 @@ struct StatsView: View {
                         )
                     }
                 }
-                Text(chartRuns.count == 1
-                     ? String(localized: "1 sortie · \(selectedRange.caption)")
-                     : String(localized: "\(chartRuns.count) sorties · \(selectedRange.caption)"))
+                Text(Pluriel.choisir(chartRuns.count,
+                     String(localized: "\(chartRuns.count) sortie · \(selectedRange.caption)"),
+                     String(localized: "\(chartRuns.count) sorties · \(selectedRange.caption)")))
                     .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
 
                 if recentPacesSecPerKm.count >= 2 {
@@ -785,8 +785,10 @@ struct StatsView: View {
                             // No per-week value was ever exposed, and "this week" (the last bar)
                             // was marked by color alone — VoiceOver had nothing beyond a silent bar.
                             .accessibilityLabel(i == bars.count - 1
-                                ? "Cette semaine"
-                                : String(localized: "Il y a \(bars.count - 1 - i) semaine\(bars.count - 1 - i > 1 ? "s" : "")"))
+                                ? String(localized: "Cette semaine")
+                                : Pluriel.choisir(bars.count - 1 - i,
+                                    String(localized: "Il y a \(bars.count - 1 - i) semaine"),
+                                    String(localized: "Il y a \(bars.count - 1 - i) semaines")))
                             .accessibilityValue("\(String(format: "%.1f", locale: Locale.current, bars[i])) km")
                     }
                 }

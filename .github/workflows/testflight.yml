@@ -434,6 +434,18 @@ jobs:
           cd ci_scripts && python3 test_cibles.py
           cd .. && python3 ci_scripts/check_cibles.py
 
+      # Zéro est au singulier en français (« 0 course ») et au PLURIEL en anglais et en espagnol
+      # (« 0 runs »). La bascule était écrite `n > 1` sur trente sites : une anglophone qui
+      # s'inscrit lisait « 0 run », « 0 badge », « 0 day in a row », « 0 follower » le jour même,
+      # sur les écrans d'un compte neuf. Quatre de ces sites recollaient en plus le « s » DANS la
+      # chaîne, ce qui fabriquait la clé à l'exécution — ni « %lld sortie » ni « %lld sorties »
+      # n'étaient au catalogue, et ces libellés sortaient en français pour tout le monde sans que
+      # `check_strings.py` puisse le voir.
+      - name: Vérifier qu'aucun pluriel n'applique la règle française aux trois langues
+        run: |
+          cd ci_scripts && python3 test_pluriel.py
+          cd .. && python3 ci_scripts/check_pluriel.py
+
       # Les tests tournent AVANT la signature, sur simulateur, donc sans certificat : un échec
       # coûte cinq minutes de machine au lieu de la construction complète. Et surtout,
       # `RouteSharingPrivacyTests` vérifie que les 300 premiers et derniers mètres d'un tracé

@@ -100,7 +100,13 @@ struct HistoryView: View {
     }
 
     private var header: some View {
-        BackTitleHeaderView(eyebrow: String(localized: "\(runs.count) sortie\(runs.count > 1 ? "s" : "")"), title: "Historique") {
+        // Le « s » recollé fabriquait la clé à l'exécution : « %lld sortie » et « %lld sorties »
+        // n'étaient donc ni l'une ni l'autre au catalogue, et cet eyebrow sortait en français
+        // pour tout le monde. Deux clés entières, les deux traduites.
+        let compte = Pluriel.choisir(runs.count,
+                                     String(localized: "\(runs.count) sortie"),
+                                     String(localized: "\(runs.count) sorties"))
+        return BackTitleHeaderView(eyebrow: compte, title: "Historique") {
             appState.go(.stats)
         } trailing: {
             Button(action: { showAddRun = true }) {
@@ -155,9 +161,9 @@ struct HistoryView: View {
                 .frame(width: 26)
                 // Sans son disque teinté : l'ambre reste au glyphe.
             VStack(alignment: .leading, spacing: 3) {
-                Text(appState.pendingActivityCount == 1
-                     ? String(localized: "1 course pas encore synchronisée")
-                     : String(localized: "\(appState.pendingActivityCount) courses pas encore synchronisées"))
+                Text(Pluriel.choisir(appState.pendingActivityCount,
+                     String(localized: "\(appState.pendingActivityCount) course pas encore synchronisée"),
+                     String(localized: "\(appState.pendingActivityCount) courses pas encore synchronisées")))
                     .font(RUFont.sans(.label, weight: .semibold))
                     .foregroundColor(RUColor.textPrimary)
                 Text(raisonDeLAttente)

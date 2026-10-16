@@ -665,6 +665,23 @@
         }
       }
     },
+    "%lld abonnement, voir la liste": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld following, view the list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld seguido, ver la lista"
+          }
+        }
+      }
+    },
     "%lld abonnements, voir la liste": {
       "extractionState": "manual",
       "localizations": {
@@ -678,6 +695,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld seguidos, ver la lista"
+          }
+        }
+      }
+    },
+    "%lld abonné, voir la liste": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld follower, view the list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld seguidor, ver la lista"
           }
         }
       }
@@ -749,18 +783,53 @@
         }
       }
     },
-    "%lld course%@ importée%@.": {
+    "%lld course importée.": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld run%@ imported."
+            "value": "%lld run imported."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld carrera%@ importada%@."
+            "value": "%lld carrera importada."
+          }
+        }
+      }
+    },
+    "%lld course pas encore synchronisée": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld run not synced yet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld carrera sin sincronizar"
+          }
+        }
+      }
+    },
+    "%lld courses importées.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld runs imported."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld carreras importadas."
           }
         }
       }
@@ -1379,6 +1448,40 @@
         }
       }
     },
+    "%lld sortie": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld salida"
+          }
+        }
+      }
+    },
+    "%lld sortie · %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld run · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld salida · %@"
+          }
+        }
+      }
+    },
     "%lld sortie%@": {
       "localizations": {
         "en": {
@@ -1391,6 +1494,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld carrera%@"
+          }
+        }
+      }
+    },
+    "%lld sorties": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld runs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld salidas"
           }
         }
       }
@@ -1820,23 +1940,6 @@
         }
       }
     },
-    "1 course pas encore synchronisée": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 run not synced yet"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 carrera sin sincronizar"
-          }
-        }
-      }
-    },
     "1 semaine faite": {
       "extractionState": "manual",
       "localizations": {
@@ -1850,22 +1953,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "1 semana hecha"
-          }
-        }
-      }
-    },
-    "1 sortie · %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 run · %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 salida · %@"
           }
         }
       }
@@ -10356,6 +10443,23 @@
         }
       }
     },
+    "Il y a %lld semaine": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld week ago"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hace %lld semana"
+          }
+        }
+      }
+    },
     "Il y a %lld semaine%@": {
       "extractionState": "manual",
       "localizations": {
@@ -10369,6 +10473,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hace %lld semana%@"
+          }
+        }
+      }
+    },
+    "Il y a %lld semaines": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld weeks ago"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hace %lld semanas"
           }
         }
       }
@@ -11084,6 +11205,23 @@
         }
       }
     },
+    "JOUR": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAY"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DÍA"
+          }
+        }
+      }
+    },
     "JOUR%@": {
       "localizations": {
         "en": {
@@ -11112,6 +11250,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "DÍA COMPLETADO"
+          }
+        }
+      }
+    },
+    "JOURS": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAYS"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DÍAS"
           }
         }
       }

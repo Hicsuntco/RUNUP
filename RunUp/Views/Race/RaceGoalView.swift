@@ -153,7 +153,14 @@ struct RaceGoalView: View {
 
                 if hasRealRaceDay {
                     HStack(spacing: 10) {
-                        tile(profile.daysUntilRace.map(String.init) ?? "—", String(localized: "JOUR\((profile.daysUntilRace ?? 2) > 1 ? "S" : "")"), highlighted: true)
+                        // Le « S » recollé fabriquait la clé à l'exécution : ni « JOUR » ni
+                        // « JOURS » n'étaient au catalogue, et cette tuile — la plus regardée
+                        // de l'écran course — sortait en français partout.
+                        tile(profile.daysUntilRace.map(String.init) ?? "—",
+                             Pluriel.choisir(profile.daysUntilRace ?? 2,
+                                             String(localized: "JOUR"),
+                                             String(localized: "JOURS")),
+                             highlighted: true)
                         tile(goalTarget, "OBJECTIF", highlighted: false)
                         if let deniveleLabel {
                             tile(deniveleLabel, "D+", highlighted: false)

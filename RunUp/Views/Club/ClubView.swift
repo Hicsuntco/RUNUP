@@ -277,9 +277,10 @@ struct ClubView: View {
             }
             Spacer()
             if let club = board.club {
-                StatChip(text: club.memberCount > 1
-                    ? String(localized: "\(club.memberCount) membres")
-                    : String(localized: "\(club.memberCount) membre"), color: RUColor.text2, background: RUColor.card)
+                StatChip(text: Pluriel.choisir(club.memberCount,
+                                               String(localized: "\(club.memberCount) membre"),
+                                               String(localized: "\(club.memberCount) membres")),
+                         color: RUColor.text2, background: RUColor.card)
             }
         }
         .padding(.vertical, 2)
@@ -634,16 +635,16 @@ struct ClubView: View {
                                 .overlay(Circle().stroke(RUColor.card, lineWidth: 2))
                         }
                     }
-                    Text(active.count > 1
-                         ? String(localized: "\(active.count) membres ont couru")
-                         : String(localized: "\(active.count) membre a couru"))
+                    Text(Pluriel.choisir(active.count,
+                                         String(localized: "\(active.count) membre a couru"),
+                                         String(localized: "\(active.count) membres ont couru")))
                         .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                     Spacer(minLength: 0)
                 }
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel(active.count > 1
-                    ? String(localized: "\(active.count) membres ont couru cette semaine")
-                    : String(localized: "\(active.count) membre a couru cette semaine"))
+                .accessibilityLabel(Pluriel.choisir(active.count,
+                                                    String(localized: "\(active.count) membre a couru cette semaine"),
+                                                    String(localized: "\(active.count) membres ont couru cette semaine")))
             }
         }
         .padding(RUSpacing.cardPadding)
@@ -1343,9 +1344,9 @@ struct ClubView: View {
                 appState.notify(
                     icon: "👏", colorHex: 0xFF3B6B,
                     title: String(localized: "Nouveaux encouragements"),
-                    text: gained == 1
-                        ? String(localized: "Quelqu'un a applaudi ta séance.")
-                        : String(localized: "\(gained) personnes ont applaudi ta séance.")
+                    text: Pluriel.choisir(gained,
+                        String(localized: "Quelqu'un a applaudi ta séance."),
+                        String(localized: "\(gained) personnes ont applaudi ta séance."))
                 )
             }
             profile.kudosSeenCounts[item.id] = item.kudos
@@ -1467,9 +1468,9 @@ struct ClubView: View {
                 appState.notify(
                     icon: "💬", colorHex: 0xFF3B6B,
                     title: String(localized: "Nouveaux commentaires"),
-                    text: gained == 1
-                        ? String(localized: "Quelqu'un a commenté ta séance.")
-                        : String(localized: "\(gained) personnes ont commenté ta séance.")
+                    text: Pluriel.choisir(gained,
+                        String(localized: "Quelqu'un a commenté ta séance."),
+                        String(localized: "\(gained) personnes ont commenté ta séance."))
                 )
             }
             profile.commentsSeenCounts[item.id] = item.commentsCount

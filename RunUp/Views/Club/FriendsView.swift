@@ -477,18 +477,28 @@ struct FriendsView: View {
     private var countsContent: some View {
         HStack(spacing: 12) {
             Button(action: { peopleSheet = .followers }) {
-                countLabel(value: followers.count, label: followers.count > 1 ? String(localized: "abonnés") : String(localized: "abonné"))
+                countLabel(value: followers.count,
+                           label: Pluriel.choisir(followers.count,
+                                                  String(localized: "abonné"),
+                                                  String(localized: "abonnés")))
             }
             .buttonStyle(PressableStyle())
-            .accessibilityLabel("\(followers.count) abonnés, voir la liste")
+            .accessibilityLabel(Pluriel.choisir(followers.count,
+                                                String(localized: "\(followers.count) abonné, voir la liste"),
+                                                String(localized: "\(followers.count) abonnés, voir la liste")))
 
             Text("·").font(RUFont.sans(.body)).foregroundColor(RUColor.text4)
 
             Button(action: { peopleSheet = .following }) {
-                countLabel(value: following.count, label: following.count > 1 ? String(localized: "abonnements") : String(localized: "abonnement"))
+                countLabel(value: following.count,
+                           label: Pluriel.choisir(following.count,
+                                                  String(localized: "abonnement"),
+                                                  String(localized: "abonnements")))
             }
             .buttonStyle(PressableStyle())
-            .accessibilityLabel("\(following.count) abonnements, voir la liste")
+            .accessibilityLabel(Pluriel.choisir(following.count,
+                                                String(localized: "\(following.count) abonnement, voir la liste"),
+                                                String(localized: "\(following.count) abonnements, voir la liste")))
 
             Spacer(minLength: 0)
         }

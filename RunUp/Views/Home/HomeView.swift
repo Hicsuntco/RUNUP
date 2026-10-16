@@ -996,9 +996,9 @@ struct HomeView: View {
         .accessibilityElement(children: .combine)
         // Deux clés entières plutôt qu'un « jour\(s) » recollé : le pluriel ne se fabrique pas en
         // ajoutant un « s » dans les autres langues.
-        .accessibilityLabel(profile.streak > 1
-            ? String(localized: "Série, \(profile.streak) jours")
-            : String(localized: "Série, \(profile.streak) jour"))
+        .accessibilityLabel(Pluriel.choisir(profile.streak,
+            String(localized: "Série, \(profile.streak) jour"),
+            String(localized: "Série, \(profile.streak) jours")))
     }
 
     /// La date du jour, en toutes lettres — `EyebrowLabel` la passe en capitales comme tous les

@@ -110,6 +110,9 @@ struct ObNext: View {
 
 struct ObProgress: View {
     var step: Int
+    /// Le nombre d'écrans de QUESTIONS, pas d'étapes du modèle de vue : l'écran de construction
+    /// ne demande rien, et le compter donnerait une barre qui n'atteint jamais son bout tant
+    /// qu'il reste quelque chose à faire.
     var total: Int
 
     var body: some View {
@@ -122,6 +125,43 @@ struct ObProgress: View {
         }
         .padding(.horizontal, RUSpacing.pagePadding)
         .padding(.top, 10)
+        // Dix traits de trois points ne disent pas où on en est : ils se lisent comme une
+        // décoration, et pour VoiceOver ils n'existent pas du tout. Le compte est donné en
+        // toutes lettres ici, et le chiffre affiché à côté est masqué pour ne pas le doubler.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(String(localized: "Écran \(min(step + 1, total)) sur \(total)"))
+    }
+}
+
+/// « Plus que deux écrans, et ton plan est prêt. »
+///
+/// # POURQUOI CETTE LIGNE EXISTE
+///
+/// Les huit vidéos qui vendent l'app montrent trois écrans — « Why do you run ? », l'écran de
+/// l'objectif, et le plan — et leur bouton dit « BUILD MY PLAN ». Dans l'app, ce bouton-là est
+/// le troisième de onze : après lui viennent le point de départ, un mot sur toi, les jours, le
+/// niveau et la montre. Ces cinq écrans ne sont pas du remplissage, ce sont eux qui rendent le
+/// plan vraiment sur mesure — mais quelqu'un qui installe après avoir vu la vidéo croit avoir
+/// fini, et on lui en demande encore cinq sans un mot.
+///
+/// D'où une phrase, et seulement À PARTIR DU MOMENT OÙ LA SURPRISE TOMBE : après l'écran que la
+/// vidéo présentait comme le dernier. L'afficher dès le début dirait « encore huit écrans » à
+/// quelqu'un qui n'avait rien demandé — c'est-à-dire décourager pour rassurer.
+struct ObResteALire: View {
+    var step: Int
+
+    var body: some View {
+        // Le calcul vit dans `OnboardingViewModel.resteALire(apres:)`, avec les bornes dont il
+        // dépend et sous test. Ici, il n'y a plus qu'une phrase à poser.
+        if let phrase = OnboardingViewModel.resteALire(apres: step) {
+            Text(phrase)
+                .font(RUFont.sans(.micro, weight: .medium))
+                .foregroundColor(RUColor.text3)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 8)
+                .padding(.horizontal, RUSpacing.pagePadding)
+        }
     }
 }
 

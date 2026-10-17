@@ -7,6 +7,43 @@ import Observation
 final class OnboardingViewModel {
     static let totalSteps = 10
 
+    /// Le dernier écran qui POSE UNE QUESTION. Au-delà, il ne reste que la construction du
+    /// programme, qui ne demande rien et se regarde.
+    ///
+    /// Séparé de `totalSteps` parce que les deux répondent à deux questions différentes :
+    /// `totalSteps` borne l'index, celui-ci borne l'effort. C'est lui que la barre de
+    /// progression et la ligne « plus que N écrans » doivent compter — une barre qui réserve un
+    /// trait pour un écran sans question n'atteint jamais son bout quand la personne a fini de
+    /// répondre.
+    static let dernierEcranDeQuestions = totalSteps - 2
+
+    /// Le nombre d'écrans de questions — neuf.
+    static let totalEcransDeQuestions = dernierEcranDeQuestions + 1
+
+    /// À partir d'où la ligne « plus que N écrans » s'affiche.
+    ///
+    /// Quatre, soit l'écran qui suit immédiatement celui de l'objectif. Les huit vidéos qui
+    /// vendent l'app s'arrêtent à celui-là, bouton « BUILD MY PLAN » compris : c'est exactement
+    /// là que quelqu'un qui les a vues croit avoir fini. Voir `ObResteALire`.
+    static let premierEcranAvecLeReste = 4
+
+    /// Ce qu'il reste à lire, dit à la personne — ou `nil` quand il n'y a rien à dire.
+    ///
+    /// Le calcul vit ICI, avec les trois bornes dont il dépend, et pas dans la vue : c'est la
+    /// seule façon de le vérifier sans lancer l'app, et c'est exactement le genre d'arithmétique
+    /// qu'une étape insérée au milieu rend fausse en silence. Voir `ObResteALire` pour le
+    /// pourquoi de la phrase, et `ResteALireTests` pour ce qu'elle doit dire.
+    static func resteALire(apres etape: Int) -> String? {
+        guard etape >= premierEcranAvecLeReste, etape <= dernierEcranDeQuestions else { return nil }
+        let restants = dernierEcranDeQuestions - etape
+        if restants == 0 {
+            return String(localized: "Dernier écran — ton plan arrive juste après.")
+        }
+        return Pluriel.choisir(restants,
+                               String(localized: "Plus qu'un écran, et ton plan est prêt."),
+                               String(localized: "Plus que \(restants) écrans, et ton plan est prêt."))
+    }
+
     var showWelcome = true
     var step = 0
 

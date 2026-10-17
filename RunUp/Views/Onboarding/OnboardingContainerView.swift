@@ -37,9 +37,24 @@ struct OnboardingContainerView: View {
                             Color.clear.frame(width: 44, height: 44)
                         }
                         Spacer()
+                        // LE COMPTE, EN CHIFFRES, EN FACE DU CHEVRON.
+                        //
+                        // La barre existait déjà, muette : neuf traits de trois points se lisent
+                        // comme une décoration, pas comme « tu en es au quatrième sur neuf ».
+                        // Masqué de VoiceOver, qui reçoit la même chose en toutes lettres par le
+                        // libellé de la barre — le lire deux fois serait pire que pas du tout.
+                        if vm.step <= OnboardingViewModel.dernierEcranDeQuestions {
+                            Text(verbatim: "\(vm.step + 1)/\(OnboardingViewModel.totalEcransDeQuestions)")
+                                .font(RUFont.sans(.micro, weight: .semibold))
+                                .monospacedDigit()
+                                .foregroundColor(RUColor.text3)
+                                .padding(.trailing, 12)
+                                .accessibilityHidden(true)
+                        }
                     }
                     .padding(.horizontal, 10)
-                    ObProgress(step: vm.step, total: OnboardingViewModel.totalSteps)
+                    ObProgress(step: vm.step, total: OnboardingViewModel.totalEcransDeQuestions)
+                    ObResteALire(step: vm.step)
                     currentStep
                         .id(vm.step)
                         .transition(.opacity)

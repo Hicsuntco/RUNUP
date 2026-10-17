@@ -5296,6 +5296,23 @@
         }
       }
     },
+    "CRÉER MON PLAN": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BUILD MY PLAN"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CREAR MI PLAN"
+          }
+        }
+      }
+    },
     "Calories": {
       "extractionState": "manual",
       "localizations": {
@@ -7836,6 +7853,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Último bloque, es el momento — déjalo todo 🔥"
+          }
+        }
+      }
+    },
+    "Dernier écran — ton plan arrive juste après.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last screen — your plan comes right after."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Última pantalla: tu plan llega justo después."
           }
         }
       }
@@ -16794,6 +16828,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cuanto más sepamos, más se ajustará el plan a tu realidad."
+          }
+        }
+      }
+    },
+    "Plus qu'un écran, et ton plan est prêt.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One more screen, and your plan is ready."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una pantalla más y tu plan está listo."
+          }
+        }
+      }
+    },
+    "Plus que %lld écrans, et ton plan est prêt.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld more screens, and your plan is ready."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld pantallas más y tu plan está listo."
           }
         }
       }
@@ -29563,6 +29631,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Calentamiento terminado. Primera repetición: apunta a %@/km, zancada relajada."
+          }
+        }
+      }
+    },
+    "Écran %lld sur %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen %1$lld of %2$lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pantalla %1$lld de %2$lld"
           }
         }
       }

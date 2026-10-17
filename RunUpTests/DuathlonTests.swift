@@ -158,14 +158,22 @@ final class DuathlonTests: XCTestCase {
 
     // MARK: - L'objectif, et le robinet qui le retient
 
-    /// L'OBJECTIF EST OUVERT, et les deux surfaces qui le proposent savent le construire.
+    /// L'OBJECTIF EST RETIRÉ DE LA LISTE, ET IL RESTE ENTIÈREMENT CONSTRUCTIBLE.
     ///
-    /// Ce test était le robinet : il exigeait `estProposable == false` tant que l'assistant de
-    /// nouvel objectif ne savait pas demander le format. Il a fait son travail — c'est en le
-    /// retournant sciemment, après avoir donné son étape à l'assistant, que l'objectif s'est
-    /// ouvert. Il est remplacé par ce qui doit rester vrai maintenant.
-    func testLeDuathlonEstProposableEtConstructible() {
-        XCTAssertTrue(GoalType.duathlon.estProposable)
+    /// C'est toute la valeur de ce test. Le duathlon a été refermé le 17 octobre 2026 pour une
+    /// raison de vitrine — les huit vidéos qui vendent l'app montrent sept objectifs — et pas
+    /// parce qu'il manquerait quoi que ce soit. Une fonctionnalité retirée d'une liste pourrit
+    /// en silence : six mois plus tard, personne ne sait plus si elle marche encore, et la
+    /// rouvrir devient un chantier au lieu d'une ligne.
+    ///
+    /// Ce test tient donc les deux bouts : il exige que l'objectif ne soit PAS proposé, et que
+    /// tout ce qu'il faut pour le proposer demain soit encore debout. La raison du retrait est
+    /// écrite dans `TriathlonTests.retenusVolontairement`, qui refuse un objectif retenu sans
+    /// explication — et refuse aussi qu'il se rouvre sans qu'on l'y enlève.
+    func testLeDuathlonEstRetenuMaisResteConstructible() {
+        XCTAssertFalse(GoalType.duathlon.estProposable,
+                       "le duathlon s'est rouvert : si c'est voulu, retire-le de "
+                       + "TriathlonTests.retenusVolontairement")
 
         // Le champ que l'assistant doit savoir remplir. Sans lui, choisir le duathlon par
         // cette porte-là construirait un plan sans format — donc sans distances, sans temps
@@ -182,8 +190,8 @@ final class DuathlonTests: XCTestCase {
         XCTAssertNotNil(profil.raceDate, "la date a été effacée : le plan serait ouvert")
     }
 
-    /// Les objectifs DÉJÀ ouverts le restent. Ajouter un cas à une énumération est le genre de
-    /// geste qui referme un robinet d'à côté sans qu'on s'en aperçoive.
+    /// Les objectifs ouverts le restent. Ajouter un cas à une énumération — ou en refermer un —
+    /// est le genre de geste qui referme un robinet d'à côté sans qu'on s'en aperçoive.
     func testAjouterLeDuathlonNARienFermeDAutre() {
         for objectif in GoalType.allCases where objectif != .duathlon {
             XCTAssertTrue(objectif.estProposable, "\(objectif.rawValue) s'est refermé")

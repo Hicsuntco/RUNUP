@@ -85,19 +85,26 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
     /// sans être encore offert.
     var estProposable: Bool {
         switch self {
-        // LE DUATHLON EST OUVERT, ET VOICI CE QUI DEVAIT ÊTRE VRAI AVANT.
+        // LE DUATHLON EST REFERMÉ, ET CE N'EST PAS PARCE QU'IL EST INCOMPLET.
         //
-        // Il est arrivé en six lots et il est resté retenu pendant cinq : le modèle des quatre
-        // formats, l'objectif lui-même, le format qui voyage jusqu'en base, l'écran
-        // d'inscription, les séances. Le choisir avant le cinquième aurait donné un plan de
-        // COURSE portant le nom « duathlon » — pas un kilomètre de vélo, pas un enchaînement.
+        // Il est arrivé en six lots — le modèle des quatre formats, l'objectif, le format qui
+        // voyage jusqu'en base, l'écran d'inscription, les séances d'enchaînement, l'étape de
+        // l'assistant de nouvel objectif — et les six sont là. `DuathlonTests`,
+        // `DuathlonWeekTests` et `DuathlonRaceDayTests` continuent de le vérifier : rien n'est
+        // démonté, et le rouvrir est ce seul `case` à déplacer.
         //
-        // Il s'ouvre maintenant parce que les DEUX surfaces qui le proposent savent demander
-        // son format : l'inscription et l'assistant de nouvel objectif. La seconde est le
-        // piège, et le triathlon y est tombé avant lui — elle lit cette propriété exactement
-        // comme la première.
-        case .race, .progress, .restart, .weight, .health, .hyrox, .ultraTrail, .triathlon,
-             .duathlon:
+        // Il est retiré de la LISTE parce que les huit vidéos qui vendent l'app n'en montrent
+        // aucune trace : elles présentent sept objectifs, et le duathlon n'en fait pas partie.
+        // Proposer dans l'app un objectif que rien ne prépare au-dehors, c'est le proposer à
+        // quelqu'un qui ne l'a pas cherché — et c'est le format le plus exigeant des neuf.
+        //
+        // CE QUE ÇA NE FAIT PAS : refermer le plan de qui l'a déjà choisi. Cette propriété ne
+        // filtre que les deux écrans qui PROPOSENT un objectif (l'inscription, l'assistant de
+        // nouvel objectif). Un profil dont `goalId` vaut déjà `duathlon` garde son plan, ses
+        // séances d'enchaînement et sa date de course, exactement comme avant.
+        case .duathlon:
+            return false
+        case .race, .progress, .restart, .weight, .health, .hyrox, .ultraTrail, .triathlon:
             return true
         }
     }

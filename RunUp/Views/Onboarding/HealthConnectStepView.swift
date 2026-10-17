@@ -34,7 +34,19 @@ struct HealthConnectStepView: View {
                     .padding(.top, 22)
                 }
             }
-            ObNext(label: vm.connected.isEmpty ? "PLUS TARD" : "CONTINUER", action: onNext)
+            // LE BOUTON DES VIDÉOS, À L'ENDROIT OÙ IL EST VRAI.
+            //
+            // Les huit reels montrent « BUILD MY PLAN » sous l'écran de l'objectif — le
+            // troisième. Dans l'app, cinq écrans le suivent, et celui-ci est le dernier :
+            // c'est lui qui déclenche vraiment la construction du programme. Il porte donc la
+            // phrase que la publicité a promise, là où elle ne ment pas.
+            //
+            // Et une seule phrase, plus « PLUS TARD » contre « CONTINUER » : « plus tard »
+            // répondait à la question de la montre, pas à celle du bouton, et se lisait comme
+            // « remettre l'inscription à plus tard » au moment précis où elle se termine. Le
+            // caractère facultatif de la connexion est dit par le sous-titre de l'écran, qui
+            // est sa place.
+            ObNext(label: "CRÉER MON PLAN", action: onNext)
         }
     }
 

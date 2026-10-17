@@ -181,7 +181,12 @@ final class TriathlonTests: XCTestCase {
     /// L'assertion d'avant comptait : `filter(\.estProposable).count == allCases.count`. Elle
     /// disait « un objectif est retenu : si c'est voulu, dis-le ici » — et c'est exactement ce
     /// qu'elle a fait quand le duathlon est arrivé. Voici l'endroit où le dire.
-    private static let retenusVolontairement: [GoalType: String] = [:]
+    private static let retenusVolontairement: [GoalType: String] = [
+        .duathlon: "retiré de la liste le 17 octobre 2026 : les huit vidéos qui vendent l'app "
+                 + "montrent sept objectifs, et le duathlon n'en fait pas partie. Tout est "
+                 + "construit — voir DuathlonTests —, seul le `case` d'estProposable est à "
+                 + "déplacer pour le rouvrir.",
+    ]
 
     func testLeTriathlonEstProposableEtConstructible() {
         XCTAssertTrue(GoalType.triathlon.estProposable)

@@ -101,26 +101,25 @@ Politique de confidentialité : https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## Nouveautés de cette version (4000 caractères max — obligatoire pour une mise à jour)
 ```
-Tes données t'appartiennent, et maintenant tu peux les emporter.
+Cette version ne change pas ce que l'app fait. Elle corrige ce qu'elle disait mal, et allège ce qu'elle faisait de trop pendant que tu cours.
 
-UN FICHIER, CHEZ TOI, QUI CONTIENT TOUT
-Réglages → Mes données → Exporter. Ton historique avec les tracés GPS, ta conversation avec le coach, tes chaussures et leur kilométrage, ta série, ton programme en cours, tes réponses d'inscription. Le fichier va où tu le ranges — iCloud, une clé, un dossier. Il ne part sur aucun serveur.
+ELLE PARLE, MAINTENANT, PENDANT LA COURSE
+Avec VoiceOver, le chrono, la distance, l'allure et la fréquence cardiaque étaient annoncés une seule fois — au moment où le doigt les touchait — puis plus rien, pendant toute la sortie. Ils se suivent maintenant en continu, et le chiffre se tait quand la montre cesse d'émettre.
 
-Et il se relit : « J'ai déjà une sauvegarde RUNUP », sur le premier écran, pour un téléphone neuf ou une réinstallation. La restauration ne s'applique qu'à une app qui repart de zéro : elle ne sait pas fusionner deux historiques sans risquer d'en perdre un bout, donc elle ne fait pas semblant.
+ET ELLE PARLE JUSTE, DANS LES TROIS LANGUES
+Zéro est au singulier en français, au pluriel en anglais et en espagnol — et toute l'app appliquait la règle française. « 0 run », « 0 badge », « 0 day in a row » le premier jour. Quatre libellés sortaient même en français pour tout le monde : l'en-tête de l'historique, la tuile JOURS de l'écran course, le compte-rendu d'import et les semaines passées des stats. Et « 12.4 km » s'écrit « 12,4 km » là où c'est la règle.
 
-UN DÉCOMPTE AVANT DE PARTIR
-3, 2, 1. Le temps de ranger le téléphone, de lancer la musique, de se placer — ces secondes-là partaient dans ton chrono et ton allure moyenne commençait toujours par une marche. Un appui n'importe où le saute.
+L'INSCRIPTION VA JUSQU'AU BOUT, QUELLE QUE SOIT LA TAILLE DU TEXTE
+En très grand texte, le bouton qui termine l'inscription sortait de l'écran, et rien ne permettait d'aller le chercher. Les écrans défilent. Les réglages chiffrés aussi : leur libellé se faisait rogner par le bouton d'à côté.
 
-Le GPS, lui, s'allume dès que tu appuies sur RUN. Il cherche sa position pendant le décompte au lieu de la chercher sur tes premiers mètres : le début du tracé ne manque plus.
+ON TE DIT OÙ TU EN ES
+L'inscription affiche le numéro de l'écran et ce qu'il en reste. Une barre muette ne dit pas « plus que deux écrans et ton plan est prêt ».
 
-TON PARCOURS EN GRAND
-À la fin d'une course, le tracé n'était qu'un aperçu. Un bouton l'ouvre maintenant en plein écran — pincer, déplacer, regarder où tu es passée.
+L'ESSAI GRATUIT DIT LA VÉRITÉ
+Il était annoncé à tout le monde. Un essai ne s'offre qu'une fois : si tu y as déjà eu droit, l'écran affiche le prix, pas une promesse.
 
-UN NOUVEL HABILLAGE, ET IL SE DÉFAIT AUSSI VITE
-Réglages → Apparence → Habillage. « Teinté » donne à toute l'app la couleur que tu as choisie : le fond la prend, le filet des cartes tombe, et elles se détachent par une ombre de la même teinte. « Classique » reste là, un appui suffit pour revenir.
-
-ET LA BARRE DU BAS
-Le mot sous le bouton central avait disparu, les libellés n'étaient pas sur la même ligne, et les écarts entre icônes n'étaient pas égaux. Les trois sont corrigés.
+MOINS DE TRAVAIL PENDANT QUE TU COURS
+L'app réécrivait ton tracé entier sur le disque toutes les dix secondes, sur le fil qui dessine l'écran — un à-coup régulier sur les sorties longues. Elle interrogeait Santé 1440 fois pour une sortie de deux heures, là où une seule demande suffit. Et « Mes routes » relisait 375 000 positions à chaque défilement.
 ```
 
 ## Mots-clés (100 caractères max, séparés par des virgules sans espace)
@@ -221,26 +220,25 @@ Privacy Policy: https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## What's New in This Version (4000 characters max — required for an update)
 ```
-Your data is yours, and now you can take it with you.
+This release doesn't change what the app does. It fixes what it said badly, and takes out the work it was doing while you run.
 
-ONE FILE, YOURS, HOLDING EVERYTHING
-Settings → My data → Export. Your history with its GPS routes, your conversation with the coach, your shoes and their mileage, your streak, your current programme, your onboarding answers. The file goes wherever you put it — iCloud, a drive, a folder. It never goes to a server.
+IT SPEAKS DURING THE RUN NOW
+With VoiceOver, the timer, distance, pace and heart rate were announced once — the moment your finger touched them — and then nothing, for the whole run. They now update continuously, and the number goes quiet when the watch stops sending.
 
-And it reads back: "I already have a RUNUP backup", on the very first screen, for a new phone or a reinstall. A restore only applies to an app starting from scratch: it can't merge two histories without risking losing part of one, so it doesn't pretend to.
+AND IT SPEAKS CORRECTLY, IN ALL THREE LANGUAGES
+Zero is singular in French and plural in English and Spanish — and the whole app was using the French rule. "0 run", "0 badge", "0 day in a row" on day one. Four labels came out in French for everyone: the history header, the DAYS tile on the race screen, the import summary and the past weeks in Stats. And "12.4 km" is written "12,4 km" where that's the rule.
 
-A COUNTDOWN BEFORE YOU GO
-3, 2, 1. Time to put the phone away, start the music, get set — those seconds used to land in your clock, and your average pace always began with a walk. Tap anywhere to skip it.
+SIGN-UP REACHES THE END, AT ANY TEXT SIZE
+At the largest text sizes, the button that ends sign-up fell off the screen, with no way to reach it. Those screens now scroll. So do the number settings, whose label was being cut off by the stepper beside it.
 
-The GPS switches on the moment you press RUN. It finds its position during the countdown instead of during your first few metres: the start of your route isn't missing any more.
+YOU'RE TOLD WHERE YOU ARE
+Sign-up shows the screen number and how many are left. A silent bar doesn't say "two more screens and your plan is ready".
 
-YOUR ROUTE, FULL SCREEN
-At the end of a run, the route was only a preview. A button now opens it full screen — pinch, pan, see where you went.
+THE FREE TRIAL TELLS THE TRUTH
+It was announced to everyone. A trial is offered once: if you've already had it, the screen now shows the price, not a promise.
 
-A NEW LOOK, AND IT UNDOES JUST AS FAST
-Settings → Appearance → Look. "Tinted" gives the whole app the colour you picked: the background takes it, the hairline border on cards drops away, and they lift off on a shadow of the same hue. "Classic" stays right there, one tap back.
-
-AND THE BOTTOM BAR
-The word under the centre button had vanished, the labels didn't sit on one line, and the gaps between icons weren't even. All three are fixed.
+LESS WORK WHILE YOU RUN
+The app rewrote your whole route to disk every ten seconds, on the thread that draws the screen — a regular stutter on long runs. It asked Health 1,440 times during a two-hour run, where one request is enough. And "My routes" re-read 375,000 positions on every scroll.
 ```
 
 ## Keywords (100 characters max, comma-separated, no spaces)
@@ -320,26 +318,25 @@ Política de privacidad: https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## Novedades de esta versión (4000 caracteres máx. — obligatorio para una actualización)
 ```
-Tus datos son tuyos, y ahora puedes llevártelos.
+Esta versión no cambia lo que hace la app. Corrige lo que decía mal y quita el trabajo que hacía mientras corres.
 
-UN ARCHIVO, EN TU CASA, CON TODO DENTRO
-Ajustes → Mis datos → Exportar. Tu historial con los recorridos GPS, tu conversación con el coach, tus zapatillas y sus kilómetros, tu racha, tu programa actual, tus respuestas del registro. El archivo va donde tú lo guardes — iCloud, una memoria, una carpeta. No se envía a ningún servidor.
+AHORA HABLA DURANTE LA CARRERA
+Con VoiceOver, el crono, la distancia, el ritmo y la frecuencia cardiaca se anunciaban una sola vez —en el momento en que el dedo los tocaba— y después nada, durante toda la salida. Ahora se siguen en continuo, y el número se calla cuando el reloj deja de enviar.
 
-Y se vuelve a leer: «Ya tengo una copia de RUNUP», en la primera pantalla, para un móvil nuevo o una reinstalación. La restauración solo se aplica a una app que empieza de cero: no sabe fusionar dos historiales sin arriesgarse a perder parte de uno, así que no finge hacerlo.
+Y HABLA BIEN, EN LOS TRES IDIOMAS
+El cero es singular en francés y plural en inglés y español, y toda la app aplicaba la regla francesa. «0 run», «0 badge», «0 day in a row» el primer día. Cuatro textos salían incluso en francés para todo el mundo: la cabecera del historial, la casilla DÍAS de la pantalla de carrera, el resumen de importación y las semanas pasadas de las estadísticas. Y «12.4 km» se escribe «12,4 km» donde esa es la norma.
 
-UNA CUENTA ATRÁS ANTES DE SALIR
-3, 2, 1. El tiempo de guardar el móvil, poner la música, colocarte — esos segundos acababan en tu cronómetro, y tu ritmo medio siempre empezaba caminando. Toca en cualquier sitio para saltarla.
+EL REGISTRO LLEGA HASTA EL FINAL, CON CUALQUIER TAMAÑO DE TEXTO
+Con el texto muy grande, el botón que termina el registro se salía de la pantalla, y no había forma de alcanzarlo. Esas pantallas ahora se desplazan. También los ajustes numéricos, cuya etiqueta quedaba recortada por el control de al lado.
 
-El GPS se enciende en cuanto pulsas RUN. Busca su posición durante la cuenta atrás en vez de buscarla en tus primeros metros: ya no falta el principio del recorrido.
+TE DECIMOS DÓNDE ESTÁS
+El registro muestra el número de pantalla y cuántas quedan. Una barra muda no dice «dos pantallas más y tu plan está listo».
 
-TU RECORRIDO EN GRANDE
-Al terminar una carrera, el recorrido era solo una vista previa. Ahora un botón lo abre a pantalla completa — pellizca, desplaza, mira por dónde pasaste.
+LA PRUEBA GRATIS DICE LA VERDAD
+Se anunciaba a todo el mundo. Una prueba se ofrece una vez: si ya la tuviste, la pantalla muestra el precio, no una promesa.
 
-UN NUEVO ASPECTO, Y SE DESHACE IGUAL DE RÁPIDO
-Ajustes → Apariencia → Aspecto. «Teñido» le da a toda la app el color que elegiste: el fondo lo toma, el borde fino de las tarjetas desaparece, y estas se despegan con una sombra del mismo tono. «Clásico» sigue ahí, a un toque de distancia.
-
-Y LA BARRA INFERIOR
-La palabra bajo el botón central había desaparecido, las etiquetas no estaban en la misma línea y los espacios entre iconos no eran iguales. Las tres cosas están corregidas.
+MENOS TRABAJO MIENTRAS CORRES
+La app reescribía todo tu recorrido en el disco cada diez segundos, en el hilo que dibuja la pantalla: un tirón regular en las salidas largas. Preguntaba a Salud 1440 veces en una salida de dos horas, donde basta una sola petición. Y «Mis rutas» releía 375 000 posiciones en cada desplazamiento.
 ```
 
 ## Palabras clave (100 caracteres máx., separadas por comas sin espacios)

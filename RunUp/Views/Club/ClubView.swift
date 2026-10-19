@@ -1386,8 +1386,9 @@ struct ClubView: View {
         do {
             _ = try await clubService.joinClub(inviteCode: joinCode.trimmingCharacters(in: .whitespaces))
             // Same placement rule as `createClub` — a mistyped invite code (404) isn't a join.
-            // Created vs joined are tracked apart on purpose: they're the two halves of the
-            // referral loop, and one growing without the other means the loop isn't closing.
+            // Created vs joined are tracked apart on purpose: a club that fills up and a club
+            // that gets created are two different signals, and one without the other says the
+            // invitation isn't landing.
             Analytics.shared.track(.clubJoined)
             joinCode = ""
             board = try await clubService.fetchBoard()

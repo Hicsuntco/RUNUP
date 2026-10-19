@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 /// "Plus de réglages" — reached from `ProfileView`'s bottom row, same one-tap cost the main page
-/// already paid for by being long: Programme, Santé & blessures, Cycle, Parrainage, Compte are all
+/// already paid for by being long: Programme, Santé & blessures, Cycle, Inviter, Compte are all
 /// real settings she's asked to keep, just not ones adjusted often enough to earn permanent space
 /// on the page she opens most. Mirrors `ClubManagementView`'s own "secondary settings" sheet
 /// pattern (`NavigationStack` + a "Fermer" toolbar button) for the same reason it exists there —
@@ -43,9 +43,9 @@ struct MoreSettingsView: View {
                         cycleCard
                     }
 
-                    if appState.auth.isSignedIn, let code = appState.auth.currentUser?.referralCode {
-                        sectionTitle("Parraine un ami")
-                        referralCard(code: code)
+                    if appState.auth.isSignedIn {
+                        sectionTitle("Inviter un ami")
+                        InvitationCard()
                     }
 
                     if appState.auth.isSignedIn {
@@ -529,16 +529,6 @@ struct MoreSettingsView: View {
         case .ovulation: return RUColor.cyan
         case .luteal: return RUColor.amber
         }
-    }
-
-    /// A real, personal referral code (see `api/auth/[action].js`) — sharing it and having the
-    /// friend actually log a first activity rewards both accounts +100 XP (see
-    /// `api/activities/[action].js`'s `grantReferralRewardIfNeeded`), not just for installing.
-    /// La section porte déjà le titre « Parraine un ami », d'où l'absence de titre dans la carte.
-    /// Le contenu vit maintenant dans `ReferralInviteCard`, partagé avec le fil d'amis vide —
-    /// c'est là que l'invitation compte vraiment, ici elle n'est qu'un rappel.
-    private func referralCard(code: String) -> some View {
-        ReferralInviteCard(code: code)
     }
 
     /// Real account, tied to the Club backend (see `AuthService`) — includes account deletion,

@@ -456,7 +456,6 @@ struct RecapView: View {
         let renderer = ImageRenderer(content: RunShareCardView(
             run: run,
             textColor: shareTextColor,
-            referralCode: appState.auth.currentUser?.referralCode,
             isPersonalRecord: recordKind(for: run) != nil
         ))
         renderer.scale = 3 // retina-quality output at the card's 360×640pt logical size

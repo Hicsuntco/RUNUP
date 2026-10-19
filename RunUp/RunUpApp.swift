@@ -157,13 +157,11 @@ private struct RootView: View {
             // chrono doit ramener à l'écran de course, et nulle part ailleurs — c'est la seule
             // raison de toucher un widget qui affiche une course en cours.
             //
-            // Traité AVANT le parrainage : les deux lisent la même URL, et un lien qui n'est pas
-            // un code de parrainage n'a rien à faire dans ce gestionnaire-là.
+            // Le seul lien que l'app sache recevoir depuis le retrait du parrainage : celui que
+            // la Live Activity pose sur l'écran verrouillé pour revenir à la course en cours.
             if url.scheme == "runup", url.host == "live" {
                 appState?.go(.live)
-                return
             }
-            ReferralLinkHandler.handle(url)
         }
     }
 }

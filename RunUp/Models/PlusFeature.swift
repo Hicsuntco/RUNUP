@@ -8,8 +8,8 @@ import Foundation
 /// modèle de Runna — mais il avait une conséquence que personne n'avait regardée en face : le
 /// Club, le fil d'amis, les classements, les défis et les itinéraires partagés se trouvaient
 /// derrière le mur. Or une fonctionnalité sociale sans monde ne vaut rien. Personne ne paye pour
-/// rejoindre un club vide, donc le club reste vide, donc personne ne paye. Le parrainage
-/// souffrait du même mal : il recrutait des gens qui heurtaient le mur une semaine plus tard.
+/// rejoindre un club vide, donc le club reste vide, donc personne ne paye. L'invitation
+/// souffre du même mal : elle recrute des gens qui heurteraient le mur une semaine plus tard.
 ///
 /// # Où passe la frontière, et pourquoi là
 ///

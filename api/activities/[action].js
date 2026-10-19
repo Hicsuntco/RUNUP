@@ -14,7 +14,6 @@ const {
 } = require('../../lib/activityFields');
 
 const ALLOWED_TYPES = new Set(['run', 'strength', 'badge']);
-const REFERRAL_REWARD_XP = 100;
 
 module.exports = withErrorHandling(async function handler(req, res) {
   const userId = await requireAuth(req, res);
@@ -199,14 +198,6 @@ async function handleCreate(req, res, userId) {
     if (capRows[0] && capRows[0].count > 40) return res.status(429).json({ error: 'too_many_activities' });
   } catch { /* the cap must never take activity posting down with it */ }
 
-  // Checked before the INSERT below — this is the referral-reward trigger (see
-  // `grantReferralRewardIfNeeded`): a signup that goes on to log a real first activity, not just
-  // an install.
-  // An existence check, not a full COUNT — this runs on every single activity creation, and only
-  // ever needs to know "is there at least one prior row", not how many.
-  const { rows: priorActivityRows } = await sql`SELECT 1 FROM activities WHERE user_id = ${userId} LIMIT 1`;
-  const isFirstActivity = priorActivityRows.length === 0;
-
   const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
   const clubId = memberRows[0]?.club_id || null;
 
@@ -240,34 +231,11 @@ async function handleCreate(req, res, userId) {
   if (inserted.length === 0) return res.status(200).json({ ok: true, duplicate: true });
 
   // Before the response, deliberately — Vercel may freeze the function the moment the response
-  // is sent, silently dropping anything still in flight. A referral reward that sometimes
-  // doesn't arrive is worse than a create call that takes half a second longer.
-  if (isFirstActivity) await grantReferralRewardIfNeeded(userId);
+  // is sent, silently dropping anything still in flight. Une notification qui n'arrive parfois
+  // pas est pire qu'un appel qui prend une demi-seconde de plus.
   if (clubId) await notifyClubOfNewActivity(clubId, userId, cleanText);
 
   res.status(201).json({ ok: true });
-}
-
-// Rewards both sides of a referral — but only the first time the referred person logs a real
-// activity, not at signup itself (an install that never actually runs isn't worth rewarding).
-// The flip of `referral_reward_granted` is conditional inside the UPDATE itself, so two
-// concurrent "first activities" can't both pass a pre-check and double-pay the referrer.
-async function grantReferralRewardIfNeeded(userId) {
-  const { rows: flipped } = await sql`
-    UPDATE users SET referral_reward_granted = true, xp_total = xp_total + ${REFERRAL_REWARD_XP}
-    WHERE id = ${userId} AND referred_by IS NOT NULL AND referral_reward_granted = false
-    RETURNING referred_by
-  `;
-  const referrerId = flipped[0]?.referred_by;
-  if (!referrerId) return;
-
-  await sql`UPDATE users SET xp_total = xp_total + ${REFERRAL_REWARD_XP} WHERE id = ${referrerId}`;
-
-  const { rows: referredRows } = await sql`SELECT name FROM users WHERE id = ${userId}`;
-  await sendPushToUser(sql, referrerId, {
-    title: 'Parrainage',
-    body: `${referredRows[0]?.name || 'Un ami'} a rejoint RunUp grâce à toi — +${REFERRAL_REWARD_XP} XP !`,
-  });
 }
 
 // Every other member of the poster's club, except anyone who's blocked the poster (mirrors the

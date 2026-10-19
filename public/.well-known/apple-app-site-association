@@ -3,9 +3,8 @@
     "details": [
       {
         "appIDs": ["SW49TQ25NV.com.hicsuntco.runup"],
-        "components": [
-          { "/": "/r/*", "comment": "Referral links open straight into RunUp with the code prefilled" }
-        ]
+        "comment": "Plus aucun lien universel depuis le retrait du parrainage : /r/CODE était le seul. Le fichier reste, vide, parce que le droit `associated-domains` de l'app le fait chercher par iOS — un 404 répété vaut moins qu'un fichier qui dit honnêtement qu'il n'y a rien à ouvrir. Le droit lui-même sera retiré à la prochaine occasion de toucher à la signature, pas au milieu d'une correction fonctionnelle.",
+        "components": []
       }
     ]
   }

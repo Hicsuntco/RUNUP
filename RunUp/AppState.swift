@@ -798,14 +798,14 @@ final class AppState {
     /// # LE TROU QU'ELLE BOUCHE
     ///
     /// `AuthService.init` ne lit que le JETON, dans le trousseau. `currentUser` — le nom,
-    /// l'adresse, le code de parrainage, les droits de la maison — n'est jamais persisté : il
+    /// l'adresse, le pseudo, les droits de la maison — n'est jamais persisté : il
     /// vaut `nil` à chaque lancement, et seules trois choses le remplissaient, toutes
     /// déclenchées par un geste précis. Ouvrir l'onglet Club. Se connecter. Enregistrer son
     /// pseudo.
     ///
     /// Autrement dit : qui lançait l'app et allait droit dans Profil → Plus de réglages lisait
-    /// une carte « Compte » sans nom ni adresse, et ne voyait NI la section « Parraine un ami »
-    /// — qui a besoin du code — NI celle de la maison. Pas une panne, pas un message : deux
+    /// une carte « Compte » sans nom ni adresse, et ne voyait NI la section « Inviter un ami »
+    /// — qui a besoin du compte — NI celle de la maison. Pas une panne, pas un message : deux
     /// sections simplement absentes, qui réapparaissaient si on était passé par le Club d'abord.
     ///
     /// # POURQUOI À CHAQUE RETOUR AU PREMIER PLAN, ET PAS SEULEMENT AU LANCEMENT

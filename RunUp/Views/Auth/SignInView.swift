@@ -14,7 +14,6 @@ struct SignInView: View {
     @State private var lastName = ""
     @State private var email = ""
     @State private var password = ""
-    @State private var referralCode = ""
     @State private var isLoading = false
     @State private var errorMessage: String?
 
@@ -92,14 +91,6 @@ struct SignInView: View {
                 ProgressView().tint(RUColor.textPrimary)
             }
         }
-        .onAppear {
-            // A referral only ever matters for a brand-new account — prefilling it also switches
-            // straight to the sign-up form, since someone who tapped a friend's link almost
-            // certainly doesn't have an account yet.
-            guard referralCode.isEmpty, let pending = ReferralLinkHandler.pendingCode else { return }
-            referralCode = pending
-            mode = .signUp
-        }
     }
 
     private var chooseUsernameView: some View {
@@ -170,12 +161,6 @@ struct SignInView: View {
             SecureField("Mot de passe", text: $password)
                 .textFieldStyle(AuthFieldStyle())
                 .textContentType(mode == .signIn ? .password : .newPassword)
-
-            if mode == .signUp {
-                TextField("Code de parrainage (facultatif)", text: $referralCode)
-                    .textFieldStyle(AuthFieldStyle())
-                    .textInputAutocapitalization(.characters)
-            }
 
             // Was only checking non-empty — a malformed email or a too-short password round-
             // tripped to the server before any error showed. Sign-in stays format-agnostic
@@ -250,8 +235,7 @@ struct SignInView: View {
             // « prénom nom » utile côté serveur.
             let familyName = credential.fullName?.familyName
                 ?? (nomDeLInscription.isEmpty ? nil : nomDeLInscription)
-            let trimmedReferral = referralCode.trimmingCharacters(in: .whitespaces)
-            Task { await runAuth { try await appState.auth.signInWithApple(identityToken: identityToken, name: givenName, lastName: familyName, referralCode: trimmedReferral.isEmpty ? nil : trimmedReferral) } }
+            Task { await runAuth { try await appState.auth.signInWithApple(identityToken: identityToken, name: givenName, lastName: familyName) } }
         case .failure:
             errorMessage = String(localized: "Connexion Apple annulée ou impossible.")
         }
@@ -264,12 +248,10 @@ struct SignInView: View {
                 if mode == .signIn {
                     try await appState.auth.logIn(email: trimmedEmail, password: password)
                 } else {
-                    let trimmedReferral = referralCode.trimmingCharacters(in: .whitespaces)
                     let trimmedLastName = lastName.trimmingCharacters(in: .whitespaces)
                     try await appState.auth.signUp(
                         email: trimmedEmail, password: password, name: name.trimmingCharacters(in: .whitespaces),
-                        lastName: trimmedLastName.isEmpty ? nil : trimmedLastName,
-                        referralCode: trimmedReferral.isEmpty ? nil : trimmedReferral
+                        lastName: trimmedLastName.isEmpty ? nil : trimmedLastName
                     )
                 }
             }
@@ -286,7 +268,6 @@ struct SignInView: View {
             // trip: ClubView's `onChange(of: auth.isSignedIn)` fires the moment this dismisses and
             // reloads everything (including a fresh refreshMe) anyway.
             try await action()
-            ReferralLinkHandler.clearPendingCode()
             // Fire-and-forget: a device token obtained earlier (e.g. during onboarding, before
             // any account existed) only ever gets a chance to reach the backend once signed in.
             // Not awaited — registering it isn't worth delaying the dismiss for.

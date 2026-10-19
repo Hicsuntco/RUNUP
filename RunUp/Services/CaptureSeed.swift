@@ -246,7 +246,7 @@ enum CaptureSeed {
         // Le XP est celui du profil et celui du classement : trois nombres identiques, trois
         // endroits, et c'est la seule capture où l'incohérence se verrait d'un coup d'œil.
         etat.auth.poserUneSessionDeDemonstration(
-            AuthenticatedUser(id: "1", name: "Charlotte", xpTotal: 4_180, referralCode: "CHARLOTTE")
+            AuthenticatedUser(id: "1", name: "Charlotte", xpTotal: 4_180, lastName: "Perret")
         )
     }
 

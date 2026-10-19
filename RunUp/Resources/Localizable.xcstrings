@@ -6538,22 +6538,6 @@
         }
       }
     },
-    "Code de parrainage (facultatif)": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Referral code (optional)"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Código de referido (opcional)"
-          }
-        }
-      }
-    },
     "Comme la semaine dernière": {
       "extractionState": "manual",
       "localizations": {
@@ -11128,6 +11112,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Invita a un amigo con tu código — ambos ganáis +100 XP en cuanto complete su primera sesión."
+          }
+        }
+      }
+    },
+    "Inviter un ami": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invite a friend"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitar a un amigo"
           }
         }
       }
@@ -15783,22 +15784,6 @@
         }
       }
     },
-    "Parraine un ami": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Refer a friend"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Invita a un amigo"
-          }
-        }
-      }
-    },
     "Partage ta course": {
       "localizations": {
         "en": {
@@ -18626,18 +18611,19 @@
         }
       }
     },
-    "Rejoins-moi sur RunUp, mon appli de coaching running — utilise mon code %@ à l'inscription : https://runup-nu.vercel.app": {
+    "Rejoins-moi sur RUNUP, mon appli de coaching running : https://runup-nu.vercel.app": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Join me on RunUp, my running coach app — use my code %@ when you sign up: https://runup-nu.vercel.app"
+            "value": "Join me on RUNUP, my running coaching app: https://runup-nu.vercel.app"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Únete a mí en RunUp, mi app de coaching de running — usa mi código %@ al registrarte: https://runup-nu.vercel.app"
+            "value": "Únete a mí en RUNUP, mi app de entrenamiento para correr: https://runup-nu.vercel.app"
           }
         }
       }
@@ -23012,6 +22998,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tu clasificación del club, el muro de tus amigos y las salidas en grupo te esperan aquí."
+          }
+        }
+      }
+    },
+    "Ton club se remplit plus vite à deux.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your club fills up faster with someone else."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu club se llena más rápido entre dos."
           }
         }
       }

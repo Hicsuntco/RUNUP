@@ -38,6 +38,16 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 -- person logs a real activity (api/activities/[action].js) — a reward for a signup that actually
 -- became a real user, not just an install. Postgres allows multiple NULLs under UNIQUE, so
 -- existing rows (no code yet) don't collide with each other or with a fresh code.
+-- RETIRÉ DU PRODUIT LE 19 OCTOBRE 2026, GARDÉ EN BASE.
+--
+-- La boucle complète — un code par compte, un lien `/r/CODE`, un champ à l'inscription, +100 XP
+-- aux deux côtés à la première vraie sortie du filleul — a été retirée. Elle supposait qu'on ait
+-- quelque chose à récompenser et quelqu'un pour le réclamer : à l'échelle où l'app en est, elle
+-- ajoutait un champ à l'inscription, une ligne sur chaque carte de partage et une branche dans la
+-- création de compte, pour un geste que personne n'a fait.
+--
+-- Les colonnes RESTENT. `referred_by` porte l'histoire de qui est arrivé par qui, et une colonne
+-- supprimée ne se retrouve pas. Plus rien ne les écrit ni ne les lit.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code TEXT UNIQUE;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by UUID REFERENCES users(id);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_reward_granted BOOLEAN NOT NULL DEFAULT false;

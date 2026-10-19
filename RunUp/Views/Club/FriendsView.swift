@@ -537,9 +537,7 @@ struct FriendsView: View {
                         Text("Cherche quelqu'un par son nom ou son pseudo juste au-dessus — ou invite ceux avec qui tu cours déjà.")
                             .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
                             .fixedSize(horizontal: false, vertical: true)
-                        if let code = auth.currentUser?.referralCode {
-                            ReferralInviteCard(code: code)
-                        }
+                        InvitationCard()
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, 6)

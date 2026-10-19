@@ -9,10 +9,6 @@ struct AuthenticatedUser: Codable, Equatable {
     var id: String
     var name: String
     var xpTotal: Int
-    /// This account's own shareable code (see `api/auth/[action].js`) — nil only in the brief
-    /// window before the very first sign-in response comes back, or for very old accounts on a
-    /// backend that hasn't run the referral migration yet.
-    var referralCode: String?
     /// Nil until she sets one (`ClubService.updateProfile`) or Apple provided it at first sign-in
     /// — neither signup nor onboarding asks for it. Exists so "Mes amis" search can disambiguate
     /// "which Léo?" without relying on first name alone (see `api/friends/[action].js` search).
@@ -38,7 +34,7 @@ struct AuthenticatedUser: Codable, Equatable {
     var adminListConfigured: Bool = false
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, xpTotal, referralCode, lastName, username, email, isAdmin, adminListConfigured
+        case id, name, xpTotal, lastName, username, email, isAdmin, adminListConfigured
     }
 
     init(from decoder: Decoder) throws {
@@ -46,7 +42,6 @@ struct AuthenticatedUser: Codable, Equatable {
         id = try c.decode(String.self, forKey: .id)
         name = try c.decode(String.self, forKey: .name)
         xpTotal = try c.decode(Int.self, forKey: .xpTotal)
-        referralCode = try c.decodeIfPresent(String.self, forKey: .referralCode)
         lastName = try c.decodeIfPresent(String.self, forKey: .lastName)
         username = try c.decodeIfPresent(String.self, forKey: .username)
         email = try c.decodeIfPresent(String.self, forKey: .email)
@@ -54,13 +49,12 @@ struct AuthenticatedUser: Codable, Equatable {
         adminListConfigured = try c.decodeIfPresent(Bool.self, forKey: .adminListConfigured) ?? false
     }
 
-    init(id: String, name: String, xpTotal: Int, referralCode: String? = nil,
+    init(id: String, name: String, xpTotal: Int,
          lastName: String? = nil, username: String? = nil, email: String? = nil,
          isAdmin: Bool = false, adminListConfigured: Bool = false) {
         self.id = id
         self.name = name
         self.xpTotal = xpTotal
-        self.referralCode = referralCode
         self.lastName = lastName
         self.username = username
         self.email = email
@@ -216,12 +210,12 @@ final class AuthService {
     /// `lastName` is sent separately from `name` (not pre-joined) so the server can store it as
     /// real, structured `last_name` — Apple only ever provides both on this account's very first
     /// sign-in, so this is the one chance to capture it at all.
-    func signInWithApple(identityToken: String, name: String?, lastName: String? = nil, referralCode: String? = nil) async throws {
-        try await authenticate(path: "api/auth/apple", body: ["identityToken": identityToken, "name": name ?? "", "lastName": lastName ?? "", "referralCode": referralCode ?? ""])
+    func signInWithApple(identityToken: String, name: String?, lastName: String? = nil) async throws {
+        try await authenticate(path: "api/auth/apple", body: ["identityToken": identityToken, "name": name ?? "", "lastName": lastName ?? ""])
     }
 
-    func signUp(email: String, password: String, name: String, lastName: String? = nil, referralCode: String? = nil) async throws {
-        try await authenticate(path: "api/auth/signup", body: ["email": email, "password": password, "name": name, "lastName": lastName ?? "", "referralCode": referralCode ?? ""])
+    func signUp(email: String, password: String, name: String, lastName: String? = nil) async throws {
+        try await authenticate(path: "api/auth/signup", body: ["email": email, "password": password, "name": name, "lastName": lastName ?? ""])
     }
 
     func logIn(email: String, password: String) async throws {
@@ -238,7 +232,7 @@ final class AuthService {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         let decoded: MeResponse = try await send(request)
         let user = AuthenticatedUser(
-            id: decoded.id, name: decoded.name, xpTotal: decoded.xpTotal, referralCode: decoded.referralCode,
+            id: decoded.id, name: decoded.name, xpTotal: decoded.xpTotal,
             lastName: decoded.lastName, username: decoded.username, email: decoded.email,
             isAdmin: decoded.isAdmin ?? false,
             adminListConfigured: decoded.adminListConfigured ?? false
@@ -352,7 +346,6 @@ private struct MeResponse: Decodable {
     var id: String
     var name: String
     var xpTotal: Int
-    var referralCode: String?
     var clubId: String?
     var lastName: String?
     var username: String?

@@ -163,9 +163,29 @@ async function handleMatchContacts(req, res, userId) {
 // `username` is validated (lowercase letters/digits/underscore, 3-20 chars) and must be globally
 // unique (case-insensitively — see the DB's functional unique index); `lastName` gets the same
 // content filter as every other user-visible free-text field.
+// LE PRÉNOM EST MODIFIABLE, ET CE N'EST PAS UN CONFORT.
+//
+// Il était écrit UNE FOIS, à l'inscription, et plus jamais. Or « Se connecter avec Apple » ne
+// transmet `fullName` qu'à la TOUTE PREMIÈRE autorisation d'un identifiant Apple pour cette
+// app : une réinstallation, un second appareil, ou un compte Apple qui avait déjà ouvert RUNUP
+// une fois n'envoient rien. Le serveur rangeait alors le compte sous « Coureur » — et personne
+// ne pouvait plus le corriger, depuis aucun écran.
+//
+// Résultat : la recherche de « Mes amis » cherche dans `name || ' ' || last_name`, donc taper le
+// vrai prénom de quelqu'un ne le trouvait pas. Et taper « Coureur » les trouvait tous, identiques.
+//
+// Contrairement au pseudo et au nom, le prénom ne peut pas être EFFACÉ : la colonne est
+// `NOT NULL`, et un compte sans nom n'a rien à afficher dans un fil d'activité.
 async function handleUpdateProfile(req, res, userId) {
-  const { username, lastName } = req.body || {};
+  const { name, username, lastName } = req.body || {};
   const updates = {};
+
+  if (name !== undefined) {
+    const cleanName = typeof name === 'string' ? name.trim().slice(0, 60) : '';
+    if (!cleanName) return res.status(400).json({ error: 'bad_request' });
+    if (containsObjectionableContent(cleanName)) return res.status(422).json({ error: 'objectionable_content' });
+    updates.name = cleanName;
+  }
 
   if (username !== undefined) {
     if (username === null || username === '') {
@@ -190,6 +210,7 @@ async function handleUpdateProfile(req, res, userId) {
   if (Object.keys(updates).length === 0) return res.status(400).json({ error: 'bad_request' });
 
   try {
+    if ('name' in updates) await sql`UPDATE users SET name = ${updates.name} WHERE id = ${userId}`;
     if ('username' in updates) await sql`UPDATE users SET username = ${updates.username} WHERE id = ${userId}`;
     if ('lastName' in updates) await sql`UPDATE users SET last_name = ${updates.lastName} WHERE id = ${userId}`;
   } catch (e) {

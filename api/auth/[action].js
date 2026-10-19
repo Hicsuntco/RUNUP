@@ -7,6 +7,9 @@ const { sql } = require('../../lib/db');
 const { verifyAppleIdentityToken, signSession, verifiedSessionClaims, bcrypt } = require('../../lib/auth');
 const { withErrorHandling } = require('../../lib/http');
 const { containsObjectionableContent } = require('../../lib/moderation');
+// Le nom d'affichage : comment on le choisit à la création, et quand on a le droit de le
+// remplacer. Les deux règles vivent ensemble — voir l'en-tête de `lib/noms.js`.
+const { nomALaCreation, nomDeReparation } = require('../../lib/noms');
 // Real referral loop (see db/schema.sql) — every new account gets its own shareable code;
 // signing up with someone else's code links `referred_by`, rewarded later on the referred
 // person's first real activity (api/activities/[action].js). Shared with api/me.js, which
@@ -62,8 +65,7 @@ async function handleApple(req, res) {
     // anything in it). Kept as two separate fields (not pre-joined client-side) so `last_name`
     // is real, structured data for the "nom prénom" search in api/friends, not something that
     // would need re-parsing back out of a single string later.
-    const rawName = name && name.trim();
-    const displayName = (rawName && !containsObjectionableContent(rawName)) ? rawName : 'Coureur';
+    const displayName = nomALaCreation(name);
     const rawLastName = lastName && lastName.trim();
     const cleanLastName = (rawLastName && !containsObjectionableContent(rawLastName)) ? rawLastName.slice(0, 60) : null;
     const referrerId = await resolveReferrerId(referralCode);
@@ -101,11 +103,33 @@ async function handleApple(req, res) {
         throw e;
       }
     }
-  } else if (!user.referral_code) {
+  } else {
+    // RÉPARER UN COMPTE SANS NOM — ET SEULEMENT CELUI-LÀ.
+    //
+    // Apple ne transmet `fullName` qu'à la toute première autorisation d'un identifiant Apple
+    // pour cette app. Une réinstallation, un second appareil, ou un compte Apple qui avait déjà
+    // ouvert RUNUP une fois n'envoient rien : le compte a donc été créé sous `NOM_PAR_DEFAUT`,
+    // et il y serait resté pour toujours — la recherche de « Mes amis » interroge
+    // `name || ' ' || last_name`, donc son vrai prénom ne le trouvait pas, et « Coureur » les
+    // trouvait tous à la fois.
+    //
+    // La condition est volontairement étroite : on ne remplace QUE le nom de repli, jamais un
+    // nom que quelqu'un a choisi. Un client trafiqué ne gagne rien ici — il peut déjà changer
+    // son propre prénom par `api/friends/updateProfile`, et seulement le sien.
+    const repare = nomDeReparation(user.name, name);
+    if (repare) {
+      user.name = repare;
+      await sql`UPDATE users SET name = ${user.name} WHERE id = ${user.id}`;
+    }
     // Lazily backfills a code for an account created before the referral feature existed —
     // rather than leaving her (or any early user) permanently without one to share.
-    user.referral_code = await generateUniqueReferralCode();
-    if (user.referral_code) await sql`UPDATE users SET referral_code = ${user.referral_code} WHERE id = ${user.id}`;
+    //
+    // `if` et non `else if` : un compte peut très bien être privé des deux, et la version
+    // précédente ne réparait alors que le code de parrainage.
+    if (!user.referral_code) {
+      user.referral_code = await generateUniqueReferralCode();
+      if (user.referral_code) await sql`UPDATE users SET referral_code = ${user.referral_code} WHERE id = ${user.id}`;
+    }
   }
 
   const token = await signSession(user.id);

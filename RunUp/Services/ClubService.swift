@@ -755,8 +755,15 @@ struct ClubService {
     /// unchanged), and either can be cleared by passing an empty string. Throws
     /// `ClubServiceError.badResponse(409, _)` if the username is already taken by someone else,
     /// `(400, _)` if it fails the format check (lowercase letters/digits/underscore, 3-20 chars).
-    func updateProfile(username: String? = nil, lastName: String? = nil) async throws {
+    ///
+    /// `name` est le PRÉNOM, et il ne peut pas être vidé : la colonne est `NOT NULL` côté
+    /// serveur, qui refuse une chaîne vide par un 400. Il est modifiable depuis que « Se
+    /// connecter avec Apple » s'est révélé muet sur le nom dès la deuxième autorisation — les
+    /// comptes concernés étaient rangés sous « Coureur », introuvables par leur vrai prénom et
+    /// incorrigibles.
+    func updateProfile(name: String? = nil, username: String? = nil, lastName: String? = nil) async throws {
         var body: [String: Any] = [:]
+        if let name { body["name"] = name }
         if let username { body["username"] = username }
         if let lastName { body["lastName"] = lastName }
         let _: OkResponse = try await send(path: "api/friends/updateProfile", method: "POST", body: body)

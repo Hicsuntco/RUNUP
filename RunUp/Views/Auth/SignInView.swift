@@ -227,7 +227,23 @@ struct SignInView: View {
             // given/family name are sent as two separate fields (not pre-joined) so the server can
             // store a real, structured `last_name` for "Mes amis" search, this being the one
             // chance to ever capture it.
+            //
+            // ET QUAND APPLE NE DIT RIEN, ON A LE PRÉNOM SOUS LA MAIN.
+            //
+            // « La toute première fois » veut dire : la première autorisation de cet identifiant
+            // Apple pour cette app, jamais depuis. Une réinstallation, un second appareil, un
+            // compte qui avait déjà ouvert RUNUP une fois — Apple se tait, et le serveur rangeait
+            // le compte sous « Coureur » (voir `api/auth/[action].js`). Taper le vrai prénom de
+            // quelqu'un dans « Mes amis » ne le trouvait donc pas : la recherche interroge
+            // `name || ' ' || last_name`. Et « Coureur » les trouvait tous, identiques.
+            //
+            // Le prénom de l'inscription est le bon repli, et pas un pis-aller : quand Apple se
+            // tait, c'est que cet identifiant a DÉJÀ ouvert l'app sur cet appareil — donc que la
+            // personne devant l'écran est celle qui a rempli l'inscription. Un identifiant Apple
+            // vraiment nouveau, lui, reçoit son nom d'Apple et ne passe jamais par ici.
+            let prenomDeLInscription = appState.profile.name.trimmingCharacters(in: .whitespaces)
             let givenName = credential.fullName?.givenName
+                ?? (prenomDeLInscription.isEmpty ? nil : prenomDeLInscription)
             let familyName = credential.fullName?.familyName
             let trimmedReferral = referralCode.trimmingCharacters(in: .whitespaces)
             Task { await runAuth { try await appState.auth.signInWithApple(identityToken: identityToken, name: givenName, lastName: familyName, referralCode: trimmedReferral.isEmpty ? nil : trimmedReferral) } }

@@ -262,3 +262,37 @@ WHERE name = 'weather_advice_sent'
   AND created_at > now() - interval '90 days'
 GROUP BY 1, 2
 ORDER BY 1, 2;
+
+
+-- =====================================================================================
+-- COMBIEN DE COMPTES SONT INTROUVABLES PAR LEUR PRÉNOM ?
+--
+-- « Se connecter avec Apple » ne transmet le nom qu'à la TOUTE PREMIÈRE autorisation d'un
+-- identifiant Apple pour cette app. Une réinstallation, un second appareil, ou un identifiant
+-- qui avait déjà ouvert RUNUP une fois n'envoient rien : le compte était alors créé sous
+-- « Coureur ». La recherche de « Mes amis » interroge `name || ' ' || last_name`, donc le vrai
+-- prénom de ces personnes ne les trouvait pas — et « Coureur » les trouvait toutes à la fois.
+--
+-- Depuis la correction, un compte dans ce cas est réparé tout seul à sa prochaine connexion
+-- Apple, et le prénom est modifiable dans Réglages → Mes amis. Cette requête dit combien de
+-- comptes attendent encore l'un ou l'autre.
+SELECT COUNT(*)                                              AS comptes,
+       COUNT(*) FILTER (WHERE name = 'Coureur')              AS sans_prenom,
+       COUNT(*) FILTER (WHERE username IS NOT NULL)          AS avec_pseudo,
+       COUNT(*) FILTER (WHERE last_name IS NOT NULL)         AS avec_nom,
+       COUNT(*) FILTER (WHERE name = 'Coureur'
+                          AND username IS NULL
+                          AND last_name IS NULL)             AS introuvables
+FROM users;
+
+-- Et le détail, pour savoir qui prévenir. L'adresse e-mail n'est PAS sélectionnée : savoir
+-- combien de comptes sont concernés ne demande pas de lire qui ils sont.
+SELECT left(id::text, 8) AS compte,
+       name              AS prenom,
+       username          AS pseudo,
+       last_name         AS nom,
+       created_at::date  AS inscrit_le
+FROM users
+WHERE name = 'Coureur'
+ORDER BY created_at DESC
+LIMIT 50;

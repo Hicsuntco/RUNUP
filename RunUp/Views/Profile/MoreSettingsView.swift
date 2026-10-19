@@ -16,6 +16,7 @@ struct MoreSettingsView: View {
     @State private var ficheAdminOuverte = false
     @State private var showDeleteAccountConfirm = false
     @State private var isDeletingAccount = false
+    @State private var firstNameText = ""
     @State private var usernameText = ""
     @State private var lastNameText = ""
     @State private var isSavingIdentity = false
@@ -108,6 +109,15 @@ struct MoreSettingsView: View {
             // et « Enregistrer » envoyait cette chaîne vide, ce qui effaçait le pseudo. Une perte
             // de donnée silencieuse, déclenchée par un geste qui prétendait sauvegarder.
             .task(id: appState.auth.currentUser?.id) {
+                // Le prénom du COMPTE, pas celui du profil local : ce sont deux choses, et c'est
+                // précisément quand elles divergent que ce champ sert. Si le compte a été rangé
+                // sous « Coureur » faute de nom transmis par Apple, on propose le prénom donné à
+                // l'inscription — un appui sur « Enregistrer » et la recherche le retrouve.
+                let duCompte = appState.auth.currentUser?.name ?? ""
+                let localement = appState.profile.name.trimmingCharacters(in: .whitespaces)
+                firstNameText = (duCompte.isEmpty || duCompte == "Coureur") && !localement.isEmpty
+                    ? localement
+                    : duCompte
                 usernameText = appState.auth.currentUser?.username ?? ""
                 lastNameText = appState.auth.currentUser?.lastName ?? ""
             }
@@ -642,6 +652,19 @@ struct MoreSettingsView: View {
     /// single tap; a taken username surfaces inline rather than a generic failure toast.
     private var identityEditor: some View {
         VStack(alignment: .leading, spacing: 10) {
+            // LE PRÉNOM EN PREMIER, ET IL N'EST PAS FACULTATIF.
+            //
+            // C'est celui que la recherche de « Mes amis » interroge, et c'est celui qui
+            // s'affiche dans le fil et au classement. Il manquait ici : « Se connecter avec
+            // Apple » ne donne le nom qu'à la toute première autorisation d'un identifiant
+            // Apple, donc une réinstallation ou un second appareil créait un compte appelé
+            // « Coureur » — que personne ne pouvait plus corriger depuis l'app.
+            TextField("Prénom", text: $firstNameText)
+                .textFieldStyle(.plain)
+                .font(RUFont.sans(.emphasis))
+                .foregroundColor(RUColor.textPrimary)
+                .padding(.horizontal, 12).padding(.vertical, 9)
+                .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous))
             TextField("Pseudo (facultatif)", text: $usernameText)
                 .textFieldStyle(.plain)
                 .font(RUFont.sans(.emphasis))
@@ -681,7 +704,12 @@ struct MoreSettingsView: View {
         isSavingIdentity = true
         identityError = nil
         do {
+            // Le prénom n'est envoyé que s'il est rempli : vide, il serait refusé par le
+            // serveur (colonne `NOT NULL`) et ferait échouer l'enregistrement du pseudo et du
+            // nom avec lui. Un champ laissé vide ne doit pas emporter les deux autres.
+            let prenom = firstNameText.trimmingCharacters(in: .whitespaces)
             try await clubService.updateProfile(
+                name: prenom.isEmpty ? nil : prenom,
                 username: usernameText.trimmingCharacters(in: .whitespaces),
                 lastName: lastNameText.trimmingCharacters(in: .whitespaces)
             )

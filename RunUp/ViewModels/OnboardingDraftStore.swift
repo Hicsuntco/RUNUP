@@ -11,6 +11,11 @@ private struct OnboardingDraft: Codable {
     var showWelcome: Bool
     var step: Int
     var name: String
+    /// Optionnel, comme tous les champs ajoutés après coup : la synthèse de `Codable` n'utilise
+    /// pas les valeurs par défaut, donc un brouillon écrit avant que le nom de famille existe
+    /// ferait échouer TOUT le décodage — et quelqu'un perdrait son inscription en cours à la
+    /// mise à jour. `decodeIfPresent` rend `nil` pour une clé absente.
+    var lastName: String?
     var birthdate: Date?
     var sex: String?
     var goal: GoalType?
@@ -74,6 +79,7 @@ extension OnboardingViewModel {
         showWelcome = draft.showWelcome
         step = draft.step
         name = draft.name
+        lastName = draft.lastName ?? ""
         birthdate = draft.birthdate
         sex = draft.sex
         goal = draft.goal
@@ -121,7 +127,8 @@ extension OnboardingViewModel {
         // typed anything.
         guard !showWelcome else { return }
         let draft = OnboardingDraft(
-            showWelcome: showWelcome, step: step, name: name, birthdate: birthdate, sex: sex, goal: goal,
+            showWelcome: showWelcome, step: step, name: name, lastName: lastName,
+            birthdate: birthdate, sex: sex, goal: goal,
             distance: distance, customDistance: customDistance, raceElevationGain: raceElevationGain,
             chrono: chrono, isCustomChrono: isCustomChrono,
             raceDate: raceDate, hyroxDivision: hyroxDivision,

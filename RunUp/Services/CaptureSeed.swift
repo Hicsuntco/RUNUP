@@ -320,6 +320,7 @@ enum CaptureSeed {
         let calendrier = Calendar.current
         return AdaptivePlanEngine.OnboardingResult(
             name: "Charlotte",
+            lastName: "Perret",
             birthdate: calendrier.date(byAdding: .year, value: -31, to: maintenant),
             sex: "female",
             goal: .race,

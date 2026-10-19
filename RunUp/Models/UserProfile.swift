@@ -10,6 +10,20 @@ import SwiftData
 final class UserProfile {
     // MARK: Identity
     var name: String
+
+    /// Le NOM DE FAMILLE, demandé à l'inscription en même temps que le prénom.
+    ///
+    /// Il ne sert à rien hors du Club — le coach dit « Charlotte », pas « Charlotte Perret ». Il
+    /// est demandé quand même, et dès la première question, pour une raison qu'on a apprise par
+    /// l'échec : la recherche de « Mes amis » interroge `name || ' ' || last_name` côté serveur,
+    /// et quelqu'un qui n'a ni nom ni pseudo n'est trouvable que par son adresse e-mail exacte.
+    /// Les testeuses de la première semaine étaient dans ce cas, toutes à la fois.
+    ///
+    /// Valeur par défaut vide et NON optionnelle : `check_model_defaults.py` l'exige — un
+    /// `@Model` dont une propriété n'a pas de valeur par défaut fait planter le décodeur de
+    /// SwiftData au lancement, sur un profil écrit par la version d'avant.
+    var lastName: String = ""
+
     var birthdate: Date?
     var goalId: GoalType
     var level: ExperienceLevel

@@ -5183,6 +5183,23 @@
         }
       }
     },
+    "COMMENT\nTU T'APPELLES ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WHAT'S\nYOUR NAME?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿CÓMO\nTE LLAMAS?"
+          }
+        }
+      }
+    },
     "CONNECTE TA MONTRE": {
       "localizations": {
         "en": {
@@ -14705,6 +14722,23 @@
         }
       }
     },
+    "Nom de famille": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apellido"
+          }
+        }
+      }
+    },
     "Nom de l'itinéraire": {
       "localizations": {
         "en": {
@@ -23042,6 +23076,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tu entrenador personal"
+          }
+        }
+      }
+    },
+    "Ton coach s'adressera à toi par ton prénom. Le nom sert à tes amis, pour te retrouver dans le Club.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your coach will call you by your first name. The last name is for your friends, to find you in the Club."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu entrenador te llamará por tu nombre. El apellido sirve a tus amigos, para encontrarte en el Club."
           }
         }
       }

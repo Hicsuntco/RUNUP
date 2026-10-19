@@ -152,6 +152,7 @@ enum SauvegardeService {
     /// pas encore.
     static func appliquer(_ p: Sauvegarde.Profil, sur profil: UserProfile) {
         if let v = p.name { profil.name = v }
+        if let v = p.lastName { profil.lastName = v }
         if let v = p.birthdate { profil.birthdate = v }
         if let v = p.sex { profil.sex = v }
         if let v = p.goalId, let g = GoalType(rawValue: v) { profil.goalId = g }
@@ -240,6 +241,7 @@ extension Sauvegarde.Profil {
     init(_ m: UserProfile) {
         self.init()
         name = m.name
+        lastName = m.lastName
         birthdate = m.birthdate
         sex = m.sex
         goalId = m.goalId.rawValue

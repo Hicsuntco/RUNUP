@@ -53,6 +53,8 @@ final class OnboardingViewModel {
 
     // Step 0
     var name = ""
+    /// Le nom de famille, demandé sur le même écran que le prénom — voir `NameStepView`.
+    var lastName = ""
     // Step 1
     var birthdate: Date?
     var sex: String?
@@ -181,7 +183,14 @@ final class OnboardingViewModel {
 
     func canProceed(fromStep step: Int) -> Bool {
         switch step {
+        // LES DEUX, ET PAS SEULEMENT LE PRÉNOM.
+        //
+        // Le nom ne sert à rien hors du Club — le coach dit « Charlotte ». Il est exigé quand
+        // même, parce que c'est l'autre moitié de ce que la recherche de « Mes amis » interroge
+        // (`name || ' ' || last_name` côté serveur) : sans lui et sans pseudo, un compte n'est
+        // trouvable que par son adresse e-mail exacte, ce qui n'est le chemin de personne.
         case 0: return !name.trimmingCharacters(in: .whitespaces).isEmpty
+            && !lastName.trimmingCharacters(in: .whitespaces).isEmpty
         case 1: return birthdate != nil && sex != nil
         case 2: return goal != nil
         case 3:
@@ -306,6 +315,7 @@ final class OnboardingViewModel {
     func buildResult() -> AdaptivePlanEngine.OnboardingResult {
         AdaptivePlanEngine.OnboardingResult(
             name: name.trimmingCharacters(in: .whitespaces),
+            lastName: lastName.trimmingCharacters(in: .whitespaces),
             birthdate: birthdate,
             sex: sex,
             goal: goal ?? .health,

@@ -119,7 +119,11 @@ struct MoreSettingsView: View {
                     ? localement
                     : duCompte
                 usernameText = appState.auth.currentUser?.username ?? ""
-                lastNameText = appState.auth.currentUser?.lastName ?? ""
+                // Même repli que pour le prénom : le nom de l'inscription quand le compte n'en
+                // a pas. Un compte créé avant que l'inscription ne le demande n'en a aucun.
+                let nomDuCompte = appState.auth.currentUser?.lastName ?? ""
+                let nomLocal = appState.profile.lastName.trimmingCharacters(in: .whitespaces)
+                lastNameText = nomDuCompte.isEmpty ? nomLocal : nomDuCompte
             }
             .sheet(isPresented: $ficheAdminOuverte) {
                 AdminSheet().runUpSheetStyle(detents: [.large])

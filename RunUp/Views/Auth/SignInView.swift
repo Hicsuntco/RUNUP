@@ -242,9 +242,14 @@ struct SignInView: View {
             // personne devant l'écran est celle qui a rempli l'inscription. Un identifiant Apple
             // vraiment nouveau, lui, reçoit son nom d'Apple et ne passe jamais par ici.
             let prenomDeLInscription = appState.profile.name.trimmingCharacters(in: .whitespaces)
+            let nomDeLInscription = appState.profile.lastName.trimmingCharacters(in: .whitespaces)
             let givenName = credential.fullName?.givenName
                 ?? (prenomDeLInscription.isEmpty ? nil : prenomDeLInscription)
+            // Le nom de famille suit la même règle que le prénom, et depuis qu'il est demandé à
+            // l'inscription il est presque toujours là : c'est lui qui rend la recherche par
+            // « prénom nom » utile côté serveur.
             let familyName = credential.fullName?.familyName
+                ?? (nomDeLInscription.isEmpty ? nil : nomDeLInscription)
             let trimmedReferral = referralCode.trimmingCharacters(in: .whitespaces)
             Task { await runAuth { try await appState.auth.signInWithApple(identityToken: identityToken, name: givenName, lastName: familyName, referralCode: trimmedReferral.isEmpty ? nil : trimmedReferral) } }
         case .failure:

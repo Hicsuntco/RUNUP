@@ -17,6 +17,7 @@ final class SauvegardeTests: XCTestCase {
 
     private func profilRempli() -> UserProfile {
         let p = UserProfile(name: "Charlotte")
+        p.lastName = "Perret"
         p.onboarded = true
         p.goalId = .race
         p.level = .confirmee
@@ -102,6 +103,9 @@ final class SauvegardeTests: XCTestCase {
         SauvegardeService.appliquer(try XCTUnwrap(sauvegarde.profil), sur: neuf)
 
         XCTAssertEqual(neuf.name, "Charlotte")
+        // Le nom de famille est demandé à l'inscription depuis qu'on a vu ce que coûtait son
+        // absence : c'est la moitié de ce que la recherche de « Mes amis » interroge.
+        XCTAssertEqual(neuf.lastName, "Perret")
         XCTAssertEqual(neuf.goalId, .race)
         XCTAssertEqual(neuf.level, .confirmee)
         XCTAssertEqual(neuf.sex, "female")

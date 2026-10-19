@@ -154,6 +154,9 @@ extension Sauvegarde {
     struct Profil: Codable, Equatable {
         // Identité
         var name: String?
+        /// Demandé à l'inscription depuis qu'on a vu ce que coûtait son absence : sans nom et
+        /// sans pseudo, un compte n'est trouvable dans « Mes amis » que par son adresse exacte.
+        var lastName: String?
         var birthdate: Date?
         var sex: String?
         /// `GoalType.rawValue`. Voir « LA TOLÉRANCE DU DÉCODAGE » en tête de fichier.
@@ -258,6 +261,7 @@ extension Sauvegarde {
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             name = c.lire(String.self, .name)
+            lastName = c.lire(String.self, .lastName)
             birthdate = c.lire(Date.self, .birthdate)
             sex = c.lire(String.self, .sex)
             goalId = c.lire(String.self, .goalId)

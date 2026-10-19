@@ -19,6 +19,10 @@ enum AdaptivePlanEngine {
 
     struct OnboardingResult {
         var name: String
+        /// Le nom de famille. Vide est accepté par le moteur — c'est l'écran qui l'exige, et un
+        /// profil de démonstration ou un brouillon d'une version antérieure peut très bien ne
+        /// pas en avoir.
+        var lastName: String = ""
         var birthdate: Date?
         var sex: String?
         var goal: GoalType
@@ -67,6 +71,7 @@ enum AdaptivePlanEngine {
 
     static func applyOnboarding(_ result: OnboardingResult, to profile: UserProfile) {
         profile.name = result.name.isEmpty ? "Toi" : result.name
+        profile.lastName = result.lastName
         profile.birthdate = result.birthdate
         profile.sex = result.sex
         // POSÉ ICI ET PAS SEULEMENT AU LANCEMENT. `AppState.init` miroite le genre depuis le

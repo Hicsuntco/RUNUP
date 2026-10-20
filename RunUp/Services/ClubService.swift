@@ -305,6 +305,10 @@ struct PublicUser: Decodable, Identifiable, Hashable {
     var avatarBase64: String?
     var isPrivate: Bool
     var followStatus: String?
+    /// Pourquoi ce compte est proposé — « club » ou « follower ». Non nil seulement dans les
+    /// suggestions : une liste de noms sans explication ressemble à un annuaire, et on ne suit
+    /// pas un annuaire.
+    var reason: String?
 }
 
 /// The caller's own follow graph, independent of any club — see `ClubService.fetchFriendsList`.
@@ -689,6 +693,17 @@ struct ClubService {
     /// the right button state without a second round trip per row.
     func searchUsers(query: String) async throws -> [PublicUser] {
         let response: PublicUserListResponse = try await send(path: "api/friends/search", method: "GET", query: ["q": query])
+        return response.items
+    }
+
+    /// Les gens qu'on n'a pas besoin de chercher : les membres de ses clubs qu'elle ne suit pas
+    /// encore, et celles et ceux qui la suivent sans retour.
+    ///
+    /// La meilleure recherche est celle qu'on n'a pas à taper. L'écran affichait « Personne à
+    /// suivre pour l'instant » et un champ de recherche à quelqu'un dont le club était plein de
+    /// gens à suivre : le serveur savait déjà qui proposer, personne ne le lui demandait.
+    func suggestions() async throws -> [PublicUser] {
+        let response: PublicUserListResponse = try await send(path: "api/friends/suggestions", method: "GET")
         return response.items
     }
 

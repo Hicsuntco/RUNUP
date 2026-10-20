@@ -8,6 +8,12 @@ const { sendPushToUser } = require('../../lib/apns');
 const { isBlockedEitherWay, activityMetrics } = require('../../lib/social');
 const { underDailyCap } = require('../../lib/rateLimit');
 const { containsObjectionableContent } = require('../../lib/moderation');
+// Le repli des noms pour la recherche — accents, casse, traits d'union, ligatures. Une seule
+// table, partagée entre le texte tapé (replié ici, en JavaScript) et les colonnes (repliées par
+// `translate` dans les requêtes ci-dessous). Voir l'en-tête de `lib/recherche.js`.
+const {
+  ACCENTS_SOURCE, ACCENTS_CIBLE, normaliser, echapperPourLike,
+} = require('../../lib/recherche');
 
 module.exports = withErrorHandling(async function handler(req, res) {
   const userId = await requireAuth(req, res);
@@ -17,6 +23,9 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'search':
       if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
       return handleSearch(req, res, userId);
+    case 'suggestions':
+      if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleSuggestions(req, res, userId);
     case 'matchContacts':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleMatchContacts(req, res, userId);
@@ -64,25 +73,41 @@ function mapUser(row) {
 
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
 
-// Finds real accounts to follow — a first name alone can't disambiguate ("which Léo?"), so this
-// tries three things depending on what looks like was typed:
-//   - contains "@": an EXACT (never partial) email match — an email is never substring-searchable,
-//     so this can't be used to harvest the directory the way name/username search could.
-//   - otherwise: a username prefix match (an explicit, chosen handle — the only fully reliable
-//     way to find one specific person) OR a fuzzy "prénom nom" match against name + last_name.
-// Excludes herself and anyone blocked either way. `followStatus` (from the CALLER's point of
-// view — is *she* already following this result) lets the client show the right button state
-// (Suivre / Demande envoyée / Abonné·e) without a second round trip per row.
+// Trouve de vrais comptes à suivre. Trois façons de chercher, selon ce qui a été tapé :
+//
+//   · une adresse e-mail (contient « @ ») : correspondance EXACTE, jamais partielle — une adresse
+//     ne se cherche pas par morceaux, sans quoi ce point d'entrée servirait à moissonner
+//     l'annuaire ;
+//   · sinon : un pseudo qui COMMENCE par ce qui est tapé, ou un nom qui le CONTIENT.
+//
+// # CE QUI RENDAIT LA RECHERCHE DIFFICILE, ET QUI NE L'EST PLUS
+//
+// Elle comparait `name || ' ' || last_name` au texte tapé, tels quels. Trois conséquences, toutes
+// vécues :
+//
+//   · « leo » ne trouvait pas « Léo ». `ILIKE` ignore la casse, pas les accents — dans une app
+//     française, c'est la moitié des prénoms ;
+//   · « perret charlotte » ne trouvait pas « Charlotte Perret ». La chaîne était toujours
+//     construite prénom-puis-nom, et chercher quelqu'un par son nom est pourtant le réflexe de
+//     qui le connaît peu ;
+//   · « jean pierre » ne trouvait pas « Jean-Pierre », et réciproquement.
+//
+// Les deux côtés sont donc repliés par la même table (`lib/recherche.js`), et la comparaison se
+// fait dans LES DEUX ORDRES. Le tri met en tête ce qui ressemble le plus à une intention : le
+// pseudo exact d'abord, puis un prénom qui commence par ce qui est tapé, puis le reste.
+//
+// Exclut soi-même et toute personne bloquée dans un sens ou dans l'autre. `followStatus` est vu
+// DEPUIS L'APPELANTE — est-ce qu'ELLE suit déjà ce résultat — pour que le client affiche le bon
+// bouton (Suivre / Demande envoyée / Abonné·e) sans un aller-retour par ligne.
 async function handleSearch(req, res, userId) {
   const raw = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 60) : '';
   if (raw.length < 2) return res.status(200).json({ items: [] });
 
   // Same daily cap every write path in this file uses. Search is a read, but it's the one endpoint
-  // that walks the whole user directory (the ILIKE branch below), so it's what a script would
-  // hammer to enumerate accounts one prefix at a time — and each call is an unindexed scan of
-  // `users`. 300/day is far past any real use: the client searches as she types, so looking
-  // someone up costs a handful of requests. Counted after the <2 char guard so keystrokes that
-  // never reach the database don't burn the quota.
+  // that walks the whole user directory, so it's what a script would hammer to enumerate accounts
+  // one prefix at a time. 300/day is far past any real use: the client searches as she types, so
+  // looking someone up costs a handful of requests. Counted after the <2 char guard so keystrokes
+  // that never reach the database don't burn the quota.
   if (!(await underDailyCap('search:' + userId, 300))) return res.status(429).json({ error: 'too_many_requests' });
 
   let rows;
@@ -97,23 +122,91 @@ async function handleSearch(req, res, userId) {
       LIMIT 5
     `);
   } else {
-    const usernameQuery = raw.replace(/^@/, '');
+    // Replié ici, comparé replié là-bas : `besoin` est ce que la requête cherche réellement.
+    const besoin = echapperPourLike(normaliser(raw));
+    const pseudo = echapperPourLike(normaliser(raw.replace(/^@/, '')).replace(/\s+/g, ''));
     ({ rows } = await sql`
       SELECT u.id, u.name, u.last_name, u.username, u.avatar_data, u.avatar_url, u.is_private, f.status AS follow_status
       FROM users u
       LEFT JOIN follows f ON f.follower_id = ${userId} AND f.followee_id = u.id
       WHERE u.id != ${userId}
         AND (
-          lower(u.username) LIKE lower(${usernameQuery + '%'})
-          OR (u.name || ' ' || COALESCE(u.last_name, '')) ILIKE ${'%' + raw + '%'}
+          lower(u.username) LIKE ${pseudo + '%'}
+          OR translate(lower(replace(replace(replace(
+               u.name || ' ' || coalesce(u.last_name, ''), '-', ' '), 'œ', 'oe'), 'æ', 'ae')),
+               ${ACCENTS_SOURCE}, ${ACCENTS_CIBLE}) LIKE ${'%' + besoin + '%'}
+          OR translate(lower(replace(replace(replace(
+               coalesce(u.last_name, '') || ' ' || u.name, '-', ' '), 'œ', 'oe'), 'æ', 'ae')),
+               ${ACCENTS_SOURCE}, ${ACCENTS_CIBLE}) LIKE ${'%' + besoin + '%'}
         )
         AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
         AND u.id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
-      ORDER BY u.name ASC
+      ORDER BY
+        (lower(u.username) = ${pseudo}) DESC,
+        (translate(lower(u.name), ${ACCENTS_SOURCE}, ${ACCENTS_CIBLE}) LIKE ${besoin + '%'}) DESC,
+        (translate(lower(coalesce(u.last_name, '')), ${ACCENTS_SOURCE}, ${ACCENTS_CIBLE}) LIKE ${besoin + '%'}) DESC,
+        u.name ASC
       LIMIT 20
     `);
   }
   res.status(200).json({ items: rows.map(mapUser) });
+}
+
+// LES GENS QU'ON N'A PAS BESOIN DE CHERCHER.
+//
+// La meilleure recherche est celle qu'on n'a pas à taper. Deux populations sont connues du
+// serveur sans que personne n'ait rien à écrire :
+//
+//   · les membres de ses clubs qu'elle ne suit pas encore — elle est dans le même club qu'eux,
+//     c'est à peu près la définition de « quelqu'un que je connais » dans cette app ;
+//   · celles et ceux qui la suivent sans qu'elle les suive en retour.
+//
+// L'écran les affichait déjà… non : il affichait « Personne à suivre pour l'instant » et un
+// champ de recherche, à quelqu'un dont le club était plein de gens à suivre. C'est le défaut que
+// cette route répare.
+//
+// Les deux sources portent leur RAISON, parce qu'une liste de noms sans explication ressemble à
+// un annuaire — et qu'on ne suit pas un annuaire. Le client affiche « Dans ton club » ou
+// « Te suit déjà ».
+//
+// Pas de cap journalier ici : c'est une lecture bornée à vingt lignes, déclenchée par l'ouverture
+// d'un écran et non par une frappe, et elle ne renvoie que des gens déjà reliés à l'appelante —
+// il n'y a pas d'annuaire à moissonner par cette porte.
+async function handleSuggestions(req, res, userId) {
+  const { rows } = await sql`
+    WITH mes_clubs AS (
+      SELECT club_id FROM club_members WHERE user_id = ${userId}
+    ),
+    candidats AS (
+      -- Les membres de mes clubs. DISTINCT parce que deux clubs partagés ne font pas deux
+      -- personnes.
+      SELECT DISTINCT cm.user_id AS id, 'club'::text AS raison
+      FROM club_members cm
+      WHERE cm.club_id IN (SELECT club_id FROM mes_clubs) AND cm.user_id != ${userId}
+      UNION
+      -- Celles et ceux qui me suivent. Une demande en attente ne compte pas : elle n'a pas
+      -- encore été acceptée, et proposer de suivre quelqu'un dont on n'a pas validé la demande
+      -- inverse les rôles.
+      SELECT fo.follower_id AS id, 'follower'::text AS raison
+      FROM follows fo
+      WHERE fo.followee_id = ${userId} AND fo.status = 'accepted'
+    )
+    SELECT u.id, u.name, u.last_name, u.username, u.avatar_data, u.avatar_url, u.is_private,
+           f.status AS follow_status,
+           -- Un même compte peut être dans les deux : « dans ton club » est la raison la plus
+           -- parlante des deux, donc elle gagne.
+           min(c.raison) AS raison
+    FROM candidats c
+    JOIN users u ON u.id = c.id
+    LEFT JOIN follows f ON f.follower_id = ${userId} AND f.followee_id = u.id
+    WHERE f.status IS NULL
+      AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+      AND u.id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
+    GROUP BY u.id, u.name, u.last_name, u.username, u.avatar_data, u.avatar_url, u.is_private, f.status
+    ORDER BY min(c.raison) ASC, u.name ASC
+    LIMIT 20
+  `;
+  res.status(200).json({ items: rows.map((row) => ({ ...mapUser(row), reason: row.raison })) });
 }
 
 // Retrouve, parmi les comptes existants, ceux dont l'adresse e-mail est dans le carnet d'adresses

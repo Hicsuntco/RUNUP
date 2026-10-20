@@ -7695,6 +7695,23 @@
         }
       }
     },
+    "Dans ton club": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In your club"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En tu club"
+          }
+        }
+      }
+    },
     "Date": {
       "localizations": {
         "en": {
@@ -22328,6 +22345,23 @@
         }
       }
     },
+    "Te suit déjà": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already follows you"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya te sigue"
+          }
+        }
+      }
+    },
     "Technique": {
       "extractionState": "manual",
       "localizations": {
@@ -23775,6 +23809,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Corriste ayer: rodaje suave, las piernas siguen trabajando."
+          }
+        }
+      }
+    },
+    "Tu connais peut-être": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "People you may know"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quizá conozcas"
           }
         }
       }

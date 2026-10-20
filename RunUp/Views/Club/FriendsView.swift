@@ -29,6 +29,10 @@ struct FriendsView: View {
     /// connexion », y compris quand la session a expiré. Voir `PanneReseau.phrase(pour:)`.
     @State private var searchError: String?
     @State private var searchTask: Task<Void, Never>?
+
+    /// Les gens qu'on n'a pas besoin de chercher — membres de ses clubs non suivis, et abonnés
+    /// sans retour. Chargés à l'ouverture, affichés tant que le champ est vide.
+    @State private var suggestions: [PublicUser] = []
     @State private var isMatchingContacts = false
     @State private var contactsDenied = false
     /// Les comptes trouvés dans le carnet d'adresses. Un état à part, et non le champ de
@@ -67,6 +71,17 @@ struct FriendsView: View {
                     countsRow
                     searchField
                     contactsButton
+                    // AU-DESSUS du fil, pas À LA PLACE. Une première version les avait mises
+                    // dans la chaîne de `else if` juste en dessous : qui avait des suggestions
+                    // perdait son fil d'activité, c'est-à-dire que plus on avait de gens à
+                    // suivre, moins on voyait ce qu'ils faisaient.
+                    //
+                    // Elles s'effacent pendant une recherche et pendant l'affichage des
+                    // contacts : ces deux écrans-là répondent à une question posée, et une liste
+                    // de propositions en dessous ferait douter de ce qu'on regarde.
+                    if !isSearchingMode, contactMatches == nil, !suggestions.isEmpty {
+                        suggestionsList
+                    }
                     if isSearchingMode {
                         searchResultsList
                     } else if let contactMatches {
@@ -330,6 +345,37 @@ struct FriendsView: View {
         }
     }
 
+    /// LA MEILLEURE RECHERCHE EST CELLE QU'ON N'A PAS À TAPER.
+    ///
+    /// L'écran affichait un champ de recherche et « Personne à suivre pour l'instant » à
+    /// quelqu'un dont le club était plein de gens à suivre. Le serveur savait déjà qui proposer
+    /// — les membres de ses clubs qu'elle ne suit pas, celles et ceux qui la suivent sans retour
+    /// — et personne ne le lui demandait.
+    ///
+    /// Chaque ligne porte SA RAISON. Une liste de noms sans explication ressemble à un annuaire,
+    /// et on ne suit pas un annuaire : « Dans ton club » dit en trois mots pourquoi cette
+    /// personne est là et pas une autre.
+    private var suggestionsList: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Tu connais peut-être")
+                .font(RUFont.sans(.label, weight: .semibold))
+                .foregroundColor(RUColor.textPrimary)
+                .padding(.bottom, 2)
+            ForEach(suggestions) { user in
+                personRow(user, detail: raisonLisible(user.reason)) { followButton(for: user) }
+            }
+        }
+    }
+
+    /// « club » / « follower » viennent du serveur — ce sont des identifiants, pas des phrases.
+    private func raisonLisible(_ raison: String?) -> String? {
+        switch raison {
+        case "club": return String(localized: "Dans ton club")
+        case "follower": return String(localized: "Te suit déjà")
+        default: return nil
+        }
+    }
+
     private var searchResultsList: some View {
         VStack(spacing: 6) {
             if isSearching && searchResults.isEmpty {
@@ -375,7 +421,10 @@ struct FriendsView: View {
     /// Full name (when she's set a last name) plus the "@pseudo" secondary line (when she's set
     /// one) — either helps tell several people sharing a first name apart, which a bare first
     /// name alone never could.
-    private func personRow<Trailing: View>(_ user: PublicUser, @ViewBuilder trailing: () -> Trailing) -> some View {
+    /// `detail` : une ligne de plus sous le nom, quand il y a quelque chose à dire de la raison
+    /// pour laquelle cette personne est là. Nil partout ailleurs — une rangée de recherche n'a
+    /// rien à expliquer, c'est la question posée qui l'explique.
+    private func personRow<Trailing: View>(_ user: PublicUser, detail: String? = nil, @ViewBuilder trailing: () -> Trailing) -> some View {
         HStack(spacing: 12) {
             AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 34, seed: user.id)
             VStack(alignment: .leading, spacing: 1) {
@@ -388,6 +437,10 @@ struct FriendsView: View {
                 }
                 if let username = user.username {
                     Text("@\(username)").font(RUFont.mono(10.5)).foregroundColor(RUColor.text3)
+                } else if let detail {
+                    // Sous le nom, à la place du pseudo quand il n'y en a pas : la raison compte
+                    // moins qu'un identifiant, elle ne lui prend pas sa place.
+                    Text(detail).font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                 }
             }
             Spacer(minLength: 8)
@@ -597,6 +650,11 @@ struct FriendsView: View {
         }
         if let echec { errorMessage = PanneReseau.phrase(pour: echec) }
         isLoading = false
+
+        // APRÈS le reste, et sans faire échouer l'écran. Les suggestions sont un confort : si
+        // elles ne reviennent pas, la recherche et le fil fonctionnent exactement comme avant, et
+        // afficher une erreur pour une liste que personne n'a demandée serait pire que le silence.
+        suggestions = (try? await clubService.suggestions()) ?? []
     }
 
 

@@ -299,12 +299,6 @@ struct ClubView: View {
                     onCreateChallenge: { title, targetKm, endDate in
                         try await createChallenge(title: title, targetKm: targetKm, endDate: endDate)
                     },
-                    onSetOpen: { ouvert in
-                        try await clubService.setClubOpen(ouvert)
-                        // Le tableau vient du serveur : on le relit plutôt que de deviner le
-                        // nouvel état, pour que l'écran dise ce que le serveur a retenu.
-                        await loadIfSignedIn()
-                    },
                     onReport: { member in
                         // Dismiss the sheet first, then set the target once its dismiss animation
                         // is out of the way — setting both in the same tick makes SwiftUI try to
@@ -324,6 +318,12 @@ struct ClubView: View {
                         }
                     },
                     onUpdateBio: { bio in try await updateBio(bio) },
+                    onSetOpen: { ouvert in
+                        try await clubService.setClubOpen(ouvert)
+                        // Le tableau vient du serveur : on le relit plutôt que de deviner le
+                        // nouvel état, pour que l'écran dise ce que le serveur a retenu.
+                        await loadIfSignedIn()
+                    },
                     // Même précaution que `onReport` ci-dessus : fermer la feuille, puis présenter
                     // le dialogue une fois son animation de fermeture passée.
                     onReportClub: {

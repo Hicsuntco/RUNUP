@@ -64,6 +64,23 @@ CREATE TABLE IF NOT EXISTS clubs (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- LE CLUB EST OUVERT PAR DÉFAUT, ET SE FERME À LA DEMANDE.
+--
+-- On rejoignait un club avec un code à six lettres. Le code est parti : un club se trouve
+-- maintenant par son NOM, et se rejoint d'un appui. Un code suppose qu'on l'ait reçu de
+-- quelqu'un, donc qu'on sache déjà que le club existe — c'est-à-dire tout ce qu'une recherche
+-- rend inutile.
+--
+-- Ouvert par défaut, Y COMPRIS POUR LES CLUBS QUI EXISTAIENT DÉJÀ, et c'est une décision assumée
+-- plutôt qu'un effet de bord : un club créé à l'époque du code devient trouvable par son nom le
+-- jour de la mise à jour. La contrepartie est le verrou ci-dessous, que son créateur peut poser
+-- à tout moment — un club fermé n'apparaît dans aucune recherche et ne se rejoint plus.
+--
+-- `invite_code` RESTE en base : la colonne est `NOT NULL UNIQUE` et chaque club en porte un.
+-- Plus rien ne le lit ni ne l'affiche. Le supprimer demanderait une migration destructrice pour
+-- ne rien gagner.
+ALTER TABLE clubs ADD COLUMN IF NOT EXISTS is_open BOOLEAN NOT NULL DEFAULT true;
+
 CREATE TABLE IF NOT EXISTS club_members (
   club_id UUID NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,

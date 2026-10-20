@@ -3,7 +3,24 @@ import Foundation
 struct ClubInfo: Decodable {
     var id: String
     var name: String
-    var inviteCode: String
+    var memberCount: Int
+    /// Un club fermé n'apparaît dans aucune recherche et ne se rejoint plus. Ses membres
+    /// actuels ne sont pas touchés : fermer n'est pas vider.
+    ///
+    /// Optionnel pour une seule raison, qui vaut pour les trois champs ajoutés ici : la fenêtre
+    /// entre le déploiement du serveur et celui de l'app n'est jamais nulle, et un `decode`
+    /// strict déconnecterait du Club tous ceux qui n'ont pas encore mis à jour.
+    var isOpen: Bool?
+    /// L'interrupteur n'est montré qu'à la personne qui a créé le club. Le serveur le revérifie.
+    var isOwner: Bool?
+}
+
+/// Un club trouvé par la recherche — tout ce qu'il faut pour décider de le rejoindre, et rien de
+/// plus. Le nombre de membres n'est pas décoratif : rien n'empêche deux clubs de porter le même
+/// nom, et c'est la seule chose qui permette de les distinguer d'un coup d'œil.
+struct ClubSearchResult: Decodable, Identifiable, Hashable {
+    var id: String
+    var name: String
     var memberCount: Int
 }
 
@@ -321,11 +338,10 @@ struct FriendsList: Decodable {
     var incomingRequests: [PublicUser]
 }
 
-/// Returned by `createClub` — used by the caller to show the invite code to share.
+/// Rendu par `createClub`. Ne porte plus de code d'invitation : on rejoint un club par son nom.
 struct ClubCreatedResponse: Decodable {
     var id: String
     var name: String
-    var inviteCode: String
 }
 
 struct ClubJoinedResponse: Decodable {
@@ -458,8 +474,23 @@ struct ClubService {
         let _: OkResponse = try await send(path: "api/clubs/deleteEvent", method: "POST", body: ["eventId": eventId])
     }
 
-    func joinClub(inviteCode: String) async throws -> ClubJoinedResponse {
-        try await send(path: "api/clubs/join", method: "POST", body: ["inviteCode": inviteCode])
+    /// Rejoint un club trouvé par la recherche. L'identifiant ne remplace pas le code : il ne
+    /// sert à rien à qui ne l'a pas obtenu par `searchClubs`, et le serveur revérifie que le
+    /// club est bien ouvert.
+    func joinClub(clubId: String) async throws -> ClubJoinedResponse {
+        try await send(path: "api/clubs/join", method: "POST", body: ["clubId": clubId])
+    }
+
+    /// Cherche un club par son nom — accents, casse et traits d'union ignorés, comme pour les
+    /// personnes. Ne rend que les clubs ouverts, et jamais celui dont on est déjà membre.
+    func searchClubs(query: String) async throws -> [ClubSearchResult] {
+        let response: ClubSearchResponse = try await send(path: "api/clubs/search", method: "GET", query: ["q": query])
+        return response.items
+    }
+
+    /// Ouvre ou ferme son club. Réservé à la personne qui l'a créé — le serveur refuse les autres.
+    func setClubOpen(_ isOpen: Bool) async throws {
+        let _: ClubOpenResponse = try await send(path: "api/clubs/setOpen", method: "POST", body: ["isOpen": isOpen])
     }
 
     func leaveClub() async throws {
@@ -876,6 +907,14 @@ private struct OkResponse: Decodable {
 private struct BioResponse: Decodable {
     var ok: Bool
     var bio: String?
+}
+
+private struct ClubSearchResponse: Decodable {
+    var items: [ClubSearchResult]
+}
+
+private struct ClubOpenResponse: Decodable {
+    var isOpen: Bool
 }
 
 private struct PublicUserListResponse: Decodable {

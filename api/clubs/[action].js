@@ -7,6 +7,11 @@ const { withErrorHandling, isUuid } = require('../../lib/http');
 const { containsObjectionableContent } = require('../../lib/moderation');
 const { sendPushToUsers } = require('../../lib/apns');
 const { underDailyCap } = require('../../lib/rateLimit');
+// Le même repli que la recherche de personnes : accents, casse, traits d'union, ligatures. Un
+// club qui s'appelle « Les Côtes de Belleville » doit se trouver en tapant « cotes ».
+const {
+  ACCENTS_SOURCE, ACCENTS_CIBLE, normaliser, echapperPourLike,
+} = require('../../lib/recherche');
 
 module.exports = withErrorHandling(async function handler(req, res) {
   const userId = await requireAuth(req, res);
@@ -19,6 +24,12 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'join':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleJoin(req, res, userId);
+    case 'search':
+      if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleSearchClubs(req, res, userId);
+    case 'setOpen':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleSetOpen(req, res, userId);
     case 'leave':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleLeave(req, res, userId);
@@ -85,6 +96,13 @@ async function handleCreate(req, res, userId) {
   if (containsObjectionableContent(cleanName)) return res.status(422).json({ error: 'objectionable_content' });
 
   let club;
+  // LE CODE EST ENCORE ÉCRIT, ET PLUS JAMAIS LU.
+  //
+  // `clubs.invite_code` est `NOT NULL UNIQUE` : un club ne peut pas être créé sans. Plus rien ne
+  // s'en sert — on rejoint un club par son nom — mais retirer la contrainte demanderait une
+  // migration destructrice sur une colonne qui ne gêne personne. On continue donc d'en tirer un,
+  // et on ne le rend plus à qui que ce soit.
+  //
   // Retry on the astronomically rare invite_code collision instead of trusting a single attempt.
   for (let attempt = 0; attempt < 5 && !club; attempt++) {
     const code = randomInviteCode();
@@ -92,7 +110,7 @@ async function handleCreate(req, res, userId) {
       const { rows } = await sql`
         INSERT INTO clubs (name, invite_code, created_by)
         VALUES (${cleanName}, ${code}, ${userId})
-        RETURNING id, name, invite_code
+        RETURNING id, name
       `;
       club = rows[0];
     } catch (e) {
@@ -112,24 +130,36 @@ async function handleCreate(req, res, userId) {
     }
     throw e;
   }
-  res.status(201).json({ id: club.id, name: club.name, inviteCode: club.invite_code });
+  res.status(201).json({ id: club.id, name: club.name });
 }
 
+// ON REJOINT UN CLUB PAR SON IDENTIFIANT, PLUS PAR UN CODE.
+//
+// Le code à six lettres supposait qu'on l'ait reçu de quelqu'un — donc qu'on sache déjà que le
+// club existe, et comment il s'appelle. C'est exactement ce qu'une recherche par nom rend
+// inutile. `handleSearchClubs` trouve le club, celui-ci l'ouvre.
+//
+// L'identifiant n'est pas un secret et ne remplace pas le code : il ne sert à rien à qui ne
+// l'a pas obtenu par la recherche, et la recherche ne rend que les clubs OUVERTS. Le `is_open`
+// est donc revérifié ici, et pas seulement à la recherche — sans quoi un identifiant retenu
+// avant la fermeture d'un club y ferait encore entrer.
 async function handleJoin(req, res, userId) {
   const { rows: already } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
   if (already.length > 0) return res.status(409).json({ error: 'already_in_club' });
 
-  // Invite codes are 6 chars from a 32-char alphabet (~1.07 billion combinations) — only safe
-  // against brute-forcing if guesses are actually throttled. 20/day is far beyond any real
-  // mistyped-code retry count.
+  // Le plafond reste. Il ne protège plus un code devinable, mais il borne toujours ce qu'un
+  // script peut faire de cette route — entrer et sortir d'un club en boucle, par exemple.
   if (!(await underDailyCap('join:' + userId, 20))) return res.status(429).json({ error: 'too_many_requests' });
 
-  const { inviteCode } = req.body || {};
-  if (!inviteCode) return res.status(400).json({ error: 'bad_request' });
+  const { clubId } = req.body || {};
+  if (!isUuid(clubId)) return res.status(400).json({ error: 'bad_request' });
 
-  const { rows } = await sql`SELECT id, name FROM clubs WHERE invite_code = ${String(inviteCode).trim().toUpperCase().slice(0, 12)}`;
+  const { rows } = await sql`SELECT id, name, is_open FROM clubs WHERE id = ${clubId}`;
   const club = rows[0];
   if (!club) return res.status(404).json({ error: 'not_found' });
+  // Fermé : la même réponse que « n'existe pas ». Dire « ce club est fermé » confirmerait son
+  // existence à quelqu'un qui ne peut de toute façon pas y entrer.
+  if (!club.is_open) return res.status(404).json({ error: 'not_found' });
 
   // Same double-submit race as create — the unique index is the real guard, the pre-check above
   // just gives the common case a friendlier path.
@@ -142,6 +172,65 @@ async function handleJoin(req, res, userId) {
     throw e;
   }
   res.status(200).json({ id: club.id, name: club.name });
+}
+
+// CHERCHER UN CLUB PAR SON NOM.
+//
+// Ne rend que les clubs OUVERTS, et jamais celui dont l'appelante est déjà membre — proposer de
+// rejoindre un club où l'on est déjà est la façon la plus sûre de faire douter de ce qu'on lit.
+//
+// Le nombre de membres accompagne chaque résultat, et ce n'est pas une décoration : rien
+// n'empêche deux clubs de porter le même nom, et c'est la seule chose qui permette de les
+// distinguer d'un coup d'œil.
+async function handleSearchClubs(req, res, userId) {
+  const raw = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 60) : '';
+  if (raw.length < 2) return res.status(200).json({ items: [] });
+
+  // Même plafond et même raison que la recherche de personnes : c'est la route qui balaie la
+  // table des clubs, donc celle qu'un script interrogerait préfixe par préfixe.
+  if (!(await underDailyCap('clubSearch:' + userId, 300))) return res.status(429).json({ error: 'too_many_requests' });
+
+  const besoin = echapperPourLike(normaliser(raw));
+  const { rows } = await sql`
+    SELECT c.id, c.name,
+           (SELECT COUNT(*)::int FROM club_members m WHERE m.club_id = c.id) AS member_count
+    FROM clubs c
+    WHERE c.is_open = true
+      AND c.id NOT IN (SELECT club_id FROM club_members WHERE user_id = ${userId})
+      AND translate(lower(replace(replace(replace(c.name, '-', ' '), 'œ', 'oe'), 'æ', 'ae')),
+            ${ACCENTS_SOURCE}, ${ACCENTS_CIBLE}) LIKE ${'%' + besoin + '%'}
+    ORDER BY
+      (translate(lower(c.name), ${ACCENTS_SOURCE}, ${ACCENTS_CIBLE}) LIKE ${besoin + '%'}) DESC,
+      (SELECT COUNT(*) FROM club_members m WHERE m.club_id = c.id) DESC,
+      c.name ASC
+    LIMIT 20
+  `;
+  res.status(200).json({
+    items: rows.map((row) => ({ id: row.id, name: row.name, memberCount: row.member_count })),
+  });
+}
+
+// LE VERROU, ET IL N'APPARTIENT QU'À LA PERSONNE QUI A CRÉÉ LE CLUB.
+//
+// Un club fermé disparaît des recherches et ne se rejoint plus — ni par la recherche, ni par un
+// identifiant retenu avant la fermeture. Ses membres actuels ne sont pas touchés : fermer n'est
+// pas vider.
+//
+// Volontairement PAS « sur invitation » : il n'existe aucun mécanisme d'invitation dans l'app,
+// et nommer ainsi un interrupteur qui se contente de fermer la porte promettrait une porte de
+// service qui n'existe pas.
+async function handleSetOpen(req, res, userId) {
+  const { isOpen } = req.body || {};
+  if (typeof isOpen !== 'boolean') return res.status(400).json({ error: 'bad_request' });
+
+  const { rows } = await sql`
+    UPDATE clubs SET is_open = ${isOpen}
+    WHERE created_by = ${userId}
+    RETURNING id, is_open
+  `;
+  // Aucune ligne : l'appelante n'a créé aucun club. Pas une erreur de sa part, mais rien à faire.
+  if (rows.length === 0) return res.status(403).json({ error: 'forbidden' });
+  res.status(200).json({ isOpen: rows[0].is_open });
 }
 
 async function handleLeave(req, res, userId) {
@@ -220,7 +309,7 @@ async function handleMine(req, res, userId) {
   if (memberRows.length === 0) return res.status(200).json({ club: null, leaderboard: [] });
 
   const clubId = memberRows[0].club_id;
-  const { rows: clubRows } = await sql`SELECT id, name, invite_code FROM clubs WHERE id = ${clubId}`;
+  const { rows: clubRows } = await sql`SELECT id, name, is_open, created_by FROM clubs WHERE id = ${clubId}`;
   const club = clubRows[0];
 
   // Rank is computed over every member first (a subquery), then blocked users are filtered out
@@ -320,7 +409,12 @@ async function handleMine(req, res, userId) {
   });
 
   res.status(200).json({
-    club: { id: club.id, name: club.name, inviteCode: club.invite_code, memberCount: countRows[0].count },
+    club: {
+      id: club.id, name: club.name, memberCount: countRows[0].count,
+      // Le verrou, et à qui il appartient. Le client n'affiche l'interrupteur qu'à la personne
+      // qui a créé le club — le serveur le revérifie de toute façon (`handleSetOpen`).
+      isOpen: club.is_open, isOwner: club.created_by === userId,
+    },
     leaderboard: leaderboard.map((r) => ({
       id: r.id, name: r.name, xp: r.xp_total, rank: Number(r.rank), isMe: r.id === userId,
       bio: r.bio || null,

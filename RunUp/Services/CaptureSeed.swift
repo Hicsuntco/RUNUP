@@ -149,7 +149,7 @@ enum CaptureSeed {
 
         let tableau = """
         {
-          "club": { "id": "demo", "name": "Les Foulées du Canal", "inviteCode": "CANAL", "memberCount": 18 },
+          "club": { "id": "demo", "name": "Les Foulées du Canal", "memberCount": 18, "isOpen": true, "isOwner": false },
           "leaderboard": [
             { "id": "1", "name": "Charlotte", "xp": 4180, "rank": 1, "isMe": true,
               "bio": "Objectif 10 km sous 47:30", "joinedAt": "\(ilYAJours(214))",

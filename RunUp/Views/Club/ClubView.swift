@@ -26,7 +26,10 @@ struct ClubView: View {
     @State private var errorMessage: String?
     @State private var showSignIn = false
     @State private var newClubName = ""
-    @State private var joinCode = ""
+    @State private var clubQuery = ""
+    @State private var clubResultats: [ClubSearchResult] = []
+    @State private var clubSearchEnCours = false
+    @State private var clubSearchTask: Task<Void, Never>?
     @State private var reportTarget: ReportTarget?
     @State private var pendingBlock: (userId: String, name: String)?
     @State private var showManagement = false
@@ -137,6 +140,9 @@ struct ClubView: View {
             .padding(.bottom, 130)
         }
         .task { await loadIfSignedIn() }
+        // Même temporisation que la recherche de personnes : on cherche À LA FRAPPE, mais on
+        // n'envoie pas une requête par lettre.
+        .onChange(of: clubQuery) { _, nouveau in chercherUnClub(nouveau) }
         .refreshable { await loadIfSignedIn() }
         .onChange(of: feed.count) { _, count in
             if count > 0 { feedRevealed = true }
@@ -293,6 +299,12 @@ struct ClubView: View {
                     onCreateChallenge: { title, targetKm, endDate in
                         try await createChallenge(title: title, targetKm: targetKm, endDate: endDate)
                     },
+                    onSetOpen: { ouvert in
+                        try await clubService.setClubOpen(ouvert)
+                        // Le tableau vient du serveur : on le relit plutôt que de deviner le
+                        // nouvel état, pour que l'écran dise ce que le serveur a retenu.
+                        await loadIfSignedIn()
+                    },
                     onReport: { member in
                         // Dismiss the sheet first, then set the target once its dismiss animation
                         // is out of the way — setting both in the same tick makes SwiftUI try to
@@ -386,20 +398,58 @@ struct ClubView: View {
                 }
             }
 
+            // ON CHERCHE UN CLUB PAR SON NOM.
+            //
+            // Ce bloc demandait un code à six lettres. Un code suppose qu'on l'ait reçu de
+            // quelqu'un — donc qu'on sache déjà que le club existe et comment il s'appelle,
+            // c'est-à-dire tout ce qu'une recherche rend inutile. Et il fallait le taper sans se
+            // tromper, sur un champ en capitales, pour une erreur qui ne disait que
+            // « introuvable ».
             VStack(alignment: .leading, spacing: 6) {
-                RUCardHeader(icon: "key.fill", tint: RUColor.rose2, title: "Rejoindre avec un code")
-                HStack {
-                    TextField("Code d'invitation", text: $joinCode)
-                        .textFieldStyle(.plain)
-                        .font(RUFont.mono(14))
-                        .foregroundColor(RUColor.textPrimary)
-                        .textInputAutocapitalization(.characters)
-                        .padding(.horizontal, 14).padding(.vertical, 11)
-                        .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
-                    Button("Rejoindre") { Task { await joinClub() } }
-                        .buttonStyle(PrimaryButtonStyle(isDisabled: joinCode.trimmingCharacters(in: .whitespaces).isEmpty || isLoading))
-                        .disabled(joinCode.trimmingCharacters(in: .whitespaces).isEmpty || isLoading)
+                RUCardHeader(icon: "magnifyingglass", tint: RUColor.rose2, title: "Rejoindre un club")
+                TextField("Chercher par son nom", text: $clubQuery)
+                    .textFieldStyle(.plain)
+                    .font(RUFont.sans(.emphasis))
+                    .foregroundColor(RUColor.textPrimary)
+                    .autocorrectionDisabled()
+                    .padding(.horizontal, 14).padding(.vertical, 11)
+                    .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+
+                if clubSearchEnCours {
+                    ProgressView().frame(maxWidth: .infinity).padding(.vertical, 12)
+                } else if !clubQuery.trimmingCharacters(in: .whitespaces).isEmpty, clubResultats.isEmpty {
+                    Text("Aucun club ouvert ne porte ce nom.")
+                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                        .padding(.vertical, 8)
+                }
+                ForEach(clubResultats) { trouve in
+                    Button(action: { Task { await joinClub(trouve) } }) {
+                        HStack(spacing: 10) {
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(trouve.name)
+                                    .font(RUFont.sans(.label, weight: .medium))
+                                    .foregroundColor(RUColor.textPrimary)
+                                    .lineLimit(1)
+                                // Le nombre de membres n'est pas décoratif : rien n'empêche deux
+                                // clubs de porter le même nom, et c'est ce qui les distingue.
+                                Text(Pluriel.choisir(trouve.memberCount,
+                                                     String(localized: "\(trouve.memberCount) membre"),
+                                                     String(localized: "\(trouve.memberCount) membres")))
+                                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                            }
+                            Spacer(minLength: 8)
+                            Text("Rejoindre")
+                                .font(RUFont.sans(.body, weight: .semibold))
+                                .foregroundColor(RUColor.rose2)
+                        }
+                        .padding(.horizontal, 13).padding(.vertical, 10)
+                        .frame(minHeight: 44)
+                        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(PressableStyle())
+                    .disabled(isLoading)
                 }
             }
         }
@@ -1150,30 +1200,25 @@ struct ClubView: View {
                         Text(verbatim: Accord.selon(f: String(localized: "Tu es seule dans \(club.name)"),
                                                     m: String(localized: "Tu es seul dans \(club.name)")))
                             .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                        Text("Un club prend vie à plusieurs — classement, défis, sorties de groupe. Partage le code, ceux qui l'ont te rejoignent directement.")
+                        // LE NOM A REMPLACÉ LE CODE.
+                        //
+                        // Ce bloc affichait le code à six lettres et proposait de le partager.
+                        // Il n'y a plus de code : on cherche « \(club.name) » dans le Club et on
+                        // appuie. Le message partagé dit donc quoi chercher, ce qui est la seule
+                        // chose que l'autre ait besoin de savoir.
+                        Text("Un club prend vie à plusieurs — classement, défis, sorties de groupe. Dis-leur de chercher son nom dans l'onglet Club.")
                             .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
                             .fixedSize(horizontal: false, vertical: true)
-                        HStack(spacing: 10) {
-                            Text(club.inviteCode)
-                                .font(RUFont.mono(18, weight: .semibold))
-                                .foregroundColor(RUColor.textPrimary)
-                                .tracking(2)
-                                .padding(.horizontal, 16).padding(.vertical, 10)
-                                .ruCard(radius: 12, fill: RUColor.card2)
-                                // Épelé, sinon VoiceOver lit un code alphanumérique comme un mot
-                                // et il devient impossible à recopier.
-                                .accessibilityLabel("Code d'invitation du club")
-                                .accessibilityValue(club.inviteCode.map { String($0) }.joined(separator: " "))
-                            Spacer(minLength: 0)
-                            ShareLink(item: String(localized: "Rejoins mon club \(club.name) sur RunUp avec le code \(club.inviteCode) : https://runup-nu.vercel.app")) {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "square.and.arrow.up")
-                                    Text("Partager")
-                                }
-                                .font(RUFont.sans(.label, weight: .semibold))
+                        ShareLink(item: String(localized: "Rejoins mon club \(club.name) sur RUNUP — cherche-le par son nom dans l'onglet Club : https://runup-nu.vercel.app")) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "square.and.arrow.up")
+                                Text("Partager")
                             }
-                            .buttonStyle(SecondaryButtonStyle())
+                            .font(RUFont.sans(.label, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                            .frame(minHeight: 44)
                         }
+                        .buttonStyle(SecondaryButtonStyle())
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(RUSpacing.cardPadding)
@@ -1380,20 +1425,44 @@ struct ClubView: View {
         board.challenge = challenge
     }
 
-    private func joinClub() async {
+    private func chercherUnClub(_ texte: String) {
+        clubSearchTask?.cancel()
+        let propre = texte.trimmingCharacters(in: .whitespaces)
+        guard propre.count >= 2 else {
+            clubResultats = []
+            clubSearchEnCours = false
+            return
+        }
+        clubSearchEnCours = true
+        clubSearchTask = Task {
+            try? await Task.sleep(for: .milliseconds(300))
+            guard !Task.isCancelled else { return }
+            let trouves = (try? await clubService.searchClubs(query: propre)) ?? []
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                clubResultats = trouves
+                clubSearchEnCours = false
+            }
+        }
+    }
+
+    private func joinClub(_ club: ClubSearchResult) async {
         isLoading = true
         errorMessage = nil
         do {
-            _ = try await clubService.joinClub(inviteCode: joinCode.trimmingCharacters(in: .whitespaces))
-            // Same placement rule as `createClub` — a mistyped invite code (404) isn't a join.
-            // Created vs joined are tracked apart on purpose: a club that fills up and a club
-            // that gets created are two different signals, and one without the other says the
-            // invitation isn't landing.
+            _ = try await clubService.joinClub(clubId: club.id)
+            // Same placement rule as `createClub` — a club that closed between the search and
+            // the tap (404) isn't a join. Created vs joined are tracked apart on purpose: a club
+            // that fills up and a club that gets created are two different signals, and one
+            // without the other says the invitation isn't landing.
             Analytics.shared.track(.clubJoined)
-            joinCode = ""
+            clubQuery = ""
+            clubResultats = []
             board = try await clubService.fetchBoard()
         } catch ClubServiceError.badResponse(404, _) {
-            errorMessage = String(localized: "Code d'invitation introuvable.")
+            // Le club a été fermé ou supprimé entre la recherche et l'appui. Rare, mais c'est
+            // la seule chose que ce code puisse vouloir dire maintenant.
+            errorMessage = String(localized: "Ce club n'est plus ouvert.")
         } catch {
             errorMessage = String(localized: "Impossible de rejoindre ce club.")
         }

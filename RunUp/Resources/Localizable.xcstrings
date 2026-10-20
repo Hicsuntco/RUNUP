@@ -4145,6 +4145,23 @@
         }
       }
     },
+    "Aucun club ouvert ne porte ce nom.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No open club goes by that name."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ningún club abierto se llama así."
+          }
+        }
+      }
+    },
     "Aucun commentaire pour l'instant — sois la première !": {
       "localizations": {
         "en": {
@@ -5379,6 +5396,40 @@
         }
       }
     },
+    "Ce club n'apparaît dans aucune recherche et ne peut plus être rejoint. Ses membres actuels y restent.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This club shows up in no search and can no longer be joined. Its current members stay."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este club no aparece en ninguna búsqueda y ya no se puede unir. Sus miembros actuales siguen."
+          }
+        }
+      }
+    },
+    "Ce club n'est plus ouvert.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This club is no longer open."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este club ya no está abierto."
+          }
+        }
+      }
+    },
     "Ce fichier n'est pas une sauvegarde RUNUP, ou il est abîmé.": {
       "localizations": {
         "en": {
@@ -6165,6 +6216,23 @@
         }
       }
     },
+    "Chercher par son nom": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search by name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar por nombre"
+          }
+        }
+      }
+    },
     "Chercher un prénom…": {
       "localizations": {
         "en": {
@@ -6425,6 +6493,23 @@
         }
       }
     },
+    "Club ouvert": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open club"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Club abierto"
+          }
+        }
+      }
+    },
     "Coach": {
       "localizations": {
         "en": {
@@ -6469,71 +6554,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Código"
-          }
-        }
-      }
-    },
-    "Code copié": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Code copied"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Código copiado"
-          }
-        }
-      }
-    },
-    "Code d'invitation": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Invite code"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Código de invitación"
-          }
-        }
-      }
-    },
-    "Code d'invitation du club": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Club invite code"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Código de invitación del club"
-          }
-        }
-      }
-    },
-    "Code d'invitation introuvable.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Invite code not found."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Código de invitación no encontrado."
           }
         }
       }
@@ -14460,6 +14480,23 @@
         }
       }
     },
+    "N'importe qui peut trouver ce club par son nom et le rejoindre.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anyone can find this club by name and join it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cualquiera puede encontrar este club por su nombre y unirse."
+          }
+        }
+      }
+    },
     "NAGE": {
       "localizations": {
         "en": {
@@ -15862,22 +15899,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Compartir esta ruta"
-          }
-        }
-      }
-    },
-    "Partager le code d'invitation": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Share the invite code"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compartir el código de invitación"
           }
         }
       }
@@ -18530,22 +18551,6 @@
         }
       }
     },
-    "Rejoindre avec un code": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Join with a code"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unirse con un código"
-          }
-        }
-      }
-    },
     "Rejoindre le classement mondial": {
       "localizations": {
         "en": {
@@ -18562,35 +18567,36 @@
         }
       }
     },
-    "Rejoins mon club %@ sur RunUp avec le code %@ : https://runup-nu.vercel.app": {
+    "Rejoindre un club": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Join my club %@ on RunUp with the code %@: https://runup-nu.vercel.app"
+            "value": "Join a club"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Únete a mi club %@ en RunUp con el código %@: https://runup-nu.vercel.app"
+            "value": "Unirse a un club"
           }
         }
       }
     },
-    "Rejoins mon club sur RunUp avec le code %@ !": {
+    "Rejoins mon club %@ sur RUNUP — cherche-le par son nom dans l'onglet Club : https://runup-nu.vercel.app": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Join my club on RunUp with the code %@!"
+            "value": "Join my club %@ on RUNUP — search its name in the Club tab: https://runup-nu.vercel.app"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "¡Únete a mi club en RunUp con el código %@!"
+            "value": "Únete a mi club %@ en RUNUP: búscalo por su nombre en la pestaña Club: https://runup-nu.vercel.app"
           }
         }
       }
@@ -24078,19 +24084,19 @@
         }
       }
     },
-    "Un club prend vie à plusieurs — classement, défis, sorties de groupe. Partage le code, ceux qui l'ont te rejoignent directement.": {
+    "Un club prend vie à plusieurs — classement, défis, sorties de groupe. Dis-leur de chercher son nom dans l'onglet Club.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A club only comes alive with other people — leaderboard, challenges, group runs. Share the code and anyone who has it joins you straight away."
+            "value": "A club comes alive with other people — leaderboard, challenges, group runs. Tell them to search its name in the Club tab."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un club cobra vida cuando sois varias — clasificación, desafíos, salidas en grupo. Comparte el código y quien lo tenga se une contigo al momento."
+            "value": "Un club cobra vida entre varios: clasificación, retos, salidas en grupo. Diles que busquen su nombre en la pestaña Club."
           }
         }
       }

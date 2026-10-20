@@ -22,16 +22,20 @@ struct ClubManagementView: View {
     var onReport: (LeaderboardRow) -> Void
     var onBlock: (LeaderboardRow) -> Void
     var onUpdateBio: (String) async throws -> Void
+    /// Ouvre ou ferme le club. Comme les autres actions de cet écran, c'est l'appelante qui la
+    /// réalise et qui recharge : cette vue n'a pas de service à elle.
+    var onSetOpen: (Bool) async throws -> Void
     var onReportClub: () -> Void
     var onLeaveClub: () -> Void
 
     @State private var showCreateChallenge = false
+    @State private var ouvertureEnCours = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    inviteCodeCard
+                    verrouDuClub
 
                     challengeSection
 
@@ -145,29 +149,49 @@ struct ClubManagementView: View {
         }
     }
 
-    /// Used to be its own bold card up top — too loud for something you touch once in a while.
-    /// A slim row reads as secondary info, not a headline.
-    private var inviteCodeCard: some View {
-        HStack(spacing: 8) {
-            Text("Code").font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
-            Button(action: {
-                UIPasteboard.general.string = club.inviteCode
-                Haptics.impact(.light)
-                appState.toast(String(localized: "Code copié"))
-            }) {
-                Text(club.inviteCode).font(RUFont.mono(12.5, weight: .semibold)).foregroundColor(RUColor.text2).tracking(1.5)
+    /// LE VERROU DU CLUB — et il a remplacé le code d'invitation à cette place.
+    ///
+    /// On rejoignait ce club avec un code à six lettres, affiché ici. On le rejoint maintenant en
+    /// cherchant son nom : le code supposait qu'on l'ait reçu de quelqu'un, donc qu'on sache déjà
+    /// que le club existe — exactement ce qu'une recherche rend inutile.
+    ///
+    /// La contrepartie d'un club trouvable est de pouvoir le rendre introuvable. Fermé, il
+    /// n'apparaît dans aucune recherche et ne se rejoint plus. Ses membres actuels ne sont pas
+    /// touchés : fermer n'est pas vider, et c'est écrit sous l'interrupteur parce que c'est la
+    /// première question que pose un interrupteur de ce genre.
+    ///
+    /// Montré à la seule personne qui a créé le club. Le serveur le revérifie de son côté.
+    @ViewBuilder private var verrouDuClub: some View {
+        if club.isOwner == true {
+            VStack(alignment: .leading, spacing: 6) {
+                Toggle(isOn: Binding(
+                    get: { club.isOpen ?? true },
+                    set: { nouveau in Task { await changerLOuverture(nouveau) } }
+                )) {
+                    Text("Club ouvert")
+                        .font(RUFont.sans(.emphasis, weight: .medium))
+                        .foregroundColor(RUColor.textPrimary)
+                }
+                .tint(RUColor.rose)
+                .disabled(ouvertureEnCours)
+                Text(club.isOpen ?? true
+                     ? "N'importe qui peut trouver ce club par son nom et le rejoindre."
+                     : "Ce club n'apparaît dans aucune recherche et ne peut plus être rejoint. Ses membres actuels y restent.")
+                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .buttonStyle(PressableStyle())
-            Spacer()
-            ShareLink(item: String(localized: "Rejoins mon club sur RunUp avec le code \(club.inviteCode) !")) {
-                Image(systemName: "square.and.arrow.up").font(.system(size: 12, weight: .medium)).foregroundColor(RUColor.text3)
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(PressableStyle())
-            .accessibilityLabel("Partager le code d'invitation")
+            .padding(.horizontal, 4)
         }
-        .padding(.horizontal, 4)
+    }
+
+    private func changerLOuverture(_ ouvert: Bool) async {
+        ouvertureEnCours = true
+        defer { ouvertureEnCours = false }
+        do {
+            try await onSetOpen(ouvert)
+        } catch {
+            appState.toast(PanneReseau.phrase(pour: error))
+        }
     }
 
     private func memberRow(_ member: LeaderboardRow) -> some View {

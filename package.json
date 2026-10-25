@@ -9,6 +9,7 @@
     "jose": "^5.9.6"
   },
   "scripts": {
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "build": "node ci_scripts/appliquer_schema.js"
   }
 }

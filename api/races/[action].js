@@ -61,6 +61,9 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'post':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handlePost(req, res, userId);
+    case 'kudos':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleKudos(req, res, userId);
     case 'closePost':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleClosePost(req, res, userId);
@@ -308,6 +311,8 @@ async function handlePage(req, res, userId) {
   const { rows: messages } = await sql`
     SELECT p.id, p.parent_id, p.kind, p.text, p.closed_at, p.created_at,
            (p.user_id = ${userId}) AS is_mine,
+           (SELECT COUNT(*)::int FROM race_post_kudos k WHERE k.post_id = p.id) AS kudos,
+           EXISTS(SELECT 1 FROM race_post_kudos k WHERE k.post_id = p.id AND k.user_id = ${userId}) AS kudoed_by_me,
            u.id AS author_id, u.name AS author_name, u.last_name AS author_last_name,
            u.username AS author_username, u.avatar_data, u.avatar_url
     FROM race_posts p
@@ -354,6 +359,8 @@ async function handlePage(req, res, userId) {
       // Dit par le serveur et non déduit côté app : « marquer comme réglé » n'est proposé qu'à
       // l'auteur, et l'app n'a aucune raison de porter son propre identifiant pour le savoir.
       isMine: row.is_mine === true,
+      kudos: row.kudos,
+      kudoedByMe: row.kudoed_by_me === true,
       createdAt: row.created_at,
       author: {
         id: row.author_id,
@@ -406,6 +413,44 @@ async function handlePost(req, res, userId) {
     RETURNING id, created_at
   `;
   res.status(201).json({ id: rows[0].id, createdAt: rows[0].created_at });
+}
+
+// APPLAUDIR UN MESSAGE DU MUR.
+//
+// Un mur où l'on ne peut pas réagir est froid : quelqu'un qui écrit « je vise 3h30, quelqu'un sur
+// ce rythme ? » et ne reçoit rien ne saura jamais si personne ne l'a lu, ou si personne n'est au
+// même rythme. L'applaudissement est la réponse la moins coûteuse qui dise « lu, et oui ».
+//
+// Une BASCULE, comme les applaudissements d'une sortie : le même appel met et retire. Deux routes
+// pour un interrupteur demanderaient au client de savoir dans quel état il se trouve, et il se
+// trompe dès qu'un autre appareil a changé l'état entre-temps.
+async function handleKudos(req, res, userId) {
+  const { postId } = req.body || {};
+  if (!isUuid(postId)) return res.status(400).json({ error: 'bad_request' });
+
+  // Le message doit exister ET appartenir à une course que je peux voir. Sans cette jointure,
+  // n'importe quel identifiant valide serait applaudissable.
+  const { rows: existe } = await sql`
+    SELECT p.id FROM race_posts p JOIN races r ON r.id = p.race_id WHERE p.id = ${postId}
+  `;
+  if (existe.length === 0) return res.status(404).json({ error: 'not_found' });
+
+  const { rows: retire } = await sql`
+    DELETE FROM race_post_kudos WHERE post_id = ${postId} AND user_id = ${userId} RETURNING post_id
+  `;
+  if (retire.length === 0) {
+    await sql`
+      INSERT INTO race_post_kudos (post_id, user_id) VALUES (${postId}, ${userId})
+      ON CONFLICT DO NOTHING
+    `;
+  }
+
+  const { rows: compte } = await sql`
+    SELECT COUNT(*)::int AS n FROM race_post_kudos WHERE post_id = ${postId}
+  `;
+  // Le compte RÉEL est rendu, pas un « +1 » que le client appliquerait : deux personnes qui
+  // applaudissent en même temps feraient sinon diverger les deux écrans jusqu'au rechargement.
+  res.status(200).json({ kudoed: retire.length === 0, kudos: compte[0].n });
 }
 
 // Retirer son annonce — le dossard est vendu, le partenaire est trouvé. On marque, on ne supprime

@@ -692,3 +692,34 @@ CREATE INDEX IF NOT EXISTS idx_race_posts_parent ON race_posts (parent_id, creat
 -- plutôt que le type annoncé par le client, plafond quotidien, et l'ancienne image effacée du
 -- stockage au remplacement comme à la suppression de la sortie.
 ALTER TABLE activities ADD COLUMN IF NOT EXISTS photo_url TEXT;
+
+-- APPLAUDIR UN MESSAGE DE COURSE, ET COMMENTER UN ITINÉRAIRE.
+--
+-- Les applaudissements et les commentaires n'existaient que sur les sorties. Un mur où l'on ne
+-- peut pas réagir est froid : quelqu'un qui écrit « je vise 3h30, quelqu'un sur ce rythme ? » et
+-- ne reçoit rien ne saura jamais si personne ne l'a lu ou si personne n'est au même rythme.
+--
+-- DEUX TABLES ET NON UNE TABLE GÉNÉRIQUE `(type, cible, personne)`. Elle aurait l'air plus
+-- élégante et serait pire ici : la clé étrangère disparaît, donc plus rien ne garantit que la
+-- cible existe, et la suppression en cascade — un message effacé emporte ses applaudissements —
+-- deviendrait du code au lieu d'une contrainte. Deux petites tables typées coûtent une ligne de
+-- schéma chacune et gardent les deux propriétés.
+CREATE TABLE IF NOT EXISTS race_post_kudos (
+  post_id UUID NOT NULL REFERENCES race_posts(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (post_id, user_id)
+);
+
+-- Un itinéraire se garde déjà (`route_saves`), ce qui est sa forme d'approbation. Ce qui lui
+-- manquait, c'est de pouvoir DIRE quelque chose : « attention aux racines après le pont »,
+-- « fermé en hiver ». Un itinéraire est un lieu, et ce qu'on en sait vaut souvent le tracé.
+CREATE TABLE IF NOT EXISTS route_comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  route_id UUID NOT NULL REFERENCES routes(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  text TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_route_comments_route ON route_comments (route_id, created_at DESC);

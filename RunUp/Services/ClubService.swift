@@ -943,6 +943,29 @@ struct ClubService {
     /// Retire son annonce : le dossard est parti, le partenaire est trouvé. On marque, on ne
     /// supprime pas — les réponses sous une annonce effacée deviendraient des messages sans
     /// contexte.
+    /// Applaudir un message du mur d'une course, ou retirer son applaudissement — c'est le MÊME
+    /// appel. Le serveur rend le compte réel plutôt qu'un « +1 » appliqué ici : deux personnes qui
+    /// applaudissent en même temps feraient sinon diverger les deux écrans.
+    func toggleRacePostKudos(postId: String) async throws -> (kudoed: Bool, kudos: Int) {
+        let reponse: RaceKudosResponse = try await send(path: "api/races/kudos", method: "POST",
+                                                        body: ["postId": postId])
+        return (reponse.kudoed, reponse.kudos)
+    }
+
+    /// Ce qu'on sait d'un itinéraire et que le tracé ne dit pas : les racines après le pont, la
+    /// fontaine qui marche, le chemin fermé en hiver.
+    func fetchRouteComments(routeId: String) async throws -> [CommentItem] {
+        let reponse: CommentsResponse = try await send(path: "api/activities/routeComments",
+                                                       method: "GET", query: ["routeId": routeId])
+        return reponse.items
+    }
+
+    func postRouteComment(routeId: String, text: String) async throws {
+        let _: RacePostCreatedResponse = try await send(path: "api/activities/routeComment",
+                                                        method: "POST",
+                                                        body: ["routeId": routeId, "text": text])
+    }
+
     func closeRacePost(postId: String) async throws {
         let _: OkResponse = try await send(path: "api/races/closePost", method: "POST", body: ["postId": postId])
     }
@@ -1040,6 +1063,8 @@ struct WallRacePost: Decodable, Identifiable, Hashable {
     var kind: String
     var text: String
     var closed: Bool
+    var kudos: Int
+    var kudoedByMe: Bool
     var createdAt: Date
     var author: PublicUser
 }
@@ -1091,6 +1116,11 @@ private struct RaceCreatedResponse: Decodable {
     /// Faux quand la course existait déjà. L'app n'en fait rien d'autre qu'une mesure : voir
     /// `createRace`, où le doublon évité est précisément ce qu'on veut.
     var created: Bool
+}
+
+private struct RaceKudosResponse: Decodable {
+    var kudoed: Bool
+    var kudos: Int
 }
 
 private struct RacePostCreatedResponse: Decodable {

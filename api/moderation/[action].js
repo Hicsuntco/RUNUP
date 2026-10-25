@@ -13,7 +13,11 @@ const { withErrorHandling, isUuid } = require('../../lib/http');
 // nom comme ses messages sont écrits par des coureurs. Un mur d'annonces où l'on cède un dossard
 // est exactement l'endroit où une arnaque se poste ; sans ce bouton, la seule issue serait de
 // quitter la page.
-const REPORT_TARGET_TYPES = new Set(['user', 'club', 'activity', 'comment', 'route', 'race', 'race_post']);
+const REPORT_TARGET_TYPES = new Set([
+  'user', 'club', 'activity', 'comment', 'route', 'race', 'race_post',
+  // Ce qu'on écrit sous un itinéraire est lu par tous ceux qui ouvrent ce tracé sur la carte.
+  'route_comment',
+]);
 
 module.exports = withErrorHandling(async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });

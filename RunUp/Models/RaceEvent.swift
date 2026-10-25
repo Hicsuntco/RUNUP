@@ -158,6 +158,11 @@ struct RacePost: Decodable, Identifiable, Hashable {
     /// Dit par le serveur : « marquer comme réglé » n'est proposé qu'à l'auteur, et l'app n'a
     /// aucune raison de porter son propre identifiant pour le savoir.
     var isMine: Bool
+    /// Les applaudissements. Un mur où l'on ne peut pas réagir est froid : quelqu'un qui demande
+    /// « 3h30, quelqu'un sur ce rythme ? » et ne reçoit rien ne saura jamais si personne ne l'a lu
+    /// ou si personne n'est au même rythme.
+    var kudos: Int
+    var kudoedByMe: Bool
     var createdAt: Date
     var author: PublicUser
 }

@@ -117,10 +117,20 @@ struct WallView: View {
                             )
                         case .course(let post):
                             // Une annonce de course garde sa carte : c'est ce qui la distingue
-                            // d'une sortie au milieu du fil. Son propre retrait, donc, puisque le
-                            // conteneur n'en donne plus.
-                            carteDeCourse(post)
-                                .padding(.bottom, 16)
+                            // d'une sortie au milieu du fil. Mais il lui faut LE MÊME FILET en
+                            // tête, et la capture l'a montré : sans lui, elle se collait sous le
+                            // post précédent et se lisait comme un morceau de celui-ci. Le post
+                            // porte son filet lui-même ; la carte de course ne le faisait pas.
+                            VStack(spacing: 0) {
+                                if index > 0 {
+                                    Rectangle()
+                                        .fill(RUColor.line)
+                                        .frame(height: RUSpacing.hairline)
+                                        .padding(.bottom, 16)
+                                }
+                                carteDeCourse(post)
+                            }
+                            .padding(.bottom, 16)
                         }
                     }
                 }
@@ -210,12 +220,23 @@ struct WallView: View {
     /// Elle dit DE QUELLE COURSE il s'agit — sans ça, « je cherche quelqu'un à 4:45 » arrivant au
     /// milieu des sorties ne voudrait rien dire — et elle mène à la page, où se tient la
     /// conversation.
+    /// Compacte, et volontairement différente d'une carte de sortie : ce n'est pas la même chose.
+    /// Elle dit DE QUELLE COURSE il s'agit — sans ça, « je cherche quelqu'un à 4:45 » arrivant au
+    /// milieu des sorties ne voudrait rien dire.
+    ///
+    /// # ELLE N'EST PAS UN BOUTON, ET C'EST UNE CORRECTION
+    ///
+    /// Je l'avais écrite comme un seul grand bouton vers la page de la course, avec
+    /// l'applaudissement posé dessus par un geste de tape. Un geste de tape À L'INTÉRIEUR d'un
+    /// bouton est avalé par le bouton : applaudir aurait ouvert la page. Deux actions sur une même
+    /// carte demandent deux cibles distinctes — c'est exactement la répartition du post juste
+    /// au-dessus, où le bloc d'identité mène à la personne et l'applaudissement reste une action.
     private func carteDeCourse(_ post: WallRacePost) -> some View {
-        Button(action: {
-            appState.openRacesTabOnNextVisit = true
-            appState.go(.club)
-        }) {
-            VStack(alignment: .leading, spacing: 9) {
+        VStack(alignment: .leading, spacing: 9) {
+            Button(action: {
+                appState.openRacesTabOnNextVisit = true
+                appState.go(.club)
+            }) {
                 HStack(spacing: 9) {
                     ZStack {
                         Circle().fill(RUColor.cyan.opacity(0.16))
@@ -242,20 +263,41 @@ struct WallView: View {
                         .padding(.horizontal, 7).padding(.vertical, 3)
                         .background(RUColor.cyan.opacity(0.14), in: Capsule())
                 }
-
-                Text(post.text)
-                    .font(RUFont.sans(.body))
-                    .foregroundColor(post.closed ? RUColor.text3 : RUColor.text2)
-                    .strikethrough(post.closed, color: RUColor.text3)
-                    .lineLimit(4)
-                    .fixedSize(horizontal: false, vertical: true)
+                .contentShape(Rectangle())
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(RUSpacing.cardPadding)
-            .ruCard()
-            .contentShape(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
+            .buttonStyle(PressableStyle())
+            .accessibilityLabel(String(localized: "Voir la page de \(post.raceName)"))
+
+            Text(post.text)
+                .font(RUFont.sans(.body))
+                .foregroundColor(post.closed ? RUColor.text3 : RUColor.text2)
+                .strikethrough(post.closed, color: RUColor.text3)
+                .lineLimit(4)
+                .fixedSize(horizontal: false, vertical: true)
+
+            // Applaudir SANS quitter le fil. Obliger à ouvrir la page de la course pour répondre
+            // « lu, et oui » coûte plus cher que la réponse elle-même, et c'est comme ça qu'un mur
+            // reste vide.
+            Button(action: { Task { await applaudirLaCourse(post) } }) {
+                HStack(spacing: 7) {
+                    Image(systemName: post.kudoedByMe ? "hands.clap.fill" : "hands.clap")
+                        .font(.system(size: 15, weight: .regular))
+                    if post.kudos > 0 {
+                        Text("\(post.kudos)")
+                            .font(RUFont.sans(.body, weight: .semibold))
+                    }
+                }
+                .foregroundColor(post.kudoedByMe ? RUColor.rose : RUColor.text2)
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(PressableStyle())
+            .accessibilityLabel(post.kudoedByMe ? "Retirer ton applaudissement" : "Applaudir ce message")
+            .accessibilityValue("\(post.kudos)")
         }
-        .buttonStyle(PressableStyle())
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(RUSpacing.cardPadding)
+        .ruCard()
     }
 
     private func genreLisible(_ genre: String) -> String {
@@ -329,6 +371,18 @@ struct WallView: View {
             let maintenant = try await clubService.toggleKudos(activityId: item.id)
             page?.items[index].kudoedByMe = maintenant
             page?.items[index].kudos += maintenant ? 1 : -1
+            Haptics.impact(.light)
+        } catch {
+            appState.toast(String(localized: "Impossible d'applaudir — réessaie."))
+        }
+    }
+
+    private func applaudirLaCourse(_ post: WallRacePost) async {
+        guard let index = page?.racePosts.firstIndex(where: { $0.id == post.id }) else { return }
+        do {
+            let reponse = try await clubService.toggleRacePostKudos(postId: post.id)
+            page?.racePosts[index].kudoedByMe = reponse.kudoed
+            page?.racePosts[index].kudos = reponse.kudos
             Haptics.impact(.light)
         } catch {
             appState.toast(String(localized: "Impossible d'applaudir — réessaie."))

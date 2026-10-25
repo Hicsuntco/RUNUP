@@ -20,6 +20,10 @@ struct RouteDetailSheet: View {
     @State private var isSaving = false
     @State private var reportPresented = false
     @State private var reportReason = ""
+    @State private var commentaires: [CommentItem] = []
+    @State private var brouillon = ""
+    @State private var envoiEnCours = false
+    @State private var cibleSignalee: ReportTarget?
 
     private var current: SharedRoute { detailed ?? route }
 
@@ -32,16 +36,20 @@ struct RouteDetailSheet: View {
                 stats
                 if let notes = current.notes, !notes.isEmpty { notesCard(notes) }
                 actions
+                ceQuOnEnSait
                 reportButton
             }
             .padding(20)
         }
         .background(RUColor.pageBackground)
-        .task { await loadFullTrace() }
+        .task {
+            await loadFullTrace()
+            await chargerLesCommentaires()
+        }
         .alert("Signaler cet itinéraire", isPresented: $reportPresented) {
             TextField("Pourquoi ?", text: $reportReason)
             Button("Envoyer") { report() }
-            Button("Annuler", role: .cancel) {}
+            Button("Annuler", role: .cancel) { cibleSignalee = nil; reportReason = "" }
         } message: {
             Text("Ce signalement sera examiné. Merci de préciser ce qui pose problème.")
         }
@@ -157,6 +165,112 @@ struct RouteDetailSheet: View {
         }
     }
 
+    // MARK: - Ce qu'on en sait
+
+    /// CE QUE LE TRACÉ NE DIT PAS.
+    ///
+    /// Un itinéraire se gardait déjà — le marque-page, qui est sa forme d'approbation. Ce qui lui
+    /// manquait, c'était de pouvoir DIRE quelque chose : « attention aux racines après le pont »,
+    /// « fermé en hiver », « la fontaine au kilomètre 4 marche ». Un itinéraire est un lieu, et ce
+    /// qu'on en sait vaut souvent autant que son dessin.
+    ///
+    /// Le titre n'est pas « Commentaires » : on ne vient pas commenter un parcours, on vient dire
+    /// ce qu'on en sait. Le mot change ce qu'on écrit.
+    private var ceQuOnEnSait: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            RUCardHeader(icon: "text.bubble", tint: RUColor.cyan, title: "Ce qu'on en sait")
+
+            if commentaires.isEmpty {
+                Text("Personne n'a encore rien dit sur ce parcours.")
+                    .font(RUFont.sans(.body))
+                    .foregroundColor(RUColor.text3)
+            } else {
+                ForEach(commentaires) { commentaire in
+                    HStack(alignment: .top, spacing: 10) {
+                        Button(action: { appState.ouvrirLeProfil(commentaire.userId) }) {
+                            AvatarView(urlString: commentaire.avatarUrl,
+                                       base64DataURI: commentaire.avatarBase64,
+                                       initial: String(commentaire.name.prefix(1)),
+                                       size: 28, seed: commentaire.userId)
+                        }
+                        .buttonStyle(PressableStyle())
+                        .accessibilityLabel(String(localized: "Voir le profil de \(commentaire.name)"))
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack(spacing: 6) {
+                                Text(commentaire.name)
+                                    .font(RUFont.sans(.body, weight: .semibold))
+                                    .foregroundColor(RUColor.textPrimary)
+                                Text(commentaire.createdAt.relativeDescription)
+                                    .font(RUFont.sans(.micro))
+                                    .foregroundColor(RUColor.text3)
+                            }
+                            Text(commentaire.text)
+                                .font(RUFont.sans(.label))
+                                .foregroundColor(RUColor.text2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .contextMenu {
+                        Button("Signaler ce commentaire") {
+                            cibleSignalee = ReportTarget(targetType: "route_comment",
+                                                         targetId: commentaire.id,
+                                                         displayName: commentaire.name)
+                            reportReason = ""
+                            reportPresented = true
+                        }
+                    }
+                }
+            }
+
+            HStack(alignment: .bottom, spacing: 10) {
+                TextField("Écris ce que tu sais de ce parcours…", text: $brouillon, axis: .vertical)
+                    .textFieldStyle(.plain)
+                    .font(RUFont.sans(.label))
+                    .foregroundColor(RUColor.textPrimary)
+                    .lineLimit(1...4)
+                    .padding(.horizontal, 13).padding(.vertical, 10)
+                    .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous)
+                        .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+
+                Button(action: { Task { await envoyer() } }) {
+                    Image(systemName: "arrow.up.circle.fill")
+                        .font(.system(size: 28))
+                        .foregroundStyle(brouillon.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                                         ? RUColor.text3 : RUColor.rose)
+                }
+                .buttonStyle(PressableStyle())
+                .disabled(brouillon.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || envoiEnCours)
+                .accessibilityLabel("Envoyer")
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func chargerLesCommentaires() async {
+        commentaires = (try? await ClubService(auth: appState.auth)
+            .fetchRouteComments(routeId: route.id)) ?? []
+    }
+
+    private func envoyer() async {
+        let propre = brouillon.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !propre.isEmpty else { return }
+        envoiEnCours = true
+        do {
+            try await ClubService(auth: appState.auth).postRouteComment(routeId: route.id, text: propre)
+            brouillon = ""
+            await chargerLesCommentaires()
+            Haptics.impact(.light)
+        } catch ClubServiceError.badResponse(422, _) {
+            appState.toast(String(localized: "Ce texte a été refusé par le filtre de contenu. Reformule-le."))
+        } catch {
+            appState.toast(String(localized: "Impossible de publier — \(PanneReseau.motif(pour: error))."))
+        }
+        envoiEnCours = false
+    }
+
     private var reportButton: some View {
         Button("Signaler cet itinéraire") { reportPresented = true }
             .font(RUFont.sans(.body))
@@ -210,13 +324,20 @@ struct RouteDetailSheet: View {
         }
     }
 
+    /// La même alerte sert pour l'itinéraire ET pour un commentaire : `cibleSignalee` dit lequel.
+    /// Nil veut dire l'itinéraire — c'est le bouton en pied de page, qui n'en désigne pas d'autre.
     private func report() {
         let reason = reportReason.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !reason.isEmpty else { return }
+        let cible = cibleSignalee
+        cibleSignalee = nil
         reportReason = ""
+        guard !reason.isEmpty else { return }
         Task {
-            try? await ClubService(auth: appState.auth)
-                .report(targetType: "route", targetId: current.id, reason: reason)
+            try? await ClubService(auth: appState.auth).report(
+                targetType: cible?.targetType ?? "route",
+                targetId: cible?.targetId ?? current.id,
+                reason: reason
+            )
             appState.toast(String(localized: "Signalement envoyé"))
         }
     }

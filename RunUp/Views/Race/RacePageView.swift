@@ -589,16 +589,40 @@ struct RacePageView: View {
                 .padding(.leading, 10)
             }
 
-            Button(action: {
-                reponseA = message
-                brouillon = ""
-            }) {
-                Text("Répondre")
-                    .font(RUFont.sans(.body, weight: .semibold))
-                    .foregroundColor(RUColor.rose2)
+            HStack(spacing: 18) {
+                // Applaudir : la réponse la moins coûteuse qui dise « lu, et oui ». Sans elle, un
+                // message sans réponse ne distingue pas « personne ne m'a lu » de « personne n'est
+                // à mon rythme ».
+                Button(action: { Task { await applaudir(message) } }) {
+                    HStack(spacing: 7) {
+                        Image(systemName: message.kudoedByMe ? "hands.clap.fill" : "hands.clap")
+                            .font(.system(size: 15, weight: .regular))
+                        if message.kudos > 0 {
+                            Text("\(message.kudos)")
+                                .font(RUFont.sans(.body, weight: .semibold))
+                        }
+                    }
+                    .foregroundColor(message.kudoedByMe ? RUColor.rose : RUColor.text2)
                     .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(PressableStyle())
+                .accessibilityLabel(message.kudoedByMe ? "Retirer ton applaudissement" : "Applaudir ce message")
+                .accessibilityValue("\(message.kudos)")
+
+                Button(action: {
+                    reponseA = message
+                    brouillon = ""
+                }) {
+                    Text("Répondre")
+                        .font(RUFont.sans(.body, weight: .semibold))
+                        .foregroundColor(RUColor.rose2)
+                        .frame(minHeight: 44)
+                }
+                .buttonStyle(PressableStyle())
+
+                Spacer(minLength: 0)
             }
-            .buttonStyle(PressableStyle())
         }
         .padding(RUSpacing.cardPadding)
         .ruCard()
@@ -773,6 +797,20 @@ struct RacePageView: View {
             appState.toast(String(localized: "Impossible de publier — \(PanneReseau.motif(pour: error))."))
         }
         enCours = false
+    }
+
+    /// Le compte vient du SERVEUR, pas d'un « +1 » posé ici : deux personnes qui applaudissent en
+    /// même temps feraient sinon diverger les deux écrans jusqu'au rechargement.
+    private func applaudir(_ message: RacePost) async {
+        guard let index = page?.posts.firstIndex(where: { $0.id == message.id }) else { return }
+        do {
+            let reponse = try await clubService.toggleRacePostKudos(postId: message.id)
+            page?.posts[index].kudoedByMe = reponse.kudoed
+            page?.posts[index].kudos = reponse.kudos
+            Haptics.impact(.light)
+        } catch {
+            appState.toast(String(localized: "Impossible d'applaudir — réessaie."))
+        }
     }
 
     private func clore(_ message: RacePost) async {

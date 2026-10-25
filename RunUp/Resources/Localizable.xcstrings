@@ -4288,6 +4288,23 @@
         }
       }
     },
+    "Applaudir ce message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clap this post"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplaudir este mensaje"
+          }
+        }
+      }
+    },
     "Applaudir cette séance": {
       "localizations": {
         "en": {
@@ -6031,6 +6048,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lo que lee"
+          }
+        }
+      }
+    },
+    "Ce qu'on en sait": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What people know"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo que se sabe"
           }
         }
       }
@@ -17822,6 +17856,23 @@
         }
       }
     },
+    "Personne n'a encore rien dit sur ce parcours.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nobody has said anything about this route yet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nadie ha dicho nada sobre esta ruta todavía."
+          }
+        }
+      }
+    },
     "Personne n'a encore rien posté — reviens plus tard.": {
       "localizations": {
         "en": {
@@ -26932,6 +26983,23 @@
         }
       }
     },
+    "Voir la page de %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See the %@ page"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver la página de %@"
+          }
+        }
+      }
+    },
     "Voir le profil de %@": {
       "extractionState": "manual",
       "localizations": {
@@ -32037,6 +32105,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pantalla %1$lld de %2$lld"
+          }
+        }
+      }
+    },
+    "Écris ce que tu sais de ce parcours…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share what you know about this route…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuenta lo que sabes de esta ruta…"
           }
         }
       }

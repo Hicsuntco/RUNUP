@@ -63,6 +63,12 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'wall':
       if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
       return handleWall(req, res, userId);
+    case 'routeComments':
+      if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleRouteComments(req, res, userId);
+    case 'routeComment':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleRouteComment(req, res, userId);
     case 'photo':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleActivityPhoto(req, res, userId);
@@ -365,6 +371,8 @@ async function handleWall(req, res, userId, porteeForcee) {
   // mondial de dossards n'est pas un fil, c'est une petite annonce.
   const { rows: messagesDeCourse } = portee === 'club' || portee === 'amis' ? { rows: [] } : await sql`
     SELECT p.id, p.race_id, p.kind, p.text, p.created_at, p.closed_at,
+           (SELECT COUNT(*)::int FROM race_post_kudos k WHERE k.post_id = p.id) AS kudos,
+           EXISTS(SELECT 1 FROM race_post_kudos k WHERE k.post_id = p.id AND k.user_id = ${userId}) AS kudoed_by_me,
            r.name AS race_name, to_char(r.race_date, 'YYYY-MM-DD') AS race_date, r.discipline,
            u.id AS author_id, u.name AS author_name, u.last_name AS author_last_name,
            u.username AS author_username, u.avatar_data, u.avatar_url
@@ -391,6 +399,8 @@ async function handleWall(req, res, userId, porteeForcee) {
       kind: r.kind,
       text: r.text,
       closed: r.closed_at !== null,
+      kudos: r.kudos,
+      kudoedByMe: r.kudoed_by_me === true,
       createdAt: r.created_at,
       author: {
         id: r.author_id,
@@ -835,6 +845,65 @@ function isValidJpegBuffer(buffer) {
 // une photo en fait un fil qu'on regarde. C'est aussi, de loin, le contenu le plus sensible que
 // l'app accepte — d'où les octets magiques plutôt que le type annoncé, et le signalement qui
 // existe déjà sur chaque sortie (`targetType: 'activity'`).
+// CE QU'ON SAIT D'UN ITINÉRAIRE, ET QUE LE TRACÉ NE DIT PAS.
+//
+// Un itinéraire se gardait déjà (le marque-page), ce qui est sa forme d'approbation. Ce qui lui
+// manquait, c'était de pouvoir DIRE quelque chose : « attention aux racines après le pont »,
+// « fermé en hiver », « la fontaine au kilomètre 4 marche ». Un itinéraire est un lieu, et ce
+// qu'on en sait vaut souvent autant que son dessin.
+//
+// Les personnes bloquées sont retirées des deux côtés, comme partout : on ne lit pas quelqu'un
+// qu'on a bloqué, et on n'est pas lu par quelqu'un qui nous a bloqué.
+async function handleRouteComments(req, res, userId) {
+  const routeId = typeof req.query.routeId === 'string' ? req.query.routeId : '';
+  if (!isUuid(routeId)) return res.status(400).json({ error: 'bad_request' });
+
+  const { rows } = await sql`
+    SELECT c.id, c.text, c.created_at, u.id AS user_id, u.name, u.avatar_data, u.avatar_url
+    FROM route_comments c
+    JOIN users u ON u.id = c.user_id
+    WHERE c.route_id = ${routeId}
+      AND c.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+      AND c.user_id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
+    ORDER BY c.created_at ASC
+    LIMIT 100
+  `;
+  res.status(200).json({
+    items: rows.map((r) => ({
+      id: r.id,
+      userId: r.user_id,
+      name: r.name,
+      avatarBase64: r.avatar_data || null,
+      avatarUrl: r.avatar_url || null,
+      text: r.text,
+      createdAt: r.created_at,
+    })),
+  });
+}
+
+async function handleRouteComment(req, res, userId) {
+  const { routeId, text } = req.body || {};
+  if (!isUuid(routeId)) return res.status(400).json({ error: 'bad_request' });
+
+  const propre = typeof text === 'string' ? text.trim().slice(0, 500) : '';
+  if (!propre) return res.status(400).json({ error: 'bad_request' });
+  // Même filtre que les noms de club, les titres de défi et les commentaires de sortie : un
+  // commentaire d'itinéraire est lu par tous ceux qui ouvrent ce tracé sur la carte.
+  if (containsObjectionableContent(propre)) return res.status(422).json({ error: 'objectionable_content' });
+  if (!(await underDailyCap(`routeComment:${userId}`, 60))) {
+    return res.status(429).json({ error: 'too_many_requests' });
+  }
+
+  const { rows: existe } = await sql`SELECT id FROM routes WHERE id = ${routeId}`;
+  if (existe.length === 0) return res.status(404).json({ error: 'not_found' });
+
+  const { rows } = await sql`
+    INSERT INTO route_comments (route_id, user_id, text) VALUES (${routeId}, ${userId}, ${propre})
+    RETURNING id, created_at
+  `;
+  res.status(201).json({ id: rows[0].id, createdAt: rows[0].created_at });
+}
+
 async function handleActivityPhoto(req, res, userId) {
   const { activityId, photoDataURI } = req.body || {};
   if (!isUuid(activityId)) return res.status(400).json({ error: 'bad_request' });

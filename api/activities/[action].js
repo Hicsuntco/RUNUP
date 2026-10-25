@@ -60,6 +60,9 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'routePhoto':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleRoutePhoto(req, res, userId);
+    case 'wall':
+      if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleWall(req, res, userId);
     case 'photo':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleActivityPhoto(req, res, userId);
@@ -263,12 +266,48 @@ async function notifyClubOfNewActivity(clubId, posterId, text) {
   await sendPushToUsers(sql, recipients.map((r) => r.user_id), { title: 'Le Club', body: `${posterName} ${text}` });
 }
 
+// LE FIL DU CLUB N'EST PLUS QU'UNE PORTÉE DU MUR.
+//
+// Il portait sa propre copie de la grande requête ci-dessous, et le fil des amis une troisième
+// (api/friends). Les trois ont déjà divergé une fois : celle des amis ne sélectionnait ni le
+// tracé, ni le titre, ni la note, donc la MÊME sortie s'affichait avec sa carte dans l'onglet
+// Club et nue dans l'onglet Amis, sans que rien ne le signale — les champs sont optionnels au
+// décodage, donc l'absence passait inaperçue. Une quatrième copie pour le mur aurait été une
+// quatrième occasion de diverger.
+//
+// `feed` garde donc son nom et sa réponse — les versions de l'app déjà installées l'appellent —
+// mais passe par la même requête, avec la portée « club ».
 async function handleFeed(req, res, userId) {
-  const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
-  const clubId = memberRows[0]?.club_id;
-  if (!clubId) return res.status(200).json({ items: [] });
+  return handleWall(req, res, userId, 'club');
+}
 
-  const { rows } = await sql`
+// LE MUR : UN SEUL ENDROIT OÙ TOUT ATTERRIT.
+//
+// Trois fils séparés demandaient de savoir OÙ regarder avant de savoir QUOI regarder : le club
+// pour ses membres, les amis pour ses abonnements, la page d'une course pour ce qui s'y dit. Un
+// seul fil retourne la question — tout arrive, et les filtres servent à restreindre, pas à
+// trouver.
+//
+// LE CONTEXTE NE SE PERD PAS POUR AUTANT, et c'était le vrai risque. Chaque sortie porte sa
+// PROVENANCE (`source`) : « ton club », « tu la suis », « toi ». Sans ça, un fil mélangé ne dit
+// plus pourquoi telle personne y figure, et c'est précisément ce qui distingue un réseau d'un
+// annuaire.
+//
+// Les messages des pages de course arrivent dans un tableau à part plutôt que mélangés aux
+// sorties : ce sont deux formes différentes, et les forcer dans la même rendrait chaque champ
+// optionnel des deux côtés. Le client les entrelace par date.
+async function handleWall(req, res, userId, porteeForcee) {
+  const demandee = porteeForcee || (typeof req.query.scope === 'string' ? req.query.scope : 'tout');
+  const portee = ['tout', 'club', 'amis', 'courses'].includes(demandee) ? demandee : 'tout';
+
+  const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
+  const clubId = memberRows[0]?.club_id || null;
+
+  // La portée « club » sans club ne rend rien, et c'est la réponse juste : il n'y a pas de fil de
+  // club quand on n'en a pas. Les autres portées, elles, marchent très bien sans.
+  if (portee === 'club' && !clubId) return res.status(200).json({ items: [], racePosts: [] });
+
+  const rows = portee === 'courses' ? [] : (await sql`
     SELECT a.id, a.text, a.created_at, u.name, u.id AS user_id, u.avatar_data, u.avatar_url,
            a.distance_km, a.duration_seconds, a.avg_pace, a.elevation_gain_m, a.is_personal_record,
            a.content_key, a.route_preview, a.title, a.note, a.edited_at, a.photo_url,
@@ -295,18 +334,76 @@ async function handleFeed(req, res, userId) {
              WHERE c3.activity_id = a.id
                AND c3.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
                AND c3.user_id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
-             ORDER BY c3.created_at DESC LIMIT 1) AS last_comment
+             ORDER BY c3.created_at DESC LIMIT 1) AS last_comment,
+           -- LA PROVENANCE, dans cet ordre de priorité. Une sortie peut être les trois à la fois
+           -- — un camarade de club qu'on suit aussi — et il faut bien n'en dire qu'une. La plus
+           -- spécifique gagne : « toi » avant « ton club » avant « tu la suis ».
+           CASE
+             WHEN a.user_id = ${userId} THEN 'moi'
+             WHEN ${clubId}::uuid IS NOT NULL AND a.club_id = ${clubId}::uuid THEN 'club'
+             ELSE 'amis'
+           END AS source
     FROM activities a
     JOIN users u ON u.id = a.user_id
-    WHERE a.club_id = ${clubId}
+    WHERE (
+            (${portee} IN ('tout', 'club') AND ${clubId}::uuid IS NOT NULL AND a.club_id = ${clubId}::uuid)
+         OR (${portee} IN ('tout', 'amis') AND EXISTS (
+               SELECT 1 FROM follows f
+                WHERE f.follower_id = ${userId} AND f.followee_id = a.user_id AND f.status = 'accepted'))
+            -- MES PROPRES SORTIES, et seulement dans « tout ». Un fil où l'on ne se voit pas
+            -- laisse croire qu'on n'a rien publié ; mais les filtres « club » et « amis »
+            -- répondent à une question précise, à laquelle on n'est pas la réponse.
+         OR (${portee} = 'tout' AND a.user_id = ${userId})
+          )
       AND a.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
       AND a.user_id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
     ORDER BY a.created_at DESC
     LIMIT 50
+  `).rows;
+
+  // Ce qui s'écrit sur les pages des courses QUE JE PRÉPARE. Pas toutes les courses : un mur
+  // mondial de dossards n'est pas un fil, c'est une petite annonce.
+  const { rows: messagesDeCourse } = portee === 'club' || portee === 'amis' ? { rows: [] } : await sql`
+    SELECT p.id, p.race_id, p.kind, p.text, p.created_at, p.closed_at,
+           r.name AS race_name, to_char(r.race_date, 'YYYY-MM-DD') AS race_date, r.discipline,
+           u.id AS author_id, u.name AS author_name, u.last_name AS author_last_name,
+           u.username AS author_username, u.avatar_data, u.avatar_url
+    FROM race_posts p
+    JOIN races r ON r.id = p.race_id
+    JOIN users u ON u.id = p.user_id
+    JOIN race_followers me ON me.race_id = p.race_id AND me.user_id = ${userId}
+    WHERE p.parent_id IS NULL
+      AND r.race_date >= CURRENT_DATE
+      AND p.user_id <> ${userId}
+      AND p.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+      AND p.user_id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
+    ORDER BY p.created_at DESC
+    LIMIT 25
   `;
 
   res.status(200).json({
+    racePosts: messagesDeCourse.map((r) => ({
+      id: r.id,
+      raceId: r.race_id,
+      raceName: r.race_name,
+      raceDate: r.race_date,
+      discipline: r.discipline,
+      kind: r.kind,
+      text: r.text,
+      closed: r.closed_at !== null,
+      createdAt: r.created_at,
+      author: {
+        id: r.author_id,
+        name: r.author_name,
+        lastName: r.author_last_name || null,
+        username: r.author_username || null,
+        avatarBase64: r.avatar_data || null,
+        avatarUrl: r.avatar_url || null,
+        isPrivate: false,
+      },
+    })),
     items: rows.map((r) => ({
+      source: r.source,
       id: r.id,
       userId: r.user_id,
       name: r.name,

@@ -29,6 +29,13 @@ struct ActivityFeedRow: View {
     var onBlock: () -> Void
     var onDelete: () -> Void
     var onEdit: () -> Void
+    /// « ton club », « tu la suis », « toi » — pourquoi cette sortie est dans le fil qu'on lit.
+    ///
+    /// Déclaré EN DERNIER et avec une valeur par défaut : les trois appels existants ne le passent
+    /// pas, et l'initialiseur mémoire d'une structure Swift exige l'ordre de déclaration. Nil dans
+    /// un fil d'un seul genre, où la provenance serait une évidence répétée à chaque carte — dans
+    /// le fil du club, tout vient du club.
+    var sourceLabel: String? = nil
 
     /// Le fond du bandeau de tracé est sombre dans les DEUX thèmes, volontairement. Une ligne fine
     /// et colorée se lit sur du sombre ; sur un fond clair elle devient un gribouillis pâle. C'est
@@ -270,9 +277,23 @@ struct ActivityFeedRow: View {
                         .font(RUFont.sans(.label, weight: .bold))
                         .foregroundColor(onDark ? .white : RUColor.textPrimary)
                         .lineLimit(1).minimumScaleFactor(0.8)
-                    Text(timeLine)
-                        .font(RUFont.sans(.small))
-                        .foregroundColor(onDark ? .white.opacity(0.7) : RUColor.text3)
+                    HStack(spacing: 5) {
+                        Text(timeLine)
+                            .font(RUFont.sans(.small))
+                            .foregroundColor(onDark ? .white.opacity(0.7) : RUColor.text3)
+                        // LA PROVENANCE, posée sous le nom. Dans un fil mélangé, « ton club » ou
+                        // « tu la suis » est ce qui répond à « pourquoi cette personne est là ? ».
+                        // Sans elle, un fil unique redevient un annuaire.
+                        if let sourceLabel {
+                            Text(verbatim: "·")
+                                .font(RUFont.sans(.small))
+                                .foregroundColor(onDark ? .white.opacity(0.45) : RUColor.text3)
+                            Text(sourceLabel)
+                                .font(RUFont.sans(.small, weight: .semibold))
+                                .foregroundColor(onDark ? .white.opacity(0.78) : RUColor.text2)
+                                .lineLimit(1)
+                        }
+                    }
                 }
             }
             .contentShape(Rectangle())

@@ -15,7 +15,7 @@ struct SocialView: View {
     @Environment(AppState.self) private var appState
     @State private var mode: Mode = .club
 
-    private enum Mode { case club, friends, routes, races }
+    private enum Mode { case club, friends, routes, races, mur }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -29,6 +29,7 @@ struct SocialView: View {
                 case .friends: FriendsView()
                 case .routes: RouteDiscoveryView()
                 case .races: RaceDiscoveryView()
+                case .mur: WallView()
                 }
             }
         }
@@ -43,6 +44,9 @@ struct SocialView: View {
             } else if appState.openRacesTabOnNextVisit {
                 mode = .races
                 appState.openRacesTabOnNextVisit = false
+            } else if appState.openWallTabOnNextVisit {
+                mode = .mur
+                appState.openWallTabOnNextVisit = false
             }
         }
     }

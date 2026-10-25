@@ -88,6 +88,8 @@ final class AppState {
     /// Et pour les pages de course — ouvert aussi bien par la carte « Courses » du Profil que par
     /// l'écran de l'objectif, qui propose d'aller voir qui prépare la même.
     var openRacesTabOnNextVisit = false
+    /// Et pour le fil, qui est la porte qu'on pousse le plus souvent.
+    var openWallTabOnNextVisit = false
 
     /// LA PAGE DE QUELQU'UN, OUVRABLE DE PARTOUT.
     ///

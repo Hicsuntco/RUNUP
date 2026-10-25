@@ -150,7 +150,14 @@ struct ActivityMetrics: Codable, Equatable {
     }
 }
 
+/// La provenance d'une sortie dans le mur : pourquoi elle y figure.
+///
+/// Sans elle, un fil mélangé ne dit plus pourquoi telle personne s'y trouve — et c'est ce qui
+/// sépare un réseau d'un annuaire. Optionnelle parce que les deux anciens fils ne la renvoient
+/// pas, et que l'app doit continuer de les décoder.
 struct FeedItem: Decodable, Identifiable {
+    /// « moi » | « club » | « amis ». Nil quand la réponse vient d'un ancien fil.
+    var source: String?
     var id: String
     var userId: String
     var name: String
@@ -498,6 +505,14 @@ struct ClubService {
 
     func leaveClub() async throws {
         let _: OkResponse = try await send(path: "api/clubs/leave", method: "POST")
+    }
+
+    /// LE MUR : tout ce qui arrive, d'où que ça vienne.
+    ///
+    /// `scope` restreint — « tout », « club », « amis », « courses ». Il ne sert pas à TROUVER
+    /// (c'est le travail du fil complet) mais à répondre à une question précise.
+    func fetchWall(scope: String = "tout") async throws -> WallPage {
+        try await send(path: "api/activities/wall", method: "GET", query: ["scope": scope])
     }
 
     func fetchFeed() async throws -> [FeedItem] {
@@ -1002,6 +1017,31 @@ struct ClubService {
 
 private struct FeedResponse: Decodable {
     var items: [FeedItem]
+}
+
+/// Ce que rend le mur : les sorties, et les messages des pages de course que je prépare.
+///
+/// DEUX TABLEAUX ET NON UN SEUL, et c'est délibéré : une sortie et un message de course sont deux
+/// formes différentes. Les forcer dans la même rendrait chaque champ optionnel des deux côtés, et
+/// la carte devrait deviner ce qu'elle affiche. Le client les entrelace par date.
+struct WallPage: Decodable {
+    var items: [FeedItem]
+    var racePosts: [WallRacePost]
+}
+
+/// Un message d'une page de course, tel qu'il apparaît dans le mur : il porte le NOM de sa course,
+/// sinon il arriverait sans contexte au milieu des sorties.
+struct WallRacePost: Decodable, Identifiable, Hashable {
+    var id: String
+    var raceId: String
+    var raceName: String
+    var raceDate: String
+    var discipline: String
+    var kind: String
+    var text: String
+    var closed: Bool
+    var createdAt: Date
+    var author: PublicUser
 }
 
 private struct RsvpResponse: Decodable {

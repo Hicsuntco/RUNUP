@@ -5224,6 +5224,23 @@
         }
       }
     },
+    "Bloquer cette personne ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Block this person?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Bloquear a esta persona?"
+          }
+        }
+      }
+    },
     "Bois par petites gorgées, souvent. Un demi-litre avalé d'un coup au ravitaillement ressort au premier raidillon.": {
       "localizations": {
         "en": {
@@ -11613,6 +11630,23 @@
         }
       }
     },
+    "Impossible de charger le fil — %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't load the feed — %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo cargar el muro — %@."
+          }
+        }
+      }
+    },
     "Impossible de charger les commentaires.": {
       "localizations": {
         "en": {
@@ -11917,6 +11951,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudo eliminar la cuenta — inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Impossible de supprimer — réessaie.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't delete — try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo eliminar — inténtalo de nuevo."
           }
         }
       }
@@ -13798,6 +13849,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudo escribir el archivo."
+          }
+        }
+      }
+    },
+    "Le fil": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The feed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El muro"
           }
         }
       }
@@ -17638,6 +17706,23 @@
         }
       }
     },
+    "Personne de ton club n'a encore publié.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nobody in your club has posted yet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nadie de tu club ha publicado todavía."
+          }
+        }
+      }
+    },
     "Personne encore. Dis-le et les suivants te trouveront.": {
       "extractionState": "manual",
       "localizations": {
@@ -18960,6 +19045,23 @@
         }
       }
     },
+    "Prépare une course et ce qui s'y dit arrivera ici.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Train for a race and what's said there will land here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prepara una carrera y lo que se diga allí llegará aquí."
+          }
+        }
+      }
+    },
     "Préparer un HYROX": {
       "extractionState": "manual",
       "localizations": {
@@ -20011,6 +20113,23 @@
         }
       }
     },
+    "Rejoins un club, suis des coureurs, prépare une course — tout atterrira ici.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join a club, follow runners, train for a race — it all lands here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Únete a un club, sigue a corredores, prepara una carrera — todo aterriza aquí."
+          }
+        }
+      }
+    },
     "Rejoins-en un, ou crée le tien": {
       "extractionState": "manual",
       "localizations": {
@@ -20602,6 +20721,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nada por ahora"
+          }
+        }
+      }
+    },
+    "Rien sous ce filtre": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing under this filter"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nada con este filtro"
           }
         }
       }
@@ -22424,6 +22560,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sigue a personas reales"
+          }
+        }
+      }
+    },
+    "Suis des coureurs et leurs sorties arriveront ici.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Follow some runners and their runs will land here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sigue a corredores y sus salidas llegarán aquí."
           }
         }
       }
@@ -24776,6 +24929,23 @@
         }
       }
     },
+    "Ton club, tes abonnements et tes courses, au même endroit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your club, who you follow and your races, in one place"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu club, a quién sigues y tus carreras, en un solo sitio"
+          }
+        }
+      }
+    },
     "Ton club, ton classement et ton fil d'activité seront définitivement supprimés du serveur. Cette action est irréversible.": {
       "localizations": {
         "en": {
@@ -25214,6 +25384,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tu ultra"
+          }
+        }
+      }
+    },
+    "Tout": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todo"
           }
         }
       }
@@ -26822,6 +27009,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Volumen por día (km)"
+          }
+        }
+      }
+    },
+    "Vous ne verrez plus rien l'un de l'autre, nulle part dans l'app.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neither of you will see anything from the other, anywhere in the app."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguno de los dos verá nada del otro, en ninguna parte de la app."
           }
         }
       }
@@ -31423,6 +31627,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "tú"
+          }
+        }
+      }
+    },
+    "ton club": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "your club"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tu club"
+          }
+        }
+      }
+    },
+    "tu la suis": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "you follow them"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "la sigues"
           }
         }
       }

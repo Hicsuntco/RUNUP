@@ -255,11 +255,22 @@ struct ProfileView: View {
 
     private var totalKm: Double { runs.onFoot.reduce(0) { $0 + $1.distanceKm } }
 
-    /// Number of real, permanent badges earned — `profile.seenBadgeKeys` (see `ClubView`) already
-    /// tracks exactly this set (every earned key gets appended there the moment `ClubView` next
-    /// computes it, and a badge never un-earns), so this reads it directly instead of re-deriving
-    /// earned/locked state from `runs`/`profile.streak` a second time in a different file.
-    private var badgeCount: Int { profile.seenBadgeKeys.count }
+    /// Le nombre de badges gagnés, DÉRIVÉ comme la bande de badges juste en dessous.
+    ///
+    /// # « 0 BADGE » AU-DESSUS DE « BADGES · 6 SUR 16 »
+    ///
+    /// Il lisait `profile.seenBadgeKeys`, avec pour raison que cet ensemble « contient déjà
+    /// exactement ceux-là ». Il ne les contient qu'APRÈS que `ClubView` ait fait sa passe de
+    /// comparaison : c'est lui, et lui seul, qui y range les clés gagnées. Qui n'a jamais ouvert
+    /// l'onglet Club a donc un ensemble vide — et lisait « 0 badge » en haut de son profil,
+    /// quelques centimètres au-dessus d'une bande qui en affichait six, sur le même écran.
+    ///
+    /// La capture de diagnostic du Profil l'a montré du premier coup : le profil de démonstration
+    /// n'ouvre pas le Club, donc il était dans ce cas-là exactement.
+    ///
+    /// `earnedBadges` est la dérivation que cet écran fait DÉJÀ pour sa propre bande. Les deux
+    /// chiffres de la page ne peuvent plus diverger, puisqu'ils n'en font plus qu'un.
+    private var badgeCount: Int { earnedBadges.count }
 
     /// `.profil-stat-row` de la maquette : trois chiffres posés à même la page, alignés sur leur
     /// ligne de base, PAS une carte à trois colonnes séparées par des filets.
@@ -531,9 +542,19 @@ struct ProfileView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(13)
-            // Une hauteur PLANCHER et pas fixe : à 200 % de taille de texte, une tuile fixe
-            // tronquerait son titre. La grille égalise les deux tuiles d'une rangée toute seule.
-            .frame(minHeight: 116, alignment: .topLeading)
+            // UNE HAUTEUR PLANCHER, ET DE QUOI REMPLIR LA RANGÉE.
+            //
+            // Plancher et non fixe : à 200 % de taille de texte, une tuile fixe tronquerait son
+            // titre. Mais `minHeight` seul ne suffisait pas — et c'est la capture de diagnostic
+            // qui l'a montré, pas le raisonnement. La grille donne bien à chaque rangée la
+            // hauteur de sa plus haute tuile ; la plus courte, elle, gardait sa taille propre et
+            // se retrouvait CENTRÉE dans la rangée. En français, « Amis » flottait 24 points
+            // sous « Running Club », dont la ligne passe sur deux lignes ; en espagnol les deux
+            // rangées étaient décalées, « Rutas » débordant sur deux lignes à son tour.
+            //
+            // `maxHeight: .infinity` fait prendre à la tuile toute la hauteur qu'on lui propose,
+            // donc celle de la rangée, et son contenu reste en haut à gauche.
+            .frame(minHeight: 116, maxHeight: .infinity, alignment: .topLeading)
             .ruCard(radius: RUSpacing.radiusCompact)
             // Toute la tuile répond, pas seulement son texte : sans forme de contact, la moitié
             // de la surface visée ne fait rien.

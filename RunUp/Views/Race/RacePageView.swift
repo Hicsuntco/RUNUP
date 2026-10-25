@@ -409,8 +409,14 @@ struct RacePageView: View {
                             .font(RUFont.sans(.label, weight: .semibold))
                             .foregroundColor(RUColor.textPrimary)
                             .lineLimit(1)
+                            // « Margaux Hubert » prenait toute la largeur et la pastille à sa
+                            // droite se faisait couper par le bord de l'écran — la capture le
+                            // montrait, un contour ouvert. Un nom se tronque proprement avec ses
+                            // points de suspension ; une capsule tronquée est un défaut.
+                            .truncationMode(.tail)
                     }
                     .buttonStyle(PressableStyle())
+                    .layoutPriority(0)
                     if coureur.lookingForPartner {
                         // Un contour, pas un fond. Sur une liste où la plupart cherchent
                         // quelqu'un, la pastille pleine se répétait à chaque ligne et finissait
@@ -421,6 +427,8 @@ struct RacePageView: View {
                             .padding(.horizontal, 7).padding(.vertical, 2)
                             .overlay(Capsule().strokeBorder(RUColor.rose2.opacity(0.4),
                                                             lineWidth: RUSpacing.hairline))
+                            .fixedSize(horizontal: true, vertical: false)
+                            .layoutPriority(1)
                     }
                 }
 

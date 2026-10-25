@@ -151,10 +151,15 @@ struct AvatarView: View {
                 // colorées — pas l'aplat `RUColor.rose` plein qu'il y avait ici, qui était le seul
                 // avatar de l'app à enfreindre la règle « accent, pas aplat » (et que la maquette
                 // a justement retiré en v4 : « avatars en aplat pâle + initiales colorées »).
-                RUColor.tint(RUColor.violet, 0.16, over: RUColor.bg)
+                //
+                // La teinte suit l'ACCENT COURANT, pas un violet écrit en dur. Au profil, ce
+                // disque porte un anneau de dégradé rose : une initiale violette dans un anneau
+                // rose fait deux familles de couleur sur un seul objet de 88 points. Le violet
+                // de la maquette était son accent à elle, pas une couleur d'avatar.
+                RUColor.tint(AccentTheme.current.primary, 0.16, over: RUColor.bg)
                 Text(initial.uppercased())
                     .displayStyle(size * 0.4)
-                    .foregroundColor(RUColor.violet)
+                    .foregroundColor(AccentTheme.current.primary)
             }
         }
     }

@@ -12,6 +12,10 @@
 // INTERDISENT le transfert — courir sous le nom d'un autre, c'est la disqualification, et surtout
 // des secours qui liraient le mauvais dossier médical. L'app l'affiche sur chaque annonce plutôt
 // que de faire comme si la question ne se posait pas.
+// `race_date` sort en CHAÎNE (`to_char`) et non en date : une colonne DATE traverse le pilote en
+// objet Date JS, donc en ISO avec une heure et un fuseau, et le 4 avril devient le 3 avril à 22 h
+// pour qui la relit en UTC. Une date de course n'a pas d'heure ; elle n'a pas à en gagner une au
+// passage.
 const { sql } = require('../../lib/db');
 const { requireAuth } = require('../../lib/auth');
 const { withErrorHandling, isUuid } = require('../../lib/http');
@@ -93,7 +97,7 @@ async function handleSearch(req, res, userId) {
 
   const besoin = echapperPourLike(normaliser(raw));
   const { rows } = await sql`
-    SELECT r.id, r.name, r.city, r.race_date, r.distance_km, r.elevation_gain_m, r.discipline,
+    SELECT r.id, r.name, r.city, to_char(r.race_date, 'YYYY-MM-DD') AS race_date, r.distance_km, r.elevation_gain_m, r.discipline,
            r.website, r.is_seeded,
            (SELECT COUNT(*)::int FROM race_followers f WHERE f.race_id = r.id) AS follower_count
     FROM races r
@@ -116,7 +120,7 @@ async function handleSearch(req, res, userId) {
 // meilleure recherche reste celle qu'on n'a pas à taper.
 async function handleUpcoming(req, res, userId) {
   const { rows } = await sql`
-    SELECT r.id, r.name, r.city, r.race_date, r.distance_km, r.elevation_gain_m, r.discipline,
+    SELECT r.id, r.name, r.city, to_char(r.race_date, 'YYYY-MM-DD') AS race_date, r.distance_km, r.elevation_gain_m, r.discipline,
            r.website,
            (SELECT COUNT(*)::int FROM race_followers f WHERE f.race_id = r.id) AS follower_count
     FROM races r
@@ -132,7 +136,7 @@ async function handleUpcoming(req, res, userId) {
 // marathon en octobre, et c'est même le cas le plus courant d'une saison.
 async function handleMine(req, res, userId) {
   const { rows } = await sql`
-    SELECT r.id, r.name, r.city, r.race_date, r.distance_km, r.elevation_gain_m, r.discipline,
+    SELECT r.id, r.name, r.city, to_char(r.race_date, 'YYYY-MM-DD') AS race_date, r.distance_km, r.elevation_gain_m, r.discipline,
            r.website,
            (SELECT COUNT(*)::int FROM race_followers f WHERE f.race_id = r.id) AS follower_count
     FROM race_followers me
@@ -176,7 +180,7 @@ async function handleCreate(req, res, userId) {
     VALUES (${course.name}, ${course.nameKey}, ${course.city}, ${course.raceDate},
             ${course.distanceKm}, ${course.elevationGainM}, ${course.discipline}, ${course.website}, ${userId})
     ON CONFLICT (name_key, race_date) DO NOTHING
-    RETURNING id, name, city, race_date, distance_km, elevation_gain_m, discipline, website
+    RETURNING id, name, city, to_char(race_date, 'YYYY-MM-DD') AS race_date, distance_km, elevation_gain_m, discipline, website
   `;
   if (rows.length > 0) {
     return res.status(201).json({ race: mapRace({ ...rows[0], follower_count: 0 }), created: true });
@@ -184,7 +188,7 @@ async function handleCreate(req, res, userId) {
 
   // Elle existait déjà : on rend l'existante. Voir le commentaire en tête de ce handler.
   const { rows: deja } = await sql`
-    SELECT r.id, r.name, r.city, r.race_date, r.distance_km, r.elevation_gain_m, r.discipline, r.website,
+    SELECT r.id, r.name, r.city, to_char(r.race_date, 'YYYY-MM-DD') AS race_date, r.distance_km, r.elevation_gain_m, r.discipline, r.website,
            (SELECT COUNT(*)::int FROM race_followers f WHERE f.race_id = r.id) AS follower_count
     FROM races r WHERE r.name_key = ${course.nameKey} AND r.race_date = ${course.raceDate}
   `;
@@ -248,7 +252,7 @@ async function handlePage(req, res, userId) {
   if (!isUuid(raceId)) return res.status(400).json({ error: 'bad_request' });
 
   const { rows: courseRows } = await sql`
-    SELECT r.id, r.name, r.city, r.race_date, r.distance_km, r.elevation_gain_m, r.discipline, r.website,
+    SELECT r.id, r.name, r.city, to_char(r.race_date, 'YYYY-MM-DD') AS race_date, r.distance_km, r.elevation_gain_m, r.discipline, r.website,
            (SELECT COUNT(*)::int FROM race_followers f WHERE f.race_id = r.id) AS follower_count
     FROM races r WHERE r.id = ${raceId}
   `;
@@ -303,6 +307,7 @@ async function handlePage(req, res, userId) {
   // coûtent moins qu'une requête récursive.
   const { rows: messages } = await sql`
     SELECT p.id, p.parent_id, p.kind, p.text, p.closed_at, p.created_at,
+           (p.user_id = ${userId}) AS is_mine,
            u.id AS author_id, u.name AS author_name, u.last_name AS author_last_name,
            u.username AS author_username, u.avatar_data, u.avatar_url
     FROM race_posts p
@@ -346,6 +351,9 @@ async function handlePage(req, res, userId) {
       kind: row.kind,
       text: row.text,
       closed: row.closed_at !== null,
+      // Dit par le serveur et non déduit côté app : « marquer comme réglé » n'est proposé qu'à
+      // l'auteur, et l'app n'a aucune raison de porter son propre identifiant pour le savoir.
+      isMine: row.is_mine === true,
       createdAt: row.created_at,
       author: {
         id: row.author_id,

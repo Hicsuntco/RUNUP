@@ -107,12 +107,9 @@ enum TriathlonFormat: String, Codable, CaseIterable, Identifiable {
     /// « 20 km », « 21,1 km » — le zéro décimal inutile tombe, et la virgule suit la langue de
     /// l'appareil. Un « 21.1 km » dans une app en français est le genre de détail qui fait
     /// douter du reste.
-    private static func km(_ valeur: Double) -> String {
-        let arrondi = (valeur * 10).rounded() / 10
-        return arrondi == arrondi.rounded()
-            ? String(format: "%.0f km", locale: Locale.current, arrondi)
-            : String(format: "%.1f km", locale: Locale.current, arrondi)
-    }
+    /// Voir `Distances.km` : la même mise en forme existait ici, dans `Duathlon` et il en
+    /// fallait une troisième pour les pages de course.
+    private static func km(_ valeur: Double) -> String { Distances.km(valeur) }
 }
 
 /// CE QU'ELLE SAIT NAGER AUJOURD'HUI, ET PAS CE QU'ELLE VISE.

@@ -108,8 +108,22 @@ test('une date mal formée est refusée', () => {
 test('une date passée est refusée, celle du jour acceptée', () => {
   // La recherche ne rend pas les courses passées : en créer une ne ferait qu'ajouter une ligne
   // que personne ne reverrait jamais.
-  assert.strictEqual(refus({ raceDate: '2026-10-24' }), 'past_date');
+  assert.strictEqual(refus({ raceDate: '2026-10-23' }), 'past_date');
+  assert.strictEqual(refus({ raceDate: '2025-10-25' }), 'past_date');
   assert.strictEqual(course({ raceDate: JOUR }).raceDate, JOUR);
+});
+
+test('LA VEILLE PASSE : LE FUSEAU DU TÉLÉPHONE N\'EST PAS CELUI DU SERVEUR', () => {
+  // Le jour vient du sélecteur de date de l'app. « Aujourd'hui » à Los Angeles est encore hier à
+  // Paris pendant huit heures : refuser au jour près ferait échouer la création d'une course du
+  // jour pour tout l'ouest du monde.
+  assert.strictEqual(course({ raceDate: '2026-10-24' }).raceDate, '2026-10-24');
+});
+
+test('la veille du 1er mars se calcule juste, même une année bissextile', () => {
+  // `setUTCDate(0)` sur mars donne le 29 février 2028 et le 28 février 2027.
+  assert.strictEqual(nettoyerCourse({ ...base, raceDate: '2028-02-29' }, '2028-03-01').erreur, undefined);
+  assert.strictEqual(nettoyerCourse({ ...base, raceDate: '2028-02-28' }, '2028-03-01').erreur, 'past_date');
 });
 
 test('un horodatage complet est accepté par sa date', () => {

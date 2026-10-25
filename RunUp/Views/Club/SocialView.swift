@@ -1,8 +1,10 @@
 import SwiftUI
 
-/// Le conteneur des deux écrans sociaux — `ClubView` (esprit club : classement partagé, défis,
-/// code d'invitation) et `FriendsView` (un fil d'abonnements, indépendant de toute appartenance à
-/// un club). Lequel s'affiche est décidé en amont, par la carte du Profil sur laquelle on a tapé.
+/// Le conteneur des écrans sociaux — `ClubView` (esprit club : classement partagé, défis),
+/// `FriendsView` (un fil d'abonnements, indépendant de toute appartenance à un club),
+/// `RouteDiscoveryView` (où courir) et `RaceDiscoveryView` (les pages de course : qui prépare la
+/// même que moi). Lequel s'affiche est décidé en amont, par la carte du Profil sur laquelle on a
+/// tapé.
 ///
 /// Cet écran portait jusqu'ici un sélecteur « Mon club / Mes amis » en haut. Il a disparu pour
 /// deux raisons : depuis que le Profil est le 5e onglet, on n'arrive plus ici que par l'une de ses
@@ -13,7 +15,7 @@ struct SocialView: View {
     @Environment(AppState.self) private var appState
     @State private var mode: Mode = .club
 
-    private enum Mode { case club, friends, routes }
+    private enum Mode { case club, friends, routes, races }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -26,6 +28,7 @@ struct SocialView: View {
                 case .club: ClubView()
                 case .friends: FriendsView()
                 case .routes: RouteDiscoveryView()
+                case .races: RaceDiscoveryView()
                 }
             }
         }
@@ -37,6 +40,9 @@ struct SocialView: View {
             } else if appState.openRoutesTabOnNextVisit {
                 mode = .routes
                 appState.openRoutesTabOnNextVisit = false
+            } else if appState.openRacesTabOnNextVisit {
+                mode = .races
+                appState.openRacesTabOnNextVisit = false
             }
         }
     }

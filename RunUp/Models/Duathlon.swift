@@ -131,15 +131,10 @@ enum DuathlonFormat: String, Codable, CaseIterable, Identifiable {
         return heuresCourse / (heuresCourse + heuresVelo)
     }
 
-    /// « 20 km », « 2,5 km » — le zéro décimal inutile tombe, la virgule suit la langue.
+    /// « 20 km », « 2,5 km ». La mise en forme vit dans `Distances` : elle est la même sur
+    /// l'écran d'inscription, sur celui du triathlon et sur les pages de course, et trois copies
+    /// finissent toujours par diverger.
     ///
-    /// Interne et non privée : l'écran d'inscription écrit la même phrase avec les mêmes
-    /// nombres, et une seconde mise en forme à côté finirait par en diverger — « 2.5 km » d'un
-    /// côté, « 2,5 km » de l'autre, sur le même écran.
-    static func km(_ valeur: Double) -> String {
-        let arrondi = (valeur * 10).rounded() / 10
-        return arrondi == arrondi.rounded()
-            ? String(format: "%.0f km", locale: Locale.current, arrondi)
-            : String(format: "%.1f km", locale: Locale.current, arrondi)
-    }
+    /// Gardée ici, interne et non privée, parce que les appels existants la nomment ainsi.
+    static func km(_ valeur: Double) -> String { Distances.km(valeur) }
 }

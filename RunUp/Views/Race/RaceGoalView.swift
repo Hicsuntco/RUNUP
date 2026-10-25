@@ -176,6 +176,38 @@ struct RaceGoalView: View {
                     }
                 }
 
+                // CET ÉCRAN SAVAIT QUE TU PRÉPARES UNE COURSE ET NE TE DISAIT PAS QUE
+                // D'AUTRES LA PRÉPARENT AUSSI. La page de la course est l'endroit où l'on trouve
+                // quelqu'un à son allure, où l'on voit où en sont les autres, et où un dossard se
+                // cède. Ne pas y mener d'ici, c'est tenir la fonctionnalité derrière une carte du
+                // Profil que personne n'ouvre en pensant à sa course.
+                if hasRealRaceDay {
+                    Button(action: {
+                        appState.openRacesTabOnNextVisit = true
+                        appState.go(.club)
+                    }) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "person.2.fill")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(RUColor.violet)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text("Qui court la même course ?")
+                                    .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                                Text("Trouve quelqu'un à ton allure, vois où en sont les autres")
+                                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
+                            }
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .bold)).foregroundColor(RUColor.text3)
+                        }
+                        .padding(.horizontal, 14).padding(.vertical, 12)
+                        .frame(minHeight: 44)
+                        .ruCard()
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(PressableStyle())
+                }
+
                 // LA FORME DU PLAN SE VEND, ET ELLE ÉTAIT DONNÉE ICI. L'accueil supprime la
                 // carte du programme sans abonnement, le Plan floute sa forme derrière un
                 // `PlusSection` — et cet écran, atteignable en permanence depuis la pastille

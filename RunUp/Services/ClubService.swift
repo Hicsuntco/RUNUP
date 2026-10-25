@@ -815,6 +815,86 @@ struct ClubService {
         let _: OkResponse = try await send(path: "api/friends/updateProfile", method: "POST", body: body)
     }
 
+    // MARK: - Courses (chaque course officielle a sa page)
+
+    /// Cherche une course par son nom ou sa ville. Ne rend jamais une course passée : une page de
+    /// course sert à la préparer, et une fois qu'elle a eu lieu elle n'a plus personne à réunir.
+    func searchRaces(query: String) async throws -> [RaceEvent] {
+        let response: RaceListResponse = try await send(path: "api/races/search", method: "GET", query: ["q": query])
+        return response.items
+    }
+
+    /// Ce qu'on propose quand rien n'est tapé : les courses les plus suivies qui approchent, et
+    /// jamais celles qu'on prépare déjà. La meilleure recherche est celle qu'on n'a pas à taper.
+    func upcomingRaces() async throws -> [RaceEvent] {
+        let response: RaceListResponse = try await send(path: "api/races/upcoming", method: "GET")
+        return response.items
+    }
+
+    /// Les courses que je prépare. Il peut y en avoir plusieurs — un 10 km en mars et un marathon
+    /// en octobre, c'est même le cas le plus courant d'une saison.
+    func myRaces() async throws -> [RaceEvent] {
+        let response: RaceListResponse = try await send(path: "api/races/mine", method: "GET")
+        return response.items
+    }
+
+    func racePage(raceId: String) async throws -> RacePage {
+        try await send(path: "api/races/page", method: "GET", query: ["raceId": raceId])
+    }
+
+    /// Crée une course, OU rend celle qui existait déjà.
+    ///
+    /// Le serveur ne refuse pas un nom déjà pris : il renvoie la course existante avec
+    /// `created: false`. Toute la valeur de la fonctionnalité tient à ce que deux personnes qui
+    /// préparent la même course atterrissent sur la MÊME page — un refus les laisserait chacune
+    /// sur la sienne.
+    func createRace(name: String, city: String?, raceDate: String, distanceKm: Double?,
+                    elevationGainM: Int?, discipline: String, website: String?) async throws -> RaceEvent {
+        var body: [String: Any] = ["name": name, "raceDate": raceDate, "discipline": discipline]
+        if let city, !city.isEmpty { body["city"] = city }
+        if let distanceKm { body["distanceKm"] = distanceKm }
+        if let elevationGainM { body["elevationGainM"] = elevationGainM }
+        if let website, !website.isEmpty { body["website"] = website }
+        let response: RaceCreatedResponse = try await send(path: "api/races/create", method: "POST", body: body)
+        return response.race
+    }
+
+    /// Suivre une course, ou mettre à jour ce qu'on y a déclaré — c'est le même appel, donc
+    /// cocher « je cherche un partenaire » plus tard ne demande pas de se désinscrire d'abord.
+    ///
+    /// `sharesTraining` est un choix explicite : quand il est faux, le serveur ne CALCULE même pas
+    /// le volume d'entraînement, il ne se contente pas de ne pas l'envoyer.
+    func followRace(raceId: String, targetChrono: String?, targetPaceSecPerKm: Int?,
+                    sharesTraining: Bool, lookingForPartner: Bool) async throws {
+        var body: [String: Any] = [
+            "raceId": raceId,
+            "sharesTraining": sharesTraining,
+            "lookingForPartner": lookingForPartner,
+        ]
+        if let targetChrono, !targetChrono.isEmpty { body["targetChrono"] = targetChrono }
+        if let targetPaceSecPerKm { body["targetPaceSecPerKm"] = targetPaceSecPerKm }
+        let _: OkResponse = try await send(path: "api/races/follow", method: "POST", body: body)
+    }
+
+    func unfollowRace(raceId: String) async throws {
+        let _: OkResponse = try await send(path: "api/races/unfollow", method: "POST", body: ["raceId": raceId])
+    }
+
+    /// Écrit dans le fil de la course. `kind` vaut « message », « partner », « bib_offer » ou
+    /// « bib_wanted » ; une réponse (`parentId` non nil) est toujours un simple message.
+    func postToRace(raceId: String, kind: String, text: String, parentId: String? = nil) async throws {
+        var body: [String: Any] = ["raceId": raceId, "kind": kind, "text": text]
+        if let parentId { body["parentId"] = parentId }
+        let _: RacePostCreatedResponse = try await send(path: "api/races/post", method: "POST", body: body)
+    }
+
+    /// Retire son annonce : le dossard est parti, le partenaire est trouvé. On marque, on ne
+    /// supprime pas — les réponses sous une annonce effacée deviendraient des messages sans
+    /// contexte.
+    func closeRacePost(postId: String) async throws {
+        let _: OkResponse = try await send(path: "api/races/closePost", method: "POST", body: ["postId": postId])
+    }
+
     // MARK: -
 
     private func send<T: Decodable>(path: String, method: String, body: [String: Any]? = nil, query: [String: String]? = nil) async throws -> T {
@@ -923,4 +1003,20 @@ private struct PublicUserListResponse: Decodable {
 
 private struct FollowStatusResponse: Decodable {
     var status: String
+}
+
+private struct RaceListResponse: Decodable {
+    var items: [RaceEvent]
+}
+
+private struct RaceCreatedResponse: Decodable {
+    var race: RaceEvent
+    /// Faux quand la course existait déjà. L'app n'en fait rien d'autre qu'une mesure : voir
+    /// `createRace`, où le doublon évité est précisément ce qu'on veut.
+    var created: Bool
+}
+
+private struct RacePostCreatedResponse: Decodable {
+    var id: String
+    var createdAt: Date
 }

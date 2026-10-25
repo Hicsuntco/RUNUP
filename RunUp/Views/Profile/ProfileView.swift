@@ -58,6 +58,7 @@ struct ProfileView: View {
                         VStack(spacing: 12) {
                             amisCard
                             clubCard
+                            coursesCard
                             itinerairesCard
                         }
                     }
@@ -571,6 +572,35 @@ struct ProfileView: View {
                     } else {
                         Text("Trouve des coureurs à suivre").font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text2)
                     }
+                }
+            }
+        }
+        .buttonStyle(PressableStyle())
+    }
+
+    /// La porte des pages de course. Elle répond encore à une autre question : non pas « avec qui
+    /// je cours » ni « où je cours », mais « qui prépare la MÊME course que moi » — la seule de
+    /// l'onglet qui ait une date, et donc une urgence.
+    private var coursesCard: some View {
+        Button(action: {
+            appState.openRacesTabOnNextVisit = true
+            appState.go(.club)
+        }) {
+            socialCard(tint: RUColor.violet) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle().fill(RUColor.violet.opacity(0.18))
+                        Image(systemName: "flag.checkered").font(.system(size: 15)).foregroundColor(RUColor.violet)
+                    }
+                    .frame(width: 40, height: 40)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Courses").font(RUFont.sans(.emphasis, weight: .bold)).foregroundColor(RUColor.textPrimary)
+                        Text("Qui prépare la même course que toi")
+                            .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                    }
+                    Spacer(minLength: 0)
+                    cardArrow
                 }
             }
         }

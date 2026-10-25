@@ -68,6 +68,23 @@
         }
       }
     },
+    "%@ /km": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ /km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ /km"
+          }
+        }
+      }
+    },
     "%@ /km entre les blocs · %@ · enchaîne course et mouvement, sans repos complet": {
       "localizations": {
         "en": {
@@ -184,6 +201,23 @@
         }
       }
     },
+    "%@ ne verra plus rien de toi.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ won't see anything of yours any more."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ya no verá nada tuyo."
+          }
+        }
+      }
+    },
     "%@ par an": {
       "extractionState": "manual",
       "localizations": {
@@ -265,6 +299,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ al mes"
+          }
+        }
+      }
+    },
+    "%@ sur 4 semaines · %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ over 4 weeks · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ en 4 semanas · %@"
           }
         }
       }
@@ -381,6 +432,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ · Bloque %@"
+          }
+        }
+      }
+    },
+    "%@ · facultatif": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · opcional"
           }
         }
       }
@@ -848,6 +916,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld en la salida"
+          }
+        }
+      }
+    },
+    "%lld coureur": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld runner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld corredor"
+          }
+        }
+      }
+    },
+    "%lld coureurs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld runners"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld corredores"
           }
         }
       }
@@ -1468,6 +1570,23 @@
         }
       }
     },
+    "%lld personne prépare cette course": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld person is training for this race"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld persona prepara esta carrera"
+          }
+        }
+      }
+    },
     "%lld personnes ont applaudi ta séance.": {
       "localizations": {
         "en": {
@@ -1496,6 +1615,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld personas comentaron tu sesión."
+          }
+        }
+      }
+    },
+    "%lld personnes préparent cette course": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld people are training for this race"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld personas preparan esta carrera"
           }
         }
       }
@@ -2492,6 +2628,23 @@
         }
       }
     },
+    "3:30, sub-4, finir…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3:30, sub-4, just finish…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3:30, sub-4, terminar…"
+          }
+        }
+      }
+    },
     "3M": {
       "localizations": {
         "en": {
@@ -2900,6 +3053,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "ACELERA"
+          }
+        }
+      }
+    },
+    "AJOUTER UNE COURSE": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ADD A RACE"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AÑADIR UNA CARRERA"
           }
         }
       }
@@ -3688,6 +3858,23 @@
         }
       }
     },
+    "Allure visée": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target pace"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ritmo objetivo"
+          }
+        }
+      }
+    },
     "Allure, charge d'entraînement, records, prédictions": {
       "extractionState": "manual",
       "localizations": {
@@ -3879,6 +4066,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cancelar esta salida"
+          }
+        }
+      }
+    },
+    "Annuler la réponse": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel reply"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar la respuesta"
           }
         }
       }
@@ -4259,6 +4463,23 @@
         }
       }
     },
+    "Aucune course en vue": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No race in sight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna carrera a la vista"
+          }
+        }
+      }
+    },
     "Aucune course pour l'instant — termine une sortie ou ajoutes-en une manuellement.": {
       "localizations": {
         "en": {
@@ -4271,6 +4492,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Todavía no hay carreras — termina una salida o añade una manualmente."
+          }
+        }
+      }
+    },
+    "Aucune course à venir ne porte ce nom.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No upcoming race goes by that name."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna carrera próxima se llama así."
           }
         }
       }
@@ -4947,6 +5185,23 @@
         }
       }
     },
+    "C'est aujourd'hui": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It's today"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es hoy"
+          }
+        }
+      }
+    },
     "C'est d'ici que part ta première sortie longue.": {
       "extractionState": "manual",
       "localizations": {
@@ -5313,6 +5568,23 @@
         }
       }
     },
+    "CRÉER LA PAGE": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CREATE THE PAGE"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CREAR LA PÁGINA"
+          }
+        }
+      }
+    },
     "CRÉER MON COMPTE": {
       "extractionState": "manual",
       "localizations": {
@@ -5462,6 +5734,23 @@
         }
       }
     },
+    "Ce message ne passe pas.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That message won't do."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ese mensaje no pasa."
+          }
+        }
+      }
+    },
     "Ce n'est pas le bon compte": {
       "extractionState": "manual",
       "localizations": {
@@ -5491,6 +5780,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este nombre no está permitido — elige otro."
+          }
+        }
+      }
+    },
+    "Ce nom ne passe pas. Mets le nom officiel de la course.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That name won't do. Use the race's official name."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ese nombre no pasa. Pon el nombre oficial de la carrera."
           }
         }
       }
@@ -5604,6 +5910,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lo que vales hoy en 5 km, 10 km, media y maratón, según tus salidas reales."
+          }
+        }
+      }
+    },
+    "Ce que tu vises": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What you're aiming for"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo que buscas"
           }
         }
       }
@@ -6183,6 +6506,23 @@
         }
       }
     },
+    "Cherche celle que tu prépares. Sur sa page tu verras qui la court aussi, à quelle allure, et où ils en sont de leur préparation.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search for the one you're training for. On its page you'll see who else is running it, at what pace, and how their own training is going."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busca la que preparas. En su página verás quién más la corre, a qué ritmo, y cómo va su preparación."
+          }
+        }
+      }
+    },
     "Cherche quelqu'un par son nom ou son pseudo juste au-dessus — ou invite ceux avec qui tu cours déjà.": {
       "extractionState": "manual",
       "localizations": {
@@ -6392,6 +6732,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tiempo objetivo"
+          }
+        }
+      }
+    },
+    "Chrono visé · facultatif": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target time · optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiempo objetivo · opcional"
           }
         }
       }
@@ -7402,6 +7759,23 @@
         }
       }
     },
+    "Courses": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Races"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carreras"
+          }
+        }
+      }
+    },
     "Courses de la semaine": {
       "localizations": {
         "en": {
@@ -7446,6 +7820,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Manta de supervivencia y silbato."
+          }
+        }
+      }
+    },
+    "Création…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creating…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creando…"
           }
         }
       }
@@ -7711,6 +8102,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "DAR MI OPINIÓN"
+          }
+        }
+      }
+    },
+    "Dans %lld jour": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %lld day"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En %lld día"
+          }
+        }
+      }
+    },
+    "Dans %lld jours": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %lld days"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En %lld días"
           }
         }
       }
@@ -8126,6 +8551,23 @@
         }
       }
     },
+    "Dis-le et tu apparaîtras sur cette page. Tu pourras y trouver quelqu'un à ton allure, et suivre où en sont les autres.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Say so and you'll show up on this page. You'll be able to find someone at your pace, and follow how the others are getting on."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dilo y aparecerás en esta página. Podrás encontrar a alguien a tu ritmo y seguir cómo van los demás."
+          }
+        }
+      }
+    },
     "Discipline": {
       "extractionState": "manual",
       "localizations": {
@@ -8155,6 +8597,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Distancia"
+          }
+        }
+      }
+    },
+    "Distance (km)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distance (km)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distancia (km)"
           }
         }
       }
@@ -9360,6 +9819,23 @@
         }
       }
     },
+    "Enregistrement…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardando…"
+          }
+        }
+      }
+    },
     "Enregistrer": {
       "localizations": {
         "en": {
@@ -10502,6 +10978,23 @@
         }
       }
     },
+    "Hyrox": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hyrox"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hyrox"
+          }
+        }
+      }
+    },
     "Identifiant": {
       "extractionState": "manual",
       "localizations": {
@@ -10767,6 +11260,23 @@
         }
       }
     },
+    "Impossible d'enregistrer — %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't save — %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo guardar — %@."
+          }
+        }
+      }
+    },
     "Impossible d'enregistrer, réessaie.": {
       "localizations": {
         "en": {
@@ -10831,6 +11341,23 @@
         }
       }
     },
+    "Impossible de charger cette page — %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't load this page — %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo cargar esta página — %@."
+          }
+        }
+      }
+    },
     "Impossible de charger les commentaires.": {
       "localizations": {
         "en": {
@@ -10843,6 +11370,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudieron cargar los comentarios."
+          }
+        }
+      }
+    },
+    "Impossible de charger les courses — %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't load the races — %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron cargar las carreras — %@."
           }
         }
       }
@@ -10875,6 +11419,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudieron cargar tus amigos — comprueba tu conexión."
+          }
+        }
+      }
+    },
+    "Impossible de créer la course — %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't create the race — %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo crear la carrera — %@."
           }
         }
       }
@@ -10959,6 +11520,23 @@
         }
       }
     },
+    "Impossible de marquer ce message — réessaie.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't mark this message — try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo marcar este mensaje — inténtalo de nuevo."
+          }
+        }
+      }
+    },
     "Impossible de mettre à jour — réessaie.": {
       "localizations": {
         "en": {
@@ -10987,6 +11565,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudo proponer la salida, inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Impossible de publier — %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't post — %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo publicar — %@."
           }
         }
       }
@@ -11067,6 +11662,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudo eliminar la cuenta — inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Impossible de te retirer — réessaie.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't remove you — try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo quitarte — inténtalo de nuevo."
           }
         }
       }
@@ -11331,6 +11943,23 @@
         }
       }
     },
+    "JE PRÉPARE CETTE COURSE": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I'M RUNNING THIS RACE"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PREPARO ESTA CARRERA"
+          }
+        }
+      }
+    },
     "JE SUIS PRÊTE": {
       "localizations": {
         "en": {
@@ -11413,6 +12042,40 @@
         }
       }
     },
+    "Je cherche": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Looking"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busco"
+          }
+        }
+      }
+    },
+    "Je cherche quelqu'un pour courir avec moi": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I'm looking for someone to run with"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busco a alguien para correr conmigo"
+          }
+        }
+      }
+    },
     "Je cours 2-3 fois par semaine": {
       "extractionState": "manual",
       "localizations": {
@@ -11443,6 +12106,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Corro desde hace menos de 6 meses"
+          }
+        }
+      }
+    },
+    "Je cède": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offering"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ofrezco"
           }
         }
       }
@@ -11560,6 +12240,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Prefiero no decirlo"
+          }
+        }
+      }
+    },
+    "Je prépare": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I'm running"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparo"
+          }
+        }
+      }
+    },
+    "Je prépare cette course": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I'm running this race"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparo esta carrera"
           }
         }
       }
@@ -12187,6 +12901,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "La distancia olímpica no me asusta"
+          }
+        }
+      }
+    },
+    "La distance que tu cherches": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The distance you're after"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La distancia que buscas"
           }
         }
       }
@@ -12881,6 +13612,23 @@
         }
       }
     },
+    "Le mur": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The wall"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El muro"
+          }
+        }
+      }
+    },
     "Le plan complet": {
       "extractionState": "manual",
       "localizations": {
@@ -13143,6 +13891,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudieron borrar los datos anteriores. Inténtalo de nuevo o reinicia la app."
+          }
+        }
+      }
+    },
+    "Les autres coureurs de cette course verront ton volume des 4 dernières semaines. Rien d'autre : ni tes parcours, ni tes allures réelles, ni tes dates de sortie.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The other runners on this race will see your volume over the last 4 weeks. Nothing else: not your routes, not your real paces, not when you ran."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los demás corredores de esta carrera verán tu volumen de las últimas 4 semanas. Nada más: ni tus rutas, ni tus ritmos reales, ni cuándo sales a correr."
           }
         }
       }
@@ -13576,6 +14341,23 @@
         }
       }
     },
+    "MODIFIER": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EDIT"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EDITAR"
+          }
+        }
+      }
+    },
     "Ma course sur RunUp": {
       "localizations": {
         "en": {
@@ -13642,6 +14424,23 @@
         }
       }
     },
+    "Marathon de Paris": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "London Marathon"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maratón de Madrid"
+          }
+        }
+      }
+    },
     "Marche rapide en côte": {
       "localizations": {
         "en": {
@@ -13687,6 +14486,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Martes"
+          }
+        }
+      }
+    },
+    "Marquer comme réglé": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as settled"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcar como resuelto"
           }
         }
       }
@@ -13967,6 +14783,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mis estadísticas"
+          }
+        }
+      }
+    },
+    "Message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mensaje"
           }
         }
       }
@@ -14413,6 +15246,23 @@
         }
       }
     },
+    "Montrer où j'en suis de ma préparation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show how my training is going"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar cómo va mi preparación"
+          }
+        }
+      }
+    },
     "Mot de passe": {
       "localizations": {
         "en": {
@@ -14806,6 +15656,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nombre de la ruta"
+          }
+        }
+      }
+    },
+    "Nom de la course": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Race name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre de la carrera"
+          }
+        }
+      }
+    },
+    "Nom de la course, ou sa ville": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Race name, or its city"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre de la carrera, o su ciudad"
           }
         }
       }
@@ -15740,6 +16624,23 @@
         }
       }
     },
+    "PUBLIER": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "POST"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PUBLICAR"
+          }
+        }
+      }
+    },
     "PUBLIER L'ITINÉRAIRE": {
       "localizations": {
         "en": {
@@ -15818,6 +16719,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ruta de %lld km"
+          }
+        }
+      }
+    },
+    "Paris": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "London"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Madrid"
           }
         }
       }
@@ -15949,6 +16867,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Compartido por %@"
+          }
+        }
+      }
+    },
+    "Partenaire": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compañero"
           }
         }
       }
@@ -16414,6 +17349,23 @@
         }
       }
     },
+    "Personne encore. Dis-le et les suivants te trouveront.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nobody yet. Say so and the next ones will find you."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nadie todavía. Dilo y los siguientes te encontrarán."
+          }
+        }
+      }
+    },
     "Personne n'a encore couru cette semaine — lance-toi !": {
       "localizations": {
         "en": {
@@ -16787,6 +17739,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Más de 1 año"
+          }
+        }
+      }
+    },
+    "Plus d'options": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More options"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más opciones"
           }
         }
       }
@@ -18096,6 +19065,57 @@
         }
       }
     },
+    "Qui court la même course ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who else is running it?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Quién corre la misma carrera?"
+          }
+        }
+      }
+    },
+    "Qui la prépare": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who's running it"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quién la prepara"
+          }
+        }
+      }
+    },
+    "Qui prépare la même course que toi": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who else is training for your race"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quién prepara la misma carrera que tú"
+          }
+        }
+      }
+    },
     "Quitter": {
       "localizations": {
         "en": {
@@ -18173,6 +19193,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "RÉCORD"
+          }
+        }
+      }
+    },
+    "RETIRER": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REMOVE"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QUITAR"
           }
         }
       }
@@ -18304,6 +19341,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "RUNUP no responde ahora mismo: inténtalo de nuevo en un momento."
+          }
+        }
+      }
+    },
+    "RUNUP ne vend rien et ne garantit rien : vous vous arrangez entre vous. La plupart des organisateurs interdisent le transfert de dossard — vérifie leur règlement. Courir sous le nom d'un autre, c'est la disqualification, et des secours qui liraient le mauvais dossier médical.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RUNUP sells nothing and guarantees nothing: you sort it out between yourselves. Most organisers forbid transferring a bib — check their rules. Running under someone else's name means disqualification, and medics reading the wrong medical file."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RUNUP no vende nada ni garantiza nada: lo arregláis entre vosotros. La mayoría de los organizadores prohíben el traspaso de dorsal — consulta su reglamento. Correr con el nombre de otro es la descalificación, y servicios médicos leyendo la ficha equivocada."
           }
         }
       }
@@ -19079,6 +20133,23 @@
         }
       }
     },
+    "Rien d'écrit encore. Une question sur le parcours, le ravitaillement, l'hébergement — c'est ici.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing written yet. A question about the course, the aid stations, where to stay — this is the place."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nada escrito todavía. Una duda sobre el recorrido, los avituallamientos, el alojamiento — es aquí."
+          }
+        }
+      }
+    },
     "Rien de nouveau aujourd'hui": {
       "extractionState": "manual",
       "localizations": {
@@ -19174,6 +20245,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nada que analizar todavía"
+          }
+        }
+      }
+    },
+    "Route": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Road"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asfalto"
           }
         }
       }
@@ -19421,6 +20509,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ajustes"
+          }
+        }
+      }
+    },
+    "Répondre": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reply"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responder"
+          }
+        }
+      }
+    },
+    "Réponse à %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replying to %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Respuesta a %@"
           }
         }
       }
@@ -20081,6 +21203,23 @@
         }
       }
     },
+    "Seulement ceux qui cherchent quelqu'un": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only those looking for someone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo quienes buscan a alguien"
+          }
+        }
+      }
+    },
     "Si cette paire n'est pas neuve, indique les km déjà dessus.": {
       "localizations": {
         "en": {
@@ -20209,6 +21348,40 @@
         }
       }
     },
+    "Signaler ce coureur": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report this runner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denunciar a este corredor"
+          }
+        }
+      }
+    },
+    "Signaler ce message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report this message"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denunciar este mensaje"
+          }
+        }
+      }
+    },
     "Signaler cet itinéraire": {
       "localizations": {
         "en": {
@@ -20237,6 +21410,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Denunciar esta actividad"
+          }
+        }
+      }
+    },
+    "Signaler cette course": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report this race"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denunciar esta carrera"
           }
         }
       }
@@ -20274,6 +21464,23 @@
         }
       }
     },
+    "Site officiel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Official website"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sitio oficial"
+          }
+        }
+      }
+    },
     "Soir": {
       "localizations": {
         "en": {
@@ -20286,6 +21493,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Noche"
+          }
+        }
+      }
+    },
+    "Soit %@ /km": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That's %@ /km"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O sea %@ /km"
           }
         }
       }
@@ -21907,6 +23131,23 @@
         }
       }
     },
+    "Ta distance, et pourquoi tu cèdes ton dossard": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your distance, and why you're giving up your bib"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu distancia, y por qué traspasas tu dorsal"
+          }
+        }
+      }
+    },
     "Ta forme de départ estimée": {
       "localizations": {
         "en": {
@@ -22132,6 +23373,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tu progreso empieza aquí"
+          }
+        }
+      }
+    },
+    "Ta réponse…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your reply…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu respuesta…"
           }
         }
       }
@@ -23009,6 +24267,23 @@
         }
       }
     },
+    "Ton allure, ton objectif, et à partir de quand tu veux courir accompagné": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your pace, your goal, and from when you'd like company"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu ritmo, tu objetivo, y desde cuándo quieres compañía"
+          }
+        }
+      }
+    },
     "Ton bilan t'attend sur l'iPhone 📱": {
       "localizations": {
         "en": {
@@ -23568,6 +24843,23 @@
         }
       }
     },
+    "Tout le monde pourra la trouver et la suivre. Les champs laissés vides se complètent plus tard.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anyone will be able to find it and follow it. Whatever you leave blank can be filled in later."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cualquiera podrá encontrarla y seguirla. Lo que dejes en blanco se completa más tarde."
+          }
+        }
+      }
+    },
     "Toutes": {
       "localizations": {
         "en": {
@@ -23668,6 +24960,23 @@
         }
       }
     },
+    "Triathlon": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Triathlon"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Triatlón"
+          }
+        }
+      }
+    },
     "Trois choses décident d'un triathlon, et aucune n'est ton entraînement. Elles se préparent — et elles se testent à l'entraînement, jamais le jour J.": {
       "extractionState": "manual",
       "localizations": {
@@ -23714,6 +25023,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tres días sin nada rápido: metemos algo de velocidad."
+          }
+        }
+      }
+    },
+    "Trop de courses créées aujourd'hui. Réessaie demain.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many races created today. Try again tomorrow."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demasiadas carreras creadas hoy. Inténtalo mañana."
+          }
+        }
+      }
+    },
+    "Trop de messages aujourd'hui. Réessaie demain.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many messages today. Try again tomorrow."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demasiados mensajes hoy. Inténtalo mañana."
           }
         }
       }
@@ -23768,6 +25111,23 @@
         }
       }
     },
+    "Trouve quelqu'un à ton allure, vois où en sont les autres": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find someone at your pace, see how the others are doing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encuentra a alguien a tu ritmo, mira cómo van los demás"
+          }
+        }
+      }
+    },
     "Trouve ton rythme de croisière : vise %@, foulée relâchée.": {
       "extractionState": "manual",
       "localizations": {
@@ -23798,6 +25158,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Encontrar mis contactos en RUNUP"
+          }
+        }
+      }
+    },
+    "Tu apparais en haut de la liste, pour celles et ceux qui visent la même allure.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You show up at the top of the list, for the people aiming at the same pace."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apareces arriba de la lista, para quienes buscan el mismo ritmo."
           }
         }
       }
@@ -23969,6 +25346,23 @@
         }
       }
     },
+    "Tu la prépares ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you running it?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿La preparas?"
+          }
+        }
+      }
+    },
     "Tu n'en as pas encore rejoint": {
       "extractionState": "manual",
       "localizations": {
@@ -24032,6 +25426,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Estarás fresca, en grupo, y cinco o diez kilómetros no asustan cuando es tu distancia de entrenamiento. Justo por eso casi todo el mundo sale demasiado rápido."
+          }
+        }
+      }
+    },
+    "Type d'épreuve": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Event type"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tipo de prueba"
           }
         }
       }
@@ -24509,6 +25920,23 @@
         }
       }
     },
+    "Une question, un conseil, un repère sur le parcours…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A question, a tip, a landmark on the course…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una duda, un consejo, una referencia del recorrido…"
+          }
+        }
+      }
+    },
     "Une routine régulière qui tient dans ta semaine": {
       "extractionState": "manual",
       "localizations": {
@@ -24738,6 +26166,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Versión"
+          }
+        }
+      }
+    },
+    "Ville": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "City"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ciudad"
           }
         }
       }
@@ -25320,6 +26765,23 @@
         }
       }
     },
+    "aujourd'hui": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "today"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hoy"
+          }
+        }
+      }
+    },
     "avant course": {
       "localizations": {
         "en": {
@@ -25484,6 +26946,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "esta tarde"
+          }
+        }
+      }
+    },
+    "cherche quelqu'un": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "looking for someone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "busca a alguien"
           }
         }
       }
@@ -26507,6 +27986,23 @@
         }
       }
     },
+    "préparation non partagée": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "training not shared"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "preparación no compartida"
+          }
+        }
+      }
+    },
     "ratio charge %@": {
       "localizations": {
         "en": {
@@ -26587,6 +28083,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "recuperación"
+          }
+        }
+      }
+    },
+    "réglé": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "settled"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "resuelto"
           }
         }
       }
@@ -29632,6 +31145,23 @@
         }
       }
     },
+    "Ça approche": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coming up"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se acercan"
+          }
+        }
+      }
+    },
     "Ça fait un moment. On repart doucement, sans chrono.": {
       "extractionState": "manual",
       "localizations": {
@@ -30271,6 +31801,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "a vigilar"
+          }
+        }
+      }
+    },
+    "à ton allure": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "your pace"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a tu ritmo"
           }
         }
       }

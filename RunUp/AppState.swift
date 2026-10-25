@@ -85,6 +85,9 @@ final class AppState {
     /// Même mécanique que ci-dessus pour la carte « Itinéraires » du Profil : une intention de
     /// navigation à usage unique, pas une préférence à persister.
     var openRoutesTabOnNextVisit = false
+    /// Et pour les pages de course — ouvert aussi bien par la carte « Courses » du Profil que par
+    /// l'écran de l'objectif, qui propose d'aller voir qui prépare la même.
+    var openRacesTabOnNextVisit = false
     /// Phone↔watch bridge — receives runs finished on the wrist, mirrors today's session out.
     /// Optional only because it needs `self` (created at the end of `init`); never nil after.
     @ObservationIgnored private(set) var watchSession: WatchSessionService?

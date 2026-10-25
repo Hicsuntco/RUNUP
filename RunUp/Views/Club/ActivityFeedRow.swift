@@ -406,7 +406,6 @@ struct ActivityFeedRow: View {
         var id: String { label }
         var value: String
         var label: String
-        var accent: Bool = false
     }
 
     private var metrics: [Metric] {
@@ -414,10 +413,12 @@ struct ActivityFeedRow: View {
         if let distanceKm = item.distanceKm {
             result.append(Metric(value: String(format: "%.1f", locale: Locale.current, distanceKm), label: "km"))
         }
-        // L'allure est la seule colonne accentuée — c'est le chiffre qu'on compare, dans la
-        // maquette comme dans la conversation d'un club.
+        // L'ALLURE N'EST PLUS ACCENTUÉE. Elle l'était parce que c'est le chiffre qu'on compare
+        // — vrai sur une carte isolée. Dans un fil, la même colonne revient à chaque post : un
+        // chiffre rose tous les cinq centimètres, en ligne verticale, sur toute la hauteur du
+        // défilement. L'accent ne désignait plus rien, il peignait une colonne.
         if let avgPace = item.avgPace {
-            result.append(Metric(value: avgPace, label: "allure", accent: true))
+            result.append(Metric(value: avgPace, label: "allure"))
         }
         if let durationDisplay = item.durationDisplay {
             result.append(Metric(value: durationDisplay, label: "temps"))
@@ -440,7 +441,7 @@ struct ActivityFeedRow: View {
                 MetricColumn(
                     value: metric.value,
                     label: metric.label,
-                    valueColor: metric.accent ? RUColor.rose : RUColor.textPrimary,
+                    valueColor: RUColor.textPrimary,
                     valueSize: 16
                 )
             }

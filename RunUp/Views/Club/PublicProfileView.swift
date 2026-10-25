@@ -164,7 +164,9 @@ struct PublicProfileView: View {
         RUMetricRow(spacing: 20) {
             MetricColumn(value: Distances.km(profil.totalKm), label: String(localized: "Au total"))
             MetricColumn(value: "\(profil.runs)", label: String(localized: "Sorties"))
-            MetricColumn(value: "\(profil.followers)", label: String(localized: "Abonnés"), valueColor: RUColor.rose2)
+            // Quatre chiffres en rang : en teinter UN SEUL le désigne comme important alors
+            // qu'il ne l'est pas plus que les autres. Ils se lisent ensemble ou pas du tout.
+            MetricColumn(value: "\(profil.followers)", label: String(localized: "Abonnés"))
             MetricColumn(value: "\(profil.following)", label: String(localized: "Abonnements"))
         }
         .padding(.top, 4)
@@ -209,7 +211,7 @@ struct PublicProfileView: View {
         return Group {
             if !gagnes.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    RUCardHeader(icon: "rosette", tint: RUColor.lime, title: "Badges")
+                    RUCardHeader(title: "Badges")
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 10) {
                             ForEach(gagnes) { badge in
@@ -252,7 +254,7 @@ struct PublicProfileView: View {
     @ViewBuilder
     private func sorties(_ profil: PublicProfile) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            RUCardHeader(icon: "figure.run", tint: RUColor.rose2, title: "Ses sorties")
+            RUCardHeader(title: "Ses sorties")
 
             if !profil.canSeeRuns {
                 // LE CŒUR DE L'ÉCRAN POUR UN COMPTE PRIVÉ. Une liste vide ferait croire que la

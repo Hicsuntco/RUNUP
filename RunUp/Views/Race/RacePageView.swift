@@ -128,10 +128,15 @@ struct RacePageView: View {
     private var entete: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top, spacing: 12) {
+                // Un disque de dégradé rose de 46 points en haut de CHAQUE page de course :
+                // la première chose que l'œil rencontrait était une couleur, pas le nom de la
+                // course. L'anneau garde la forme et rend la couleur au seul endroit de la page
+                // qui en a besoin — le compte à rebours.
                 ZStack {
-                    Circle().fill(RUColor.accentGradient())
+                    Circle().fill(RUColor.card2)
+                    Circle().strokeBorder(RUColor.line, lineWidth: RUSpacing.hairline)
                     Image(systemName: courante.disciplineSymbole)
-                        .font(.system(size: 17)).foregroundColor(.white)
+                        .font(.system(size: 17)).foregroundColor(RUColor.text2)
                 }
                 .frame(width: 46, height: 46)
 
@@ -164,7 +169,7 @@ struct RacePageView: View {
                 if let coureurs = page?.runners.count, coureurs > 0 {
                     pastille(Pluriel.choisir(coureurs,
                         String(localized: "\(coureurs) coureur"),
-                        String(localized: "\(coureurs) coureurs")), teinte: RUColor.violet)
+                        String(localized: "\(coureurs) coureurs")), teinte: RUColor.text2)
                 }
             }
 
@@ -352,7 +357,7 @@ struct RacePageView: View {
     @ViewBuilder
     private var quiLaPrepare: some View {
         VStack(alignment: .leading, spacing: 10) {
-            RUCardHeader(icon: "person.2.fill", tint: RUColor.violet, title: "Qui la prépare")
+            RUCardHeader(title: "Qui la prépare")
 
             if (page?.runners ?? []).contains(where: \.lookingForPartner) {
                 Toggle(isOn: $filtrePartenaires) {
@@ -407,11 +412,15 @@ struct RacePageView: View {
                     }
                     .buttonStyle(PressableStyle())
                     if coureur.lookingForPartner {
+                        // Un contour, pas un fond. Sur une liste où la plupart cherchent
+                        // quelqu'un, la pastille pleine se répétait à chaque ligne et finissait
+                        // par peindre la colonne ; le trait dit la même chose sans la masse.
                         Text("cherche quelqu'un")
-                            .font(RUFont.sans(.small, weight: .bold))
+                            .font(RUFont.sans(.small, weight: .semibold))
                             .foregroundColor(RUColor.rose2)
-                            .padding(.horizontal, 6).padding(.vertical, 2)
-                            .background(RUColor.rose.opacity(0.14), in: Capsule())
+                            .padding(.horizontal, 7).padding(.vertical, 2)
+                            .overlay(Capsule().strokeBorder(RUColor.rose2.opacity(0.4),
+                                                            lineWidth: RUSpacing.hairline))
                     }
                 }
 
@@ -425,7 +434,9 @@ struct RacePageView: View {
                 // « n'a pas partagé » et « 0 km » ne sont pas la même phrase.
                 if let km = coureur.km4Weeks {
                     Text(String(localized: "\(Distances.km(km)) sur 4 semaines · \(sortiesLisibles(coureur.runs4Weeks ?? 0))"))
-                        .font(RUFont.mono(10.5))
+                        // Était en chasse fixe : une deuxième typographie pour une ligne qui
+                        // n'aligne rien en colonne, donc un corps étranger au milieu de la liste.
+                        .font(RUFont.sans(.small))
                         .foregroundColor(RUColor.text3)
                 } else {
                     Text("préparation non partagée")
@@ -502,7 +513,7 @@ struct RacePageView: View {
 
     private var leMur: some View {
         VStack(alignment: .leading, spacing: 10) {
-            RUCardHeader(icon: "bubble.left.and.bubble.right.fill", tint: RUColor.cyan, title: "Le mur")
+            RUCardHeader(title: "Le mur")
 
             redaction
 

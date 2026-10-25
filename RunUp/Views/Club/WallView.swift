@@ -116,11 +116,11 @@ struct WallView: View {
                                 sourceLabel: libelleDeProvenance(item.source)
                             )
                         case .course(let post):
-                            // Une annonce de course garde sa carte : c'est ce qui la distingue
-                            // d'une sortie au milieu du fil. Mais il lui faut LE MÊME FILET en
-                            // tête, et la capture l'a montré : sans lui, elle se collait sous le
-                            // post précédent et se lisait comme un morceau de celui-ci. Le post
-                            // porte son filet lui-même ; la carte de course ne le faisait pas.
+                            // Même filet, même rythme qu'une sortie. L'annonce avait gardé sa
+                            // carte pour se distinguer ; dans un fil entièrement à plat, c'était
+                            // elle qui détonnait — un rectangle rempli tous les quatre posts.
+                            // Ce qui la distingue, c'est son en-tête : un drapeau à damier, le
+                            // nom de la course sous celui de la personne, et le genre annoncé.
                             VStack(spacing: 0) {
                                 if index > 0 {
                                     Rectangle()
@@ -216,13 +216,9 @@ struct WallView: View {
 
     // MARK: - Une annonce de course dans le fil
 
-    /// Compacte, et volontairement différente d'une carte de sortie : ce n'est pas la même chose.
-    /// Elle dit DE QUELLE COURSE il s'agit — sans ça, « je cherche quelqu'un à 4:45 » arrivant au
-    /// milieu des sorties ne voudrait rien dire — et elle mène à la page, où se tient la
-    /// conversation.
-    /// Compacte, et volontairement différente d'une carte de sortie : ce n'est pas la même chose.
-    /// Elle dit DE QUELLE COURSE il s'agit — sans ça, « je cherche quelqu'un à 4:45 » arrivant au
-    /// milieu des sorties ne voudrait rien dire.
+    /// Compacte. Elle dit DE QUELLE COURSE il s'agit — sans ça, « je cherche quelqu'un à 4:45 »
+    /// arrivant au milieu des sorties ne voudrait rien dire — et elle mène à la page, où se tient
+    /// la conversation.
     ///
     /// # ELLE N'EST PAS UN BOUTON, ET C'EST UNE CORRECTION
     ///
@@ -258,10 +254,11 @@ struct WallView: View {
                     }
                     Spacer(minLength: 0)
                     Text(genreLisible(post.kind))
-                        .font(RUFont.sans(.small, weight: .bold))
+                        .font(RUFont.sans(.small, weight: .semibold))
                         .foregroundColor(RUColor.cyan)
-                        .padding(.horizontal, 7).padding(.vertical, 3)
-                        .background(RUColor.cyan.opacity(0.14), in: Capsule())
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .overlay(Capsule().strokeBorder(RUColor.cyan.opacity(0.4),
+                                                        lineWidth: RUSpacing.hairline))
                 }
                 .contentShape(Rectangle())
             }
@@ -296,8 +293,6 @@ struct WallView: View {
             .accessibilityValue("\(post.kudos)")
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(RUSpacing.cardPadding)
-        .ruCard()
     }
 
     private func genreLisible(_ genre: String) -> String {

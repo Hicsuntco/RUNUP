@@ -39,9 +39,9 @@ struct RaceDiscoveryView: View {
                 } else if enRecherche {
                     resultats
                 } else {
-                    if !mine.isEmpty { section(titre: "Je prépare", icone: "flag.checkered", courses: mine) }
+                    if !mine.isEmpty { section(titre: "Je prépare", courses: mine) }
                     if !upcoming.isEmpty {
-                        section(titre: "Ça approche", icone: "calendar", courses: upcoming)
+                        section(titre: "Ça approche", courses: upcoming)
                     }
                     if mine.isEmpty && upcoming.isEmpty { videHonnete }
                     boutonCreer
@@ -170,9 +170,9 @@ struct RaceDiscoveryView: View {
 
     /// `titre` arrive en français : `RUCardHeader` le passe lui-même par le catalogue
     /// (`LocalizedStringKey`), donc le traduire ici le traduirait deux fois.
-    private func section(titre: String, icone: String, courses: [RaceEvent]) -> some View {
+    private func section(titre: String, courses: [RaceEvent]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            RUCardHeader(icon: icone, tint: RUColor.rose2, title: titre)
+            RUCardHeader(title: titre)
             // Des lignes séparées par un filet, pas une pile de cartes : une liste de courses se
             // parcourt du pouce, et dix rectangles arrondis empilés fabriquent dix objets là où
             // il n'y a qu'une liste.

@@ -26,6 +26,10 @@ struct ProfileView: View {
     @State private var board: ClubBoard?
     @State private var friendsList: FriendsList?
     @State private var todaysFriendActivityCount = 0
+    /// La plus proche des courses qu'elle prépare — `mine` les rend déjà triées par date. Sert la
+    /// ligne de la tuile « Courses », qui sans elle promettrait une recherche au lieu de montrer
+    /// un compte à rebours.
+    @State private var nextRace: RaceEvent?
 
     private static let raceDateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -54,13 +58,8 @@ struct ProfileView: View {
                     // badges et l'équipement sont apparus dessous : sans celui-ci, les cartes
                     // sociales étaient la seule section anonyme de l'écran.
                     VStack(alignment: .leading, spacing: 10) {
-                        RUCardHeader(title: String(localized: "Communauté"))
-                        VStack(spacing: 12) {
-                            amisCard
-                            clubCard
-                            coursesCard
-                            itinerairesCard
-                        }
+                        RUCardHeader(title: "Communauté")
+                        grilleCommunaute
                     }
                 }
 
@@ -452,247 +451,185 @@ struct ProfileView: View {
         .ruCard()
     }
 
-    /// Fond de `.social-card` : la carte standard, LAVÉE d'une pointe de sa couleur (7 %) et
-    /// bordée de cette même couleur (22 %). C'est volontairement une teinte, pas un aplat — la
-    /// règle que suit la maquette d'un bout à l'autre est « accent, pas remplissage » : deux
-    /// grosses cartes en aplat rose/violet feraient hurler une page qui, autrement, est neutre.
-    /// Ce qui change vraiment, c'est que les deux destinations cessent d'être deux cartes grises
-    /// identiques et deviennent deux endroits distincts et reconnaissables.
-    private func socialCard<Content: View>(tint: Color, @ViewBuilder content: () -> Content) -> some View {
-        let shape = RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous)
-        return content()
-            .padding(15)
-            // Mélange OPAQUE dans `card` (`RUColor.tint`), pas un `tint.opacity(0.07)` translucide
-            // posé par-dessus : c'est la règle du fichier de tokens, et ici elle compte vraiment —
-            // en thème sombre `card` est lui-même une translucidité blanche, empiler deux couches
-            // translucides y donnerait une carte plus claire que toutes les autres de la page.
-            // ── Ni fond teinté, ni contour coloré ───────────────────────────────────────────
-            //
-            // La carte portait les deux : un mélange de sa couleur à 7 % dans la surface, et un
-            // liseré de cette même couleur à 30 %. Vues sur un vrai téléphone en thème sombre,
-            // les trois cartes de Communauté étaient les objets les plus datés de l'app — un
-            // rectangle teinté cerclé de sa propre couleur, avec un gros disque plein à gauche.
-            //
-            // La couleur reste, entière, dans le DISQUE de l'icône. C'est le seul endroit où elle
-            // est à pleine intensité, donc le seul où elle est encore la couleur qu'on croyait
-            // poser. Diluée dans un fond, elle ne l'était plus.
-            .background(shape.fill(RUColor.card))
-            // Même ombre que `ruCard()`, et surtout pas plus. Cette carte portait encore
-            // l'ancienne (radius 16, y 5, 16 %), rescapée parce qu'elle est posée à la main ici
-            // plutôt que par le modificateur partagé : les deux seules cartes teintées de la page
-            // flottaient donc quatre fois plus haut que toutes les cartes neutres de l'app. La
-            // maquette fait l'inverse — une teinte se distingue par sa couleur, jamais par plus
-            // d'élévation.
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.04 : 0), radius: 1, x: 0, y: 1)
-            .shadow(color: .black.opacity(RUColor.isLight ? 0.08 : 0), radius: 4, x: 0, y: 3)
-            // Les trois cartes sociales sont des boutons entiers — Club, Amis, Itinéraires. Sans
-            // forme de contact, seuls leurs textes et leurs pastilles répondaient : sur une carte
-            // de cette taille, la majorité de la surface visée ne faisait rien. Posé ici, dans
-            // l'enveloppe partagée, plutôt que trois fois sur les appelants.
-            .contentShape(shape)
-    }
+    // MARK: - La grille de Communauté
 
-    /// Un chevron nu.
+    /// QUATRE CARTES PLEINE LARGEUR SONT DEVENUES QUATRE TUILES.
     ///
-    /// Il vivait dans une pastille ronde parce qu'il « se perdait sur une carte teintée » — la
-    /// carte ne l'est plus, et le disque n'a donc plus rien à compenser. Trois cartes, trois
-    /// disques de moins : sur un écran qui porte déjà trois grands disques d'icône à gauche, en
-    /// aligner trois autres à droite faisait six cercles pour six lignes.
-    private var cardArrow: some View {
-        Image(systemName: "chevron.right")
-            .font(.system(size: 12, weight: .bold))
-            .foregroundColor(RUColor.text3)
-            .frame(width: 26, height: 26)
-    }
-
-    /// Filet de `.social-card-teaser` : sépare l'en-tête de la carte (qui/quoi) de son aperçu de
-    /// contenu (qui court, quand). Sans lui les deux lignes se lisaient comme un seul pavé.
-    private var teaserDivider: some View {
-        Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
-    }
-
-    private var amisCard: some View {
-        Button(action: {
-            appState.openFriendsTabOnNextVisit = true
-            appState.go(.club)
-        }) {
-            socialCard(tint: RUColor.violet) {
-                VStack(alignment: .leading, spacing: 11) {
-                    HStack(spacing: 12) {
-                        ZStack {
-                            Circle().fill(RUColor.violet.opacity(0.16))
-                            Image(systemName: "person.2.fill").font(.system(size: 16)).foregroundColor(RUColor.violet)
-                        }
-                        .frame(width: 40, height: 40)
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Amis").font(RUFont.sans(.emphasis, weight: .bold)).foregroundColor(RUColor.textPrimary)
-                            if let friendsList {
-                                Text("\(friendsList.followers.count) abonnés · \(friendsList.following.count) abonnements")
-                                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
-                            }
-                        }
-                        Spacer(minLength: 0)
-                        // Les demandes en attente étaient signalées sur le segment « Mes amis »
-                        // du sélecteur de `SocialView`, qui vient de disparaître. Sans ce
-                        // report, un compte privé pouvait garder des demandes sans réponse
-                        // indéfiniment — c'est justement la raison d'être de ce compteur, et il
-                        // est mieux ici : sur l'écran ouvert par l'onglet, pas sur une barre
-                        // qu'il fallait déjà avoir atteinte.
-                        if let friendsList, !friendsList.incomingRequests.isEmpty {
-                            Text("\(friendsList.incomingRequests.count)")
-                                .font(RUFont.sans(.small, weight: .bold))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 6).padding(.vertical, 2)
-                                .background(RUColor.rose, in: Capsule())
-                                .accessibilityLabel(Pluriel.choisir(friendsList.incomingRequests.count,
-                                    String(localized: "\(friendsList.incomingRequests.count) demande en attente"),
-                                    String(localized: "\(friendsList.incomingRequests.count) demandes en attente")))
-                        }
-                        cardArrow
-                    }
-
-                    teaserDivider
-
-                    if let friendsList, !friendsList.following.isEmpty {
-                        HStack(spacing: 8) {
-                            HStack(spacing: -7) {
-                                ForEach(friendsList.following.prefix(3)) { user in
-                                    AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 22, seed: user.id)
-                                        .overlay(Circle().stroke(RUColor.bg, lineWidth: 2))
-                                }
-                            }
-                            Text(todaysFriendActivityCount > 0
-                                 ? Pluriel.choisir(todaysFriendActivityCount,
-                                    String(localized: "\(todaysFriendActivityCount) nouvelle activité aujourd'hui"),
-                                    String(localized: "\(todaysFriendActivityCount) nouvelles activités aujourd'hui"))
-                                 : String(localized: "Rien de nouveau aujourd'hui"))
-                                .font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text2)
-                        }
-                    } else {
-                        Text("Trouve des coureurs à suivre").font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text2)
-                    }
-                }
-            }
-        }
-        .buttonStyle(PressableStyle())
-    }
-
-    /// La porte des pages de course. Elle répond encore à une autre question : non pas « avec qui
-    /// je cours » ni « où je cours », mais « qui prépare la MÊME course que moi » — la seule de
-    /// l'onglet qui ait une date, et donc une urgence.
-    private var coursesCard: some View {
-        Button(action: {
-            appState.openRacesTabOnNextVisit = true
-            appState.go(.club)
-        }) {
-            socialCard(tint: RUColor.violet) {
-                HStack(spacing: 12) {
+    /// Ce qu'elles avaient de laid n'était pas leur dessin, c'était leur rythme. Deux d'entre
+    /// elles — Amis, Club — portaient un en-tête, un filet, puis un aperçu ; les deux autres —
+    /// Courses, Itinéraires — une seule ligne. Posées l'une sous l'autre, les deux premières
+    /// faisaient deux fois la hauteur des suivantes, qui avaient donc l'air inachevées. Sept
+    /// cents points de hauteur pour quatre liens, et les badges — ce que la page a de plus
+    /// coloré — rejetés sous la ligne de flottaison.
+    ///
+    /// La grille les met à égalité : même hauteur, même structure, deux par rangée, et l'écran
+    /// y gagne quatre cent cinquante points. On voit maintenant les badges sans faire défiler.
+    ///
+    /// CE QUI A ÉTÉ PERDU, ET CE QUI NE L'A PAS ÉTÉ. L'aperçu sous le filet n'a pas disparu :
+    /// il EST la ligne de la tuile. Chaque tuile dit la chose la plus utile qu'elle sache —
+    /// la prochaine sortie du club plutôt que son nombre de membres, les sorties d'amis du jour
+    /// plutôt que le total des abonnements, la course la plus proche plutôt que la promesse
+    /// qu'on pourrait en chercher une. C'est un ordre de priorité, pas une amputation : les deux
+    /// lignes empilées disaient rarement deux choses différentes.
+    private func tuileSociale(icone: String,
+                              teinte: Color,
+                              degrade: Bool = false,
+                              titre: String,
+                              ligne: String,
+                              pastille: String? = nil,
+                              etiquettePastille: String? = nil,
+                              action: @escaping () -> Void) -> some View {
+        let forme = RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous)
+        return Button(action: action) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .top, spacing: 6) {
                     ZStack {
-                        Circle().fill(RUColor.violet.opacity(0.18))
-                        Image(systemName: "flag.checkered").font(.system(size: 15)).foregroundColor(RUColor.violet)
-                    }
-                    .frame(width: 40, height: 40)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Courses").font(RUFont.sans(.emphasis, weight: .bold)).foregroundColor(RUColor.textPrimary)
-                        Text("Qui prépare la même course que toi")
-                            .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
-                    }
-                    Spacer(minLength: 0)
-                    cardArrow
-                }
-            }
-        }
-        .buttonStyle(PressableStyle())
-    }
-
-    /// La troisième porte de l'onglet social. Elle répond à une question que les deux autres ne
-    /// posent pas : non pas « avec qui je cours », mais « où je cours », quand on est quelque part
-    /// qu'on ne connaît pas.
-    private var itinerairesCard: some View {
-        Button(action: {
-            appState.openRoutesTabOnNextVisit = true
-            appState.go(.club)
-        }) {
-            socialCard(tint: RUColor.violet) {
-                HStack(spacing: 12) {
-                    ZStack {
-                        Circle().fill(RUColor.violet.opacity(0.18))
-                        Image(systemName: "map.fill").font(.system(size: 15)).foregroundColor(RUColor.violet)
-                    }
-                    .frame(width: 40, height: 40)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Itinéraires").font(RUFont.sans(.emphasis, weight: .bold)).foregroundColor(RUColor.textPrimary)
-                        Text("Trouve où courir, ici ou en voyage")
-                            .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
-                    }
-                    Spacer(minLength: 0)
-                    cardArrow
-                }
-            }
-        }
-        .buttonStyle(PressableStyle())
-    }
-
-    private var clubCard: some View {
-        Button(action: { appState.go(.club) }) {
-            socialCard(tint: RUColor.rose) {
-                VStack(alignment: .leading, spacing: 11) {
-                    HStack(spacing: 12) {
-                        ZStack {
-                            // Seul vrai aplat de la page, et il fait 40 pt : la pastille du club
-                            // porte le dégradé de marque avec un trophée blanc, là où Amis porte
-                            // une simple teinte violette. C'est ce qui distingue les deux cartes
-                            // au premier coup d'œil sans colorer la moitié de l'écran.
+                        // Le dégradé de marque est réservé au Club : c'est ce qui le distingue
+                        // des trois autres sans colorer la moitié de la page. Les autres portent
+                        // leur teinte diluée dans le disque, à pleine intensité sur le symbole —
+                        // le seul endroit de la tuile où la couleur est vraiment celle qu'on pose.
+                        if degrade {
                             Circle().fill(RUColor.accentGradient())
-                            Image(systemName: "trophy.fill").font(.system(size: 15)).foregroundColor(.white)
+                        } else {
+                            Circle().fill(teinte.opacity(0.16))
                         }
-                        .frame(width: 40, height: 40)
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Running Club").font(RUFont.sans(.emphasis, weight: .bold)).foregroundColor(RUColor.textPrimary)
-                            if let club = board?.club {
-                                Text(Pluriel.choisir(club.memberCount,
-                                     String(localized: "\(club.name) · \(club.memberCount) membre"),
-                                     String(localized: "\(club.name) · \(club.memberCount) membres")))
-                                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
-                            } else {
-                                Text("Tu n'en as pas encore rejoint").font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
-                            }
-                        }
-                        Spacer(minLength: 0)
-                        cardArrow
+                        Image(systemName: icone)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(degrade ? .white : teinte)
                     }
+                    .frame(width: 38, height: 38)
 
-                    teaserDivider
+                    Spacer(minLength: 0)
 
-                    if let event = board?.events?.first {
-                        HStack(spacing: 4) {
-                            Image(systemName: "mappin.circle.fill").font(.system(size: 11)).foregroundColor(RUColor.rose)
-                            Text(event.title).font(RUFont.sans(.small, weight: .bold)).foregroundColor(RUColor.rose).lineLimit(1).minimumScaleFactor(0.8)
-                            Text(Pluriel.choisir(event.going,
-                                 String(localized: "— \(event.going) confirmé"),
-                                 String(localized: "— \(event.going) confirmés")))
-                                .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
-                        }
-                    } else if board?.club == nil {
-                        // La maquette propose ici un aperçu de « 2 clubs près de toi » à
-                        // rejoindre. Non repris : un club de cette app se rejoint UNIQUEMENT par
-                        // code d'invitation (`ClubService.joinClub`) — il n'existe ni annuaire
-                        // public, ni géolocalisation de clubs, ni notion de club « proche » dans
-                        // le schéma. La carte dit donc ce qui est réellement faisable.
-                        Text("Rejoins un club avec un code d'invitation, ou crée le tien")
-                            .font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text2)
-                    } else {
-                        Text("Aucune sortie prévue pour l'instant")
-                            .font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text3)
+                    // Les demandes en attente. La seule chose de cette grille qu'on ne doit pas
+                    // pouvoir manquer : un compte privé peut garder des demandes sans réponse
+                    // indéfiniment, et c'est la raison d'être de ce compteur.
+                    if let pastille {
+                        Text(pastille)
+                            .font(RUFont.sans(.small, weight: .bold))
+                            .foregroundColor(RUColor.onRose)
+                            .padding(.horizontal, 7).padding(.vertical, 3)
+                            .background(RUColor.rose, in: Capsule())
+                            .accessibilityLabel(etiquettePastille ?? pastille)
                     }
                 }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(titre)
+                        .font(RUFont.sans(.emphasis, weight: .bold))
+                        .foregroundColor(RUColor.textPrimary)
+                        .lineLimit(1).minimumScaleFactor(0.75)
+                    Text(ligne)
+                        .font(RUFont.sans(.small))
+                        .foregroundColor(RUColor.text3)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        // Sans ça, une ligne de deux lignes est tronquée au lieu de pousser la
+                        // tuile — et les quatre tuiles n'ont pas toutes la même longueur de texte.
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(13)
+            // Une hauteur PLANCHER et pas fixe : à 200 % de taille de texte, une tuile fixe
+            // tronquerait son titre. La grille égalise les deux tuiles d'une rangée toute seule.
+            .frame(minHeight: 116, alignment: .topLeading)
+            .ruCard(radius: RUSpacing.radiusCompact)
+            // Toute la tuile répond, pas seulement son texte : sans forme de contact, la moitié
+            // de la surface visée ne fait rien.
+            .contentShape(forme)
         }
         .buttonStyle(PressableStyle())
+        // Les quatre éléments d'une tuile décrivent UNE destination : quatre arrêts VoiceOver
+        // pour une tuile, c'est quatre fois le même contexte relu.
+        .accessibilityElement(children: .combine)
+    }
+
+    private var grilleCommunaute: some View {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
+                  spacing: 12) {
+            tuileSociale(
+                icone: "person.2.fill", teinte: RUColor.violet,
+                titre: String(localized: "Amis"), ligne: ligneDesAmis,
+                pastille: pastilleDesDemandes, etiquettePastille: etiquetteDesDemandes,
+                action: {
+                    appState.openFriendsTabOnNextVisit = true
+                    appState.go(.club)
+                })
+
+            tuileSociale(
+                icone: "trophy.fill", teinte: RUColor.rose, degrade: true,
+                titre: String(localized: "Running Club"), ligne: ligneDuClub,
+                action: { appState.go(.club) })
+
+            tuileSociale(
+                icone: "flag.checkered", teinte: RUColor.cyan,
+                titre: String(localized: "Courses"), ligne: ligneDesCourses,
+                action: {
+                    appState.openRacesTabOnNextVisit = true
+                    appState.go(.club)
+                })
+
+            tuileSociale(
+                icone: "map.fill", teinte: RUColor.amber,
+                titre: String(localized: "Itinéraires"), ligne: String(localized: "Où courir, ici ou en voyage"),
+                action: {
+                    appState.openRoutesTabOnNextVisit = true
+                    appState.go(.club)
+                })
+        }
+    }
+
+    // MARK: Ce que chaque tuile sait dire
+
+    /// Ce qui s'est passé aujourd'hui d'abord : c'est la seule ligne qui donne une raison
+    /// d'ouvrir l'écran MAINTENANT. Le nombre d'abonnements ne change pas d'un jour à l'autre.
+    private var ligneDesAmis: String {
+        if todaysFriendActivityCount > 0 {
+            return Pluriel.choisir(todaysFriendActivityCount,
+                                   String(localized: "\(todaysFriendActivityCount) sortie aujourd'hui"),
+                                   String(localized: "\(todaysFriendActivityCount) sorties aujourd'hui"))
+        }
+        if let friendsList, !friendsList.following.isEmpty {
+            return Pluriel.choisir(friendsList.following.count,
+                                   String(localized: "\(friendsList.following.count) abonnement"),
+                                   String(localized: "\(friendsList.following.count) abonnements"))
+        }
+        return String(localized: "Trouve des coureurs à suivre")
+    }
+
+    private var pastilleDesDemandes: String? {
+        guard let friendsList, !friendsList.incomingRequests.isEmpty else { return nil }
+        return "\(friendsList.incomingRequests.count)"
+    }
+
+    private var etiquetteDesDemandes: String? {
+        guard let friendsList, !friendsList.incomingRequests.isEmpty else { return nil }
+        return Pluriel.choisir(friendsList.incomingRequests.count,
+                               String(localized: "\(friendsList.incomingRequests.count) demande en attente"),
+                               String(localized: "\(friendsList.incomingRequests.count) demandes en attente"))
+    }
+
+    /// La prochaine sortie prime sur le nom du club : le nom est écrit sur l'écran d'arrivée, la
+    /// sortie a une date et peut se manquer.
+    private var ligneDuClub: String {
+        if let event = board?.events?.first { return event.title }
+        if let club = board?.club {
+            return Pluriel.choisir(club.memberCount,
+                                   String(localized: "\(club.name) · \(club.memberCount) membre"),
+                                   String(localized: "\(club.name) · \(club.memberCount) membres"))
+        }
+        // La phrase disait « avec un code d'invitation » — un code qui n'existe plus : on
+        // rejoint un club en le cherchant par son nom depuis que les codes ont été retirés.
+        return String(localized: "Rejoins-en un, ou crée le tien")
+    }
+
+    /// « Marathon de Paris · J-162 ». La course la plus proche, celle que le serveur rend en
+    /// tête de `mine` — pas un compte de courses suivies, qui ne dirait rien à faire.
+    private var ligneDesCourses: String {
+        guard let nextRace else { return String(localized: "Trouve celle que tu prépares") }
+        guard let jours = nextRace.joursRestants, jours > 0 else { return nextRace.name }
+        return String(localized: "\(nextRace.name) · J-\(jours)")
     }
 
     // MARK: - Badges
@@ -768,6 +705,23 @@ struct ProfileView: View {
 
     private func loadSocialSummary() async {
         guard auth.isSignedIn else { isLoadingSocial = false; return }
+
+        // EN DÉMONSTRATION, LE CACHE EST TOUT — même raison qu'au Club (`ClubView.loadIfSignedIn`).
+        //
+        // Il n'y a pas de serveur en face d'un simulateur, et la session de démonstration n'est
+        // pas un vrai jeton : les quatre requêtes ci-dessous prendraient un 401, donc
+        // `markSessionRejected()`, donc toute la section Communauté remplacée par « Session
+        // expirée » — dans la capture, en bonne place. `CaptureSeed` a déjà tout posé.
+        if Demonstration.enCours {
+            board = appState.cachedClubBoard
+            friendsList = appState.cachedFriendsList
+            nextRace = appState.cachedNextRace
+            todaysFriendActivityCount = (appState.cachedClubFeed ?? [])
+                .filter { Calendar.current.isDateInToday($0.createdAt) }.count
+            isLoadingSocial = false
+            return
+        }
+
         isLoadingSocial = true
         // Independent requests, fired concurrently — same reasoning as `ClubView.loadIfSignedIn`:
         // none of these three depends on another's result, so the wait is the slowest single
@@ -775,10 +729,16 @@ struct ProfileView: View {
         async let boardAttempt = try? await clubService.fetchBoard()
         async let friendsListAttempt = try? await clubService.fetchFriendsList()
         async let friendsFeedAttempt = try? await clubService.fetchFriendsFeed()
-        let (boardResult, friendsListResult, friendsFeedResult) = await (boardAttempt, friendsListAttempt, friendsFeedAttempt)
+        // La quatrième part en même temps que les trois autres : l'attente reste celle de la plus
+        // lente, pas la somme. C'est ce qui permet à la tuile « Courses » de montrer un vrai
+        // compte à rebours sans rien coûter à l'ouverture de la page.
+        async let racesAttempt = try? await clubService.myRaces()
+        let (boardResult, friendsListResult, friendsFeedResult, racesResult) =
+            await (boardAttempt, friendsListAttempt, friendsFeedAttempt, racesAttempt)
 
         board = boardResult
         friendsList = friendsListResult
+        nextRace = (racesResult ?? []).first
         todaysFriendActivityCount = (friendsFeedResult ?? []).filter { Calendar.current.isDateInToday($0.createdAt) }.count
         isLoadingSocial = false
     }

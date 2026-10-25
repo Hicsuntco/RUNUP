@@ -231,9 +231,48 @@ enum CaptureSeed {
         //
         // Ce code n'existe qu'en débogage et ne tourne que dans le simulateur des captures.
         // Mieux vaut qu'il s'arrête net, avec la raison, que de livrer une image fausse.
+        // CE QUE LE PROFIL MONTRE, ET QU'IL ALLAIT CHERCHER AU SERVEUR.
+        //
+        // La grille Communauté dit la chose la plus utile qu'elle sache de chaque destination :
+        // les abonnements, le club, la course la plus proche. En démonstration elle n'avait rien
+        // à dire — pire, elle le demandait au serveur avec un jeton qui n'en est pas un, prenait
+        // un 401, et remplaçait toute la section par « Session expirée ».
+        //
+        // Une demande en attente, et c'est exprès : c'est le seul élément de la grille qu'on ne
+        // doit pas pouvoir manquer, donc le seul qu'une capture doit montrer.
+        let amis = """
+        {
+          "isPrivate": false,
+          "following": [
+            { "id": "2", "name": "Inès", "lastName": "Lambert", "username": "ines", "isPrivate": false },
+            { "id": "3", "name": "Margaux", "username": "margaux", "isPrivate": false },
+            { "id": "5", "name": "Lina", "isPrivate": false }
+          ],
+          "followers": [
+            { "id": "2", "name": "Inès", "lastName": "Lambert", "username": "ines", "isPrivate": false },
+            { "id": "4", "name": "Sarah", "isPrivate": false }
+          ],
+          "incomingRequests": [
+            { "id": "6", "name": "Camille", "lastName": "Roux", "isPrivate": false }
+          ]
+        }
+        """
+
+        // Une vraie course, à une vraie date : la tuile affiche un compte à rebours, et c'est
+        // précisément la ligne dont il faut vérifier qu'elle tient sur deux lignes.
+        let course = """
+        {
+          "id": "demo-course", "name": "Marathon de Paris", "city": "Paris",
+          "raceDate": "\(formateur.string(from: maintenant.addingTimeInterval(86_400 * 162)).prefix(10))",
+          "distanceKm": 42.195, "discipline": "run", "followerCount": 143
+        }
+        """
+
         do {
             etat.cachedClubBoard = try decodeur.decode(ClubBoard.self, from: Data(tableau.utf8))
             etat.cachedClubFeed = try decodeur.decode([FeedItem].self, from: Data(fil.utf8))
+            etat.cachedFriendsList = try decodeur.decode(FriendsList.self, from: Data(amis.utf8))
+            etat.cachedNextRace = try decodeur.decode(RaceEvent.self, from: Data(course.utf8))
         } catch {
             preconditionFailure("Le club de démonstration ne se décode pas : \(error)")
         }

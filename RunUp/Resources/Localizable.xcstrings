@@ -436,6 +436,23 @@
         }
       }
     },
+    "%@ · J-%lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · D-%lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · D-%lld"
+          }
+        }
+      }
+    },
     "%@ · facultatif": {
       "extractionState": "manual",
       "localizations": {
@@ -802,6 +819,23 @@
         }
       }
     },
+    "%lld abonnement": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld following"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld seguido"
+          }
+        }
+      }
+    },
     "%lld abonnement, voir la liste": {
       "extractionState": "manual",
       "localizations": {
@@ -815,6 +849,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld seguido, ver la lista"
+          }
+        }
+      }
+    },
+    "%lld abonnements": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld following"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld seguidos"
           }
         }
       }
@@ -1755,6 +1806,23 @@
         }
       }
     },
+    "%lld sortie aujourd'hui": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld run today"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld salida hoy"
+          }
+        }
+      }
+    },
     "%lld sortie · %@": {
       "extractionState": "manual",
       "localizations": {
@@ -1801,6 +1869,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld salidas"
+          }
+        }
+      }
+    },
+    "%lld sorties aujourd'hui": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld runs today"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld salidas hoy"
           }
         }
       }
@@ -16430,6 +16515,23 @@
         }
       }
     },
+    "Où courir, ici ou en voyage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where to run, here or away"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dónde correr, aquí o de viaje"
+          }
+        }
+      }
+    },
     "Où passe la journée": {
       "extractionState": "manual",
       "localizations": {
@@ -19684,6 +19786,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Únete a un club con un código de invitación, o crea el tuyo"
+          }
+        }
+      }
+    },
+    "Rejoins-en un, ou crée le tien": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join one, or start yours"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Únete a uno, o crea el tuyo"
           }
         }
       }
@@ -25074,6 +25193,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Demasiado duro"
+          }
+        }
+      }
+    },
+    "Trouve celle que tu prépares": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find the one you're training for"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busca la que preparas"
           }
         }
       }

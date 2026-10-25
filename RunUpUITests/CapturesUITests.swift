@@ -52,7 +52,21 @@ final class CapturesUITests: XCTestCase {
     func test5Journee() { prendre(rang: 5, ecran: "rings", nom: "journee") }
     func test6Stats() { prendre(rang: 6, ecran: "stats", nom: "stats") }
 
-    private func prendre(rang: Int, ecran: String, nom: String) {
+    // LES CAPTURES DE DIAGNOSTIC — celles qu'on prend pour REGARDER, pas pour publier.
+    //
+    // CE QU'ELLES RÉSOLVENT. Sans Xcode en local, un écran redessiné ne se juge qu'une fois
+    // installé sur un téléphone : un aller-retour d'un quart d'heure pour savoir si deux tuiles
+    // tiennent côte à côte. Celles-ci sortent du même harnais que les captures de la fiche, par
+    // le même chemin, avec le même état de démonstration — mais dans un sous-dossier que
+    // `screenshots.py` ne regarde pas.
+    //
+    // POURQUOI UN SOUS-DOSSIER. Le composeur de la fiche apparie chaque capture à une accroche
+    // par le chiffre de tête de son nom. Une septième image à la racine recevrait une accroche
+    // qui n'existe pas. Il ne lit que les FICHIERS d'un dossier, jamais ses sous-dossiers : une
+    // capture rangée dans `diagnostic/` est donc invisible pour lui, et visible dans l'artefact.
+    func test7ProfilDiagnostic() { prendre(rang: 7, ecran: "profile", nom: "profil", diagnostic: true) }
+
+    private func prendre(rang: Int, ecran: String, nom: String, diagnostic: Bool = false) {
         let app = XCUIApplication()
         app.launchArguments = ["--captures", "--ecran=\(ecran)"]
         // La langue et la région viennent de l'extérieur : le même test tourne trois fois, une
@@ -84,11 +98,12 @@ final class CapturesUITests: XCTestCase {
 
         let capture = XCUIScreen.main.screenshot()
         let piece = XCTAttachment(screenshot: capture)
-        piece.name = "\(rang)-\(nom)"
+        piece.name = diagnostic ? "diagnostic-\(nom)" : "\(rang)-\(nom)"
         piece.lifetime = .keepAlways
         add(piece)
 
-        ecrire(capture.pngRepresentation, sous: "\(rang)-\(nom).png")
+        ecrire(capture.pngRepresentation,
+               sous: diagnostic ? "diagnostic/\(nom).png" : "\(rang)-\(nom).png")
         app.terminate()
     }
 

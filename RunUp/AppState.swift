@@ -123,6 +123,12 @@ final class AppState {
     /// underneath to catch up.
     var cachedClubBoard: ClubBoard?
     var cachedClubFeed: [FeedItem]?
+    /// Les deux caches que le PROFIL consulte en démonstration. Sans eux, l'écran du Profil est
+    /// le seul des captures à interroger vraiment le serveur — avec un jeton de démonstration,
+    /// donc un 401, donc `sessionRejected`, donc « Session expirée » à la place de toute la
+    /// section Communauté. Voir `CaptureSeed.poserLeClub`.
+    var cachedFriendsList: FriendsList?
+    var cachedNextRace: RaceEvent?
 
     // Live run (ephemeral, survives navigating away from the Live screen)
     var liveRun: LiveRunViewModel?

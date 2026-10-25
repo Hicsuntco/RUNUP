@@ -214,8 +214,26 @@ struct PublicProfileView: View {
                         HStack(spacing: 10) {
                             ForEach(gagnes) { badge in
                                 Button(action: { selectedBadge = badge }) {
-                                    BadgeHexTile(emoji: badge.emoji, earned: true,
-                                                 color: RUColor.lime, side: 62)
+                                    VStack(spacing: 5) {
+                                        // SA COULEUR, PAS UNE COULEUR. Les cinq tuiles sortaient
+                                        // toutes en vert : j'avais passé une teinte fixe là où
+                                        // le reste de l'app lit celle du badge. Une série d'hexagones
+                                        // identiques ne dit plus lequel est lequel, et ne ressemble
+                                        // plus à la bande du Profil ni à celle du Club.
+                                        BadgeHexTile(emoji: badge.emoji, earned: true,
+                                                     color: ClubBadgeCatalog.color(for: badge.key),
+                                                     side: 58)
+                                        // Et son nom. Un hexagone nu avec « 🌅 » dessus ne dit pas
+                                        // ce qui a été gagné — c'est précisément ce qu'on vient
+                                        // regarder sur la page de quelqu'un.
+                                        Text(badge.name)
+                                            .font(RUFont.sans(.micro, weight: .semibold))
+                                            .foregroundColor(RUColor.textPrimary)
+                                            .multilineTextAlignment(.center)
+                                            .lineLimit(2)
+                                            .minimumScaleFactor(0.8)
+                                            .frame(width: 66)
+                                    }
                                 }
                                 .buttonStyle(PressableStyle())
                             }

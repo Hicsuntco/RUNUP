@@ -60,19 +60,25 @@ final class RaceEventTests: XCTestCase {
                        "« \(lisible) » a glissé d'un jour")
     }
 
-    func testAucunFuseauNeFaitGlisserLeJourDuDossard() {
-        // La même chose, mais sur la mécanique plutôt que sur la phrase : le jour relu dans le
-        // fuseau du formateur (UTC) est stable, là où le lire dans n'importe quel autre fuseau ne
-        // l'est PAS. Les deux moitiés de l'assertion documentent pourquoi l'affichage est en UTC.
+    func testRelireLInstantAilleursQuEnUTCFaitGlisserLeJour() {
+        // POURQUOI L'AFFICHAGE EST FORMATÉ EN UTC, démontré plutôt qu'affirmé.
+        //
+        // `jour` vaut minuit UTC. Relu en UTC c'est bien le 4 ; relu à Los Angeles (−7 en avril),
+        // c'est le 3 à 17 h. Minuit glisse donc vers l'OUEST, exactement comme midi glissait vers
+        // l'EST (Kiritimati, +14, le lisait comme le 5 — c'est l'échec qui a fait réécrire tout
+        // ça). Il n'existe pas d'heure qui règle les deux : vingt-six heures d'amplitude de
+        // fuseaux contre vingt-quatre dans une journée. D'où un jour FORMATÉ en UTC, et non un
+        // instant qu'on espère bien placé.
         guard let jour = course("2027-04-04").jour else { return XCTFail("date illisible") }
+
         var utc = Calendar(identifier: .gregorian)
         utc.timeZone = TimeZone(identifier: "UTC")!
         XCTAssertEqual(utc.component(.day, from: jour), 4)
 
-        var kiritimati = Calendar(identifier: .gregorian)
-        kiritimati.timeZone = TimeZone(identifier: "Pacific/Kiritimati")!
-        XCTAssertNotEqual(kiritimati.component(.day, from: jour), 4,
-                          "Kiritimati est à UTC+14 : si ce jour-là coïncide, l'hypothèse de ce test a changé")
+        var losAngeles = Calendar(identifier: .gregorian)
+        losAngeles.timeZone = TimeZone(identifier: "America/Los_Angeles")!
+        XCTAssertEqual(losAngeles.component(.day, from: jour), 3,
+                       "minuit UTC devrait se lire la veille à l'ouest — c'est tout l'intérêt de ne pas afficher cet instant tel quel")
     }
 
     func testUneDateIllisibleNeFaitPasTomberLAffichage() {

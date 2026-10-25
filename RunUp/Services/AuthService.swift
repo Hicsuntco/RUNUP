@@ -252,7 +252,15 @@ final class AuthService {
         request.httpMethod = "POST"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
-        request.httpBody = try JSONSerialization.data(withJSONObject: ["avatarDataURI": dataURI as Any])
+        // `dataURI as Any` AVEC UN nil FAISAIT PLANTER L'APP, PAS ÉCHOUER L'APPEL.
+        //
+        // `Optional<String>.none as Any` reste un optionnel vide emballé dans `Any` :
+        // `JSONSerialization` ne le reconnaît pas comme une valeur JSON et lève une exception
+        // Objective-C — qu'aucun `try` Swift n'attrape. Supprimer sa photo, connectée, terminait
+        // donc l'app. `NSNull()` est le `null` JSON, et le serveur le traite comme l'absence de
+        // clé (`avatarDataURI === null || === undefined`, voir api/account/[action].js).
+        let valeur: Any = dataURI.map { $0 as Any } ?? NSNull()
+        request.httpBody = try JSONSerialization.data(withJSONObject: ["avatarDataURI": valeur])
         let _: OkResponse = try await send(request)
     }
 

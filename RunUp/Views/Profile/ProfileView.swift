@@ -98,66 +98,104 @@ struct ProfileView: View {
 
     // MARK: - Header
 
+    /// Mon statut, quand le club me l'a rendu. La bio est une colonne de `users`, mais aucun
+    /// point d'entrée ne la rend pour moi seule : elle n'arrive que par le classement du club.
+    /// Sans club, pas de bio — et la ligne disparaît plutôt que de laisser un vide.
+    private var maBio: String? {
+        guard let bio = board?.leaderboard.first(where: \.isMe)?.bio, !bio.isEmpty else { return nil }
+        return bio
+    }
+
+    /// # LA PHOTO SE VOYAIT À PEINE, ET C'ÉTAIT LE PROBLÈME
+    ///
+    /// Elle tenait dans 52 points, au bout d'une ligne, à côté d'un nom en 18 : la taille d'une
+    /// vignette de liste. Sur la page de quelqu'un d'autre — `PublicProfileView` — la même photo
+    /// fait 100 points et ouvre l'écran. Donc l'app montrait les autres mieux qu'elle ne la
+    /// montrait, elle, sur son propre profil.
+    ///
+    /// Elle passe à 88 points, et le nom gagne son pseudo et son statut en dessous : c'est la
+    /// même forme que la page publique, ce qui n'est pas une coquetterie — les deux écrans
+    /// décrivent le même objet, l'un se modifie et l'autre se regarde.
     private var header: some View {
-        HStack(alignment: .top) {
-            HStack(spacing: 11) {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 14) {
                 avatarButton
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(profile.name).displayStyle(18).foregroundColor(RUColor.textPrimary)
-                    // `.profil-obj-pill` de la maquette : l'objectif était une simple ligne de
-                    // texte gris de plus, indistincte du reste ; dans une capsule bordée il
-                    // devient une étiquette d'identité, au même titre que le nom.
-                    //
-                    // Elle est désormais le chemin vers l'objectif. Il vivait sous l'intertitre
-                    // « Mon équipement », à côté des chaussures — une course à préparer n'est pas
-                    // de l'équipement — et il était donc écrit deux fois sur le même écran, dont
-                    // une au mauvais endroit. La pastille l'affichait déjà : autant qu'elle y
-                    // mène. Elle s'affiche même sans objectif, sinon il n'y aurait plus aucune
-                    // porte d'entrée pour en choisir un.
-                    // SANS OBJECTIF, LA PASTILLE MÈNE À L'ASSISTANT, PAS À L'ÉCRAN D'OBJECTIF.
-                    // Elle annonce « Choisir une course à préparer » et envoyait sur `RaceGoalView`,
-                    // qui est en LECTURE SEULE : « Date à définir », des tuiles vides, et aucun
-                    // bouton pour choisir quoi que ce soit. Le libellé promettait une action que
-                    // l'écran d'arrivée n'a pas. L'assistant, lui, fait exactement ce qui est écrit.
-                    Button(action: {
-                        if objectifText == nil { appState.newGoalWizardPresented = true } else { appState.go(.race) }
-                    }) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "target").font(.system(size: 9)).foregroundColor(RUColor.text3)
-                            Text(objectifText ?? String(localized: "Choisir une course à préparer"))
-                                .font(RUFont.sans(.small, weight: .semibold))
-                                .foregroundColor(RUColor.text2)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.8)
-                            Image(systemName: "chevron.right").font(.system(size: 8, weight: .semibold)).foregroundColor(RUColor.text3)
-                        }
-                        .padding(.horizontal, 9).padding(.vertical, 4)
-                        .background(RUColor.card, in: Capsule())
-                        .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
-                        // La pastille fait 26 pt : en faire une destination sans agrandir sa zone
-                        // tapable aurait été remplacer une ligne facile à viser par une cible qui
-                        // ne l'est pas.
-                        .frame(minHeight: 44)
-                        .contentShape(Rectangle())
+                    Text(profile.name).displayStyle(24).foregroundColor(RUColor.textPrimary)
+                    if let pseudo = auth.currentUser?.username, !pseudo.isEmpty {
+                        Text(verbatim: "@\(pseudo)")
+                            .font(RUFont.sans(.body))
+                            .foregroundColor(RUColor.text3)
                     }
-                    .buttonStyle(PressableStyle())
-                    .accessibilityElement(children: .combine)
+                    if let maBio {
+                        Text(maBio)
+                            .font(RUFont.sans(.body))
+                            .foregroundColor(RUColor.text2)
+                            .lineLimit(3)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
+                Spacer(minLength: 8)
+                Button(action: { showSettings = true }) {
+                    Image(systemName: "gearshape.fill")
+                        .font(.system(size: 15))
+                        .foregroundColor(RUColor.textPrimary)
+                        .frame(width: 36, height: 36)
+                        .background(RUColor.card, in: Circle())
+                        .overlay(Circle().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(PressableStyle())
+                .accessibilityLabel("Réglages")
             }
-            Spacer(minLength: 8)
-            Button(action: { showSettings = true }) {
-                Image(systemName: "gearshape.fill")
-                    .font(.system(size: 15))
-                    .foregroundColor(RUColor.textPrimary)
-                    .frame(width: 36, height: 36)
-                    .background(RUColor.card, in: Circle())
-                    .overlay(Circle().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(PressableStyle())
-            .accessibilityLabel("Réglages")
+
+            pastilleDObjectif
         }
+    }
+
+    /// Sortie de la colonne du nom quand la photo est passée à 88 points : à côté d'un disque de
+    /// cette taille, « 10 km · 47:30 · 6 décembre 2026 » n'avait plus la largeur de s'écrire et
+    /// se rabattait sur son facteur de réduction. Sur sa propre ligne, elle a tout l'écran.
+    private var pastilleDObjectif: some View {
+        // `.profil-obj-pill` de la maquette : l'objectif était une simple ligne de
+        // texte gris de plus, indistincte du reste ; dans une capsule bordée il
+        // devient une étiquette d'identité, au même titre que le nom.
+        //
+        // Elle est désormais le chemin vers l'objectif. Il vivait sous l'intertitre
+        // « Mon équipement », à côté des chaussures — une course à préparer n'est pas
+        // de l'équipement — et il était donc écrit deux fois sur le même écran, dont
+        // une au mauvais endroit. La pastille l'affichait déjà : autant qu'elle y
+        // mène. Elle s'affiche même sans objectif, sinon il n'y aurait plus aucune
+        // porte d'entrée pour en choisir un.
+        // SANS OBJECTIF, LA PASTILLE MÈNE À L'ASSISTANT, PAS À L'ÉCRAN D'OBJECTIF.
+        // Elle annonce « Choisir une course à préparer » et envoyait sur `RaceGoalView`,
+        // qui est en LECTURE SEULE : « Date à définir », des tuiles vides, et aucun
+        // bouton pour choisir quoi que ce soit. Le libellé promettait une action que
+        // l'écran d'arrivée n'a pas. L'assistant, lui, fait exactement ce qui est écrit.
+        Button(action: {
+            if objectifText == nil { appState.newGoalWizardPresented = true } else { appState.go(.race) }
+        }) {
+            HStack(spacing: 4) {
+                Image(systemName: "target").font(.system(size: 9)).foregroundColor(RUColor.text3)
+                Text(objectifText ?? String(localized: "Choisir une course à préparer"))
+                    .font(RUFont.sans(.small, weight: .semibold))
+                    .foregroundColor(RUColor.text2)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                Image(systemName: "chevron.right").font(.system(size: 8, weight: .semibold)).foregroundColor(RUColor.text3)
+            }
+            .padding(.horizontal, 9).padding(.vertical, 4)
+            .background(RUColor.card, in: Capsule())
+            .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+            // La pastille fait 26 pt : en faire une destination sans agrandir sa zone
+            // tapable aurait été remplacer une ligne facile à viser par une cible qui
+            // ne l'est pas.
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityElement(children: .combine)
     }
 
     /// Only when a program/course-libre goal is actually current — recovery and choice phases
@@ -176,7 +214,7 @@ struct ProfileView: View {
     private var avatarButton: some View {
         PhotosPicker(selection: $avatarPickerItem, matching: .images) {
             ZStack(alignment: .bottomTrailing) {
-                AvatarView(imageData: profile.avatarImageData, initial: String(profile.name.prefix(1)), size: 52)
+                AvatarView(imageData: profile.avatarImageData, initial: String(profile.name.prefix(1)), size: 88)
                     .opacity(isSavingAvatar ? 0.5 : 1)
                     // `.profil-avatar-ring` : un liseré dégradé, détaché de la photo par un
                     // interstice, autour de MA photo uniquement. C'est le seul avatar « moi » de
@@ -193,10 +231,14 @@ struct ProfileView: View {
                     // A small pencil badge is what actually tells her the avatar is
                     // tappable — a plain circle with no affordance reads as decoration.
                     Image(systemName: "pencil.circle.fill")
-                        .font(.system(size: 16))
+                        .font(.system(size: 22))
                         .foregroundColor(.white)
                         .background(RUColor.rose, in: Circle())
-                        .offset(x: 2, y: 2)
+                        // Le cercle de fond du symbole déborde du disque de la photo : un liseré
+                        // de la couleur de la page le détache, sinon le crayon se lit comme une
+                        // entaille dans l'anneau.
+                        .overlay(Circle().strokeBorder(RUColor.bg, lineWidth: 2))
+                        .offset(x: 1, y: 1)
                 }
             }
         }

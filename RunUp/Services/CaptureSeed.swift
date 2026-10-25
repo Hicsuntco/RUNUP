@@ -178,7 +178,7 @@ enum CaptureSeed {
           "club": { "id": "demo", "name": "Les Foulées du Canal", "memberCount": 18, "isOpen": true, "isOwner": false },
           "leaderboard": [
             { "id": "1", "name": "Charlotte", "xp": 4180, "rank": 1, "isMe": true,
-              "bio": "Objectif 10 km sous 47:30", "joinedAt": "\(ilYAJours(214))",
+              "bio": "Je cours le matin, avant que la ville se réveille.", "joinedAt": "\(ilYAJours(214))",
               "activitiesCount": 16, "badgeKeys": ["firstRun", "tenRuns", "streak7", "distance50"] },
             { "id": "2", "name": "Inès", "xp": 3940, "rank": 2, "isMe": false,
               "joinedAt": "\(ilYAJours(301))", "activitiesCount": 14,
@@ -405,7 +405,8 @@ enum CaptureSeed {
         // Le XP est celui du profil et celui du classement : trois nombres identiques, trois
         // endroits, et c'est la seule capture où l'incohérence se verrait d'un coup d'œil.
         etat.auth.poserUneSessionDeDemonstration(
-            AuthenticatedUser(id: "1", name: "Charlotte", xpTotal: 4_180, lastName: "Perret")
+            AuthenticatedUser(id: "1", name: "Charlotte", xpTotal: 4_180, lastName: "Perret",
+                              username: "charlotte")
         )
     }
 

@@ -511,8 +511,14 @@ struct ClubService {
     ///
     /// `scope` restreint — « tout », « club », « amis », « courses ». Il ne sert pas à TROUVER
     /// (c'est le travail du fil complet) mais à répondre à une question précise.
-    func fetchWall(scope: String = "tout") async throws -> WallPage {
-        try await send(path: "api/activities/wall", method: "GET", query: ["scope": scope])
+    ///
+    /// `avant` est la date de la DERNIÈRE entrée déjà affichée — sortie ou message de course,
+    /// peu importe : le serveur applique le même curseur aux deux sources, donc repartir de la
+    /// plus ancienne des deux ne saute rien. Nil demande la première page.
+    func fetchWall(scope: String = "tout", avant: Date? = nil) async throws -> WallPage {
+        var query = ["scope": scope]
+        if let avant { query["before"] = ISO8601DateFormatter().string(from: avant) }
+        return try await send(path: "api/activities/wall", method: "GET", query: query)
     }
 
     func fetchFeed() async throws -> [FeedItem] {
@@ -1050,6 +1056,15 @@ private struct FeedResponse: Decodable {
 struct WallPage: Decodable {
     var items: [FeedItem]
     var racePosts: [WallRacePost]
+    /// Vrai quand les DEUX sources sont épuisées. Une page vide de sorties ne suffit pas à
+    /// conclure : elle peut encore porter deux messages de course.
+    ///
+    /// OPTIONNEL, ET PAS « = false » : Swift synthétise `decode` pour toute propriété non
+    /// optionnelle, valeur par défaut ou non (voir ci_scripts/check_decodage.py). Un serveur
+    /// pas encore déployé ne renvoie pas la clé, et le fil entier échouerait à se décoder pour
+    /// un drapeau de pagination. Nil se lit « on ne sait pas » : on redemande une page pour
+    /// rien, une fois, plutôt que de ne plus rien afficher du tout.
+    var fin: Bool?
 }
 
 /// Un message d'une page de course, tel qu'il apparaît dans le mur : il porte le NOM de sa course,

@@ -21091,6 +21091,23 @@
         }
       }
     },
+    "Répondre à %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reply to %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responder a %@"
+          }
+        }
+      }
+    },
     "Réponse à %@": {
       "extractionState": "manual",
       "localizations": {

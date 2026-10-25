@@ -657,16 +657,31 @@ struct RacePageView: View {
                 .accessibilityLabel(message.kudoedByMe ? "Retirer ton applaudissement" : "Applaudir ce message")
                 .accessibilityValue("\(message.kudos)")
 
+                // LA MÊME BULLE QUE DANS LE FIL, AVEC LE MÊME COMPTE.
+                //
+                // C'était le mot « Répondre », en rose, à côté d'une main grise : deux formes et
+                // deux poids pour deux actions jumelles, et un post qui ne se lisait pas comme
+                // ceux du fil alors qu'il en est un. L'icône dit la même chose, le nombre dit en
+                // plus s'il y a déjà une conversation — ce que le mot ne disait pas.
                 Button(action: {
                     reponseA = message
                     brouillon = ""
                 }) {
-                    Text("Répondre")
-                        .font(RUFont.sans(.body, weight: .semibold))
-                        .foregroundColor(RUColor.rose2)
-                        .frame(minHeight: 44)
+                    HStack(spacing: 7) {
+                        Image(systemName: "bubble.right")
+                            .font(.system(size: 15, weight: .regular))
+                        let reponsesCount = reponses(a: message).count
+                        if reponsesCount > 0 {
+                            Text("\(reponsesCount)")
+                                .font(RUFont.sans(.body, weight: .semibold))
+                        }
+                    }
+                    .foregroundColor(RUColor.text2)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(PressableStyle())
+                .accessibilityLabel(String(localized: "Répondre à \(message.author.name)"))
 
                 Spacer(minLength: 0)
             }
@@ -683,10 +698,10 @@ struct RacePageView: View {
                 Button(action: { appState.ouvrirLeProfil(message.author.id) }) {
                     HStack(spacing: 8) {
                         AvatarView(urlString: message.author.avatarUrl, base64DataURI: message.author.avatarBase64,
-                                   initial: String(message.author.name.prefix(1)), size: 26, seed: message.author.id)
+                                   initial: String(message.author.name.prefix(1)), size: 32, seed: message.author.id)
                         VStack(alignment: .leading, spacing: 1) {
                             Text(message.author.name)
-                                .font(RUFont.sans(.body, weight: .semibold))
+                                .font(RUFont.sans(.label, weight: .bold))
                                 .foregroundColor(RUColor.textPrimary)
                             Text(message.createdAt.relativeDescription)
                                 .font(RUFont.sans(.small))

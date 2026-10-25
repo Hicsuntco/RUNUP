@@ -26,6 +26,11 @@ struct WallView: View {
     @State private var loadError: String?
     @State private var filtre: Filtre = .tout
     @State private var revealed = false
+    /// Le défilement sans fin. `finDuFil` s'allume quand le serveur dit que les deux sources
+    /// sont épuisées ; `chargementEnPlus` empêche deux demandes de partir pour la même fin de
+    /// liste — la dernière ligne peut réapparaître plusieurs fois pendant un défilement rapide.
+    @State private var chargementEnPlus = false
+    @State private var finDuFil = false
 
     // Ce que les cartes ouvrent.
     @State private var commentsFor: FeedItem?
@@ -97,6 +102,7 @@ struct WallView: View {
                     videHonnete
                 } else {
                     ForEach(Array(entrees.enumerated()), id: \.element.id) { index, entree in
+                      Group {
                         switch entree {
                         case .sortie(let item):
                             ActivityFeedRow(
@@ -132,6 +138,20 @@ struct WallView: View {
                             }
                             .padding(.bottom, 16)
                         }
+                      }
+                      // TROIS AVANT LA FIN, PAS À LA FIN. Déclencher sur la dernière ligne fait
+                      // toucher le bas avant que la suite n'arrive : le fil s'arrête une demi-
+                      // seconde à chaque page, et c'est exactement ce qui distingue un vrai fil
+                      // d'une liste qui se recharge.
+                      .onAppear {
+                          if index >= entrees.count - 3 { Task { await chargerLaSuite() } }
+                      }
+                    }
+
+                    if chargementEnPlus {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 24)
                     }
                 }
             }
@@ -142,7 +162,10 @@ struct WallView: View {
         .background(RUColor.pageBackground)
         .task { if page == nil { await charger() } }
         .refreshable { await charger() }
-        .onChange(of: filtre) { _, _ in Task { await charger() } }
+        .onChange(of: filtre) { _, _ in
+            finDuFil = false
+            Task { await charger() }
+        }
         .sheet(item: $commentsFor) { item in
             ActivityCommentsSheet(
                 activity: item,
@@ -348,7 +371,9 @@ struct WallView: View {
             return
         }
         do {
-            page = try await clubService.fetchWall(scope: filtre.rawValue)
+            let recue = try await clubService.fetchWall(scope: filtre.rawValue)
+            page = recue
+            finDuFil = recue.fin ?? false
             // L'apparition en cascade des cartes ne joue qu'une fois : la rejouer à chaque
             // rechargement ferait clignoter un fil qu'on vient de tirer vers le bas.
             if !revealed {
@@ -358,6 +383,44 @@ struct WallView: View {
             loadError = PanneReseau.motif(pour: error)
         }
         isLoading = false
+    }
+
+    /// LA PAGE SUIVANTE.
+    ///
+    /// Elle part de la date de la dernière entrée AFFICHÉE — pas de la dernière sortie ni du
+    /// dernier message de course pris séparément : les deux listes sont entrelacées à l'écran,
+    /// et c'est cet entrelacement qui dit où l'on en est.
+    private func chargerLaSuite() async {
+        guard !chargementEnPlus, !finDuFil, !isLoading, !Demonstration.enCours,
+              let derniere = entrees.last?.date else { return }
+        chargementEnPlus = true
+        defer { chargementEnPlus = false }
+        do {
+            let suite = try await clubService.fetchWall(scope: filtre.rawValue, avant: derniere)
+            // Le serveur filtre déjà par date stricte, mais une entrée déjà présente coûterait
+            // un doublon visible et un identifiant répété dans le `ForEach` : on s'en assure ici.
+            let connues = Set((page?.items ?? []).map(\.id))
+            let connuesCourses = Set((page?.racePosts ?? []).map(\.id))
+            let nouvelles = suite.items.filter { !connues.contains($0.id) }
+            let nouvellesCourses = suite.racePosts.filter { !connuesCourses.contains($0.id) }
+            page?.items.append(contentsOf: nouvelles)
+            page?.racePosts.append(contentsOf: nouvellesCourses)
+            // CE QUI S'EST AJOUTÉ, PAS CE QUI EST ARRIVÉ.
+            //
+            // Un serveur qui ne connaît pas encore `before` rend la MÊME première page : cinquante
+            // sorties, toutes déjà là. Conclure sur `suite.items.isEmpty` la déclarerait pleine et
+            // la dernière ligne redemanderait cette page à chaque réapparition, indéfiniment.
+            // Zéro entrée ajoutée veut dire la même chose dans les deux cas : il n'y a plus rien
+            // après, ou le serveur ne sait pas aller plus loin. Dans les deux, on s'arrête.
+            //
+            // Zéro ajout l'emporte même sur un `fin: false` du serveur : si le curseur ne fait
+            // plus avancer la liste, redemander ne la fera pas avancer non plus.
+            finDuFil = (nouvelles.isEmpty && nouvellesCourses.isEmpty) || (suite.fin ?? false)
+        } catch {
+            // Silencieux, et c'est voulu : la page déjà affichée reste juste. Une bannière
+            // d'erreur en bas d'un fil qu'on fait défiler rapidement serait du bruit pour une
+            // panne que le prochain geste réessaiera de toute façon.
+        }
     }
 
     private func applaudir(_ item: FeedItem) async {

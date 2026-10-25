@@ -19,6 +19,10 @@ import SwiftUI
 /// pas devenir le trou laissé par une image absente.
 struct ActivityFeedRow: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// L'éclat du double-tape. Local à la carte : deux posts applaudis coup sur coup doivent
+    /// pouvoir s'animer chacun chez soi.
+    @State private var eclat = false
     var item: FeedItem
     var isMine: Bool
     var revealed: Bool
@@ -89,6 +93,12 @@ struct ActivityFeedRow: View {
                 }
 
                 media
+                    // LE DOUBLE-TAPE SUR L'IMAGE : le geste par lequel on aime, partout, depuis
+                    // dix ans. Il n'enlève jamais un applaudissement — sur Instagram comme ici,
+                    // double-taper une photo déjà aimée ne la dés-aime pas : ce serait punir
+                    // l'enthousiasme. Le bouton applaudir reste le seul chemin pour retirer.
+                    .overlay { eclatDApplaudissement }
+                    .onTapGesture(count: 2) { applaudirParDoubleTape() }
 
                 // La phrase de la sortie : « a couru 12,4 km · Sortie longue ».
                 Text(item.localizedText)
@@ -200,6 +210,43 @@ struct ActivityFeedRow: View {
         }
         .accessibilityElement()
         .accessibilityLabel(String(localized: "Photo de la sortie"))
+    }
+
+    /// La main qui s'ouvre au centre de l'image, une demi-seconde. Sans elle, un double-tape
+    /// réussi ne se distingue pas d'un double-tape manqué : le compteur bouge de un, sous le pli,
+    /// là où le doigt vient de passer.
+    private var eclatDApplaudissement: some View {
+        Image(systemName: "hands.clap.fill")
+            .font(.system(size: 72))
+            .foregroundStyle(.white)
+            .shadow(color: .black.opacity(0.35), radius: 14)
+            .scaleEffect(eclat ? 1 : 0.5)
+            .opacity(eclat ? 1 : 0)
+            .allowsHitTesting(false)
+    }
+
+    private func applaudirParDoubleTape() {
+        guard !item.kudoedByMe else {
+            // Déjà applaudi : on ne fait rien côté serveur, mais la main repasse quand même.
+            // Un geste qui ne répond pas se lit comme un geste qui n'a pas été vu.
+            jouerLEclat()
+            return
+        }
+        onKudos()
+        Haptics.impact(.light)
+        jouerLEclat()
+    }
+
+    private func jouerLEclat() {
+        // Sous « Réduire les animations », l'éclat apparaît et disparaît sans ressort : le geste
+        // garde son accusé de réception, c'est le rebond qui part.
+        let entree: Animation = reduceMotion ? .easeOut(duration: 0.12)
+                                             : .spring(response: 0.28, dampingFraction: 0.5)
+        withAnimation(entree) { eclat = true }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(480))
+            withAnimation(.easeOut(duration: 0.22)) { eclat = false }
+        }
     }
 
     /// Le tracé, quand il n'y a pas de photo. Le fond reste sombre dans les DEUX thèmes,

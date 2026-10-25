@@ -306,6 +306,19 @@ async function handleWall(req, res, userId, porteeForcee) {
   const demandee = porteeForcee || (typeof req.query.scope === 'string' ? req.query.scope : 'tout');
   const portee = ['tout', 'club', 'amis', 'courses'].includes(demandee) ? demandee : 'tout';
 
+  // LE CURSEUR. Un fil qui s'arrête au cinquantième n'est pas un fil, c'est une page.
+  //
+  // Pagination par CLÉ, pas par décalage : `OFFSET 50` relit les cinquante premières lignes à
+  // chaque page et, surtout, décale tout d'un cran dès qu'une sortie est publiée pendant qu'on
+  // fait défiler — on reverrait la même carte deux fois. Un curseur sur la date ne bouge pas.
+  //
+  // Les deux requêtes ci-dessous partagent le MÊME curseur, et l'app repart de la date de la
+  // dernière entrée affichée, quelle que soit sa nature : rien ne se saute, rien ne se répète.
+  // Deux lignes à la microseconde près identiques seraient le seul cas où l'une des deux se
+  // perdrait ; `created_at` est un timestamptz, ça ne s'est jamais produit.
+  const brut = typeof req.query.before === 'string' ? req.query.before : null;
+  const avant = brut && !Number.isNaN(Date.parse(brut)) ? new Date(brut).toISOString() : null;
+
   const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
   const clubId = memberRows[0]?.club_id || null;
 
@@ -363,8 +376,9 @@ async function handleWall(req, res, userId, porteeForcee) {
           )
       AND a.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
       AND a.user_id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
+      AND (${avant}::timestamptz IS NULL OR a.created_at < ${avant}::timestamptz)
     ORDER BY a.created_at DESC
-    LIMIT 50
+    LIMIT ${PAGE_DU_FIL}
   `).rows;
 
   // Ce qui s'écrit sur les pages des courses QUE JE PRÉPARE. Pas toutes les courses : un mur
@@ -385,11 +399,15 @@ async function handleWall(req, res, userId, porteeForcee) {
       AND p.user_id <> ${userId}
       AND p.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
       AND p.user_id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
+      AND (${avant}::timestamptz IS NULL OR p.created_at < ${avant}::timestamptz)
     ORDER BY p.created_at DESC
-    LIMIT 25
+    LIMIT ${PAGE_DES_COURSES}
   `;
 
   res.status(200).json({
+    // « Il n'y a plus rien après » ne se devine pas d'une page vide : une page peut ne rendre
+    // aucune sortie et deux messages de course. Les deux requêtes doivent être épuisées.
+    fin: rows.length < PAGE_DU_FIL && messagesDeCourse.length < PAGE_DES_COURSES,
     racePosts: messagesDeCourse.map((r) => ({
       id: r.id,
       raceId: r.race_id,
@@ -588,6 +606,11 @@ const MAX_PREVIEW_POINTS = 32;
 // serré pour un client trafiqué : chaque publication est une écriture JSONB non triviale.
 const MAX_ROUTES_PER_DAY = 10;
 const ROUTES_PAGE_SIZE = 50;
+
+// Une page du fil. 50 sorties et 25 messages de course par appel : assez pour que le défilement
+// ne reparte pas chercher tous les trois posts, assez peu pour que la première page arrive vite.
+const PAGE_DU_FIL = 50;
+const PAGE_DES_COURSES = 25;
 
 function coerceNumber(value, { min, max }) {
   const n = Number(value);

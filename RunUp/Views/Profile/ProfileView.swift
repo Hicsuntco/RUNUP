@@ -214,7 +214,13 @@ struct ProfileView: View {
     private var avatarButton: some View {
         PhotosPicker(selection: $avatarPickerItem, matching: .images) {
             ZStack(alignment: .bottomTrailing) {
-                AvatarView(imageData: profile.avatarImageData, initial: String(profile.name.prefix(1)), size: 88)
+                // `useGradient: false` : À 88 POINTS, L'APLAT DE DÉGRADÉ N'EST PLUS UN AVATAR, C'EST UN
+                // BLOC DE COULEUR. À 52 il passait ; agrandi, il redevenait le plus gros objet rose
+                // de l'app juste après qu'on en ait retiré partout ailleurs. La branche pâle —
+                // teinte à 16 % et initiale colorée — est celle que la maquette a adoptée en v4,
+                // et elle a la forme d'une photo au lieu d'en tenir la place.
+                AvatarView(imageData: profile.avatarImageData, initial: String(profile.name.prefix(1)),
+                           size: 88, useGradient: false)
                     .opacity(isSavingAvatar ? 0.5 : 1)
                     // `.profil-avatar-ring` : un liseré dégradé, détaché de la photo par un
                     // interstice, autour de MA photo uniquement. C'est le seul avatar « moi » de
@@ -666,7 +672,9 @@ struct ProfileView: View {
                 })
 
             tuileSociale(
-                icone: "trophy.fill", teinte: RUColor.rose, degrade: true,
+                // Deux tuiles sur quatre en aplat plein et deux en teinte pâle : la grille
+                // disait une hiérarchie qui n'existe pas. Les quatre destinations se valent.
+                icone: "trophy.fill", teinte: RUColor.rose,
                 titre: String(localized: "Running Club"), ligne: ligneDuClub,
                 action: { appState.go(.club) })
 

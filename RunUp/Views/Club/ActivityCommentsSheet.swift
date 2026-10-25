@@ -6,6 +6,7 @@ import SwiftUI
 /// only calls back into it, same split as `ClubManagementView`.
 struct ActivityCommentsSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppState.self) private var appState
     var activity: FeedItem
     var currentUserId: String?
     var clubService: ClubService
@@ -63,10 +64,26 @@ struct ActivityCommentsSheet: View {
 
     private func commentRow(_ comment: CommentItem) -> some View {
         HStack(alignment: .top, spacing: 10) {
-            AvatarView(urlString: comment.avatarUrl, base64DataURI: comment.avatarBase64, initial: String(comment.name.prefix(1)), size: 28, seed: comment.userId == currentUserId ? nil : comment.userId)
+            // La photo et le nom mènent à la personne ; le TEXTE du commentaire, non — on doit
+            // pouvoir le sélectionner et le relire sans changer d'écran.
+            //
+            // La page s'ouvre PAR-DESSUS cette feuille, qui reste en dessous : on revient dans la
+            // conversation en refermant, à l'endroit où on l'avait laissée.
+            let moi = comment.userId == currentUserId
+            Button(action: { if !moi { appState.ouvrirLeProfil(comment.userId) } }) {
+                AvatarView(urlString: comment.avatarUrl, base64DataURI: comment.avatarBase64, initial: String(comment.name.prefix(1)), size: 28, seed: moi ? nil : comment.userId)
+            }
+            .buttonStyle(PressableStyle())
+            .disabled(moi)
+            .accessibilityLabel(moi ? comment.name : String(localized: "Voir le profil de \(comment.name)"))
+
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
-                    Text(comment.name).font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                    Button(action: { if !moi { appState.ouvrirLeProfil(comment.userId) } }) {
+                        Text(comment.name).font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                    }
+                    .buttonStyle(PressableStyle())
+                    .disabled(moi)
                     Text(comment.createdAt.relativeDescription).font(RUFont.sans(.micro)).foregroundColor(RUColor.text3)
                 }
                 Text(comment.text).font(RUFont.sans(.label)).foregroundColor(RUColor.text2).lineSpacing(2)

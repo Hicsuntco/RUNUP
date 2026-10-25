@@ -989,6 +989,7 @@ struct ClubView: View {
     }
 
     private func weekRow(_ entry: WeeklyRow, displayRank: Int) -> some View {
+        Button(action: { if !entry.isMe { appState.ouvrirLeProfil(entry.id) } }) {
         HStack(spacing: 12) {
             Text(displayRank >= 1 && displayRank <= 3 ? ["🥇", "🥈", "🥉"][displayRank - 1] : "\(displayRank)")
                 .displayStyle(15)
@@ -1016,6 +1017,9 @@ struct ClubView: View {
         .padding(.vertical, 11)
         .background(entry.isMe ? RUColor.rose.opacity(0.09) : Color.clear, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
         .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableStyle())
+        .disabled(entry.isMe)
     }
 
     /// A compact progress ring + percentage, replacing the raw-km number in "% objectif" mode —
@@ -1052,7 +1056,15 @@ struct ClubView: View {
         }
     }
 
+    /// TOUTE LA LIGNE OUVRE LA PAGE DU MEMBRE, et c'est un `Button` et non un `onTapGesture`.
+    ///
+    /// La nuance a déjà coûté un défaut dans ce fichier : une bande qui défile, un geste de tape
+    /// posé dessus, et taper pour arrêter l'inertie du défilement déclenchait l'action. Un
+    /// `Button` placé dans une vue défilante ne répond pas à la tape qui arrête la décélération ;
+    /// un `onTapGesture`, si. Sur un classement qu'on fait défiler, c'est la différence entre
+    /// « j'ai arrêté la liste » et « je me retrouve sur le profil de quelqu'un ».
     private func generalRow(_ entry: LeaderboardRow) -> some View {
+        Button(action: { if !entry.isMe { appState.ouvrirLeProfil(entry.id) } }) {
         HStack(spacing: 12) {
             Text(entry.rank >= 1 && entry.rank <= 3 ? ["🥇", "🥈", "🥉"][entry.rank - 1] : "\(entry.rank)")
                 .displayStyle(15)
@@ -1072,6 +1084,11 @@ struct ClubView: View {
         .padding(.vertical, 11)
         .background(entry.isMe ? RUColor.rose.opacity(0.09) : Color.clear, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
         .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableStyle())
+        // Sa propre ligne ne mène nulle part : on est déjà à un onglet de son profil, et un
+        // aller-retour vers soi-même n'apprend rien.
+        .disabled(entry.isMe)
         .contextMenu {
             if !entry.isMe {
                 Button("Signaler \(entry.name)") {

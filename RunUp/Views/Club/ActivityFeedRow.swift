@@ -18,6 +18,7 @@ import SwiftUI
 /// composition d'origine : en-tête, phrase, rangée de chiffres. Elle doit rester bonne à regarder,
 /// pas devenir le trou laissé par une image absente.
 struct ActivityFeedRow: View {
+    @Environment(AppState.self) private var appState
     var item: FeedItem
     var isMine: Bool
     var revealed: Bool
@@ -182,20 +183,31 @@ struct ActivityFeedRow: View {
 
     // MARK: - Pièces communes
 
+    /// TOUT LE BLOC D'IDENTITÉ OUVRE LA PAGE DE LA PERSONNE — photo, nom et heure ensemble.
+    ///
+    /// Viser le seul nom serait une cible de la largeur d'un mot au milieu d'une carte ; et c'est
+    /// la photo qu'on vise spontanément. Sur sa propre sortie, rien ne s'ouvre : on est déjà à
+    /// deux onglets de son profil, et un aller-retour vers soi-même n'apprend rien.
     private func author(onDark: Bool) -> some View {
-        HStack(spacing: 9) {
-            AvatarView(urlString: item.avatarUrl, base64DataURI: item.avatarBase64,
-                       initial: String(item.name.prefix(1)), size: 32, seed: isMine ? nil : item.userId)
-            VStack(alignment: .leading, spacing: 1) {
-                Text(item.name)
-                    .font(RUFont.sans(.label, weight: .bold))
-                    .foregroundColor(onDark ? .white : RUColor.textPrimary)
-                    .lineLimit(1).minimumScaleFactor(0.8)
-                Text(timeLine)
-                    .font(RUFont.sans(.small))
-                    .foregroundColor(onDark ? .white.opacity(0.7) : RUColor.text3)
+        Button(action: { if !isMine { appState.ouvrirLeProfil(item.userId) } }) {
+            HStack(spacing: 9) {
+                AvatarView(urlString: item.avatarUrl, base64DataURI: item.avatarBase64,
+                           initial: String(item.name.prefix(1)), size: 32, seed: isMine ? nil : item.userId)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(item.name)
+                        .font(RUFont.sans(.label, weight: .bold))
+                        .foregroundColor(onDark ? .white : RUColor.textPrimary)
+                        .lineLimit(1).minimumScaleFactor(0.8)
+                    Text(timeLine)
+                        .font(RUFont.sans(.small))
+                        .foregroundColor(onDark ? .white.opacity(0.7) : RUColor.text3)
+                }
             }
+            .contentShape(Rectangle())
         }
+        .buttonStyle(PressableStyle())
+        .disabled(isMine)
+        .accessibilityLabel(isMine ? item.name : String(localized: "Voir le profil de \(item.name)"))
     }
 
     /// « il y a 2 h », et « · modifié » dès qu'un texte a changé.

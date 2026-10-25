@@ -426,24 +426,35 @@ struct FriendsView: View {
     /// rien à expliquer, c'est la question posée qui l'explique.
     private func personRow<Trailing: View>(_ user: PublicUser, detail: String? = nil, @ViewBuilder trailing: () -> Trailing) -> some View {
         HStack(spacing: 12) {
-            AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 34, seed: user.id)
-            VStack(alignment: .leading, spacing: 1) {
-                HStack(spacing: 4) {
-                    Text(user.lastName.map { "\(user.name) \($0)" } ?? user.name)
-                        .font(RUFont.sans(.label, weight: .medium)).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
-                    if user.isPrivate {
-                        Image(systemName: "lock.fill").font(.system(size: 9)).foregroundColor(RUColor.text3)
+            // La photo et le nom ouvrent la page de la personne ; le bouton de droite garde son
+            // geste à lui. C'est la répartition de Strava et d'Instagram : le bloc d'identité
+            // mène à la personne, l'action reste une action.
+            Button(action: { appState.ouvrirLeProfil(user.id) }) {
+                HStack(spacing: 12) {
+                    AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 34, seed: user.id)
+                    VStack(alignment: .leading, spacing: 1) {
+                        HStack(spacing: 4) {
+                            Text(user.lastName.map { "\(user.name) \($0)" } ?? user.name)
+                                .font(RUFont.sans(.label, weight: .medium)).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
+                            if user.isPrivate {
+                                Image(systemName: "lock.fill").font(.system(size: 9)).foregroundColor(RUColor.text3)
+                            }
+                        }
+                        if let username = user.username {
+                            Text("@\(username)").font(RUFont.mono(10.5)).foregroundColor(RUColor.text3)
+                        } else if let detail {
+                            // Sous le nom, à la place du pseudo quand il n'y en a pas : la raison
+                            // compte moins qu'un identifiant, elle ne lui prend pas sa place.
+                            Text(detail).font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                        }
                     }
+                    Spacer(minLength: 8)
                 }
-                if let username = user.username {
-                    Text("@\(username)").font(RUFont.mono(10.5)).foregroundColor(RUColor.text3)
-                } else if let detail {
-                    // Sous le nom, à la place du pseudo quand il n'y en a pas : la raison compte
-                    // moins qu'un identifiant, elle ne lui prend pas sa place.
-                    Text(detail).font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
-                }
+                .contentShape(Rectangle())
             }
-            Spacer(minLength: 8)
+            .buttonStyle(PressableStyle())
+            .accessibilityLabel(String(localized: "Voir le profil de \(user.name)"))
+
             trailing()
         }
         .padding(.horizontal, 13).padding(.vertical, 10)

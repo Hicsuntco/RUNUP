@@ -88,6 +88,28 @@ final class AppState {
     /// Et pour les pages de course — ouvert aussi bien par la carte « Courses » du Profil que par
     /// l'écran de l'objectif, qui propose d'aller voir qui prépare la même.
     var openRacesTabOnNextVisit = false
+
+    /// LA PAGE DE QUELQU'UN, OUVRABLE DE PARTOUT.
+    ///
+    /// Posée ici plutôt que dans chaque écran, et c'est ce qui permet à « chaque nom est une
+    /// porte » d'être vrai : un nom apparaît au fil, au classement, sur une page de course, sous
+    /// un commentaire, dans une liste d'abonnés. Demander à chacun de ces écrans de porter sa
+    /// propre présentation, c'est accepter qu'un sur six l'oublie — et c'est toujours celui-là
+    /// qu'on remarque. La présentation vit à la racine (voir `ContentRouterView`), les écrans se
+    /// contentent d'appeler `ouvrirLeProfil`.
+    var profilOuvert: ProfilOuvert?
+
+    /// `fullScreenCover(item:)` demande un `Identifiable` ; un identifiant de compte est une
+    /// chaîne. Ce minuscule emballage évite de poser un `Identifiable` sur `String`, ce qui
+    /// vaudrait pour toute l'app.
+    struct ProfilOuvert: Identifiable, Hashable {
+        var id: String
+    }
+
+    func ouvrirLeProfil(_ userId: String) {
+        guard !userId.isEmpty else { return }
+        profilOuvert = ProfilOuvert(id: userId)
+    }
     /// Phone↔watch bridge — receives runs finished on the wrist, mirrors today's session out.
     /// Optional only because it needs `self` (created at the end of `init`); never nil after.
     @ObservationIgnored private(set) var watchSession: WatchSessionService?

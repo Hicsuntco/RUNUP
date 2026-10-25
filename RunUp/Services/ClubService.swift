@@ -733,6 +733,13 @@ struct ClubService {
     /// La meilleure recherche est celle qu'on n'a pas à taper. L'écran affichait « Personne à
     /// suivre pour l'instant » et un champ de recherche à quelqu'un dont le club était plein de
     /// gens à suivre : le serveur savait déjà qui proposer, personne ne le lui demandait.
+    /// La page de quelqu'un : qui elle est, ses chiffres, ses badges, et ses dernières sorties
+    /// quand elle les laisse voir. Un compte bloqué d'un côté ou de l'autre rend 404, exprès
+    /// indistinguable d'un compte qui n'existe pas.
+    func fetchProfile(userId: String) async throws -> PublicProfilePage {
+        try await send(path: "api/friends/profile", method: "GET", query: ["userId": userId])
+    }
+
     func suggestions() async throws -> [PublicUser] {
         let response: PublicUserListResponse = try await send(path: "api/friends/suggestions", method: "GET")
         return response.items

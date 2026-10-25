@@ -371,15 +371,24 @@ struct RacePageView: View {
 
     private func ligneDeCoureur(_ coureur: RaceRunner) -> some View {
         HStack(alignment: .top, spacing: 11) {
-            AvatarView(urlString: coureur.avatarUrl, base64DataURI: coureur.avatarBase64,
-                       initial: String(coureur.nomComplet.prefix(1)), size: 36, seed: coureur.id)
+            Button(action: { appState.ouvrirLeProfil(coureur.id) }) {
+                AvatarView(urlString: coureur.avatarUrl, base64DataURI: coureur.avatarBase64,
+                           initial: String(coureur.nomComplet.prefix(1)), size: 36, seed: coureur.id)
+            }
+            .buttonStyle(PressableStyle())
+            .accessibilityLabel(String(localized: "Voir le profil de \(coureur.nomComplet)"))
 
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
-                    Text(coureur.nomComplet)
-                        .font(RUFont.sans(.label, weight: .semibold))
-                        .foregroundColor(RUColor.textPrimary)
-                        .lineLimit(1)
+                    // Un nom est une porte. Avant, c'était du texte mort : on voyait que quelqu'un
+                    // préparait la même course sans pouvoir regarder qui c'était.
+                    Button(action: { appState.ouvrirLeProfil(coureur.id) }) {
+                        Text(coureur.nomComplet)
+                            .font(RUFont.sans(.label, weight: .semibold))
+                            .foregroundColor(RUColor.textPrimary)
+                            .lineLimit(1)
+                    }
+                    .buttonStyle(PressableStyle())
                     if coureur.lookingForPartner {
                         Text("cherche quelqu'un")
                             .font(RUFont.sans(.small, weight: .bold))
@@ -598,16 +607,26 @@ struct RacePageView: View {
     private func messageEnTete(_ message: RacePost) -> some View {
         VStack(alignment: .leading, spacing: 5) {
             HStack(spacing: 8) {
-                AvatarView(urlString: message.author.avatarUrl, base64DataURI: message.author.avatarBase64,
-                           initial: String(message.author.name.prefix(1)), size: 26, seed: message.author.id)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(message.author.name)
-                        .font(RUFont.sans(.body, weight: .semibold))
-                        .foregroundColor(RUColor.textPrimary)
-                    Text(message.createdAt.relativeDescription)
-                        .font(RUFont.sans(.small))
-                        .foregroundColor(RUColor.text3)
+                // Tout le bloc d'identité ouvre la page de la personne — la photo, le nom et
+                // l'heure ensemble, comme partout ailleurs. Viser un mot de huit caractères
+                // serait une cible de 30 points de large au milieu d'une ligne.
+                Button(action: { appState.ouvrirLeProfil(message.author.id) }) {
+                    HStack(spacing: 8) {
+                        AvatarView(urlString: message.author.avatarUrl, base64DataURI: message.author.avatarBase64,
+                                   initial: String(message.author.name.prefix(1)), size: 26, seed: message.author.id)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(message.author.name)
+                                .font(RUFont.sans(.body, weight: .semibold))
+                                .foregroundColor(RUColor.textPrimary)
+                            Text(message.createdAt.relativeDescription)
+                                .font(RUFont.sans(.small))
+                                .foregroundColor(RUColor.text3)
+                        }
+                    }
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(PressableStyle())
+                .accessibilityLabel(String(localized: "Voir le profil de \(message.author.name)"))
                 Spacer(minLength: 0)
                 if message.kind != "message" {
                     Text(Self.libelleDuGenre(message.kind))

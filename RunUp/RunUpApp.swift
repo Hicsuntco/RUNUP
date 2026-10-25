@@ -235,6 +235,21 @@ private struct ContentRouterView: View {
         .fullScreenCover(isPresented: $showIntro) {
             PaywallView(subscriptions: subscriptions, onClose: { showIntro = false })
         }
+        // LA PAGE DE QUELQU'UN, POSÉE UNE SEULE FOIS POUR TOUTE L'APP.
+        //
+        // Un nom apparaît au fil, au classement du club, sur une page de course, sous un
+        // commentaire, dans une liste d'abonnés. Demander à chacun de ces écrans de porter sa
+        // propre présentation, c'est accepter qu'un sur six l'oublie — et c'est toujours celui-là
+        // qu'on remarque. Ici, ils se contentent d'appeler `appState.ouvrirLeProfil(id)`.
+        //
+        // Plein écran et non feuille : c'est une destination, pas une parenthèse — la même raison
+        // que pour la page d'une course.
+        .fullScreenCover(item: Binding(
+            get: { appState.profilOuvert },
+            set: { appState.profilOuvert = $0 }
+        )) { ouvert in
+            PublicProfileView(userId: ouvert.id)
+        }
         .onChange(of: appState.profile.onboarded) { _, onboarded in
             guard onboarded, !introShown else { return }
             introShown = true

@@ -1,6 +1,12 @@
-// Real friends/follow graph, independent of clubs — search | follow | unfollow | respond |
-// removeFollower | list | feed | setPrivate | updateProfile. Consolidated into one dynamic
-// route, same pattern as api/clubs/[action].js and api/activities/[action].js.
+// Real friends/follow graph, independent of clubs — search | profile | follow | unfollow |
+// respond | removeFollower | list | feed | setPrivate | updateProfile. Consolidated into one
+// dynamic route, same pattern as api/clubs/[action].js and api/activities/[action].js.
+//
+// `profile` VIT ICI PLUTÔT QUE DANS UNE ROUTE À LUI, et pas seulement par goût du rangement :
+// le plan Vercel du projet plafonne à douze fonctions serverless, et `api/` en compte déjà
+// douze. Une treizième ferait échouer le déploiement entier — donc une fonctionnalité de plus
+// se range dans la route dont elle relève, ce qui est ici le bon endroit de toute façon : une
+// page de profil est une question du graphe d'abonnements.
 const { sql } = require('../../lib/db');
 const { requireAuth } = require('../../lib/auth');
 const { withErrorHandling, isUuid } = require('../../lib/http');
@@ -23,6 +29,9 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'search':
       if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
       return handleSearch(req, res, userId);
+    case 'profile':
+      if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleProfile(req, res, userId);
     case 'suggestions':
       if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
       return handleSuggestions(req, res, userId);
@@ -481,6 +490,116 @@ async function handleFeed(req, res, userId) {
       kudoedByMe: r.kudoed_by_me,
       commentsCount: r.comments_count,
     })),
+  });
+}
+
+// --- LA PAGE DE QUELQU'UN -------------------------------------------------------------------
+//
+// # CE QU'ELLE REND, ET CE QU'ELLE REFUSE DE RENDRE
+//
+// Trois réponses possibles, et la différence entre les deux dernières est tout l'objet de cette
+// fonction :
+//
+//   · BLOQUÉ, d'un côté ou de l'autre → 404, volontairement indistinguable d'un compte qui
+//     n'existe pas. Dire « cette personne t'a bloqué » serait lui retirer le bénéfice du blocage ;
+//   · COMPTE PRIVÉ que je ne suis pas → l'en-tête SEUL. Le nom, la photo, le mot de présentation,
+//     les compteurs et les badges — de quoi reconnaître la bonne personne et demander à la
+//     suivre. Pas une seule de ses sorties. C'est la règle d'Instagram, et c'est la seule qui
+//     rende un compte privé utilisable : invisible, personne ne pourrait le retrouver pour le
+//     suivre ; ouvert, il ne serait pas privé.
+//   · SINON → l'en-tête et ses vingt dernières sorties.
+//
+// Les sorties ne sont pas « masquées par le client » : quand `canSeeRuns` est faux, la requête
+// n'est pas faite. Une donnée qu'on ne lit pas est la seule qui ne puisse pas fuir par un écran
+// qu'on n'avait pas prévu.
+async function handleProfile(req, res, userId) {
+  const cible = typeof req.query.userId === 'string' ? req.query.userId : '';
+  if (!isUuid(cible)) return res.status(400).json({ error: 'bad_request' });
+
+  if (cible !== userId && await isBlockedEitherWay(userId, cible)) {
+    return res.status(404).json({ error: 'not_found' });
+  }
+
+  const { rows: personnes } = await sql`
+    SELECT u.id, u.name, u.last_name, u.username, u.bio, u.avatar_data, u.avatar_url,
+           u.is_private, u.created_at,
+           (SELECT COUNT(*)::int FROM follows f WHERE f.followee_id = u.id AND f.status = 'accepted') AS followers,
+           (SELECT COUNT(*)::int FROM follows f WHERE f.follower_id = u.id AND f.status = 'accepted') AS following,
+           (SELECT COUNT(*)::int FROM activities a WHERE a.user_id = u.id AND a.type = 'run') AS runs,
+           -- Le total de kilomètres de ses sorties, pas un compteur tenu à part : un compteur
+           -- dérive dès qu'une sortie est supprimée, et il en existe un chemin (api/activities
+           -- delete).
+           (SELECT COALESCE(SUM(a.distance_km), 0) FROM activities a
+             WHERE a.user_id = u.id AND a.type = 'run') AS total_km,
+           (SELECT ARRAY_AGG(b.badge_key) FROM user_badges b WHERE b.user_id = u.id) AS badge_keys,
+           (SELECT f.status FROM follows f WHERE f.follower_id = ${userId} AND f.followee_id = u.id) AS follow_status,
+           EXISTS(SELECT 1 FROM follows f WHERE f.follower_id = u.id AND f.followee_id = ${userId} AND f.status = 'accepted') AS follows_me
+    FROM users u WHERE u.id = ${cible}
+  `;
+  if (personnes.length === 0) return res.status(404).json({ error: 'not_found' });
+  const p = personnes[0];
+
+  const cestMoi = cible === userId;
+  const canSeeRuns = cestMoi || !p.is_private || p.follow_status === 'accepted';
+
+  let sorties = [];
+  if (canSeeRuns) {
+    const { rows } = await sql`
+      SELECT a.id, a.text, a.created_at, a.distance_km, a.duration_seconds, a.avg_pace,
+             a.elevation_gain_m, a.is_personal_record, a.content_key,
+             a.route_preview, a.title, a.note, a.edited_at,
+             (SELECT COUNT(*)::int FROM activity_kudos k WHERE k.activity_id = a.id) AS kudos,
+             EXISTS(SELECT 1 FROM activity_kudos k WHERE k.activity_id = a.id AND k.user_id = ${userId}) AS kudoed_by_me,
+             (SELECT COUNT(*)::int FROM activity_comments c WHERE c.activity_id = a.id) AS comments_count
+      FROM activities a
+      WHERE a.user_id = ${cible}
+      ORDER BY a.created_at DESC
+      LIMIT 20
+    `;
+    sorties = rows.map((r) => ({
+      id: r.id,
+      userId: cible,
+      name: p.name,
+      avatarBase64: p.avatar_data || null,
+      avatarUrl: p.avatar_url || null,
+      text: r.text,
+      title: r.title || null,
+      note: r.note || null,
+      editedAt: r.edited_at || null,
+      routePreview: r.route_preview || null,
+      createdAt: r.created_at,
+      ...activityMetrics(r),
+      kudos: r.kudos,
+      kudoedByMe: r.kudoed_by_me,
+      commentsCount: r.comments_count,
+    }));
+  }
+
+  res.status(200).json({
+    profile: {
+      id: p.id,
+      name: p.name,
+      lastName: p.last_name || null,
+      username: p.username || null,
+      bio: p.bio || null,
+      avatarBase64: p.avatar_data || null,
+      avatarUrl: p.avatar_url || null,
+      isPrivate: p.is_private,
+      isMe: cestMoi,
+      followStatus: p.follow_status || null,
+      followsMe: p.follows_me === true,
+      followers: p.followers,
+      following: p.following,
+      runs: p.runs,
+      totalKm: Number(p.total_km),
+      badgeKeys: p.badge_keys || [],
+      joinedAt: p.created_at,
+      // Dit EXPLICITEMENT plutôt que déduit d'une liste vide : « ce compte est privé » et « cette
+      // personne n'a encore rien couru » sont deux écrans différents, et le client ne peut pas
+      // les distinguer autrement.
+      canSeeRuns,
+    },
+    items: sorties,
   });
 }
 

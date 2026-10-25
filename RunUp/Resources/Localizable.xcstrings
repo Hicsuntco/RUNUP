@@ -3125,6 +3125,23 @@
         }
       }
     },
+    "ABONNÉ": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FOLLOWING"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SIGUIENDO"
+          }
+        }
+      }
+    },
     "ACCÉLÈRE": {
       "extractionState": "manual",
       "localizations": {
@@ -4397,6 +4414,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Detener y enviar"
+          }
+        }
+      }
+    },
+    "Au total": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En total"
           }
         }
       }
@@ -5783,6 +5817,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este club ya no está abierto."
+          }
+        }
+      }
+    },
+    "Ce compte est privé": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This account is private"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta cuenta es privada"
           }
         }
       }
@@ -8159,6 +8210,40 @@
         }
       }
     },
+    "DEMANDE ENVOYÉE": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REQUESTED"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SOLICITADO"
+          }
+        }
+      }
+    },
+    "DEMANDER À SUIVRE": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REQUEST TO FOLLOW"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SOLICITAR SEGUIR"
+          }
+        }
+      }
+    },
     "DISTANCE": {
       "localizations": {
         "en": {
@@ -8351,6 +8436,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Solicitud enviada"
+          }
+        }
+      }
+    },
+    "Demande à le suivre pour voir ses sorties.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request to follow to see their runs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicita seguirla para ver sus salidas."
           }
         }
       }
@@ -11328,6 +11430,23 @@
         }
       }
     },
+    "Impossible d'applaudir — réessaie.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't give kudos — try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo aplaudir — inténtalo de nuevo."
+          }
+        }
+      }
+    },
     "Impossible d'enregistrer pour l'instant. Réessaie dans un moment.": {
       "extractionState": "manual",
       "localizations": {
@@ -11406,6 +11525,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudo enviar, inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Impossible d'ouvrir ce profil — %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't open this profile — %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo abrir este perfil — %@."
           }
         }
       }
@@ -11813,6 +11949,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Información general"
+          }
+        }
+      }
+    },
+    "Inscrit en %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Joined %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se unió en %@"
           }
         }
       }
@@ -20352,6 +20505,23 @@
         }
       }
     },
+    "Rien de publié pour l'instant.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing posted yet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nada publicado todavía."
+          }
+        }
+      }
+    },
     "Rien pour l'instant": {
       "localizations": {
         "en": {
@@ -20845,6 +21015,23 @@
         }
       }
     },
+    "SUIVRE": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FOLLOW"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SEGUIR"
+          }
+        }
+      }
+    },
     "Salut %@ 👋 %@ %@ Une question avant de te lancer ?": {
       "localizations": {
         "en": {
@@ -21322,6 +21509,23 @@
         }
       }
     },
+    "Ses sorties": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Their runs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sus salidas"
+          }
+        }
+      }
+    },
     "Session expirée": {
       "extractionState": "manual",
       "localizations": {
@@ -21563,6 +21767,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Denunciar esta carrera"
+          }
+        }
+      }
+    },
+    "Signaler cette personne": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report this person"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denunciar a esta persona"
           }
         }
       }
@@ -23741,6 +23962,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cinta de correr"
+          }
+        }
+      }
+    },
+    "Te suit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Follows you"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te sigue"
           }
         }
       }
@@ -26439,6 +26677,23 @@
         }
       }
     },
+    "Voir le profil de %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See %@'s profile"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver el perfil de %@"
+          }
+        }
+      }
+    },
     "Voir les commentaires": {
       "localizations": {
         "en": {
@@ -26515,6 +26770,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ya no verán la actividad del otro, y esto elimina cualquier seguimiento entre ustedes."
+          }
+        }
+      }
+    },
+    "Vous vous suivez": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You follow each other"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os seguís mutuamente"
           }
         }
       }
@@ -27082,6 +27354,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "al mediodía"
+          }
+        }
+      }
+    },
+    "ce profil n'est pas accessible": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "this profile isn't available"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "este perfil no está disponible"
           }
         }
       }

@@ -82,8 +82,9 @@ struct WallView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 14) {
+            LazyVStack(spacing: 0) {
                 barreDeFiltres
+                    .padding(.bottom, 14)
 
                 if isLoading {
                     ProgressView().frame(maxWidth: .infinity).padding(.vertical, 50)
@@ -115,7 +116,11 @@ struct WallView: View {
                                 sourceLabel: libelleDeProvenance(item.source)
                             )
                         case .course(let post):
+                            // Une annonce de course garde sa carte : c'est ce qui la distingue
+                            // d'une sortie au milieu du fil. Son propre retrait, donc, puisque le
+                            // conteneur n'en donne plus.
                             carteDeCourse(post)
+                                .padding(.bottom, 16)
                         }
                     }
                 }
@@ -297,6 +302,14 @@ struct WallView: View {
 
     private func charger() async {
         loadError = nil
+        // En démonstration, le cache est tout — même raison qu'au Club, au Profil et sur la page
+        // de quelqu'un : pas de serveur en face d'un simulateur.
+        if Demonstration.enCours {
+            page = appState.cachedWall
+            isLoading = false
+            if !revealed { withAnimation(.easeOut(duration: 0.35)) { revealed = true } }
+            return
+        }
         do {
             page = try await clubService.fetchWall(scope: filtre.rawValue)
             // L'apparition en cascade des cartes ne joue qu'une fois : la rejouer à chaque

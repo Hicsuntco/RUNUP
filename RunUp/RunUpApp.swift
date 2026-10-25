@@ -127,6 +127,9 @@ private struct RootView: View {
                     // base et doit y être avant.
                     CaptureSeed.poserLeClub(dans: etat)
                 }
+                // AVANT `go` : `SocialView` lit ce drapeau dans son `onAppear`, donc il doit
+                // être posé avant que l'écran n'apparaisse.
+                if CaptureSeed.murDemande { appState?.openWallTabOnNextVisit = true }
                 if let ecran = CaptureSeed.ecranDemande {
                     appState?.go(ecran)
                 }

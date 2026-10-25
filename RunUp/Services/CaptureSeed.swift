@@ -49,6 +49,11 @@ enum CaptureSeed {
     /// Séparé de `--ecran=` parce qu'une page de profil n'est PAS un `AppScreen` : elle se
     /// présente au-dessus de n'importe lequel (voir `ContentRouterView`). Les deux arguments se
     /// combinent donc au lieu de se concurrencer.
+    /// `--mur` : ouvrir le fil plutôt que l'écran par défaut de l'onglet social.
+    static var murDemande: Bool {
+        ProcessInfo.processInfo.arguments.contains("--mur")
+    }
+
     static var profilDemande: String? {
         ProcessInfo.processInfo.arguments
             .first(where: { $0.hasPrefix("--profil=") })
@@ -302,6 +307,31 @@ enum CaptureSeed {
             etat.cachedClubFeed = try decodeur.decode([FeedItem].self, from: Data(fil.utf8))
             etat.cachedFriendsList = try decodeur.decode(FriendsList.self, from: Data(amis.utf8))
             etat.cachedNextRace = try decodeur.decode(RaceEvent.self, from: Data(course.utf8))
+            // Le mur, construit à partir du fil déjà semé : les mêmes sorties, chacune avec sa
+            // provenance, plus une annonce de course. Les reconstruire à part en ferait deux jeux
+            // de démonstration qui finiraient par ne plus raconter la même chose.
+            let murBrut = """
+            {
+              "items": [],
+              "racePosts": [
+                {
+                  "id": "p1", "raceId": "demo-course", "raceName": "Marathon de Paris",
+                  "raceDate": "2027-04-04", "discipline": "run", "kind": "partner",
+                  "text": "Je vise 3h30, sorties longues le dimanche matin au bois. Quelqu'un sur ce rythme ?",
+                  "closed": false, "createdAt": "\(ilYA(5))",
+                  "author": { "id": "3", "name": "Margaux", "isPrivate": false }
+                }
+              ]
+            }
+            """
+            var mur = try decodeur.decode(WallPage.self, from: Data(murBrut.utf8))
+            mur.items = (etat.cachedClubFeed ?? []).map { sortie in
+                var copie = sortie
+                copie.source = sortie.userId == "1" ? "moi" : "club"
+                return copie
+            }
+            etat.cachedWall = mur
+
             var sienne = try decodeur.decode(PublicProfilePage.self, from: Data(profil.utf8))
             // Ses sorties sont celles du fil de démonstration qui lui appartiennent : une page de
             // profil avec des cartes vides ne dirait rien de ce qu'elle doit montrer.

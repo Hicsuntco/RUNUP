@@ -57,21 +57,52 @@ struct ActivityFeedRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // LA PHOTO PASSE DEVANT LE TRACÉ, et le tracé ne disparaît pas pour autant.
+            // UN FILET ENTRE DEUX POSTS, ET RIEN AUTOUR.
             //
-            // Une carte du fil a UN bandeau. Quand une sortie porte les deux, c'est la photo qu'on
-            // est venu voir — un dessin de boucle ne retient personne. Le tracé reprend sa place
-            // en vignette dans le coin, comme la carte incrustée d'un post Strava : il dit toujours
-            // où l'on a couru, sans prendre les deux cents points de haut qui font le sujet.
-            if let photo {
-                photoHead(photo)
-            } else if let trace {
-                traceHead(trace)
-            } else {
-                plainHead
+            // La carte est partie. Une sortie n'est pas un objet posé sur la page — c'est la page.
+            // Un rectangle arrondi avec son fond et son contour autour de chaque post fabrique une
+            // pile de tuiles qu'on parcourt ; un filet fin entre deux posts fabrique un fil qu'on
+            // descend. C'est la différence entre un tableau de bord et Instagram, et elle tient à
+            // ça.
+            //
+            // Le filet est EN TÊTE de chaque post sauf le premier, pas en pied : un filet en pied
+            // flotterait tout seul après le dernier, sous rien.
+            if index > 0 {
+                Rectangle()
+                    .fill(RUColor.line)
+                    .frame(height: RUSpacing.hairline)
+                    .padding(.bottom, 16)
             }
 
-            VStack(alignment: .leading, spacing: 9) {
+            VStack(alignment: .leading, spacing: 11) {
+                // LE NOM AU-DESSUS DE L'IMAGE, ET NON PLUS DESSUS.
+                //
+                // Il était posé SUR le bandeau, ce qui obligeait à deux voiles dégradés pour que du
+                // blanc reste lisible sur n'importe quelle photo — un ciel de midi, de la neige.
+                // Au-dessus, le texte est sur le fond de l'app : il est lisible par construction,
+                // les deux voiles disparaissent, et la photo n'est plus assombrie à ses deux bouts
+                // pour servir de support à du texte. Moins de pièces, et la photo entière.
+                HStack(spacing: 10) {
+                    author(onDark: false)
+                    Spacer(minLength: 0)
+                    menuDuPost
+                }
+
+                media
+
+                // La phrase de la sortie : « a couru 12,4 km · Sortie longue ».
+                Text(item.localizedText)
+                    .font(RUFont.sans(.label))
+                    .foregroundColor(RUColor.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if item.hasMetrics {
+                    HStack(spacing: 10) {
+                        metricsRow
+                        if item.isPersonalRecord { recordBadge(onDark: false) }
+                    }
+                }
+
                 if let title = item.title, !title.isEmpty {
                     Text(title)
                         .font(RUFont.sans(.emphasis, weight: .bold))
@@ -80,10 +111,13 @@ struct ActivityFeedRow: View {
                 }
                 if let note = item.note, !note.isEmpty {
                     Text(note)
-                        .font(RUFont.sans(.small))
+                        .font(RUFont.sans(.body))
                         .foregroundColor(RUColor.text2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
+
+                actions
+
                 if let liked = likedByLine {
                     Text(liked)
                         .font(RUFont.sans(.small))
@@ -100,19 +134,14 @@ struct ActivityFeedRow: View {
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-
-                Rectangle()
-                    .fill(RUColor.line)
-                    .frame(height: RUSpacing.hairline)
-
-                actions
             }
-            .padding(RUSpacing.cardPadding)
+            .padding(.bottom, 16)
         }
-        .ruCard()
         .opacity(revealed ? 1 : 0)
         .offset(x: revealed ? 0 : -14)
         .animation(.easeOut(duration: 0.35).delay(Double(min(index, 8)) * 0.05), value: revealed)
+        // Le même menu sous l'appui long, pour qui connaît le geste. Les trois points l'ont rendu
+        // trouvable ; ils ne le remplacent pas.
         .contextMenu {
             if isMine {
                 Button("Modifier ma sortie", action: onEdit)
@@ -124,14 +153,61 @@ struct ActivityFeedRow: View {
         }
     }
 
-    // MARK: - Avec tracé
+    // MARK: - L'image
 
-    private func traceHead(_ trace: [RunRecord.RoutePoint]) -> some View {
+    /// LA PHOTO D'ABORD, LE TRACÉ SINON, RIEN QUAND IL N'Y A RIEN.
+    ///
+    /// Un post a une image ou n'en a pas. Quand une sortie porte les deux, c'est la photo qu'on est
+    /// venu voir ; le tracé reprend sa place en vignette dans le coin, comme la carte incrustée
+    /// d'un post Strava. Et une sortie sans photo ni tracé — une séance de renfo, un badge — n'a
+    /// pas de bloc d'image du tout, au lieu d'un rectangle vide qui tiendrait la place.
+    @ViewBuilder
+    private var media: some View {
+        if let photo {
+            image(photo)
+        } else if let trace {
+            banniereDeTrace(trace)
+        }
+    }
+
+    private func image(_ url: URL) -> some View {
+        AsyncImage(url: url) { image in
+            image.resizable().scaledToFill()
+        } placeholder: {
+            // Le fond du tracé plutôt qu'un vide : il tient la place à la bonne couleur pendant
+            // que l'image arrive, au lieu de faire sauter la mise en page à son arrivée.
+            ZStack {
+                Self.traceBackground
+                ProgressView().tint(.white)
+            }
+        }
+        // 4:5, le format le plus haut qu'Instagram accepte — c'est lui qui remplit l'écran d'un
+        // téléphone sans avaler le post suivant. Fixe, et non la hauteur de l'image : des posts de
+        // hauteurs différentes font sauter le fil à chaque chargement.
+        .aspectRatio(4.0 / 5.0, contentMode: .fill)
+        .frame(maxWidth: .infinity)
+        .clipped()
+        .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+        .overlay(alignment: .bottomTrailing) {
+            if let trace {
+                RouteThumbnail(route: trace, lineWidth: 2, lineColor: .white, showsStart: false)
+                    .frame(width: 52, height: 52)
+                    .padding(7)
+                    .background(.black.opacity(0.32), in: RoundedRectangle(cornerRadius: RUSpacing.radiusTile, style: .continuous))
+                    .padding(10)
+                    .allowsHitTesting(false)
+            }
+        }
+        .accessibilityElement()
+        .accessibilityLabel(String(localized: "Photo de la sortie"))
+    }
+
+    /// Le tracé, quand il n'y a pas de photo. Le fond reste sombre dans les DEUX thèmes,
+    /// volontairement : une ligne fine et colorée se lit sur du sombre ; sur un fond clair elle
+    /// devient un gribouillis pâle.
+    private func banniereDeTrace(_ trace: [RunRecord.RoutePoint]) -> some View {
         ZStack {
             Self.traceBackground
-            // Le tracé se DESSINE, il n'est pas posé. Sur une vignette de 52 points
-            // l'animation serait du bruit ; ici le tracé fait 192 points de haut et c'est le
-            // sujet de la carte — on voit la boucle partir et se refermer.
             SelfDrawingRoute(
                 route: trace,
                 lineWidth: 3.5,
@@ -139,125 +215,34 @@ struct ActivityFeedRow: View {
                 targetPoints: 140,
                 showsStart: true
             )
-            // Les marges hautes et basses réservent la place du nom et des chiffres posés
-            // par-dessus : le tracé ne passe jamais SOUS un texte, il s'arrête avant.
-            .padding(EdgeInsets(top: 44, leading: 18, bottom: 50, trailing: 18))
+            .padding(20)
         }
-        .frame(height: 192)
-        .overlay(alignment: .topLeading) { author(onDark: true).padding(12) }
-        .overlay(alignment: .topTrailing) {
-            if item.isPersonalRecord { recordBadge(onDark: true).padding(12) }
-        }
-        .overlay(alignment: .bottomLeading) { heroStats.padding(EdgeInsets(top: 0, leading: 14, bottom: 12, trailing: 14)) }
-        .clipShape(UnevenRoundedRectangle(
-            topLeadingRadius: RUSpacing.radiusStandard,
-            topTrailingRadius: RUSpacing.radiusStandard,
-            style: .continuous
-        ))
+        .frame(height: 190)
+        .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
     }
 
-    /// Le bandeau photo : la même grammaire que `traceHead` — nom en haut à gauche, record en
-    /// haut à droite, chiffres en bas — mais sur une image.
+    /// Les trois points, à la place du menu contextuel caché sous un appui long.
     ///
-    /// LES DEUX VOILES NE SONT PAS DU DÉCOR. Les textes posés dessus sont BLANCS, et une photo
-    /// est n'importe quoi : un ciel de midi, de la neige, un dossard blanc. Sans un dégradé sombre
-    /// sous le nom et sous les chiffres, la moitié des cartes du fil deviennent illisibles — et
-    /// c'est la moitié qu'on ne découvre qu'une fois le fil plein de vraies photos. Ils sont
-    /// posés AVANT les textes dans la pile, donc sous eux.
-    private func photoHead(_ url: URL) -> some View {
-        ZStack {
-            // Le fond du tracé sert de fond de chargement : du sombre sous des textes blancs,
-            // c'est déjà le bon contraste avant même que l'image n'arrive.
-            Self.traceBackground
-            AsyncImage(url: url) { image in
-                image.resizable().scaledToFill()
-            } placeholder: {
-                ProgressView().tint(.white)
+    /// Il n'existait QUE sous un appui long sur la carte — un geste que personne ne découvre, et
+    /// le seul chemin vers « signaler » et « bloquer ». Sur un fil public, la modération ne peut
+    /// pas être un geste qu'on devine. Le menu long reste, pour qui le connaît.
+    private var menuDuPost: some View {
+        Menu {
+            if isMine {
+                Button("Modifier ma sortie", action: onEdit)
+                Button("Supprimer cette activité", role: .destructive, action: onDelete)
+            } else {
+                Button("Signaler cette activité", action: onReport)
+                Button("Bloquer \(item.name)", role: .destructive, action: onBlock)
             }
+        } label: {
+            Image(systemName: "ellipsis")
+                .font(.system(size: 13, weight: .bold))
+                .foregroundColor(RUColor.text3)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
         }
-        .frame(height: 220)
-        .clipped()
-        .overlay(alignment: .top) {
-            LinearGradient(colors: [.black.opacity(0.55), .clear],
-                           startPoint: .top, endPoint: .bottom)
-                .frame(height: 96)
-                .allowsHitTesting(false)
-        }
-        .overlay(alignment: .bottom) {
-            LinearGradient(colors: [.clear, .black.opacity(0.62)],
-                           startPoint: .top, endPoint: .bottom)
-                .frame(height: 116)
-                .allowsHitTesting(false)
-        }
-        .overlay(alignment: .topLeading) { author(onDark: true).padding(12) }
-        .overlay(alignment: .topTrailing) {
-            if item.isPersonalRecord { recordBadge(onDark: true).padding(12) }
-        }
-        .overlay(alignment: .bottomLeading) { heroStats.padding(EdgeInsets(top: 0, leading: 14, bottom: 12, trailing: 14)) }
-        .overlay(alignment: .bottomTrailing) {
-            if let trace {
-                RouteThumbnail(route: trace, lineWidth: 2, lineColor: .white, showsStart: false)
-                    .frame(width: 54, height: 54)
-                    .padding(8)
-                    .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: RUSpacing.radiusTile, style: .continuous))
-                    .padding(EdgeInsets(top: 0, leading: 0, bottom: 10, trailing: 12))
-                    .allowsHitTesting(false)
-            }
-        }
-        .clipShape(UnevenRoundedRectangle(
-            topLeadingRadius: RUSpacing.radiusStandard,
-            topTrailingRadius: RUSpacing.radiusStandard,
-            style: .continuous
-        ))
-        // L'image EST le sujet de la carte : VoiceOver doit dire qu'il y en a une, sinon la carte
-        // se lit exactement comme une carte sans photo.
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(String(localized: "Photo de la sortie"))
-    }
-
-    /// Trois chiffres au plus, en grand, sur le tracé. Pas quatre : le dénivelé est la mesure dont
-    /// on se passe le mieux d'un coup d'œil, et la rangée complète vit toujours dans la carte sans
-    /// tracé.
-    private var heroStats: some View {
-        HStack(alignment: .lastTextBaseline, spacing: 18) {
-            ForEach(metrics.prefix(3)) { metric in
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(metric.value)
-                        .font(RUFont.display(22))
-                        .foregroundColor(.white)
-                    Text(LocalizedStringKey(metric.label))
-                        .font(RUFont.sans(.micro, weight: .bold))
-                        .tracking(0.5)
-                        .foregroundColor(.white.opacity(0.62))
-                }
-            }
-            Spacer(minLength: 0)
-        }
-    }
-
-    // MARK: - Sans tracé
-
-    private var plainHead: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 10) {
-                author(onDark: false)
-                Spacer(minLength: 0)
-                if item.isPersonalRecord { recordBadge(onDark: false) }
-            }
-            // La phrase commence par un verbe conjugué (« a couru 8,2 km · Sortie longue ») : elle
-            // reste rattachée au nom au-dessus, mais sur sa propre ligne.
-            //
-            // `localizedText` et pas `text` : le serveur renvoie la phrase telle que l'autrice l'a
-            // composée, DANS SA LANGUE. Ici on la refabrique dans celle de la lectrice dès que le
-            // post porte de quoi le faire — voir `FeedItem.localizedText`.
-            Text(item.localizedText)
-                .font(RUFont.sans(.label))
-                .foregroundColor(RUColor.textPrimary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            if item.hasMetrics { metricsRow }
-        }
-        .padding(EdgeInsets(top: 14, leading: 14, bottom: 0, trailing: 14))
+        .accessibilityLabel("Plus d'options")
     }
 
     // MARK: - Pièces communes
@@ -355,22 +340,36 @@ struct ActivityFeedRow: View {
     /// Actions sans pastille ni contour : dans une carte, deux gros boutons bordés pèsent plus
     /// lourd que l'activité elle-même. La cible tactile reste à 44 pt via `frame(minHeight:)` +
     /// `contentShape` — c'est le chrome qui disparaît, pas la zone tapable.
+    /// DES TRAITS, PAS DES EMOJIS.
+    ///
+    /// L'applaudissement était un 👏 — l'élément le moins épuré de la carte, et le seul qui change
+    /// de dessin selon la version d'iOS. Un symbole système garde exactement le sens
+    /// (« applaudir », pas « aimer » : ce n'est pas la même chose dans une app de course) et
+    /// adopte la graisse du reste de l'interface. Plein quand c'est fait, en trait sinon — la
+    /// grammaire d'Instagram, où un cœur vide et un cœur plein sont la même icône.
+    ///
+    /// Le crayon de « Modifier » est parti : il vit maintenant dans les trois points en tête du
+    /// post, avec « Supprimer ». Deux chemins pour la même action sur la même carte, dont un en
+    /// doublon du menu, n'est pas de la redondance utile — c'est une icône de plus à lire.
     private var actions: some View {
-        HStack(spacing: 20) {
+        HStack(spacing: 18) {
             Button(action: {
                 Haptics.impact(.light)
                 onKudos()
             }) {
-                HStack(spacing: 6) {
-                    Text("👏")
-                    Text("\(item.kudos)")
+                HStack(spacing: 7) {
+                    Image(systemName: item.kudoedByMe ? "hands.clap.fill" : "hands.clap")
+                        .font(.system(size: 15, weight: .regular))
+                    if item.kudos > 0 {
+                        Text("\(item.kudos)")
+                            .font(RUFont.sans(.body, weight: .semibold))
+                            .contentTransition(.numericText())
+                    }
                 }
-                .font(RUFont.sans(.body, weight: .semibold))
-                .foregroundColor(item.kudoedByMe ? RUColor.rose2 : RUColor.text2)
-                .padding(.trailing, 6)
+                .foregroundColor(item.kudoedByMe ? RUColor.rose : RUColor.text2)
                 .frame(minHeight: 44)
                 .contentShape(Rectangle())
-                .scaleEffect(item.kudoedByMe ? 1.08 : 1.0)
+                .scaleEffect(item.kudoedByMe ? 1.06 : 1.0)
                 .animation(.spring(response: 0.3, dampingFraction: 0.45), value: item.kudoedByMe)
             }
             .buttonStyle(PressableStyle())
@@ -378,13 +377,15 @@ struct ActivityFeedRow: View {
             .accessibilityValue("\(item.kudos)")
 
             Button(action: onComment) {
-                HStack(spacing: 6) {
-                    Image(systemName: "bubble.left")
-                    Text("\(item.commentsCount)")
+                HStack(spacing: 7) {
+                    Image(systemName: "bubble.right")
+                        .font(.system(size: 15, weight: .regular))
+                    if item.commentsCount > 0 {
+                        Text("\(item.commentsCount)")
+                            .font(RUFont.sans(.body, weight: .semibold))
+                    }
                 }
-                .font(RUFont.sans(.body, weight: .semibold))
                 .foregroundColor(RUColor.text2)
-                .padding(.trailing, 6)
                 .frame(minHeight: 44)
                 .contentShape(Rectangle())
             }
@@ -393,18 +394,6 @@ struct ActivityFeedRow: View {
             .accessibilityValue("\(item.commentsCount)")
 
             Spacer(minLength: 0)
-
-            if isMine {
-                Button(action: onEdit) {
-                    Image(systemName: "square.and.pencil")
-                        .font(.system(size: 15))
-                        .foregroundColor(RUColor.text3)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(PressableStyle())
-                .accessibilityLabel("Modifier ma sortie")
-            }
         }
     }
 

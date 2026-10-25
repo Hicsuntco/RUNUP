@@ -73,11 +73,18 @@ final class CapturesUITests: XCTestCase {
         prendre(rang: 8, ecran: "club", nom: "profil-public", diagnostic: true, profil: "2")
     }
 
+    /// Le fil, ouvert par-dessus l'onglet Club. Comme `--profil=`, `--mur` se combine avec
+    /// `--ecran=` : le fil est un mode de l'onglet social, pas un écran de l'app.
+    func test9MurDiagnostic() {
+        prendre(rang: 9, ecran: "club", nom: "mur", diagnostic: true, mur: true)
+    }
+
     private func prendre(rang: Int, ecran: String, nom: String, diagnostic: Bool = false,
-                         profil: String? = nil) {
+                         profil: String? = nil, mur: Bool = false) {
         let app = XCUIApplication()
         app.launchArguments = ["--captures", "--ecran=\(ecran)"]
         if let profil { app.launchArguments += ["--profil=\(profil)"] }
+        if mur { app.launchArguments += ["--mur"] }
         // La langue et la région viennent de l'extérieur : le même test tourne trois fois, une
         // par langue, et c'est le workflow qui dit laquelle. `-AppleLanguages` est la seule
         // façon de forcer la langue d'un lancement sans toucher aux réglages du simulateur.

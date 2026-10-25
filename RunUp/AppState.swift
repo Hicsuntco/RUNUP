@@ -156,6 +156,9 @@ final class AppState {
     /// Et la page de quelqu'un, pour la même raison : sans serveur en face, elle n'afficherait
     /// qu'une erreur dans la capture.
     var cachedPublicProfile: PublicProfilePage?
+    /// Et le fil. Troisième cache de démonstration du même genre : tout écran qui parle au serveur
+    /// en demande un, faute de serveur dans un simulateur.
+    var cachedWall: WallPage?
 
     // Live run (ephemeral, survives navigating away from the Live screen)
     var liveRun: LiveRunViewModel?

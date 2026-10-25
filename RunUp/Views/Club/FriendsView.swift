@@ -582,7 +582,7 @@ struct FriendsView: View {
     private var feedSection: some View {
         // `LazyVStack` : même raison que le fil du club — 50 lignes construites d'un coup,
         // avatars compris, dont l'écrasante majorité hors écran.
-        LazyVStack(alignment: .leading, spacing: 8) {
+        LazyVStack(alignment: .leading, spacing: 0) {
             RUCardHeader(icon: "bolt.fill", tint: RUColor.rose, title: "Fil d'activité")
             // `errorMessage == nil` : « Personne à suivre pour l'instant » est une AFFIRMATION
             // sur le contenu du compte, et l'app n'a pas le droit de la faire quand elle vient

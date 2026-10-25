@@ -9,7 +9,11 @@ const { withErrorHandling, isUuid } = require('../../lib/http');
 
 // 'route' : un itinéraire partagé porte un nom et une note écrits par son autrice, visibles par
 // des inconnus — donc signalable, comme tout contenu généré par un utilisateur (App Store 1.2).
-const REPORT_TARGET_TYPES = new Set(['user', 'club', 'activity', 'comment', 'route']);
+// 'race' et 'race_post' : la page d'une course est ouverte à tous ceux qui la préparent, et son
+// nom comme ses messages sont écrits par des coureurs. Un mur d'annonces où l'on cède un dossard
+// est exactement l'endroit où une arnaque se poste ; sans ce bouton, la seule issue serait de
+// quitter la page.
+const REPORT_TARGET_TYPES = new Set(['user', 'club', 'activity', 'comment', 'route', 'race', 'race_post']);
 
 module.exports = withErrorHandling(async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });

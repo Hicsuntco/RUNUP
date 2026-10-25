@@ -177,7 +177,9 @@ CREATE TABLE IF NOT EXISTS blocks (
 CREATE TABLE IF NOT EXISTS reports (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   reporter_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  target_type TEXT NOT NULL, -- 'user' | 'club' | 'activity'
+  -- Les valeurs acceptées vivent dans api/moderation/[action].js (REPORT_TARGET_TYPES) :
+  -- 'user' | 'club' | 'activity' | 'comment' | 'route' | 'race' | 'race_post'. Pas de CHECK ici,
+  -- pour qu'ajouter un genre de contenu signalable n'exige pas une migration.
   target_id UUID NOT NULL,
   reason TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -570,3 +572,109 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS email_sha256 TEXT
 -- Le croisement compare jusqu'à un millier d'empreintes d'un coup : sans index, chaque recherche
 -- dans les contacts parcourrait toute la table des comptes.
 CREATE INDEX IF NOT EXISTS idx_users_email_sha256 ON users (email_sha256);
+
+
+-- =====================================================================================
+-- LES COURSES OFFICIELLES, ET LEUR PAGE
+--
+-- Une course a maintenant sa page : qui la prépare, où ils en sont, qui cherche quelqu'un à son
+-- allure, qui cède ou cherche un dossard, et ce que les uns conseillent aux autres.
+--
+-- # CE QUI REND CETTE FONCTIONNALITÉ POSSIBLE OU INUTILE : LE DOUBLON
+--
+-- Toute la valeur tient à ce que deux personnes qui préparent la même course atterrissent sur la
+-- MÊME page. Dix « Marathon de Paris » écrits dix façons, et il ne reste rien — dix pages d'une
+-- personne. D'où `name_key` : le nom replié (minuscules, accents, traits d'union, ligatures) par
+-- `lib/recherche.js`, et un index UNIQUE sur (nom replié, date). « Marathon de PARIS » et
+-- « marathon de paris » du même jour sont la même course, et la base le refuse plutôt que de le
+-- constater.
+--
+-- La clé est calculée côté application et non par une colonne générée, parce que le repli vit
+-- déjà en JavaScript pour la recherche : une seconde implémentation en SQL serait une seconde
+-- occasion de diverger. En échange, l'index UNIQUE garantit qu'aucune insertion ne passe à côté.
+CREATE TABLE IF NOT EXISTS races (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  -- Le nom replié. Jamais affiché, jamais modifié à la main.
+  name_key TEXT NOT NULL,
+  city TEXT,
+  race_date DATE NOT NULL,
+  -- NULL pour une épreuve dont la distance n'est pas un nombre (un trail « 3 boucles », un relais).
+  distance_km NUMERIC,
+  elevation_gain_m INTEGER,
+  -- 'run' | 'trail' | 'hyrox' | 'triathlon' | 'duathlon' — la même famille que `GoalType`, pour
+  -- que la page sache quoi afficher (un D+ n'a de sens que sur un trail).
+  discipline TEXT NOT NULL DEFAULT 'run',
+  website TEXT,
+  -- NULL pour les courses semées par l'app ; sinon la personne qui l'a créée.
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  -- Semée par l'app (les grandes courses françaises) plutôt que créée par quelqu'un. Sert à les
+  -- faire remonter en premier dans la recherche, et à ne jamais les laisser supprimer.
+  is_seeded BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_races_name_date ON races (name_key, race_date);
+-- La recherche porte sur le nom replié ; la liste « bientôt » porte sur la date.
+CREATE INDEX IF NOT EXISTS idx_races_date ON races (race_date);
+
+-- QUI PRÉPARE CETTE COURSE.
+--
+-- `shares_training` est un OPT-IN EXPLICITE, et il est faux par défaut. Montrer à des inconnus
+-- où quelqu'un en est de son entraînement n'est pas la même chose que lui montrer qu'il court la
+-- même course : la seconde est l'objet de la page, la première est une donnée personnelle. Le
+-- serveur ne rend le volume de personne tant que cette case n'est pas cochée.
+--
+-- `target_pace_sec_per_km` est DÉRIVÉ du chrono visé et de la distance, côté application, au
+-- moment où la personne s'inscrit à la page. Stocké plutôt que recalculé, parce que c'est lui qui
+-- trie la mise en relation et qu'un tri ne doit pas dépendre d'une analyse de chaîne à chaque
+-- requête.
+CREATE TABLE IF NOT EXISTS race_followers (
+  race_id UUID NOT NULL REFERENCES races(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  target_chrono TEXT,
+  target_pace_sec_per_km INTEGER,
+  shares_training BOOLEAN NOT NULL DEFAULT false,
+  looking_for_partner BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (race_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_race_followers_user ON race_followers (user_id);
+-- La mise en relation trie par écart d'allure : l'index la rend utile même sur une grosse course.
+CREATE INDEX IF NOT EXISTS idx_race_followers_pace ON race_followers (race_id, target_pace_sec_per_km);
+
+-- LE FIL DE LA PAGE : les conseils, les recherches de partenaire, et les dossards.
+--
+-- UNE SEULE TABLE pour les trois, et c'est délibéré. Ce sont trois sujets d'une même
+-- conversation — on ne va pas sur la page d'une course pour « consulter la rubrique dossards »,
+-- on y va pour voir ce qui s'y dit. Trois tables auraient fait trois écrans, trois listes vides
+-- à remplir, et trois endroits où modérer.
+--
+-- `parent_id` porte les réponses. C'est aussi le SEUL canal de contact entre deux personnes :
+-- l'app n'a pas de messagerie, donc on répond sous l'annonce, en public. Pour un dossard, c'est
+-- une protection autant qu'une limite — une négociation qui se tient devant tout le monde est
+-- une négociation qu'on peut signaler.
+--
+-- LES DOSSARDS, ET CE QUE L'APP NE FAIT PAS. Elle affiche une annonce et met deux personnes en
+-- contact. Elle n'encaisse rien, ne reverse rien, ne garantit rien, et ne vérifie aucun dossard.
+-- La plupart des organisateurs INTERDISENT le transfert : courir sous le nom d'un autre, c'est la
+-- disqualification, et surtout des secours qui liraient le mauvais dossier médical. L'app le dit
+-- sur chaque annonce plutôt que de faire comme si la question ne se posait pas.
+CREATE TABLE IF NOT EXISTS race_posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  race_id UUID NOT NULL REFERENCES races(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  -- NULL pour un message de premier niveau, sinon le message auquel il répond.
+  parent_id UUID REFERENCES race_posts(id) ON DELETE CASCADE,
+  -- 'message' | 'bib_offer' | 'bib_wanted' | 'partner'
+  kind TEXT NOT NULL DEFAULT 'message',
+  text TEXT NOT NULL,
+  -- Retiré par son auteur. On ne supprime pas la ligne : une réponse sous une annonce effacée
+  -- deviendrait un message sans contexte.
+  closed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_race_posts_race ON race_posts (race_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_race_posts_parent ON race_posts (parent_id, created_at);

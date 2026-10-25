@@ -678,3 +678,17 @@ CREATE TABLE IF NOT EXISTS race_posts (
 
 CREATE INDEX IF NOT EXISTS idx_race_posts_race ON race_posts (race_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_race_posts_parent ON race_posts (parent_id, created_at);
+
+-- LA PHOTO D'UNE SORTIE.
+--
+-- Une sortie portait un texte, des chiffres et un tracé. C'est un journal ; une photo en fait un
+-- fil qu'on regarde — c'est la différence entre l'app et Strava ou Instagram, et c'est elle qui
+-- fait descendre le pouce.
+--
+-- Une URL de stockage Blob, exactement comme `routes.photo_url` et `users.avatar_url` : jamais
+-- l'image elle-même. Une base de données qui porte des images se paie deux fois — à la lecture
+-- de chaque ligne du fil, et à la sauvegarde. Voir `handleActivityPhoto` dans
+-- api/activities/[action].js : chemin stable `activities/<id>.jpg`, octets magiques vérifiés
+-- plutôt que le type annoncé par le client, plafond quotidien, et l'ancienne image effacée du
+-- stockage au remplacement comme à la suppression de la sortie.
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS photo_url TEXT;

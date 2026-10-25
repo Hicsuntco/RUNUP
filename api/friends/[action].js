@@ -460,7 +460,7 @@ async function handleFeed(req, res, userId) {
            -- d'édition : la même sortie s'affichait avec sa carte et son titre dans l'onglet
            -- Club, et nue dans l'onglet Amis. Aucune erreur nulle part — les champs sont
            -- optionnels au décodage, donc l'absence passait inaperçue.
-           a.route_preview, a.title, a.note, a.edited_at,
+           a.route_preview, a.title, a.note, a.edited_at, a.photo_url,
            (SELECT COUNT(*)::int FROM activity_kudos k WHERE k.activity_id = a.id) AS kudos,
            EXISTS(SELECT 1 FROM activity_kudos k WHERE k.activity_id = a.id AND k.user_id = ${userId}) AS kudoed_by_me,
            (SELECT COUNT(*)::int FROM activity_comments c WHERE c.activity_id = a.id) AS comments_count
@@ -484,6 +484,7 @@ async function handleFeed(req, res, userId) {
       note: r.note || null,
       editedAt: r.edited_at || null,
       routePreview: r.route_preview || null,
+      photoUrl: r.photo_url || null,
       createdAt: r.created_at,
       ...activityMetrics(r),
       kudos: r.kudos,
@@ -547,7 +548,7 @@ async function handleProfile(req, res, userId) {
     const { rows } = await sql`
       SELECT a.id, a.text, a.created_at, a.distance_km, a.duration_seconds, a.avg_pace,
              a.elevation_gain_m, a.is_personal_record, a.content_key,
-             a.route_preview, a.title, a.note, a.edited_at,
+             a.route_preview, a.title, a.note, a.edited_at, a.photo_url,
              (SELECT COUNT(*)::int FROM activity_kudos k WHERE k.activity_id = a.id) AS kudos,
              EXISTS(SELECT 1 FROM activity_kudos k WHERE k.activity_id = a.id AND k.user_id = ${userId}) AS kudoed_by_me,
              (SELECT COUNT(*)::int FROM activity_comments c WHERE c.activity_id = a.id) AS comments_count
@@ -567,6 +568,7 @@ async function handleProfile(req, res, userId) {
       note: r.note || null,
       editedAt: r.edited_at || null,
       routePreview: r.route_preview || null,
+      photoUrl: r.photo_url || null,
       createdAt: r.created_at,
       ...activityMetrics(r),
       kudos: r.kudos,

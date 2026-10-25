@@ -60,6 +60,9 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'routePhoto':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleRoutePhoto(req, res, userId);
+    case 'photo':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleActivityPhoto(req, res, userId);
     default:
       return res.status(404).json({ error: 'not_found' });
   }
@@ -124,8 +127,17 @@ async function handleUpdate(req, res, userId) {
 async function handleDelete(req, res, userId) {
   const { activityId } = req.body || {};
   if (!isUuid(activityId)) return res.status(400).json({ error: 'bad_request' });
-  const { rows } = await sql`DELETE FROM activities WHERE id = ${activityId} AND user_id = ${userId} RETURNING id`;
+  // `photo_url` est RENDUE par le DELETE : une sortie effacée doit emporter son image, sinon
+  // chaque suppression laisse un objet orphelin dans le stockage — que plus rien ne référence,
+  // que personne ne verra jamais, et qui reste facturé.
+  const { rows } = await sql`
+    DELETE FROM activities WHERE id = ${activityId} AND user_id = ${userId}
+    RETURNING id, photo_url
+  `;
   if (rows.length === 0) return res.status(404).json({ error: 'not_found' });
+  // `catch` vide et sans `await` : la sortie est déjà supprimée, et l'échec d'un ménage ne doit
+  // pas faire croire à un échec de suppression.
+  if (rows[0].photo_url) del(rows[0].photo_url).catch(() => {});
   res.status(200).json({ ok: true });
 }
 
@@ -259,7 +271,7 @@ async function handleFeed(req, res, userId) {
   const { rows } = await sql`
     SELECT a.id, a.text, a.created_at, u.name, u.id AS user_id, u.avatar_data, u.avatar_url,
            a.distance_km, a.duration_seconds, a.avg_pace, a.elevation_gain_m, a.is_personal_record,
-           a.content_key, a.route_preview, a.title, a.note, a.edited_at,
+           a.content_key, a.route_preview, a.title, a.note, a.edited_at, a.photo_url,
            (SELECT COUNT(*)::int FROM activity_kudos k WHERE k.activity_id = a.id) AS kudos,
            EXISTS(SELECT 1 FROM activity_kudos k WHERE k.activity_id = a.id AND k.user_id = ${userId}) AS kudoed_by_me,
            (SELECT COUNT(*)::int FROM activity_comments c WHERE c.activity_id = a.id) AS comments_count,
@@ -305,6 +317,7 @@ async function handleFeed(req, res, userId) {
       note: r.note || null,
       editedAt: r.edited_at || null,
       routePreview: r.route_preview || null,
+      photoUrl: r.photo_url || null,
       createdAt: r.created_at,
       ...activityMetrics(r),
       kudos: r.kudos,
@@ -712,6 +725,66 @@ const MAX_ROUTE_PHOTOS_PER_DAY = 20;
 
 function isValidJpegBuffer(buffer) {
   return buffer.length > 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+}
+
+// LA PHOTO D'UNE SORTIE.
+//
+// Mot pour mot la même mécanique que la photo d'un itinéraire juste en dessous, et c'est
+// délibéré : même préfixe attendu, mêmes octets magiques vérifiés, même plafond quotidien, même
+// chemin stable dans le stockage, même ménage de l'ancienne image. Une seconde façon de déposer
+// une image serait une seconde façon de se tromper.
+//
+// CE QU'ELLE CHANGE. Une sortie portait un texte, des chiffres et un tracé. C'est un journal ;
+// une photo en fait un fil qu'on regarde. C'est aussi, de loin, le contenu le plus sensible que
+// l'app accepte — d'où les octets magiques plutôt que le type annoncé, et le signalement qui
+// existe déjà sur chaque sortie (`targetType: 'activity'`).
+async function handleActivityPhoto(req, res, userId) {
+  const { activityId, photoDataURI } = req.body || {};
+  if (!isUuid(activityId)) return res.status(400).json({ error: 'bad_request' });
+
+  const { rows } = await sql`SELECT user_id, photo_url FROM activities WHERE id = ${activityId}`;
+  if (!rows[0]) return res.status(404).json({ error: 'not_found' });
+  // L'autrice seule. Sans ce contrôle, n'importe qui remplacerait la photo de n'importe quelle
+  // sortie du fil de son club.
+  if (rows[0].user_id !== userId) return res.status(403).json({ error: 'forbidden' });
+  const previousUrl = rows[0].photo_url;
+
+  // Retirer sa photo est sans condition : ni plafond, ni validation. Quelqu'un qui réalise après
+  // coup que l'image en dit trop ne doit pas avoir à choisir entre la garder et effacer sa sortie.
+  if (photoDataURI === null || photoDataURI === undefined) {
+    await sql`UPDATE activities SET photo_url = NULL WHERE id = ${activityId}`;
+    if (previousUrl) del(previousUrl).catch(() => {});
+    return res.status(200).json({ ok: true, photoUrl: null });
+  }
+
+  if (typeof photoDataURI !== 'string'
+      || photoDataURI.length > MAX_ROUTE_PHOTO_LENGTH
+      || !photoDataURI.startsWith('data:image/jpeg;base64,')) {
+    return res.status(400).json({ error: 'bad_request' });
+  }
+  if (!(await underDailyCap(`activityPhoto:${userId}`, MAX_ROUTE_PHOTOS_PER_DAY))) {
+    return res.status(429).json({ error: 'too_many_uploads' });
+  }
+
+  let decoded;
+  try {
+    decoded = Buffer.from(photoDataURI.slice('data:image/jpeg;base64,'.length), 'base64');
+  } catch {
+    return res.status(400).json({ error: 'bad_request' });
+  }
+  // Les octets magiques, pas le préfixe annoncé par le client : c'est ce qui empêche vraiment de
+  // déposer autre chose qu'une image et de la servir à tout un club.
+  if (!isValidJpegBuffer(decoded)) return res.status(400).json({ error: 'not_an_image' });
+
+  const blob = await put(`activities/${activityId}.jpg`, decoded, {
+    access: 'public',
+    contentType: 'image/jpeg',
+    addRandomSuffix: false,
+    cacheControlMaxAge: 3600,
+  });
+  await sql`UPDATE activities SET photo_url = ${blob.url} WHERE id = ${activityId}`;
+  if (previousUrl && previousUrl !== blob.url) del(previousUrl).catch(() => {});
+  res.status(200).json({ ok: true, photoUrl: blob.url });
 }
 
 async function handleRoutePhoto(req, res, userId) {

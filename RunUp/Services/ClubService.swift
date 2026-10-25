@@ -193,6 +193,9 @@ struct FeedItem: Decodable, Identifiable {
     /// `nil` pour une sortie sans GPS, trop courte pour survivre au rognage, ou dont l'autrice a
     /// retiré le tracé après coup.
     var routePreview: [RunRecord.RoutePoint]?
+    /// La photo de la sortie, quand son autrice en a mis une. Une URL de stockage, jamais
+    /// l'image : `AsyncImage` va la chercher, le fil ne la transporte pas.
+    var photoUrl: String?
     /// Trois noms au plus parmi ceux qui ont aimé — ce qui transforme « 7 » en gens. Le compte
     /// complet reste `kudos` ; ces noms n'en sont pas l'ordre, seulement un échantillon.
     var kudosNames: [String]
@@ -658,12 +661,39 @@ struct ClubService {
     /// doit pas emporter la publication avec lui — un itinéraire sans photo reste utile, une
     /// publication perdue ne l'est pas.
     @discardableResult
+    /// Pose ou retire la photo d'une sortie. `nil` la retire — sans condition, parce que
+    /// quelqu'un qui réalise après coup que l'image en dit trop ne doit pas avoir à choisir entre
+    /// la garder et effacer sa sortie.
+    func setActivityPhoto(activityId: String, dataURI: String?) async throws -> String? {
+        let response: RoutePhotoResponse = try await send(
+            path: "api/activities/photo", method: "POST",
+            body: ["activityId": activityId, "photoDataURI": Self.pourJSON(dataURI)]
+        )
+        return response.photoUrl
+    }
+
     func setRoutePhoto(routeId: String, dataURI: String?) async throws -> String? {
         let response: RoutePhotoResponse = try await send(
             path: "api/activities/routePhoto", method: "POST",
-            body: ["routeId": routeId, "photoDataURI": dataURI as Any]
+            body: ["routeId": routeId, "photoDataURI": Self.pourJSON(dataURI)]
         )
         return response.photoUrl
+    }
+
+    /// `nil` rendu en `NSNull`, LE SEUL NIL QUE JSON ACCEPTE.
+    ///
+    /// `dataURI as Any` avec un optionnel vide range un `Optional<String>.none` dans le
+    /// dictionnaire. `JSONSerialization` ne le considère pas comme un objet JSON valide et lève
+    /// une exception Objective-C — que Swift ne rattrape pas : l'app S'ARRÊTE, elle ne rend pas
+    /// une erreur. C'est ce qu'écrivait `setRoutePhoto`, sans conséquence jusqu'ici parce que son
+    /// unique appelant garde un `if let` et ne passe jamais rien de vide. Retirer la photo d'une
+    /// sortie, en revanche, consiste précisément à passer `nil` — le piège était armé pour le
+    /// prochain appelant, qui est celui que je viens d'écrire.
+    ///
+    /// Et `null` ne peut pas être remplacé par une clé ABSENTE : côté serveur, absente veut dire
+    /// « ne touche à rien », `null` veut dire « retire-la ». Les deux routes lisent la différence.
+    private static func pourJSON(_ valeur: String?) -> Any {
+        valeur ?? NSNull()
     }
 
     /// Ceux que j'ai publiés, et ceux que j'ai enregistrés pour plus tard.

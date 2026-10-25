@@ -1,4 +1,6 @@
 import SwiftUI
+import PhotosUI
+import UIKit
 
 /// Renommer sa sortie, lui ajouter une note, ou lui retirer son tracé — après coup.
 ///
@@ -32,6 +34,15 @@ struct EditActivitySheet: View {
     @State private var removeRoute = false
     @State private var saving = false
     @State private var errorMessage: String?
+
+    // La photo. `photoItem` est la sélection, `photoPreview` l'image réduite affichée tout de
+    // suite, `photoDataURI` ce qui part au serveur — et `photoRetiree` le cas qu'on ne peut pas
+    // déduire des trois autres : « il y en avait une, je la retire » ressemblerait sinon à
+    // « je n'en ai pas choisi », c'est-à-dire à « n'y touche pas ».
+    @State private var photoItem: PhotosPickerItem?
+    @State private var photoPreview: UIImage?
+    @State private var photoDataURI: String?
+    @State private var photoRetiree = false
 
     init(item: FeedItem, onSaved: @escaping () -> Void) {
         self.item = item
@@ -81,6 +92,8 @@ struct EditActivitySheet: View {
                                 if new.count > Self.maxNote { note = String(new.prefix(Self.maxNote)) }
                             }
                     }
+
+                    photoSection
 
                     if item.routePreview != nil { routeSection }
 
@@ -152,6 +165,91 @@ struct EditActivitySheet: View {
         }
     }
 
+    /// LA PHOTO, APRÈS COUP ET NON AU MOMENT DE COURIR.
+    ///
+    /// On ne sort pas son téléphone pour choisir une image en finissant un dix kilomètres. C'est
+    /// aussi ce que fait Strava : la sortie part d'abord, la photo s'ajoute ensuite — et toutes
+    /// les sorties déjà publiées en deviennent candidates, ce qu'un ajout au moment de la
+    /// publication n'aurait jamais permis.
+    private var photoSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Photo")
+                .font(RUFont.sans(.micro, weight: .bold))
+                .tracking(1.2)
+                .foregroundColor(RUColor.text3)
+
+            if let apercu = photoPreview {
+                zoneDePhoto { Image(uiImage: apercu).resizable().scaledToFill() }
+            } else if let existante = item.photoUrl, !existante.isEmpty, !photoRetiree,
+                      let url = URL(string: existante) {
+                zoneDePhoto {
+                    AsyncImage(url: url) { image in
+                        image.resizable().scaledToFill()
+                    } placeholder: {
+                        RUColor.card2
+                    }
+                }
+            } else {
+                PhotosPicker(selection: $photoItem, matching: .images) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "camera.fill").font(.system(size: 14))
+                        Text("Ajouter une photo")
+                    }
+                    .font(RUFont.sans(.label, weight: .semibold))
+                    .foregroundColor(RUColor.rose2)
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: 52)
+                    .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous)
+                        .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                }
+            }
+
+            Text("Elle sera visible par ton club et par tes abonnés.")
+                .font(RUFont.sans(.small))
+                .foregroundColor(RUColor.text3)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .onChange(of: photoItem) { _, nouveau in Task { await chargerLaPhoto(nouveau) } }
+    }
+
+    private func zoneDePhoto<Contenu: View>(@ViewBuilder _ contenu: () -> Contenu) -> some View {
+        ZStack(alignment: .topTrailing) {
+            contenu()
+                .frame(height: 170)
+                .frame(maxWidth: .infinity)
+                .clipped()
+                .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+            Button(action: {
+                photoPreview = nil
+                photoDataURI = nil
+                photoItem = nil
+                photoRetiree = true
+            }) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 22))
+                    .foregroundStyle(.white, .black.opacity(0.45))
+                    .padding(8)
+            }
+            .accessibilityLabel("Retirer la photo")
+        }
+    }
+
+    /// Réduite et encodée dès la sélection : 1080 px sur le côté long, qualité 0,6 — ce qui tient
+    /// sous les 500 ko que le serveur accepte tout en restant net en plein écran. Exactement la
+    /// même chaîne que la photo d'un itinéraire et celle du profil : une troisième façon de
+    /// préparer une image serait une troisième façon de dépasser le plafond.
+    private func chargerLaPhoto(_ selection: PhotosPickerItem?) async {
+        guard let selection,
+              let data = try? await selection.loadTransferable(type: Data.self),
+              let image = UIImage(data: data) else { return }
+        let reduite = image.resized(maxDimension: 1080)
+        guard let jpeg = reduite.jpegData(compressionQuality: 0.6) else { return }
+        photoPreview = reduite
+        photoDataURI = "data:image/jpeg;base64," + jpeg.base64EncodedString()
+        photoRetiree = false
+    }
+
     private func save() {
         saving = true
         errorMessage = nil
@@ -165,6 +263,17 @@ struct EditActivitySheet: View {
                     note: trimmedNote.isEmpty ? nil : trimmedNote,
                     removeRoute: removeRoute
                 )
+                // LA PHOTO PART APRÈS LE TEXTE, ET SON ÉCHEC NE REMET PAS LE RESTE EN CAUSE.
+                //
+                // Ce sont deux requêtes parce que ce sont deux choses : le texte passe par le
+                // filtre de modération, l'image par un stockage et un plafond quotidien. Les
+                // joindre ferait perdre un titre corrigé parce qu'une photo était trop lourde.
+                // Même ordre et même raison que la publication d'un itinéraire.
+                if let photoDataURI {
+                    _ = try? await clubService.setActivityPhoto(activityId: item.id, dataURI: photoDataURI)
+                } else if photoRetiree {
+                    _ = try? await clubService.setActivityPhoto(activityId: item.id, dataURI: nil)
+                }
                 onSaved()
                 dismiss()
             } catch {

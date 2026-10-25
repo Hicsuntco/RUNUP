@@ -3813,6 +3813,23 @@
         }
       }
     },
+    "Ajouter une photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir una foto"
+          }
+        }
+      }
+    },
     "Ajouter une séance": {
       "extractionState": "manual",
       "localizations": {
@@ -9669,6 +9686,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Se queda en tu historial, pero ya no se propondrá por defecto en tus próximas carreras."
+          }
+        }
+      }
+    },
+    "Elle sera visible par ton club et par tes abonnés.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your club and your followers will see it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La verán tu club y quienes te siguen."
           }
         }
       }
@@ -17847,6 +17881,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fase de afinamiento"
+          }
+        }
+      }
+    },
+    "Photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto"
+          }
+        }
+      }
+    },
+    "Photo de la sortie": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto de la salida"
           }
         }
       }

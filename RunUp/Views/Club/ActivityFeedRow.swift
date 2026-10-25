@@ -43,9 +43,22 @@ struct ActivityFeedRow: View {
         return route
     }
 
+    private var photo: URL? {
+        guard let brut = item.photoUrl, !brut.isEmpty else { return nil }
+        return URL(string: brut)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if let trace {
+            // LA PHOTO PASSE DEVANT LE TRACÉ, et le tracé ne disparaît pas pour autant.
+            //
+            // Une carte du fil a UN bandeau. Quand une sortie porte les deux, c'est la photo qu'on
+            // est venu voir — un dessin de boucle ne retient personne. Le tracé reprend sa place
+            // en vignette dans le coin, comme la carte incrustée d'un post Strava : il dit toujours
+            // où l'on a couru, sans prendre les deux cents points de haut qui font le sujet.
+            if let photo {
+                photoHead(photo)
+            } else if let trace {
                 traceHead(trace)
             } else {
                 plainHead
@@ -134,6 +147,65 @@ struct ActivityFeedRow: View {
             topTrailingRadius: RUSpacing.radiusStandard,
             style: .continuous
         ))
+    }
+
+    /// Le bandeau photo : la même grammaire que `traceHead` — nom en haut à gauche, record en
+    /// haut à droite, chiffres en bas — mais sur une image.
+    ///
+    /// LES DEUX VOILES NE SONT PAS DU DÉCOR. Les textes posés dessus sont BLANCS, et une photo
+    /// est n'importe quoi : un ciel de midi, de la neige, un dossard blanc. Sans un dégradé sombre
+    /// sous le nom et sous les chiffres, la moitié des cartes du fil deviennent illisibles — et
+    /// c'est la moitié qu'on ne découvre qu'une fois le fil plein de vraies photos. Ils sont
+    /// posés AVANT les textes dans la pile, donc sous eux.
+    private func photoHead(_ url: URL) -> some View {
+        ZStack {
+            // Le fond du tracé sert de fond de chargement : du sombre sous des textes blancs,
+            // c'est déjà le bon contraste avant même que l'image n'arrive.
+            Self.traceBackground
+            AsyncImage(url: url) { image in
+                image.resizable().scaledToFill()
+            } placeholder: {
+                ProgressView().tint(.white)
+            }
+        }
+        .frame(height: 220)
+        .clipped()
+        .overlay(alignment: .top) {
+            LinearGradient(colors: [.black.opacity(0.55), .clear],
+                           startPoint: .top, endPoint: .bottom)
+                .frame(height: 96)
+                .allowsHitTesting(false)
+        }
+        .overlay(alignment: .bottom) {
+            LinearGradient(colors: [.clear, .black.opacity(0.62)],
+                           startPoint: .top, endPoint: .bottom)
+                .frame(height: 116)
+                .allowsHitTesting(false)
+        }
+        .overlay(alignment: .topLeading) { author(onDark: true).padding(12) }
+        .overlay(alignment: .topTrailing) {
+            if item.isPersonalRecord { recordBadge(onDark: true).padding(12) }
+        }
+        .overlay(alignment: .bottomLeading) { heroStats.padding(EdgeInsets(top: 0, leading: 14, bottom: 12, trailing: 14)) }
+        .overlay(alignment: .bottomTrailing) {
+            if let trace {
+                RouteThumbnail(route: trace, lineWidth: 2, lineColor: .white, showsStart: false)
+                    .frame(width: 54, height: 54)
+                    .padding(8)
+                    .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: RUSpacing.radiusTile, style: .continuous))
+                    .padding(EdgeInsets(top: 0, leading: 0, bottom: 10, trailing: 12))
+                    .allowsHitTesting(false)
+            }
+        }
+        .clipShape(UnevenRoundedRectangle(
+            topLeadingRadius: RUSpacing.radiusStandard,
+            topTrailingRadius: RUSpacing.radiusStandard,
+            style: .continuous
+        ))
+        // L'image EST le sujet de la carte : VoiceOver doit dire qu'il y en a une, sinon la carte
+        // se lit exactement comme une carte sans photo.
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(String(localized: "Photo de la sortie"))
     }
 
     /// Trois chiffres au plus, en grand, sur le tracé. Pas quatre : le dénivelé est la mesure dont

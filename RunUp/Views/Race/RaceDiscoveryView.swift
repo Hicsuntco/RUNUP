@@ -53,10 +53,19 @@ struct RaceDiscoveryView: View {
         }
         .background(RUColor.pageBackground)
         .onChange(of: query) { _, nouveau in chercher(nouveau) }
-        .sheet(item: $ouverte) { course in
+        // PLEIN ÉCRAN, ET PAS UNE FEUILLE À MI-HAUTEUR.
+        //
+        // Une feuille est une PARENTHÈSE : on y fait une chose, on la referme. La page d'une
+        // course est une DESTINATION — on y lit qui la prépare, on fait défiler le mur, on écrit.
+        // Ouverte à mi-hauteur au-dessus de la liste, elle avait l'air d'une carte posée sur
+        // l'écran plutôt que d'un endroit où l'on se trouve, et il fallait la tirer vers le haut
+        // avant de pouvoir y faire quoi que ce soit.
+        .fullScreenCover(item: $ouverte) { course in
             RacePageView(race: course) { Task { await charger() } }
-                .runUpSheetStyle()
         }
+        // Celle-ci RESTE une feuille, et c'est le bon choix : créer une course est une
+        // parenthèse, elle a une fin. Mais en pleine hauteur — le formulaire fait huit champs,
+        // et s'ouvrir à mi-écran sur un formulaire oblige à le tirer avant de le lire.
         .sheet(isPresented: $creationPresentee) {
             CreateRaceSheet(nomPropose: recherche) { creee in
                 creationPresentee = false
@@ -70,7 +79,7 @@ struct RaceDiscoveryView: View {
                     await charger()
                 }
             }
-            .runUpSheetStyle()
+            .runUpSheetStyle(detents: [.large])
         }
         .task { if isLoading { await charger() } }
         .refreshable { await charger() }

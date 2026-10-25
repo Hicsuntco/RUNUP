@@ -34,6 +34,7 @@ struct RacePageView: View {
 
     @Environment(AppState.self) private var appState
     @Environment(\.openURL) private var openURL
+    @Environment(\.dismiss) private var dismiss
 
     @State private var page: RacePage?
     @State private var isLoading = true
@@ -68,25 +69,31 @@ struct RacePageView: View {
     private var jeLaPrepare: Bool { page?.me != nil }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                entete
+        VStack(spacing: 0) {
+            retour
+                .padding(.horizontal, RUSpacing.pagePadding)
+                .padding(.top, 8)
 
-                if isLoading {
-                    ProgressView().frame(maxWidth: .infinity).padding(.vertical, 40)
-                } else if let loadError {
-                    Text("Impossible de charger cette page — \(loadError).")
-                        .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
-                        .frame(maxWidth: .infinity).padding(.vertical, 24)
-                } else {
-                    maParticipation
-                    quiLaPrepare
-                    leMur
-                    boutonSignalerLaCourse
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    entete
+
+                    if isLoading {
+                        ProgressView().frame(maxWidth: .infinity).padding(.vertical, 40)
+                    } else if let loadError {
+                        Text("Impossible de charger cette page — \(loadError).")
+                            .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
+                            .frame(maxWidth: .infinity).padding(.vertical, 24)
+                    } else {
+                        maParticipation
+                        quiLaPrepare
+                        leMur
+                        boutonSignalerLaCourse
+                    }
                 }
+                .padding(RUSpacing.pagePadding)
+                .padding(.bottom, 24)
             }
-            .padding(RUSpacing.pagePadding)
-            .padding(.bottom, 24)
         }
         .background(RUColor.pageBackground)
         .task { if page == nil { await charger() } }
@@ -97,6 +104,23 @@ struct RacePageView: View {
         } message: {
             Text("Ce signalement sera examiné. Merci de préciser ce qui pose problème.")
         }
+    }
+
+    /// Le chemin de retour. Une feuille se referme d'un glissement vers le bas ; un écran plein
+    /// n'a rien de tel, et sans ce bouton on serait enfermé dedans.
+    private var retour: some View {
+        Button(action: { dismiss() }) {
+            HStack(spacing: 6) {
+                Image(systemName: "chevron.left").font(.system(size: 12, weight: .bold))
+                Text("Courses").font(RUFont.sans(.label, weight: .semibold))
+            }
+            .foregroundColor(RUColor.text2)
+            .frame(minHeight: 44)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityLabel("Retour aux courses")
     }
 
     // MARK: - 1. La course

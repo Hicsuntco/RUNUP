@@ -20235,6 +20235,23 @@
         }
       }
     },
+    "Retour aux courses": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to races"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a las carreras"
+          }
+        }
+      }
+    },
     "Rien avant : la première course se fait à vide, et c'est sans conséquence, elle est courte. Rien après non plus — à pied, sur un estomac déjà secoué, presque tout est refusé.": {
       "extractionState": "manual",
       "localizations": {

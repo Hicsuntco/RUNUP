@@ -49,6 +49,16 @@ enum CaptureSeed {
     /// Séparé de `--ecran=` parce qu'une page de profil n'est PAS un `AppScreen` : elle se
     /// présente au-dessus de n'importe lequel (voir `ContentRouterView`). Les deux arguments se
     /// combinent donc au lieu de se concurrencer.
+    /// `--courses` : ouvrir l'écran des courses dans l'onglet social.
+    static var coursesDemandees: Bool {
+        ProcessInfo.processInfo.arguments.contains("--courses")
+    }
+
+    /// `--course` : ouvrir la page d'une course par-dessus l'écran.
+    static var courseDemandee: Bool {
+        ProcessInfo.processInfo.arguments.contains("--course")
+    }
+
     /// `--mur` : ouvrir le fil plutôt que l'écran par défaut de l'onglet social.
     static var murDemande: Bool {
         ProcessInfo.processInfo.arguments.contains("--mur")
@@ -331,6 +341,52 @@ enum CaptureSeed {
                 return copie
             }
             etat.cachedWall = mur
+
+            // LA PAGE D'UNE COURSE. Trois coureurs dont deux partagent leur entraînement et un
+            // non — c'est la distinction qui demande le plus de soin à l'affichage — et trois
+            // messages dont une cession de dossard, pour que l'avertissement se photographie.
+            let pageDeCourse = """
+            {
+              "race": {
+                "id": "demo-course", "name": "Marathon de Paris", "city": "Paris",
+                "raceDate": "2027-04-04", "distanceKm": 42.195, "discipline": "run",
+                "followerCount": 143
+              },
+              "me": {
+                "targetChrono": "3:45", "targetPaceSecPerKm": 320,
+                "sharesTraining": true, "lookingForPartner": false
+              },
+              "runners": [
+                { "id": "3", "name": "Margaux", "lastName": "Hubert", "isPrivate": false,
+                  "followStatus": "accepted", "targetChrono": "3:30", "targetPaceSecPerKm": 298,
+                  "lookingForPartner": true, "km4Weeks": 182.4, "runs4Weeks": 16 },
+                { "id": "2", "name": "Inès", "lastName": "Lambert", "username": "ines",
+                  "isPrivate": false, "followStatus": "accepted", "targetChrono": "3:48",
+                  "targetPaceSecPerKm": 324, "lookingForPartner": true,
+                  "km4Weeks": 146.0, "runs4Weeks": 14 },
+                { "id": "5", "name": "Lina", "isPrivate": false, "targetChrono": "sub-4",
+                  "lookingForPartner": false }
+              ],
+              "posts": [
+                { "id": "m1", "kind": "partner",
+                  "text": "Je vise 3h30, sorties longues le dimanche matin au bois. Quelqu'un sur ce rythme ?",
+                  "closed": false, "isMine": false, "kudos": 4, "kudoedByMe": true,
+                  "createdAt": "\(ilYA(5))",
+                  "author": { "id": "3", "name": "Margaux", "isPrivate": false } },
+                { "id": "m2", "kind": "bib_offer",
+                  "text": "Je cède mon dossard, blessure au genou. Distance marathon.",
+                  "closed": false, "isMine": false, "kudos": 1, "kudoedByMe": false,
+                  "createdAt": "\(ilYA(26))",
+                  "author": { "id": "5", "name": "Lina", "isPrivate": false } },
+                { "id": "m3", "kind": "message",
+                  "text": "Le ravito du 30e est à droite, pas à gauche comme l'an dernier.",
+                  "closed": false, "isMine": false, "kudos": 11, "kudoedByMe": false,
+                  "createdAt": "\(ilYA(52))",
+                  "author": { "id": "2", "name": "Inès", "isPrivate": false } }
+              ]
+            }
+            """
+            etat.cachedRacePage = try decodeur.decode(RacePage.self, from: Data(pageDeCourse.utf8))
 
             var sienne = try decodeur.decode(PublicProfilePage.self, from: Data(profil.utf8))
             // Ses sorties sont celles du fil de démonstration qui lui appartiennent : une page de

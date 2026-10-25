@@ -435,16 +435,21 @@ struct HomeView: View {
             Text(LocalizedStringKey(isRestDay ? "Aujourd'hui" : "Séance du jour"))
                 .font(RUFont.sans(.micro, weight: .bold)).tracking(0.2)
         }
-        .foregroundColor(isRestDay ? RUColor.text2 : .white)
+        // UN SEUL ROSE PAR CARTE, ET IL VA À CE SUR QUOI ON PEUT AGIR.
+        //
+        // Cette pastille était un aplat de dégradé rose à texte blanc — l'élément le plus bruyant
+        // de la carte, et celui qui dit le moins : « Séance du jour » sur l'écran d'accueil d'une
+        // app de course n'apprend rien à personne. Elle disputait l'accent au bouton DÉMARRER,
+        // qui est la seule chose de la carte sur laquelle on peut appuyer.
+        //
+        // Elle garde son symbole — qui, lui, porte la famille de la séance et change selon le
+        // jour — et perd sa couleur. Les deux états deviennent le même, ce qui est juste : un
+        // jour de repos et un jour de séance sont deux faits, pas deux niveaux d'importance.
+        .foregroundColor(RUColor.text2)
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
-        .background(
-            isRestDay
-                ? AnyShapeStyle(RUColor.card2)
-                : AnyShapeStyle(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom)),
-            in: Capsule()
-        )
-        .overlay(Capsule().stroke(isRestDay ? RUColor.line : Color.clear, lineWidth: RUSpacing.hairline))
+        .background(RUColor.card2, in: Capsule())
+        .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
     }
 
     /// DÉMARRER, et un « + » à côté.
@@ -541,7 +546,7 @@ struct HomeView: View {
                                 .foregroundColor(RUColor.text3)
                         }
                         MetricColumn(value: seance.pace, label: "Allure", valueSize: 17)
-                        MetricColumn(value: seance.zone, label: "Zone", valueColor: RUColor.rose2, valueSize: 17)
+                        MetricColumn(value: seance.zone, label: "Zone", valueSize: 17)
                     }
                     .padding(.top, 10)
                 }
@@ -602,7 +607,10 @@ struct HomeView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .font(RUFont.sans(.small, weight: .medium))
-                .foregroundColor(RUColor.rose2)
+                // Rose auparavant. C'est une EXPLICATION — « voici pourquoi la séance est ce
+                // qu'elle est » — et une explication n'est pas un accent : on la lit une fois,
+                // on n'agit pas dessus.
+                .foregroundColor(RUColor.text2)
                 .padding(.top, 6)
             }
 
@@ -671,7 +679,7 @@ struct HomeView: View {
                             .foregroundColor(RUColor.text3)
                     }
                     MetricColumn(value: session.pace, label: "Allure", valueSize: 17)
-                    MetricColumn(value: session.zone, label: "Zone", valueColor: RUColor.rose2, valueSize: 17)
+                    MetricColumn(value: session.zone, label: "Zone", valueSize: 17)
                 }
                 .padding(.top, 10)
 

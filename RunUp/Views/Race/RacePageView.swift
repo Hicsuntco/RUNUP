@@ -281,17 +281,26 @@ struct RacePageView: View {
                     }
                 }
 
-                interrupteur(
-                    titre: String(localized: "Je cherche quelqu'un pour courir avec moi"),
-                    detail: String(localized: "Tu apparais en haut de la liste, pour celles et ceux qui visent la même allure."),
-                    actif: $cherchePartenaire
-                )
-
-                interrupteur(
-                    titre: String(localized: "Montrer où j'en suis de ma préparation"),
-                    detail: String(localized: "Les autres coureurs de cette course verront ton volume des 4 dernières semaines. Rien d'autre : ni tes parcours, ni tes allures réelles, ni tes dates de sortie."),
-                    actif: $partageEntrainement
-                )
+                // DEUX INTERRUPTEURS DANS UNE CARTE, PAS DEUX CARTES.
+                //
+                // Chacun avait la sienne, et deux rectangles posés l'un sur l'autre pour deux
+                // cases à cocher font une liste de boîtes. Ils appartiennent à la même question —
+                // « qu'est-ce que j'accepte de montrer ? » — donc à la même carte, séparés par un
+                // filet.
+                VStack(spacing: 0) {
+                    interrupteur(
+                        titre: String(localized: "Je cherche quelqu'un pour courir avec moi"),
+                        detail: String(localized: "Tu apparais en haut de la liste, pour celles et ceux qui visent la même allure."),
+                        actif: $cherchePartenaire
+                    )
+                    Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
+                    interrupteur(
+                        titre: String(localized: "Montrer où j'en suis de ma préparation"),
+                        detail: String(localized: "Les autres coureurs de cette course verront ton volume des 4 dernières semaines. Rien d'autre : ni tes parcours, ni tes allures réelles, ni tes dates de sortie."),
+                        actif: $partageEntrainement
+                    )
+                }
+                .ruCard()
 
                 Button(action: { Task { await enregistrerMaParticipation() } }) {
                     Text(enCours ? String(localized: "Enregistrement…") : String(localized: "ENREGISTRER"))
@@ -330,7 +339,7 @@ struct RacePageView: View {
                 .foregroundColor(RUColor.text3)
         }
         .padding(RUSpacing.cardPadding)
-        .ruCard()
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: - 3. Qui la prépare
@@ -362,10 +371,17 @@ struct RacePageView: View {
                     .foregroundColor(RUColor.text3)
                     .padding(.vertical, 8)
             } else {
-                VStack(spacing: 8) {
-                    ForEach(coureursAffiches) { coureur in ligneDeCoureur(coureur) }
+                // DES LIGNES, PAS DES BOÎTES. Chaque coureur était dans un rectangle rempli posé
+                // dans une section qui n'en est pas un : huit boîtes empilées pour huit lignes de
+                // liste. Un filet entre deux lignes sépare aussi bien et ne fabrique rien.
+                VStack(spacing: 0) {
+                    ForEach(Array(coureursAffiches.enumerated()), id: \.element.id) { rang, coureur in
+                        if rang > 0 {
+                            Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
+                        }
+                        ligneDeCoureur(coureur)
+                    }
                 }
-            }
         }
     }
 
@@ -434,8 +450,7 @@ struct RacePageView: View {
             }
             .accessibilityLabel("Plus d'options")
         }
-        .padding(11)
-        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+        .padding(.vertical, 11)
     }
 
     /// « 14 sorties ». À part, et non imbriqué dans l'interpolation de la ligne au-dessus : une
@@ -496,8 +511,10 @@ struct RacePageView: View {
                     .foregroundColor(RUColor.text3)
                     .padding(.vertical, 8)
             } else {
-                VStack(spacing: 10) {
-                    ForEach(messagesDeTete) { message in bloc(message) }
+                VStack(spacing: 0) {
+                    ForEach(Array(messagesDeTete.enumerated()), id: \.element.id) { rang, message in
+                        bloc(message, rang: rang)
+                    }
                 }
             }
         }
@@ -561,20 +578,38 @@ struct RacePageView: View {
         }
     }
 
+    /// UN FILET VERTICAL, PAS UNE BOÎTE.
+    ///
+    /// C'était un pavé ambre rempli, posé À L'INTÉRIEUR de la carte d'un message : une boîte dans
+    /// une boîte, et la chose la plus colorée du mur alors qu'elle ne demande rien — elle avertit.
+    /// Un filet ambre à gauche du texte dit « attention » aussi bien, sans fabriquer un second
+    /// rectangle ni repeindre un dixième de l'écran.
     private var avertissementDossard: some View {
-        HStack(alignment: .top, spacing: 8) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 12)).foregroundColor(RUColor.amber)
+        HStack(alignment: .top, spacing: 10) {
+            Rectangle()
+                .fill(RUColor.amber.opacity(0.65))
+                .frame(width: 2)
             Text("RUNUP ne vend rien et ne garantit rien : vous vous arrangez entre vous. La plupart des organisateurs interdisent le transfert de dossard — vérifie leur règlement. Courir sous le nom d'un autre, c'est la disqualification, et des secours qui liraient le mauvais dossier médical.")
                 .font(RUFont.sans(.small))
                 .foregroundColor(RUColor.amberText)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(10)
-        .background(RUColor.amber.opacity(0.12), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+        .fixedSize(horizontal: false, vertical: true)
     }
 
-    private func bloc(_ message: RacePost) -> some View {
+    /// LE MÊME TRAITEMENT QUE LE FIL : un filet entre deux messages, et rien autour.
+    ///
+    /// Chaque message portait sa carte, et la carte portait la boîte de l'avertissement dossard.
+    /// Trois rectangles emboîtés pour une phrase. Un mur de conversation se descend ; une pile de
+    /// cartes se parcourt.
+    private func bloc(_ message: RacePost, rang: Int) -> some View {
         VStack(alignment: .leading, spacing: 8) {
+            if rang > 0 {
+                Rectangle()
+                    .fill(RUColor.line)
+                    .frame(height: RUSpacing.hairline)
+                    .padding(.bottom, 6)
+            }
             messageEnTete(message)
 
             if message.kind == "bib_offer" || message.kind == "bib_wanted" {
@@ -624,8 +659,7 @@ struct RacePageView: View {
                 Spacer(minLength: 0)
             }
         }
-        .padding(RUSpacing.cardPadding)
-        .ruCard()
+        .padding(.bottom, 10)
     }
 
     private func messageEnTete(_ message: RacePost) -> some View {
@@ -735,6 +769,13 @@ struct RacePageView: View {
 
     private func charger() async {
         loadError = nil
+        // En démonstration, le cache est tout — quatrième écran dans ce cas, même raison que les
+        // trois autres : pas de serveur en face d'un simulateur.
+        if Demonstration.enCours {
+            page = appState.cachedRacePage
+            isLoading = false
+            return
+        }
         do {
             page = try await clubService.racePage(raceId: race.id)
         } catch {

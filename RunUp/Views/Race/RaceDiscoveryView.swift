@@ -81,7 +81,14 @@ struct RaceDiscoveryView: View {
             }
             .runUpSheetStyle(detents: [.large])
         }
-        .task { if isLoading { await charger() } }
+        .task {
+            if isLoading { await charger() }
+            #if DEBUG
+            // La page de course n'est pas un écran de l'app : elle se présente par-dessus celui-ci.
+            // Pour la photographier, il faut donc la demander d'ici, une fois la liste en place.
+            if CaptureSeed.courseDemandee { ouverte = appState.cachedRacePage?.race }
+            #endif
+        }
         .refreshable { await charger() }
     }
 
@@ -126,9 +133,14 @@ struct RaceDiscoveryView: View {
                 boutonCreer
             }
         } else {
-            VStack(spacing: 10) {
-                ForEach(results) { course in ligne(course) }
-                boutonCreer
+            VStack(spacing: 0) {
+                ForEach(Array(results.enumerated()), id: \.element.id) { rang, course in
+                    if rang > 0 {
+                        Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
+                    }
+                    ligne(course)
+                }
+                boutonCreer.padding(.top, 14)
             }
         }
     }
@@ -161,8 +173,16 @@ struct RaceDiscoveryView: View {
     private func section(titre: String, icone: String, courses: [RaceEvent]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             RUCardHeader(icon: icone, tint: RUColor.rose2, title: titre)
-            VStack(spacing: 10) {
-                ForEach(courses) { course in ligne(course) }
+            // Des lignes séparées par un filet, pas une pile de cartes : une liste de courses se
+            // parcourt du pouce, et dix rectangles arrondis empilés fabriquent dix objets là où
+            // il n'y a qu'une liste.
+            VStack(spacing: 0) {
+                ForEach(Array(courses.enumerated()), id: \.element.id) { rang, course in
+                    if rang > 0 {
+                        Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
+                    }
+                    ligne(course)
+                }
             }
         }
     }
@@ -214,8 +234,8 @@ struct RaceDiscoveryView: View {
                     }
                 }
             }
-            .padding(12)
-            .ruCard()
+            .padding(.vertical, 13)
+            .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())
     }
@@ -261,6 +281,12 @@ struct RaceDiscoveryView: View {
 
     private func charger() async {
         loadError = nil
+        if Demonstration.enCours {
+            mine = [appState.cachedRacePage?.race].compactMap { $0 }
+            upcoming = []
+            isLoading = false
+            return
+        }
         do {
             // Les deux listes ensemble : elles s'affichent ensemble, et les charger l'une après
             // l'autre ferait apparaître la page en deux temps.

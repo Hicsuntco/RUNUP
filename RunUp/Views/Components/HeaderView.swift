@@ -13,7 +13,16 @@ struct HeaderView<Trailing: View>: View {
     var body: some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 2) {
-                EyebrowLabel(text: eyebrow, color: RUColor.rose)
+                // L'EYEBROW REPREND LA COULEUR QUE LE SYSTÈME LUI DONNE, et ce n'est pas rose.
+                //
+                // `EyebrowLabel` porte `text3` par défaut, avec sa raison écrite : la maquette
+                // réserve la prose secondaire à `ink2` et met toutes ses micro-étiquettes en
+                // `ink3`. Ce composant-ci passait outre et forçait le rose sur l'eyebrow de
+                // CHAQUE onglet de premier niveau — une date, « Semaine 4/9 », « Mode course
+                // libre ». Aucune de ces lignes n'est une action ; les peindre de la couleur des
+                // actions, c'est dépenser l'accent sur ce qui ne le mérite pas, en haut de chaque
+                // écran de l'app.
+                EyebrowLabel(text: eyebrow)
                 Text(LocalizedStringKey(title)).displayStyle(titleSize).foregroundColor(RUColor.textPrimary)
             }
             Spacer()
@@ -31,7 +40,10 @@ struct HeaderView<Trailing: View>: View {
 /// larger than a modal push).
 struct BackTitleHeaderView<Trailing: View>: View {
     var eyebrow: String? = nil
-    var eyebrowColor: Color = RUColor.rose
+    /// Même raison qu'au-dessus : le défaut suit `EyebrowLabel`, qui met ses micro-étiquettes en
+    /// `text3`. Les appelants qui veulent vraiment un accent le passent — aucun ne le fait
+    /// aujourd'hui, ce qui dit assez que le rose n'était pas un choix mais un défaut hérité.
+    var eyebrowColor: Color = RUColor.text3
     var title: String
     var titleSize: CGFloat = 22
     var onBack: () -> Void
@@ -55,7 +67,7 @@ struct BackTitleHeaderView<Trailing: View>: View {
 }
 
 extension BackTitleHeaderView where Trailing == EmptyView {
-    init(eyebrow: String? = nil, eyebrowColor: Color = RUColor.rose, title: String, titleSize: CGFloat = 22, onBack: @escaping () -> Void) {
+    init(eyebrow: String? = nil, eyebrowColor: Color = RUColor.text3, title: String, titleSize: CGFloat = 22, onBack: @escaping () -> Void) {
         self.init(eyebrow: eyebrow, eyebrowColor: eyebrowColor, title: title, titleSize: titleSize, onBack: onBack, trailing: { EmptyView() })
     }
 }

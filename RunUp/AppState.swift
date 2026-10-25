@@ -159,6 +159,10 @@ final class AppState {
     /// Et le fil. Troisième cache de démonstration du même genre : tout écran qui parle au serveur
     /// en demande un, faute de serveur dans un simulateur.
     var cachedWall: WallPage?
+    /// Et la page d'une course — la quatrième, et celle qui porte le plus de mise en page : des
+    /// coureurs, un mur, un avertissement. C'est exactement l'écran qu'on ne veut pas juger de
+    /// mémoire.
+    var cachedRacePage: RacePage?
 
     // Live run (ephemeral, survives navigating away from the Live screen)
     var liveRun: LiveRunViewModel?

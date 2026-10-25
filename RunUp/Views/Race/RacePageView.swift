@@ -382,6 +382,7 @@ struct RacePageView: View {
                         ligneDeCoureur(coureur)
                     }
                 }
+            }
         }
     }
 

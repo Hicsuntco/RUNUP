@@ -328,7 +328,7 @@ enum CaptureSeed {
                   "id": "p1", "raceId": "demo-course", "raceName": "Marathon de Paris",
                   "raceDate": "2027-04-04", "discipline": "run", "kind": "partner",
                   "text": "Je vise 3h30, sorties longues le dimanche matin au bois. Quelqu'un sur ce rythme ?",
-                  "closed": false, "createdAt": "\(ilYA(5))",
+                  "closed": false, "kudos": 4, "kudoedByMe": true, "createdAt": "\(ilYA(5))",
                   "author": { "id": "3", "name": "Margaux", "isPrivate": false }
                 }
               ]

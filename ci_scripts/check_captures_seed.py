@@ -31,6 +31,11 @@ from pathlib import Path
 
 RACINE = Path(__file__).resolve().parent.parent
 SERVICE = RACINE / "RunUp" / "Services" / "ClubService.swift"
+# Les types des pages de course vivent dans leur propre fichier. Les deux sources sont lues et
+# concaténées : `champs_obligatoires` cherche une structure par son nom, peu importe d'où elle
+# vient.
+MODELE_COURSE = RACINE / "RunUp" / "Models" / "RaceEvent.swift"
+MODELE_PROFIL = RACINE / "RunUp" / "Models" / "PublicProfile.swift"
 GRAINE = RACINE / "RunUp" / "Services" / "CaptureSeed.swift"
 CATALOGUE = RACINE / "RunUp" / "Models" / "ClubBadgeCatalog.swift"
 
@@ -54,7 +59,12 @@ def champs_obligatoires(texte, nom):
     if "init(from decoder" in corps:
         return None
     return {nom_champ for nom_champ, type_ in CHAMP.findall(corps)
-            if not type_.endswith("?") and "=" not in type_}
+            # UNE PROPRIÉTÉ CALCULÉE N'EST PAS UN CHAMP À DÉCODER. `var jour: Date? { … }` ou
+            # `var nomComplet: String {` ouvrent un bloc : leur « type » contient une accolade, et
+            # aucune ne vient du JSON. Sans ce filtre, le contrôle réclamait `sousTitre`,
+            # `joursRestants` et `disciplineSymbole` dans un littéral de démonstration — cinq faux
+            # manques sur un type qui n'en avait aucun.
+            if "{" not in type_ and not type_.endswith("?") and "=" not in type_}
 
 
 def champs_stricts(texte, nom):
@@ -104,8 +114,37 @@ def litteral(texte, variable):
     m = re.search(rf'let {variable} = """\n(.*?)\n\s*"""', texte, re.S)
     if m is None:
         raise SystemExit(f"littéral `{variable}` introuvable dans {GRAINE.name}")
-    brut = re.sub(r"\\\((?:[^()]|\([^()]*\))*\)", "2026-01-01T00:00:00Z", m.group(1))
-    return json.loads(brut)
+    return json.loads(sans_interpolations(m.group(1)))
+
+
+def sans_interpolations(brut):
+    """Les `\\(…)` de Swift remplacés par une date fixe, À N'IMPORTE QUELLE PROFONDEUR.
+
+    C'était une expression régulière qui n'acceptait qu'UN niveau de parenthèses imbriquées. Elle
+    a tenu tant que les interpolations ressemblaient à `\\(ilYAJours(214))`. La première qui en a
+    porté deux —
+    `\\(formateur.string(from: maintenant.addingTimeInterval(86_400 * 162)).prefix(10))` — n'a pas
+    été remplacée, le `\\(` est resté dans le texte, et `json.loads` s'est arrêté sur « Invalid
+    \\escape » en désignant une colonne qui ne veut rien dire pour qui lit du Swift.
+
+    Un compteur de parenthèses n'a pas de profondeur maximale. C'est trois lignes de plus et une
+    classe entière de faux diagnostics en moins.
+    """
+    sortie, i, n = [], 0, len(brut)
+    while i < n:
+        if brut[i] == "\\" and i + 1 < n and brut[i + 1] == "(":
+            profondeur, i = 1, i + 2
+            while i < n and profondeur:
+                if brut[i] == "(":
+                    profondeur += 1
+                elif brut[i] == ")":
+                    profondeur -= 1
+                i += 1
+            sortie.append("2026-01-01T00:00:00Z")
+            continue
+        sortie.append(brut[i])
+        i += 1
+    return "".join(sortie)
 
 
 def badges_connus():
@@ -131,6 +170,75 @@ def manques(tableau, obligatoires_club, obligatoires_ligne, badges):
     return trouves
 
 
+# CE QUE CHAQUE JEU DE DÉMONSTRATION DOIT POUVOIR DEVENIR.
+#
+# `poserLeClub` décode six littéraux JSON, et un seul champ non optionnel manquant fait échouer le
+# décodage — ce qui déclenche son `preconditionFailure` et fait PLANTER l'app au lancement sous le
+# drapeau des captures. Ce n'est pas une hypothèse : `WallRacePost` a gagné `kudos` et
+# `kudoedByMe` le jour où le mur d'une course a pu recevoir des applaudissements, le littéral `mur`
+# ne les a pas gagnés, et les dix captures ont planté. Le contrôle ne couvrait alors que deux des
+# six littéraux.
+#
+# Chaque entrée dit : le littéral, le type qu'il doit devenir, et — pour les objets imbriqués — le
+# chemin et le type de chacun. Un `[]` dans un chemin veut dire « chaque élément du tableau ».
+JEUX = [
+    ("amis", "FriendsList", [
+        (["following", []], "PublicUser"),
+        (["followers", []], "PublicUser"),
+        (["incomingRequests", []], "PublicUser"),
+    ]),
+    ("course", "RaceEvent", []),
+    ("murBrut", "WallPage", [
+        (["racePosts", []], "WallRacePost"),
+        (["racePosts", [], "author"], "PublicUser"),
+    ]),
+    ("profil", "PublicProfilePage", [
+        (["profile"], "PublicProfile"),
+    ]),
+    ("pageDeCourse", "RacePage", [
+        (["race"], "RaceEvent"),
+        (["me"], "RaceFollow"),
+        (["runners", []], "RaceRunner"),
+        (["posts", []], "RacePost"),
+        (["posts", [], "author"], "PublicUser"),
+    ]),
+]
+
+
+def aux_chemins(valeur, chemin):
+    """Toutes les valeurs atteintes par `chemin`. `[]` traverse un tableau."""
+    courant = [valeur]
+    for pas in chemin:
+        suivant = []
+        for v in courant:
+            if pas == []:
+                if isinstance(v, list):
+                    suivant.extend(v)
+            elif isinstance(v, dict) and pas in v:
+                suivant.append(v[pas])
+        courant = suivant
+    return courant
+
+
+def manques_des_jeux(graine, sources):
+    fautes = []
+    for variable, type_racine, imbriques in JEUX:
+        valeur = litteral(graine, variable)
+        for chemin, nom_type in [([], type_racine)] + imbriques:
+            obligatoires = champs_obligatoires(sources, nom_type)
+            if obligatoires is None:
+                continue
+            for objet in aux_chemins(valeur, chemin):
+                if not isinstance(objet, dict):
+                    continue
+                absents = sorted(obligatoires - set(objet))
+                if absents:
+                    ou = "/".join("[]" if p == [] else str(p) for p in chemin) or "(racine)"
+                    fautes.append((f"{variable} → {ou} ({nom_type})",
+                                   "champ(s) absent(s) : " + ", ".join(absents)))
+    return fautes
+
+
 def main():
     service = SERVICE.read_text(encoding="utf-8")
     graine = GRAINE.read_text(encoding="utf-8")
@@ -140,16 +248,24 @@ def main():
     obligatoires_ligne = champs_obligatoires(service, "LeaderboardRow")
     badges = badges_connus()
 
+    sources = "\n".join([
+        service,
+        MODELE_COURSE.read_text(encoding="utf-8"),
+        MODELE_PROFIL.read_text(encoding="utf-8"),
+    ])
+
     fautes = manques(tableau, obligatoires_club, obligatoires_ligne, badges)
     fautes += manques_du_fil(fil, champs_stricts(service, "FeedItem"))
+    fautes += manques_des_jeux(graine, sources)
     if fautes:
         print("Le club de démonstration ne se décodera pas :\n", file=sys.stderr)
         for qui, quoi in fautes:
             print(f"  {qui} — {quoi}", file=sys.stderr)
-        print("\nUn champ non optionnel absent fait échouer le décodage du tableau ENTIER,",
+        print("\nUn champ non optionnel absent fait échouer le décodage ENTIER, donc le",
               file=sys.stderr)
-        print("donc l'écran du Club montre « Créer un club » dans la capture d'écran.",
+        print("`preconditionFailure` de `poserLeClub` — l'app PLANTE au lancement sous le",
               file=sys.stderr)
+        print("drapeau des captures, et aucune image ne sort.", file=sys.stderr)
         print(f"Voir `poserLeClub` dans {GRAINE.name}.", file=sys.stderr)
         return 1
 
@@ -158,6 +274,7 @@ def main():
     print(f"Club de démonstration : {lignes} lignes de classement, tous les champs obligatoires")
     print(f"                        de LeaderboardRow présents, {len(badges)} badges au catalogue.")
     print(f"                        {len(fil)} activités au fil, dont {traces} avec un tracé en paires.")
+    print(f"                        {len(JEUX) + 2} jeux de démonstration, tous décodables.")
     return 0
 
 

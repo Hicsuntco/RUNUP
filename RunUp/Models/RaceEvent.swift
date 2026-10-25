@@ -10,8 +10,17 @@ import Foundation
 /// clair (`to_char`), et c'est cette chaîne qu'on garde : une date de course n'a pas d'heure, elle
 /// n'a pas à en gagner une au passage, et le jour affiché ne doit pas dépendre d'où l'on est.
 ///
-/// `jour` la reconvertit en `Date` à midi UTC — midi et non minuit, pour qu'aucun décalage de
-/// fuseau ne puisse la faire basculer sur la veille au moment de l'afficher.
+/// AUCUN INSTANT N'EST LE MÊME JOUR PARTOUT, et c'est pour ça que l'affichage est en UTC et non
+/// dans le fuseau du téléphone. Les fuseaux habités vont de UTC−12 à UTC+14 : vingt-six heures
+/// d'écart, donc à n'importe quelle heure du globe il y a deux dates au calendrier en même temps.
+/// Choisir midi UTC au lieu de minuit déplace le problème sans le résoudre — à Kiritimati (+14),
+/// midi UTC est déjà le lendemain à deux heures du matin. `dateLisible` formate donc le jour
+/// explicitement en UTC : la LANGUE suit le téléphone, le JOUR ne suit personne. Le 4 avril est le
+/// 4 avril, de Los Angeles à Tokyo.
+///
+/// `joursRestants`, lui, compare deux JOURS et non deux instants : le jour imprimé sur le dossard,
+/// et le jour qu'il est chez la personne qui regarde. C'est le seul endroit où son fuseau compte,
+/// parce que « J-42 » répond à « combien de jours me reste-t-il », pas « où est la course ».
 struct RaceEvent: Decodable, Identifiable, Hashable {
     var id: String
     var name: String
@@ -34,23 +43,44 @@ struct RaceEvent: Decodable, Identifiable, Hashable {
         // non grégorien ou des chiffres non arabes, un formateur local ne le relirait pas.
         f.locale = Locale(identifier: "en_US_POSIX")
         f.timeZone = TimeZone(identifier: "UTC")
-        f.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
+        f.dateFormat = "yyyy-MM-dd"
         return f
     }()
 
-    var jour: Date? { Self.jourISO.date(from: raceDate + "T12:00:00+0000") }
+    private static let utc = TimeZone(identifier: "UTC") ?? .gmt
 
-    /// Combien de jours il reste. Négatif n'arrive pas : le serveur ne rend aucune course passée.
-    var joursRestants: Int? {
-        guard let jour else { return nil }
-        let calendrier = Calendar.current
-        let aujourdhui = calendrier.startOfDay(for: Date())
-        return calendrier.dateComponents([.day], from: aujourdhui, to: calendrier.startOfDay(for: jour)).day
+    private static var calendrierUTC: Calendar {
+        var calendrier = Calendar(identifier: .gregorian)
+        calendrier.timeZone = utc
+        return calendrier
     }
+
+    /// Minuit UTC le jour de la course. Un repère, pas une heure : rien n'affiche cet instant
+    /// tel quel — voir `dateLisible`, qui le remet en mots dans le même fuseau qu'il a été lu.
+    var jour: Date? { Self.jourISO.date(from: raceDate) }
+
+    /// Le style d'affichage : la langue et l'ordre des mots viennent du téléphone, le fuseau non.
+    private static let styleDuJour = Date.FormatStyle(date: .long, time: .omitted, timeZone: utc)
 
     var dateLisible: String {
         guard let jour else { return raceDate }
-        return jour.formatted(.dateTime.day().month(.wide).year().locale(Locale.current))
+        return jour.formatted(Self.styleDuJour)
+    }
+
+    /// Combien de jours il reste, du jour qu'il est CHEZ MOI au jour de la course. Négatif
+    /// n'arrive quasiment pas : le serveur ne rend aucune course passée, mais la veille est
+    /// acceptée à la création (voir lib/courses.js), donc l'appel reste honnête s'il arrive.
+    var joursRestants: Int? {
+        guard let jour else { return nil }
+        // `Calendar.current` pour lire le jour local — il suit les voyages, là où un
+        // `DateFormatter` statique figerait le fuseau du lancement de l'app. Puis les deux jours
+        // se comparent dans le MÊME calendrier, sinon on compterait un décalage de fuseau comme
+        // un jour de préparation.
+        let local = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+        let calendrier = Self.calendrierUTC
+        guard let aujourdhui = calendrier.date(from: DateComponents(
+            year: local.year, month: local.month, day: local.day)) else { return nil }
+        return calendrier.dateComponents([.day], from: aujourdhui, to: jour).day
     }
 
     /// « Paris · 42,2 km · 1 200 m D+ » — ce qui distingue deux courses du même nom, dans cet

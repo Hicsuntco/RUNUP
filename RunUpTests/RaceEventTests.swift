@@ -11,8 +11,18 @@ import XCTest
 /// la course du Marathon de Paris s'affichait le 3 avril à qui lisait en UTC.
 ///
 /// La route rend donc le jour en CLAIR (`to_char`), et c'est cette chaîne que `RaceEvent` garde.
-/// `jour` la reconvertit à MIDI UTC, précisément pour qu'aucun décalage de fuseau — jusqu'à
-/// quatorze heures — ne puisse la faire basculer sur la veille ou le lendemain à l'affichage.
+///
+/// # ET MIDI UTC NE SUFFIT PAS — C'EST CE TEST QUI L'A MONTRÉ
+///
+/// La première version de `jour` posait l'instant à MIDI UTC, en se disant que douze heures de
+/// marge de chaque côté couvraient tous les fuseaux. Faux : les fuseaux habités vont de UTC−12 à
+/// UTC+14, soit VINGT-SIX heures d'amplitude. À Kiritimati (+14), midi UTC est déjà le lendemain
+/// à deux heures du matin, et ce test-ci lisait le 4 avril comme un 5. Aucun instant n'est le même
+/// jour au calendrier partout — la question n'a pas de bonne réponse sous cette forme.
+///
+/// Le jour est donc FORMATÉ en UTC (`dateLisible`) : la langue et l'ordre des mots suivent le
+/// téléphone, le jour ne suit personne. `joursRestants` est le seul endroit où le fuseau de la
+/// personne compte, parce que « J-42 » répond à « combien de jours me reste-t-il ».
 final class RaceEventTests: XCTestCase {
 
     private func course(_ date: String, distanceKm: Double? = nil, elevationGainM: Int? = nil,
@@ -25,26 +35,44 @@ final class RaceEventTests: XCTestCase {
     // MARK: - Le jour ne bouge pas
 
     func testLeJourEstCeluiQuiEstEcrit() {
-        let calendrier = Calendar(identifier: .gregorian)
-        guard let jour = course("2027-04-04").jour else { return XCTFail("date illisible") }
-        var utc = calendrier
+        var utc = Calendar(identifier: .gregorian)
         utc.timeZone = TimeZone(identifier: "UTC")!
+        guard let jour = course("2027-04-04").jour else { return XCTFail("date illisible") }
         let parties = utc.dateComponents([.year, .month, .day], from: jour)
         XCTAssertEqual(parties.year, 2027)
         XCTAssertEqual(parties.month, 4)
         XCTAssertEqual(parties.day, 4)
     }
 
-    func testMidiEtPasMinuit() {
-        // Minuit UTC lu à Los Angeles (−8) est la VEILLE à 16 h. Midi laisse douze heures de
-        // marge de chaque côté, soit plus que n'importe quel décalage réel.
+    func testLeJourAfficheEstCeluiDuDossardOuQueSoitLeTelephone() {
+        // LE TEST QUI COMPTE. Pas « l'instant tombe-t-il le bon jour quelque part », mais « la
+        // phrase affichée porte-t-elle le bon jour ». `dateLisible` formate en UTC, donc elle ne
+        // dépend pas du fuseau de l'appareil : le 4 avril est le 4 avril partout.
+        //
+        // Le fuseau du simulateur ne se change pas depuis un test, alors on vérifie la propriété
+        // directement : le même instant, relu dans le fuseau du formateur, redonne le jour écrit.
+        let lisible = course("2027-04-04").dateLisible
+        XCTAssertTrue(lisible.contains("4"), "« \(lisible) » ne porte pas le 4")
+        XCTAssertTrue(lisible.contains("2027"), "« \(lisible) » ne porte pas 2027")
+        // Les deux jours voisins : ce sont EXACTEMENT les deux valeurs qu'un instant mal placé
+        // produisait (3 à l'ouest avec minuit, 5 à l'est avec midi).
+        XCTAssertFalse(lisible.contains(" 3 ") || lisible.contains(" 5 "),
+                       "« \(lisible) » a glissé d'un jour")
+    }
+
+    func testAucunFuseauNeFaitGlisserLeJourDuDossard() {
+        // La même chose, mais sur la mécanique plutôt que sur la phrase : le jour relu dans le
+        // fuseau du formateur (UTC) est stable, là où le lire dans n'importe quel autre fuseau ne
+        // l'est PAS. Les deux moitiés de l'assertion documentent pourquoi l'affichage est en UTC.
         guard let jour = course("2027-04-04").jour else { return XCTFail("date illisible") }
-        for fuseau in ["Pacific/Kiritimati", "America/Los_Angeles", "Pacific/Niue", "Asia/Tokyo"] {
-            var calendrier = Calendar(identifier: .gregorian)
-            calendrier.timeZone = TimeZone(identifier: fuseau)!
-            XCTAssertEqual(calendrier.component(.day, from: jour), 4,
-                           "le 4 avril n'est plus le 4 à \(fuseau)")
-        }
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = TimeZone(identifier: "UTC")!
+        XCTAssertEqual(utc.component(.day, from: jour), 4)
+
+        var kiritimati = Calendar(identifier: .gregorian)
+        kiritimati.timeZone = TimeZone(identifier: "Pacific/Kiritimati")!
+        XCTAssertNotEqual(kiritimati.component(.day, from: jour), 4,
+                          "Kiritimati est à UTC+14 : si ce jour-là coïncide, l'hypothèse de ce test a changé")
     }
 
     func testUneDateIllisibleNeFaitPasTomberLAffichage() {

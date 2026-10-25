@@ -19,6 +19,14 @@ on:
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/server.yml"
+      # ET LES SERVICES DE L'APP, qui ne sont pourtant pas du serveur.
+      #
+      # `check_deploiement.py` lit là-dedans les adresses que l'app appelle. Un écran qui se met
+      # à appeler une route neuve est donc un changement de ce que le serveur DOIT exposer — et
+      # sans cette ligne, le seul contrôle qui le vérifie ne se déclencherait pas. C'est
+      # exactement la forme du défaut qu'il vient de fermer : la vérification existait, rien ne
+      # la déclenchait au bon moment.
+      - "RunUp/Services/**"
   workflow_dispatch:
 
 jobs:

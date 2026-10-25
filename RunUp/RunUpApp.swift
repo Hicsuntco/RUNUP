@@ -130,6 +130,11 @@ private struct RootView: View {
                 if let ecran = CaptureSeed.ecranDemande {
                     appState?.go(ecran)
                 }
+                // APRÈS l'écran : la page de profil se présente par-dessus celui-ci, et poser
+                // les deux dans l'autre ordre la refermerait aussitôt.
+                if let profil = CaptureSeed.profilDemande {
+                    appState?.ouvrirLeProfil(profil)
+                }
                 #endif
             }
             // Cold launch never fires the `scenePhase` handler below (there's no previous phase to

@@ -44,6 +44,17 @@ enum CaptureSeed {
         ProcessInfo.processInfo.arguments.contains(drapeau)
     }
 
+    /// Le profil à ouvrir par-dessus l'écran, passé en `--profil=2`.
+    ///
+    /// Séparé de `--ecran=` parce qu'une page de profil n'est PAS un `AppScreen` : elle se
+    /// présente au-dessus de n'importe lequel (voir `ContentRouterView`). Les deux arguments se
+    /// combinent donc au lieu de se concurrencer.
+    static var profilDemande: String? {
+        ProcessInfo.processInfo.arguments
+            .first(where: { $0.hasPrefix("--profil=") })
+            .map { String($0.dropFirst("--profil=".count)) }
+    }
+
     static var ecranDemande: AppScreen? {
         guard let brut = ProcessInfo.processInfo.arguments
             .first(where: { $0.hasPrefix(prefixeEcran) })?
@@ -258,6 +269,24 @@ enum CaptureSeed {
         }
         """
 
+        // LA PAGE DE QUELQU'UN. Inès est déjà au classement, au fil et dans les abonnements :
+        // la même personne d'un écran à l'autre, ce qui est exactement ce qu'une capture doit
+        // montrer. Compte PUBLIC et `canSeeRuns` à vrai — l'état privé a son propre écran, qui
+        // se photographie en basculant ces deux valeurs.
+        let profil = """
+        {
+          "profile": {
+            "id": "2", "name": "Inès", "lastName": "Lambert", "username": "ines",
+            "bio": "Marathon de Paris, et un chien qui court plus vite que moi.",
+            "isPrivate": false, "isMe": false, "followStatus": "accepted", "followsMe": true,
+            "followers": 48, "following": 61, "runs": 142, "totalKm": 1284.6,
+            "badgeKeys": ["firstRun", "tenRuns", "earlyRun", "streak7", "distance50"],
+            "joinedAt": "\(ilYAJours(301))", "canSeeRuns": true
+          },
+          "items": []
+        }
+        """
+
         // Une vraie course, à une vraie date : la tuile affiche un compte à rebours, et c'est
         // précisément la ligne dont il faut vérifier qu'elle tient sur deux lignes.
         let course = """
@@ -273,6 +302,11 @@ enum CaptureSeed {
             etat.cachedClubFeed = try decodeur.decode([FeedItem].self, from: Data(fil.utf8))
             etat.cachedFriendsList = try decodeur.decode(FriendsList.self, from: Data(amis.utf8))
             etat.cachedNextRace = try decodeur.decode(RaceEvent.self, from: Data(course.utf8))
+            var sienne = try decodeur.decode(PublicProfilePage.self, from: Data(profil.utf8))
+            // Ses sorties sont celles du fil de démonstration qui lui appartiennent : une page de
+            // profil avec des cartes vides ne dirait rien de ce qu'elle doit montrer.
+            sienne.items = (etat.cachedClubFeed ?? []).filter { $0.userId == "2" }
+            etat.cachedPublicProfile = sienne
         } catch {
             preconditionFailure("Le club de démonstration ne se décode pas : \(error)")
         }

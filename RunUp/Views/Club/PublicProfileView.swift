@@ -287,6 +287,14 @@ struct PublicProfileView: View {
 
     private func charger() async {
         loadError = nil
+        // EN DÉMONSTRATION, LE CACHE EST TOUT — même raison qu'au Club et au Profil : il n'y a
+        // pas de serveur en face d'un simulateur, et la session de démonstration n'est pas un
+        // vrai jeton. Sans ça, la capture ne montrerait qu'une ligne d'erreur.
+        if Demonstration.enCours {
+            page = appState.cachedPublicProfile
+            isLoading = false
+            return
+        }
         do {
             page = try await clubService.fetchProfile(userId: userId)
         } catch ClubServiceError.badResponse(404, _) {

@@ -66,9 +66,18 @@ final class CapturesUITests: XCTestCase {
     // capture rangée dans `diagnostic/` est donc invisible pour lui, et visible dans l'artefact.
     func test7ProfilDiagnostic() { prendre(rang: 7, ecran: "profile", nom: "profil", diagnostic: true) }
 
-    private func prendre(rang: Int, ecran: String, nom: String, diagnostic: Bool = false) {
+    /// La page de quelqu'un, ouverte par-dessus l'onglet Club. `--profil=` se combine avec
+    /// `--ecran=` au lieu de le remplacer : une page de profil n'est pas un écran de l'app, elle
+    /// se présente au-dessus de n'importe lequel.
+    func test8ProfilPublicDiagnostic() {
+        prendre(rang: 8, ecran: "club", nom: "profil-public", diagnostic: true, profil: "2")
+    }
+
+    private func prendre(rang: Int, ecran: String, nom: String, diagnostic: Bool = false,
+                         profil: String? = nil) {
         let app = XCUIApplication()
         app.launchArguments = ["--captures", "--ecran=\(ecran)"]
+        if let profil { app.launchArguments += ["--profil=\(profil)"] }
         // La langue et la région viennent de l'extérieur : le même test tourne trois fois, une
         // par langue, et c'est le workflow qui dit laquelle. `-AppleLanguages` est la seule
         // façon de forcer la langue d'un lancement sans toucher aux réglages du simulateur.

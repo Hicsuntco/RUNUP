@@ -151,6 +151,9 @@ final class AppState {
     /// section Communauté. Voir `CaptureSeed.poserLeClub`.
     var cachedFriendsList: FriendsList?
     var cachedNextRace: RaceEvent?
+    /// Et la page de quelqu'un, pour la même raison : sans serveur en face, elle n'afficherait
+    /// qu'une erreur dans la capture.
+    var cachedPublicProfile: PublicProfilePage?
 
     // Live run (ephemeral, survives navigating away from the Live screen)
     var liveRun: LiveRunViewModel?

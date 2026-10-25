@@ -34,3 +34,21 @@ jobs:
       # verrou, sinon un test vert ici ne dit rien de ce qui est déployé.
       - run: npm ci
       - run: npm test
+
+      # ─── ET EST-CE QUE C'EST EN LIGNE ? ────────────────────────────────────────────────────
+      #
+      # Ce workflow ne déploie RIEN, et c'est le piège : son rond vert dit « les tests passent »,
+      # pas « c'est en ligne ». Le déploiement est fait par l'intégration Git de Vercel, en dehors
+      # du dépôt, et ne rapporte rien ici.
+      #
+      # Les pages de course sont parties avec leurs tests verts, ce workflow vert, et
+      # `api/races/*` répondait 404 en production : l'app installée affichait « Impossible de
+      # charger les courses » sur un écran annoncé comme terminé. Rien ne l'avait dit.
+      #
+      # Cinq minutes de patience parce que Vercel construit PENDANT que ce workflow tourne :
+      # sonder une seule fois, tout de suite, accuserait un déploiement en route. Le contrôle
+      # s'arrête à la première ronde complète.
+      #
+      # Aucun secret : il ne fait que constater qu'une adresse répond autre chose que 404.
+      - name: Les routes que l'app appelle sont-elles déployées
+        run: python3 ci_scripts/check_deploiement.py --patience 300

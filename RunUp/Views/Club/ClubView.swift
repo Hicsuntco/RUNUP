@@ -585,7 +585,7 @@ struct ClubView: View {
             if let challenge = board.challenge {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
-                        RUCardHeader(icon: "flag.checkered", tint: RUColor.rose2, title: "Défi du club")
+                        RUCardHeader(title: "Défi du club")
                         StatChip(text: String(localized: "J-\(daysLeft(until: challenge.endDate))"), color: RUColor.rose2)
                     }
                     Text(challenge.title).displayStyle(19).foregroundColor(RUColor.textPrimary)
@@ -602,7 +602,7 @@ struct ClubView: View {
                 Button(action: { showManagement = true }) {
                     HStack {
                         VStack(alignment: .leading, spacing: 3) {
-                            RUCardHeader(icon: "flag.checkered", tint: RUColor.rose2, title: "Défi du club")
+                            RUCardHeader(title: "Défi du club")
                             Text("Aucun défi en cours — en créer un").font(RUFont.sans(.label)).foregroundColor(RUColor.textPrimary)
                         }
                         Spacer()
@@ -635,6 +635,14 @@ struct ClubView: View {
     /// cet onglet : c'est de l'administration, elle n'a jamais eu à être au-dessus du classement.
     private var overviewContent: some View {
         VStack(alignment: .leading, spacing: 10) {
+            // UNE ICÔNE POUR LA PAGE, AUCUNE POUR SES SECTIONS.
+            //
+            // Quatre couleurs tenaient lieu de titres sur cet écran — rose pour la semaine,
+            // rose2 pour le défi, violet pour les sorties, ambre pour le classement — soit
+            // quatre teintes pour quatre intertitres de même niveau, qui ne distinguaient rien
+            // d'autre qu'elles-mêmes. C'est la règle déjà appliquée à la page d'une course et au
+            // profil de quelqu'un ; elle manquait ici, sur l'écran qui en empile le plus.
+            //
             // LA PAGE DU CLUB S'OUVRE SUR LE CLUB, PAS SUR MOI.
             //
             // Le premier bloc était ma carte de niveau : le plus saturé de l'écran, un dégradé
@@ -873,7 +881,7 @@ struct ClubView: View {
         return VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 14) {
                 VStack(alignment: .leading, spacing: 2) {
-                    RUCardHeader(icon: "chart.bar.fill", tint: RUColor.rose, title: "Le club cette semaine", subtitle: "Kilomètres cumulés")
+                    RUCardHeader(title: "Le club cette semaine", subtitle: "Kilomètres cumulés")
                     HStack(alignment: .lastTextBaseline, spacing: 4) {
                         Text(km).displayStyle(26).foregroundColor(RUColor.textPrimary)
                         Text("KM").font(RUFont.sans(.small, weight: .bold)).foregroundColor(RUColor.text2)
@@ -961,7 +969,7 @@ struct ClubView: View {
     /// violet, redevient le point focal communautaire qu'il doit être.
     private var eventsCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            RUCardHeader(icon: "calendar", tint: RUColor.violet, title: "Sorties de groupe") {
+            RUCardHeader(title: "Sorties de groupe") {
                 Button(action: { showCreateEvent = true }) {
                     HStack(spacing: 4) {
                         Image(systemName: "plus").font(.system(size: 10, weight: .bold))
@@ -1136,7 +1144,7 @@ struct ClubView: View {
                 // même ligne — c'est ce qui fait qu'on comprend « classement DE LA SEMAINE » et
                 // pas « classement tout court, avec un réglage mystérieux ».
                 HStack {
-                    RUCardHeader(icon: "trophy.fill", tint: RUColor.amber, title: "Classement de la semaine")
+                    RUCardHeader(title: "Classement de la semaine")
                     Spacer(minLength: 8)
                     weeklyDisplayModePicker
                 }

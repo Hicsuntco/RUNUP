@@ -101,9 +101,26 @@ final class CapturesUITests: XCTestCase {
         prendre(rang: 13, ecran: "club", nom: "club-classement", diagnostic: true, onglet: "classement")
     }
 
+    /// LE BAS DES ÉCRANS, QUE PERSONNE N'AVAIT JAMAIS VU.
+    ///
+    /// Une capture photographie l'écran, donc le HAUT de la page. L'aperçu du Club fait
+    /// maintenant deux écrans et demi — ce que le club prépare, ses records, le niveau — et la
+    /// page d'une sortie en fait autant avec ses splits et son profil de terrain. Tout ce qui
+    /// est sous la ligne de flottaison n'avait donc jamais été regardé, sur les deux écrans qui
+    /// portent le plus de chiffres.
+    func test14ClubApercuBasDiagnostic() {
+        prendre(rang: 14, ecran: "club", nom: "club-apercu-bas", diagnostic: true,
+                onglet: "apercu", defilements: 3)
+    }
+
+    func test15SortieBasDiagnostic() {
+        prendre(rang: 15, ecran: "club", nom: "sortie-bas", diagnostic: true,
+                sortie: true, defilements: 3)
+    }
+
     private func prendre(rang: Int, ecran: String, nom: String, diagnostic: Bool = false,
                          profil: String? = nil, mur: Bool = false, course: Bool = false,
-                         sortie: Bool = false, onglet: String? = nil) {
+                         sortie: Bool = false, onglet: String? = nil, defilements: Int = 0) {
         let app = XCUIApplication()
         app.launchArguments = ["--captures", "--ecran=\(ecran)"]
         if let profil { app.launchArguments += ["--profil=\(profil)"] }
@@ -138,6 +155,22 @@ final class CapturesUITests: XCTestCase {
         // `ContentRouterView` durent moins d'une demi-seconde ; deux secondes laissent la marge
         // sur une machine chargée sans peser sur les dix-huit lancements.
         Thread.sleep(forTimeInterval: 2.0)
+
+        // LE DÉFILEMENT SE FAIT EN COORDONNÉES, PAS EN ÉLÉMENTS.
+        //
+        // `app.scrollViews.firstMatch.swipeUp()` demanderait l'arbre d'accessibilité — la
+        // requête qui a tué le premier essai de ces captures (voir ci-dessus). Un glissement
+        // entre deux points normalisés ne consulte rien : il s'adresse à la fenêtre.
+        //
+        // Une pause après chaque geste : l'inertie du défilement continue après le doigt, et
+        // photographier pendant qu'elle court donne une image floue ou à mi-chemin.
+        for _ in 0..<defilements {
+            let depart = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85))
+            let arrivee = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2))
+            depart.press(forDuration: 0.05, thenDragTo: arrivee)
+            Thread.sleep(forTimeInterval: 0.6)
+        }
+        if defilements > 0 { Thread.sleep(forTimeInterval: 1.0) }
 
         let capture = XCUIScreen.main.screenshot()
         let piece = XCTAttachment(screenshot: capture)

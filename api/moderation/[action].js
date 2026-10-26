@@ -17,6 +17,9 @@ const REPORT_TARGET_TYPES = new Set([
   'user', 'club', 'activity', 'comment', 'route', 'race', 'race_post',
   // Ce qu'on écrit sous un itinéraire est lu par tous ceux qui ouvrent ce tracé sur la carte.
   'route_comment',
+  // 'club_post' : le mur du club. Même raison que 'race_post' — un texte libre écrit par un
+  // membre et lu par tous les autres. Sans ce bouton, la seule issue serait de quitter le club.
+  'club_post',
 ]);
 
 module.exports = withErrorHandling(async function handler(req, res) {

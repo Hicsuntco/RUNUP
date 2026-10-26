@@ -8993,6 +8993,23 @@
         }
       }
     },
+    "Dis quelque chose au club…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Say something to the club…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dile algo al club…"
+          }
+        }
+      }
+    },
     "Dis-le et tu apparaîtras sur cette page. Tu pourras y trouver quelqu'un à ton allure, et suivre où en sont les autres.": {
       "extractionState": "manual",
       "localizations": {
@@ -19701,6 +19718,23 @@
         }
       }
     },
+    "Publier sur le mur du club": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Post to the club wall"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publicar en el muro del club"
+          }
+        }
+      }
+    },
     "QUEL DUATHLON ?": {
       "extractionState": "manual",
       "localizations": {
@@ -23099,6 +23133,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eliminar"
+          }
+        }
+      }
+    },
+    "Supprimer ce message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this message"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar este mensaje"
           }
         }
       }

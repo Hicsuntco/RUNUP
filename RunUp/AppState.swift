@@ -192,6 +192,8 @@ final class AppState {
     var cachedActivityDetail: ActivityDetail?
     /// Et les deux sections de l'aperçu du Club : ce qu'il prépare, ce qu'il a fait de mieux.
     var cachedClubHighlights: ClubHighlights?
+    /// Et le mur du club : ce qu'on s'y dit entre deux sorties.
+    var cachedClubPosts: [ClubPost]?
 
     // Live run (ephemeral, survives navigating away from the Live screen)
     var liveRun: LiveRunViewModel?

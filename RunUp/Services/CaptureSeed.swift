@@ -535,6 +535,29 @@ enum CaptureSeed {
             """
             etat.cachedClubHighlights = try decodeur.decode(ClubHighlights.self, from: Data(pepites.utf8))
 
+            // LE MUR DU CLUB. Trois messages dont une réponse : c'est ce qu'il faut pour que la
+            // capture montre une CONVERSATION et pas trois annonces. Un mur où personne ne se
+            // répond ressemble à un panneau d'affichage.
+            let murDuClub = """
+            {
+              "posts": [
+                { "id": "mc1", "parentId": null,
+                  "text": "La berge est fermée jusqu'au 12 entre les deux ponts. On passe par la rue de Crimée en attendant.",
+                  "createdAt": "\(ilYA(6))", "kudos": 5, "kudoedByMe": false, "isMine": false,
+                  "author": { "id": "3", "name": "Margaux", "isPrivate": false } },
+                { "id": "mc2", "parentId": "mc1",
+                  "text": "Merci, j'allais y aller ce soir !",
+                  "createdAt": "\(ilYA(5))", "kudos": 1, "kudoedByMe": true, "isMine": false,
+                  "author": { "id": "4", "name": "Sarah", "isPrivate": false } },
+                { "id": "mc3", "parentId": null,
+                  "text": "Bienvenue à Lina qui nous rejoint cette semaine 🎉",
+                  "createdAt": "\(ilYA(30))", "kudos": 9, "kudoedByMe": true, "isMine": false,
+                  "author": { "id": "2", "name": "Inès", "isPrivate": false } }
+              ]
+            }
+            """
+            etat.cachedClubPosts = try decodeur.decode(ClubPostsResponse.self, from: Data(murDuClub.utf8)).posts
+
             var sienne = try decodeur.decode(PublicProfilePage.self, from: Data(profil.utf8))
             // Ses sorties sont celles du fil de démonstration qui lui appartiennent : une page de
             // profil avec des cartes vides ne dirait rien de ce qu'elle doit montrer.

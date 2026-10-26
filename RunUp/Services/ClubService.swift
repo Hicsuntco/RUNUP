@@ -554,6 +554,33 @@ struct ClubService {
         )
     }
 
+    // MARK: - Le mur du club
+
+    func fetchClubPosts() async throws -> [ClubPost] {
+        let reponse: ClubPostsResponse = try await send(path: "api/clubs/posts", method: "GET")
+        return reponse.posts
+    }
+
+    func postClubMessage(text: String, parentId: String? = nil) async throws {
+        var body: [String: Any] = ["text": text]
+        if let parentId { body["parentId"] = parentId }
+        let _: CreatedResponse = try await send(path: "api/clubs/post", method: "POST", body: body)
+    }
+
+    /// Applaudir, ou retirer — le MÊME appel, comme partout ailleurs dans l'app. Rend l'état
+    /// d'après, dit par le serveur : deviner localement, c'est afficher une main pleine sur un
+    /// appareil et vide sur l'autre.
+    func toggleClubPostKudos(postId: String) async throws -> Bool {
+        let reponse: KudosResponse = try await send(path: "api/clubs/postKudos", method: "POST",
+                                                    body: ["postId": postId])
+        return reponse.kudoed
+    }
+
+    func deleteClubPost(postId: String) async throws {
+        let _: OkResponse = try await send(path: "api/clubs/deletePost", method: "POST",
+                                           body: ["postId": postId])
+    }
+
     /// La bannière du club — un data URI JPEG déjà redimensionné par l'app, ou nil pour l'effacer.
     /// Réservée à qui a créé le club ; le serveur le revérifie.
     func setClubCover(dataURI: String?) async throws {
@@ -1174,6 +1201,31 @@ struct WallPage: Decodable {
     var fin: Bool?
 }
 
+/// UN MESSAGE DU MUR DU CLUB.
+///
+/// Le club pouvait publier des sorties, applaudir et commenter. Il ne pouvait pas PARLER : « qui
+/// a un dossard en trop pour dimanche ? », « la berge est fermée jusqu'au 12 », « bienvenue à
+/// Sarah » — rien de tout cela n'est une sortie, rien n'est un commentaire sous la sortie de
+/// quelqu'un, et il n'existait aucun endroit pour l'écrire.
+///
+/// La forme est celle de `RacePost`, volontairement : deux murs qui se ressemblent se corrigent
+/// ensemble. Sans le genre ni le drapeau « réglé », qui appartiennent aux dossards d'une course.
+struct ClubPost: Decodable, Identifiable, Hashable {
+    var id: String
+    /// Non nil pour une réponse. Deux niveaux, pas plus : au-delà on ne sait plus à qui l'on parle.
+    var parentId: String?
+    var text: String
+    var isMine: Bool
+    var kudos: Int
+    var kudoedByMe: Bool
+    var createdAt: Date
+    var author: PublicUser
+}
+
+struct ClubPostsResponse: Decodable {
+    var posts: [ClubPost]
+}
+
 /// CE QUE LE CLUB PRÉPARE, ET CE QU'IL A FAIT DE MIEUX.
 ///
 /// Un classement hebdomadaire dit qui court le plus. Il ne dit ni ce que le club prépare, ni ce
@@ -1374,6 +1426,13 @@ private struct RsvpResponse: Decodable {
 
 private struct KudosResponse: Decodable {
     var kudoed: Bool
+}
+
+/// Ce que rend une création de message : le serveur répond 201 avec l'identifiant et la date, et
+/// l'app recharge le mur — elle ne reconstruit pas la ligne de son côté, sinon deux appareils
+/// afficheraient deux versions du même message.
+private struct CreatedResponse: Decodable {
+    var id: String
 }
 
 private struct CommentsResponse: Decodable {

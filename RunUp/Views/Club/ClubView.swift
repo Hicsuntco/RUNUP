@@ -20,6 +20,13 @@ struct ClubView: View {
     /// Ce que le club prépare, et ce qu'il a fait de mieux. Chargé à part du tableau de bord :
     /// celui-ci part à chaque ouverture du Club, celui-là seulement quand l'aperçu s'affiche.
     @State private var highlights: ClubHighlights?
+    /// LE MUR DU CLUB : ce qu'on se dit entre deux sorties. Les messages vivent dans le même
+    /// onglet que les activités et s'y entrelacent par date — un mur à part aurait fait un
+    /// quatrième onglet pour une conversation de dix lignes.
+    @State private var posts: [ClubPost] = []
+    @State private var brouillonDuClub = ""
+    @State private var reponseA: ClubPost?
+    @State private var envoiDuMessage = false
     @State private var feed: [FeedItem] = []
     // Starts true (not false) so the very first render — before `.task` below has had a chance to
     // run — reads as "checking for your club" rather than immediately flashing the create/join
@@ -1493,7 +1500,8 @@ struct ClubView: View {
         // à l'ouverture de l'onglet — avatars décodés, deux passes d'ombre par carte, et
         // l'animation de révélation qui tournait sur ~45 lignes hors écran.
         LazyVStack(spacing: 0) {
-            if feed.isEmpty && !isLoading {
+            composeurDuMur
+            if feed.isEmpty && posts.isEmpty && !isLoading {
                 // Un fil vide a deux causes très différentes, et un seul message les traitait
                 // toutes les deux. Seule dans son club, « sois la première » demande de poster
                 // pour un public qui n'existe pas — ce qu'il faut, c'est des membres, et le code
@@ -1534,22 +1542,262 @@ struct ClubView: View {
                         .frame(maxWidth: .infinity).padding(.vertical, 20)
                 }
             }
-            ForEach(Array(feed.enumerated()), id: \.element.id) { index, item in
-                ActivityFeedRow(
-                    item: item,
-                    isMine: item.userId == auth.currentUser?.id,
-                    revealed: feedRevealed,
-                    index: index,
-                    onKudos: { Task { await toggleKudos(item) } },
-                    onComment: { commentsActivity = item },
-                    onReport: {
-                        reportTarget = ReportTarget(targetType: "activity", targetId: item.id, displayName: String(localized: "l'activité de \(item.name)"))
-                    },
-                    onBlock: { pendingBlock = (item.userId, item.name) },
-                    onDelete: { pendingDeleteActivity = item },
-                    onEdit: { editingActivity = item }
-                )
+            // ENTRELACÉS PAR DATE, pas empilés en deux listes. Un mur posé au-dessus des
+            // sorties se serait lu comme une annonce épinglée ; mêlés, un message de lundi et
+            // une sortie de lundi se répondent, et c'est ce qui fait une conversation de club.
+            ForEach(Array(entreesDuClub.enumerated()), id: \.element.id) { index, entree in
+                switch entree {
+                case .sortie(let item):
+                    ActivityFeedRow(
+                        item: item,
+                        isMine: item.userId == auth.currentUser?.id,
+                        revealed: feedRevealed,
+                        index: index,
+                        onKudos: { Task { await toggleKudos(item) } },
+                        onComment: { commentsActivity = item },
+                        onReport: {
+                            reportTarget = ReportTarget(targetType: "activity", targetId: item.id, displayName: String(localized: "l'activité de \(item.name)"))
+                        },
+                        onBlock: { pendingBlock = (item.userId, item.name) },
+                        onDelete: { pendingDeleteActivity = item },
+                        onEdit: { editingActivity = item }
+                    )
+                case .message(let post):
+                    VStack(spacing: 0) {
+                        if index > 0 {
+                            Rectangle().fill(RUColor.line)
+                                .frame(height: RUSpacing.hairline)
+                                .padding(.bottom, 16)
+                        }
+                        blocDeMessage(post)
+                    }
+                    .padding(.bottom, 16)
+                }
             }
+        }
+    }
+
+    /// Une entrée de l'onglet Activité : une sortie, ou un message du mur. Deux formes, une seule
+    /// liste triée — le même motif que le fil unique, pour la même raison.
+    private enum EntreeDuClub: Identifiable {
+        case sortie(FeedItem)
+        case message(ClubPost)
+
+        var id: String {
+            switch self {
+            case .sortie(let item): return "s-\(item.id)"
+            case .message(let post): return "m-\(post.id)"
+            }
+        }
+
+        var date: Date {
+            switch self {
+            case .sortie(let item): return item.createdAt
+            case .message(let post): return post.createdAt
+            }
+        }
+    }
+
+    private var entreesDuClub: [EntreeDuClub] {
+        // Seulement les messages de premier niveau : une réponse s'affiche sous le sien, pas
+        // au milieu du fil où elle n'aurait plus de question.
+        let messages = posts.filter { $0.parentId == nil }.map(EntreeDuClub.message)
+        return (feed.map(EntreeDuClub.sortie) + messages).sorted { $0.date > $1.date }
+    }
+
+    private func reponses(a message: ClubPost) -> [ClubPost] {
+        posts.filter { $0.parentId == message.id }.sorted { $0.createdAt < $1.createdAt }
+    }
+
+    // MARK: - Écrire sur le mur
+
+    private var composeurDuMur: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let reponseA {
+                HStack(spacing: 6) {
+                    Text("Réponse à \(reponseA.author.name)")
+                        .font(RUFont.sans(.small, weight: .semibold))
+                        .foregroundColor(RUColor.text2)
+                    Button(action: { self.reponseA = nil }) {
+                        Image(systemName: "xmark.circle.fill").font(.system(size: 13)).foregroundColor(RUColor.text3)
+                    }
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+                    .accessibilityLabel("Annuler la réponse")
+                    Spacer(minLength: 0)
+                }
+            }
+            HStack(spacing: 10) {
+                TextField(reponseA == nil
+                          ? String(localized: "Dis quelque chose au club…")
+                          : String(localized: "Ta réponse…"),
+                          text: $brouillonDuClub, axis: .vertical)
+                    .textFieldStyle(.plain)
+                    .lineLimit(1...4)
+                    .font(RUFont.sans(.body))
+                    .foregroundColor(RUColor.textPrimary)
+                    .padding(.horizontal, 13).padding(.vertical, 10)
+                    .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                Button(action: { Task { await publierSurLeMur() } }) {
+                    Image(systemName: "arrow.up")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(RUColor.onRose)
+                        .frame(width: 38, height: 38)
+                        .background(RUColor.rose, in: Circle())
+                        .opacity(peutPublier ? 1 : 0.35)
+                }
+                .buttonStyle(PressableStyle())
+                .disabled(!peutPublier)
+                .accessibilityLabel("Publier sur le mur du club")
+            }
+        }
+        .padding(.bottom, 16)
+    }
+
+    private var peutPublier: Bool {
+        !brouillonDuClub.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !envoiDuMessage
+    }
+
+    private func blocDeMessage(_ message: ClubPost) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            enTeteDeMessage(message)
+            ForEach(reponses(a: message)) { reponse in
+                HStack(alignment: .top, spacing: 8) {
+                    Rectangle().fill(RUColor.line).frame(width: RUSpacing.hairline)
+                    enTeteDeMessage(reponse)
+                }
+                .padding(.leading, 10)
+            }
+            HStack(spacing: 18) {
+                Button(action: { Task { await applaudirLeMessage(message) } }) {
+                    HStack(spacing: 7) {
+                        Image(systemName: message.kudoedByMe ? "hands.clap.fill" : "hands.clap")
+                            .font(.system(size: 15, weight: .regular))
+                        if message.kudos > 0 {
+                            Text("\(message.kudos)").font(RUFont.sans(.body, weight: .semibold))
+                        }
+                    }
+                    .foregroundColor(message.kudoedByMe ? RUColor.rose : RUColor.text2)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(PressableStyle())
+                .accessibilityLabel(message.kudoedByMe ? "Retirer ton applaudissement" : "Applaudir ce message")
+
+                Button(action: {
+                    reponseA = message
+                    brouillonDuClub = ""
+                }) {
+                    HStack(spacing: 7) {
+                        Image(systemName: "bubble.right").font(.system(size: 15, weight: .regular))
+                        let compte = reponses(a: message).count
+                        if compte > 0 {
+                            Text("\(compte)").font(RUFont.sans(.body, weight: .semibold))
+                        }
+                    }
+                    .foregroundColor(RUColor.text2)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(PressableStyle())
+                .accessibilityLabel(String(localized: "Répondre à \(message.author.name)"))
+                Spacer(minLength: 0)
+            }
+        }
+    }
+
+    private func enTeteDeMessage(_ message: ClubPost) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(spacing: 8) {
+                // Le bloc d'identité entier ouvre la page de la personne — la photo, le nom et
+                // l'heure ensemble, comme partout ailleurs.
+                Button(action: { if !message.isMine { appState.ouvrirLeProfil(message.author.id) } }) {
+                    HStack(spacing: 8) {
+                        AvatarView(urlString: message.author.avatarUrl, base64DataURI: message.author.avatarBase64,
+                                   initial: String(message.author.name.prefix(1)), size: 32,
+                                   seed: message.isMine ? nil : message.author.id)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(message.author.name)
+                                .font(RUFont.sans(.label, weight: .bold))
+                                .foregroundColor(RUColor.textPrimary)
+                            Text(message.createdAt.relativeDescription)
+                                .font(RUFont.sans(.small))
+                                .foregroundColor(RUColor.text3)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(PressableStyle())
+                Spacer(minLength: 0)
+                Menu {
+                    if message.isMine {
+                        Button("Supprimer ce message", role: .destructive) {
+                            Task { await supprimerLeMessage(message) }
+                        }
+                    } else {
+                        Button("Signaler ce message") {
+                            reportTarget = ReportTarget(targetType: "club_post", targetId: message.id,
+                                                        displayName: message.author.name)
+                        }
+                        Button("Bloquer \(message.author.name)", role: .destructive) {
+                            pendingBlock = (message.author.id, message.author.name)
+                        }
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(RUColor.text3)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel("Plus d'options")
+            }
+            Text(message.text)
+                .font(RUFont.sans(.body))
+                .foregroundColor(RUColor.text2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func publierSurLeMur() async {
+        let texte = brouillonDuClub.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !texte.isEmpty else { return }
+        envoiDuMessage = true
+        defer { envoiDuMessage = false }
+        do {
+            try await clubService.postClubMessage(text: texte, parentId: reponseA?.id)
+            brouillonDuClub = ""
+            reponseA = nil
+            // On RECHARGE plutôt que de fabriquer la ligne localement : le serveur décide de
+            // l'identifiant et de la date, et deux appareils afficheraient sinon deux versions
+            // du même message.
+            posts = (try? await clubService.fetchClubPosts()) ?? posts
+        } catch {
+            appState.toast(PanneReseau.phrase(pour: error))
+        }
+    }
+
+    private func applaudirLeMessage(_ message: ClubPost) async {
+        guard let index = posts.firstIndex(where: { $0.id == message.id }) else { return }
+        do {
+            let maintenant = try await clubService.toggleClubPostKudos(postId: message.id)
+            posts[index].kudoedByMe = maintenant
+            posts[index].kudos += maintenant ? 1 : -1
+            Haptics.impact(.light)
+        } catch {
+            appState.toast(PanneReseau.phrase(pour: error))
+        }
+    }
+
+    private func supprimerLeMessage(_ message: ClubPost) async {
+        do {
+            try await clubService.deleteClubPost(postId: message.id)
+            // Les réponses partent avec lui côté serveur (ON DELETE CASCADE) : on fait pareil ici
+            // plutôt que de laisser des réponses orphelines jusqu'au prochain chargement.
+            posts.removeAll { $0.id == message.id || $0.parentId == message.id }
+        } catch {
+            appState.toast(PanneReseau.phrase(pour: error))
         }
     }
 
@@ -1578,6 +1826,7 @@ struct ClubView: View {
         // dans la capture, en bonne place. Le club posé par `CaptureSeed` est déjà là, complet ;
         // il n'y a rien à aller chercher. Voir `Demonstration`.
         if Demonstration.enCours {
+            posts = appState.cachedClubPosts ?? []
             isLoading = false
             return
         }
@@ -1594,7 +1843,12 @@ struct ClubView: View {
         async let meAttempt = try? await auth.refreshMe()
         async let boardAttempt = chargeBoard()
         async let feedAttempt = chargeFeed()
-        let (_, boardResult, feedResult) = await (meAttempt, boardAttempt, feedAttempt)
+        // Le mur part avec les trois autres plutôt qu'après : il appartient au même onglet que
+        // les sorties, et une quatrième attente en série rendrait l'onglet Activité plus lent
+        // que les deux autres pour une liste de dix lignes.
+        async let murAttempt = try? await clubService.fetchClubPosts()
+        let (_, boardResult, feedResult, murResult) = await (meAttempt, boardAttempt, feedAttempt, murAttempt)
+        if let murResult { posts = murResult }
 
         switch boardResult {
         case .success(let chargé):
@@ -1646,6 +1900,11 @@ struct ClubView: View {
     }
 
     private func loadFeed() async {
+        // En démonstration, le mur vient de la graine : pas de serveur en face d'un simulateur.
+        if Demonstration.enCours {
+            posts = appState.cachedClubPosts ?? []
+            return
+        }
         do {
             feed = try await clubService.fetchFeed()
             notifyNewKudos(in: feed)
@@ -1653,6 +1912,9 @@ struct ClubView: View {
         } catch {
             errorMessage = PanneReseau.phrase(pour: error)
         }
+        // Le mur, à part et sans bruit : un onglet Activité qui afficherait une erreur parce que
+        // le mur n'a pas répondu alors que les sorties sont là serait faux deux fois.
+        posts = (try? await clubService.fetchClubPosts()) ?? posts
     }
 
     private func loadGlobalBoard() async {

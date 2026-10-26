@@ -80,6 +80,19 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'cover':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleCover(req, res, userId);
+    // LE MUR DU CLUB. Mêmes trois actions que le mur d'une course, au mot près.
+    case 'posts':
+      if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
+      return handlePosts(req, res, userId);
+    case 'post':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleCreatePost(req, res, userId);
+    case 'postKudos':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handlePostKudos(req, res, userId);
+    case 'deletePost':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleDeletePost(req, res, userId);
     default:
       return res.status(404).json({ error: 'not_found' });
   }
@@ -883,4 +896,137 @@ async function handleCover(req, res, userId) {
   await sql`UPDATE clubs SET cover_url = ${blob.url} WHERE id = ${club.id}`;
   if (club.cover_url && club.cover_url !== blob.url) del(club.cover_url).catch(() => {});
   res.status(200).json({ ok: true, coverUrl: blob.url });
+}
+
+// LE MUR DU CLUB : ce qu'on se dit entre deux sorties.
+//
+// Un club pouvait publier des courses, applaudir et commenter. Il ne pouvait pas PARLER. « Qui a
+// un dossard en trop pour dimanche ? », « la berge est fermée jusqu'au 12 », « bienvenue à
+// Sarah » : rien de tout cela n'est une sortie, rien n'est un commentaire sous la sortie de
+// quelqu'un, et il n'existait aucun endroit pour l'écrire.
+//
+// Deux niveaux, comme le mur d'une course : un message, ses réponses. Une réponse de réponse
+// n'existe pas — au-delà de deux niveaux, personne ne sait plus à qui l'on parle.
+const LONGUEUR_MESSAGE_CLUB = 500;
+
+// Le club de qui appelle, ou rien. Toutes les actions du mur passent par là : on n'écrit pas sur
+// le mur d'un club dont on n'est pas membre, et on ne le lit pas non plus.
+async function monClub(userId) {
+  const { rows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
+  return rows[0]?.club_id || null;
+}
+
+async function handlePosts(req, res, userId) {
+  const clubId = await monClub(userId);
+  if (!clubId) return res.status(200).json({ posts: [] });
+
+  const { rows } = await sql`
+    SELECT p.id, p.parent_id, p.text, p.created_at, p.user_id,
+           u.name, u.last_name, u.username, u.avatar_data, u.avatar_url,
+           (SELECT COUNT(*)::int FROM club_post_kudos k WHERE k.post_id = p.id) AS kudos,
+           EXISTS(SELECT 1 FROM club_post_kudos k WHERE k.post_id = p.id AND k.user_id = ${userId}) AS kudoed_by_me
+      FROM club_posts p
+      JOIN users u ON u.id = p.user_id
+     WHERE p.club_id = ${clubId}
+       AND p.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+       AND p.user_id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
+     ORDER BY p.created_at DESC
+     LIMIT 100
+  `;
+
+  res.status(200).json({
+    posts: rows.map((r) => ({
+      id: r.id,
+      parentId: r.parent_id || null,
+      text: r.text,
+      createdAt: r.created_at,
+      kudos: r.kudos,
+      kudoedByMe: r.kudoed_by_me === true,
+      isMine: r.user_id === userId,
+      author: {
+        id: r.user_id,
+        name: r.name,
+        lastName: r.last_name || null,
+        username: r.username || null,
+        avatarBase64: r.avatar_data || null,
+        avatarUrl: r.avatar_url || null,
+        isPrivate: false,
+      },
+    })),
+  });
+}
+
+async function handleCreatePost(req, res, userId) {
+  if (!(await underDailyCap('clubPost:' + userId, 60))) {
+    return res.status(429).json({ error: 'too_many_requests' });
+  }
+  const clubId = await monClub(userId);
+  if (!clubId) return res.status(404).json({ error: 'not_found' });
+
+  const propre = typeof req.body?.text === 'string' ? req.body.text.trim().slice(0, LONGUEUR_MESSAGE_CLUB) : '';
+  if (!propre) return res.status(400).json({ error: 'bad_request' });
+  // Même filtre que les noms de clubs, les commentaires et les messages d'une course : ce texte
+  // atterrit chez tous les membres.
+  if (containsObjectionableContent(propre)) return res.status(422).json({ error: 'objectionable_content' });
+
+  const parentId = req.body?.parentId;
+  let parent = null;
+  if (parentId !== undefined && parentId !== null) {
+    if (!isUuid(parentId)) return res.status(400).json({ error: 'bad_request' });
+    const { rows } = await sql`
+      SELECT id FROM club_posts WHERE id = ${parentId} AND club_id = ${clubId} AND parent_id IS NULL
+    `;
+    if (rows.length === 0) return res.status(404).json({ error: 'not_found' });
+    parent = parentId;
+  }
+
+  const { rows } = await sql`
+    INSERT INTO club_posts (club_id, user_id, parent_id, text)
+    VALUES (${clubId}, ${userId}, ${parent}, ${propre})
+    RETURNING id, created_at
+  `;
+  res.status(201).json({ id: rows[0].id, createdAt: rows[0].created_at });
+}
+
+async function handlePostKudos(req, res, userId) {
+  const { postId } = req.body || {};
+  if (!isUuid(postId)) return res.status(400).json({ error: 'bad_request' });
+  if (!(await underDailyCap('clubPostKudos:' + userId, 300))) {
+    return res.status(429).json({ error: 'too_many_requests' });
+  }
+  const clubId = await monClub(userId);
+  if (!clubId) return res.status(404).json({ error: 'not_found' });
+
+  // Le message doit appartenir à MON club : détenir un identifiant ne donne pas le droit
+  // d'applaudir sur le mur d'un club où l'on n'est pas.
+  const { rows: post } = await sql`SELECT id FROM club_posts WHERE id = ${postId} AND club_id = ${clubId}`;
+  if (post.length === 0) return res.status(404).json({ error: 'not_found' });
+
+  const { rows: existe } = await sql`
+    SELECT 1 FROM club_post_kudos WHERE post_id = ${postId} AND user_id = ${userId}
+  `;
+  if (existe.length > 0) {
+    await sql`DELETE FROM club_post_kudos WHERE post_id = ${postId} AND user_id = ${userId}`;
+    return res.status(200).json({ kudoed: false });
+  }
+  await sql`
+    INSERT INTO club_post_kudos (post_id, user_id) VALUES (${postId}, ${userId})
+    ON CONFLICT DO NOTHING
+  `;
+  res.status(200).json({ kudoed: true });
+}
+
+// Son propre message, et rien d'autre. Les réponses partent avec lui (ON DELETE CASCADE) : une
+// réponse sous un message effacé serait un message sans contexte.
+async function handleDeletePost(req, res, userId) {
+  const { postId } = req.body || {};
+  if (!isUuid(postId)) return res.status(400).json({ error: 'bad_request' });
+  // `RETURNING 1` ET NON `rowCount` : `lib/db.js` enveloppe le pilote Neon et ne rend QUE
+  // `{ rows }`. `rowCount` y vaut `undefined`, donc ce point d'entrée aurait répondu 404 à
+  // chaque suppression RÉUSSIE. Le même piège a déjà coûté un bug dans api/activities.
+  const { rows } = await sql`
+    DELETE FROM club_posts WHERE id = ${postId} AND user_id = ${userId} RETURNING 1
+  `;
+  if (rows.length === 0) return res.status(404).json({ error: 'not_found' });
+  res.status(200).json({ ok: true });
 }

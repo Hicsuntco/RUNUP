@@ -765,3 +765,33 @@ ALTER TABLE clubs ADD COLUMN IF NOT EXISTS city TEXT;
 -- elle-même — la même règle que les photos de profil et de sortie, pour la même raison : une
 -- ligne de `clubs` est relue à chaque ouverture de l'écran par chaque membre.
 ALTER TABLE clubs ADD COLUMN IF NOT EXISTS cover_url TEXT;
+
+-- LE MUR DU CLUB.
+--
+-- Un club pouvait publier des sorties, applaudir et commenter. Il ne pouvait pas PARLER. « Qui a
+-- un dossard en trop pour dimanche ? », « la berge est fermée jusqu'au 12 », « bienvenue à
+-- Sarah » : rien de tout cela n'est une sortie, rien de tout cela n'est un commentaire sous la
+-- sortie de quelqu'un, et il n'existait aucun endroit pour l'écrire.
+--
+-- La forme est celle du mur d'une course, au mot près — un message, ses réponses par `parent_id`,
+-- ses applaudissements dans une table à part. Deux murs qui se ressemblent se corrigent ensemble ;
+-- deux murs inventés séparément divergent au premier correctif.
+CREATE TABLE IF NOT EXISTS club_posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  club_id UUID NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  -- NULL pour un message de premier niveau, sinon le message auquel il répond.
+  parent_id UUID REFERENCES club_posts(id) ON DELETE CASCADE,
+  text TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_club_posts_club ON club_posts (club_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_club_posts_parent ON club_posts (parent_id, created_at);
+
+CREATE TABLE IF NOT EXISTS club_post_kudos (
+  post_id UUID NOT NULL REFERENCES club_posts(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (post_id, user_id)
+);

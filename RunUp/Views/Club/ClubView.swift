@@ -1181,7 +1181,11 @@ struct ClubView: View {
                     weeklyDisplayMode = mode
                 }) {
                     Text(mode == .km ? "Km" : "% objectif")
-                        .font(RUFont.mono(10, weight: .medium))
+                        // Était en chasse fixe : deux mots de réglage dans une typographie que
+                        // rien d'autre de l'écran n'emploie, à côté d'un titre de section en
+                        // sans. La chasse fixe sert les CHIFFRES qui s'alignent en colonne,
+                        // pas les étiquettes.
+                        .font(RUFont.sans(.small, weight: .semibold))
                         .foregroundColor(weeklyDisplayMode == mode ? .white : RUColor.text2)
                         // Même hauteur que le sélecteur de période des Stats, dont c'est l'idiome.
                         .padding(.horizontal, 9).padding(.vertical, 9)
@@ -1204,13 +1208,28 @@ struct ClubView: View {
         .background(RUColor.card2, in: Capsule())
     }
 
+    /// LE RANG, ÉCRIT TROIS FOIS ET SANS MÉDAILLE.
+    ///
+    /// Les trois premières places portaient 🥇🥈🥉 — des émojis en couleurs d'impression au
+    /// milieu d'une liste sombre et sobre, et la chose la moins chère à l'œil de tout l'écran.
+    /// Un classement n'a pas besoin d'images pour dire qui mène : le chiffre le dit, et l'or de
+    /// la première place suffit à la distinguer. Les deuxième et troisième reprennent leur rang,
+    /// comme la quatrième et la cinquième — la hiérarchie est dans l'ordre de la liste, pas dans
+    /// trois pastilles de couleur.
+    ///
+    /// Et il était recopié à l'identique dans les TROIS classements (semaine, général, mondial),
+    /// donc corrigé une fois ici plutôt que trois fois là-bas.
+    private func rang(_ valeur: Int, estMoi: Bool) -> some View {
+        Text("\(valeur)")
+            .displayStyle(15)
+            .foregroundColor(estMoi ? RUColor.rose2 : (valeur == 1 ? RUColor.amber : RUColor.text2))
+            .frame(width: 20)
+    }
+
     private func weekRow(_ entry: WeeklyRow, displayRank: Int) -> some View {
         Button(action: { if !entry.isMe { appState.ouvrirLeProfil(entry.id) } }) {
         HStack(spacing: 12) {
-            Text(displayRank >= 1 && displayRank <= 3 ? ["🥇", "🥈", "🥉"][displayRank - 1] : "\(displayRank)")
-                .displayStyle(15)
-                .foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.text2)
-                .frame(width: 20)
+            rang(displayRank, estMoi: entry.isMe)
             AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28, seed: entry.isMe ? nil : entry.id)
             Text(entry.isMe ? String(localized: "\(entry.name) · toi") : entry.name)
                 .font(RUFont.sans(.label, weight: entry.isMe ? .semibold : .regular))
@@ -1282,10 +1301,7 @@ struct ClubView: View {
     private func generalRow(_ entry: LeaderboardRow) -> some View {
         Button(action: { if !entry.isMe { appState.ouvrirLeProfil(entry.id) } }) {
         HStack(spacing: 12) {
-            Text(entry.rank >= 1 && entry.rank <= 3 ? ["🥇", "🥈", "🥉"][entry.rank - 1] : "\(entry.rank)")
-                .displayStyle(15)
-                .foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.text2)
-                .frame(width: 20)
+            rang(entry.rank, estMoi: entry.isMe)
             AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28, seed: entry.isMe ? nil : entry.id)
             Text(entry.isMe ? String(localized: "\(entry.name) · toi") : entry.name)
                 .font(RUFont.sans(.label, weight: entry.isMe ? .semibold : .regular))
@@ -1370,10 +1386,7 @@ struct ClubView: View {
                                 boardDivider
                             }
                             HStack(spacing: 12) {
-                                Text(entry.rank >= 1 && entry.rank <= 3 ? ["🥇", "🥈", "🥉"][entry.rank - 1] : "\(entry.rank)")
-                                    .displayStyle(15)
-                                    .foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.text2)
-                                    .frame(width: 20)
+                                rang(entry.rank, estMoi: entry.isMe)
                                 AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28, seed: entry.isMe ? nil : entry.id)
                                 Text(entry.isMe ? String(localized: "\(entry.name) · toi") : entry.name)
                                     .font(RUFont.sans(.label, weight: entry.isMe ? .semibold : .regular))

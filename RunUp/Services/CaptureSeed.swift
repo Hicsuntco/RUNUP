@@ -190,8 +190,21 @@ enum CaptureSeed {
 
         func ilYAJours(_ jours: Int) -> String { ilYA(jours * 24) }
 
-        func dansDesHeures(_ heures: Int) -> String { ilYA(-heures) }
         func dansDesJours(_ jours: Int) -> String { ilYA(-jours * 24) }
+
+        /// Une sortie de groupe À UNE HEURE RONDE, et pas « maintenant + 31 h ».
+        ///
+        /// Un décalage en heures depuis l'instant de la capture donne « DEMAIN · 13:01 » ou
+        /// « VEN. · 06:01 » selon le moment où la machine a pris la photo : personne ne propose
+        /// une sortie longue à 13:01, et c'est le genre de détail qui fait qu'une capture de
+        /// l'App Store sent la donnée fabriquée. L'heure est donc posée, le jour calculé.
+        func dans(_ jours: Int, a heure: Int, _ minute: Int = 0) -> String {
+            var calendrier = Calendar(identifier: .gregorian)
+            calendrier.timeZone = .current
+            let jour = calendrier.date(byAdding: .day, value: jours, to: maintenant) ?? maintenant
+            let pose = calendrier.date(bySettingHour: heure, minute: minute, second: 0, of: jour) ?? jour
+            return formateur.string(from: pose)
+        }
 
         let tableau = """
         {
@@ -233,9 +246,9 @@ enum CaptureSeed {
           },
           "events": [
             { "id": "e1", "title": "Sortie longue au canal", "location": "Bassin de la Villette",
-              "startsAt": "\(dansDesHeures(31))", "going": 4, "goingByMe": true, "isMine": false },
+              "startsAt": "\(dans(1, a: 9, 30))", "going": 4, "goingByMe": true, "isMine": false },
             { "id": "e2", "title": "Fractionné sur piste", "location": "Stade Jules-Ladoumègue",
-              "startsAt": "\(dansDesJours(4))", "going": 2, "goingByMe": false, "isMine": false }
+              "startsAt": "\(dans(4, a: 19))", "going": 2, "goingByMe": false, "isMine": false }
           ]
         }
         """

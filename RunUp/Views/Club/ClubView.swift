@@ -811,8 +811,15 @@ struct ClubView: View {
     }
 
     /// Pas d'avatar, et c'est le propos : personne ne possède cette ligne.
+    ///
+    /// Mais sa PLACE est gardée. Sans ce vide de 32 points, son intitulé commençait au bord de
+    /// l'écran pendant que les trois records nominatifs démarraient derrière leur photo : quatre
+    /// lignes d'une même liste avec deux marges gauches différentes. L'absence de visage se lit
+    /// alors comme un défaut d'alignement, là où elle doit se lire comme ce qu'elle est —
+    /// personne ne possède ce record.
     private func ligneDeLaMeilleureSemaine(_ semaine: ClubBestWeek) -> some View {
         HStack(spacing: 12) {
+            Color.clear.frame(width: 32, height: 1)
             VStack(alignment: .leading, spacing: 2) {
                 Text("LA PLUS GROSSE SEMAINE")
                     .font(RUFont.sans(.micro, weight: .bold)).tracking(0.6)
@@ -1672,13 +1679,19 @@ struct ClubView: View {
                     .padding(.horizontal, 13).padding(.vertical, 10)
                     .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                // UN ACCENT ÉTEINT N'EST PAS UN ACCENT DÉSACTIVÉ, C'EST UN ACCENT CASSÉ.
+                //
+                // Le bouton inactif était le rose de l'app à 35 % : un disque bordeaux terne, qui
+                // se lit comme une couleur ratée plutôt que comme un bouton en attente. Inactif,
+                // il prend la surface neutre des autres boutons-icônes de l'app ; il ne devient
+                // rose qu'au moment où il peut vraiment envoyer.
                 Button(action: { Task { await publierSurLeMur() } }) {
                     Image(systemName: "arrow.up")
                         .font(.system(size: 15, weight: .bold))
-                        .foregroundColor(RUColor.onRose)
+                        .foregroundColor(peutPublier ? RUColor.onRose : RUColor.text3)
                         .frame(width: 38, height: 38)
-                        .background(RUColor.rose, in: Circle())
-                        .opacity(peutPublier ? 1 : 0.35)
+                        .background(peutPublier ? AnyShapeStyle(RUColor.rose) : AnyShapeStyle(RUColor.card2), in: Circle())
+                        .overlay(Circle().stroke(peutPublier ? Color.clear : RUColor.line, lineWidth: RUSpacing.hairline))
                 }
                 .buttonStyle(PressableStyle())
                 .disabled(!peutPublier)

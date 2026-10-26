@@ -29,7 +29,21 @@ struct SplitsView: View {
 
     private func ligne(index: Int, time: String, fraction: Double, isLast: Bool) -> some View {
         HStack(spacing: 12) {
-            Text("\(index + 1)").font(RUFont.mono(11)).foregroundColor(RUColor.text2).frame(width: 16)
+            // 16 POINTS NE TIENNENT PAS DEUX CHIFFRES, ET LA CAPTURE L'A MONTRÉ.
+            //
+            // Les splits 10, 11 et 12 se repliaient sur DEUX LIGNES — « 1 » au-dessus de « 0 » —
+            // donc toute sortie de plus de neuf kilomètres affichait une colonne de numéros
+            // cassés. Sur l'écran de fin de course comme sur la page d'une sortie, c'est-à-dire
+            // exactement là où une sortie longue se regarde.
+            //
+            // `lineLimit(1)` en plus de la largeur : un numéro ne se replie jamais, même si une
+            // taille de texte d'accessibilité le fait déborder — il rétrécit.
+            Text("\(index + 1)")
+                .font(RUFont.mono(11))
+                .foregroundColor(RUColor.text2)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .frame(width: 22, alignment: .trailing)
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     RoundedRectangle(cornerRadius: RUSpacing.radiusMicro).fill(RUColor.card)

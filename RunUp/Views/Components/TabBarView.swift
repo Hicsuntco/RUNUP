@@ -34,28 +34,32 @@ struct TabBarView: View {
     /// sorti le Club de la barre : depuis que le Profil est un hub social, l'onglet Club menait
     /// au même couple d'écrans par un second chemin — deux hubs vers deux écrans identiques.
     ///
-    /// # CE QUI CHANGE AUJOURD'HUI, ET POURQUOI CE N'EST PAS UN RETOUR EN ARRIÈRE
+    /// # LE FIL A PRIS LA PLACE DE STATS PENDANT UN BUILD, ET LA RAISON ÉTAIT FAUSSE
     ///
-    /// Le FIL prend la place de Stats. La règle n'a pas bougé, ce sont les deux écrans qui ont
-    /// changé de nature :
+    /// L'argument était : « Stats a sa propre carte sur l'accueil, avec ses quatre chiffres
+    /// dessus ; une carte qui porte déjà ce qu'elle ouvre est un meilleur chemin qu'un onglet. »
+    /// La carte existe bien. Mais personne n'avait regardé où elle TOMBE une fois rendue :
     ///
-    ///   • le fil n'est plus un segment du hub social, c'est le fil UNIFIÉ — le club, les
-    ///     abonnements et les pages de course dans une seule liste. Il n'est donc plus un second
-    ///     chemin vers quoi que ce soit, c'est une destination, et c'était la seule de l'app
-    ///     qu'on ouvrait tous les jours en passant par un hub et en faisant défiler pour trouver
-    ///     sa carte. Trois gestes pour l'écran le plus visité d'un réseau social ;
+    ///   • c'est le 4e bloc de l'accueil, après la séance du jour, l'anneau et la semaine — soit
+    ///     environ deux écrans et demi de défilement ;
+    ///   • et elle est posée sous `if trenteJours.count > 0`, donc elle DISPARAÎT quand le mois
+    ///     est creux. Un mois sans sortie, et il n'existait plus aucun accès aux statistiques
+    ///     dans toute l'app : les trois autres `go(.stats)` du code sont des boutons RETOUR,
+    ///     depuis des écrans qu'on n'atteint que par les Stats.
     ///
-    ///   • Stats, à l'inverse, a maintenant sa propre carte sur l'ACCUEIL — « 30 derniers
-    ///     jours », avec ses quatre chiffres dessus. Une carte qui porte déjà ce qu'elle ouvre
-    ///     est un meilleur chemin qu'un onglet, et son onglet était donc devenu le second.
+    /// Un chemin unique, sous la ligne de flottaison et escamotable, n'est pas « un meilleur
+    /// chemin qu'un onglet ». La règle n'était pas en cause — la mesure l'était.
     ///
-    /// Rien n'est retiré. Stats s'ouvre depuis l'accueil, et la barre reste allumée sur Prog
-    /// pendant qu'on y est (voir `RootTabView.tabSelection`) — donc l'onglet par lequel on en
-    /// revient se voit. Club, Amis, Courses et Itinéraires restent les quatre tuiles du Profil.
+    /// # LE FIL, LUI, RESTE UN ÉCRAN À PART ENTIÈRE
+    ///
+    /// Il ne redevient PAS un mode du hub social : `AppScreen.fil` existe toujours, avec son
+    /// propre en-tête et son état déconnectée. Il s'ouvre par sa carte en tête de la section
+    /// Communauté du Profil, et le Profil reste allumé pendant qu'on y est (voir
+    /// `RootTabView.tabSelection`), exactement comme pour le Club.
     private let items: [(AppScreen, String, String)] = [
         (.home, "Prog", "list.bullet"),
         (.coach, "Coach", "bubble.left.and.bubble.right"),
-        (.fil, "Fil", "square.stack.3d.up"),
+        (.stats, "Stats", "chart.bar"),
         (.profile, "Profil", "person.crop.circle")
     ]
 
@@ -233,7 +237,7 @@ struct TabBarView: View {
         .accessibilityLabel(LocalizedStringKey(label))
         // The only persistent navigation chrome in the app, visible on every screen — without
         // this, VoiceOver conveyed the active tab purely through color (the dot + icon/label
-        // tint), so a screen-reader user had no way to tell which of Prog/Coach/Fil/Profil was
+        // tint), so a screen-reader user had no way to tell which of Prog/Coach/Stats/Profil was
         // currently selected.
         .accessibilityAddTraits(on ? .isSelected : [])
     }

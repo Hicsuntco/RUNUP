@@ -59,15 +59,17 @@ struct ProfileView: View {
                     // sociales étaient la seule section anonyme de l'écran.
                     VStack(alignment: .leading, spacing: 10) {
                         RUCardHeader(title: "Communauté")
-                        // LE FIL N'EST PLUS ICI, ET C'EST UNE PROMOTION.
+                        // LE FIL PASSE DEVANT LA GRILLE, ET PLEINE LARGEUR.
                         //
-                        // Il passait devant la grille, pleine largeur, pour la raison écrite
-                        // alors : « celle qu'on ouvre tous les jours, là où les quatre autres
-                        // répondent à une question précise ». Un écran qu'on ouvre tous les
-                        // jours n'a rien à faire derrière un hub et un défilement — il a un
-                        // onglet (`AppScreen.fil`). Les quatre tuiles restantes, elles,
-                        // répondent bien chacune à une question précise, et c'est exactement
-                        // ce qu'une grille de hub sait faire.
+                        // Ce n'est pas une cinquième destination : c'est celle qu'on ouvre tous
+                        // les jours, là où les quatre autres répondent à une question précise.
+                        // En faire une tuile parmi quatre l'aurait mise à égalité avec
+                        // « Itinéraires », qu'on ouvre trois fois par an.
+                        //
+                        // Elle ouvre `AppScreen.fil` — l'ÉCRAN, pas un mode de `SocialView`
+                        // comme autrefois. Le fil a gagné son en-tête et son état déconnectée
+                        // en devenant un écran, et il les garde en perdant son onglet.
+                        carteDuFil
                         grilleCommunaute
                     }
                 }
@@ -520,6 +522,38 @@ struct ProfileView: View {
     }
 
     // MARK: - La grille de Communauté
+
+    private var carteDuFil: some View {
+        Button(action: { appState.go(.fil) }) {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle().fill(RUColor.accentGradient())
+                    Image(systemName: "square.stack.3d.up.fill")
+                        .font(.system(size: 15)).foregroundColor(.white)
+                }
+                .frame(width: 40, height: 40)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Le fil").font(RUFont.sans(.label, weight: .bold)).foregroundColor(RUColor.textPrimary)
+                    Text("Ton club, tes abonnements et tes courses, au même endroit")
+                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(RUColor.text3)
+                    .frame(width: 26, height: 26)
+            }
+            .padding(13)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .ruCard(radius: RUSpacing.radiusCompact)
+            .contentShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+        }
+        .buttonStyle(PressableStyle())
+    }
+
 
     private func tuileSociale(icone: String,
                               teinte: Color,

@@ -32,18 +32,15 @@ struct RootTabView: View {
     /// translation y entrer éteindrait la barre entière : cinq onglets dont aucun sélectionné,
     /// alors qu'on est bien quelque part.
     ///
-    ///   • `SocialView` (Club, Amis, Courses, Itinéraires) est sous le PROFIL, qui est le hub
-    ///     social et porte les quatre tuiles qui l'ouvrent ;
-    ///   • `StatsView` est sous PROG depuis que le fil a pris son onglet : on y entre par la
-    ///     carte « 30 derniers jours » de l'accueil, qui est désormais son seul chemin.
+    /// Les deux sont sous le PROFIL, qui est le hub social et porte les cartes qui les ouvrent :
+    /// `SocialView` (Club, Amis, Courses, Itinéraires) par ses quatre tuiles, et `WallView` par
+    /// la carte du fil posée au-dessus d'elles.
     ///
     /// Et ça ne sert pas qu'à ne pas éteindre la barre : l'onglet resté allumé est précisément
-    /// celui par lequel on REVIENT. Un écran poussé sans flèche de retour doit au moins dire
-    /// d'où il vient.
+    /// celui par lequel on REVIENT.
     private var tabSelection: AppScreen {
         switch appState.screen {
-        case .club: return .profile
-        case .stats: return .home
+        case .club, .fil: return .profile
         default: return appState.screen
         }
     }

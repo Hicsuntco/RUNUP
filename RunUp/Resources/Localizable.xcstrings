@@ -11151,22 +11151,6 @@
         }
       }
     },
-    "Fil": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Feed"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Feed"
-          }
-        }
-      }
-    },
     "Fil d'activité": {
       "localizations": {
         "en": {
@@ -25819,6 +25803,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tu club · tus amigos · tus carreras"
+          }
+        }
+      }
+    },
+    "Ton club, tes abonnements et tes courses, au même endroit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your club, the people you follow and your races, all in one place"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu club, a quienes sigues y tus carreras, todo en el mismo sitio"
           }
         }
       }

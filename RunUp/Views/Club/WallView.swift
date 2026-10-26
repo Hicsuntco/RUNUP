@@ -96,16 +96,22 @@ struct WallView: View {
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
-                // UN EN-TÊTE, PARCE QUE CET ÉCRAN EST MAINTENANT UNE RACINE D'ONGLET.
+                // UN EN-TÊTE QUI DIT CE QU'ON REGARDE, ET PAR OÙ ON REVIENT.
                 //
-                // Il n'en avait pas, et il avait raison de ne pas en avoir : il était un mode de
-                // `SocialView`, qui posait au-dessus de lui une flèche « ‹ Profil » — donc une
-                // ligne de titre, et le chemin pour revenir. Les quatre autres racines d'onglet
-                // portent toutes leur `HeaderView` ; sans celui-ci, le fil serait le seul écran
-                // de premier niveau qui commence par une rangée de filtres, c'est-à-dire par un
-                // réglage avant d'avoir dit ce qu'on règle.
-                HeaderView(eyebrow: "Ton club · tes amis · tes courses", title: "Le fil") {
-                    EmptyView()
+                // Le fil n'avait pas d'en-tête du tout : il était un mode de `SocialView`, qui
+                // posait au-dessus de lui une flèche « ‹ Profil ». En devenant un écran à part
+                // entière il a perdu cette flèche, et il a fallu lui donner son titre — sans
+                // quoi il aurait été le seul écran de l'app à commencer par une rangée de
+                // filtres, c'est-à-dire par un réglage avant d'avoir dit ce qu'on règle.
+                //
+                // Il s'ouvre désormais depuis la carte du Profil, donc le retour redevient une
+                // vraie question, et `BackTitleHeaderView` porte les deux à la fois : le
+                // chevron, le sourcil et le titre sur une seule ligne. C'est le composant des
+                // écrans poussés de l'app, et le fil en est un.
+                BackTitleHeaderView(eyebrow: "Ton club · tes amis · tes courses",
+                                    title: "Le fil",
+                                    titleSize: 24) {
+                    appState.go(.profile)
                 }
                 .padding(.bottom, 10)
 

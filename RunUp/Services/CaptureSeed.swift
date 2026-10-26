@@ -65,6 +65,17 @@ enum CaptureSeed {
         ProcessInfo.processInfo.arguments.contains("--sortie")
     }
 
+    /// `--onglet=apercu|classement|activite` : l'onglet du Club à montrer.
+    ///
+    /// La démonstration ouvre le Club sur son fil, parce que c'est le seul des trois onglets
+    /// qu'un club inventé remplit vraiment. Les deux autres ne se photographiaient donc jamais —
+    /// et une page qu'on ne photographie pas est une page qu'on juge de mémoire.
+    static var ongletDuClub: String? {
+        ProcessInfo.processInfo.arguments
+            .first(where: { $0.hasPrefix("--onglet=") })
+            .map { String($0.dropFirst("--onglet=".count)) }
+    }
+
     /// `--mur` : ouvrir le fil plutôt que l'écran par défaut de l'onglet social.
     static var murDemande: Bool {
         ProcessInfo.processInfo.arguments.contains("--mur")

@@ -91,9 +91,19 @@ final class CapturesUITests: XCTestCase {
         prendre(rang: 11, ecran: "club", nom: "sortie", diagnostic: true, sortie: true)
     }
 
+    /// Les deux onglets du Club que la démonstration n'ouvre jamais : l'aperçu — niveau, semaine
+    /// du club, défi, sorties de groupe — et le classement. Le fil, lui, est déjà la capture 4.
+    func test12ClubApercuDiagnostic() {
+        prendre(rang: 12, ecran: "club", nom: "club-apercu", diagnostic: true, onglet: "apercu")
+    }
+
+    func test13ClubClassementDiagnostic() {
+        prendre(rang: 13, ecran: "club", nom: "club-classement", diagnostic: true, onglet: "classement")
+    }
+
     private func prendre(rang: Int, ecran: String, nom: String, diagnostic: Bool = false,
                          profil: String? = nil, mur: Bool = false, course: Bool = false,
-                         sortie: Bool = false) {
+                         sortie: Bool = false, onglet: String? = nil) {
         let app = XCUIApplication()
         app.launchArguments = ["--captures", "--ecran=\(ecran)"]
         if let profil { app.launchArguments += ["--profil=\(profil)"] }
@@ -101,6 +111,7 @@ final class CapturesUITests: XCTestCase {
         // La page de course s'ouvre depuis l'écran des courses : il faut donc y être.
         if course { app.launchArguments += ["--course", "--courses"] }
         if sortie { app.launchArguments += ["--sortie"] }
+        if let onglet { app.launchArguments += ["--onglet=\(onglet)"] }
         // La langue et la région viennent de l'extérieur : le même test tourne trois fois, une
         // par langue, et c'est le workflow qui dit laquelle. `-AppleLanguages` est la seule
         // façon de forcer la langue d'un lancement sans toucher aux réglages du simulateur.

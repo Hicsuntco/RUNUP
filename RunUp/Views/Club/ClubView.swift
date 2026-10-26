@@ -15,7 +15,7 @@ struct ClubView: View {
     /// Il montre les kilomètres du club cette semaine, le défi en cours et les sorties de
     /// groupe prévues — trois choses qu'un club inventé n'a pas, donc trois états vides sous
     /// une accroche qui parle du fil du club. Le fil, lui, est plein. Voir `Demonstration`.
-    @State private var tab: Tab = Demonstration.enCours ? .feed : .overview
+    @State private var tab: Tab = Tab.auDemarrage
     @State private var board = ClubBoard(club: nil, leaderboard: [])
     @State private var feed: [FeedItem] = []
     // Starts true (not false) so the very first render — before `.task` below has had a chance to
@@ -82,7 +82,23 @@ struct ClubView: View {
     /// d'écran à eux seuls. Ils forment un ensemble cohérent — « où en est le club en ce moment »
     /// — qui devient l'onglet Aperçu, pendant que Classement et Activité deviennent atteignables
     /// en un seul geste depuis le haut de la page.
-    private enum Tab { case overview, board, feed }
+    private enum Tab {
+        case overview, board, feed
+
+        /// L'onglet d'ouverture. En démonstration, le fil — le seul des trois qu'un club inventé
+        /// remplit vraiment — sauf quand les captures en demandent un autre par `--onglet=`.
+        static var auDemarrage: Tab {
+            #if DEBUG
+            switch CaptureSeed.ongletDuClub {
+            case "apercu": return .overview
+            case "classement": return .board
+            case "activite": return .feed
+            default: break
+            }
+            #endif
+            return Demonstration.enCours ? .feed : .overview
+        }
+    }
 
     private var profile: UserProfile { appState.profile }
     private var auth: AuthService { appState.auth }

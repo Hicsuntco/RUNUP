@@ -1039,6 +1039,40 @@
         }
       }
     },
+    "%lld coureuse": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld runner"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld corredora"
+          }
+        }
+      }
+    },
+    "%lld coureuses": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld runners"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld corredoras"
+          }
+        }
+      }
+    },
     "%lld course importée.": {
       "extractionState": "manual",
       "localizations": {
@@ -3864,6 +3898,23 @@
         }
       }
     },
+    "Ajouter une photo de couverture": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a cover photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir una foto de portada"
+          }
+        }
+      }
+    },
     "Ajouter une séance": {
       "extractionState": "manual",
       "localizations": {
@@ -6418,6 +6469,23 @@
         }
       }
     },
+    "Cette image n'a pas pu être lue.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That image couldn't be read."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha podido leer esta imagen."
+          }
+        }
+      }
+    },
     "Cette installation": {
       "extractionState": "manual",
       "localizations": {
@@ -6610,6 +6678,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cambiar"
+          }
+        }
+      }
+    },
+    "Changer la photo de couverture": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change the cover photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar la foto de portada"
           }
         }
       }
@@ -13310,6 +13395,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "LA FACTURA NO LLEGA ENSEGUIDA. Llega en la segunda carrera, y no se renegocia: en un duatlón no se recupera al final lo que se gastó al principio. Sal más suave de lo que te parece justo."
+          }
+        }
+      }
+    },
+    "LA PLUS GROSSE SEMAINE": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BIGGEST WEEK"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LA SEMANA MÁS GRANDE"
           }
         }
       }

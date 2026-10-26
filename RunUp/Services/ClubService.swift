@@ -17,6 +17,9 @@ struct ClubInfo: Decodable {
     /// champs ci-dessus — et parce qu'un club peut parfaitement n'avoir rien écrit.
     var description: String?
     var city: String?
+    /// La bannière du club. Une URL de stockage, jamais l'image : une ligne de `clubs` est relue
+    /// à chaque ouverture de l'écran, par chaque membre.
+    var coverUrl: String?
 }
 
 /// Un club trouvé par la recherche — tout ce qu'il faut pour décider de le rejoindre, et rien de
@@ -549,6 +552,17 @@ struct ClubService {
             path: "api/clubs/setClubProfile", method: "POST",
             body: ["description": description ?? "", "city": city ?? ""]
         )
+    }
+
+    /// La bannière du club — un data URI JPEG déjà redimensionné par l'app, ou nil pour l'effacer.
+    /// Réservée à qui a créé le club ; le serveur le revérifie.
+    func setClubCover(dataURI: String?) async throws {
+        // `NSNull()` et non `nil` : un optionnel vide emballé dans `Any` n'est pas une valeur
+        // JSON, et `JSONSerialization` lève une exception Objective-C qu'aucun `try` Swift
+        // n'attrape. Le serveur lit `null` comme une demande de retrait.
+        let valeur: Any = dataURI.map { $0 as Any } ?? NSNull()
+        let _: OkResponse = try await send(path: "api/clubs/cover", method: "POST",
+                                           body: ["coverDataURI": valeur])
     }
 
     /// Ouvre ou ferme son club. Réservé à la personne qui l'a créé — le serveur refuse les autres.
@@ -1169,6 +1183,16 @@ struct WallPage: Decodable {
 struct ClubHighlights: Decodable {
     var races: [ClubRace]
     var records: [ClubRecord]
+    /// Le seul record qui n'appartienne à personne : ce que le club a fait ENSEMBLE dans sa
+    /// meilleure semaine. Nil tant qu'aucune semaine ENTIÈRE n'a été courue — celle en cours est
+    /// exclue, sinon un lundi matin battrait le record de l'année.
+    var bestWeek: ClubBestWeek?
+}
+
+struct ClubBestWeek: Decodable {
+    var startsAt: Date
+    var km: Double
+    var runners: Int
 }
 
 /// Une course que plusieurs membres préparent. `race` est le MÊME `RaceEvent` que partout

@@ -529,7 +529,8 @@ enum CaptureSeed {
                 { "genre": "denivele", "activityId": "c", "userId": "5", "name": "Lina",
                   "createdAt": "\(ilYA(22))", "distanceKm": 8.2, "durationSeconds": 2583,
                   "elevationGainM": 42, "secPerKm": 315.0 }
-              ]
+              ],
+              "bestWeek": { "startsAt": "\(ilYAJours(24))", "km": 212.4, "runners": 7 }
             }
             """
             etat.cachedClubHighlights = try decodeur.decode(ClubHighlights.self, from: Data(pepites.utf8))

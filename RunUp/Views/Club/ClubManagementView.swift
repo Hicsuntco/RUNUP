@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import PhotosUI
 
 /// "Gestion du club" — reached by tapping the club name in `ClubView`'s header. Groups what
 /// isn't part of the day-to-day leaderboard/feed: the invite code (used to sit as its own card on
@@ -27,6 +28,8 @@ struct ClubManagementView: View {
     var onSetOpen: (Bool) async throws -> Void
     /// Ce que le club est, et où il court. Réservé à qui l'a créé.
     var onSetClubProfile: (String, String) async throws -> Void
+    /// Sa bannière — un data URI JPEG, ou nil pour l'effacer.
+    var onSetClubCover: (String?) async throws -> Void
     var onReportClub: () -> Void
     var onLeaveClub: () -> Void
 
@@ -36,6 +39,8 @@ struct ClubManagementView: View {
     @State private var villeDuClub = ""
     @State private var identiteEnregistree = false
     @State private var identiteEnCours = false
+    @State private var choixDeCouverture: PhotosPickerItem?
+    @State private var couvertureEnCours = false
 
     var body: some View {
         NavigationStack {
@@ -182,6 +187,7 @@ struct ClubManagementView: View {
         if club.isOwner == true {
             VStack(alignment: .leading, spacing: 10) {
                 RUCardHeader(title: "Ce que les autres voient")
+                couverture
                 TextField("Où court-on ? (ville)", text: $villeDuClub)
                     .textFieldStyle(.plain)
                     .font(RUFont.sans(.body))
@@ -217,6 +223,86 @@ struct ClubManagementView: View {
                 descriptionDuClub = club.description ?? ""
                 villeDuClub = club.city ?? ""
             }
+        }
+    }
+
+    /// LA BANNIÈRE DU CLUB, déposée là où se décide tout le reste de son identité.
+    ///
+    /// L'aperçu montre l'image ACTUELLE quand il y en a une, et un cadre en pointillés sinon :
+    /// un bouton « Ajouter une photo » posé sur rien ne dit pas ce qu'il produira, là où un
+    /// cadre à la bonne forme montre déjà la place qu'elle prendra en tête de la page.
+    @ViewBuilder private var couverture: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            PhotosPicker(selection: $choixDeCouverture, matching: .images) {
+                ZStack {
+                    if let brut = club.coverUrl, !brut.isEmpty, let url = URL(string: brut) {
+                        AsyncImage(url: url) { image in
+                            image.resizable().scaledToFill()
+                        } placeholder: {
+                            RUColor.card
+                        }
+                    } else {
+                        RUColor.card
+                        VStack(spacing: 6) {
+                            Image(systemName: "photo").font(.system(size: 20))
+                            Text("Ajouter une photo de couverture")
+                                .font(RUFont.sans(.small, weight: .semibold))
+                        }
+                        .foregroundColor(RUColor.text3)
+                    }
+                    if couvertureEnCours {
+                        Color.black.opacity(0.4)
+                        ProgressView().tint(.white)
+                    }
+                }
+                .aspectRatio(16.0 / 6.0, contentMode: .fill)
+                .frame(maxWidth: .infinity)
+                .clipped()
+                .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous)
+                    .strokeBorder(RUColor.line, style: StrokeStyle(lineWidth: RUSpacing.hairline,
+                                                                   dash: club.coverUrl == nil ? [5, 4] : [])))
+                .contentShape(Rectangle())
+            }
+            .disabled(couvertureEnCours)
+            .accessibilityLabel("Changer la photo de couverture")
+            .onChange(of: choixDeCouverture) { _, nouveau in
+                Task { await envoyerLaCouverture(nouveau) }
+            }
+            if club.coverUrl != nil {
+                Button("Retirer la photo", role: .destructive) {
+                    Task { await envoyerLaCouverture(nil) }
+                }
+                .font(RUFont.sans(.small, weight: .semibold))
+                .foregroundColor(RUColor.rose2)
+                .disabled(couvertureEnCours)
+            }
+        }
+    }
+
+    /// 1080 points de large, et pas la photo d'origine : le sélecteur rend des images de pleine
+    /// résolution d'appareil photo (plusieurs mégaoctets), et le serveur refuse au-delà de 500 ko.
+    /// C'est le même redimensionnement que la photo de profil, à une autre taille — une bannière
+    /// occupe toute la largeur de l'écran, une pastille 88 points.
+    private func envoyerLaCouverture(_ item: PhotosPickerItem?) async {
+        couvertureEnCours = true
+        defer { couvertureEnCours = false }
+        var dataURI: String?
+        if let item {
+            guard let data = try? await item.loadTransferable(type: Data.self),
+                  let image = UIImage(data: data),
+                  let jpeg = image.resized(maxDimension: 1080).jpegData(compressionQuality: 0.7)
+            else {
+                appState.toast(String(localized: "Cette image n'a pas pu être lue."))
+                return
+            }
+            dataURI = "data:image/jpeg;base64,\(jpeg.base64EncodedString())"
+        }
+        do {
+            try await onSetClubCover(dataURI)
+            choixDeCouverture = nil
+        } catch {
+            appState.toast(PanneReseau.phrase(pour: error))
         }
     }
 

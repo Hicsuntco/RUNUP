@@ -759,3 +759,9 @@ ALTER TABLE activities ADD COLUMN IF NOT EXISTS kcal INTEGER;
 -- résultat.
 ALTER TABLE clubs ADD COLUMN IF NOT EXISTS description TEXT;
 ALTER TABLE clubs ADD COLUMN IF NOT EXISTS city TEXT;
+
+-- LA COUVERTURE DU CLUB. Ce qui reste pour qu'il ressemble à un lieu plutôt qu'à une fiche :
+-- une image du canal, de la piste, du groupe au départ. Une URL de stockage, jamais l'image
+-- elle-même — la même règle que les photos de profil et de sortie, pour la même raison : une
+-- ligne de `clubs` est relue à chaque ouverture de l'écran par chaque membre.
+ALTER TABLE clubs ADD COLUMN IF NOT EXISTS cover_url TEXT;

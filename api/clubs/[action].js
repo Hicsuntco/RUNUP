@@ -6,6 +6,8 @@ const { requireAuth } = require('../../lib/auth');
 const { withErrorHandling, isUuid } = require('../../lib/http');
 const { containsObjectionableContent } = require('../../lib/moderation');
 const { REJECTED, sanitizeOwnText } = require('../../lib/activityFields');
+const { tamponDepuisDataURI } = require('../../lib/images');
+const { put, del } = require('@vercel/blob');
 
 // Une description de club tient en un paragraphe qu'on lit sans le déplier — l'équivalent de la
 // note d'une sortie, en plus court : elle s'affiche en tête d'une page, pas dans un fil.
@@ -75,6 +77,9 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'setClubProfile':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleSetClubProfile(req, res, userId);
+    case 'cover':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleCover(req, res, userId);
     default:
       return res.status(404).json({ error: 'not_found' });
   }
@@ -323,7 +328,7 @@ async function handleMine(req, res, userId) {
   if (memberRows.length === 0) return res.status(200).json({ club: null, leaderboard: [] });
 
   const clubId = memberRows[0].club_id;
-  const { rows: clubRows } = await sql`SELECT id, name, is_open, created_by, description, city FROM clubs WHERE id = ${clubId}`;
+  const { rows: clubRows } = await sql`SELECT id, name, is_open, created_by, description, city, cover_url FROM clubs WHERE id = ${clubId}`;
   const club = clubRows[0];
 
   // Rank is computed over every member first (a subquery), then blocked users are filtered out
@@ -431,6 +436,7 @@ async function handleMine(req, res, userId) {
       // Ce qui fait d'un club un LIEU et plus un nom : ce qu'il est, et où il court.
       description: club.description || null,
       city: club.city || null,
+      coverUrl: club.cover_url || null,
     },
     leaderboard: leaderboard.map((r) => ({
       id: r.id, name: r.name, xp: r.xp_total, rank: Number(r.rank), isMe: r.id === userId,
@@ -677,7 +683,7 @@ async function handleHighlights(req, res, userId) {
   // s'il y en a un, et un 404 l'obligerait à distinguer « pas de club » de « panne ».
   if (!clubId) return res.status(200).json({ races: [], records: [] });
 
-  const [courses, records] = await Promise.all([
+  const [courses, records, semaine] = await Promise.all([
     // LES COURSES QUE LE CLUB PRÉPARE, la plus proche d'abord. Une course par ligne, avec qui
     // s'y est inscrit : c'est le « qui vient ? » d'une sortie de groupe, à l'échelle d'une année.
     sql`
@@ -732,6 +738,28 @@ async function handleHighlights(req, res, userId) {
               distance_km, duration_seconds, elevation_gain_m, sec_par_km
          FROM sorties WHERE elevation_gain_m > 0 ORDER BY elevation_gain_m DESC LIMIT 1)
     `,
+    // LA PLUS GROSSE SEMAINE DU CLUB — le seul record qui n'appartienne à personne.
+    //
+    // Les trois ci-dessus nomment quelqu'un ; celui-ci dit ce que le club a fait ENSEMBLE, et
+    // c'est une phrase qu'aucun classement individuel ne produira jamais.
+    //
+    // La semaine EN COURS est exclue : elle n'est pas finie, et la comparer à des semaines
+    // entières ferait dire « record » à une semaine qui vient de commencer. `date_trunc('week')`
+    // démarre un lundi en Postgres — le même lundi que le classement hebdomadaire de l'app.
+    //
+    // Pas de filtre de blocage ici, contrairement aux trois records : un total collectif qui
+    // changerait selon qui le regarde ne serait plus un fait du club.
+    sql`
+      SELECT date_trunc('week', a.created_at) AS debut, SUM(a.distance_km)::float AS km,
+             COUNT(DISTINCT a.user_id)::int AS coureurs
+        FROM activities a
+        JOIN club_members cm ON cm.user_id = a.user_id AND cm.club_id = ${clubId}
+       WHERE a.type = 'run' AND a.distance_km IS NOT NULL
+         AND date_trunc('week', a.created_at) < date_trunc('week', now())
+       GROUP BY 1
+       ORDER BY km DESC
+       LIMIT 1
+    `,
   ]);
 
   res.status(200).json({
@@ -766,6 +794,11 @@ async function handleHighlights(req, res, userId) {
       elevationGainM: r.elevation_gain_m,
       secPerKm: r.sec_par_km === null ? null : Number(r.sec_par_km),
     })),
+    bestWeek: semaine.rows[0] ? {
+      startsAt: semaine.rows[0].debut,
+      km: Number(semaine.rows[0].km),
+      runners: semaine.rows[0].coureurs,
+    } : null,
   });
 }
 
@@ -794,4 +827,60 @@ async function handleSetClubProfile(req, res, userId) {
 
   await sql`UPDATE clubs SET description = ${description}, city = ${city} WHERE id = ${clubId}`;
   res.status(200).json({ ok: true, description, city });
+}
+
+
+// LA PHOTO DE COUVERTURE DU CLUB.
+//
+// Mot pour mot la mécanique de la photo de profil et de celle d'une sortie, et c'est délibéré :
+// mêmes octets magiques vérifiés, même plafond quotidien, même chemin stable dans le stockage,
+// même ménage de l'ancienne image. Une seconde façon de déposer une image serait une seconde
+// façon de se tromper.
+//
+// Plus généreuse que l'avatar (500 ko contre 200), comme la photo d'une sortie : une bannière
+// large porte nettement plus d'information qu'une pastille de 88 points, et c'est tout l'intérêt.
+//
+// Réservée à qui a créé le club, et le serveur le revérifie : cette image s'affiche en tête
+// d'une page vue par tous les membres.
+const MAX_COVER_LENGTH = 500000;
+
+async function handleCover(req, res, userId) {
+  const { rows: clubRows } = await sql`
+    SELECT c.id, c.cover_url FROM clubs c
+      JOIN club_members m ON m.club_id = c.id AND m.user_id = ${userId}
+     WHERE c.created_by = ${userId}
+  `;
+  const club = clubRows[0];
+  if (!club) return res.status(403).json({ error: 'not_owner' });
+
+  if (!(await underDailyCap('clubCover:' + userId, 20))) {
+    return res.status(429).json({ error: 'too_many_uploads' });
+  }
+
+  const brut = req.body?.coverDataURI;
+  // `null` efface. Distinguer « rien envoyé » de « envoyé mais illisible » compte : le premier
+  // est une demande de retrait, le second une erreur qu'il faut dire.
+  if (brut === null || brut === undefined) {
+    await sql`UPDATE clubs SET cover_url = NULL WHERE id = ${club.id}`;
+    if (club.cover_url) del(club.cover_url).catch(() => {});
+    return res.status(200).json({ ok: true, coverUrl: null });
+  }
+
+  const image = tamponDepuisDataURI(brut, MAX_COVER_LENGTH);
+  if (!image) return res.status(400).json({ error: 'not_an_image' });
+
+  const blob = await put(`clubs/${club.id}.jpg`, image, {
+    access: 'public',
+    contentType: 'image/jpeg',
+    // Un chemin stable par club : un remplacement écrase le même objet au lieu d'accumuler une
+    // image par changement.
+    addRandomSuffix: false,
+    // L'adresse ne change pas d'un envoi à l'autre : sans ce cache court, l'ancienne image
+    // continuerait de s'afficher jusqu'à l'expiration du cache de chaque appareil.
+    cacheControlMaxAge: 3600,
+  });
+
+  await sql`UPDATE clubs SET cover_url = ${blob.url} WHERE id = ${club.id}`;
+  if (club.cover_url && club.cover_url !== blob.url) del(club.cover_url).catch(() => {});
+  res.status(200).json({ ok: true, coverUrl: blob.url });
 }

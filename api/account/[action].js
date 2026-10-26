@@ -10,20 +10,13 @@
 // installée n'est affectée.
 const { put, del } = require('@vercel/blob');
 const { sql } = require('../../lib/db');
+const { estUnJpeg } = require('../../lib/images');
 const { requireAuth } = require('../../lib/auth');
 const { withErrorHandling } = require('../../lib/http');
 
 // Generous for a compressed 240pt-thumbnail data URI, tight enough that a tampered client can't
 // use this to smuggle in something much larger.
 const MAX_LENGTH = 200000;
-
-// The client always sends a JPEG (ProfileView.setAvatar calls UIImage.jpegData) — checking the
-// real magic bytes, not just the client-declared "data:image/..." prefix, is what actually stops
-// a tampered client from storing (and serving to every club member via the leaderboard/feed
-// queries) something that isn't a real image at all, including an SVG with an embedded <script>.
-function isValidJpeg(buffer) {
-  return buffer.length > 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
-}
 
 module.exports = withErrorHandling(async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
@@ -86,7 +79,7 @@ async function handleAvatar(req, res, userId) {
   } catch {
     return res.status(400).json({ error: 'bad_request' });
   }
-  if (!isValidJpeg(decoded)) return res.status(400).json({ error: 'not_an_image' });
+  if (!estUnJpeg(decoded)) return res.status(400).json({ error: 'not_an_image' });
 
   const blob = await put(`avatars/${userId}.jpg`, decoded, {
     access: 'public',

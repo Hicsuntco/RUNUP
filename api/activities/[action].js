@@ -3,6 +3,9 @@
 // exactly as before.
 const { put, del } = require('@vercel/blob');
 const { sql } = require('../../lib/db');
+// Les octets magiques d'un JPEG, écrits une seule fois pour les trois points d'entrée qui
+// acceptent une image (voir lib/images.js).
+const { estUnJpeg } = require('../../lib/images');
 const { requireAuth } = require('../../lib/auth');
 const { withErrorHandling, isUuid } = require('../../lib/http');
 const { sendPushToUser, sendPushToUsers } = require('../../lib/apns');
@@ -942,10 +945,6 @@ function mapRouteSummary(row) {
 const MAX_ROUTE_PHOTO_LENGTH = 500000;
 const MAX_ROUTE_PHOTOS_PER_DAY = 20;
 
-function isValidJpegBuffer(buffer) {
-  return buffer.length > 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
-}
-
 // LA PHOTO D'UNE SORTIE.
 //
 // Mot pour mot la même mécanique que la photo d'un itinéraire juste en dessous, et c'est
@@ -1052,7 +1051,7 @@ async function handleActivityPhoto(req, res, userId) {
   }
   // Les octets magiques, pas le préfixe annoncé par le client : c'est ce qui empêche vraiment de
   // déposer autre chose qu'une image et de la servir à tout un club.
-  if (!isValidJpegBuffer(decoded)) return res.status(400).json({ error: 'not_an_image' });
+  if (!estUnJpeg(decoded)) return res.status(400).json({ error: 'not_an_image' });
 
   const blob = await put(`activities/${activityId}.jpg`, decoded, {
     access: 'public',
@@ -1100,7 +1099,7 @@ async function handleRoutePhoto(req, res, userId) {
   }
   // Les octets magiques, pas le préfixe annoncé par le client : c'est ce qui empêche vraiment de
   // déposer autre chose qu'une image et de le servir à tous ceux qui consultent la carte.
-  if (!isValidJpegBuffer(decoded)) return res.status(400).json({ error: 'not_an_image' });
+  if (!estUnJpeg(decoded)) return res.status(400).json({ error: 'not_an_image' });
 
   const blob = await put(`routes/${routeId}.jpg`, decoded, {
     access: 'public',

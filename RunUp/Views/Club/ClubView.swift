@@ -109,6 +109,7 @@ struct ClubView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
+                banniere
                 header
                 // Pleine largeur, SOUS l'en-tête et pas dedans : à côté du nom, elle aurait eu
                 // la moitié de la ligne et se serait tronquée au premier mot intéressant.
@@ -362,6 +363,10 @@ struct ClubView: View {
                         try await clubService.setClubProfile(description: description, city: ville)
                         await loadIfSignedIn()
                     },
+                    onSetClubCover: { dataURI in
+                        try await clubService.setClubCover(dataURI: dataURI)
+                        await loadIfSignedIn()
+                    },
                     // Même précaution que `onReport` ci-dessus : fermer la feuille, puis présenter
                     // le dialogue une fois son animation de fermeture passée.
                     onReportClub: {
@@ -550,6 +555,31 @@ struct ClubView: View {
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusHero, style: .continuous).stroke(RUColor.violet.opacity(0.3), lineWidth: RUSpacing.hairline))
     }
 
+    /// LA COUVERTURE DU CLUB.
+    ///
+    /// La dernière chose qui manquait pour qu'un club ressemble à un LIEU plutôt qu'à une fiche :
+    /// le canal, la piste, le groupe au départ. Elle ne s'affiche que si quelqu'un en a posé une
+    /// — un cadre gris en attente d'image dirait « il manque quelque chose » à des clubs qui ne
+    /// manquent de rien.
+    ///
+    /// 16:6, pas 16:9 : c'est une bande, pas une photo. Plus haute, elle pousserait le nom du
+    /// club et ses trois onglets sous la ligne de flottaison, et on ouvrirait l'écran sur une
+    /// image au lieu de l'ouvrir sur le club.
+    @ViewBuilder private var banniere: some View {
+        if let brut = board.club?.coverUrl, !brut.isEmpty, let url = URL(string: brut) {
+            AsyncImage(url: url) { image in
+                image.resizable().scaledToFill()
+            } placeholder: {
+                RUColor.card
+            }
+            .aspectRatio(16.0 / 6.0, contentMode: .fill)
+            .frame(maxWidth: .infinity)
+            .clipped()
+            .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+            .accessibilityHidden(true)
+        }
+    }
+
     /// « Lyon · 18 membres », ou le compte seul quand le club n'a pas dit où il court.
     private func ligneDuClubTrouve(_ trouve: ClubSearchResult) -> String {
         let membres = Pluriel.choisir(trouve.memberCount,
@@ -733,10 +763,18 @@ struct ClubView: View {
 
     @ViewBuilder
     private var recordsDuClub: some View {
-        if let records = highlights?.records, !records.isEmpty {
+        let records = highlights?.records ?? []
+        if !records.isEmpty || highlights?.bestWeek != nil {
             VStack(alignment: .leading, spacing: 10) {
                 RUCardHeader(title: "Les records du club")
                 VStack(spacing: 0) {
+                    // LE RECORD COLLECTIF EN TÊTE, et c'est l'ordre juste : les trois suivants
+                    // nomment quelqu'un, celui-ci dit ce que le club a fait ENSEMBLE. Sur la page
+                    // d'un club, c'est la phrase la plus à sa place.
+                    if let semaine = highlights?.bestWeek {
+                        ligneDeLaMeilleureSemaine(semaine)
+                        if !records.isEmpty { boardDivider }
+                    }
                     ForEach(Array(records.enumerated()), id: \.element.id) { rang, record in
                         if rang > 0 { boardDivider }
                         ligneDeRecord(record)
@@ -746,6 +784,41 @@ struct ClubView: View {
             .padding(.top, 6)
         }
     }
+
+    /// Pas d'avatar, et c'est le propos : personne ne possède cette ligne.
+    private func ligneDeLaMeilleureSemaine(_ semaine: ClubBestWeek) -> some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("LA PLUS GROSSE SEMAINE")
+                    .font(RUFont.sans(.micro, weight: .bold)).tracking(0.6)
+                    .foregroundColor(RUColor.text3)
+                Text(Distances.km(semaine.km))
+                    .displayStyle(19)
+                    .foregroundColor(RUColor.textPrimary)
+            }
+            Spacer(minLength: 8)
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(Pluriel.choisir(semaine.runners,
+                                     String(localized: "\(semaine.runners) coureuse"),
+                                     String(localized: "\(semaine.runners) coureuses")))
+                    .font(RUFont.sans(.body, weight: .semibold))
+                    .foregroundColor(RUColor.text2)
+                Text(Self.semaineFormatter.string(from: semaine.startsAt))
+                    .font(RUFont.sans(.small))
+                    .foregroundColor(RUColor.text3)
+            }
+        }
+        .padding(.vertical, 11)
+        .accessibilityElement(children: .combine)
+    }
+
+    /// « semaine du 6 oct. » — le lundi, puisque c'est là que la semaine du club commence.
+    private static let semaineFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale.current
+        f.setLocalizedDateFormatFromTemplate("d MMM")
+        return f
+    }()
 
     /// Chaque record OUVRE la sortie qui le porte. Un record qu'on ne peut pas aller voir est une
     /// ligne de statistique ; un record qui mène au tracé, aux splits et au profil de celle qui

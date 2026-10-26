@@ -30,6 +30,8 @@ struct ClubManagementView: View {
     var onSetClubProfile: (String, String) async throws -> Void
     /// Sa bannière — un data URI JPEG, ou nil pour l'effacer.
     var onSetClubCover: (String?) async throws -> Void
+    /// Nommer un organisateur, ou lui retirer le rôle. Réservé à qui a créé le club.
+    var onSetMemberRole: (String, Bool) async throws -> Void
     var onReportClub: () -> Void
     var onLeaveClub: () -> Void
 
@@ -353,16 +355,63 @@ struct ClubManagementView: View {
     private func memberRow(_ member: LeaderboardRow) -> some View {
         HStack(spacing: 12) {
             AvatarView(urlString: member.avatarUrl, base64DataURI: member.avatarBase64, initial: String(member.name.prefix(1)), size: 36, seed: member.isMe ? nil : member.id)
-            Text(member.isMe ? String(localized: "\(member.name) · toi") : member.name)
-                .font(RUFont.sans(.label, weight: member.isMe ? .semibold : .regular))
-                .foregroundColor(RUColor.textPrimary)
-            Spacer()
+            VStack(alignment: .leading, spacing: 1) {
+                Text(member.isMe ? String(localized: "\(member.name) · toi") : member.name)
+                    .font(RUFont.sans(.label, weight: member.isMe ? .semibold : .regular))
+                    .foregroundColor(RUColor.textPrimary)
+                    .lineLimit(1)
+                // QUI TIENT LE CLUB, écrit sous le nom. Un crew a trois ou quatre personnes qui
+                // organisent, et savoir à qui s'adresser pour un créneau ou une annulation est
+                // une information de tous les jours — pas un détail d'administration.
+                if let libelle = libelleDuRole(member.role) {
+                    Text(libelle)
+                        .font(RUFont.sans(.small, weight: .semibold))
+                        .foregroundColor(RUColor.text3)
+                }
+            }
+            Spacer(minLength: 8)
             Text("\(member.xp) XP").font(RUFont.mono(11)).foregroundColor(RUColor.text2)
             Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold)).foregroundColor(RUColor.text3)
         }
         .padding(.horizontal, 13).padding(.vertical, 11)
         .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+        // SEULE LA CRÉATRICE NOMME. Un organisateur qui pourrait en nommer d'autres pourrait
+        // aussi la destituer, et le club se prendrait en otage en deux gestes. Le serveur
+        // applique la même règle — ce menu ne fait que ne pas proposer l'impossible.
+        .contextMenu {
+            if club.isOwner == true, !member.isMe, member.role != "owner" {
+                if member.role == "organiser" {
+                    Button("Retirer le rôle d'organisateur") {
+                        Task { await changerLeRole(member, organisateur: false) }
+                    }
+                } else {
+                    Button("Nommer organisateur") {
+                        Task { await changerLeRole(member, organisateur: true) }
+                    }
+                }
+            }
+        }
+    }
+
+    /// DES TOURNURES SANS ACCORD, et ce n'est pas un détail de style : ces deux libellés
+    /// décrivent QUELQU'UN D'AUTRE, dont l'app ne connaît pas le genre. `Accord` s'accorde avec
+    /// la personne qui LIT — il n'a rien à dire ici. « Fondatrice » aurait donc été juste une
+    /// fois sur deux, et « Organisateur·rice » n'est pas une phrase qu'on lit.
+    private func libelleDuRole(_ role: String?) -> String? {
+        switch role {
+        case "owner": return String(localized: "A créé le club")
+        case "organiser": return String(localized: "Organise les séances")
+        default: return nil
+        }
+    }
+
+    private func changerLeRole(_ member: LeaderboardRow, organisateur: Bool) async {
+        do {
+            try await onSetMemberRole(member.id, organisateur)
+        } catch {
+            appState.toast(PanneReseau.phrase(pour: error))
+        }
     }
 }
 

@@ -87,6 +87,9 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'cover':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleCover(req, res, userId);
+    case 'setRole':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleSetRole(req, res, userId);
     // LE MUR DU CLUB. Mêmes trois actions que le mur d'une course, au mot près.
     case 'posts':
       if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
@@ -262,12 +265,13 @@ async function handleSetOpen(req, res, userId) {
   const { isOpen } = req.body || {};
   if (typeof isOpen !== 'boolean') return res.status(400).json({ error: 'bad_request' });
 
+  const clubId = await clubQueJAdministre(userId);
+  if (!clubId) return res.status(403).json({ error: 'forbidden' });
   const { rows } = await sql`
     UPDATE clubs SET is_open = ${isOpen}
-    WHERE created_by = ${userId}
+    WHERE id = ${clubId}
     RETURNING id, is_open
   `;
-  // Aucune ligne : l'appelante n'a créé aucun club. Pas une erreur de sa part, mais rien à faire.
   if (rows.length === 0) return res.status(403).json({ error: 'forbidden' });
   res.status(200).json({ isOpen: rows[0].is_open });
 }
@@ -359,8 +363,15 @@ async function handleMine(req, res, userId) {
   // real array_agg over `user_badges`) instead of anything computed only from this device's own
   // local history.
   const { rows: leaderboard } = await sql`
-    SELECT id, name, xp_total, rank, bio, avatar_data, avatar_url, joined_at, activities_count, badge_keys FROM (
+    SELECT id, name, xp_total, rank, bio, avatar_data, avatar_url, joined_at, activities_count, badge_keys, role FROM (
       SELECT u.id, u.name, u.xp_total, u.bio, u.avatar_data, u.avatar_url, cm.joined_at,
+             -- Qui tient le club. La créatrice est organisatrice par construction, sans ligne
+             -- de rôle à elle : c'est clubs.created_by qui le dit, et le calculer ici évite à
+             -- l'app de porter la règle une deuxième fois.
+             --
+             -- (Pas d'accent grave dans ce commentaire : il est À L'INTÉRIEUR d'un gabarit
+             -- JavaScript délimité par des accents graves, et le premier refermerait la chaîne.)
+             CASE WHEN u.id = ${club.created_by} THEN 'owner' ELSE cm.role END AS role,
              RANK() OVER (ORDER BY u.xp_total DESC) AS rank,
              (SELECT COUNT(*)::int FROM activities a WHERE a.user_id = u.id AND a.club_id = cm.club_id) AS activities_count,
              COALESCE((SELECT array_agg(ub.badge_key) FROM user_badges ub WHERE ub.user_id = u.id), ARRAY[]::text[]) AS badge_keys
@@ -505,6 +516,7 @@ async function handleMine(req, res, userId) {
       joinedAt: r.joined_at,
       activitiesCount: r.activities_count,
       badgeKeys: r.badge_keys || [],
+      role: r.role || 'member',
     })),
     weekly: weeklyMapped,
     weekStats: {
@@ -676,7 +688,15 @@ async function handleRsvpEvent(req, res, userId) {
 async function handleDeleteEvent(req, res, userId) {
   const { eventId } = req.body || {};
   if (!isUuid(eventId)) return res.status(400).json({ error: 'bad_request' });
-  const { rows } = await sql`DELETE FROM club_events WHERE id = ${eventId} AND created_by = ${userId} RETURNING id`;
+  // SON AUTEUR, OU UN ORGANISATEUR. Une séance qu'un membre parti a laissée derrière lui
+  // resterait sinon affichée pour toujours, sans personne pour l'annuler.
+  const administre = await clubQueJAdministre(userId);
+  const { rows } = await sql`
+    DELETE FROM club_events
+     WHERE id = ${eventId}
+       AND (created_by = ${userId} OR (${administre}::uuid IS NOT NULL AND club_id = ${administre}::uuid))
+    RETURNING id
+  `;
   if (rows.length === 0) return res.status(404).json({ error: 'not_found' });
   res.status(200).json({ ok: true });
 }
@@ -879,12 +899,7 @@ async function handleHighlights(req, res, userId) {
 // Le serveur revérifie la propriété. Le client cache déjà le formulaire à qui n'est pas le
 // créateur ; cacher un bouton n'a jamais empêché personne d'appeler l'adresse qu'il ouvrait.
 async function handleSetClubProfile(req, res, userId) {
-  const { rows: clubRows } = await sql`
-    SELECT c.id FROM clubs c
-      JOIN club_members m ON m.club_id = c.id AND m.user_id = ${userId}
-     WHERE c.created_by = ${userId}
-  `;
-  const clubId = clubRows[0]?.id;
+  const clubId = await clubQueJAdministre(userId);
   if (!clubId) return res.status(403).json({ error: 'not_owner' });
 
   const description = sanitizeOwnText(req.body?.description, MAX_CLUB_DESCRIPTION);
@@ -913,11 +928,9 @@ async function handleSetClubProfile(req, res, userId) {
 const MAX_COVER_LENGTH = 500000;
 
 async function handleCover(req, res, userId) {
-  const { rows: clubRows } = await sql`
-    SELECT c.id, c.cover_url FROM clubs c
-      JOIN club_members m ON m.club_id = c.id AND m.user_id = ${userId}
-     WHERE c.created_by = ${userId}
-  `;
+  const administre = await clubQueJAdministre(userId);
+  if (!administre) return res.status(403).json({ error: 'not_owner' });
+  const { rows: clubRows } = await sql`SELECT id, cover_url FROM clubs WHERE id = ${administre}`;
   const club = clubRows[0];
   if (!club) return res.status(403).json({ error: 'not_owner' });
 
@@ -963,6 +976,23 @@ async function handleCover(req, res, userId) {
 // Deux niveaux, comme le mur d'une course : un message, ses réponses. Une réponse de réponse
 // n'existe pas — au-delà de deux niveaux, personne ne sait plus à qui l'on parle.
 const LONGUEUR_MESSAGE_CLUB = 500;
+
+// QUI PEUT ADMINISTRER CE CLUB.
+//
+// La personne qui l'a créé, et celles qu'elle a nommées organisatrices. Écrit une seule fois :
+// quatre points d'entrée posaient chacun leur propre `created_by = userId`, et c'est ainsi
+// qu'une règle finit par être vraie à trois endroits sur quatre.
+//
+// Rend l'identifiant du club quand c'est le cas, `null` sinon — les appelants en ont besoin
+// juste après, et une deuxième requête pour le relire serait un aller-retour de plus.
+async function clubQueJAdministre(userId) {
+  const { rows } = await sql`
+    SELECT c.id FROM clubs c
+      JOIN club_members m ON m.club_id = c.id AND m.user_id = ${userId}
+     WHERE c.created_by = ${userId} OR m.role = 'organiser'
+  `;
+  return rows[0]?.id || null;
+}
 
 // Le club de qui appelle, ou rien. Toutes les actions du mur passent par là : on n'écrit pas sur
 // le mur d'un club dont on n'est pas membre, et on ne le lit pas non plus.
@@ -1141,4 +1171,33 @@ async function handlePublicClub(req, res) {
       going: e.going,
     })),
   });
+}
+
+// NOMMER UN ORGANISATEUR, OU LUI RETIRER LE RÔLE.
+//
+// RÉSERVÉ À LA PERSONNE QUI A CRÉÉ LE CLUB, et pas aux organisateurs eux-mêmes. Un organisateur
+// qui pourrait en nommer d'autres pourrait aussi destituer la fondatrice, et un club se
+// prendrait en otage en deux gestes. C'est le seul endroit du serveur où `created_by` reste la
+// règle plutôt que `clubQueJAdministre`, et c'est volontaire.
+async function handleSetRole(req, res, userId) {
+  const { memberId, role } = req.body || {};
+  if (!isUuid(memberId) || (role !== 'organiser' && role !== 'member')) {
+    return res.status(400).json({ error: 'bad_request' });
+  }
+
+  const { rows: clubRows } = await sql`SELECT id FROM clubs WHERE created_by = ${userId}`;
+  const clubId = clubRows[0]?.id;
+  if (!clubId) return res.status(403).json({ error: 'not_owner' });
+
+  // Se nommer soi-même n'a pas de sens : la créatrice administre déjà par construction, et se
+  // « retirer » le rôle ne lui retirerait rien. Mieux vaut refuser que faire semblant.
+  if (memberId === userId) return res.status(400).json({ error: 'bad_request' });
+
+  const { rows } = await sql`
+    UPDATE club_members SET role = ${role}
+     WHERE club_id = ${clubId} AND user_id = ${memberId}
+    RETURNING user_id
+  `;
+  if (rows.length === 0) return res.status(404).json({ error: 'not_found' });
+  res.status(200).json({ ok: true, memberId, role });
 }

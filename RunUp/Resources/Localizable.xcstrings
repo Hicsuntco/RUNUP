@@ -3227,6 +3227,23 @@
         }
       }
     },
+    "A créé le club": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Created the club"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creó el club"
+          }
+        }
+      }
+    },
     "ABONNÉ": {
       "extractionState": "manual",
       "localizations": {
@@ -16609,6 +16626,23 @@
         }
       }
     },
+    "Nommer organisateur": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make organiser"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombrar organizador"
+          }
+        }
+      }
+    },
     "Non faite": {
       "localizations": {
         "en": {
@@ -17260,6 +17294,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opciones del par"
+          }
+        }
+      }
+    },
+    "Organise les séances": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organises the sessions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organiza las sesiones"
           }
         }
       }
@@ -21068,6 +21119,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Quitar la foto"
+          }
+        }
+      }
+    },
+    "Retirer le rôle d'organisateur": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove organiser role"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar el rol de organizador"
           }
         }
       }

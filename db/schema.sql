@@ -823,3 +823,17 @@ ALTER TABLE club_events ADD COLUMN IF NOT EXISTS pace_groups JSONB;
 -- Le groupe choisi en répondant présent. NULL quand la séance n'en propose aucun, ou quand
 -- quelqu'un vient sans savoir encore à quelle allure il courra.
 ALTER TABLE event_rsvps ADD COLUMN IF NOT EXISTS pace_group TEXT;
+
+-- LES ORGANISATEURS D'UN CLUB.
+--
+-- Tout ce qui fait tourner un club — sa présentation, sa photo, sa porte ouverte ou fermée,
+-- l'annulation d'une séance — était réservé à UNE personne : celle qui avait créé le club. Un
+-- crew ne marche pas comme ça. Il y a celui qui a ouvert le compte, et il y a les trois ou
+-- quatre qui tiennent les séances — et le jour où le premier part en vacances, le club ne peut
+-- plus rien changer.
+--
+-- 'member' | 'organiser'. Deux rôles, pas cinq : un club de course n'est pas une entreprise, et
+-- une hiérarchie qu'on ne comprend pas d'un coup d'œil ne sera jamais utilisée. La personne qui
+-- a créé le club (`clubs.created_by`) est organisatrice par construction, sans ligne ici — et
+-- elle est la seule à pouvoir en nommer d'autres, sinon un organisateur pourrait la destituer.
+ALTER TABLE club_members ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'member';

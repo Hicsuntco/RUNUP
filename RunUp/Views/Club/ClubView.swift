@@ -394,6 +394,10 @@ struct ClubView: View {
                         try await clubService.setClubCover(dataURI: dataURI)
                         await loadIfSignedIn()
                     },
+                    onSetMemberRole: { memberId, organisateur in
+                        try await clubService.setMemberRole(memberId: memberId, organiser: organisateur)
+                        await loadIfSignedIn()
+                    },
                     // Même précaution que `onReport` ci-dessus : fermer la feuille, puis présenter
                     // le dialogue une fois son animation de fermeture passée.
                     onReportClub: {

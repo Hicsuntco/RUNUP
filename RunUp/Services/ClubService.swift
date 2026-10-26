@@ -37,6 +37,13 @@ struct ClubSearchResult: Decodable, Identifiable, Hashable {
 struct LeaderboardRow: Decodable, Identifiable, Hashable {
     var id: String
     var name: String
+    /// « owner » | « organiser » | « member ». Dit par le serveur plutôt que déduit ici : la
+    /// créatrice est organisatrice par construction, sans ligne de rôle à elle, et porter cette
+    /// règle une deuxième fois dans l'app serait l'occasion qu'elles divergent.
+    ///
+    /// Optionnel : la fenêtre entre le déploiement du serveur et celui de l'app n'est jamais
+    /// nulle, et un décodage strict viderait le Club de tous ceux qui n'ont pas encore mis à jour.
+    var role: String?
     var xp: Int
     var rank: Int
     var isMe: Bool
@@ -551,6 +558,16 @@ struct ClubService {
     func searchClubs(query: String) async throws -> [ClubSearchResult] {
         let response: ClubSearchResponse = try await send(path: "api/clubs/search", method: "GET", query: ["q": query])
         return response.items
+    }
+
+    /// Nommer un organisateur, ou lui retirer le rôle. RÉSERVÉ à qui a créé le club — pas aux
+    /// organisateurs eux-mêmes : l'un d'eux pourrait sinon destituer la fondatrice, et un club se
+    /// prendrait en otage en deux gestes. Le serveur applique la même règle.
+    func setMemberRole(memberId: String, organiser: Bool) async throws {
+        let _: OkResponse = try await send(
+            path: "api/clubs/setRole", method: "POST",
+            body: ["memberId": memberId, "role": organiser ? "organiser" : "member"]
+        )
     }
 
     /// Ce que le club est, et où il court. Réservé à qui l'a créé — le serveur refuse les autres.

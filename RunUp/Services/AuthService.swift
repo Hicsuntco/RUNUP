@@ -175,6 +175,13 @@ final class AuthService {
     /// déconnexion — c'est-à-dire précisément jusqu'au moment où l'on aurait eu besoin de savoir.
     var onAuthenticated: ((AuthenticatedUser) -> Void)?
 
+    /// Le nom sous lequel le serveur range un compte qui n'en a reçu aucun — la seule valeur de
+    /// `users.name` qu'une correction a le droit de remplacer. Recopiée de `lib/noms.js`, où la
+    /// règle vit, et exposée ici parce que TROIS endroits de l'app la testaient : le champ
+    /// « Prénom » des réglages, la réparation au lancement (`AppState`), et cette comparaison-ci.
+    /// Trois chaînes littérales identiques sont trois endroits où l'une cesse de correspondre.
+    static let nomParDefaut = "Coureur"
+
     private static let baseURL = URL(string: "https://runup-nu.vercel.app")!
 
     /// L'hôte auquel cette installation parle, pour la fiche admin — et rien d'autre.

@@ -292,6 +292,7 @@ final class AppState {
         }
         auth.onAuthenticated = { [weak self] user in
             self?.reconcileProfileOwner(with: user)
+            self?.reparerLeNomDuCompte(user)
         }
         // Avant toute chose dans l'interface : le bouton RUN doit s'afficher d'emblée dans la
         // discipline choisie la dernière fois, pas basculer sous les yeux après coup.
@@ -337,6 +338,56 @@ final class AppState {
             break
         case .conflict:
             profileOwnerConflict = user
+        }
+    }
+
+    /// SON PROPRE CLUB L'APPELAIT « Coureur ».
+    ///
+    /// # CE QU'ON VOIT
+    ///
+    /// Les trois records du club portent un nom et un visage. Sur un compte créé sans nom, ils
+    /// affichent tous les trois « Coureur » derrière une pastille à la lettre C — y compris
+    /// quand les trois records sont les SIENS. La page du club ressemble alors à une page dont
+    /// les données ne sont pas arrivées.
+    ///
+    /// # POURQUOI CE COMPTE N'A PAS DE NOM
+    ///
+    /// « Se connecter avec Apple » ne transmet le nom qu'à la TOUTE PREMIÈRE autorisation d'un
+    /// identifiant Apple pour cette app. Une réinstallation, un second appareil, un identifiant
+    /// qui avait déjà ouvert RUNUP : Apple se tait, et le serveur range le compte sous
+    /// `AuthService.nomParDefaut` (voir `lib/noms.js`).
+    ///
+    /// # POURQUOI ICI, ET PAS À LA CONNEXION
+    ///
+    /// La connexion sait déjà se rattraper : `SignInView` envoie le prénom de l'inscription
+    /// quand Apple ne dit rien, et le serveur répare le compte. Mais ça ne vaut que pour une
+    /// connexion À VENIR — les comptes déjà rangés sous ce nom ne repasseront jamais par là, et
+    /// la seule issue était d'aller trouver le champ « Prénom » dans Plus de réglages.
+    ///
+    /// `onAuthenticated` part à chaque rafraîchissement de `currentUser`, donc à la prochaine
+    /// ouverture du Club : la correction arrive sans qu'on ait rien à chercher.
+    ///
+    /// C'est le jumeau exact de la photo, que `SignInView` pousse déjà au serveur quand elle a
+    /// été choisie avant que le compte n'existe — même situation, même rattrapage.
+    ///
+    /// UNE SEULE FOIS PAR LANCEMENT, et le drapeau n'est pas une précaution de style : le
+    /// `refreshMe()` final rappelle `onAuthenticated`. Si l'envoi a échoué (hors ligne), le nom
+    /// du compte est toujours celui par défaut, et sans ce drapeau on repartirait pour un tour,
+    /// indéfiniment.
+    private var nomDuCompteDejaRepare = false
+
+    private func reparerLeNomDuCompte(_ user: AuthenticatedUser) {
+        guard !nomDuCompteDejaRepare, user.name == AuthService.nomParDefaut else { return }
+        let prenom = profile.name.trimmingCharacters(in: .whitespaces)
+        guard !prenom.isEmpty, prenom != AuthService.nomParDefaut else { return }
+        nomDuCompteDejaRepare = true
+        let nom = profile.lastName.trimmingCharacters(in: .whitespaces)
+        let service = ClubService(auth: auth)
+        Task { [auth] in
+            // `try?` des deux côtés : c'est une réparation de confort, pas une étape dont
+            // dépend quoi que ce soit. Hors ligne, elle retentera au prochain lancement.
+            try? await service.updateProfile(name: prenom, lastName: nom.isEmpty ? nil : nom)
+            try? await auth.refreshMe()
         }
     }
 

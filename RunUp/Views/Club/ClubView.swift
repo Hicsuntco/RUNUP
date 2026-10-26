@@ -554,8 +554,24 @@ struct ClubView: View {
         return (level, title, xp % xpPerLevel, xpPerLevel)
     }
 
+    /// LE SEUL OBJET SOMBRE D'UNE PAGE CLAIRE, ET IL ÉTAIT EN BAS DE CELLE-CI.
+    ///
+    /// Ce bloc gardait son dégradé violet nuit DANS LES DEUX THÈMES. En sombre, c'est le héros
+    /// de la page ; en clair, c'est un pavé noir au pied d'un écran pâle — c'est-à-dire
+    /// exactement le « gros cadre » qu'on avait retiré du HAUT de cette page, réapparu au bas.
+    ///
+    /// On le voit à ce que le code avouait déjà : les textes étaient figés en blanc, avec pour
+    /// raison « cette carte reste sombre dans les deux thèmes, donc `text2` passerait
+    /// sombre-sur-sombre ». Le symptôme était traité, pas la cause.
+    ///
+    /// En clair, c'est maintenant une carte comme les autres. Ce qui ne bouge pas, c'est la
+    /// PASTILLE du niveau : elle garde son dégradé violet→rose, et reste le point de couleur de
+    /// la section. Un point, pas un aplat plein cadre.
     private var levelCard: some View {
         let info = levelInfo
+        let clair = RUColor.isLight
+        let encre = clair ? RUColor.textPrimary : Color.white
+        let encre2 = clair ? RUColor.text3 : Color.white.opacity(0.65)
         return HStack(spacing: 14) {
             Text("\(info.level)").displayStyle(22).foregroundColor(.white)
                 .contentTransition(.numericText())
@@ -567,13 +583,11 @@ struct ClubView: View {
                 // il vient de mon XP à moi.
                 Text("Ton niveau dans le club")
                     .font(RUFont.sans(.small, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.65))
+                    .foregroundColor(encre2)
                 HStack(alignment: .lastTextBaseline) {
-                    Text("Niveau \(info.level) · \(info.title)").font(RUFont.sans(.title, weight: .bold)).foregroundColor(.white)
+                    Text("Niveau \(info.level) · \(info.title)").font(RUFont.sans(.title, weight: .bold)).foregroundColor(encre)
                     Spacer()
-                    // Fixed light-on-dark — this card keeps its dark violet gradient in BOTH
-                    // themes, so theme-aware text2 went dark-on-dark in light mode.
-                    Text("\(info.xpIntoLevel) / \(info.xpForLevel) XP").font(RUFont.mono(10)).foregroundColor(.white.opacity(0.65))
+                    Text("\(info.xpIntoLevel) / \(info.xpForLevel) XP").font(RUFont.mono(10)).foregroundColor(encre2)
                         .contentTransition(.numericText())
                 }
                 LinearBar(fraction: Double(info.xpIntoLevel) / Double(info.xpForLevel), color: RUColor.violet, gradient: RUColor.violetRoseGradient)
@@ -582,8 +596,12 @@ struct ClubView: View {
         .animation(.easeOut(duration: 0.4), value: info.level)
         .animation(.easeOut(duration: 0.4), value: info.xpIntoLevel)
         .padding(16)
-        .background(LinearGradient(colors: [Color(hex: 0x241046), Color(hex: 0x160B1F)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: RUSpacing.radiusHero, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusHero, style: .continuous).stroke(RUColor.violet.opacity(0.3), lineWidth: RUSpacing.hairline))
+        .background(clair
+                    ? LinearGradient(colors: [RUColor.card, RUColor.card], startPoint: .topLeading, endPoint: .bottomTrailing)
+                    : LinearGradient(colors: [Color(hex: 0x241046), Color(hex: 0x160B1F)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                    in: RoundedRectangle(cornerRadius: RUSpacing.radiusHero, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusHero, style: .continuous)
+            .stroke(clair ? RUColor.cardBorder : RUColor.violet.opacity(0.3), lineWidth: RUSpacing.hairline))
     }
 
     /// LA COUVERTURE DU CLUB.
@@ -702,6 +720,94 @@ struct ClubView: View {
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 
+    /// Rien n'est lancé : pas un kilomètre cette semaine, pas de défi, pas de sortie prévue.
+    ///
+    /// Les trois sections du haut de l'Aperçu, prises ensemble. Séparément, chacune a une bonne
+    /// raison d'afficher sa phrase d'absence ; empilées, elles font une page qui ne dit rien
+    /// trois fois.
+    private var clubEnSommeil: Bool {
+        (board.weekStats?.totalKm ?? 0) == 0
+            && board.challenge == nil
+            && (board.events ?? []).isEmpty
+    }
+
+    /// À plusieurs, mais rien de lancé. Les deux actions sont celles que portaient les
+    /// intertitres de « Défi du club » et « Sorties de groupe » — elles ne sont pas perdues avec
+    /// les sections, elles sont réunies là où quelqu'un les cherchera.
+    private var carteClubAReveiller: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Rien n'est lancé pour l'instant")
+                .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+            Text("Un défi à se partager, ou une sortie à proposer : c'est ce qui donne au club une raison de se retrouver cette semaine.")
+                .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 10) {
+                Button(action: { showManagement = true }) {
+                    Text("Créer un défi")
+                        .font(RUFont.sans(.label, weight: .semibold))
+                        .frame(maxWidth: .infinity).frame(minHeight: 44)
+                }
+                .buttonStyle(SecondaryButtonStyle())
+                Button(action: { showCreateEvent = true }) {
+                    Text("Proposer une sortie")
+                        .font(RUFont.sans(.label, weight: .semibold))
+                        .frame(maxWidth: .infinity).frame(minHeight: 44)
+                }
+                .buttonStyle(SecondaryButtonStyle())
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(RUSpacing.cardPadding)
+        .ruCard()
+    }
+
+    /// SEULE DANS SON CLUB : LA SEULE CHOSE À FAIRE, ET ELLE EST DITE DEUX FOIS AU MÊME ENDROIT.
+    ///
+    /// Cette carte vivait dans l'onglet Activité, c'est-à-dire sur le troisième onglet d'un
+    /// écran qui s'ouvre sur le premier. Un club d'une personne n'a pourtant qu'un seul sujet —
+    /// trouver la deuxième — et l'Aperçu lui répondait par trois sections vides empilées :
+    /// « Personne n'a encore couru cette semaine », « Aucun défi en cours », « Aucune sortie
+    /// prévue ». Trois fois rien, en trois intertitres de même taille que de vraies sections.
+    ///
+    /// Elle est donc partagée par les deux onglets plutôt que recopiée : un lien de partage
+    /// dupliqué, c'est une des deux copies qui garde l'ancienne URL le jour où elle change.
+    @ViewBuilder private var carteClubSeul: some View {
+        if let club = board.club {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(verbatim: Accord.selon(f: String(localized: "Tu es seule dans \(club.name)"),
+                                            m: String(localized: "Tu es seul dans \(club.name)")))
+                    .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                // LE LIEN A REMPLACÉ LE CODE.
+                //
+                // Ce bloc affichait un code à six lettres et proposait de le partager, puis
+                // il a dit « cherche son nom dans l'onglet Club » — une consigne, et qui
+                // désignait un onglet qui n'existe plus. Il n'y a qu'une chose à envoyer
+                // maintenant, et c'est le lien juste en dessous.
+                Text("Un club prend vie à plusieurs — classement, défis, sorties de groupe. Envoie son lien aux gens avec qui tu cours.")
+                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
+                    .fixedSize(horizontal: false, vertical: true)
+                // UN VRAI LIEN, ENFIN. Ce message disait « cherche-le par son nom dans
+                // l'onglet Club » : une consigne, pas une invitation. Le lien ouvre
+                // maintenant la page publique du club — sa photo, sa ville, ses
+                // prochaines séances — et, sur un iPhone où l'app est installée,
+                // directement l'app.
+                ShareLink(item: String(localized: "Rejoins mon club \(club.name) sur RUNUP : https://runup-nu.vercel.app/club/\(club.id)")) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "square.and.arrow.up")
+                        Text("Partager")
+                    }
+                    .font(RUFont.sans(.label, weight: .semibold))
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: 44)
+                }
+                .buttonStyle(SecondaryButtonStyle())
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(RUSpacing.cardPadding)
+            .ruCard()
+        }
+    }
+
     /// Contenu de l'onglet Aperçu : « où en est le club en ce moment ». L'ordre suit celui de la
     /// maquette — l'état collectif (niveau, pouls, défi) d'abord, puis ce qui appelle une action
     /// (les sorties), puis qui est là. La ligne d'adhésion (signaler / quitter) descend en bas de
@@ -722,9 +828,29 @@ struct ClubView: View {
             // violet plein cadre — et une statistique PERSONNELLE en tête d'une page
             // collective. On ouvrait « Les Foulées du Canal » et on lisait « Niveau 17 ». Mon
             // niveau n'a pas disparu, il est descendu à sa place : après ce que le club fait.
-            weekPulseCard
-            challengeCard
-            eventsCard
+
+            // TROIS FOIS RIEN N'EST PAS TROIS SECTIONS.
+            //
+            // Un club qui démarre ouvrait sur « Personne n'a encore couru cette semaine »,
+            // « Aucun défi en cours » et « Aucune sortie prévue » — trois intertitres de la
+            // taille d'une vraie section, pour dire trois fois qu'il n'y a rien. C'est tout
+            // le premier écran, et c'est la première impression que donne un club.
+            //
+            // Quand les trois sont vides, elles cèdent la place à UN bloc qui dit quoi faire.
+            // Seule, c'est trouver la deuxième personne — la carte qui le dit existait déjà,
+            // mais sur l'onglet Activité, qu'on n'ouvre pas quand on vient d'arriver. À
+            // plusieurs, ce sont les deux boutons que portaient les intertitres disparus.
+            if clubEnSommeil {
+                if board.club.map({ $0.memberCount <= 1 }) == true {
+                    carteClubSeul
+                } else {
+                    carteClubAReveiller
+                }
+            } else {
+                weekPulseCard
+                challengeCard
+                eventsCard
+            }
             // CE QU'UN CLASSEMENT NE DIT PAS. Un tableau hebdomadaire dit qui court le plus ;
             // il ne dit ni vers quoi le club court, ni ce qu'il a déjà réussi. Les deux
             // sections ci-dessous ne demandent aucune donnée nouvelle — elles étaient dans les
@@ -1623,39 +1749,8 @@ struct ClubView: View {
                 // pour un public qui n'existe pas — ce qu'il faut, c'est des membres, et le code
                 // d'invitation était rangé deux écrans plus loin, dans Gestion du club. À
                 // plusieurs, la phrase d'origine est juste : il n'y a qu'à courir.
-                if let club = board.club, club.memberCount <= 1 {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(verbatim: Accord.selon(f: String(localized: "Tu es seule dans \(club.name)"),
-                                                    m: String(localized: "Tu es seul dans \(club.name)")))
-                            .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                        // LE NOM A REMPLACÉ LE CODE.
-                        //
-                        // Ce bloc affichait le code à six lettres et proposait de le partager.
-                        // Il n'y a plus de code : on cherche « \(club.name) » dans le Club et on
-                        // appuie. Le message partagé dit donc quoi chercher, ce qui est la seule
-                        // chose que l'autre ait besoin de savoir.
-                        Text("Un club prend vie à plusieurs — classement, défis, sorties de groupe. Dis-leur de chercher son nom dans l'onglet Club.")
-                            .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
-                            .fixedSize(horizontal: false, vertical: true)
-                        // UN VRAI LIEN, ENFIN. Ce message disait « cherche-le par son nom dans
-                        // l'onglet Club » : une consigne, pas une invitation. Le lien ouvre
-                        // maintenant la page publique du club — sa photo, sa ville, ses
-                        // prochaines séances — et, sur un iPhone où l'app est installée,
-                        // directement l'app.
-                        ShareLink(item: String(localized: "Rejoins mon club \(club.name) sur RUNUP : https://runup-nu.vercel.app/club/\(club.id)")) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "square.and.arrow.up")
-                                Text("Partager")
-                            }
-                            .font(RUFont.sans(.label, weight: .semibold))
-                            .frame(maxWidth: .infinity)
-                            .frame(minHeight: 44)
-                        }
-                        .buttonStyle(SecondaryButtonStyle())
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(RUSpacing.cardPadding)
-                    .ruCard()
+                if board.club.map({ $0.memberCount <= 1 }) == true {
+                    carteClubSeul
                 } else {
                     Text(verbatim: Accord.selon(f: String(localized: "Personne n'a encore rien posté — sois la première !"),
                                                 m: String(localized: "Personne n'a encore rien posté — sois le premier !")))

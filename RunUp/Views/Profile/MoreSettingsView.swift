@@ -115,7 +115,7 @@ struct MoreSettingsView: View {
                 // l'inscription — un appui sur « Enregistrer » et la recherche le retrouve.
                 let duCompte = appState.auth.currentUser?.name ?? ""
                 let localement = appState.profile.name.trimmingCharacters(in: .whitespaces)
-                firstNameText = (duCompte.isEmpty || duCompte == "Coureur") && !localement.isEmpty
+                firstNameText = (duCompte.isEmpty || duCompte == AuthService.nomParDefaut) && !localement.isEmpty
                     ? localement
                     : duCompte
                 usernameText = appState.auth.currentUser?.username ?? ""

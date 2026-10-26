@@ -8416,6 +8416,22 @@
         }
       }
     },
+    "Créer un défi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a challenge"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crear un reto"
+          }
+        }
+      }
+    },
     "Cumule 10 sorties un samedi ou un dimanche.": {
       "extractionState": "manual",
       "localizations": {
@@ -19726,6 +19742,22 @@
         }
       }
     },
+    "Proposer une sortie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Propose a group run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proponer una salida"
+          }
+        }
+      }
+    },
     "Prédiction de course": {
       "localizations": {
         "en": {
@@ -21484,6 +21516,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nada publicado todavía."
+          }
+        }
+      }
+    },
+    "Rien n'est lancé pour l'instant": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing is running yet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no hay nada en marcha"
           }
         }
       }
@@ -27021,6 +27069,22 @@
         }
       }
     },
+    "Un club prend vie à plusieurs — classement, défis, sorties de groupe. Envoie son lien aux gens avec qui tu cours.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A club comes alive with other people — leaderboard, challenges, group runs. Send its link to the people you run with."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un club cobra vida entre varios: clasificación, retos, salidas en grupo. Envía su enlace a la gente con la que corres."
+          }
+        }
+      }
+    },
     "Un compte existe déjà avec cet email.": {
       "localizations": {
         "en": {
@@ -27067,6 +27131,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Un duatlón se decide en sus primeros kilómetros, y la factura llega dos horas después. Nada de lo que sigue se juega en las piernas."
+          }
+        }
+      }
+    },
+    "Un défi à se partager, ou une sortie à proposer : c'est ce qui donne au club une raison de se retrouver cette semaine.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A challenge to share, or a group run to propose: that is what gives the club a reason to meet up this week."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un reto que compartir, o una salida que proponer: eso es lo que da al club un motivo para reunirse esta semana."
           }
         }
       }

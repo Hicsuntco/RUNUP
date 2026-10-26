@@ -51,13 +51,24 @@ enum RUColor {
         guard habillage == .teinte else { return neutre }
         // LE SOL PREND LA COULEUR. Voir `Habillage`.
         //
-        // Une trace, pas un aplat : 7 % en clair, 10 % en sombre. Au-delà, le fond cesse d'être
+        // Une trace, pas un aplat : 3,5 % en clair, 10 % en sombre. Au-delà, le fond cesse d'être
         // un fond et se met à concurrencer les cartes posées dessus — et surtout il faudrait
         // reprendre tous les contrastes de texte, que `check_a11y` tient sur ces valeurs-ci.
         //
         // Plus fort en sombre qu'en clair parce qu'une teinte se voit moins sur du presque-noir :
-        // à 7 % des deux côtés, le mode sombre paraîtrait inchangé.
-        return melange(rose, sur: neutre, part: isLight ? 0.07 : 0.10)
+        // à la même valeur des deux côtés, le mode sombre paraîtrait inchangé.
+        //
+        // LA VALEUR CLAIRE ÉTAIT À 7 %, ET CE N'ÉTAIT PLUS UNE TRACE.
+        //
+        // Sept pour cent du rose de marque (#F50D7A) sur le neutre clair (#F4F3F8) donne
+        // #F4E3EF : une page ROSE, pas une page teintée. Sur une capture de vrai téléphone,
+        // l'écran entier paraît imprimé sur du papier rose, et les cartes blanches censées
+        // « flotter dessus » se lisent comme des trous. La moitié (#F4EBF4) fait ce que la
+        // phrase ci-dessus promettait depuis le début.
+        //
+        // Baisser cette valeur ne peut que faire MONTER les contrastes : le fond se rapproche du
+        // neutre sur lequel `classique` les tient déjà.
+        return melange(rose, sur: neutre, part: isLight ? 0.035 : 0.10)
     }
 
     /// L'habillage courant — voir `Habillage`. Lu comme `isLight` : calculé, jamais stocké.

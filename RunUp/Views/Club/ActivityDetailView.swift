@@ -55,9 +55,14 @@ struct ActivityDetailView: View {
                     phrase(sortie)
                     grilleDeMesures(sortie)
                     titreEtNote(sortie)
+                    // APPLAUDIR AVANT LES SPLITS, PAS APRÈS. Posées en bas, les deux actions
+                    // arrivaient derrière douze barres et un profil de terrain : applaudir
+                    // demandait de faire défiler toute l'analyse d'une sortie qu'on venait
+                    // d'ouvrir pour la féliciter. Ce qui se répond d'un geste vient en premier ;
+                    // ce qui se lit vient ensuite.
+                    actions(sortie)
                     blocDesSplits(sortie)
                     blocDuProfil(sortie)
-                    actions(sortie)
                     sansDetail(sortie)
                 }
             }

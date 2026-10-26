@@ -190,6 +190,9 @@ enum CaptureSeed {
 
         func ilYAJours(_ jours: Int) -> String { ilYA(jours * 24) }
 
+        func dansDesHeures(_ heures: Int) -> String { ilYA(-heures) }
+        func dansDesJours(_ jours: Int) -> String { ilYA(-jours * 24) }
+
         let tableau = """
         {
           "club": { "id": "demo", "name": "Les Foulées du Canal", "memberCount": 18, "isOpen": true, "isOwner": false },
@@ -209,6 +212,28 @@ enum CaptureSeed {
             { "id": "5", "name": "Lina", "xp": 2870, "rank": 5, "isMe": false,
               "joinedAt": "\(ilYAJours(41))", "activitiesCount": 6,
               "badgeKeys": ["firstRun"] }
+          ],
+          "weekly": [
+            { "id": "3", "name": "Margaux", "weekKm": 48.6, "rank": 1, "isMe": false,
+              "targetKm": 52.0, "pctOfTarget": 93 },
+            { "id": "2", "name": "Inès", "weekKm": 41.2, "rank": 2, "isMe": false,
+              "targetKm": 45.0, "pctOfTarget": 92 },
+            { "id": "1", "name": "Charlotte", "weekKm": 33.8, "rank": 3, "isMe": true,
+              "targetKm": 32.0, "pctOfTarget": 106 },
+            { "id": "4", "name": "Sarah", "weekKm": 22.4, "rank": 4, "isMe": false,
+              "targetKm": 30.0, "pctOfTarget": 75 },
+            { "id": "5", "name": "Lina", "weekKm": 12.1, "rank": 5, "isMe": false }
+          ],
+          "weekStats": { "totalKm": 158.1, "activeMembers": 5 },
+          "challenge": {
+            "id": "d1", "title": "300 km ensemble en octobre",
+            "targetKm": 300, "progressKm": 212.5, "endDate": "\(dansDesJours(6))"
+          },
+          "events": [
+            { "id": "e1", "title": "Sortie longue au canal", "location": "Bassin de la Villette",
+              "startsAt": "\(dansDesHeures(31))", "going": 4, "goingByMe": true, "isMine": false },
+            { "id": "e2", "title": "Fractionné sur piste", "location": "Stade Jules-Ladoumègue",
+              "startsAt": "\(dansDesJours(4))", "going": 2, "goingByMe": false, "isMine": false }
           ]
         }
         """

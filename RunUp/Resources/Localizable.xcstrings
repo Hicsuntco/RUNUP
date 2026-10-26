@@ -25380,6 +25380,23 @@
         }
       }
     },
+    "Ton niveau dans le club": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your level in the club"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu nivel en el club"
+          }
+        }
+      }
+    },
     "Ton nouveau\nprogramme arrive": {
       "localizations": {
         "en": {

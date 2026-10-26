@@ -39,7 +39,6 @@ struct ClubView: View {
     @State private var commentsActivity: FeedItem?
     /// La sortie en cours de modification — la sienne uniquement, le serveur le vérifie de son côté.
     @State private var editingActivity: FeedItem?
-    @State private var selectedBadge: ClubBadge?
     /// Set only when `syncBadgesIfNeeded` finds a key `badges` reports earned that isn't yet in
     /// `profile.seenBadgeKeys` — i.e. genuinely just crossed the threshold this load, not merely
     /// "earned at some point before this feature existed." Drives `BadgeUnlockedView`.
@@ -169,9 +168,6 @@ struct ClubView: View {
         .sheet(isPresented: $showSignIn) {
             SignInView()
                 .runUpSheetStyle(detents: [.large])
-        }
-        .sheet(item: $selectedBadge) { badge in
-            BadgeDetailView(badge: badge).runUpSheetStyle(detents: [.height(300)])
         }
         .sheet(item: $editingActivity) { activity in
             EditActivitySheet(item: activity, onSaved: { Task { await loadFeed() } })
@@ -505,6 +501,12 @@ struct ClubView: View {
                 .frame(width: 52, height: 52)
                 .background(LinearGradient(colors: [RUColor.violet, RUColor.rose], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
             VStack(alignment: .leading, spacing: 8) {
+                // « TON NIVEAU », écrit. Sur une page qui parle du club du début à la fin, un
+                // « Niveau 17 » sans sujet se lit comme le niveau DU CLUB — ce qu'il n'est pas :
+                // il vient de mon XP à moi.
+                Text("Ton niveau dans le club")
+                    .font(RUFont.sans(.small, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.65))
                 HStack(alignment: .lastTextBaseline) {
                     Text("Niveau \(info.level) · \(info.title)").font(RUFont.sans(.title, weight: .bold)).foregroundColor(.white)
                     Spacer()
@@ -599,7 +601,12 @@ struct ClubView: View {
     /// cet onglet : c'est de l'administration, elle n'a jamais eu à être au-dessus du classement.
     private var overviewContent: some View {
         VStack(alignment: .leading, spacing: 10) {
-            levelCard
+            // LA PAGE DU CLUB S'OUVRE SUR LE CLUB, PAS SUR MOI.
+            //
+            // Le premier bloc était ma carte de niveau : le plus saturé de l'écran, un dégradé
+            // violet plein cadre — et une statistique PERSONNELLE en tête d'une page
+            // collective. On ouvrait « Les Foulées du Canal » et on lisait « Niveau 17 ». Mon
+            // niveau n'a pas disparu, il est descendu à sa place : après ce que le club fait.
             weekPulseCard
             challengeCard
             eventsCard
@@ -609,6 +616,7 @@ struct ClubView: View {
             // courses suivies et dans les sorties publiées, jamais regardées ensemble.
             coursesDuClub
             recordsDuClub
+            levelCard
         }
         .task { await chargerLesPepites() }
     }
@@ -1059,8 +1067,6 @@ struct ClubView: View {
             }
             .transition(.opacity)
 
-            RUCardHeader(icon: "rosette", tint: RUColor.amber, title: "Derniers badges")
-            badgeStrip
         }
     }
 
@@ -1277,38 +1283,15 @@ struct ClubView: View {
         }
     }
 
-    /// Horizontally scrollable, not a plain `HStack` — the badge catalog grew from 4 to 15+
-    /// entries and a bare `HStack` has to squeeze every tile to fit the screen width at once,
-    /// which crushed each tile down to just a few points wide and wrapped its label one letter
-    /// per line ("Séri / e de / 3 jour / s"). A fixed tile width lets a scroll view give each one
-    /// its real size instead, with the label capped at two lines for the handful of longer names.
-    private var badgeStrip: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(badges) { badge in
-                    let color = ClubBadgeCatalog.color(for: badge.key)
-                    Button(action: { selectedBadge = badge }) {
-                        VStack(spacing: 5) {
-                            BadgeHexTile(emoji: badge.emoji, earned: badge.earned, color: color)
-                            Text(badge.name)
-                                .font(RUFont.sans(.micro, weight: .semibold))
-                                .foregroundColor(badge.earned ? RUColor.textPrimary : RUColor.text2)
-                                .multilineTextAlignment(.center)
-                                .lineLimit(2)
-                                .minimumScaleFactor(0.8)
-                        }
-                        .frame(width: 64)
-                        // SwiftUI hit-tests a filled Shape against its actual path, not its
-                        // bounding box — the hexagon's cut corners silently became dead zones
-                        // without this, unlike the square tile it replaced.
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(PressableStyle())
-                }
-            }
-            .padding(.vertical, 2)
-        }
-    }
+    // LA BANDE DE BADGES A QUITTÉ L'ONGLET CLASSEMENT.
+    //
+    // Elle y affichait MES badges, sous le titre « Derniers badges », au bas d'un classement du
+    // CLUB — une deuxième statistique personnelle posée sur une page collective, après la carte
+    // de niveau. Et elle était déjà, en mieux, sur le Profil : les seize badges avec leur nom et
+    // leur progression, au lieu de six vignettes qu'il fallait faire défiler latéralement.
+    //
+    // Le calcul (`badges`) reste : c'est lui qui alimente la synchronisation vers le serveur et
+    // la célébration d'un badge débloqué.
 
     /// The opt-in global weekly board — every club's members compete on the SAME real km-this-
     /// week race the club board already shows, just across the whole platform instead of one

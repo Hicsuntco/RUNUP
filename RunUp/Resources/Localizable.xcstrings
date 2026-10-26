@@ -4669,6 +4669,23 @@
         }
       }
     },
+    "Aucun défi en cours — un objectif de kilomètres à se partager, avec une date de fin.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No challenge running — a shared kilometre target, with a deadline."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ningún reto en curso: un objetivo de kilómetros para compartir, con fecha de fin."
+          }
+        }
+      }
+    },
     "Aucun parcours GPS enregistré pour l'instant — la carte se remplit après ta première course trackée.": {
       "localizations": {
         "en": {
@@ -18193,6 +18210,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nadie ha corrido aún esta semana — ¡sé el primero!"
+          }
+        }
+      }
+    },
+    "Personne n'a encore couru cette semaine.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nobody has run yet this week."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nadie ha corrido todavía esta semana."
           }
         }
       }

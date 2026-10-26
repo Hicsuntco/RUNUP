@@ -65,12 +65,6 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'deleteEvent':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleDeleteEvent(req, res, userId);
-    case 'globalWeekly':
-      if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
-      return handleGlobalWeekly(req, res, userId);
-    case 'setGlobalOptIn':
-      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
-      return handleSetGlobalOptIn(req, res, userId);
     case 'highlights':
       if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
       return handleHighlights(req, res, userId);
@@ -631,54 +625,16 @@ async function handleSyncWeeklyTarget(req, res, userId) {
   res.status(200).json({ ok: true });
 }
 
-// Real km run THIS week, across EVERY opted-in user on the platform — not scoped to a club, so
-// this is a bigger visibility surface than the club-scoped weekly board, which is why it's
-// opt-in (see `global_leaderboard_opt_in`) rather than on for everyone by default. The caller's
-// own block list still applies, same as the club leaderboard.
-async function handleGlobalWeekly(req, res, userId) {
-  // LE SEUL ENDPOINT DE LECTURE COÛTEUX SANS PLAFOND. C'est la requête la plus lourde du
-  // serveur : jointure et agrégation sur TOUS les comptes inscrits au classement global et toutes
-  // leurs sorties de la semaine, fonction de fenêtre sur l'ensemble, et le `LIMIT 100` appliqué
-  // seulement APRÈS le tri. `join`, `event`, `search` et `contacts` ont tous le leur — celui-ci
-  // n'en avait aucun, et l'inscription autorise trente comptes par jour et par adresse. Une
-  // boucle sur cet appel fait recalculer l'agrégat complet à chaque fois, facturé au temps de
-  // calcul, et dégrade l'onglet Club de tout le monde au passage.
-  if (!(await underDailyCap('global:' + userId, 100))) {
-    return res.status(429).json({ error: 'too_many_requests' });
-  }
-  const { rows } = await sql`
-    SELECT id, name, avatar_data, avatar_url, week_km, rank FROM (
-      SELECT u.id, u.name, u.avatar_data, u.avatar_url,
-             COALESCE(SUM(a.distance_km), 0) AS week_km,
-             RANK() OVER (ORDER BY COALESCE(SUM(a.distance_km), 0) DESC) AS rank
-      FROM users u
-      LEFT JOIN activities a ON a.user_id = u.id
-        AND a.type = 'run' AND a.distance_km IS NOT NULL
-        AND a.created_at >= date_trunc('week', now())
-      WHERE u.global_leaderboard_opt_in = true
-      GROUP BY u.id, u.name, u.avatar_data, u.avatar_url
-    ) ranked
-    WHERE id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
-    AND id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
-    ORDER BY rank ASC
-    LIMIT 100
-  `;
-  const { rows: meRows } = await sql`SELECT global_leaderboard_opt_in FROM users WHERE id = ${userId}`;
-  res.status(200).json({
-    optedIn: meRows[0]?.global_leaderboard_opt_in || false,
-    entries: rows.map((r) => ({
-      id: r.id, name: r.name, avatarBase64: r.avatar_data || null, avatarUrl: r.avatar_url || null, weekKm: Number(r.week_km), rank: Number(r.rank), isMe: r.id === userId,
-    })),
-  });
-}
-
-async function handleSetGlobalOptIn(req, res, userId) {
-  const { optedIn } = req.body || {};
-  if (typeof optedIn !== 'boolean') return res.status(400).json({ error: 'bad_request' });
-  await sql`UPDATE users SET global_leaderboard_opt_in = ${optedIn} WHERE id = ${userId}`;
-  res.status(200).json({ ok: true });
-}
-
+// LE CLASSEMENT MONDIAL EST PARTI.
+//
+// Un club de course est LOCAL. Se comparer aux kilomètres de quelqu'un qu'on ne croisera jamais,
+// dans une ville qu'on ne connaît pas, ne fait pas courir — ça ne fait même pas un classement,
+// ça fait un palmarès où personne ne se reconnaît.
+//
+// C'était aussi, et de loin, la requête la plus lourde du serveur : une agrégation sur TOUS les
+// comptes inscrits et toutes leurs activités de la semaine, pour un écran que presque personne
+// n'ouvrait. La colonne `users.global_leaderboard_opt_in` reste en base : la retirer serait une
+// migration destructrice pour rien.
 
 // CE QU'UN CLUB A ET QU'UN CLASSEMENT N'A PAS.
 //

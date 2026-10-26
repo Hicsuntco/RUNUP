@@ -54,15 +54,21 @@ struct ClubView: View {
     @State private var showCreateEvent = false
     /// My own feed activity pending delete confirmation (appui long → Supprimer).
     @State private var pendingDeleteActivity: FeedItem?
-    /// Which board the Classement tab shows — the fresh Monday-reset km race, all-time XP, or the
-    /// opt-in global weekly board across every club.
+    /// Lequel des deux classements l'onglet montre : la course aux kilomètres de la semaine, ou
+    /// l'XP de toujours.
     @State private var boardMode: BoardMode = .week
-    /// Nil until the global board has been fetched at least once (lazy — most people never tap
-    /// it) — distinct from `optedIn` inside it, which reflects HER OWN current opt-in state.
-    @State private var globalBoard: GlobalWeeklyBoard?
-    @State private var isLoadingGlobal = false
 
-    private enum BoardMode { case week, general, global }
+    /// LE CLASSEMENT MONDIAL EST PARTI, ET C'EST UNE DÉCISION DE FOND.
+    ///
+    /// Un club de course est LOCAL. Se comparer aux kilomètres de quelqu'un qu'on ne croisera
+    /// jamais, dans une ville qu'on ne connaît pas, ne fait pas courir — ça ne fait même pas un
+    /// classement, ça fait un palmarès mondial où personne ne se reconnaît. Ce que le club
+    /// compare, c'est ses membres entre eux, et c'est tout ce qui a du sens.
+    ///
+    /// Partent avec lui : la pastille « Mondial », son contenu, son interrupteur de
+    /// participation et ses deux appels au serveur. La colonne `global_leaderboard_opt_in`
+    /// reste en base — la retirer serait une migration destructrice pour rien.
+    private enum BoardMode { case week, general }
     /// Only meaningful within `BoardMode.week` — raw km (server-ranked) vs. each member's own %
     /// of their real weekly plan (`WeeklyRow.pctOfTarget`, client-ranked — see `weekBoardContent`).
     /// The whole reason this mode exists: a mixed-level club (a beginner on 15 km/week next to a
@@ -617,40 +623,52 @@ struct ClubView: View {
     /// a fixed "100 km ce mois-ci" regardless of whether anyone had actually agreed to that goal.
     /// `progressKm` is a real sum computed server-side over every member's logged runs since the
     /// challenge was created, not just this device's local history.
+    /// UNE SECTION, PAS UNE CARTE — et surtout pas une carte VIDE.
+    ///
+    /// « Défi du club / Aucun défi en cours » occupait un rectangle plein de cent points de haut
+    /// pour dire qu'il n'y avait rien à dire. Deux de ces blocs se suivaient en tête de l'écran,
+    /// et c'est tout ce qu'on voyait d'un club qui démarre : deux grands cadres vides.
+    ///
+    /// L'invitation à en créer un reste, en une ligne discrète — c'est la même forme que
+    /// « Sorties de groupe » juste en dessous, qui n'a jamais eu besoin d'un cadre pour dire
+    /// qu'aucune sortie n'est prévue.
     private var challengeCard: some View {
-        Group {
+        VStack(alignment: .leading, spacing: 10) {
             if let challenge = board.challenge {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        RUCardHeader(title: "Défi du club")
-                        StatChip(text: String(localized: "J-\(daysLeft(until: challenge.endDate))"), color: RUColor.rose2)
-                    }
-                    Text(challenge.title).displayStyle(19).foregroundColor(RUColor.textPrimary)
-                    LinearBar(fraction: challenge.targetKm > 0 ? min(1, challenge.progressKm / challenge.targetKm) : 0, color: RUColor.rose)
-                    HStack {
-                        Text(challengeProgressText(challenge)).font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
-                        Spacer()
-                        Text("ensemble").font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
-                    }
+                HStack {
+                    RUCardHeader(title: "Défi du club")
+                    StatChip(text: String(localized: "J-\(daysLeft(until: challenge.endDate))"), color: RUColor.rose2)
                 }
-                .padding(16)
-                .ruCard()
+                Text(challenge.title).displayStyle(19).foregroundColor(RUColor.textPrimary)
+                LinearBar(fraction: challenge.targetKm > 0 ? min(1, challenge.progressKm / challenge.targetKm) : 0, color: RUColor.rose)
+                HStack {
+                    Text(challengeProgressText(challenge)).font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
+                    Spacer()
+                    Text("ensemble").font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
+                }
             } else {
-                Button(action: { showManagement = true }) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 3) {
-                            RUCardHeader(title: "Défi du club")
-                            Text("Aucun défi en cours — en créer un").font(RUFont.sans(.label)).foregroundColor(RUColor.textPrimary)
+                HStack {
+                    RUCardHeader(title: "Défi du club")
+                    Spacer(minLength: 8)
+                    Button(action: { showManagement = true }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "plus").font(.system(size: 10, weight: .bold))
+                            Text("Créer").font(RUFont.sans(.small, weight: .semibold))
                         }
-                        Spacer()
-                        Image(systemName: "plus.circle.fill").font(.system(size: 20)).foregroundColor(RUColor.rose2)
+                        .foregroundColor(RUColor.rose2)
+                        .padding(8)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
                     }
-                    .padding(16)
+                    .buttonStyle(PressableStyle())
                 }
-                .buttonStyle(PressableStyle())
-                .ruCard()
+                Text("Aucun défi en cours — un objectif de kilomètres à se partager, avec une date de fin.")
+                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 2)
             }
         }
+        .padding(.top, 6)
     }
 
     private var clubTabs: some View {
@@ -896,7 +914,6 @@ struct ClubView: View {
     private func boardModeChip(_ label: String, _ value: BoardMode) -> some View {
         Button(action: {
             withAnimation(.easeInOut(duration: 0.2)) { boardMode = value }
-            if value == .global && globalBoard == nil { Task { await loadGlobalBoard() } }
         }) {
             Text(label)
                 .font(RUFont.sans(.small, weight: .semibold))
@@ -962,9 +979,19 @@ struct ClubView: View {
             HStack(spacing: 14) {
                 VStack(alignment: .leading, spacing: 2) {
                     RUCardHeader(title: "Le club cette semaine", subtitle: "Kilomètres cumulés")
-                    HStack(alignment: .lastTextBaseline, spacing: 4) {
-                        Text(km).displayStyle(26).foregroundColor(RUColor.textPrimary)
-                        Text("KM").font(RUFont.sans(.small, weight: .bold)).foregroundColor(RUColor.text2)
+                    // « 0,0 KM » EN GRAND N'EST PAS UNE INFORMATION, C'EST UN REPROCHE.
+                    //
+                    // Un club qui démarre, ou un lundi matin, ouvrait sur un zéro de vingt-six
+                    // points dans un cadre plein. Le chiffre ne s'écrit donc en grand que
+                    // lorsqu'il y a quelque chose à écrire ; sinon, une phrase.
+                    if stats?.totalKm ?? 0 > 0 {
+                        HStack(alignment: .lastTextBaseline, spacing: 4) {
+                            Text(km).displayStyle(26).foregroundColor(RUColor.textPrimary)
+                            Text("KM").font(RUFont.sans(.small, weight: .bold)).foregroundColor(RUColor.text2)
+                        }
+                    } else {
+                        Text("Personne n'a encore couru cette semaine.")
+                            .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                     }
                 }
                 Spacer(minLength: 8)
@@ -1003,8 +1030,6 @@ struct ClubView: View {
                                                     String(localized: "\(active.count) membres ont couru cette semaine")))
             }
         }
-        .padding(RUSpacing.cardPadding)
-        .ruCard()
     }
 
     private static let eventDateFormatter: DateFormatter = {
@@ -1176,15 +1201,12 @@ struct ClubView: View {
             HStack(spacing: 6) {
                 boardModeChip(String(localized: "Cette semaine"), .week)
                 boardModeChip(String(localized: "Général (XP)"), .general)
-                boardModeChip(String(localized: "Mondial"), .global)
             }
             Group {
                 if boardMode == .week {
                     weekBoardContent
-                } else if boardMode == .general {
-                    generalBoardContent
                 } else {
-                    globalBoardContent
+                    generalBoardContent
                 }
             }
             .transition(.opacity)
@@ -1430,70 +1452,6 @@ struct ClubView: View {
     //
     // Le calcul (`badges`) reste : c'est lui qui alimente la synchronisation vers le serveur et
     // la célébration d'un badge débloqué.
-
-    /// The opt-in global weekly board — every club's members compete on the SAME real km-this-
-    /// week race the club board already shows, just across the whole platform instead of one
-    /// club. Off by default (see `global_leaderboard_opt_in`): a real, explicit choice since
-    /// this exposes her name/photo/km to people outside her own club.
-    private var globalBoardContent: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Classement mondial").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
-                    Text("Visible par tout le monde, pas juste ton club.")
-                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
-                }
-                Spacer()
-                if let globalBoard {
-                    Toggle("", isOn: Binding(get: { globalBoard.optedIn }, set: { _ in toggleGlobalOptIn() }))
-                        .labelsHidden()
-                        .tint(RUColor.rose)
-                        .accessibilityLabel("Rejoindre le classement mondial")
-                }
-            }
-            .padding(RUSpacing.cardPadding)
-            .ruCard()
-
-            if isLoadingGlobal && globalBoard == nil {
-                ProgressView().frame(maxWidth: .infinity).padding(.vertical, 20)
-            } else if let globalBoard {
-                if !globalBoard.optedIn {
-                    Text("Active le classement mondial pour voir où tu te situes parmi tous les coureurs RunUp cette semaine.")
-                        .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
-                        .frame(maxWidth: .infinity).padding(.vertical, 12)
-                } else if globalBoard.entries.isEmpty {
-                    Text(verbatim: Accord.selon(f: String(localized: "Personne n'a encore couru cette semaine — sois la première !"),
-                                                m: String(localized: "Personne n'a encore couru cette semaine — sois le premier !")))
-                        .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
-                        .frame(maxWidth: .infinity).padding(.vertical, 20)
-                } else {
-                    let rows = globalBoard.entries
-                    VStack(spacing: 0) {
-                        ForEach(Array(rows.enumerated()), id: \.element.id) { index, entry in
-                            if index > 0 && !entry.isMe && !rows[index - 1].isMe {
-                                boardDivider
-                            }
-                            HStack(spacing: 12) {
-                                rang(entry.rank, estMoi: entry.isMe)
-                                AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28, seed: entry.isMe ? nil : entry.id)
-                                Text(entry.isMe ? String(localized: "\(entry.name) · toi") : entry.name)
-                                    .font(RUFont.sans(.label, weight: entry.isMe ? .semibold : .regular))
-                                    .foregroundColor(RUColor.textPrimary)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.7)
-                                Spacer()
-                                Text(verbatim: "\(String(format: "%.1f", locale: Locale.current, entry.weekKm)) km")
-                                    .displayStyle(14).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
-                            }
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 11)
-                            .background(entry.isMe ? RUColor.rose.opacity(0.09) : Color.clear, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     private var feedContent: some View {
         // `LazyVStack` : le serveur renvoie 50 activités, et un `VStack` les construisait TOUTES
@@ -1915,30 +1873,6 @@ struct ClubView: View {
         // Le mur, à part et sans bruit : un onglet Activité qui afficherait une erreur parce que
         // le mur n'a pas répondu alors que les sorties sont là serait faux deux fois.
         posts = (try? await clubService.fetchClubPosts()) ?? posts
-    }
-
-    private func loadGlobalBoard() async {
-        isLoadingGlobal = true
-        globalBoard = try? await clubService.fetchGlobalWeekly()
-        isLoadingGlobal = false
-    }
-
-    private func toggleGlobalOptIn() {
-        guard let current = globalBoard?.optedIn else { return }
-        let next = !current
-        globalBoard?.optedIn = next
-        Haptics.selection()
-        Task {
-            do {
-                try await clubService.setGlobalLeaderboardOptIn(next)
-                await loadGlobalBoard()
-            } catch {
-                await MainActor.run {
-                    globalBoard?.optedIn = current
-                    appState.toast(String(localized: "Impossible de mettre à jour — réessaie."))
-                }
-            }
-        }
     }
 
     /// Real kudos notifications — compares each of *your own* posts' current kudos count against

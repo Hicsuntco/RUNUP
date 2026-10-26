@@ -837,3 +837,30 @@ ALTER TABLE event_rsvps ADD COLUMN IF NOT EXISTS pace_group TEXT;
 -- a créé le club (`clubs.created_by`) est organisatrice par construction, sans ligne ici — et
 -- elle est la seule à pouvoir en nommer d'autres, sinon un organisateur pourrait la destituer.
 ALTER TABLE club_members ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'member';
+
+-- « ON ÉTAIT 28 MARDI DERNIER. »
+--
+-- C'est la phrase dont un crew est fier, et elle n'existait nulle part. Une séance hebdomadaire
+-- s'avance d'une semaine quand sa date est passée et vide ses présences : ce qui s'est passé
+-- mardi dernier disparaissait donc au profit de mardi prochain, chaque semaine, pour toujours.
+--
+-- Une ligne par occurrence TENUE, écrite au moment où la séance s'avance. Pas de présences
+-- nominatives ici : un compte et une date suffisent à dire qu'un club vit, et la liste des
+-- présents d'un mardi d'octobre n'intéresse personne six mois plus tard — alors qu'elle dirait
+-- de chaque membre où il était ce soir-là.
+CREATE TABLE IF NOT EXISTS club_session_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  club_id UUID NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+  -- La séance d'origine, quand elle existe encore. ON DELETE SET NULL : annuler « le mardi » ne
+  -- doit pas effacer les quarante mardis qui ont eu lieu.
+  event_id UUID REFERENCES club_events(id) ON DELETE SET NULL,
+  title TEXT NOT NULL,
+  held_at TIMESTAMPTZ NOT NULL,
+  attendees INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_club_session_history_club ON club_session_history (club_id, held_at DESC);
+-- Une occurrence ne s'enregistre qu'une fois : l'avance d'une séance est atomique, mais deux
+-- déploiements concurrents ou une migration rejouée ne doivent pas doubler un mardi.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_club_session_history_unique
+  ON club_session_history (club_id, held_at, title);

@@ -730,6 +730,7 @@ struct ClubView: View {
             // sections ci-dessous ne demandent aucune donnée nouvelle — elles étaient dans les
             // courses suivies et dans les sorties publiées, jamais regardées ensemble.
             coursesDuClub
+            seancesTenues
             recordsDuClub
             levelCard
         }
@@ -800,6 +801,63 @@ struct ClubView: View {
         .accessibilityLabel(Pluriel.choisir(course.members,
             String(localized: "\(course.race.name), \(course.members) membre la prépare"),
             String(localized: "\(course.race.name), \(course.members) membres la préparent")))
+    }
+
+    // MARK: - Les séances tenues
+
+    /// « ON ÉTAIT 28 MARDI DERNIER. »
+    ///
+    /// La phrase dont un crew est fier, et la seule preuve qu'un club VIT : un classement dit
+    /// qui court, pas si on se retrouve. Elle n'existait nulle part — une séance hebdomadaire
+    /// s'avance d'une semaine et vide ses présences, donc ce qui s'était passé disparaissait
+    /// chaque semaine au profit de la suivante.
+    ///
+    /// La MOYENNE d'abord, le total ensuite : vingt séances à trois personnes et vingt séances à
+    /// trente ne sont pas le même club, et c'est la moyenne qui le dit.
+    @ViewBuilder
+    private var seancesTenues: some View {
+        if let histo = highlights?.sessionHistory, histo.total > 0 {
+            VStack(alignment: .leading, spacing: 10) {
+                RUCardHeader(title: "Les séances tenues")
+                HStack(alignment: .lastTextBaseline, spacing: 6) {
+                    Text("\(histo.averageAttendees)")
+                        .displayStyle(26)
+                        .foregroundColor(RUColor.textPrimary)
+                    // Pas de `Pluriel` ici : « au départ en moyenne » ne s'accorde pas, et
+                    // appeler le choix de pluriel avec deux fois la même phrase donnerait deux
+                    // clés identiques au catalogue et un faux air de règle.
+                    Text("au départ en moyenne")
+                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
+                    Spacer(minLength: 8)
+                    Text(Pluriel.choisir(histo.total,
+                                         String(localized: "\(histo.total) séance"),
+                                         String(localized: "\(histo.total) séances")))
+                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                }
+                VStack(spacing: 0) {
+                    ForEach(Array(histo.recent.enumerated()), id: \.element.id) { rang, seance in
+                        if rang > 0 { boardDivider }
+                        HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(Self.semaineFormatter.string(from: seance.heldAt))
+                                    .font(RUFont.sans(.micro, weight: .bold)).tracking(0.6)
+                                    .foregroundColor(RUColor.text3)
+                                Text(seance.title)
+                                    .font(RUFont.sans(.body, weight: .semibold))
+                                    .foregroundColor(RUColor.textPrimary)
+                                    .lineLimit(1)
+                            }
+                            Spacer(minLength: 8)
+                            Text("\(seance.attendees) au départ")
+                                .font(RUFont.sans(.body, weight: .semibold))
+                                .foregroundColor(RUColor.text2)
+                        }
+                        .padding(.vertical, 11)
+                    }
+                }
+            }
+            .padding(.top, 6)
+        }
     }
 
     // MARK: - Les records du club

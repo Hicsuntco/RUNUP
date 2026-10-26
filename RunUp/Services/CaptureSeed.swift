@@ -534,7 +534,15 @@ enum CaptureSeed {
                   "createdAt": "\(ilYA(22))", "distanceKm": 8.2, "durationSeconds": 2583,
                   "elevationGainM": 42, "secPerKm": 315.0 }
               ],
-              "bestWeek": { "startsAt": "\(ilYAJours(24))", "km": 212.4, "runners": 7 }
+              "bestWeek": { "startsAt": "\(ilYAJours(24))", "km": 212.4, "runners": 7 },
+              "sessionHistory": {
+                "total": 41, "averageAttendees": 17,
+                "recent": [
+                  { "title": "Sortie longue au canal", "heldAt": "\(ilYAJours(6))", "attendees": 28 },
+                  { "title": "Fractionné sur piste", "heldAt": "\(ilYAJours(9))", "attendees": 14 },
+                  { "title": "Sortie longue au canal", "heldAt": "\(ilYAJours(13))", "attendees": 22 }
+                ]
+              }
             }
             """
             etat.cachedClubHighlights = try decodeur.decode(ClubHighlights.self, from: Data(pepites.utf8))

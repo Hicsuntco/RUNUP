@@ -1291,12 +1291,33 @@ struct ClubHighlights: Decodable {
     /// meilleure semaine. Nil tant qu'aucune semaine ENTIÈRE n'a été courue — celle en cours est
     /// exclue, sinon un lundi matin battrait le record de l'année.
     var bestWeek: ClubBestWeek?
+    /// Optionnel : le serveur peut être en avance sur l'app installée, et un aperçu qui cesse de
+    /// se décoder pour un historique absent serait une régression bien pire que son absence.
+    var sessionHistory: ClubSessionHistory?
 }
 
 struct ClubBestWeek: Decodable {
     var startsAt: Date
     var km: Double
     var runners: Int
+}
+
+/// LES SÉANCES TENUES. « On était 28 mardi dernier » est la phrase dont un crew est fier, et la
+/// seule preuve qu'un club VIT — un classement dit qui court, pas si on se retrouve.
+///
+/// La moyenne compte plus que le total : vingt séances à trois personnes et vingt séances à
+/// trente ne sont pas le même club.
+struct ClubSessionHistory: Decodable {
+    var total: Int
+    var averageAttendees: Int
+    var recent: [ClubHeldSession]
+}
+
+struct ClubHeldSession: Decodable, Identifiable {
+    var title: String
+    var heldAt: Date
+    var attendees: Int
+    var id: String { "\(title)-\(heldAt.timeIntervalSince1970)" }
 }
 
 /// Une course que plusieurs membres préparent. `race` est le MÊME `RaceEvent` que partout

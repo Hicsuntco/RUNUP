@@ -450,8 +450,31 @@ async function handleMine(req, res, userId) {
        WHERE club_id = ${clubId}
          AND repeats_weekly = true
          AND starts_at < now() - interval '3 hours'
-      RETURNING id
+      RETURNING id, title, starts_at,
+                starts_at - (ceil(extract(epoch FROM (now() - starts_at)) / 604800.0) * interval '7 days') AS tenue_le,
+                (SELECT COUNT(*)::int FROM event_rsvps r WHERE r.event_id = club_events.id) AS presents
     `;
+
+    // ON GARDE CE QUI VIENT D'AVOIR LIEU, AVANT DE L'EFFACER.
+    //
+    // La séance s'avance d'une semaine et vide ses présences : sans cette ligne, « on était 28
+    // mardi dernier » disparaîtrait au profit de mardi prochain, chaque semaine, pour toujours.
+    // C'est pourtant la phrase dont un crew est fier, et la preuve qu'un club vit.
+    //
+    // `ON CONFLICT DO NOTHING` sur (club, date, titre) : l'avance est atomique, mais une
+    // migration rejouée ne doit pas doubler un mardi.
+    const tenues = avancees.filter((e) => e.presents > 0);
+    if (tenues.length > 0) {
+      await sql`
+        INSERT INTO club_session_history (club_id, event_id, title, held_at, attendees)
+        SELECT ${clubId}, x.event_id::uuid, x.title, x.held_at::timestamptz, x.attendees::int
+          FROM jsonb_to_recordset(${JSON.stringify(tenues.map((e) => ({
+            event_id: e.id, title: e.title, held_at: e.tenue_le, attendees: e.presents,
+          })))}::jsonb)
+            AS x(event_id text, title text, held_at text, attendees int)
+        ON CONFLICT DO NOTHING
+      `;
+    }
     // Les présences appartiennent à l'occurrence, pas à la série : « qui vient » se redemande
     // chaque semaine. Sans ce vide, la séance de mardi prochain s'ouvrirait avec les présents de
     // mardi dernier déjà cochés.
@@ -771,7 +794,7 @@ async function handleHighlights(req, res, userId) {
   // s'il y en a un, et un 404 l'obligerait à distinguer « pas de club » de « panne ».
   if (!clubId) return res.status(200).json({ races: [], records: [] });
 
-  const [courses, records, semaine] = await Promise.all([
+  const [courses, records, semaine, seances] = await Promise.all([
     // LES COURSES QUE LE CLUB PRÉPARE, la plus proche d'abord. Une course par ligne, avec qui
     // s'y est inscrit : c'est le « qui vient ? » d'une sortie de groupe, à l'échelle d'une année.
     sql`
@@ -848,6 +871,21 @@ async function handleHighlights(req, res, userId) {
        ORDER BY km DESC
        LIMIT 1
     `,
+    // LES SÉANCES TENUES. « On était 28 mardi dernier » est la phrase dont un crew est fier, et
+    // la seule preuve qu'un club VIT — un classement dit qui court, pas si on se retrouve.
+    //
+    // Les cinq dernières, et les deux chiffres qui les résument : combien de séances, et combien
+    // de personnes en moyenne. La moyenne compte plus que le total : vingt séances à trois
+    // personnes et vingt séances à trente ne sont pas le même club.
+    sql`
+      SELECT title, held_at, attendees,
+             (SELECT COUNT(*)::int FROM club_session_history WHERE club_id = ${clubId}) AS total,
+             (SELECT ROUND(AVG(attendees))::int FROM club_session_history WHERE club_id = ${clubId}) AS moyenne
+        FROM club_session_history
+       WHERE club_id = ${clubId}
+       ORDER BY held_at DESC
+       LIMIT 5
+    `,
   ]);
 
   res.status(200).json({
@@ -882,6 +920,15 @@ async function handleHighlights(req, res, userId) {
       elevationGainM: r.elevation_gain_m,
       secPerKm: r.sec_par_km === null ? null : Number(r.sec_par_km),
     })),
+    sessionHistory: {
+      total: seances.rows[0]?.total ?? 0,
+      averageAttendees: seances.rows[0]?.moyenne ?? 0,
+      recent: seances.rows.map((r) => ({
+        title: r.title,
+        heldAt: r.held_at,
+        attendees: r.attendees,
+      })),
+    },
     bestWeek: semaine.rows[0] ? {
       startsAt: semaine.rows[0].debut,
       km: Number(semaine.rows[0].km),

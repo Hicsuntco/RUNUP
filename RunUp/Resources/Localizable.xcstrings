@@ -2041,6 +2041,23 @@
         }
       }
     },
+    "%lld séance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld session"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld sesión"
+          }
+        }
+      }
+    },
     "%lld séance sur %lld prévues": {
       "localizations": {
         "en": {
@@ -2053,6 +2070,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld salida de %lld previstas"
+          }
+        }
+      }
+    },
+    "%lld séances": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld sessions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld sesiones"
           }
         }
       }
@@ -14907,6 +14941,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Las sesiones ya hechas no se mueven."
+          }
+        }
+      }
+    },
+    "Les séances tenues": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sessions held"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las sesiones celebradas"
           }
         }
       }
@@ -28223,6 +28274,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "aligerado (fase menstrual)"
+          }
+        }
+      }
+    },
+    "au départ en moyenne": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "at the start on average"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "en la salida de media"
           }
         }
       }

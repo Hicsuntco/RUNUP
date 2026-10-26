@@ -9,5 +9,11 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/club/:id",
+      "destination": "/club.html"
+    }
   ]
 }

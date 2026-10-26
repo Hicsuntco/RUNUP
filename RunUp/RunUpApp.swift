@@ -174,6 +174,24 @@ private struct RootView: View {
             // la Live Activity pose sur l'écran verrouillé pour revenir à la course en cours.
             if url.scheme == "runup", url.host == "live" {
                 appState?.go(.live)
+                return
+            }
+            // LE LIEN D'UN CLUB : `runup-nu.vercel.app/club/<uuid>`, celui qu'un crew met dans
+            // sa bio. iOS l'ouvre DANS l'app quand elle est installée (voir
+            // `.well-known/apple-app-site-association`) ; sinon la page web s'affiche, et c'est
+            // elle qui fait le travail.
+            //
+            // On va chercher le NOM avant d'ouvrir l'écran : il n'existe pas d'écran « club de
+            // quelqu'un d'autre », et ce qu'on veut en arrivant par ce lien c'est rejoindre —
+            // donc la recherche préremplie, qui mène au bouton « Rejoindre » en un geste.
+            if url.host == "runup-nu.vercel.app",
+               url.pathComponents.count >= 3, url.pathComponents[1] == "club" {
+                let identifiant = url.pathComponents[2]
+                Task { @MainActor in
+                    guard let club = await ClubService.clubPublic(id: identifiant) else { return }
+                    appState?.clubDepuisUnLien = club.name
+                    appState?.go(.club)
+                }
             }
         }
     }

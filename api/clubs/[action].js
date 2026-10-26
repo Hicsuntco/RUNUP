@@ -22,6 +22,19 @@ const {
 } = require('../../lib/recherche');
 
 module.exports = withErrorHandling(async function handler(req, res) {
+  // LA PAGE PUBLIQUE D'UN CLUB EST LE SEUL POINT D'ENTRÉE SANS JETON DE TOUT LE SERVEUR, et
+  // c'est tout son intérêt : un crew recrute sur Instagram et par le bouche-à-oreille, pas dans
+  // un moteur de recherche interne. Un lien qu'il faut déjà avoir l'app pour ouvrir ne recrute
+  // personne.
+  //
+  // AVANT l'authentification, donc — et volontairement avant, pas « sans la vérifier » : la
+  // réponse ne contient que ce qu'un club OUVERT affiche de lui-même (son nom, sa ville, sa
+  // présentation, ses prochaines séances), jamais ses membres ni rien qui désigne quelqu'un.
+  if (req.query.action === 'public') {
+    if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
+    return handlePublicClub(req, res);
+  }
+
   const userId = await requireAuth(req, res);
   if (!userId) return res.status(401).json({ error: 'unauthorized' });
 
@@ -1071,4 +1084,61 @@ async function handleDeletePost(req, res, userId) {
   `;
   if (rows.length === 0) return res.status(404).json({ error: 'not_found' });
   res.status(200).json({ ok: true });
+}
+
+
+// LA PAGE PUBLIQUE D'UN CLUB : ce qu'il montre de lui à quelqu'un qui n'est pas encore entré.
+//
+// SEULEMENT LES CLUBS OUVERTS. Un club fermé n'apparaît dans aucune recherche et ne se rejoint
+// pas ; lui donner une page publique contredirait le seul réglage de confidentialité qu'un club
+// possède. Il répond 404, comme un club qui n'existe pas — dire « il existe mais il est fermé »
+// serait déjà une information sur lui.
+//
+// AUCUN NOM DE MEMBRE. Un compte de membres, des séances, et rien d'autre : la page est publique
+// au sens le plus fort du terme — indexable, partageable, lisible par n'importe qui — et
+// personne n'a consenti à y figurer en rejoignant un club.
+async function handlePublicClub(req, res) {
+  const id = typeof req.query.id === 'string' ? req.query.id : '';
+  if (!isUuid(id)) return res.status(400).json({ error: 'bad_request' });
+
+  const { rows } = await sql`
+    SELECT c.id, c.name, c.city, c.description, c.cover_url,
+           (SELECT COUNT(*)::int FROM club_members m WHERE m.club_id = c.id) AS member_count
+      FROM clubs c
+     WHERE c.id = ${id} AND c.is_open = true
+  `;
+  const club = rows[0];
+  if (!club) return res.status(404).json({ error: 'not_found' });
+
+  let seances = [];
+  try {
+    const { rows: evenements } = await sql`
+      SELECT title, location, starts_at, repeats_weekly,
+             (SELECT COUNT(*)::int FROM event_rsvps r WHERE r.event_id = e.id) AS going
+        FROM club_events e
+       WHERE e.club_id = ${club.id} AND e.starts_at >= now() - interval '3 hours'
+       ORDER BY e.starts_at ASC
+       LIMIT 5
+    `;
+    seances = evenements;
+  } catch { /* table pas encore migrée : une page sans séances vaut mieux qu'une page en panne */ }
+
+  // Une minute de cache au bord, cinq de plus en arrière-plan : cette page peut être partagée à
+  // des centaines de personnes d'un coup depuis une story, et rien dedans ne change à la seconde.
+  res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+  res.status(200).json({
+    id: club.id,
+    name: club.name,
+    city: club.city || null,
+    description: club.description || null,
+    coverUrl: club.cover_url || null,
+    memberCount: club.member_count,
+    sessions: seances.map((e) => ({
+      title: e.title,
+      location: e.location || null,
+      startsAt: e.starts_at,
+      repeatsWeekly: e.repeats_weekly === true,
+      going: e.going,
+    })),
+  });
 }

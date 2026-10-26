@@ -135,6 +135,14 @@ final class AppState {
     func ouvrirLaCourse(_ course: RaceEvent) {
         courseOuverte = course
     }
+
+    /// LE CLUB QU'UN LIEN DEMANDE D'OUVRIR.
+    ///
+    /// Posé par `.onOpenURL` quand on arrive depuis `runup-nu.vercel.app/club/<id>` — le lien
+    /// qu'un crew met dans sa bio Instagram. L'écran du Club le lit à son apparition et
+    /// préremplit la recherche avec le nom, puisqu'il n'existe pas d'écran « club de quelqu'un
+    /// d'autre » : ce qu'on veut en arrivant par ce lien, c'est le rejoindre.
+    var clubDepuisUnLien: String?
     /// Phone↔watch bridge — receives runs finished on the wrist, mirrors today's session out.
     /// Optional only because it needs `self` (created at the end of `init`); never nil after.
     @ObservationIgnored private(set) var watchSession: WatchSessionService?

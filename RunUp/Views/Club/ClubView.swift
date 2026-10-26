@@ -180,6 +180,20 @@ struct ClubView: View {
             .padding(.bottom, 130)
         }
         .task { await loadIfSignedIn() }
+        // Arrivée par le lien public d'un club : la recherche s'ouvre déjà remplie de son nom,
+        // donc le bouton « Rejoindre » est à un geste. Le nom est consommé pour qu'un retour sur
+        // l'onglet ne le réécrive pas par-dessus une recherche en cours.
+        .onChange(of: appState.clubDepuisUnLien) { _, nom in
+            guard let nom else { return }
+            clubQuery = nom
+            appState.clubDepuisUnLien = nil
+        }
+        .onAppear {
+            if let nom = appState.clubDepuisUnLien {
+                clubQuery = nom
+                appState.clubDepuisUnLien = nil
+            }
+        }
         // Même temporisation que la recherche de personnes : on cherche À LA FRAPPE, mais on
         // n'envoie pas une requête par lettre.
         .onChange(of: clubQuery) { _, nouveau in chercherUnClub(nouveau) }
@@ -1561,7 +1575,12 @@ struct ClubView: View {
                         Text("Un club prend vie à plusieurs — classement, défis, sorties de groupe. Dis-leur de chercher son nom dans l'onglet Club.")
                             .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
                             .fixedSize(horizontal: false, vertical: true)
-                        ShareLink(item: String(localized: "Rejoins mon club \(club.name) sur RUNUP — cherche-le par son nom dans l'onglet Club : https://runup-nu.vercel.app")) {
+                        // UN VRAI LIEN, ENFIN. Ce message disait « cherche-le par son nom dans
+                        // l'onglet Club » : une consigne, pas une invitation. Le lien ouvre
+                        // maintenant la page publique du club — sa photo, sa ville, ses
+                        // prochaines séances — et, sur un iPhone où l'app est installée,
+                        // directement l'app.
+                        ShareLink(item: String(localized: "Rejoins mon club \(club.name) sur RUNUP : https://runup-nu.vercel.app/club/\(club.id)")) {
                             HStack(spacing: 6) {
                                 Image(systemName: "square.and.arrow.up")
                                 Text("Partager")

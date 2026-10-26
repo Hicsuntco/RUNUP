@@ -631,6 +631,22 @@ struct ClubService {
         try await send(path: "api/activities/detail", method: "GET", query: ["id": id])
     }
 
+    /// LA PAGE PUBLIQUE D'UN CLUB, SANS JETON.
+    ///
+    /// Le seul appel de l'app qui n'en demande pas, parce que c'est le seul point d'entrée du
+    /// serveur qui n'en demande pas : on arrive ici depuis un lien, avant d'être connectée,
+    /// peut-être même avant d'avoir un compte. Rend `nil` plutôt que de lever : un lien mort ne
+    /// doit pas faire apparaître une erreur à quelqu'un qui vient juste d'ouvrir l'app.
+    static func clubPublic(id: String) async -> PublicClub? {
+        var url = baseURL.appending(path: "api/clubs/public")
+        url.append(queryItems: [URLQueryItem(name: "id", value: id)])
+        guard let (data, reponse) = try? await URLSession.shared.data(from: url),
+              let http = reponse as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            return nil
+        }
+        return try? JSONDecoder().decode(PublicClub.self, from: data)
+    }
+
     /// CE QU'UN CLUB A ET QU'UN CLASSEMENT N'A PAS : ce qu'il prépare, et ce qu'il a fait de
     /// mieux. Un appel à part du tableau de bord, qui part quand l'aperçu s'affiche.
     func fetchClubHighlights() async throws -> ClubHighlights {
@@ -1231,6 +1247,18 @@ struct ClubPost: Decodable, Identifiable, Hashable {
 
 struct ClubPostsResponse: Decodable {
     var posts: [ClubPost]
+}
+
+/// Ce qu'un club montre de lui à quelqu'un qui n'est pas encore entré. Aucun nom de membre :
+/// la page d'où vient cette structure est publique au sens le plus fort — partageable, lisible
+/// par n'importe qui — et personne n'a consenti à y figurer en rejoignant un club.
+struct PublicClub: Decodable {
+    var id: String
+    var name: String
+    var city: String?
+    var description: String?
+    var coverUrl: String?
+    var memberCount: Int
 }
 
 /// CE QUE LE CLUB PRÉPARE, ET CE QU'IL A FAIT DE MIEUX.

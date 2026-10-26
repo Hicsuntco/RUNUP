@@ -20675,19 +20675,19 @@
         }
       }
     },
-    "Rejoins mon club %@ sur RUNUP — cherche-le par son nom dans l'onglet Club : https://runup-nu.vercel.app": {
+    "Rejoins mon club %@ sur RUNUP : https://runup-nu.vercel.app/club/%@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Join my club %@ on RUNUP — search its name in the Club tab: https://runup-nu.vercel.app"
+            "value": "Join my club %1$@ on RUNUP: https://runup-nu.vercel.app/club/%2$@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Únete a mi club %@ en RUNUP: búscalo por su nombre en la pestaña Club: https://runup-nu.vercel.app"
+            "value": "Únete a mi club %1$@ en RUNUP: https://runup-nu.vercel.app/club/%2$@"
           }
         }
       }

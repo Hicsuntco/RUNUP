@@ -227,10 +227,17 @@ extension Text {
         self.font(RUFont.display(size)).tracking(-size * 0.03)
     }
 
-    /// Class `.eye` — eyebrow label above section/card titles.
+    /// Le sourcil posé au-dessus d'un titre de page ou de section.
     ///
-    /// Recalé sur le `.ru-eyebrow` de la maquette : `font-size: 8.5px; font-weight: 700;
-    /// letter-spacing: 0.18em; color: var(--ru-ink3)`.
+    /// CE QU'IL REND AUJOURD'HUI : `.small` demi-gras, soit 13,1 pt, interlettrage 0,2, `text3`.
+    /// Ni 8,5 pt, ni capitales, ni interlettrage 3 — voir la décision écrite dans le corps de la
+    /// méthode, en bas de cette suite de notes. L'historique qui suit se lit donc comme un
+    /// historique : c'est l'état d'une étape antérieure, pas la description du rendu actuel.
+    /// (Ce décalage a déjà coûté une mesure fausse : 10,6 pt annoncés pour un jeton qui en rend
+    /// 13,1.)
+    ///
+    /// Étape antérieure, recalée sur le `.ru-eyebrow` de la maquette : `font-size: 8.5px;
+    /// font-weight: 700; letter-spacing: 0.18em; color: var(--ru-ink3)`.
     ///
     /// - Taille 9 → 10 : le gabarit téléphone de la maquette (268px pour ~393pt réels) donne un
     ///   facteur ~1,25, calibré sur deux repères non ambigus — ses micro-libellés de métriques font

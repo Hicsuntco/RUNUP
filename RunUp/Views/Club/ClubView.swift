@@ -606,15 +606,28 @@ struct ClubView: View {
                 // « TON NIVEAU », écrit. Sur une page qui parle du club du début à la fin, un
                 // « Niveau 17 » sans sujet se lit comme le niveau DU CLUB — ce qu'il n'est pas :
                 // il vient de mon XP à moi.
-                Text("Ton niveau dans le club")
-                    .font(RUFont.sans(.small, weight: .semibold))
-                    .foregroundColor(encre2)
-                HStack(alignment: .lastTextBaseline) {
-                    Text("Niveau \(info.level) · \(info.title)").font(RUFont.sans(.title, weight: .bold)).foregroundColor(encre)
-                    Spacer()
+                // L'XP MONTE SUR LA LIGNE DU SOURCIL, PARCE QUE LE TITRE SE REPLIE.
+                //
+                // « Niveau 17 · Élite locale » ne tient pas sur une ligne à 23,1 pt dans la
+                // largeur qui reste à droite de la pastille. Il passait donc sur deux lignes,
+                // et comme le compteur d'XP partageait sa rangée en `lastTextBaseline`, il se
+                // retrouvait échoué à droite de « Élite locale » — une forme en escalier, avec
+                // la jauge qui démarre sous un bloc de texte en deux morceaux.
+                //
+                // Les deux lignes du titre ne sont pas le problème : un titre long a le droit
+                // de se replier. C'est de lui accrocher un chiffre qui l'était. Le sourcil, lui,
+                // tient toujours sur une ligne et a de la place à droite.
+                HStack(alignment: .firstTextBaseline) {
+                    Text("Ton niveau dans le club")
+                        .font(RUFont.sans(.small, weight: .semibold))
+                        .foregroundColor(encre2)
+                    Spacer(minLength: 8)
                     Text("\(info.xpIntoLevel) / \(info.xpForLevel) XP").font(RUFont.mono(10)).foregroundColor(encre2)
                         .contentTransition(.numericText())
                 }
+                Text("Niveau \(info.level) · \(info.title)")
+                    .font(RUFont.sans(.title, weight: .bold)).foregroundColor(encre)
+                    .fixedSize(horizontal: false, vertical: true)
                 LinearBar(fraction: Double(info.xpIntoLevel) / Double(info.xpForLevel), color: RUColor.violet, gradient: RUColor.violetRoseGradient)
             }
         }

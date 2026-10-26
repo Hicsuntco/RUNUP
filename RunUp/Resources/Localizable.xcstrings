@@ -6136,6 +6136,23 @@
         }
       }
     },
+    "Ce que les autres voient": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What others see"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo que ven los demás"
+          }
+        }
+      }
+    },
     "Ce que tu débloques": {
       "extractionState": "manual",
       "localizations": {
@@ -9993,6 +10010,23 @@
         }
       }
     },
+    "En deux phrases : qui êtes-vous, quand courez-vous ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In two lines: who are you, when do you run?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En dos frases: quiénes sois, cuándo corréis"
+          }
+        }
+      }
+    },
     "En gris, les semaines de décharge : le volume baisse exprès, c'est là que les progrès se fixent.": {
       "localizations": {
         "en": {
@@ -10222,6 +10256,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Registrar la sesión"
+          }
+        }
+      }
+    },
+    "Enregistré": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardado"
           }
         }
       }
@@ -17004,6 +17055,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dónde correr, aquí o de viaje"
+          }
+        }
+      }
+    },
+    "Où court-on ? (ville)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where do you run? (city)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Dónde corréis? (ciudad)"
           }
         }
       }

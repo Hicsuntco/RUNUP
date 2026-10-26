@@ -747,3 +747,15 @@ ALTER TABLE activities ADD COLUMN IF NOT EXISTS route_altitudes JSONB;
 -- même phrase, et c'est la règle de toutes les métriques de cette table.
 ALTER TABLE activities ADD COLUMN IF NOT EXISTS avg_heart_rate INTEGER;
 ALTER TABLE activities ADD COLUMN IF NOT EXISTS kcal INTEGER;
+
+-- UN CLUB EST UN LIEU, ET LE NÔTRE N'EN AVAIT PAS L'AIR.
+--
+-- Il n'avait qu'un nom. Pas un mot sur ce qu'il est, pas une ville. « Les Foulées du Canal ·
+-- 18 membres » ne dit ni où l'on court, ni à quelle heure, ni si on y est le bienvenu quand on
+-- débute — c'est-à-dire exactement ce qu'on cherche à savoir avant de rejoindre un club.
+--
+-- La ville sert aussi la recherche : un club se trouve par son nom, et deux clubs peuvent très
+-- bien le partager. « Les Foulées · Lyon » et « Les Foulées · Nantes » cessent d'être le même
+-- résultat.
+ALTER TABLE clubs ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE clubs ADD COLUMN IF NOT EXISTS city TEXT;

@@ -13,6 +13,10 @@ struct ClubInfo: Decodable {
     var isOpen: Bool?
     /// L'interrupteur n'est montré qu'à la personne qui a créé le club. Le serveur le revérifie.
     var isOwner: Bool?
+    /// CE QUI FAIT D'UN CLUB UN LIEU ET PLUS UN NOM. Optionnels pour la même raison que les deux
+    /// champs ci-dessus — et parce qu'un club peut parfaitement n'avoir rien écrit.
+    var description: String?
+    var city: String?
 }
 
 /// Un club trouvé par la recherche — tout ce qu'il faut pour décider de le rejoindre, et rien de
@@ -21,6 +25,9 @@ struct ClubInfo: Decodable {
 struct ClubSearchResult: Decodable, Identifiable, Hashable {
     var id: String
     var name: String
+    /// Deux clubs peuvent porter le même nom. Sans la ville, « Les Foulées » de Lyon et celles
+    /// de Nantes sont le même résultat, et on en rejoint une à l'autre bout du pays.
+    var city: String?
     var memberCount: Int
 }
 
@@ -534,6 +541,14 @@ struct ClubService {
     func searchClubs(query: String) async throws -> [ClubSearchResult] {
         let response: ClubSearchResponse = try await send(path: "api/clubs/search", method: "GET", query: ["q": query])
         return response.items
+    }
+
+    /// Ce que le club est, et où il court. Réservé à qui l'a créé — le serveur refuse les autres.
+    func setClubProfile(description: String?, city: String?) async throws {
+        let _: OkResponse = try await send(
+            path: "api/clubs/setClubProfile", method: "POST",
+            body: ["description": description ?? "", "city": city ?? ""]
+        )
     }
 
     /// Ouvre ou ferme son club. Réservé à la personne qui l'a créé — le serveur refuse les autres.

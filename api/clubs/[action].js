@@ -5,6 +5,12 @@ const { sql } = require('../../lib/db');
 const { requireAuth } = require('../../lib/auth');
 const { withErrorHandling, isUuid } = require('../../lib/http');
 const { containsObjectionableContent } = require('../../lib/moderation');
+const { REJECTED, sanitizeOwnText } = require('../../lib/activityFields');
+
+// Une description de club tient en un paragraphe qu'on lit sans le déplier — l'équivalent de la
+// note d'une sortie, en plus court : elle s'affiche en tête d'une page, pas dans un fil.
+const MAX_CLUB_DESCRIPTION = 240;
+const MAX_CLUB_CITY = 80;
 const { sendPushToUsers } = require('../../lib/apns');
 const { underDailyCap } = require('../../lib/rateLimit');
 // Le même repli que la recherche de personnes : accents, casse, traits d'union, ligatures. Un
@@ -66,6 +72,9 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'highlights':
       if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
       return handleHighlights(req, res, userId);
+    case 'setClubProfile':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleSetClubProfile(req, res, userId);
     default:
       return res.status(404).json({ error: 'not_found' });
   }
@@ -195,7 +204,7 @@ async function handleSearchClubs(req, res, userId) {
 
   const besoin = echapperPourLike(normaliser(raw));
   const { rows } = await sql`
-    SELECT c.id, c.name,
+    SELECT c.id, c.name, c.city,
            (SELECT COUNT(*)::int FROM club_members m WHERE m.club_id = c.id) AS member_count
     FROM clubs c
     WHERE c.is_open = true
@@ -209,7 +218,9 @@ async function handleSearchClubs(req, res, userId) {
     LIMIT 20
   `;
   res.status(200).json({
-    items: rows.map((row) => ({ id: row.id, name: row.name, memberCount: row.member_count })),
+    // La ville avec le nom : « Les Foulées · Lyon » et « Les Foulées · Nantes » cessent d'être
+    // le même résultat, et on ne rejoint plus un club à l'autre bout du pays par homonymie.
+    items: rows.map((row) => ({ id: row.id, name: row.name, city: row.city || null, memberCount: row.member_count })),
   });
 }
 
@@ -312,7 +323,7 @@ async function handleMine(req, res, userId) {
   if (memberRows.length === 0) return res.status(200).json({ club: null, leaderboard: [] });
 
   const clubId = memberRows[0].club_id;
-  const { rows: clubRows } = await sql`SELECT id, name, is_open, created_by FROM clubs WHERE id = ${clubId}`;
+  const { rows: clubRows } = await sql`SELECT id, name, is_open, created_by, description, city FROM clubs WHERE id = ${clubId}`;
   const club = clubRows[0];
 
   // Rank is computed over every member first (a subquery), then blocked users are filtered out
@@ -417,6 +428,9 @@ async function handleMine(req, res, userId) {
       // Le verrou, et à qui il appartient. Le client n'affiche l'interrupteur qu'à la personne
       // qui a créé le club — le serveur le revérifie de toute façon (`handleSetOpen`).
       isOpen: club.is_open, isOwner: club.created_by === userId,
+      // Ce qui fait d'un club un LIEU et plus un nom : ce qu'il est, et où il court.
+      description: club.description || null,
+      city: club.city || null,
     },
     leaderboard: leaderboard.map((r) => ({
       id: r.id, name: r.name, xp: r.xp_total, rank: Number(r.rank), isMe: r.id === userId,
@@ -753,4 +767,31 @@ async function handleHighlights(req, res, userId) {
       secPerKm: r.sec_par_km === null ? null : Number(r.sec_par_km),
     })),
   });
+}
+
+// LA DESCRIPTION ET LA VILLE DU CLUB, écrites par qui l'a créé.
+//
+// Modérées comme tout ce que quelqu'un écrit et que d'autres liront : c'est la règle 1.2 de
+// l'App Store, et ces deux champs s'affichent en tête d'une page vue par tous les membres ET
+// dans les résultats de recherche de gens qui ne sont pas encore entrés.
+//
+// Le serveur revérifie la propriété. Le client cache déjà le formulaire à qui n'est pas le
+// créateur ; cacher un bouton n'a jamais empêché personne d'appeler l'adresse qu'il ouvrait.
+async function handleSetClubProfile(req, res, userId) {
+  const { rows: clubRows } = await sql`
+    SELECT c.id FROM clubs c
+      JOIN club_members m ON m.club_id = c.id AND m.user_id = ${userId}
+     WHERE c.created_by = ${userId}
+  `;
+  const clubId = clubRows[0]?.id;
+  if (!clubId) return res.status(403).json({ error: 'not_owner' });
+
+  const description = sanitizeOwnText(req.body?.description, MAX_CLUB_DESCRIPTION);
+  const city = sanitizeOwnText(req.body?.city, MAX_CLUB_CITY);
+  if (description === REJECTED || city === REJECTED) {
+    return res.status(422).json({ error: 'objectionable_content' });
+  }
+
+  await sql`UPDATE clubs SET description = ${description}, city = ${city} WHERE id = ${clubId}`;
+  res.status(200).json({ ok: true, description, city });
 }

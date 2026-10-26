@@ -110,6 +110,14 @@ struct ClubView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
                 header
+                // Pleine largeur, SOUS l'en-tête et pas dedans : à côté du nom, elle aurait eu
+                // la moitié de la ligne et se serait tronquée au premier mot intéressant.
+                if let texte = board.club?.description, !texte.isEmpty {
+                    Text(texte)
+                        .font(RUFont.sans(.body))
+                        .foregroundColor(RUColor.text2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
 
                 if !auth.isSignedIn {
                     signInPrompt
@@ -287,6 +295,17 @@ struct ClubView: View {
                             Text(club.name).displayStyle(24).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
                             Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundColor(RUColor.text3)
                         }
+                        // CE QUE LE CLUB EST, ET OÙ IL COURT. Sans ces deux lignes, la page
+                        // s'ouvrait sur un nom et un compte de membres — ce qui ne dit ni où
+                        // l'on court, ni à quelle heure, ni si on y est le bienvenu quand on
+                        // débute, c'est-à-dire tout ce qu'on cherche à savoir d'un club.
+                        if let ville = club.city, !ville.isEmpty {
+                            HStack(spacing: 4) {
+                                Image(systemName: "mappin").font(.system(size: 9))
+                                Text(ville).font(RUFont.sans(.small, weight: .semibold))
+                            }
+                            .foregroundColor(RUColor.text2)
+                        }
                     }
                 }
                 .buttonStyle(PressableStyle())
@@ -337,6 +356,10 @@ struct ClubView: View {
                         try await clubService.setClubOpen(ouvert)
                         // Le tableau vient du serveur : on le relit plutôt que de deviner le
                         // nouvel état, pour que l'écran dise ce que le serveur a retenu.
+                        await loadIfSignedIn()
+                    },
+                    onSetClubProfile: { description, ville in
+                        try await clubService.setClubProfile(description: description, city: ville)
                         await loadIfSignedIn()
                     },
                     // Même précaution que `onReport` ci-dessus : fermer la feuille, puis présenter
@@ -448,10 +471,12 @@ struct ClubView: View {
                                     .lineLimit(1)
                                 // Le nombre de membres n'est pas décoratif : rien n'empêche deux
                                 // clubs de porter le même nom, et c'est ce qui les distingue.
-                                Text(Pluriel.choisir(trouve.memberCount,
-                                                     String(localized: "\(trouve.memberCount) membre"),
-                                                     String(localized: "\(trouve.memberCount) membres")))
+                                // LA VILLE AVANT LE COMPTE, pour la même raison en plus fort :
+                                // entre deux « Foulées du Canal », c'est elle qui dit laquelle
+                                // est la sienne. Un nombre de membres ne l'a jamais dit.
+                                Text(ligneDuClubTrouve(trouve))
                                     .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                                    .lineLimit(1)
                             }
                             Spacer(minLength: 8)
                             Text("Rejoindre")
@@ -523,6 +548,15 @@ struct ClubView: View {
         .padding(16)
         .background(LinearGradient(colors: [Color(hex: 0x241046), Color(hex: 0x160B1F)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: RUSpacing.radiusHero, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusHero, style: .continuous).stroke(RUColor.violet.opacity(0.3), lineWidth: RUSpacing.hairline))
+    }
+
+    /// « Lyon · 18 membres », ou le compte seul quand le club n'a pas dit où il court.
+    private func ligneDuClubTrouve(_ trouve: ClubSearchResult) -> String {
+        let membres = Pluriel.choisir(trouve.memberCount,
+                                      String(localized: "\(trouve.memberCount) membre"),
+                                      String(localized: "\(trouve.memberCount) membres"))
+        guard let ville = trouve.city, !ville.isEmpty else { return membres }
+        return "\(ville) · \(membres)"
     }
 
     private func daysLeft(until date: Date) -> Int {

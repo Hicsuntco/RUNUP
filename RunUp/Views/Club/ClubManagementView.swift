@@ -25,16 +25,23 @@ struct ClubManagementView: View {
     /// Ouvre ou ferme le club. Comme les autres actions de cet écran, c'est l'appelante qui la
     /// réalise et qui recharge : cette vue n'a pas de service à elle.
     var onSetOpen: (Bool) async throws -> Void
+    /// Ce que le club est, et où il court. Réservé à qui l'a créé.
+    var onSetClubProfile: (String, String) async throws -> Void
     var onReportClub: () -> Void
     var onLeaveClub: () -> Void
 
     @State private var showCreateChallenge = false
     @State private var ouvertureEnCours = false
+    @State private var descriptionDuClub = ""
+    @State private var villeDuClub = ""
+    @State private var identiteEnregistree = false
+    @State private var identiteEnCours = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
+                    identiteDuClub
                     verrouDuClub
 
                     challengeSection
@@ -161,6 +168,69 @@ struct ClubManagementView: View {
     /// première question que pose un interrupteur de ce genre.
     ///
     /// Montré à la seule personne qui a créé le club. Le serveur le revérifie de son côté.
+    /// CE QUE LE CLUB EST, ET OÙ IL COURT.
+    ///
+    /// Un club n'avait qu'un nom. « Les Foulées du Canal · 18 membres » ne dit ni où l'on court,
+    /// ni à quelle heure, ni si on y est le bienvenu quand on débute — c'est-à-dire tout ce
+    /// qu'on cherche à savoir avant d'en rejoindre un. Les deux champs s'affichent en tête de la
+    /// page du club, et la ville suit jusque dans les résultats de recherche.
+    ///
+    /// Comme l'interrupteur ci-dessous : montré à la seule personne qui a créé le club, et
+    /// revérifié par le serveur — cacher un bouton n'a jamais empêché personne d'appeler
+    /// l'adresse qu'il ouvrait.
+    @ViewBuilder private var identiteDuClub: some View {
+        if club.isOwner == true {
+            VStack(alignment: .leading, spacing: 10) {
+                RUCardHeader(title: "Ce que les autres voient")
+                TextField("Où court-on ? (ville)", text: $villeDuClub)
+                    .textFieldStyle(.plain)
+                    .font(RUFont.sans(.body))
+                    .foregroundColor(RUColor.textPrimary)
+                    .padding(.horizontal, 13).padding(.vertical, 10)
+                    .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                TextField("En deux phrases : qui êtes-vous, quand courez-vous ?",
+                          text: $descriptionDuClub, axis: .vertical)
+                    .textFieldStyle(.plain)
+                    .lineLimit(2...5)
+                    .font(RUFont.sans(.body))
+                    .foregroundColor(RUColor.textPrimary)
+                    .padding(.horizontal, 13).padding(.vertical, 10)
+                    .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                HStack(spacing: 10) {
+                    Button(action: { Task { await enregistrerLIdentite() } }) {
+                        Text("Enregistrer")
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                    .disabled(identiteEnCours)
+                    if identiteEnregistree {
+                        Text("Enregistré")
+                            .font(RUFont.sans(.small, weight: .semibold))
+                            .foregroundColor(RUColor.lime)
+                    }
+                    Spacer(minLength: 0)
+                }
+            }
+            .padding(.horizontal, 4)
+            .onAppear {
+                descriptionDuClub = club.description ?? ""
+                villeDuClub = club.city ?? ""
+            }
+        }
+    }
+
+    private func enregistrerLIdentite() async {
+        identiteEnCours = true
+        defer { identiteEnCours = false }
+        do {
+            try await onSetClubProfile(descriptionDuClub, villeDuClub)
+            identiteEnregistree = true
+        } catch {
+            appState.toast(PanneReseau.phrase(pour: error))
+        }
+    }
+
     @ViewBuilder private var verrouDuClub: some View {
         if club.isOwner == true {
             VStack(alignment: .leading, spacing: 6) {

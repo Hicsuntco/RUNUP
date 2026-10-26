@@ -195,7 +195,9 @@ enum CaptureSeed {
 
         let tableau = """
         {
-          "club": { "id": "demo", "name": "Les Foulées du Canal", "memberCount": 18, "isOpen": true, "isOwner": false },
+          "club": { "id": "demo", "name": "Les Foulées du Canal", "memberCount": 18,
+                    "isOpen": true, "isOwner": false, "city": "Paris 19e",
+                    "description": "On se retrouve au bassin de la Villette les mardis et les dimanches. Tous les rythmes, du premier 5 km au marathon." },
           "leaderboard": [
             { "id": "1", "name": "Charlotte", "xp": 4180, "rank": 1, "isMe": true,
               "bio": "Je cours le matin, avant que la ville se réveille.", "joinedAt": "\(ilYAJours(214))",

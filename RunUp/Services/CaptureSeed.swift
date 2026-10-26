@@ -246,9 +246,13 @@ enum CaptureSeed {
           },
           "events": [
             { "id": "e1", "title": "Sortie longue au canal", "location": "Bassin de la Villette",
-              "startsAt": "\(dans(1, a: 9, 30))", "going": 4, "goingByMe": true, "isMine": false },
+              "startsAt": "\(dans(1, a: 9, 30))", "going": 9, "goingByMe": true, "isMine": false,
+              "repeatsWeekly": true, "paceGroups": ["4:30", "5:15", "6:00"],
+              "myPaceGroup": "5:15", "paceCounts": { "4:30": 2, "5:15": 4, "6:00": 3 } },
             { "id": "e2", "title": "Fractionné sur piste", "location": "Stade Jules-Ladoumègue",
-              "startsAt": "\(dans(4, a: 19))", "going": 2, "goingByMe": false, "isMine": false }
+              "startsAt": "\(dans(4, a: 19))", "going": 2, "goingByMe": false, "isMine": false,
+              "repeatsWeekly": true, "paceGroups": ["VMA courte", "VMA longue"],
+              "paceCounts": { "VMA courte": 1, "VMA longue": 1 } }
           ]
         }
         """

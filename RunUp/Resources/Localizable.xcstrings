@@ -1689,6 +1689,23 @@
         }
       }
     },
+    "%lld personne": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld person"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld persona"
+          }
+        }
+      }
+    },
     "%lld personne prépare cette course": {
       "extractionState": "manual",
       "localizations": {
@@ -1702,6 +1719,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld persona prepara esta carrera"
+          }
+        }
+      }
+    },
+    "%lld personnes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld people"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld personas"
           }
         }
       }
@@ -5677,6 +5711,23 @@
         }
       }
     },
+    "CHAQUE SEMAINE": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EVERY WEEK"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CADA SEMANA"
+          }
+        }
+      }
+    },
     "CIBLE": {
       "extractionState": "manual",
       "localizations": {
@@ -6728,6 +6779,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cambiar foto de perfil"
+          }
+        }
+      }
+    },
+    "Chaque semaine": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada semana"
           }
         }
       }
@@ -10610,6 +10678,23 @@
         }
       }
     },
+    "Ex. 4:30, 5:15, 6:00": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E.g. 4:30, 5:15, 6:00"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ej. 4:30, 5:15, 6:00"
+          }
+        }
+      }
+    },
     "Ex. Entrée du parc de la Tête d'Or": {
       "localizations": {
         "en": {
@@ -11304,6 +11389,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gestión global"
+          }
+        }
+      }
+    },
+    "Groupe %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ group"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grupo %@"
+          }
+        }
+      }
+    },
+    "Groupes d'allure (facultatif)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pace groups (optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grupos de ritmo (opcional)"
           }
         }
       }
@@ -13814,6 +13933,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "La sesión se interrumpió: inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "La séance se reporte d'elle-même à la semaine suivante, et les présences repartent de zéro.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The session moves itself to the following week, and attendance starts over."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La sesión se traslada sola a la semana siguiente, y las asistencias vuelven a cero."
           }
         }
       }
@@ -23786,6 +23922,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sesiones ajustadas a tus %lld días"
+          }
+        }
+      }
+    },
+    "Séparés par des virgules. Chacun choisit le sien en disant « J'y serai » — c'est ce qui dit combien de meneurs prévoir.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comma-separated. Everyone picks theirs when they say “I'll be there” — that's what tells you how many pacers to line up."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Separados por comas. Cada uno elige el suyo al decir «Allí estaré»: eso es lo que dice cuántos liebres preparar."
           }
         }
       }

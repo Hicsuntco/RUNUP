@@ -409,10 +409,49 @@ async function handleMine(req, res, userId) {
   // the challenge) for every member.
   let events = [];
   try {
+    // LA SÉANCE QUI REVIENT S'AVANCE TOUTE SEULE.
+    //
+    // Une séance hebdomadaire est UNE ligne qui pointe toujours vers la prochaine fois — pas une
+    // ligne par occurrence, qui ferait cinquante-deux lignes par an dont on ne regarde que la
+    // première. Quand sa date est passée de plus de trois heures, on l'avance d'autant de
+    // semaines qu'il faut (`ceil` : un club en sommeil trois semaines retrouve la bonne date du
+    // premier coup, pas trois lectures plus tard).
+    //
+    // Une seule instruction, donc atomique : deux membres qui ouvrent le Club à la même seconde
+    // ne peuvent pas l'avancer deux fois.
+    const { rows: avancees } = await sql`
+      UPDATE club_events
+         SET starts_at = starts_at + (
+               ceil(extract(epoch FROM (now() - starts_at)) / 604800.0) * interval '7 days')
+       WHERE club_id = ${clubId}
+         AND repeats_weekly = true
+         AND starts_at < now() - interval '3 hours'
+      RETURNING id
+    `;
+    // Les présences appartiennent à l'occurrence, pas à la série : « qui vient » se redemande
+    // chaque semaine. Sans ce vide, la séance de mardi prochain s'ouvrirait avec les présents de
+    // mardi dernier déjà cochés.
+    if (avancees.length > 0) {
+      // `= ANY(…::uuid[])` ET NON `IN (…)` : le pilote passe un tableau JS comme UN paramètre,
+      // donc `IN ($1)` comparerait un uuid à un tableau entier et échouerait. Le transtypage est
+      // nécessaire parce que le tableau arrive en `text[]`.
+      const ids = avancees.map((r) => r.id);
+      await sql`DELETE FROM event_rsvps WHERE event_id = ANY(${ids}::uuid[])`;
+    }
+
     const { rows } = await sql`
       SELECT e.id, e.title, e.location, e.starts_at, e.created_by,
+             e.repeats_weekly, e.pace_groups,
              (SELECT COUNT(*)::int FROM event_rsvps r WHERE r.event_id = e.id) AS going,
-             EXISTS(SELECT 1 FROM event_rsvps r WHERE r.event_id = e.id AND r.user_id = ${userId}) AS going_by_me
+             EXISTS(SELECT 1 FROM event_rsvps r WHERE r.event_id = e.id AND r.user_id = ${userId}) AS going_by_me,
+             (SELECT r.pace_group FROM event_rsvps r WHERE r.event_id = e.id AND r.user_id = ${userId}) AS my_pace_group,
+             -- Combien de personnes dans chaque groupe d'allure : c'est la seule information
+             -- dont l'organisateur a besoin, et celle qui dit à chacun s'il courra accompagné.
+             (SELECT COALESCE(json_object_agg(g.pace_group, g.n), '{}'::json) FROM (
+                SELECT r.pace_group, COUNT(*)::int AS n
+                  FROM event_rsvps r
+                 WHERE r.event_id = e.id AND r.pace_group IS NOT NULL
+                 GROUP BY r.pace_group) g) AS pace_counts
       FROM club_events e
       WHERE e.club_id = ${clubId} AND e.starts_at >= now() - interval '3 hours'
       ORDER BY e.starts_at ASC
@@ -467,6 +506,10 @@ async function handleMine(req, res, userId) {
       going: e.going,
       goingByMe: e.going_by_me,
       isMine: e.created_by === userId,
+      repeatsWeekly: e.repeats_weekly === true,
+      paceGroups: Array.isArray(e.pace_groups) ? e.pace_groups : [],
+      myPaceGroup: e.my_pace_group || null,
+      paceCounts: e.pace_counts || {},
     })),
     challenge: challenge ? {
       id: challenge.id,
@@ -480,6 +523,22 @@ async function handleMine(req, res, userId) {
 
 // A member proposes a real group run — title + optional meeting point + date/time. The creator
 // is auto-RSVP'd (proposing a sortie means going), and every other member gets a push.
+// Les groupes d'allure d'une séance, écrits par qui la propose. Une liste libre : un club
+// décide de ses groupes, et aucune échelle imposée ne conviendrait à la fois à un crew de
+// débutants et à un club d'élite. Huit au plus — au-delà ce n'est plus un départ groupé.
+function nettoyerLesGroupes(valeur) {
+  if (!Array.isArray(valeur) || valeur.length === 0) return null;
+  const propres = valeur
+    .filter((g) => typeof g === 'string')
+    .map((g) => g.trim().slice(0, 24))
+    .filter(Boolean)
+    .slice(0, 8);
+  if (propres.length === 0) return null;
+  // Les libellés s'affichent chez tous les membres : même filtre que le titre.
+  if (propres.some((g) => containsObjectionableContent(g))) return 'rejete';
+  return propres;
+}
+
 async function handleCreateEvent(req, res, userId) {
   const { title, location, startsAt } = req.body || {};
   const cleanTitle = typeof title === 'string' ? title.trim().slice(0, 80) : '';
@@ -511,9 +570,15 @@ async function handleCreateEvent(req, res, userId) {
   const { clientId } = req.body || {};
   const cleanClientId = isUuid(clientId) ? clientId : null;
 
+  const repeats = req.body?.repeatsWeekly === true;
+  const groupes = nettoyerLesGroupes(req.body?.paceGroups);
+  if (groupes === 'rejete') return res.status(422).json({ error: 'objectionable_content' });
+
   const { rows: inserted } = await sql`
-    INSERT INTO club_events (club_id, created_by, title, location, starts_at, client_id)
-    VALUES (${clubId}, ${userId}, ${cleanTitle}, ${cleanLocation || null}, ${when.toISOString()}, ${cleanClientId})
+    INSERT INTO club_events (club_id, created_by, title, location, starts_at, client_id,
+                             repeats_weekly, pace_groups)
+    VALUES (${clubId}, ${userId}, ${cleanTitle}, ${cleanLocation || null}, ${when.toISOString()}, ${cleanClientId},
+            ${repeats}, ${groupes ? JSON.stringify(groupes) : null}::jsonb)
     ON CONFLICT (client_id) DO NOTHING
     RETURNING id, title, location, starts_at
   `;
@@ -560,17 +625,38 @@ async function handleRsvpEvent(req, res, userId) {
 
   const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
   const clubId = memberRows[0]?.club_id;
-  const { rows: eventRows } = await sql`SELECT club_id FROM club_events WHERE id = ${eventId}`;
+  const { rows: eventRows } = await sql`SELECT club_id, pace_groups FROM club_events WHERE id = ${eventId}`;
   if (!clubId || eventRows[0]?.club_id !== clubId) return res.status(404).json({ error: 'not_found' });
 
-  const { rows: existing } = await sql`SELECT 1 FROM event_rsvps WHERE event_id = ${eventId} AND user_id = ${userId}`;
+  // LE GROUPE D'ALLURE DOIT ÊTRE UN DE CEUX DE LA SÉANCE. Du texte libre venu du client
+  // atterrirait à côté des libellés de l'organisateur et ferait, à l'affichage, un quatrième
+  // groupe que personne n'a prévu.
+  const proposes = Array.isArray(eventRows[0].pace_groups) ? eventRows[0].pace_groups : [];
+  const demande = typeof req.body?.paceGroup === 'string' ? req.body.paceGroup : null;
+  const groupe = demande && proposes.includes(demande) ? demande : null;
+
+  const { rows: existing } = await sql`SELECT pace_group FROM event_rsvps WHERE event_id = ${eventId} AND user_id = ${userId}`;
   if (existing.length > 0) {
+    // Déjà présente, mais sur un AUTRE groupe : elle change de groupe, elle ne se décommande
+    // pas. Sans ce cas, taper « 5:15 » quand on était sur « 4:30 » effaçait la présence.
+    if (groupe && existing[0].pace_group !== groupe) {
+      await sql`UPDATE event_rsvps SET pace_group = ${groupe} WHERE event_id = ${eventId} AND user_id = ${userId}`;
+      const { rows: apres } = await sql`SELECT COUNT(*)::int AS count FROM event_rsvps WHERE event_id = ${eventId}`;
+      return res.status(200).json({ going: true, count: apres[0].count, paceGroup: groupe });
+    }
     await sql`DELETE FROM event_rsvps WHERE event_id = ${eventId} AND user_id = ${userId}`;
   } else {
-    await sql`INSERT INTO event_rsvps (event_id, user_id) VALUES (${eventId}, ${userId}) ON CONFLICT DO NOTHING`;
+    await sql`
+      INSERT INTO event_rsvps (event_id, user_id, pace_group) VALUES (${eventId}, ${userId}, ${groupe})
+      ON CONFLICT DO NOTHING
+    `;
   }
   const { rows: countRows } = await sql`SELECT COUNT(*)::int AS count FROM event_rsvps WHERE event_id = ${eventId}`;
-  res.status(200).json({ going: existing.length === 0, count: countRows[0].count });
+  res.status(200).json({
+    going: existing.length === 0,
+    count: countRows[0].count,
+    paceGroup: existing.length === 0 ? groupe : null,
+  });
 }
 
 // Only the sortie's creator can cancel it.

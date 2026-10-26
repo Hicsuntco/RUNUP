@@ -795,3 +795,31 @@ CREATE TABLE IF NOT EXISTS club_post_kudos (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   PRIMARY KEY (post_id, user_id)
 );
+
+-- CE QUI FAIT VIVRE UN VRAI RUNNING CLUB : LA SÉANCE QUI REVIENT.
+--
+-- Un crew ne propose pas des sorties une par une. Il a un RENDEZ-VOUS : « le mardi 19h30, porte
+-- de Vanves », toutes les semaines, et c'est ce rendez-vous qui fait le club. Les sorties
+-- ponctuelles obligeaient quelqu'un à reposter la même chose chaque semaine — et le jour où il
+-- oublie, le club n'a plus de séance.
+--
+-- UNE SÉANCE HEBDOMADAIRE EST UNE SEULE LIGNE QUI POINTE TOUJOURS VERS LA PROCHAINE FOIS. Pas une
+-- ligne par occurrence : au bout d'un an, « le mardi » ferait cinquante-deux lignes dont on ne
+-- regarde jamais que la première. Quand la date est passée, le serveur l'avance d'autant de
+-- semaines qu'il faut et vide les présences — ce qui est exactement la façon dont le club y
+-- pense : « le mardi » est UNE chose, et qui vient se redemande chaque semaine.
+ALTER TABLE club_events ADD COLUMN IF NOT EXISTS repeats_weekly BOOLEAN NOT NULL DEFAULT false;
+
+-- LES GROUPES D'ALLURE, sans lesquels une sortie de crew ne fonctionne pas.
+--
+-- Trente personnes au départ ne courent pas ensemble : elles partent en groupes — « 4:30 »,
+-- « 5:15 », « 6:00 et on discute ». Dire « j'y serai » sans dire à quelle allure laisse
+-- l'organisateur sans la seule information dont il a besoin : combien de meneurs prévoir.
+--
+-- Une liste libre, écrite par qui propose la séance : un club décide de ses groupes, et aucune
+-- échelle imposée ne conviendrait à la fois à un crew de débutants et à un club d'élite.
+ALTER TABLE club_events ADD COLUMN IF NOT EXISTS pace_groups JSONB;
+
+-- Le groupe choisi en répondant présent. NULL quand la séance n'en propose aucun, ou quand
+-- quelqu'un vient sans savoir encore à quelle allure il courra.
+ALTER TABLE event_rsvps ADD COLUMN IF NOT EXISTS pace_group TEXT;

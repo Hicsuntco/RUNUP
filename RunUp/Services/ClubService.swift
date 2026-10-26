@@ -92,6 +92,18 @@ struct ClubEvent: Decodable, Identifiable {
     var going: Int
     var goingByMe: Bool
     var isMine: Bool
+    /// CE QUI FAIT VIVRE UN VRAI CREW : la séance qui revient. « Le mardi 19h30 » est UNE chose,
+    /// pas cinquante-deux sorties à reposter. Optionnels au décodage : le serveur peut être en
+    /// avance sur l'app installée, et une séance sans ces champs reste une sortie valide.
+    var repeatsWeekly: Bool?
+    /// Les groupes d'allure proposés par qui organise — « 4:30 », « 5:15 », « 6:00 et on
+    /// discute ». Vide pour une sortie qui part d'un seul bloc.
+    var paceGroups: [String]?
+    /// Le mien, quand j'ai répondu présente.
+    var myPaceGroup: String?
+    /// Combien de personnes par groupe. C'est la seule information dont l'organisateur a besoin
+    /// — combien de meneurs prévoir — et celle qui dit à chacun s'il courra accompagné.
+    var paceCounts: [String: Int]?
 }
 
 struct ClubBoard: Decodable {
@@ -490,12 +502,18 @@ struct ClubService {
 
     /// Proposes a sortie de groupe — the server auto-RSVPs the creator and pushes the club.
     /// `clientId` defaults to a fresh UUID, same idempotency pattern as `createChallenge` above.
-    func createEvent(clientId: UUID = UUID(), title: String, location: String?, startsAt: Date) async throws -> ClubEvent {
+    /// `repeatsWeekly` et `paceGroups` en fin de liste avec une valeur par défaut : un
+    /// initialiseur Swift se remplit dans l'ordre déclaré, et les insérer au milieu aurait
+    /// demandé de retoucher chaque appel pour rien.
+    func createEvent(clientId: UUID = UUID(), title: String, location: String?, startsAt: Date,
+                     repeatsWeekly: Bool = false, paceGroups: [String] = []) async throws -> ClubEvent {
         var body: [String: Any] = [
             "clientId": clientId.uuidString,
             "title": title,
             "startsAt": ISO8601DateFormatter().string(from: startsAt),
         ]
+        if repeatsWeekly { body["repeatsWeekly"] = true }
+        if !paceGroups.isEmpty { body["paceGroups"] = paceGroups }
         if let location, !location.isEmpty { body["location"] = location }
         let event: ClubEvent = try await send(path: "api/clubs/createEvent", method: "POST", body: body)
         compte(.sortie)
@@ -503,12 +521,17 @@ struct ClubService {
     }
 
     /// Toggles "J'y serai" — returns the new state + the fresh count.
-    func toggleEventRsvp(eventId: String) async throws -> (going: Bool, count: Int) {
-        let response: RsvpResponse = try await send(path: "api/clubs/rsvpEvent", method: "POST", body: ["eventId": eventId])
+    /// `paceGroup` dit AUSSI « je change de groupe » : répondre avec un autre groupe que le sien
+    /// ne se décommande pas, ça déplace. Le serveur refuse un libellé qui n'est pas un de ceux
+    /// de la séance.
+    func toggleEventRsvp(eventId: String, paceGroup: String? = nil) async throws -> (going: Bool, count: Int, paceGroup: String?) {
+        var body: [String: Any] = ["eventId": eventId]
+        if let paceGroup { body["paceGroup"] = paceGroup }
+        let response: RsvpResponse = try await send(path: "api/clubs/rsvpEvent", method: "POST", body: body)
         // Une bascule : seule la montée compte. Se désinscrire d'une sortie n'est pas un geste
         // d'usage, et compter les deux sens donnerait deux points à qui hésite.
         if response.going { compte(.jySerai) }
-        return (response.going, response.count)
+        return (response.going, response.count, response.paceGroup)
     }
 
     /// Cancels a sortie — creator only (the server enforces it).
@@ -1406,6 +1429,9 @@ struct WallRacePost: Decodable, Identifiable, Hashable {
 private struct RsvpResponse: Decodable {
     var going: Bool
     var count: Int
+    /// Le groupe retenu par le serveur — nil quand la séance n'en propose aucun, ou quand on
+    /// vient de se décommander.
+    var paceGroup: String?
 }
 
 private struct KudosResponse: Decodable {

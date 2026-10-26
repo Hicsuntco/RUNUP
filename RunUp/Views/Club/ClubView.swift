@@ -1093,10 +1093,24 @@ struct ClubView: View {
                     .padding(.horizontal, 2)
             }
             ForEach(board.events ?? []) { event in
+                VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(eventDateLabel(event.startsAt))
-                            .font(RUFont.sans(.micro, weight: .bold)).tracking(0.6).foregroundColor(RUColor.rose2)
+                        HStack(spacing: 6) {
+                            Text(eventDateLabel(event.startsAt))
+                                .font(RUFont.sans(.micro, weight: .bold)).tracking(0.6).foregroundColor(RUColor.rose2)
+                            // « CHAQUE SEMAINE », écrit. Sans ça, une séance qui revient se lit
+                            // comme une sortie de plus, et c'est tout le contraire : c'est LE
+                            // rendez-vous du club, celui autour duquel le reste s'organise.
+                            if event.repeatsWeekly == true {
+                                HStack(spacing: 3) {
+                                    Image(systemName: "arrow.triangle.2.circlepath").font(.system(size: 8, weight: .bold))
+                                    Text("CHAQUE SEMAINE")
+                                }
+                                .font(RUFont.sans(.micro, weight: .bold)).tracking(0.4)
+                                .foregroundColor(RUColor.text3)
+                            }
+                        }
                         Text(event.title).font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                         if let location = event.location, !location.isEmpty {
                             HStack(spacing: 3) {
@@ -1127,6 +1141,8 @@ struct ClubView: View {
                     }
                     .buttonStyle(PressableStyle())
                 }
+                groupesDAllure(event)
+                }
                 .padding(12)
                 .ruCard(radius: RUSpacing.radiusCompact)
                 .contextMenu {
@@ -1137,8 +1153,9 @@ struct ClubView: View {
             }
         }
         .sheet(isPresented: $showCreateEvent) {
-            CreateEventSheet { title, location, date in
-                let created = try await clubService.createEvent(title: title, location: location, startsAt: date)
+            CreateEventSheet { title, location, date, chaqueSemaine, groupes in
+                let created = try await clubService.createEvent(title: title, location: location, startsAt: date,
+                                                                repeatsWeekly: chaqueSemaine, paceGroups: groupes)
                 await MainActor.run {
                     var events = board.events ?? []
                     events.append(created)
@@ -1150,15 +1167,73 @@ struct ClubView: View {
         }
     }
 
-    private func toggleRsvp(_ event: ClubEvent) {
+    /// LES GROUPES D'ALLURE, SANS LESQUELS UNE SORTIE DE CREW NE FONCTIONNE PAS.
+    ///
+    /// Trente personnes au départ ne courent pas ensemble : elles partent par groupes — « 4:30 »,
+    /// « 5:15 », « 6:00 et on discute ». Dire « j'y serai » sans dire à quelle allure laisse
+    /// l'organisateur sans la seule information dont il ait besoin : combien de meneurs prévoir.
+    ///
+    /// Taper un autre groupe que le sien DÉPLACE, ça ne décommande pas : c'est le geste qu'on
+    /// fait vraiment, et le contraire aurait fait disparaître sa présence d'un doigt mal posé.
+    @ViewBuilder
+    private func groupesDAllure(_ event: ClubEvent) -> some View {
+        let groupes = event.paceGroups ?? []
+        if !groupes.isEmpty {
+            // Horizontal : un club peut en proposer huit, et huit pastilles sur une ligne fixe
+            // se réduiraient jusqu'à l'illisible.
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    ForEach(groupes, id: \.self) { groupe in
+                        let choisi = event.myPaceGroup == groupe
+                        let compte = event.paceCounts?[groupe] ?? 0
+                        Button(action: { toggleRsvp(event, groupe: groupe) }) {
+                            HStack(spacing: 5) {
+                                Text(groupe)
+                                    .font(RUFont.sans(.small, weight: .bold))
+                                if compte > 0 {
+                                    Text("\(compte)")
+                                        .font(RUFont.sans(.small))
+                                        .foregroundColor(choisi ? RUColor.onRose.opacity(0.8) : RUColor.text3)
+                                }
+                            }
+                            .foregroundColor(choisi ? RUColor.onRose : RUColor.text2)
+                            .padding(.horizontal, 10)
+                            .frame(minHeight: 32)
+                            .background(choisi ? RUColor.rose : RUColor.card2, in: Capsule())
+                            .overlay(Capsule().stroke(choisi ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
+                            .contentShape(Capsule())
+                        }
+                        .buttonStyle(PressableStyle())
+                        .accessibilityLabel(String(localized: "Groupe \(groupe)"))
+                        .accessibilityValue(Pluriel.choisir(compte,
+                                                            String(localized: "\(compte) personne"),
+                                                            String(localized: "\(compte) personnes")))
+                        .accessibilityAddTraits(choisi ? .isSelected : [])
+                    }
+                }
+                .padding(.horizontal, 1)
+            }
+        }
+    }
+
+    private func toggleRsvp(_ event: ClubEvent, groupe: String? = nil) {
         Haptics.selection()
         Task {
             do {
-                let result = try await clubService.toggleEventRsvp(eventId: event.id)
+                let result = try await clubService.toggleEventRsvp(eventId: event.id, paceGroup: groupe)
                 await MainActor.run {
                     if let index = board.events?.firstIndex(where: { $0.id == event.id }) {
                         board.events?[index].goingByMe = result.going
                         board.events?[index].going = result.count
+                        board.events?[index].myPaceGroup = result.paceGroup
+                        // Le compte par groupe vient du serveur au prochain chargement ; en
+                        // attendant, on bouge le sien pour que la pastille choisie réponde tout
+                        // de suite. Un chiffre qui attend l'aller-retour se lit comme un geste
+                        // qui n'a pas pris.
+                        var comptes = board.events?[index].paceCounts ?? [:]
+                        if let avant = event.myPaceGroup { comptes[avant] = max(0, (comptes[avant] ?? 1) - 1) }
+                        if let apres = result.paceGroup { comptes[apres] = (comptes[apres] ?? 0) + 1 }
+                        board.events?[index].paceCounts = comptes
                     }
                 }
             } catch ClubServiceError.badResponse(404, _) {

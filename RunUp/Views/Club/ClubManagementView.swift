@@ -661,13 +661,26 @@ struct CreateChallengeSheet: View {
 /// (same visual language, same error handling), for a title + optional meeting point + date/time.
 struct CreateEventSheet: View {
     @Environment(\.dismiss) private var dismiss
-    var onCreate: (String, String?, Date) async throws -> Void
+    var onCreate: (String, String?, Date, Bool, [String]) async throws -> Void
 
     @State private var title = ""
     @State private var location = ""
     @State private var startsAt = Calendar.current.date(byAdding: .day, value: 1, to: .now) ?? .now
+    @State private var chaqueSemaine = false
+    /// Les groupes, saisis d'une traite et séparés par des virgules. Un champ par groupe avec
+    /// un bouton « ajouter » demanderait quatre gestes pour écrire « 4:30, 5:15, 6:00 » ; une
+    /// ligne en demande un.
+    @State private var groupes = ""
     @State private var isSaving = false
     @State private var errorMessage: String?
+
+    /// « 4:30, 5:15, 6:00 » → trois groupes. Les espaces et les entrées vides tombent : une
+    /// virgule en trop à la fin ne doit pas créer un quatrième groupe sans nom.
+    private var groupesSaisis: [String] {
+        groupes.split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+    }
 
     private var isValid: Bool { !title.trimmingCharacters(in: .whitespaces).isEmpty }
 
@@ -691,6 +704,31 @@ struct CreateEventSheet: View {
                             .datePickerStyle(.compact)
                             .labelsHidden()
                             .colorScheme(RUColor.colorScheme)
+                    }
+
+                    // LA SÉANCE QUI REVIENT : ce qui sépare un club d'une suite de sorties.
+                    //
+                    // Un crew a un rendez-vous — « le mardi 19h30 » — et c'est lui qui fait le
+                    // club. Sans cet interrupteur, quelqu'un devait reposter la même sortie
+                    // chaque semaine, et le jour où il oublie, le club n'a plus de séance.
+                    VStack(alignment: .leading, spacing: 6) {
+                        Toggle(isOn: $chaqueSemaine) {
+                            Text("Chaque semaine")
+                                .font(RUFont.sans(.emphasis, weight: .medium))
+                                .foregroundColor(RUColor.textPrimary)
+                        }
+                        .tint(RUColor.rose)
+                        Text("La séance se reporte d'elle-même à la semaine suivante, et les présences repartent de zéro.")
+                            .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        EyebrowLabel(text: "Groupes d'allure (facultatif)", color: RUColor.text3)
+                        ObTextField(placeholder: String(localized: "Ex. 4:30, 5:15, 6:00"), text: $groupes)
+                        Text("Séparés par des virgules. Chacun choisit le sien en disant « J'y serai » — c'est ce qui dit combien de meneurs prévoir.")
+                            .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
 
                     if let errorMessage {
@@ -718,7 +756,9 @@ struct CreateEventSheet: View {
         errorMessage = nil
         do {
             let trimmedLocation = location.trimmingCharacters(in: .whitespaces)
-            try await onCreate(title.trimmingCharacters(in: .whitespaces), trimmedLocation.isEmpty ? nil : trimmedLocation, startsAt)
+            try await onCreate(title.trimmingCharacters(in: .whitespaces),
+                               trimmedLocation.isEmpty ? nil : trimmedLocation,
+                               startsAt, chaqueSemaine, groupesSaisis)
             Haptics.success()
             dismiss()
         } catch ClubServiceError.badResponse(422, _) {

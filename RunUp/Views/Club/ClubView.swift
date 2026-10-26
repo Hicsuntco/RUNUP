@@ -2311,7 +2311,8 @@ struct ClubBadge: Identifiable {
     // spurious re-animations even when nothing about the badges actually changed.
     var id: String { key }
     var key: String
-    var emoji: String
+    /// Le nom d'un symbole SF — voir `ClubBadgeCatalog.Definition.symbole`.
+    var symbole: String
     var name: String
     var detail: String
     /// nil for binary badges ("Lève-tôt") or whenever there's no local data to compute progress
@@ -2333,8 +2334,8 @@ struct BadgeDetailView: View {
     var body: some View {
         let color = ClubBadgeCatalog.color(for: badge.key)
         VStack(spacing: 14) {
-            BadgeHexTile(emoji: badge.emoji, earned: badge.earned, color: color,
-                         side: 76, emojiSize: 34, lockedOpacity: 0.4)
+            BadgeHexTile(symbole: badge.symbole, earned: badge.earned, color: color,
+                         side: 76, tailleDuSymbole: 32, lockedOpacity: 0.4)
                 .padding(.top, 22)
 
             Text(badge.name).font(RUFont.sans(.title, weight: .bold)).foregroundColor(RUColor.textPrimary)

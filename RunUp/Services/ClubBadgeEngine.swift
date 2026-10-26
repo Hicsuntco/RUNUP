@@ -102,7 +102,7 @@ enum ClubBadgeEngine {
         ]
         return ClubBadgeCatalog.all.map { def in
             ClubBadge(
-                key: def.key, emoji: def.emoji, name: def.name, detail: def.detail,
+                key: def.key, symbole: def.symbole, name: def.name, detail: def.detail,
                 progressText: progress[def.key] ?? nil,
                 earned: earned[def.key] ?? false
             )

@@ -790,7 +790,7 @@ struct ProfileView: View {
                         let color = ClubBadgeCatalog.color(for: badge.key)
                         Button(action: { selectedBadge = badge }) {
                             VStack(spacing: 6) {
-                                BadgeHexTile(emoji: badge.emoji, earned: badge.earned, color: color)
+                                BadgeHexTile(symbole: badge.symbole, earned: badge.earned, color: color)
                                 Text(badge.name)
                                     .font(RUFont.sans(.micro, weight: .semibold))
                                     .foregroundColor(badge.earned ? RUColor.textPrimary : RUColor.text2)

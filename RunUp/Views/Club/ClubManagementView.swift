@@ -459,7 +459,7 @@ struct ClubMemberProfileView: View {
     /// here, unlike `ClubView.badges`: this device has no access to another member's run history.
     private var badges: [ClubBadge] {
         ClubBadgeCatalog.all.map { def in
-            ClubBadge(key: def.key, emoji: def.emoji, name: def.name, detail: def.detail, progressText: nil, earned: member.badgeKeys.contains(def.key))
+            ClubBadge(key: def.key, symbole: def.symbole, name: def.name, detail: def.detail, progressText: nil, earned: member.badgeKeys.contains(def.key))
         }
     }
 
@@ -572,7 +572,9 @@ struct ClubMemberProfileView: View {
                                     .fill(badge.earned ? color.opacity(0.22) : RUColor.card2)
                                     .overlay(HexagonBadgeShape().stroke(badge.earned ? color.opacity(0.7) : RUColor.line, lineWidth: RUSpacing.hairline))
                                     .aspectRatio(1, contentMode: .fit)
-                                    .overlay(Text(badge.emoji).font(.system(size: 22)))
+                                    .overlay(Image(systemName: badge.symbole)
+                                        .font(.system(size: 20, weight: .semibold))
+                                        .foregroundColor(ClubBadgeCatalog.color(for: badge.key)))
                                     .opacity(badge.earned ? 1 : 0.35)
                                 Text(badge.name)
                                     .font(RUFont.sans(.micro, weight: .semibold))

@@ -206,7 +206,7 @@ struct PublicProfileView: View {
         // sienne, c'est un bulletin.
         let gagnes = ClubBadgeCatalog.all
             .filter { profil.badgeKeys.contains($0.key) }
-            .map { ClubBadge(key: $0.key, emoji: $0.emoji, name: $0.name, detail: $0.detail,
+            .map { ClubBadge(key: $0.key, symbole: $0.symbole, name: $0.name, detail: $0.detail,
                              progressText: nil, earned: true) }
         return Group {
             if !gagnes.isEmpty {
@@ -222,7 +222,7 @@ struct PublicProfileView: View {
                                         // le reste de l'app lit celle du badge. Une série d'hexagones
                                         // identiques ne dit plus lequel est lequel, et ne ressemble
                                         // plus à la bande du Profil ni à celle du Club.
-                                        BadgeHexTile(emoji: badge.emoji, earned: true,
+                                        BadgeHexTile(symbole: badge.symbole, earned: true,
                                                      color: ClubBadgeCatalog.color(for: badge.key),
                                                      side: 58)
                                         // Et son nom. Un hexagone nu avec « 🌅 » dessus ne dit pas

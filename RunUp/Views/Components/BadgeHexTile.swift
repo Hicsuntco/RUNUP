@@ -12,13 +12,15 @@ import SwiftUI
 /// surface est neutre pour tout le monde, et « débloqué » se lit à trois signes qui ne dépendent
 /// d'aucune teinte — le contour vif, l'opacité pleine, l'emoji net.
 struct BadgeHexTile: View {
-    let emoji: String
+    /// Le nom d'un symbole SF, pas un émoji : il prend la couleur du badge et la graisse du
+    /// reste de l'app, là où un émoji est dessiné par le système dans son propre style.
+    let symbole: String
     let earned: Bool
     let color: Color
     /// Le côté, quand l'appelant en impose un. Sinon la tuile prend la place qu'on lui donne et
     /// reste carrée — c'est ce dont une grille a besoin pour aligner ses colonnes.
     var side: CGFloat? = nil
-    var emojiSize: CGFloat = 26
+    var tailleDuSymbole: CGFloat = 24
     /// Un badge verrouillé s'efface, sans disparaître : on doit pouvoir lire ce qui reste à faire.
     var lockedOpacity: Double = 0.35
 
@@ -28,7 +30,14 @@ struct BadgeHexTile: View {
             .overlay(HexagonBadgeShape().stroke(earned ? color : RUColor.line,
                                                 lineWidth: RUSpacing.hairline))
             .modifier(TailleHexagone(side: side))
-            .overlay(Text(emoji).font(.system(size: emojiSize)))
+            // Le symbole prend la COULEUR DU BADGE quand il est gagné, et le gris du texte
+            // secondaire sinon : un badge verrouillé doit se lire comme « pas encore », pas
+            // comme une version délavée de lui-même.
+            .overlay(
+                Image(systemName: symbole)
+                    .font(.system(size: tailleDuSymbole, weight: .semibold))
+                    .foregroundColor(earned ? color : RUColor.text2)
+            )
             .opacity(earned ? 1 : lockedOpacity)
     }
 }

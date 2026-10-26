@@ -449,6 +449,51 @@ enum CaptureSeed {
             """
             etat.cachedActivityDetail = try decodeur.decode(ActivityDetail.self, from: Data(sortie.utf8))
 
+            // CE QUE LE CLUB PRÉPARE, ET CE QU'IL A FAIT DE MIEUX. Les deux sections qui
+            // distinguent un club d'un classement — et les deux qui, vides, feraient passer
+            // l'aperçu pour un écran inachevé sur une capture de l'App Store.
+            //
+            // Les records pointent vers de VRAIES sorties du fil de démonstration : chacun
+            // s'ouvre, et atterrit sur la sortie déroulée. Un record qui mène à une page vide
+            // serait pire que pas de record du tout.
+            let pepites = """
+            {
+              "races": [
+                {
+                  "race": { "id": "demo-course", "name": "Marathon de Paris", "city": "Paris",
+                            "raceDate": "2027-04-04", "distanceKm": 42.195, "discipline": "run" },
+                  "members": 3,
+                  "runners": [
+                    { "id": "1", "name": "Charlotte" },
+                    { "id": "2", "name": "Inès" },
+                    { "id": "3", "name": "Margaux" }
+                  ]
+                },
+                {
+                  "race": { "id": "demo-20km", "name": "20 km de Paris", "city": "Paris",
+                            "raceDate": "2026-10-11", "distanceKm": 20.0, "discipline": "run" },
+                  "members": 2,
+                  "runners": [
+                    { "id": "4", "name": "Sarah" },
+                    { "id": "5", "name": "Lina" }
+                  ]
+                }
+              ],
+              "records": [
+                { "genre": "distance", "activityId": "a", "userId": "2", "name": "Inès",
+                  "createdAt": "\(ilYA(3))", "distanceKm": 12.4, "durationSeconds": 4190,
+                  "elevationGainM": 86, "secPerKm": 337.9 },
+                { "genre": "allure", "activityId": "b", "userId": "3", "name": "Margaux",
+                  "createdAt": "\(ilYA(9))", "distanceKm": 6.0, "durationSeconds": 1764,
+                  "secPerKm": 294.0 },
+                { "genre": "denivele", "activityId": "c", "userId": "5", "name": "Lina",
+                  "createdAt": "\(ilYA(22))", "distanceKm": 8.2, "durationSeconds": 2583,
+                  "elevationGainM": 42, "secPerKm": 315.0 }
+              ]
+            }
+            """
+            etat.cachedClubHighlights = try decodeur.decode(ClubHighlights.self, from: Data(pepites.utf8))
+
             var sienne = try decodeur.decode(PublicProfilePage.self, from: Data(profil.utf8))
             // Ses sorties sont celles du fil de démonstration qui lui appartiennent : une page de
             // profil avec des cartes vides ne dirait rien de ce qu'elle doit montrer.

@@ -568,6 +568,12 @@ struct ClubService {
         try await send(path: "api/activities/detail", method: "GET", query: ["id": id])
     }
 
+    /// CE QU'UN CLUB A ET QU'UN CLASSEMENT N'A PAS : ce qu'il prépare, et ce qu'il a fait de
+    /// mieux. Un appel à part du tableau de bord, qui part quand l'aperçu s'affiche.
+    func fetchClubHighlights() async throws -> ClubHighlights {
+        try await send(path: "api/clubs/highlights", method: "GET")
+    }
+
     func fetchFeed() async throws -> [FeedItem] {
         let response: FeedResponse = try await send(path: "api/activities/feed", method: "GET")
         return response.items
@@ -1137,6 +1143,56 @@ struct WallPage: Decodable {
     /// un drapeau de pagination. Nil se lit « on ne sait pas » : on redemande une page pour
     /// rien, une fois, plutôt que de ne plus rien afficher du tout.
     var fin: Bool?
+}
+
+/// CE QUE LE CLUB PRÉPARE, ET CE QU'IL A FAIT DE MIEUX.
+///
+/// Un classement hebdomadaire dit qui court le plus. Il ne dit ni ce que le club prépare, ni ce
+/// qu'il a déjà réussi — deux choses qui ne demandaient aucune donnée nouvelle : elles étaient
+/// dans les courses suivies et dans les sorties publiées, elles n'avaient jamais été regardées
+/// ensemble.
+struct ClubHighlights: Decodable {
+    var races: [ClubRace]
+    var records: [ClubRecord]
+}
+
+/// Une course que plusieurs membres préparent. `race` est le MÊME `RaceEvent` que partout
+/// ailleurs : il sait déjà écrire sa date et compter les jours qui restent, deux calculs qui ont
+/// coûté deux bugs de fuseau et qu'on ne réécrit pas pour un deuxième écran.
+struct ClubRace: Decodable, Identifiable {
+    var race: RaceEvent
+    var members: Int
+    var runners: [ClubRunner]
+    var id: String { race.id }
+}
+
+/// Juste de quoi dessiner un visage et ouvrir une page. Pas un `PublicUser` : celui-ci porte des
+/// champs — compte privé, relation de suivi — qu'une pile d'avatars n'a aucune raison de
+/// demander au serveur.
+struct ClubRunner: Decodable, Identifiable, Hashable {
+    var id: String
+    var name: String
+    var avatarUrl: String?
+    var avatarBase64: String?
+}
+
+/// Un record du club : une vraie sortie, avec qui l'a courue.
+struct ClubRecord: Decodable, Identifiable {
+    /// « distance » | « allure » | « denivele ».
+    var genre: String
+    var activityId: String
+    var userId: String
+    var name: String
+    var avatarUrl: String?
+    var avatarBase64: String?
+    var createdAt: Date
+    var distanceKm: Double?
+    var durationSeconds: Int?
+    var elevationGainM: Int?
+    /// Les secondes au kilomètre, CALCULÉES par le serveur depuis la durée et la distance.
+    /// `avg_pace` est du texte (« 5:38 ») : trié comme tel, « 10:12 » passerait avant « 9:30 ».
+    var secPerKm: Double?
+    var id: String { genre }
 }
 
 /// LA SORTIE DÉROULÉE.

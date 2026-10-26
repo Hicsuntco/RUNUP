@@ -203,6 +203,12 @@ JEUX = [
         (["posts", [], "author"], "PublicUser"),
     ]),
     ("sortie", "ActivityDetail", []),
+    ("pepites", "ClubHighlights", [
+        (["races", []], "ClubRace"),
+        (["races", [], "race"], "RaceEvent"),
+        (["races", [], "runners", []], "ClubRunner"),
+        (["records", []], "ClubRecord"),
+    ]),
 ]
 
 

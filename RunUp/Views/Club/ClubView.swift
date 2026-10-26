@@ -17,6 +17,9 @@ struct ClubView: View {
     /// une accroche qui parle du fil du club. Le fil, lui, est plein. Voir `Demonstration`.
     @State private var tab: Tab = Tab.auDemarrage
     @State private var board = ClubBoard(club: nil, leaderboard: [])
+    /// Ce que le club prépare, et ce qu'il a fait de mieux. Chargé à part du tableau de bord :
+    /// celui-ci part à chaque ouverture du Club, celui-là seulement quand l'aperçu s'affiche.
+    @State private var highlights: ClubHighlights?
     @State private var feed: [FeedItem] = []
     // Starts true (not false) so the very first render — before `.task` below has had a chance to
     // run — reads as "checking for your club" rather than immediately flashing the create/join
@@ -600,7 +603,164 @@ struct ClubView: View {
             weekPulseCard
             challengeCard
             eventsCard
+            // CE QU'UN CLASSEMENT NE DIT PAS. Un tableau hebdomadaire dit qui court le plus ;
+            // il ne dit ni vers quoi le club court, ni ce qu'il a déjà réussi. Les deux
+            // sections ci-dessous ne demandent aucune donnée nouvelle — elles étaient dans les
+            // courses suivies et dans les sorties publiées, jamais regardées ensemble.
+            coursesDuClub
+            recordsDuClub
         }
+        .task { await chargerLesPepites() }
+    }
+
+    // MARK: - Ce que le club prépare
+
+    @ViewBuilder
+    private var coursesDuClub: some View {
+        if let courses = highlights?.races, !courses.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                RUCardHeader(title: "Ce que le club prépare")
+                VStack(spacing: 0) {
+                    ForEach(Array(courses.enumerated()), id: \.element.id) { rang, course in
+                        if rang > 0 { boardDivider }
+                        ligneDeCourseDuClub(course)
+                    }
+                }
+            }
+            .padding(.top, 6)
+        }
+    }
+
+    private func ligneDeCourseDuClub(_ course: ClubRace) -> some View {
+        Button(action: { appState.ouvrirLaCourse(course.race) }) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 3) {
+                    if let jours = course.race.joursRestants, jours >= 0 {
+                        Text(jours == 0 ? String(localized: "C'est aujourd'hui")
+                                        : String(localized: "J-\(jours)"))
+                            .font(RUFont.sans(.micro, weight: .bold)).tracking(0.6)
+                            .foregroundColor(RUColor.rose2)
+                    }
+                    Text(course.race.name)
+                        .font(RUFont.sans(.label, weight: .semibold))
+                        .foregroundColor(RUColor.textPrimary)
+                        .lineLimit(1)
+                    if !course.race.sousTitre.isEmpty {
+                        Text(course.race.sousTitre)
+                            .font(RUFont.sans(.small))
+                            .foregroundColor(RUColor.text3)
+                            .lineLimit(1)
+                    }
+                }
+                Spacer(minLength: 8)
+                // Les visages, et le compte à côté. « 3 » seul ne dit pas QUI prépare la même
+                // course que moi — et c'est exactement la question qu'on se pose en lisant cette
+                // liste dans un club.
+                HStack(spacing: -8) {
+                    ForEach(course.runners) { coureur in
+                        AvatarView(urlString: coureur.avatarUrl, base64DataURI: coureur.avatarBase64,
+                                   initial: String(coureur.name.prefix(1)), size: 26, seed: coureur.id)
+                            .overlay(Circle().stroke(RUColor.bg, lineWidth: 2))
+                    }
+                }
+                if course.members > course.runners.count {
+                    Text("+\(course.members - course.runners.count)")
+                        .font(RUFont.sans(.small, weight: .bold))
+                        .foregroundColor(RUColor.text2)
+                }
+            }
+            .padding(.vertical, 11)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Pluriel.choisir(course.members,
+            String(localized: "\(course.race.name), \(course.members) membre la prépare"),
+            String(localized: "\(course.race.name), \(course.members) membres la préparent")))
+    }
+
+    // MARK: - Les records du club
+
+    @ViewBuilder
+    private var recordsDuClub: some View {
+        if let records = highlights?.records, !records.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                RUCardHeader(title: "Les records du club")
+                VStack(spacing: 0) {
+                    ForEach(Array(records.enumerated()), id: \.element.id) { rang, record in
+                        if rang > 0 { boardDivider }
+                        ligneDeRecord(record)
+                    }
+                }
+            }
+            .padding(.top, 6)
+        }
+    }
+
+    /// Chaque record OUVRE la sortie qui le porte. Un record qu'on ne peut pas aller voir est une
+    /// ligne de statistique ; un record qui mène au tracé, aux splits et au profil de celle qui
+    /// l'a couru est une histoire du club.
+    private func ligneDeRecord(_ record: ClubRecord) -> some View {
+        Button(action: { appState.ouvrirLaSortie(record.activityId) }) {
+            HStack(spacing: 12) {
+                AvatarView(urlString: record.avatarUrl, base64DataURI: record.avatarBase64,
+                           initial: String(record.name.prefix(1)), size: 32, seed: record.userId)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(libelleDuRecord(record.genre))
+                        .font(RUFont.sans(.micro, weight: .bold)).tracking(0.6)
+                        .foregroundColor(RUColor.text3)
+                    Text(valeurDuRecord(record))
+                        .displayStyle(19)
+                        .foregroundColor(RUColor.textPrimary)
+                }
+                Spacer(minLength: 8)
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(record.name)
+                        .font(RUFont.sans(.body, weight: .semibold))
+                        .foregroundColor(RUColor.text2)
+                        .lineLimit(1)
+                    Text(record.createdAt.relativeDescription)
+                        .font(RUFont.sans(.small))
+                        .foregroundColor(RUColor.text3)
+                }
+            }
+            .padding(.vertical, 11)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityElement(children: .combine)
+    }
+
+    private func libelleDuRecord(_ genre: String) -> String {
+        switch genre {
+        case "distance": return String(localized: "LA PLUS LONGUE")
+        case "allure": return String(localized: "LA PLUS RAPIDE")
+        default: return String(localized: "LE PLUS DE DÉNIVELÉ")
+        }
+    }
+
+    private func valeurDuRecord(_ record: ClubRecord) -> String {
+        switch record.genre {
+        case "distance":
+            return record.distanceKm.map { Distances.km($0) } ?? "—"
+        case "allure":
+            // « /km » accolé à l'allure : sans l'unité, « 4:12 » se lit comme un temps.
+            return record.secPerKm.map { String(localized: "\(TimeFormat.allure(secondesParKm: $0)) /km") } ?? "—"
+        default:
+            return record.elevationGainM.map { "\($0) m" } ?? "—"
+        }
+    }
+
+    private func chargerLesPepites() async {
+        if Demonstration.enCours {
+            highlights = appState.cachedClubHighlights
+            return
+        }
+        guard highlights == nil, auth.isSignedIn else { return }
+        // Silencieux en cas d'échec, et c'est voulu : ce sont deux sections EN PLUS. Une
+        // bannière d'erreur pour elles ferait croire que tout l'aperçu est en panne alors que
+        // le niveau, la semaine, le défi et les sorties sont là.
+        highlights = try? await clubService.fetchClubHighlights()
     }
 
     private func boardModeChip(_ label: String, _ value: BoardMode) -> some View {

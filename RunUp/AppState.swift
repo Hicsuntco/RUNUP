@@ -126,6 +126,15 @@ final class AppState {
         guard !activityId.isEmpty else { return }
         sortieOuverte = SortieOuverte(id: activityId)
     }
+
+    /// Et la page d'une course. Troisième porte posée ici pour la même raison que les deux
+    /// autres : une course se touche depuis sa liste ET depuis l'aperçu du club, et le jour où
+    /// un troisième écran y mènera, il n'aura rien à savoir de la présentation.
+    var courseOuverte: RaceEvent?
+
+    func ouvrirLaCourse(_ course: RaceEvent) {
+        courseOuverte = course
+    }
     /// Phone↔watch bridge — receives runs finished on the wrist, mirrors today's session out.
     /// Optional only because it needs `self` (created at the end of `init`); never nil after.
     @ObservationIgnored private(set) var watchSession: WatchSessionService?
@@ -181,6 +190,8 @@ final class AppState {
     /// une dizaine de barres de splits, un profil de terrain. Autant d'occasions qu'un détail
     /// soit faux sans que rien ne plante, donc autant de raisons de la photographier.
     var cachedActivityDetail: ActivityDetail?
+    /// Et les deux sections de l'aperçu du Club : ce qu'il prépare, ce qu'il a fait de mieux.
+    var cachedClubHighlights: ClubHighlights?
 
     // Live run (ephemeral, survives navigating away from the Live screen)
     var liveRun: LiveRunViewModel?

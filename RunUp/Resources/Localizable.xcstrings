@@ -553,6 +553,40 @@
         }
       }
     },
+    "%@, %lld membre la prépare": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$lld member training for it"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$lld miembro la prepara"
+          }
+        }
+      }
+    },
+    "%@, %lld membres la préparent": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$lld members training for it"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$lld miembros la preparan"
+          }
+        }
+      }
+    },
     "%@, allure cible %@ par kilomètre": {
       "extractionState": "manual",
       "localizations": {
@@ -6065,6 +6099,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lo que se sabe"
+          }
+        }
+      }
+    },
+    "Ce que le club prépare": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What the club is training for"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo que el club prepara"
           }
         }
       }
@@ -13212,6 +13263,57 @@
         }
       }
     },
+    "LA PLUS LONGUE": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LONGEST RUN"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LA MÁS LARGA"
+          }
+        }
+      }
+    },
+    "LA PLUS RAPIDE": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FASTEST PACE"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LA MÁS RÁPIDA"
+          }
+        }
+      }
+    },
+    "LE PLUS DE DÉNIVELÉ": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MOST ELEVATION"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MÁS DESNIVEL"
+          }
+        }
+      }
+    },
     "La barre de progression suit toujours la durée de la séance, quel que soit le grand chiffre — c'est le seul objectif qu'une séance porte.": {
       "localizations": {
         "en": {
@@ -14431,6 +14533,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Las subidas"
+          }
+        }
+      }
+    },
+    "Les records du club": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Club records"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los récords del club"
           }
         }
       }

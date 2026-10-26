@@ -63,6 +63,9 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'setGlobalOptIn':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleSetGlobalOptIn(req, res, userId);
+    case 'highlights':
+      if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleHighlights(req, res, userId);
     default:
       return res.status(404).json({ error: 'not_found' });
   }
@@ -641,4 +644,113 @@ async function handleSetGlobalOptIn(req, res, userId) {
   if (typeof optedIn !== 'boolean') return res.status(400).json({ error: 'bad_request' });
   await sql`UPDATE users SET global_leaderboard_opt_in = ${optedIn} WHERE id = ${userId}`;
   res.status(200).json({ ok: true });
+}
+
+
+// CE QU'UN CLUB A ET QU'UN CLASSEMENT N'A PAS.
+//
+// Un classement hebdomadaire dit qui court le plus. Il ne dit pas ce que le club PRÉPARE, ni ce
+// qu'il a déjà fait de mieux. Deux choses qu'aucune des deux autres listes ne porte, et qui ne
+// demandent aucune colonne nouvelle : elles sont dans les courses suivies et dans les sorties
+// publiées, elles n'avaient simplement jamais été regardées ensemble.
+//
+// Un point d'entrée à part du tableau de bord : le tableau est demandé à chaque ouverture du
+// Club, celui-ci seulement quand l'aperçu s'affiche. Les deux requêtes partent ensemble.
+async function handleHighlights(req, res, userId) {
+  const { rows: memberRows } = await sql`SELECT club_id FROM club_members WHERE user_id = ${userId}`;
+  const clubId = memberRows[0]?.club_id;
+  // Pas de club : pas d'erreur, des listes vides. L'écran qui appelle ne sait pas toujours encore
+  // s'il y en a un, et un 404 l'obligerait à distinguer « pas de club » de « panne ».
+  if (!clubId) return res.status(200).json({ races: [], records: [] });
+
+  const [courses, records] = await Promise.all([
+    // LES COURSES QUE LE CLUB PRÉPARE, la plus proche d'abord. Une course par ligne, avec qui
+    // s'y est inscrit : c'est le « qui vient ? » d'une sortie de groupe, à l'échelle d'une année.
+    sql`
+      SELECT r.id, r.name, r.city, to_char(r.race_date, 'YYYY-MM-DD') AS race_date,
+             r.distance_km, r.discipline,
+             COUNT(*)::int AS members,
+             json_agg(json_build_object(
+               'id', u.id, 'name', u.name,
+               'avatarUrl', u.avatar_url, 'avatarBase64', u.avatar_data
+             ) ORDER BY u.name) AS runners
+        FROM race_followers f
+        JOIN races r ON r.id = f.race_id
+        JOIN club_members cm ON cm.user_id = f.user_id AND cm.club_id = ${clubId}
+        JOIN users u ON u.id = f.user_id
+       WHERE r.race_date >= CURRENT_DATE
+         AND f.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+         AND f.user_id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
+       GROUP BY r.id, r.name, r.city, r.race_date, r.distance_km, r.discipline
+       ORDER BY r.race_date ASC
+       LIMIT 8
+    `,
+    // LES RECORDS DU CLUB. Trois, et pas un palmarès : la plus longue sortie, la meilleure
+    // allure, le plus gros dénivelé. Chacun est une vraie sortie publiée, avec qui l'a courue.
+    //
+    // L'ALLURE SE CALCULE, ELLE NE SE TRIE PAS. `avg_pace` est du texte (« 5:38 ») : trié comme
+    // tel, « 10:12 » passerait avant « 9:30 ». Les secondes au kilomètre viennent donc de la
+    // durée et de la distance, et seulement au-delà de 5 km — en dessous, un sprint de 800 m
+    // gagnerait tous les classements d'allure d'un club pour toujours.
+    sql`
+      WITH sorties AS (
+        SELECT a.id, a.user_id, u.name, u.avatar_url, u.avatar_data, a.created_at,
+               a.distance_km, a.duration_seconds, a.elevation_gain_m,
+               CASE WHEN a.distance_km > 0 AND a.duration_seconds > 0
+                    THEN a.duration_seconds / a.distance_km END AS sec_par_km
+          FROM activities a
+          JOIN users u ON u.id = a.user_id
+          JOIN club_members cm ON cm.user_id = a.user_id AND cm.club_id = ${clubId}
+         WHERE a.type = 'run'
+           AND a.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
+           AND a.user_id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
+      )
+      (SELECT 'distance' AS genre, id, user_id, name, avatar_url, avatar_data, created_at,
+              distance_km, duration_seconds, elevation_gain_m, sec_par_km
+         FROM sorties WHERE distance_km IS NOT NULL ORDER BY distance_km DESC LIMIT 1)
+      UNION ALL
+      (SELECT 'allure', id, user_id, name, avatar_url, avatar_data, created_at,
+              distance_km, duration_seconds, elevation_gain_m, sec_par_km
+         FROM sorties WHERE sec_par_km IS NOT NULL AND distance_km >= 5
+        ORDER BY sec_par_km ASC LIMIT 1)
+      UNION ALL
+      (SELECT 'denivele', id, user_id, name, avatar_url, avatar_data, created_at,
+              distance_km, duration_seconds, elevation_gain_m, sec_par_km
+         FROM sorties WHERE elevation_gain_m > 0 ORDER BY elevation_gain_m DESC LIMIT 1)
+    `,
+  ]);
+
+  res.status(200).json({
+    races: courses.rows.map((r) => ({
+      // La course est IMBRIQUÉE, sous la même forme que partout ailleurs : l'app la décode avec
+      // son `RaceEvent`, qui sait déjà écrire « 4 avril 2027 » et compter les jours restants —
+      // deux calculs qui ont coûté deux bugs de fuseau et qu'on ne réécrit pas ici.
+      race: {
+        id: r.id,
+        name: r.name,
+        city: r.city || null,
+        raceDate: r.race_date,
+        distanceKm: r.distance_km === null ? null : Number(r.distance_km),
+        discipline: r.discipline,
+      },
+      members: r.members,
+      // Six visages au plus : au-delà, la pile déborde de la ligne et le compte dit le reste.
+      runners: (r.runners || []).slice(0, 6).map((u) => ({
+        id: u.id, name: u.name, avatarUrl: u.avatarUrl || null, avatarBase64: u.avatarBase64 || null,
+      })),
+    })),
+    records: records.rows.map((r) => ({
+      genre: r.genre,
+      activityId: r.id,
+      userId: r.user_id,
+      name: r.name,
+      avatarUrl: r.avatar_url || null,
+      avatarBase64: r.avatar_data || null,
+      createdAt: r.created_at,
+      distanceKm: r.distance_km === null ? null : Number(r.distance_km),
+      durationSeconds: r.duration_seconds,
+      elevationGainM: r.elevation_gain_m,
+      secPerKm: r.sec_par_km === null ? null : Number(r.sec_par_km),
+    })),
+  });
 }

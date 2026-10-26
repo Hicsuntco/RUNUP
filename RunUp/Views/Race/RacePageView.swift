@@ -30,7 +30,10 @@ struct RacePageView: View {
     var race: RaceEvent
     /// Appelé quand je me mets à suivre la course, ou que j'arrête : la liste d'où l'on vient
     /// porte « Je prépare », et elle serait fausse au retour.
-    var onParticipationChanged: () -> Void
+    ///
+    /// Facultatif depuis que la page s'ouvre aussi depuis le Club, où il n'y a aucune liste de
+    /// courses derrière à rafraîchir.
+    var onParticipationChanged: () -> Void = {}
 
     @Environment(AppState.self) private var appState
     @Environment(\.openURL) private var openURL

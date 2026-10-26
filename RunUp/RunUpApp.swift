@@ -271,6 +271,12 @@ private struct ContentRouterView: View {
         )) { ouverte in
             ActivityDetailView(activityId: ouverte.id)
         }
+        .fullScreenCover(item: Binding(
+            get: { appState.courseOuverte },
+            set: { appState.courseOuverte = $0 }
+        )) { course in
+            RacePageView(race: course)
+        }
         .onChange(of: appState.profile.onboarded) { _, onboarded in
             guard onboarded, !introShown else { return }
             introShown = true

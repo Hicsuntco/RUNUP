@@ -3,19 +3,24 @@ import SwiftUI
 /// Le conteneur des écrans sociaux — `ClubView` (esprit club : classement partagé, défis),
 /// `FriendsView` (un fil d'abonnements, indépendant de toute appartenance à un club),
 /// `RouteDiscoveryView` (où courir) et `RaceDiscoveryView` (les pages de course : qui prépare la
-/// même que moi). Lequel s'affiche est décidé en amont, par la carte du Profil sur laquelle on a
+/// même que moi). Lequel s'affiche est décidé en amont, par la tuile du Profil sur laquelle on a
 /// tapé.
 ///
+/// LE FIL N'EST PLUS L'UN D'EUX. `WallView` était un cinquième mode d'ici, donc à trois gestes
+/// du lancement de l'app : ouvrir le Profil, faire défiler jusqu'à sa carte, taper. Il a son
+/// propre onglet (`AppScreen.fil`) — ce qui le sort aussi de cette vue-ci, et avec elle de la
+/// flèche « ‹ Profil » posée au-dessus, qui aurait menti sur l'endroit d'où l'on vient.
+///
 /// Cet écran portait jusqu'ici un sélecteur « Mon club / Mes amis » en haut. Il a disparu pour
-/// deux raisons : depuis que le Profil est le 5e onglet, on n'arrive plus ici que par l'une de ses
-/// deux cartes — le choix est donc déjà fait, et le reproposer juste au-dessus de l'écran choisi
-/// n'ajoutait rien ; et il n'existait aucun chemin de retour vers le Profil, la barre d'onglets y
-/// ramenait sans que rien ne le dise.
+/// deux raisons : on n'arrive plus ici que par l'une des tuiles du Profil — le choix est donc
+/// déjà fait, et le reproposer juste au-dessus de l'écran choisi n'ajoutait rien ; et il
+/// n'existait aucun chemin de retour vers le Profil, la barre d'onglets y ramenait sans que rien
+/// ne le dise.
 struct SocialView: View {
     @Environment(AppState.self) private var appState
     @State private var mode: Mode = .club
 
-    private enum Mode { case club, friends, routes, races, mur }
+    private enum Mode { case club, friends, routes, races }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -29,7 +34,6 @@ struct SocialView: View {
                 case .friends: FriendsView()
                 case .routes: RouteDiscoveryView()
                 case .races: RaceDiscoveryView()
-                case .mur: WallView()
                 }
             }
         }
@@ -44,9 +48,6 @@ struct SocialView: View {
             } else if appState.openRacesTabOnNextVisit {
                 mode = .races
                 appState.openRacesTabOnNextVisit = false
-            } else if appState.openWallTabOnNextVisit {
-                mode = .mur
-                appState.openWallTabOnNextVisit = false
             }
         }
     }

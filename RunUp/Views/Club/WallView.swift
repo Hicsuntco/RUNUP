@@ -38,6 +38,14 @@ struct WallView: View {
     @State private var reportTarget: ReportTarget?
     @State private var reportReason = ""
     @State private var pendingBlock: (id: String, name: String)?
+    /// LE FIL EST UN ONGLET, DONC IL S'OUVRE AUSSI DÉCONNECTÉE.
+    ///
+    /// Tant qu'il était une carte du Profil, cette carte vivait DANS la branche
+    /// `auth.isSignedIn` de cet écran : déconnectée, elle n'existait pas, et le fil était
+    /// inatteignable. Un onglet, lui, est toujours là. Sans ce cas, taper « Fil » sans compte
+    /// affichait « Impossible de charger le fil — 401 » : un message d'erreur pour une situation
+    /// qui n'en est pas une.
+    @State private var showSignIn = false
 
     private var clubService: ClubService { ClubService(auth: appState.auth) }
 
@@ -88,70 +96,92 @@ struct WallView: View {
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
-                barreDeFiltres
-                    .padding(.bottom, 14)
+                // UN EN-TÊTE, PARCE QUE CET ÉCRAN EST MAINTENANT UNE RACINE D'ONGLET.
+                //
+                // Il n'en avait pas, et il avait raison de ne pas en avoir : il était un mode de
+                // `SocialView`, qui posait au-dessus de lui une flèche « ‹ Profil » — donc une
+                // ligne de titre, et le chemin pour revenir. Les quatre autres racines d'onglet
+                // portent toutes leur `HeaderView` ; sans celui-ci, le fil serait le seul écran
+                // de premier niveau qui commence par une rangée de filtres, c'est-à-dire par un
+                // réglage avant d'avoir dit ce qu'on règle.
+                HeaderView(eyebrow: "Ton club · tes amis · tes courses", title: "Le fil") {
+                    EmptyView()
+                }
+                .padding(.bottom, 10)
 
-                if isLoading {
-                    ProgressView().frame(maxWidth: .infinity).padding(.vertical, 50)
-                } else if let loadError {
-                    Text("Impossible de charger le fil — \(loadError).")
-                        .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
-                        .multilineTextAlignment(.center)
-                        .padding(.vertical, 40).padding(.horizontal, 24)
-                } else if entrees.isEmpty {
-                    videHonnete
+                // CE QUE L'ON VOIT SANS COMPTE, ET CE QUE L'ON NE VOIT PAS.
+                //
+                // Les filtres partent avec le fil : « Tout / Club / Amis / Courses » posés
+                // au-dessus d'une invitation à se connecter proposeraient de restreindre
+                // quatre listes vides.
+                if !appState.auth.isSignedIn {
+                    invitationAConnexion
                 } else {
-                    ForEach(Array(entrees.enumerated()), id: \.element.id) { index, entree in
-                      Group {
-                        switch entree {
-                        case .sortie(let item):
-                            ActivityFeedRow(
-                                item: item,
-                                isMine: item.source == "moi",
-                                revealed: revealed,
-                                index: index,
-                                onKudos: { Task { await applaudir(item) } },
-                                onComment: { commentsFor = item },
-                                onReport: {
-                                    reportTarget = ReportTarget(targetType: "activity", targetId: item.id,
-                                                                displayName: item.name)
-                                },
-                                onBlock: { pendingBlock = (item.userId, item.name) },
-                                onDelete: { Task { await supprimer(item) } },
-                                onEdit: { editing = item },
-                                sourceLabel: libelleDeProvenance(item.source)
-                            )
-                        case .course(let post):
-                            // Même filet, même rythme qu'une sortie. L'annonce avait gardé sa
-                            // carte pour se distinguer ; dans un fil entièrement à plat, c'était
-                            // elle qui détonnait — un rectangle rempli tous les quatre posts.
-                            // Ce qui la distingue, c'est son en-tête : un drapeau à damier, le
-                            // nom de la course sous celui de la personne, et le genre annoncé.
-                            VStack(spacing: 0) {
-                                if index > 0 {
-                                    Rectangle()
-                                        .fill(RUColor.line)
-                                        .frame(height: RUSpacing.hairline)
-                                        .padding(.bottom, 16)
-                                }
-                                carteDeCourse(post)
-                            }
-                            .padding(.bottom, 16)
-                        }
-                      }
-                      // TROIS AVANT LA FIN, PAS À LA FIN. Déclencher sur la dernière ligne fait
-                      // toucher le bas avant que la suite n'arrive : le fil s'arrête une demi-
-                      // seconde à chaque page, et c'est exactement ce qui distingue un vrai fil
-                      // d'une liste qui se recharge.
-                      .onAppear {
-                          if index >= entrees.count - 3 { Task { await chargerLaSuite() } }
-                      }
-                    }
+                    barreDeFiltres
+                        .padding(.bottom, 14)
 
-                    if chargementEnPlus {
-                        ProgressView()
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 24)
+                    if isLoading {
+                        ProgressView().frame(maxWidth: .infinity).padding(.vertical, 50)
+                    } else if let loadError {
+                        Text("Impossible de charger le fil — \(loadError).")
+                            .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
+                            .multilineTextAlignment(.center)
+                            .padding(.vertical, 40).padding(.horizontal, 24)
+                    } else if entrees.isEmpty {
+                        videHonnete
+                    } else {
+                        ForEach(Array(entrees.enumerated()), id: \.element.id) { index, entree in
+                          Group {
+                            switch entree {
+                            case .sortie(let item):
+                                ActivityFeedRow(
+                                    item: item,
+                                    isMine: item.source == "moi",
+                                    revealed: revealed,
+                                    index: index,
+                                    onKudos: { Task { await applaudir(item) } },
+                                    onComment: { commentsFor = item },
+                                    onReport: {
+                                        reportTarget = ReportTarget(targetType: "activity", targetId: item.id,
+                                                                    displayName: item.name)
+                                    },
+                                    onBlock: { pendingBlock = (item.userId, item.name) },
+                                    onDelete: { Task { await supprimer(item) } },
+                                    onEdit: { editing = item },
+                                    sourceLabel: libelleDeProvenance(item.source)
+                                )
+                            case .course(let post):
+                                // Même filet, même rythme qu'une sortie. L'annonce avait gardé sa
+                                // carte pour se distinguer ; dans un fil entièrement à plat, c'était
+                                // elle qui détonnait — un rectangle rempli tous les quatre posts.
+                                // Ce qui la distingue, c'est son en-tête : un drapeau à damier, le
+                                // nom de la course sous celui de la personne, et le genre annoncé.
+                                VStack(spacing: 0) {
+                                    if index > 0 {
+                                        Rectangle()
+                                            .fill(RUColor.line)
+                                            .frame(height: RUSpacing.hairline)
+                                            .padding(.bottom, 16)
+                                    }
+                                    carteDeCourse(post)
+                                }
+                                .padding(.bottom, 16)
+                            }
+                          }
+                          // TROIS AVANT LA FIN, PAS À LA FIN. Déclencher sur la dernière ligne fait
+                          // toucher le bas avant que la suite n'arrive : le fil s'arrête une demi-
+                          // seconde à chaque page, et c'est exactement ce qui distingue un vrai fil
+                          // d'une liste qui se recharge.
+                          .onAppear {
+                              if index >= entrees.count - 3 { Task { await chargerLaSuite() } }
+                          }
+                        }
+
+                        if chargementEnPlus {
+                            ProgressView()
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 24)
+                        }
                     }
                 }
             }
@@ -160,8 +190,12 @@ struct WallView: View {
             .padding(.bottom, RUSpacing.tabBarBottomInset + RUSpacing.tabBarHeight + 20)
         }
         .background(RUColor.pageBackground)
-        .task { if page == nil { await charger() } }
-        .refreshable { await charger() }
+        .task { if page == nil, appState.auth.isSignedIn { await charger() } }
+        .refreshable { if appState.auth.isSignedIn { await charger() } }
+        .onChange(of: appState.auth.isSignedIn) { _, connectee in
+            if connectee { Task { await charger() } }
+        }
+        .sheet(isPresented: $showSignIn) { SignInView().runUpSheetStyle(detents: [.large]) }
         .onChange(of: filtre) { _, _ in
             finDuFil = false
             Task { await charger() }
@@ -203,6 +237,26 @@ struct WallView: View {
         } message: {
             Text("Vous ne verrez plus rien l'un de l'autre, nulle part dans l'app.")
         }
+    }
+
+    /// Une porte, pas un mur — le même parti que `ProfileView.signInPrompt` et
+    /// `FriendsView.signInPrompt` : dire ce qu'il y a derrière plutôt que ce qui manque. Rien
+    /// n'est retenu en otage au passage, puisque applaudir, commenter et suivre demandent de
+    /// toute façon un compte.
+    private var invitationAConnexion: some View {
+        VStack(spacing: 12) {
+            AppMarkView(size: 44)
+            Text("Le fil se remplit à plusieurs")
+                .font(RUFont.sans(.emphasis, weight: .bold)).foregroundColor(RUColor.textPrimary)
+            Text("Connecte-toi pour voir les sorties de ton club, celles des gens que tu suis et ce qui se dit sur tes courses.")
+                .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).multilineTextAlignment(.center)
+            Button("SE CONNECTER") { showSignIn = true }
+                .buttonStyle(PrimaryButtonStyle())
+                .padding(.top, 4)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(20)
+        .ruCard()
     }
 
     // MARK: - Les filtres

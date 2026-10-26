@@ -73,10 +73,10 @@ final class CapturesUITests: XCTestCase {
         prendre(rang: 8, ecran: "club", nom: "profil-public", diagnostic: true, profil: "2")
     }
 
-    /// Le fil, ouvert par-dessus l'onglet Club. Comme `--profil=`, `--mur` se combine avec
-    /// `--ecran=` : le fil est un mode de l'onglet social, pas un écran de l'app.
-    func test9MurDiagnostic() {
-        prendre(rang: 9, ecran: "club", nom: "mur", diagnostic: true, mur: true)
+    /// Le fil, qui est un écran à lui seul depuis qu'il a son onglet : `--ecran=fil` suffit, là
+    /// où il fallait `--ecran=club --mur` pour atteindre un mode de l'onglet social.
+    func test9FilDiagnostic() {
+        prendre(rang: 9, ecran: "fil", nom: "fil", diagnostic: true)
     }
 
     /// La page d'une course — l'écran qui porte le plus de mise en page : des coureurs, un mur,
@@ -92,7 +92,7 @@ final class CapturesUITests: XCTestCase {
     }
 
     /// Les deux onglets du Club que la démonstration n'ouvre jamais : l'aperçu — niveau, semaine
-    /// du club, défi, sorties de groupe — et le classement. Le fil, lui, est déjà la capture 4.
+    /// du club, défi, sorties de groupe — et le classement.
     func test12ClubApercuDiagnostic() {
         prendre(rang: 12, ecran: "club", nom: "club-apercu", diagnostic: true, onglet: "apercu")
     }
@@ -119,12 +119,11 @@ final class CapturesUITests: XCTestCase {
     }
 
     private func prendre(rang: Int, ecran: String, nom: String, diagnostic: Bool = false,
-                         profil: String? = nil, mur: Bool = false, course: Bool = false,
+                         profil: String? = nil, course: Bool = false,
                          sortie: Bool = false, onglet: String? = nil, defilements: Int = 0) {
         let app = XCUIApplication()
         app.launchArguments = ["--captures", "--ecran=\(ecran)"]
         if let profil { app.launchArguments += ["--profil=\(profil)"] }
-        if mur { app.launchArguments += ["--mur"] }
         // La page de course s'ouvre depuis l'écran des courses : il faut donc y être.
         if course { app.launchArguments += ["--course", "--courses"] }
         if sortie { app.launchArguments += ["--sortie"] }

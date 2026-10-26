@@ -27,13 +27,25 @@ struct RootTabView: View {
     /// éteindre la mise en avant — zéro est sous la zone morte.
     @State private var glissement: CGSize = .zero
 
-    /// Quel onglet la barre affiche comme actif — ce n'est pas toujours l'écran courant. Depuis
-    /// que Profil est le 5e onglet, Club et Amis (`SocialView`) sont des destinations SOUS le
-    /// Profil, ouvertes par ses deux cartes. Sans cette translation, entrer dans son club
-    /// éteignait la barre entière : cinq onglets dont aucun sélectionné, alors qu'on est bien
-    /// quelque part.
+    /// Quel onglet la barre affiche comme actif — ce n'est pas toujours l'écran courant. Deux
+    /// écrans sont des destinations SOUS un onglet, ouvertes par une carte, et sans cette
+    /// translation y entrer éteindrait la barre entière : cinq onglets dont aucun sélectionné,
+    /// alors qu'on est bien quelque part.
+    ///
+    ///   • `SocialView` (Club, Amis, Courses, Itinéraires) est sous le PROFIL, qui est le hub
+    ///     social et porte les quatre tuiles qui l'ouvrent ;
+    ///   • `StatsView` est sous PROG depuis que le fil a pris son onglet : on y entre par la
+    ///     carte « 30 derniers jours » de l'accueil, qui est désormais son seul chemin.
+    ///
+    /// Et ça ne sert pas qu'à ne pas éteindre la barre : l'onglet resté allumé est précisément
+    /// celui par lequel on REVIENT. Un écran poussé sans flèche de retour doit au moins dire
+    /// d'où il vient.
     private var tabSelection: AppScreen {
-        appState.screen == .club ? .profile : appState.screen
+        switch appState.screen {
+        case .club: return .profile
+        case .stats: return .home
+        default: return appState.screen
+        }
     }
 
     /// Les écrans qui reçoivent du texte À MÊME LA PAGE.
@@ -246,6 +258,7 @@ struct RootTabView: View {
         case .coach: CoachView()
         case .stats: StatsView()
         case .club: SocialView()
+        case .fil: WallView()
         case .race: RaceGoalView()
         case .profile: ProfileView()
         case .history: HistoryView()

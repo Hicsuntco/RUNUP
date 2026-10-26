@@ -7773,6 +7773,22 @@
         }
       }
     },
+    "Connecte-toi pour voir les sorties de ton club, celles des gens que tu suis et ce qui se dit sur tes courses.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to see your club's runs, the runs of the people you follow, and what's being said about your races."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicia sesión para ver las salidas de tu club, las de quienes sigues y lo que se dice sobre tus carreras."
+          }
+        }
+      }
+    },
     "Connecter": {
       "localizations": {
         "en": {
@@ -11119,6 +11135,22 @@
         }
       }
     },
+    "Fil": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feed"
+          }
+        }
+      }
+    },
     "Fil d'activité": {
       "localizations": {
         "en": {
@@ -14427,6 +14459,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "El muro"
+          }
+        }
+      }
+    },
+    "Le fil se remplit à plusieurs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A feed needs other people"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El feed se llena entre varios"
           }
         }
       }
@@ -25711,19 +25759,18 @@
         }
       }
     },
-    "Ton club, tes abonnements et tes courses, au même endroit": {
-      "extractionState": "manual",
+    "Ton club · tes amis · tes courses": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your club, who you follow and your races, in one place"
+            "value": "Your club · your friends · your races"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tu club, a quién sigues y tus carreras, en un solo sitio"
+            "value": "Tu club · tus amigos · tus carreras"
           }
         }
       }

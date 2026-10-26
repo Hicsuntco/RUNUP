@@ -10,6 +10,12 @@ enum AppScreen: String, Hashable {
     case coach
     case stats
     case club
+    /// Le fil, et son propre onglet depuis qu'il est une destination et non un hub.
+    ///
+    /// Il n'a pas de clé « mur » ni « wall » : `--ecran=fil` est aussi le drapeau que le harnais
+    /// de captures passe, et la valeur brute de ce cas EST ce drapeau (voir
+    /// `CaptureSeed.ecranDemande`). Un nom technique ici deviendrait un nom technique là-bas.
+    case fil
     case race
     case profile
     case history
@@ -25,11 +31,12 @@ enum AppScreen: String, Hashable {
     /// croisaient sur la moitié droite pendant que la gauche restait vide. Ce n'est pas une
     /// navigation, c'est un enchevêtrement.
     ///
-    /// Le Club partage l'onglet du Profil (voir `RootTabView.tabSelection`), donc il compte
-    /// comme une racine : passer de l'un à l'autre est un mouvement latéral, pas une descente.
+    /// Le Club partage l'onglet du Profil et Stats celui de Prog (voir
+    /// `RootTabView.tabSelection`), donc tous deux comptent comme des racines : passer de l'un à
+    /// l'autre est un mouvement latéral, pas une descente.
     var estRacineDOnglet: Bool {
         switch self {
-        case .home, .coach, .stats, .profile, .club: return true
+        case .home, .coach, .stats, .fil, .profile, .club: return true
         case .plan, .rings, .live, .recap, .race, .history, .weeklyRecap, .shoes, .heatmap:
             return false
         }

@@ -59,13 +59,15 @@ struct ProfileView: View {
                     // sociales étaient la seule section anonyme de l'écran.
                     VStack(alignment: .leading, spacing: 10) {
                         RUCardHeader(title: "Communauté")
-                        // LE FIL PASSE DEVANT LA GRILLE, ET PLEINE LARGEUR.
+                        // LE FIL N'EST PLUS ICI, ET C'EST UNE PROMOTION.
                         //
-                        // Ce n'est pas une cinquième destination : c'est celle qu'on ouvre tous les
-                        // jours, là où les quatre autres répondent à une question précise. En
-                        // faire une tuile parmi quatre l'aurait mise à égalité avec « Itinéraires »,
-                        // qu'on ouvre trois fois par an.
-                        carteDuFil
+                        // Il passait devant la grille, pleine largeur, pour la raison écrite
+                        // alors : « celle qu'on ouvre tous les jours, là où les quatre autres
+                        // répondent à une question précise ». Un écran qu'on ouvre tous les
+                        // jours n'a rien à faire derrière un hub et un défilement — il a un
+                        // onglet (`AppScreen.fil`). Les quatre tuiles restantes, elles,
+                        // répondent bien chacune à une question précise, et c'est exactement
+                        // ce qu'une grille de hub sait faire.
                         grilleCommunaute
                     }
                 }
@@ -519,62 +521,6 @@ struct ProfileView: View {
 
     // MARK: - La grille de Communauté
 
-    /// QUATRE CARTES PLEINE LARGEUR SONT DEVENUES QUATRE TUILES.
-    ///
-    /// Ce qu'elles avaient de laid n'était pas leur dessin, c'était leur rythme. Deux d'entre
-    /// elles — Amis, Club — portaient un en-tête, un filet, puis un aperçu ; les deux autres —
-    /// Courses, Itinéraires — une seule ligne. Posées l'une sous l'autre, les deux premières
-    /// faisaient deux fois la hauteur des suivantes, qui avaient donc l'air inachevées. Sept
-    /// cents points de hauteur pour quatre liens, et les badges — ce que la page a de plus
-    /// coloré — rejetés sous la ligne de flottaison.
-    ///
-    /// La grille les met à égalité : même hauteur, même structure, deux par rangée, et l'écran
-    /// y gagne quatre cent cinquante points. On voit maintenant les badges sans faire défiler.
-    ///
-    /// CE QUI A ÉTÉ PERDU, ET CE QUI NE L'A PAS ÉTÉ. L'aperçu sous le filet n'a pas disparu :
-    /// il EST la ligne de la tuile. Chaque tuile dit la chose la plus utile qu'elle sache —
-    /// la prochaine sortie du club plutôt que son nombre de membres, les sorties d'amis du jour
-    /// plutôt que le total des abonnements, la course la plus proche plutôt que la promesse
-    /// qu'on pourrait en chercher une. C'est un ordre de priorité, pas une amputation : les deux
-    /// lignes empilées disaient rarement deux choses différentes.
-    private var carteDuFil: some View {
-        Button(action: {
-            appState.openWallTabOnNextVisit = true
-            appState.go(.club)
-        }) {
-            HStack(spacing: 12) {
-                ZStack {
-                    Circle().fill(RUColor.accentGradient())
-                    Image(systemName: "square.stack.3d.up.fill")
-                        .font(.system(size: 15)).foregroundColor(.white)
-                }
-                .frame(width: 40, height: 40)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Le fil").font(RUFont.sans(.emphasis, weight: .bold)).foregroundColor(RUColor.textPrimary)
-                    Text("Ton club, tes abonnements et tes courses, au même endroit")
-                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                Spacer(minLength: 0)
-                cardArrowDuFil
-            }
-            .padding(13)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .ruCard(radius: RUSpacing.radiusCompact)
-            .contentShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-        }
-        .buttonStyle(PressableStyle())
-    }
-
-    private var cardArrowDuFil: some View {
-        Image(systemName: "chevron.right")
-            .font(.system(size: 12, weight: .bold))
-            .foregroundColor(RUColor.text3)
-            .frame(width: 26, height: 26)
-    }
-
     private func tuileSociale(icone: String,
                               teinte: Color,
                               degrade: Bool = false,
@@ -659,6 +605,24 @@ struct ProfileView: View {
         .accessibilityElement(children: .combine)
     }
 
+    /// QUATRE CARTES PLEINE LARGEUR SONT DEVENUES QUATRE TUILES.
+    ///
+    /// Ce qu'elles avaient de laid n'était pas leur dessin, c'était leur rythme. Deux d'entre
+    /// elles — Amis, Club — portaient un en-tête, un filet, puis un aperçu ; les deux autres —
+    /// Courses, Itinéraires — une seule ligne. Posées l'une sous l'autre, les deux premières
+    /// faisaient deux fois la hauteur des suivantes, qui avaient donc l'air inachevées. Sept
+    /// cents points de hauteur pour quatre liens, et les badges — ce que la page a de plus
+    /// coloré — rejetés sous la ligne de flottaison.
+    ///
+    /// La grille les met à égalité : même hauteur, même structure, deux par rangée, et l'écran
+    /// y gagne quatre cent cinquante points. On voit maintenant les badges sans faire défiler.
+    ///
+    /// CE QUI A ÉTÉ PERDU, ET CE QUI NE L'A PAS ÉTÉ. L'aperçu sous le filet n'a pas disparu :
+    /// il EST la ligne de la tuile. Chaque tuile dit la chose la plus utile qu'elle sache —
+    /// la prochaine sortie du club plutôt que son nombre de membres, les sorties d'amis du jour
+    /// plutôt que le total des abonnements, la course la plus proche plutôt que la promesse
+    /// qu'on pourrait en chercher une. C'est un ordre de priorité, pas une amputation : les deux
+    /// lignes empilées disaient rarement deux choses différentes.
     private var grilleCommunaute: some View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
                   spacing: 12) {

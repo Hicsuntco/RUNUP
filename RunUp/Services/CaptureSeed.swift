@@ -76,11 +76,6 @@ enum CaptureSeed {
             .map { String($0.dropFirst("--onglet=".count)) }
     }
 
-    /// `--mur` : ouvrir le fil plutôt que l'écran par défaut de l'onglet social.
-    static var murDemande: Bool {
-        ProcessInfo.processInfo.arguments.contains("--mur")
-    }
-
     static var profilDemande: String? {
         ProcessInfo.processInfo.arguments
             .first(where: { $0.hasPrefix("--profil=") })

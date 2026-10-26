@@ -139,6 +139,10 @@ private struct RootView: View {
                 if let profil = CaptureSeed.profilDemande {
                     appState?.ouvrirLeProfil(profil)
                 }
+                // Même ordre, même raison : la page d'une sortie se présente par-dessus l'écran.
+                if CaptureSeed.sortieDemandee, let id = appState?.cachedActivityDetail?.id {
+                    appState?.ouvrirLaSortie(id)
+                }
                 #endif
             }
             // Cold launch never fires the `scenePhase` handler below (there's no previous phase to
@@ -258,6 +262,14 @@ private struct ContentRouterView: View {
             set: { appState.profilOuvert = $0 }
         )) { ouvert in
             PublicProfileView(userId: ouvert.id)
+        }
+        // La sortie déroulée, présentée exactement comme la page de quelqu'un et pour les mêmes
+        // raisons : une destination atteinte depuis quatre écrans, donc une présentation unique.
+        .fullScreenCover(item: Binding(
+            get: { appState.sortieOuverte },
+            set: { appState.sortieOuverte = $0 }
+        )) { ouverte in
+            ActivityDetailView(activityId: ouverte.id)
         }
         .onChange(of: appState.profile.onboarded) { _, onboarded in
             guard onboarded, !introShown else { return }

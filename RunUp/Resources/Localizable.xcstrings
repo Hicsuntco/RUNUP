@@ -6513,6 +6513,23 @@
         }
       }
     },
+    "Cette sortie n'a pas de détail enregistré : pas de temps au kilomètre, pas de profil, pas de cardio.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No detail was recorded for this activity: no per-kilometre times, no elevation profile, no heart rate."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta actividad no tiene detalle guardado: ni tiempos por kilómetro, ni perfil, ni frecuencia cardiaca."
+          }
+        }
+      }
+    },
     "Changer": {
       "localizations": {
         "en": {
@@ -7215,6 +7232,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Comentarios"
+          }
+        }
+      }
+    },
+    "Commenter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comment"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comentar"
           }
         }
       }
@@ -11627,6 +11661,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudo abrir este perfil — %@."
+          }
+        }
+      }
+    },
+    "Impossible d'ouvrir cette sortie — %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't open this activity — %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha podido abrir esta actividad — %@."
           }
         }
       }
@@ -16784,6 +16835,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sí"
+          }
+        }
+      }
+    },
+    "Ouvre la sortie en détail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the full activity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre la actividad completa"
           }
         }
       }
@@ -25606,6 +25674,23 @@
         }
       }
     },
+    "Tracé de la sortie": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run route"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trazado de la salida"
+          }
+        }
+      }
+    },
     "Trail": {
       "extractionState": "manual",
       "localizations": {
@@ -27681,6 +27766,23 @@
         }
       }
     },
+    "bpm moyen": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "avg bpm"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ppm medio"
+          }
+        }
+      }
+    },
     "ce matin": {
       "extractionState": "manual",
       "localizations": {
@@ -27910,6 +28012,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "mañana por la tarde"
+          }
+        }
+      }
+    },
+    "distance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "distance"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "distancia"
           }
         }
       }

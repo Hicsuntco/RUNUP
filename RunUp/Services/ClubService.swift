@@ -120,16 +120,33 @@ struct ActivityMetrics: Codable, Equatable {
     /// Renseigné par le client à partir de son propre historique (`RunRecord`), la seule source
     /// qui connaisse ses sorties passées. Le serveur ne le recalcule pas.
     var isPersonalRecord: Bool = false
+    /// CE QU'IL FAUT POUR DÉROULER LA SORTIE, et pas seulement la résumer.
+    ///
+    /// Les temps au kilomètre, au format « m:ss » — ceux de `RunRecord.splits`, repris tels quels
+    /// plutôt que recalculés depuis un cumul, pour la même raison que l'allure moyenne : le fil
+    /// doit montrer le chiffre qu'elle a vu à l'arrivée.
+    var splits: [String] = []
+    /// Mesurées par la montre ou par Santé. Nil quand personne ne les a mesurées, jamais 0 : « pas
+    /// de cardio » et « 0 bpm » ne sont pas la même phrase.
+    var avgHeartRate: Int?
+    var kcal: Int?
 
     static let none = ActivityMetrics()
 
+    /// Les trois derniers paramètres sont EN FIN DE LISTE et portent une valeur par défaut : un
+    /// initialiseur Swift se remplit dans l'ordre déclaré, et les insérer au milieu aurait
+    /// demandé de retoucher chaque appel pour rien.
     init(distanceKm: Double? = nil, durationSeconds: Int? = nil, avgPace: String? = nil,
-         elevationGainM: Int? = nil, isPersonalRecord: Bool = false) {
+         elevationGainM: Int? = nil, isPersonalRecord: Bool = false,
+         splits: [String] = [], avgHeartRate: Int? = nil, kcal: Int? = nil) {
         self.distanceKm = distanceKm
         self.durationSeconds = durationSeconds
         self.avgPace = avgPace
         self.elevationGainM = elevationGainM
         self.isPersonalRecord = isPersonalRecord
+        self.splits = splits
+        self.avgHeartRate = avgHeartRate
+        self.kcal = kcal
     }
 
     /// Décodage tolérant : cette structure est ENREGISTRÉE, dans la file d'envoi au club que
@@ -143,10 +160,39 @@ struct ActivityMetrics: Codable, Equatable {
         avgPace = try c.decodeIfPresent(String.self, forKey: .avgPace)
         elevationGainM = try c.decodeIfPresent(Int.self, forKey: .elevationGainM)
         isPersonalRecord = try c.decodeIfPresent(Bool.self, forKey: .isPersonalRecord) ?? false
+        splits = try c.decodeIfPresent([String].self, forKey: .splits) ?? []
+        avgHeartRate = try c.decodeIfPresent(Int.self, forKey: .avgHeartRate)
+        kcal = try c.decodeIfPresent(Int.self, forKey: .kcal)
     }
 
     private enum CodingKeys: String, CodingKey {
         case distanceKm, durationSeconds, avgPace, elevationGainM, isPersonalRecord
+        case splits, avgHeartRate, kcal
+    }
+}
+
+/// LA PHRASE D'UNE SORTIE, DANS LA LANGUE DE QUI LA LIT.
+///
+/// `text` arrive du serveur déjà rédigé — « a couru 8,2 km · Sortie longue » — dans la langue de
+/// celle qui a posté. Une app vendue en trois langues servait donc un fil français à ses
+/// lectrices anglophones, jusque dans le titre de séance. `contentKey` dit CE QUE la sortie
+/// raconte sous une forme qui ne dépend d'aucune langue, et l'appareil qui lit refabrique la
+/// phrase chez lui.
+///
+/// À part, parce que deux écrans en ont besoin : la carte du fil, et la page d'une sortie
+/// ouverte depuis le fil. Deux copies de cette logique auraient fini par ne plus dire tout à
+/// fait la même chose de la même course, sur deux écrans qu'on atteint d'un seul geste.
+enum PhraseDeSortie {
+    static func localisee(text: String, contentKey: String?, distanceKm: Double?) -> String {
+        guard let contentKey else { return text }
+        if contentKey == "daily_goals" { return String(localized: "a bouclé ses 3 objectifs du jour") }
+        guard let kind = SessionKind(rawValue: contentKey) else { return text }
+        let sessionTitle = String(localized: String.LocalizationValue(kind.titleKey))
+        guard let distanceKm, distanceKm > 0.05 else {
+            return String(localized: "a fait sa séance · \(sessionTitle)")
+        }
+        let distance = String(format: "%.1f", locale: Locale.current, distanceKm)
+        return String(localized: "a couru \(distance) km · \(sessionTitle)")
     }
 }
 
@@ -278,15 +324,7 @@ struct FeedItem: Decodable, Identifiable {
     /// Sans `contentKey` — activité d'avant ce champ, séance hors plan — on garde `text` : la
     /// phrase de l'autrice reste très au-dessus d'une carte vide.
     var localizedText: String {
-        guard let contentKey else { return text }
-        if contentKey == "daily_goals" { return String(localized: "a bouclé ses 3 objectifs du jour") }
-        guard let kind = SessionKind(rawValue: contentKey) else { return text }
-        let sessionTitle = String(localized: String.LocalizationValue(kind.titleKey))
-        guard let distanceKm, distanceKm > 0.05 else {
-            return String(localized: "a fait sa séance · \(sessionTitle)")
-        }
-        let distance = String(format: "%.1f", locale: Locale.current, distanceKm)
-        return String(localized: "a couru \(distance) km · \(sessionTitle)")
+        PhraseDeSortie.localisee(text: text, contentKey: contentKey, distanceKm: distanceKm)
     }
 
     /// Vrai dès qu'au moins une métrique existe — la ligne KM / ALLURE / D+ de la carte
@@ -521,6 +559,15 @@ struct ClubService {
         return try await send(path: "api/activities/wall", method: "GET", query: query)
     }
 
+    /// UNE SORTIE, EN ENTIER.
+    ///
+    /// Un appel à part, et pas trois champs de plus dans le fil : les splits et les altitudes
+    /// d'une sortie pèsent plus que tout le reste de sa carte, et le fil en charge cinquante
+    /// d'un coup. On ne paie ce poids que pour la sortie qu'on ouvre vraiment.
+    func fetchActivityDetail(id: String) async throws -> ActivityDetail {
+        try await send(path: "api/activities/detail", method: "GET", query: ["id": id])
+    }
+
     func fetchFeed() async throws -> [FeedItem] {
         let response: FeedResponse = try await send(path: "api/activities/feed", method: "GET")
         return response.items
@@ -592,7 +639,32 @@ struct ClubService {
         if metrics.isPersonalRecord { body["isPersonalRecord"] = true }
         // Absente plutôt que vide quand la sortie est trop courte pour un tracé rogné : la colonne
         // reste NULL, et la carte du fil s'affiche sans dessin au lieu d'un cadre vide.
-        if trace.count > 1 { body["routePreview"] = trace.map { [$0.lat, $0.lng] } }
+        if trace.count > 1 {
+            body["routePreview"] = trace.map { [$0.lat, $0.lng] }
+            // LES ALTITUDES VOYAGENT À CÔTÉ DU TRACÉ, PAS DEDANS.
+            //
+            // Les glisser dans les mêmes tableaux en ferait des triplets, et toutes les versions
+            // de l'app déjà installées décodent ce champ en paires STRICTES (`$0.count == 2`) :
+            // leur tracé aurait cessé de se dessiner du jour au lendemain, en silence. Un champ
+            // à part s'ignore tout seul.
+            //
+            // Même longueur que le tracé, trous compris — le serveur refuse en entier une liste
+            // d'une autre longueur, parce qu'un profil décalé d'un cran est un profil faux.
+            let altitudes = trace.map { $0.altitude }
+            if altitudes.contains(where: { $0 != nil }) {
+                // `NSNull()` et non `nil` : un optionnel vide emballé dans `Any` n'est pas une
+                // valeur JSON, et `JSONSerialization` lève une exception Objective-C qu'aucun
+                // `try` Swift n'attrape (la même qui terminait l'app en retirant sa photo).
+                body["routeAltitudes"] = altitudes.map { (a: Double?) -> Any in
+                    guard let a else { return NSNull() }
+                    return a
+                }
+            }
+        }
+        // Les kilomètres un par un, le cœur, les calories. Chacun absent plutôt que nul.
+        if !metrics.splits.isEmpty { body["splits"] = metrics.splits }
+        if let avgHeartRate = metrics.avgHeartRate, avgHeartRate > 0 { body["avgHeartRate"] = avgHeartRate }
+        if let kcal = metrics.kcal, kcal > 0 { body["kcal"] = kcal }
         let _: OkResponse = try await send(
             path: "api/activities/create",
             method: "POST",
@@ -1065,6 +1137,122 @@ struct WallPage: Decodable {
     /// un drapeau de pagination. Nil se lit « on ne sait pas » : on redemande une page pour
     /// rien, une fois, plutôt que de ne plus rien afficher du tout.
     var fin: Bool?
+}
+
+/// LA SORTIE DÉROULÉE.
+///
+/// Ce que `FeedItem` ne porte pas : les kilomètres un par un, le profil du terrain, le cœur et
+/// les calories. Un `FeedItem` décrit une carte de fil ; celui-ci décrit une course.
+///
+/// Tout y est optionnel ou vide par défaut, et pas par prudence de façade : une sortie publiée
+/// par une version de l'app qui n'envoyait pas encore ces champs, une séance saisie à la main,
+/// une course sans montre cardio — les trois existent, et l'écran dit « pas mesuré » au lieu
+/// d'afficher un zéro qui passerait pour une mesure.
+struct ActivityDetail: Decodable, Identifiable {
+    var id: String
+    var userId: String
+    var name: String
+    var lastName: String?
+    var username: String?
+    var avatarUrl: String?
+    var avatarBase64: String?
+    var text: String
+    var contentKey: String?
+    var createdAt: Date
+    var editedAt: Date?
+    var distanceKm: Double?
+    var durationSeconds: Int?
+    var avgPace: String?
+    var elevationGainM: Int?
+    var isPersonalRecord: Bool
+    var title: String?
+    var note: String?
+    var photoUrl: String?
+    /// « m:ss » par kilomètre, dans l'ordre.
+    var splits: [String]
+    var avgHeartRate: Int?
+    var kcal: Int?
+    var kudos: Int
+    var kudoedByMe: Bool
+    var commentsCount: Int
+    var isMine: Bool
+    /// Le tracé, reconstruit à partir des deux champs que le serveur garde côte à côte : les
+    /// paires lat/lng, et les altitudes dans le même ordre. Les altitudes manquent souvent — une
+    /// sortie d'avant ce champ, ou un GPS dont la précision verticale n'était pas digne de foi.
+    var route: [RunRecord.RoutePoint]
+    var nomComplet: String {
+        guard let lastName, !lastName.isEmpty else { return name }
+        return "\(name) \(lastName)"
+    }
+
+    var localizedText: String {
+        PhraseDeSortie.localisee(text: text, contentKey: contentKey, distanceKm: distanceKm)
+    }
+
+    var durationDisplay: String? {
+        guard let durationSeconds, durationSeconds > 0 else { return nil }
+        return TimeFormat.duree(durationSeconds)
+    }
+
+    /// Y a-t-il quelque chose à DÉROULER ? Sans splits ni profil ni cardio, la page ne dirait
+    /// rien de plus que la carte du fil, et il vaut mieux l'annoncer que la laisser ouvrir sur
+    /// une répétition.
+    var aDuDetail: Bool {
+        !splits.isEmpty || avgHeartRate != nil || kcal != nil || route.contains { $0.altitude != nil }
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, userId, name, lastName, username, avatarUrl, avatarBase64, text, contentKey
+        case createdAt, editedAt, distanceKm, durationSeconds, avgPace, elevationGainM
+        case isPersonalRecord, title, note, photoUrl, splits, avgHeartRate, kcal
+        case kudos, kudoedByMe, commentsCount, isMine, routePreview, routeAltitudes
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        userId = try c.decodeIfPresent(String.self, forKey: .userId) ?? ""
+        name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+        lastName = try c.decodeIfPresent(String.self, forKey: .lastName)
+        username = try c.decodeIfPresent(String.self, forKey: .username)
+        avatarUrl = try c.decodeIfPresent(String.self, forKey: .avatarUrl)
+        avatarBase64 = try c.decodeIfPresent(String.self, forKey: .avatarBase64)
+        text = try c.decodeIfPresent(String.self, forKey: .text) ?? ""
+        contentKey = try c.decodeIfPresent(String.self, forKey: .contentKey)
+        createdAt = try c.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
+        editedAt = try c.decodeIfPresent(Date.self, forKey: .editedAt)
+        distanceKm = try c.decodeIfPresent(Double.self, forKey: .distanceKm)
+        durationSeconds = try c.decodeIfPresent(Int.self, forKey: .durationSeconds)
+        avgPace = try c.decodeIfPresent(String.self, forKey: .avgPace)
+        elevationGainM = try c.decodeIfPresent(Int.self, forKey: .elevationGainM)
+        isPersonalRecord = try c.decodeIfPresent(Bool.self, forKey: .isPersonalRecord) ?? false
+        title = try c.decodeIfPresent(String.self, forKey: .title)
+        note = try c.decodeIfPresent(String.self, forKey: .note)
+        photoUrl = try c.decodeIfPresent(String.self, forKey: .photoUrl)
+        splits = try c.decodeIfPresent([String].self, forKey: .splits) ?? []
+        avgHeartRate = try c.decodeIfPresent(Int.self, forKey: .avgHeartRate)
+        kcal = try c.decodeIfPresent(Int.self, forKey: .kcal)
+        kudos = try c.decodeIfPresent(Int.self, forKey: .kudos) ?? 0
+        kudoedByMe = try c.decodeIfPresent(Bool.self, forKey: .kudoedByMe) ?? false
+        commentsCount = try c.decodeIfPresent(Int.self, forKey: .commentsCount) ?? 0
+        isMine = try c.decodeIfPresent(Bool.self, forKey: .isMine) ?? false
+
+        // Le tracé et ses altitudes se rejoignent ICI, et seulement s'ils sont d'accord sur leur
+        // longueur. Le serveur les échantillonne ensemble et refuse déjà les listes mal
+        // appariées ; une vérification de plus coûte une ligne et évite de dessiner un profil
+        // qui désignerait les mauvais kilomètres.
+        let paires = try c.decodeIfPresent([[Double]].self, forKey: .routePreview) ?? []
+        let altitudes = try c.decodeIfPresent([Double?].self, forKey: .routeAltitudes) ?? []
+        if paires.count > 1, paires.allSatisfy({ $0.count >= 2 }) {
+            let alignees = altitudes.count == paires.count ? altitudes : []
+            route = paires.enumerated().map { index, p in
+                RunRecord.RoutePoint(lat: p[0], lng: p[1],
+                                     altitude: index < alignees.count ? alignees[index] : nil)
+            }
+        } else {
+            route = []
+        }
+    }
 }
 
 /// Un message d'une page de course, tel qu'il apparaît dans le mur : il porte le NOM de sa course,

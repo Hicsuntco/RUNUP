@@ -168,7 +168,7 @@ struct WallView: View {
         }
         .sheet(item: $commentsFor) { item in
             ActivityCommentsSheet(
-                activity: item,
+                activityId: item.id,
                 currentUserId: appState.auth.currentUser?.id,
                 clubService: clubService,
                 onCommentPosted: { Task { await charger() } },

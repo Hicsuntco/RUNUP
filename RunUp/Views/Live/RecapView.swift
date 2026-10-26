@@ -140,12 +140,8 @@ struct RecapView: View {
                         if !run.splits.isEmpty {
                             RUCardHeader(icon: "list.number", tint: RUColor.violet, title: "Splits par km").padding(.top, 8)
 
-                            VStack(spacing: 5) {
-                                let fractions = splitFractions(run.splits)
-                                ForEach(run.splits.indices, id: \.self) { i in
-                                    splitRow(index: i, time: run.splits[i], fraction: fractions[i], isLast: i == run.splits.count - 1)
-                                }
-                            }
+                            SplitsView(splits: run.splits, revealed: splitsRevealed,
+                                       reduceMotion: reduceMotion)
                         }
 
                         if ElevationProfileView.hasData(run.route) {
@@ -578,49 +574,4 @@ struct RecapView: View {
         .accessibilityLabel("\(label), \(value)")
     }
 
-    private func splitRow(index: Int, time: String, fraction: Double, isLast: Bool) -> some View {
-        HStack(spacing: 12) {
-            Text("\(index + 1)").font(RUFont.mono(11)).foregroundColor(RUColor.text2).frame(width: 16)
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: RUSpacing.radiusMicro).fill(RUColor.card)
-                    RoundedRectangle(cornerRadius: RUSpacing.radiusMicro)
-                        .fill(isLast ? RUColor.rose : RUColor.text4)
-                        // Bars sweep in one after the other (40ms stagger per row) instead of the
-                        // whole list appearing pre-drawn — same "revealed, not dumped" read as the
-                        // Home ring's animate-on-appear fill, on the screen every run ends at.
-                        .frame(width: geo.size.width * fraction * (splitsRevealed ? 1 : 0))
-                        .animation(reduceMotion ? nil : .easeOut(duration: 0.5).delay(Double(index) * 0.04), value: splitsRevealed)
-                }
-            }
-            .frame(height: 22)
-            .accessibilityHidden(true)
-            // minWidth, not a fixed width — a plain "m:ss" fits 38pt at the default text size, but
-            // larger Dynamic Type sizes need the row to grow rather than truncate the split time.
-            Text(time).displayStyle(14).foregroundColor(isLast ? RUColor.rose2 : RUColor.textPrimary).frame(minWidth: 38, alignment: .trailing)
-        }
-        // The bar itself carries no VoiceOver value and "last split" was color-only (no text/icon
-        // cue) — combined into one element with an explicit label/value so both survive.
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(isLast
-            ? String(localized: "Split \(index + 1), dernier")
-            : String(localized: "Split \(index + 1)"))
-        .accessibilityValue(time)
-    }
-
-    /// Bar length relative to this run's own fastest/slowest split — was previously
-    /// `0.45 + index * 0.07`, a shape that grew with the split's position in the list regardless
-    /// of whether the runner actually sped up or slowed down.
-    private func splitFractions(_ splits: [String]) -> [Double] {
-        let seconds = splits.map { PaceModel.parseSecPerKm($0) }
-        let known = seconds.compactMap { $0 }
-        guard let minSec = known.min(), let maxSec = known.max(), maxSec > minSec else {
-            return splits.map { _ in 0.6 }
-        }
-        return seconds.map { sec in
-            guard let sec else { return 0.6 }
-            let t = (sec - minSec) / (maxSec - minSec) // 0 = fastest split ... 1 = slowest
-            return 0.35 + (1 - t) * 0.6
-        }
-    }
 }

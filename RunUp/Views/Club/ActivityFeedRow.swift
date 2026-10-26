@@ -100,18 +100,33 @@ struct ActivityFeedRow: View {
                     .overlay { eclatDApplaudissement }
                     .onTapGesture(count: 2) { applaudirParDoubleTape() }
 
-                // La phrase de la sortie : « a couru 12,4 km · Sortie longue ».
-                Text(item.localizedText)
-                    .font(RUFont.sans(.label))
-                    .foregroundColor(RUColor.textPrimary)
-                    .fixedSize(horizontal: false, vertical: true)
+                // LA PHRASE ET LES CHIFFRES OUVRENT LA SORTIE.
+                //
+                // Une carte de fil était un cul-de-sac : quatre chiffres, et rien derrière. Les
+                // kilomètres un par un, le profil du terrain et le cardio existaient sur
+                // l'appareil de qui avait couru sans jamais en sortir. C'est ce bloc-ci qui est
+                // la porte — pas l'image, qui porte déjà le double-tape, ni le nom, qui mène à
+                // la personne. Trois zones, trois destinations, aucune ambiguïté.
+                Button(action: { appState.ouvrirLaSortie(item.id) }) {
+                    VStack(alignment: .leading, spacing: 11) {
+                        Text(item.localizedText)
+                            .font(RUFont.sans(.label))
+                            .foregroundColor(RUColor.textPrimary)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
 
-                if item.hasMetrics {
-                    HStack(spacing: 10) {
-                        metricsRow
-                        if item.isPersonalRecord { recordBadge(onDark: false) }
+                        if item.hasMetrics {
+                            HStack(spacing: 10) {
+                                metricsRow
+                                if item.isPersonalRecord { recordBadge(onDark: false) }
+                            }
+                        }
                     }
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(PressableStyle())
+                .accessibilityElement(children: .combine)
+                .accessibilityHint("Ouvre la sortie en détail")
 
                 if let title = item.title, !title.isEmpty {
                     Text(title)

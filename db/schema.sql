@@ -723,3 +723,27 @@ CREATE TABLE IF NOT EXISTS route_comments (
 );
 
 CREATE INDEX IF NOT EXISTS idx_route_comments_route ON route_comments (route_id, created_at DESC);
+
+-- LA SORTIE EN PROFONDEUR : ce qu'il faut pour la DÉROULER, et pas seulement la résumer.
+--
+-- Le fil montrait quatre chiffres — km, allure, temps, D+ — et s'arrêtait là. Ouvrir la sortie
+-- de quelqu'un pour voir ses kilomètres un par un, son profil de dénivelé et sa fréquence
+-- cardiaque était impossible : ces données existent sur l'appareil de qui a couru, et ne
+-- quittaient jamais l'appareil.
+--
+-- `splits` : les temps au kilomètre, dans l'ordre, au format « m:ss » — la forme exacte que
+-- `RunRecord.splits` écrit et que l'écran de fin de course affiche. Recalculer une allure à
+-- partir d'un cumul donnerait un chiffre légèrement différent de celui qu'elle a vu.
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS splits JSONB;
+-- Les altitudes du tracé, dans le MÊME ordre et la même longueur que `route_preview`, à côté de
+-- lui plutôt que dedans. Les mettre dedans aurait changé la forme d'une colonne que toutes les
+-- versions déjà installées décodent en paires strictes : leur tracé aurait cessé de se dessiner
+-- du jour au lendemain, en silence. Une colonne à part ne casse rien et s'ignore toute seule.
+-- Un élément peut être `null` : une altitude GPS n'est gardée que quand sa précision verticale
+-- était digne de foi.
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS route_altitudes JSONB;
+-- La fréquence cardiaque moyenne, et les calories. Mesurées par la montre ou par Santé ; NULL
+-- quand personne ne les a mesurées, jamais 0 — « pas de cardio » et « 0 bpm » ne sont pas la
+-- même phrase, et c'est la règle de toutes les métriques de cette table.
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS avg_heart_rate INTEGER;
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS kcal INTEGER;

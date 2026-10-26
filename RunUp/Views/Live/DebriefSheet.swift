@@ -174,7 +174,13 @@ struct DebriefSheet: View {
                         durationSeconds: run.durationSeconds > 0 ? run.durationSeconds : nil,
                         avgPace: hasDistance && PaceModel.parseSecPerKm(run.avgPace) != nil ? run.avgPace : nil,
                         elevationGainM: run.elevationGainM > 0 ? run.elevationGainM : nil,
-                        isPersonalRecord: RunRecord.beatsPersonalRecord(run, history: runs)
+                        isPersonalRecord: RunRecord.beatsPersonalRecord(run, history: runs),
+                        // De quoi DÉROULER la sortie chez les autres, et pas seulement la
+                        // résumer : ses kilomètres un par un, son cœur, ses calories. Ils
+                        // existaient déjà sur l'appareil et n'en sortaient jamais.
+                        splits: run.splits,
+                        avgHeartRate: run.avgHeartRate > 0 ? run.avgHeartRate : nil,
+                        kcal: run.kcal > 0 ? run.kcal : nil
                     )
                     // `contentKey` accompagne la phrase sans la remplacer : le serveur garde `text` pour la
                     // notification push, qu'il compose lui-même et sans connaître la langue de qui la

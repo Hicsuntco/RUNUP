@@ -11,6 +11,7 @@ const { underDailyCap } = require('../../lib/rateLimit');
 const { canViewActivity, activityMetrics, isBlockedEitherWay } = require('../../lib/social');
 const {
   MAX_TITLE, MAX_NOTE, REJECTED, isLatLngPair, sanitizeOwnText, sanitizeRoutePreview,
+  sanitizeAltitudes, sanitizeSplits, sanitizeEntierBorne,
 } = require('../../lib/activityFields');
 
 const ALLOWED_TYPES = new Set(['run', 'strength', 'badge']);
@@ -72,6 +73,9 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'photo':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleActivityPhoto(req, res, userId);
+    case 'detail':
+      if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleActivityDetail(req, res, userId);
     default:
       return res.status(404).json({ error: 'not_found' });
   }
@@ -203,6 +207,19 @@ async function handleCreate(req, res, userId) {
   // Le tracé, le titre et la note — voir `sanitizeRoutePreview` et `sanitizeOwnText`. Les trois
   // sont facultatifs : une sortie sans GPS, sans titre et sans note reste une activité valide.
   const routePreview = sanitizeRoutePreview(req.body?.routePreview);
+  // CE QU'IL FAUT POUR DÉROULER LA SORTIE, et pas seulement la résumer : les kilomètres un par
+  // un, le profil du terrain, le cœur et les calories. Tous facultatifs, aucun n'empêche la
+  // sortie d'être publiée — une sortie saisie à la main n'a rien de tout ça.
+  //
+  // Les altitudes sont validées contre la longueur du tracé D'ENTRÉE, avant échantillonnage, et
+  // échantillonnées avec les mêmes indices (voir lib/activityFields.js) : décalées d'un cran,
+  // elles désigneraient les mauvais kilomètres sans que rien ne plante.
+  const altitudes = Array.isArray(req.body?.routePreview)
+    ? sanitizeAltitudes(req.body?.routeAltitudes, req.body.routePreview.length)
+    : null;
+  const splits = type === 'run' ? sanitizeSplits(req.body?.splits) : null;
+  const heartRate = type === 'run' ? sanitizeEntierBorne(req.body?.avgHeartRate, 30, 250) : null;
+  const calories = type === 'run' ? sanitizeEntierBorne(req.body?.kcal, 1, 20000) : null;
   const title = sanitizeOwnText(req.body?.title, MAX_TITLE);
   const note = sanitizeOwnText(req.body?.note, MAX_NOTE);
   if (title === REJECTED || note === REJECTED) return res.status(422).json({ error: 'objectionable_content' });
@@ -237,9 +254,11 @@ async function handleCreate(req, res, userId) {
   // Un seul aller-retour : ou les deux écritures passent, ou aucune.
   const { rows: inserted } = await sql`
     WITH ins AS (
-      INSERT INTO activities (client_id, user_id, club_id, type, text, xp_earned, distance_km, duration_seconds, avg_pace, elevation_gain_m, is_personal_record, content_key, route_preview, title, note)
+      INSERT INTO activities (client_id, user_id, club_id, type, text, xp_earned, distance_km, duration_seconds, avg_pace, elevation_gain_m, is_personal_record, content_key, route_preview, title, note, splits, route_altitudes, avg_heart_rate, kcal)
       VALUES (${clientId}, ${userId}, ${clubId}, ${type}, ${cleanText}, ${xp}, ${distance}, ${duration}, ${pace}, ${elevation}, ${personalRecord}, ${key},
-              ${routePreview ? JSON.stringify(routePreview) : null}::jsonb, ${title}, ${note})
+              ${routePreview ? JSON.stringify(routePreview) : null}::jsonb, ${title}, ${note},
+              ${splits ? JSON.stringify(splits) : null}::jsonb,
+              ${altitudes ? JSON.stringify(altitudes) : null}::jsonb, ${heartRate}, ${calories})
       ON CONFLICT (client_id) DO NOTHING
       RETURNING id, user_id
     ), credit AS (
@@ -257,6 +276,76 @@ async function handleCreate(req, res, userId) {
   if (clubId) await notifyClubOfNewActivity(clubId, userId, cleanText);
 
   res.status(201).json({ ok: true });
+}
+
+// LA SORTIE DÉROULÉE : une activité, en entier.
+//
+// Le fil en montre quatre chiffres. Ici, tout ce qui a été mesuré : les kilomètres un par un, le
+// profil du terrain, le cœur, les calories, le tracé complet, le titre et la note de son autrice.
+//
+// UN POINT D'ENTRÉE À PART, et pas trois champs de plus dans le fil : les splits et les altitudes
+// d'une sortie pèsent plus que tout le reste de sa carte, et le fil en charge cinquante d'un
+// coup. On ne paie ce poids que pour la sortie qu'on ouvre vraiment.
+//
+// La règle de visibilité est celle des applaudissements et des commentaires, au mot près —
+// `canViewActivity` : club ou abonnement accepté, et jamais à travers un blocage. Quelqu'un qui
+// détient l'identifiant d'une sortie sans relation avec son autrice reçoit le même 404 qu'une
+// sortie qui n'existe pas. Ne rien dire de plus est volontaire : « cette sortie existe mais tu
+// n'y as pas droit » est déjà une information sur quelqu'un.
+async function handleActivityDetail(req, res, userId) {
+  const activityId = typeof req.query.id === 'string' ? req.query.id : '';
+  if (!isUuid(activityId)) return res.status(400).json({ error: 'bad_request' });
+
+  const { rows } = await sql`
+    SELECT a.id, a.user_id, a.club_id, a.text, a.content_key, a.created_at, a.edited_at,
+           a.distance_km, a.duration_seconds, a.avg_pace, a.elevation_gain_m,
+           a.is_personal_record, a.title, a.note, a.photo_url,
+           a.splits, a.route_preview, a.route_altitudes, a.avg_heart_rate, a.kcal,
+           u.name, u.last_name, u.username, u.avatar_data, u.avatar_url,
+           (SELECT COUNT(*)::int FROM activity_kudos k WHERE k.activity_id = a.id) AS kudos,
+           EXISTS(SELECT 1 FROM activity_kudos k WHERE k.activity_id = a.id AND k.user_id = ${userId}) AS kudoed_by_me,
+           (SELECT COUNT(*)::int FROM activity_comments c WHERE c.activity_id = a.id) AS comments_count
+      FROM activities a
+      JOIN users u ON u.id = a.user_id
+     WHERE a.id = ${activityId}
+  `;
+  const a = rows[0];
+  if (!a || !(await canViewActivity(userId, a.user_id, a.club_id))) {
+    return res.status(404).json({ error: 'not_found' });
+  }
+
+  res.status(200).json({
+    id: a.id,
+    userId: a.user_id,
+    name: a.name,
+    lastName: a.last_name || null,
+    username: a.username || null,
+    avatarBase64: a.avatar_data || null,
+    avatarUrl: a.avatar_url || null,
+    text: a.text,
+    contentKey: a.content_key || null,
+    createdAt: a.created_at,
+    editedAt: a.edited_at || null,
+    distanceKm: a.distance_km === null ? null : Number(a.distance_km),
+    durationSeconds: a.duration_seconds,
+    avgPace: a.avg_pace,
+    elevationGainM: a.elevation_gain_m,
+    isPersonalRecord: a.is_personal_record === true,
+    title: a.title || null,
+    note: a.note || null,
+    photoUrl: a.photo_url || null,
+    // Les trois champs profonds. NULL tant qu'une version de l'app qui ne les envoie pas a posté
+    // la sortie : l'écran le dit, plutôt que d'afficher des zéros.
+    splits: Array.isArray(a.splits) ? a.splits : [],
+    routePreview: Array.isArray(a.route_preview) ? a.route_preview : [],
+    routeAltitudes: Array.isArray(a.route_altitudes) ? a.route_altitudes : [],
+    avgHeartRate: a.avg_heart_rate,
+    kcal: a.kcal,
+    kudos: a.kudos,
+    kudoedByMe: a.kudoed_by_me === true,
+    commentsCount: a.comments_count,
+    isMine: a.user_id === userId,
+  });
 }
 
 // Every other member of the poster's club, except anyone who's blocked the poster (mirrors the

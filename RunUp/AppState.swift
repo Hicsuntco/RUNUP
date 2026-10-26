@@ -112,6 +112,20 @@ final class AppState {
         guard !userId.isEmpty else { return }
         profilOuvert = ProfilOuvert(id: userId)
     }
+
+    /// LA SORTIE OUVERTE, posée ici pour la même raison que le profil : une sortie se touche
+    /// depuis le fil, depuis le club, depuis les amis et depuis la page de quelqu'un. Demander à
+    /// chacun de ces écrans de porter sa propre présentation, c'est accepter qu'un sur quatre
+    /// l'oublie — et c'est toujours celui-là qu'on remarque.
+    struct SortieOuverte: Identifiable, Hashable {
+        var id: String
+    }
+    var sortieOuverte: SortieOuverte?
+
+    func ouvrirLaSortie(_ activityId: String) {
+        guard !activityId.isEmpty else { return }
+        sortieOuverte = SortieOuverte(id: activityId)
+    }
     /// Phone↔watch bridge — receives runs finished on the wrist, mirrors today's session out.
     /// Optional only because it needs `self` (created at the end of `init`); never nil after.
     @ObservationIgnored private(set) var watchSession: WatchSessionService?
@@ -163,6 +177,10 @@ final class AppState {
     /// coureurs, un mur, un avertissement. C'est exactement l'écran qu'on ne veut pas juger de
     /// mémoire.
     var cachedRacePage: RacePage?
+    /// Et la sortie déroulée — la cinquième. Celle qui porte le plus de CHIFFRES : six mesures,
+    /// une dizaine de barres de splits, un profil de terrain. Autant d'occasions qu'un détail
+    /// soit faux sans que rien ne plante, donc autant de raisons de la photographier.
+    var cachedActivityDetail: ActivityDetail?
 
     // Live run (ephemeral, survives navigating away from the Live screen)
     var liveRun: LiveRunViewModel?

@@ -202,7 +202,46 @@ JEUX = [
         (["posts", []], "RacePost"),
         (["posts", [], "author"], "PublicUser"),
     ]),
+    ("sortie", "ActivityDetail", []),
 ]
+
+
+def manques_de_la_sortie(graine):
+    """Ce qu'aucune liste de champs obligatoires ne peut attraper sur la sortie déroulée.
+
+    `ActivityDetail` écrit son propre `init(from:)`, donc le contrôle ci-dessus ne lui réclame
+    rien : ses règles sont du code. Or deux d'entre elles ne plantent jamais quand on les enfreint,
+    elles se contentent de MENTIR en image :
+
+      • un profil d'altitudes d'une autre longueur que le tracé est abandonné en silence par le
+        décodeur — la page sort sans profil, et on croit que la fonctionnalité ne marche pas ;
+      • un D+ annoncé qui ne correspond pas à la somme des montées du profil donne une capture où
+        « 86 m » surplombe une colline de trente. Rien ne tombe, et c'est faux.
+
+    Les deux sont exactement ce que ces images servent à attraper, donc autant les attraper ici.
+    """
+    fautes = []
+    sortie = litteral(graine, "sortie")
+    points = sortie.get("routePreview") or []
+    altitudes = sortie.get("routeAltitudes") or []
+    if altitudes and len(altitudes) != len(points):
+        fautes.append(("sortie → routeAltitudes",
+                       f"{len(altitudes)} altitudes pour {len(points)} points — "
+                       "le décodeur les abandonnera, et la page sortira sans profil"))
+    annonce = sortie.get("elevationGainM")
+    if altitudes and isinstance(annonce, (int, float)):
+        montee = sum(max(0, b - a) for a, b in zip(altitudes, altitudes[1:])
+                     if a is not None and b is not None)
+        # Dix mètres de marge : le profil est échantillonné, pas la course entière.
+        if abs(montee - annonce) > 10:
+            fautes.append(("sortie → elevationGainM",
+                           f"{annonce} m annoncés, {montee:.0f} m de montée dans le profil"))
+    splits = sortie.get("splits") or []
+    distance = sortie.get("distanceKm")
+    if splits and isinstance(distance, (int, float)) and abs(len(splits) - distance) > 1.5:
+        fautes.append(("sortie → splits",
+                       f"{len(splits)} splits pour {distance} km — un split vaut un kilomètre"))
+    return fautes
 
 
 def aux_chemins(valeur, chemin):
@@ -257,6 +296,7 @@ def main():
     fautes = manques(tableau, obligatoires_club, obligatoires_ligne, badges)
     fautes += manques_du_fil(fil, champs_stricts(service, "FeedItem"))
     fautes += manques_des_jeux(graine, sources)
+    fautes += manques_de_la_sortie(graine)
     if fautes:
         print("Le club de démonstration ne se décodera pas :\n", file=sys.stderr)
         for qui, quoi in fautes:
@@ -274,7 +314,10 @@ def main():
     print(f"Club de démonstration : {lignes} lignes de classement, tous les champs obligatoires")
     print(f"                        de LeaderboardRow présents, {len(badges)} badges au catalogue.")
     print(f"                        {len(fil)} activités au fil, dont {traces} avec un tracé en paires.")
+    sortie = litteral(graine, "sortie")
     print(f"                        {len(JEUX) + 2} jeux de démonstration, tous décodables.")
+    print(f"                        Sortie déroulée : {len(sortie.get('splits') or [])} splits, "
+          f"{len(sortie.get('routeAltitudes') or [])} altitudes d'accord avec le tracé et le D+.")
     return 0
 
 

@@ -7,8 +7,9 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const {
-  MAX_TITLE, MAX_NOTE, MAX_FEED_ROUTE_POINTS, REJECTED,
+  MAX_TITLE, MAX_NOTE, MAX_FEED_ROUTE_POINTS, MAX_SPLITS, REJECTED,
   sanitizeOwnText, sanitizeRoutePreview,
+  sanitizeAltitudes, sanitizeSplits, sanitizeEntierBorne,
 } = require('../lib/activityFields');
 
 test('un titre ordinaire passe tel quel', () => {
@@ -96,4 +97,60 @@ test('un tracé plus long que la borne garde sa FORME, pas son début', () => {
 test('un tracé court est rendu tel quel', () => {
   const court = [[48.85, 2.35], [48.86, 2.36], [48.87, 2.37]];
   assert.deepEqual(sanitizeRoutePreview(court), court);
+});
+
+// LES ALTITUDES SUIVENT LE TRACÉ, OU NE PARTENT PAS.
+//
+// Un profil de dénivelé décalé d'un cran ne plante rien : il désigne simplement les mauvais
+// kilomètres, et personne ne s'en aperçoit. C'est pour ça que ces tests existent.
+
+test('les altitudes sont échantillonnées SUR LES MÊMES points que le tracé', () => {
+  // Chaque altitude vaut l'indice de son point : si les deux échantillonnages coïncident,
+  // l'altitude gardée en position k vaut l'indice d'origine du point gardé en position k.
+  const n = 1000;
+  const trace = Array.from({ length: n }, (_, i) => [48.85, i / n]);
+  const altitudes = Array.from({ length: n }, (_, i) => i);
+  const points = sanitizeRoutePreview(trace);
+  const sortie = sanitizeAltitudes(altitudes, n);
+  assert.equal(points.length, MAX_FEED_ROUTE_POINTS);
+  assert.equal(sortie.length, MAX_FEED_ROUTE_POINTS);
+  points.forEach((point, k) => {
+    assert.equal(Math.round(point[1] * n), sortie[k], `point ${k} et son altitude`);
+  });
+});
+
+test('une liste d’altitudes d’une autre longueur que le tracé est refusée en entier', () => {
+  assert.equal(sanitizeAltitudes([10, 20, 30], 4), null);
+  assert.equal(sanitizeAltitudes([10, 20, 30], 2), null);
+  assert.deepEqual(sanitizeAltitudes([10, 20, 30], 3), [10, 20, 30]);
+});
+
+test('un trou d’altitude est gardé, un trou PARTOUT ne vaut pas un profil', () => {
+  assert.deepEqual(sanitizeAltitudes([12, null, 14], 3), [12, null, 14],
+                   'une mesure manquante au milieu reste un profil');
+  assert.equal(sanitizeAltitudes([null, null, null], 3), null,
+               'aucune mesure du tout n’est un profil vide, pas un profil troué');
+});
+
+test('une altitude hors du monde fait tomber le profil, pas la sortie', () => {
+  assert.equal(sanitizeAltitudes([10, 99999, 12], 3), null);
+  assert.equal(sanitizeAltitudes([10, -4000, 12], 3), null);
+  assert.equal(sanitizeAltitudes([10, Infinity, 12], 3), null);
+});
+
+test('les splits ne passent qu’en « m:ss »', () => {
+  assert.deepEqual(sanitizeSplits(['5:12', '4:58', '12:03']), ['5:12', '4:58', '12:03']);
+  assert.equal(sanitizeSplits(['5:72']), null, 'soixante-douze secondes n’existent pas');
+  assert.equal(sanitizeSplits(['512']), null);
+  assert.equal(sanitizeSplits(['<b>5:12</b>']), null, 'rien d’autre que des chiffres n’entre');
+  assert.equal(sanitizeSplits([]), null);
+  assert.equal(sanitizeSplits(Array.from({ length: MAX_SPLITS + 1 }, () => '5:00')), null);
+});
+
+test('zéro n’est jamais une fréquence cardiaque', () => {
+  assert.equal(sanitizeEntierBorne(152, 30, 250), 152);
+  assert.equal(sanitizeEntierBorne(0, 30, 250), null, 'pas de cardio ≠ 0 bpm');
+  assert.equal(sanitizeEntierBorne(400, 30, 250), null);
+  assert.equal(sanitizeEntierBorne('152', 30, 250), null, 'une chaîne n’est pas une mesure');
+  assert.equal(sanitizeEntierBorne(151.6, 30, 250), 152, 'arrondi, pas tronqué');
 });

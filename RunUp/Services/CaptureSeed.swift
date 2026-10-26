@@ -59,6 +59,12 @@ enum CaptureSeed {
         ProcessInfo.processInfo.arguments.contains("--course")
     }
 
+    /// `--sortie` : ouvrir la page d'une sortie par-dessus l'écran. Comme `--profil=`, elle se
+    /// présente au-dessus de n'importe lequel ; l'identifiant est celui de la graine.
+    static var sortieDemandee: Bool {
+        ProcessInfo.processInfo.arguments.contains("--sortie")
+    }
+
     /// `--mur` : ouvrir le fil plutôt que l'écran par défaut de l'onglet social.
     static var murDemande: Bool {
         ProcessInfo.processInfo.arguments.contains("--mur")
@@ -387,6 +393,50 @@ enum CaptureSeed {
             }
             """
             etat.cachedRacePage = try decodeur.decode(RacePage.self, from: Data(pageDeCourse.utf8))
+
+            // LA SORTIE DÉROULÉE : la même que la première du fil — 12,4 km d'Inès — mais vue de
+            // l'intérieur. C'est l'écran qui porte le plus de CHIFFRES de toute l'app : six
+            // mesures, douze barres de splits et un profil de terrain. Autant d'occasions qu'un
+            // détail soit faux sans que rien ne plante.
+            //
+            // Les altitudes sont d'accord avec le D+ annoncé : +67 m sur la montée, puis +19 m
+            // sur la bosse du retour, soit les 86 m de la ligne « D+ ». Une capture où le profil
+            // monte de trente mètres à côté d'un « 86 m » serait un bug invisible aux tests et
+            // évident à l'œil — c'est exactement ce que ces images servent à attraper.
+            //
+            // Et les douze splits finissent par le plus rapide : la dernière barre est rose, et
+            // c'est elle qui montre que l'échelle est relative aux splits de CETTE sortie.
+            let sortie = """
+            {
+              "id": "a", "userId": "2", "name": "Inès", "lastName": "Lambert", "username": "ines",
+              "text": "a couru 12,4 km · Sortie longue", "contentKey": "long_run",
+              "createdAt": "\(ilYA(3))",
+              "distanceKm": 12.4, "durationSeconds": 4190, "avgPace": "5:38",
+              "elevationGainM": 86, "isPersonalRecord": false,
+              "avgHeartRate": 154, "kcal": 812,
+              "title": "Boucle du canal", "note": "Parfait au lever du jour, personne sur la berge.",
+              "kudos": 7, "kudoedByMe": true, "commentsCount": 2, "isMine": false,
+              "splits": ["5:52","5:44","5:39","5:35","5:31","5:28","5:33","5:41","5:47","5:36","5:29","5:20"],
+              "routePreview": [
+                [48.88120, 2.36900], [48.88433, 2.37412], [48.88739, 2.37922],
+                [48.89030, 2.38427], [48.89303, 2.38924], [48.89557, 2.39413],
+                [48.89796, 2.39893], [48.90026, 2.40362], [48.90253, 2.40822],
+                [48.90486, 2.41273], [48.90732, 2.41717], [48.90996, 2.42155],
+                [48.91278, 2.42590], [48.91791, 2.42728], [48.92135, 2.43087],
+                [48.92204, 2.43532], [48.92000, 2.43891], [48.91626, 2.44029],
+                [48.91229, 2.43463], [48.90836, 2.42895], [48.90454, 2.42325],
+                [48.90084, 2.41750], [48.89728, 2.41170], [48.89385, 2.40584],
+                [48.89050, 2.39992], [48.88721, 2.39393], [48.88390, 2.38789],
+                [48.88054, 2.38178], [48.87707, 2.37563]
+              ],
+              "routeAltitudes": [
+                30, 35, 41, 47, 53, 58, 63, 68, 73, 77,
+                81, 85, 89, 93, 97, 92, 86, 80, 85, 91,
+                96, 99, 92, 82, 72, 62, 52, 43, 35
+              ]
+            }
+            """
+            etat.cachedActivityDetail = try decodeur.decode(ActivityDetail.self, from: Data(sortie.utf8))
 
             var sienne = try decodeur.decode(PublicProfilePage.self, from: Data(profil.utf8))
             // Ses sorties sont celles du fil de démonstration qui lui appartiennent : une page de

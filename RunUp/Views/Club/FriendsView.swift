@@ -155,7 +155,7 @@ struct FriendsView: View {
         }
         .sheet(item: $commentsActivity) { activity in
             ActivityCommentsSheet(
-                activity: activity,
+                activityId: activity.id,
                 currentUserId: auth.currentUser?.id,
                 clubService: clubService,
                 onCommentPosted: { bumpCommentsCount(activity.id) },

@@ -7,7 +7,10 @@ import SwiftUI
 struct ActivityCommentsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(AppState.self) private var appState
-    var activity: FeedItem
+    /// L'IDENTIFIANT, PAS LA CARTE. Cette feuille ne lisait que `activity.id` : exiger un
+    /// `FeedItem` entier la rendait inatteignable depuis la page d'une sortie, qui en décode un
+    /// autre type. Un identifiant est tout ce qu'il faut pour aller chercher des commentaires.
+    var activityId: String
     var currentUserId: String?
     var clubService: ClubService
     /// Called once a comment is successfully posted, so `ClubView` can bump the feed's local
@@ -127,7 +130,7 @@ struct ActivityCommentsSheet: View {
         isLoading = true
         errorMessage = nil
         do {
-            comments = try await clubService.fetchComments(activityId: activity.id)
+            comments = try await clubService.fetchComments(activityId: activityId)
         } catch {
             errorMessage = String(localized: "Impossible de charger les commentaires.")
         }
@@ -140,7 +143,7 @@ struct ActivityCommentsSheet: View {
         isSending = true
         errorMessage = nil
         do {
-            let comment = try await clubService.postComment(activityId: activity.id, text: text)
+            let comment = try await clubService.postComment(activityId: activityId, text: text)
             comments.append(comment)
             newText = ""
             Haptics.impact(.light)

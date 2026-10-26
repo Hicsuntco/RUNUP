@@ -85,14 +85,22 @@ final class CapturesUITests: XCTestCase {
         prendre(rang: 10, ecran: "club", nom: "course", diagnostic: true, course: true)
     }
 
+    /// La sortie déroulée — l'écran le plus CHIFFRÉ de l'app : six mesures, douze barres de
+    /// splits, un profil de terrain. Rien n'y plante quand un chiffre est faux ; il faut le voir.
+    func test11SortieDiagnostic() {
+        prendre(rang: 11, ecran: "club", nom: "sortie", diagnostic: true, sortie: true)
+    }
+
     private func prendre(rang: Int, ecran: String, nom: String, diagnostic: Bool = false,
-                         profil: String? = nil, mur: Bool = false, course: Bool = false) {
+                         profil: String? = nil, mur: Bool = false, course: Bool = false,
+                         sortie: Bool = false) {
         let app = XCUIApplication()
         app.launchArguments = ["--captures", "--ecran=\(ecran)"]
         if let profil { app.launchArguments += ["--profil=\(profil)"] }
         if mur { app.launchArguments += ["--mur"] }
         // La page de course s'ouvre depuis l'écran des courses : il faut donc y être.
         if course { app.launchArguments += ["--course", "--courses"] }
+        if sortie { app.launchArguments += ["--sortie"] }
         // La langue et la région viennent de l'extérieur : le même test tourne trois fois, une
         // par langue, et c'est le workflow qui dit laquelle. `-AppleLanguages` est la seule
         // façon de forcer la langue d'un lancement sans toucher aux réglages du simulateur.

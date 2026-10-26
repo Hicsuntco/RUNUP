@@ -314,11 +314,31 @@ struct ClubView: View {
     /// in particular sat as its own card, which read as clutter on a screen that's really about
     /// the leaderboard and feed).
     private var header: some View {
-        HStack(alignment: .center) {
+        // ALIGNÉ EN HAUT : le bloc de gauche fait trois lignes (le sourcil, le nom, la ville) et
+        // la pastille une seule. Centrée, elle tombait en face du NOM, c'est-à-dire nulle part —
+        // ni sur la première ligne ni sur la dernière. En haut, elle partage la ligne du sourcil.
+        HStack(alignment: .top) {
             if let club = board.club {
                 Button(action: { showManagement = true }) {
                     VStack(alignment: .leading, spacing: 2) {
-                        RUCardHeader(icon: "person.3.fill", tint: RUColor.rose, title: "Le Club")
+                        // « LE CLUB » EST UN SOURCIL, ET IL ÉTAIT ÉCRIT COMME UN INTERTITRE.
+                        //
+                        // `RUCardHeader` le posait à la taille d'une section — donc « Le Club »
+                        // avait exactement le corps de « Les records du club », deux points
+                        // sous le nom du club juste en dessous. Trois lignes de la même
+                        // importance apparente en tête de page.
+                        //
+                        // `EyebrowLabel` est le jeton prévu pour ça, et sa définition le dit :
+                        // « 9 px, interlettrage 3, capitales, graisse 700, posé AU-DESSUS des
+                        // titres de section ». L'icône de page reste — c'est une décision
+                        // écrite plus haut dans ce fichier, et elle vaut toujours — mais elle
+                        // descend à la taille de ce qu'elle accompagne.
+                        HStack(spacing: 5) {
+                            Image(systemName: "person.3.fill")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundColor(RUColor.rose)
+                            EyebrowLabel(text: "Le Club")
+                        }
                         HStack(spacing: 6) {
                             Text(club.name).displayStyle(24).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
                             Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundColor(RUColor.text3)
@@ -339,7 +359,12 @@ struct ClubView: View {
                 .buttonStyle(PressableStyle())
             } else {
                 VStack(alignment: .leading, spacing: 2) {
-                    RUCardHeader(icon: "person.3.fill", tint: RUColor.rose, title: "Le Club")
+                    HStack(spacing: 5) {
+                        Image(systemName: "person.3.fill")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundColor(RUColor.rose)
+                        EyebrowLabel(text: "Le Club")
+                    }
                     Text("Rejoins un club").displayStyle(24).foregroundColor(RUColor.textPrimary)
                 }
             }
@@ -813,7 +838,16 @@ struct ClubView: View {
     /// (les sorties), puis qui est là. La ligne d'adhésion (signaler / quitter) descend en bas de
     /// cet onglet : c'est de l'administration, elle n'a jamais eu à être au-dessus du classement.
     private var overviewContent: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        // SERRÉ DANS UN GROUPE, LARGE ENTRE DEUX — et c'était 10 des deux côtés.
+        //
+        // Chaque section empile son intertitre et son contenu à 10 points, et les sections
+        // étaient espacées de 10 + les 6 de leur `padding(.top)`, soit 16. Seize contre dix :
+        // l'œil ne distingue pas les deux, donc il ne voit pas des groupes, il voit une liste
+        // de lignes également séparées. C'est ce qui donne à la page son air de brouillon.
+        //
+        // 18 porte l'écart entre sections à 24 contre 10 à l'intérieur. Un rapport de 1 à 2,4
+        // suffit à ce que le groupement se lise sans qu'on ait à y penser.
+        VStack(alignment: .leading, spacing: 18) {
             // UNE ICÔNE POUR LA PAGE, AUCUNE POUR SES SECTIONS.
             //
             // Quatre couleurs tenaient lieu de titres sur cet écran — rose pour la semaine,
@@ -1026,8 +1060,12 @@ struct ClubView: View {
                 Text("LA PLUS GROSSE SEMAINE")
                     .font(RUFont.sans(.micro, weight: .bold)).tracking(0.6)
                     .foregroundColor(RUColor.text3)
+                // 19 → 21, soit 22,9 pt rendus. C'EST LE CHIFFRE QU'ON VIENT LIRE, et il
+                // passait derrière l'intertitre qui le surplombe (20,0 avant, 17,5 depuis).
+                // Dans une app de course, la mesure est le contenu ; « Les records du club »
+                // n'est que l'étagère sur laquelle elle est posée.
                 Text(Distances.km(semaine.km))
-                    .displayStyle(19)
+                    .displayStyle(21)
                     .foregroundColor(RUColor.textPrimary)
             }
             Spacer(minLength: 8)
@@ -1067,7 +1105,7 @@ struct ClubView: View {
                         .font(RUFont.sans(.micro, weight: .bold)).tracking(0.6)
                         .foregroundColor(RUColor.text3)
                     Text(valeurDuRecord(record))
-                        .displayStyle(19)
+                        .displayStyle(21)
                         .foregroundColor(RUColor.textPrimary)
                 }
                 Spacer(minLength: 8)

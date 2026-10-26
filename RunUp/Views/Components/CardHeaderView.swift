@@ -37,8 +37,27 @@ struct RUCardHeader<Accessory: View>: View {
                     .frame(width: 20)
             }
             VStack(alignment: .leading, spacing: 1) {
+                // UN TITRE DE SECTION QUI PESAIT AUTANT QUE LA PAGE ET PLUS QUE SES CHIFFRES.
+                //
+                // Rendu, sur la page d'un club, le barème était celui-ci :
+                //
+                //     26,2 pt  le nom du club          `displayStyle(24)`  → × 1,09
+                //     20,7 pt  « 22,4 km »             `displayStyle(19)`  → × 1,09
+                //     20,0 pt  « Les records du club »  `.emphasis` gras   → × 1,25
+                //     15,0 pt  le texte courant         `.body`
+                //
+                // Quatre niveaux dans six points. Un écran où le titre de la page, ses
+                // intertitres et ses données ont la même taille n'a pas de hiérarchie : tout
+                // parle fort, donc rien ne ressort, et la page se lit comme une liste de lignes
+                // sans rapport les unes avec les autres. Et le plus faux des trois écarts est le
+                // dernier : dans une app de course, l'étiquette passait DEVANT le chiffre.
+                //
+                // `.label` plutôt que `.emphasis` met le titre à 17,5 — sous les 20,7 des
+                // mesures, nettement sous les 26,2 du titre de page, et toujours à 2,5 points
+                // au-dessus du texte courant. Ici plutôt qu'aux 72 appels : c'est le barème de
+                // l'app entière, pas le réglage d'un écran.
                 Text(LocalizedStringKey(title))
-                    .font(RUFont.sans(.emphasis, weight: .bold))
+                    .font(RUFont.sans(.label, weight: .bold))
                     .foregroundColor(RUColor.textPrimary)
                     .lineLimit(1).minimumScaleFactor(0.8)
                 if let subtitle {

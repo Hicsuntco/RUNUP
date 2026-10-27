@@ -19,14 +19,16 @@ final class ClubOutboxCodableTests: XCTestCase {
             metrics: ActivityMetrics(distanceKm: 10.2), userId: "u1",
             contentKey: "long_run",
             trace: [RunRecord.RoutePoint(lat: 48.85, lng: 2.35),
-                    RunRecord.RoutePoint(lat: 48.86, lng: 2.36)])
+                    RunRecord.RoutePoint(lat: 48.86, lng: 2.36)],
+            discipline: "bike")
         XCTAssertEqual(try aller_retour(entree), entree)
     }
 
     /// Chaque champ optionnel séparément : un `encodeIfPresent` oublié ne se voit que sur le sien.
     func testChaqueChampOptionnelSurvitSeul() throws {
         let base = PendingClubActivity(clientId: UUID(), type: "run", text: "t", xpEarned: 10,
-                                       metrics: nil, userId: nil, contentKey: nil, trace: nil)
+                                       metrics: nil, userId: nil, contentKey: nil, trace: nil,
+                                       discipline: nil)
         var avecCle = base; avecCle.contentKey = "tempo"
         XCTAssertEqual(try aller_retour(avecCle).contentKey, "tempo")
 
@@ -39,6 +41,12 @@ final class ClubOutboxCodableTests: XCTestCase {
 
         var avecProprietaire = base; avecProprietaire.userId = "u9"
         XCTAssertEqual(try aller_retour(avecProprietaire).userId, "u9")
+
+        // La discipline, ajoutée le jour où le fil a dû dire « Vélo 24 km » plutôt que
+        // « Course 24 km ». Elle est exactement le genre de champ que cet `encode` écrit à la
+        // main avait déjà oublié deux fois.
+        var avecDiscipline = base; avecDiscipline.discipline = "trail"
+        XCTAssertEqual(try aller_retour(avecDiscipline).discipline, "trail")
     }
 
     /// Une entrée écrite AVANT le regroupement des métriques porte `distanceKm` à la racine. Elle
@@ -60,7 +68,8 @@ final class ClubOutboxCodableTests: XCTestCase {
     /// avant la connexion. Le `nil` doit survivre au disque, sinon elle devient orpheline.
     func testEntreeSansProprietaire() throws {
         let entree = PendingClubActivity(clientId: UUID(), type: "run", text: "t", xpEarned: 0,
-                                         metrics: nil, userId: nil, contentKey: nil, trace: nil)
+                                         metrics: nil, userId: nil, contentKey: nil, trace: nil,
+                                         discipline: nil)
         XCTAssertNil(try aller_retour(entree).userId)
     }
 }

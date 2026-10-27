@@ -157,21 +157,12 @@ struct WallView: View {
                                     sourceLabel: libelleDeProvenance(item.source)
                                 )
                             case .course(let post):
-                                // Même filet, même rythme qu'une sortie. L'annonce avait gardé sa
-                                // carte pour se distinguer ; dans un fil entièrement à plat, c'était
-                                // elle qui détonnait — un rectangle rempli tous les quatre posts.
-                                // Ce qui la distingue, c'est son en-tête : un drapeau à damier, le
-                                // nom de la course sous celui de la personne, et le genre annoncé.
-                                VStack(spacing: 0) {
-                                    if index > 0 {
-                                        Rectangle()
-                                            .fill(RUColor.line)
-                                            .frame(height: RUSpacing.hairline)
-                                            .padding(.bottom, 16)
-                                    }
-                                    carteDeCourse(post)
-                                }
-                                .padding(.bottom, 16)
+                                // Plus de filet : `carteDeCourse` est une carte comme les
+                                // sorties, et c'est l'écart entre deux cartes qui les sépare.
+                                // Même valeur que celui d'`ActivityFeedRow`, pour que le fil
+                                // garde un seul rythme quel que soit le type de post.
+                                carteDeCourse(post)
+                                    .padding(.bottom, 14)
                             }
                           }
                           // TROIS AVANT LA FIN, PAS À LA FIN. Déclencher sur la dernière ligne fait
@@ -376,6 +367,23 @@ struct WallView: View {
             .accessibilityValue("\(post.kudos)")
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        // MÊME CARTE QUE LES SORTIES, ET C'EST LA MOITIÉ DU PROPOS.
+        //
+        // Quand le fil était plat, cette annonce avait perdu sa carte pour ne pas détonner —
+        // « un rectangle rempli tous les quatre posts ». Le raisonnement était juste et il
+        // s'inverse exactement : maintenant que CHAQUE sortie est une carte, c'est elle qui
+        // détonnerait en restant à plat, et le fil se lirait comme deux listes cousues.
+        //
+        // Mêmes marges, même rayon, même contour que `ActivityFeedRow` : ce qui distingue une
+        // annonce de course reste ce qui la distinguait déjà — son drapeau à damier, le nom de
+        // la course sous celui de la personne, et le genre annoncé en cyan.
+        .padding(14)
+        .background(RUColor.card)
+        .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous)
+                .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline)
+        )
     }
 
     private func genreLisible(_ genre: String) -> String {

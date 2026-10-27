@@ -1853,15 +1853,11 @@ struct ClubView: View {
                         onEdit: { editingActivity = item }
                     )
                 case .message(let post):
-                    VStack(spacing: 0) {
-                        if index > 0 {
-                            Rectangle().fill(RUColor.line)
-                                .frame(height: RUSpacing.hairline)
-                                .padding(.bottom, 16)
-                        }
-                        blocDeMessage(post)
-                    }
-                    .padding(.bottom, 16)
+                    // Plus de filet : `blocDeMessage` est une carte comme les sorties, et c'est
+                    // l'écart entre deux cartes qui les sépare — même valeur qu'`ActivityFeedRow`,
+                    // pour que l'onglet garde un seul rythme quel que soit le type d'entrée.
+                    blocDeMessage(post)
+                        .padding(.bottom, 14)
                 }
             }
         }
@@ -2001,6 +1997,19 @@ struct ClubView: View {
                 Spacer(minLength: 0)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        // MÊME CARTE QUE LES SORTIES — voir la note jumelle sur `WallView.carteDeCourse`.
+        //
+        // Ce message du mur partageait le rythme à plat des sorties ; depuis qu'elles sont des
+        // cartes, c'est lui qui détonnerait en restant nu, et l'onglet Activité se lirait comme
+        // deux listes cousues plutôt que comme une conversation.
+        .padding(14)
+        .background(RUColor.card)
+        .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous)
+                .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline)
+        )
     }
 
     private func enTeteDeMessage(_ message: ClubPost) -> some View {

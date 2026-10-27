@@ -96,24 +96,37 @@ struct WallView: View {
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
-                // UN EN-TÊTE QUI DIT CE QU'ON REGARDE, ET PAR OÙ ON REVIENT.
+                // LE CHEVRON SUR SA PROPRE LIGNE, ET LE TITRE SUR LA MARGE.
                 //
-                // Le fil n'avait pas d'en-tête du tout : il était un mode de `SocialView`, qui
-                // posait au-dessus de lui une flèche « ‹ Profil ». En devenant un écran à part
-                // entière il a perdu cette flèche, et il a fallu lui donner son titre — sans
-                // quoi il aurait été le seul écran de l'app à commencer par une rangée de
-                // filtres, c'est-à-dire par un réglage avant d'avoir dit ce qu'on règle.
+                // `BackTitleHeaderView` pose le chevron et le bloc de texte CÔTE À CÔTE. Deux
+                // défauts en découlaient, tous deux visibles sur un vrai téléphone :
                 //
-                // Il s'ouvre désormais depuis la carte du Profil, donc le retour redevient une
-                // vraie question, et `BackTitleHeaderView` porte les deux à la fois : le
-                // chevron, le sourcil et le titre sur une seule ligne. C'est le composant des
-                // écrans poussés de l'app, et le fil en est un.
-                BackTitleHeaderView(eyebrow: "Ton club · tes amis · tes courses",
-                                    title: "Le fil",
-                                    titleSize: 24) {
-                    appState.go(.profile)
+                //   • le chevron mesure 44 points de large et l'écart vaut 12, donc le titre
+                //     démarrait 56 points après le bord — pendant que toutes les cartes du fil
+                //     démarrent, elles, sur la marge de page. Rien ne s'alignait avec rien ;
+                //   • le chevron est centré verticalement sur le bloc, et le bloc fait deux
+                //     lignes : il flottait donc ENTRE le sourcil et le titre, accroché à aucun
+                //     des deux.
+                //
+                // Le retour prend sa propre ligne, comme sur `SocialView` et comme sur l'écran
+                // du Club, et le sourcil et le titre retombent sur la marge avec le reste.
+                Button(action: { appState.go(.profile) }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "chevron.left").font(.system(size: 12, weight: .bold))
+                        Text("Profil").font(RUFont.sans(.label, weight: .semibold))
+                    }
+                    .foregroundColor(RUColor.text2)
+                    .frame(minHeight: 44)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
                 }
-                .padding(.bottom, 10)
+                .buttonStyle(PressableStyle())
+                .accessibilityLabel("Retour au profil")
+
+                HeaderView(eyebrow: "Ton club · tes amis · tes courses", title: "Le fil") {
+                    EmptyView()
+                }
+                .padding(.bottom, 12)
 
                 // CE QUE L'ON VOIT SANS COMPTE, ET CE QUE L'ON NE VOIT PAS.
                 //

@@ -356,6 +356,26 @@ struct FeedItem: Decodable, Identifiable {
         PhraseDeSortie.localisee(text: text, contentKey: contentKey, distanceKm: distanceKm)
     }
 
+    /// LE NOM DE LA SÉANCE, SANS LA PHRASE AUTOUR.
+    ///
+    /// `localizedText` rend « a couru 8,1 km · Sortie longue » : une phrase, qui continue le nom
+    /// de l'autrice affiché juste au-dessus — « Charlotte / a couru 8,1 km ». C'était juste tant
+    /// qu'elle se lisait à la taille d'une phrase. Promue en TITRE de la carte, elle ne l'est
+    /// plus, pour deux raisons :
+    ///
+    ///   • un titre ne commence pas par un verbe conjugué en minuscule. « a couru 8,1 km » à
+    ///     23 points et en gras se lit comme une phrase coupée de son sujet ;
+    ///   • et elle répète la distance qui figure QUARANTE POINTS PLUS BAS, en colonne, sous son
+    ///     étiquette « km ». Deux fois « 8,1 km » dans le même regard.
+    ///
+    /// Ce qui reste utile dans cette phrase, c'est le nom de la séance. Il est ici seul, et les
+    /// chiffres disent le reste — exactement la division du travail de la référence : un titre,
+    /// puis une rangée de mesures.
+    var nomDeLaSeance: String? {
+        guard let contentKey, let kind = SessionKind(rawValue: contentKey) else { return nil }
+        return String(localized: String.LocalizationValue(kind.titleKey))
+    }
+
     /// Vrai dès qu'au moins une métrique existe — la ligne KM / ALLURE / D+ de la carte
     /// n'apparaît que dans ce cas, et jamais pour un post de type « badge ».
     var hasMetrics: Bool {

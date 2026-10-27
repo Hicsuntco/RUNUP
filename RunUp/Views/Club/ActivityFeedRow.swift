@@ -109,15 +109,37 @@ struct ActivityFeedRow: View {
                 // destinations.
                 Button(action: { appState.ouvrirLaSortie(item.id) }) {
                     VStack(alignment: .leading, spacing: 10) {
-                        // `.title` gras : 23,1 pt rendus contre 17,5 pour le nom de l'autrice
-                        // juste au-dessus et 13,1 pour l'horodatage. C'est la rupture d'échelle
-                        // demandée, et c'est celle de la référence — chez Strava le titre de la
-                        // sortie est l'élément le plus gros du post après ses chiffres.
-                        Text(item.localizedText)
-                            .font(RUFont.sans(.title, weight: .bold))
-                            .foregroundColor(RUColor.textPrimary)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        // UN TITRE, OU UNE PHRASE — ET PAS UNE PHRASE DÉGUISÉE EN TITRE.
+                        //
+                        // Ce qui s'affichait ici était « a couru 8,1 km · Sortie longue » à
+                        // 23 points et en gras. Deux défauts, et c'est la mise en gros qui les a
+                        // révélés : un titre ne commence pas par un verbe conjugué en minuscule,
+                        // et celui-ci répétait la distance qui figure quarante points plus bas,
+                        // en colonne, sous son étiquette « km ».
+                        //
+                        // Trois cas, dans cet ordre :
+                        //   • le nom que l'autrice a donné à sa sortie, s'il existe — ce sont
+                        //     ses mots, ils passent avant les nôtres ;
+                        //   • sinon le nom de la séance (« Sortie longue », « Tempo run »), que
+                        //     la phrase contenait déjà et qui est la seule part d'elle qui ne
+                        //     soit pas redite par les chiffres ;
+                        //   • sinon la phrase du serveur, qui en EST une — un badge, une
+                        //     activité d'avant ce champ. Elle reste alors au corps d'une phrase
+                        //     (17,5), parce qu'elle n'est pas un titre et ne doit pas en avoir
+                        //     l'air.
+                        if let titre = titreDuPost {
+                            Text(titre)
+                                .font(RUFont.sans(.title, weight: .bold))
+                                .foregroundColor(RUColor.textPrimary)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        } else {
+                            Text(item.localizedText)
+                                .font(RUFont.sans(.label))
+                                .foregroundColor(RUColor.textPrimary)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
 
                         if item.hasMetrics {
                             HStack(spacing: 10) {
@@ -132,12 +154,8 @@ struct ActivityFeedRow: View {
                 .accessibilityElement(children: .combine)
                 .accessibilityHint("Ouvre la sortie en détail")
 
-                if let title = item.title, !title.isEmpty {
-                    Text(title)
-                        .font(RUFont.sans(.label, weight: .bold))
-                        .foregroundColor(RUColor.textPrimary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                // `item.title` ne s'affiche PLUS ici : il est devenu le titre de la carte,
+                // au-dessus des chiffres. Le laisser aurait écrit deux fois la même ligne.
                 if let note = item.note, !note.isEmpty {
                     Text(note)
                         .font(RUFont.sans(.body))
@@ -210,6 +228,14 @@ struct ActivityFeedRow: View {
         }
     }
 
+
+    /// Le titre de la carte, ou `nil` quand ce post n'a pas de titre et seulement une phrase.
+    private var titreDuPost: String? {
+        if let propre = item.title?.trimmingCharacters(in: .whitespacesAndNewlines), !propre.isEmpty {
+            return propre
+        }
+        return item.nomDeLaSeance
+    }
 
     // MARK: - L'image
 

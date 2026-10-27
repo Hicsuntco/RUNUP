@@ -226,15 +226,45 @@ struct MetricColumn: View {
     /// site — mais sans ce paramètre, les rangées à filets ne pouvaient pas être construites avec
     /// ce composant partagé.
     var alignment: HorizontalAlignment = .leading
+    /// L'ÉTIQUETTE AU-DESSUS DE LA VALEUR, ET NON PLUS DESSOUS.
+    ///
+    /// C'est l'ordre de Strava — « Distance » en petit gris, « 6,45 km » en gras dessous — et il
+    /// n'est pas qu'une habitude : sous la valeur, l'étiquette se lit comme une légende, donc
+    /// comme quelque chose qu'on consulte après coup. Au-dessus, elle annonce, et c'est le
+    /// chiffre qui conclut la lecture. Dans un fil qu'on descend au pouce, c'est le chiffre
+    /// qu'on veut en dernier sous l'œil.
+    ///
+    /// Faux par défaut : les trente-sept autres appels de ce composant sont des grilles de
+    /// mesures dans une carte, où l'étiquette dessous est juste.
+    var labelOnTop: Bool = false
+    /// Le cran de l'étiquette. `.micro` convient à une grille dense ; au-dessus d'une valeur de
+    /// 24 points dans un fil, elle devient un filet illisible.
+    var labelSize: RUTextSize = .micro
 
     var body: some View {
         VStack(alignment: alignment, spacing: 3) {
+            if labelOnTop { etiquette }
             Text(value).displayStyle(valueSize).foregroundColor(valueColor)
-            Text(LocalizedStringKey(label))
+            if !labelOnTop { etiquette }
+        }
+        // Reused across Home, Live, Stats, and History — a single fix here covers every duration/
+        // pace/zone/metric pair in the app at once. Without this, VoiceOver read the value and its
+        // label as two disconnected stops ("8:32" ... several stops later ... "ALLURE"); the
+        // explicit label puts them in "name, value" order for clarity rather than relying on
+        // `.combine`'s default top-to-bottom concatenation (value first, unit-less, then label).
+        //
+        // Posé sur la PAIRE et non sur l'étiquette : c'est la paire qui est un élément, et
+        // l'ordre annoncé ne doit pas changer selon que l'étiquette est au-dessus ou dessous.
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text(LocalizedStringKey(label)) + Text(", ") + Text(value))
+    }
+
+    private var etiquette: some View {
+        Text(LocalizedStringKey(label))
                 // Moyenne, plus grasse. Le chiffre au-dessus est déjà le seul élément gras de
                 // la paire ; un libellé en gras à côté de lui réduit l'écart au lieu de le
                 // creuser. Les capitales et le gris suffisent à le tenir à sa place.
-                .font(RUFont.sans(.micro, weight: .medium))
+                .font(RUFont.sans(labelSize, weight: .medium))
                 // 0,02–0,03em partout dans la maquette pour cette famille de micro-libellés
                 // (`.mcard .l`, `.simplestat .l`, `.week-tile .l`, `.stat-summary-row .l`,
                 // `.pr-chip .l`, `.feed-stats .fl`) : à 9pt cela vaut ~0,25pt. L'ancien 1pt
@@ -251,13 +281,5 @@ struct MetricColumn: View {
                 // `--ru-ink3` dans la maquette, pour ces libellés comme pour les eyebrows —
                 // `ink2` y est réservé à la prose secondaire. Voir `eyebrowStyle`.
                 .foregroundColor(RUColor.text3)
-        }
-        // Reused across Home, Live, Stats, and History — a single fix here covers every duration/
-        // pace/zone/metric pair in the app at once. Without this, VoiceOver read the value and its
-        // label as two disconnected stops ("8:32" ... several stops later ... "ALLURE"); the
-        // explicit label puts them in "name, value" order for clarity rather than relying on
-        // `.combine`'s default top-to-bottom concatenation (value first, unit-less, then label).
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(Text(LocalizedStringKey(label)) + Text(", ") + Text(value))
     }
 }

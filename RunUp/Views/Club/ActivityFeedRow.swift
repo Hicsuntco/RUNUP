@@ -60,71 +60,61 @@ struct ActivityFeedRow: View {
     }
 
     var body: some View {
+        // CHAQUE SORTIE EST UNE CARTE, ET L'IMAGE EN OCCUPE TOUTE LA LARGEUR.
+        //
+        // # CE QUI A ÉTÉ ESSAYÉ ENTRE-TEMPS, ET POURQUOI ON EN REVIENT
+        //
+        // Ce fichier a porté deux partis successifs, tous deux écrits ici noir sur blanc :
+        // d'abord « la carte est partie, un filet entre deux posts », puis « l'image touche les
+        // deux bords de l'écran ». Les deux visaient Instagram. Mais la référence demandée est
+        // STRAVA, et Strava ne fait ni l'un ni l'autre : ses posts sont des blocs blancs
+        // nettement séparés, et c'est cette séparation qui fait qu'on les compte au lieu de les
+        // subir.
+        //
+        // La carte revient donc, avec un rayon FAIBLE — 16, le plus petit de l'échelle, contre
+        // 26 pour une carte ordinaire. Un coin très arrondi fait un objet mignon ; un coin
+        // à peine marqué fait un document. Sur un fil, c'est le second qu'on veut.
+        //
+        // # LA STRUCTURE, EN TROIS BANDES
+        //
+        // Le texte, l'image, le social. Les deux bandes de texte portent les marges ; l'image
+        // non — elle va d'un bord à l'autre de la CARTE, et c'est le `clipShape` posé sur la
+        // pile entière qui lui taille ses deux coins hauts ou bas selon sa place. C'est le
+        // bord à bord de la version précédente, ramené à l'échelle du bloc plutôt qu'à celle de
+        // l'écran : l'image tient toujours la page, mais la carte la tient, elle.
         VStack(alignment: .leading, spacing: 0) {
-            // UN FILET ENTRE DEUX POSTS, ET RIEN AUTOUR.
-            //
-            // La carte est partie. Une sortie n'est pas un objet posé sur la page — c'est la page.
-            // Un rectangle arrondi avec son fond et son contour autour de chaque post fabrique une
-            // pile de tuiles qu'on parcourt ; un filet fin entre deux posts fabrique un fil qu'on
-            // descend. C'est la différence entre un tableau de bord et Instagram, et elle tient à
-            // ça.
-            //
-            // Le filet est EN TÊTE de chaque post sauf le premier, pas en pied : un filet en pied
-            // flotterait tout seul après le dernier, sous rien.
-            if index > 0 {
-                Rectangle()
-                    .fill(RUColor.line)
-                    .frame(height: RUSpacing.hairline)
-                    .padding(.bottom, 16)
-            }
-
-            VStack(alignment: .leading, spacing: 11) {
+            VStack(alignment: .leading, spacing: 10) {
                 // LE NOM AU-DESSUS DE L'IMAGE, ET NON PLUS DESSUS.
                 //
-                // Il était posé SUR le bandeau, ce qui obligeait à deux voiles dégradés pour que du
-                // blanc reste lisible sur n'importe quelle photo — un ciel de midi, de la neige.
-                // Au-dessus, le texte est sur le fond de l'app : il est lisible par construction,
-                // les deux voiles disparaissent, et la photo n'est plus assombrie à ses deux bouts
-                // pour servir de support à du texte. Moins de pièces, et la photo entière.
+                // Il était posé SUR le bandeau, ce qui obligeait à deux voiles dégradés pour que
+                // du blanc reste lisible sur n'importe quelle photo — un ciel de midi, de la
+                // neige. Au-dessus, le texte est sur le fond de la carte : il est lisible par
+                // construction, les deux voiles disparaissent, et la photo n'est plus assombrie
+                // à ses deux bouts pour servir de support à du texte.
                 HStack(spacing: 10) {
                     author(onDark: false)
                     Spacer(minLength: 0)
                     menuDuPost
                 }
 
-                media
-                    // BORD À BORD, ET C'EST LE GESTE QUI FAIT LA DIFFÉRENCE.
-                    //
-                    // L'image était posée DANS la colonne de texte, avec ses coins arrondis et
-                    // les marges de page de chaque côté. C'est la mise en page d'un tableau de
-                    // bord : une vignette illustrant une ligne. Instagram, Strava et tout ce qui
-                    // se parcourt au pouce font l'inverse — l'image touche les deux bords, et
-                    // c'est elle qui tient la page pendant que le texte s'aligne autour.
-                    //
-                    // Les quatre écrans qui affichent cette ligne (le fil, les amis, l'activité
-                    // du club, la page de quelqu'un) posent tous exactement
-                    // `RUSpacing.pagePadding` horizontalement : une marge négative de la même
-                    // valeur la ramène donc au bord de l'écran dans les quatre, sans qu'aucun
-                    // d'eux ait à le savoir.
-                    .padding(.horizontal, -RUSpacing.pagePadding)
-                    // LE DOUBLE-TAPE SUR L'IMAGE : le geste par lequel on aime, partout, depuis
-                    // dix ans. Il n'enlève jamais un applaudissement — sur Instagram comme ici,
-                    // double-taper une photo déjà aimée ne la dés-aime pas : ce serait punir
-                    // l'enthousiasme. Le bouton applaudir reste le seul chemin pour retirer.
-                    .overlay { eclatDApplaudissement }
-                    .onTapGesture(count: 2) { applaudirParDoubleTape() }
-
-                // LA PHRASE ET LES CHIFFRES OUVRENT LA SORTIE.
+                // LA PHRASE ET LES CHIFFRES PASSENT DEVANT L'IMAGE.
                 //
-                // Une carte de fil était un cul-de-sac : quatre chiffres, et rien derrière. Les
-                // kilomètres un par un, le profil du terrain et le cardio existaient sur
-                // l'appareil de qui avait couru sans jamais en sortir. C'est ce bloc-ci qui est
-                // la porte — pas l'image, qui porte déjà le double-tape, ni le nom, qui mène à
-                // la personne. Trois zones, trois destinations, aucune ambiguïté.
+                // C'est l'ordre de Strava : le titre de la sortie, ses mesures, PUIS la carte.
+                // On lit ce que c'est avant de le voir, et l'image conclut le post au lieu de
+                // l'ouvrir. Ils étaient dessous, où ils se lisaient comme la légende de la
+                // photo.
+                //
+                // Ce bloc reste la PORTE vers la sortie déroulée — pas l'image, qui porte le
+                // double-tape, ni le nom, qui mène à la personne. Trois zones, trois
+                // destinations.
                 Button(action: { appState.ouvrirLaSortie(item.id) }) {
-                    VStack(alignment: .leading, spacing: 11) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        // `.title` gras : 23,1 pt rendus contre 17,5 pour le nom de l'autrice
+                        // juste au-dessus et 13,1 pour l'horodatage. C'est la rupture d'échelle
+                        // demandée, et c'est celle de la référence — chez Strava le titre de la
+                        // sortie est l'élément le plus gros du post après ses chiffres.
                         Text(item.localizedText)
-                            .font(RUFont.sans(.label))
+                            .font(RUFont.sans(.title, weight: .bold))
                             .foregroundColor(RUColor.textPrimary)
                             .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -144,7 +134,7 @@ struct ActivityFeedRow: View {
 
                 if let title = item.title, !title.isEmpty {
                     Text(title)
-                        .font(RUFont.sans(.emphasis, weight: .bold))
+                        .font(RUFont.sans(.label, weight: .bold))
                         .foregroundColor(RUColor.textPrimary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -154,7 +144,20 @@ struct ActivityFeedRow: View {
                         .foregroundColor(RUColor.text2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
+            }
+            .padding(.horizontal, 14)
+            .padding(.top, 14)
+            .padding(.bottom, 13)
 
+            media
+                // LE DOUBLE-TAPE SUR L'IMAGE : le geste par lequel on aime, partout, depuis
+                // dix ans. Il n'enlève jamais un applaudissement — sur Instagram comme ici,
+                // double-taper une photo déjà aimée ne la dés-aime pas : ce serait punir
+                // l'enthousiasme. Le bouton applaudir reste le seul chemin pour retirer.
+                .overlay { eclatDApplaudissement }
+                .onTapGesture(count: 2) { applaudirParDoubleTape() }
+
+            VStack(alignment: .leading, spacing: 9) {
                 actions
 
                 if let liked = likedByLine {
@@ -164,8 +167,8 @@ struct ActivityFeedRow: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 if let last = item.lastComment {
-                    // Une carte qui affiche « 💬 2 » oblige à ouvrir une feuille pour savoir si ces
-                    // deux commentaires valent le détour. Celle-ci répond sur place.
+                    // Une carte qui affiche « 💬 2 » oblige à ouvrir une feuille pour savoir si
+                    // ces deux commentaires valent le détour. Celle-ci répond sur place.
                     (Text(last.name).font(RUFont.sans(.small, weight: .bold))
                      + Text(verbatim: "  ")
                      + Text(last.text).font(RUFont.sans(.small)))
@@ -174,8 +177,23 @@ struct ActivityFeedRow: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .padding(.bottom, 16)
+            .padding(.horizontal, 14)
+            .padding(.top, 12)
+            .padding(.bottom, 13)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RUColor.card)
+        // `clipShape` AVANT le contour, sinon le trait serait rogné par la forme qu'il dessine.
+        // Et c'est lui qui taille les coins de l'image, qui n'en porte aucun elle-même.
+        .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous)
+                .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline)
+        )
+        // L'ÉCART ENTRE DEUX CARTES remplace le filet qui séparait deux posts. Porté par la
+        // carte elle-même et non par ses quatre hôtes : le fil, les amis, l'activité du club et
+        // la page de quelqu'un empilent tous ces lignes dans une pile d'espacement zéro.
+        .padding(.bottom, 14)
         .opacity(revealed ? 1 : 0)
         .offset(x: revealed ? 0 : -14)
         .animation(.easeOut(duration: 0.35).delay(Double(min(index, 8)) * 0.05), value: revealed)
@@ -191,6 +209,7 @@ struct ActivityFeedRow: View {
             }
         }
     }
+
 
     // MARK: - L'image
 
@@ -513,31 +532,35 @@ struct ActivityFeedRow: View {
         return result
     }
 
+    /// PLUS DE FILETS ENTRE LES COLONNES, ET L'ÉTIQUETTE AU-DESSUS.
+    ///
+    /// Les filets verticaux découpaient une rangée de 26 points de haut. L'étiquette passée
+    /// au-dessus de la valeur, le bloc en fait 44 : le filet devenait un trait court flottant au
+    /// milieu, et il aurait fallu le rallonger — c'est-à-dire ajouter de l'encre pour réparer de
+    /// l'encre. La référence n'en met aucun : chez Strava les quatre colonnes ne sont séparées
+    /// que par du vide, et ça suffit parce que chaque colonne porte désormais son propre titre.
     private var metricsRow: some View {
-        HStack(spacing: 0) {
+        HStack(alignment: .firstTextBaseline, spacing: 22) {
             ForEach(metrics) { metric in
-                if metric.id != metrics.first?.id {
-                    Rectangle()
-                        .fill(RUColor.line)
-                        .frame(width: RUSpacing.hairline, height: 26)
-                        .padding(.horizontal, 12)
-                }
                 MetricColumn(
                     value: metric.value,
                     label: metric.label,
                     valueColor: RUColor.textPrimary,
                     // 16 → 22, ET C'EST UNE QUESTION DE PROPORTION, PAS DE GOÛT.
                     //
-                    // Ces chiffres suivent une image qui fait maintenant toute la largeur de
-                    // l'écran et 266 points de haut. À 17,4 pt rendus, ils se lisaient comme
-                    // une légende sous une illustration. Dans un fil de course, la rangée de
-                    // mesures est le DEUXIÈME temps du post, juste après l'image — c'est elle
-                    // qu'on vient lire quand on a fini de regarder le tracé.
+                    // Ces chiffres ANNONCENT une image qui fait toute la largeur de la carte.
+                    // À 17,4 pt rendus, ils se lisaient comme une légende ; dans un fil de
+                    // course, la rangée de mesures est le deuxième temps du post, juste après
+                    // le titre, et c'est elle qu'on vient lire.
                     //
                     // 22 donne 24 pt rendus, soit la taille d'un titre de page. C'est voulu :
-                    // sur cette ligne-là, le chiffre EST le titre, et « km » ou « allure » en
-                    // dessous ne sont que des unités.
-                    valueSize: 22
+                    // sur cette ligne-là, le chiffre EST le titre, et « km » ou « allure » au-
+                    // dessus ne sont que des étiquettes.
+                    valueSize: 22,
+                    labelOnTop: true,
+                    // `.small` et non `.micro` : 13,1 pt contre 10,6. Sous une valeur de 24, une
+                    // étiquette de 10,6 est un filet ; au-dessus, elle doit s'annoncer.
+                    labelSize: .small
                 )
             }
             Spacer(minLength: 0)

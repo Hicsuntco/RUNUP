@@ -69,7 +69,7 @@ struct ClubManagementView: View {
 
                     membershipSection
                 }
-                .padding(18)
+                .padding(RUSpacing.pagePadding)
             }
             .background(RUColor.pageBackground)
             .navigationTitle(club.name)
@@ -675,7 +675,7 @@ struct CreateChallengeSheet: View {
                         Text(errorMessage).font(RUFont.sans(.body)).foregroundColor(RUColor.rose)
                     }
                 }
-                .padding(18)
+                .padding(RUSpacing.pagePadding)
             }
             .background(RUColor.pageBackground)
             .navigationTitle("Nouveau défi")
@@ -786,7 +786,7 @@ struct CreateEventSheet: View {
                         Text(errorMessage).font(RUFont.sans(.body)).foregroundColor(RUColor.rose)
                     }
                 }
-                .padding(18)
+                .padding(RUSpacing.pagePadding)
             }
             .background(RUColor.pageBackground)
             .navigationTitle("Sortie de groupe")

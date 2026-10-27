@@ -64,7 +64,7 @@ struct ProgramSettingsSheet: View {
                 .disabled(days.count < minimumJours)
                 .padding(.top, 18)
             }
-            .padding(.horizontal, 18)
+            .padding(.horizontal, RUSpacing.pagePadding)
             // L'encart du bas n'est plus posé ici : `runUpSheetStyle` le donne à toutes les
             // feuilles, d'une seule valeur. Voir `RUSpacing.sheetBottomInset`.
         }

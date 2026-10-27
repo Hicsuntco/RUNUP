@@ -184,7 +184,7 @@ private struct AddShoeSheet: View {
                             .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                     }
                 }
-                .padding(18)
+                .padding(RUSpacing.pagePadding)
             }
             .background(RUColor.pageBackground)
             .navigationTitle("Nouvelle paire")

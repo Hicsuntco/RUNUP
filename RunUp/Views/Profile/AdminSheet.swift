@@ -66,7 +66,7 @@ struct AdminSheet: View {
                         .font(RUFont.sans(.small)).foregroundColor(RUColor.text3).lineSpacing(2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                .padding(18)
+                .padding(RUSpacing.pagePadding)
             }
             .background(RUColor.pageBackground)
             .navigationTitle("Fiche admin")

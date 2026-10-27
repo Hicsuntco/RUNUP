@@ -147,7 +147,7 @@ struct DebriefSheet: View {
                 .padding(.top, 16)
 
             }
-            .padding(.horizontal, 18)
+            .padding(.horizontal, RUSpacing.pagePadding)
             .padding(.bottom, 10)
         }
         // LE BOUTON SORT DU DÉFILEMENT, ET C'EST CE QUI L'ÉLOIGNE DU BAS DE L'ÉCRAN.
@@ -168,7 +168,7 @@ struct DebriefSheet: View {
                 // Un filet, pour que le contenu qui passe dessous se voie passer dessous.
                 Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
                 boutonDeValidation
-                    .padding(.horizontal, 18)
+                    .padding(.horizontal, RUSpacing.pagePadding)
                     .padding(.top, 12)
                     .padding(.bottom, 6)
             }

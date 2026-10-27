@@ -103,7 +103,7 @@ struct AddRunSheet: View {
                         .ruCard()
                     }
                 }
-                .padding(18)
+                .padding(RUSpacing.pagePadding)
             }
             .background(RUColor.pageBackground)
             // « Une séance » et non « une course » : cette feuille ajoute aussi des nages.

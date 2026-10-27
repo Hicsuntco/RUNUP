@@ -97,7 +97,8 @@ struct PublishRouteSheet: View {
                 Button("Annuler") { dismiss() }
                     .buttonStyle(SecondaryButtonStyle())
             }
-            .padding(20)
+            // La marge de page de l'app, et non un nombre à soi. Voir `RUSpacing.pagePadding`.
+            .padding(RUSpacing.pagePadding)
         }
         .background(RUColor.pageBackground)
         .task { await resolveLocality() }

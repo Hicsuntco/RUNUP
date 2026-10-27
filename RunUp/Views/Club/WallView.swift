@@ -123,10 +123,29 @@ struct WallView: View {
                 .buttonStyle(PressableStyle())
                 .accessibilityLabel("Retour au profil")
 
-                HeaderView(eyebrow: "Ton club · tes amis · tes courses", title: "Le fil") {
-                    EmptyView()
-                }
-                .padding(.bottom, 12)
+                // LE SOURCIL DISPARAÎT, ET C'EST LA LONGUEUR QUI LE CONDAMNE.
+                //
+                // Ce que l'écran du Club fait juste, et que celui-ci ratait, tient en un mot :
+                // là-bas le sourcil dit « Le Club » — deux mots, une étiquette, qu'on lit comme
+                // la catégorie du titre qui suit. Ici il disait « Ton club · tes amis · tes
+                // courses » : six mots, trente-trois caractères, une phrase entière posée
+                // au-dessus d'un titre de six lettres. Un sourcil plus long que son titre ne se
+                // lit plus comme une étiquette, il se lit comme une ligne de texte égarée entre
+                // le retour et le titre — trois lignes sans rapport apparent, empilées.
+                //
+                // ET IL ÉNUMÉRAIT LES FILTRES POSÉS JUSTE EN DESSOUS. « Ton club, tes amis, tes
+                // courses » est très exactement la liste des pastilles « Club / Amis / Courses »
+                // qui le suivent de douze points. Une légende pour le contrôle du dessous, écrite
+                // au-dessus du titre : il n'y avait pas de version courte à trouver, il y avait
+                // une ligne à retirer.
+                //
+                // L'écran y gagne la hauteur d'une ligne avant la première carte, ce qui est ce
+                // qu'un fil a de mieux à faire de sa place.
+                Text("Le fil")
+                    .displayStyle(24)
+                    .foregroundColor(RUColor.textPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.bottom, 14)
 
                 // CE QUE L'ON VOIT SANS COMPTE, ET CE QUE L'ON NE VOIT PAS.
                 //

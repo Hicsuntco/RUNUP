@@ -25791,22 +25791,6 @@
         }
       }
     },
-    "Ton club · tes amis · tes courses": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your club · your friends · your races"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tu club · tus amigos · tus carreras"
-          }
-        }
-      }
-    },
     "Ton club, tes abonnements et tes courses, au même endroit": {
       "localizations": {
         "en": {

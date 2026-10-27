@@ -118,6 +118,16 @@ ALTER TABLE activities ADD COLUMN IF NOT EXISTS distance_km NUMERIC;
 -- pas le vérifier. NULL pour une sortie trop courte, sans GPS, ou dont l'autrice a retiré le
 -- tracé après coup.
 ALTER TABLE activities ADD COLUMN IF NOT EXISTS route_preview JSONB;
+-- CE QUE LA PERSONNE A FAIT : 'run' | 'bike' | 'trail' | 'swim'.
+--
+-- `content_key` le disait DÉJÀ pour une séance du plan — un `SessionKind` connaît sa discipline.
+-- Mais une sortie LIBRE n'a pas de `content_key` : partir à vélo par le bouton RUN basculé sur
+-- « Vélo » produisait une activité que rien ne distinguait d'un footing, et le fil l'annonçait
+-- « Course ». La discipline est donc envoyée telle quelle, et ne se déduit plus.
+--
+-- NULL pour tout ce qui a été publié avant cette colonne : l'app retombe alors sur la discipline
+-- du `content_key`, puis sur la course. Voir `FeedItem.disciplineAffichee`.
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS discipline TEXT;
 -- Le titre que l'autrice donne à sa sortie, et sa note libre. `text` juste au-dessus reste la
 -- phrase FABRIQUÉE (« a couru 8,2 km · Sortie longue ») : elle décrit ce qui s'est passé et n'a
 -- pas à être réécrite. Ces deux colonnes-ci sont les seules que l'autrice possède, d'où la

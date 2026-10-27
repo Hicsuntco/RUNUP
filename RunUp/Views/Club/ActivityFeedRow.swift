@@ -120,9 +120,11 @@ struct ActivityFeedRow: View {
                         // Trois cas, dans cet ordre :
                         //   • le nom que l'autrice a donné à sa sortie, s'il existe — ce sont
                         //     ses mots, ils passent avant les nôtres ;
-                        //   • sinon le nom de la séance (« Sortie longue », « Tempo run »), que
-                        //     la phrase contenait déjà et qui est la seule part d'elle qui ne
-                        //     soit pas redite par les chiffres ;
+                        //   • sinon LA DISCIPLINE ET LA DISTANCE : « Course 5,6 km », « Vélo
+                        //     24 km », « Trail 12,4 km ». C'est la forme de la référence, et
+                        //     c'est ce qu'on veut lire d'abord d'une sortie qui n'a pas de nom —
+                        //     pas le type de séance du plan, qui ne dit rien à qui ne l'a pas
+                        //     suivi, et surtout pas un verbe conjugué ;
                         //   • sinon la phrase du serveur, qui en EST une — un badge, une
                         //     activité d'avant ce champ. Elle reste alors au corps d'une phrase
                         //     (17,5), parce qu'elle n'est pas un titre et ne doit pas en avoir
@@ -230,11 +232,28 @@ struct ActivityFeedRow: View {
 
 
     /// Le titre de la carte, ou `nil` quand ce post n'a pas de titre et seulement une phrase.
+    ///
+    /// « Course 5,6 km » plutôt que « a couru 5,6 km · Tempo run », et la différence n'est pas
+    /// qu'une tournure. Le nom de séance du plan — « Tempo run », « Sortie longue » — ne veut
+    /// rien dire pour qui lit le fil sans suivre ce plan-là ; la discipline, si. Et une carte de
+    /// fil s'annonce par CE QUE C'ÉTAIT, pas par la place que ça tenait dans la semaine de
+    /// quelqu'un d'autre.
+    ///
+    /// La distance revient donc dans le titre alors qu'elle figure aussi en colonne juste en
+    /// dessous. Ce n'est pas la redondance qu'on avait retirée : « a couru 8,1 km » répétait le
+    /// chiffre SANS rien ajouter, là où « Course 8,1 km » est le nom que porte la sortie — la
+    /// colonne, elle, le range avec l'allure et le temps, pour comparer.
     private var titreDuPost: String? {
         if let propre = item.title?.trimmingCharacters(in: .whitespacesAndNewlines), !propre.isEmpty {
             return propre
         }
-        return item.nomDeLaSeance
+        let sport = item.disciplineAffichee.title
+        guard let km = item.distanceKm, km > 0.05 else {
+            // Sans distance — une nage en piscine saisie à la main, une séance de renfo — le nom
+            // de la discipline seul vaut mieux qu'un « 0,0 km » posé à côté.
+            return item.hasMetrics ? sport : nil
+        }
+        return "\(sport) \(Distances.km(km))"
     }
 
     // MARK: - L'image

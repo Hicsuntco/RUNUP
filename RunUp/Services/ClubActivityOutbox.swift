@@ -47,8 +47,11 @@ struct PendingClubActivity: Codable, Equatable {
     ///
     /// Optionnel comme les trois champs au-dessus : une file écrite avant ce champ n'en a pas.
     var trace: [RunRecord.RoutePoint]?
+    /// Courir, rouler, nager — voir `activities.discipline`. Optionnel comme les quatre champs
+    /// au-dessus, et pour la même raison : une file écrite avant lui n'en a pas.
+    var discipline: String?
 
-    init(clientId: UUID, type: String, text: String, xpEarned: Int, metrics: ActivityMetrics?, userId: String?, contentKey: String?, trace: [RunRecord.RoutePoint]?) {
+    init(clientId: UUID, type: String, text: String, xpEarned: Int, metrics: ActivityMetrics?, userId: String?, contentKey: String?, trace: [RunRecord.RoutePoint]?, discipline: String?) {
         self.clientId = clientId
         self.type = type
         self.text = text
@@ -57,10 +60,11 @@ struct PendingClubActivity: Codable, Equatable {
         self.userId = userId
         self.contentKey = contentKey
         self.trace = trace
+        self.discipline = discipline
     }
 
     private enum CodingKeys: String, CodingKey {
-        case clientId, type, text, xpEarned, metrics, userId, contentKey, trace
+        case clientId, type, text, xpEarned, metrics, userId, contentKey, trace, discipline
         /// Le champ tel qu'il était écrit avant que les métriques soient regroupées. Une sortie
         /// encore en file au moment de la mise à jour porte cette clé et pas `metrics`.
         case legacyDistanceKm = "distanceKm"
@@ -78,6 +82,7 @@ struct PendingClubActivity: Codable, Equatable {
         text = try c.decodeIfPresent(String.self, forKey: .text) ?? ""
         xpEarned = try c.decodeIfPresent(Int.self, forKey: .xpEarned) ?? 0
         contentKey = try c.decodeIfPresent(String.self, forKey: .contentKey)
+        discipline = try c.decodeIfPresent(String.self, forKey: .discipline)
         trace = try c.decodeIfPresent([RunRecord.RoutePoint].self, forKey: .trace)
         if let stored = try c.decodeIfPresent(ActivityMetrics.self, forKey: .metrics) {
             metrics = stored
@@ -111,6 +116,9 @@ struct PendingClubActivity: Codable, Equatable {
         // carte du fil sans tracé, et texte figé en français pour tout le monde.
         try c.encodeIfPresent(contentKey, forKey: .contentKey)
         try c.encodeIfPresent(trace, forKey: .trace)
+        // Et celui-ci avec eux, pour la même raison : une sortie à vélo finie hors réseau puis
+        // rejouée depuis le disque s'annoncerait « Course » faute d'avoir été écrite.
+        try c.encodeIfPresent(discipline, forKey: .discipline)
     }
 
     /// Vrai si cette sortie peut être publiée sous le compte donné. Une entrée sans propriétaire
@@ -145,7 +153,7 @@ extension AppState {
     /// something to retry rather than a `try?` that discarded the payload the instant it failed.
     /// `route` est le tracé BRUT de la sortie. Le rognage de confidentialité est appliqué ici, une
     /// fois, et c'est le résultat qui est mis en file puis envoyé — voir `PendingClubActivity.trace`.
-    func postClubActivity(type: String, text: String, xpEarned: Int, contentKey: String? = nil, metrics: ActivityMetrics = .none, route: [RunRecord.RoutePoint] = []) {
+    func postClubActivity(type: String, text: String, xpEarned: Int, contentKey: String? = nil, discipline: String? = nil, metrics: ActivityMetrics = .none, route: [RunRecord.RoutePoint] = []) {
         guard auth.isSignedIn else { return }
         let pending = PendingClubActivity(
             clientId: UUID(),
@@ -155,7 +163,8 @@ extension AppState {
             metrics: metrics,
             userId: auth.currentUser?.id,
             contentKey: contentKey,
-            trace: RouteGeometry.feedTrace(route)
+            trace: RouteGeometry.feedTrace(route),
+            discipline: discipline
         )
         outbox.append(pending)
         // UN PLAFOND, comme le tampon d'`Analytics` en a un. Sans lui, une file qui ne part plus
@@ -208,7 +217,7 @@ extension AppState {
     private func attemptPost(_ pending: PendingClubActivity) async {
         let service = ClubService(auth: auth)
         do {
-            try await service.postActivity(clientId: pending.clientId, type: pending.type, text: pending.text, xpEarned: pending.xpEarned, contentKey: pending.contentKey, metrics: pending.metrics ?? .none, trace: pending.trace ?? [])
+            try await service.postActivity(clientId: pending.clientId, type: pending.type, text: pending.text, xpEarned: pending.xpEarned, contentKey: pending.contentKey, discipline: pending.discipline, metrics: pending.metrics ?? .none, trace: pending.trace ?? [])
             outbox.removeAll { $0.clientId == pending.clientId }
             pendingActivityCount = outbox.count
             pendingActivityBlocker = nil

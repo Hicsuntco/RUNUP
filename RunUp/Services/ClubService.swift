@@ -260,6 +260,11 @@ struct FeedItem: Decodable, Identifiable {
     /// `nil` pour les activités antérieures à ce champ et pour une séance hors plan — la phrase du
     /// serveur reste alors la meilleure chose disponible.
     var contentKey: String?
+    /// CE QUE LA PERSONNE A FAIT — « run » | « bike » | « trail » | « swim ».
+    ///
+    /// Optionnel, et pas seulement par prudence de décodage : il vaut `nil` pour tout ce qui a
+    /// été publié avant que cette colonne n'existe. `disciplineAffichee` dit comment on retombe.
+    var discipline: String?
     var kudos: Int
     var kudoedByMe: Bool
     var commentsCount: Int
@@ -292,6 +297,7 @@ struct FeedItem: Decodable, Identifiable {
     private enum CodingKeys: String, CodingKey {
         case id, userId, name, avatarUrl, avatarBase64, text, createdAt
         case distanceKm, durationSeconds, avgPace, elevationGainM, isPersonalRecord, contentKey
+        case discipline
         case kudos, kudoedByMe, commentsCount
         case title, note, editedAt, routePreview, kudosNames, lastComment
     }
@@ -316,6 +322,7 @@ struct FeedItem: Decodable, Identifiable {
         elevationGainM = try c.decodeIfPresent(Int.self, forKey: .elevationGainM)
         isPersonalRecord = try c.decodeIfPresent(Bool.self, forKey: .isPersonalRecord) ?? false
         contentKey = try c.decodeIfPresent(String.self, forKey: .contentKey)
+        discipline = try c.decodeIfPresent(String.self, forKey: .discipline)
         kudos = try c.decode(Int.self, forKey: .kudos)
         kudoedByMe = try c.decode(Bool.self, forKey: .kudoedByMe)
         commentsCount = try c.decode(Int.self, forKey: .commentsCount)
@@ -374,6 +381,27 @@ struct FeedItem: Decodable, Identifiable {
     var nomDeLaSeance: String? {
         guard let contentKey, let kind = SessionKind(rawValue: contentKey) else { return nil }
         return String(localized: String.LocalizationValue(kind.titleKey))
+    }
+
+    /// COURSE, VÉLO, TRAIL OU NATATION — en trois recours, du plus sûr au plus ancien.
+    ///
+    /// 1. Ce que le serveur dit. C'est ce que la personne a RÉELLEMENT fait, envoyé depuis son
+    ///    appareil : c'est le seul recours qui sache qu'une sortie libre était à vélo.
+    /// 2. Sinon, la discipline du type de séance. Un `SessionKind` la connaît — les séances
+    ///    d'ultra sont du trail, celles de triathlon se répartissent entre nage, vélo et course.
+    ///    Juste pour toute séance du plan, muet pour une sortie libre.
+    /// 3. Sinon la course, qui est ce qu'étaient toutes les activités avant que l'app ne sache
+    ///    faire autre chose — la même règle que `RunRecord.discipline`.
+    ///
+    /// Les deux derniers recours existent parce que la colonne est neuve : tout ce qui a été
+    /// publié avant elle arrive sans discipline, et devra quand même s'annoncer correctement.
+    var disciplineAffichee: Discipline {
+        if let discipline, let connue = Discipline(rawValue: discipline) { return connue }
+        if let contentKey, let kind = SessionKind(rawValue: contentKey),
+           let premiere = kind.disciplines.first {
+            return premiere
+        }
+        return .legacy
     }
 
     /// Vrai dès qu'au moins une métrique existe — la ligne KM / ALLURE / D+ de la carte
@@ -744,12 +772,16 @@ struct ClubService {
     /// idempotent — l'appliquer une seconde fois retirerait 300 m de plus à chaque bout — donc il
     /// ne peut pas vivre à la fois ici et là-bas. Il vit là-bas, parce que c'est aussi ce qui est
     /// écrit sur le disque en attendant le réseau : la file ne garde jamais un tracé complet.
-    func postActivity(clientId: UUID = UUID(), type: String, text: String, xpEarned: Int, contentKey: String? = nil, metrics: ActivityMetrics = .none, trace: [RunRecord.RoutePoint] = []) async throws {
+    func postActivity(clientId: UUID = UUID(), type: String, text: String, xpEarned: Int, contentKey: String? = nil, discipline: String? = nil, metrics: ActivityMetrics = .none, trace: [RunRecord.RoutePoint] = []) async throws {
         var body: [String: Any] = ["clientId": clientId.uuidString, "type": type, "text": text, "xpEarned": xpEarned]
         // `text` part quand même : c'est lui que reçoit la notification push, composée côté
         // serveur, qui n'a aucune langue de destinataire à consulter. `contentKey` s'y ajoute pour
         // le fil, où l'appareil qui lit peut, lui, faire mieux.
         if let contentKey { body["contentKey"] = contentKey }
+        // La discipline voyage à part de `contentKey`, et ce n'est pas une redondance : une
+        // sortie LIBRE n'a pas de type de séance, donc rien d'autre ne dirait qu'elle était à
+        // vélo. Le serveur n'accepte que les quatre valeurs connues (voir api/activities).
+        if let discipline { body["discipline"] = discipline }
         // Chaque métrique n'est envoyée que si elle a été réellement mesurée : une clé absente
         // devient NULL en base, ce que le fil sait afficher comme « pas de donnée ». Envoyer 0
         // ferait apparaître « 0 D+ » sur une sortie dont le dénivelé n'a simplement jamais été

@@ -454,7 +454,7 @@ async function handleFeed(req, res, userId) {
   const { rows } = await sql`
     SELECT a.id, a.text, a.created_at, u.name, u.id AS user_id, u.avatar_data, u.avatar_url,
            a.distance_km, a.duration_seconds, a.avg_pace, a.elevation_gain_m, a.is_personal_record,
-           a.content_key,
+           a.content_key, a.discipline,
            -- MÊME CARTE, MÊMES CHAMPS. Les deux fils sont décodés par le MÊME type côté app, et
            -- celui-ci ne sélectionnait ni le tracé, ni le titre, ni la note, ni la date
            -- d'édition : la même sortie s'affichait avec sa carte et son titre dans l'onglet
@@ -547,7 +547,7 @@ async function handleProfile(req, res, userId) {
   if (canSeeRuns) {
     const { rows } = await sql`
       SELECT a.id, a.text, a.created_at, a.distance_km, a.duration_seconds, a.avg_pace,
-             a.elevation_gain_m, a.is_personal_record, a.content_key,
+             a.elevation_gain_m, a.is_personal_record, a.content_key, a.discipline,
              a.route_preview, a.title, a.note, a.edited_at, a.photo_url,
              (SELECT COUNT(*)::int FROM activity_kudos k WHERE k.activity_id = a.id) AS kudos,
              EXISTS(SELECT 1 FROM activity_kudos k WHERE k.activity_id = a.id AND k.user_id = ${userId}) AS kudoed_by_me,

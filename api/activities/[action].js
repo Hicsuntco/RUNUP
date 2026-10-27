@@ -161,7 +161,7 @@ async function handleDelete(req, res, userId) {
 // user's club feed, and credits its XP to their real, server-side total — this is what makes the
 // leaderboard and feed genuinely backed by real actions instead of mock data.
 async function handleCreate(req, res, userId) {
-  const { clientId, type, text, xpEarned, distanceKm, durationSeconds, avgPace, elevationGainM, isPersonalRecord, contentKey } = req.body || {};
+  const { clientId, type, text, xpEarned, distanceKm, durationSeconds, avgPace, elevationGainM, isPersonalRecord, contentKey, discipline } = req.body || {};
   const cleanText = typeof text === 'string' ? text.trim().slice(0, 200) : '';
   if (!isUuid(clientId) || !ALLOWED_TYPES.has(type) || !cleanText || typeof xpEarned !== 'number') {
     return res.status(400).json({ error: 'bad_request' });
@@ -178,6 +178,15 @@ async function handleCreate(req, res, userId) {
   // D'où le filtre sur la forme plutôt que le filtre de modération — et l'absence de filtre
   // laisserait passer n'importe quoi dans une colonne dont la valeur sert de clé.
   const key = typeof contentKey === 'string' && /^[a-z0-9_]{1,40}$/.test(contentKey) ? contentKey : null;
+  // LA DISCIPLINE, ET UNE LISTE FERMÉE PLUTÔT QU'UN FILTRE DE FORME.
+  //
+  // Contrairement à `content_key`, dont les valeurs se comptent par dizaines et grandissent avec
+  // le catalogue de séances, il n'y en a que quatre et elles ne bougeront pas souvent. Une liste
+  // explicite dit donc exactement ce qui entre, et une valeur inconnue devient `null` — ce que
+  // l'app traite déjà comme « je ne sais pas », puisque c'est le cas de toutes les activités
+  // publiées avant cette colonne.
+  const DISCIPLINES = ['run', 'bike', 'trail', 'swim'];
+  const sport = DISCIPLINES.includes(discipline) ? discipline : null;
   // Only 'run' activities carry a real distance — a structured column (rather than parsing it
   // back out of `text`) is what lets club challenges compute real collective progress. Finite +
   // capped at 500 km: `Infinity > 0` is true in JS, and a tampered client's `1e12` would
@@ -257,8 +266,8 @@ async function handleCreate(req, res, userId) {
   // Un seul aller-retour : ou les deux écritures passent, ou aucune.
   const { rows: inserted } = await sql`
     WITH ins AS (
-      INSERT INTO activities (client_id, user_id, club_id, type, text, xp_earned, distance_km, duration_seconds, avg_pace, elevation_gain_m, is_personal_record, content_key, route_preview, title, note, splits, route_altitudes, avg_heart_rate, kcal)
-      VALUES (${clientId}, ${userId}, ${clubId}, ${type}, ${cleanText}, ${xp}, ${distance}, ${duration}, ${pace}, ${elevation}, ${personalRecord}, ${key},
+      INSERT INTO activities (client_id, user_id, club_id, type, text, xp_earned, distance_km, duration_seconds, avg_pace, elevation_gain_m, is_personal_record, content_key, discipline, route_preview, title, note, splits, route_altitudes, avg_heart_rate, kcal)
+      VALUES (${clientId}, ${userId}, ${clubId}, ${type}, ${cleanText}, ${xp}, ${distance}, ${duration}, ${pace}, ${elevation}, ${personalRecord}, ${key}, ${sport},
               ${routePreview ? JSON.stringify(routePreview) : null}::jsonb, ${title}, ${note},
               ${splits ? JSON.stringify(splits) : null}::jsonb,
               ${altitudes ? JSON.stringify(altitudes) : null}::jsonb, ${heartRate}, ${calories})
@@ -300,7 +309,7 @@ async function handleActivityDetail(req, res, userId) {
   if (!isUuid(activityId)) return res.status(400).json({ error: 'bad_request' });
 
   const { rows } = await sql`
-    SELECT a.id, a.user_id, a.club_id, a.text, a.content_key, a.created_at, a.edited_at,
+    SELECT a.id, a.user_id, a.club_id, a.text, a.content_key, a.discipline, a.created_at, a.edited_at,
            a.distance_km, a.duration_seconds, a.avg_pace, a.elevation_gain_m,
            a.is_personal_record, a.title, a.note, a.photo_url,
            a.splits, a.route_preview, a.route_altitudes, a.avg_heart_rate, a.kcal,
@@ -327,6 +336,7 @@ async function handleActivityDetail(req, res, userId) {
     avatarUrl: a.avatar_url || null,
     text: a.text,
     contentKey: a.content_key || null,
+    discipline: a.discipline || null,
     createdAt: a.created_at,
     editedAt: a.edited_at || null,
     distanceKm: a.distance_km === null ? null : Number(a.distance_km),
@@ -421,7 +431,7 @@ async function handleWall(req, res, userId, porteeForcee) {
   const rows = portee === 'courses' ? [] : (await sql`
     SELECT a.id, a.text, a.created_at, u.name, u.id AS user_id, u.avatar_data, u.avatar_url,
            a.distance_km, a.duration_seconds, a.avg_pace, a.elevation_gain_m, a.is_personal_record,
-           a.content_key, a.route_preview, a.title, a.note, a.edited_at, a.photo_url,
+           a.content_key, a.discipline, a.route_preview, a.title, a.note, a.edited_at, a.photo_url,
            (SELECT COUNT(*)::int FROM activity_kudos k WHERE k.activity_id = a.id) AS kudos,
            EXISTS(SELECT 1 FROM activity_kudos k WHERE k.activity_id = a.id AND k.user_id = ${userId}) AS kudoed_by_me,
            (SELECT COUNT(*)::int FROM activity_comments c WHERE c.activity_id = a.id) AS comments_count,

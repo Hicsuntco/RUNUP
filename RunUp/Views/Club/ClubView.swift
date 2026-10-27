@@ -1084,16 +1084,24 @@ struct ClubView: View {
     private func ligneDeLaMeilleureSemaine(_ semaine: ClubBestWeek) -> some View {
         HStack(spacing: 12) {
             Color.clear.frame(width: 32, height: 1)
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text("LA PLUS GROSSE SEMAINE")
-                    .font(RUFont.sans(.micro, weight: .bold)).tracking(0.6)
-                    .foregroundColor(RUColor.text3)
-                // 19 → 21, soit 22,9 pt rendus. C'EST LE CHIFFRE QU'ON VIENT LIRE, et il
-                // passait derrière l'intertitre qui le surplombe (20,0 avant, 17,5 depuis).
-                // Dans une app de course, la mesure est le contenu ; « Les records du club »
-                // n'est que l'étagère sur laquelle elle est posée.
+                    .font(RUFont.sans(.small, weight: .bold)).tracking(0.6)
+                    .foregroundColor(RUColor.rose2)
+                // LE CHIFFRE DE LA PAGE, ET IL N'Y EN A QU'UN.
+                //
+                // Une page sans point de fixation se lit comme une liste, quelle que soit la
+                // qualité de ses alignements : l'œil n'a nulle part où se poser d'abord, donc
+                // il balaie. C'est ce qui donne à cet écran son air « lisse » — rien n'y est
+                // deux fois plus grand que son voisin.
+                //
+                // Le record COLLECTIF est le bon candidat, et pas par défaut : c'est le seul
+                // chiffre de la page qui appartienne au club entier plutôt qu'à quelqu'un, et
+                // le seul dont la valeur grandit quand le club grandit. Les trois records
+                // nominatifs qui suivent restent à 21 — l'écart entre 36 et 23 est précisément
+                // ce qui fait de l'un un titre et des autres une liste.
                 Text(Distances.km(semaine.km))
-                    .displayStyle(21)
+                    .displayStyle(33)
                     .foregroundColor(RUColor.textPrimary)
             }
             Spacer(minLength: 8)

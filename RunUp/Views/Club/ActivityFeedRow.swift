@@ -526,7 +526,18 @@ struct ActivityFeedRow: View {
                     value: metric.value,
                     label: metric.label,
                     valueColor: RUColor.textPrimary,
-                    valueSize: 16
+                    // 16 → 22, ET C'EST UNE QUESTION DE PROPORTION, PAS DE GOÛT.
+                    //
+                    // Ces chiffres suivent une image qui fait maintenant toute la largeur de
+                    // l'écran et 266 points de haut. À 17,4 pt rendus, ils se lisaient comme
+                    // une légende sous une illustration. Dans un fil de course, la rangée de
+                    // mesures est le DEUXIÈME temps du post, juste après l'image — c'est elle
+                    // qu'on vient lire quand on a fini de regarder le tracé.
+                    //
+                    // 22 donne 24 pt rendus, soit la taille d'un titre de page. C'est voulu :
+                    // sur cette ligne-là, le chiffre EST le titre, et « km » ou « allure » en
+                    // dessous ne sont que des unités.
+                    valueSize: 22
                 )
             }
             Spacer(minLength: 0)

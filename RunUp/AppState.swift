@@ -293,6 +293,7 @@ final class AppState {
         auth.onAuthenticated = { [weak self] user in
             self?.reconcileProfileOwner(with: user)
             self?.reparerLeNomDuCompte(user)
+            self?.pousserLaPhotoSiJamaisMontee(user)
         }
         // Avant toute chose dans l'interface : le bouton RUN doit s'afficher d'emblée dans la
         // discipline choisie la dernière fois, pas basculer sous les yeux après coup.
@@ -388,6 +389,48 @@ final class AppState {
             // dépend quoi que ce soit. Hors ligne, elle retentera au prochain lancement.
             try? await service.updateProfile(name: prenom, lastName: nom.isEmpty ? nil : nom)
             try? await auth.refreshMe()
+        }
+    }
+
+    /// LE NOM EST MONTÉ AU SERVEUR, LA PHOTO EST RESTÉE SUR LE TÉLÉPHONE.
+    ///
+    /// La réparation ci-dessus a été écrite en disant qu'elle était « le jumeau exact de la
+    /// photo, que `SignInView` pousse déjà quand elle a été choisie avant que le compte
+    /// n'existe ». C'était vrai de la connexion, et faux de tout le reste : ce rattrapage-là
+    /// n'arrive QUE pendant `runAuth`, donc jamais pour un compte déjà connecté depuis
+    /// longtemps. Résultat visible dans le fil et dans les records du club : le prénom s'est
+    /// réparé, et les trois lignes portaient toujours une pastille à la lettre.
+    ///
+    /// # POURQUOI UNE CLÉ DANS `UserDefaults` ET PAS UN CHAMP
+    ///
+    /// Il faut savoir si cette photo est déjà montée, et `AuthenticatedUser` ne porte rien de
+    /// tel — l'ajouter demanderait un champ de plus à `api/me`, à son modèle décodable et à sa
+    /// règle d'optionalité. Pour un envoi qu'on veut faire UNE fois par compte et par appareil,
+    /// une clé locale dit exactement ce qu'on a besoin de savoir : « l'ai-je déjà fait, pour ce
+    /// compte-ci, depuis ce téléphone-ci ».
+    ///
+    /// L'identifiant du compte EST la valeur stockée, et pas un booléen : un téléphone qui
+    /// change de compte doit repousser la photo du nouveau profil.
+    ///
+    /// Ça ne remplace pas `ProfileView.setAvatar`, qui pousse déjà à chaque changement de photo
+    /// quand la session est ouverte. Ça ne couvre que le trou : une photo choisie avant que ce
+    /// chemin-là n'existe, ou avant que le compte n'existe.
+    private static let cleAvatarPousse = "runup.avatarPousseVers"
+
+    private func pousserLaPhotoSiJamaisMontee(_ user: AuthenticatedUser) {
+        guard let jpeg = profile.avatarImageData, !jpeg.isEmpty else { return }
+        let deja = UserDefaults.standard.string(forKey: Self.cleAvatarPousse)
+        guard deja != user.id else { return }
+        let dataURI = "data:image/jpeg;base64,\(jpeg.base64EncodedString())"
+        Task { [auth] in
+            do {
+                try await auth.updateAvatar(dataURI: dataURI)
+                // La clé n'est posée qu'APRÈS un envoi réussi : la poser avant transformerait
+                // une panne de réseau en photo définitivement absente du serveur.
+                UserDefaults.standard.set(user.id, forKey: Self.cleAvatarPousse)
+            } catch {
+                // Silencieux, et réessayé au prochain rafraîchissement du compte.
+            }
         }
     }
 

@@ -93,6 +93,20 @@ struct ActivityFeedRow: View {
                 }
 
                 media
+                    // BORD À BORD, ET C'EST LE GESTE QUI FAIT LA DIFFÉRENCE.
+                    //
+                    // L'image était posée DANS la colonne de texte, avec ses coins arrondis et
+                    // les marges de page de chaque côté. C'est la mise en page d'un tableau de
+                    // bord : une vignette illustrant une ligne. Instagram, Strava et tout ce qui
+                    // se parcourt au pouce font l'inverse — l'image touche les deux bords, et
+                    // c'est elle qui tient la page pendant que le texte s'aligne autour.
+                    //
+                    // Les quatre écrans qui affichent cette ligne (le fil, les amis, l'activité
+                    // du club, la page de quelqu'un) posent tous exactement
+                    // `RUSpacing.pagePadding` horizontalement : une marge négative de la même
+                    // valeur la ramène donc au bord de l'écran dans les quatre, sans qu'aucun
+                    // d'eux ait à le savoir.
+                    .padding(.horizontal, -RUSpacing.pagePadding)
                     // LE DOUBLE-TAPE SUR L'IMAGE : le geste par lequel on aime, partout, depuis
                     // dix ans. Il n'enlève jamais un applaudissement — sur Instagram comme ici,
                     // double-taper une photo déjà aimée ne la dés-aime pas : ce serait punir
@@ -212,7 +226,9 @@ struct ActivityFeedRow: View {
         .aspectRatio(4.0 / 5.0, contentMode: .fill)
         .frame(maxWidth: .infinity)
         .clipped()
-        .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+        // Plus de coins arrondis : l'image touche maintenant les deux bords de l'écran, et un
+        // coin arrondi contre un bord d'écran se lit comme une image mal découpée, pas comme un
+        // objet posé. Même raison qu'au bandeau de tracé.
         .overlay(alignment: .bottomTrailing) {
             if let trace {
                 RouteThumbnail(route: trace, lineWidth: 2, lineColor: .white, showsStart: false)
@@ -279,8 +295,14 @@ struct ActivityFeedRow: View {
             )
             .padding(20)
         }
-        .frame(height: 190)
-        .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+        // 190 → 4:3. Le bandeau de tracé était SQUAT : cent quatre-vingt-dix points de haut
+        // pendant que la branche photo, dix lignes plus haut, tient un 4:5 — soit près du double.
+        // Deux traitements pour la même place dans la même ligne, et c'est le tracé qui perdait,
+        // alors que c'est lui qu'on a presque toujours (une sortie sans photo en a quand même un).
+        //
+        // 4:3 et non 4:5 : une trace GPS n'est pas un portrait. Étirée sur cinq quarts, elle
+        // flotte au milieu d'un rectangle vide — ce qu'on veut, c'est qu'elle remplisse.
+        .aspectRatio(4.0 / 3.0, contentMode: .fill)
     }
 
     /// Les trois points, à la place du menu contextuel caché sous un appui long.

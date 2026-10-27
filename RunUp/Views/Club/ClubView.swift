@@ -779,17 +779,20 @@ struct ClubView: View {
             Text("Un défi à se partager, ou une sortie à proposer : c'est ce qui donne au club une raison de se retrouver cette semaine.")
                 .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
                 .fixedSize(horizontal: false, vertical: true)
+            // PAS DE `minHeight: 44` ICI — voir la note sur le bouton « Partager » plus bas.
+            // Le style le garantit déjà ; le réécrire dans le libellé l'EMPILE sous les marges
+            // du style et donne un pavé de soixante-douze points.
             HStack(spacing: 10) {
                 Button(action: { showManagement = true }) {
                     Text("Créer un défi")
                         .font(RUFont.sans(.label, weight: .semibold))
-                        .frame(maxWidth: .infinity).frame(minHeight: 44)
+                        .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(SecondaryButtonStyle())
                 Button(action: { showCreateEvent = true }) {
                     Text("Proposer une sortie")
                         .font(RUFont.sans(.label, weight: .semibold))
-                        .frame(maxWidth: .infinity).frame(minHeight: 44)
+                        .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(SecondaryButtonStyle())
             }
@@ -829,6 +832,19 @@ struct ClubView: View {
                 // maintenant la page publique du club — sa photo, sa ville, ses
                 // prochaines séances — et, sur un iPhone où l'app est installée,
                 // directement l'app.
+                // LE PAVÉ GRIS DE SOIXANTE-DOUZE POINTS, ET D'OÙ IL VENAIT.
+                //
+                // `SecondaryButtonStyle` garantit DÉJÀ la cible de 44 points — c'est écrit dans
+                // son corps : `.padding(.vertical, 14).frame(maxWidth: .infinity, minHeight: 44)`.
+                // Le libellé en redemandait 44 de son côté, et les deux ne se recouvrent pas :
+                // le style ajoute ses 14 points EN HAUT ET EN BAS d'un libellé déjà haut de 44.
+                // D'où 72 points de haut pour le mot « Partager » — un aplat gris qui occupait
+                // un tiers de la carte et la faisait ressembler à un formulaire.
+                //
+                // Et `GhostButtonStyle` plutôt que `Secondary`, parce que c'est le style de
+                // partage de la maquette : sa propre documentation cite « Partager ce badge » et
+                // « Partager ta course ». Fond de carte, libellé en accent — l'action se voit
+                // par sa COULEUR au lieu de se voir par sa masse.
                 ShareLink(item: String(localized: "Rejoins mon club \(club.name) sur RUNUP : https://runup-nu.vercel.app/club/\(club.id)")) {
                     HStack(spacing: 6) {
                         Image(systemName: "square.and.arrow.up")
@@ -836,9 +852,8 @@ struct ClubView: View {
                     }
                     .font(RUFont.sans(.label, weight: .semibold))
                     .frame(maxWidth: .infinity)
-                    .frame(minHeight: 44)
                 }
-                .buttonStyle(SecondaryButtonStyle())
+                .buttonStyle(GhostButtonStyle())
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(RUSpacing.cardPadding)

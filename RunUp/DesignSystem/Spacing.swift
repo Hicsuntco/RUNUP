@@ -85,6 +85,22 @@ enum RUSpacing {
     /// définition du contour, pas de l'élévation.
     static let hairline: CGFloat = 1
 
+    /// CE QUE CHAQUE FEUILLE RÉSERVE EN BAS, ET POURQUOI ELLE NE LE DÉCIDE PLUS ELLE-MÊME.
+    ///
+    /// Les vingt-cinq feuilles de l'app avaient chacune inventé sa valeur : 44 dans le détail
+    /// d'une séance, 40 dans les réglages et la connexion, 28 dans les quatre feuilles de jour
+    /// de course, 26 dans les réglages du programme, 24 dans le bilan, 2 dans le changement de
+    /// compte — et RIEN du tout dans dix autres. Ce n'est pas une variété de styles, c'est une
+    /// question à laquelle personne n'a répondu deux fois pareil.
+    ///
+    /// Et la plus répandue des réponses était fausse : le bilan avait 24, et son bouton touchait
+    /// quand même le bas de l'écran. Une feuille présentée en grand descend sous l'indicateur
+    /// d'accueil, qui mesure 34 points à lui seul.
+    ///
+    /// 44 = les 34 de l'indicateur, plus dix points d'air. En dessous, le dernier élément se lit
+    /// comme coupé par le bord plutôt que posé avant lui.
+    static let sheetBottomInset: CGFloat = 44
+
     /// 56 et non plus 64, et l'encoche du bas 12 au lieu de 18 : la barre occupait 82 pt en
     /// bas de chaque écran, pour cinq cibles de 44.
     static let tabBarHeight: CGFloat = 56

@@ -234,7 +234,7 @@ struct RootTabView: View {
             get: { appState.pendingDebriefs.first },
             set: { newValue in if newValue == nil, !appState.pendingDebriefs.isEmpty { appState.pendingDebriefs.removeFirst() } }
         )) { run in
-            DebriefSheet(run: run).runUpSheetStyle()
+            DebriefSheet(run: run).runUpSheetStyle(gereSonBas: true)
         }
         // Tapping the weekly-recap local notification lands here rather than wherever the app
         // happened to be left open — `NotificationService` can't reach `AppState` directly (it's a

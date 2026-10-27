@@ -51,7 +51,8 @@ struct NotificationsSheet: View {
                 }
             }
             .padding(.horizontal, 18)
-            .padding(.bottom, 28)
+            // L'encart du bas n'est plus posé ici : `runUpSheetStyle` le donne à toutes les
+            // feuilles, d'une seule valeur. Voir `RUSpacing.sheetBottomInset`.
         }
         .onAppear {
             for n in notifications where !n.read { n.read = true }

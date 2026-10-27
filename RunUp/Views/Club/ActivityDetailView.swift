@@ -81,7 +81,7 @@ struct ActivityDetailView: View {
                 onReport: { _ in },
                 onBlock: { _ in }
             )
-            .runUpSheetStyle(detents: [.large])
+            .runUpSheetStyle(detents: [.large], gereSonBas: true)
         }
     }
 

@@ -81,7 +81,7 @@ struct SignInView: View {
                     .buttonStyle(PressableStyle())
                 }
                 .padding(.horizontal, RUSpacing.pagePadding)
-                .padding(.bottom, 40)
+                // Voir `RUSpacing.sheetBottomInset` : l'encart vient de `runUpSheetStyle`.
             }
         }
         .background(RUColor.pageBackground)
@@ -131,7 +131,7 @@ struct SignInView: View {
                 .disabled(isSavingUsername)
         }
         .padding(.horizontal, RUSpacing.pagePadding)
-        .padding(.bottom, 40)
+        // Voir `RUSpacing.sheetBottomInset` : l'encart vient de `runUpSheetStyle`.
         .onAppear {
             guard usernameField.isEmpty else { return }
             usernameField = suggestedUsername()

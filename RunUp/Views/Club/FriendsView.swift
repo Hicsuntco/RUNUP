@@ -174,7 +174,7 @@ struct FriendsView: View {
                     }
                 }
             )
-                .runUpSheetStyle(detents: [.large])
+                .runUpSheetStyle(detents: [.large], gereSonBas: true)
         }
         .confirmationDialog(
             "Signaler",

@@ -230,7 +230,7 @@ struct ClubView: View {
                     }
                 }
             )
-                .runUpSheetStyle(detents: [.large])
+                .runUpSheetStyle(detents: [.large], gereSonBas: true)
         }
         .onChange(of: auth.isSignedIn) { _, signedIn in
             if signedIn { Task { await loadIfSignedIn() } }

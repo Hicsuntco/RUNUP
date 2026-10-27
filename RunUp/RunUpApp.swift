@@ -256,7 +256,7 @@ private struct ContentRouterView: View {
             PaywallView(subscriptions: subscriptions,
                         highlighted: feature,
                         onClose: { appState.plusPrompt = nil })
-                .runUpSheetStyle(detents: [.large])
+                .runUpSheetStyle(detents: [.large], gereSonBas: true)
         }
         // Plein écran, et non une feuille : c'est l'offre d'ouverture, elle mérite la place. Une
         // présentation distincte de celle des verrous ci-dessus, pour que les deux ne se

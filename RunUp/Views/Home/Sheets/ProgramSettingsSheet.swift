@@ -65,7 +65,8 @@ struct ProgramSettingsSheet: View {
                 .padding(.top, 18)
             }
             .padding(.horizontal, 18)
-            .padding(.bottom, 26)
+            // L'encart du bas n'est plus posé ici : `runUpSheetStyle` le donne à toutes les
+            // feuilles, d'une seule valeur. Voir `RUSpacing.sheetBottomInset`.
         }
         .onAppear {
             days = Set(appState.profile.runningDays)

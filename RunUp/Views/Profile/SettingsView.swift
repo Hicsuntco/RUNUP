@@ -46,7 +46,7 @@ struct SettingsView: View {
                 }
                 .padding(.horizontal, RUSpacing.pagePadding)
                 .padding(.top, 8)
-                .padding(.bottom, 40)
+                // Voir `RUSpacing.sheetBottomInset` : l'encart vient de `runUpSheetStyle`.
             }
             .background(RUColor.pageBackground)
             .navigationTitle("Réglages")
@@ -60,7 +60,7 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showPaywall) {
             PaywallView(subscriptions: subscriptions, onClose: { showPaywall = false })
-                .runUpSheetStyle(detents: [.large])
+                .runUpSheetStyle(detents: [.large], gereSonBas: true)
         }
     }
 

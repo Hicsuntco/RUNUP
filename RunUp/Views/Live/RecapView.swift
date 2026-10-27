@@ -301,7 +301,7 @@ struct RecapView: View {
             }
             .sheet(isPresented: $showDebrief) {
                 DebriefSheet(run: run)
-                    .runUpSheetStyle()
+                    .runUpSheetStyle(gereSonBas: true)
             }
             // UN ÉCRAN ENTIER, ET PAS UNE FEUILLE. Une feuille se referme en la tirant vers le
             // bas — c'est tout son intérêt, et c'est exactement le geste qu'on fait pour

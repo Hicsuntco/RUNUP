@@ -222,7 +222,7 @@ struct WallView: View {
                 },
                 onBlock: { commentaire in pendingBlock = (commentaire.userId, commentaire.name) }
             )
-            .runUpSheetStyle(detents: [.large])
+            .runUpSheetStyle(detents: [.large], gereSonBas: true)
         }
         .sheet(item: $editing) { item in
             EditActivitySheet(item: item, onSaved: { Task { await charger() } })

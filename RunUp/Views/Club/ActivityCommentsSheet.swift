@@ -89,7 +89,7 @@ struct ActivityCommentsSheet: View {
                     .disabled(moi)
                     Text(comment.createdAt.relativeDescription).font(RUFont.sans(.micro)).foregroundColor(RUColor.text3)
                 }
-                Text(comment.text).font(RUFont.sans(.label)).foregroundColor(RUColor.text2).lineSpacing(2)
+                Text(comment.text).font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(2)
             }
             Spacer(minLength: 0)
         }

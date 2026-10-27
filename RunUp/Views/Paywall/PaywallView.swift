@@ -146,7 +146,7 @@ struct PaywallView: View {
                 .foregroundColor(RUColor.onRose)
                 .fixedSize(horizontal: false, vertical: true)
             Text(highlighted?.pitch ?? String(localized: "Ton programme, ton coach et tes stats. Sans rien qui manque."))
-                .font(RUFont.sans(.label))
+                .font(RUFont.sans(.body))
                 .foregroundColor(RUColor.onRose.opacity(0.88))
                 .fixedSize(horizontal: false, vertical: true)
         }

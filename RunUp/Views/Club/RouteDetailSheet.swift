@@ -206,7 +206,7 @@ struct RouteDetailSheet: View {
                                     .foregroundColor(RUColor.text3)
                             }
                             Text(commentaire.text)
-                                .font(RUFont.sans(.label))
+                                .font(RUFont.sans(.body))
                                 .foregroundColor(RUColor.text2)
                                 .fixedSize(horizontal: false, vertical: true)
                         }

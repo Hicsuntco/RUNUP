@@ -552,7 +552,7 @@ struct ClubMemberProfileView: View {
             }
             .padding(.horizontal, 10)
         } else if let bio = member.bio, !bio.isEmpty {
-            Text(bio).font(RUFont.sans(.label)).foregroundColor(RUColor.text2).multilineTextAlignment(.center).padding(.horizontal, 20)
+            Text(bio).font(RUFont.sans(.body)).foregroundColor(RUColor.text2).multilineTextAlignment(.center).padding(.horizontal, 20)
         }
     }
 

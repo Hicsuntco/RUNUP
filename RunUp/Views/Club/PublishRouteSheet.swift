@@ -180,7 +180,7 @@ struct PublishRouteSheet: View {
             Text(verbatim: Accord.selon(
                 f: String(localized: "Les \(Int(RouteGeometry.sharingTrimMeters)) premiers et derniers mètres sont retirés avant l'envoi : personne ne verra d'où tu es partie ni où tu es rentrée. C'est le tracé ci-dessus qui sera publié, pas celui que tu as couru."),
                 m: String(localized: "Les \(Int(RouteGeometry.sharingTrimMeters)) premiers et derniers mètres sont retirés avant l'envoi : personne ne verra d'où tu es parti ni où tu es rentré. C'est le tracé ci-dessus qui sera publié, pas celui que tu as couru.")))
-                .font(RUFont.sans(.label))
+                .font(RUFont.sans(.body))
                 .foregroundColor(RUColor.text2)
         }
         .padding(12)
@@ -192,7 +192,7 @@ struct PublishRouteSheet: View {
             Image(systemName: "exclamationmark.triangle")
                 .foregroundColor(RUColor.rose)
             Text("Cette sortie est trop courte pour être partagée : une fois les extrémités retirées, il ne resterait pas assez de tracé pour être utile.")
-                .font(RUFont.sans(.label))
+                .font(RUFont.sans(.body))
                 .foregroundColor(RUColor.text2)
         }
         .padding(12)

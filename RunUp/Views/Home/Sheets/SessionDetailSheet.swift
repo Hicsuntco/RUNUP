@@ -178,7 +178,7 @@ struct SessionDetailSheet: View {
 
                 if isRestDay {
                     Text(session.displaySubtitle)
-                        .font(RUFont.sans(.label)).foregroundColor(RUColor.text2).lineSpacing(3)
+                        .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
                         .padding(.top, 16)
                 } else {
                     RUMetricRow(spacing: 16) {

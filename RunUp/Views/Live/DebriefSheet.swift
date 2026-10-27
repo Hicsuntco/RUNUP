@@ -73,15 +73,34 @@ struct DebriefSheet: View {
                 EyebrowLabel(text: String(localized: "Bilan · \(run.title)"), color: RUColor.rose).padding(.top, 8)
                 Text("Comment tu te sens ?").displayStyle(24).foregroundColor(RUColor.textPrimary).padding(.top, 4)
 
-                HStack(alignment: .top, spacing: 10) {
-                    AppMarkView(size: 18, radius: 9)
-                    Text(insightMessage)
-                        .font(RUFont.sans(.label)).foregroundColor(RUColor.textPrimary).lineSpacing(3)
-                }
-                .padding(RUSpacing.cardPadding)
-                .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
-                .padding(.top, 14)
+                // LE MOT DU COACH SORT DE SA BOÎTE, ET REDESCEND À LA TAILLE D'UNE PHRASE.
+                //
+                // # CE QUI SE VOYAIT
+                //
+                // Une carte blanche à contour, posée entre la question et les quatre émojis,
+                // pour UNE phrase. Son texte démarrait quatorze points à droite de « Comment tu
+                // te sens ? » — le `cardPadding` ajouté à la marge de la feuille — donc la
+                // feuille comptait deux marges gauches différentes sur quatre blocs. C'est ce
+                // décalage qu'on lit comme « rien n'est aligné » : il n'y a pas d'erreur, il y a
+                // un cran que rien ne justifie.
+                //
+                // # ET LA TAILLE
+                //
+                // `.label` rend 17,5 points. Sur un mot ou deux c'est une étiquette ; sur un
+                // paragraphe de trois lignes, c'est un bloc de texte à la taille d'un titre de
+                // section. `.body` rend 15 — le cran que l'app réserve à la prose, partout
+                // ailleurs.
+                //
+                // Ce que la boîte prétendait faire, la place le fait : cette phrase est le
+                // SOUS-TITRE de la question juste au-dessus. Elle se lit maintenant comme tel,
+                // sur la même marge que tout le reste, et la feuille perd un cadre.
+                Text(insightMessage)
+                    .font(RUFont.sans(.body))
+                    .foregroundColor(RUColor.text2)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 8)
 
                 EyebrowLabel(text: "L'effort ressenti", color: RUColor.text3).padding(.top, 18).padding(.bottom, 10)
                 HStack(spacing: 6) {
@@ -127,133 +146,159 @@ struct DebriefSheet: View {
                 .ruHeroCard(radius: 18)
                 .padding(.top, 16)
 
-                Button("VALIDER & METTRE À JOUR") {
-                    // Blocks a double-tap (or reopening this sheet for a run already validated)
-                    // from crediting XP/streak/club-feed a second time for the same run —
-                    // `run.modelContext == nil` below only ever guarded the INSERT, not a second
-                    // run through the reward logic on a record already inserted.
-                    guard run.debriefedAt == nil else { dismiss(); return }
-                    run.debriefedAt = .now
-                    // A GPS run is inserted by `endLiveRun` (it really happened, validated or
-                    // not); a manual "FAIT" run reaches here NOT yet inserted, so a dismissed
-                    // sheet leaves no phantom record — it only becomes real on this tap.
-                    if run.modelContext == nil {
-                        appState.modelContext.insert(run)
-                    }
-                    // Auto-attaches whichever pair is set as default in `ShoesView` — asking her
-                    // to pick a shoe on every single run here would clutter the one screen that
-                    // matters most (the RPE debrief); a wrong pick is a rare enough edge case to
-                    // just fix from History/ShoesView instead of designing a picker into this flow.
-                    if let shoeID = appState.profile.defaultShoeID, let shoe = activeShoes.first(where: { $0.id == shoeID }) {
-                        run.shoeID = shoeID
-                        // `runs` may or may not already include this exact run (GPS runs are
-                        // inserted earlier by `endLiveRun`, manual ones aren't yet) — excluding it
-                        // by identity and adding `run.distanceKm` back by hand sidesteps that
-                        // instead of risking a double count.
-                        let kmBefore = shoe.totalKm(runs: runs.filter { $0 !== run })
-                        let kmAfter = kmBefore + run.distanceKm
-                        if kmBefore < shoe.alertThresholdKm, kmAfter >= shoe.alertThresholdKm {
-                            appState.notify(icon: "👟", colorHex: 0xFFB03D, title: String(localized: "\(shoe.name) en fin de vie"), text: String(localized: "Cette paire dépasse \(Int(shoe.alertThresholdKm)) km — pense à la changer bientôt."))
-                        }
-                    }
-                    AdaptivePlanEngine.applyDebrief(rpe: rpe, run: run, profile: appState.profile)
-                    let distance = String(format: "%.1f", locale: Locale.current, run.distanceKm)
-                    // A distance-less séance (HYROX/renfo logged without GPS) shouldn't read
-                    // "a couru 0,0 km" in the club feed.
-                    let feedText = run.distanceKm > 0.05
-                        ? String(localized: "a couru \(distance) km · \(run.title)")
-                        : String(localized: "a fait sa séance · \(run.title)")
-                    // Les vraies mesures de la sortie partent avec le post : c'est ce qui permet à
-                    // la carte du fil d'afficher KM / ALLURE / TEMPS au lieu d'une seule phrase.
-                    // Chaque champ n'est joint que s'il a été réellement mesuré — une séance sans
-                    // GPS n'envoie ni distance, ni allure, ni dénivelé, et sa carte n'affichera
-                    // simplement pas ces colonnes.
-                    let hasDistance = run.distanceKm > 0.05
-                    let metrics = ActivityMetrics(
-                        distanceKm: hasDistance ? run.distanceKm : nil,
-                        durationSeconds: run.durationSeconds > 0 ? run.durationSeconds : nil,
-                        avgPace: hasDistance && PaceModel.parseSecPerKm(run.avgPace) != nil ? run.avgPace : nil,
-                        elevationGainM: run.elevationGainM > 0 ? run.elevationGainM : nil,
-                        isPersonalRecord: RunRecord.beatsPersonalRecord(run, history: runs),
-                        // De quoi DÉROULER la sortie chez les autres, et pas seulement la
-                        // résumer : ses kilomètres un par un, son cœur, ses calories. Ils
-                        // existaient déjà sur l'appareil et n'en sortaient jamais.
-                        splits: run.splits,
-                        avgHeartRate: run.avgHeartRate > 0 ? run.avgHeartRate : nil,
-                        kcal: run.kcal > 0 ? run.kcal : nil
-                    )
-                    // `contentKey` accompagne la phrase sans la remplacer : le serveur garde `text` pour la
-                    // notification push, qu'il compose lui-même et sans connaître la langue de qui la
-                    // reçoit, tandis que le fil se refabrique la phrase chez sa lectrice. Absent pour
-                    // une séance hors plan — il n'y a alors aucun type de séance à nommer.
-                    appState.postClubActivity(type: "run", text: feedText, xpEarned: 120, contentKey: run.sessionKind?.rawValue, discipline: run.discipline.rawValue, metrics: metrics, route: run.route)
-                    // Deliberately here rather than in `AppState.endLiveRun` — this tap is where a
-                    // run actually becomes real on every path into it (GPS, "FAIT", a run handed
-                    // back by the Watch), and it's the tap that credits XP/streak/plan adaptation.
-                    // Anything earlier would count a stopped-but-never-validated run as completed,
-                    // and would miss the two non-GPS paths entirely.
-                    Analytics.shared.trackOnce(.firstRunCompleted)
-                    Analytics.shared.track(.runCompleted, [
-                        "distance_km": .double((run.distanceKm * 10).rounded() / 10),
-                        "duration_min": .int(run.durationSeconds / 60),
-                        // `RPE`'s own raw value, which is ordinal by construction (0 = trop dur →
-                        // 3 = facile) — an average over it is meaningful, where the French display
-                        // label would have been both unaverageable and free to change with copy.
-                        "rpe": .int(rpe.rawValue),
-                        "streak": .int(appState.profile.streak),
-                    ])
-                    // Every completed session earns its own bell entry — before this, the only
-                    // notify() call sites were the rare same-day 3-goals bonus, a club kudos/
-                    // comment, or a weekly plan update, so a solo runner who just isn't hitting
-                    // that exact daily combo would never see anything land in the bell at all.
-                    appState.notify(icon: "✅", colorHex: 0xC9FF3B, title: String(localized: "Séance terminée"), text: run.distanceKm > 0.05 ? "\(run.title) · \(distance) km · +120 XP" : "\(run.title) · +120 XP")
-                    // This single tap awards XP, updates the streak, and possibly a daily-goals
-                    // bonus — the app's core adaptive-plan mechanic — but had zero haptic feedback,
-                    // the same as tapping a settings toggle. A success tap here, and a stronger one
-                    // on the two branches below that are genuine celebration moments.
-                    Haptics.success()
-                    let streak = appState.profile.streak
-                    if AdaptivePlanEngine.streakMilestones.contains(streak) {
-                        appState.notify(icon: "🔥", colorHex: 0xFF6B4A, title: String(localized: "Série de \(streak) jours"), text: String(localized: "Tu enchaînes les séances sans lâcher — continue comme ça !"))
-                        Haptics.impact(.heavy)
-                    }
-                    if AdaptivePlanEngine.checkDailyGoalsBonus(appState.profile) {
-                        appState.postClubActivity(type: "badge", text: String(localized: "a bouclé ses 3 objectifs du jour"), xpEarned: 120, contentKey: "daily_goals")
-                        appState.notify(icon: "🎉", colorHex: 0xC9FF3B, title: String(localized: "Journée bouclée"), text: String(localized: "Tes 3 objectifs du jour sont faits — +120 XP."))
-                        NotificationService.shared.postImmediateNotification(title: String(localized: "Journée bouclée 🎉"), body: String(localized: "Tes 3 objectifs du jour sont faits — +120 XP."))
-                        Haptics.impact(.heavy)
-                    }
-                    // Today's session is done — an evening reminder for it would be stale now.
-                    NotificationService.shared.rescheduleDailyReminder(for: appState.profile)
-                    appState.publishWidgetSnapshot()
-                    appState.toast(String(localized: "Programme mis à jour · +120 XP 🔥"))
-                    // Ask for a rating right after a run that felt good, not on a fixed schedule —
-                    // `shouldRequestReview` also caps this to real milestones and a 90-day cooldown.
-                    if appState.shouldRequestReview(rpe: rpe) {
-                        appState.recordReviewPromptShown()
-                        requestReview()
-                        // `requestReview()` only hands the request to the window scene — presenting
-                        // it is async and risks getting silently dropped if this sheet dismisses and
-                        // navigates away in the same synchronous burst, which is exactly what used
-                        // to happen right here. Give it a beat to actually attach before tearing
-                        // down the presenting context.
-                        Task {
-                            try? await Task.sleep(for: .milliseconds(600))
-                            await MainActor.run {
-                                dismiss()
-                                appState.go(.rings)
-                            }
-                        }
-                    } else {
-                        dismiss()
-                        appState.go(.rings)
-                    }
-                }
-                .buttonStyle(PrimaryButtonStyle())
-                .padding(.top, 16)
             }
             .padding(.horizontal, 18)
-            .padding(.bottom, 24)
+            .padding(.bottom, 10)
         }
+        // LE BOUTON SORT DU DÉFILEMENT, ET C'EST CE QUI L'ÉLOIGNE DU BAS DE L'ÉCRAN.
+        //
+        // Il était la dernière vue du `ScrollView`, avec 24 points sous lui. Vingt-quatre
+        // points comptés depuis le bas du CONTENU, pas depuis le bas de l'écran : une
+        // feuille présentée en plein écran descend sous l'indicateur d'accueil, et le
+        // bouton s'y collait. Les autres feuilles de l'app ont inventé chacune leur valeur
+        // pour le même problème — 24 ici, 30 dans la gestion du club, 44 dans le détail
+        // d'une séance — ce qui est le signe qu'aucune ne le réglait.
+        //
+        // `safeAreaInset` le pose HORS du défilement : le système le place au-dessus de
+        // l'indicateur d'accueil, et le contenu qui défile s'arrête juste avant lui. Le
+        // geste principal de la feuille cesse du même coup de demander qu'on fasse défiler
+        // pour l'atteindre.
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: 0) {
+                // Un filet, pour que le contenu qui passe dessous se voie passer dessous.
+                Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
+                boutonDeValidation
+                    .padding(.horizontal, 18)
+                    .padding(.top, 12)
+                    .padding(.bottom, 6)
+            }
+            .background(RUColor.bg)
+        }
+    }
+
+    private var boutonDeValidation: some View {
+            Button("VALIDER & METTRE À JOUR") {
+                // Blocks a double-tap (or reopening this sheet for a run already validated)
+                // from crediting XP/streak/club-feed a second time for the same run —
+                // `run.modelContext == nil` below only ever guarded the INSERT, not a second
+                // run through the reward logic on a record already inserted.
+                guard run.debriefedAt == nil else { dismiss(); return }
+                run.debriefedAt = .now
+                // A GPS run is inserted by `endLiveRun` (it really happened, validated or
+                // not); a manual "FAIT" run reaches here NOT yet inserted, so a dismissed
+                // sheet leaves no phantom record — it only becomes real on this tap.
+                if run.modelContext == nil {
+                    appState.modelContext.insert(run)
+                }
+                // Auto-attaches whichever pair is set as default in `ShoesView` — asking her
+                // to pick a shoe on every single run here would clutter the one screen that
+                // matters most (the RPE debrief); a wrong pick is a rare enough edge case to
+                // just fix from History/ShoesView instead of designing a picker into this flow.
+                if let shoeID = appState.profile.defaultShoeID, let shoe = activeShoes.first(where: { $0.id == shoeID }) {
+                    run.shoeID = shoeID
+                    // `runs` may or may not already include this exact run (GPS runs are
+                    // inserted earlier by `endLiveRun`, manual ones aren't yet) — excluding it
+                    // by identity and adding `run.distanceKm` back by hand sidesteps that
+                    // instead of risking a double count.
+                    let kmBefore = shoe.totalKm(runs: runs.filter { $0 !== run })
+                    let kmAfter = kmBefore + run.distanceKm
+                    if kmBefore < shoe.alertThresholdKm, kmAfter >= shoe.alertThresholdKm {
+                        appState.notify(icon: "👟", colorHex: 0xFFB03D, title: String(localized: "\(shoe.name) en fin de vie"), text: String(localized: "Cette paire dépasse \(Int(shoe.alertThresholdKm)) km — pense à la changer bientôt."))
+                    }
+                }
+                AdaptivePlanEngine.applyDebrief(rpe: rpe, run: run, profile: appState.profile)
+                let distance = String(format: "%.1f", locale: Locale.current, run.distanceKm)
+                // A distance-less séance (HYROX/renfo logged without GPS) shouldn't read
+                // "a couru 0,0 km" in the club feed.
+                let feedText = run.distanceKm > 0.05
+                    ? String(localized: "a couru \(distance) km · \(run.title)")
+                    : String(localized: "a fait sa séance · \(run.title)")
+                // Les vraies mesures de la sortie partent avec le post : c'est ce qui permet à
+                // la carte du fil d'afficher KM / ALLURE / TEMPS au lieu d'une seule phrase.
+                // Chaque champ n'est joint que s'il a été réellement mesuré — une séance sans
+                // GPS n'envoie ni distance, ni allure, ni dénivelé, et sa carte n'affichera
+                // simplement pas ces colonnes.
+                let hasDistance = run.distanceKm > 0.05
+                let metrics = ActivityMetrics(
+                    distanceKm: hasDistance ? run.distanceKm : nil,
+                    durationSeconds: run.durationSeconds > 0 ? run.durationSeconds : nil,
+                    avgPace: hasDistance && PaceModel.parseSecPerKm(run.avgPace) != nil ? run.avgPace : nil,
+                    elevationGainM: run.elevationGainM > 0 ? run.elevationGainM : nil,
+                    isPersonalRecord: RunRecord.beatsPersonalRecord(run, history: runs),
+                    // De quoi DÉROULER la sortie chez les autres, et pas seulement la
+                    // résumer : ses kilomètres un par un, son cœur, ses calories. Ils
+                    // existaient déjà sur l'appareil et n'en sortaient jamais.
+                    splits: run.splits,
+                    avgHeartRate: run.avgHeartRate > 0 ? run.avgHeartRate : nil,
+                    kcal: run.kcal > 0 ? run.kcal : nil
+                )
+                // `contentKey` accompagne la phrase sans la remplacer : le serveur garde `text` pour la
+                // notification push, qu'il compose lui-même et sans connaître la langue de qui la
+                // reçoit, tandis que le fil se refabrique la phrase chez sa lectrice. Absent pour
+                // une séance hors plan — il n'y a alors aucun type de séance à nommer.
+                appState.postClubActivity(type: "run", text: feedText, xpEarned: 120, contentKey: run.sessionKind?.rawValue, discipline: run.discipline.rawValue, metrics: metrics, route: run.route)
+                // Deliberately here rather than in `AppState.endLiveRun` — this tap is where a
+                // run actually becomes real on every path into it (GPS, "FAIT", a run handed
+                // back by the Watch), and it's the tap that credits XP/streak/plan adaptation.
+                // Anything earlier would count a stopped-but-never-validated run as completed,
+                // and would miss the two non-GPS paths entirely.
+                Analytics.shared.trackOnce(.firstRunCompleted)
+                Analytics.shared.track(.runCompleted, [
+                    "distance_km": .double((run.distanceKm * 10).rounded() / 10),
+                    "duration_min": .int(run.durationSeconds / 60),
+                    // `RPE`'s own raw value, which is ordinal by construction (0 = trop dur →
+                    // 3 = facile) — an average over it is meaningful, where the French display
+                    // label would have been both unaverageable and free to change with copy.
+                    "rpe": .int(rpe.rawValue),
+                    "streak": .int(appState.profile.streak),
+                ])
+                // Every completed session earns its own bell entry — before this, the only
+                // notify() call sites were the rare same-day 3-goals bonus, a club kudos/
+                // comment, or a weekly plan update, so a solo runner who just isn't hitting
+                // that exact daily combo would never see anything land in the bell at all.
+                appState.notify(icon: "✅", colorHex: 0xC9FF3B, title: String(localized: "Séance terminée"), text: run.distanceKm > 0.05 ? "\(run.title) · \(distance) km · +120 XP" : "\(run.title) · +120 XP")
+                // This single tap awards XP, updates the streak, and possibly a daily-goals
+                // bonus — the app's core adaptive-plan mechanic — but had zero haptic feedback,
+                // the same as tapping a settings toggle. A success tap here, and a stronger one
+                // on the two branches below that are genuine celebration moments.
+                Haptics.success()
+                let streak = appState.profile.streak
+                if AdaptivePlanEngine.streakMilestones.contains(streak) {
+                    appState.notify(icon: "🔥", colorHex: 0xFF6B4A, title: String(localized: "Série de \(streak) jours"), text: String(localized: "Tu enchaînes les séances sans lâcher — continue comme ça !"))
+                    Haptics.impact(.heavy)
+                }
+                if AdaptivePlanEngine.checkDailyGoalsBonus(appState.profile) {
+                    appState.postClubActivity(type: "badge", text: String(localized: "a bouclé ses 3 objectifs du jour"), xpEarned: 120, contentKey: "daily_goals")
+                    appState.notify(icon: "🎉", colorHex: 0xC9FF3B, title: String(localized: "Journée bouclée"), text: String(localized: "Tes 3 objectifs du jour sont faits — +120 XP."))
+                    NotificationService.shared.postImmediateNotification(title: String(localized: "Journée bouclée 🎉"), body: String(localized: "Tes 3 objectifs du jour sont faits — +120 XP."))
+                    Haptics.impact(.heavy)
+                }
+                // Today's session is done — an evening reminder for it would be stale now.
+                NotificationService.shared.rescheduleDailyReminder(for: appState.profile)
+                appState.publishWidgetSnapshot()
+                appState.toast(String(localized: "Programme mis à jour · +120 XP 🔥"))
+                // Ask for a rating right after a run that felt good, not on a fixed schedule —
+                // `shouldRequestReview` also caps this to real milestones and a 90-day cooldown.
+                if appState.shouldRequestReview(rpe: rpe) {
+                    appState.recordReviewPromptShown()
+                    requestReview()
+                    // `requestReview()` only hands the request to the window scene — presenting
+                    // it is async and risks getting silently dropped if this sheet dismisses and
+                    // navigates away in the same synchronous burst, which is exactly what used
+                    // to happen right here. Give it a beat to actually attach before tearing
+                    // down the presenting context.
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(600))
+                        await MainActor.run {
+                            dismiss()
+                            appState.go(.rings)
+                        }
+                    }
+                } else {
+                    dismiss()
+                    appState.go(.rings)
+                }
+            }
+            .buttonStyle(PrimaryButtonStyle())
     }
 }

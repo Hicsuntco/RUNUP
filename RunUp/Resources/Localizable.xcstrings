@@ -11543,6 +11543,22 @@
         }
       }
     },
+    "Gérer cette annonce": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage this post"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestionar este anuncio"
+          }
+        }
+      }
+    },
     "Gérer mon abonnement": {
       "extractionState": "manual",
       "localizations": {
@@ -11985,6 +12001,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudo aplaudir — inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Impossible d'enregistrer la sortie, réessaie.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not save the group run, try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo guardar la salida, inténtalo de nuevo."
           }
         }
       }
@@ -15965,6 +15997,54 @@
         }
       }
     },
+    "Modifier ce message": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit this message"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar este mensaje"
+          }
+        }
+      }
+    },
+    "Modifier cette annonce": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit this post"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar este anuncio"
+          }
+        }
+      }
+    },
+    "Modifier cette sortie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit this group run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar esta salida"
+          }
+        }
+      }
+    },
     "Modifier jours & objectif": {
       "localizations": {
         "en": {
@@ -15977,6 +16057,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Modificar días y objetivo"
+          }
+        }
+      }
+    },
+    "Modifier l'annonce": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit post"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar el anuncio"
+          }
+        }
+      }
+    },
+    "Modifier le message": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit message"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar el mensaje"
           }
         }
       }
@@ -23551,6 +23663,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "¿Eliminar esta actividad?"
+          }
+        }
+      }
+    },
+    "Supprimer cette annonce": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this post"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar este anuncio"
           }
         }
       }

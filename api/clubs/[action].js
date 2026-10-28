@@ -100,6 +100,12 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'postKudos':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handlePostKudos(req, res, userId);
+    case 'updateEvent':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleUpdateEvent(req, res, userId);
+    case 'updatePost':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleUpdatePost(req, res, userId);
     case 'deletePost':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleDeletePost(req, res, userId);
@@ -708,6 +714,55 @@ async function handleRsvpEvent(req, res, userId) {
 }
 
 // Only the sortie's creator can cancel it.
+// MODIFIER UNE SORTIE DE GROUPE DÉJÀ PROPOSÉE.
+//
+// Les mêmes contrôles que `createEvent` — modération du titre et du lieu, date dans la fenêtre
+// d'un an, groupes d'allure nettoyés — parce qu'une modification est une CRÉATION différée : ce
+// qui n'avait pas le droit d'entrer à la création n'a pas le droit d'entrer ici non plus. Les
+// recopier plutôt que les appeler est délibéré : les deux points d'entrée ne partagent ni leur
+// idempotence, ni leur plafond quotidien, ni leur notification.
+//
+// Pas de plafond quotidien, lui : modifier ne pousse aucune notification, donc rien à limiter.
+// Et pas de `clientId` : on modifie une ligne qui existe, l'identifiant EST l'idempotence.
+//
+// MÊME RÈGLE D'AUTORISATION QUE LA SUPPRESSION : son auteur, ou un organisateur du club. Une
+// séance laissée par quelqu'un qui est parti doit rester corrigeable.
+async function handleUpdateEvent(req, res, userId) {
+  const { eventId, title, location, startsAt } = req.body || {};
+  if (!isUuid(eventId)) return res.status(400).json({ error: 'bad_request' });
+
+  const cleanTitle = typeof title === 'string' ? title.trim().slice(0, 80) : '';
+  const cleanLocation = typeof location === 'string' ? location.trim().slice(0, 80) : '';
+  if (!cleanTitle || !startsAt) return res.status(400).json({ error: 'bad_request' });
+  if (containsObjectionableContent(cleanTitle) || containsObjectionableContent(cleanLocation)) {
+    return res.status(422).json({ error: 'objectionable_content' });
+  }
+  const when = new Date(startsAt);
+  if (Number.isNaN(when.getTime())) return res.status(400).json({ error: 'bad_request' });
+  const oneYear = 365 * 24 * 3600 * 1000;
+  if (when.getTime() < Date.now() - 3600 * 1000 || when.getTime() > Date.now() + oneYear) {
+    return res.status(400).json({ error: 'bad_date' });
+  }
+  const repeats = req.body?.repeatsWeekly === true;
+  const groupes = nettoyerLesGroupes(req.body?.paceGroups);
+  if (groupes === 'rejete') return res.status(422).json({ error: 'objectionable_content' });
+
+  const administre = await clubQueJAdministre(userId);
+  const { rows } = await sql`
+    UPDATE club_events
+       SET title = ${cleanTitle},
+           location = ${cleanLocation || null},
+           starts_at = ${when.toISOString()},
+           repeats_weekly = ${repeats},
+           pace_groups = ${groupes ? JSON.stringify(groupes) : null}::jsonb
+     WHERE id = ${eventId}
+       AND (created_by = ${userId} OR (${administre}::uuid IS NOT NULL AND club_id = ${administre}::uuid))
+    RETURNING 1
+  `;
+  if (rows.length === 0) return res.status(404).json({ error: 'not_found' });
+  res.status(200).json({ ok: true });
+}
+
 async function handleDeleteEvent(req, res, userId) {
   const { eventId } = req.body || {};
   if (!isUuid(eventId)) return res.status(400).json({ error: 'bad_request' });
@@ -1150,6 +1205,28 @@ async function handlePostKudos(req, res, userId) {
 
 // Son propre message, et rien d'autre. Les réponses partent avec lui (ON DELETE CASCADE) : une
 // réponse sous un message effacé serait un message sans contexte.
+// MODIFIER UN MESSAGE DU MUR. Son auteur seulement — contrairement à une sortie de groupe, un
+// message est une PAROLE : un organisateur peut la supprimer, jamais la réécrire au nom de
+// quelqu'un d'autre.
+//
+// `RETURNING 1` et non `rowCount` : `lib/db.js` enveloppe le pilote Neon et ne rend que
+// `{ rows }`. Voir la note de `handleDeletePost` juste en dessous — le même piège a déjà coûté
+// un bug dans api/activities.
+async function handleUpdatePost(req, res, userId) {
+  const { postId, text } = req.body || {};
+  if (!isUuid(postId)) return res.status(400).json({ error: 'bad_request' });
+  const propre = typeof text === 'string' ? text.trim().slice(0, 500) : '';
+  if (!propre) return res.status(400).json({ error: 'bad_request' });
+  if (containsObjectionableContent(propre)) return res.status(422).json({ error: 'objectionable_content' });
+  const { rows } = await sql`
+    UPDATE club_posts SET text = ${propre}
+     WHERE id = ${postId} AND user_id = ${userId}
+    RETURNING 1
+  `;
+  if (rows.length === 0) return res.status(404).json({ error: 'not_found' });
+  res.status(200).json({ ok: true });
+}
+
 async function handleDeletePost(req, res, userId) {
   const { postId } = req.body || {};
   if (!isUuid(postId)) return res.status(400).json({ error: 'bad_request' });

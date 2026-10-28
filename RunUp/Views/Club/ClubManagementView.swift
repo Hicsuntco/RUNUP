@@ -713,6 +713,19 @@ struct CreateChallengeSheet: View {
 struct CreateEventSheet: View {
     @Environment(\.dismiss) private var dismiss
     var onCreate: (String, String?, Date, Bool, [String]) async throws -> Void
+    /// LA SORTIE QU'ON MODIFIE, ou nil pour en proposer une nouvelle.
+    ///
+    /// Une seule feuille pour les deux gestes, et pas par économie de fichiers : proposer et
+    /// corriger demandent EXACTEMENT les mêmes champs, et une seconde feuille serait la copie
+    /// de celle-ci — donc l'endroit où un champ ajouté demain ne serait ajouté qu'une fois.
+    ///
+    /// Ce qui change est le remplissage, le titre du bouton, et rien d'autre : c'est l'appelant
+    /// qui décide si `onCreate` crée ou met à jour.
+    var existant: ClubEvent? = nil
+
+    /// Les champs ne sont remplis qu'UNE fois. `onAppear` repart à chaque retour de premier plan
+    /// — passer prendre un appel pendant la saisie effacerait sinon tout ce qui a été tapé.
+    @State private var prerempli = false
 
     @State private var title = ""
     @State private var location = ""
@@ -735,6 +748,9 @@ struct CreateEventSheet: View {
 
     private var isValid: Bool { !title.trimmingCharacters(in: .whitespaces).isEmpty }
 
+    /// Maintenant, ou la date de la séance qu'on modifie si elle est déjà derrière.
+    private var borneBasse: Date { min(.now, existant?.startsAt ?? .now) }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -751,7 +767,15 @@ struct CreateEventSheet: View {
 
                     VStack(alignment: .leading, spacing: 8) {
                         EyebrowLabel(text: "Quand ?", color: RUColor.text3)
-                        DatePicker("", selection: $startsAt, in: .now..., displayedComponents: [.date, .hourAndMinute])
+                        // LA BORNE BASSE DESCEND JUSQU'À LA SÉANCE QU'ON MODIFIE.
+                        //
+                        // `in: .now...` seul est juste à la création, et faux à la modification :
+                        // une séance qui commence dans vingt minutes a une date ANTÉRIEURE au
+                        // moment où l'on ouvre cette feuille pour corriger son lieu. SwiftUI
+                        // ramène alors silencieusement la sélection dans la plage — on vient
+                        // changer un mot, et on repart avec la date déplacée sans l'avoir vu.
+                        DatePicker("", selection: $startsAt, in: borneBasse...,
+                                   displayedComponents: [.date, .hourAndMinute])
                             .datePickerStyle(.compact)
                             .labelsHidden()
                             .colorScheme(RUColor.colorScheme)
@@ -791,10 +815,19 @@ struct CreateEventSheet: View {
             .background(RUColor.pageBackground)
             .navigationTitle("Sortie de groupe")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                guard !prerempli, let e = existant else { return }
+                prerempli = true
+                title = e.title
+                location = e.location ?? ""
+                startsAt = e.startsAt
+                chaqueSemaine = e.repeatsWeekly ?? false
+                groupes = (e.paceGroups ?? []).joined(separator: ", ")
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Proposer") { Task { await save() } }
+                    Button(existant == nil ? "Proposer" : "Enregistrer") { Task { await save() } }
                         .disabled(!isValid || isSaving)
                 }
             }
@@ -815,7 +848,9 @@ struct CreateEventSheet: View {
         } catch ClubServiceError.badResponse(422, _) {
             errorMessage = String(localized: "Ce texte n'est pas autorisé — reformule.")
         } catch {
-            errorMessage = String(localized: "Impossible de proposer la sortie, réessaie.")
+            errorMessage = existant == nil
+                ? String(localized: "Impossible de proposer la sortie, réessaie.")
+                : String(localized: "Impossible d'enregistrer la sortie, réessaie.")
         }
         isSaving = false
     }

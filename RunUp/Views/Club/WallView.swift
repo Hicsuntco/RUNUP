@@ -46,6 +46,8 @@ struct WallView: View {
     /// affichait « Impossible de charger le fil — 401 » : un message d'erreur pour une situation
     /// qui n'en est pas une.
     @State private var showSignIn = false
+    /// L'annonce de course qu'on est en train de réécrire.
+    @State private var annonceEnModification: WallRacePost?
 
     private var clubService: ClubService { ClubService(auth: appState.auth) }
 
@@ -225,6 +227,18 @@ struct WallView: View {
             if connectee { Task { await charger() } }
         }
         .sheet(isPresented: $showSignIn) { SignInView().runUpSheetStyle(detents: [.large]) }
+        .sheet(item: $annonceEnModification) { post in
+            EditTextPostSheet(titreDeLaFeuille: String(localized: "Modifier l'annonce"),
+                              texteInitial: post.text) { texte in
+                try await clubService.updateRacePost(postId: post.id, text: texte)
+                await MainActor.run {
+                    if let i = page?.racePosts.firstIndex(where: { $0.id == post.id }) {
+                        page?.racePosts[i].text = texte
+                    }
+                }
+            }
+            .runUpSheetStyle()
+        }
         .onChange(of: filtre) { _, _ in
             finDuFil = false
             Task { await charger() }
@@ -370,6 +384,10 @@ struct WallView: View {
             }
             .buttonStyle(PressableStyle())
             .accessibilityLabel(String(localized: "Voir la page de \(post.raceName)"))
+            // LES TROIS POINTS SONT HORS DU BOUTON, et c'est la même raison que l'applaudissement
+            // trois blocs plus bas : un contrôle posé DANS un bouton est avalé par lui, et ouvrir
+            // le menu ouvrirait la page de la course.
+            .overlay(alignment: .topTrailing) { menuDeLAnnonce(post) }
 
             Text(post.text)
                 .font(RUFont.sans(.body))
@@ -416,6 +434,53 @@ struct WallView: View {
             RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous)
                 .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline)
         )
+    }
+
+    /// MODIFIER OU SUPPRIMER SON ANNONCE, depuis le fil où on la relit.
+    ///
+    /// `WallRacePost` ne porte pas d'`isMine` — contrairement à une sortie ou à un message de
+    /// club, le serveur ne le renvoie pas pour ce type. La comparaison d'identifiants fait le
+    /// même travail sans rien changer au protocole : le jeton dit qui je suis, l'annonce dit qui
+    /// l'a écrite.
+    @ViewBuilder
+    private func menuDeLAnnonce(_ post: WallRacePost) -> some View {
+        if post.author.id == appState.auth.currentUser?.id, !post.closed {
+            Menu {
+                Button("Modifier cette annonce") { annonceEnModification = post }
+                Button("Supprimer cette annonce", role: .destructive) {
+                    Task { await supprimerLAnnonce(post) }
+                }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(RUColor.text3)
+                    .frame(width: 34, height: 34)
+                    .contentShape(Rectangle())
+            }
+            .accessibilityLabel("Gérer cette annonce")
+        }
+    }
+
+    /// Supprime, ou CLÔT quand le serveur répond qu'on y a répondu.
+    ///
+    /// Le 409 n'est pas une panne : `race_posts.parent_id` porte `ON DELETE CASCADE`, donc
+    /// effacer une annonce à laquelle deux personnes ont répondu emporterait leurs deux
+    /// messages. Le serveur refuse, et le bon repli est celui qui existait déjà — l'annonce se
+    /// barre, la conversation garde son point de départ.
+    private func supprimerLAnnonce(_ post: WallRacePost) async {
+        do {
+            try await clubService.deleteRacePost(postId: post.id)
+            await MainActor.run { page?.racePosts.removeAll { $0.id == post.id } }
+        } catch ClubService.ErreurDeSuppression.aDesReponses {
+            try? await clubService.closeRacePost(postId: post.id)
+            await MainActor.run {
+                if let i = page?.racePosts.firstIndex(where: { $0.id == post.id }) {
+                    page?.racePosts[i].closed = true
+                }
+            }
+        } catch {
+            // Silencieux : la liste n'a pas bougé, donc rien ne ment à l'écran.
+        }
     }
 
     private func genreLisible(_ genre: String) -> String {

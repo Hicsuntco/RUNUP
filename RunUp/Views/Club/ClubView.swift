@@ -52,6 +52,11 @@ struct ClubView: View {
     @State private var unlockedBadge: ClubBadge?
     @State private var showLeaveConfirm = false
     @State private var showCreateEvent = false
+    /// La sortie de groupe qu'on est en train de modifier. Non nil présente `CreateEventSheet`
+    /// pré-remplie — la même feuille que la création, voir sa note.
+    @State private var eventEnModification: ClubEvent?
+    /// Le message du mur qu'on est en train de réécrire.
+    @State private var messageEnModification: ClubPost?
     /// My own feed activity pending delete confirmation (appui long → Supprimer).
     @State private var pendingDeleteActivity: FeedItem?
     /// Lequel des deux classements l'onglet montre : la course aux kilomètres de la semaine, ou
@@ -1428,11 +1433,17 @@ struct ClubView: View {
                 }
                 .padding(12)
                 .ruCard(radius: RUSpacing.radiusCompact)
-                .contextMenu {
-                    if event.isMine {
-                        Button("Annuler cette sortie", role: .destructive) { deleteEvent(event) }
-                    }
-                }
+                // L'APPUI LONG N'EST PAS UNE INTERFACE, C'EST UN RACCOURCI.
+                //
+                // Annuler sa propre sortie de groupe n'existait QUE sous un appui long, sans le
+                // moindre indice à l'écran. Un geste que personne ne découvre n'est pas une
+                // fonctionnalité : la séance du mardi restait affichée au club entier parce que
+                // celle qui l'avait proposée ne savait pas comment la retirer.
+                //
+                // Les trois points sont posés sur la ligne, comme sur une sortie du fil et sur
+                // un message du mur — un seul endroit à chercher pour reprendre ce qu'on a
+                // publié, quel qu'il soit. L'appui long reste, pour qui connaît le geste.
+                .contextMenu { menuDeLaSortie(event) }
             }
         }
         .sheet(isPresented: $showCreateEvent) {
@@ -1447,6 +1458,44 @@ struct ClubView: View {
                 }
             }
             .runUpSheetStyle()
+        }
+        .sheet(item: $messageEnModification) { message in
+            EditTextPostSheet(titreDeLaFeuille: String(localized: "Modifier le message"),
+                              texteInitial: message.text) { texte in
+                try await clubService.updateClubPost(postId: message.id, text: texte)
+                // Recousu sur place plutôt que rechargé : un message n'a qu'un texte, il ne
+                // change ni de place ni de compteur. Recharger le mur entier pour une phrase
+                // ferait clignoter la liste sous les doigts de qui vient de la corriger.
+                await MainActor.run {
+                    if let i = posts.firstIndex(where: { $0.id == message.id }) {
+                        posts[i].text = texte
+                    }
+                }
+            }
+            .runUpSheetStyle()
+        }
+        .sheet(item: $eventEnModification) { event in
+            CreateEventSheet(onCreate: { title, location, date, chaqueSemaine, groupes in
+                try await clubService.updateEvent(eventId: event.id, title: title, location: location,
+                                                  startsAt: date, repeatsWeekly: chaqueSemaine,
+                                                  paceGroups: groupes)
+                // Rechargé plutôt que recousu à la main : la séance modifiée peut avoir changé
+                // de date, donc de PLACE dans la liste, et ses présences par groupe d'allure
+                // dépendent de groupes qui viennent d'être réécrits. Reconstruire tout ça ici
+                // serait refaire le travail du serveur, moins bien.
+                await loadIfSignedIn()
+            }, existant: event)
+            .runUpSheetStyle()
+        }
+    }
+
+    /// Modifier ou annuler SA sortie de groupe. Vide pour celle de quelqu'un d'autre — un menu
+    /// qui ne contient rien ne s'ouvre pas, donc rien à masquer en plus.
+    @ViewBuilder
+    private func menuDeLaSortie(_ event: ClubEvent) -> some View {
+        if event.isMine {
+            Button("Modifier cette sortie") { eventEnModification = event }
+            Button("Annuler cette sortie", role: .destructive) { deleteEvent(event) }
         }
     }
 
@@ -2037,6 +2086,7 @@ struct ClubView: View {
                 Spacer(minLength: 0)
                 Menu {
                     if message.isMine {
+                        Button("Modifier ce message") { messageEnModification = message }
                         Button("Supprimer ce message", role: .destructive) {
                             Task { await supprimerLeMessage(message) }
                         }

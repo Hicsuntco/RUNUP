@@ -67,6 +67,12 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'closePost':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleClosePost(req, res, userId);
+    case 'updatePost':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleUpdatePost(req, res, userId);
+    case 'deletePost':
+      if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleDeletePost(req, res, userId);
     default:
       return res.status(404).json({ error: 'not_found' });
   }
@@ -455,6 +461,47 @@ async function handleKudos(req, res, userId) {
 
 // Retirer son annonce — le dossard est vendu, le partenaire est trouvé. On marque, on ne supprime
 // pas : les réponses sous une annonce effacée deviendraient des messages sans contexte.
+// MODIFIER SON ANNONCE. Son auteur seulement, même modération qu'à la publication.
+async function handleUpdatePost(req, res, userId) {
+  const { postId, text } = req.body || {};
+  if (!isUuid(postId)) return res.status(400).json({ error: 'bad_request' });
+  const propre = typeof text === 'string' ? text.trim().slice(0, 500) : '';
+  if (!propre) return res.status(400).json({ error: 'bad_request' });
+  if (containsObjectionableContent(propre)) return res.status(422).json({ error: 'objectionable_content' });
+  const { rows } = await sql`
+    UPDATE race_posts SET text = ${propre}
+     WHERE id = ${postId} AND user_id = ${userId} AND closed_at IS NULL
+    RETURNING 1
+  `;
+  if (rows.length === 0) return res.status(404).json({ error: 'not_found' });
+  res.status(200).json({ ok: true });
+}
+
+// SUPPRIMER SON ANNONCE — MAIS SEULEMENT SI PERSONNE N'Y A RÉPONDU.
+//
+// C'est la raison d'être de `closed_at`, écrite dans le schéma : « on ne supprime pas la ligne,
+// une réponse sous une annonce effacée deviendrait un message sans contexte ». Et c'est pire que
+// ça ici, parce que `parent_id` porte `ON DELETE CASCADE` : supprimer une annonce à laquelle
+// deux personnes ont répondu EFFACERAIT LEURS DEUX MESSAGES. Les mots de quelqu'un d'autre ne
+// disparaissent pas parce que l'autrice du fil se ravise.
+//
+// La règle est donc la seule qui respecte les deux besoins : sans réponse, l'annonce n'appartient
+// qu'à son autrice et part pour de bon ; avec des réponses, elle se CLÔT — le texte reste, barré,
+// et la conversation garde son point de départ. L'app lit le 409 et propose « clore » à la place.
+async function handleDeletePost(req, res, userId) {
+  const { postId } = req.body || {};
+  if (!isUuid(postId)) return res.status(400).json({ error: 'bad_request' });
+  const { rows: reponses } = await sql`
+    SELECT 1 FROM race_posts WHERE parent_id = ${postId} LIMIT 1
+  `;
+  if (reponses.length > 0) return res.status(409).json({ error: 'has_replies' });
+  const { rows } = await sql`
+    DELETE FROM race_posts WHERE id = ${postId} AND user_id = ${userId} RETURNING 1
+  `;
+  if (rows.length === 0) return res.status(404).json({ error: 'not_found' });
+  res.status(200).json({ ok: true });
+}
+
 async function handleClosePost(req, res, userId) {
   const { postId } = req.body || {};
   if (!isUuid(postId)) return res.status(400).json({ error: 'bad_request' });

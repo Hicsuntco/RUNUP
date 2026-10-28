@@ -589,6 +589,24 @@ struct ClubService {
         return (response.going, response.count, response.paceGroup)
     }
 
+    /// Modifie une sortie de groupe déjà proposée — son auteur, ou un organisateur du club.
+    ///
+    /// Les mêmes champs que la création, et c'est voulu : une séance se corrige en entier
+    /// (« finalement c'est jeudi, et au stade »), pas champ par champ. Le serveur applique à la
+    /// modification la modération et la fenêtre de date qu'il applique à la création.
+    func updateEvent(eventId: String, title: String, location: String?, startsAt: Date,
+                     repeatsWeekly: Bool = false, paceGroups: [String] = []) async throws {
+        var body: [String: Any] = [
+            "eventId": eventId,
+            "title": title,
+            "startsAt": ISO8601DateFormatter().string(from: startsAt),
+            "repeatsWeekly": repeatsWeekly,
+        ]
+        body["paceGroups"] = paceGroups
+        if let location, !location.isEmpty { body["location"] = location }
+        let _: OkResponse = try await send(path: "api/clubs/updateEvent", method: "POST", body: body)
+    }
+
     /// Cancels a sortie — creator only (the server enforces it).
     func deleteEvent(eventId: String) async throws {
         let _: OkResponse = try await send(path: "api/clubs/deleteEvent", method: "POST", body: ["eventId": eventId])
@@ -646,6 +664,13 @@ struct ClubService {
         let reponse: KudosResponse = try await send(path: "api/clubs/postKudos", method: "POST",
                                                     body: ["postId": postId])
         return reponse.kudoed
+    }
+
+    /// Réécrit un message du mur. Son auteur seulement — un organisateur peut le supprimer,
+    /// jamais le réécrire en son nom.
+    func updateClubPost(postId: String, text: String) async throws {
+        let _: OkResponse = try await send(path: "api/clubs/updatePost", method: "POST",
+                                           body: ["postId": postId, "text": text])
     }
 
     func deleteClubPost(postId: String) async throws {
@@ -1200,6 +1225,33 @@ struct ClubService {
 
     func closeRacePost(postId: String) async throws {
         let _: OkResponse = try await send(path: "api/races/closePost", method: "POST", body: ["postId": postId])
+    }
+
+    func updateRacePost(postId: String, text: String) async throws {
+        let _: OkResponse = try await send(path: "api/races/updatePost", method: "POST",
+                                           body: ["postId": postId, "text": text])
+    }
+
+    /// Supprime une annonce — et le 409 qu'elle peut rendre est une RÉPONSE, pas une panne.
+    ///
+    /// Le serveur refuse d'effacer une annonce à laquelle on a répondu : `race_posts.parent_id`
+    /// porte `ON DELETE CASCADE`, donc la supprimer emporterait les messages des autres. Il rend
+    /// alors `has_replies`, et l'appelant propose « clore » — qui barre le texte sans effacer la
+    /// conversation. C'est pour ça que ce cas remonte nommé plutôt que comme une erreur réseau.
+    func deleteRacePost(postId: String) async throws {
+        do {
+            let _: OkResponse = try await send(path: "api/races/deletePost", method: "POST",
+                                               body: ["postId": postId])
+        } catch ClubServiceError.badResponse(409, _) {
+            throw ErreurDeSuppression.aDesReponses
+        }
+    }
+
+    /// Ce qu'une suppression peut refuser, nommé plutôt que deviné à partir d'un code HTTP chez
+    /// chaque appelant.
+    enum ErreurDeSuppression: Error {
+        /// L'annonce a des réponses : elle se clôt, elle ne s'efface pas.
+        case aDesReponses
     }
 
     // MARK: -

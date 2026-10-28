@@ -53,7 +53,7 @@ struct BadgeShareCardView: View {
                         Text(verbatim: "RUNUP").font(RUFont.display(horsEchelle: 15)).tracking(4).foregroundColor(RUColor.textPrimary)
                     }
                     Text(Self.dateFormatter.string(from: .now))
-                        .font(RUFont.mono(9.5))
+                        .font(RUFont.mono(horsEchelle: 9.5))
                         .tracking(1)
                         .foregroundColor(RUColor.text3)
                 }

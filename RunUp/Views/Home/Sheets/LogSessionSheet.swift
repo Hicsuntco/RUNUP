@@ -97,7 +97,7 @@ struct LogSessionSheet: View {
             TextField("", text: text, prompt: Text(placeholder).foregroundColor(RUColor.text3))
                 .keyboardType(.decimalPad)
                 .focused($focus, equals: focused)
-                .font(RUFont.mono(20))
+                .font(RUFont.mono(.title))
                 .foregroundColor(RUColor.textPrimary)
                 .multilineTextAlignment(.trailing)
             Text(unit)

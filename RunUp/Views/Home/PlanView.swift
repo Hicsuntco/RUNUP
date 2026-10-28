@@ -509,8 +509,8 @@ struct PlanView: View {
                 // Remontées de 10/9 à 11/10 : c'était le plus petit texte de l'app, en gris, en
                 // chasse fixe, et il portait les deux chiffres pour lesquels on ouvre la ligne.
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(session.durationMinutes)′ · \(session.zone)").font(RUFont.mono(11)).foregroundColor(RUColor.text2)
-                    Text("\(session.pace)/km").font(RUFont.mono(10)).foregroundColor(RUColor.text3)
+                    Text("\(session.durationMinutes)′ · \(session.zone)").font(RUFont.mono(.small)).foregroundColor(RUColor.text2)
+                    Text("\(session.pace)/km").font(RUFont.mono(.small)).foregroundColor(RUColor.text3)
                 }
             }
         }

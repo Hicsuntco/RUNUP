@@ -364,11 +364,11 @@ struct RecapView: View {
                 // numbers below it (which do) are combined into this card's own label instead.
                 .accessibilityHidden(true)
             HStack {
-                Text(verbatim: "\(Int(minAlt.rounded())) m").font(RUFont.mono(11)).foregroundColor(RUColor.text2)
+                Text(verbatim: "\(Int(minAlt.rounded())) m").font(RUFont.mono(.small)).foregroundColor(RUColor.text2)
                 Spacer()
                 Text("+\(run.elevationGainM) m D+").font(RUFont.sans(.small, weight: .bold)).foregroundColor(RUColor.lime)
                 Spacer()
-                Text(verbatim: "\(Int(maxAlt.rounded())) m").font(RUFont.mono(11)).foregroundColor(RUColor.text2)
+                Text(verbatim: "\(Int(maxAlt.rounded())) m").font(RUFont.mono(.small)).foregroundColor(RUColor.text2)
             }
         }
         .padding(RUSpacing.cardPadding)

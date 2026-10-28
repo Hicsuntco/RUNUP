@@ -289,7 +289,7 @@ struct RingsView: View {
                     Text(name).font(RUFont.sans(.title, weight: .bold)).foregroundColor(RUColor.textPrimary)
                     Spacer()
                     (Text(formattedValue(value)).font(RUFont.sans(.small, weight: .bold)).foregroundColor(color)
-                        + Text(" / \(formattedValue(goal)) \(unit)").font(RUFont.mono(11)).foregroundColor(RUColor.text2))
+                        + Text(" / \(formattedValue(goal)) \(unit)").font(RUFont.mono(.small)).foregroundColor(RUColor.text2))
                 }
                 LinearBar(fraction: goal == 0 ? 0 : value / goal, color: color, height: 5)
             }

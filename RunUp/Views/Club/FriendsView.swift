@@ -441,7 +441,7 @@ struct FriendsView: View {
                             }
                         }
                         if let username = user.username {
-                            Text("@\(username)").font(RUFont.mono(10.5)).foregroundColor(RUColor.text3)
+                            Text("@\(username)").font(RUFont.mono(.small)).foregroundColor(RUColor.text3)
                         } else if let detail {
                             // Sous le nom, à la place du pseudo quand il n'y en a pas : la raison
                             // compte moins qu'un identifiant, elle ne lui prend pas sa place.

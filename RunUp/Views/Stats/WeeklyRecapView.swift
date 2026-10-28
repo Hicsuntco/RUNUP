@@ -215,15 +215,27 @@ struct WeeklyRecapView: View {
             HStack(alignment: .bottom, spacing: 6) {
                 ForEach(bars.indices, id: \.self) { i in
                     RoundedRectangle(cornerRadius: RUSpacing.radiusBar)
-                        // Dégradé rose2 → rose sur la barre du jour (comme `.db.today .b2` dans
-                        // la maquette), au lieu d'un aplat : c'est le même dégradé que le bouton
-                        // RUN et le sélecteur de période des Stats, donc la barre "aujourd'hui"
-                        // se rattache au vocabulaire d'accent de l'app plutôt qu'à une couleur
-                        // plate isolée.
+                        // ── LA COULEUR SUIT LA DONNÉE, PAS LA DATE ───────────────────────────
+                        //
+                        // Le dégradé était accroché à AUJOURD'HUI. Sur la première capture de
+                        // cet écran, ça donnait exactement l'inverse de ce qu'un graphique doit
+                        // faire : mercredi, 0 km et jour courant, en rose vif ; lundi, 8,1 km et
+                        // seule vraie donnée de la semaine, en gris. La seule couleur de la
+                        // carte désignait la barre VIDE, et l'œil, qui lit le rose comme « c'est
+                        // ça qu'il faut regarder », tombait sur un trait de quatre points. Ça
+                        // ressemblait à une panne ; c'était un barème.
+                        //
+                        // Et le gris n'était pas n'importe lequel : `RUColor.line`, le jeton des
+                        // FILETS de séparation, employé comme remplissage d'une barre de soixante
+                        // points. Un jeton hors de son emploi, comme les teintes d'icône.
+                        //
+                        // Désormais : une barre qui porte des kilomètres prend l'accent, une
+                        // barre vide prend `card2` — la sous-surface, donc « un emplacement sans
+                        // rien dedans ». Aujourd'hui se marque sous l'axe, sur sa lettre.
                         .fill(
-                            i == todayWeekdayIndex
+                            bars[i] > 0
                                 ? AnyShapeStyle(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom))
-                                : AnyShapeStyle(RUColor.line)
+                                : AnyShapeStyle(RUColor.card2)
                         )
                         // Bars grow up from the baseline day-by-day on appear — same "revealed,
                         // not pre-drawn" treatment the Recap splits and the Home ring already get.
@@ -239,8 +251,17 @@ struct WeeklyRecapView: View {
             .frame(height: 60, alignment: .bottom)
             .onAppear { chartRevealed = true }
             HStack {
-                ForEach(DayStatus.letters, id: \.self) { letter in
-                    Text(letter).font(RUFont.sans(.micro, weight: .bold)).foregroundColor(RUColor.text3).frame(maxWidth: .infinity)
+                // PAR INDICE, ET PAS PAR LA LETTRE. `DayStatus.letters` contient deux « M »
+                // (mardi, mercredi) : un `ForEach(…, id: \.self)` sur ces lettres donne deux
+                // éléments de même identité, ce que SwiftUI n'a pas le droit de départager —
+                // il recycle, saute ou anime de travers, sans rien signaler.
+                ForEach(DayStatus.letters.indices, id: \.self) { i in
+                    Text(DayStatus.letters[i])
+                        .font(RUFont.sans(.micro, weight: .bold))
+                        // C'est ici qu'« aujourd'hui » se marque, maintenant que la barre dit la
+                        // donnée : sous l'axe, sur la lettre du jour.
+                        .foregroundColor(i == todayWeekdayIndex ? RUColor.rose : RUColor.text3)
+                        .frame(maxWidth: .infinity)
                 }
             }
         }
@@ -287,8 +308,8 @@ struct WeeklyRecapView: View {
                 Text(run.date.formatted(.dateTime.weekday(.wide).day().month().locale(Locale.current))).font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
             }
             Spacer()
-            Text(String(format: "%.2f km", locale: Locale.current, run.distanceKm)).font(RUFont.mono(12)).foregroundColor(RUColor.text2)
-            Text(run.avgPace + "/km").font(RUFont.mono(12)).foregroundColor(RUColor.text2)
+            Text(String(format: "%.2f km", locale: Locale.current, run.distanceKm)).font(RUFont.mono(.body)).foregroundColor(RUColor.text2)
+            Text(run.avgPace + "/km").font(RUFont.mono(.body)).foregroundColor(RUColor.text2)
         }
         .padding(RUSpacing.cardPadding)
         .ruCard(radius: RUSpacing.radiusCard)

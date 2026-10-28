@@ -111,7 +111,7 @@ struct AdminSheet: View {
             // `Text(verbatim:)` : ces valeurs viennent du serveur ou du bundle, elles sont déjà
             // ce qu'elles sont. Les repasser au catalogue chercherait une clé qui n'existe pas.
             Text(verbatim: valeur)
-                .font(RUFont.mono(13)).foregroundColor(RUColor.text2)
+                .font(RUFont.mono(.body)).foregroundColor(RUColor.text2)
                 .multilineTextAlignment(.trailing)
                 .textSelection(.enabled)
         }

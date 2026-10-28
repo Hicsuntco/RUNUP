@@ -457,7 +457,7 @@ struct StatsView: View {
                     selectedRange = range
                 }) {
                     Text(LocalizedStringKey(range.rawValue))
-                        .font(RUFont.mono(10, weight: .medium))
+                        .font(RUFont.mono(.small, weight: .medium))
                         .foregroundColor(selectedRange == range ? .white : RUColor.text2)
                         // 5 pt de marge verticale sur un texte de 12,5 donnaient des segments de
                         // 23 pt de haut. Le contrôle segmenté d'iOS en fait 32 : c'est le plancher

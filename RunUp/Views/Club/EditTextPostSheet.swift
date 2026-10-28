@@ -57,7 +57,7 @@ struct EditTextPostSheet: View {
                     // qui font trois lignes.
                     if propre.count > longueurMax - 80 {
                         Text(verbatim: "\(propre.count) / \(longueurMax)")
-                            .font(RUFont.mono(10))
+                            .font(RUFont.mono(.small))
                             .foregroundColor(propre.count > longueurMax ? RUColor.rose : RUColor.text3)
                             .frame(maxWidth: .infinity, alignment: .trailing)
                     }

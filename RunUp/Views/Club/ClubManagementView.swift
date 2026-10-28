@@ -370,7 +370,7 @@ struct ClubManagementView: View {
                 }
             }
             Spacer(minLength: 8)
-            Text("\(member.xp) XP").font(RUFont.mono(11)).foregroundColor(RUColor.text2)
+            Text("\(member.xp) XP").font(RUFont.mono(.small)).foregroundColor(RUColor.text2)
             Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold)).foregroundColor(RUColor.text3)
         }
         .padding(.horizontal, 14).padding(.vertical, 12)

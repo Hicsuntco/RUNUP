@@ -559,7 +559,7 @@ struct MoreSettingsView: View {
                     HStack(alignment: .firstTextBaseline) {
                         rowIcon("envelope")
                         Text(verbatim: adresse)
-                            .font(RUFont.mono(13)).foregroundColor(RUColor.text2)
+                            .font(RUFont.mono(.body)).foregroundColor(RUColor.text2)
                             .textSelection(.enabled)
                             .multilineTextAlignment(.leading)
                             .fixedSize(horizontal: false, vertical: true)

@@ -219,13 +219,13 @@ struct RaceDiscoveryView: View {
                         // « J-42 » et non « dans 42 jours » : c'est la forme qu'un dossard
                         // porte, et elle tient sur une ligne à côté du nom de la course.
                         Text(jours == 0 ? String(localized: "aujourd'hui") : String(localized: "J-\(jours)"))
-                            .font(RUFont.mono(11))
+                            .font(RUFont.mono(.small))
                             .foregroundColor(RUColor.rose2)
                     }
                     if let suiveurs = course.followerCount, suiveurs > 0 {
                         HStack(spacing: 4) {
                             Image(systemName: "person.2.fill").font(.system(size: 9))
-                            Text("\(suiveurs)").font(RUFont.mono(10.5))
+                            Text("\(suiveurs)").font(RUFont.mono(.small))
                         }
                         .foregroundColor(RUColor.text3)
                         .accessibilityLabel(Pluriel.choisir(suiveurs,

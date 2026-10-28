@@ -627,7 +627,7 @@ struct ClubView: View {
                         .font(RUFont.sans(.small, weight: .semibold))
                         .foregroundColor(encre2)
                     Spacer(minLength: 8)
-                    Text("\(info.xpIntoLevel) / \(info.xpForLevel) XP").font(RUFont.mono(10)).foregroundColor(encre2)
+                    Text("\(info.xpIntoLevel) / \(info.xpForLevel) XP").font(RUFont.mono(.small)).foregroundColor(encre2)
                         .contentTransition(.numericText())
                 }
                 Text("Niveau \(info.level) · \(info.title)")
@@ -2578,7 +2578,7 @@ struct BadgeDetailView: View {
                 .padding(.horizontal, 30)
 
             if let progressText = badge.progressText, !badge.earned {
-                Text(progressText).font(RUFont.mono(13, weight: .semibold)).foregroundColor(RUColor.rose2)
+                Text(progressText).font(RUFont.mono(.body, weight: .semibold)).foregroundColor(RUColor.rose2)
             }
 
             // La carte partageable existait déjà (`BadgeShareCardView`), mais n'était rendue que

@@ -39,7 +39,7 @@ struct SplitsView: View {
             // `lineLimit(1)` en plus de la largeur : un numéro ne se replie jamais, même si une
             // taille de texte d'accessibilité le fait déborder — il rétrécit.
             Text("\(index + 1)")
-                .font(RUFont.mono(11))
+                .font(RUFont.mono(.small))
                 .foregroundColor(RUColor.text2)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)

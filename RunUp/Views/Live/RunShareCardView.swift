@@ -128,7 +128,7 @@ struct RunShareCardView: View {
                     Text(verbatim: "RUNUP").font(RUFont.display(horsEchelle: 15)).tracking(4).foregroundStyle(valueStyle)
                 }
                 Text(Self.dateFormatter.string(from: run.date))
-                    .font(RUFont.mono(9.5))
+                    .font(RUFont.mono(horsEchelle: 9.5))
                     .tracking(1)
                     .foregroundColor(secondaryColor.opacity(0.85))
                 // L'adresse, sans code. Plus petite et plus discrète que la date : sur une
@@ -136,7 +136,7 @@ struct RunShareCardView: View {
                 // Une carte qui crie son adresse ne se partage pas — et une carte qu'on ne
                 // partage pas ne recrute personne, quelle que soit la taille du lien.
                 Text(verbatim: Self.hoteDuLien)
-                    .font(RUFont.mono(8))
+                    .font(RUFont.mono(horsEchelle: 8))
                     .tracking(0.5)
                     .foregroundColor(secondaryColor.opacity(0.6))
             }

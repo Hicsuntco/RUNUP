@@ -186,7 +186,24 @@ enum RUFont {
     /// `minimumScaleFactor` — ils rétrécissent au lieu de se couper.
     private static let bodySizeFactor: CGFloat = 1.25
 
-    static func mono(_ size: CGFloat, weight: DMWeight = .regular) -> Font {
+    /// LA TROISIÈME FAMILLE AVAIT LE MÊME DÉFAUT QUE LES DEUX AUTRES.
+    ///
+    /// DM Mono sert aux relevés chiffrés — horodatages, compteurs d'XP, kilométrage d'une paire
+    /// de chaussures, temps de fractionnés. C'est un rôle légitime et il ne change pas. Mais ses
+    /// tailles étaient écrites à la main, 26 appels sur HUIT valeurs : 8, 9,5, 10, 10,5, 11, 12,
+    /// 13, 20. Avec 10, 10,5 et 11 voisinant sur dix-sept appels — trois tailles dans un point.
+    ///
+    /// Elle reprend donc l'échelle du texte courant, `RUTextSize`, plutôt qu'une quatrième à
+    /// elle : un relevé chiffré vit à côté du texte qu'il complète, et les deux doivent
+    /// s'accorder. Cinq crans employés sur les six.
+    static func mono(_ step: RUTextSize, weight: DMWeight = .regular) -> Font {
+        mono(horsEchelle: step.rawValue, weight: weight)
+    }
+
+    /// Voir `display(horsEchelle:)` : l'étiquette est là pour que l'exception se voie. Il y en a
+    /// trois, toutes dans des cartes d'export — une image partagée est rendue à une géométrie de
+    /// pixels fixe, et sa typographie ne doit pas bouger quand l'échelle de l'app bouge.
+    static func mono(horsEchelle size: CGFloat, weight: DMWeight = .regular) -> Font {
         let pointSize = scaled(size * bodySizeFactor)
         switch weight {
         case .medium: return .custom("DMMono-Medium", fixedSize: pointSize)

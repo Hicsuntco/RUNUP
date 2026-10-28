@@ -306,7 +306,7 @@ private struct RouteRow: View {
                     .foregroundColor(RUColor.text3)
                 if let elevation = route.elevationGainM, elevation > 0 {
                     Text("\(elevation) m D+")
-                        .font(RUFont.mono(10.5))
+                        .font(RUFont.mono(.small))
                         .foregroundColor(RUColor.text3)
                 }
             }
@@ -317,7 +317,7 @@ private struct RouteRow: View {
                     .font(.system(size: 13))
                     .foregroundColor(route.saved ? RUColor.rose : RUColor.text3)
                 Text("\(route.savesCount)")
-                    .font(RUFont.mono(10.5))
+                    .font(RUFont.mono(.small))
                     .foregroundColor(RUColor.text3)
             }
         }

@@ -773,44 +773,88 @@ struct ProfileView: View {
     /// Le commentaire d'origine refusait un `Button` par tuile pour ne pas donner vingt arrêts
     /// VoiceOver identiques. L'objection tenait tant qu'ils menaient tous au même endroit ; vingt
     /// destinations distinctes méritent vingt arrêts, chacun nommé.
+    /// Le badge non débloqué dont on est le PLUS PRÈS.
+    ///
+    /// C'est la seule chose que la bande ne pouvait pas dire : sa progression vivait derrière un
+    /// tap, dans la feuille de détail d'une tuile qu'il fallait d'abord deviner. Remontée ici,
+    /// elle devient la phrase qui donne une raison de recourir — « 2/3 jours » sous le nom du
+    /// badge, c'est un objectif ; la même chaîne cachée dans une feuille, c'est une statistique.
+    ///
+    /// Les badges binaires — « Lève-tôt », « Première sortie » — n'ont pas de progression et
+    /// sont donc écartés : ils ne se gagnent pas en s'approchant, ils se gagnent d'un coup.
+    private var leProchain: ClubBadge? {
+        badges
+            .filter { !$0.earned && $0.fraction != nil && $0.progressText != nil }
+            .max(by: { ($0.fraction ?? 0) < ($1.fraction ?? 0) })
+    }
+
+    /// UNE GRILLE, ET PLUS UNE BANDE QUI DÉFILE.
+    ///
+    /// Seize badges dans un défilement horizontal, c'est cinq de visibles. Or ce qu'une
+    /// collection doit montrer, ce n'est pas ce qu'on a — c'est ce qui MANQUE : les onze
+    /// hexagones éteints sont le ressort, et ils étaient hors de l'écran, derrière un geste que
+    /// rien ne signalait.
+    ///
+    /// En grille, les seize tiennent d'un coup, et le vide occupe sa vraie place. `BadgeHexTile`
+    /// l'attendait d'ailleurs : son paramètre `side` est documenté « la tuile prend la place
+    /// qu'on lui donne et reste carrée — c'est ce dont une grille a besoin pour aligner ses
+    /// colonnes ». Le composant était prêt, la grille n'existait pas.
+    ///
+    /// Quatre colonnes : à seize badges, ça fait quatre rangées pleines, sans trou en bas.
     private var badgeSection: some View {
         let ordered = earnedBadges + badges.filter { !$0.earned }
         return VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
-                RUCardHeader(title: earnedBadges.isEmpty
-                             ? String(localized: "Badges à débloquer")
-                             : String(localized: "Badges · \(earnedBadges.count) sur \(badges.count)"))
-                Spacer()
-            }
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(ordered) { badge in
-                        let color = ClubBadgeCatalog.color(for: badge.key)
-                        Button(action: { selectedBadge = badge }) {
-                            VStack(spacing: 6) {
-                                BadgeHexTile(symbole: badge.symbole, earned: badge.earned, color: color)
-                                Text(badge.name)
-                                    .font(RUFont.sans(.micro, weight: .semibold))
-                                    .foregroundColor(badge.earned ? RUColor.textPrimary : RUColor.text2)
-                                    .multilineTextAlignment(.center)
-                                    .lineLimit(2)
-                                    .minimumScaleFactor(0.8)
-                            }
-                            .frame(width: 66)
-                            // Un hexagone plein ne se laisse frapper que sur son tracé : sans ça,
-                            // ses coins coupés sont des zones mortes. Même remarque que dans
-                            // `ClubView.badgeStrip`.
-                            .contentShape(Rectangle())
+            RUCardHeader(title: earnedBadges.isEmpty
+                         ? String(localized: "Badges à débloquer")
+                         : String(localized: "Badges · \(earnedBadges.count) sur \(badges.count)"))
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 4),
+                      spacing: 14) {
+                ForEach(ordered) { badge in
+                    let color = ClubBadgeCatalog.color(for: badge.key)
+                    Button(action: { selectedBadge = badge }) {
+                        VStack(spacing: 6) {
+                            BadgeHexTile(symbole: badge.symbole, earned: badge.earned, color: color)
+                            Text(badge.name)
+                                .font(RUFont.sans(.micro, weight: .semibold))
+                                .foregroundColor(badge.earned ? RUColor.textPrimary : RUColor.text3)
+                                .multilineTextAlignment(.center)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
                         }
-                        .buttonStyle(PressableStyle())
-                        .accessibilityElement(children: .combine)
-                        .accessibilityLabel(badge.earned
-                                            ? String(localized: "\(badge.name), débloqué")
-                                            : String(localized: "\(badge.name), à débloquer"))
+                        // Un hexagone plein ne se laisse frapper que sur son tracé : sans ça,
+                        // ses coins coupés sont des zones mortes. Même remarque que dans
+                        // `ClubView.badgeStrip`.
+                        .contentShape(Rectangle())
                     }
+                    .buttonStyle(PressableStyle())
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel(badge.earned
+                                        ? String(localized: "\(badge.name), débloqué")
+                                        : String(localized: "\(badge.name), à débloquer"))
                 }
-                .padding(.vertical, 2)
-                .padding(.horizontal, 2)
+            }
+            if let prochain = leProchain, let avancee = prochain.progressText {
+                Button(action: { selectedBadge = prochain }) {
+                    HStack(spacing: 8) {
+                        Text("Le plus proche")
+                            .font(RUFont.sans(.small, weight: .medium))
+                            .foregroundColor(RUColor.text3)
+                        Text(prochain.name)
+                            .font(RUFont.sans(.small, weight: .semibold))
+                            .foregroundColor(RUColor.textPrimary)
+                            .lineLimit(1)
+                        Spacer(minLength: 8)
+                        Text(avancee)
+                            .font(RUFont.mono(.small, weight: .medium))
+                            .foregroundColor(RUColor.rose)
+                    }
+                    .padding(.top, 4)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(PressableStyle())
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(String(localized: "Le plus proche : \(prochain.name), \(avancee)"))
             }
         }
     }

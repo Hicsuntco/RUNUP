@@ -78,33 +78,42 @@ enum ClubBadgeEngine {
             "nightRun": nightRun,
             "weekendWarrior": weekendRuns >= 10
         ]
-        let progress: [String: String?] = [
+        /// Le texte ET la part, posés ENSEMBLE sur une ligne.
+        ///
+        /// Deux dictionnaires parallèles — un pour « 2/3 jours », un pour 0,67 — auraient
+        /// divergé au premier badge ajouté : c'est exactement la façon dont les dix rayons et
+        /// les dix-neuf écarts sont nés dans ce dépôt. Sur la même ligne, un écart se voit.
+        struct Avancement { var texte: String?; var part: Double? }
+        func part(_ fait: Double, _ sur: Double) -> Double { min(max(fait / sur, 0), 1) }
+
+        let progress: [String: Avancement] = [
             // Seules les lignes qui portent un mot français passent par le catalogue — les autres
             // ne sont que des chiffres et des unités identiques dans les trois langues.
-            "streak3": String(localized: "\(min(profile.streak, 3))/3 jours"),
-            "interval3": String(localized: "\(min(intervalRuns, 3))/3 séances"),
-            "earlyRun": nil,
-            "elevation300": "\(min(Int(totalElevation), 300))/300 m",
-            "firstRun": nil,
-            "streak7": String(localized: "\(min(profile.streak, 7))/7 jours"),
-            "streak30": String(localized: "\(min(profile.streak, 30))/30 jours"),
-            "tenRuns": "\(min(runs.count, 10))/10",
-            "fiftyRuns": "\(min(runs.count, 50))/50",
-            "distance50": "\(min(Int(totalDistance), 50))/50 km",
-            "distance250": "\(min(Int(totalDistance), 250))/250 km",
-            "distance1000": "\(min(Int(totalDistance), 1000))/1000 km",
+            "streak3": Avancement(texte: String(localized: "\(min(profile.streak, 3))/3 jours"), part: part(Double(profile.streak), 3)),
+            "interval3": Avancement(texte: String(localized: "\(min(intervalRuns, 3))/3 séances"), part: part(Double(intervalRuns), 3)),
+            "earlyRun": Avancement(),
+            "elevation300": Avancement(texte: "\(min(Int(totalElevation), 300))/300 m", part: part(totalElevation, 300)),
+            "firstRun": Avancement(),
+            "streak7": Avancement(texte: String(localized: "\(min(profile.streak, 7))/7 jours"), part: part(Double(profile.streak), 7)),
+            "streak30": Avancement(texte: String(localized: "\(min(profile.streak, 30))/30 jours"), part: part(Double(profile.streak), 30)),
+            "tenRuns": Avancement(texte: "\(min(runs.count, 10))/10", part: part(Double(runs.count), 10)),
+            "fiftyRuns": Avancement(texte: "\(min(runs.count, 50))/50", part: part(Double(runs.count), 50)),
+            "distance50": Avancement(texte: "\(min(Int(totalDistance), 50))/50 km", part: part(totalDistance, 50)),
+            "distance250": Avancement(texte: "\(min(Int(totalDistance), 250))/250 km", part: part(totalDistance, 250)),
+            "distance1000": Avancement(texte: "\(min(Int(totalDistance), 1000))/1000 km", part: part(totalDistance, 1000)),
             // `locale:` : sans lui, la progression d'un badge s'écrit « 18.3/21 km » en
             // français et en espagnol, point décimal compris.
-            "halfMarathonDistance": "\(String(format: "%.1f", locale: Locale.current, min(longestRun, 21)))/21 km",
-            "marathonDistance": "\(String(format: "%.1f", locale: Locale.current, min(longestRun, 42)))/42 km",
-            "nightRun": nil,
-            "weekendWarrior": "\(min(weekendRuns, 10))/10"
+            "halfMarathonDistance": Avancement(texte: "\(String(format: "%.1f", locale: Locale.current, min(longestRun, 21)))/21 km", part: part(longestRun, 21)),
+            "marathonDistance": Avancement(texte: "\(String(format: "%.1f", locale: Locale.current, min(longestRun, 42)))/42 km", part: part(longestRun, 42)),
+            "nightRun": Avancement(),
+            "weekendWarrior": Avancement(texte: "\(min(weekendRuns, 10))/10", part: part(Double(weekendRuns), 10))
         ]
         return ClubBadgeCatalog.all.map { def in
             ClubBadge(
                 key: def.key, symbole: def.symbole, name: def.name, detail: def.detail,
-                progressText: progress[def.key] ?? nil,
-                earned: earned[def.key] ?? false
+                progressText: progress[def.key]?.texte,
+                earned: earned[def.key] ?? false,
+                fraction: progress[def.key]?.part
             )
         }
     }

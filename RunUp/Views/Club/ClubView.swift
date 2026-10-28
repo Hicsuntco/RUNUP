@@ -2540,6 +2540,17 @@ struct ClubBadge: Identifiable {
     /// from (any badge on someone else's profile).
     var progressText: String?
     var earned: Bool
+    /// LA MÊME AVANCÉE, EN NOMBRE — 0 à 1.
+    ///
+    /// `progressText` rend « 2/3 jours », ce qui se lit mais ne se compare pas : pour désigner
+    /// LE badge dont on est le plus proche, il faut pouvoir les classer. Et une chaîne traduite
+    /// ne se range pas — « 18,3/21 km » et « 2/3 jours » n'ont ni la même unité ni le même
+    /// séparateur décimal selon la langue.
+    ///
+    /// En dernier et avec un défaut : les deux autres constructeurs de cette structure
+    /// (`PublicProfileView`, qui n'a pas l'historique de la personne) continuent de compiler
+    /// sans y toucher.
+    var fraction: Double?
 }
 
 /// Was previously just a static, untappable tile — no way to know what a badge required or how

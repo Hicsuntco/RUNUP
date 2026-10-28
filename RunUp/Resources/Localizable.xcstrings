@@ -14726,6 +14726,38 @@
         }
       }
     },
+    "Le plus proche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closest"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El más cercano"
+          }
+        }
+      }
+    },
+    "Le plus proche : %@, %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closest: %@, %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El más cercano: %@, %@"
+          }
+        }
+      }
+    },
     "Le programme se cale dessus — tu pourras toujours bouger une séance.": {
       "localizations": {
         "en": {

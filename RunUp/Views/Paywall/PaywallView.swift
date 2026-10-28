@@ -62,13 +62,13 @@ struct PaywallView: View {
         ScrollView {
             VStack(spacing: 0) {
                 hero
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 18) {
                     advantagesList
                     offers
                 }
                 .padding(.horizontal, RUSpacing.pagePadding)
-                .padding(.top, 16)
-                .padding(.bottom, 20)
+                .padding(.top, 18)
+                .padding(.bottom, 18)
             }
         }
         .background(RUColor.pageBackground)
@@ -137,7 +137,7 @@ struct PaywallView: View {
                         .font(RUFont.sans(.small, weight: .bold))
                 }
                 .foregroundColor(RUColor.onRose)
-                .padding(.horizontal, 12).padding(.vertical, 7)
+                .padding(.horizontal, 12).padding(.vertical, 8)
                 .background(RUColor.onRose.opacity(0.18), in: Capsule())
             }
 
@@ -151,7 +151,7 @@ struct PaywallView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(20)
+        .padding(18)
         // Une carte teintée en retrait, pas une bannière pleine largeur passant sous la barre
         // d'état. `ignoresSafeArea` sur un enfant de `ScrollView` ne fait pas ce qu'on croit — la
         // vue est disposée dans l'espace du défilement — et la référence apportée fait exactement
@@ -167,7 +167,7 @@ struct PaywallView: View {
             Text("Ce que tu débloques")
                 .font(RUFont.sans(.label, weight: .bold))
                 .foregroundColor(RUColor.textPrimary)
-            VStack(alignment: .leading, spacing: 13) {
+            VStack(alignment: .leading, spacing: 14) {
                 ForEach(advantages) { advantage in
                     HStack(alignment: .top, spacing: 12) {
                         // Un glyphe plein, sans pastille. Cinq carrés rose pâle empilés faisaient
@@ -228,7 +228,7 @@ struct PaywallView: View {
                 Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
                     .font(.system(size: 19))
                     .foregroundColor(isSelected ? RUColor.rose : RUColor.text3)
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 8) {
                         Text(isYearly ? "Annuel" : "Mensuel")
                             .font(RUFont.sans(.label, weight: .bold))
@@ -242,7 +242,7 @@ struct PaywallView: View {
                             Text(verbatim: "−" + (Double(saving) / 100).formatted(.percent))
                                 .font(RUFont.sans(.micro, weight: .bold))
                                 .foregroundColor(RUColor.onRose)
-                                .padding(.horizontal, 7).padding(.vertical, 3)
+                                .padding(.horizontal, 8).padding(.vertical, 4)
                                 .background(RUColor.rose, in: Capsule())
                         }
                     }
@@ -259,7 +259,7 @@ struct PaywallView: View {
                         .multilineTextAlignment(.trailing)
                 }
             }
-            .padding(15)
+            .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
             .overlay(
@@ -305,7 +305,7 @@ struct PaywallView: View {
     /// Rassemblés ici parce qu'ils forment une seule décision. Éparpillés dans le défilement, le
     /// bouton se lisait sans son prix et le prix sans son bouton.
     private var footer: some View {
-        VStack(spacing: 9) {
+        VStack(spacing: 10) {
             if let line = priceLine {
                 Text(line)
                     .font(RUFont.sans(.small))

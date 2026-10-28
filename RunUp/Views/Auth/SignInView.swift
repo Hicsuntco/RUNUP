@@ -42,7 +42,7 @@ struct SignInView: View {
                             .font(RUFont.sans(.body))
                             .foregroundColor(RUColor.text2)
                             .multilineTextAlignment(.center)
-                            .padding(.horizontal, 20)
+                            .padding(.horizontal, 18)
                     }
                     .padding(.top, 24)
 
@@ -102,7 +102,7 @@ struct SignInView: View {
                     .font(RUFont.sans(.body))
                     .foregroundColor(RUColor.text2)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, 18)
             }
             .padding(.top, 24)
 

@@ -184,8 +184,8 @@ struct UltraRaceDaySheet: View {
     private func puces(_ lignes: [String]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             ForEach(lignes, id: \.self) { ligne in
-                HStack(alignment: .top, spacing: 9) {
-                    Circle().fill(RUColor.text4).frame(width: 5, height: 5).padding(.top, 7)
+                HStack(alignment: .top, spacing: 10) {
+                    Circle().fill(RUColor.text4).frame(width: 5, height: 5).padding(.top, 8)
                     Text(verbatim: ligne)
                         .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
                     Spacer(minLength: 0)

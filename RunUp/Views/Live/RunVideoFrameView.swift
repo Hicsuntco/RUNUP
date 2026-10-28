@@ -83,7 +83,7 @@ struct RunVideoFrameView: View {
     }
 
     private var entete: some View {
-        VStack(spacing: 5) {
+        VStack(spacing: 6) {
             Text(verbatim: run.titreAffiche)
                 .font(RUFont.display(horsEchelle: 26))
                 .foregroundColor(.white)
@@ -116,7 +116,7 @@ struct RunVideoFrameView: View {
     /// aurait traversé le contrôle du catalogue sans être vu, et « TEMPS » serait sorti en
     /// français en anglais et en espagnol.
     private func compteur(_ label: Text, _ valeur: String) -> some View {
-        VStack(spacing: 1) {
+        VStack(spacing: 2) {
             label
                 .font(RUFont.sans(.small, weight: .bold))
                 .tracking(2.5)
@@ -133,7 +133,7 @@ struct RunVideoFrameView: View {
     }
 
     private var signature: some View {
-        HStack(spacing: 7) {
+        HStack(spacing: 8) {
             AppMarkView(size: 24)
             Text(verbatim: "RUNUP")
                 .font(RUFont.display(horsEchelle: 19))

@@ -34,14 +34,14 @@ struct NotificationsSheet: View {
                                 Circle().fill(Color(hex: UInt32(n.colorHex))).frame(width: 36, height: 36)
                                     .overlay(Text(n.icon).font(.system(size: 15)))
                             }
-                            VStack(alignment: .leading, spacing: 3) {
+                            VStack(alignment: .leading, spacing: 4) {
                                 Text(n.title).font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                                 Text(n.text).font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(2)
                                 Text(n.timestamp, style: .relative).font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                             }
                             Spacer(minLength: 0)
                         }
-                        .padding(13)
+                        .padding(14)
                         // `card` et non `card2` : posée à même le fond de la feuille, cette carte est une
                         // CARTE, pas une sous-surface. Depuis l'inversion du thème clair, `card2`
                         // (#F1F1F6) sur `bg` (#F4F4F8) donne 1,03:1 — la même couleur à l'œil, donc

@@ -37,7 +37,7 @@ struct SplashView: View {
     var body: some View {
         ZStack {
             RUColor.bg.ignoresSafeArea()
-            HStack(spacing: 16) {
+            HStack(spacing: 18) {
                 AppMarkView(size: markSize, radius: markSize * 0.26, drawn: drawn)
                     // La tuile arrive derrière les barres, pas avec elles : les traits blancs se
                     // posent sur le noir, et le dégradé de marque monte dessous une fois qu'ils

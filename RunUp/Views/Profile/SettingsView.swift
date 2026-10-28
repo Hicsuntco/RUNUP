@@ -21,7 +21,7 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 18) {
                     // `sectionTitle` passe par `EyebrowLabel`, qui refait un `LocalizedStringKey`
                     // à partir de son `String` — ces littéraux-là n'ont donc rien à envelopper.
                     sectionTitle("Sources de données")
@@ -128,7 +128,7 @@ struct SettingsView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .frame(minHeight: 44)
         }
-        .padding(16)
+        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
         .ruCard()
     }
@@ -157,7 +157,7 @@ struct SettingsView: View {
                 Spacer()
                 Text("›").foregroundColor(RUColor.text2)
             }
-            .padding(.horizontal, 14).padding(.vertical, 13)
+            .padding(.horizontal, 14).padding(.vertical, 14)
             .frame(minHeight: 44)
             .contentShape(Rectangle())
         }
@@ -172,7 +172,7 @@ struct SettingsView: View {
                 Spacer()
                 Text("›").foregroundColor(RUColor.text2)
             }
-            .padding(.horizontal, 14).padding(.vertical, 13)
+            .padding(.horizontal, 14).padding(.vertical, 14)
             // Sans forme de contact, la ligne n'est touchable que sur ses deux textes : le vide
             // entre « Plus de réglages » et le chevron — soit la moitié de la largeur — ne
             // répondait pas. C'est ce qui la faisait paraître capricieuse.
@@ -227,7 +227,7 @@ struct SettingsView: View {
             .tint(RUColor.rose)
             .accessibilityLabel("Synchroniser avec Apple Santé")
         }
-        .padding(.horizontal, 14).padding(.vertical, 13)
+        .padding(.horizontal, 14).padding(.vertical, 14)
     }
 
     /// Nuancier — tap a swatch to re-theme the whole app (buttons, highlights, the logo mark)
@@ -245,7 +245,7 @@ struct SettingsView: View {
                     modeButton(String(localized: "Sombre"), isLight: false)
                     modeButton(String(localized: "Blanc"), isLight: true)
                 }
-                .padding(3)
+                .padding(4)
                 .background(RUColor.card2, in: Capsule())
             }
 
@@ -289,7 +289,7 @@ struct SettingsView: View {
             Divider().background(RUColor.line)
 
             Text("Couleur de l'app").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: 4), spacing: 16) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: 4), spacing: 18) {
                 ForEach(AccentTheme.all) { theme in
                     Button(action: { selectAccent(theme) }) {
                         ZStack {
@@ -325,7 +325,7 @@ struct SettingsView: View {
             Text(label)
                 .font(RUFont.sans(.body, weight: .semibold))
                 .foregroundColor(selected ? .white : RUColor.text2)
-                .padding(.horizontal, 14).padding(.vertical, 9)
+                .padding(.horizontal, 14).padding(.vertical, 10)
                 .frame(minHeight: 44)
                 .background(selected ? RUColor.rose : .clear, in: Capsule())
                 .contentShape(Capsule())
@@ -422,7 +422,7 @@ struct SettingsView: View {
                     .tint(RUColor.rose)
                     .accessibilityLabel("Notifications du coach")
             }
-            .padding(.horizontal, 14).padding(.vertical, 13)
+            .padding(.horizontal, 14).padding(.vertical, 14)
 
             Divider().background(RUColor.line)
 
@@ -457,7 +457,7 @@ struct SettingsView: View {
                         .frame(minHeight: 44, alignment: .leading)
                 }
             }
-            .padding(.horizontal, 14).padding(.vertical, 13)
+            .padding(.horizontal, 14).padding(.vertical, 14)
         }
         .ruCard()
     }
@@ -478,7 +478,7 @@ struct SettingsView: View {
                 .tint(RUColor.rose)
                 .foregroundColor(RUColor.textPrimary)
             }
-            .padding(.horizontal, 14).padding(.vertical, 13)
+            .padding(.horizontal, 14).padding(.vertical, 14)
             Divider().background(RUColor.line)
             RUReglageRow(libelle: "Objectif calories actives") {
                 Stepper(
@@ -491,7 +491,7 @@ struct SettingsView: View {
                 .tint(RUColor.rose)
                 .foregroundColor(RUColor.textPrimary)
             }
-            .padding(.horizontal, 14).padding(.vertical, 13)
+            .padding(.horizontal, 14).padding(.vertical, 14)
         }
         .ruCard()
     }
@@ -565,7 +565,7 @@ private struct StravaConnectionRow: View {
                 Text(errorMessage).font(RUFont.sans(.small)).foregroundColor(RUColor.rose)
             }
         }
-        .padding(.horizontal, 14).padding(.vertical, 13)
+        .padding(.horizontal, 14).padding(.vertical, 14)
         .task {
             if auth.isSignedIn { await refreshStatus() }
         }

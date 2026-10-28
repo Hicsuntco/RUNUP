@@ -47,7 +47,7 @@ struct ClubManagementView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 18) {
                     identiteDuClub
                     verrouDuClub
 
@@ -115,7 +115,7 @@ struct ClubManagementView: View {
 
     private func membershipRow(icon: String, title: String, destructive: Bool) -> some View {
         let tint = destructive ? RUColor.rose : RUColor.text2
-        return HStack(spacing: 13) {
+        return HStack(spacing: 14) {
             Image(systemName: icon)
                 // Sans sa tuile teintée, comme les icônes d'en-tête, du plan et de Stats.
                 .font(.system(size: 17, weight: .semibold))
@@ -153,7 +153,7 @@ struct ClubManagementView: View {
                     Text("\(Int(challenge.progressKm)) / \(Int(challenge.targetKm)) km parcourus ensemble")
                         .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
                 }
-                .padding(13)
+                .padding(14)
                 .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
             } else {
@@ -194,7 +194,7 @@ struct ClubManagementView: View {
                     .textFieldStyle(.plain)
                     .font(RUFont.sans(.body))
                     .foregroundColor(RUColor.textPrimary)
-                    .padding(.horizontal, 13).padding(.vertical, 10)
+                    .padding(.horizontal, 14).padding(.vertical, 10)
                     .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                 TextField("En deux phrases : qui êtes-vous, quand courez-vous ?",
@@ -203,7 +203,7 @@ struct ClubManagementView: View {
                     .lineLimit(2...5)
                     .font(RUFont.sans(.body))
                     .foregroundColor(RUColor.textPrimary)
-                    .padding(.horizontal, 13).padding(.vertical, 10)
+                    .padding(.horizontal, 14).padding(.vertical, 10)
                     .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                 HStack(spacing: 10) {
@@ -355,7 +355,7 @@ struct ClubManagementView: View {
     private func memberRow(_ member: LeaderboardRow) -> some View {
         HStack(spacing: 12) {
             AvatarView(urlString: member.avatarUrl, base64DataURI: member.avatarBase64, initial: String(member.name.prefix(1)), size: 36, seed: member.isMe ? nil : member.id)
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(member.isMe ? String(localized: "\(member.name) · toi") : member.name)
                     .font(RUFont.sans(.label, weight: member.isMe ? .semibold : .regular))
                     .foregroundColor(RUColor.textPrimary)
@@ -373,7 +373,7 @@ struct ClubManagementView: View {
             Text("\(member.xp) XP").font(RUFont.mono(11)).foregroundColor(RUColor.text2)
             Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold)).foregroundColor(RUColor.text3)
         }
-        .padding(.horizontal, 13).padding(.vertical, 11)
+        .padding(.horizontal, 14).padding(.vertical, 12)
         .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
         // SEULE LA CRÉATRICE NOMME. Un organisateur qui pourrait en nommer d'autres pourrait
@@ -467,7 +467,7 @@ struct ClubMemberProfileView: View {
         ScrollView {
             VStack(spacing: 14) {
                 AvatarView(urlString: member.avatarUrl, base64DataURI: member.avatarBase64, initial: String(member.name.prefix(1)), size: 72, seed: member.isMe ? nil : member.id)
-                    .padding(.top, 20)
+                    .padding(.top, 18)
                 Text(member.name).font(RUFont.sans(.title, weight: .bold)).foregroundColor(RUColor.textPrimary)
                 Text("Niveau \(level) · \(levelTitle)").font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
                 Text("Membre depuis \(Self.joinedFormatter.string(from: member.joinedAt))")
@@ -475,7 +475,7 @@ struct ClubMemberProfileView: View {
 
                 bioSection
 
-                RUMetricRow(spacing: 20) {
+                RUMetricRow(spacing: 18) {
                     MetricColumn(value: "\(member.xp)", label: "XP")
                     MetricColumn(value: "#\(member.rank)", label: "Rang club", valueColor: RUColor.rose2)
                     MetricColumn(value: "\(member.activitiesCount)", label: "Activités")
@@ -517,7 +517,7 @@ struct ClubMemberProfileView: View {
                         .font(RUFont.sans(.label))
                         .foregroundColor(RUColor.textPrimary)
                         .lineLimit(1...3)
-                        .padding(11)
+                        .padding(12)
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                     if let bioError {
@@ -552,7 +552,7 @@ struct ClubMemberProfileView: View {
             }
             .padding(.horizontal, 10)
         } else if let bio = member.bio, !bio.isEmpty {
-            Text(bio).font(RUFont.sans(.body)).foregroundColor(RUColor.text2).multilineTextAlignment(.center).padding(.horizontal, 20)
+            Text(bio).font(RUFont.sans(.body)).foregroundColor(RUColor.text2).multilineTextAlignment(.center).padding(.horizontal, 18)
         }
     }
 
@@ -567,7 +567,7 @@ struct ClubMemberProfileView: View {
                     ForEach(badges) { badge in
                         let color = ClubBadgeCatalog.color(for: badge.key)
                         Button(action: { selectedBadge = badge }) {
-                            VStack(spacing: 5) {
+                            VStack(spacing: 6) {
                                 HexagonBadgeShape()
                                     .fill(badge.earned ? color.opacity(0.22) : RUColor.card2)
                                     .overlay(HexagonBadgeShape().stroke(badge.earned ? color.opacity(0.7) : RUColor.line, lineWidth: RUSpacing.hairline))
@@ -658,7 +658,7 @@ struct CreateChallengeSheet: View {
                                 }
                             Text("km").font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.text2)
                         }
-                        .padding(13)
+                        .padding(14)
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                     }

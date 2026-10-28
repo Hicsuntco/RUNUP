@@ -221,7 +221,7 @@ struct LiveRunView: View {
                     Text(libelleEtat)
                         .font(RUFont.display(.caption)).tracking(2).foregroundColor(Ink.accentSoft)
                 }
-                .padding(.horizontal, 12).padding(.vertical, 7)
+                .padding(.horizontal, 12).padding(.vertical, 8)
                 .background(Ink.accent.opacity(0.16), in: Capsule())
                 .background(.ultraThinMaterial, in: Capsule())
             }
@@ -305,7 +305,7 @@ struct LiveRunView: View {
                 .font(RUFont.sans(.body, weight: .semibold))
                 .foregroundColor(Color(hex: 0xFFD79A))
         }
-        .padding(.horizontal, 12).padding(.vertical, 9)
+        .padding(.horizontal, 12).padding(.vertical, 10)
         // Surface neutre, l'ambre reste au texte. L'écran de course est toujours sombre : un
         // ambre à 16 % y donnait un brun, cerclé du même brun. Un accent n'a que deux états.
         .background(Color.white.opacity(0.09), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
@@ -316,7 +316,7 @@ struct LiveRunView: View {
         HStack(spacing: 12) {
             Circle().fill(Ink.accent).frame(width: 34, height: 34)
                 .overlay(Image(systemName: "speaker.wave.2.fill").foregroundColor(.white).font(.system(size: 13)))
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 4) {
                 // Pas de `RUCardHeader` ici : son titre lit `textPrimary`, qui devient noir en
                 // mode clair — sur cette bulle sombre, le nom du coach disparaissait.
                 Text("Coach · en direct")
@@ -379,7 +379,7 @@ struct LiveRunView: View {
     @ViewBuilder private var instruction: some View {
         if hasInstruction {
             VStack(spacing: 2) {
-                HStack(spacing: 7) {
+                HStack(spacing: 8) {
                     Text(vm?.segmentLabel ?? String(localized: "ALLURE CIBLE"))
                         .font(RUFont.display(.caption)).tracking(2)
                         .foregroundColor(Ink.accentSoft)
@@ -515,7 +515,7 @@ struct LiveRunView: View {
                     .monospacedDigit()
                     .contentTransition(.numericText())
                     .animation(RUMotion.respecting(reduceMotion, RUMotion.digit), value: Int(vm?.elapsedSeconds ?? 0))
-                HStack(alignment: .lastTextBaseline, spacing: 5) {
+                HStack(alignment: .lastTextBaseline, spacing: 6) {
                     Text(String(format: "%.2f", locale: Locale.current, vm?.distanceKm ?? 0))
                         .displayStyle(.figure).foregroundColor(.white)
                         .monospacedDigit()
@@ -552,7 +552,7 @@ struct LiveRunView: View {
                 liveMetric("\(Int(vm?.kcal ?? 0))", "KCAL", Ink.cyan)
             }
 
-            HStack(spacing: 16) {
+            HStack(spacing: 18) {
                 Button(action: {
                     Haptics.impact(.heavy)
                     showStopConfirm = true
@@ -585,7 +585,7 @@ struct LiveRunView: View {
                 voiceCoachButton
             }
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 18)
         .padding(.top, 18)
         // Le fond du panneau descend jusqu'au bord physique de l'écran — c'est son dégradé qui
         // ferme l'image. Son CONTENU, lui, s'arrête au-dessus de la barre de geste : voir

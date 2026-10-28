@@ -307,6 +307,12 @@ jobs:
       - name: Vérifier que l'échelle de titrage reste fermée
         run: python3 ci_scripts/check_echelle.py
 
+      # Dix-neuf écarts verticaux continus de 0 à 22, et trente-trois valeurs de marge. `spacing: 9`
+      # à côté de cent `spacing: 8` est un nombre parfaitement valide pour le compilateur, et c'est
+      # comme ça que les dix-neuf sont arrivées — une par une, sans que personne ait à les défendre.
+      - name: Vérifier que les écarts et les marges tiennent sur la grille
+        run: python3 ci_scripts/check_grille.py
+
       - name: Vérifier que le compteur du Club ne compte que des gestes délibérés
         run: python3 ci_scripts/check_club_metrics.py
 

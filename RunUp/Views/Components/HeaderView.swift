@@ -53,7 +53,7 @@ struct BackTitleHeaderView<Trailing: View>: View {
         HStack(spacing: 12) {
             BackChevronButton(action: onBack)
             if let eyebrow {
-                VStack(alignment: .leading, spacing: 1) {
+                VStack(alignment: .leading, spacing: 2) {
                     EyebrowLabel(text: eyebrow, color: eyebrowColor)
                     Text(LocalizedStringKey(title)).displayStyle(titleSize).foregroundColor(RUColor.textPrimary)
                 }

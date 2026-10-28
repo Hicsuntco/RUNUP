@@ -67,7 +67,7 @@ struct BuildingProgramView: View {
     private var construction: some View {
         ObScreen {
             ObCorps {
-                VStack(spacing: 22) {
+                VStack(spacing: 24) {
                     // Le 4 était écrit trois fois, sans lien avec la liste qui décide vraiment du
                     // nombre de paliers. Un cinquième élément ajouté un jour à `buildSteps` aurait
                     // envoyé l'anneau à 125 % et laissé la coche de fin inatteignable.
@@ -111,7 +111,7 @@ struct BuildingProgramView: View {
                                 .foregroundColor(vm.buildProgress > i ? RUColor.textPrimary : RUColor.text2)
                             Spacer()
                         }
-                        .padding(.vertical, 13)
+                        .padding(.vertical, 14)
                         .overlay(Divider().background(RUColor.line), alignment: .bottom)
                         .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: vm.buildProgress)
                     }

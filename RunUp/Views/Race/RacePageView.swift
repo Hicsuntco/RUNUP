@@ -78,7 +78,7 @@ struct RacePageView: View {
                 .padding(.top, 8)
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 18) {
                     entete
 
                     if isLoading {
@@ -143,7 +143,7 @@ struct RacePageView: View {
                 }
                 .frame(width: 46, height: 46)
 
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text(courante.name)
                         .font(RUFont.display(.title))
                         .foregroundColor(RUColor.textPrimary)
@@ -196,7 +196,7 @@ struct RacePageView: View {
         Text(texte)
             .font(RUFont.sans(.small, weight: .bold))
             .foregroundColor(teinte)
-            .padding(.horizontal, 9).padding(.vertical, 4)
+            .padding(.horizontal, 10).padding(.vertical, 4)
             .background(teinte.opacity(0.14), in: Capsule())
     }
 
@@ -276,7 +276,7 @@ struct RacePageView: View {
                         .font(RUFont.sans(.emphasis))
                         .foregroundColor(RUColor.textPrimary)
                         .autocorrectionDisabled()
-                        .padding(.horizontal, 14).padding(.vertical, 11)
+                        .padding(.horizontal, 14).padding(.vertical, 12)
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                     // Le chrono est libre, mais s'il se lit comme un temps l'app en tire une
@@ -335,7 +335,7 @@ struct RacePageView: View {
     }
 
     private func interrupteur(titre: String, detail: String, actif: Binding<Bool>) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: 6) {
             Toggle(isOn: actif) {
                 Text(titre)
                     .font(RUFont.sans(.label, weight: .semibold))
@@ -395,7 +395,7 @@ struct RacePageView: View {
     }
 
     private func ligneDeCoureur(_ coureur: RaceRunner) -> some View {
-        HStack(alignment: .top, spacing: 11) {
+        HStack(alignment: .top, spacing: 12) {
             Button(action: { appState.ouvrirLeProfil(coureur.id) }) {
                 AvatarView(urlString: coureur.avatarUrl, base64DataURI: coureur.avatarBase64,
                            initial: String(coureur.nomComplet.prefix(1)), size: 36, seed: coureur.id)
@@ -403,7 +403,7 @@ struct RacePageView: View {
             .buttonStyle(PressableStyle())
             .accessibilityLabel(String(localized: "Voir le profil de \(coureur.nomComplet)"))
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
                     // Un nom est une porte. Avant, c'était du texte mort : on voyait que quelqu'un
                     // préparait la même course sans pouvoir regarder qui c'était.
@@ -427,7 +427,7 @@ struct RacePageView: View {
                         Text("cherche quelqu'un")
                             .font(RUFont.sans(.small, weight: .semibold))
                             .foregroundColor(RUColor.rose2)
-                            .padding(.horizontal, 7).padding(.vertical, 2)
+                            .padding(.horizontal, 8).padding(.vertical, 2)
                             .overlay(Capsule().strokeBorder(RUColor.rose2.opacity(0.4),
                                                             lineWidth: RUSpacing.hairline))
                             .fixedSize(horizontal: true, vertical: false)
@@ -473,7 +473,7 @@ struct RacePageView: View {
             }
             .accessibilityLabel("Plus d'options")
         }
-        .padding(.vertical, 11)
+        .padding(.vertical, 12)
     }
 
     /// « 14 sorties ». À part, et non imbriqué dans l'interpolation de la ligne au-dessus : une
@@ -580,7 +580,7 @@ struct RacePageView: View {
                 .lineLimit(1...5)
                 .font(RUFont.sans(.body))
                 .foregroundColor(RUColor.textPrimary)
-                .padding(.horizontal, 13).padding(.vertical, 10)
+                .padding(.horizontal, 14).padding(.vertical, 10)
                 .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
 
@@ -652,7 +652,7 @@ struct RacePageView: View {
                 // message sans réponse ne distingue pas « personne ne m'a lu » de « personne n'est
                 // à mon rythme ».
                 Button(action: { Task { await applaudir(message) } }) {
-                    HStack(spacing: 7) {
+                    HStack(spacing: 8) {
                         Image(systemName: message.kudoedByMe ? "hands.clap.fill" : "hands.clap")
                             .font(.system(size: 15, weight: .regular))
                         if message.kudos > 0 {
@@ -678,7 +678,7 @@ struct RacePageView: View {
                     reponseA = message
                     brouillon = ""
                 }) {
-                    HStack(spacing: 7) {
+                    HStack(spacing: 8) {
                         Image(systemName: "bubble.right")
                             .font(.system(size: 15, weight: .regular))
                         let reponsesCount = reponses(a: message).count
@@ -701,7 +701,7 @@ struct RacePageView: View {
     }
 
     private func messageEnTete(_ message: RacePost) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
                 // Tout le bloc d'identité ouvre la page de la personne — la photo, le nom et
                 // l'heure ensemble, comme partout ailleurs. Viser un mot de huit caractères
@@ -710,7 +710,7 @@ struct RacePageView: View {
                     HStack(spacing: 8) {
                         AvatarView(urlString: message.author.avatarUrl, base64DataURI: message.author.avatarBase64,
                                    initial: String(message.author.name.prefix(1)), size: 32, seed: message.author.id)
-                        VStack(alignment: .leading, spacing: 1) {
+                        VStack(alignment: .leading, spacing: 2) {
                             Text(message.author.name)
                                 .font(RUFont.sans(.label, weight: .bold))
                                 .foregroundColor(RUColor.textPrimary)
@@ -728,7 +728,7 @@ struct RacePageView: View {
                     Text(Self.libelleDuGenre(message.kind))
                         .font(RUFont.sans(.small, weight: .bold))
                         .foregroundColor(RUColor.cyan)
-                        .padding(.horizontal, 7).padding(.vertical, 2)
+                        .padding(.horizontal, 8).padding(.vertical, 2)
                         .background(RUColor.cyan.opacity(0.14), in: Capsule())
                 }
                 Menu {

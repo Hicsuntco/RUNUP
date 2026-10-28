@@ -32,7 +32,7 @@ struct PlusLockCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: compact ? 8 : 12) {
-            HStack(spacing: 7) {
+            HStack(spacing: 8) {
                 Image(systemName: "sparkles")
                     .font(.system(size: compact ? 12 : 14, weight: .semibold))
                 Text(verbatim: "RUNUP PLUS")

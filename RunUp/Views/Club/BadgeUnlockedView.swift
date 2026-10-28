@@ -95,7 +95,7 @@ struct BadgeUnlockedView: View {
                             item: shareImage,
                             preview: SharePreview(badge.name, image: shareImage)
                         ) {
-                            HStack(spacing: 7) {
+                            HStack(spacing: 8) {
                                 Image(systemName: "square.and.arrow.up")
                                 Text("Partager ce badge")
                             }
@@ -120,7 +120,7 @@ struct BadgeUnlockedView: View {
                     .buttonStyle(PressableStyle())
                 }
                 .padding(.horizontal, 24)
-                .padding(.bottom, 20)
+                .padding(.bottom, 18)
             }
         }
         .onAppear {

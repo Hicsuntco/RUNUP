@@ -172,7 +172,7 @@ private struct AddShoeSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 18) {
                     VStack(alignment: .leading, spacing: 8) {
                         EyebrowLabel(text: "Nom de la paire", color: RUColor.text3)
                         ObTextField(placeholder: String(localized: "Ex. Pegasus 41"), text: $name)

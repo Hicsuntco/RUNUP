@@ -10,7 +10,7 @@ struct WellbeingFieldsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            EyebrowLabel(text: "Une douleur ou blessure à surveiller ?", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
+            EyebrowLabel(text: "Une douleur ou blessure à surveiller ?", color: RUColor.text3).padding(.top, 18).padding(.bottom, 10)
             ChipFlowLayout {
                 ForEach(OnboardingChoices.blessures, id: \.0) { id, label in
                     SelectableChip(label: label, selected: vm.injuryArea == id) { vm.injuryArea = id }
@@ -24,7 +24,7 @@ struct WellbeingFieldsView: View {
             // Voir `AncienneteBlessure`.
             if let zone = vm.injuryArea, zone != OnboardingChoices.aucuneBlessure {
                 EyebrowLabel(text: "C'était quand ?", color: RUColor.text3)
-                    .padding(.top, 20).padding(.bottom, 10)
+                    .padding(.top, 18).padding(.bottom, 10)
                 ChipFlowLayout {
                     ForEach(AncienneteBlessure.allCases) { choix in
                         SelectableChip(label: choix.title, selected: vm.injuryWhen == choix) {
@@ -37,7 +37,7 @@ struct WellbeingFieldsView: View {
             // LE TERRAIN. Le plan prescrivait « Côtes longues » sans jamais demander s'il y
             // avait une côte à moins de vingt kilomètres.
             EyebrowLabel(text: "Où tu cours, en vrai", color: RUColor.text3)
-                .padding(.top, 20).padding(.bottom, 10)
+                .padding(.top, 18).padding(.bottom, 10)
             ChipFlowLayout {
                 ForEach(Terrain.allCases) { terrain in
                     SelectableChip(label: terrain.title, selected: vm.terrains.contains(terrain)) {
@@ -50,7 +50,7 @@ struct WellbeingFieldsView: View {
             // LES AUTRES SPORTS. Trois séances de renfo par semaine ne laissent pas les mêmes
             // jambes, et le plan posait ses deux séances de qualité dans tous les cas.
             EyebrowLabel(text: "Tu fais autre chose à côté ?", color: RUColor.text3)
-                .padding(.top, 20).padding(.bottom, 10)
+                .padding(.top, 18).padding(.bottom, 10)
             ChipFlowLayout {
                 ForEach(AutreSport.allCases) { sport in
                     SelectableChip(label: sport.title, selected: vm.autresSports.contains(sport)) {
@@ -61,7 +61,7 @@ struct WellbeingFieldsView: View {
             }
 
             if vm.sex == "female" {
-                EyebrowLabel(text: "Adapter le programme à ton cycle ?", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
+                EyebrowLabel(text: "Adapter le programme à ton cycle ?", color: RUColor.text3).padding(.top, 18).padding(.bottom, 10)
                 ChipFlowLayout {
                     SelectableChip(label: "Oui", selected: vm.cycleTrackingEnabled) { vm.cycleTrackingEnabled = true }
                     SelectableChip(label: "Non merci", selected: !vm.cycleTrackingEnabled) { vm.cycleTrackingEnabled = false }
@@ -79,7 +79,7 @@ struct WellbeingFieldsView: View {
                         .datePickerStyle(.compact)
                         .labelsHidden()
                         .colorScheme(RUColor.colorScheme)
-                        .padding(13)
+                        .padding(14)
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
 
@@ -112,7 +112,7 @@ struct WellbeingFieldsView: View {
                             }
                             .foregroundColor(RUColor.rose)
                         }
-                        .padding(13)
+                        .padding(14)
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                     }

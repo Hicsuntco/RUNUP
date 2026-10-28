@@ -40,7 +40,7 @@ struct ProfileView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 18) {
                 header
 
                 if runs.isEmpty { firstDayCard } else { statRow }
@@ -124,7 +124,7 @@ struct ProfileView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top, spacing: 14) {
                 avatarButton
-                VStack(alignment: .leading, spacing: 5) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text(profile.name).displayStyle(.title).foregroundColor(RUColor.textPrimary)
                     if let pseudo = auth.currentUser?.username, !pseudo.isEmpty {
                         Text(verbatim: "@\(pseudo)")
@@ -189,7 +189,7 @@ struct ProfileView: View {
                     .minimumScaleFactor(0.8)
                 Image(systemName: "chevron.right").font(.system(size: 8, weight: .semibold)).foregroundColor(RUColor.text3)
             }
-            .padding(.horizontal, 9).padding(.vertical, 4)
+            .padding(.horizontal, 10).padding(.vertical, 4)
             .background(RUColor.card, in: Capsule())
             .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
             // La pastille fait 26 pt : en faire une destination sans agrandir sa zone
@@ -233,7 +233,7 @@ struct ProfileView: View {
                     // `strokeBorder` (et non `stroke`) pour que le trait soit tracé À L'INTÉRIEUR
                     // du cercle : le diamètre visible reste exactement celui du cadre, sans
                     // déborder d'un demi-trait sur la mise en page ni sur le crayon d'édition.
-                    .padding(3)
+                    .padding(4)
                     .overlay(Circle().strokeBorder(RUColor.accentGradient(), lineWidth: 2))
                 if isSavingAvatar {
                     ProgressView().tint(RUColor.textPrimary)
@@ -444,13 +444,13 @@ struct ProfileView: View {
                 .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(16)
+        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
         .ruHeroCard()
     }
 
     private func firstDayFact(icon: String, value: String, label: String) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: 4) {
             Image(systemName: icon).font(.system(size: 11, weight: .semibold)).foregroundColor(RUColor.rose)
             Text(value).displayStyle(.subtitle).foregroundColor(RUColor.textPrimary)
                 .lineLimit(1).minimumScaleFactor(0.6)
@@ -517,7 +517,7 @@ struct ProfileView: View {
                 .padding(.top, 4)
         }
         .frame(maxWidth: .infinity)
-        .padding(20)
+        .padding(18)
         .ruCard()
     }
 
@@ -546,7 +546,7 @@ struct ProfileView: View {
                     .foregroundColor(RUColor.text3)
                     .frame(width: 26, height: 26)
             }
-            .padding(13)
+            .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
             .ruCard(radius: RUSpacing.radiusCompact)
             .contentShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
@@ -592,7 +592,7 @@ struct ProfileView: View {
                         Text(pastille)
                             .font(RUFont.sans(.small, weight: .bold))
                             .foregroundColor(RUColor.onRose)
-                            .padding(.horizontal, 7).padding(.vertical, 3)
+                            .padding(.horizontal, 8).padding(.vertical, 4)
                             .background(RUColor.rose, in: Capsule())
                             .accessibilityLabel(etiquettePastille ?? pastille)
                     }
@@ -614,7 +614,7 @@ struct ProfileView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(13)
+            .padding(14)
             // UNE HAUTEUR PLANCHER, ET DE QUOI REMPLIR LA RANGÉE.
             //
             // Plancher et non fixe : à 200 % de taille de texte, une tuile fixe tronquerait son

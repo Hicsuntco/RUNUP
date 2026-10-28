@@ -38,7 +38,7 @@ struct ActivityDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 18) {
                 retour
 
                 if enChargement {
@@ -105,7 +105,7 @@ struct ActivityDetailView: View {
 
     private func auteur(_ s: ActivityDetail) -> some View {
         Button(action: { if !s.isMine { appState.ouvrirLeProfil(s.userId) } }) {
-            HStack(spacing: 11) {
+            HStack(spacing: 12) {
                 AvatarView(urlString: s.avatarUrl, base64DataURI: s.avatarBase64,
                            initial: String(s.name.prefix(1)), size: 40,
                            seed: s.isMine ? nil : s.userId)
@@ -175,7 +175,7 @@ struct ActivityDetailView: View {
             SelfDrawingRoute(route: s.route, lineWidth: 3.5,
                              colors: [RUColor.rose, RUColor.violet],
                              targetPoints: 140, showsStart: true)
-                .padding(22)
+                .padding(24)
         }
         .frame(height: 230)
         .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
@@ -220,7 +220,7 @@ struct ActivityDetailView: View {
                                    GridItem(.flexible(), spacing: 10),
                                    GridItem(.flexible(), spacing: 10)], spacing: 10) {
             ForEach(cases, id: \.libelle) { mesure in
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text(mesure.valeur)
                         .displayStyle(.title)
                         .foregroundColor(RUColor.textPrimary)
@@ -297,7 +297,7 @@ struct ActivityDetailView: View {
     private func actions(_ s: ActivityDetail) -> some View {
         HStack(spacing: 18) {
             Button(action: { Task { await applaudir() } }) {
-                HStack(spacing: 7) {
+                HStack(spacing: 8) {
                     Image(systemName: s.kudoedByMe ? "hands.clap.fill" : "hands.clap")
                         .font(.system(size: 16, weight: .regular))
                     if s.kudos > 0 {
@@ -315,7 +315,7 @@ struct ActivityDetailView: View {
             .accessibilityValue("\(s.kudos)")
 
             Button(action: { commentairesOuverts = true }) {
-                HStack(spacing: 7) {
+                HStack(spacing: 8) {
                     Image(systemName: "bubble.right").font(.system(size: 16, weight: .regular))
                     if s.commentsCount > 0 {
                         Text("\(s.commentsCount)").font(RUFont.sans(.body, weight: .semibold))

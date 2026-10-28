@@ -190,7 +190,7 @@ struct RaceGoalView: View {
                             Image(systemName: "person.2.fill")
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundColor(RUColor.violet)
-                            VStack(alignment: .leading, spacing: 1) {
+                            VStack(alignment: .leading, spacing: 2) {
                                 Text("Qui court la même course ?")
                                     .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                                 Text("Trouve quelqu'un à ton allure, vois où en sont les autres")
@@ -263,7 +263,7 @@ struct RaceGoalView: View {
                         ForEach(strategie.indices, id: \.self) { i in
                             HStack(spacing: 12) {
                                 RoundedRectangle(cornerRadius: RUSpacing.radiusBar).fill(RUColor.text4).frame(width: 3, height: 30)
-                                VStack(alignment: .leading, spacing: 1) {
+                                VStack(alignment: .leading, spacing: 2) {
                                     Text(strategie[i].0).font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                                     Text(strategie[i].1).font(RUFont.sans(.small)).foregroundColor(RUColor.text2).lineSpacing(2)
                                 }
@@ -283,7 +283,7 @@ struct RaceGoalView: View {
                                 Image(systemName: "list.bullet.clipboard")
                                     .font(.system(size: 15, weight: .semibold))
                                     .foregroundColor(RUColor.violet)
-                                VStack(alignment: .leading, spacing: 1) {
+                                VStack(alignment: .leading, spacing: 2) {
                                     Text("Ravitaillement, matériel, la nuit")
                                         .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                                     Text("Ce que le plan ne te dit pas, et qui décide autant")
@@ -309,7 +309,7 @@ struct RaceGoalView: View {
                                 Image(systemName: "list.bullet.clipboard")
                                     .font(.system(size: 15, weight: .semibold))
                                     .foregroundColor(RUColor.violet)
-                                VStack(alignment: .leading, spacing: 1) {
+                                VStack(alignment: .leading, spacing: 2) {
                                     Text("Ravitaillement, transitions, combinaison")
                                         .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                                     Text("Ce que le plan ne te dit pas, et qui décide autant")
@@ -336,7 +336,7 @@ struct RaceGoalView: View {
                                 Image(systemName: "list.bullet.clipboard")
                                     .font(.system(size: 15, weight: .semibold))
                                     .foregroundColor(RUColor.violet)
-                                VStack(alignment: .leading, spacing: 1) {
+                                VStack(alignment: .leading, spacing: 2) {
                                     Text("Départ, ravitaillement, transitions")
                                         .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                                     Text("Ce que le plan ne te dit pas, et qui décide autant")
@@ -359,7 +359,7 @@ struct RaceGoalView: View {
                             let isLast = i == pacingPlan.count - 1
                             HStack(spacing: 12) {
                                 RoundedRectangle(cornerRadius: RUSpacing.radiusBar).fill(isLast ? RUColor.rose : RUColor.text4).frame(width: 3, height: 30)
-                                VStack(alignment: .leading, spacing: 1) {
+                                VStack(alignment: .leading, spacing: 2) {
                                     Text(pacingPlan[i].1).font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                                     Text(pacingPlan[i].0).font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                                 }
@@ -455,7 +455,7 @@ struct RaceGoalView: View {
             Text(LocalizedStringKey(label)).font(RUFont.sans(.micro, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
+        .padding(.vertical, 18)
         .background(highlighted ? RUColor.card2 : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(highlighted ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
     }

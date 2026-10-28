@@ -176,7 +176,7 @@ struct WatchRunView: View {
 
     private func stack(_ m: WatchRunMetrics) -> some View {
         VStack(spacing: m.spacing) {
-            HStack(spacing: 5) {
+            HStack(spacing: 6) {
                 Circle()
                     .fill(workout.state == .paused ? WTheme.text3 : WTheme.lime)
                     .frame(width: m.statusDot, height: m.statusDot)
@@ -298,8 +298,8 @@ struct WatchSummaryView: View {
                     .font(WTheme.sansBold(10.5))
                     .tracking(0.2)
                     .foregroundStyle(WTheme.lime)
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 3)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
                     .background(WTheme.lime.opacity(0.12), in: Capsule())
 
                 ZStack {
@@ -346,7 +346,7 @@ struct WatchSummaryView: View {
     }
 
     private func metric(value: String, unit: String, accent: Color = .white) -> some View {
-        VStack(spacing: 1) {
+        VStack(spacing: 2) {
             Text(value)
                 .font(WTheme.display(18))
                 .foregroundStyle(accent)

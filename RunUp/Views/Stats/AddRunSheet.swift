@@ -74,7 +74,7 @@ struct AddRunSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 18) {
                     EyebrowLabel(text: "Informations générales", color: RUColor.text3)
                     VStack(spacing: 0) {
                         disciplineRow

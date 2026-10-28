@@ -25,8 +25,8 @@ struct SelectableChip: View {
             // du dégradé vaut #DFFF8C, et du blanc dessus donne 1,12:1 — le libellé disparaît.
             // `rose2` et non `rose` : c'est l'extrémité la plus pâle du dégradé, donc le pire cas.
             .foregroundColor(selected ? RUColor.onAccent(RUColor.rose2) : RUColor.text2)
-            .padding(.horizontal, 15)
-            .padding(.vertical, 11)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
             .frame(minHeight: 44)
             // A flat solid fill read flat/dated — the same rose2→rose gradient the RUN button
             // already uses gives selection real depth without introducing a new accent.
@@ -76,7 +76,7 @@ struct StatChip: View {
             .foregroundColor(color)
             // 8px/10px de padding horizontal dans la maquette, soit ~10–12,5pt à son échelle.
             .padding(.horizontal, 10)
-            .padding(.vertical, 5)
+            .padding(.vertical, 6)
             // ── Le fond devient NEUTRE ──────────────────────────────────────────────────────
             //
             // Il était une teinte de la couleur de la pastille elle-même, diluée à 12 % dans le
@@ -242,7 +242,7 @@ struct MetricColumn: View {
     var labelSize: RUTextSize = .micro
 
     var body: some View {
-        VStack(alignment: alignment, spacing: 3) {
+        VStack(alignment: alignment, spacing: 4) {
             if labelOnTop { etiquette }
             Text(value).displayStyle(valueSize).foregroundColor(valueColor)
             if !labelOnTop { etiquette }

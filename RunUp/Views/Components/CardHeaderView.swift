@@ -36,7 +36,7 @@ struct RUCardHeader<Accessory: View>: View {
                     .foregroundColor(tint)
                     .frame(width: 20)
             }
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: 2) {
                 // UN TITRE DE SECTION QUI PESAIT AUTANT QUE LA PAGE ET PLUS QUE SES CHIFFRES.
                 //
                 // Rendu, sur la page d'un club, le barème était celui-ci :

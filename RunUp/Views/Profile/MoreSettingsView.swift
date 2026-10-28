@@ -25,7 +25,7 @@ struct MoreSettingsView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 18) {
                     sectionTitle("Course")
                     runSettingsCard
 
@@ -141,7 +141,7 @@ struct MoreSettingsView: View {
             HStack(spacing: 12) {
                 Image(systemName: "key.horizontal")
                     .font(.system(size: 15, weight: .semibold)).foregroundColor(RUColor.violet)
-                VStack(alignment: .leading, spacing: 1) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text("Fiche admin")
                         .font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
                     Text("Le compte, ses droits, et ce que le serveur en dit")
@@ -204,7 +204,7 @@ struct MoreSettingsView: View {
                 Spacer()
                 Text("›").foregroundColor(RUColor.text2)
             }
-            .padding(.horizontal, 14).padding(.vertical, 13)
+            .padding(.horizontal, 14).padding(.vertical, 14)
             // Même défaut que la ligne qui mène ici : seuls l'icône, le libellé et le chevron
             // répondaient, et tout le vide entre eux traversait. Sur un écran qui n'est QUE des
             // lignes comme celle-ci, ça donne un tactile qui semble marcher une fois sur deux.
@@ -310,7 +310,7 @@ struct MoreSettingsView: View {
                                 }
                             }
                         } label: {
-                            HStack(spacing: 5) {
+                            HStack(spacing: 6) {
                                 Text(LocalizedStringKey(metric.nameKey))
                                     .font(RUFont.sans(.emphasis, weight: .medium))
                                     .foregroundColor(RUColor.textPrimary)
@@ -406,7 +406,7 @@ struct MoreSettingsView: View {
                 .tint(RUColor.rose)
                 .accessibilityLabel("Suivi du cycle")
             }
-            .padding(.horizontal, 14).padding(.vertical, 13)
+            .padding(.horizontal, 14).padding(.vertical, 14)
 
             if profile.cycleTrackingEnabled {
                 Divider().background(RUColor.line)
@@ -497,7 +497,7 @@ struct MoreSettingsView: View {
                     .buttonStyle(PressableStyle())
 
                     if let phase = profile.cyclePhase {
-                        HStack(spacing: 7) {
+                        HStack(spacing: 8) {
                             Circle().fill(cyclePhaseColor(phase)).frame(width: 8, height: 8)
                             Text("Phase actuelle estimée : \(cyclePhaseLabel(phase))")
                                 .font(RUFont.sans(.body, weight: .semibold))
@@ -542,7 +542,7 @@ struct MoreSettingsView: View {
                                                 m: String(localized: "Connecté en tant que \(user.name)"))).font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
                     Spacer()
                 }
-                .padding(.horizontal, 14).padding(.vertical, 13)
+                .padding(.horizontal, 14).padding(.vertical, 14)
                 Divider().background(RUColor.line)
                 // L'ADRESSE DU COMPTE, TELLE QUE LE SERVEUR LA VOIT.
                 //
@@ -565,7 +565,7 @@ struct MoreSettingsView: View {
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: 0)
                     }
-                    .padding(.horizontal, 14).padding(.vertical, 13)
+                    .padding(.horizontal, 14).padding(.vertical, 14)
                     Divider().background(RUColor.line)
                 }
             }
@@ -580,7 +580,7 @@ struct MoreSettingsView: View {
                     Spacer()
                     if isDeletingAccount { ProgressView().tint(RUColor.rose) }
                 }
-                .padding(.horizontal, 14).padding(.vertical, 13)
+                .padding(.horizontal, 14).padding(.vertical, 14)
                 .frame(minHeight: 44)
                 .contentShape(Rectangle())
             }
@@ -617,7 +617,7 @@ struct MoreSettingsView: View {
                     Spacer()
                     Text("›").foregroundColor(RUColor.text2)
                 }
-                .padding(.horizontal, 14).padding(.vertical, 13)
+                .padding(.horizontal, 14).padding(.vertical, 14)
                 .frame(minHeight: 44)
                 .contentShape(Rectangle())
             }
@@ -657,7 +657,7 @@ struct MoreSettingsView: View {
                 .textFieldStyle(.plain)
                 .font(RUFont.sans(.emphasis))
                 .foregroundColor(RUColor.textPrimary)
-                .padding(.horizontal, 12).padding(.vertical, 9)
+                .padding(.horizontal, 12).padding(.vertical, 10)
                 .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous))
             TextField("Pseudo (facultatif)", text: $usernameText)
                 .textFieldStyle(.plain)
@@ -665,13 +665,13 @@ struct MoreSettingsView: View {
                 .foregroundColor(RUColor.textPrimary)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-                .padding(.horizontal, 12).padding(.vertical, 9)
+                .padding(.horizontal, 12).padding(.vertical, 10)
                 .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous))
             TextField("Nom (facultatif)", text: $lastNameText)
                 .textFieldStyle(.plain)
                 .font(RUFont.sans(.emphasis))
                 .foregroundColor(RUColor.textPrimary)
-                .padding(.horizontal, 12).padding(.vertical, 9)
+                .padding(.horizontal, 12).padding(.vertical, 10)
                 .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous))
             if let identityError {
                 Text(identityError).font(RUFont.sans(.small)).foregroundColor(RUColor.rose)
@@ -691,7 +691,7 @@ struct MoreSettingsView: View {
                 .disabled(isSavingIdentity)
             }
         }
-        .padding(.horizontal, 14).padding(.vertical, 13)
+        .padding(.horizontal, 14).padding(.vertical, 14)
     }
 
     private func saveIdentity() async {

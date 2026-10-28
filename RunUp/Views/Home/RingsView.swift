@@ -151,7 +151,7 @@ struct RingsView: View {
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(Text(String(localized: "\(displayDone) sur \(displayTotal) objectifs bouclés")))
 
-                VStack(spacing: 9) {
+                VStack(spacing: 10) {
                     seanceRow
                     // `ringRow` rend `name`/`unit` par des `Text(String)` nus : les littéraux ne
                     // passeraient pas par le catalogue sans ça. « kcal » reste un symbole d'unité.
@@ -163,12 +163,12 @@ struct RingsView: View {
                     if let coachNudge {
                         HStack(spacing: 12) {
                             AppMarkView(size: 34)
-                            VStack(alignment: .leading, spacing: 3) {
+                            VStack(alignment: .leading, spacing: 4) {
                                 RUCardHeader(icon: "bubble.left.fill", tint: RUColor.rose2, title: "Coach")
                                 Text(coachNudge).font(RUFont.sans(.label)).foregroundColor(RUColor.textPrimary)
                             }
                         }
-                        .padding(15)
+                        .padding(14)
                         .ruHeroCard(radius: 18)
                     } else {
                         // The one genuine celebration state on this screen (all 3 goals done) — a

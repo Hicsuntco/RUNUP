@@ -47,8 +47,8 @@ struct BadgeShareCardView: View {
                         .padding(.top, 4)
                 }
 
-                VStack(spacing: 5) {
-                    HStack(spacing: 7) {
+                VStack(spacing: 6) {
+                    HStack(spacing: 8) {
                         AppMarkView(size: 22, radius: 6, color: RUColor.rose)
                         Text(verbatim: "RUNUP").font(RUFont.display(horsEchelle: 15)).tracking(4).foregroundColor(RUColor.textPrimary)
                     }

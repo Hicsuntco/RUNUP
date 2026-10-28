@@ -29,7 +29,7 @@ struct RouteDetailSheet: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 18) {
                 photo
                 map
                 title
@@ -231,7 +231,7 @@ struct RouteDetailSheet: View {
                     .font(RUFont.sans(.label))
                     .foregroundColor(RUColor.textPrimary)
                     .lineLimit(1...4)
-                    .padding(.horizontal, 13).padding(.vertical, 10)
+                    .padding(.horizontal, 14).padding(.vertical, 10)
                     .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous)
                         .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))

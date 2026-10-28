@@ -4,6 +4,36 @@ import CoreGraphics
 enum RUSpacing {
     static let pagePadding: CGFloat = 18
 
+    // ── La grille d'espacement ────────────────────────────────────────────────────────────────
+    //
+    // Il y avait DIX-NEUF écarts verticaux distincts, continus de 0 à 22 sans un seul trou, et
+    // trente-trois valeurs de marge. Le défaut ne tenait pas au nombre mais à ce que les voisines
+    // disaient : 8 était employé 100 fois et 9 huit fois ; 10 cent trente-trois fois et 11 deux
+    // fois ; 12 quatre-vingt-treize fois et 13 deux fois. Une valeur à un point d'une valeur
+    // dominante n'est pas une décision — c'est un écran réglé à l'œil, séparément, puis recopié.
+    // Et c'est précisément ce qui fait qu'une app a l'air cousue main au mauvais sens : rien ne
+    // s'aligne d'un bloc à l'autre, sans qu'on puisse dire où.
+    //
+    // La grille ci-dessous est un pas de 2 jusqu'à 14, puis 18 — la marge de page, pour qu'un
+    // écart de section fasse écho au bord de l'écran — puis 24.
+    //
+    // 409 appels ont rejoint leur voisine, chacun d'au plus 2 points : les impairs (1, 3, 5, 7, 9,
+    // 11, 13, 15) et les trois valeurs hautes qui faisaient quatre jetons pour un seul rôle
+    // (16, 20, 22 → 18 ou 24). Les 2 points sont le plafond du déplacement, pas une moyenne : au
+    // dessus de 14, deux points ne se voient pas, et c'est bien pour ça que quatre valeurs y
+    // cohabitaient sans que personne tranche.
+    //
+    // CE QUI RESTE HORS GRILLE, ET POURQUOI : tout ce qui dépasse 24. Ce ne sont plus des écarts
+    // de rythme mais des hauteurs réservées — les 130 points qu'un défilement garde sous la barre
+    // d'onglets, les encarts de feuille. Les régler sur une grille de rythme n'aurait aucun sens :
+    // ils répondent à la taille d'un objet, pas à celle d'un blanc.
+    //
+    // `ci_scripts/check_grille.py` LIT LE TABLEAU CI-DESSOUS. C'est sa seule raison d'exister en
+    // tant que valeur Swift : elle n'est appelée par aucune vue, elle est la déclaration que le
+    // garde-fou compare au code. Ajouter une valeur ici la rend légale partout — donc c'est ici,
+    // et pas dans le script, qu'on assume de rouvrir la grille.
+    static let grille: [CGFloat] = [0, 2, 4, 6, 8, 10, 12, 14, 18, 24]
+
     // ── Rayons ────────────────────────────────────────────────────────────────────────────────
     //
     // Il y avait quatre jetons et CENT TRENTE-CINQ nombres écrits à la main, sur dix valeurs

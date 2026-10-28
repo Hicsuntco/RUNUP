@@ -55,7 +55,7 @@ struct AccountSwitchSheet: View {
             }
             .padding(.top, 4)
         }
-        .padding(22)
+        .padding(24)
         // LA SEULE ACTION DESTRUCTRICE DE L'APP QUI N'EN AVAIT PAS. Supprimer une course en a
         // une, une paire de chaussures en a une, effacer la conversation du coach en a une — et
         // celle-ci efface les trois à la fois. Le bouton est en plus rose plein, celui qu'on

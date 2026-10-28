@@ -155,7 +155,7 @@ struct PlanView: View {
             RUCardHeader(icon: "chart.bar.fill", tint: RUColor.rose,
                          title: "La forme du plan",
                          subtitle: "Volume estimé, semaine par semaine")
-            HStack(alignment: .bottom, spacing: 3) {
+            HStack(alignment: .bottom, spacing: 4) {
                 ForEach(weekSummaries) { week in
                     volumeBar(week, maxKm: maxKm)
                 }
@@ -164,7 +164,7 @@ struct PlanView: View {
             phaseBar
             deloadNote
         }
-        .padding(16)
+        .padding(18)
         .ruCard()
     }
 
@@ -184,7 +184,7 @@ struct PlanView: View {
     /// couleur absente apprend à ignorer les légendes.
     @ViewBuilder private var deloadNote: some View {
         if weekSummaries.contains(where: { $0.block == .deload }) {
-            HStack(alignment: .firstTextBaseline, spacing: 7) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
                 RoundedRectangle(cornerRadius: 2, style: .continuous)
                     .fill(RUColor.text3)
                     .frame(width: 10, height: 10)
@@ -228,7 +228,7 @@ struct PlanView: View {
             Haptics.selection()
             withAnimation(.easeOut(duration: 0.2)) { selectedWeek = week.number }
         }) {
-            VStack(spacing: 5) {
+            VStack(spacing: 6) {
                 Spacer(minLength: 0)
                 RoundedRectangle(cornerRadius: 3, style: .continuous)
                     .fill(blockColor(week.block))
@@ -251,7 +251,7 @@ struct PlanView: View {
                     RoundedRectangle(cornerRadius: 4, style: .continuous)
                         .stroke(RUColor.textPrimary.opacity(0.55), lineWidth: 1.5)
                         .frame(height: height + 8)
-                        .padding(.bottom, 5)
+                        .padding(.bottom, 6)
                 }
             }
         }
@@ -268,7 +268,7 @@ struct PlanView: View {
         for week in weekSummaries where !seen.contains(week.block) { seen.append(week.block) }
         return HStack(spacing: 14) {
             ForEach(seen, id: \.rawValue) { block in
-                HStack(spacing: 5) {
+                HStack(spacing: 6) {
                     Circle().fill(blockColor(block)).frame(width: 7, height: 7)
                     Text(block.label).font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                 }
@@ -297,7 +297,7 @@ struct PlanView: View {
             navButton(systemName: "chevron.left", enabled: (selected?.number ?? weekRange.lowerBound) > weekRange.lowerBound) {
                 step(-1)
             }
-            VStack(spacing: 1) {
+            VStack(spacing: 2) {
                 Text(selected.map { String(localized: "Semaine \($0.number)") } ?? "")
                     .font(RUFont.sans(.label, weight: .bold))
                     .foregroundColor(RUColor.textPrimary)
@@ -353,7 +353,7 @@ struct PlanView: View {
     /// passées — pour montrer exactement le même contenu.
     private func weekCard(_ week: WeekSummary) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 10) {
                     Text("Semaine \(week.number)")
                         .font(RUFont.sans(.title, weight: .bold))
@@ -418,7 +418,7 @@ struct PlanView: View {
                 .buttonStyle(PressableStyle())
             }
         }
-        .padding(16)
+        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
@@ -442,7 +442,7 @@ struct PlanView: View {
             .font(RUFont.sans(.small, weight: .bold))
             .tracking(0.2)
             .foregroundColor(RUColor.rose)
-            .padding(.horizontal, 9).padding(.vertical, 5)
+            .padding(.horizontal, 10).padding(.vertical, 6)
             // Neutre : un rose à 10 % donne un bordeaux en thème sombre, et le texte
             // est déjà rose. Même règle que `StatChip`.
             .background(RUColor.card2, in: Capsule())
@@ -488,7 +488,7 @@ struct PlanView: View {
                 .fill(isRest ? Color.clear : family.tint)
                 .frame(width: 3, height: 34)
             dayIcon(session: session, isRest: isRest, completed: day.completed, isToday: isToday)
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(session?.displayTitle ?? String(localized: "Repos"))
                     .font(RUFont.sans(.label, weight: isToday ? .semibold : .regular))
                     .foregroundColor(isRest ? RUColor.text3 : RUColor.textPrimary)
@@ -508,7 +508,7 @@ struct PlanView: View {
             if let session, !isRest {
                 // Remontées de 10/9 à 11/10 : c'était le plus petit texte de l'app, en gris, en
                 // chasse fixe, et il portait les deux chiffres pour lesquels on ouvre la ligne.
-                VStack(alignment: .trailing, spacing: 1) {
+                VStack(alignment: .trailing, spacing: 2) {
                     Text("\(session.durationMinutes)′ · \(session.zone)").font(RUFont.mono(11)).foregroundColor(RUColor.text2)
                     Text("\(session.pace)/km").font(RUFont.mono(10)).foregroundColor(RUColor.text3)
                 }

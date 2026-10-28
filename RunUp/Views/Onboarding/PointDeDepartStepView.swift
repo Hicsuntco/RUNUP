@@ -37,7 +37,7 @@ struct PointDeDepartStepView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     EyebrowLabel(text: "Tu cours combien de fois par semaine, en ce moment ?",
                                  color: RUColor.text3)
-                        .padding(.top, 22).padding(.bottom, 10)
+                        .padding(.top, 24).padding(.bottom, 10)
                     ChipFlowLayout {
                         ForEach(VolumeActuel.allCases) { choix in
                             SelectableChip(label: choix.title, selected: vm.volumeActuel == choix) {
@@ -48,7 +48,7 @@ struct PointDeDepartStepView: View {
 
                     EyebrowLabel(text: "Ta plus longue sortie des 4 dernières semaines",
                                  color: RUColor.text3)
-                        .padding(.top, 22).padding(.bottom, 10)
+                        .padding(.top, 24).padding(.bottom, 10)
                     ChipFlowLayout {
                         ForEach(PlusLongueSortie.allCases) { choix in
                             SelectableChip(label: choix.title, selected: vm.plusLongueSortie == choix) {
@@ -65,7 +65,7 @@ struct PointDeDepartStepView: View {
                         .padding(.top, 8)
 
                     EyebrowLabel(text: "Ta meilleure perf récente (facultatif)", color: RUColor.text3)
-                        .padding(.top, 22).padding(.bottom, 10)
+                        .padding(.top, 24).padding(.bottom, 10)
                     ObTextField(placeholder: "Ex. 10 km en 52 min", text: $vm.bestRecentPerf)
 
                     // L'ALLURE N'EST DEMANDÉE QUE SI LA PERF NE L'A PAS DÉJÀ DITE. Une distance
@@ -75,7 +75,7 @@ struct PointDeDepartStepView: View {
                     if vm.bestRecentPerf.trimmingCharacters(in: .whitespaces).isEmpty {
                         EyebrowLabel(text: "Sinon : ton allure sur un footing tranquille",
                                      color: RUColor.text3)
-                            .padding(.top, 22).padding(.bottom, 10)
+                            .padding(.top, 24).padding(.bottom, 10)
                         ChipFlowLayout {
                             ForEach(AllureFooting.allCases) { choix in
                                 SelectableChip(label: choix.title, selected: vm.allureFooting == choix) {

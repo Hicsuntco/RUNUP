@@ -193,7 +193,7 @@ struct DisciplineDialView: View {
             .tracking(1.5)
             .foregroundColor(visee == nil ? RUColor.text3 : RUColor.rose2)
             .padding(.horizontal, 10)
-            .padding(.vertical, 5)
+            .padding(.vertical, 6)
             .background(.ultraThinMaterial.opacity(0.9), in: Capsule())
             .background(RUColor.card.opacity(RUColor.isLight ? 0.96 : 0.82), in: Capsule())
             .contentTransition(.opacity)

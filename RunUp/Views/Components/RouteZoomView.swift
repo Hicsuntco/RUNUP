@@ -29,7 +29,7 @@ struct RouteZoomView: View {
                     Spacer(minLength: 12)
                     fermer
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 18)
                 .padding(.top, 10)
                 Spacer()
             }
@@ -40,7 +40,7 @@ struct RouteZoomView: View {
     /// Les trois chiffres que la carte ne dit pas. Posés sur un fond flouté parce qu'ils se
     /// lisent par-dessus une carte, dont la couleur sous le texte n'est pas connue à l'avance.
     private var resume: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: 4) {
             Text(run.titreAffiche)
                 .font(RUFont.sans(.label, weight: .semibold))
                 .foregroundColor(RUColor.textPrimary)
@@ -55,7 +55,7 @@ struct RouteZoomView: View {
                 valeur(run.avgPace, unite: String(localized: "/km"))
             }
         }
-        .padding(.horizontal, 13)
+        .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous)

@@ -55,12 +55,12 @@ struct DeepDiveStepView: View {
             Text("Ton coach adapte ses conseils course et nutrition à ton objectif — sans jamais sacrifier ta forme.")
                 .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
         }
-        .padding(.top, 20)
+        .padding(.top, 18)
     }
 
     private var progressFields: some View {
         VStack(alignment: .leading, spacing: 0) {
-            EyebrowLabel(text: "Ta priorité", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
+            EyebrowLabel(text: "Ta priorité", color: RUColor.text3).padding(.top, 18).padding(.bottom, 10)
             ChipFlowLayout {
                 // Les libellés sont RÉSOLUS ici et non laissés en littéraux : « Être régulière »
                 // s'accorde avec la personne, et seule une chaîne déjà choisie peut porter le bon
@@ -81,7 +81,7 @@ struct DeepDiveStepView: View {
 
     private var restartFields: some View {
         VStack(alignment: .leading, spacing: 0) {
-            EyebrowLabel(text: "Ta dernière sortie remonte à", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
+            EyebrowLabel(text: "Ta dernière sortie remonte à", color: RUColor.text3).padding(.top, 18).padding(.bottom, 10)
             ChipFlowLayout {
                 ForEach(OnboardingChoices.recences, id: \.0) { id, label in
                     SelectableChip(label: label, selected: vm.lastRanRecency == id) { vm.lastRanRecency = id }
@@ -104,7 +104,7 @@ struct DeepDiveStepView: View {
             // Le temps est désormais demandé PAR SÉANCE, à l'étape des jours, et il plafonne
             // vraiment chaque durée du plan. Le total hebdomadaire s'en déduit : c'est le
             // nombre de jours, déjà répondu, multiplié par le temps d'un jour.
-            EyebrowLabel(text: "Ton moment préféré pour courir", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
+            EyebrowLabel(text: "Ton moment préféré pour courir", color: RUColor.text3).padding(.top, 18).padding(.bottom, 10)
             ChipFlowLayout {
                 ForEach(OnboardingChoices.momentsDeLaJournee, id: \.0) { id, label in
                     SelectableChip(label: label, selected: vm.preferredTimeOfDay == id) { vm.preferredTimeOfDay = id }
@@ -141,7 +141,7 @@ private struct NumField: View {
                     }
                 Text(unit).font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.text2)
             }
-            .padding(13)
+            .padding(14)
             .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
         }

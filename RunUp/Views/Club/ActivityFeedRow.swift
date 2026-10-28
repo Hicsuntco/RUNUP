@@ -167,7 +167,7 @@ struct ActivityFeedRow: View {
             }
             .padding(.horizontal, 14)
             .padding(.top, 14)
-            .padding(.bottom, 13)
+            .padding(.bottom, 14)
 
             media
                 // LE DOUBLE-TAPE SUR L'IMAGE : le geste par lequel on aime, partout, depuis
@@ -177,7 +177,7 @@ struct ActivityFeedRow: View {
                 .overlay { eclatDApplaudissement }
                 .onTapGesture(count: 2) { applaudirParDoubleTape() }
 
-            VStack(alignment: .leading, spacing: 9) {
+            VStack(alignment: .leading, spacing: 10) {
                 actions
 
                 if let liked = likedByLine {
@@ -199,7 +199,7 @@ struct ActivityFeedRow: View {
             }
             .padding(.horizontal, 14)
             .padding(.top, 12)
-            .padding(.bottom, 13)
+            .padding(.bottom, 14)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RUColor.card)
@@ -297,7 +297,7 @@ struct ActivityFeedRow: View {
             if let trace {
                 RouteThumbnail(route: trace, lineWidth: 2, lineColor: .white, showsStart: false)
                     .frame(width: 52, height: 52)
-                    .padding(7)
+                    .padding(8)
                     .background(.black.opacity(0.32), in: RoundedRectangle(cornerRadius: RUSpacing.radiusTile, style: .continuous))
                     .padding(10)
                     .allowsHitTesting(false)
@@ -357,7 +357,7 @@ struct ActivityFeedRow: View {
                 targetPoints: 140,
                 showsStart: true
             )
-            .padding(20)
+            .padding(18)
         }
         // 190 → 4:3. Le bandeau de tracé était SQUAT : cent quatre-vingt-dix points de haut
         // pendant que la branche photo, dix lignes plus haut, tient un 4:5 — soit près du double.
@@ -402,15 +402,15 @@ struct ActivityFeedRow: View {
     /// deux onglets de son profil, et un aller-retour vers soi-même n'apprend rien.
     private func author(onDark: Bool) -> some View {
         Button(action: { if !isMine { appState.ouvrirLeProfil(item.userId) } }) {
-            HStack(spacing: 9) {
+            HStack(spacing: 10) {
                 AvatarView(urlString: item.avatarUrl, base64DataURI: item.avatarBase64,
                            initial: String(item.name.prefix(1)), size: 32, seed: isMine ? nil : item.userId)
-                VStack(alignment: .leading, spacing: 1) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)
                         .font(RUFont.sans(.label, weight: .bold))
                         .foregroundColor(onDark ? .white : RUColor.textPrimary)
                         .lineLimit(1).minimumScaleFactor(0.8)
-                    HStack(spacing: 5) {
+                    HStack(spacing: 6) {
                         Text(timeLine)
                             .font(RUFont.sans(.small))
                             .foregroundColor(onDark ? .white.opacity(0.7) : RUColor.text3)
@@ -505,7 +505,7 @@ struct ActivityFeedRow: View {
                 Haptics.impact(.light)
                 onKudos()
             }) {
-                HStack(spacing: 7) {
+                HStack(spacing: 8) {
                     Image(systemName: item.kudoedByMe ? "hands.clap.fill" : "hands.clap")
                         .font(.system(size: 15, weight: .regular))
                     if item.kudos > 0 {
@@ -525,7 +525,7 @@ struct ActivityFeedRow: View {
             .accessibilityValue("\(item.kudos)")
 
             Button(action: onComment) {
-                HStack(spacing: 7) {
+                HStack(spacing: 8) {
                     Image(systemName: "bubble.right")
                         .font(.system(size: 15, weight: .regular))
                     if item.commentsCount > 0 {
@@ -585,7 +585,7 @@ struct ActivityFeedRow: View {
     /// l'encre. La référence n'en met aucun : chez Strava les quatre colonnes ne sont séparées
     /// que par du vide, et ça suffit parce que chaque colonne porte désormais son propre titre.
     private var metricsRow: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 22) {
+        HStack(alignment: .firstTextBaseline, spacing: 24) {
             ForEach(metrics) { metric in
                 MetricColumn(
                     value: metric.value,

@@ -298,7 +298,7 @@ struct WallView: View {
                 .padding(.top, 4)
         }
         .frame(maxWidth: .infinity)
-        .padding(20)
+        .padding(18)
         .ruCard()
     }
 
@@ -348,7 +348,7 @@ struct WallView: View {
     /// carte demandent deux cibles distinctes — c'est exactement la répartition du post juste
     /// au-dessus, où le bloc d'identité mène à la personne et l'applaudissement reste une action.
     private func carteDeCourse(_ post: WallRacePost) -> some View {
-        VStack(alignment: .leading, spacing: 9) {
+        VStack(alignment: .leading, spacing: 10) {
             // LE MENU EST À CÔTÉ DU BOUTON, PAS DESSUS.
             //
             // Je l'avais d'abord posé en `overlay(alignment: .topTrailing)` sur le bouton
@@ -365,7 +365,7 @@ struct WallView: View {
                     appState.openRacesTabOnNextVisit = true
                     appState.go(.club)
                 }) {
-                    HStack(spacing: 9) {
+                    HStack(spacing: 10) {
                         ZStack {
                             Circle().fill(RUColor.cyan.opacity(0.16))
                             Image(systemName: "flag.checkered")
@@ -374,7 +374,7 @@ struct WallView: View {
                         }
                         .frame(width: 34, height: 34)
 
-                        VStack(alignment: .leading, spacing: 1) {
+                        VStack(alignment: .leading, spacing: 2) {
                             Text(post.author.name)
                                 .font(RUFont.sans(.label, weight: .bold))
                                 .foregroundColor(RUColor.textPrimary)
@@ -388,7 +388,7 @@ struct WallView: View {
                         Text(genreLisible(post.kind))
                             .font(RUFont.sans(.small, weight: .semibold))
                             .foregroundColor(RUColor.cyan)
-                            .padding(.horizontal, 8).padding(.vertical, 3)
+                            .padding(.horizontal, 8).padding(.vertical, 4)
                             .overlay(Capsule().strokeBorder(RUColor.cyan.opacity(0.4),
                                                             lineWidth: RUSpacing.hairline))
                     }
@@ -410,7 +410,7 @@ struct WallView: View {
             // « lu, et oui » coûte plus cher que la réponse elle-même, et c'est comme ça qu'un mur
             // reste vide.
             Button(action: { Task { await applaudirLaCourse(post) } }) {
-                HStack(spacing: 7) {
+                HStack(spacing: 8) {
                     Image(systemName: post.kudoedByMe ? "hands.clap.fill" : "hands.clap")
                         .font(.system(size: 15, weight: .regular))
                     if post.kudos > 0 {
@@ -521,7 +521,7 @@ struct WallView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 18)
     }
 
     private var messageDuVide: String {

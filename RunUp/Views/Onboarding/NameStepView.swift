@@ -11,7 +11,7 @@ struct NameStepView: View {
                     ObTitle(eyebrow: "Pour commencer", title: "COMMENT\nTU T'APPELLES ?",
                             subtitle: "Ton coach s'adressera à toi par ton prénom. Le nom sert à tes amis, pour te retrouver dans le Club.")
                     ObTextField(placeholder: "Prénom", text: $vm.name)
-                        .padding(.top, 22)
+                        .padding(.top, 24)
                     // LE NOM EST DEMANDÉ ICI, ET IL EST EXIGÉ.
                     //
                     // Il ne sert à rien hors du Club. Il est demandé quand même, dès la première

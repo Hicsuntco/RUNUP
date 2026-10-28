@@ -116,7 +116,7 @@ struct ObProgress: View {
     var total: Int
 
     var body: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: 6) {
             ForEach(0..<total, id: \.self) { i in
                 Capsule()
                     .fill(i <= step ? RUColor.rose : RUColor.line)

@@ -15,11 +15,11 @@ struct ProgramSettingsSheet: View {
             VStack(alignment: .leading, spacing: 0) {
                 Text("Modifier mon programme").displayStyle(.title).foregroundColor(RUColor.textPrimary).padding(.top, 8)
 
-                EyebrowLabel(text: "Jours de course", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
+                EyebrowLabel(text: "Jours de course", color: RUColor.text3).padding(.top, 18).padding(.bottom, 10)
                 // spacing 5, not 7 — same fix as onboarding's RunningDaysStepView: on the
                 // smallest currently-supported iPhone (375pt), 7 gaps of 7pt each pushed every
                 // square under the 44pt tap-target minimum.
-                HStack(spacing: 5) {
+                HStack(spacing: 6) {
                     ForEach(0..<7) { i in
                         let on = days.contains(i)
                         Button(action: { if on { days.remove(i) } else { days.insert(i) } }) {
@@ -40,7 +40,7 @@ struct ProgramSettingsSheet: View {
                     }
                 }
 
-                EyebrowLabel(text: "Objectif", color: RUColor.text3).padding(.top, 22).padding(.bottom, 10)
+                EyebrowLabel(text: "Objectif", color: RUColor.text3).padding(.top, 24).padding(.bottom, 10)
                 ObTextField(placeholder: "Objectif", text: $goal)
 
                 Text("Le coach recalcule tes prochaines séances dès l'enregistrement.")

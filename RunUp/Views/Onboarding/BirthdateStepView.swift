@@ -23,7 +23,7 @@ struct BirthdateStepView: View {
                     .datePickerStyle(.compact)
                     .labelsHidden()
                     .colorScheme(RUColor.colorScheme)
-                    .padding(13)
+                    .padding(14)
                     .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
 
@@ -31,7 +31,7 @@ struct BirthdateStepView: View {
                         Text("\(age) ans").font(RUFont.sans(.label)).foregroundColor(RUColor.text2)
                     }
                 }
-                .padding(.top, 22)
+                .padding(.top, 24)
 
                 VStack(alignment: .leading, spacing: 0) {
                     // Only ever used to decide whether to offer cycle-tracking further along —

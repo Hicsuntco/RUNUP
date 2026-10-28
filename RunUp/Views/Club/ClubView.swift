@@ -338,7 +338,7 @@ struct ClubView: View {
                         // titres de section ». L'icône de page reste — c'est une décision
                         // écrite plus haut dans ce fichier, et elle vaut toujours — mais elle
                         // descend à la taille de ce qu'elle accompagne.
-                        HStack(spacing: 5) {
+                        HStack(spacing: 6) {
                             Image(systemName: "person.3.fill")
                                 .font(.system(size: 10, weight: .semibold))
                                 .foregroundColor(RUColor.rose)
@@ -364,7 +364,7 @@ struct ClubView: View {
                 .buttonStyle(PressableStyle())
             } else {
                 VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 5) {
+                    HStack(spacing: 6) {
                         Image(systemName: "person.3.fill")
                             .font(.system(size: 10, weight: .semibold))
                             .foregroundColor(RUColor.rose)
@@ -478,14 +478,14 @@ struct ClubView: View {
                 .padding(.top, 4)
         }
         .frame(maxWidth: .infinity)
-        .padding(20)
+        .padding(18)
         .ruCard()
     }
 
     // MARK: Signed in, no club yet
 
     private var clubSetupCard: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 6) {
                 RUCardHeader(icon: "plus.circle.fill", tint: RUColor.rose2, title: "Créer un club", subtitle: "Tu en seras l'administratrice")
                 HStack {
@@ -493,7 +493,7 @@ struct ClubView: View {
                         .textFieldStyle(.plain)
                         .font(RUFont.sans(.emphasis))
                         .foregroundColor(RUColor.textPrimary)
-                        .padding(.horizontal, 14).padding(.vertical, 11)
+                        .padding(.horizontal, 14).padding(.vertical, 12)
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                     Button("Créer") { Task { await createClub() } }
@@ -516,7 +516,7 @@ struct ClubView: View {
                     .font(RUFont.sans(.emphasis))
                     .foregroundColor(RUColor.textPrimary)
                     .autocorrectionDisabled()
-                    .padding(.horizontal, 14).padding(.vertical, 11)
+                    .padding(.horizontal, 14).padding(.vertical, 12)
                     .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
 
@@ -530,7 +530,7 @@ struct ClubView: View {
                 ForEach(clubResultats) { trouve in
                     Button(action: { Task { await joinClub(trouve) } }) {
                         HStack(spacing: 10) {
-                            VStack(alignment: .leading, spacing: 1) {
+                            VStack(alignment: .leading, spacing: 2) {
                                 Text(trouve.name)
                                     .font(RUFont.sans(.label, weight: .medium))
                                     .foregroundColor(RUColor.textPrimary)
@@ -549,7 +549,7 @@ struct ClubView: View {
                                 .font(RUFont.sans(.body, weight: .semibold))
                                 .foregroundColor(RUColor.rose2)
                         }
-                        .padding(.horizontal, 13).padding(.vertical, 10)
+                        .padding(.horizontal, 14).padding(.vertical, 10)
                         .frame(minHeight: 44)
                         .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
                         .contentShape(Rectangle())
@@ -559,7 +559,7 @@ struct ClubView: View {
                 }
             }
         }
-        .padding(16)
+        .padding(18)
         .ruCard()
     }
 
@@ -638,7 +638,7 @@ struct ClubView: View {
         }
         .animation(.easeOut(duration: 0.4), value: info.level)
         .animation(.easeOut(duration: 0.4), value: info.xpIntoLevel)
-        .padding(16)
+        .padding(18)
         .background(clair
                     ? LinearGradient(colors: [RUColor.card, RUColor.card], startPoint: .topLeading, endPoint: .bottomTrailing)
                     : LinearGradient(colors: [Color(hex: 0x241046), Color(hex: 0x160B1F)], startPoint: .topLeading, endPoint: .bottomTrailing),
@@ -758,7 +758,7 @@ struct ClubView: View {
             segment(String(localized: "Classement"), .board)
             segment(String(localized: "Activité"), .feed)
         }
-        .padding(3)
+        .padding(4)
         .background(RUColor.bg2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
@@ -951,7 +951,7 @@ struct ClubView: View {
     private func ligneDeCourseDuClub(_ course: ClubRace) -> some View {
         Button(action: { appState.ouvrirLaCourse(course.race) }) {
             HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 4) {
                     if let jours = course.race.joursRestants, jours >= 0 {
                         Text(jours == 0 ? String(localized: "C'est aujourd'hui")
                                         : String(localized: "J-\(jours)"))
@@ -986,7 +986,7 @@ struct ClubView: View {
                         .foregroundColor(RUColor.text2)
                 }
             }
-            .padding(.vertical, 11)
+            .padding(.vertical, 12)
             .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())
@@ -1045,7 +1045,7 @@ struct ClubView: View {
                                 .font(RUFont.sans(.body, weight: .semibold))
                                 .foregroundColor(RUColor.text2)
                         }
-                        .padding(.vertical, 11)
+                        .padding(.vertical, 12)
                     }
                 }
             }
@@ -1089,7 +1089,7 @@ struct ClubView: View {
     private func ligneDeLaMeilleureSemaine(_ semaine: ClubBestWeek) -> some View {
         HStack(spacing: 12) {
             Color.clear.frame(width: 32, height: 1)
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text("LA PLUS GROSSE SEMAINE")
                     .font(RUFont.sans(.small, weight: .bold)).tracking(0.6)
                     .foregroundColor(RUColor.rose2)
@@ -1121,7 +1121,7 @@ struct ClubView: View {
                     .foregroundColor(RUColor.text3)
             }
         }
-        .padding(.vertical, 11)
+        .padding(.vertical, 12)
         .accessibilityElement(children: .combine)
     }
 
@@ -1160,7 +1160,7 @@ struct ClubView: View {
                         .foregroundColor(RUColor.text3)
                 }
             }
-            .padding(.vertical, 11)
+            .padding(.vertical, 12)
             .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())
@@ -1206,7 +1206,7 @@ struct ClubView: View {
             Text(label)
                 .font(RUFont.sans(.small, weight: .semibold))
                 .foregroundColor(boardMode == value ? RUColor.rose2 : RUColor.text2)
-                .padding(.horizontal, 11).padding(.vertical, 6)
+                .padding(.horizontal, 12).padding(.vertical, 6)
                 .frame(minHeight: 44)
                 // Les deux branches de ce ternaire valaient `card2` : le sélecteur ne changeait
                 // donc de REMPLISSAGE jamais, et la pastille active ne se distinguait que par un
@@ -1236,7 +1236,7 @@ struct ClubView: View {
                 .foregroundColor(tab == value ? RUColor.textPrimary : RUColor.text3)
                 // Back to its original compact size, no enforced 44pt minimum — she found the
                 // audit's forced-44pt height on this pill too big and asked for it back.
-                .padding(.vertical, 9)
+                .padding(.vertical, 10)
                 .frame(maxWidth: .infinity)
                 .background(tab == value ? RUColor.card : .clear, in: RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous))
                 .shadow(color: .black.opacity(tab == value && RUColor.isLight ? 0.08 : 0), radius: 3, x: 0, y: 1)
@@ -1391,7 +1391,7 @@ struct ClubView: View {
                             // comme une sortie de plus, et c'est tout le contraire : c'est LE
                             // rendez-vous du club, celui autour duquel le reste s'organise.
                             if event.repeatsWeekly == true {
-                                HStack(spacing: 3) {
+                                HStack(spacing: 4) {
                                     Image(systemName: "arrow.triangle.2.circlepath").font(.system(size: 8, weight: .bold))
                                     Text("CHAQUE SEMAINE")
                                 }
@@ -1401,7 +1401,7 @@ struct ClubView: View {
                         }
                         Text(event.title).font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                         if let location = event.location, !location.isEmpty {
-                            HStack(spacing: 3) {
+                            HStack(spacing: 4) {
                                 Image(systemName: "mappin").font(.system(size: 8))
                                 Text(location).font(RUFont.sans(.small))
                             }
@@ -1414,7 +1414,7 @@ struct ClubView: View {
                             Text(event.goingByMe ? "J'y serai ✓" : "J'y serai")
                                 .font(RUFont.sans(.small, weight: .bold))
                                 .foregroundColor(event.goingByMe ? .white : RUColor.textPrimary)
-                                .padding(.horizontal, 11).padding(.vertical, 6)
+                                .padding(.horizontal, 12).padding(.vertical, 6)
                                 .background(event.goingByMe ? RUColor.rose : RUColor.card2, in: Capsule())
                                 .overlay(Capsule().stroke(event.goingByMe ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
                             Text("\(event.going) au départ")
@@ -1519,7 +1519,7 @@ struct ClubView: View {
                         let choisi = event.myPaceGroup == groupe
                         let compte = event.paceCounts?[groupe] ?? 0
                         Button(action: { toggleRsvp(event, groupe: groupe) }) {
-                            HStack(spacing: 5) {
+                            HStack(spacing: 6) {
                                 Text(groupe)
                                     .font(RUFont.sans(.small, weight: .bold))
                                 if compte > 0 {
@@ -1543,7 +1543,7 @@ struct ClubView: View {
                         .accessibilityAddTraits(choisi ? .isSelected : [])
                     }
                 }
-                .padding(.horizontal, 1)
+                .padding(.horizontal, 2)
             }
         }
     }
@@ -1646,7 +1646,7 @@ struct ClubView: View {
             if (board.weekly ?? []).isEmpty && !isLoading {
                 Text("Personne n'a encore couru cette semaine — lance-toi !")
                     .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
-                    .frame(maxWidth: .infinity).padding(.vertical, 20)
+                    .frame(maxWidth: .infinity).padding(.vertical, 18)
             } else {
                 // La bascule Km / % objectif était posée seule, alignée à droite, sans rien
                 // dire de ce qu'elle bascule. La maquette lui donne son titre de section sur la
@@ -1691,7 +1691,7 @@ struct ClubView: View {
     /// Same pill-in-capsule idiom as `StatsView.rangePicker` — Km vs. "% objectif" for the weekly
     /// board only (the all-time XP/global boards have no personal target to compare against).
     private var weeklyDisplayModePicker: some View {
-        HStack(spacing: 3) {
+        HStack(spacing: 4) {
             ForEach(WeeklyDisplayMode.allCases) { mode in
                 Button(action: {
                     Haptics.selection()
@@ -1705,7 +1705,7 @@ struct ClubView: View {
                         .font(RUFont.sans(.small, weight: .semibold))
                         .foregroundColor(weeklyDisplayMode == mode ? .white : RUColor.text2)
                         // Même hauteur que le sélecteur de période des Stats, dont c'est l'idiome.
-                        .padding(.horizontal, 9).padding(.vertical, 9)
+                        .padding(.horizontal, 10).padding(.vertical, 10)
                         .background(
                             // Même dégradé d'accent que partout ailleurs, via le token partagé
                             // (`--ru-gradient` de la maquette) plutôt qu'un couple recopié à la
@@ -1766,7 +1766,7 @@ struct ClubView: View {
         // avatar, nom — doivent rester alignées d'une ligne à l'autre, sinon la ligne « toi » a
         // l'air décalée par erreur. Le fond teinté suffit largement à la distinguer.
         .padding(.horizontal, 8)
-        .padding(.vertical, 11)
+        .padding(.vertical, 12)
         .background(entry.isMe ? RUColor.rose.opacity(0.09) : Color.clear, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
         .contentShape(Rectangle())
         }
@@ -1830,7 +1830,7 @@ struct ClubView: View {
         }
         // Même chrome que `weekRow` ci-dessus (retrait uniforme, fond teinté pour « toi »).
         .padding(.horizontal, 8)
-        .padding(.vertical, 11)
+        .padding(.vertical, 12)
         .background(entry.isMe ? RUColor.rose.opacity(0.09) : Color.clear, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
         .contentShape(Rectangle())
         }
@@ -1878,7 +1878,7 @@ struct ClubView: View {
                     Text(verbatim: Accord.selon(f: String(localized: "Personne n'a encore rien posté — sois la première !"),
                                                 m: String(localized: "Personne n'a encore rien posté — sois le premier !")))
                         .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
-                        .frame(maxWidth: .infinity).padding(.vertical, 20)
+                        .frame(maxWidth: .infinity).padding(.vertical, 18)
                 }
             }
             // ENTRELACÉS PAR DATE, pas empilés en deux listes. Un mur posé au-dessus des
@@ -1971,7 +1971,7 @@ struct ClubView: View {
                     .lineLimit(1...4)
                     .font(RUFont.sans(.body))
                     .foregroundColor(RUColor.textPrimary)
-                    .padding(.horizontal, 13).padding(.vertical, 10)
+                    .padding(.horizontal, 14).padding(.vertical, 10)
                     .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                 // UN ACCENT ÉTEINT N'EST PAS UN ACCENT DÉSACTIVÉ, C'EST UN ACCENT CASSÉ.
@@ -1993,7 +1993,7 @@ struct ClubView: View {
                 .accessibilityLabel("Publier sur le mur du club")
             }
         }
-        .padding(.bottom, 16)
+        .padding(.bottom, 18)
     }
 
     private var peutPublier: Bool {
@@ -2012,7 +2012,7 @@ struct ClubView: View {
             }
             HStack(spacing: 18) {
                 Button(action: { Task { await applaudirLeMessage(message) } }) {
-                    HStack(spacing: 7) {
+                    HStack(spacing: 8) {
                         Image(systemName: message.kudoedByMe ? "hands.clap.fill" : "hands.clap")
                             .font(.system(size: 15, weight: .regular))
                         if message.kudos > 0 {
@@ -2030,7 +2030,7 @@ struct ClubView: View {
                     reponseA = message
                     brouillonDuClub = ""
                 }) {
-                    HStack(spacing: 7) {
+                    HStack(spacing: 8) {
                         Image(systemName: "bubble.right").font(.system(size: 15, weight: .regular))
                         let compte = reponses(a: message).count
                         if compte > 0 {
@@ -2062,7 +2062,7 @@ struct ClubView: View {
     }
 
     private func enTeteDeMessage(_ message: ClubPost) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
                 // Le bloc d'identité entier ouvre la page de la personne — la photo, le nom et
                 // l'heure ensemble, comme partout ailleurs.
@@ -2071,7 +2071,7 @@ struct ClubView: View {
                         AvatarView(urlString: message.author.avatarUrl, base64DataURI: message.author.avatarBase64,
                                    initial: String(message.author.name.prefix(1)), size: 32,
                                    seed: message.isMine ? nil : message.author.id)
-                        VStack(alignment: .leading, spacing: 1) {
+                        VStack(alignment: .leading, spacing: 2) {
                             Text(message.author.name)
                                 .font(RUFont.sans(.label, weight: .bold))
                                 .foregroundColor(RUColor.textPrimary)
@@ -2564,7 +2564,7 @@ struct BadgeDetailView: View {
         VStack(spacing: 14) {
             BadgeHexTile(symbole: badge.symbole, earned: badge.earned, color: color,
                          side: 76, tailleDuSymbole: 32, lockedOpacity: 0.4)
-                .padding(.top, 22)
+                .padding(.top, 24)
 
             Text(badge.name).font(RUFont.sans(.title, weight: .bold)).foregroundColor(RUColor.textPrimary)
 
@@ -2596,7 +2596,7 @@ struct BadgeDetailView: View {
             if badge.earned {
                 if let shareImage {
                     ShareLink(item: shareImage, preview: SharePreview(badge.name, image: shareImage)) {
-                        HStack(spacing: 7) {
+                        HStack(spacing: 8) {
                             Image(systemName: "square.and.arrow.up")
                             Text("Partager ce badge")
                         }

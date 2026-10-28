@@ -225,7 +225,7 @@ struct FriendsView: View {
                 .padding(.top, 4)
         }
         .frame(maxWidth: .infinity)
-        .padding(20)
+        .padding(18)
         .ruCard()
     }
 
@@ -257,7 +257,7 @@ struct FriendsView: View {
                 .accessibilityLabel("Effacer la recherche")
             }
         }
-        .padding(.horizontal, 14).padding(.vertical, 11)
+        .padding(.horizontal, 14).padding(.vertical, 12)
         .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
@@ -379,16 +379,16 @@ struct FriendsView: View {
     private var searchResultsList: some View {
         VStack(spacing: 6) {
             if isSearching && searchResults.isEmpty {
-                ProgressView().frame(maxWidth: .infinity).padding(.vertical, 20)
+                ProgressView().frame(maxWidth: .infinity).padding(.vertical, 18)
             } else if let searchError {
                 Text(searchError)
                     .font(RUFont.sans(.body)).foregroundColor(RUColor.rose)
                     .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity).padding(.vertical, 20)
+                    .frame(maxWidth: .infinity).padding(.vertical, 18)
             } else if searchResults.isEmpty {
                 Text("Personne ne porte ce nom.")
                     .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
-                    .frame(maxWidth: .infinity).padding(.vertical, 20)
+                    .frame(maxWidth: .infinity).padding(.vertical, 18)
             }
             ForEach(searchResults) { user in
                 personRow(user) { followButton(for: user) }
@@ -408,7 +408,7 @@ struct FriendsView: View {
             Text(label)
                 .font(RUFont.sans(.body, weight: .bold))
                 .foregroundColor(isActive ? RUColor.textPrimary : .white)
-                .padding(.horizontal, 13).padding(.vertical, 7)
+                .padding(.horizontal, 14).padding(.vertical, 8)
                 .background(isActive ? RUColor.card2 : RUColor.rose, in: Capsule())
                 .overlay(Capsule().stroke(isActive ? RUColor.line : Color.clear, lineWidth: RUSpacing.hairline))
                 // « Suivre » est l'action de cette liste, et sa capsule ne fait que 29 pt.
@@ -432,7 +432,7 @@ struct FriendsView: View {
             Button(action: { appState.ouvrirLeProfil(user.id) }) {
                 HStack(spacing: 12) {
                     AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 34, seed: user.id)
-                    VStack(alignment: .leading, spacing: 1) {
+                    VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: 4) {
                             Text(user.lastName.map { "\(user.name) \($0)" } ?? user.name)
                                 .font(RUFont.sans(.label, weight: .medium)).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
@@ -457,7 +457,7 @@ struct FriendsView: View {
 
             trailing()
         }
-        .padding(.horizontal, 13).padding(.vertical, 10)
+        .padding(.horizontal, 14).padding(.vertical, 10)
         .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
         .contextMenu {
@@ -608,7 +608,7 @@ struct FriendsView: View {
                 } else {
                     Text("Personne n'a encore rien posté — reviens plus tard.")
                         .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
-                        .frame(maxWidth: .infinity).padding(.vertical, 20)
+                        .frame(maxWidth: .infinity).padding(.vertical, 18)
                 }
             }
             ForEach(Array(feed.enumerated()), id: \.element.id) { index, item in
@@ -861,16 +861,16 @@ private struct PeopleListSheet: View {
                             }
                             .font(RUFont.sans(.small, weight: .semibold))
                             .foregroundColor(RUColor.text2)
-                            .padding(.horizontal, 11).padding(.vertical, 6)
+                            .padding(.horizontal, 12).padding(.vertical, 6)
                             .frame(minHeight: 44)
                             .background(RUColor.card2, in: Capsule())
                             .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                         }
-                        .padding(.horizontal, 13).padding(.vertical, 10)
+                        .padding(.horizontal, 14).padding(.vertical, 10)
                         .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
                     }
                 }
-                .padding(16)
+                .padding(18)
             }
             .background(RUColor.pageBackground)
             .navigationTitle(title)

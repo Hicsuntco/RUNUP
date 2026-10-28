@@ -31,7 +31,7 @@ struct HealthConnectStepView: View {
                             }
                         }
                     }
-                    .padding(.top, 22)
+                    .padding(.top, 24)
                 }
             }
             // LE BOUTON DES VIDÉOS, À L'ENDROIT OÙ IL EST VRAI.
@@ -123,7 +123,7 @@ private struct ConnectRow: View {
                         .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                 }
             }
-            .padding(15)
+            .padding(14)
             .opacity(source != .apple ? 0.5 : 1)
             .background(connected ? RUColor.lime.opacity(0.1) : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous).stroke(connected ? RUColor.lime.opacity(0.35) : RUColor.line, lineWidth: RUSpacing.hairline))

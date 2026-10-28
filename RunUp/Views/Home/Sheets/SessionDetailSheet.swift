@@ -179,16 +179,16 @@ struct SessionDetailSheet: View {
                 if isRestDay {
                     Text(session.displaySubtitle)
                         .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
-                        .padding(.top, 16)
+                        .padding(.top, 18)
                 } else {
-                    RUMetricRow(spacing: 16) {
+                    RUMetricRow(spacing: 18) {
                         MetricColumn(value: "\(session.durationMinutes)′", label: "Durée")
                         MetricColumn(value: session.pace, label: "Allure cible")
                         MetricColumn(value: session.zone, label: "Zone", valueColor: RUColor.rose2)
                     }
-                    .padding(.top, 16)
+                    .padding(.top, 18)
 
-                    EyebrowLabel(text: "Structure de la séance", color: RUColor.text3).padding(.top, 22).padding(.bottom, 10)
+                    EyebrowLabel(text: "Structure de la séance", color: RUColor.text3).padding(.top, 24).padding(.bottom, 10)
 
                     VStack(spacing: 6) {
                         ForEach(steps.indices, id: \.self) { i in
@@ -222,9 +222,9 @@ struct SessionDetailSheet: View {
                         .font(RUFont.sans(.body))
                         .foregroundColor(RUColor.text2)
                         .lineSpacing(3)
-                        .padding(13)
+                        .padding(14)
                         .ruCard(radius: 16)
-                        .padding(.top, 16)
+                        .padding(.top, 18)
                     }
 
                 }
@@ -247,7 +247,7 @@ struct SessionDetailSheet: View {
                     .font(RUFont.sans(.label, weight: .semibold))
                     .foregroundColor(RUColor.lime)
                     .frame(maxWidth: .infinity)
-                    .padding(16)
+                    .padding(18)
                     // Surface neutre : l'accent reste au texte et à l'icône. Un lime
                     // dilué donne sa version sale, et le contour de la même couleur la redisait.
                     .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))

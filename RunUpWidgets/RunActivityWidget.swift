@@ -87,7 +87,7 @@ struct RunActivityWidget: Widget {
                 // course prend — elle vit dans `Shared`, que cette extension compile aussi.
                 metric(value: context.state.paceLabel, label: context.attributes.discipline.rythmeLabel)
                 Spacer(minLength: 8)
-                VStack(alignment: .trailing, spacing: 1) {
+                VStack(alignment: .trailing, spacing: 2) {
                     elapsedText(context.state)
                         .font(DisplayFont.font(26))
                         .foregroundColor(.white)
@@ -98,7 +98,7 @@ struct RunActivityWidget: Widget {
             if context.attributes.plannedDurationMinutes > 0 {
                 let plannedSeconds = Double(context.attributes.plannedDurationMinutes * 60)
                 let fraction = max(0, min(1, context.state.elapsedSeconds / plannedSeconds))
-                VStack(alignment: .leading, spacing: 5) {
+                VStack(alignment: .leading, spacing: 6) {
                     HStack {
                         Text("Séance").font(.custom("\(DisplayFont.family)-Bold", size: 10)).tracking(0.2).foregroundColor(.white.opacity(0.45))
                         Spacer()
@@ -119,13 +119,13 @@ struct RunActivityWidget: Widget {
                 }
             }
         }
-        .padding(16)
+        .padding(18)
         .activityBackgroundTint(Self.bg)
         .activitySystemActionForegroundColor(.white)
     }
 
     private func metric(value: String, label: String) -> some View {
-        VStack(alignment: .leading, spacing: 1) {
+        VStack(alignment: .leading, spacing: 2) {
             Text(value)
                 .font(DisplayFont.font(26))
                 .foregroundColor(.white)

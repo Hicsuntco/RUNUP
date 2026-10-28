@@ -91,7 +91,7 @@ struct WeeklyRecapView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 18) {
                 // Was a hand-rolled copy of `BackTitleHeaderView` — the exact same
                 // `HStack(spacing: 12) { BackChevronButton; VStack(spacing: 1) { eyebrow; title } }`
                 // the component already renders, down to the 24pt title. Identical output (the
@@ -120,7 +120,7 @@ struct WeeklyRecapView: View {
                         RUCardHeader(icon: "speedometer", tint: RUColor.violet, title: "Allure moyenne")
                         Text(verbatim: "\(PaceModel.formatDuration(avgPaceSecPerKm))/km").displayStyle(.subtitle).foregroundColor(RUColor.textPrimary)
                     }
-                    .padding(16)
+                    .padding(18)
                     .ruCard()
                 }
 
@@ -130,7 +130,7 @@ struct WeeklyRecapView: View {
                     Text("Pas encore de course cette semaine — tu as le temps.")
                         .font(RUFont.sans(.body))
                         .foregroundColor(RUColor.text2)
-                        .padding(16)
+                        .padding(18)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .ruCard()
                 } else {
@@ -175,7 +175,7 @@ struct WeeklyRecapView: View {
 
     private func statTile(value: String, unit: String?, label: String, color: Color, chip: String?, chipColor: Color) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack(alignment: .lastTextBaseline, spacing: 3) {
+            HStack(alignment: .lastTextBaseline, spacing: 4) {
                 Text(value).displayStyle(.figure).foregroundColor(color)
                 if let unit {
                     Text(unit).font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
@@ -233,7 +233,7 @@ struct WeeklyRecapView: View {
                 }
             }
         }
-        .padding(16)
+        .padding(18)
         .ruCard()
     }
 

@@ -44,7 +44,7 @@ struct WelcomeView: View {
                                         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                                         .frame(width: 38, height: 38)
                                         .overlay(Image(systemName: prop.icon).foregroundColor(RUColor.rose2).font(.system(size: 15)))
-                                    VStack(alignment: .leading, spacing: 3) {
+                                    VStack(alignment: .leading, spacing: 4) {
                                         Text(prop.title).font(RUFont.sans(.emphasis, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                                         Text(prop.desc).font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
                                     }
@@ -52,7 +52,7 @@ struct WelcomeView: View {
                             }
                         }
                         .padding(.top, 30)
-                        .padding(.bottom, 20)
+                        .padding(.bottom, 18)
                     }
                     .padding(.horizontal, 26)
                 }
@@ -78,7 +78,7 @@ struct WelcomeView: View {
                     }
                     ObNext(label: "COMMENCER", action: onStart)
                 }
-                .padding(.horizontal, 22)
+                .padding(.horizontal, 24)
             }
         }
     }

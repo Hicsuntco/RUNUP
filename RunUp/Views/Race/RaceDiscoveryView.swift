@@ -214,7 +214,7 @@ struct RaceDiscoveryView: View {
                 }
                 Spacer(minLength: 0)
 
-                VStack(alignment: .trailing, spacing: 3) {
+                VStack(alignment: .trailing, spacing: 4) {
                     if let jours = course.joursRestants, jours >= 0 {
                         // « J-42 » et non « dans 42 jours » : c'est la forme qu'un dossard
                         // porte, et elle tient sur une ligne à côté du nom de la course.
@@ -223,7 +223,7 @@ struct RaceDiscoveryView: View {
                             .foregroundColor(RUColor.rose2)
                     }
                     if let suiveurs = course.followerCount, suiveurs > 0 {
-                        HStack(spacing: 3) {
+                        HStack(spacing: 4) {
                             Image(systemName: "person.2.fill").font(.system(size: 9))
                             Text("\(suiveurs)").font(RUFont.mono(10.5))
                         }
@@ -234,7 +234,7 @@ struct RaceDiscoveryView: View {
                     }
                 }
             }
-            .padding(.vertical, 13)
+            .padding(.vertical, 14)
             .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())
@@ -254,7 +254,7 @@ struct RaceDiscoveryView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 28)
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 18)
     }
 
     private var boutonCreer: some View {
@@ -274,7 +274,7 @@ struct RaceDiscoveryView: View {
             .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 24)
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 18)
     }
 
     // MARK: - Chargement

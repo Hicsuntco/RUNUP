@@ -17,7 +17,7 @@ struct HyroxDetailsStepView: View {
                         subtitle: GoalType.hyrox.etapePromesse)
 
                 EyebrowLabel(text: "Division", color: RUColor.text3)
-                    .padding(.top, 20).padding(.bottom, 10)
+                    .padding(.top, 18).padding(.bottom, 10)
                 VStack(spacing: 8) {
                     ForEach(HyroxDivision.allCases) { d in
                         SelectableCard(selected: vm.hyroxDivision == d, emoji: nil, title: d.title, subtitle: d.subtitle) {
@@ -27,7 +27,7 @@ struct HyroxDetailsStepView: View {
                 }
 
                 EyebrowLabel(text: "Ton objectif chrono", color: RUColor.text3)
-                    .padding(.top, 22).padding(.bottom, 10)
+                    .padding(.top, 24).padding(.bottom, 10)
                 ChipFlowLayout {
                     ForEach(["Sous 1h15", "Sous 1h30", "Sous 1h45"], id: \.self) { t in
                         SelectableChip(label: t, selected: vm.chrono == t && !vm.isCustomChrono) {
@@ -48,7 +48,7 @@ struct HyroxDetailsStepView: View {
                 }
 
                 EyebrowLabel(text: "Date de l'épreuve", color: RUColor.text3)
-                    .padding(.top, 22).padding(.bottom, 10)
+                    .padding(.top, 24).padding(.bottom, 10)
                 DatePicker(
                     "",
                     selection: Binding(get: { vm.raceDate ?? Calendar.current.date(byAdding: .day, value: 60, to: .now)! }, set: { vm.raceDate = $0 }),
@@ -58,7 +58,7 @@ struct HyroxDetailsStepView: View {
                 .datePickerStyle(.compact)
                 .labelsHidden()
                 .colorScheme(RUColor.colorScheme)
-                .padding(13)
+                .padding(14)
                 .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
 

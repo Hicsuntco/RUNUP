@@ -160,7 +160,7 @@ struct HistoryView: View {
                 .foregroundColor(RUColor.amberText)
                 .frame(width: 26)
                 // Sans son disque teinté : l'ambre reste au glyphe.
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(Pluriel.choisir(appState.pendingActivityCount,
                      String(localized: "\(appState.pendingActivityCount) course pas encore synchronisée"),
                      String(localized: "\(appState.pendingActivityCount) courses pas encore synchronisées")))
@@ -174,7 +174,7 @@ struct HistoryView: View {
                     Haptics.selection()
                     appState.retryPendingClubActivities()
                 }) {
-                    HStack(spacing: 5) {
+                    HStack(spacing: 6) {
                         Image(systemName: "arrow.triangle.2.circlepath").font(.system(size: 10, weight: .semibold))
                         Text("Réessayer maintenant")
                     }
@@ -206,7 +206,7 @@ struct HistoryView: View {
     private func runCard(_ run: RunRecord) -> some View {
         HStack(spacing: 12) {
             runThumbnail(run)
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
                     Text(run.date, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated).locale(Locale.current))
                         .font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text3)
@@ -232,7 +232,7 @@ struct HistoryView: View {
                 .font(RUFont.sans(.body, weight: .semibold))
                 .foregroundColor(RUColor.text2)
                 .lineLimit(1).minimumScaleFactor(0.8)
-                .padding(.top, 1)
+                .padding(.top, 2)
 
                 // LA SEULE PORTE DE RETOUR VERS UN RESSENTI PERDU.
                 //
@@ -249,7 +249,7 @@ struct HistoryView: View {
                 // déjà : un ressenti d'une semaine passée corromprait le palier courant.
                 if run.debriefedAt == nil, AdaptivePlanEngine.currentWeekRange().contains(run.date) {
                     Button(action: { appState.pendingDebriefs.append(run) }) {
-                        HStack(spacing: 5) {
+                        HStack(spacing: 6) {
                             Image(systemName: "arrow.uturn.backward")
                                 .font(.system(size: 9, weight: .semibold))
                             Text("Ressenti manquant")

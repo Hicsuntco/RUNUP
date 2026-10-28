@@ -80,7 +80,7 @@ struct NewGoalWizardView: View {
                 // programme » tombait sur une carte de vente dont on ne sortait QU'EN TUANT
                 // L'APP. Et la seconde porte était pire : programme terminé, l'app lui demande
                 // de choisir la suite, et l'écran du choix se referme sur elle.
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 18) {
                     BackTitleHeaderView(title: "Nouvel objectif", titleSize: .subtitle) { dismiss() }
                         .padding(.top, 8)
                     ScrollView { PlusLockCard(feature: .raceGoal) }
@@ -96,7 +96,7 @@ struct NewGoalWizardView: View {
 
     private var content: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 18) {
                 BackTitleHeaderView(title: "Nouvel objectif", titleSize: .subtitle) {
                     if step == 0 { dismiss() } else { step -= 1 }
                 }
@@ -157,7 +157,7 @@ struct NewGoalWizardView: View {
                 ForEach(formats, id: \.self) { d in
                     Button(action: { distance = d; chrono = d.chronoPresets[safe: 1] ?? "" }) {
                         Text(d.label).displayStyle(.subtitle).foregroundColor(distance == d ? RUColor.rose2 : RUColor.textPrimary)
-                            .frame(maxWidth: .infinity).padding(.vertical, 16)
+                            .frame(maxWidth: .infinity).padding(.vertical, 18)
                             .background(distance == d ? RUColor.card2 : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(distance == d ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
                     }
@@ -166,16 +166,16 @@ struct NewGoalWizardView: View {
                 }
             }
             if goal == .ultraTrail {
-                EyebrowLabel(text: "Le dénivelé positif", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
+                EyebrowLabel(text: "Le dénivelé positif", color: RUColor.text3).padding(.top, 18).padding(.bottom, 10)
                 ObTextField(placeholder: "Ex. 4000", text: $raceElevationGain, keyboard: .numberPad)
             }
-            EyebrowLabel(text: "Chrono visé", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
+            EyebrowLabel(text: "Chrono visé", color: RUColor.text3).padding(.top, 18).padding(.bottom, 10)
             ChipFlowLayout {
                 ForEach(distance.chronoPresets, id: \.self) { t in
                     SelectableChip(label: t, selected: chrono == t) { chrono = t }
                 }
             }
-            EyebrowLabel(text: "Date de la course", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
+            EyebrowLabel(text: "Date de la course", color: RUColor.text3).padding(.top, 18).padding(.bottom, 10)
             DatePicker(
                 "",
                 selection: $raceDate,
@@ -185,13 +185,13 @@ struct NewGoalWizardView: View {
             .datePickerStyle(.compact)
             .labelsHidden()
             .colorScheme(RUColor.colorScheme)
-            .padding(13)
+            .padding(14)
             .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
             Button("CONTINUER") { step = 2 }
                 .buttonStyle(PrimaryButtonStyle(isDisabled: deniveleManquant))
                 .disabled(deniveleManquant)
-                .padding(.top, 20)
+                .padding(.top, 18)
         }
     }
 
@@ -215,14 +215,14 @@ struct NewGoalWizardView: View {
                 }
             }
 
-            EyebrowLabel(text: "Chrono visé", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
+            EyebrowLabel(text: "Chrono visé", color: RUColor.text3).padding(.top, 18).padding(.bottom, 10)
             ChipFlowLayout {
                 ForEach(duathlonFormat.chronoPresets, id: \.self) { t in
                     SelectableChip(label: t, selected: chrono == t) { chrono = t }
                 }
             }
 
-            EyebrowLabel(text: "Date de l'épreuve", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
+            EyebrowLabel(text: "Date de l'épreuve", color: RUColor.text3).padding(.top, 18).padding(.bottom, 10)
             DatePicker(
                 "",
                 selection: $raceDate,
@@ -232,13 +232,13 @@ struct NewGoalWizardView: View {
             .datePickerStyle(.compact)
             .labelsHidden()
             .colorScheme(RUColor.colorScheme)
-            .padding(13)
+            .padding(14)
             .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
 
             Button("CONTINUER") { step = 2 }
                 .buttonStyle(PrimaryButtonStyle())
-                .padding(.top, 20)
+                .padding(.top, 18)
         }
     }
 
@@ -261,7 +261,7 @@ struct NewGoalWizardView: View {
             }
 
             EyebrowLabel(text: "Aujourd'hui, tu nages combien sans t'arrêter ?", color: RUColor.text3)
-                .padding(.top, 20).padding(.bottom, 10)
+                .padding(.top, 18).padding(.bottom, 10)
             VStack(spacing: 8) {
                 ForEach(NiveauDeNage.allCases) { n in
                     SelectableCard(selected: nageNiveau == n, emoji: nil, title: n.title, subtitle: n.subtitle) {
@@ -274,20 +274,20 @@ struct NewGoalWizardView: View {
                 Text(avertissement)
                     .font(RUFont.sans(.small)).foregroundColor(RUColor.text2).lineSpacing(3)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(13)
+                    .padding(14)
                     .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                     .padding(.top, 10)
             }
 
-            EyebrowLabel(text: "Chrono visé", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
+            EyebrowLabel(text: "Chrono visé", color: RUColor.text3).padding(.top, 18).padding(.bottom, 10)
             ChipFlowLayout {
                 ForEach(triathlonFormat.chronoPresets, id: \.self) { t in
                     SelectableChip(label: t, selected: chrono == t) { chrono = t }
                 }
             }
 
-            EyebrowLabel(text: "Date de l'épreuve", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
+            EyebrowLabel(text: "Date de l'épreuve", color: RUColor.text3).padding(.top, 18).padding(.bottom, 10)
             DatePicker(
                 "",
                 selection: $raceDate,
@@ -297,14 +297,14 @@ struct NewGoalWizardView: View {
             .datePickerStyle(.compact)
             .labelsHidden()
             .colorScheme(RUColor.colorScheme)
-            .padding(13)
+            .padding(14)
             .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
 
             Button("CONTINUER") { step = 2 }
                 .buttonStyle(PrimaryButtonStyle(isDisabled: nageManquante))
                 .disabled(nageManquante)
-                .padding(.top, 20)
+                .padding(.top, 18)
         }
     }
 
@@ -322,7 +322,7 @@ struct NewGoalWizardView: View {
     private var daysStep: some View {
         VStack(alignment: .leading, spacing: 0) {
             EyebrowLabel(text: "Tes jours de course", color: RUColor.text3).padding(.bottom, 10)
-            HStack(spacing: 7) {
+            HStack(spacing: 8) {
                 ForEach(0..<7) { i in
                     let on = days.contains(i)
                     Button(action: { if on { days.remove(i) } else { days.insert(i) } }) {
@@ -340,12 +340,12 @@ struct NewGoalWizardView: View {
                 // le nouveau plan qu'on dimensionne. Un triathlon en exige trois.
                 .buttonStyle(PrimaryButtonStyle(isDisabled: days.count < minimumJours))
                 .disabled(days.count < minimumJours)
-                .padding(.top, 20)
+                .padding(.top, 18)
         }
     }
 
     private var buildingView: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 18) {
             // Was a fixed pct: 70 — a gauge that never actually moved or finished reads as fake
             // progress; this now genuinely animates to 100% over the same wait `scheduleFinish`
             // uses before the new program is actually ready.

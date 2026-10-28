@@ -63,7 +63,7 @@ struct StatsView: View {
             VStack(alignment: .leading, spacing: 10) {
                 HeaderView(eyebrow: "Analyse · progression", title: runs.isEmpty ? "Ta progression démarre ici" : "Ta forme évolue") {
                     Button(action: { appState.go(.history) }) {
-                        HStack(spacing: 5) {
+                        HStack(spacing: 6) {
                             Text("Historique").font(RUFont.sans(.small, weight: .semibold))
                             Text("›")
                         }
@@ -144,7 +144,7 @@ struct StatsView: View {
                 .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(16)
+        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
         .ruHeroCard()
     }
@@ -380,7 +380,7 @@ struct StatsView: View {
                            String(localized: "\(thisWeekRuns.count) séances sur \(profile.runningDays.count) prévues"))
                 )
             }
-            .padding(16)
+            .padding(18)
             .ruCard()
         }
         .buttonStyle(PressableStyle())
@@ -447,7 +447,7 @@ struct StatsView: View {
     }
 
     private var rangePicker: some View {
-        HStack(spacing: 3) {
+        HStack(spacing: 4) {
             ForEach(StatsRange.allCases) { range in
                 Button(action: {
                     Haptics.selection()
@@ -461,7 +461,7 @@ struct StatsView: View {
                         // que ce genre d'objet peut se permettre — les segments sont jointifs, une
                         // frappe imprécise tombe sur le voisin plutôt que dans le vide, ce qui
                         // n'est pas vrai d'une pastille isolée. En dessous, il n'y a plus d'excuse.
-                        .padding(.horizontal, 9).padding(.vertical, 9)
+                        .padding(.horizontal, 10).padding(.vertical, 10)
                         // Same gradient fill as `SelectableChip` — a flat rose square inside this
                         // pill read flat/dated next to it.
                         .background(
@@ -605,7 +605,7 @@ struct StatsView: View {
                     .padding(.top, 4)
             }
         }
-        .padding(16)
+        .padding(18)
         .ruCard()
     }
 
@@ -652,7 +652,7 @@ struct StatsView: View {
                 }
             }
         }
-        .padding(16)
+        .padding(18)
         .ruCard()
     }
 
@@ -761,7 +761,7 @@ struct StatsView: View {
                 .font(RUFont.sans(.small))
             }
         }
-        .padding(16)
+        .padding(18)
         .ruHeroCard()
     }
 
@@ -838,7 +838,7 @@ struct StatsView: View {
                 Text("Ta charge d'entraînement s'affichera ici après tes premières courses.")
                     .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
             } else {
-                HStack(alignment: .bottom, spacing: 5) {
+                HStack(alignment: .bottom, spacing: 6) {
                     ForEach(bars.indices, id: \.self) { i in
                         RoundedRectangle(cornerRadius: RUSpacing.radiusBar)
                             .fill(i == bars.count - 1 ? RUColor.rose : RUColor.line)
@@ -869,7 +869,7 @@ struct StatsView: View {
                 }
             }
         }
-        .padding(16)
+        .padding(18)
         .ruCard()
     }
 }

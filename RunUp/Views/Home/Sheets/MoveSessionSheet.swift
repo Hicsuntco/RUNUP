@@ -31,7 +31,7 @@ struct MoveSessionSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 18) {
                     if let picked {
                         destinationStep(for: picked)
                     } else {

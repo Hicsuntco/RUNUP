@@ -81,7 +81,7 @@ struct DuathlonRaceDaySheet: View {
             Image(systemName: icone)
                 .font(.system(size: 14, weight: .semibold)).foregroundColor(RUColor.rose2)
                 .frame(width: 22)
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(titre)
                     .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                 // `DuathlonFormat.km` et pas une mise en forme écrite ici : « 2.5 km » sous une
@@ -103,7 +103,7 @@ struct DuathlonRaceDaySheet: View {
             Image(systemName: "arrow.triangle.swap")
                 .font(.system(size: 14, weight: .semibold)).foregroundColor(RUColor.rose2)
                 .frame(width: 22)
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text("Transitions")
                     .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                 Text("T1 et T2")

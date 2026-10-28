@@ -47,7 +47,7 @@ struct CreateRaceSheet: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 18) {
                 Text("Ajouter une course")
                     .font(RUFont.display(.title))
                     .foregroundColor(RUColor.textPrimary)
@@ -137,7 +137,7 @@ struct CreateRaceSheet: View {
                 .keyboardType(clavier)
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(clavier == .URL ? .never : .sentences)
-                .padding(.horizontal, 14).padding(.vertical, 11)
+                .padding(.horizontal, 14).padding(.vertical, 12)
                 .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
         }

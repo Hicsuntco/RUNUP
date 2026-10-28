@@ -186,7 +186,7 @@ struct CoachView: View {
     }
 
     private func tuileLue(nom: String, valeur: String, accent: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(LocalizedStringKey(nom))
                 .font(RUFont.sans(.small, weight: .medium))
                 .foregroundColor(RUColor.text3)
@@ -395,7 +395,7 @@ struct CoachView: View {
                         .animation(reduceMotion ? nil : .easeInOut(duration: 0.5).repeatForever(autoreverses: true).delay(Double(i) * 0.15), value: typingBounce)
                 }
             }
-            .padding(13)
+            .padding(14)
             .background(RUColor.card, in: BubbleShape(tailCorner: .topLeft))
             Spacer()
         }
@@ -438,10 +438,10 @@ struct CoachView: View {
             .disabled(!canSend)
             .accessibilityLabel("Envoyer")
         }
-        .padding(.leading, 16).padding(.trailing, 8).padding(.vertical, 8)
+        .padding(.leading, 18).padding(.trailing, 8).padding(.vertical, 8)
         .background(RUColor.card, in: Capsule())
         .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 18)
         // Les mêmes 96 points qu'avant, mais écrits à partir des mesures de la barre plutôt qu'en
         // dur : c'est ce nombre nu, isolé de tout, qui a laissé la branche verrouillée ci-dessus
         // repartir de zéro.
@@ -501,7 +501,7 @@ struct FlowChips: View {
                     Text(chip)
                         .font(RUFont.sans(.small, weight: .semibold))
                         .foregroundColor(RUColor.text2)
-                        .padding(.horizontal, 11).padding(.vertical, 6)
+                        .padding(.horizontal, 12).padding(.vertical, 6)
                         .frame(minHeight: 44)
                         .background(RUColor.card, in: Capsule())
                         .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))

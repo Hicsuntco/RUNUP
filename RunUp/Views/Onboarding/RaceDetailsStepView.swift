@@ -37,7 +37,7 @@ struct RaceDetailsStepView: View {
                         .gridCellColumns(d == .other ? 2 : 1)
                     }
                 }
-                .padding(.top, 20)
+                .padding(.top, 18)
 
                 if vm.distance == .other {
                     ObTextField(placeholder: vm.isUltra ? "Ex. 110 km, Diagonale des Fous…"
@@ -63,13 +63,13 @@ struct RaceDetailsStepView: View {
                         Text("requis")
                             .font(RUFont.sans(.micro, weight: .bold))
                             .foregroundColor(vm.raceElevationGainM == nil ? RUColor.amber : RUColor.text3)
-                            .padding(.horizontal, 7).padding(.vertical, 3)
+                            .padding(.horizontal, 8).padding(.vertical, 4)
                             .overlay(Capsule().stroke(
                                 vm.raceElevationGainM == nil ? RUColor.amber : RUColor.line,
                                 lineWidth: RUSpacing.hairline))
                         Spacer(minLength: 0)
                     }
-                    .padding(.top, 22).padding(.bottom, 10)
+                    .padding(.top, 24).padding(.bottom, 10)
                     // `keyboard:` et non le modificateur `.keyboardType` : `ObTextField` porte
                     // déjà ce réglage en paramètre, et il l'applique au `TextField` lui-même.
                     ObTextField(placeholder: "Ex. 4000", text: $vm.raceElevationGain,
@@ -78,7 +78,7 @@ struct RaceDetailsStepView: View {
 
                 if vm.distance != nil {
                     EyebrowLabel(text: "Ton objectif chrono", color: RUColor.text3)
-                        .padding(.top, 22).padding(.bottom, 10)
+                        .padding(.top, 24).padding(.bottom, 10)
                     ChipFlowLayout {
                         if vm.distance != .other {
                             ForEach(vm.distance?.chronoPresets ?? [], id: \.self) { t in
@@ -101,7 +101,7 @@ struct RaceDetailsStepView: View {
                     }
 
                     EyebrowLabel(text: "Date de la course", color: RUColor.text3)
-                        .padding(.top, 22).padding(.bottom, 10)
+                        .padding(.top, 24).padding(.bottom, 10)
                     DatePicker(
                         "",
                         selection: Binding(get: { vm.raceDate ?? Calendar.current.date(byAdding: .day, value: 60, to: .now)! }, set: { vm.raceDate = $0 }),
@@ -111,7 +111,7 @@ struct RaceDetailsStepView: View {
                     .datePickerStyle(.compact)
                     .labelsHidden()
                     .colorScheme(RUColor.colorScheme)
-                    .padding(13)
+                    .padding(14)
                     .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
 

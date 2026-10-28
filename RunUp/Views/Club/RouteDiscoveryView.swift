@@ -138,7 +138,7 @@ struct RouteDiscoveryView: View {
                     .font(RUFont.sans(.label, weight: .semibold))
                     .foregroundColor(RUColor.textPrimary)
                     .padding(.horizontal, 14)
-                    .padding(.vertical, 9)
+                    .padding(.vertical, 10)
                     .background(Capsule().fill(RUColor.card))
                     .overlay(Capsule().stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                     .shadow(color: .black.opacity(0.12), radius: 8, y: 3)
@@ -161,7 +161,7 @@ struct RouteDiscoveryView: View {
                     .font(RUFont.sans(.label, weight: .semibold))
                     .foregroundColor(RUColor.textPrimary)
                     .padding(.horizontal, 14)
-                    .padding(.vertical, 9)
+                    .padding(.vertical, 10)
                     .frame(minHeight: 44)
                     .background(Capsule().fill(RUColor.card))
                     .overlay(Capsule().stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
@@ -296,7 +296,7 @@ private struct RouteRow: View {
             .frame(width: 52, height: 52)
             .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(route.name)
                     .font(RUFont.sans(.emphasis, weight: .bold))
                     .foregroundColor(RUColor.textPrimary)

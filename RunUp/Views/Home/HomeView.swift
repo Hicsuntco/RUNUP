@@ -301,7 +301,7 @@ struct HomeView: View {
     }
 
     private func bandeDeSemaine(avecQuantieme: Bool) -> some View {
-        HStack(spacing: 5) {
+        HStack(spacing: 6) {
             ForEach(profile.weekStrip) { day in
                 // Plus de contour, et un fond pour ceux qui n'en avaient pas.
                 //
@@ -389,7 +389,7 @@ struct HomeView: View {
                 // la seule qui en garde un devient, à cette hauteur, un bloc rose isolé qui pèse
                 // plus lourd que la séance du jour. Une frise se mesure à ce qu'elle porte, pas à
                 // ce qu'elle portait.
-                .padding(.vertical, 11)
+                .padding(.vertical, 12)
                 // Each cell (weekday letter + a date number or checkmark, colored by state) was
                 // 2-3 separate disconnected VoiceOver stops with no indication of which day is
                 // today, done, or a rest day — that information lived only in color/border, never
@@ -439,7 +439,7 @@ struct HomeView: View {
     /// famille n'y apprendrait rien et disputerait l'accent, alors que dans le plan, où sept
     /// lignes se côtoient, c'est précisément ce qui donne la forme de la semaine.
     private func sessionTag(_ isRestDay: Bool, family: SessionFamily) -> some View {
-        HStack(spacing: 5) {
+        HStack(spacing: 6) {
             Image(systemName: isRestDay ? "moon.zzz.fill" : family.symbol).font(.system(size: 9, weight: .bold))
             Text(LocalizedStringKey(isRestDay ? "Aujourd'hui" : "Séance du jour"))
                 .font(RUFont.sans(.micro, weight: .bold)).tracking(0.2)
@@ -456,7 +456,7 @@ struct HomeView: View {
         // jour de repos et un jour de séance sont deux faits, pas deux niveaux d'importance.
         .foregroundColor(RUColor.text2)
         .padding(.horizontal, 10)
-        .padding(.vertical, 5)
+        .padding(.vertical, 6)
         .background(RUColor.card2, in: Capsule())
         .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
     }
@@ -542,7 +542,7 @@ struct HomeView: View {
                 // place de l'écran pour ne rien dire.
                 if !repos {
                     RUMetricRow(spacing: 18) {
-                        VStack(alignment: .leading, spacing: 1) {
+                        VStack(alignment: .leading, spacing: 2) {
                             Text("\(seance.durationMinutes)")
                                 // 56 → 40. Voir la note jumelle sur `sessionCard`.
                                 .font(RUFont.display(.banner))
@@ -567,7 +567,7 @@ struct HomeView: View {
                     .padding(.top, repos ? 14 : 15)
             }
         }
-        .padding(16)
+        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
         .ruCard()
     }
@@ -676,7 +676,7 @@ struct HomeView: View {
                 // deux bords avec un trou au centre : deux blocs qui s'ignorent au lieu d'une
                 // rangée qui se lit.
                 RUMetricRow(spacing: 18) {
-                    VStack(alignment: .leading, spacing: 1) {
+                    VStack(alignment: .leading, spacing: 2) {
                         Text("\(session.durationMinutes)")
                             // 56 → 40, SOIT 43,6 POINTS AU LIEU DE 61.
                             //
@@ -718,7 +718,7 @@ struct HomeView: View {
                 // hors de l'app a une distance et une durée réelles, que l'app ne peut pas
                 // deviner. Les demander vaut mieux que de les inventer ou de les laisser à zéro.
                 runActionsRow
-                    .padding(.top, 15)
+                    .padding(.top, 14)
             }
         }
         // La carte prend TOUTE la largeur, quel que soit son contenu.
@@ -733,7 +733,7 @@ struct HomeView: View {
         // 20 au lieu de 16 : c'est la carte qui porte le sommet de l'écran, et une marge plus
         // large est ce qui distingue une carte principale d'une carte de liste — sans avoir à
         // lui ajouter un contour, une teinte ou un badge.
-        .padding(20)
+        .padding(18)
         .contentShape(Rectangle())
         .onTapGesture { appState.openSessionDetail() }
         .ruCard()
@@ -765,7 +765,7 @@ struct HomeView: View {
     private func tomorrowRow(_ next: (title: String, minutes: Int)) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
-            HStack(alignment: .firstTextBaseline, spacing: 9) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Text("Demain")
                     .font(RUFont.sans(.micro, weight: .bold))
                     .tracking(1.2)
@@ -781,7 +781,7 @@ struct HomeView: View {
                     .foregroundColor(RUColor.text3)
             }
         }
-        .padding(.top, 16)
+        .padding(.top, 18)
         .accessibilityElement(children: .combine)
     }
 
@@ -873,7 +873,7 @@ struct HomeView: View {
     /// une phrase et n'a rien à faire dans le catalogue.
     private func statTile(_ value: String, unit: String?, label: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline, spacing: 3) {
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(verbatim: value)
                     .displayStyle(.figure)
                     .foregroundColor(RUColor.textPrimary)
@@ -902,7 +902,7 @@ struct HomeView: View {
         // toujours la couleur de SON arc.
         let goalColors = DailyGoalsBarsView.fillColors
         return Button(action: { appState.go(.rings) }) {
-            VStack(spacing: 20) {
+            VStack(spacing: 18) {
                 ZStack {
                     DailyGoalsBarsView(
                         goals: p.dailyGoalSlotsToday.map { .init(slot: $0.slot, progress: $0.progress) },
@@ -950,7 +950,7 @@ struct HomeView: View {
             // paraître à l'étroit, parce que ses coins sont vides et que l'œil mesure la distance
             // au point le plus PROCHE du bord, pas au cadre.
             .padding(.horizontal, RUSpacing.cardPadding)
-            .padding(.vertical, 22)
+            .padding(.vertical, 24)
         }
         .buttonStyle(PressableStyle())
         // La carte revient. Je l'avais retirée en pariant qu'un anneau de cette taille n'a plus
@@ -990,10 +990,10 @@ struct HomeView: View {
     /// Sous l'anneau, les trois colonnes sont dans l'ordre des trois arcs — la pastille confirme
     /// alors une correspondance que la position suggère déjà.
     private func ringStat(name: String, value: String, color: Color) -> some View {
-        VStack(spacing: 5) {
+        VStack(spacing: 6) {
             // La pastille SUR la ligne du nom, pas flottant au-dessus : détachée, elle se lisait
             // comme une puce décorative à mi-chemin entre l'anneau et le texte.
-            HStack(spacing: 5) {
+            HStack(spacing: 6) {
                 Circle().fill(color).frame(width: 6, height: 6)
                 Text(LocalizedStringKey(name))
                     .font(RUFont.sans(.label, weight: .medium))
@@ -1023,7 +1023,7 @@ struct HomeView: View {
         }
         .foregroundColor(profile.streak > 0 ? RUColor.amber : RUColor.text3)
         .padding(.horizontal, 10)
-        .padding(.vertical, 7)
+        .padding(.vertical, 8)
         .background(RUColor.card, in: Capsule())
         .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
         // Was just "5" to VoiceOver with no context — the flame icon that gives it meaning

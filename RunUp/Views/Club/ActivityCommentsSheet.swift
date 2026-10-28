@@ -43,13 +43,13 @@ struct ActivityCommentsSheet: View {
                                 commentRow(comment)
                             }
                         }
-                        .padding(16)
+                        .padding(18)
                     }
                 }
 
                 if let errorMessage {
                     Text(errorMessage).font(RUFont.sans(.small)).foregroundColor(RUColor.rose)
-                        .padding(.horizontal, 16).padding(.top, 4)
+                        .padding(.horizontal, 18).padding(.top, 4)
                 }
 
                 composer
@@ -122,7 +122,7 @@ struct ActivityCommentsSheet: View {
             .disabled(newText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSending)
             .accessibilityLabel("Envoyer le commentaire")
         }
-        .padding(.horizontal, 16).padding(.vertical, 10)
+        .padding(.horizontal, 18).padding(.vertical, 10)
         .background(.ultraThinMaterial)
     }
 

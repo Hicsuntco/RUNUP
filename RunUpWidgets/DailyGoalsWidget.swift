@@ -276,7 +276,7 @@ struct DailyGoalsWidgetView: View {
     }
 
     private func runEyebrow(_ course: LiveRunWidgetSnapshot) -> some View {
-        HStack(spacing: 5) {
+        HStack(spacing: 6) {
             Circle()
                 .fill(Color.white.opacity(course.isPaused ? 0.45 : 1))
                 .frame(width: 6, height: 6)
@@ -288,7 +288,7 @@ struct DailyGoalsWidgetView: View {
     }
 
     private func runMetric(_ valeur: String, _ unite: String) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 3) {
+        HStack(alignment: .firstTextBaseline, spacing: 4) {
             Text(valeur)
                 .font(.custom("\(DisplayFont.family)-Bold", size: 17))
                 .monospacedDigit()
@@ -307,7 +307,7 @@ struct DailyGoalsWidgetView: View {
             runMetric(TimeFormat.distance(km: course.distanceKm), "km")
             Spacer(minLength: 0)
         }
-        .padding(13)
+        .padding(14)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text("Course en cours, \(TimeFormat.distance(km: course.distanceKm)) kilomètres"))
@@ -366,7 +366,7 @@ struct DailyGoalsWidgetView: View {
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .overlay(alignment: .topTrailing) {
-            if snapshot.streak > 0 { streakBadge.padding(9) }
+            if snapshot.streak > 0 { streakBadge.padding(10) }
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text("\(snapshot.dailyGoalsDone) sur \(snapshot.dailyGoalsTotal) objectifs bouclés"))
@@ -381,8 +381,8 @@ struct DailyGoalsWidgetView: View {
     private var mediumBody: some View {
         HStack(spacing: 14) {
             WidgetRingView(goals: goals, size: 92, colors: colors, isLight: isLight)
-            VStack(alignment: .leading, spacing: 7) {
-                HStack(spacing: 7) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
                     Text(Self.weekdayFormatter.string(from: entryDate).capitalized)
                         .font(.custom("\(DisplayFont.family)-Bold", size: 15))
                         .foregroundColor(textPrimary)
@@ -431,7 +431,7 @@ struct DailyGoalsWidgetView: View {
     }
 
     private var weekDots: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: 6) {
             ForEach(Array(snapshot.weekStrip.enumerated()), id: \.offset) { _, day in
                 // `colors[0]` et non `colors[1]` : depuis que les trois objectifs portent trois
                 // teintes distinctes, l'index 1 n'est plus l'accent principal mais le violet du
@@ -455,7 +455,7 @@ struct DailyGoalsWidgetView: View {
         }
         .foregroundColor(flameColor)
         .padding(.horizontal, 6)
-        .padding(.vertical, 2.5)
+        .padding(.vertical, 2)
         .background(flameColor.opacity(isLight ? 0.12 : 0.16), in: Capsule())
     }
 }

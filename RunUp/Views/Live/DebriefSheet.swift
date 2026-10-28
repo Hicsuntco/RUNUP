@@ -106,7 +106,7 @@ struct DebriefSheet: View {
                 HStack(spacing: 6) {
                     ForEach(RPE.allCases) { opt in
                         Button(action: { rpe = opt }) {
-                            VStack(spacing: 5) {
+                            VStack(spacing: 6) {
                                 Text(opt.emoji).font(.system(size: 22))
                                 Text(opt.label).font(RUFont.sans(.micro, weight: .semibold)).foregroundColor(rpe == opt ? RUColor.rose2 : RUColor.text2)
                             }
@@ -142,9 +142,9 @@ struct DebriefSheet: View {
                         }
                     }
                 }
-                .padding(16)
+                .padding(18)
                 .ruHeroCard(radius: 18)
-                .padding(.top, 16)
+                .padding(.top, 18)
 
             }
             .padding(.horizontal, RUSpacing.pagePadding)

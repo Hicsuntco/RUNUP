@@ -21,7 +21,7 @@ struct RecoveryView: View {
                     Text("Ton corps a fait le plus dur. On souffle \(total) jours avant de repartir — c'est ce qui fait tenir les progrès dans la durée.")
                         .font(RUFont.sans(.label)).foregroundColor(RUColor.text2).multilineTextAlignment(.center).lineSpacing(3)
 
-                    HStack(spacing: 5) {
+                    HStack(spacing: 6) {
                         ForEach(0..<total, id: \.self) { i in
                             RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous)
                                 .fill(i < done ? RUColor.lime : RUColor.card)
@@ -41,7 +41,7 @@ struct RecoveryView: View {
                     .padding(.top, 6)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 22).padding(.horizontal, 18)
+                .padding(.vertical, 24).padding(.horizontal, 18)
                 .ruHeroCard(radius: RUSpacing.radiusHero, borderOpacity: 0.22)
 
                 VStack(alignment: .leading, spacing: 6) {
@@ -50,7 +50,7 @@ struct RecoveryView: View {
                     Text("Pas de course prévue — hydrate-toi bien et dors un peu plus si tu peux.")
                         .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
                 }
-                .padding(16)
+                .padding(18)
                 .ruCard()
 
                 // Days now tick with the real calendar (see `refreshProgramForCurrentDate`) — no

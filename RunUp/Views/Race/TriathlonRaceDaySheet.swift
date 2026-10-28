@@ -69,7 +69,7 @@ struct TriathlonRaceDaySheet: View {
             Image(systemName: icone)
                 .font(.system(size: 14, weight: .semibold)).foregroundColor(RUColor.rose2)
                 .frame(width: 22)
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(titre)
                     .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                 (Text(verbatim: "\(distance) ") + Text(unite))
@@ -89,7 +89,7 @@ struct TriathlonRaceDaySheet: View {
             Image(systemName: "arrow.triangle.swap")
                 .font(.system(size: 14, weight: .semibold)).foregroundColor(RUColor.rose2)
                 .frame(width: 22)
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text("Transitions")
                     .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                 Text("T1 et T2")

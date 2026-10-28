@@ -127,7 +127,7 @@ struct EditActivitySheet: View {
     private var routeSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Toggle(isOn: $removeRoute) {
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text("Retirer le tracé")
                         .font(RUFont.sans(.emphasis, weight: .semibold))
                         .foregroundColor(RUColor.textPrimary)

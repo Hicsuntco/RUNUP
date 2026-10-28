@@ -506,8 +506,8 @@ struct RunInProgressPill: View {
                     .tracking(1)
                     .foregroundColor(RUColor.onRose)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 9)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 10)
             .frame(minHeight: 44)
             .background(RUColor.rose, in: Capsule())
             // Même geste : la barre entière baignait dans un halo rose de 20 points. Une barre

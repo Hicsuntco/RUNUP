@@ -154,14 +154,14 @@ struct PublicProfileView: View {
                                      : String(localized: "Te suit"))
                     .font(RUFont.sans(.small, weight: .bold))
                     .foregroundColor(RUColor.violet)
-                    .padding(.horizontal, 9).padding(.vertical, 4)
+                    .padding(.horizontal, 10).padding(.vertical, 4)
                     .background(RUColor.violet.opacity(0.14), in: Capsule())
             }
         }
     }
 
     private func chiffres(_ profil: PublicProfile) -> some View {
-        RUMetricRow(spacing: 20) {
+        RUMetricRow(spacing: 18) {
             MetricColumn(value: Distances.km(profil.totalKm), label: String(localized: "Au total"))
             MetricColumn(value: "\(profil.runs)", label: String(localized: "Sorties"))
             // Quatre chiffres en rang : en teinter UN SEUL le désigne comme important alors
@@ -216,7 +216,7 @@ struct PublicProfileView: View {
                         HStack(spacing: 10) {
                             ForEach(gagnes) { badge in
                                 Button(action: { selectedBadge = badge }) {
-                                    VStack(spacing: 5) {
+                                    VStack(spacing: 6) {
                                         // SA COULEUR, PAS UNE COULEUR. Les cinq tuiles sortaient
                                         // toutes en vert : j'avais passé une teinte fixe là où
                                         // le reste de l'app lit celle du badge. Une série d'hexagones
@@ -279,7 +279,7 @@ struct PublicProfileView: View {
                     .font(RUFont.sans(.body))
                     .foregroundColor(RUColor.text3)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 22)
+                    .padding(.vertical, 24)
             } else {
                 ForEach(Array((page?.items ?? []).enumerated()), id: \.element.id) { index, item in
                     ActivityFeedRow(

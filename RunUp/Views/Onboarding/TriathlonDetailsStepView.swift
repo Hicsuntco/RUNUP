@@ -26,7 +26,7 @@ struct TriathlonDetailsStepView: View {
                         subtitle: GoalType.triathlon.etapePromesse)
 
                 EyebrowLabel(text: "Format", color: RUColor.text3)
-                    .padding(.top, 20).padding(.bottom, 10)
+                    .padding(.top, 18).padding(.bottom, 10)
                 VStack(spacing: 8) {
                     ForEach(TriathlonFormat.allCases) { f in
                         // Les trois distances en sous-titre : c'est ce qui identifie un format
@@ -38,7 +38,7 @@ struct TriathlonDetailsStepView: View {
                 }
 
                 EyebrowLabel(text: "Aujourd'hui, tu nages combien sans t'arrêter ?", color: RUColor.text3)
-                    .padding(.top, 22).padding(.bottom, 10)
+                    .padding(.top, 24).padding(.bottom, 10)
                 VStack(spacing: 8) {
                     ForEach(NiveauDeNage.allCases) { n in
                         SelectableCard(selected: vm.nageNiveau == n, emoji: nil, title: n.title, subtitle: n.subtitle) {
@@ -51,14 +51,14 @@ struct TriathlonDetailsStepView: View {
                     Text(avertissement)
                         .font(RUFont.sans(.small)).foregroundColor(RUColor.text2).lineSpacing(3)
                         .fixedSize(horizontal: false, vertical: true)
-                        .padding(13)
+                        .padding(14)
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                         .padding(.top, 10)
                 }
 
                 EyebrowLabel(text: "Ton objectif chrono", color: RUColor.text3)
-                    .padding(.top, 22).padding(.bottom, 10)
+                    .padding(.top, 24).padding(.bottom, 10)
                 ChipFlowLayout {
                     ForEach(vm.triathlonFormat?.chronoPresets ?? [], id: \.self) { t in
                         SelectableChip(label: t, selected: vm.chrono == t && !vm.isCustomChrono) {
@@ -79,7 +79,7 @@ struct TriathlonDetailsStepView: View {
                 }
 
                 EyebrowLabel(text: "Date de l'épreuve", color: RUColor.text3)
-                    .padding(.top, 22).padding(.bottom, 10)
+                    .padding(.top, 24).padding(.bottom, 10)
                 DatePicker(
                     "",
                     selection: Binding(get: { vm.raceDate ?? Calendar.current.date(byAdding: .day, value: 90, to: .now)! }, set: { vm.raceDate = $0 }),
@@ -89,7 +89,7 @@ struct TriathlonDetailsStepView: View {
                 .datePickerStyle(.compact)
                 .labelsHidden()
                 .colorScheme(RUColor.colorScheme)
-                .padding(13)
+                .padding(14)
                 .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
 

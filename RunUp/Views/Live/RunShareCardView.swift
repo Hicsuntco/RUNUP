@@ -115,15 +115,15 @@ struct RunShareCardView: View {
                     .padding(.bottom, 8)
             }
 
-            VStack(spacing: 16) {
+            VStack(spacing: 18) {
                 // `statBlock` rend son libellé par un `Text(String)` nu.
                 statBlock(String(localized: "DISTANCE"), String(format: "%.2f km", locale: Locale.current, run.distanceKm), valueSize: 58)
                 statBlock(String(localized: "ALLURE"), "\(run.avgPace) /km", valueSize: 40)
                 statBlock(String(localized: "TEMPS"), PaceModel.formatDuration(Double(run.durationSeconds)), valueSize: 40)
             }
 
-            VStack(spacing: 5) {
-                HStack(spacing: 7) {
+            VStack(spacing: 6) {
+                HStack(spacing: 8) {
                     AppMarkView(size: 22, radius: 6)
                     Text(verbatim: "RUNUP").font(RUFont.display(horsEchelle: 15)).tracking(4).foregroundStyle(valueStyle)
                 }
@@ -141,14 +141,14 @@ struct RunShareCardView: View {
                     .foregroundColor(secondaryColor.opacity(0.6))
             }
             .modifier(OutlinedTextShadow(light: outlineIsLight))
-            .padding(.top, 22)
+            .padding(.top, 24)
         }
         .frame(width: 360, height: 640)
     }
 
     /// One Strava-style stacked stat — small tracked label over a big display-face value, centered.
     private func statBlock(_ label: String, _ value: String, valueSize: CGFloat) -> some View {
-        VStack(spacing: 1) {
+        VStack(spacing: 2) {
             Text(label)
                 .font(RUFont.sans(.body, weight: .bold))
                 .tracking(2.5)

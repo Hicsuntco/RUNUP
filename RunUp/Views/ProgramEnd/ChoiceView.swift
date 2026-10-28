@@ -34,7 +34,7 @@ struct ChoiceView: View {
 
                 VStack(alignment: .leading, spacing: 10) {
                     RUCardHeader(icon: "checkmark.seal.fill", tint: RUColor.rose, title: "Bilan de ton programme")
-                    RUMetricRow(spacing: 20) {
+                    RUMetricRow(spacing: 18) {
                         MetricColumn(value: "\(totalKm)", label: "km parcourus")
                         // Deux clés entières plutôt qu'un « s » recollé : le pluriel ne se fabrique
                         // pas de la même façon dans les trois langues.
@@ -49,13 +49,13 @@ struct ChoiceView: View {
                                      valueColor: RUColor.rose2)
                     }
                 }
-                .padding(16)
+                .padding(18)
                 .ruCard()
 
                 Button(action: { showNewGoal = true }) {
                     HStack(spacing: 14) {
                         Text("🎯").font(.system(size: 26))
-                        VStack(alignment: .leading, spacing: 3) {
+                        VStack(alignment: .leading, spacing: 4) {
                             Text("Se fixer un nouvel objectif").displayStyle(.subtitle).foregroundColor(RUColor.textPrimary)
                             Text("Une nouvelle course, progresser encore, perdre du poids…")
                                 .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(2)
@@ -75,7 +75,7 @@ struct ChoiceView: View {
                 }) {
                     HStack(spacing: 14) {
                         AppMarkView(size: 26, radius: 8)
-                        VStack(alignment: .leading, spacing: 3) {
+                        VStack(alignment: .leading, spacing: 4) {
                             Text("Mode course libre").displayStyle(.subtitle).foregroundColor(RUColor.textPrimary)
                             Text("Pas d'objectif précis — on te propose juste de quoi garder la forme.")
                                 .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(2)

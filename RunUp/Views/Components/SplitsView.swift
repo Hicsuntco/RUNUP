@@ -19,7 +19,7 @@ struct SplitsView: View {
     var reduceMotion: Bool
 
     var body: some View {
-        VStack(spacing: 5) {
+        VStack(spacing: 6) {
             let fractions = Self.fractions(splits)
             ForEach(splits.indices, id: \.self) { i in
                 ligne(index: i, time: splits[i], fraction: fractions[i], isLast: i == splits.count - 1)

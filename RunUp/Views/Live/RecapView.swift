@@ -208,7 +208,7 @@ struct RecapView: View {
                             // la page saute au moment où l'image finit de se rendre.
                             .frame(height: Self.sharePreviewHeight)
                             .frame(maxWidth: .infinity)
-                            HStack(spacing: 7) {
+                            HStack(spacing: 8) {
                                 ForEach(ShareCardTextColor.allCases) { style in
                                     SelectableChip(label: style.label, selected: shareTextColor == style) {
                                         shareTextColor = style
@@ -289,7 +289,7 @@ struct RecapView: View {
                         }
                     }
                     .padding(.horizontal, RUSpacing.pagePadding)
-                    .padding(.top, 16)
+                    .padding(.top, 18)
                     .padding(.bottom, 24)
                 }
             }
@@ -430,10 +430,10 @@ struct RecapView: View {
                     .accessibilityLabel(String(localized: "Agrandir le tracé"))
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 18)
             .padding(.top, 44)
             .frame(maxHeight: .infinity, alignment: .top)
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 4) {
                 EyebrowLabel(text: "✓ Séance terminée", color: RUColor.lime)
                 Text(verbatim: run.titreAffiche).displayStyle(.title).foregroundColor(RUColor.textPrimary)
             }
@@ -560,7 +560,7 @@ struct RecapView: View {
     }
 
     private func statTile(_ value: String, _ label: String, _ color: Color = RUColor.textPrimary, index: Int = 0) -> some View {
-        VStack(spacing: 3) {
+        VStack(spacing: 4) {
             Text(value).displayStyle(.title).foregroundColor(color)
             Text(label).font(RUFont.sans(.micro, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
         }

@@ -50,7 +50,7 @@ struct CarteDeSauvegarde: View {
                     }
                     Spacer(minLength: 0)
                 }
-                .padding(.horizontal, 14).padding(.vertical, 13)
+                .padding(.horizontal, 14).padding(.vertical, 14)
                 .frame(minHeight: 44)
                 .contentShape(Rectangle())
             }
@@ -71,7 +71,7 @@ struct CarteDeSauvegarde: View {
                     }
                     Spacer(minLength: 0)
                 }
-                .padding(.horizontal, 14).padding(.vertical, 13)
+                .padding(.horizontal, 14).padding(.vertical, 14)
                 .frame(minHeight: 44)
                 .contentShape(Rectangle())
             }

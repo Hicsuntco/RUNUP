@@ -349,45 +349,55 @@ struct WallView: View {
     /// au-dessus, où le bloc d'identité mène à la personne et l'applaudissement reste une action.
     private func carteDeCourse(_ post: WallRacePost) -> some View {
         VStack(alignment: .leading, spacing: 9) {
-            Button(action: {
-                appState.openRacesTabOnNextVisit = true
-                appState.go(.club)
-            }) {
-                HStack(spacing: 9) {
-                    ZStack {
-                        Circle().fill(RUColor.cyan.opacity(0.16))
-                        Image(systemName: "flag.checkered")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(RUColor.cyan)
-                    }
-                    .frame(width: 34, height: 34)
+            // LE MENU EST À CÔTÉ DU BOUTON, PAS DESSUS.
+            //
+            // Je l'avais d'abord posé en `overlay(alignment: .topTrailing)` sur le bouton
+            // d'en-tête — ce qui le plaçait très exactement SUR la capsule de genre
+            // (« Partenaire », « Dossard à céder »), qui occupe déjà ce coin. Deux éléments au
+            // même endroit : la capsule illisible, et les trois points posés sur elle.
+            //
+            // Une rangée qui porte le bouton PUIS le menu règle les deux questions à la fois :
+            // chacun a sa place, et le menu reste hors du bouton — un contrôle posé dans un
+            // bouton est avalé par lui, c'est la correction que l'en-tête de cette fonction
+            // raconte déjà pour l'applaudissement.
+            HStack(spacing: 0) {
+                Button(action: {
+                    appState.openRacesTabOnNextVisit = true
+                    appState.go(.club)
+                }) {
+                    HStack(spacing: 9) {
+                        ZStack {
+                            Circle().fill(RUColor.cyan.opacity(0.16))
+                            Image(systemName: "flag.checkered")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(RUColor.cyan)
+                        }
+                        .frame(width: 34, height: 34)
 
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(post.author.name)
-                            .font(RUFont.sans(.label, weight: .bold))
-                            .foregroundColor(RUColor.textPrimary)
-                            .lineLimit(1)
-                        Text(post.raceName)
-                            .font(RUFont.sans(.small))
-                            .foregroundColor(RUColor.text3)
-                            .lineLimit(1)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(post.author.name)
+                                .font(RUFont.sans(.label, weight: .bold))
+                                .foregroundColor(RUColor.textPrimary)
+                                .lineLimit(1)
+                            Text(post.raceName)
+                                .font(RUFont.sans(.small))
+                                .foregroundColor(RUColor.text3)
+                                .lineLimit(1)
+                        }
+                        Spacer(minLength: 0)
+                        Text(genreLisible(post.kind))
+                            .font(RUFont.sans(.small, weight: .semibold))
+                            .foregroundColor(RUColor.cyan)
+                            .padding(.horizontal, 8).padding(.vertical, 3)
+                            .overlay(Capsule().strokeBorder(RUColor.cyan.opacity(0.4),
+                                                            lineWidth: RUSpacing.hairline))
                     }
-                    Spacer(minLength: 0)
-                    Text(genreLisible(post.kind))
-                        .font(RUFont.sans(.small, weight: .semibold))
-                        .foregroundColor(RUColor.cyan)
-                        .padding(.horizontal, 8).padding(.vertical, 3)
-                        .overlay(Capsule().strokeBorder(RUColor.cyan.opacity(0.4),
-                                                        lineWidth: RUSpacing.hairline))
+                    .contentShape(Rectangle())
                 }
-                .contentShape(Rectangle())
+                .buttonStyle(PressableStyle())
+                .accessibilityLabel(String(localized: "Voir la page de \(post.raceName)"))
+                menuDeLAnnonce(post)
             }
-            .buttonStyle(PressableStyle())
-            .accessibilityLabel(String(localized: "Voir la page de \(post.raceName)"))
-            // LES TROIS POINTS SONT HORS DU BOUTON, et c'est la même raison que l'applaudissement
-            // trois blocs plus bas : un contrôle posé DANS un bouton est avalé par lui, et ouvrir
-            // le menu ouvrirait la page de la course.
-            .overlay(alignment: .topTrailing) { menuDeLAnnonce(post) }
 
             Text(post.text)
                 .font(RUFont.sans(.body))

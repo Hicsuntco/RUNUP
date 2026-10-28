@@ -106,7 +106,7 @@ enum RUFont {
     ///
     /// Le point d'entrée normal : un cran nommé, pas un nombre.
     static func display(_ step: RUDisplaySize) -> Font {
-        display(horsEchelle: step.rawValue)
+        display(horsEchelle: step.rawValue, grasse: step.grasse)
     }
 
     /// La sortie de l'échelle, et son nom le dit à l'appel.
@@ -123,7 +123,7 @@ enum RUFont {
     ///   • les initiales d'un avatar, à 0,4 × son diamètre : une suite continue, pas un cran ;
     ///   • le chronomètre de la course en cours — 96 pt pour le décompte de départ, 52 ou 64 pour
     ///     le temps écoulé selon qu'une consigne est affichée. Un seul écran, lu à bout de bras.
-    static func display(horsEchelle size: CGFloat) -> Font {
+    static func display(horsEchelle size: CGFloat, grasse: Bool = false) -> Font {
         // ── LES CHIFFRES À CHASSE FIXE, POUR TOUTE L'APP ─────────────────────────────────────
         //
         // Trois fichiers appelaient `.monospacedDigit()` à la main — l'accueil, la course en
@@ -139,8 +139,28 @@ enum RUFont {
         //
         // Pas sur `sans` : du texte courant à chasse fixe se lit mal, et les chiffres d'une
         // phrase n'ont aucune colonne à tenir.
-        .custom(DisplayFont.postScriptName, fixedSize: scaled(DisplayFont.pointSize(for: size)))
-            .monospacedDigit()
+        //
+        // ── ET LA GRAISSE, AU-DESSUS DE 24 POINTS ────────────────────────────────────────────
+        //
+        // Toute l'app titrait en Inter Medium : le prénom en haut de l'accueil, un titre de
+        // feuille, et le chiffre de 48 points de l'allure moyenne, tous dans la MÊME graisse.
+        // Or la graisse perçue d'un caractère baisse quand sa taille monte — à 30 ou 48 points,
+        // une moyenne lit maigre et délavée là où, à 14, elle lit juste. C'est ce que corrige
+        // l'optical sizing des familles qui en ont ; Inter n'en a pas, donc on le fait à la main.
+        //
+        // Au-dessus de 24 points DESSINÉS, c'est-à-dire aux trois crans qui portent les grands
+        // chiffres et les accroches. En dessous, rien ne bouge : un titre de carte en gras
+        // écraserait le texte qu'il coiffe.
+        //
+        // Inter-Bold est déjà livrée et déjà enregistrée dans les trois cibles — c'est la graisse
+        // du texte courant en gras. Aucun fichier de plus, et le nom est écrit en toutes lettres
+        // juste derrière `.custom` pour que `check_fonts.py` le voie : une police demandée qu'il ne
+        // voit pas est exactement la panne silencieuse qu'il existe pour empêcher.
+        let taille = scaled(DisplayFont.pointSize(for: size))
+        let police: Font = grasse
+            ? .custom("\(DisplayFont.family)-Bold", fixedSize: taille)
+            : .custom(DisplayFont.postScriptName, fixedSize: taille)
+        return police.monospacedDigit()
     }
 
     /// Le texte courant et les métriques, relevés de 6 %.
@@ -253,18 +273,18 @@ extension Text {
     /// returns `some View` rather than `Text` — safe everywhere it's used since none of these
     /// call sites concatenate the result with `+` (that requires `Text` on both sides).
     func displayStyle(_ step: RUDisplaySize) -> some View {
-        displayStyle(horsEchelle: step.rawValue)
+        displayStyle(horsEchelle: step.rawValue, grasse: step.grasse)
     }
 
     /// Voir `RUFont.display(horsEchelle:)` : l'étiquette est là pour que l'exception se voie.
-    func displayStyle(horsEchelle size: CGFloat) -> some View {
+    func displayStyle(horsEchelle size: CGFloat, grasse: Bool = false) -> some View {
         // Interlettrage NÉGATIF, proportionnel à la taille (−3 %), là où il était fixé à +0,5.
         //
         // Un titrage gras espacé positivement se lit comme du texte agrandi ; c'est le resserrage
         // qui le fait lire comme un titre. La proportionnalité compte autant que le signe : à
         // 11 pt, −0,33 se remarque à peine, à 46 pt, −1,4 change la ligne entière. Une valeur
         // fixe ne peut pas servir les deux.
-        self.font(RUFont.display(horsEchelle: size)).tracking(-size * 0.03)
+        self.font(RUFont.display(horsEchelle: size, grasse: grasse)).tracking(-size * 0.03)
     }
 
     /// Le sourcil posé au-dessus d'un titre de page ou de section.
@@ -340,6 +360,18 @@ enum RUDisplaySize: CGFloat {
     case hero = 35
     /// 44 → 48,0 pt. Une accroche, un record : au plus un par écran.
     case banner = 44
+
+    /// LA GRAISSE SUIT LE CRAN, parce que la graisse PERÇUE baisse quand la taille monte.
+    ///
+    /// Un `switch` exhaustif plutôt qu'une comparaison de nombres : ajouter un cran demandera
+    /// alors de répondre à la question, au lieu de la laisser se décider toute seule par un
+    /// seuil que personne ne relira.
+    var grasse: Bool {
+        switch self {
+        case .caption, .label, .subtitle, .title: return false
+        case .figure, .hero, .banner: return true
+        }
+    }
 }
 
 /// Les six crans de texte de l'app.

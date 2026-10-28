@@ -134,12 +134,34 @@ struct RUStatTile: View {
     var progress: Double?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            RUCardHeader(icon: icon, tint: tint, title: title)
+        VStack(alignment: .leading, spacing: 6) {
+            // ── LE LIBELLÉ S'EFFACE, LE CHIFFRE DEVIENT L'OBJET ─────────────────────────────
+            //
+            // La tuile coiffait son chiffre d'un `RUCardHeader` — titre en gras, encre pleine,
+            // 17,5 points. Le chiffre, lui, était à 26,2 en graisse moyenne. Résultat sur
+            // l'écran Stats : « Distance totale » pesait autant que « 145 », et la tuile se
+            // lisait comme une ligne de liste dont le chiffre serait la suite.
+            //
+            // C'est l'inverse de ce que fait n'importe quelle app de sport, et pour une raison
+            // qui n'est pas de goût : dans une tuile, le libellé est connu d'avance — on sait
+            // qu'on regarde des distances. C'est le chiffre qu'on vient chercher. Un libellé qui
+            // pèse autant que lui oblige à le lire pour arriver à ce qu'on voulait.
+            //
+            // Le libellé passe donc en micro-étiquette (`.small` moyenne, `text3`, comme toute
+            // micro-étiquette du système) et le chiffre monte d'un cran, à `.figure` — qui est
+            // aussi le premier cran en gras. L'en-tête de carte partagé ne convient plus : il
+            // porte un titre de CARTE, et une tuile n'en a pas.
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(tint)
+                Text(LocalizedStringKey(title))
+                    .font(RUFont.sans(.small, weight: .medium))
+                    .foregroundColor(RUColor.text3)
+                    .lineLimit(1).minimumScaleFactor(0.8)
+            }
             VStack(alignment: .leading, spacing: 6) {
-                // L'unité accompagne le chiffre, elle ne rivalise pas avec lui — le raisonnement
-                // complet, et les neuf traitements qu'il remplace, sont dans `RUChiffre`.
-                RUChiffre(valeur: value, unite: unit, cran: .title)
+                RUChiffre(valeur: value, unite: unit)
                 if let progress {
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {

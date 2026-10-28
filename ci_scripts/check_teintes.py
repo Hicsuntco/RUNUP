@@ -36,8 +36,6 @@ AUTORISE = {
     "RunUp/Views/Stats/StatsView.swift":
         (5, "le bloc Vélo, marqué en turquoise d'un bout à l'autre — un repère de discipline, "
             "et non une décoration, parce qu'il est tenu sur toute la section"),
-    "RunUp/Views/Components/CardHeaderView.swift":
-        (1, "`RUStatTile` transmet son propre paramètre à l'en-tête qu'il compose"),
 }
 
 APPEL = re.compile(r"(?:RUCardHeader|RUStatTile)\([^\n]*tint:")

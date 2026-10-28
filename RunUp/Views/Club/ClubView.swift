@@ -2277,7 +2277,7 @@ struct ClubView: View {
             if item.kudos > seen {
                 let gained = item.kudos - seen
                 appState.notify(
-                    icon: "👏", colorHex: 0xFF3B6B,
+                    icon: "hands.clap.fill", colorHex: 0xFF3B6B,
                     title: String(localized: "Nouveaux encouragements"),
                     text: Pluriel.choisir(gained,
                         String(localized: "Quelqu'un a applaudi ta séance."),
@@ -2426,7 +2426,7 @@ struct ClubView: View {
             if item.commentsCount > seen {
                 let gained = item.commentsCount - seen
                 appState.notify(
-                    icon: "💬", colorHex: 0xFF3B6B,
+                    icon: "bubble.left.fill", colorHex: 0xFF3B6B,
                     title: String(localized: "Nouveaux commentaires"),
                     text: Pluriel.choisir(gained,
                         String(localized: "Quelqu'un a commenté ta séance."),

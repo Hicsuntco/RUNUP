@@ -482,13 +482,21 @@ struct HomeView: View {
             }
             .buttonStyle(PrimaryButtonStyle())
 
+            // LE CHROME PART, LA CIBLE RESTE.
+            //
+            // C'était un carré gris de 52 points, rempli et cerclé, posé contre le bouton
+            // principal. Deux objets de même encombrement côte à côte, dont un seul compte :
+            // l'œil doit trancher entre eux alors que la hiérarchie est évidente.
+            //
+            // C'est la règle déjà écrite pour les actions d'une carte du fil — « dans une carte,
+            // deux gros boutons bordés pèsent plus lourd que l'activité elle-même » : on retire
+            // l'emballage, pas la zone tapable. 44 points de cible via `frame` + `contentShape`,
+            // le minimum d'Apple, et le bouton principal récupère la largeur rendue.
             Button(action: { Haptics.selection(); appState.openLogSession() }) {
                 Image(systemName: "plus")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.system(size: 20, weight: .semibold))
                     .foregroundColor(RUColor.text2)
-                    .frame(width: 52, height: 52)
-                    .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.line, lineWidth: RUSpacing.hairline))
+                    .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
             }
             .buttonStyle(PressableStyle())

@@ -656,7 +656,7 @@ final class AppState {
 
         let distance = String(format: "%.1f", locale: Locale.current, record.distanceKm)
         notify(
-            icon: "🛟",
+            icon: "lifepreserver.fill",
             colorHex: 0x38E0D0,
             title: String(localized: "Course récupérée"),
             text: String(localized: "L'app s'est fermée pendant ta sortie — \(distance) km avaient été enregistrés. Valide ton ressenti pour les garder.")
@@ -762,7 +762,7 @@ final class AppState {
         let courus = imported.onFoot.reduce(0) { $0 + $1.distanceKm }
         let distance = String(format: "%.1f", locale: Locale.current, courus)
         notify(
-            icon: "❤️",
+            icon: "heart.fill",
             colorHex: 0xFF3B6B,
             title: Pluriel.choisir(imported.count,
                 String(localized: "Sortie récupérée dans Santé"),
@@ -915,7 +915,7 @@ final class AppState {
         // `WorkoutSession`) — l'afficher tel quel remettait du français dans une notification
         // par ailleurs traduite.
         let sessionName = profile.todaySession.displayTitle
-        notify(icon: "🌙", colorHex: 0x8A6CFF, title: String(localized: "Séance allégée aujourd'hui"), text: "\(sessionName) · \(reason).")
+        notify(icon: "moon.zzz.fill", colorHex: 0x8A6CFF, title: String(localized: "Séance allégée aujourd'hui"), text: "\(sessionName) · \(reason).")
         if profile.coachNotificationsEnabled {
             NotificationService.shared.postImmediateNotification(
                 title: String(localized: "Séance allégée aujourd'hui"),
@@ -1026,7 +1026,7 @@ final class AppState {
         profile.activeCaloriesToday = await calories
         if AdaptivePlanEngine.checkDailyGoalsBonus(profile) {
             postClubActivity(type: "badge", text: String(localized: "a bouclé ses 3 objectifs du jour"), xpEarned: 120, contentKey: "daily_goals")
-            notify(icon: "🎉", colorHex: 0xC9FF3B, title: String(localized: "Journée bouclée"), text: String(localized: "Tes 3 objectifs du jour sont faits — +120 XP."))
+            notify(icon: "sparkles", colorHex: 0xC9FF3B, title: String(localized: "Journée bouclée"), text: String(localized: "Tes 3 objectifs du jour sont faits — +120 XP."))
             NotificationService.shared.postImmediateNotification(title: String(localized: "Journée bouclée 🎉"), body: String(localized: "Tes 3 objectifs du jour sont faits — +120 XP."))
             toast(String(localized: "Journée bouclée · +120 XP 🎉"))
         }

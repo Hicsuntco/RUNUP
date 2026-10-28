@@ -170,7 +170,7 @@ final class WatchSessionService: NSObject {
 
         appState.pendingDebriefs.append(record)
         let distance = String(format: "%.1f", locale: Locale.current, record.distanceKm)
-        appState.notify(icon: "⌚", colorHex: 0xFF3B6B, title: String(localized: "Course reçue de ta montre"), text: String(localized: "\(record.title) · \(distance) km — valide ton ressenti pour mettre à jour le programme."))
+        appState.notify(icon: "applewatch", colorHex: 0xFF3B6B, title: String(localized: "Course reçue de ta montre"), text: String(localized: "\(record.title) · \(distance) km — valide ton ressenti pour mettre à jour le programme."))
         appState.toast(String(localized: "Course reçue de ta montre ⌚"))
     }
 }

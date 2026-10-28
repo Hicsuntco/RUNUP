@@ -239,10 +239,17 @@ struct ActivityFeedRow: View {
     /// fil s'annonce par CE QUE C'ÉTAIT, pas par la place que ça tenait dans la semaine de
     /// quelqu'un d'autre.
     ///
-    /// La distance revient donc dans le titre alors qu'elle figure aussi en colonne juste en
-    /// dessous. Ce n'est pas la redondance qu'on avait retirée : « a couru 8,1 km » répétait le
-    /// chiffre SANS rien ajouter, là où « Course 8,1 km » est le nom que porte la sortie — la
-    /// colonne, elle, le range avec l'allure et le temps, pour comparer.
+    /// La distance entre donc dans le titre — et la colonne « km » en sort. L'argument précédent
+    /// disait que les deux ne font pas la même chose : « Course 8,1 km » NOMME la sortie, la
+    /// colonne la RANGE avec l'allure et le temps pour comparer. C'est juste en principe. Ce
+    /// qu'il n'avait pas vu, c'est que les deux « 8,1 » tombent à soixante points l'un de
+    /// l'autre, identiques au caractère près : l'œil lit une répétition avant que l'esprit lise
+    /// une distinction.
+    ///
+    /// Et l'argument de la colonne alignée, qui était le vrai, tient encore : le titre aussi est
+    /// à une position fixe en tête de chaque carte, donc les distances restent lisibles en
+    /// colonne verticale quand on descend le fil. Simplement, il n'y en a plus qu'une — et les
+    /// trois mesures qui restent cessent d'être à l'étroit à quatre dans la largeur.
     private var titreDuPost: String? {
         if let propre = item.title?.trimmingCharacters(in: .whitespacesAndNewlines), !propre.isEmpty {
             return propre
@@ -556,9 +563,19 @@ struct ActivityFeedRow: View {
         var label: String
     }
 
+    /// Vrai quand le titre PORTE déjà la distance, c'est-à-dire quand `titreDuPost` l'a fabriqué
+    /// faute de titre écrit par l'autrice. Un titre écrit à la main — « Sortie du club », « Enfin
+    /// sous les 5 minutes » — ne la porte pas, et la colonne doit rester.
+    private var leTitrePorteLaDistance: Bool {
+        let ecritALaMain = item.title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard ecritALaMain.isEmpty else { return false }
+        guard let km = item.distanceKm, km > 0.05 else { return false }
+        return true
+    }
+
     private var metrics: [Metric] {
         var result: [Metric] = []
-        if let distanceKm = item.distanceKm {
+        if let distanceKm = item.distanceKm, !leTitrePorteLaDistance {
             result.append(Metric(value: String(format: "%.1f", locale: Locale.current, distanceKm), label: "km"))
         }
         // L'ALLURE N'EST PLUS ACCENTUÉE. Elle l'était parce que c'est le chiffre qu'on compare

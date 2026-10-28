@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import SwiftData
 
 /// Bell-icon notifications sheet — marks all as read on open. Mirrors `NotifsSheet` in screensC.jsx.
@@ -31,8 +32,29 @@ struct NotificationsSheet: View {
                             if n.icon == "mark" {
                                 AppMarkView(size: 36)
                             } else {
+                                // UN SYMBOLE QUAND C'EN EST UN, LE TEXTE BRUT SINON.
+                                //
+                                // Les six icônes de notification de l'app étaient des emojis —
+                                // ⌚ ✅ 🌙 🎉 👟 🔥 — dans une app dont tout le reste du chrome
+                                // est en symboles système. Un emoji change de dessin à chaque
+                                // version d'iOS, ne prend pas la graisse de l'interface, et
+                                // porte sa propre palette à côté de celle qu'on vient de régler.
+                                //
+                                // Le repli n'est pas de la prudence : l'icône est ENREGISTRÉE
+                                // dans la base avec la notification. Celles qui sont déjà posées
+                                // sur l'appareil portent encore un emoji, et `Image(systemName:)`
+                                // sur « 🔥 » ne dessine rien du tout. On regarde donc si la
+                                // chaîne nomme un symbole, et on retombe sur le texte sinon.
                                 Circle().fill(Color(hex: UInt32(n.colorHex))).frame(width: 36, height: 36)
-                                    .overlay(Text(n.icon).font(.system(size: 15)))
+                                    .overlay {
+                                        if UIImage(systemName: n.icon) != nil {
+                                            Image(systemName: n.icon)
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundColor(.white)
+                                        } else {
+                                            Text(n.icon).font(.system(size: 15))
+                                        }
+                                    }
                             }
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(n.title).font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)

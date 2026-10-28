@@ -118,6 +118,24 @@ final class CapturesUITests: XCTestCase {
                 sortie: true, defilements: 3)
     }
 
+    /// DEUX ÉCRANS QUI EXISTENT DEPUIS TOUJOURS ET QUE PERSONNE N'AVAIT JAMAIS PHOTOGRAPHIÉS.
+    ///
+    /// `AppScreen` les expose tous les deux — il suffisait de les demander. Ils portent
+    /// précisément ce qui vient de changer : le bilan hebdomadaire a des tuiles de statistique
+    /// (dont la hiérarchie libellé/chiffre a été inversée) et des lignes de course (dont le
+    /// rayon est passé de 14 à 24), l'historique a une colonne de chiffres alignés (donc la
+    /// chasse fixe) et des cartes.
+    ///
+    /// Une page qu'on ne photographie pas est une page qu'on juge de mémoire — c'est écrit plus
+    /// haut à propos des onglets du club, et c'était vrai de ces deux-là aussi.
+    func test16HistoriqueDiagnostic() {
+        prendre(rang: 16, ecran: "history", nom: "historique", diagnostic: true)
+    }
+
+    func test17BilanHebdoDiagnostic() {
+        prendre(rang: 17, ecran: "weeklyRecap", nom: "bilan-hebdo", diagnostic: true)
+    }
+
     private func prendre(rang: Int, ecran: String, nom: String, diagnostic: Bool = false,
                          profil: String? = nil, course: Bool = false,
                          sortie: Bool = false, onglet: String? = nil, defilements: Int = 0) {

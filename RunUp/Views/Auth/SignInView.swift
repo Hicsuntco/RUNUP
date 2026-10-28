@@ -53,7 +53,7 @@ struct SignInView: View {
                         // `minHeight` : le libellé d'Apple suit le Dynamic Type, la boîte non — en gros
                 // caractères, « Se connecter avec Apple » se faisait rogner en haut et en bas.
                 .frame(minHeight: 50)
-                        .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
 
                     HStack {
                         Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
@@ -360,7 +360,7 @@ private struct AuthFieldStyle: TextFieldStyle {
             .foregroundColor(RUColor.textPrimary)
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
-            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 }

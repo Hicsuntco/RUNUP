@@ -125,8 +125,8 @@ private struct ConnectRow: View {
             }
             .padding(14)
             .opacity(source != .apple ? 0.5 : 1)
-            .background(connected ? RUColor.lime.opacity(0.1) : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous).stroke(connected ? RUColor.lime.opacity(0.35) : RUColor.line, lineWidth: RUSpacing.hairline))
+            .background(connected ? RUColor.lime.opacity(0.1) : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(connected ? RUColor.lime.opacity(0.35) : RUColor.line, lineWidth: RUSpacing.hairline))
         }
         .buttonStyle(PressableStyle())
         .disabled(source != .apple)

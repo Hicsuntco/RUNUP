@@ -548,8 +548,8 @@ struct ProfileView: View {
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .ruCard(radius: RUSpacing.radiusCompact)
-            .contentShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+            .ruCard(radius: RUSpacing.radiusCard)
+            .contentShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
         }
         .buttonStyle(PressableStyle())
     }
@@ -563,7 +563,7 @@ struct ProfileView: View {
                               pastille: String? = nil,
                               etiquettePastille: String? = nil,
                               action: @escaping () -> Void) -> some View {
-        let forme = RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous)
+        let forme = RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous)
         return Button(action: action) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .top, spacing: 6) {
@@ -628,7 +628,7 @@ struct ProfileView: View {
             // `maxHeight: .infinity` fait prendre à la tuile toute la hauteur qu'on lui propose,
             // donc celle de la rangée, et son contenu reste en haut à gauche.
             .frame(minHeight: 116, maxHeight: .infinity, alignment: .topLeading)
-            .ruCard(radius: RUSpacing.radiusCompact)
+            .ruCard(radius: RUSpacing.radiusCard)
             // Toute la tuile répond, pas seulement son texte : sans forme de contact, la moitié
             // de la surface visée ne fait rien.
             .contentShape(forme)

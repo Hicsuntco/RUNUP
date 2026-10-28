@@ -148,6 +148,6 @@ struct MoveSessionSheet: View {
         .padding(.vertical, 12).padding(.horizontal, 12)
         .frame(minHeight: 44)
         .contentShape(Rectangle())
-        .ruCard(radius: RUSpacing.radiusCompact)
+        .ruCard(radius: RUSpacing.radiusCard)
     }
 }

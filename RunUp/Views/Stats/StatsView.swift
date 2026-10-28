@@ -300,7 +300,7 @@ struct StatsView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())
-        .ruCard(radius: RUSpacing.radiusCompact)
+        .ruCard(radius: RUSpacing.radiusCard)
         .accessibilityElement(children: .combine)
     }
 

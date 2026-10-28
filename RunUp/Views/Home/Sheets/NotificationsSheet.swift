@@ -46,7 +46,7 @@ struct NotificationsSheet: View {
                         // CARTE, pas une sous-surface. Depuis l'inversion du thème clair, `card2`
                         // (#F1F1F6) sur `bg` (#F4F4F8) donne 1,03:1 — la même couleur à l'œil, donc
                         // plus aucune carte, juste une colonne de textes flottants.
-                        .ruCard(radius: 16)
+                        .ruCard(radius: RUSpacing.radiusCard)
                     }
                 }
             }

@@ -458,8 +458,8 @@ struct FriendsView: View {
             trailing()
         }
         .padding(.horizontal, 14).padding(.vertical, 10)
-        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
         .contextMenu {
             Button("Signaler \(user.name)") {
                 reportTarget = ReportTarget(targetType: "user", targetId: user.id, displayName: user.name)
@@ -867,7 +867,7 @@ private struct PeopleListSheet: View {
                             .overlay(Capsule().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                         }
                         .padding(.horizontal, 14).padding(.vertical, 10)
-                        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+                        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
                     }
                 }
                 .padding(18)

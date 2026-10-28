@@ -270,8 +270,8 @@ struct RaceGoalView: View {
                                 Spacer()
                             }
                             .padding(.horizontal, 14).padding(.vertical, 12)
-                            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                         }
                     }
                     // LES TROIS AUTRES QUESTIONS, CELLES QUE LE PLAN NE POSE PAS. Un ultra se perd
@@ -368,8 +368,8 @@ struct RaceGoalView: View {
                                     + Text(verbatim: " /km").font(RUFont.sans(.micro)).foregroundColor(RUColor.text2))
                             }
                             .padding(.horizontal, 14).padding(.vertical, 12)
-                            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                         }
                     }
                 }
@@ -456,7 +456,7 @@ struct RaceGoalView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 18)
-        .background(highlighted ? RUColor.card2 : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(highlighted ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
+        .background(highlighted ? RUColor.card2 : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(highlighted ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
     }
 }

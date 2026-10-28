@@ -298,7 +298,7 @@ struct ActivityFeedRow: View {
                 RouteThumbnail(route: trace, lineWidth: 2, lineColor: .white, showsStart: false)
                     .frame(width: 52, height: 52)
                     .padding(8)
-                    .background(.black.opacity(0.32), in: RoundedRectangle(cornerRadius: RUSpacing.radiusTile, style: .continuous))
+                    .background(.black.opacity(0.32), in: RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous))
                     .padding(10)
                     .allowsHitTesting(false)
             }

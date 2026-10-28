@@ -201,7 +201,7 @@ struct SessionDetailSheet: View {
                                 Spacer()
                             }
                             .padding(12)
-                            .ruCard(radius: 14, fill: RUColor.card2)
+                            .ruCard(radius: RUSpacing.radiusInner, fill: RUColor.card2)
                         }
                     }
 
@@ -223,7 +223,7 @@ struct SessionDetailSheet: View {
                         .foregroundColor(RUColor.text2)
                         .lineSpacing(3)
                         .padding(14)
-                        .ruCard(radius: 16)
+                        .ruCard(radius: RUSpacing.radiusCard)
                         .padding(.top, 18)
                     }
 
@@ -250,7 +250,7 @@ struct SessionDetailSheet: View {
                     .padding(18)
                     // Surface neutre : l'accent reste au texte et à l'icône. Un lime
                     // dilué donne sa version sale, et le contour de la même couleur la redisait.
-                    .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
+                    .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
             } else {
                 HStack(spacing: 8) {
                     Button("Déplacer à demain") {

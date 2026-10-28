@@ -68,7 +68,7 @@ struct RouteDetailSheet: View {
             }
             .frame(height: 200)
             .frame(maxWidth: .infinity)
-            .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
             .accessibilityLabel(Text("Photo du parcours"))
         }
     }
@@ -82,7 +82,7 @@ struct RouteDetailSheet: View {
             }
         }
         .frame(height: 220)
-        .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
         .allowsHitTesting(false)
         .accessibilityLabel(Text("Tracé de l'itinéraire"))
     }
@@ -133,8 +133,8 @@ struct RouteDetailSheet: View {
             .foregroundColor(RUColor.text2)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(RUSpacing.cardPadding)
-            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous)
+            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous)
                 .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 

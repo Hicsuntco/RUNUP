@@ -132,8 +132,8 @@ struct PublishRouteSheet: View {
             .frame(height: 160)
             .frame(maxWidth: .infinity)
             .padding(RUSpacing.cardPadding)
-            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous)
+            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous)
                 .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
             .accessibilityLabel(Text("Aperçu du tracé qui sera publié"))
     }
@@ -155,7 +155,7 @@ struct PublishRouteSheet: View {
                         .scaledToFill()
                         .frame(height: 150)
                         .frame(maxWidth: .infinity)
-                        .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
                     Button {
                         self.photoPreview = nil
                         self.photoDataURI = nil
@@ -194,7 +194,7 @@ struct PublishRouteSheet: View {
                 .foregroundColor(RUColor.text2)
         }
         .padding(12)
-        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
     }
 
     private var tooShortNote: some View {
@@ -206,7 +206,7 @@ struct PublishRouteSheet: View {
                 .foregroundColor(RUColor.text2)
         }
         .padding(12)
-        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
     }
 
     /// « Boucle de 8 km » — un nom déjà rempli, que l'utilisatrice n'a qu'à corriger. Un champ vide

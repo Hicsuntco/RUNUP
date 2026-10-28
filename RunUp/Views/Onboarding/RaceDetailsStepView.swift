@@ -29,8 +29,8 @@ struct RaceDetailsStepView: View {
                                 .foregroundColor(vm.distance == d ? RUColor.rose2 : RUColor.textPrimary)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 18)
-                                .background(vm.distance == d ? RUColor.card2 : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
-                                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(vm.distance == d ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
+                                .background(vm.distance == d ? RUColor.card2 : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+                                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(vm.distance == d ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
                         }
                         .buttonStyle(PressableStyle())
                         .accessibilityAddTraits(vm.distance == d ? .isSelected : [])
@@ -112,8 +112,8 @@ struct RaceDetailsStepView: View {
                     .labelsHidden()
                     .colorScheme(RUColor.colorScheme)
                     .padding(14)
-                    .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                    .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
 
                     if let days = vm.daysUntilRace {
                         Text("J-\(days)").font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.rose2).padding(.top, 10)

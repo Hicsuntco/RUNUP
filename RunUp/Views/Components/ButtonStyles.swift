@@ -42,7 +42,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             // which made every primary CTA ~68pt tall instead of the intended ~44-46pt).
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity, minHeight: 44)
-            .background(resolvedFill, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+            .background(resolvedFill, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
             // The glow was a big part of what read as "gamified" rather than "premium digital" —
             // light mode drops it to nothing (the card shadow language handles elevation there
             // instead); dark mode's energetic glow is untouched.
@@ -96,8 +96,8 @@ struct GhostButtonStyle: ButtonStyle {
             .foregroundColor(tint ?? RUColor.rose)
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity, minHeight: 44)
-            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
             .opacity(configuration.isPressed ? 0.85 : 1)
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
             .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
@@ -115,8 +115,8 @@ struct SecondaryButtonStyle: ButtonStyle {
             .foregroundColor(RUColor.textPrimary)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity, minHeight: 44)
-            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
             .opacity(configuration.isPressed ? 0.85 : 1)
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
             .animation(.easeOut(duration: 0.12), value: configuration.isPressed)

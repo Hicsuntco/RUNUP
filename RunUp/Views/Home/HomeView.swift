@@ -396,9 +396,9 @@ struct HomeView: View {
                 // announced.
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel(dayAccessibilityLabel(day))
-                // `radiusInner` et non `radiusCompact` : ce dernier vient de passer de 18 à 22,
-                // et 22 sur une case de 43 points de large en ferait une gélule. Le rayon d'une
-                // forme doit rester proportionné à sa taille, pas suivre la carte qui la contient.
+                // `radiusInner` et non `radiusCard` : le rayon de carte vaut 24, et 24 sur une
+                // case de 43 points de large en ferait une gélule. Le rayon d'une forme doit
+                // rester proportionné à sa taille, pas suivre la carte qui la contient.
                 .background(bg, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
             }
         }

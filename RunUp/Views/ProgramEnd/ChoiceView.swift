@@ -66,7 +66,7 @@ struct ChoiceView: View {
                     .padding(18)
                 }
                 .buttonStyle(PressableStyle())
-                .ruHeroCard(radius: 20, borderOpacity: 0.28)
+                .ruHeroCard(radius: RUSpacing.radiusCard, borderOpacity: 0.28)
 
                 Button(action: {
                     AdaptivePlanEngine.chooseFreeRun(profile)

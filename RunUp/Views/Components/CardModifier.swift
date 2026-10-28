@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Standard card surface: barely-there white fill, hairline border, generous radius. Class `.card`.
 struct CardBackground: ViewModifier {
-    var radius: CGFloat = RUSpacing.radiusStandard
+    var radius: CGFloat = RUSpacing.radiusCard
     var fill: Color = RUColor.card
 
     func body(content: Content) -> some View {
@@ -33,13 +33,13 @@ struct CardBackground: ViewModifier {
 }
 
 extension View {
-    func ruCard(radius: CGFloat = RUSpacing.radiusStandard, fill: Color = RUColor.card) -> some View {
+    func ruCard(radius: CGFloat = RUSpacing.radiusCard, fill: Color = RUColor.card) -> some View {
         modifier(CardBackground(radius: radius, fill: fill))
     }
 
     /// Applies the subtle rose-tinted gradient background used on "hero" cards
     /// (forme du jour, coach nudge, program summary...).
-    func ruHeroCard(radius: CGFloat = RUSpacing.radiusStandard, borderOpacity _: Double = 0.2) -> some View {
+    func ruHeroCard(radius: CGFloat = RUSpacing.radiusCard, borderOpacity _: Double = 0.2) -> some View {
         self
             .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
             // LE CONTOUR TOMBE. C'était un accent dilué — 20 %, et jusqu'à 28 % chez certains

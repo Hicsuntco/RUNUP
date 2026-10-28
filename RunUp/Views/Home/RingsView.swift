@@ -169,7 +169,7 @@ struct RingsView: View {
                             }
                         }
                         .padding(14)
-                        .ruHeroCard(radius: 18)
+                        .ruHeroCard(radius: RUSpacing.radiusCard)
                     } else {
                         // The one genuine celebration state on this screen (all 3 goals done) — a
                         // spring scale-in gives it the "achievement unlocked" beat the static text
@@ -180,7 +180,7 @@ struct RingsView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(18)
-                        .background(RadialGradient(colors: [RUColor.rose.opacity(0.2), .clear], center: .top, startRadius: 0, endRadius: 200), in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
+                        .background(RadialGradient(colors: [RUColor.rose.opacity(0.2), .clear], center: .top, startRadius: 0, endRadius: 200), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
                         .scaleEffect(celebrationShown ? 1 : 0.85)
                         .opacity(celebrationShown ? 1 : 0)
                         .onAppear {

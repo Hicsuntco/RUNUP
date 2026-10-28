@@ -34,60 +34,56 @@ enum RUSpacing {
     // et pas dans le script, qu'on assume de rouvrir la grille.
     static let grille: [CGFloat] = [0, 2, 4, 6, 8, 10, 12, 14, 18, 24]
 
-    // ── Rayons ────────────────────────────────────────────────────────────────────────────────
+    // ── L'échelle des rayons ──────────────────────────────────────────────────────────────────
     //
-    // Il y avait quatre jetons et CENT TRENTE-CINQ nombres écrits à la main, sur dix valeurs
-    // distinctes. Treize appels seulement passaient par un jeton.
+    // Il y avait eu quatre jetons et CENT TRENTE-CINQ nombres écrits à la main, sur dix valeurs
+    // distinctes. Le rangement a mis les 135 appels sur des jetons, puis deux tours successifs
+    // ont adouci les coins — 14 → 18 → 22 pour la carte courante, 20 → 24 → 26 pour celle de
+    // premier plan. Chaque tour était justifié ; aucun n'avait regardé le résultat d'ensemble.
     //
-    // Les valeurs ci-dessous sont exactement celles déjà employées, une par famille de forme :
-    // remplacer un littéral par son jeton ne déplace donc aucun pixel. Réduire ensuite dix
-    // valeurs à cinq est une décision de design visible, séparée de ce rangement — la même
-    // distinction que pour l'échelle typographique, et pour la même raison : on ne modifie pas
-    // en douce une app qui vient d'être validée sous prétexte de la ranger.
+    // CE QUE L'AUDIT A TROUVÉ. Il restait DIX jetons, dont trois faisaient le même travail à
+    // quatre points d'écart — le coin d'une carte :
     //
-    // Ce que le rangement apporte : la forme des cartes se règle ici, pas dans 135 fichiers.
+    //     radiusCompact   22   106 appels
+    //     radiusLarge     24    13 appels
+    //     radiusStandard  26    21 appels, dont le défaut de `.ruCard()` et `.ruHeroCard()`
+    //     radiusHero      24     5 appels — LA MÊME VALEUR que radiusLarge, sous un autre nom
     //
-    // ── Et c'est ce qui a permis de les relever d'un cran ────────────────────────────────────
-    // 14 → 18 pour la carte courante, 18 → 22 pour celle de premier plan, et le reste à
-    // l'avenant. Les quatre références apportées ont toutes des angles nettement plus doux que
-    // ce que l'app avait ; à 14 pt sur un écran de 393, une carte lit « boîte », à 18 elle lit
-    // « surface ». C'est le changement le moins risqué du lot — un rayon ne déplace aucun
-    // contenu, il ne fait que retailler le coin — et l'un des plus visibles.
+    // Soit à peu près une moitié des cartes de l'app à 22 et l'autre à 26, sans que personne
+    // puisse dire laquelle est laquelle : à cette échelle, quatre points de rayon ne se
+    // distinguent pas. Deux noms portaient en plus la même valeur, donc deux intentions qui ne
+    // se distinguaient plus du tout. Et `radiusPill` (99) n'était appelé par rien.
     //
-    // Sans le rangement d'abord, c'était 135 nombres à retrouver un par un.
+    // UN SEUL RAYON DE CARTE, À 24. C'est le milieu des deux populations : aucune surface de
+    // l'app ne se déplace de plus de 2 points, la même discipline que la grille d'espacement
+    // ci-dessus. Et c'est déjà la valeur des deux jetons qui étaient des doublons, donc dix-huit
+    // appels ne bougent pas du tout.
     //
-    // ── Et relevés d'un cran de plus ─────────────────────────────────────────────────────────
-    // 18 → 22, 22 → 26, 20 → 24, 14 → 16. Même raisonnement qu'au tour précédent, poussé d'un
-    // cran : à 18 pt une carte lisait « surface », à 22 elle lit « objet posé ». C'est le geste
-    // le moins risqué d'une refonte visuelle — un rayon ne déplace aucun contenu, il ne fait que
-    // retailler le coin — et il se voit sur les trente écrans à la fois.
+    // Reste une échelle de cinq, où chaque cran répond à un objet et non à une nuance :
     //
-    // Les petites formes ne bougent PAS : une pastille de 10 pt arrondie à 14 devient une gélule,
-    // et une jauge de 2 pt n'a pas de coin à adoucir. L'adoucissement vaut pour ce qui a la
-    // surface de le porter.
+    //     2    un filet, une jauge — un trait qui n'a pas de surface à arrondir
+    //     6    une petite jauge, un curseur
+    //     12   une pastille, une vignette
+    //     16   une sous-surface DANS une carte, un champ de saisie
+    //     24   une carte
+    //
+    // Les petites valeurs ne montent pas : une pastille de 10 points arrondie à 24 devient une
+    // gélule. L'adoucissement vaut pour ce qui a la surface de le porter.
 
     /// 2 — jauges et barres de progression fines.
     static let radiusBar: CGFloat = 2
     /// 6 — petites jauges, curseurs.
     static let radiusMicro: CGFloat = 6
-    /// 10 — pastilles d'icône, tuiles de jour.
-    static let radiusTile: CGFloat = 10
-    /// 12 — vignettes, pastilles d'icône plus grandes.
+    /// 12 — pastilles d'icône, vignettes, tuiles de jour.
     static let radiusChip: CGFloat = 12
     /// 16 — sous-surfaces dans une carte, champs de saisie.
     static let radiusInner: CGFloat = 16
-    /// 22 — la carte courante. La valeur la plus employée de l'app, et de loin.
-    static let radiusCompact: CGFloat = 22
-    /// 24 — cartes qui portent un contenu large (grilles, feuilles).
-    static let radiusLarge: CGFloat = 24
-    /// 26 — la carte de premier plan.
-    static let radiusStandard: CGFloat = 26
-    static let radiusPill: CGFloat = 99
-    /// A deliberately larger radius for a handful of always-dark "trophy" cards that keep their
-    /// own fixed gradient in both themes (Club's level card) rather than routing through
-    /// `.ruCard()`/`.ruHeroCard()`'s theme-aware fill — named here instead of a bare `20` so it
-    /// reads as an intentional third size, not a stray one-off.
-    static let radiusHero: CGFloat = 24
+    /// 24 — une carte. Toutes les cartes.
+    static let radiusCard: CGFloat = 24
+
+    /// L'échelle ci-dessus, pour `ci_scripts/check_grille.py` — même rôle que `grille` : elle
+    /// n'est appelée par aucune vue, elle est la déclaration que le garde-fou compare au code.
+    static let rayons: [CGFloat] = [radiusBar, radiusMicro, radiusChip, radiusInner, radiusCard]
 
     /// Padding intérieur d'une carte standard. La maquette ne l'uniformise pas — ses cartes vont de
     /// 7px (`.activity-tile`, une tuile de grille) à 14px (`.session-card`, la carte héro) — mais

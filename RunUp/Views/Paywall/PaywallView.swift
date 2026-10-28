@@ -157,7 +157,7 @@ struct PaywallView: View {
         // vue est disposée dans l'espace du défilement — et la référence apportée fait exactement
         // ça : sa carte verte « Your Weekly Progress » est une carte arrondie en retrait.
         .background(RUColor.accentGradient(from: .topLeading, to: .bottomTrailing),
-                    in: RoundedRectangle(cornerRadius: RUSpacing.radiusHero, style: .continuous))
+                    in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
         .padding(.horizontal, RUSpacing.pagePadding)
         .padding(.top, onClose == nil ? 14 : 4)
     }
@@ -261,9 +261,9 @@ struct PaywallView: View {
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous)
+                RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous)
                     .stroke(isSelected ? RUColor.rose : RUColor.line,
                             lineWidth: isSelected ? 2 : RUSpacing.hairline)
             )

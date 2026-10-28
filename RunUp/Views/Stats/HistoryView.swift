@@ -190,7 +190,7 @@ struct HistoryView: View {
         .padding(12)
         // Surface neutre : l'accent reste au texte et à l'icône. Un amber
         // dilué donne sa version sale, et le contour de la même couleur la redisait.
-        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
+        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
     }
 
     /// La `.hist-row` de la maquette : vignette du parcours à GAUCHE, puis date / titre / trois
@@ -265,7 +265,7 @@ struct HistoryView: View {
             }
         }
         .padding(12)
-        .ruCard(radius: RUSpacing.radiusCompact)
+        .ruCard(radius: RUSpacing.radiusCard)
         // The main screen for reviewing past training — without this, each run swiped through
         // with VoiceOver was 8-9 disconnected stops (date, optional HR, title, then three
         // separate value/label pairs) instead of one coherent "this run" element. Les libellés

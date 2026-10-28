@@ -28,8 +28,8 @@ struct ProgramSettingsSheet: View {
                                 .foregroundColor(on ? .white : RUColor.text2)
                                 .frame(maxWidth: .infinity)
                                 .aspectRatio(1, contentMode: .fit)
-                                .background(on ? RUColor.rose : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-                                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(on ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
+                                .background(on ? RUColor.rose : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+                                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(on ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
                         }
                         .buttonStyle(PressableStyle())
                         // Visually identical to onboarding's RunningDaysStepView day picker, which

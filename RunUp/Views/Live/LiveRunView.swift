@@ -15,7 +15,7 @@ import UIKit
 /// `Color(hex: 0x0A0A0E)` for `RUColor.bg`) without redesigning every element built against it —
 /// the white pause button and white metric text would both go invisible against a white
 /// background in light mode — would make this screen worse, not better. Same documented-exception
-/// treatment as `RUSpacing.radiusHero`.
+/// treatment as `RUSpacing.radiusCard`.
 ///
 /// This is also why `Color(hex: 0xFFD79A)`/`Color(hex: 0x0E0E14)` below pin `RUColor.amberText`/
 /// `.bg`'s *dark-mode* values literally instead of referencing those tokens — the tokens are
@@ -286,7 +286,7 @@ struct LiveRunView: View {
                            text: "Localisation refusée — ouvrir les Réglages")
             }
             .buttonStyle(.plain)
-            .contentShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
         case .searching:
             bannerBody(icon: "location.magnifyingglass",
                        text: "Recherche du signal GPS…")
@@ -308,8 +308,8 @@ struct LiveRunView: View {
         .padding(.horizontal, 12).padding(.vertical, 10)
         // Surface neutre, l'ambre reste au texte. L'écran de course est toujours sombre : un
         // ambre à 16 % y donnait un brun, cerclé du même brun. Un accent n'a que deux états.
-        .background(Color.white.opacity(0.09), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+        .background(Color.white.opacity(0.09), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
     }
 
     private func coachBubble(_ text: String) -> some View {
@@ -326,9 +326,9 @@ struct LiveRunView: View {
             }
         }
         .padding(RUSpacing.cardPadding)
-        .background(Color(hex: 0x0E0E14).opacity(0.85), in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous).stroke(Ink.accent.opacity(0.25), lineWidth: RUSpacing.hairline))
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
+        .background(Color(hex: 0x0E0E14).opacity(0.85), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(Ink.accent.opacity(0.25), lineWidth: RUSpacing.hairline))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
         .padding(.top, 90)
         // Speaker icon + "Coach · en direct" eyebrow + the coach line were three separate stops.
         .accessibilityElement(children: .combine)

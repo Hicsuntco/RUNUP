@@ -262,7 +262,7 @@ struct WeeklyRecapView: View {
         .padding(.horizontal, 14).padding(.vertical, 12)
         // Surface neutre : l'accent reste au texte et à l'icône. Un rose
         // dilué donne sa version sale, et le contour de la même couleur la redisait.
-        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
+        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
         // Le trophée et le fond teinté sont décoratifs ; sans regroupement, VoiceOver lit le
         // libellé et sa valeur comme deux arrêts, sans dire qu'il s'agit d'un record.
         .accessibilityElement(children: .combine)
@@ -280,6 +280,6 @@ struct WeeklyRecapView: View {
             Text(run.avgPace + "/km").font(RUFont.mono(12)).foregroundColor(RUColor.text2)
         }
         .padding(RUSpacing.cardPadding)
-        .ruCard(radius: 14)
+        .ruCard(radius: RUSpacing.radiusCard)
     }
 }

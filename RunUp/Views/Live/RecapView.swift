@@ -178,8 +178,8 @@ struct RecapView: View {
                                     shareImage
                                         .resizable()
                                         .scaledToFit()
-                                        .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
-                                        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                                        .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+                                        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                                 } else if shareRenderFailed {
                                     // `ImageRenderer.uiImage` can come back nil under memory
                                     // pressure — without this, the spinner below just spun
@@ -198,7 +198,7 @@ struct RecapView: View {
                                     ProgressView().tint(RUColor.text2)
                                         .frame(width: Self.sharePreviewHeight * Self.shareCardAspect)
                                         .frame(maxHeight: .infinity)
-                                        .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: RUSpacing.radiusStandard, style: .continuous))
+                                        .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
                                 }
                             }
                             // 300 et non 230 : à 129 points de large la carte n'était pas
@@ -349,8 +349,8 @@ struct RecapView: View {
             Spacer(minLength: 0)
         }
         .padding(RUSpacing.cardPadding)
-        .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+        .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 
     private func elevationCard(_ run: RunRecord) -> some View {
@@ -566,7 +566,7 @@ struct RecapView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
-        .ruCard(radius: 14)
+        .ruCard(radius: RUSpacing.radiusInner)
         .opacity(splitsRevealed ? 1 : 0)
         .scaleEffect(splitsRevealed ? 1 : 0.92)
         .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.8).delay(Double(index) * 0.05), value: splitsRevealed)

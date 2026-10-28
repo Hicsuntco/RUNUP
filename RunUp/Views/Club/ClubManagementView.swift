@@ -132,7 +132,7 @@ struct ClubManagementView: View {
         .padding(12)
         .frame(minHeight: 44)
         .contentShape(Rectangle())
-        .ruCard(radius: RUSpacing.radiusCompact)
+        .ruCard(radius: RUSpacing.radiusCard)
         .accessibilityElement(children: .combine)
     }
 
@@ -154,8 +154,8 @@ struct ClubManagementView: View {
                         .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
                 }
                 .padding(14)
-                .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
             } else {
                 Text("Aucun défi en cours pour l'instant.")
                     .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
@@ -374,8 +374,8 @@ struct ClubManagementView: View {
             Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold)).foregroundColor(RUColor.text3)
         }
         .padding(.horizontal, 14).padding(.vertical, 12)
-        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
         // SEULE LA CRÉATRICE NOMME. Un organisateur qui pourrait en nommer d'autres pourrait
         // aussi la destituer, et le club se prendrait en otage en deux gestes. Le serveur
         // applique la même règle — ce menu ne fait que ne pas proposer l'impossible.
@@ -659,8 +659,8 @@ struct CreateChallengeSheet: View {
                             Text("km").font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.text2)
                         }
                         .padding(14)
-                        .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                        .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                     }
 
                     VStack(alignment: .leading, spacing: 8) {

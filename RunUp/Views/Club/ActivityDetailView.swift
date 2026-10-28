@@ -232,7 +232,7 @@ struct ActivityDetailView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 10).padding(.horizontal, 12)
-                .ruCard(radius: RUSpacing.radiusCompact)
+                .ruCard(radius: RUSpacing.radiusCard)
                 .accessibilityElement(children: .combine)
             }
         }
@@ -272,7 +272,7 @@ struct ActivityDetailView: View {
                 ElevationProfileView(route: s.route)
                     .frame(height: 110)
                     .padding(.vertical, 10).padding(.horizontal, 12)
-                    .ruCard(radius: RUSpacing.radiusCompact)
+                    .ruCard(radius: RUSpacing.radiusCard)
             }
             .padding(.top, 6)
         }

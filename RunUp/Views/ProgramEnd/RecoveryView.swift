@@ -42,7 +42,7 @@ struct RecoveryView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24).padding(.horizontal, 18)
-                .ruHeroCard(radius: RUSpacing.radiusHero, borderOpacity: 0.22)
+                .ruHeroCard(radius: RUSpacing.radiusCard, borderOpacity: 0.22)
 
                 VStack(alignment: .leading, spacing: 6) {
                     RUCardHeader(icon: "sun.max.fill", tint: RUColor.rose2, title: "Aujourd'hui")

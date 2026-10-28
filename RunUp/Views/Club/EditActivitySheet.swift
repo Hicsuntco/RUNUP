@@ -159,8 +159,8 @@ struct EditActivitySheet: View {
             content()
                 .padding(12)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous)
+                .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous)
                     .stroke(RUColor.line, lineWidth: RUSpacing.hairline))
         }
     }
@@ -199,8 +199,8 @@ struct EditActivitySheet: View {
                     .foregroundColor(RUColor.rose2)
                     .frame(maxWidth: .infinity)
                     .frame(minHeight: 52)
-                    .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous)
+                    .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous)
                         .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                 }
             }
@@ -219,7 +219,7 @@ struct EditActivitySheet: View {
                 .frame(height: 170)
                 .frame(maxWidth: .infinity)
                 .clipped()
-                .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
             Button(action: {
                 photoPreview = nil
                 photoDataURI = nil

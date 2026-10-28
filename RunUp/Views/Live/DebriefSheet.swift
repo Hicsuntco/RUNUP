@@ -112,8 +112,8 @@ struct DebriefSheet: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
-                            .background(rpe == opt ? RUColor.card2 : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(rpe == opt ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
+                            .background(rpe == opt ? RUColor.card2 : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(rpe == opt ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
                         }
                         .buttonStyle(PressableStyle())
                         // The app's own core adaptive-plan mechanic, asked after every single run
@@ -143,7 +143,7 @@ struct DebriefSheet: View {
                     }
                 }
                 .padding(18)
-                .ruHeroCard(radius: 18)
+                .ruHeroCard(radius: RUSpacing.radiusCard)
                 .padding(.top, 18)
 
             }

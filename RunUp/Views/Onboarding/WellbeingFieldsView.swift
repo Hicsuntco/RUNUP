@@ -80,8 +80,8 @@ struct WellbeingFieldsView: View {
                         .labelsHidden()
                         .colorScheme(RUColor.colorScheme)
                         .padding(14)
-                        .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                        .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
 
                         HStack {
                             Text("Durée moyenne du cycle").font(RUFont.sans(.label)).foregroundColor(RUColor.textPrimary)
@@ -113,8 +113,8 @@ struct WellbeingFieldsView: View {
                             .foregroundColor(RUColor.rose)
                         }
                         .padding(14)
-                        .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                        .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                     }
                     .padding(.top, 4)
                     .id("cycleFields")

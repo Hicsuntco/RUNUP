@@ -551,7 +551,7 @@ struct ClubView: View {
                         }
                         .padding(.horizontal, 14).padding(.vertical, 10)
                         .frame(minHeight: 44)
-                        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+                        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(PressableStyle())
@@ -606,7 +606,7 @@ struct ClubView: View {
             Text("\(info.level)").displayStyle(.title).foregroundColor(.white)
                 .contentTransition(.numericText())
                 .frame(width: 52, height: 52)
-                .background(LinearGradient(colors: [RUColor.violet, RUColor.rose], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
+                .background(LinearGradient(colors: [RUColor.violet, RUColor.rose], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
             VStack(alignment: .leading, spacing: 8) {
                 // « TON NIVEAU », écrit. Sur une page qui parle du club du début à la fin, un
                 // « Niveau 17 » sans sujet se lit comme le niveau DU CLUB — ce qu'il n'est pas :
@@ -642,8 +642,8 @@ struct ClubView: View {
         .background(clair
                     ? LinearGradient(colors: [RUColor.card, RUColor.card], startPoint: .topLeading, endPoint: .bottomTrailing)
                     : LinearGradient(colors: [Color(hex: 0x241046), Color(hex: 0x160B1F)], startPoint: .topLeading, endPoint: .bottomTrailing),
-                    in: RoundedRectangle(cornerRadius: RUSpacing.radiusHero, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusHero, style: .continuous)
+                    in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous)
             .stroke(clair ? RUColor.cardBorder : RUColor.violet.opacity(0.3), lineWidth: RUSpacing.hairline))
     }
 
@@ -759,8 +759,8 @@ struct ClubView: View {
             segment(String(localized: "Activité"), .feed)
         }
         .padding(4)
-        .background(RUColor.bg2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+        .background(RUColor.bg2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 
     /// Rien n'est lancé : pas un kilomètre cette semaine, pas de défi, pas de sortie prévue.
@@ -1432,7 +1432,7 @@ struct ClubView: View {
                 groupesDAllure(event)
                 }
                 .padding(12)
-                .ruCard(radius: RUSpacing.radiusCompact)
+                .ruCard(radius: RUSpacing.radiusCard)
                 // L'APPUI LONG N'EST PAS UNE INTERFACE, C'EST UN RACCOURCI.
                 //
                 // Annuler sa propre sortie de groupe n'existait QUE sous un appui long, sans le

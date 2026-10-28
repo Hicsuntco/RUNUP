@@ -158,8 +158,8 @@ struct NewGoalWizardView: View {
                     Button(action: { distance = d; chrono = d.chronoPresets[safe: 1] ?? "" }) {
                         Text(d.label).displayStyle(.subtitle).foregroundColor(distance == d ? RUColor.rose2 : RUColor.textPrimary)
                             .frame(maxWidth: .infinity).padding(.vertical, 18)
-                            .background(distance == d ? RUColor.card2 : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(distance == d ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
+                            .background(distance == d ? RUColor.card2 : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(distance == d ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
                     }
                     .buttonStyle(PressableStyle())
                     .accessibilityAddTraits(distance == d ? .isSelected : [])
@@ -186,8 +186,8 @@ struct NewGoalWizardView: View {
             .labelsHidden()
             .colorScheme(RUColor.colorScheme)
             .padding(14)
-            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
             Button("CONTINUER") { step = 2 }
                 .buttonStyle(PrimaryButtonStyle(isDisabled: deniveleManquant))
                 .disabled(deniveleManquant)
@@ -233,8 +233,8 @@ struct NewGoalWizardView: View {
             .labelsHidden()
             .colorScheme(RUColor.colorScheme)
             .padding(14)
-            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
 
             Button("CONTINUER") { step = 2 }
                 .buttonStyle(PrimaryButtonStyle())
@@ -275,8 +275,8 @@ struct NewGoalWizardView: View {
                     .font(RUFont.sans(.small)).foregroundColor(RUColor.text2).lineSpacing(3)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(14)
-                    .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+                    .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                     .padding(.top, 10)
             }
 
@@ -298,8 +298,8 @@ struct NewGoalWizardView: View {
             .labelsHidden()
             .colorScheme(RUColor.colorScheme)
             .padding(14)
-            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+            .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
 
             Button("CONTINUER") { step = 2 }
                 .buttonStyle(PrimaryButtonStyle(isDisabled: nageManquante))
@@ -328,8 +328,8 @@ struct NewGoalWizardView: View {
                     Button(action: { if on { days.remove(i) } else { days.insert(i) } }) {
                         Text(DayStatus.letters[i]).displayStyle(.label).foregroundColor(on ? .white : RUColor.text2)
                             .frame(maxWidth: .infinity).aspectRatio(1, contentMode: .fit)
-                            .background(on ? RUColor.rose : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(on ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
+                            .background(on ? RUColor.rose : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(on ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
                     }
                     .buttonStyle(PressableStyle())
                     .accessibilityAddTraits(on ? .isSelected : [])

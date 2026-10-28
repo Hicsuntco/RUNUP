@@ -279,7 +279,7 @@ struct CoachView: View {
             .padding(12)
             // Surface neutre : l'accent reste au texte et à l'icône. Un amber
             // dilué donne sa version sale, et le contour de la même couleur la redisait.
-            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
         case .system:
             appliedChangeRow(message)
         case .coach:
@@ -331,7 +331,7 @@ struct CoachView: View {
         // et le liseré à 25 % l'entourait d'un cadre de la même teinte. Le fond devient neutre et
         // le vert reste où il se voit : sur la coche. C'est la même correction que les pastilles,
         // les tuiles d'icône et les cartes de Communauté — ne jamais diluer un accent.
-        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
+        .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
         .accessibilityElement(children: .combine)
     }
 

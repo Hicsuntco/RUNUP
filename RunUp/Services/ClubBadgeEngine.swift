@@ -92,7 +92,7 @@ enum ClubBadgeEngine {
             "streak3": Avancement(texte: String(localized: "\(min(profile.streak, 3))/3 jours"), part: part(Double(profile.streak), 3)),
             "interval3": Avancement(texte: String(localized: "\(min(intervalRuns, 3))/3 séances"), part: part(Double(intervalRuns), 3)),
             "earlyRun": Avancement(),
-            "elevation300": Avancement(texte: "\(min(Int(totalElevation), 300))/300 m", part: part(totalElevation, 300)),
+            "elevation300": Avancement(texte: "\(min(Int(totalElevation), 300))/300 m", part: part(Double(totalElevation), 300)),
             "firstRun": Avancement(),
             "streak7": Avancement(texte: String(localized: "\(min(profile.streak, 7))/7 jours"), part: part(Double(profile.streak), 7)),
             "streak30": Avancement(texte: String(localized: "\(min(profile.streak, 30))/30 jours"), part: part(Double(profile.streak), 30)),

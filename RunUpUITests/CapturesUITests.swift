@@ -136,6 +136,20 @@ final class CapturesUITests: XCTestCase {
         prendre(rang: 17, ecran: "weeklyRecap", nom: "bilan-hebdo", diagnostic: true)
     }
 
+    /// LE BAS DU PROFIL, où vit la grille de badges.
+    ///
+    /// `test7` photographie le profil sans défiler, et la grille est tout en bas — sous les
+    /// chiffres, la carte du fil et la grille communauté. Elle n'a donc jamais été vue, alors
+    /// qu'elle vient précisément de passer d'une bande horizontale à une grille : le défaut
+    /// qu'on corrigeait était « on ne voit que cinq badges sur seize », et la capture ne voyait
+    /// pas la correction.
+    ///
+    /// Même raison que pour `club-apercu-bas` et `sortie-bas` : un écran long n'est pas
+    /// photographié par sa première hauteur.
+    func test18ProfilBasDiagnostic() {
+        prendre(rang: 18, ecran: "profile", nom: "profil-bas", diagnostic: true, defilements: 3)
+    }
+
     private func prendre(rang: Int, ecran: String, nom: String, diagnostic: Bool = false,
                          profil: String? = nil, course: Bool = false,
                          sortie: Bool = false, onglet: String? = nil, defilements: Int = 0) {

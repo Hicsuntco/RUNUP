@@ -345,10 +345,11 @@ struct SettingsView: View {
     /// calculer pour l'habillage NON courant — on ne peut pas montrer l'autre en basculant
     /// l'app pour la durée d'un aperçu.
     private func apercuDHabillage(_ h: Habillage) -> some View {
-        let neutre = RUColor.isLight ? Color(hex: 0xF4F3F8) : Color(hex: 0x08070D)
-        let fond = h == .teinte
-            ? RUColor.melange(RUColor.rose, sur: neutre, part: RUColor.isLight ? 0.07 : 0.10)
-            : neutre
+        // UNE SEULE FORMULE, ET PLUS UNE COPIE. L'aperçu recalculait le fond à la main — même
+        // neutre, même rose, même pourcentage — et la copie a dérivé : la valeur claire est
+        // passée à 3,5 % dans `RUColor`, l'aperçu en montrait toujours 7. Un réglage qui ment
+        // sur ce qu'il va produire.
+        let fond = RUColor.fond(pour: h)
         return RoundedRectangle(cornerRadius: 9, style: .continuous)
             .fill(fond)
             .frame(width: 44, height: 34)

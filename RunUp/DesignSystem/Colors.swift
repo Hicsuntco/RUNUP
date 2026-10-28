@@ -46,7 +46,17 @@ enum RUColor {
     ///
     /// La teinte penche très légèrement vers le violet de l'accent plutôt que vers un gris neutre :
     /// un gris pur à côté d'un rose vif prend l'air sale, un gris qui partage sa famille non.
-    static var bg: Color {
+    static var bg: Color { fond(pour: habillage) }
+
+    /// LE FOND D'UN HABILLAGE DONNÉ, et pas seulement de celui qui est actif.
+    ///
+    /// `bg` ne sait répondre que pour l'habillage courant, ce qui ne suffit pas à l'aperçu des
+    /// réglages : il montre les DEUX habillages côte à côte, dont celui qu'on n'a pas. Faute de
+    /// cette fonction, l'aperçu recopiait la formule — le neutre, le rose, le pourcentage — et
+    /// la copie a fait exactement ce que font les copies : le pourcentage clair est passé de
+    /// 7 % à 3,5 % ici, et l'aperçu a continué d'en montrer 7. Le réglage mentait sur ce qu'il
+    /// allait produire.
+    static func fond(pour habillage: Habillage) -> Color {
         let neutre = isLight ? Color(hex: 0xF4F3F8) : Color(hex: 0x08070D)
         guard habillage == .teinte else { return neutre }
         // LE SOL PREND LA COULEUR. Voir `Habillage`.

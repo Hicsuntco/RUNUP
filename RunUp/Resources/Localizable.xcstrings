@@ -17903,6 +17903,22 @@
         }
       }
     },
+    "Parcourus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Covered"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorridos"
+          }
+        }
+      }
+    },
     "Paris": {
       "extractionState": "manual",
       "localizations": {
@@ -24236,6 +24252,22 @@
         }
       }
     },
+    "Séances": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sessions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesiones"
+          }
+        }
+      }
+    },
     "Séances calées sur tes %lld jours": {
       "extractionState": "manual",
       "localizations": {
@@ -25289,6 +25321,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tiempo"
+          }
+        }
+      }
+    },
+    "Temps actif": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiempo activo"
           }
         }
       }

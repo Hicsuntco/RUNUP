@@ -125,8 +125,7 @@ struct DebriefSheet: View {
 
                 VStack(alignment: .leading, spacing: 0) {
                     RUCardHeader(icon: planUnlocked ? "arrow.triangle.branch" : "flame",
-                                 tint: RUColor.rose2,
-                                 title: planUnlocked ? "Impact sur ton programme" : "Ce que ça change")
+                                       title: planUnlocked ? "Impact sur ton programme" : "Ce que ça change")
                     ForEach(impactLines.indices, id: \.self) { i in
                         HStack(spacing: 12) {
                             Text(impactLines[i].0).font(.system(size: 18))

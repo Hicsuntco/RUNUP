@@ -34,18 +34,42 @@ AUTORISE = {
     "RunUp/Views/Profile/ShoesView.swift":
         (1, "« Retirées » en gris : volontairement éteint, ce sont des archives"),
     "RunUp/Views/Stats/StatsView.swift":
-        (5, "le bloc Vélo, marqué en turquoise d'un bout à l'autre — un repère de discipline, "
-            "et non une décoration, parce qu'il est tenu sur toute la section"),
+        (6, "le bloc Vélo, marqué en turquoise d'un bout à l'autre — un repère de discipline, "
+            "et non une décoration, parce qu'il est tenu sur toute la section ; plus la flamme "
+            "de la série, verte quand elle court et grise quand elle est cassée — la seule "
+            "teinte conditionnelle de l'app, et c'est ce qui la justifie : elle ne décore pas "
+            "la flamme, elle dit si la flamme est allumée"),
 }
 
-APPEL = re.compile(r"(?:RUCardHeader|RUStatTile)\([^\n]*tint:")
+# UN APPEL, PAS UNE LIGNE — et c'est une correction de ce script lui-même.
+#
+# La première version cherchait `RUCardHeader(... tint:` sur UNE ligne. Deux teintes lui ont
+# échappé parce qu'elles vivaient sur la ligne de continuation d'un appel écrit en plusieurs
+# lignes, et le script a rendu « tout le reste sur l'accent » pendant que l'écran Stats gardait
+# une flamme verte. C'est la capture qui l'a dit, pas lui.
+#
+# On suit donc la profondeur de parenthèses depuis l'ouverture de l'appel jusqu'à sa fermeture,
+# et on regarde `tint:` n'importe où dedans.
+OUVERTURE = re.compile(r"(?:RUCardHeader|RUStatTile)\(")
+PROFONDEUR = 12
 
 fautes = []
 compte = {}
 for chemin in sorted(RACINE.rglob("*.swift")):
     rel = str(chemin.relative_to(RACINE))
-    for num, ligne in enumerate(chemin.read_text().split("\n"), 1):
-        if ligne.lstrip().startswith("//") or not APPEL.search(ligne):
+    lignes = chemin.read_text().split("\n")
+    for num, ligne in enumerate(lignes, 1):
+        if ligne.lstrip().startswith("//") or not OUVERTURE.search(ligne):
+            continue
+        profondeur, corps = 0, []
+        for suite in lignes[num - 1:num - 1 + PROFONDEUR]:
+            corps.append(suite)
+            profondeur += suite.count("(") - suite.count(")")
+            if profondeur <= 0 and len(corps) > 0:
+                break
+        # Les lignes de commentaire du corps ne comptent pas : une note qui mentionne `tint:`
+        # n'est pas une teinte.
+        if not any("tint:" in c for c in corps if not c.lstrip().startswith("//")):
             continue
         compte[rel] = compte.get(rel, 0) + 1
         if rel not in AUTORISE:

@@ -171,6 +171,9 @@ struct StatsView: View {
                            title: "Temps cumulé",
                            value: PaceModel.formatTotalDuration(totalDurationSeconds), unit: nil,
                            footnote: nil, progress: nil)
+                // La seule teinte conditionnelle de l'app, et c'est ce qui la justifie : verte
+                // quand la série court, grise quand elle est cassée. Elle ne décore pas la
+                // flamme, elle dit si la flamme est allumée.
                 RUStatTile(icon: "flame.fill",
                            tint: profile.streak > 0 ? RUColor.lime : RUColor.text3,
                            title: "Série",

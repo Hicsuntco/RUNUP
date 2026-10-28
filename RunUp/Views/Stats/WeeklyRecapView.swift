@@ -161,22 +161,38 @@ struct WeeklyRecapView: View {
         let deltaKm = totalKm - lastWeekKm
         return VStack(spacing: 10) {
             HStack(spacing: 10) {
-                statTile(value: String(format: "%.1f", locale: Locale.current, totalKm), unit: "km", label: String(localized: "PARCOURUS"), color: RUColor.rose,
+                statTile(value: String(format: "%.1f", locale: Locale.current, totalKm), unit: "km", label: String(localized: "Parcourus"),
                          chip: lastWeekKm > 0 ? (deltaKm >= 0 ? "▲ \(String(format: "%.1f", locale: Locale.current, deltaKm))" : "▼ \(String(format: "%.1f", locale: Locale.current, -deltaKm))") : nil,
                          chipColor: deltaKm >= 0 ? RUColor.lime : RUColor.amber)
-                statTile(value: "\(weekRuns.count)", unit: nil, label: String(localized: "SÉANCES"), color: RUColor.lime, chip: nil, chipColor: RUColor.lime)
+                statTile(value: "\(weekRuns.count)", unit: nil, label: String(localized: "Séances"), chip: nil, chipColor: RUColor.lime)
             }
             HStack(spacing: 10) {
-                statTile(value: PaceModel.formatTotalDuration(totalDurationSeconds), unit: nil, label: String(localized: "TEMPS ACTIF"), color: RUColor.cyan, chip: nil, chipColor: RUColor.cyan)
-                statTile(value: "\(profile.streak)", unit: String(localized: "j"), label: String(localized: "SÉRIE"), color: RUColor.amber, chip: nil, chipColor: RUColor.amber)
+                statTile(value: PaceModel.formatTotalDuration(totalDurationSeconds), unit: nil, label: String(localized: "Temps actif"), chip: nil, chipColor: RUColor.cyan)
+                statTile(value: "\(profile.streak)", unit: String(localized: "j"), label: String(localized: "Série"), chip: nil, chipColor: RUColor.amber)
             }
         }
     }
 
-    private func statTile(value: String, unit: String?, label: String, color: Color, chip: String?, chipColor: Color) -> some View {
+    /// LE BILAN HEBDOMADAIRE AVAIT SON PROPRE SYSTÈME, ET C'EST LA PREMIÈRE CAPTURE QUI L'A DIT.
+    ///
+    /// Cet écran n'avait jamais été photographié — `AppScreen` l'expose, le harnais ne le
+    /// demandait pas. Sur l'image, ses quatre tuiles portent QUATRE couleurs : 8,1 en rose,
+    /// 1 en vert, 42 min en turquoise, 23 j en ambre. Et leurs libellés sont en capitales
+    /// espacées quand les tuiles de l'écran Stats, qui montrent les mêmes mesures, viennent de
+    /// passer en minuscules grises.
+    ///
+    /// Deux écrans qui disent la même chose de deux façons : c'est précisément ce qui fait
+    /// qu'une app se lit comme un assemblage. Le chiffre reprend l'encre du texte, le libellé
+    /// reprend la micro-étiquette du système. Les couleurs sémantiques restent où elles
+    /// servent — la pastille d'écart « ▼ 19,6 » garde son ambre, parce que l'ambre y veut dire
+    /// « moins bien que la semaine passée ».
+    private func statTile(value: String, unit: String?, label: String, chip: String?, chipColor: Color) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            RUChiffre(valeur: value, unite: unit, couleur: color)
-            Text(label).font(RUFont.sans(.micro, weight: .bold)).tracking(1).foregroundColor(RUColor.text2)
+            RUChiffre(valeur: value, unite: unit)
+            Text(label)
+                .font(RUFont.sans(.small, weight: .medium))
+                .foregroundColor(RUColor.text3)
+                .lineLimit(1).minimumScaleFactor(0.8)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(RUSpacing.cardPadding)

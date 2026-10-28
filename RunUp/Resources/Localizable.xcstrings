@@ -25520,6 +25520,54 @@
         }
       }
     },
+    "Tendance en baisse sur les dernières semaines": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trending down over recent weeks"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tendencia a la baja en las últimas semanas"
+          }
+        }
+      }
+    },
+    "Tendance en hausse sur les dernières semaines": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trending up over recent weeks"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tendencia al alza en las últimas semanas"
+          }
+        }
+      }
+    },
+    "Tendance stable sur les dernières semaines": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steady over recent weeks"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estable en las últimas semanas"
+          }
+        }
+      }
+    },
     "Tenir plus longtemps": {
       "localizations": {
         "en": {
@@ -29947,6 +29995,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "más despacio de lo que te apetece: en un ultra nadie gana en la salida, muchos pierden allí"
+          }
+        }
+      }
+    },
+    "prochain palier : %lld jours": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "next milestone: %lld days"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "próximo hito: %lld días"
           }
         }
       }

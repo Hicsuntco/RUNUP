@@ -132,6 +132,15 @@ struct RUStatTile: View {
     var footnote: String?
     /// 0...1, ou `nil` quand ce chiffre ne va nulle part (un cumul de km n'a pas d'objectif).
     var progress: Double?
+    /// LES VALEURS DONT CE CHIFFRE EST LE DERNIER POINT.
+    ///
+    /// Une tuile disait « 145 km » et rien d'autre — une valeur sans échelle. La courbe occupe
+    /// le blanc qui était déjà là, en bas de la tuile, et le chiffre cesse d'être isolé.
+    ///
+    /// Exclusive de `progress`, et dans cet ordre : une tuile qui a un OBJECTIF montre d'abord
+    /// où elle en est par rapport à lui. Les deux ensemble donneraient deux lectures du même
+    /// chiffre à deux centimètres l'une de l'autre.
+    var serie: [Double]?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -171,7 +180,17 @@ struct RUStatTile: View {
                         }
                     }
                     .frame(height: 5)
-                } else if let footnote {
+                } else if let serie {
+                    RUSparkline(valeurs: serie, couleur: tint)
+                }
+                // LA NOTE N'EST PLUS L'ALTERNATIVE DE LA BARRE, elle vient dessous.
+                //
+                // Les trois branches s'excluaient : une tuile qui passait une progression ET une
+                // note n'affichait que la barre, en silence. Aucun appelant ne le faisait, donc
+                // rien ne l'avait signalé — jusqu'à la tuile « Série », dont la barre dit où on
+                // en est et dont la note dit vers QUOI. L'une sans l'autre ne veut rien dire :
+                // une barre aux deux tiers sans son palier est un pourcentage de rien.
+                if let footnote {
                     Text(LocalizedStringKey(footnote))
                         .font(RUFont.sans(.small))
                         .foregroundColor(RUColor.text3)

@@ -149,13 +149,57 @@ struct StatsView: View {
         .ruHeroCard()
     }
 
+    /// LES HUIT DERNIÈRES SEMAINES, de la plus ancienne à celle-ci.
+    ///
+    /// Huit et pas douze : c'est la fenêtre que le reste de l'onglet emploie déjà pour la
+    /// tendance d'allure, et deux fenêtres différentes sur le même écran donneraient deux
+    /// réponses à « récemment ».
+    ///
+    /// Le calendrier est sorti de la boucle — `Calendar.current` n'est pas une constante,
+    /// chaque accès en reconstruit un, et cette fonction est lue depuis un `body`. C'est la
+    /// même correction que celle écrite dans `ClubBadgeEngine`, pour la même raison.
+    /// Le prochain palier de série, et ce qu'il en reste.
+    ///
+    /// Les trois autres tuiles de la grille portent huit semaines d'historique ; une SÉRIE n'en
+    /// a pas — c'est un état au présent, le nombre de jours qui se suivent en ce moment. Elle
+    /// serait donc la seule tuile vide des quatre, et le blanc qu'on vient de remplir ailleurs
+    /// se serait concentré là.
+    ///
+    /// Elle a en revanche un prochain palier, et ce sont ceux des badges : 3, 7, 30. La tuile
+    /// sait déjà dessiner une progression — c'est le même composant qui l'affiche pour un
+    /// objectif. Au-delà de trente jours, plus de palier et plus de barre : une série de
+    /// quarante jours n'a pas besoin qu'on lui propose un but.
+    private var palierDeSerie: (part: Double, note: String)? {
+        let paliers = [3, 7, 30]
+        guard let prochain = paliers.first(where: { profile.streak < $0 }) else { return nil }
+        return (Double(profile.streak) / Double(prochain),
+                String(localized: "prochain palier : \(prochain) jours"))
+    }
+
+    private func parSemaine(_ sorties: [RunRecord], semaines: Int = 8,
+                            mesure: (RunRecord) -> Double) -> [Double] {
+        let calendrier = Calendar.current
+        guard let cetteSemaine = calendrier.dateInterval(of: .weekOfYear, for: .now)?.start else {
+            return []
+        }
+        var seaux = [Double](repeating: 0, count: semaines)
+        for sortie in sorties {
+            guard let debut = calendrier.dateInterval(of: .weekOfYear, for: sortie.date)?.start,
+                  let ecart = calendrier.dateComponents([.weekOfYear], from: debut, to: cetteSemaine).weekOfYear,
+                  ecart >= 0, ecart < semaines else { continue }
+            seaux[semaines - 1 - ecart] += mesure(sortie)
+        }
+        return seaux
+    }
+
     private var summaryGrid: some View {
         VStack(spacing: 10) {
             HStack(spacing: 10) {
                 RUStatTile(icon: "ruler",
                            title: "Distance totale",
                            value: String(format: "%.0f", totalDistanceKm), unit: "km",
-                           footnote: nil, progress: nil)
+                           footnote: nil, progress: nil,
+                           serie: parSemaine(runsOnFoot) { $0.distanceKm })
                 // `onFoot` et non `runs` : la tuile d'à côté annonce une distance à pied, et
                 // cette tuile-ci comptait TOUTES les sorties, vélo compris. « 42 km · 15 sorties »
                 // décrivait alors deux ensembles différents sur la même ligne — le genre de
@@ -164,13 +208,15 @@ struct StatsView: View {
                            title: "Sorties",
                            value: "\(runsOnFoot.count)",
                            unit: Pluriel.choisir(runsOnFoot.count, "sortie", "sorties"),
-                           footnote: nil, progress: nil)
+                           footnote: nil, progress: nil,
+                           serie: parSemaine(runsOnFoot) { _ in 1 })
             }
             HStack(spacing: 10) {
                 RUStatTile(icon: "clock",
                            title: "Temps cumulé",
                            value: PaceModel.formatTotalDuration(totalDurationSeconds), unit: nil,
-                           footnote: nil, progress: nil)
+                           footnote: nil, progress: nil,
+                           serie: parSemaine(runsOnFoot) { Double($0.durationSeconds) })
                 // La seule teinte conditionnelle de l'app, et c'est ce qui la justifie : verte
                 // quand la série court, grise quand elle est cassée. Elle ne décore pas la
                 // flamme, elle dit si la flamme est allumée.
@@ -179,7 +225,7 @@ struct StatsView: View {
                            title: "Série",
                            value: "\(profile.streak)",
                            unit: Pluriel.choisir(profile.streak, "jour", "jours"),
-                           footnote: nil, progress: nil)
+                           footnote: palierDeSerie?.note, progress: palierDeSerie?.part)
             }
         }
     }

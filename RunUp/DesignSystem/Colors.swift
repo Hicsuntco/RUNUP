@@ -366,6 +366,21 @@ enum RUColor {
         )
     }
 
+    /// LE FOND SUR LEQUEL UN TRACÉ SE DESSINE, dans les DEUX thèmes.
+    ///
+    /// Il vivait en privé dans `ActivityFeedRow`, parce qu'un seul écran en avait besoin. Le
+    /// bandeau de l'accueil en a besoin aussi, et une deuxième copie aurait divergé au premier
+    /// réglage — c'est exactement ce qui est arrivé aux dix rayons et aux dix-neuf écarts.
+    ///
+    /// Il ne suit pas le thème, et c'est voulu : un tracé lumineux se lit sur du sombre. Posé
+    /// sur du blanc, il faudrait l'assombrir, donc changer ses couleurs selon le thème — et
+    /// l'app aurait deux tracés au lieu d'un. Une photo, elle non plus, ne s'éclaircit pas
+    /// parce que la page est claire.
+    static var traceBackground: LinearGradient {
+        LinearGradient(colors: [Color(hex: 0x1A1926), Color(hex: 0x0E0D16)],
+                       startPoint: .topLeading, endPoint: .bottomTrailing)
+    }
+
     static var violetRoseGradient: LinearGradient {
         LinearGradient(colors: [violet, rose], startPoint: .leading, endPoint: .trailing)
     }

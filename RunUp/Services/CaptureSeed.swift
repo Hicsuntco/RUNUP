@@ -719,6 +719,47 @@ enum CaptureSeed {
     /// se valent y dessine une ligne plate, c'est-à-dire la capture la moins convaincante qu'une
     /// app d'entraînement puisse publier. Les allures descendent donc de 5:50 à 5:06 au fil des
     /// semaines, avec du bruit — une courbe parfaitement lisse ne ressemble à personne.
+    /// UN TRACÉ PLAUSIBLE, FABRIQUÉ, ET POURQUOI IL EN FAUT UN.
+    ///
+    /// Les seize sorties de démonstration n'en avaient AUCUN. Conséquence invisible depuis le
+    /// code et évidente sur une image : partout où l'app dessine une route — la vignette d'une
+    /// ligne d'historique, le bandeau de l'accueil — le profil de démonstration tombait sur le
+    /// repli, un petit coureur gris dans un carré. Seize fois de suite dans l'historique.
+    ///
+    /// Et ce profil est celui qui fabrique LES CAPTURES DE LA FICHE APP STORE. Les images
+    /// publiées montraient donc des carrés gris là où l'app, chez quelqu'un qui court avec, trace
+    /// des routes. C'est la seule partie de ce fichier qui ait un effet hors de l'atelier.
+    ///
+    /// Ce n'est pas une vraie trace GPS et ça n'essaie pas de l'être : c'est une boucle fermée à
+    /// trois harmoniques dont les amplitudes, les phases et le nombre de lobes dépendent de la
+    /// graine. Deux sorties de même longueur ne se ressemblent donc pas, et le rayon suit la
+    /// distance — une sortie de 14 km dessine une boucle plus large qu'une de 6.
+    ///
+    /// Déterministe, exprès : une capture qui change de dessin à chaque exécution ne se compare
+    /// pas à la précédente.
+    private static func trace(graine: Int, km: Double, points: Int = 90) -> [RunRecord.RoutePoint] {
+        // Le bassin de la Villette — le club de démonstration court à Paris 19e.
+        let centreLat = 48.8886, centreLng = 2.3770
+        let rayonKm = km / (2 * .pi)
+        let parDegreLat = 111.0
+        let parDegreLng = 111.0 * cos(centreLat * .pi / 180)
+
+        let a1 = 0.18 + Double((graine * 7) % 5) * 0.06
+        let a2 = 0.10 + Double((graine * 11) % 4) * 0.05
+        let p1 = Double(graine % 7) * 0.9
+        let p2 = Double((graine * 3) % 5) * 1.3
+        let lobes1 = Double(2 + graine % 3)
+        let lobes2 = Double(4 + (graine * 2) % 3)
+
+        return (0..<points).map { i in
+            let t = Double(i) / Double(points) * 2 * .pi
+            let r = rayonKm * (1 + a1 * sin(lobes1 * t + p1) + a2 * cos(lobes2 * t + p2))
+            return RunRecord.RoutePoint(lat: centreLat + (r * sin(t)) / parDegreLat,
+                                        lng: centreLng + (r * cos(t)) / parDegreLng,
+                                        altitude: 35 + 8 * sin(3 * t + p1))
+        }
+    }
+
     private static func historique(maintenant: Date) -> [RunRecord] {
         let calendrier = Calendar.current
         // (jours en arrière, km, secondes/km, type de séance)
@@ -732,7 +773,8 @@ enum CaptureSeed {
             (31, 6.5, 332, .enduranceFooting), (34, 10.5, 346, .longRun),
             (38, 6.0, 338, .easyFooting), (41, 9.6, 350, .longRun),
         ]
-        return sorties.map { jours, km, secParKm, kind in
+        return sorties.enumerated().map { rang, sortie in
+            let (jours, km, secParKm, kind) = sortie
             let releve = AdaptivePlanEngine.buildRunRecord(
                 title: "Sortie",
                 elapsedSeconds: km * secParKm,
@@ -746,6 +788,8 @@ enum CaptureSeed {
             // Déjà débriefées : une course en attente de ressenti ouvre une feuille modale au
             // lancement, qui viendrait se poser au milieu de la capture.
             releve.debriefedAt = releve.date
+            // Le rang sert de graine : chaque sortie a son dessin, et le même à chaque série.
+            releve.route = trace(graine: rang + 1, km: km)
             return releve
         }
     }

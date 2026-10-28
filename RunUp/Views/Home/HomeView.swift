@@ -155,6 +155,25 @@ struct HomeView: View {
                     freeRunCard.ruRises(reduceMotion)
                 }
 
+                // LA DERNIÈRE SORTIE, JUSTE APRÈS CELLE DU JOUR.
+                //
+                // L'accueil n'avait AUCUNE image. Pas une : une carte de séance, un anneau, une
+                // bande de sept jours, des chiffres — du texte et des formes, sur six cents
+                // points de défilement. Et l'app possède pourtant le seul vrai visuel qu'une app
+                // de course puisse avoir, son tracé GPS, qui ne sortait jamais de l'onglet Club.
+                //
+                // POURQUOI PAS TOUT EN HAUT, comme la maquette le proposait. La note vingt
+                // lignes plus haut tranche déjà la question et elle a raison : « on ouvre
+                // l'accueil pour savoir ce qu'on court aujourd'hui », donc ce qui SE FAIT passe
+                // avant ce qui S'EST FAIT. Un bandeau rétrospectif posé au-dessus de la seule
+                // carte qui porte un bouton aurait défait cette décision pour une raison
+                // d'esthétique — ce qui est exactement la mauvaise façon de gagner un argument.
+                //
+                // Juste après, en revanche, il répond à la carte du jour : voilà ce que tu cours
+                // aujourd'hui, voilà ce que tu as couru la dernière fois. Et il reste au-dessus
+                // de la ligne de flottaison.
+                derniereSortie.ruRises(reduceMotion)
+
                 ringsCard.ruRises(reduceMotion)
 
                 // La bande de la semaine pour tout le monde. Elle disait deux choses, et une
@@ -578,6 +597,55 @@ struct HomeView: View {
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
         .ruCard()
+    }
+
+    /// La dernière sortie qui a laissé une trace, en bandeau.
+    ///
+    /// `route.count > 1` et pas seulement « la dernière sortie » : une séance saisie à la main
+    /// ou validée sans GPS n'a rien à montrer, et un bandeau vide vaut moins que pas de bandeau.
+    /// On remonte donc jusqu'à la dernière qui en a une — sinon rien, et l'accueil retrouve
+    /// exactement la mise en page qu'il avait.
+    ///
+    /// Le tracé est DESSINÉ (`SelfDrawingRoute`), pas cartographié. L'historique, lui, affiche
+    /// une vraie carte dans ses vignettes, et c'est juste à cet endroit-là : on y cherche OÙ on
+    /// a couru. Ici on cherche QU'ON a couru — et un dessin se charge sans tuiles, sans réseau,
+    /// et se dessine tout seul à l'apparition, ce qu'une carte ne fait pas.
+    @ViewBuilder private var derniereSortie: some View {
+        if let derniere = runs.filter({ $0.route.count > 1 }).max(by: { $0.date < $1.date }) {
+            Button(action: { Haptics.selection(); appState.go(.history) }) {
+                VStack(spacing: 0) {
+                    ZStack {
+                        RUColor.traceBackground
+                        SelfDrawingRoute(route: derniere.route, lineWidth: 3,
+                                         targetPoints: 140, showsStart: true)
+                            .padding(14)
+                    }
+                    .frame(height: 104)
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                        Text(derniere.date.formatted(.dateTime.weekday(.abbreviated).day()
+                                                        .month(.abbreviated).locale(Locale.current)))
+                            .font(RUFont.sans(.small, weight: .medium))
+                            .foregroundColor(RUColor.text3)
+                        Spacer(minLength: 8)
+                        RUChiffre(valeur: Distances.valeur(derniere.distanceKm),
+                                  unite: "km", cran: .subtitle)
+                        RUChiffre(valeur: derniere.avgPace, unite: "/km", cran: .subtitle)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.top, 10)
+                    .padding(.bottom, 12)
+                }
+                .background(RUColor.card)
+                .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous)
+                    .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
+            }
+            .buttonStyle(PressableStyle())
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(String(localized: "Ta dernière sortie"))
+            .accessibilityValue(String(localized: "\(Distances.km(derniere.distanceKm)) à \(derniere.avgPace) du kilomètre"))
+            .accessibilityHint(String(localized: "Ouvre l'historique"))
+        }
     }
 
     private var sessionCard: some View {

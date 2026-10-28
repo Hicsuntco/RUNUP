@@ -44,11 +44,6 @@ struct ActivityFeedRow: View {
     /// Le fond du bandeau de tracé est sombre dans les DEUX thèmes, volontairement. Une ligne fine
     /// et colorée se lit sur du sombre ; sur un fond clair elle devient un gribouillis pâle. C'est
     /// le seul endroit de l'app qui ne suit pas le thème, et c'est un choix, pas un oubli.
-    private static let traceBackground = LinearGradient(
-        colors: [Color(hex: 0x1A1926), Color(hex: 0x0E0D16)],
-        startPoint: .topLeading, endPoint: .bottomTrailing
-    )
-
     private var trace: [RunRecord.RoutePoint]? {
         guard let route = item.routePreview, route.count > 1 else { return nil }
         return route
@@ -287,7 +282,7 @@ struct ActivityFeedRow: View {
             // Le fond du tracé plutôt qu'un vide : il tient la place à la bonne couleur pendant
             // que l'image arrive, au lieu de faire sauter la mise en page à son arrivée.
             ZStack {
-                Self.traceBackground
+                RUColor.traceBackground
                 ProgressView().tint(.white)
             }
         }
@@ -356,7 +351,7 @@ struct ActivityFeedRow: View {
     /// devient un gribouillis pâle.
     private func banniereDeTrace(_ trace: [RunRecord.RoutePoint]) -> some View {
         ZStack {
-            Self.traceBackground
+            RUColor.traceBackground
             SelfDrawingRoute(
                 route: trace,
                 lineWidth: 3.5,

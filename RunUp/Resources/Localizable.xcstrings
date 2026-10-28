@@ -536,6 +536,22 @@
         }
       }
     },
+    "%@ à %@ du kilomètre": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ at %@ per kilometre"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ a %@ por kilómetro"
+          }
+        }
+      }
+    },
     "%@, %@ kilomètres": {
       "extractionState": "manual",
       "localizations": {
@@ -17543,6 +17559,22 @@
         }
       }
     },
+    "Ouvre l'historique": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens your history"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre tu historial"
+          }
+        }
+      }
+    },
     "Ouvre la sortie en détail": {
       "extractionState": "manual",
       "localizations": {
@@ -24711,6 +24743,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tu carrera debería caber en el día, pero lleva un frontal igual: una salida temprana, un bosque cerrado o dos horas más de lo previsto bastan."
+          }
+        }
+      }
+    },
+    "Ta dernière sortie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your last run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu última salida"
           }
         }
       }

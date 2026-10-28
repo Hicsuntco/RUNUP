@@ -46,7 +46,7 @@ struct LogSessionSheet: View {
                 VStack(alignment: .leading, spacing: 18) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(session.displayTitle)
-                            .displayStyle(22).foregroundColor(RUColor.textPrimary)
+                            .displayStyle(.title).foregroundColor(RUColor.textPrimary)
                         Text("Enregistre-la comme si tu venais de la faire.")
                             .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                     }

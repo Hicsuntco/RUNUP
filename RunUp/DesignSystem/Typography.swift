@@ -104,7 +104,26 @@ enum RUFont {
     /// le widget et la montre les utilisent aussi, et une police nommée à trois endroits finit
     /// toujours par n'être changée qu'à deux.
     ///
-    static func display(_ size: CGFloat) -> Font {
+    /// Le point d'entrée normal : un cran nommé, pas un nombre.
+    static func display(_ step: RUDisplaySize) -> Font {
+        display(horsEchelle: step.rawValue)
+    }
+
+    /// La sortie de l'échelle, et son nom le dit à l'appel.
+    ///
+    /// Un paramètre étiqueté plutôt qu'une surcharge muette : `display(26)` se serait écrit tout
+    /// seul, sans que personne ait à se demander si 26 existait. `display(horsEchelle: 26)` ne
+    /// s'écrit pas par distraction, et un seul `grep horsEchelle` donne la liste complète des
+    /// exceptions — donc la liste de ce qui reste à justifier. Il y en a douze, et elles tiennent
+    /// en trois raisons :
+    ///
+    ///   • les cartes d'export (`RunShareCardView`, `RunVideoFrameView`, `BadgeShareCardView`) :
+    ///     une image partagée est rendue à une géométrie de pixels fixe, et sa typographie ne
+    ///     doit pas se déplacer parce que l'échelle de l'app s'est déplacée ;
+    ///   • les initiales d'un avatar, à 0,4 × son diamètre : une suite continue, pas un cran ;
+    ///   • le chronomètre de la course en cours — 96 pt pour le décompte de départ, 52 ou 64 pour
+    ///     le temps écoulé selon qu'une consigne est affichée. Un seul écran, lu à bout de bras.
+    static func display(horsEchelle size: CGFloat) -> Font {
         .custom(DisplayFont.postScriptName, fixedSize: scaled(DisplayFont.pointSize(for: size)))
     }
 
@@ -217,14 +236,19 @@ extension Text {
     /// `.tracking`/`.textCase` are `View`-only modifiers (not declared on `Text` itself), so this
     /// returns `some View` rather than `Text` — safe everywhere it's used since none of these
     /// call sites concatenate the result with `+` (that requires `Text` on both sides).
-    func displayStyle(_ size: CGFloat) -> some View {
+    func displayStyle(_ step: RUDisplaySize) -> some View {
+        displayStyle(horsEchelle: step.rawValue)
+    }
+
+    /// Voir `RUFont.display(horsEchelle:)` : l'étiquette est là pour que l'exception se voie.
+    func displayStyle(horsEchelle size: CGFloat) -> some View {
         // Interlettrage NÉGATIF, proportionnel à la taille (−3 %), là où il était fixé à +0,5.
         //
         // Un titrage gras espacé positivement se lit comme du texte agrandi ; c'est le resserrage
         // qui le fait lire comme un titre. La proportionnalité compte autant que le signe : à
         // 11 pt, −0,33 se remarque à peine, à 46 pt, −1,4 change la ligne entière. Une valeur
         // fixe ne peut pas servir les deux.
-        self.font(RUFont.display(size)).tracking(-size * 0.03)
+        self.font(RUFont.display(horsEchelle: size)).tracking(-size * 0.03)
     }
 
     /// Le sourcil posé au-dessus d'un titre de page ou de section.
@@ -263,6 +287,43 @@ extension Text {
         // écrans ont besoin de calme.
         self.font(RUFont.sans(.small, weight: .semibold)).tracking(0.2).foregroundColor(color)
     }
+}
+
+/// Les sept crans de la police de titrage.
+///
+/// Il y en avait VINGT-SIX, écrits à la main sur 103 appels : 11, 12, 13, 14, 15, 16, 17, 18, 19,
+/// 20, 21, 22, 23, 24, 25, 26, 28, 29, 30, 33, 34, 36, 40, 42, 44, 96. Ce n'est pas le nombre qui
+/// était le défaut — c'est que les voisines ne se distinguaient pas : 20, 21, 22, 23, 24, 25 et 26
+/// font sept tailles dans six points, et à l'écran (× 1,09) elles rendent 21,8 / 22,9 / 24,0 /
+/// 25,1 / 26,2 / 27,3 / 28,3. Personne ne lit ça comme une hiérarchie ; on lit sept écrans réglés
+/// à l'œil, séparément, et c'est exactement l'impression de bricolage que l'app donnait.
+///
+/// Les crans ci-dessous valent chacun 1,22 à 1,29 fois le précédent — assez pour que le saut se
+/// voie, assez peu pour qu'il reste une progression et non une rupture. À l'écran (× 1,09) :
+/// 12,0 / 15,3 / 19,6 / 24,0 / 30,5 / 38,2 / 48,0.
+///
+/// Chaque cran a été choisi sur une valeur qui existait DÉJÀ et qui portait le plus d'appels :
+/// 22 en portait 18, 26 en portait 13, 34 et 11 six chacun. L'échelle ne vient donc pas d'une
+/// table de ratios appliquée par-dessus l'app — elle vient de l'app, dont on a gardé les
+/// paliers dominants et jeté les hésitations autour.
+///
+/// Comme `RUTextSize`, la variante numérique est étiquetée `horsEchelle:` pour que les
+/// vingt-six valeurs ne reviennent pas une par une.
+enum RUDisplaySize: CGFloat {
+    /// 11 → 12,0 pt. Micro-chiffres, valeurs de pastille.
+    case caption = 11
+    /// 14 → 15,3 pt. Libellés de bouton, valeurs en ligne.
+    case label = 14
+    /// 18 → 19,6 pt. Titres de ligne de liste, valeurs d'une grille de mesures dense.
+    case subtitle = 18
+    /// 22 → 24,0 pt. Titres de page et de feuille, titres de carte, valeurs mises en avant.
+    case title = 22
+    /// 28 → 30,5 pt. LE chiffre d'une carte — un cumul, une moyenne, une allure.
+    case figure = 28
+    /// 35 → 38,2 pt. Le chiffre unique d'un écran.
+    case hero = 35
+    /// 44 → 48,0 pt. Une accroche, un record : au plus un par écran.
+    case banner = 44
 }
 
 /// Les six crans de texte de l'app.

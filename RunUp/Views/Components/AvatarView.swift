@@ -129,7 +129,7 @@ struct AvatarView: View {
         if let theme = personalTheme {
             mesh(for: theme)
             Text(initial.uppercased())
-                .displayStyle(size * 0.4)
+                .displayStyle(horsEchelle: size * 0.4)
                 // Inchangé, et vérifié plutôt que supposé : la règle de luminance ci-dessus
                 // reproduit exactement les 8 choix codés en dur par la maquette — encre sombre
                 // sur Cyan/Ambre/Lime, blanc sur les cinq autres.
@@ -143,7 +143,7 @@ struct AvatarView: View {
             if useGradient {
                 mesh(for: AccentTheme.current)
                 Text(initial.uppercased())
-                    .displayStyle(size * 0.4)
+                    .displayStyle(horsEchelle: size * 0.4)
                     .foregroundColor(initialColor(for: AccentTheme.current))
             } else {
                 // Le `.avatar` nu de la maquette : `background: color-mix(in srgb, var(--ru-violet)
@@ -158,7 +158,7 @@ struct AvatarView: View {
                 // de la maquette était son accent à elle, pas une couleur d'avatar.
                 RUColor.tint(AccentTheme.current.primary, 0.16, over: RUColor.bg)
                 Text(initial.uppercased())
-                    .displayStyle(size * 0.4)
+                    .displayStyle(horsEchelle: size * 0.4)
                     .foregroundColor(AccentTheme.current.primary)
             }
         }

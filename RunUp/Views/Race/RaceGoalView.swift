@@ -148,7 +148,7 @@ struct RaceGoalView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                BackTitleHeaderView(eyebrow: "Ton objectif", title: goalTitle, titleSize: 24) { appState.go(.profile) }
+                BackTitleHeaderView(eyebrow: "Ton objectif", title: goalTitle, titleSize: .title) { appState.go(.profile) }
                 Text(dateLine).font(RUFont.sans(.body)).foregroundColor(RUColor.text2).padding(.leading, 34)
 
                 if hasRealRaceDay {
@@ -364,7 +364,7 @@ struct RaceGoalView: View {
                                     Text(pacingPlan[i].0).font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                                 }
                                 Spacer()
-                                (Text(pacingPlan[i].2).font(RUFont.display(18)).foregroundColor(isLast ? RUColor.rose2 : RUColor.textPrimary)
+                                (Text(pacingPlan[i].2).font(RUFont.display(.subtitle)).foregroundColor(isLast ? RUColor.rose2 : RUColor.textPrimary)
                                     + Text(verbatim: " /km").font(RUFont.sans(.micro)).foregroundColor(RUColor.text2))
                             }
                             .padding(.horizontal, 14).padding(.vertical, 12)
@@ -445,7 +445,7 @@ struct RaceGoalView: View {
         VStack(spacing: 4) {
             // Free-text values ("Sous 1h30", a custom chrono) must shrink in a third-of-screen
             // tile, not wrap or clip on 320-375pt phones.
-            Text(value).displayStyle(30).foregroundColor(highlighted ? RUColor.rose2 : RUColor.textPrimary)
+            Text(value).displayStyle(.figure).foregroundColor(highlighted ? RUColor.rose2 : RUColor.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.45)
                 .padding(.horizontal, 6)

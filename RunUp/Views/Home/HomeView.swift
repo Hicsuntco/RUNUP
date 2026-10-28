@@ -88,9 +88,11 @@ struct HomeView: View {
                     // dominant de l'app. Un prénom qu'on ne lit pas — on le sait déjà — occupait
                     // le haut du barème.
                     //
-                    // 26 le met à 28,3 : encore nettement au-dessus de tout texte de l'écran, et
-                    // sous les deux chiffres des cartes, qui sont ce qu'on vient voir.
-                    titleSize: 26
+                    // Le cran de titre de l'app le met à 24,0 : au-dessus de tout texte de
+                    // l'écran, et sous les deux chiffres des cartes, qui sont ce qu'on vient voir.
+                    // C'était un 26 écrit ici seulement ; le prénom n'a pas de raison d'être le
+                    // seul titre de l'app à son propre palier.
+                    titleSize: .title
                 ) {
                     HStack(spacing: 8) {
                         streakChip
@@ -237,7 +239,7 @@ struct HomeView: View {
                                     .foregroundColor(RUColor.text3)
                             }
                         }
-                        Text("\(weekEyebrow) · Bloc \(block.label)").displayStyle(17).foregroundColor(RUColor.textPrimary)
+                        Text("\(weekEyebrow) · Bloc \(block.label)").displayStyle(.subtitle).foregroundColor(RUColor.textPrimary)
                     }
                 }
                 .accessibilityElement(children: .combine)
@@ -355,7 +357,7 @@ struct HomeView: View {
                     }
                 }()
                 VStack(spacing: 6) {
-                    Text(day.displayLetter).displayStyle(12).foregroundColor(color)
+                    Text(day.displayLetter).displayStyle(.caption).foregroundColor(color)
                     ZStack {
                         if estAujourdhui && day.state != .done {
                             Circle().stroke(RUColor.rose2, lineWidth: 1.5)
@@ -520,7 +522,7 @@ struct HomeView: View {
         return VStack(alignment: .leading, spacing: 0) {
             sessionTag(repos, family: seance.family)
             Text(seance.displayTitle)
-                .displayStyle(repos ? 18 : 23)
+                .displayStyle(repos ? .subtitle : .title)
                 .foregroundColor(repos ? RUColor.text2 : RUColor.textPrimary)
                 .padding(.top, 8)
             Text(suggestion.raison)
@@ -543,7 +545,7 @@ struct HomeView: View {
                         VStack(alignment: .leading, spacing: 1) {
                             Text("\(seance.durationMinutes)")
                                 // 56 → 40. Voir la note jumelle sur `sessionCard`.
-                                .font(RUFont.display(40))
+                                .font(RUFont.display(.banner))
                                 .foregroundColor(RUColor.textPrimary)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.6)
@@ -553,8 +555,8 @@ struct HomeView: View {
                                 .textCase(.uppercase)
                                 .foregroundColor(RUColor.text3)
                         }
-                        MetricColumn(value: seance.pace, label: "Allure", valueSize: 17)
-                        MetricColumn(value: seance.zone, label: "Zone", valueSize: 17)
+                        MetricColumn(value: seance.pace, label: "Allure")
+                        MetricColumn(value: seance.zone, label: "Zone")
                     }
                     .padding(.top, 10)
                 }
@@ -590,7 +592,7 @@ struct HomeView: View {
             // d'une ligne, pour que le regard aille à l'anneau et aux chiffres de la semaine,
             // qui eux ont quelque chose à dire ce jour-là.
             Text(titre)
-                .displayStyle(isRestDay ? 18 : 23)
+                .displayStyle(isRestDay ? .subtitle : .title)
                 .foregroundColor(isRestDay ? RUColor.text2 : RUColor.textPrimary)
                 .padding(.top, 8)
 
@@ -689,7 +691,7 @@ struct HomeView: View {
                             // À 43,6 le rapport tombe à 1,7 : la durée domine toujours sa
                             // rangée de mesures — c'est elle le chiffre de la carte — sans
                             // écraser son propre titre ni tenir un tiers de l'écran.
-                            .font(RUFont.display(40))
+                            .font(RUFont.display(.banner))
                             .foregroundColor(RUColor.textPrimary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.6)
@@ -699,8 +701,8 @@ struct HomeView: View {
                             .textCase(.uppercase)
                             .foregroundColor(RUColor.text3)
                     }
-                    MetricColumn(value: session.pace, label: "Allure", valueSize: 17)
-                    MetricColumn(value: session.zone, label: "Zone", valueSize: 17)
+                    MetricColumn(value: session.pace, label: "Allure")
+                    MetricColumn(value: session.zone, label: "Zone")
                 }
                 .padding(.top, 10)
 
@@ -873,7 +875,7 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline, spacing: 3) {
                 Text(verbatim: value)
-                    .displayStyle(26)
+                    .displayStyle(.figure)
                     .foregroundColor(RUColor.textPrimary)
                     .monospacedDigit()
                     .lineLimit(1).minimumScaleFactor(0.6)
@@ -916,7 +918,7 @@ struct HomeView: View {
                             // prénom, la durée, cette fraction — et deux cartes suffisaient à
                             // le remplir en entier. Chacun reste le point de fixation de SON
                             // bloc ; aucun ne prétend plus l'être pour la page.
-                            .font(RUFont.display(36))
+                            .font(RUFont.display(.hero))
                             .foregroundColor(RUColor.textPrimary)
                             .monospacedDigit()
                         Text("Ta journée")

@@ -142,7 +142,7 @@ struct PaywallView: View {
             }
 
             Text(highlighted?.title ?? String(localized: "RUNUP Plus"))
-                .displayStyle(34)
+                .displayStyle(.hero)
                 .foregroundColor(RUColor.onRose)
                 .fixedSize(horizontal: false, vertical: true)
             Text(highlighted?.pitch ?? String(localized: "Ton programme, ton coach et tes stats. Sans rien qui manque."))

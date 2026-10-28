@@ -435,7 +435,7 @@ struct RecapView: View {
             .frame(maxHeight: .infinity, alignment: .top)
             VStack(alignment: .leading, spacing: 3) {
                 EyebrowLabel(text: "✓ Séance terminée", color: RUColor.lime)
-                Text(verbatim: run.titreAffiche).displayStyle(26).foregroundColor(RUColor.textPrimary)
+                Text(verbatim: run.titreAffiche).displayStyle(.title).foregroundColor(RUColor.textPrimary)
             }
             .padding(.horizontal, 18)
             .padding(.bottom, 14)
@@ -561,7 +561,7 @@ struct RecapView: View {
 
     private func statTile(_ value: String, _ label: String, _ color: Color = RUColor.textPrimary, index: Int = 0) -> some View {
         VStack(spacing: 3) {
-            Text(value).displayStyle(24).foregroundColor(color)
+            Text(value).displayStyle(.title).foregroundColor(color)
             Text(label).font(RUFont.sans(.micro, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
         }
         .frame(maxWidth: .infinity)

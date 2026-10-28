@@ -9,7 +9,7 @@ struct NotificationsSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Notifications").displayStyle(22).foregroundColor(RUColor.textPrimary).padding(.top, 8)
+                Text("Notifications").displayStyle(.title).foregroundColor(RUColor.textPrimary).padding(.top, 8)
 
                 if notifications.isEmpty {
                     // Was a blank scroll area under the title with no empty-state copy at all —

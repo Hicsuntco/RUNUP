@@ -489,7 +489,7 @@ struct StatsView: View {
             }
             if let recentAvgPace {
                 HStack(alignment: .lastTextBaseline, spacing: 6) {
-                    Text(PaceModel.formatDuration(recentAvgPace)).displayStyle(44).foregroundColor(RUColor.textPrimary)
+                    Text(PaceModel.formatDuration(recentAvgPace)).displayStyle(.banner).foregroundColor(RUColor.textPrimary)
                     Text("/km").font(RUFont.sans(.emphasis)).foregroundColor(RUColor.text2)
                     // Poussé au bord droit (le `margin-left:auto` de la maquette) : collé au
                     // "/km", le delta se lisait comme une deuxième unité accrochée au chiffre
@@ -772,7 +772,7 @@ struct StatsView: View {
             // silently never localized despite the app having EN/ES translations. Pre-existing gap,
             // fixed in passing since this function was already touched for the MARATHON tile.
             Text(LocalizedStringKey(label)).font(RUFont.sans(.micro, weight: .bold)).tracking(1.5).foregroundColor(RUColor.text2)
-            Text(value).displayStyle(22).foregroundColor(highlighted ? RUColor.rose2 : RUColor.textPrimary)
+            Text(value).displayStyle(.title).foregroundColor(highlighted ? RUColor.rose2 : RUColor.textPrimary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)

@@ -67,7 +67,7 @@ struct ObTitle: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             EyebrowLabel(text: eyebrow, color: RUColor.rose)
-            Text(LocalizedStringKey(title)).displayStyle(30).foregroundColor(RUColor.textPrimary).lineSpacing(-2)
+            Text(LocalizedStringKey(title)).displayStyle(.figure).foregroundColor(RUColor.textPrimary).lineSpacing(-2)
             if let subtitle {
                 Text(LocalizedStringKey(subtitle))
                     .font(RUFont.sans(.label))

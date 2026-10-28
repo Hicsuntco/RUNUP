@@ -37,7 +37,7 @@ struct SignInView: View {
                 VStack(spacing: 18) {
                     VStack(spacing: 10) {
                         AppMarkView(size: 56)
-                        Text("Connecte-toi").displayStyle(22).foregroundColor(RUColor.textPrimary)
+                        Text("Connecte-toi").displayStyle(.title).foregroundColor(RUColor.textPrimary)
                         Text("Pour rejoindre un vrai club, avec un classement et un fil d'activité réels.")
                             .font(RUFont.sans(.body))
                             .foregroundColor(RUColor.text2)
@@ -97,7 +97,7 @@ struct SignInView: View {
         VStack(spacing: 18) {
             VStack(spacing: 10) {
                 AppMarkView(size: 56)
-                Text("Choisis ton pseudo").displayStyle(22).foregroundColor(RUColor.textPrimary)
+                Text("Choisis ton pseudo").displayStyle(.title).foregroundColor(RUColor.textPrimary)
                 Text("Pour que tes amis te retrouvent facilement dans la recherche.")
                     .font(RUFont.sans(.body))
                     .foregroundColor(RUColor.text2)

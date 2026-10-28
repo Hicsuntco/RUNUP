@@ -145,7 +145,7 @@ struct RacePageView: View {
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(courante.name)
-                        .font(RUFont.display(21))
+                        .font(RUFont.display(.title))
                         .foregroundColor(RUColor.textPrimary)
                     Text(courante.dateLisible)
                         .font(RUFont.sans(.label, weight: .semibold))
@@ -264,7 +264,7 @@ struct RacePageView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 Text("Ce que tu vises")
-                    .font(RUFont.display(21))
+                    .font(RUFont.display(.title))
                     .foregroundColor(RUColor.textPrimary)
 
                 VStack(alignment: .leading, spacing: 6) {

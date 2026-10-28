@@ -102,7 +102,7 @@ struct WeeklyRecapView: View {
                 BackTitleHeaderView(
                     eyebrow: String(localized: "Semaine \(profile.weekNumber) · \(weekDateRangeLabel)"),
                     title: isBestWeekEver ? "Ta meilleure semaine 🔥" : "Bilan de la semaine",
-                    titleSize: 24
+                    titleSize: .title
                 ) {
                     appState.go(.stats)
                 }
@@ -118,7 +118,7 @@ struct WeeklyRecapView: View {
                 if let avgPaceSecPerKm {
                     HStack {
                         RUCardHeader(icon: "speedometer", tint: RUColor.violet, title: "Allure moyenne")
-                        Text(verbatim: "\(PaceModel.formatDuration(avgPaceSecPerKm))/km").displayStyle(18).foregroundColor(RUColor.textPrimary)
+                        Text(verbatim: "\(PaceModel.formatDuration(avgPaceSecPerKm))/km").displayStyle(.subtitle).foregroundColor(RUColor.textPrimary)
                     }
                     .padding(16)
                     .ruCard()
@@ -176,7 +176,7 @@ struct WeeklyRecapView: View {
     private func statTile(value: String, unit: String?, label: String, color: Color, chip: String?, chipColor: Color) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .lastTextBaseline, spacing: 3) {
-                Text(value).displayStyle(30).foregroundColor(color)
+                Text(value).displayStyle(.figure).foregroundColor(color)
                 if let unit {
                     Text(unit).font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
                 }

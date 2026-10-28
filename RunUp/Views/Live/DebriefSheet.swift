@@ -71,7 +71,7 @@ struct DebriefSheet: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 EyebrowLabel(text: String(localized: "Bilan · \(run.title)"), color: RUColor.rose).padding(.top, 8)
-                Text("Comment tu te sens ?").displayStyle(24).foregroundColor(RUColor.textPrimary).padding(.top, 4)
+                Text("Comment tu te sens ?").displayStyle(.title).foregroundColor(RUColor.textPrimary).padding(.top, 4)
 
                 // LE MOT DU COACH SORT DE SA BOÎTE, ET REDESCEND À LA TAILLE D'UNE PHRASE.
                 //

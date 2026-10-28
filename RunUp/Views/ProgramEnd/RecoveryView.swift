@@ -17,7 +17,7 @@ struct RecoveryView: View {
 
                 VStack(spacing: 12) {
                     Text("🌿").font(.system(size: 34))
-                    Text("Place à la récupération").displayStyle(22).foregroundColor(RUColor.textPrimary)
+                    Text("Place à la récupération").displayStyle(.title).foregroundColor(RUColor.textPrimary)
                     Text("Ton corps a fait le plus dur. On souffle \(total) jours avant de repartir — c'est ce qui fait tenir les progrès dans la durée.")
                         .font(RUFont.sans(.label)).foregroundColor(RUColor.text2).multilineTextAlignment(.center).lineSpacing(3)
 
@@ -29,7 +29,7 @@ struct RecoveryView: View {
                                 .frame(width: 34, height: 34)
                                 .overlay(
                                     Text(i < done ? "✓" : "\(i + 1)")
-                                        .displayStyle(13)
+                                        .displayStyle(.label)
                                         // `onAccent` et non un noir écrit à la main : la pastille est remplie de
                                         // `lime`, qui vaut 0xC8FF3D en sombre et 0x6B9E00 en clair. La règle
                                         // choisit par la luminance du fond réel — ce qu'un littéral ne peut

@@ -81,7 +81,7 @@ struct NewGoalWizardView: View {
                 // L'APP. Et la seconde porte était pire : programme terminé, l'app lui demande
                 // de choisir la suite, et l'écran du choix se referme sur elle.
                 VStack(alignment: .leading, spacing: 16) {
-                    BackTitleHeaderView(title: "Nouvel objectif", titleSize: 20) { dismiss() }
+                    BackTitleHeaderView(title: "Nouvel objectif", titleSize: .subtitle) { dismiss() }
                         .padding(.top, 8)
                     ScrollView { PlusLockCard(feature: .raceGoal) }
                 }
@@ -97,7 +97,7 @@ struct NewGoalWizardView: View {
     private var content: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                BackTitleHeaderView(title: "Nouvel objectif", titleSize: 20) {
+                BackTitleHeaderView(title: "Nouvel objectif", titleSize: .subtitle) {
                     if step == 0 { dismiss() } else { step -= 1 }
                 }
                 .padding(.top, 8)
@@ -156,7 +156,7 @@ struct NewGoalWizardView: View {
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                 ForEach(formats, id: \.self) { d in
                     Button(action: { distance = d; chrono = d.chronoPresets[safe: 1] ?? "" }) {
-                        Text(d.label).displayStyle(20).foregroundColor(distance == d ? RUColor.rose2 : RUColor.textPrimary)
+                        Text(d.label).displayStyle(.subtitle).foregroundColor(distance == d ? RUColor.rose2 : RUColor.textPrimary)
                             .frame(maxWidth: .infinity).padding(.vertical, 16)
                             .background(distance == d ? RUColor.card2 : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous).stroke(distance == d ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
@@ -326,7 +326,7 @@ struct NewGoalWizardView: View {
                 ForEach(0..<7) { i in
                     let on = days.contains(i)
                     Button(action: { if on { days.remove(i) } else { days.insert(i) } }) {
-                        Text(DayStatus.letters[i]).displayStyle(15).foregroundColor(on ? .white : RUColor.text2)
+                        Text(DayStatus.letters[i]).displayStyle(.label).foregroundColor(on ? .white : RUColor.text2)
                             .frame(maxWidth: .infinity).aspectRatio(1, contentMode: .fit)
                             .background(on ? RUColor.rose : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous).stroke(on ? RUColor.rose : RUColor.line, lineWidth: RUSpacing.hairline))
@@ -358,7 +358,7 @@ struct NewGoalWizardView: View {
                     .font(.system(size: 26))
                     .foregroundColor(buildFinished ? RUColor.lime : RUColor.textPrimary)
             }
-            Text("Ton nouveau\nprogramme arrive").displayStyle(22).multilineTextAlignment(.center).foregroundColor(RUColor.textPrimary)
+            Text("Ton nouveau\nprogramme arrive").displayStyle(.title).multilineTextAlignment(.center).foregroundColor(RUColor.textPrimary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         // L'animation démarrait dans l'action du bouton, donc dans le même tour de boucle que le

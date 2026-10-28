@@ -208,7 +208,7 @@ struct CoachView: View {
         HStack(spacing: 12) {
             AppMarkView(size: 40)
             VStack(alignment: .leading, spacing: 2) {
-                Text("Ton coach").displayStyle(19).foregroundColor(RUColor.textPrimary)
+                Text("Ton coach").displayStyle(.subtitle).foregroundColor(RUColor.textPrimary)
                 // Honest subtitle — the old green "en ligne" dot measured nothing (it was
                 // hardcoded, lit even in airplane mode).
                 Text("Connaît ton programme")

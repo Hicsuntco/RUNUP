@@ -34,7 +34,7 @@ struct WeekKmSummary: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .lastTextBaseline, spacing: 4) {
                 Text(String(format: "%.1f", locale: Locale.current, doneKm))
-                    .displayStyle(26)
+                    .displayStyle(.figure)
                     .foregroundColor(RUColor.textPrimary)
                     .lineLimit(1).minimumScaleFactor(0.7)
                 // Le dénominateur reste petit et gris : c'est une précision sur le chiffre, pas

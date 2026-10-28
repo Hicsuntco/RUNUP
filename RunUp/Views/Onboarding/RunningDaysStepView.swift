@@ -19,7 +19,7 @@ struct RunningDaysStepView: View {
                             if on { vm.runningDays.remove(i) } else { vm.runningDays.insert(i) }
                         }) {
                             Text(DayStatus.letters[i])
-                                .displayStyle(15)
+                                .displayStyle(.label)
                                 .foregroundColor(on ? .white : RUColor.text2)
                                 .frame(maxWidth: .infinity)
                                 .aspectRatio(1, contentMode: .fit)
@@ -48,7 +48,7 @@ struct RunningDaysStepView: View {
                             let on = vm.effectiveLongRunDay == i
                             Button(action: { vm.preferredLongRunDay = i }) {
                                 Text(DayStatus.letters[i])
-                                    .displayStyle(15)
+                                    .displayStyle(.label)
                                     .foregroundColor(on ? .white : RUColor.text2)
                                     .frame(maxWidth: .infinity)
                                     .aspectRatio(1, contentMode: .fit)

@@ -90,7 +90,7 @@ struct RouteDetailSheet: View {
     private var title: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(current.name)
-                .font(RUFont.display(26))
+                .font(RUFont.display(.title))
                 .foregroundColor(RUColor.textPrimary)
             if let author = current.authorName {
                 Text(String(localized: "Partagé par \(author)"))
@@ -119,7 +119,7 @@ struct RouteDetailSheet: View {
 
     private func statTile(_ value: String, _ label: String) -> some View {
         VStack(spacing: 2) {
-            Text(value).font(RUFont.display(22)).foregroundColor(RUColor.textPrimary)
+            Text(value).font(RUFont.display(.title)).foregroundColor(RUColor.textPrimary)
             Text(label).font(RUFont.sans(.micro, weight: .semibold)).tracking(1).foregroundColor(RUColor.text3)
         }
         .frame(maxWidth: .infinity)

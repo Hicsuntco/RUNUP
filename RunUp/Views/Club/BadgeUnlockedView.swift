@@ -76,7 +76,7 @@ struct BadgeUnlockedView: View {
                         .tracking(2.5)
                         .foregroundColor(RUColor.text3)
                     Text(badge.name)
-                        .font(RUFont.display(30))
+                        .font(RUFont.display(.figure))
                         .foregroundColor(RUColor.textPrimary)
                         .multilineTextAlignment(.center)
                     Text(badge.detail)

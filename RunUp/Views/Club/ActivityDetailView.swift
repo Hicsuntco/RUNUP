@@ -222,7 +222,7 @@ struct ActivityDetailView: View {
             ForEach(cases, id: \.libelle) { mesure in
                 VStack(alignment: .leading, spacing: 3) {
                     Text(mesure.valeur)
-                        .displayStyle(20)
+                        .displayStyle(.title)
                         .foregroundColor(RUColor.textPrimary)
                         .lineLimit(1).minimumScaleFactor(0.6)
                     Text(LocalizedStringKey(mesure.libelle))

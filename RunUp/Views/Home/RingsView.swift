@@ -129,7 +129,7 @@ struct RingsView: View {
                     DailyGoalsBarsView(goals: displayGoals.map { .init(slot: $0.slot, progress: $0.progress) }, size: 168, animateOnAppear: true)
                         .opacity(isLoadingHistoricalDay ? 0.4 : 1)
                     VStack(spacing: 2) {
-                        Text("\(displayDone) / \(displayTotal)").displayStyle(28).foregroundColor(RUColor.textPrimary)
+                        Text("\(displayDone) / \(displayTotal)").displayStyle(.figure).foregroundColor(RUColor.textPrimary)
                         Text("BOUCLÉS")
                             .font(RUFont.sans(.small, weight: .bold))
                             .tracking(1.5)
@@ -175,7 +175,7 @@ struct RingsView: View {
                         // spring scale-in gives it the "achievement unlocked" beat the static text
                         // didn't have, matching the ring's own animate-on-appear fill above.
                         VStack(spacing: 6) {
-                            Text("JOURNÉE BOUCLÉE").displayStyle(26).foregroundColor(RUColor.textPrimary)
+                            Text("JOURNÉE BOUCLÉE").displayStyle(.title).foregroundColor(RUColor.textPrimary)
                             Text("Tes \(p.dailyGoalsTotal) objectifs du jour atteints 👏 +120 XP").font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
                         }
                         .frame(maxWidth: .infinity)

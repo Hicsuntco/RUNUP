@@ -7,7 +7,7 @@ struct HeaderView<Trailing: View>: View {
     /// La taille du titre, réglable comme celle de `BackTitleHeaderView` juste en dessous, et pour
     /// la même raison : un onglet de premier niveau ne se lit pas à la même échelle qu'un écran
     /// poussé par-dessus. Le défaut reste la valeur d'avant, donc aucun appelant existant ne bouge.
-    var titleSize: CGFloat = 24
+    var titleSize: RUDisplaySize = .title
     @ViewBuilder var trailing: Trailing
 
     var body: some View {
@@ -45,7 +45,7 @@ struct BackTitleHeaderView<Trailing: View>: View {
     /// aujourd'hui, ce qui dit assez que le rose n'était pas un choix mais un défaut hérité.
     var eyebrowColor: Color = RUColor.text3
     var title: String
-    var titleSize: CGFloat = 22
+    var titleSize: RUDisplaySize = .title
     var onBack: () -> Void
     @ViewBuilder var trailing: Trailing
 
@@ -67,7 +67,7 @@ struct BackTitleHeaderView<Trailing: View>: View {
 }
 
 extension BackTitleHeaderView where Trailing == EmptyView {
-    init(eyebrow: String? = nil, eyebrowColor: Color = RUColor.text3, title: String, titleSize: CGFloat = 22, onBack: @escaping () -> Void) {
+    init(eyebrow: String? = nil, eyebrowColor: Color = RUColor.text3, title: String, titleSize: RUDisplaySize = .title, onBack: @escaping () -> Void) {
         self.init(eyebrow: eyebrow, eyebrowColor: eyebrowColor, title: title, titleSize: titleSize, onBack: onBack, trailing: { EmptyView() })
     }
 }

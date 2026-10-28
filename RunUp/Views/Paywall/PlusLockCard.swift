@@ -42,7 +42,7 @@ struct PlusLockCard: View {
             .foregroundColor(RUColor.rose)
 
             Text(feature.title)
-                .font(compact ? RUFont.sans(.emphasis, weight: .semibold) : RUFont.display(22))
+                .font(compact ? RUFont.sans(.emphasis, weight: .semibold) : RUFont.display(.title))
                 .foregroundColor(RUColor.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
 

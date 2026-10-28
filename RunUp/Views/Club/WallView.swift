@@ -144,7 +144,7 @@ struct WallView: View {
                 // L'écran y gagne la hauteur d'une ligne avant la première carte, ce qui est ce
                 // qu'un fil a de mieux à faire de sa place.
                 Text("Le fil")
-                    .displayStyle(24)
+                    .displayStyle(.title)
                     .foregroundColor(RUColor.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.bottom, 14)

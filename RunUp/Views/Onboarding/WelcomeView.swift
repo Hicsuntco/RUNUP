@@ -25,7 +25,7 @@ struct WelcomeView: View {
                             .shadow(color: RUColor.rose.opacity(RUColor.isLight ? 0 : 0.4), radius: 30, x: 0, y: 16)
 
                         Text("COURS COMME\nSI TU AVAIS\nUN COACH")
-                            .displayStyle(42)
+                            .displayStyle(.banner)
                             .foregroundColor(RUColor.textPrimary)
                             .lineSpacing(-4)
                             .padding(.top, 24)

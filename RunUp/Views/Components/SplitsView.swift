@@ -61,7 +61,7 @@ struct SplitsView: View {
             // minWidth, pas une largeur fixe — un « m:ss » tient dans 38 points à la taille de
             // texte par défaut, mais les tailles d'accessibilité ont besoin que la ligne grandisse
             // plutôt que de tronquer le temps.
-            Text(time).displayStyle(14).foregroundColor(isLast ? RUColor.rose2 : RUColor.textPrimary).frame(minWidth: 38, alignment: .trailing)
+            Text(time).displayStyle(.label).foregroundColor(isLast ? RUColor.rose2 : RUColor.textPrimary).frame(minWidth: 38, alignment: .trailing)
         }
         // La barre ne porte aucune valeur VoiceOver, et « dernier split » n'existait qu'en
         // couleur — combinés en un seul élément avec un libellé et une valeur explicites.

@@ -43,7 +43,7 @@ struct PlanRecapView: View {
                             .font(.system(size: 46))
                             .accessibilityHidden(true)
                         Text(goal.title)
-                            .displayStyle(29)
+                            .displayStyle(.figure)
                             .multilineTextAlignment(.center)
                             .foregroundColor(RUColor.textPrimary)
                             .lineSpacing(-2)

@@ -46,7 +46,7 @@ struct SplashView: View {
                     .scaleEffect(0.88 + 0.12 * tile)
 
                 Text(verbatim: "RUNUP")
-                    .font(RUFont.display(34))
+                    .font(RUFont.display(.hero))
                     .tracking(4)
                     .foregroundColor(RUColor.textPrimary)
                     .fixedSize()

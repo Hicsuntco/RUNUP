@@ -300,6 +300,13 @@ jobs:
       - name: Vérifier que la couleur de marque est la même partout
         run: python3 ci_scripts/check_accent.py
 
+      # L'échelle de titrage avait vingt-six tailles écrites à la main, dont sept dans six points.
+      # Le compilateur refuse maintenant un nombre nu ; il ne peut pas refuser la porte de
+      # service `horsEchelle:`, et c'est par une porte de service que les vingt-six étaient
+      # arrivées — une exception qui rend la suivante normale.
+      - name: Vérifier que l'échelle de titrage reste fermée
+        run: python3 ci_scripts/check_echelle.py
+
       - name: Vérifier que le compteur du Club ne compte que des gestes délibérés
         run: python3 ci_scripts/check_club_metrics.py
 

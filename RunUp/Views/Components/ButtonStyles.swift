@@ -30,7 +30,7 @@ struct PrimaryButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(RUFont.display(16))
+            .font(RUFont.display(.label))
             .tracking(1)
             // Encre décidée par la luminance de l'accent, pas un blanc en dur : sur les
             // palettes pâles du nuancier (Lime, Cyan, Ambre) le libellé blanc tombait à

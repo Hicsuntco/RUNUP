@@ -345,7 +345,7 @@ struct ClubView: View {
                             EyebrowLabel(text: "Le Club")
                         }
                         HStack(spacing: 6) {
-                            Text(club.name).displayStyle(24).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                            Text(club.name).displayStyle(.title).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
                             Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundColor(RUColor.text3)
                         }
                         // CE QUE LE CLUB EST, ET OÙ IL COURT. Sans ces deux lignes, la page
@@ -370,7 +370,7 @@ struct ClubView: View {
                             .foregroundColor(RUColor.rose)
                         EyebrowLabel(text: "Le Club")
                     }
-                    Text("Rejoins un club").displayStyle(24).foregroundColor(RUColor.textPrimary)
+                    Text("Rejoins un club").displayStyle(.title).foregroundColor(RUColor.textPrimary)
                 }
             }
             Spacer()
@@ -603,7 +603,7 @@ struct ClubView: View {
         let encre = clair ? RUColor.textPrimary : Color.white
         let encre2 = clair ? RUColor.text3 : Color.white.opacity(0.65)
         return HStack(spacing: 14) {
-            Text("\(info.level)").displayStyle(22).foregroundColor(.white)
+            Text("\(info.level)").displayStyle(.title).foregroundColor(.white)
                 .contentTransition(.numericText())
                 .frame(width: 52, height: 52)
                 .background(LinearGradient(colors: [RUColor.violet, RUColor.rose], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
@@ -718,7 +718,7 @@ struct ClubView: View {
                     RUCardHeader(title: "Défi du club")
                     StatChip(text: String(localized: "J-\(daysLeft(until: challenge.endDate))"), color: RUColor.rose2)
                 }
-                Text(challenge.title).displayStyle(19).foregroundColor(RUColor.textPrimary)
+                Text(challenge.title).displayStyle(.subtitle).foregroundColor(RUColor.textPrimary)
                 LinearBar(fraction: challenge.targetKm > 0 ? min(1, challenge.progressKm / challenge.targetKm) : 0, color: RUColor.rose)
                 HStack {
                     Text(challengeProgressText(challenge)).font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
@@ -1014,7 +1014,7 @@ struct ClubView: View {
                 RUCardHeader(title: "Les séances tenues")
                 HStack(alignment: .lastTextBaseline, spacing: 6) {
                     Text("\(histo.averageAttendees)")
-                        .displayStyle(26)
+                        .displayStyle(.figure)
                         .foregroundColor(RUColor.textPrimary)
                     // Pas de `Pluriel` ici : « au départ en moyenne » ne s'accorde pas, et
                     // appeler le choix de pluriel avec deux fois la même phrase donnerait deux
@@ -1106,7 +1106,7 @@ struct ClubView: View {
                 // nominatifs qui suivent restent à 21 — l'écart entre 36 et 23 est précisément
                 // ce qui fait de l'un un titre et des autres une liste.
                 Text(Distances.km(semaine.km))
-                    .displayStyle(33)
+                    .displayStyle(.hero)
                     .foregroundColor(RUColor.textPrimary)
             }
             Spacer(minLength: 8)
@@ -1146,7 +1146,7 @@ struct ClubView: View {
                         .font(RUFont.sans(.micro, weight: .bold)).tracking(0.6)
                         .foregroundColor(RUColor.text3)
                     Text(valeurDuRecord(record))
-                        .displayStyle(21)
+                        .displayStyle(.title)
                         .foregroundColor(RUColor.textPrimary)
                 }
                 Spacer(minLength: 8)
@@ -1274,7 +1274,7 @@ struct ClubView: View {
                     // lorsqu'il y a quelque chose à écrire ; sinon, une phrase.
                     if stats?.totalKm ?? 0 > 0 {
                         HStack(alignment: .lastTextBaseline, spacing: 4) {
-                            Text(km).displayStyle(26).foregroundColor(RUColor.textPrimary)
+                            Text(km).displayStyle(.figure).foregroundColor(RUColor.textPrimary)
                             Text("KM").font(RUFont.sans(.small, weight: .bold)).foregroundColor(RUColor.text2)
                         }
                     } else {
@@ -1738,7 +1738,7 @@ struct ClubView: View {
     /// donc corrigé une fois ici plutôt que trois fois là-bas.
     private func rang(_ valeur: Int, estMoi: Bool) -> some View {
         Text("\(valeur)")
-            .displayStyle(15)
+            .displayStyle(.label)
             .foregroundColor(estMoi ? RUColor.rose2 : (valeur == 1 ? RUColor.amber : RUColor.text2))
             .frame(width: 20)
     }
@@ -1758,7 +1758,7 @@ struct ClubView: View {
                 weeklyPctBadge(pct: pct, isMe: entry.isMe)
             } else {
                 Text(verbatim: "\(String(format: "%.1f", locale: Locale.current, entry.weekKm)) km")
-                    .displayStyle(14).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
+                    .displayStyle(.label).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
             }
         }
         // Même retrait horizontal pour TOUTES les lignes (et non un retrait plus grand pour la
@@ -1790,7 +1790,7 @@ struct ClubView: View {
                     .rotationEffect(.degrees(-90))
             }
             .frame(width: 20, height: 20)
-            Text("\(pct)%").displayStyle(14).foregroundColor(color)
+            Text("\(pct)%").displayStyle(.label).foregroundColor(color)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(pct) pour cent de l'objectif de la semaine")
@@ -1826,7 +1826,7 @@ struct ClubView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
             Spacer()
-            Text("\(entry.xp)").displayStyle(15).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
+            Text("\(entry.xp)").displayStyle(.label).foregroundColor(entry.isMe ? RUColor.rose2 : RUColor.textPrimary)
         }
         // Même chrome que `weekRow` ci-dessus (retrait uniforme, fond teinté pour « toi »).
         .padding(.horizontal, 8)

@@ -49,7 +49,7 @@ struct CreateRaceSheet: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Ajouter une course")
-                    .font(RUFont.display(22))
+                    .font(RUFont.display(.title))
                     .foregroundColor(RUColor.textPrimary)
 
                 champ(titre: String(localized: "Nom de la course"), texte: $nom,

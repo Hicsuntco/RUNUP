@@ -21,7 +21,7 @@ struct AccountSwitchSheet: View {
                 .padding(.bottom, 2)
 
             Text("Ces données ne sont pas les tiennes")
-                .displayStyle(26)
+                .displayStyle(.title)
                 .foregroundColor(RUColor.textPrimary)
 
             // Le nom du profil local, pas celui du compte qui arrive : c'est lui qui est à l'écran

@@ -85,7 +85,7 @@ struct RunVideoFrameView: View {
     private var entete: some View {
         VStack(spacing: 5) {
             Text(verbatim: run.titreAffiche)
-                .font(RUFont.display(26))
+                .font(RUFont.display(horsEchelle: 26))
                 .foregroundColor(.white)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
@@ -122,7 +122,7 @@ struct RunVideoFrameView: View {
                 .tracking(2.5)
                 .foregroundColor(.white.opacity(0.6))
             Text(verbatim: valeur)
-                .font(RUFont.display(34))
+                .font(RUFont.display(horsEchelle: 34))
                 .foregroundStyle(LinearGradient(colors: [Self.rose, Self.violet],
                                                 startPoint: .leading, endPoint: .trailing))
                 .lineLimit(1)
@@ -136,7 +136,7 @@ struct RunVideoFrameView: View {
         HStack(spacing: 7) {
             AppMarkView(size: 24)
             Text(verbatim: "RUNUP")
-                .font(RUFont.display(19))
+                .font(RUFont.display(horsEchelle: 19))
                 .tracking(3)
                 .foregroundColor(.white)
         }

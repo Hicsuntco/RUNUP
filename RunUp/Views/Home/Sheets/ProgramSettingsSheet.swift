@@ -13,7 +13,7 @@ struct ProgramSettingsSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text("Modifier mon programme").displayStyle(22).foregroundColor(RUColor.textPrimary).padding(.top, 8)
+                Text("Modifier mon programme").displayStyle(.title).foregroundColor(RUColor.textPrimary).padding(.top, 8)
 
                 EyebrowLabel(text: "Jours de course", color: RUColor.text3).padding(.top, 20).padding(.bottom, 10)
                 // spacing 5, not 7 — same fix as onboarding's RunningDaysStepView: on the
@@ -24,7 +24,7 @@ struct ProgramSettingsSheet: View {
                         let on = days.contains(i)
                         Button(action: { if on { days.remove(i) } else { days.insert(i) } }) {
                             Text(DayStatus.letters[i])
-                                .displayStyle(15)
+                                .displayStyle(.label)
                                 .foregroundColor(on ? .white : RUColor.text2)
                                 .frame(maxWidth: .infinity)
                                 .aspectRatio(1, contentMode: .fit)

@@ -125,7 +125,7 @@ struct PublicProfileView: View {
                 .padding(.top, 8)
 
             Text(profil.nomComplet)
-                .font(RUFont.display(23))
+                .font(RUFont.display(.title))
                 .foregroundColor(RUColor.textPrimary)
                 .multilineTextAlignment(.center)
 

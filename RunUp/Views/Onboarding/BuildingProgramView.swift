@@ -73,7 +73,7 @@ struct BuildingProgramView: View {
                     // envoyé l'anneau à 125 % et laissé la coche de fin inatteignable.
                     RingView(pct: buildFraction * 100, color: RUColor.rose, size: 110, strokeWidth: 7) {
                         Text(buildIsDone ? "✓" : "\(Int(buildFraction * 100))%")
-                            .displayStyle(30)
+                            .displayStyle(.figure)
                             .foregroundColor(buildIsDone ? RUColor.lime : RUColor.textPrimary)
                     }
                     VStack(spacing: 6) {
@@ -85,7 +85,7 @@ struct BuildingProgramView: View {
                             EyebrowLabel(text: String(localized: "Pour \(vm.name.trimmingCharacters(in: .whitespaces))"), color: RUColor.rose)
                         }
                         Text("ON CONSTRUIT\nTON PROGRAMME")
-                            .displayStyle(28)
+                            .displayStyle(.figure)
                             .multilineTextAlignment(.center)
                             .foregroundColor(RUColor.textPrimary)
                             .lineSpacing(-2)

@@ -167,7 +167,7 @@ struct SessionDetailSheet: View {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
                         RUCardHeader(icon: isRestDay ? "moon.zzz.fill" : "figure.run", tint: RUColor.rose, title: isRestDay ? "Aujourd'hui" : "Séance clé")
-                        Text(session.displayTitle).displayStyle(26).foregroundColor(RUColor.textPrimary)
+                        Text(session.displayTitle).displayStyle(.title).foregroundColor(RUColor.textPrimary)
                     }
                     Spacer()
                     if let adj = session.adjustment {

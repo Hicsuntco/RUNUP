@@ -125,7 +125,7 @@ struct ProfileView: View {
             HStack(alignment: .top, spacing: 14) {
                 avatarButton
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(profile.name).displayStyle(24).foregroundColor(RUColor.textPrimary)
+                    Text(profile.name).displayStyle(.title).foregroundColor(RUColor.textPrimary)
                     if let pseudo = auth.currentUser?.username, !pseudo.isEmpty {
                         Text(verbatim: "@\(pseudo)")
                             .font(RUFont.sans(.body))
@@ -369,7 +369,7 @@ struct ProfileView: View {
     /// Taille du chiffre, écrite une fois : `displayStyle` ne s'applique pas à un `Text` composé,
     /// donc sa police et son interlettrage sont reproduits ci-dessous et doivent rester d'accord
     /// avec lui.
-    private static let statValueSize: CGFloat = 19
+    private static let statValueSize: RUDisplaySize = .subtitle
 
     private func statCell(value: String, label: String, valueColor: Color = RUColor.textPrimary, icon: String? = nil) -> some View {
         // La flamme est une PIÈCE JOINTE dans le `Text`, pas une vue posée à côté de lui.
@@ -395,7 +395,7 @@ struct ProfileView: View {
         return HStack(alignment: .firstTextBaseline, spacing: 4) {
             number
                 .font(RUFont.display(Self.statValueSize))
-                .tracking(-Self.statValueSize * 0.03)
+                .tracking(-Self.statValueSize.rawValue * 0.03)
                 .foregroundColor(valueColor)
             Text(label).font(RUFont.sans(.micro, weight: .semibold)).foregroundColor(RUColor.text3)
         }
@@ -452,7 +452,7 @@ struct ProfileView: View {
     private func firstDayFact(icon: String, value: String, label: String) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             Image(systemName: icon).font(.system(size: 11, weight: .semibold)).foregroundColor(RUColor.rose)
-            Text(value).displayStyle(19).foregroundColor(RUColor.textPrimary)
+            Text(value).displayStyle(.subtitle).foregroundColor(RUColor.textPrimary)
                 .lineLimit(1).minimumScaleFactor(0.6)
             Text(LocalizedStringKey(label))
                 .font(RUFont.sans(.micro, weight: .semibold)).foregroundColor(RUColor.text3)

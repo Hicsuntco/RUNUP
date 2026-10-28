@@ -570,7 +570,7 @@ struct FriendsView: View {
 
     private func countLabel(value: Int, label: String) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 4) {
-            Text("\(value)").displayStyle(17).foregroundColor(RUColor.textPrimary)
+            Text("\(value)").displayStyle(.subtitle).foregroundColor(RUColor.textPrimary)
             Text(label).font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text3)
         }
         .frame(minHeight: 44)

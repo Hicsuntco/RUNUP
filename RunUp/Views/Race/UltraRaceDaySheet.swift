@@ -22,7 +22,7 @@ struct UltraRaceDaySheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Le jour J").displayStyle(22).foregroundColor(RUColor.textPrimary).padding(.top, 8)
+                Text("Le jour J").displayStyle(.title).foregroundColor(RUColor.textPrimary).padding(.top, 8)
                 Text("Trois choses décident d'un ultra, et aucune n'est ton entraînement. Elles se préparent — et elles se testent sur tes sorties longues, jamais le jour J.")
                     .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
 
@@ -164,7 +164,7 @@ struct UltraRaceDaySheet: View {
 
     private func chiffre(_ valeur: String, _ etiquette: Text) -> some View {
         VStack(spacing: 4) {
-            Text(verbatim: valeur).displayStyle(22).foregroundColor(RUColor.rose2)
+            Text(verbatim: valeur).displayStyle(.title).foregroundColor(RUColor.rose2)
                 .lineLimit(1).minimumScaleFactor(0.5)
             etiquette
                 .font(RUFont.sans(.micro, weight: .bold))

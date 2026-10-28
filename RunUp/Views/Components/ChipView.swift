@@ -217,7 +217,7 @@ struct MetricColumn: View {
     var value: String
     var label: String
     var valueColor: Color = RUColor.textPrimary
-    var valueSize: CGFloat = 20
+    var valueSize: RUDisplaySize = .subtitle
     /// Les rangées de métriques de la maquette sont majoritairement CENTRÉES, pas alignées à
     /// gauche : `.stat-summary-row .ss`, `.metric-pair .mcard`, `.simplestat` et
     /// `.live-metrics-row .lm` portent tous `text-align: center` (elles vivent dans une carte

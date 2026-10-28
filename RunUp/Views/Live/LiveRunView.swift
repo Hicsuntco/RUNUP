@@ -127,7 +127,7 @@ struct LiveRunView: View {
                     .environment(\.colorScheme, .dark)
                 VStack(spacing: 10) {
                     Text("\(reste)")
-                        .font(RUFont.display(96))
+                        .font(RUFont.display(horsEchelle: 96))
                         .foregroundColor(.white)
                         .monospacedDigit()
                         // La transition porte le compte à rebours : chaque chiffre entre en
@@ -219,7 +219,7 @@ struct LiveRunView: View {
                 HStack(spacing: 6) {
                     liveDot
                     Text(libelleEtat)
-                        .font(RUFont.display(11)).tracking(2).foregroundColor(Ink.accentSoft)
+                        .font(RUFont.display(.caption)).tracking(2).foregroundColor(Ink.accentSoft)
                 }
                 .padding(.horizontal, 12).padding(.vertical, 7)
                 .background(Ink.accent.opacity(0.16), in: Capsule())
@@ -381,7 +381,7 @@ struct LiveRunView: View {
             VStack(spacing: 2) {
                 HStack(spacing: 7) {
                     Text(vm?.segmentLabel ?? String(localized: "ALLURE CIBLE"))
-                        .font(RUFont.display(11)).tracking(2)
+                        .font(RUFont.display(.caption)).tracking(2)
                         .foregroundColor(Ink.accentSoft)
                     // LE RESTANT, à côté du nom du segment.
                     //
@@ -392,9 +392,9 @@ struct LiveRunView: View {
                     // lui qui surveille la condition de fin du segment à chaque seconde.
                     if let remaining = vm?.segmentRemainingLabel {
                         Text(verbatim: "·")
-                            .font(RUFont.display(11)).foregroundColor(Ink.label)
+                            .font(RUFont.display(.caption)).foregroundColor(Ink.label)
                         Text(remaining)
-                            .font(RUFont.display(11)).tracking(1)
+                            .font(RUFont.display(.caption)).tracking(1)
                             .foregroundColor(.white.opacity(0.82))
                             .monospacedDigit()
                             .contentTransition(.numericText())
@@ -427,15 +427,15 @@ struct LiveRunView: View {
         let pace = appState.profile.todaySession.pace
         if vm?.isTargetEffortNow ?? true {
             Text(verbatim: "\(pace)/km")
-                .displayStyle(34)
+                .displayStyle(.hero)
                 .foregroundColor(Ink.accent)
         } else {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text("CIBLE")
-                    .font(RUFont.display(11)).tracking(2)
+                    .font(RUFont.display(.caption)).tracking(2)
                     .foregroundColor(Ink.label)
                 Text(verbatim: "\(pace)/km")
-                    .displayStyle(34)
+                    .displayStyle(.hero)
                     .foregroundColor(.white.opacity(0.45))
             }
         }
@@ -511,13 +511,13 @@ struct LiveRunView: View {
                 // ensuite, qui fait glisser le seul chiffre qui change au lieu de remplacer la
                 // ligne entière.
                 Text(PaceModel.formatDuration(vm?.elapsedSeconds ?? 0))
-                    .displayStyle(hasInstruction ? 52 : 64).foregroundColor(.white)
+                    .displayStyle(horsEchelle: hasInstruction ? 52 : 64).foregroundColor(.white)
                     .monospacedDigit()
                     .contentTransition(.numericText())
                     .animation(RUMotion.respecting(reduceMotion, RUMotion.digit), value: Int(vm?.elapsedSeconds ?? 0))
                 HStack(alignment: .lastTextBaseline, spacing: 5) {
                     Text(String(format: "%.2f", locale: Locale.current, vm?.distanceKm ?? 0))
-                        .displayStyle(26).foregroundColor(.white)
+                        .displayStyle(.figure).foregroundColor(.white)
                         .monospacedDigit()
                         .contentTransition(.numericText())
                         .animation(RUMotion.respecting(reduceMotion, RUMotion.digit), value: vm?.distanceKm ?? 0)
@@ -557,7 +557,7 @@ struct LiveRunView: View {
                     Haptics.impact(.heavy)
                     showStopConfirm = true
                 }) {
-                    Text("STOP").displayStyle(11).tracking(1).foregroundColor(.white)
+                    Text("STOP").displayStyle(.caption).tracking(1).foregroundColor(.white)
                 }
                 .frame(width: 52, height: 52)
                 .background(Color.white.opacity(0.08), in: Circle())
@@ -705,7 +705,7 @@ struct LiveRunView: View {
                 : String(localized: "\(value) kilomètres par heure")
         }
         return VStack(spacing: 2) {
-            Text(value).displayStyle(26)
+            Text(value).displayStyle(.figure)
                 .monospacedDigit()
                 .contentTransition(.numericText())
                 .animation(RUMotion.respecting(reduceMotion, RUMotion.digit), value: value)
@@ -724,7 +724,7 @@ struct LiveRunView: View {
 
     private func liveMetric(_ value: String, _ label: String, _ color: Color) -> some View {
         VStack(spacing: 2) {
-            Text(value).displayStyle(26).foregroundColor(color)
+            Text(value).displayStyle(.figure).foregroundColor(color)
             Text(label).font(RUFont.sans(.micro, weight: .bold)).tracking(1.5).foregroundColor(Ink.label)
         }
         .frame(maxWidth: .infinity)

@@ -25,7 +25,7 @@ struct RaceDetailsStepView: View {
                     ForEach(RaceDistance.choix(pour: vm.goal)) { d in
                         Button(action: { vm.selectDistance(d) }) {
                             Text(d.label)
-                                .displayStyle(d == .other ? 16 : 22)
+                                .displayStyle(d == .other ? .label : .title)
                                 .foregroundColor(vm.distance == d ? RUColor.rose2 : RUColor.textPrimary)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 18)

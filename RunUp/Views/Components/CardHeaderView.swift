@@ -56,6 +56,12 @@ struct RUCardHeader<Accessory: View>: View {
                 // mesures, nettement sous les 26,2 du titre de page, et toujours à 2,5 points
                 // au-dessus du texte courant. Ici plutôt qu'aux 72 appels : c'est le barème de
                 // l'app entière, pas le réglage d'un écran.
+                //
+                // Depuis, l'échelle de titrage a été ramenée à sept crans (voir `RUDisplaySize`),
+                // et les trois valeurs citées plus haut ont bougé : le nom du club rend 24,0
+                // (`.title`) et les mesures 19,6 (`.subtitle`). L'écart que cette note défendait
+                // s'est donc élargi, pas réduit — 17,5 pour l'intertitre reste au bon endroit,
+                // entre le texte courant et les chiffres.
                 Text(LocalizedStringKey(title))
                     .font(RUFont.sans(.label, weight: .bold))
                     .foregroundColor(RUColor.textPrimary)
@@ -108,7 +114,7 @@ struct RUStatTile: View {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(value)
-                        .displayStyle(25)
+                        .displayStyle(.title)
                         .foregroundColor(RUColor.textPrimary)
                         .lineLimit(1).minimumScaleFactor(0.6)
                     if let unit {

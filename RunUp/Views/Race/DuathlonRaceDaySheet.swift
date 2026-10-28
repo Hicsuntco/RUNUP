@@ -26,7 +26,7 @@ struct DuathlonRaceDaySheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Le jour J").displayStyle(22).foregroundColor(RUColor.textPrimary).padding(.top, 8)
+                Text("Le jour J").displayStyle(.title).foregroundColor(RUColor.textPrimary).padding(.top, 8)
                 Text("Un duathlon se décide sur ses premiers kilomètres, et la facture arrive deux heures plus tard. Ce qui suit ne se joue pas aux jambes.")
                     .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
 
@@ -91,7 +91,7 @@ struct DuathlonRaceDaySheet: View {
             }
             Spacer(minLength: 0)
             Text(verbatim: TimeFormat.duree(minutes * 60))
-                .font(RUFont.display(18)).foregroundColor(RUColor.textPrimary)
+                .font(RUFont.display(.subtitle)).foregroundColor(RUColor.textPrimary)
         }
         .padding(.horizontal, 14).padding(.vertical, 10)
         .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
@@ -111,7 +111,7 @@ struct DuathlonRaceDaySheet: View {
             }
             Spacer(minLength: 0)
             Text(verbatim: TimeFormat.duree(r.transitions * 60))
-                .font(RUFont.display(18)).foregroundColor(RUColor.textPrimary)
+                .font(RUFont.display(.subtitle)).foregroundColor(RUColor.textPrimary)
         }
         .padding(.horizontal, 14).padding(.vertical, 10)
         .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCompact, style: .continuous))
@@ -216,7 +216,7 @@ struct DuathlonRaceDaySheet: View {
 
     private func chiffre(_ valeur: String, _ etiquette: Text) -> some View {
         VStack(spacing: 4) {
-            Text(verbatim: valeur).displayStyle(22).foregroundColor(RUColor.rose2)
+            Text(verbatim: valeur).displayStyle(.title).foregroundColor(RUColor.rose2)
                 .lineLimit(1).minimumScaleFactor(0.5)
             etiquette
                 .font(RUFont.sans(.micro, weight: .bold))

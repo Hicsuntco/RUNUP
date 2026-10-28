@@ -601,7 +601,7 @@ struct ActivityFeedRow: View {
                     // 22 donne 24 pt rendus, soit la taille d'un titre de page. C'est voulu :
                     // sur cette ligne-là, le chiffre EST le titre, et « km » ou « allure » au-
                     // dessus ne sont que des étiquettes.
-                    valueSize: 22,
+                    valueSize: .title,
                     labelOnTop: true,
                     // `.small` et non `.micro` : 13,1 pt contre 10,6. Sous une valeur de 24, une
                     // étiquette de 10,6 est un filet ; au-dessus, elle doit s'annoncer.

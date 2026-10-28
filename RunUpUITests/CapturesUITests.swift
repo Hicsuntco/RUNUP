@@ -121,6 +121,7 @@ final class CapturesUITests: XCTestCase {
     private func prendre(rang: Int, ecran: String, nom: String, diagnostic: Bool = false,
                          profil: String? = nil, course: Bool = false,
                          sortie: Bool = false, onglet: String? = nil, defilements: Int = 0) {
+        let clair = ProcessInfo.processInfo.environment["RUNUP_CAPTURES_CLAIR"] != nil
         let app = XCUIApplication()
         app.launchArguments = ["--captures", "--ecran=\(ecran)"]
         if let profil { app.launchArguments += ["--profil=\(profil)"] }
@@ -128,6 +129,13 @@ final class CapturesUITests: XCTestCase {
         if course { app.launchArguments += ["--course", "--courses"] }
         if sortie { app.launchArguments += ["--sortie"] }
         if let onglet { app.launchArguments += ["--onglet=\(onglet)"] }
+        // LE THÈME VIENT DE L'EXTÉRIEUR, COMME LA LANGUE, ET POUR LA MÊME RAISON.
+        //
+        // Le même test tourne une fois de plus avec `RUNUP_CAPTURES_CLAIR` posé, et c'est le
+        // workflow qui le dit. Tant qu'il n'existait pas, le harnais ne photographiait que le
+        // sombre — donc la moitié de l'app n'était jugeable que sur un téléphone, et c'est en
+        // clair que sont apparus les défauts les plus coûteux.
+        if clair { app.launchArguments += ["--clair"] }
         // La langue et la région viennent de l'extérieur : le même test tourne trois fois, une
         // par langue, et c'est le workflow qui dit laquelle. `-AppleLanguages` est la seule
         // façon de forcer la langue d'un lancement sans toucher aux réglages du simulateur.
@@ -177,8 +185,11 @@ final class CapturesUITests: XCTestCase {
         piece.lifetime = .keepAlways
         add(piece)
 
-        ecrire(capture.pngRepresentation,
-               sous: diagnostic ? "diagnostic/\(nom).png" : "\(rang)-\(nom).png")
+        // En clair, TOUT part dans un sous-dossier, les six publiables comprises : le composeur
+        // de la fiche n'apparie que les fichiers posés à la racine du dossier d'une langue, et
+        // une seconde série de « 1-accueil.png » lui donnerait deux candidates pour une accroche.
+        let fichier = diagnostic ? "diagnostic/\(nom).png" : "\(rang)-\(nom).png"
+        ecrire(capture.pngRepresentation, sous: clair ? "clair/\(fichier)" : fichier)
         app.terminate()
     }
 

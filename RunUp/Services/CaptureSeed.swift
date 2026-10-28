@@ -50,6 +50,20 @@ enum CaptureSeed {
     /// présente au-dessus de n'importe lequel (voir `ContentRouterView`). Les deux arguments se
     /// combinent donc au lieu de se concurrencer.
     /// `--courses` : ouvrir l'écran des courses dans l'onglet social.
+    /// LE THÈME CLAIR, DEMANDÉ DE L'EXTÉRIEUR.
+    ///
+    /// Le harnais ne photographiait que le sombre, parce que c'est le défaut du profil de
+    /// démonstration et que personne ne l'avait jamais contredit. Conséquence : la moitié des
+    /// thèmes de l'app n'a jamais été regardée autrement que sur un téléphone, et c'est
+    /// précisément en clair qu'ont été signalés les deux défauts les plus durs — les cartes qui
+    /// disparaissent dans leur fond, la vignette d'habillage qui mentait sur sa teinte.
+    ///
+    /// Juger un fond sans le voir, c'est ce qui a coûté ici deux corrections fausses au même
+    /// en-tête de fil. Un drapeau et une passe de plus valent moins cher.
+    static var modeClairDemande: Bool {
+        ProcessInfo.processInfo.arguments.contains("--clair")
+    }
+
     static var coursesDemandees: Bool {
         ProcessInfo.processInfo.arguments.contains("--courses")
     }
@@ -118,6 +132,9 @@ enum CaptureSeed {
 
         let profil = UserProfile(name: "Charlotte")
         contexte.insert(profil)
+        // Posé AVANT `applyOnboarding` sans que l'ordre importe : `AppState` recopie ce champ
+        // dans `ThemeStore` au moment où il charge le profil, donc bien après.
+        profil.isLightMode = modeClairDemande
         AdaptivePlanEngine.applyOnboarding(resultat(maintenant: maintenant), to: profil)
 
         // Les chiffres du jour. Ils ne viennent pas d'Apple Santé ici — personne n'a marché dans

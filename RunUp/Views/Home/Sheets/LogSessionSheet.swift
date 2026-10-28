@@ -62,16 +62,18 @@ struct LogSessionSheet: View {
                         .font(RUFont.sans(.small)).foregroundColor(RUColor.text3).lineSpacing(2)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    Button(action: validate) {
-                        Text("Enregistrer la séance")
-                    }
-                    .buttonStyle(PrimaryButtonStyle(isDisabled: durationMinutes == nil))
-                    .disabled(durationMinutes == nil)
-                    .padding(.top, 2)
                 }
                 .padding(RUSpacing.pagePadding)
             }
             .background(RUColor.bg)
+            // Le geste pour lequel cette feuille est ouverte, épinglé — voir `ruBarreDuBas`.
+            .ruBarreDuBas {
+                Button(action: validate) {
+                    Text("Enregistrer la séance")
+                }
+                .buttonStyle(PrimaryButtonStyle(isDisabled: durationMinutes == nil))
+                .disabled(durationMinutes == nil)
+            }
             .navigationTitle(Text("Séance déjà faite"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

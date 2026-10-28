@@ -297,7 +297,7 @@ struct RecapView: View {
             .ignoresSafeArea(edges: .top)
             .sheet(isPresented: $showPublishRoute) {
                 PublishRouteSheet(run: run)
-                    .runUpSheetStyle()
+                    .runUpSheetStyle(gereSonBas: true)
             }
             .sheet(isPresented: $showDebrief) {
                 DebriefSheet(run: run)

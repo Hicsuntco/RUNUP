@@ -87,13 +87,13 @@ struct PublishRouteSheet: View {
                         .foregroundColor(RUColor.rose)
                 }
 
-                Button(isPublishing ? String(localized: "PUBLICATION…") : String(localized: "PUBLIER L'ITINÉRAIRE")) {
-                    publish()
-                }
-                .buttonStyle(PrimaryButtonStyle())
-                .disabled(!canPublish)
-                .opacity(canPublish ? 1 : 0.5)
-
+                // SEUL LE GESTE PRINCIPAL MONTE DANS LA BARRE, et « Annuler » reste ici.
+                //
+                // Les deux épinglés auraient fait une barre de cent points — un quart de la
+                // feuille occupé en permanence pour proposer deux fois de partir. Et refermer
+                // n'a pas besoin d'être à portée constante : la feuille se tire vers le bas,
+                // son indicateur de glissement est affiché (voir `runUpSheetStyle`), et ce
+                // bouton-ci reste pour qui descend jusqu'au bout.
                 Button("Annuler") { dismiss() }
                     .buttonStyle(SecondaryButtonStyle())
             }
@@ -101,6 +101,15 @@ struct PublishRouteSheet: View {
             .padding(RUSpacing.pagePadding)
         }
         .background(RUColor.pageBackground)
+        // Le geste pour lequel cette feuille est ouverte, épinglé — voir `ruBarreDuBas`.
+        .ruBarreDuBas {
+            Button(isPublishing ? String(localized: "PUBLICATION…") : String(localized: "PUBLIER L'ITINÉRAIRE")) {
+                publish()
+            }
+            .buttonStyle(PrimaryButtonStyle())
+            .disabled(!canPublish)
+            .opacity(canPublish ? 1 : 0.5)
+        }
         .task { await resolveLocality() }
         .onAppear { if name.isEmpty { name = placeholderName } }
     }

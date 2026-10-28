@@ -79,7 +79,7 @@ struct RaceDiscoveryView: View {
                     await charger()
                 }
             }
-            .runUpSheetStyle(detents: [.large])
+            .runUpSheetStyle(detents: [.large], gereSonBas: true)
         }
         .task {
             if isLoading { await charger() }

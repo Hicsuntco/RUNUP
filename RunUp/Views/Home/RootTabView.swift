@@ -197,7 +197,7 @@ struct RootTabView: View {
         }
         .sheet(isPresented: Binding(get: { appState.sessionDetailPresented }, set: { appState.sessionDetailPresented = $0 })) {
             SessionDetailSheet()
-                .runUpSheetStyle()
+                .runUpSheetStyle(gereSonBas: true)
         }
         .sheet(isPresented: Binding(get: { appState.moveSessionPresented }, set: { appState.moveSessionPresented = $0 })) {
             MoveSessionSheet()
@@ -205,11 +205,11 @@ struct RootTabView: View {
         }
         .sheet(isPresented: Binding(get: { appState.logSessionPresented }, set: { appState.logSessionPresented = $0 })) {
             LogSessionSheet()
-                .runUpSheetStyle(detents: [.medium])
+                .runUpSheetStyle(detents: [.medium], gereSonBas: true)
         }
         .sheet(isPresented: Binding(get: { appState.programSettingsPresented }, set: { appState.programSettingsPresented = $0 })) {
             ProgramSettingsSheet()
-                .runUpSheetStyle()
+                .runUpSheetStyle(gereSonBas: true)
         }
         .sheet(isPresented: Binding(get: { appState.notificationsPresented }, set: { appState.notificationsPresented = $0 })) {
             NotificationsSheet()

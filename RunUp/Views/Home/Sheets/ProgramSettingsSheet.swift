@@ -47,26 +47,28 @@ struct ProgramSettingsSheet: View {
                     .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
                     .padding(.top, 14)
 
-                Button("ENREGISTRER") {
-                    appState.profile.runningDays = Array(days)
-                    appState.profile.goalDisplay = goal
-                    // Makes the copy above true — regenerate this week around the new days now,
-                    // instead of silently waiting for the next week boundary.
-                    AdaptivePlanEngine.applyProgramSettingsChange(appState.profile)
-                    appState.publishWidgetSnapshot()
-                    appState.toast(String(localized: "Programme mis à jour"))
-                    dismiss()
-                }
-                // Le minimum vient de l'objectif EN COURS : réduire un plan de triathlon à deux
-                // jours par cet écran-là aurait contourné la règle posée à l'inscription, et
-                // produit une semaine à laquelle il manque une discipline.
-                .buttonStyle(PrimaryButtonStyle(isDisabled: days.count < minimumJours))
-                .disabled(days.count < minimumJours)
-                .padding(.top, 18)
             }
             .padding(.horizontal, RUSpacing.pagePadding)
             // L'encart du bas n'est plus posé ici : `runUpSheetStyle` le donne à toutes les
             // feuilles, d'une seule valeur. Voir `RUSpacing.sheetBottomInset`.
+        }
+        // Le geste pour lequel cette feuille est ouverte, épinglé — voir `ruBarreDuBas`.
+        .ruBarreDuBas {
+            Button("ENREGISTRER") {
+                appState.profile.runningDays = Array(days)
+                appState.profile.goalDisplay = goal
+                // Makes the copy above true — regenerate this week around the new days now,
+                // instead of silently waiting for the next week boundary.
+                AdaptivePlanEngine.applyProgramSettingsChange(appState.profile)
+                appState.publishWidgetSnapshot()
+                appState.toast(String(localized: "Programme mis à jour"))
+                dismiss()
+            }
+            // Le minimum vient de l'objectif EN COURS : réduire un plan de triathlon à deux
+            // jours par cet écran-là aurait contourné la règle posée à l'inscription, et
+            // produit une semaine à laquelle il manque une discipline.
+            .buttonStyle(PrimaryButtonStyle(isDisabled: days.count < minimumJours))
+            .disabled(days.count < minimumJours)
         }
         .onAppear {
             days = Set(appState.profile.runningDays)

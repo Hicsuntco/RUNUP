@@ -93,12 +93,6 @@ struct CreateRaceSheet: View {
                         .foregroundColor(RUColor.ember)
                 }
 
-                Button(action: { Task { await creer() } }) {
-                    Text(enCours ? String(localized: "Création…") : String(localized: "CRÉER LA PAGE"))
-                }
-                .buttonStyle(PrimaryButtonStyle(isDisabled: nomPropre.isEmpty || enCours))
-                .disabled(nomPropre.isEmpty || enCours)
-
                 Text("Tout le monde pourra la trouver et la suivre. Les champs laissés vides se complètent plus tard.")
                     .font(RUFont.sans(.small))
                     .foregroundColor(RUColor.text3)
@@ -106,6 +100,14 @@ struct CreateRaceSheet: View {
             .padding(RUSpacing.pagePadding)
         }
         .background(RUColor.pageBackground)
+        // Le geste pour lequel cette feuille est ouverte, épinglé — voir `ruBarreDuBas`.
+        .ruBarreDuBas {
+            Button(action: { Task { await creer() } }) {
+                Text(enCours ? String(localized: "Création…") : String(localized: "CRÉER LA PAGE"))
+            }
+            .buttonStyle(PrimaryButtonStyle(isDisabled: nomPropre.isEmpty || enCours))
+            .disabled(nomPropre.isEmpty || enCours)
+        }
         .onAppear { if nom.isEmpty { nom = nomPropose } }
     }
 

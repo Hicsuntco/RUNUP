@@ -163,17 +163,9 @@ struct DebriefSheet: View {
         // l'indicateur d'accueil, et le contenu qui défile s'arrête juste avant lui. Le
         // geste principal de la feuille cesse du même coup de demander qu'on fasse défiler
         // pour l'atteindre.
-        .safeAreaInset(edge: .bottom) {
-            VStack(spacing: 0) {
-                // Un filet, pour que le contenu qui passe dessous se voie passer dessous.
-                Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
-                boutonDeValidation
-                    .padding(.horizontal, RUSpacing.pagePadding)
-                    .padding(.top, 12)
-                    .padding(.bottom, 6)
-            }
-            .background(RUColor.bg)
-        }
+        // Le filet, le fond et les trois marges vivent dans `ruBarreDuBas` depuis que six
+        // autres feuilles portent la même barre. Voir sa note.
+        .ruBarreDuBas { boutonDeValidation }
     }
 
     private var boutonDeValidation: some View {

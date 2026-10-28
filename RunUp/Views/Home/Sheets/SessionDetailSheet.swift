@@ -227,47 +227,55 @@ struct SessionDetailSheet: View {
                         .padding(.top, 16)
                     }
 
-                    if moved {
-                        Text("Séance déplacée à demain ✓")
-                            .font(RUFont.sans(.label, weight: .semibold))
-                            .foregroundColor(RUColor.lime)
-                            .frame(maxWidth: .infinity)
-                            .padding(16)
-                            // Surface neutre : l'accent reste au texte et à l'icône. Un lime
-                            // dilué donne sa version sale, et le contour de la même couleur la redisait.
-                            .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
-                            .padding(.top, 16)
-                    } else {
-                        HStack(spacing: 8) {
-                            Button("Déplacer à demain") {
-                                // Really swaps today/tomorrow in the plan — this used to only set
-                                // the local `moved` flag and claim success without touching
-                                // `weekSessions` at all.
-                                if AdaptivePlanEngine.moveTodaySessionToTomorrow(appState.profile) {
-                                    moved = true
-                                    appState.publishWidgetSnapshot()
-                                    appState.toast(String(localized: "Séance déplacée à demain"))
-                                } else {
-                                    appState.toast(String(localized: "Impossible de déplacer cette séance — dernier jour de la semaine."))
-                                }
-                            }
-                            .buttonStyle(SecondaryButtonStyle())
-
-                            Button(action: {
-                                dismiss()
-                                appState.startRun()
-                            }) {
-                                HStack { Image(systemName: "play.fill"); Text("DÉMARRER") }
-                            }
-                            .buttonStyle(PrimaryButtonStyle())
-                        }
-                        .padding(.top, 16)
-                    }
                 }
             }
             .padding(.horizontal, RUSpacing.pagePadding)
             // L'encart du bas n'est plus posé ici : `runUpSheetStyle` le donne à toutes les
             // feuilles, d'une seule valeur. Voir `RUSpacing.sheetBottomInset`.
+        }
+        // LE PIED DE LA FEUILLE EST ÉPINGLÉ, Y COMPRIS SA BRANCHE « DÉPLACÉE ».
+        //
+        // Les deux états partent ensemble : « Déplacer à demain / DÉMARRER », et la confirmation
+        // qui les remplace une fois la séance déplacée. Épingler seulement le premier aurait
+        // fait disparaître la barre d'un coup au moment où l'on déplace — la feuille se serait
+        // réorganisée sous les doigts, juste après un geste.
+        //
+        // Le `padding(.top, 16)` des deux branches tombe : `ruBarreDuBas` pose ses marges.
+        .ruBarreDuBas {
+            if moved {
+                Text("Séance déplacée à demain ✓")
+                    .font(RUFont.sans(.label, weight: .semibold))
+                    .foregroundColor(RUColor.lime)
+                    .frame(maxWidth: .infinity)
+                    .padding(16)
+                    // Surface neutre : l'accent reste au texte et à l'icône. Un lime
+                    // dilué donne sa version sale, et le contour de la même couleur la redisait.
+                    .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusLarge, style: .continuous))
+            } else {
+                HStack(spacing: 8) {
+                    Button("Déplacer à demain") {
+                        // Really swaps today/tomorrow in the plan — this used to only set
+                        // the local `moved` flag and claim success without touching
+                        // `weekSessions` at all.
+                        if AdaptivePlanEngine.moveTodaySessionToTomorrow(appState.profile) {
+                            moved = true
+                            appState.publishWidgetSnapshot()
+                            appState.toast(String(localized: "Séance déplacée à demain"))
+                        } else {
+                            appState.toast(String(localized: "Impossible de déplacer cette séance — dernier jour de la semaine."))
+                        }
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+
+                    Button(action: {
+                        dismiss()
+                        appState.startRun()
+                    }) {
+                        HStack { Image(systemName: "play.fill"); Text("DÉMARRER") }
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                }
+            }
         }
     }
 }

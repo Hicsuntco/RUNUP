@@ -42,6 +42,40 @@ struct RunUpSheetModifier: ViewModifier {
 }
 
 extension View {
+    /// LE GESTE PRINCIPAL D'UNE FEUILLE, ÉPINGLÉ EN BAS.
+    ///
+    /// # CE QU'IL REMPLACE
+    ///
+    /// Sept feuilles gardaient leur bouton principal comme DERNIÈRE VUE de leur défilement. Elles
+    /// ne touchent plus le bord depuis que `runUpSheetStyle` donne son encart à tout le monde,
+    /// mais il faut toujours faire défiler pour atteindre le seul geste pour lequel la feuille
+    /// est ouverte — « Démarrer », « Publier », « Enregistrer ». Sur une feuille longue, l'action
+    /// est hors écran à l'ouverture.
+    ///
+    /// # POURQUOI UN MODIFICATEUR ET PAS SEPT COPIES
+    ///
+    /// Le filet, le fond, les trois marges : écrits sept fois, ils auraient divergé sept fois —
+    /// c'est exactement ce que l'inventaire des encarts du bas vient de montrer, avec ses six
+    /// valeurs pour une seule question. Ici, un seul endroit à régler.
+    ///
+    /// Le filet n'est pas décoratif : sans lui, le contenu qui passe sous la barre semble
+    /// s'arrêter là. Avec lui, on voit qu'il continue dessous.
+    ///
+    /// La feuille qui l'emploie doit se déclarer : `runUpSheetStyle(gereSonBas: true)`, sans quoi
+    /// elle reçoit un SECOND encart sous cette barre et la décolle du bord pour rien.
+    func ruBarreDuBas<Contenu: View>(@ViewBuilder _ contenu: () -> Contenu) -> some View {
+        safeAreaInset(edge: .bottom) {
+            VStack(spacing: 0) {
+                Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
+                contenu()
+                    .padding(.horizontal, RUSpacing.pagePadding)
+                    .padding(.top, 12)
+                    .padding(.bottom, 6)
+            }
+            .background(RUColor.bg)
+        }
+    }
+
     func runUpSheetStyle(detents: Set<PresentationDetent> = [.medium, .large],
                          gereSonBas: Bool = false) -> some View {
         modifier(RunUpSheetModifier(detents: detents, gereSonBas: gereSonBas))

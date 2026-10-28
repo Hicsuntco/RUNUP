@@ -44,7 +44,7 @@ struct TriathlonRaceDaySheet: View {
 
     private var journee: some View {
         VStack(alignment: .leading, spacing: 10) {
-            RUCardHeader(icon: "clock", tint: RUColor.violet, title: "Où passe la journée")
+            RUCardHeader(icon: "clock", title: "Où passe la journée")
 
             if connu {
                 VStack(spacing: 6) {
@@ -108,7 +108,7 @@ struct TriathlonRaceDaySheet: View {
 
     private var ravitaillement: some View {
         VStack(alignment: .leading, spacing: 10) {
-            RUCardHeader(icon: "fork.knife", tint: RUColor.rose, title: "On ne mange pas dans l'eau")
+            RUCardHeader(icon: "fork.knife", title: "On ne mange pas dans l'eau")
 
             Text("La natation ne permet aucun ravitaillement, et la combinaison comprime l'estomac. Ta nutrition commence à la sortie de l'eau — alors qu'une partie de l'effort est déjà faite.")
                 .font(RUFont.sans(.small)).foregroundColor(RUColor.text2).lineSpacing(2)
@@ -143,7 +143,7 @@ struct TriathlonRaceDaySheet: View {
 
     private var transitions: some View {
         VStack(alignment: .leading, spacing: 10) {
-            RUCardHeader(icon: "arrow.triangle.swap", tint: RUColor.lime, title: "Les transitions")
+            RUCardHeader(icon: "arrow.triangle.swap", title: "Les transitions")
 
             Text(phraseDesTransitions)
                 .font(RUFont.sans(.small)).foregroundColor(RUColor.text2).lineSpacing(2)
@@ -174,7 +174,7 @@ struct TriathlonRaceDaySheet: View {
 
     private var combinaison: some View {
         VStack(alignment: .leading, spacing: 10) {
-            RUCardHeader(icon: "drop", tint: RUColor.violet, title: "La combinaison")
+            RUCardHeader(icon: "drop", title: "La combinaison")
 
             Text("Elle est obligatoire en dessous d'une certaine température d'eau, et INTERDITE au-dessus d'une autre. Les deux seuils dépendent de la fédération, du format et de l'année : ils se lisent au briefing, et nulle part ailleurs.")
                 .font(RUFont.sans(.small)).foregroundColor(RUColor.text2).lineSpacing(2)

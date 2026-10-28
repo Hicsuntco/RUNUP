@@ -229,7 +229,7 @@ struct RacePageView: View {
                     .disabled(enCours)
                 }
             } else {
-                RUCardHeader(icon: "flag.checkered", tint: RUColor.rose2, title: "Tu la prépares ?")
+                RUCardHeader(icon: "flag.checkered", title: "Tu la prépares ?")
                 Text("Dis-le et tu apparaîtras sur cette page. Tu pourras y trouver quelqu'un à ton allure, et suivre où en sont les autres.")
                     .font(RUFont.sans(.body))
                     .foregroundColor(RUColor.text3)

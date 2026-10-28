@@ -487,7 +487,7 @@ struct ClubView: View {
     private var clubSetupCard: some View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 6) {
-                RUCardHeader(icon: "plus.circle.fill", tint: RUColor.rose2, title: "Créer un club", subtitle: "Tu en seras l'administratrice")
+                RUCardHeader(icon: "plus.circle.fill", title: "Créer un club", subtitle: "Tu en seras l'administratrice")
                 HStack {
                     TextField("Nom du club", text: $newClubName)
                         .textFieldStyle(.plain)
@@ -510,7 +510,7 @@ struct ClubView: View {
             // tromper, sur un champ en capitales, pour une erreur qui ne disait que
             // « introuvable ».
             VStack(alignment: .leading, spacing: 6) {
-                RUCardHeader(icon: "magnifyingglass", tint: RUColor.rose2, title: "Rejoindre un club")
+                RUCardHeader(icon: "magnifyingglass", title: "Rejoindre un club")
                 TextField("Chercher par son nom", text: $clubQuery)
                     .textFieldStyle(.plain)
                     .font(RUFont.sans(.emphasis))

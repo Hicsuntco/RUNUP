@@ -45,7 +45,7 @@ struct RecoveryView: View {
                 .ruHeroCard(radius: RUSpacing.radiusCard, borderOpacity: 0.22)
 
                 VStack(alignment: .leading, spacing: 6) {
-                    RUCardHeader(icon: "sun.max.fill", tint: RUColor.rose2, title: "Aujourd'hui")
+                    RUCardHeader(icon: "sun.max.fill", title: "Aujourd'hui")
                     Text("Marche, étirements ou repos complet").font(RUFont.sans(.emphasis, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                     Text("Pas de course prévue — hydrate-toi bien et dors un peu plus si tu peux.")
                         .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)

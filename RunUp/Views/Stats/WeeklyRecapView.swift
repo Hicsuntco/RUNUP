@@ -117,14 +117,14 @@ struct WeeklyRecapView: View {
 
                 if let avgPaceSecPerKm {
                     HStack {
-                        RUCardHeader(icon: "speedometer", tint: RUColor.violet, title: "Allure moyenne")
+                        RUCardHeader(icon: "speedometer", title: "Allure moyenne")
                         Text(verbatim: "\(PaceModel.formatDuration(avgPaceSecPerKm))/km").displayStyle(.subtitle).foregroundColor(RUColor.textPrimary)
                     }
                     .padding(18)
                     .ruCard()
                 }
 
-                RUCardHeader(icon: "figure.run", tint: RUColor.rose, title: "Courses de la semaine").padding(.top, 6)
+                RUCardHeader(icon: "figure.run", title: "Courses de la semaine").padding(.top, 6)
 
                 if weekRuns.isEmpty {
                     Text("Pas encore de course cette semaine — tu as le temps.")
@@ -195,7 +195,7 @@ struct WeeklyRecapView: View {
         let bars = dailyVolumes
         let maxBar = max(bars.max() ?? 1, 1)
         return VStack(alignment: .leading, spacing: 12) {
-            RUCardHeader(icon: "chart.bar.fill", tint: RUColor.cyan, title: "Volume par jour (km)")
+            RUCardHeader(icon: "chart.bar.fill", title: "Volume par jour (km)")
             HStack(alignment: .bottom, spacing: 6) {
                 ForEach(bars.indices, id: \.self) { i in
                     RoundedRectangle(cornerRadius: RUSpacing.radiusBar)

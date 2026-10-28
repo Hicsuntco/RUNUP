@@ -319,6 +319,14 @@ jobs:
       - name: Vérifier qu'un chiffre et son unité passent par le composant partagé
         run: python3 ci_scripts/check_chiffres.py
 
+      # La teinte d'un en-tête de carte était passée à 55 endroits sur huit valeurs, sans règle :
+      # sur une seule rangée de l'écran Stats, règle rose, coureur violet, horloge turquoise. Et
+      # `lime` et `amber` VEULENT DIRE quelque chose deux centimètres plus loin, dans les
+      # pastilles d'écart — les dépenser en décoration vide de son sens le seul endroit où la
+      # couleur parlait.
+      - name: Vérifier que les teintes d'en-tête nomment quelque chose
+        run: python3 ci_scripts/check_teintes.py
+
       - name: Vérifier que le compteur du Club ne compte que des gestes délibérés
         run: python3 ci_scripts/check_club_metrics.py
 

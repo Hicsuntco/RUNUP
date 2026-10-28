@@ -14,6 +14,29 @@ import SwiftUI
 /// pas une carte. Un composant par rôle plutôt qu'un composant tordu pour deux.
 struct RUCardHeader<Accessory: View>: View {
     var icon: String?
+    /// LA TEINTE EST L'EXCEPTION, ET ELLE DOIT VOULOIR DIRE QUELQUE CHOSE.
+    ///
+    /// Elle était passée explicitement à 55 endroits, sur HUIT valeurs : rose 17, rose2 10,
+    /// violet 9, cyan 11, lime 2, amber 2, text3 1, amberText 1. Et elle ne suivait aucune règle.
+    /// Sur la seule feuille du triathlon : « Où passe la journée » violet, « On ne mange pas dans
+    /// l'eau » rose, « Les transitions » vert, « La combinaison » violet. Sur une seule rangée de
+    /// l'écran Stats : règle rose, coureur violet, horloge turquoise.
+    ///
+    /// Trois de ces teintes — `lime`, `cyan`, `amber` — ne suivent même pas le thème choisi par
+    /// l'utilisatrice : ce sont des valeurs fixes. Un accent cyan laissait donc des icônes vertes
+    /// et ambrées éparpillées dans une app qu'on venait de repeindre.
+    ///
+    /// Et c'est le coût réel : `lime` veut dire MIEUX et `amber` veut dire MOINS BIEN — l'écran
+    /// Stats s'en sert correctement, à deux centimètres de là, pour ses pastilles d'écart
+    /// (« ▲ 18″/km » en vert, « ▼ 19,6 km » en ambre). Les dépenser en décoration sur un glyphe
+    /// de 15 points, c'est vider de son sens le seul endroit où la couleur disait quelque chose.
+    ///
+    /// Quarante-sept appels ont donc rendu leur teinte. Les huit qui restent la gardent parce
+    /// qu'elle NOMME quelque chose, et le garde-fou `ci_scripts/check_teintes.py` les inscrit une
+    /// par une avec leur raison : un avertissement de session expirée, une course qu'on a
+    /// confirmé préparer, des chaussures retirées volontairement éteintes, et le bloc Vélo de
+    /// l'écran Stats — marqué d'un bout à l'autre, ce qui est la différence entre un repère et
+    /// une décoration.
     var tint: Color = RUColor.rose
     var title: String
     var subtitle: String?
@@ -97,7 +120,9 @@ extension RUCardHeader where Accessory == EmptyView {
 /// retrouve à devoir rétrécir pour tenir ; à deux, il a la place d'être un titre.
 struct RUStatTile: View {
     var icon: String
-    var tint: Color
+    /// Le défaut, comme pour `RUCardHeader` : passer une teinte est l'exception, et elle doit
+    /// vouloir dire quelque chose. Voir la note sur `RUCardHeader.tint`.
+    var tint: Color = RUColor.rose
     var title: String
     var value: String
     /// L'unité, en petit, juste après le chiffre — « 3 240 **steps** », « 32 **mins** ». Elle est

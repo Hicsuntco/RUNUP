@@ -420,7 +420,7 @@ struct ProfileView: View {
             goal: profile.goalId, raceDate: profile.raceDate,
             from: profile.programStartDate ?? .now)
         return VStack(alignment: .leading, spacing: 12) {
-            RUCardHeader(icon: "flag.checkered", tint: RUColor.rose,
+            RUCardHeader(icon: "flag.checkered",
                          title: String(localized: "Ton programme est prêt"),
                          subtitle: objectifText ?? String(localized: "Ta première séance t'attend"))
             HStack(spacing: 10) {

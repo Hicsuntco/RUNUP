@@ -40,7 +40,7 @@ struct UltraRaceDaySheet: View {
 
     private var ravitaillement: some View {
         VStack(alignment: .leading, spacing: 10) {
-            RUCardHeader(icon: "fork.knife", tint: RUColor.rose, title: "Le ravitaillement")
+            RUCardHeader(icon: "fork.knife", title: "Le ravitaillement")
 
             HStack(spacing: 8) {
                 chiffre(glucidesParHeure, Text("G DE GLUCIDES / H"))
@@ -77,7 +77,7 @@ struct UltraRaceDaySheet: View {
 
     private var materiel: some View {
         VStack(alignment: .leading, spacing: 10) {
-            RUCardHeader(icon: "backpack", tint: RUColor.violet, title: "Le matériel")
+            RUCardHeader(icon: "backpack", title: "Le matériel")
 
             // L'AVERTISSEMENT EN PREMIER, ET PAS EN NOTE DE BAS DE CARTE. Un sac non conforme est
             // un refus au départ : si une seule phrase de cette carte doit être lue, c'est
@@ -106,7 +106,7 @@ struct UltraRaceDaySheet: View {
 
     private var nuit: some View {
         VStack(alignment: .leading, spacing: 10) {
-            RUCardHeader(icon: "moon.stars.fill", tint: RUColor.cyan, title: "La nuit")
+            RUCardHeader(icon: "moon.stars.fill", title: "La nuit")
             verdictDeLaNuit
                 .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
 

@@ -222,7 +222,7 @@ struct RaceGoalView: View {
                 PlusSection(feature: .adaptivePlan, teaserHeight: 140) {
                 VStack(spacing: 10) {
                     HStack {
-                        RUCardHeader(icon: "calendar", tint: RUColor.rose, title: "Préparation")
+                        RUCardHeader(icon: "calendar", title: "Préparation")
                         if let total = shape.totalWeeks {
                             StatChip(text: String(localized: "Semaine \(min(profile.weekNumber, total))/\(total)"), color: RUColor.lime)
                         }
@@ -251,14 +251,14 @@ struct RaceGoalView: View {
                 // per-km split table over a format that isn't a straight run.
                 if !hasRealRaceDay {
                     VStack(alignment: .leading, spacing: 8) {
-                        RUCardHeader(icon: "location.fill", tint: RUColor.violet, title: "Où tu en es")
+                        RUCardHeader(icon: "location.fill", title: "Où tu en es")
                         Text(LocalizedStringKey(progressSummary))
                             .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
                     }
                     .padding(RUSpacing.cardPadding)
                     .ruCard()
                 } else if let strategie = strategieStructurelle {
-                    RUCardHeader(icon: "flag.checkered", tint: RUColor.rose2, title: "Stratégie · jour J")
+                    RUCardHeader(icon: "flag.checkered", title: "Stratégie · jour J")
                     VStack(spacing: 6) {
                         ForEach(strategie.indices, id: \.self) { i in
                             HStack(spacing: 12) {
@@ -353,7 +353,7 @@ struct RaceGoalView: View {
                         .accessibilityHint(Text(format.resume))
                     }
                 } else {
-                    RUCardHeader(icon: "speedometer", tint: RUColor.rose2, title: "Stratégie d'allure · jour J")
+                    RUCardHeader(icon: "speedometer", title: "Stratégie d'allure · jour J")
                     VStack(spacing: 6) {
                         ForEach(pacingPlan.indices, id: \.self) { i in
                             let isLast = i == pacingPlan.count - 1

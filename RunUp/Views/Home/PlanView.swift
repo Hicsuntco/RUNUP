@@ -152,7 +152,7 @@ struct PlanView: View {
     private var volumeChart: some View {
         let maxKm = max(1, weekSummaries.map(\.estimatedKm).max() ?? 1)
         return VStack(alignment: .leading, spacing: 14) {
-            RUCardHeader(icon: "chart.bar.fill", tint: RUColor.rose,
+            RUCardHeader(icon: "chart.bar.fill",
                          title: "La forme du plan",
                          subtitle: "Volume estimé, semaine par semaine")
             HStack(alignment: .bottom, spacing: 4) {

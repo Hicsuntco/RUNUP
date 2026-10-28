@@ -179,7 +179,7 @@ struct RouteDetailSheet: View {
     /// ce qu'on en sait. Le mot change ce qu'on écrit.
     private var ceQuOnEnSait: some View {
         VStack(alignment: .leading, spacing: 10) {
-            RUCardHeader(icon: "text.bubble", tint: RUColor.cyan, title: "Ce qu'on en sait")
+            RUCardHeader(icon: "text.bubble", title: "Ce qu'on en sait")
 
             if commentaires.isEmpty {
                 Text("Personne n'a encore rien dit sur ce parcours.")

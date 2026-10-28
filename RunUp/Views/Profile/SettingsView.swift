@@ -73,7 +73,7 @@ struct SettingsView: View {
     /// omettre de l'app ne l'est pas.
     private var subscriptionCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            RUCardHeader(icon: "sparkles", tint: RUColor.rose,
+            RUCardHeader(icon: "sparkles",
                          title: "RUNUP Plus",
                          subtitle: subscriptions.isSubscribed == true ? "Actif" : "Inactif")
             // Ouvrir l'offre à la demande, quel que soit l'état de l'abonnement.

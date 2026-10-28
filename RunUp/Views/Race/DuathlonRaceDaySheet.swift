@@ -45,7 +45,7 @@ struct DuathlonRaceDaySheet: View {
 
     private var journee: some View {
         VStack(alignment: .leading, spacing: 10) {
-            RUCardHeader(icon: "clock", tint: RUColor.violet, title: "Où passe la journée")
+            RUCardHeader(icon: "clock", title: "Où passe la journée")
 
             if connu {
                 VStack(spacing: 6) {
@@ -122,7 +122,7 @@ struct DuathlonRaceDaySheet: View {
 
     private var premiereCourse: some View {
         VStack(alignment: .leading, spacing: 10) {
-            RUCardHeader(icon: "exclamationmark.triangle", tint: RUColor.rose, title: "La première course")
+            RUCardHeader(icon: "exclamationmark.triangle", title: "La première course")
 
             Text(phraseDuDepart)
                 .font(RUFont.sans(.small)).foregroundColor(RUColor.text2).lineSpacing(2)
@@ -147,7 +147,7 @@ struct DuathlonRaceDaySheet: View {
 
     private var ravitaillement: some View {
         VStack(alignment: .leading, spacing: 10) {
-            RUCardHeader(icon: "fork.knife", tint: RUColor.rose, title: "Le vélo est la seule fenêtre")
+            RUCardHeader(icon: "fork.knife", title: "Le vélo est la seule fenêtre")
 
             Text("Rien avant : la première course se fait à vide, et c'est sans conséquence, elle est courte. Rien après non plus — à pied, sur un estomac déjà secoué, presque tout est refusé.")
                 .font(RUFont.sans(.small)).foregroundColor(RUColor.text2).lineSpacing(2)
@@ -182,7 +182,7 @@ struct DuathlonRaceDaySheet: View {
 
     private var transitions: some View {
         VStack(alignment: .leading, spacing: 10) {
-            RUCardHeader(icon: "arrow.triangle.swap", tint: RUColor.violet, title: "Les transitions")
+            RUCardHeader(icon: "arrow.triangle.swap", title: "Les transitions")
 
             // Pas de « c'est là que ça se gagne » : sur un duathlon, les transitions pèsent
             // entre 1,6 et 3,6 % selon le format — jamais le levier principal. Le dire

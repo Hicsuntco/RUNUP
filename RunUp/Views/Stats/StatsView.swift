@@ -137,7 +137,7 @@ struct StatsView: View {
     /// Les deux cartes du bas ont déjà leur phrase d'attente ; c'est le résumé qui n'en avait pas.
     private var firstDayBanner: some View {
         VStack(alignment: .leading, spacing: 10) {
-            RUCardHeader(icon: "chart.line.uptrend.xyaxis", tint: RUColor.rose,
+            RUCardHeader(icon: "chart.line.uptrend.xyaxis",
                          title: "Rien à analyser pour l'instant",
                          subtitle: "C'est normal, tu viens de commencer")
             Text("Dès ta première sortie, cet écran affichera ton allure moyenne, ta charge d'entraînement et tes records — calculés sur tes courses, pas sur des moyennes.")
@@ -152,7 +152,7 @@ struct StatsView: View {
     private var summaryGrid: some View {
         VStack(spacing: 10) {
             HStack(spacing: 10) {
-                RUStatTile(icon: "ruler", tint: RUColor.rose,
+                RUStatTile(icon: "ruler",
                            title: "Distance totale",
                            value: String(format: "%.0f", totalDistanceKm), unit: "km",
                            footnote: nil, progress: nil)
@@ -160,14 +160,14 @@ struct StatsView: View {
                 // cette tuile-ci comptait TOUTES les sorties, vélo compris. « 42 km · 15 sorties »
                 // décrivait alors deux ensembles différents sur la même ligne — le genre de
                 // chiffre qu'on ne peut pas réconcilier en le regardant.
-                RUStatTile(icon: "figure.run", tint: RUColor.violet,
+                RUStatTile(icon: "figure.run",
                            title: "Sorties",
                            value: "\(runsOnFoot.count)",
                            unit: Pluriel.choisir(runsOnFoot.count, "sortie", "sorties"),
                            footnote: nil, progress: nil)
             }
             HStack(spacing: 10) {
-                RUStatTile(icon: "clock", tint: RUColor.cyan,
+                RUStatTile(icon: "clock",
                            title: "Temps cumulé",
                            value: PaceModel.formatTotalDuration(totalDurationSeconds), unit: nil,
                            footnote: nil, progress: nil)
@@ -364,7 +364,7 @@ struct StatsView: View {
                 // qu'il bouge à chaque sortie, et qu'un compteur de séances ne dit rien d'une
                 // sortie écourtée. Les séances restent dites, en note sous la barre — une
                 // précision, plus un dénominateur concurrent.
-                RUCardHeader(icon: "calendar", tint: RUColor.rose,
+                RUCardHeader(icon: "calendar",
                              title: "Cette semaine",
                              subtitle: "Face à la semaine passée") {
                     Text("›").font(RUFont.sans(.emphasis, weight: .bold)).foregroundColor(RUColor.text3)
@@ -482,7 +482,7 @@ struct StatsView: View {
 
     private var paceCard: some View {
         VStack(alignment: .leading, spacing: 6) {
-            RUCardHeader(icon: "speedometer", tint: RUColor.violet,
+            RUCardHeader(icon: "speedometer",
                          title: "Allure moyenne",
                          subtitle: "Une sortie par point") {
                 rangePicker
@@ -635,7 +635,7 @@ struct StatsView: View {
 
     private var recordsCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            RUCardHeader(icon: "trophy.fill", tint: RUColor.amber,
+            RUCardHeader(icon: "trophy.fill",
                          title: "Records personnels",
                          subtitle: "Tes meilleures sorties")
             if runs.isEmpty {
@@ -730,7 +730,7 @@ struct StatsView: View {
 
     private var predictionCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            RUCardHeader(icon: "target", tint: RUColor.rose2,
+            RUCardHeader(icon: "target",
                          title: "Prédiction de course",
                          subtitle: "À partir de ta meilleure perf récente")
             RUTileRow(spacing: 8) {
@@ -827,7 +827,7 @@ struct StatsView: View {
         let bars = weeklyDistances
         let maxBar = max(bars.max() ?? 1, 1)
         return VStack(alignment: .leading, spacing: 12) {
-            RUCardHeader(icon: "chart.bar.fill", tint: RUColor.cyan,
+            RUCardHeader(icon: "chart.bar.fill",
                          title: "Charge d'entraînement",
                          subtitle: "Sur 8 semaines") {
                 if let ratio = acuteChronicRatio(bars) {

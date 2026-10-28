@@ -139,7 +139,7 @@ struct ClubManagementView: View {
     private var challengeSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                RUCardHeader(icon: "flag.checkered", tint: RUColor.rose2, title: "Défi du club")
+                RUCardHeader(icon: "flag.checkered", title: "Défi du club")
                 Button(challenge == nil ? "Créer" : "Changer") { showCreateChallenge = true }
                     .font(RUFont.sans(.body, weight: .semibold))
                     .foregroundColor(RUColor.rose2)
@@ -561,7 +561,7 @@ struct ClubMemberProfileView: View {
     /// few points wide. A fixed tile width lets a scroll view give each one its real size.
     private var badgesSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            RUCardHeader(icon: "rosette", tint: RUColor.amber, title: "Badges")
+            RUCardHeader(icon: "rosette", title: "Badges")
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
                     ForEach(badges) { badge in

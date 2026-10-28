@@ -225,7 +225,7 @@ struct HomeView: View {
                 Group {
                     if montreLeProgramme {
                         HStack(alignment: .firstTextBaseline, spacing: 10) {
-                            RUCardHeader(icon: "map.fill", tint: RUColor.rose,
+                            RUCardHeader(icon: "map.fill",
                                          title: String(localized: "Ton programme · \(profile.goalDisplay)"))
                             // Le compte à rebours, en texte gris au bout de la ligne. Il était
                             // une capsule rose remplie ; il se lit aussi bien sans, et il cesse
@@ -845,7 +845,7 @@ struct HomeView: View {
         let allure = s.km > 0 ? PaceModel.paceText(Double(s.seconds) / s.km) : "—"
         return Button(action: { appState.go(.stats) }) {
             VStack(alignment: .leading, spacing: 14) {
-                RUCardHeader(icon: "chart.bar.fill", tint: RUColor.rose,
+                RUCardHeader(icon: "chart.bar.fill",
                              title: String(localized: "30 derniers jours"))
                 HStack(spacing: 10) {
                     statTile(String(format: "%.0f", s.km), unit: "km", label: "Distance")

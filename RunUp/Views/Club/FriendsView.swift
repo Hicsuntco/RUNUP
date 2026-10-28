@@ -491,7 +491,7 @@ struct FriendsView: View {
 
     private var requestsCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            RUCardHeader(icon: "person.crop.circle.badge.plus", tint: RUColor.rose2, title: "Demandes en attente")
+            RUCardHeader(icon: "person.crop.circle.badge.plus", title: "Demandes en attente")
             ForEach(incomingRequests) { user in
                 HStack(spacing: 12) {
                     AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 32, seed: user.id)
@@ -580,7 +580,7 @@ struct FriendsView: View {
         // `LazyVStack` : même raison que le fil du club — 50 lignes construites d'un coup,
         // avatars compris, dont l'écrasante majorité hors écran.
         LazyVStack(alignment: .leading, spacing: 0) {
-            RUCardHeader(icon: "bolt.fill", tint: RUColor.rose, title: "Fil d'activité")
+            RUCardHeader(icon: "bolt.fill", title: "Fil d'activité")
             // `errorMessage == nil` : « Personne à suivre pour l'instant » est une AFFIRMATION
             // sur le contenu du compte, et l'app n'a pas le droit de la faire quand elle vient
             // d'échouer à le lire. Les deux s'affichaient ensemble, et se contredisaient.

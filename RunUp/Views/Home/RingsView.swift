@@ -164,7 +164,7 @@ struct RingsView: View {
                         HStack(spacing: 12) {
                             AppMarkView(size: 34)
                             VStack(alignment: .leading, spacing: 4) {
-                                RUCardHeader(icon: "bubble.left.fill", tint: RUColor.rose2, title: "Coach")
+                                RUCardHeader(icon: "bubble.left.fill", title: "Coach")
                                 Text(coachNudge).font(RUFont.sans(.label)).foregroundColor(RUColor.textPrimary)
                             }
                         }

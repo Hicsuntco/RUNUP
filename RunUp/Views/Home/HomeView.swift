@@ -613,28 +613,48 @@ struct HomeView: View {
     @ViewBuilder private var derniereSortie: some View {
         if let derniere = runs.filter({ $0.route.count > 1 }).max(by: { $0.date < $1.date }) {
             Button(action: { Haptics.selection(); appState.go(.history) }) {
-                VStack(spacing: 0) {
-                    ZStack {
-                        RUColor.traceBackground
-                        SelfDrawingRoute(route: derniere.route, lineWidth: 3,
-                                         targetPoints: 140, showsStart: true)
-                            .padding(14)
-                    }
-                    .frame(height: 104)
-                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                // ── LES CHIFFRES SE POSENT SUR LE TRACÉ, ET PAS SOUS LUI ────────────────
+                //
+                // La première version mettait une bande de 104 points puis une ligne de chiffres
+                // dessous. La capture a montré le défaut : une boucle est à peu près aussi haute
+                // que large, `SelfDrawingRoute` conserve ses proportions, donc elle se cale sur
+                // la hauteur et laisse DEUX LARGES MARGES NOIRES. Le bandeau était vide aux trois
+                // quarts.
+                //
+                // La géométrie ne se discute pas : un sujet carré dans un cadre large laisse des
+                // marges, se fait rogner, ou devient une vignette. Rogner ampute l'information
+                // que le tracé porte pour décorer ; une vignette à côté des chiffres aurait fait
+                // du bandeau une ligne d'historique de plus.
+                //
+                // Le noir cesse donc d'être du vide et devient un FOND : le tracé occupe tout le
+                // cadre, et la date et les chiffres se posent dessus en blanc, comme un texte sur
+                // une photo. Un voile dégradé au bas garantit la lisibilité quelle que soit la
+                // forme de la boucle — le trait peut passer derrière le texte sans le gêner,
+                // exactement comme une photo le ferait.
+                ZStack(alignment: .bottomLeading) {
+                    RUColor.traceBackground
+                    SelfDrawingRoute(route: derniere.route, lineWidth: 3,
+                                     targetPoints: 140, showsStart: true)
+                        .padding(14)
+                    LinearGradient(colors: [.black.opacity(0), .black.opacity(0.62)],
+                                   startPoint: .center, endPoint: .bottom)
+                    VStack(alignment: .leading, spacing: 2) {
                         Text(derniere.date.formatted(.dateTime.weekday(.abbreviated).day()
                                                         .month(.abbreviated).locale(Locale.current)))
                             .font(RUFont.sans(.small, weight: .medium))
-                            .foregroundColor(RUColor.text3)
-                        Spacer(minLength: 8)
-                        RUChiffre(valeur: Distances.valeur(derniere.distanceKm),
-                                  unite: "km", cran: .subtitle)
-                        RUChiffre(valeur: derniere.avgPace, unite: "/km", cran: .subtitle)
+                            .foregroundColor(.white.opacity(0.72))
+                        HStack(alignment: .firstTextBaseline, spacing: 14) {
+                            RUChiffre(valeur: Distances.valeur(derniere.distanceKm), unite: "km",
+                                      cran: .subtitle, couleur: .white,
+                                      couleurDeLUnite: .white.opacity(0.72))
+                            RUChiffre(valeur: derniere.avgPace, unite: "/km",
+                                      cran: .subtitle, couleur: .white,
+                                      couleurDeLUnite: .white.opacity(0.72))
+                        }
                     }
-                    .padding(.horizontal, 14)
-                    .padding(.top, 10)
-                    .padding(.bottom, 12)
+                    .padding(14)
                 }
+                .frame(height: 150)
                 .background(RUColor.card)
                 .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous)

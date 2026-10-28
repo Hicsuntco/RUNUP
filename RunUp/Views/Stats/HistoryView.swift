@@ -282,8 +282,30 @@ struct HistoryView: View {
     @ViewBuilder
     private func runThumbnail(_ run: RunRecord) -> some View {
         Group {
+            // ── UNE CARTE DE 52 POINTS NE DIT PAS OÙ, ET DOIT QUAND MÊME CITER SA SOURCE ──
+            //
+            // C'était `RunRouteMapView`, avec pour raison « on y cherche OÙ on a couru ». La
+            // première capture où le profil de démonstration a enfin des tracés montre ce que
+            // ça donne : MapKit imprime sa mention légale DANS la vignette, et à 52 points ça
+            // écrit « Mentions », « Perret », « ris » par-dessus la route. Illisible, et pas
+            // retirable — Apple l'exige.
+            //
+            // Le reste ne tient pas mieux : les noms de rue sont illisibles à cette taille, donc
+            // la carte ne répond pas à son propre « où », et ses tuiles beiges et vertes sont la
+            // seule chose de l'écran qui ne vienne pas de la palette de l'app.
+            //
+            // `RouteThumbnail` est écrit pour ce créneau exact — sa documentation dit « ~60
+            // points suffisent à 52 pt de côté » et « invisible à 52 points » à propos du départ.
+            // Il était là, et l'emplacement appelait une carte. La forme de la boucle, elle, se
+            // reconnaît parfaitement : c'est ce qui distingue seize sorties les unes des autres.
+            //
+            // La vraie carte reste où elle sert : en grand, dans le détail d'une sortie.
             if run.route.count > 1 {
-                RunRouteMapView(route: run.route, lineWidth: 2.5)
+                ZStack {
+                    RUColor.card2
+                    RouteThumbnail(route: run.route, lineWidth: 2)
+                        .padding(6)
+                }
             } else {
                 Image(systemName: "figure.run")
                     .font(.system(size: 18, weight: .medium))

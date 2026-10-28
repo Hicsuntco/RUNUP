@@ -79,11 +79,18 @@ struct HomeView: View {
                     // jour, dit la même chose sans faire semblant de dire bonjour.
                     eyebrow: isFreeRun ? String(localized: "Mode course libre") : todayDateEyebrow,
                     title: profile.name,
-                    // 32 au lieu des 24 par défaut. Le prénom est la première chose de l'écran et
-                    // il avait la taille d'un titre de section ; les écrans qui paraissent
-                    // modernes ouvrent presque tous sur un mot posé grand, puis descendent vite.
-                    // C'est l'ÉCART entre les tailles qui crée la hiérarchie, pas leur valeur.
-                    titleSize: 32
+                    // 32 → 26. LE PRÉNOM EST UNE SALUTATION, PAS LE CONTENU DE L'ÉCRAN.
+                    //
+                    // L'argument d'origine — « les écrans modernes ouvrent sur un mot posé
+                    // grand » — reste vrai, et il ne dit pas DE COMBIEN. À 32 il rendait 34,9
+                    // points : plus gros que le titre d'une page de club (26,2) et presque
+                    // aussi gros que le record collectif (36), qui est le chiffre le plus
+                    // dominant de l'app. Un prénom qu'on ne lit pas — on le sait déjà — occupait
+                    // le haut du barème.
+                    //
+                    // 26 le met à 28,3 : encore nettement au-dessus de tout texte de l'écran, et
+                    // sous les deux chiffres des cartes, qui sont ce qu'on vient voir.
+                    titleSize: 26
                 ) {
                     HStack(spacing: 8) {
                         streakChip
@@ -535,7 +542,8 @@ struct HomeView: View {
                     RUMetricRow(spacing: 18) {
                         VStack(alignment: .leading, spacing: 1) {
                             Text("\(seance.durationMinutes)")
-                                .font(RUFont.display(56))
+                                // 56 → 40. Voir la note jumelle sur `sessionCard`.
+                                .font(RUFont.display(40))
                                 .foregroundColor(RUColor.textPrimary)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.6)
@@ -668,7 +676,20 @@ struct HomeView: View {
                 RUMetricRow(spacing: 18) {
                     VStack(alignment: .leading, spacing: 1) {
                         Text("\(session.durationMinutes)")
-                            .font(RUFont.display(56))
+                            // 56 → 40, SOIT 43,6 POINTS AU LIEU DE 61.
+                            //
+                            // Soixante et un points, c'était le plus gros élément de toute
+                            // l'app — plus gros que le record collectif d'un club (36), pour
+                            // une durée de séance. Et dans sa propre carte, il écrasait le titre
+                            // qui le surplombe : « Footing récup » rend 25,1, donc la durée
+                            // parlait DEUX FOIS ET DEMIE plus fort que le nom de ce qu'on va
+                            // faire. On lit d'abord ce que c'est, le nombre de minutes vient
+                            // après.
+                            //
+                            // À 43,6 le rapport tombe à 1,7 : la durée domine toujours sa
+                            // rangée de mesures — c'est elle le chiffre de la carte — sans
+                            // écraser son propre titre ni tenir un tiers de l'écran.
+                            .font(RUFont.display(40))
                             .foregroundColor(RUColor.textPrimary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.6)
@@ -891,7 +912,11 @@ struct HomeView: View {
                         // `verbatim` : une fraction n'est pas une phrase, elle n'a rien à faire
                         // dans le catalogue de traduction.
                         Text(verbatim: "\(p.dailyGoalsDone)/\(p.dailyGoalsTotal)")
-                            .font(RUFont.display(44))
+                            // 44 → 36. Trois éléments énormes se disputaient cet écran — le
+                            // prénom, la durée, cette fraction — et deux cartes suffisaient à
+                            // le remplir en entier. Chacun reste le point de fixation de SON
+                            // bloc ; aucun ne prétend plus l'être pour la page.
+                            .font(RUFont.display(36))
                             .foregroundColor(RUColor.textPrimary)
                             .monospacedDigit()
                         Text("Ta journée")

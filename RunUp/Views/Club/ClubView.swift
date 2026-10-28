@@ -1013,14 +1013,10 @@ struct ClubView: View {
             VStack(alignment: .leading, spacing: 10) {
                 RUCardHeader(title: "Les séances tenues")
                 HStack(alignment: .lastTextBaseline, spacing: 6) {
-                    Text("\(histo.averageAttendees)")
-                        .displayStyle(.figure)
-                        .foregroundColor(RUColor.textPrimary)
                     // Pas de `Pluriel` ici : « au départ en moyenne » ne s'accorde pas, et
                     // appeler le choix de pluriel avec deux fois la même phrase donnerait deux
                     // clés identiques au catalogue et un faux air de règle.
-                    Text("au départ en moyenne")
-                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
+                    RUChiffre(valeur: "\(histo.averageAttendees)", unite: "au départ en moyenne")
                     Spacer(minLength: 8)
                     Text(Pluriel.choisir(histo.total,
                                          String(localized: "\(histo.total) séance"),
@@ -1273,10 +1269,7 @@ struct ClubView: View {
                     // points dans un cadre plein. Le chiffre ne s'écrit donc en grand que
                     // lorsqu'il y a quelque chose à écrire ; sinon, une phrase.
                     if stats?.totalKm ?? 0 > 0 {
-                        HStack(alignment: .lastTextBaseline, spacing: 4) {
-                            Text(km).displayStyle(.figure).foregroundColor(RUColor.textPrimary)
-                            Text("KM").font(RUFont.sans(.small, weight: .bold)).foregroundColor(RUColor.text2)
-                        }
+                        RUChiffre(valeur: km, unite: "KM")
                     } else {
                         Text("Personne n'a encore couru cette semaine.")
                             .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)

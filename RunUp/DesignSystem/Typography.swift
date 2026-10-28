@@ -124,7 +124,23 @@ enum RUFont {
     ///   • le chronomètre de la course en cours — 96 pt pour le décompte de départ, 52 ou 64 pour
     ///     le temps écoulé selon qu'une consigne est affichée. Un seul écran, lu à bout de bras.
     static func display(horsEchelle size: CGFloat) -> Font {
+        // ── LES CHIFFRES À CHASSE FIXE, POUR TOUTE L'APP ─────────────────────────────────────
+        //
+        // Trois fichiers appelaient `.monospacedDigit()` à la main — l'accueil, la course en
+        // cours, l'onboarding — et les quarante autres l'oubliaient. Conséquence sur une app de
+        // course : partout ailleurs, un « 1 » occupe moins de place qu'un « 8 », donc une
+        // colonne de distances se décale d'une ligne à l'autre et un chronomètre tremble à
+        // chaque seconde. C'est le genre de défaut qu'on ne sait pas nommer en regardant un
+        // écran — on le lit comme « ça n'a pas été fait avec soin », et on a raison.
+        //
+        // Ici plutôt qu'aux cent appels : c'est une propriété de la police de titrage, pas le
+        // réglage d'un écran. Inter livre bien `tnum`, et `monospacedDigit()` est un réglage de
+        // fonctionnalité OpenType — il ne change pas de famille, donc rien d'autre ne bouge.
+        //
+        // Pas sur `sans` : du texte courant à chasse fixe se lit mal, et les chiffres d'une
+        // phrase n'ont aucune colonne à tenir.
         .custom(DisplayFont.postScriptName, fixedSize: scaled(DisplayFont.pointSize(for: size)))
+            .monospacedDigit()
     }
 
     /// Le texte courant et les métriques, relevés de 6 %.

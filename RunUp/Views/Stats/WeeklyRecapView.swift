@@ -175,12 +175,7 @@ struct WeeklyRecapView: View {
 
     private func statTile(value: String, unit: String?, label: String, color: Color, chip: String?, chipColor: Color) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack(alignment: .lastTextBaseline, spacing: 4) {
-                Text(value).displayStyle(.figure).foregroundColor(color)
-                if let unit {
-                    Text(unit).font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
-                }
-            }
+            RUChiffre(valeur: value, unite: unit, couleur: color)
             Text(label).font(RUFont.sans(.micro, weight: .bold)).tracking(1).foregroundColor(RUColor.text2)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

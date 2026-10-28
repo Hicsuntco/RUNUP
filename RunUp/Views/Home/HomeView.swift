@@ -873,18 +873,7 @@ struct HomeView: View {
     /// une phrase et n'a rien à faire dans le catalogue.
     private func statTile(_ value: String, unit: String?, label: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(verbatim: value)
-                    .displayStyle(.figure)
-                    .foregroundColor(RUColor.textPrimary)
-                    .monospacedDigit()
-                    .lineLimit(1).minimumScaleFactor(0.6)
-                if let unit {
-                    Text(verbatim: unit)
-                        .font(RUFont.sans(.small, weight: .medium))
-                        .foregroundColor(RUColor.text3)
-                }
-            }
+            RUChiffre(valeur: value, unite: unit)
             Text(LocalizedStringKey(label))
                 .font(RUFont.sans(.label, weight: .medium))
                 .foregroundColor(RUColor.text3)

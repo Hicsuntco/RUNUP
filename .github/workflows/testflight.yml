@@ -313,6 +313,12 @@ jobs:
       - name: Vérifier que les écarts et les marges tiennent sur la grille
         run: python3 ci_scripts/check_grille.py
 
+      # Un grand nombre et son unité : neuf endroits, neuf traitements, quatre tailles d'unité et
+      # cinq graisses. Les deux lignes sont valides séparément, donc rien d'autre ne le remarque —
+      # et c'est l'objet le plus regardé d'une app de course.
+      - name: Vérifier qu'un chiffre et son unité passent par le composant partagé
+        run: python3 ci_scripts/check_chiffres.py
+
       - name: Vérifier que le compteur du Club ne compte que des gestes délibérés
         run: python3 ci_scripts/check_club_metrics.py
 

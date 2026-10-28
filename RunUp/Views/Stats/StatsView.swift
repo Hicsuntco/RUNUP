@@ -489,8 +489,9 @@ struct StatsView: View {
             }
             if let recentAvgPace {
                 HStack(alignment: .lastTextBaseline, spacing: 6) {
-                    Text(PaceModel.formatDuration(recentAvgPace)).displayStyle(.banner).foregroundColor(RUColor.textPrimary)
-                    Text("/km").font(RUFont.sans(.emphasis)).foregroundColor(RUColor.text2)
+                    // L'unité était en `.emphasis`, soit 20 pt à côté d'un chiffre de 48 : elle
+                    // ne l'accompagnait pas, elle lui répondait. Voir `RUChiffre`.
+                    RUChiffre(valeur: PaceModel.formatDuration(recentAvgPace), unite: "/km", cran: .banner)
                     // Poussé au bord droit (le `margin-left:auto` de la maquette) : collé au
                     // "/km", le delta se lisait comme une deuxième unité accrochée au chiffre
                     // héros ; à l'opposé de la ligne, il se lit comme ce qu'il est — une

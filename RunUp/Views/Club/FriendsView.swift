@@ -569,12 +569,9 @@ struct FriendsView: View {
     }
 
     private func countLabel(value: Int, label: String) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 4) {
-            Text("\(value)").displayStyle(.subtitle).foregroundColor(RUColor.textPrimary)
-            Text(label).font(RUFont.sans(.small, weight: .semibold)).foregroundColor(RUColor.text3)
-        }
-        .frame(minHeight: 44)
-        .contentShape(Rectangle())
+        RUChiffre(valeur: "\(value)", unite: label, cran: .subtitle)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
     }
 
     // MARK: Feed

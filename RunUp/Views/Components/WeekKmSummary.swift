@@ -33,17 +33,12 @@ struct WeekKmSummary: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .lastTextBaseline, spacing: 4) {
-                Text(String(format: "%.1f", locale: Locale.current, doneKm))
-                    .displayStyle(.figure)
-                    .foregroundColor(RUColor.textPrimary)
-                    .lineLimit(1).minimumScaleFactor(0.7)
                 // Le dénominateur reste petit et gris : c'est une précision sur le chiffre, pas
                 // une seconde valeur. Un rapport de 1,5 les faisait lire comme deux nombres.
-                Text(plannedKm > 0
-                     ? "/ \(Int(plannedKm.rounded())) km"
-                     : String(localized: "km"))
-                    .font(RUFont.sans(.small, weight: .semibold))
-                    .foregroundColor(RUColor.text3)
+                RUChiffre(valeur: String(format: "%.1f", locale: Locale.current, doneKm),
+                          unite: plannedKm > 0
+                                 ? "/ \(Int(plannedKm.rounded())) km"
+                                 : String(localized: "km"))
                 Spacer(minLength: 8)
                 // L'écart ne s'affiche que s'il compare quelque chose : une semaine passée à zéro
                 // ne produit pas une pastille « +5,0 », qui ferait passer un début pour un progrès.

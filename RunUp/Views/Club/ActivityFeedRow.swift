@@ -405,7 +405,23 @@ struct ActivityFeedRow: View {
     private func author(onDark: Bool) -> some View {
         Button(action: { if !isMine { appState.ouvrirLeProfil(item.userId) } }) {
             HStack(spacing: 10) {
-                AvatarView(urlString: item.avatarUrl, base64DataURI: item.avatarBase64,
+                // MA PHOTO, QUE L'APP A DÉJÀ, PLUTÔT QUE LA COPIE DU SERVEUR.
+                //
+                // L'avatar d'une ligne ne se lisait QUE dans la réponse du serveur. Pour les
+                // autres, c'est la seule source possible. Pour MOI, non : l'app porte ma photo
+                // dans `profile.avatarImageData` depuis que je l'ai choisie, et elle s'affiche
+                // sans réseau sur mon profil et dans l'en-tête.
+                //
+                // Le résultat était un écart que rien n'expliquait : ma tête sur mon profil, mon
+                // initiale sur mes propres sorties. Il suffit que l'envoi au serveur ait échoué
+                // une fois — réseau absent au moment du choix, espace de stockage non configuré —
+                // pour que l'écart s'installe et ne se résorbe jamais tout seul à l'écran.
+                //
+                // `imageData` passe en premier dans `AvatarView`, donc la copie du serveur reste
+                // utilisée pour tout le monde d'autre, et pour moi dès qu'elle existe. Faire un
+                // aller-retour réseau pour afficher son propre visage n'a aucun sens.
+                AvatarView(imageData: isMine ? appState.profile.avatarImageData : nil,
+                           urlString: item.avatarUrl, base64DataURI: item.avatarBase64,
                            initial: String(item.name.prefix(1)), size: 32, seed: isMine ? nil : item.userId)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)

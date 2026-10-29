@@ -106,7 +106,9 @@ struct ActivityDetailView: View {
     private func auteur(_ s: ActivityDetail) -> some View {
         Button(action: { if !s.isMine { appState.ouvrirLeProfil(s.userId) } }) {
             HStack(spacing: 12) {
-                AvatarView(urlString: s.avatarUrl, base64DataURI: s.avatarBase64,
+                // Voir `ActivityFeedRow` : ma photo vient de l'app, pas d'un aller-retour.
+                AvatarView(imageData: s.isMine ? appState.profile.avatarImageData : nil,
+                           urlString: s.avatarUrl, base64DataURI: s.avatarBase64,
                            initial: String(s.name.prefix(1)), size: 40,
                            seed: s.isMine ? nil : s.userId)
                 VStack(alignment: .leading, spacing: 2) {

@@ -136,12 +136,25 @@ def call(method: str, path: str, body=None):
                 time.sleep(2 ** essai)
                 continue
             detail = e.read().decode()
+            # LE MESSAGE D'APPLE REMONTE DANS L'EXCEPTION, et pas seulement dans le journal.
+            #
+            # Il n'était qu'imprimé, et l'exception ne portait que « HTTP 403 ». Les appelants ne
+            # pouvaient donc classer une panne que par son CODE — et un 403 d'Apple recouvre au
+            # moins deux causes sans rapport : une clé d'API sans le rôle Admin, et un contrat de
+            # licence du programme en attente de signature. `profils.py` annonçait la première
+            # dans les deux cas. Le jour où c'était la seconde, le message a envoyé chercher une
+            # clé qui n'avait rien à se reprocher.
+            raisons = []
             try:
                 for err in json.loads(detail).get("errors", []):
-                    print(f"  Apple : {err.get('title')} — {err.get('detail')}", file=sys.stderr)
+                    ligne = f"{err.get('title')} — {err.get('detail')}"
+                    raisons.append(ligne)
+                    print(f"  Apple : {ligne}", file=sys.stderr)
             except Exception:
                 print(detail, file=sys.stderr)
-            sys.exit(f"HTTP {e.code} sur {method} {path}")
+                raisons.append(detail[:400])
+            fin = (" — " + " | ".join(raisons)) if raisons else ""
+            sys.exit(f"HTTP {e.code} sur {method} {path}{fin}")
 
 
 # ── Lecture de la fiche ───────────────────────────────────────────────────────────────────────

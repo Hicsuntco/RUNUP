@@ -81,21 +81,57 @@ async function handleAvatar(req, res, userId) {
   }
   if (!estUnJpeg(decoded)) return res.status(400).json({ error: 'not_an_image' });
 
-  const blob = await put(`avatars/${userId}.jpg`, decoded, {
-    access: 'public',
-    contentType: 'image/jpeg',
-    // A stable, user-scoped path means a re-upload replaces the same object rather than
-    // accumulating one blob per change — addRandomSuffix would defeat that and leak storage.
-    addRandomSuffix: false,
-    // Every re-upload needs a fresh cache-bust: the pathname (and therefore the URL) stays the
-    // same, so without this her old photo would keep showing from CDN/client caches after a
-    // real change until each cache's own TTL happened to expire.
-    cacheControlMaxAge: 3600,
-  });
+  // ── LE DÉPÔT PEUT NE PAS EXISTER, ET C'EST ARRIVÉ ────────────────────────────────────────
+  //
+  // `put()` exige un espace Blob branché sur le projet Vercel ; sans lui, il lève, cette
+  // fonction rendait 500, et l'app affichait « Photo enregistrée, mais pas encore visible du
+  // club ». La photo restait donc locale pour toujours : visible sur son propre profil, absente
+  // de ses propres sorties dans le fil, sans que rien à l'écran explique l'écart.
+  //
+  // Une fonctionnalité entière qui tombe parce qu'une case n'a pas été cochée dans un tableau de
+  // bord est une mauvaise dépendance. On REPLIE donc sur la colonne `users.avatar_data`, le
+  // chemin d'avant la migration — que le client lit toujours partout (`avatarBase64`), puisqu'il
+  // devait continuer de servir les comptes n'ayant pas renvoyé leur photo depuis.
+  //
+  // CE N'EST PAS AUSSI BIEN, et c'est voulu comme repli et non comme défaut : la migration vers
+  // Blob existait pour ne plus faire voyager la photo entière dans chaque ligne de fil ou de
+  // classement. Le repli la fait revenir — bornée à 200 ko par `MAX_LENGTH`, et en pratique
+  // 15 à 30 ko puisque l'app redimensionne à 240 px avant d'envoyer.
+  //
+  // Il se répare tout seul : dès que le dépôt existe, le prochain envoi écrit `avatar_url` et
+  // remet `avatar_data` à NULL. Rien à migrer à la main.
+  let urlDuDepot = null;
+  try {
+    const blob = await put(`avatars/${userId}.jpg`, decoded, {
+      access: 'public',
+      contentType: 'image/jpeg',
+      // A stable, user-scoped path means a re-upload replaces the same object rather than
+      // accumulating one blob per change — addRandomSuffix would defeat that and leak storage.
+      addRandomSuffix: false,
+      // Every re-upload needs a fresh cache-bust: the pathname (and therefore the URL) stays the
+      // same, so without this her old photo would keep showing from CDN/client caches after a
+      // real change until each cache's own TTL happened to expire.
+      cacheControlMaxAge: 3600,
+    });
+    urlDuDepot = blob.url;
+  } catch (erreur) {
+    // Bruyant dans les journaux, silencieux pour l'app : elle a sa photo, et le repli marche.
+    // Sans cette ligne, un projet sans dépôt servirait des photos lourdes pendant des mois sans
+    // que personne sache pourquoi.
+    console.error('avatar: dépôt Blob indisponible, repli sur avatar_data —', erreur?.message || erreur);
+  }
 
-  await sql`UPDATE users SET avatar_data = NULL, avatar_url = ${blob.url} WHERE id = ${userId}`;
-  if (previousUrl && previousUrl !== blob.url) del(previousUrl).catch(() => {});
-  res.status(200).json({ ok: true, avatarUrl: blob.url });
+  if (urlDuDepot) {
+    await sql`UPDATE users SET avatar_data = NULL, avatar_url = ${urlDuDepot} WHERE id = ${userId}`;
+    if (previousUrl && previousUrl !== urlDuDepot) del(previousUrl).catch(() => {});
+    return res.status(200).json({ ok: true, avatarUrl: urlDuDepot });
+  }
+
+  // La colonne attend un data URI COMPLET : le client coupe à la première virgule pour décoder
+  // (voir AvatarView.localImage). Y ranger le base64 nu rendrait un carré vide.
+  await sql`UPDATE users SET avatar_data = ${avatarDataURI}, avatar_url = NULL WHERE id = ${userId}`;
+  if (previousUrl) del(previousUrl).catch(() => {});
+  res.status(200).json({ ok: true, stockage: 'base64' });
 }
 
 // Account deletion — required by App Store guideline 5.1.1(v) whenever an app offers account

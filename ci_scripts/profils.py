@@ -167,7 +167,20 @@ def main(argv):
     try:
         certs = certificats_de_distribution()
     except SystemExit as e:
-        if "403" in str(e):
+        # SUR LA RAISON, PAS SUR LE CODE. Un 403 d'Apple recouvre au moins deux causes sans
+        # rapport, et celle-ci annonçait toujours la première. Le jour où c'était la seconde, la
+        # vraie réponse d'Apple était pourtant deux lignes plus haut dans le journal : « your
+        # team's Account Holder must agree to the latest Program License Agreement ». Un message
+        # d'erreur qui se trompe coûte plus cher que pas de message du tout.
+        raison = str(e)
+        if "Program License Agreement" in raison or "PLA Update" in raison:
+            print("::error::Apple attend une signature. Le contrat de licence du programme "
+                  "développeur a changé, et SEUL LE TITULAIRE DU COMPTE peut l'accepter : "
+                  "developer.apple.com → Account, le bandeau en haut de page (ou l'onglet "
+                  "Agreements). Tant qu'il n'est pas signé, l'API refuse certificats et profils "
+                  "et aucun envoi TestFlight ne passera — ce n'est ni la clé, ni le code.",
+                  file=sys.stderr)
+        elif "403" in raison:
             print("::error::La clé d'API n'a pas accès aux certificats et profils. Il lui faut le "
                   "rôle Admin ; « App Manager » ne suffit pas, et le rôle d'une clé est figé à sa "
                   "création — il faut en créer une autre.", file=sys.stderr)

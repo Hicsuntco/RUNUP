@@ -14003,6 +14003,54 @@
         }
       }
     },
+    "La plus grosse semaine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biggest week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La semana más grande"
+          }
+        }
+      }
+    },
+    "La plus longue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Longest run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La más larga"
+          }
+        }
+      }
+    },
+    "La plus rapide": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fastest pace"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La más rápida"
+          }
+        }
+      }
+    },
     "La première course": {
       "extractionState": "manual",
       "localizations": {
@@ -14722,6 +14770,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "El plan siempre programará ahí tu sesión más larga de la semana."
+          }
+        }
+      }
+    },
+    "Le plus de dénivelé": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Most elevation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más desnivel"
           }
         }
       }

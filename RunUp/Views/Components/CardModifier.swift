@@ -33,6 +33,28 @@ struct CardBackground: ViewModifier {
 }
 
 extension View {
+    /// UNE CARTE QUAND LA SECTION A QUELQUE CHOSE À MONTRER, RIEN QUAND ELLE EST VIDE.
+    ///
+    /// L'argument écrit dans `ClubView.challengeCard` tient : « une carte VIDE occupait cent
+    /// points de haut pour dire qu'il n'y avait rien à dire », et deux de ces cadres se
+    /// suivaient en tête d'un club qui démarre. Mais il avait été appliqué SANS CONDITION — les
+    /// sections qui ont du contenu ont perdu leur surface en même temps que les autres.
+    ///
+    /// Le résultat se voit sur l'Aperçu d'un club actif : quatre sections de texte posées à même
+    /// le fond, et pour seule carte blanche celle du niveau, tout en bas. Une page dont une
+    /// section sur cinq a une surface ne se lit pas comme un parti pris, mais comme un écran
+    /// qu'on a oublié de finir.
+    ///
+    /// Une condition, donc, plutôt qu'un choix unique pour les deux états.
+    @ViewBuilder
+    func ruCarteSiPleine(_ pleine: Bool) -> some View {
+        if pleine {
+            self.padding(RUSpacing.cardPadding).ruCard()
+        } else {
+            self
+        }
+    }
+
     func ruCard(radius: CGFloat = RUSpacing.radiusCard, fill: Color = RUColor.card) -> some View {
         modifier(CardBackground(radius: radius, fill: fill))
     }

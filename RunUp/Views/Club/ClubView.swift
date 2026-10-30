@@ -747,7 +747,7 @@ struct ClubView: View {
                     .padding(.horizontal, 2)
             }
         }
-        .padding(.top, 6)
+        .ruCarteSiPleine(board.challenge != nil)
     }
 
     private var clubTabs: some View {
@@ -874,13 +874,15 @@ struct ClubView: View {
         // SERRÉ DANS UN GROUPE, LARGE ENTRE DEUX — et c'était 10 des deux côtés.
         //
         // Chaque section empile son intertitre et son contenu à 10 points, et les sections
-        // étaient espacées de 10 + les 6 de leur `padding(.top)`, soit 16. Seize contre dix :
-        // l'œil ne distingue pas les deux, donc il ne voit pas des groupes, il voit une liste
-        // de lignes également séparées. C'est ce qui donne à la page son air de brouillon.
+        // étaient espacées de 10. Dix contre dix : l'œil ne distingue pas les deux, donc il ne
+        // voit pas des groupes, il voit une liste de lignes également séparées. C'est ce qui
+        // donne à la page son air de brouillon.
         //
-        // 18 porte l'écart entre sections à 24 contre 10 à l'intérieur. Un rapport de 1 à 2,4
-        // suffit à ce que le groupement se lise sans qu'on ait à y penser.
-        VStack(alignment: .leading, spacing: 18) {
+        // 24 porte le rapport à 1 contre 2,4, ce qui suffit à ce que le groupement se lise sans
+        // qu'on ait à y penser. L'écart s'écrit ICI et une seule fois : il était composé de 18
+        // de pile plus un `padding(.top, 6)` recopié sur quatre sections — que les deux autres
+        // n'avaient pas, si bien que l'écran alternait 18 et 24 sans que ce soit voulu.
+        VStack(alignment: .leading, spacing: 24) {
             // UNE ICÔNE POUR LA PAGE, AUCUNE POUR SES SECTIONS.
             //
             // Quatre couleurs tenaient lieu de titres sur cet écran — rose pour la semaine,
@@ -944,7 +946,8 @@ struct ClubView: View {
                     }
                 }
             }
-            .padding(.top, 6)
+            .padding(RUSpacing.cardPadding)
+            .ruCard()
         }
     }
 
@@ -1045,7 +1048,8 @@ struct ClubView: View {
                     }
                 }
             }
-            .padding(.top, 6)
+            .padding(RUSpacing.cardPadding)
+            .ruCard()
         }
     }
 
@@ -1071,7 +1075,8 @@ struct ClubView: View {
                     }
                 }
             }
-            .padding(.top, 6)
+            .padding(RUSpacing.cardPadding)
+            .ruCard()
         }
     }
 
@@ -1086,9 +1091,17 @@ struct ClubView: View {
         HStack(spacing: 12) {
             Color.clear.frame(width: 32, height: 1)
             VStack(alignment: .leading, spacing: 4) {
-                Text("LA PLUS GROSSE SEMAINE")
-                    .font(RUFont.sans(.small, weight: .bold)).tracking(0.6)
-                    .foregroundColor(RUColor.rose2)
+                // GRISE COMME LES TROIS AUTRES, et sa prééminence reste entière.
+                //
+                // Elle était la seule étiquette rose de la page. Or ce qui fait de cette ligne
+                // la première n'est pas sa couleur, c'est sa TAILLE : son chiffre est à 38
+                // points quand les trois autres sont à 24. L'argument est écrit juste en
+                // dessous — « l'écart entre les deux est ce qui fait de l'un un titre et des
+                // autres une liste ». Le rose doublait ce travail déjà fait, et le dépensait
+                // sur une étiquette de treize points.
+                Text("La plus grosse semaine")
+                    .font(RUFont.sans(.small, weight: .medium))
+                    .foregroundColor(RUColor.text3)
                 // LE CHIFFRE DE LA PAGE, ET IL N'Y EN A QU'UN.
                 //
                 // Une page sans point de fixation se lit comme une liste, quelle que soit la
@@ -1099,11 +1112,9 @@ struct ClubView: View {
                 // Le record COLLECTIF est le bon candidat, et pas par défaut : c'est le seul
                 // chiffre de la page qui appartienne au club entier plutôt qu'à quelqu'un, et
                 // le seul dont la valeur grandit quand le club grandit. Les trois records
-                // nominatifs qui suivent restent à 21 — l'écart entre 36 et 23 est précisément
-                // ce qui fait de l'un un titre et des autres une liste.
-                Text(Distances.km(semaine.km))
-                    .displayStyle(.hero)
-                    .foregroundColor(RUColor.textPrimary)
+                // nominatifs qui suivent restent au cran `.title` — 38 points contre 24 est
+                // précisément ce qui fait de l'un un titre et des autres une liste.
+                RUChiffre(valeur: Distances.valeur(semaine.km), unite: "km", cran: .hero)
             }
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 2) {
@@ -1138,12 +1149,18 @@ struct ClubView: View {
                 AvatarView(urlString: record.avatarUrl, base64DataURI: record.avatarBase64,
                            initial: String(record.name.prefix(1)), size: 32, seed: record.userId)
                 VStack(alignment: .leading, spacing: 2) {
+                    // CAPITALES ESPACÉES → LA MICRO-ÉTIQUETTE DU SYSTÈME.
+                    //
+                    // « LA PLUS LONGUE » en capitales suivies, à côté d'un écran dont toutes les
+                    // autres étiquettes sont en minuscules grises depuis le bilan hebdomadaire.
+                    // Des capitales espacées donnent à une étiquette le poids d'un titre — c'est
+                    // une convention de tableau de bord, et elle fabrique du bruit sur une page
+                    // qui en compte déjà quatre.
                     Text(libelleDuRecord(record.genre))
-                        .font(RUFont.sans(.micro, weight: .bold)).tracking(0.6)
+                        .font(RUFont.sans(.small, weight: .medium))
                         .foregroundColor(RUColor.text3)
-                    Text(valeurDuRecord(record))
-                        .displayStyle(.title)
-                        .foregroundColor(RUColor.textPrimary)
+                    let part = recordEnDeuxParts(record)
+                    RUChiffre(valeur: part.valeur, unite: part.unite, cran: .title)
                 }
                 Spacer(minLength: 8)
                 VStack(alignment: .trailing, spacing: 2) {
@@ -1165,21 +1182,29 @@ struct ClubView: View {
 
     private func libelleDuRecord(_ genre: String) -> String {
         switch genre {
-        case "distance": return String(localized: "LA PLUS LONGUE")
-        case "allure": return String(localized: "LA PLUS RAPIDE")
-        default: return String(localized: "LE PLUS DE DÉNIVELÉ")
+        case "distance": return String(localized: "La plus longue")
+        case "allure": return String(localized: "La plus rapide")
+        default: return String(localized: "Le plus de dénivelé")
         }
     }
 
-    private func valeurDuRecord(_ record: ClubRecord) -> String {
+    /// LE CHIFFRE ET SON UNITÉ, SÉPARÉS — comme partout ailleurs depuis `RUChiffre`.
+    ///
+    /// `valeurDuRecord` rendait « 8,1 km » d'un bloc, donc le « km » prenait la taille du
+    /// chiffre. C'est exactement le défaut que `RUChiffre` a corrigé sur neuf autres écrans ;
+    /// celui-ci, qui est la page d'accueil d'un club, y avait échappé.
+    private func recordEnDeuxParts(_ record: ClubRecord) -> (valeur: String, unite: String?) {
         switch record.genre {
         case "distance":
-            return record.distanceKm.map { Distances.km($0) } ?? "—"
+            guard let km = record.distanceKm else { return ("—", nil) }
+            return (Distances.valeur(km), "km")
         case "allure":
-            // « /km » accolé à l'allure : sans l'unité, « 4:12 » se lit comme un temps.
-            return record.secPerKm.map { String(localized: "\(TimeFormat.allure(secondesParKm: $0)) /km") } ?? "—"
+            // « /km » reste collé au sens : sans unité, « 4:12 » se lit comme un temps.
+            guard let sec = record.secPerKm else { return ("—", nil) }
+            return (TimeFormat.allure(secondesParKm: sec), "/km")
         default:
-            return record.elevationGainM.map { "\($0) m" } ?? "—"
+            guard let m = record.elevationGainM else { return ("—", nil) }
+            return ("\(m)", "m")
         }
     }
 
@@ -1269,7 +1294,10 @@ struct ClubView: View {
                     // points dans un cadre plein. Le chiffre ne s'écrit donc en grand que
                     // lorsqu'il y a quelque chose à écrire ; sinon, une phrase.
                     if stats?.totalKm ?? 0 > 0 {
-                        RUChiffre(valeur: km, unite: "KM")
+                        // « km » et non « KM » : sur ce même écran, les quatre records écrivent
+                        // déjà leur unité en minuscules. Deux casses pour la même unité, à trois
+                        // centimètres l'une de l'autre.
+                        RUChiffre(valeur: km, unite: "km")
                     } else {
                         Text("Personne n'a encore couru cette semaine.")
                             .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
@@ -1311,6 +1339,11 @@ struct ClubView: View {
                                                     String(localized: "\(active.count) membres ont couru cette semaine")))
             }
         }
+        // Les pastilles des membres actifs se cerclent de `RUColor.card` pour se chevaucher
+        // proprement : ce liseré n'a de sens que sur une carte. Posé sur le fond lavande, il
+        // dessinait des anneaux blancs autour des visages.
+        .padding(RUSpacing.cardPadding)
+        .ruCard()
     }
 
     private static let eventDateFormatter: DateFormatter = {
@@ -1345,14 +1378,19 @@ struct ClubView: View {
 
     /// Sorties de groupe — real proposed group runs with RSVP. The one feature that turns a
     /// leaderboard into an actual club: people running TOGETHER.
-    /// Une SECTION, plus une carte-dans-carte.
+    /// Une SECTION, plus une carte par sortie — et c'est le seul endroit de l'onglet où
+    /// l'intertitre reste sur le fond.
     ///
-    /// L'onglet Vue d'ensemble empilait quatre cartes de même largeur et de même chrome — le
-    /// niveau, la semaine, le défi, les sorties — et c'est cette répétition qui faisait le « mur
-    /// de boîtes » reproché à tout l'écran. Les sorties sont une LISTE : l'intertitre passe sur
-    /// la page (le motif de « Mon équipement » sur le Profil), et chaque sortie devient sa propre
-    /// petite carte. La page respire ; le défi, désormais seule carte teintée après le héros
-    /// violet, redevient le point focal communautaire qu'il doit être.
+    /// Les sorties sont une LISTE d'objets qu'on prend un par un : chacune porte sa date, son
+    /// lieu, son « J'y serai » et ses groupes d'allure. Les poser dans une carte commune
+    /// donnerait une carte dans une carte, deux chromes emboîtés pour une seule hiérarchie.
+    /// L'intertitre passe donc sur la page — le motif de « Mon équipement » sur le Profil — et
+    /// chaque sortie devient sa propre petite carte.
+    ///
+    /// Ce raisonnement ne valait que pour une liste, et il avait été étendu à tout l'onglet : la
+    /// semaine, le défi, les courses, les séances et les records l'avaient perdu aussi, et quatre
+    /// sections flottaient sur le lavande. Elles sont redevenues des cartes ; celle-ci reste une
+    /// section, parce qu'elle en contient déjà.
     private var eventsCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             RUCardHeader(title: "Sorties de groupe") {

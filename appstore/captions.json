@@ -1,80 +1,89 @@
 {
-  "fr-FR": [
-    [
-      "Ta journée, en un écran",
-      "Ta séance du jour, ta forme, ta dernière sortie."
-    ],
-    [
-      "Le plan se recalcule",
-      "Chaque semaine, sur ce que tu as couru."
-    ],
-    [
-      "Un coach qui t'a lue",
-      "Il répond sur tes allures, pas en généralités."
-    ],
-    [
-      "Tu n'es pas seule",
-      "Le fil du club, ses sorties, ses records."
-    ],
-    [
-      "Trois objectifs par jour",
-      "Pas trente. Trois."
-    ],
-    [
-      "Tes vrais records",
-      "Mesurés sur tes sorties, pas sur des moyennes."
+  "fr-FR": {
+    "bandeau": "Course · Trail · Triathlon — un programme qui se recalcule, un coach qui te lit, un club qui court avec toi",
+    "accroches": [
+      [
+        "Ta journée, en un écran",
+        "Ta séance du jour, ta forme, ta dernière sortie."
+      ],
+      [
+        "Le plan se recalcule",
+        "Chaque semaine, sur ce que tu as couru."
+      ],
+      [
+        "Un coach qui t'a lue",
+        "Il répond sur tes allures, pas en généralités."
+      ],
+      [
+        "Tu n'es pas seule",
+        "Le fil du club, ses sorties, ses records."
+      ],
+      [
+        "Trois objectifs par jour",
+        "Pas trente. Trois."
+      ],
+      [
+        "Tes vrais records",
+        "Mesurés sur tes sorties, pas sur des moyennes."
+      ]
     ]
-  ],
-  "en-US": [
-    [
-      "Your day, on one screen",
-      "Today's session, your form, your last run."
-    ],
-    [
-      "The plan recalculates",
-      "Every week, on what you actually ran."
-    ],
-    [
-      "A coach who read you",
-      "It answers on your paces, not in generalities."
-    ],
-    [
-      "You're not running alone",
-      "The club feed, its meet-ups, its records."
-    ],
-    [
-      "Three goals a day",
-      "Not thirty. Three."
-    ],
-    [
-      "Your real records",
-      "Measured on your runs, not on averages."
+  },
+  "en-US": {
+    "bandeau": "Road · Trail · Triathlon — a plan that recalculates, a coach that reads you, a club that runs with you",
+    "accroches": [
+      [
+        "Your day, on one screen",
+        "Today's session, your form, your last run."
+      ],
+      [
+        "The plan recalculates",
+        "Every week, on what you actually ran."
+      ],
+      [
+        "A coach who read you",
+        "It answers on your paces, not in generalities."
+      ],
+      [
+        "You're not running alone",
+        "The club feed, its meet-ups, its records."
+      ],
+      [
+        "Three goals a day",
+        "Not thirty. Three."
+      ],
+      [
+        "Your real records",
+        "Measured on your runs, not on averages."
+      ]
     ]
-  ],
-  "es-ES": [
-    [
-      "Tu día, en una pantalla",
-      "La sesión de hoy, tu forma, tu última carrera."
-    ],
-    [
-      "El plan se recalcula",
-      "Cada semana, según lo que de verdad corriste."
-    ],
-    [
-      "Un entrenador que te lee",
-      "Responde sobre tus ritmos, no en general."
-    ],
-    [
-      "No corres sola",
-      "El muro del club, sus quedadas, sus récords."
-    ],
-    [
-      "Tres objetivos al día",
-      "No treinta. Tres."
-    ],
-    [
-      "Tus récords reales",
-      "Medidos en tus carreras, no en medias."
+  },
+  "es-ES": {
+    "bandeau": "Ruta · Trail · Triatlón — un plan que se recalcula, un entrenador que te lee, un club que corre contigo",
+    "accroches": [
+      [
+        "Tu día, en una pantalla",
+        "La sesión de hoy, tu forma, tu última carrera."
+      ],
+      [
+        "El plan se recalcula",
+        "Cada semana, según lo que de verdad corriste."
+      ],
+      [
+        "Un entrenador que te lee",
+        "Responde sobre tus ritmos, no en general."
+      ],
+      [
+        "No corres sola",
+        "El muro del club, sus quedadas, sus récords."
+      ],
+      [
+        "Tres objetivos al día",
+        "No treinta. Tres."
+      ],
+      [
+        "Tus récords reales",
+        "Medidos en tus carreras, no en medias."
+      ]
     ]
-  ]
+  }
 }

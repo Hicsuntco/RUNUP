@@ -51,14 +51,24 @@ CANVAS = (1290, 2796)
 TOTAL = 6
 BANDE = (CANVAS[0] * TOTAL, CANVAS[1])
 
-# LE FIL CONDUCTEUR EST UNE COURSE, ET C'EST UNE LIGNE.
+# TROIS ÉLÉMENTS TRAVERSENT LES SIX IMAGES SANS S'INTERROMPRE.
 #
-# Une seule trace part en bas à gauche du premier cadre et arrive en haut à droite du sixième.
-# Elle passe derrière les appareils : on la perd sur chacun, on la retrouve après. C'est une
-# LIGNE et pas un objet complexe, et c'est délibéré — l'App Store sépare les vignettes par un
-# blanc, et l'œil ne recolle à travers ce blanc qu'une forme simple. Un téléphone coupé, non.
-TRACE_EPAISSEUR = 15
-TRACE_OMBRE = 26
+# Deux filets horizontaux et une ligne de texte en chasse fixe. Rien d'autre. C'est peu, et c'est
+# le point : l'App Store sépare les vignettes par un blanc, et l'œil ne recolle à travers ce
+# blanc que des formes qu'il sait reconstruire — un trait, et des LETTRES. Un téléphone coupé,
+# non ; une sinusoïde décorative, oui mais elle ne dit rien ; seize tracés de démonstration,
+# essayés et retirés — ce sont des cercles perturbés, et à grande échelle ils lisent comme des
+# taches plutôt que comme des parcours.
+#
+# La ligne de texte est le vrai raccord. Elle court d'un bout à l'autre de la bande, se fait
+# couper par chaque bord de cadre, et reprend sur le suivant à la lettre près. C'est ce qu'on
+# voit en faisant défiler : une seule phrase qui avance sous six images.
+FILET_HAUT = 700
+FILET_BAS = 2480
+FILET = 2
+BANDEAU_LIGNE = 2566         # la ligne de chasse fixe qui traverse les six cadres
+BANDEAU_TAILLE = 28
+BANDEAU_CHASSE = 5.0
 
 # Un cadre sur deux montre l'écran ENTIER ; l'autre montre un morceau de ce même écran, agrandi
 # et coupé par les deux bords du cadre. C'est la « capture coupée » au sens le plus clair, et
@@ -69,20 +79,33 @@ TRACE_OMBRE = 26
 # revérifier quand l'écran correspondant change de mise en page — le composeur imprime ce qu'il a
 # découpé, pour qu'un cadrage devenu faux se voie dans le journal.
 BANDES = {
-    2: (0.053, 0.146, 0.947, 0.392),    # le plan : le graphique des semaines
-    4: (0.053, 0.398, 0.947, 0.676),    # le club : la sortie du fil et ses mesures
-    6: (0.053, 0.650, 0.947, 0.900),    # les stats : l'allure moyenne et sa courbe
+    2: (0.053, 0.130, 0.947, 0.452),    # le plan : le graphique des semaines, et la première
+    4: (0.053, 0.372, 0.947, 0.694),    # le club : la sortie du fil, ses mesures, son tracé
+    6: (0.053, 0.560, 0.947, 0.882),    # les stats : l'allure moyenne et sa courbe
 }
 BANDE_LARGEUR = 1500                     # > 1290 : elle déborde des deux côtés
-BANDE_CENTRE = 1640
+BANDE_CENTRE = 1600
 
-SCREEN_W = 640
-DEVICE_TOP = 880
+SCREEN_W = 700
+DEVICE_TOP = 790
 DEVICE_BOTTOM_MARGIN = 36
 # Le texte est CALÉ À GAUCHE, et non centré. Six titres centrés sur six cadres se lisent comme
 # six affiches ; calés à gauche sur la même marge, ils se lisent comme une seule page qui avance.
+#
+# LES TAILLES SONT ÉCRITES ICI ET NULLE PART AILLEURS. Elles l'étaient deux fois — une fois pour
+# dessiner, une fois pour vérifier le débordement — et deux copies d'une mesure finissent par
+# diverger : le contrôle aurait alors validé des accroches qui débordent, ce qui est pire que pas
+# de contrôle du tout.
 MARGE = 96
-TITRE_HAUT = 300
+TITRE_HAUT = 266
+TITRE_TAILLE = 118
+TITRE_INTERLIGNE = 126
+TITRE_LIGNES = 2             # hauteur réservée, pour que le sous-titre ne monte ni ne descende
+TITRE_CHASSE = -4.0          # resserrement : une grotesque d'interface flotte à cette taille-là
+SOUS_TAILLE = 46
+SOUS_INTERLIGNE = 60
+EYEBROW_TAILLE = 30
+EYEBROW_CHASSE = 4.0
 TITLE_MARGIN = MARGE
 SUB_MARGIN = MARGE
 
@@ -116,10 +139,6 @@ def _rgb(hexa: str) -> tuple:
 
 def _sombre(rgb: tuple, facteur: float) -> tuple:
     return tuple(max(0, min(255, round(c * facteur))) for c in rgb)
-
-
-def _clair(rgb: tuple, part: float) -> tuple:
-    return tuple(round(c + (255 - c) * part) for c in rgb)
 
 
 # Les trois couleurs du nuancier « rose » : le primaire, sa variante claire, et la queue violette
@@ -215,67 +234,53 @@ def linear(size: tuple, stops: list, horizontal: bool = False) -> Image.Image:
 PAPIER = [(0.00, (246, 243, 236)), (0.45, (234, 230, 221)),
           (0.75, (238, 234, 226)), (1.00, (244, 240, 232))]
 ENCRE = (22, 22, 28)
+# LE ROSE SE FONCE SUR UN FOND CLAIR, et ce n'est pas un choix de goût : c'est la correction que
+# l'app s'applique déjà à elle-même (`AccentTheme.primaryOnLight`, lu par `RUColor.rose` en thème
+# clair). Le rose de marque posé tel quel sur l'os descend sous le seuil de lisibilité pour un
+# texte de 28 px ; foncé, il reste la même couleur et se lit.
+ROSE_SUR_CLAIR = _sombre(PRIMAIRE, 0.86)
 ENCRE_TRACE = [(0.00, (38, 42, 50)), (0.55, (58, 62, 74)), (0.86, (112, 86, 172)), (1.00, PRIMAIRE)]
 
 
-def _points() -> list:
-    """La course, en coordonnées de la bande entière."""
-    bw, bh = BANDE
-    debut, fin = 60, 190
-    pts = []
-    for x in range(debut, bw - fin + 1, 8):
-        t = (x - debut) / (bw - debut - fin)
-        y = bh * (0.90 - 0.57 * t) + math.sin(t * 8.4) * bh * 0.052 + math.sin(t * 19.0 + 1.1) * bh * 0.013
-        pts.append((x, y))
-    return pts
-
-
-@lru_cache(maxsize=1)
-def bande() -> Image.Image:
-    """Le fond et la trace, dessinés une fois sur la bande des six cadres.
+@lru_cache(maxsize=None)
+def bande(bandeau: str) -> Image.Image:
+    """Le fond, les deux filets et la ligne courante, dessinés une fois sur les six cadres.
 
     Mis en cache : composer les six cadres redessinerait sinon six fois une image de 7740 px de
     large, dont cinq sixièmes seraient jetés à chaque fois.
     """
     bw, bh = BANDE
     strip = linear(BANDE, PAPIER, horizontal=True).convert("RGBA")
-    pts = _points()
-
-    # L'ombre portée de la trace, avant la trace : sans elle, un trait sombre sur un fond os est
-    # un trait dessiné ; avec elle, c'est un trait posé.
-    ombre = Image.new("RGBA", BANDE, (0, 0, 0, 0))
-    do = ImageDraw.Draw(ombre)
-    for i in range(len(pts) - 1):
-        do.line([pts[i], pts[i + 1]], fill=(40, 40, 50, 65), width=TRACE_OMBRE, joint="curve")
-    strip.alpha_composite(ombre.filter(ImageFilter.GaussianBlur(22)))
-
-    ligne = Image.new("RGBA", BANDE, (0, 0, 0, 0))
-    dl = ImageDraw.Draw(ligne)
-    for i in range(len(pts) - 1):
-        dl.line([pts[i], pts[i + 1]], fill=ramp(ENCRE_TRACE, i / (len(pts) - 2)) + (255,),
-                width=TRACE_EPAISSEUR, joint="curve")
-    strip.alpha_composite(ligne)
-
-    # LE DÉPART ET L'ARRIVÉE. Le premier point est à l'encre ; le dernier est le rose de marque,
-    # et c'est le seul de toute la fiche. Il est posé sur la sixième image, à l'endroit où l'œil
-    # finit sa course — la couleur arrive quand on a fini de lire, pas avant.
-    #
-    # La pente de la trace est réglée pour que ce point arrive AU-DESSUS de la bande du sixième
-    # cadre : posé plus bas, il passait dessous et la seule touche de couleur de la fiche
-    # disparaissait sans que rien ne le dise.
     d = ImageDraw.Draw(strip)
-    x0, y0 = pts[0]
-    d.ellipse((x0 - 17, y0 - 17, x0 + 17, y0 + 17), fill=(38, 42, 50, 255))
-    xf, yf = pts[-1]
-    d.ellipse((xf - 27, yf - 27, xf + 27, yf + 27), fill=PRIMAIRE + (255,))
-    d.ellipse((xf - 52, yf - 52, xf + 52, yf + 52), outline=PRIMAIRE + (130,), width=5)
+
+    for y in (FILET_HAUT, FILET_BAS):
+        d.rectangle((0, y, bw, y + FILET - 1), fill=ENCRE + (34,))
+
+    # LA LIGNE COURANTE. Répétée jusqu'à couvrir la bande entière : ce qui compte n'est pas de la
+    # lire en entier mais qu'elle ne s'arrête jamais, pour qu'aucun cadre ne commence ni ne finisse
+    # sur du vide. Le dernier segment visible passe au rose de marque — la seule couleur de toute
+    # la fiche en dehors des écrans eux-mêmes, et elle tombe là où l'œil finit sa course.
+    if bandeau:
+        police = ImageFont.truetype(str(FONTS / "DMMono-Medium.ttf"), BANDEAU_TAILLE)
+        motif = bandeau.strip() + "   ·   "
+        largeur = tracked_width(d, motif, police, BANDEAU_CHASSE)
+        depart = -largeur * 0.35     # décalé, pour qu'aucun cadre ne tombe sur un début de phrase
+        positions = []
+        x = depart
+        while x < bw:
+            positions.append(x)
+            x += largeur
+        for i, x in enumerate(positions):
+            dernier = i == len(positions) - 1
+            tracked(d, (x, BANDEAU_LIGNE), motif, police,
+                    (ROSE_SUR_CLAIR + (255,)) if dernier else ENCRE + (85,), BANDEAU_CHASSE)
     return strip
 
 
-def cadre(rang: int) -> Image.Image:
+def cadre(rang: int, bandeau: str) -> Image.Image:
     """La tranche de la bande qui revient à ce rang."""
     x = (rang - 1) * CANVAS[0]
-    return bande().crop((x, 0, x + CANVAS[0], CANVAS[1])).copy()
+    return bande(bandeau).crop((x, 0, x + CANVAS[0], CANVAS[1])).copy()
 
 
 def wrap(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont, width: int) -> list[str]:
@@ -447,23 +452,29 @@ def _accroche(canvas: Image.Image, caption, rang: int, total: int) -> None:
     # « 03 / 06 ». Une numérotation ne se met pas pour décorer : celle-ci dit une chose vraie —
     # ces six images sont une suite, et se lisent dans l'ordre. En chasse fixe, comme tous les
     # chiffres de l'app.
-    rang_font = ImageFont.truetype(str(FONTS / "DMMono-Medium.ttf"), 34)
-    draw.text((MARGE, TITRE_HAUT - 54), f"{rang:02d} / {total:02d}", font=rang_font,
-              fill=ENCRE + (110,))
+    rang_font = ImageFont.truetype(str(FONTS / "DMMono-Medium.ttf"), EYEBROW_TAILLE)
+    tracked(draw, (MARGE, TITRE_HAUT - 62), f"{rang:02d} / {total:02d}", rang_font,
+            ENCRE + (105,), EYEBROW_CHASSE)
 
-    titre_font = ImageFont.truetype(str(FONTS / "Inter-Bold.ttf"), 82)
-    tracking = -1.8
-    y = TITRE_HAUT
-    for ligne in wrap(draw, titre, titre_font, CANVAS[0] - MARGE * 2):
-        tracked(draw, (MARGE, y), ligne, titre_font, ENCRE + (255,), tracking)
-        y += 92
+    # LE BLOC DE TEXTE A UNE HAUTEUR FIXE, et le titre s'y aligne par le BAS.
+    #
+    # Quatre titres tenaient sur deux lignes, deux sur une : le sous-titre, le filet et tout ce
+    # qui suit descendaient donc de 126 px sur deux images. Dans le carrousel, où l'on voit les
+    # images l'une après l'autre au même endroit de l'écran, c'est un sautillement — et c'est
+    # exactement ce que la même règle corrige déjà pour l'appareil, posé à hauteur fixe.
+    titre_font = ImageFont.truetype(str(FONTS / "Inter-Bold.ttf"), TITRE_TAILLE)
+    lignes = wrap(draw, titre, titre_font, CANVAS[0] - MARGE * 2)
+    y = TITRE_HAUT + (TITRE_LIGNES - len(lignes)) * TITRE_INTERLIGNE
+    for ligne in lignes:
+        tracked(draw, (MARGE, y), ligne, titre_font, ENCRE + (255,), TITRE_CHASSE)
+        y += TITRE_INTERLIGNE
 
     if sous:
-        sous_font = ImageFont.truetype(str(FONTS / "Inter-Light.ttf"), 48)
-        y += 14
+        sous_font = ImageFont.truetype(str(FONTS / "Inter-Light.ttf"), SOUS_TAILLE)
+        y = TITRE_HAUT + TITRE_LIGNES * TITRE_INTERLIGNE + 18
         for ligne in wrap(draw, sous, sous_font, CANVAS[0] - MARGE * 2):
             draw.text((MARGE, y), ligne, font=sous_font, fill=ENCRE + (155,))
-            y += 62
+            y += SOUS_INTERLIGNE
 
 
 def _bande_agrandie(canvas: Image.Image, shot: Image.Image, zone: tuple, rang: int) -> None:
@@ -521,7 +532,7 @@ def _appareil(canvas: Image.Image, shot: Image.Image) -> None:
     canvas.alpha_composite(body, (gauche, haut))
 
 
-def compose(shot_path: Path, caption, dest: Path, rang: int, total: int) -> None:
+def compose(shot_path: Path, caption, dest: Path, rang: int, total: int, bandeau: str = "") -> None:
     """Une image de la fiche : sa tranche de bande, son accroche, et son écran ou son gros plan.
 
     Deux étages d'accroche. Le titre porte la promesse, le sous-titre l'explique à qui s'arrête :
@@ -531,7 +542,7 @@ def compose(shot_path: Path, caption, dest: Path, rang: int, total: int) -> None
     Une accroche restée sous forme de chaîne simple est acceptée et rendue sans sous-titre : le
     format a changé une fois, et le composeur n'a pas à casser sur un fichier écrit dans l'ancien.
     """
-    canvas = cadre(rang)
+    canvas = cadre(rang, bandeau)
     _accroche(canvas, caption, rang, total)
     shot = clean_status_bar(Image.open(shot_path).convert("RGB"))
     if rang in BANDES:
@@ -542,24 +553,45 @@ def compose(shot_path: Path, caption, dest: Path, rang: int, total: int) -> None
     canvas.convert("RGB").save(dest, "PNG")
 
 
+def accroches(bloc) -> list:
+    """Les six accroches d'une langue.
+
+    Le fichier a porté deux formes : une liste d'accroches, puis un bloc qui porte aussi la ligne
+    courante. Les deux se lisent, parce qu'un composeur qui casse sur un fichier écrit dans la
+    forme d'avant transforme une évolution de format en panne.
+    """
+    return bloc["accroches"] if isinstance(bloc, dict) else bloc
+
+
+def ruban(bloc) -> str:
+    """La ligne courante d'une langue, vide quand le fichier est à l'ancienne forme."""
+    return bloc.get("bandeau", "") if isinstance(bloc, dict) else ""
+
+
 def overflowing_captions(captions: dict) -> list[str]:
-    """Les accroches qui ne tiennent pas sur une ligne, toutes langues confondues."""
+    """Les accroches qui ne tiennent pas dans la place réservée, toutes langues confondues.
+
+    La mise en page réserve DEUX lignes au titre et UNE au sous-titre. Le contrôle mesure donc
+    cela, et pas autre chose : il refusait des titres de deux lignes à l'époque où la place n'en
+    réservait qu'une, et il aurait laissé passer un sous-titre de deux depuis.
+    """
     probe = ImageDraw.Draw(Image.new("RGB", (1, 1)))
-    title_font = ImageFont.truetype(str(FONTS / "Inter-Bold.ttf"), 82)
-    sub_font = ImageFont.truetype(str(FONTS / "Inter-Light.ttf"), 48)
+    title_font = ImageFont.truetype(str(FONTS / "Inter-Bold.ttf"), TITRE_TAILLE)
+    sub_font = ImageFont.truetype(str(FONTS / "Inter-Light.ttf"), SOUS_TAILLE)
     out: list[str] = []
-    for locale, items in sorted(captions.items()):
+    for locale, bloc in sorted(captions.items()):
+        items = accroches(bloc)
         for rank, caption in enumerate(items, start=1):
             title, subtitle = (caption, "") if isinstance(caption, str) else (caption[0], caption[1])
-            for label, text, font, width in (
-                ("titre", title, title_font, CANVAS[0] - TITLE_MARGIN * 2),
-                ("sous-titre", subtitle, sub_font, CANVAS[0] - SUB_MARGIN * 2),
+            for label, text, font, width, maxi in (
+                ("titre", title, title_font, CANVAS[0] - MARGE * 2, TITRE_LIGNES),
+                ("sous-titre", subtitle, sub_font, CANVAS[0] - MARGE * 2, 1),
             ):
                 if not text:
                     continue
-                measured = probe.textlength(text, font=font)
-                if measured > width:
-                    out.append(f"{locale} n°{rank} {label} : {int(measured)} px pour {width} — « {text} »")
+                lignes = len(wrap(probe, text, font, width))
+                if lignes > maxi:
+                    out.append(f"{locale} n°{rank} {label} : {lignes} lignes pour {maxi} — « {text} »")
     return out
 
 
@@ -623,7 +655,8 @@ def main() -> int:
     # fiche publiée plutôt qu'ici.
     print(f"Ordre retenu : {', '.join(p.name for p in shots)}\n")
 
-    texts = captions[lang]
+    texts = accroches(captions[lang])
+    bandeau = ruban(captions[lang])
 
     # Le rang vient du nom du fichier quand il commence par un chiffre — `4-club.png` reçoit la
     # quatrième accroche, où qu'il soit dans le dossier et quoi qu'il manque autour.
@@ -681,7 +714,7 @@ def main() -> int:
     dest_dir = OUT / lang
     for shot, caption, index in pairs:
         dest = dest_dir / f"{index}.png"
-        compose(shot, caption, dest, index, len(pairs))
+        compose(shot, caption, dest, index, len(pairs), bandeau)
         shown = caption if isinstance(caption, str) else f"{caption[0]} — {caption[1]}"
         print(f"{shot.name} → {dest.relative_to(ROOT)}   « {shown} »")
 

@@ -376,16 +376,25 @@ jobs:
             # laisse un .mov sans index, que ffmpeg lit mal ou pas du tout.
             kill -INT "$camera"; wait "$camera" || true
 
+            # LE DÉBUT ET LA FIN VIENNENT DU TEST, PAS D'UNE ESTIMATION.
+            #
+            # Le test écrit l'heure qu'il est au moment où la prise commence et au moment où elle
+            # s'arrête. La caméra, elle, tourne avant (installation, lancement) et après
+            # (démontage du test). Sans ces deux marques, le premier essai a rendu trente
+            # secondes pile — le plafond d'Apple, pas une fin : le dernier plan était hors champ
+            # et la vidéo s'achevait sur ce qui traînait derrière.
             lance=$(cat "$dossier/debut.txt")
+            fini=$(cat "$dossier/fin.txt")
             debut=$(python3 -c "print(max(0.0, $lance - $depart - 0.4))")
-            echo "→ app parue à $debut s après le début de l'enregistrement"
+            duree=$(python3 -c "print(round($fini - $lance + 0.6, 2))")
+            echo "→ prise : de $debut s, pendant $duree s"
 
             # Le complément est à la couleur du fond CLAIR : l'app est filmée en thème clair pour
             # s'accorder à la fiche, et six pixels d'encre sombre se verraient sur de l'os.
             python3 ci_scripts/apercu.py \
               --entree "$dossier/brut.mov" \
               --sortie "$PWD/appstore/apercu/out/$langue.mp4" \
-              --debut "$debut" --fond 0xF4F3F8
+              --debut "$debut" --duree "$duree" --fond 0xF4F3F8
           done
           ls -la appstore/apercu/out
 

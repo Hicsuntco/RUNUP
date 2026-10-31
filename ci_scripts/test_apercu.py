@@ -12,14 +12,25 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import apercu as ap  # noqa: E402
 
 echecs = []
+# LE TOTAL SE COMPTE, IL NE S'ÉCRIT PAS.
+#
+# Il était posé en dur — `total = 24` — au bas du fichier. Cinq cas ajoutés plus haut, et le
+# fichier continuait d'annoncer « 24/24 cas passent » : un compte faux dans les deux sens, qui
+# dirait la même chose avec trois cas qu'avec trente. Un test dont le compte est une constante ne
+# peut pas signaler qu'on a cessé de l'alimenter.
+total = 0
 
 
 def attendu(nom, obtenu, voulu):
+    global total
+    total += 1
     if obtenu != voulu:
         echecs.append(f"{nom} : {obtenu!r} au lieu de {voulu!r}")
 
 
 def refuse(nom, fn):
+    global total
+    total += 1
     try:
         fn()
     except SystemExit:
@@ -38,6 +49,16 @@ attendu("90 s ramenées à 30", ap.decoupe(90.0, 0), (0, 30.0))
 # Avec un début décalé, la durée se mesure sur ce qui RESTE.
 attendu("90 s à partir de 70", ap.decoupe(90.0, 70), (70, 20.0))
 attendu("90 s à partir de 10", ap.decoupe(90.0, 10), (10, 30.0))
+
+# UNE DURÉE DEMANDÉE, quand l'appelant sait où la prise s'arrête. Sans elle, un enregistrement
+# plus long que la prise donne trente secondes pile — le plafond, pas une fin — et la vidéo
+# s'achève sur ce qui traînait après le dernier plan.
+attendu("prise de 26 s dans 40 s filmées", ap.decoupe(40.0, 0, 26.0), (0, 26.0))
+attendu("prise plus longue que le plafond", ap.decoupe(60.0, 0, 44.0), (0, 30.0))
+attendu("prise plus longue que ce qui reste", ap.decoupe(25.0, 0, 40.0), (0, 25.0))
+attendu("prise de 26 s à partir de 4", ap.decoupe(40.0, 4, 26.0), (4, 26.0))
+# Une prise trop courte se dit ici, pas après l'envoi — même règle que pour l'enregistrement.
+refuse("prise de 12 s", lambda: ap.decoupe(40.0, 0, 12.0))
 
 # Le piège le plus courant : filmer douze secondes et l'apprendre après l'envoi.
 refuse("12 s", lambda: ap.decoupe(12.0, 0))
@@ -85,7 +106,6 @@ attendu("cadence", ap.IMAGES_PAR_SECONDE, 30)
 attendu("plancher", ap.SECONDES_MIN, 15)
 attendu("plafond", ap.SECONDES_MAX, 30)
 
-total = 24
 if echecs:
     print(f"{len(echecs)} cas se comportent mal :\n", file=sys.stderr)
     for e in echecs:

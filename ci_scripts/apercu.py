@@ -85,11 +85,17 @@ def sonde(chemin: pathlib.Path) -> dict:
     }
 
 
-def decoupe(secondes: float, debut: float) -> tuple[float, float]:
+def decoupe(secondes: float, debut: float, voulue: float | None = None) -> tuple[float, float]:
     """Le début et la durée à garder, ou une erreur parlante.
 
     Le plancher de quinze secondes d'Apple est le piège le plus courant : on filme ce qu'on veut
     montrer, ça fait douze secondes, et le refus arrive après l'envoi. Mieux vaut le dire ici.
+
+    `voulue` est la durée que l'appelant SAIT être la bonne — le harnais la connaît, puisque le
+    test dit quand il commence et quand il finit. Sans elle, on garde tout jusqu'au plafond, ce
+    qui a donné un premier aperçu de trente secondes pile : la caméra tournait encore pendant le
+    démontage du test, le dernier plan était hors champ, et la vidéo finissait sur ce qui
+    traînait après. Un plafond n'est pas une fin.
     """
     if debut < 0:
         raise SystemExit("Le début ne peut pas être négatif.")
@@ -98,7 +104,14 @@ def decoupe(secondes: float, debut: float) -> tuple[float, float]:
         raise SystemExit(
             f"Il reste {restant:.1f} s à partir de {debut:.0f} s, et Apple en exige "
             f"{SECONDES_MIN} au minimum. Filme plus long, ou avance moins le début.")
-    return debut, min(restant, float(SECONDES_MAX))
+    duree = min(restant, float(SECONDES_MAX))
+    if voulue is not None:
+        if voulue < SECONDES_MIN:
+            raise SystemExit(
+                f"La durée demandée est de {voulue:.1f} s, et Apple en exige {SECONDES_MIN} au "
+                f"minimum. Allonge la prise.")
+        duree = min(duree, voulue)
+    return debut, duree
 
 
 def filtre(fond: str = ENCRE) -> str:
@@ -154,6 +167,8 @@ def main() -> int:
                          help="Le fichier à écrire (défaut : appstore/apercu/out/apercu.mp4)")
     analyse.add_argument("--fond", default=ENCRE,
                          help="La couleur des bandes de complément (défaut : l'encre sombre)")
+    analyse.add_argument("--duree", type=float, default=None,
+                         help="Secondes à garder (défaut : tout, jusqu'au plafond d'Apple)")
     options = analyse.parse_args()
 
     if shutil.which("ffmpeg") is None or shutil.which("ffprobe") is None:
@@ -164,7 +179,7 @@ def main() -> int:
         raise SystemExit(f"Enregistrement introuvable : {entree}")
     sortie = options.sortie or SORTIE
     infos = sonde(entree)
-    debut, duree = decoupe(infos["secondes"], options.debut)
+    debut, duree = decoupe(infos["secondes"], options.debut, options.duree)
 
     sortie.parent.mkdir(parents=True, exist_ok=True)
     print(f"Enregistrement : {entree.name} — {infos['secondes']:.1f} s, "

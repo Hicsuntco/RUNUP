@@ -101,7 +101,7 @@ BANDEAU_CHASSE = 5.0
 BANDES = {
     2: (0.053, 0.1423, 0.947, 0.4372),  # le plan : la carte « La forme du plan », entière
     4: (0.053, 0.3996, 0.947, 0.8961),  # le club : la sortie du fil, entière
-    6: (0.053, 0.5565, 0.947, 0.8682),  # les stats : la carte « Allure moyenne », entière
+    6: (0.053, 0.5625, 0.947, 0.8682),  # les stats : la carte « Allure moyenne », entière
 }
 BANDE_CENTRE = 1600
 

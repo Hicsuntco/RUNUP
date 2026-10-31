@@ -35,11 +35,16 @@ import XCTest
 /// Apple en exige quinze au minimum et trente au maximum. Quatre plans, dans l'ordre de ce que
 /// chacun PROUVE plutôt que dans l'ordre de l'app :
 ///
-///   0 → 6 s     l'accueil, puis il défile      — voilà ta journée, en un écran
-///   6 → 12 s    le coach, puis il défile       — il a lu tes séances, il répond dessus
-///  12 → 18 s    les stats, puis elles défilent — tes records, sur tes vraies sorties
-///  18 → 24 s    le profil, puis il défile      — ce que tu as construit
-///  24 → 26 s    retour à l'accueil             — on finit là où on commence
+///   l'accueil, puis il défile      — voilà ta journée, en un écran
+///   le coach, puis il défile       — il a lu tes séances, il répond dessus
+///   les stats, puis elles défilent — tes records, sur tes vraies sorties
+///   le profil, puis il défile      — ce que tu as construit
+///   retour à l'accueil             — on finit là où on commence
+///
+/// Les durées ne sont pas écrites ici parce qu'elles ne s'écrivent pas : le premier essai visait
+/// vingt-six secondes et en a duré plus de trente-six. Un glissement lent dure ce qu'il dure, une
+/// transition d'onglet aussi, et les deux varient avec la charge de la machine. Le test dit donc
+/// quand il commence et quand il finit, et `apercu.py` coupe sur ces deux marques.
 final class ApercuUITests: XCTestCase {
 
     /// Les cinq onglets, en fraction de la largeur. Relevés sur une capture (voir l'en-tête).
@@ -63,6 +68,25 @@ final class ApercuUITests: XCTestCase {
         }
         app.launch()
         _ = app.wait(for: .runningForeground, timeout: 60)
+        Thread.sleep(forTimeInterval: 1.5)
+
+        // UNE PASSE À BLANC AVANT LA PRISE, ET ELLE CORRIGE QUELQUE CHOSE DE VISIBLE.
+        //
+        // Le premier essai montre, au moment où l'on passe sur le Coach, UN DEMI-SECONDE D'ÉCRAN
+        // VIDE : la barre d'onglets est là, le contenu n'y est pas encore. C'est la construction
+        // de la vue, qui est la plus lourde de l'app — une conversation et ses longs textes. Les
+        // deux autres onglets n'ont pas ce trou : Stats paraît d'un coup, Profil arrive en fondu.
+        //
+        // On touche donc les quatre onglets une fois avant de commencer à compter. Ce n'est pas
+        // du maquillage : ce que montre l'aperçu est ce que voit quelqu'un qui a déjà ouvert
+        // l'onglet une fois, c'est-à-dire tout le monde sauf à la toute première seconde.
+        //
+        // Le trou lui-même reste un défaut de l'app, pas de la vidéo, et il se corrige là-bas.
+        for onglet in [Onglet.coach, .stats, .profil, .prog] {
+            app.coordinate(withNormalizedOffset: CGVector(dx: onglet.rawValue, dy: Self.barre)).tap()
+            Thread.sleep(forTimeInterval: 0.7)
+        }
+        Thread.sleep(forTimeInterval: 0.8)
 
         // L'HORODATAGE DU DÉPART, ÉCRIT SUR L'HÔTE.
         //
@@ -75,13 +99,21 @@ final class ApercuUITests: XCTestCase {
         // celle où l'enregistrement a commencé ; la soustraction donne exactement ce qu'il faut
         // couper.
         ecrire("\(Date().timeIntervalSince1970)", sous: "debut.txt")
-        Thread.sleep(forTimeInterval: 1.2)
 
-        plan(app, onglet: nil, pose: 2.8, defilements: 1)        // l'accueil
-        plan(app, onglet: .coach, pose: 3.0, defilements: 1)     // le coach
-        plan(app, onglet: .stats, pose: 2.8, defilements: 1)     // les stats
-        plan(app, onglet: .profil, pose: 2.8, defilements: 1)    // le profil
+        plan(app, onglet: nil, pose: 1.6, defilements: 1)        // l'accueil
+        plan(app, onglet: .coach, pose: 1.8, defilements: 1)     // le coach
+        plan(app, onglet: .stats, pose: 1.6, defilements: 1)     // les stats
+        plan(app, onglet: .profil, pose: 1.6, defilements: 1)    // le profil
         plan(app, onglet: .prog, pose: 2.0, defilements: 0)      // retour à l'accueil
+
+        // L'HEURE DE LA FIN, pour que la vidéo s'arrête sur l'accueil.
+        //
+        // Le premier essai durait exactement trente secondes : le plafond d'Apple, atteint parce
+        // que la caméra tournait encore pendant le démontage du test. Le dernier plan — le retour
+        // à l'accueil, celui sur lequel on veut finir — était hors champ, et la vidéo s'achevait
+        // sur ce qui traînait après. Dire quand ça s'arrête vaut mieux que laisser un plafond le
+        // décider.
+        ecrire("\(Date().timeIntervalSince1970)", sous: "fin.txt")
     }
 
     /// Un plan : on y va, on laisse voir, on défile une fois, on laisse voir encore.
@@ -90,18 +122,18 @@ final class ApercuUITests: XCTestCase {
             app.coordinate(withNormalizedOffset: CGVector(dx: onglet.rawValue, dy: Self.barre)).tap()
             // Les transitions d'onglet de `RootTabView` durent moins d'une demi-seconde ; on
             // laisse une marge pour que le plan ne commence pas pendant le fondu.
-            Thread.sleep(forTimeInterval: 0.8)
+            Thread.sleep(forTimeInterval: 0.6)
         }
         Thread.sleep(forTimeInterval: pose)
         for _ in 0..<defilements {
             // Un glissement LENT, et c'est tout l'écart avec les captures. Là-bas on défile pour
             // atteindre un endroit, et vite. Ici le défilement EST le plan : pressé, il donne une
             // bouillie illisible, et c'est ce qu'on remarque d'une vidéo mal faite.
-            let depart = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.76))
-            let arrivee = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.34))
+            let depart = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.70))
+            let arrivee = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.40))
             depart.press(forDuration: 0.1, thenDragTo: arrivee,
                          withVelocity: .slow, thenHoldForDuration: 0.1)
-            Thread.sleep(forTimeInterval: 1.8)
+            Thread.sleep(forTimeInterval: 1.2)
         }
     }
 

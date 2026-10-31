@@ -484,23 +484,39 @@ struct ActivityFeedRow: View {
         .accessibilityLabel("Record personnel")
     }
 
-    /// « Aimé par Sofia, Marc et 5 autres » — ce qui fait d'un compte des gens.
+    /// « Aimé par Sofia Mendes, Marc Olivier et 5 autres » — ce qui fait d'un compte des gens.
     ///
     /// `nil` quand le serveur n'a renvoyé aucun nom : une version antérieure du serveur, ou
     /// personne qui ait applaudi. Le compte reste affiché à côté du bouton, lui.
+    ///
+    /// # DEUX « ET » DANS LA MÊME PHRASE
+    ///
+    /// La version précédente joignait les noms avec `ListFormatter`, qui pose lui-même le « et »
+    /// final — « Charlotte, Margaux et Sarah » — puis AJOUTAIT « et 4 autres » derrière. Ce qui
+    /// donnait « Aimé par Charlotte, Margaux et Sarah et 4 autres ». Le défaut existait déjà ;
+    /// il se voyait peu avec trois prénoms courts, et saute aux yeux depuis que les noms sont
+    /// complets, la ligne passant au passage sur deux lignes.
+    ///
+    /// Le reste du dénombrement entre donc dans la LISTE, comme un élément de plus, et
+    /// `ListFormatter` le relie avec son unique « et » — « and » en anglais, « y » en espagnol.
+    /// C'est ce pour quoi il est là, et ce que la ligne précédente lui reprenait à la main.
+    ///
+    /// # DEUX NOMS, ET PLUS TROIS
+    ///
+    /// Trois prénoms tenaient sur une ligne ; trois noms complets, non. La ligne n'a jamais
+    /// prétendu dire QUI a applaudi — le commentaire d'origine le dit : « trois noms parmi ceux
+    /// qui ont aimé, pas les trois derniers ». Un échantillon de deux dit la même chose en
+    /// tenant sur une ligne.
     private var likedByLine: String? {
-        let names = Array(item.kudosNames.prefix(3))
-        guard !names.isEmpty else { return nil }
-        // `ListFormatter` sait joindre « a, b et c » dans la langue courante — « a, b and c » en
-        // anglais, « a, b y c » en espagnol. Une virgule et un « et » écrits à la main ne le
-        // savent pas.
-        let list = ListFormatter.localizedString(byJoining: names)
-        let others = max(0, item.kudos - names.count)
-        switch others {
-        case 0: return String(localized: "Aimé par \(list)")
-        case 1: return String(localized: "Aimé par \(list) et une autre personne")
-        default: return String(localized: "Aimé par \(list) et \(others) autres")
+        let noms = Array(item.kudosNames.prefix(2))
+        guard !noms.isEmpty else { return nil }
+        var elements = noms
+        switch max(0, item.kudos - noms.count) {
+        case 0: break
+        case 1: elements.append(String(localized: "une autre personne"))
+        case let autres: elements.append(String(localized: "\(autres) autres"))
         }
+        return String(localized: "Aimé par \(ListFormatter.localizedString(byJoining: elements))")
     }
 
     /// Actions sans pastille ni contour : dans une carte, deux gros boutons bordés pèsent plus

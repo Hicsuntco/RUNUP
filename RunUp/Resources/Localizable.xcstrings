@@ -1021,6 +1021,23 @@
         }
       }
     },
+    "%lld autres": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld others"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld más"
+          }
+        }
+      }
+    },
     "%lld coureur": {
       "extractionState": "manual",
       "localizations": {
@@ -3864,40 +3881,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Le gustó a %@"
-          }
-        }
-      }
-    },
-    "Aimé par %@ et %lld autres": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Liked by %@ and %lld others"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le gustó a %@ y %lld más"
-          }
-        }
-      }
-    },
-    "Aimé par %@ et une autre personne": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Liked by %@ and one other"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le gustó a %@ y otra persona"
           }
         }
       }
@@ -33040,6 +33023,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "la sigues"
+          }
+        }
+      }
+    },
+    "une autre personne": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "one other person"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "otra persona"
           }
         }
       }

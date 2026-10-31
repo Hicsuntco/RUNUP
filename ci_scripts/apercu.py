@@ -101,15 +101,21 @@ def decoupe(secondes: float, debut: float) -> tuple[float, float]:
     return debut, min(restant, float(SECONDES_MAX))
 
 
-def filtre() -> str:
-    """La chaîne de filtres : mise à l'échelle SANS déformation, puis complément centré."""
+def filtre(fond: str = ENCRE) -> str:
+    """La chaîne de filtres : mise à l'échelle SANS déformation, puis complément centré.
+
+    La couleur du complément se choisit parce que l'aperçu n'est plus forcément sombre : depuis
+    que la fiche est sur fond clair, l'app y est filmée en thème clair, et six pixels de noir en
+    haut et en bas se verraient sur du blanc cassé — alors que c'est précisément la bande qu'on
+    ne doit pas voir.
+    """
     return (f"scale={LARGEUR}:{HAUTEUR}:force_original_aspect_ratio=decrease,"
-            f"pad={LARGEUR}:{HAUTEUR}:(ow-iw)/2:(oh-ih)/2:color={ENCRE},"
+            f"pad={LARGEUR}:{HAUTEUR}:(ow-iw)/2:(oh-ih)/2:color={fond},"
             f"fps={IMAGES_PAR_SECONDE}")
 
 
 def arguments(entree: pathlib.Path, sortie: pathlib.Path,
-              debut: float, duree: float, a_du_son: bool) -> list[str]:
+              debut: float, duree: float, a_du_son: bool, fond: str = ENCRE) -> list[str]:
     """La commande complète.
 
     `-ss` AVANT `-i` : ffmpeg saute alors directement au bon endroit du fichier au lieu de le
@@ -122,7 +128,7 @@ def arguments(entree: pathlib.Path, sortie: pathlib.Path,
         args += ["-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=48000"]
     args += [
         "-t", f"{duree}",
-        "-vf", filtre(),
+        "-vf", filtre(fond),
         "-c:v", "libx264", "-profile:v", "high", "-pix_fmt", "yuv420p",
         "-b:v", DEBIT, "-maxrate", DEBIT, "-bufsize", "22M",
         "-c:a", "aac", "-b:a", "256k", "-ar", "48000", "-ac", "2",
@@ -136,25 +142,41 @@ def main() -> int:
     analyse = argparse.ArgumentParser(description="Fabrique l'aperçu App Store.")
     analyse.add_argument("--debut", type=float, default=0,
                          help="Secondes à sauter au début de l'enregistrement")
+    # LES TROIS SUIVANTES EXISTENT POUR LA MACHINE, ET LE CHEMIN À LA MAIN NE LES VOIT PAS.
+    #
+    # Sans elles, le script ne sait traiter qu'un seul fichier, posé à un seul endroit : c'était
+    # juste tant que l'aperçu se filmait sur un téléphone, un par langue, à la main. Le harnais en
+    # produit maintenant trois d'affilée et doit dire lequel, où le mettre, et sur quelle couleur
+    # compléter. Omises, elles rendent exactement le comportement d'avant.
+    analyse.add_argument("--entree", type=pathlib.Path, default=None,
+                         help="L'enregistrement à traiter (défaut : le seul du dossier)")
+    analyse.add_argument("--sortie", type=pathlib.Path, default=None,
+                         help="Le fichier à écrire (défaut : appstore/apercu/out/apercu.mp4)")
+    analyse.add_argument("--fond", default=ENCRE,
+                         help="La couleur des bandes de complément (défaut : l'encre sombre)")
     options = analyse.parse_args()
 
     if shutil.which("ffmpeg") is None or shutil.which("ffprobe") is None:
         raise SystemExit("ffmpeg et ffprobe sont nécessaires.")
 
-    entree = source()
+    entree = options.entree or source()
+    if not entree.is_file():
+        raise SystemExit(f"Enregistrement introuvable : {entree}")
+    sortie = options.sortie or SORTIE
     infos = sonde(entree)
     debut, duree = decoupe(infos["secondes"], options.debut)
 
-    SORTIE.parent.mkdir(parents=True, exist_ok=True)
+    sortie.parent.mkdir(parents=True, exist_ok=True)
     print(f"Enregistrement : {entree.name} — {infos['secondes']:.1f} s, "
           f"{'avec' if infos['a_du_son'] else 'sans'} son")
     print(f"Gardé : de {debut:.0f} s à {debut + duree:.0f} s ({duree:.0f} s)")
     print(f"Sortie : {LARGEUR} × {HAUTEUR}, {IMAGES_PAR_SECONDE} i/s, H.264 {DEBIT}\n")
 
-    subprocess.run(arguments(entree, SORTIE, debut, duree, infos["a_du_son"]), check=True)
+    subprocess.run(arguments(entree, sortie, debut, duree, infos["a_du_son"], options.fond),
+                   check=True)
 
-    poids = SORTIE.stat().st_size / 1_000_000
-    print(f"\n{SORTIE.relative_to(RACINE)} — {poids:.1f} Mo")
+    poids = sortie.stat().st_size / 1_000_000
+    print(f"\n{sortie} — {poids:.1f} Mo")
     if poids > 500:
         raise SystemExit("Au-delà des 500 Mo qu'Apple accepte. Raccourcis, ou baisse le débit.")
     return 0

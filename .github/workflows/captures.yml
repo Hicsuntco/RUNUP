@@ -74,6 +74,7 @@ on:
       - "RunUp/Services/CaptureSeed.swift"
       - "RunUpUITests/**"
       - "ci_scripts/screenshots.py"
+      - "ci_scripts/apercu.py"
       # Tout ce qui se juge à l'œil et qu'aucun script ne sait relire.
       - "RunUp/Views/**"
       - "RunUp/DesignSystem/**"
@@ -93,7 +94,7 @@ on:
 jobs:
   captures:
     runs-on: macos-26
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     steps:
       - uses: actions/checkout@v4
@@ -325,6 +326,69 @@ jobs:
             "$RUNNER_TEMP/venv/bin/python" ci_scripts/screenshots.py "$langue"
           done
 
+      # ── L'APERÇU VIDÉO, FILMÉ PAR LA MACHINE ─────────────────────────────────────────────────
+      #
+      # `appstore/APERCU.md` décrit la façon d'avant : filmer un iPhone à la main, six plans d'une
+      # traite, raccourcir dans Photos pour tenir sous les 25 Mo que GitHub accepte depuis un
+      # navigateur, déposer le fichier, lancer un second workflow. À refaire par langue, et à
+      # refaire en entier dès qu'un écran change.
+      #
+      # Ce qui se refait à la main ne se refait pas. C'est ce qui était arrivé aux captures — en
+      # ligne depuis le 30 août dans l'ancien rose — avant que la machine ne les reprenne. Un
+      # aperçu qui montre une version de l'app qui n'existe plus est pire que pas d'aperçu.
+      #
+      # Le simulateur est déjà démarré, l'app déjà construite : il ne manquait que de le filmer
+      # pendant qu'un test le pilote. Voir `RunUpUITests/ApercuUITests`.
+      #
+      # ffmpeg n'est pas livré avec les machines macOS — il l'est avec les Ubuntu, d'où la
+      # répartition d'origine. On l'installe donc ici, et c'est le seul coût ajouté.
+      - name: Installer ffmpeg
+        run: brew install ffmpeg
+
+      - name: Filmer l'aperçu, langue par langue
+        run: |
+          set -euo pipefail
+          rm -rf appstore/apercu/out
+          for langue in ${{ steps.quoi.outputs.langues }}; do
+            echo "──────────── $langue · aperçu ────────────"
+            dossier="$PWD/appstore/apercu/$langue"
+            rm -rf "$dossier"; mkdir -p "$dossier"
+
+            # L'HEURE DU DÉPART DE LA CAMÉRA. Le test écrira celle où l'app a paru ; la
+            # soustraction donne exactement ce qu'il faut couper au début, au lieu de le deviner.
+            depart=$(python3 -c "import time; print(time.time())")
+            xcrun simctl io "${{ steps.sim.outputs.udid }}" recordVideo \
+              --codec h264 --force "$dossier/brut.mov" &
+            camera=$!
+
+            TEST_RUNNER_RUNUP_LANG="$langue" \
+            TEST_RUNNER_RUNUP_APERCU="1" \
+            TEST_RUNNER_RUNUP_APERCU_DIR="$dossier" \
+              xcodebuild test-without-building \
+                -project RunUp.xcodeproj \
+                -scheme Captures \
+                -destination "id=${{ steps.sim.outputs.udid }}" \
+                -derivedDataPath build/captures \
+                -only-testing:RunUpUITests/ApercuUITests \
+                CODE_SIGNING_ALLOWED=NO
+
+            # `-INT` et non `-KILL` : `simctl` ferme alors proprement le fichier. Tué net, il
+            # laisse un .mov sans index, que ffmpeg lit mal ou pas du tout.
+            kill -INT "$camera"; wait "$camera" || true
+
+            lance=$(cat "$dossier/debut.txt")
+            debut=$(python3 -c "print(max(0.0, $lance - $depart - 0.4))")
+            echo "→ app parue à $debut s après le début de l'enregistrement"
+
+            # Le complément est à la couleur du fond CLAIR : l'app est filmée en thème clair pour
+            # s'accorder à la fiche, et six pixels d'encre sombre se verraient sur de l'os.
+            python3 ci_scripts/apercu.py \
+              --entree "$dossier/brut.mov" \
+              --sortie "$PWD/appstore/apercu/out/$langue.mp4" \
+              --debut "$debut" --fond 0xF4F3F8
+          done
+          ls -la appstore/apercu/out
+
       # Les brutes ET les composées. Les premières pour pouvoir juger ce que la machine a vu, les
       # secondes pour les déposer telles quelles dans App Store Connect.
       - name: Publier les captures
@@ -334,5 +398,6 @@ jobs:
           path: |
             appstore/raw/**
             appstore/out/**
+            appstore/apercu/out/**
           if-no-files-found: error
           retention-days: 30

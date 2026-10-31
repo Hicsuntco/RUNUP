@@ -39,6 +39,10 @@ appstore/out/
 # Même raison : la sortie se refait d'une commande, et un `.mp4` de cinquante mégaoctets par
 # tentative ferait grossir le dépôt pour rien.
 appstore/apercu/out/
+# Les enregistrements bruts du simulateur, un dossier par langue : 20 à 60 Mo pièce, refilmés à
+# chaque exécution du harnais. Ils vivent dans l'artéfact, jamais dans l'historique.
+appstore/apercu/*/
+!appstore/apercu/out/
 
 # Un .pyc de `asc.py` avait été committé par mégarde ; il est retiré ici.
 __pycache__/

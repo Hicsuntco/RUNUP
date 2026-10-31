@@ -25,6 +25,26 @@ Il met l'image **à l'intérieur** du cadre plutôt que de l'étirer : le rappor
 l'enregistrement diffère de trois millièmes de celui qu'Apple demande, donc au pire six pixels de
 bande, et aucune déformation.
 
+## La machine le filme toute seule
+
+Depuis que les captures sont fabriquées par le harnais, l'aperçu l'est aussi. Le simulateur sait
+s'enregistrer, et `RunUpUITests/ApercuUITests` le pilote pendant ce temps-là : quatre onglets,
+un défilement lent dans chacun, retour à l'accueil. Vingt-six secondes, trois langues, à chaque
+exécution de **Captures App Store**.
+
+Le fichier sort dans l'artéfact, sous `apercu/out/<langue>.mp4`, déjà au format d'Apple.
+
+Le découpage du début n'est pas deviné : l'enregistrement commence avant que l'app ne soit
+installée et lancée, et cette avance varie. Le test écrit donc l'heure à laquelle l'app a paru,
+le workflow connaît celle où la caméra a démarré, et la soustraction donne exactement ce qu'il
+faut couper.
+
+**Ce que le simulateur ne sait pas jouer**, et c'est la limite assumée de ce chemin : une vraie
+course dehors. Pas de GPS qui avance, pas de carte qui défile, pas de montre. Le plan 4 du
+découpage ci-dessous — « la course en direct » — n'y est donc pas. Le jour où l'aperçu devra le
+montrer, c'est la méthode à la main, décrite plus bas, qu'il faudra reprendre : elle reste
+valable et le script accepte toujours un fichier déposé à la main.
+
 ## Trois règles qui décident de tout
 
 **1. Ça se regarde SANS SON.** L'aperçu démarre muet, et la plupart des gens ne le dés-ilencent
@@ -37,7 +57,7 @@ peu. On commence donc par ce qui MONTRE, pas par ce qui promet.
 **3. Ça finit sur ce qu'on veut poster.** Une vidéo qui s'arrête sur un écran de réglages ne donne
 envie de rien. La nôtre finit sur la vidéo de course — ce qu'on repart avec.
 
-## Le découpage, vingt-quatre secondes
+## Le découpage visé, vingt-quatre secondes — la version filmée à la main
 
 | | Durée | Ce qu'on filme | Ce que ça prouve |
 |---|---|---|---|
@@ -64,7 +84,7 @@ texte, ne se lit pas en quatre secondes sans son.
 - **Une sortie avec un vrai tracé**, et assez longue pour survivre au rognage de confidentialité :
   le bouton « FAIRE MA VIDÉO » n'apparaît pas en dessous d'un kilomètre utile.
 
-## Filmer, puis fabriquer
+## Filmer à la main, puis fabriquer
 
 1. Réglages → Centre de contrôle → ajouter **Enregistrement de l'écran** s'il n'y est pas.
 2. Enregistrer les six plans **d'une seule traite**, dans l'ordre. Viser vingt-cinq à trente

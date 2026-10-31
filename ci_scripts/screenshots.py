@@ -78,12 +78,26 @@ BANDEAU_CHASSE = 5.0
 # appareil, ou d'une autre hauteur d'écran, continue de viser la même chose. Elle reste à
 # revérifier quand l'écran correspondant change de mise en page — le composeur imprime ce qu'il a
 # découpé, pour qu'un cadrage devenu faux se voie dans le journal.
+# LA BANDE DÉBORDE À DROITE, ET SEULEMENT À DROITE.
+#
+# Elle débordait des deux côtés, centrée, de cent cinq pixels. Signalé, et c'était juste : une
+# carte de l'app a quarante à soixante pixels de marge intérieure, donc cent cinq entament le
+# TEXTE. On lisait « ourse 12,4 km », « us rapide 5:06/km », un « 5:24 » amputé de son 5. Un mot
+# coupé ne se lit pas comme une mise en page, il se lit comme une erreur.
+#
+# Elle commence donc à la marge du titre — la bande et le texte partent du même bord, ce qui
+# accroche le gros plan à la grille typographique — et c'est le bord DROIT qui s'échappe. Rien
+# de ce qui se lit n'est perdu : ce qui sort du cadre est la fin d'un graphique ou d'un tracé,
+# c'est-à-dire ce qui continue sans qu'on ait besoin de le voir finir.
+#
+# Les fractions de droite sont choisies pour que la coupe tombe dans un graphique, jamais sur un
+# mot ni sur une pastille.
 BANDES = {
-    2: (0.053, 0.130, 0.947, 0.452),    # le plan : le graphique des semaines, et la première
-    4: (0.053, 0.372, 0.947, 0.694),    # le club : la sortie du fil, ses mesures, son tracé
-    6: (0.053, 0.560, 0.947, 0.882),    # les stats : l'allure moyenne et sa courbe
+    2: (0.053, 0.130, 0.800, 0.340),    # le plan : le titre, puis les barres qui filent
+    4: (0.053, 0.372, 0.800, 0.694),    # le club : l'autrice, ses mesures, son tracé qui file
+    6: (0.053, 0.600, 0.638, 0.820),    # les stats : l'allure moyenne, et la courbe qui file
 }
-BANDE_LARGEUR = 1500                     # > 1290 : elle déborde des deux côtés
+BANDE_DEBORD = 150                       # ce qui dépasse du bord droit du cadre
 BANDE_CENTRE = 1600
 
 SCREEN_W = 700
@@ -517,23 +531,24 @@ def _bande_agrandie(canvas: Image.Image, shot: Image.Image, zone: tuple, rang: i
     w, h = shot.size
     x0, y0, x1, y1 = (round(zone[0] * w), round(zone[1] * h), round(zone[2] * w), round(zone[3] * h))
     morceau = shot.crop((x0, y0, x1, y1))
-    hauteur = round(BANDE_LARGEUR * morceau.height / morceau.width)
-    morceau = morceau.resize((BANDE_LARGEUR, hauteur), Image.LANCZOS).convert("RGBA")
+    largeur = CANVAS[0] - MARGE + BANDE_DEBORD
+    hauteur = round(largeur * morceau.height / morceau.width)
+    morceau = morceau.resize((largeur, hauteur), Image.LANCZOS).convert("RGBA")
     rayon = 30
     masque = Image.new("L", morceau.size, 0)
-    ImageDraw.Draw(masque).rounded_rectangle((0, 0, BANDE_LARGEUR - 1, hauteur - 1), rayon, fill=255)
+    ImageDraw.Draw(masque).rounded_rectangle((0, 0, largeur - 1, hauteur - 1), rayon, fill=255)
     morceau.putalpha(masque)
 
-    gauche, haut = (CANVAS[0] - BANDE_LARGEUR) // 2, BANDE_CENTRE - hauteur // 2
+    gauche, haut = MARGE, BANDE_CENTRE - hauteur // 2
     ombre = Image.new("RGBA", CANVAS, (0, 0, 0, 0))
     tache = Image.new("RGBA", morceau.size, (0, 0, 0, 0))
     tache.paste((0, 0, 0, 120), (0, 0), masque)
     ombre.alpha_composite(tache, (gauche, haut + 26))
     canvas.alpha_composite(ombre.filter(ImageFilter.GaussianBlur(34)))
-    ImageDraw.Draw(morceau).rounded_rectangle((0, 0, BANDE_LARGEUR - 1, hauteur - 1), rayon,
+    ImageDraw.Draw(morceau).rounded_rectangle((0, 0, largeur - 1, hauteur - 1), rayon,
                                               outline=ENCRE + (40,), width=3)
     canvas.alpha_composite(morceau, (gauche, haut))
-    print(f"  bande : {x1 - x0}×{y1 - y0} px de la capture, agrandie ×{BANDE_LARGEUR / (x1 - x0):.2f}")
+    print(f"  bande : {x1 - x0}×{y1 - y0} px de la capture, agrandie ×{largeur / (x1 - x0):.2f}")
 
 
 def _appareil(canvas: Image.Image, shot: Image.Image) -> None:

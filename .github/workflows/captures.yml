@@ -14,10 +14,12 @@
 # 1. Construit l'app en DÉBOGAGE pour un simulateur. C'est la condition de tout : l'état de
 #    démonstration vit sous `#if DEBUG` (voir `CaptureSeed`), donc une construction Release
 #    photographierait l'écran d'inscription.
-# 2. Lance `RunUpUITests` une fois par langue. Le test ouvre l'app six fois, chaque fois
-#    directement sur l'écran voulu, et écrit le PNG sur le disque de la machine.
-# 3. Compose les six images finales par langue avec `ci_scripts/screenshots.py` — fond de marque,
-#    châssis, accroche — et publie tout en artefact téléchargeable.
+# 2. Lance `RunUpUITests` DEUX fois par langue : une passe en thème sombre, une en thème clair.
+#    Le test ouvre l'app six fois par passe, chaque fois directement sur l'écran voulu, et écrit
+#    le PNG sur le disque de la machine. La passe claire livre la fiche ; la passe sombre produit
+#    le dossier `diagnostic/`, celui qu'on regarde pour juger l'app écran par écran.
+# 3. Compose les six images finales par langue avec `ci_scripts/screenshots.py` — fond os, trace
+#    continue, accroche — et publie tout en artefact téléchargeable.
 #
 # AUCUN SECRET N'EST NÉCESSAIRE. Rien n'est signé, rien n'est envoyé à Apple : on construit pour
 # un simulateur et on produit des images. C'est aussi pour ça que ce workflow est séparé de
@@ -234,6 +236,38 @@ jobs:
             ls -1 "$dossier"
           done
 
+      # ── LA MÊME SÉRIE EN THÈME CLAIR, ET C'EST ELLE QUI LIVRE ────────────────────────────────
+      #
+      # Le thème clair n'était photographié qu'en français, après la composition, comme outil de
+      # travail — « on vient voir des fonds et des contrastes, pas des traductions ». Les deux
+      # moitiés de cette phrase ont cessé d'être vraies le jour où la fiche est passée sur un
+      # fond os : ce sont ces captures-là qui partent sur l'App Store, dans les trois langues,
+      # et un écran sombre posé sur ce fond ferait six trous noirs.
+      #
+      # Elle passe donc AVANT la composition, et elle ne peut plus échouer en silence : ce n'est
+      # plus une passe de confort, c'est la source de la fiche.
+      #
+      # La passe sombre reste, et garde son rôle d'origine : c'est elle qui produit le dossier
+      # `diagnostic/`, celui qu'on regarde pour juger l'app écran par écran.
+      - name: Photographier la série claire, langue par langue
+        run: |
+          set -euo pipefail
+          for langue in ${{ steps.quoi.outputs.langues }}; do
+            echo "──────────── $langue · clair ────────────"
+            dossier="$PWD/appstore/raw/$langue"
+            rm -rf "$dossier/clair"
+            TEST_RUNNER_RUNUP_LANG="$langue" \
+            TEST_RUNNER_RUNUP_CAPTURES_DIR="$dossier" \
+            TEST_RUNNER_RUNUP_CAPTURES_CLAIR="1" \
+              xcodebuild test-without-building \
+                -project RunUp.xcodeproj \
+                -scheme Captures \
+                -destination "id=${{ steps.sim.outputs.udid }}" \
+                -derivedDataPath build/captures \
+                CODE_SIGNING_ALLOWED=NO
+            echo "→ $(ls -1 "$dossier/clair" | wc -l | tr -d ' ') capture(s) dans appstore/raw/$langue/clair"
+          done
+
       # DIRE POURQUOI, PLUTÔT QUE DE DEVINER.
       #
       # Deux séries ont été diagnostiquées à l'aveugle — « Lost connection to the application »,
@@ -290,43 +324,6 @@ jobs:
             echo "──────────── $langue ────────────"
             "$RUNNER_TEMP/venv/bin/python" ci_scripts/screenshots.py "$langue"
           done
-
-      # ── LA MÊME SÉRIE EN THÈME CLAIR ─────────────────────────────────────────────────────────
-      #
-      # Le harnais ne photographiait que le sombre, parce que c'est le défaut du profil de
-      # démonstration et que personne ne l'avait contredit. La moitié des thèmes de l'app
-      # n'était donc jugeable que sur un téléphone — et c'est en clair qu'ont été signalés les
-      # deux défauts les plus coûteux : les cartes qui se perdent dans leur fond, et la vignette
-      # d'habillage qui mentait sur sa teinte.
-      #
-      # EN FRANÇAIS SEULEMENT : on vient voir des fonds, des contrastes et des rayons, pas des
-      # traductions. Trois langues de plus ne montreraient rien de neuf et coûteraient quinze
-      # minutes.
-      #
-      # APRÈS LA COMPOSITION, ET `continue-on-error`. Cette passe est un outil de travail, pas
-      # une livraison : si elle plante, les six images de la fiche sont déjà composées et doivent
-      # partir quand même. L'étape se colore en revanche en orange — un échec silencieux serait
-      # pire que pas de passe du tout.
-      #
-      # Le sous-dossier `clair/` est invisible pour `screenshots.py`, qui ne lit que les fichiers
-      # posés à la racine du dossier d'une langue (voir le test, qui l'explique à son tour).
-      - name: Photographier la même série en thème clair
-        continue-on-error: true
-        run: |
-          set -euo pipefail
-          dossier="$PWD/appstore/raw/fr-FR"
-          rm -rf "$dossier/clair"
-          TEST_RUNNER_RUNUP_LANG="fr-FR" \
-          TEST_RUNNER_RUNUP_CAPTURES_DIR="$dossier" \
-          TEST_RUNNER_RUNUP_CAPTURES_CLAIR="1" \
-            xcodebuild test-without-building \
-              -project RunUp.xcodeproj \
-              -scheme Captures \
-              -destination "id=${{ steps.sim.outputs.udid }}" \
-              -derivedDataPath build/captures \
-              CODE_SIGNING_ALLOWED=NO
-          echo "→ clair :"
-          ls -1R "$dossier/clair"
 
       # Les brutes ET les composées. Les premières pour pouvoir juger ce que la machine a vu, les
       # secondes pour les déposer telles quelles dans App Store Connect.

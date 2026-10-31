@@ -1,80 +1,80 @@
 {
   "fr-FR": [
     [
-      "Tout sur un écran",
-      "Ta journée, ton programme, ta course."
+      "Ta journée, en un écran",
+      "Ta séance du jour, ta forme, ta dernière sortie."
     ],
     [
-      "Un plan qui s'adapte",
-      "Recalculé sur ta forme, chaque semaine."
+      "Le plan se recalcule",
+      "Chaque semaine, sur ce que tu as couru."
     ],
     [
-      "Un coach qui te connaît",
-      "Il a lu tes dernières séances."
+      "Un coach qui t'a lue",
+      "Il répond sur tes allures, pas en généralités."
     ],
     [
-      "Tu ne cours jamais seule",
-      "Le fil du club, ses sorties, ses routes."
+      "Tu n'es pas seule",
+      "Le fil du club, ses sorties, ses records."
     ],
     [
       "Trois objectifs par jour",
       "Pas trente. Trois."
     ],
     [
-      "Tes records, en courbe",
-      "Sur tes vraies sorties, pas des moyennes."
+      "Tes vrais records",
+      "Mesurés sur tes sorties, pas sur des moyennes."
     ]
   ],
   "en-US": [
     [
-      "Everything on one screen",
-      "Your day, your plan, your run."
+      "Your day, on one screen",
+      "Today's session, your form, your last run."
     ],
     [
-      "A plan that adapts",
-      "It recalculates on your form, every week."
+      "The plan recalculates",
+      "Every week, on what you actually ran."
     ],
     [
-      "A coach who knows you",
-      "It has read your last sessions."
+      "A coach who read you",
+      "It answers on your paces, not in generalities."
     ],
     [
-      "You never run alone",
-      "The club feed, its events, its routes."
+      "You're not running alone",
+      "The club feed, its meet-ups, its records."
     ],
     [
       "Three goals a day",
       "Not thirty. Three."
     ],
     [
-      "Your records, plotted",
-      "From your runs, not from averages."
+      "Your real records",
+      "Measured on your runs, not on averages."
     ]
   ],
   "es-ES": [
     [
-      "Todo en una pantalla",
-      "Tu día, tu plan, tu carrera."
+      "Tu día, en una pantalla",
+      "La sesión de hoy, tu forma, tu última carrera."
     ],
     [
-      "Un plan que se adapta",
-      "Se recalcula según tu forma, cada semana."
+      "El plan se recalcula",
+      "Cada semana, según lo que de verdad corriste."
     ],
     [
-      "Tu entrenador te conoce",
-      "Ha leído tus últimas sesiones."
+      "Un entrenador que te lee",
+      "Responde sobre tus ritmos, no en general."
     ],
     [
-      "Nunca corres sola",
-      "El muro del club, sus quedadas, sus rutas."
+      "No corres sola",
+      "El muro del club, sus quedadas, sus récords."
     ],
     [
       "Tres objetivos al día",
       "No treinta. Tres."
     ],
     [
-      "Tus récords, en curva",
-      "Con tus carreras, no con medias."
+      "Tus récords reales",
+      "Medidos en tus carreras, no en medias."
     ]
   ]
 }

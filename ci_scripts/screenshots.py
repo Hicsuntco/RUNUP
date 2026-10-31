@@ -22,8 +22,10 @@ encore : les autres tailles d'iPhone sont dérivées automatiquement de celle-ci
 from __future__ import annotations
 
 import json
+import math
 import re
 import sys
+from functools import lru_cache
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
@@ -36,24 +38,53 @@ FONTS = ROOT / "RunUp" / "Resources" / "Fonts"
 
 CANVAS = (1290, 2796)
 
-# Le châssis, en entier.
+# LA FICHE EST UNE SEULE IMAGE, DÉCOUPÉE EN SIX.
 #
-# Il débordait par le bas, volontairement : un appareil coupé au bord du cadre a plus de
-# profondeur qu'un objet posé au milieu, et c'est ce que font les fiches qu'on regarde en face.
-# Ça ne marche que si le bas de l'écran n'a rien à montrer. Or RUNUP a une barre d'onglets
-# flottante tout en bas de chaque écran : le débordement rognait précisément un élément
-# d'interface, et cinq captures sur cinq semblaient mal cadrées plutôt que mises en scène.
+# La version précédente composait six images indépendantes sur le même aplat rose : six îlots,
+# six téléphones centrés, aucun lien. Or l'App Store les montre à la suite — on en voit deux et
+# demie d'un coup — et c'est cette continuité-là qu'une fiche peut utiliser et que celle-ci
+# n'utilisait pas.
 #
-# L'appareil tient donc entier, avec une marge sous lui. La largeur d'écran descend de 1046 à
-# 998 — cinq pour cent, invisibles — et c'est ce qui permet au texte de garder sa place au-dessus
-# sans que rien ne se touche.
-DEVICE_TOP = 520
+# Tout est donc dessiné sur une bande de six cadres de large, puis découpé. Le fond, la trace et
+# le rythme traversent les coupures ; chaque cadre reste lisible seul, parce qu'Apple n'en montre
+# souvent qu'un dans les résultats de recherche.
+TOTAL = 6
+BANDE = (CANVAS[0] * TOTAL, CANVAS[1])
+
+# LE FIL CONDUCTEUR EST UNE COURSE, ET C'EST UNE LIGNE.
+#
+# Une seule trace part en bas à gauche du premier cadre et arrive en haut à droite du sixième.
+# Elle passe derrière les appareils : on la perd sur chacun, on la retrouve après. C'est une
+# LIGNE et pas un objet complexe, et c'est délibéré — l'App Store sépare les vignettes par un
+# blanc, et l'œil ne recolle à travers ce blanc qu'une forme simple. Un téléphone coupé, non.
+TRACE_EPAISSEUR = 15
+TRACE_OMBRE = 26
+
+# Un cadre sur deux montre l'écran ENTIER ; l'autre montre un morceau de ce même écran, agrandi
+# et coupé par les deux bords du cadre. C'est la « capture coupée » au sens le plus clair, et
+# c'est ce qui donne son rythme à la fiche — un plan large, un gros plan, un plan large.
+#
+# La zone agrandie est exprimée en FRACTION de la capture, pas en pixels : une capture d'un autre
+# appareil, ou d'une autre hauteur d'écran, continue de viser la même chose. Elle reste à
+# revérifier quand l'écran correspondant change de mise en page — le composeur imprime ce qu'il a
+# découpé, pour qu'un cadrage devenu faux se voie dans le journal.
+BANDES = {
+    2: (0.053, 0.146, 0.947, 0.392),    # le plan : le graphique des semaines
+    4: (0.053, 0.398, 0.947, 0.676),    # le club : la sortie du fil et ses mesures
+    6: (0.053, 0.650, 0.947, 0.900),    # les stats : l'allure moyenne et sa courbe
+}
+BANDE_LARGEUR = 1500                     # > 1290 : elle déborde des deux côtés
+BANDE_CENTRE = 1640
+
+SCREEN_W = 640
+DEVICE_TOP = 880
 DEVICE_BOTTOM_MARGIN = 36
-SCREEN_W = 998
-# Marges des deux étages de l'accroche. Nommées parce que le contrôle de débordement les lit
-# aussi : deux valeurs séparées auraient fini par diverger, et le contrôle aurait menti.
-TITLE_MARGIN = 96
-SUB_MARGIN = 150
+# Le texte est CALÉ À GAUCHE, et non centré. Six titres centrés sur six cadres se lisent comme
+# six affiches ; calés à gauche sur la même marge, ils se lisent comme une seule page qui avance.
+MARGE = 96
+TITRE_HAUT = 300
+TITLE_MARGIN = MARGE
+SUB_MARGIN = MARGE
 
 # Les captures viennent d'un iPhone, où elles s'appellent `IMG_0042.PNG` — extension EN MAJUSCULES.
 # Un `glob("*.png")` ne les voit pas sur le runner Linux, qui distingue la casse, et le script
@@ -64,7 +95,7 @@ SUFFIXES = {".png", ".jpg", ".jpeg"}
 #
 # Elle ne l'était même pas : ce fichier portait bien un `ROSE` et un `VIOLET`, écrits deux fois
 # avec deux valeurs différentes — et ni l'un ni l'autre n'était LU. Le dégradé réellement dessiné
-# par `scene()` était trois littéraux à part, réglés à la main le jour où le châssis est né et
+# par le fond était trois littéraux à part, réglés à la main le jour où le châssis est né et
 # jamais retouchés depuis. Quand le rose de marque a changé de teinte, les quatre copies Swift ont
 # suivi (`check_accent.py` les tient ensemble) ; ce fichier-ci, non — et c'est lui qui fabrique la
 # seule surface que les gens voient AVANT d'installer.
@@ -171,45 +202,80 @@ def linear(size: tuple, stops: list, horizontal: bool = False) -> Image.Image:
     return strip.resize(size, Image.BICUBIC)
 
 
-def glow(size: tuple, color: tuple, strength: float = 1.0) -> Image.Image:
-    """Un halo circulaire, en calque RGBA.
+# L'ENCRE ET LE PAPIER.
+#
+# Le fond était le rose de marque, plein cadre, six fois. C'est ce qui faisait du rose l'identité
+# de RUNUP avant même qu'on ouvre l'app — et une identité qui tient dans un magenta saturé est
+# une identité où tout le monde ne se reconnaît pas.
+#
+# Le fond est désormais un os très légèrement dégradé, les captures sont prises en thème CLAIR,
+# et la typographie est à l'encre. Le rose n'a pas disparu : il est resté là où il veut dire
+# quelque chose — dans l'app elle-même, qu'on voit par l'écran, et sur le point d'ARRIVÉE de la
+# trace, une seule fois sur les six images. Un accent est un accent quand il est rare.
+PAPIER = [(0.00, (246, 243, 236)), (0.45, (234, 230, 221)),
+          (0.75, (238, 234, 226)), (1.00, (244, 240, 232))]
+ENCRE = (22, 22, 28)
+ENCRE_TRACE = [(0.00, (38, 42, 50)), (0.55, (58, 62, 74)), (0.86, (112, 86, 172)), (1.00, PRIMAIRE)]
 
-    Construit en 256 px puis agrandi : une centaine d'ellipses concentriques suffisent à un
-    dégradé lisse une fois interpolées, et évitent d'en dessiner des milliers à taille réelle.
+
+def _points() -> list:
+    """La course, en coordonnées de la bande entière."""
+    bw, bh = BANDE
+    debut, fin = 60, 190
+    pts = []
+    for x in range(debut, bw - fin + 1, 8):
+        t = (x - debut) / (bw - debut - fin)
+        y = bh * (0.90 - 0.57 * t) + math.sin(t * 8.4) * bh * 0.052 + math.sin(t * 19.0 + 1.1) * bh * 0.013
+        pts.append((x, y))
+    return pts
+
+
+@lru_cache(maxsize=1)
+def bande() -> Image.Image:
+    """Le fond et la trace, dessinés une fois sur la bande des six cadres.
+
+    Mis en cache : composer les six cadres redessinerait sinon six fois une image de 7740 px de
+    large, dont cinq sixièmes seraient jetés à chaque fois.
     """
-    s = 256
-    field = Image.new("L", (s, s), 0)
-    d = ImageDraw.Draw(field)
-    steps = 120
-    for i in range(steps, 0, -1):
-        t = i / steps
-        r = t * s / 2
-        d.ellipse((s / 2 - r, s / 2 - r, s / 2 + r, s / 2 + r), fill=int(255 * strength * (1 - t) ** 2))
-    layer = Image.new("RGBA", size, color + (0,))
-    layer.putalpha(field.resize(size, Image.BICUBIC))
-    return layer
+    bw, bh = BANDE
+    strip = linear(BANDE, PAPIER, horizontal=True).convert("RGBA")
+    pts = _points()
+
+    # L'ombre portée de la trace, avant la trace : sans elle, un trait sombre sur un fond os est
+    # un trait dessiné ; avec elle, c'est un trait posé.
+    ombre = Image.new("RGBA", BANDE, (0, 0, 0, 0))
+    do = ImageDraw.Draw(ombre)
+    for i in range(len(pts) - 1):
+        do.line([pts[i], pts[i + 1]], fill=(40, 40, 50, 65), width=TRACE_OMBRE, joint="curve")
+    strip.alpha_composite(ombre.filter(ImageFilter.GaussianBlur(22)))
+
+    ligne = Image.new("RGBA", BANDE, (0, 0, 0, 0))
+    dl = ImageDraw.Draw(ligne)
+    for i in range(len(pts) - 1):
+        dl.line([pts[i], pts[i + 1]], fill=ramp(ENCRE_TRACE, i / (len(pts) - 2)) + (255,),
+                width=TRACE_EPAISSEUR, joint="curve")
+    strip.alpha_composite(ligne)
+
+    # LE DÉPART ET L'ARRIVÉE. Le premier point est à l'encre ; le dernier est le rose de marque,
+    # et c'est le seul de toute la fiche. Il est posé sur la sixième image, à l'endroit où l'œil
+    # finit sa course — la couleur arrive quand on a fini de lire, pas avant.
+    #
+    # La pente de la trace est réglée pour que ce point arrive AU-DESSUS de la bande du sixième
+    # cadre : posé plus bas, il passait dessous et la seule touche de couleur de la fiche
+    # disparaissait sans que rien ne le dise.
+    d = ImageDraw.Draw(strip)
+    x0, y0 = pts[0]
+    d.ellipse((x0 - 17, y0 - 17, x0 + 17, y0 + 17), fill=(38, 42, 50, 255))
+    xf, yf = pts[-1]
+    d.ellipse((xf - 27, yf - 27, xf + 27, yf + 27), fill=PRIMAIRE + (255,))
+    d.ellipse((xf - 52, yf - 52, xf + 52, yf + 52), outline=PRIMAIRE + (130,), width=5)
+    return strip
 
 
-def scene() -> Image.Image:
-    """Le fond : le dégradé de marque, éclairé derrière l'épaule de l'appareil.
-
-    Le halo clair ne décore pas — il sépare. Sur un aplat uniforme, un téléphone noir se découpe
-    par son ombre seule ; une zone plus claire derrière ses coins hauts lui donne un relief que
-    l'ombre ne suffit pas à produire.
-    """
-    # Le dégradé va du rose de marque à son violet, tous deux lus dans le nuancier. Le seul nombre
-    # réglé à la main qui reste est la DENSITÉ de l'arrêt du milieu : il ne porte pas de teinte,
-    # donc un changement de rose le traverse sans qu'on y touche. L'ancienne version assombrissait
-    # aussi le violet du bas, ce qui le désaturait — le nuancier en donne un meilleur.
-    canvas = linear(CANVAS, [(0.0, PRIMAIRE),
-                             (0.55, _sombre(PRIMAIRE, 0.87)),
-                             (1.0, QUEUE)])
-    canvas = canvas.convert("RGBA")
-    # Le halo, tiré de la variante CLAIRE du nuancier et éclairci encore : c'est un reflet, pas un
-    # aplat. Il valait (255, 140, 190) en dur, soit exactement l'ancien rose clair éclairci de
-    # 40 % — la même main, le même jour, la même teinte restée en arrière.
-    canvas.alpha_composite(glow((2200, 2200), _clair(CLAIR, 0.40), 0.45), (-455, -300))
-    return canvas.convert("RGB")
+def cadre(rang: int) -> Image.Image:
+    """La tranche de la bande qui revient à ce rang."""
+    x = (rang - 1) * CANVAS[0]
+    return bande().crop((x, 0, x + CANVAS[0], CANVAS[1])).copy()
 
 
 def wrap(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont, width: int) -> list[str]:
@@ -373,103 +439,105 @@ def clean_status_bar(shot: Image.Image) -> Image.Image:
     return shot
 
 
-def compose(shot_path: Path, caption, dest: Path) -> None:
-    """Compose une capture sous son accroche.
-
-    L'accroche tient sur deux étages : un titre court et gras, une phrase claire et légère en
-    dessous. Sur une seule ligne d'un seul poids, une accroche de dix mots oblige à s'arrêter pour
-    la lire — or dans le carrousel de l'App Store on voit deux images et demie d'un coup, en
-    diagonale, et ce qui n'est pas saisi d'un balayage n'est pas lu du tout. Le titre porte la
-    promesse, le sous-titre l'explique à qui s'arrête.
-
-    Une accroche restée sous forme de chaîne simple est acceptée et rendue sans sous-titre : le
-    format a changé, et le composeur n'a pas à casser sur un fichier écrit dans l'ancien.
-    """
-    title, subtitle = (caption, "") if isinstance(caption, str) else (caption[0], caption[1])
-
-    canvas = scene().convert("RGBA")
+def _accroche(canvas: Image.Image, caption, rang: int, total: int) -> None:
+    """Le numéro, le titre et le sous-titre, calés à gauche sur la même marge."""
+    titre, sous = (caption, "") if isinstance(caption, str) else (caption[0], caption[1])
     draw = ImageDraw.Draw(canvas)
 
-    font = ImageFont.truetype(str(FONTS / "Inter-Bold.ttf"), 82)
+    # « 03 / 06 ». Une numérotation ne se met pas pour décorer : celle-ci dit une chose vraie —
+    # ces six images sont une suite, et se lisent dans l'ordre. En chasse fixe, comme tous les
+    # chiffres de l'app.
+    rang_font = ImageFont.truetype(str(FONTS / "DMMono-Medium.ttf"), 34)
+    draw.text((MARGE, TITRE_HAUT - 54), f"{rang:02d} / {total:02d}", font=rang_font,
+              fill=ENCRE + (110,))
+
+    titre_font = ImageFont.truetype(str(FONTS / "Inter-Bold.ttf"), 82)
     tracking = -1.8
-    margin = TITLE_MARGIN
-    lines = wrap(draw, title, font, CANVAS[0] - margin * 2)
+    y = TITRE_HAUT
+    for ligne in wrap(draw, titre, titre_font, CANVAS[0] - MARGE * 2):
+        tracked(draw, (MARGE, y), ligne, titre_font, ENCRE + (255,), tracking)
+        y += 92
 
-    # L'accroche d'abord : c'est elle qui fixe où commence l'appareil. Une accroche sur trois
-    # lignes ne doit pas se retrouver recouverte par la capture.
-    leading = 98
-    y = 190
-    for line in lines:
-        w = tracked_width(draw, line, font, tracking)
-        tracked(draw, ((CANVAS[0] - w) / 2, y), line, font, (255, 255, 255), tracking)
-        y += leading
-
-    # Le second étage, en blanc PLEIN. Il a d'abord été posé à 82 % pour qu'il ne dispute pas le
-    # titre — et sur ce rose-là, ça le faisait tomber à 2,88:1, sous le plancher de 3:1 des grands
-    # caractères. C'était creuser l'écart par le mauvais levier : la taille et la graisse suffisent
-    # à dire « second », l'opacité ne fait que rendre illisible.
-    if subtitle:
-        sub_font = ImageFont.truetype(str(FONTS / "Inter-Light.ttf"), 48)
-        sub_margin = SUB_MARGIN
+    if sous:
+        sous_font = ImageFont.truetype(str(FONTS / "Inter-Light.ttf"), 48)
         y += 14
-        for line in wrap(draw, subtitle, sub_font, CANVAS[0] - sub_margin * 2):
-            w = draw.textlength(line, font=sub_font)
-            draw.text(((CANVAS[0] - w) / 2, y), line, font=sub_font, fill=(255, 255, 255, 255))
+        for ligne in wrap(draw, sous, sous_font, CANVAS[0] - MARGE * 2):
+            draw.text((MARGE, y), ligne, font=sous_font, fill=ENCRE + (155,))
             y += 62
 
-    body, silhouette, b = device(clean_status_bar(Image.open(shot_path).convert("RGB")), screen_w=SCREEN_W)
+
+def _bande_agrandie(canvas: Image.Image, shot: Image.Image, zone: tuple, rang: int) -> None:
+    """Un morceau de l'écran, agrandi et coupé par les deux bords du cadre."""
+    w, h = shot.size
+    x0, y0, x1, y1 = (round(zone[0] * w), round(zone[1] * h), round(zone[2] * w), round(zone[3] * h))
+    morceau = shot.crop((x0, y0, x1, y1))
+    hauteur = round(BANDE_LARGEUR * morceau.height / morceau.width)
+    morceau = morceau.resize((BANDE_LARGEUR, hauteur), Image.LANCZOS).convert("RGBA")
+    rayon = 30
+    masque = Image.new("L", morceau.size, 0)
+    ImageDraw.Draw(masque).rounded_rectangle((0, 0, BANDE_LARGEUR - 1, hauteur - 1), rayon, fill=255)
+    morceau.putalpha(masque)
+
+    gauche, haut = (CANVAS[0] - BANDE_LARGEUR) // 2, BANDE_CENTRE - hauteur // 2
+    ombre = Image.new("RGBA", CANVAS, (0, 0, 0, 0))
+    tache = Image.new("RGBA", morceau.size, (0, 0, 0, 0))
+    tache.paste((0, 0, 0, 120), (0, 0), masque)
+    ombre.alpha_composite(tache, (gauche, haut + 26))
+    canvas.alpha_composite(ombre.filter(ImageFilter.GaussianBlur(34)))
+    ImageDraw.Draw(morceau).rounded_rectangle((0, 0, BANDE_LARGEUR - 1, hauteur - 1), rayon,
+                                              outline=ENCRE + (40,), width=3)
+    canvas.alpha_composite(morceau, (gauche, haut))
+    print(f"  bande : {x1 - x0}×{y1 - y0} px de la capture, agrandie ×{BANDE_LARGEUR / (x1 - x0):.2f}")
+
+
+def _appareil(canvas: Image.Image, shot: Image.Image) -> None:
+    """L'écran entier, dans son châssis, au centre du cadre."""
+    body, silhouette, b = device(shot, screen_w=SCREEN_W)
     dw, dh = body.size
-    left = (CANVAS[0] - dw) // 2
+    gauche, haut = (CANVAS[0] - dw) // 2, DEVICE_TOP
 
-    # Le châssis démarre TOUJOURS à la même hauteur, quelle que soit la longueur de l'accroche.
-    #
-    # Il suivait le bas du texte : une accroche dont le sous-titre passait sur deux lignes
-    # repoussait l'appareil de soixante pixels. Sur les six images de la fiche, deux avaient donc
-    # leur téléphone plus bas que les quatre autres — et dans le carrousel, où l'on fait défiler
-    # une image après l'autre au même endroit de l'écran, l'appareil montait et descendait sous
-    # l'œil. C'est ce sautillement, plus qu'aucun détail de rendu, qui fait qu'une fiche a l'air
-    # montée à la main.
-    #
-    # La zone de texte est donc réservée, pas mesurée. Une accroche qui la déborderait se ferait
-    # recouvrir : le composeur le dit plutôt que de la laisser passer.
-    top = DEVICE_TOP
-    if y > top - 40:
-        print(f"  ⚠ accroche trop longue de {round(y - top + 40)} px — elle touchera l'appareil : "
-              f"raccourcis le titre ou le sous-titre.", file=sys.stderr)
-
-    # Le recadrage reste, comme filet de sécurité : une capture d'un appareil plus allongé que
-    # prévu déborderait sinon hors du cadre sans rien dire. Avec les proportions d'aujourd'hui il
-    # ne se déclenche pas — l'appareil tient entier, marge comprise.
-    visible = max(0, CANVAS[1] - DEVICE_BOTTOM_MARGIN - top)
+    visible = max(0, CANVAS[1] - DEVICE_BOTTOM_MARGIN - haut)
     if dh > visible:
         print(f"  ⚠ appareil recadré de {dh - visible} px en bas — capture plus haute que prévu.",
               file=sys.stderr)
-        body = body.crop((0, 0, dw, visible))
-        silhouette = silhouette.crop((0, 0, dw, visible))
-        dh = visible
+        body, silhouette, dh = body.crop((0, 0, dw, visible)), silhouette.crop((0, 0, dw, visible)), visible
 
     # Les boutons, dessinés AVANT l'appareil : ils dépassent du châssis, qui les recouvre à demi.
-    # Ils sont du métal, pas de l'ombre : peints sombres, ils se lisaient comme des taches posées
-    # derrière le téléphone. Un gris clair les rattache à l'arête vive du châssis.
-    tab = max(3, round(b * 0.62))
-    full_h = round(SCREEN_W / Image.open(shot_path).width * Image.open(shot_path).height) + 2 * b
-    buttons = ImageDraw.Draw(canvas)
-    for lo, hi in BUTTONS_LEFT:
-        y0, y1 = top + full_h * lo, top + full_h * hi
-        buttons.rounded_rectangle((left - tab, y0, left + b, y1), radius=tab, fill=(146, 146, 152))
-    for lo, hi in BUTTONS_RIGHT:
-        y0, y1 = top + full_h * lo, top + full_h * hi
-        buttons.rounded_rectangle((left + dw - b, y0, left + dw + tab, y1), radius=tab, fill=(146, 146, 152))
+    onglet = max(3, round(b * 0.62))
+    boutons = ImageDraw.Draw(canvas)
+    for cote, bornes in ((0, BUTTONS_LEFT), (1, BUTTONS_RIGHT)):
+        for lo, hi in bornes:
+            y0, y1 = haut + dh * lo, haut + dh * hi
+            if cote == 0:
+                boutons.rounded_rectangle((gauche - onglet, y0, gauche + b, y1), radius=onglet,
+                                          fill=(146, 146, 152))
+            else:
+                boutons.rounded_rectangle((gauche + dw - b, y0, gauche + dw + onglet, y1),
+                                          radius=onglet, fill=(146, 146, 152))
 
-    # L'ombre suit la silhouette, pas un rectangle : c'est ce qui la rend crédible aux coins.
-    shadow = Image.new("RGBA", CANVAS, (0, 0, 0, 0))
-    tinted = Image.new("RGBA", (dw, dh), (0, 0, 0, 150))
-    shadow.paste(tinted, (left, top + 26), silhouette)
-    shadow = shadow.filter(ImageFilter.GaussianBlur(42))
-    canvas = Image.alpha_composite(canvas.convert("RGBA"), shadow)
+    ombre = Image.new("RGBA", CANVAS, (0, 0, 0, 0))
+    ombre.paste(Image.new("RGBA", (dw, dh), (0, 0, 0, 120)), (gauche, haut + 26), silhouette)
+    canvas.alpha_composite(ombre.filter(ImageFilter.GaussianBlur(40)))
+    canvas.alpha_composite(body, (gauche, haut))
 
-    canvas.alpha_composite(body, (left, top))
 
+def compose(shot_path: Path, caption, dest: Path, rang: int, total: int) -> None:
+    """Une image de la fiche : sa tranche de bande, son accroche, et son écran ou son gros plan.
+
+    Deux étages d'accroche. Le titre porte la promesse, le sous-titre l'explique à qui s'arrête :
+    dans le carrousel on voit deux images et demie d'un coup, en diagonale, et ce qui n'est pas
+    saisi d'un balayage n'est pas lu du tout.
+
+    Une accroche restée sous forme de chaîne simple est acceptée et rendue sans sous-titre : le
+    format a changé une fois, et le composeur n'a pas à casser sur un fichier écrit dans l'ancien.
+    """
+    canvas = cadre(rang)
+    _accroche(canvas, caption, rang, total)
+    shot = clean_status_bar(Image.open(shot_path).convert("RGB"))
+    if rang in BANDES:
+        _bande_agrandie(canvas, shot, BANDES[rang], rang)
+    else:
+        _appareil(canvas, shot)
     dest.parent.mkdir(parents=True, exist_ok=True)
     canvas.convert("RGB").save(dest, "PNG")
 
@@ -526,9 +594,19 @@ def main() -> int:
     # accroche en anglais coûte l'installation au moment où la personne fait défiler le carrousel.
     # À défaut de dossier pour la langue demandée, on retombe sur les captures posées à la racine —
     # utile tant qu'une seule série existe.
-    folder = RAW / lang
-    if not folder.is_dir():
-        folder = RAW
+    # LA FICHE SE COMPOSE SUR LA SÉRIE CLAIRE.
+    #
+    # Le thème clair n'était photographié qu'en français, après la composition, comme outil de
+    # travail. C'est lui qui livre maintenant : le fond os de la fiche appelle des captures
+    # claires, et un écran sombre posé dessus ferait six trous noirs. La passe claire est donc
+    # devenue la source, pour les trois langues, et passe AVANT la composition.
+    #
+    # Le repli reste, dans l'ordre : la série claire de la langue, la série sombre de la langue,
+    # puis les fichiers posés à la racine. Un repli qui se tait serait pire que l'absence : le
+    # composeur dit lequel il a pris.
+    for folder in (RAW / lang / "clair", RAW / lang, RAW):
+        if folder.is_dir() and any(p.is_file() and p.suffix.lower() in SUFFIXES for p in folder.iterdir()):
+            break
     shots = sorted(
         (p for p in folder.iterdir() if p.is_file() and p.suffix.lower() in SUFFIXES),
         key=lambda p: natural(p.name),
@@ -603,7 +681,7 @@ def main() -> int:
     dest_dir = OUT / lang
     for shot, caption, index in pairs:
         dest = dest_dir / f"{index}.png"
-        compose(shot, caption, dest)
+        compose(shot, caption, dest, index, len(pairs))
         shown = caption if isinstance(caption, str) else f"{caption[0]} — {caption[1]}"
         print(f"{shot.name} → {dest.relative_to(ROOT)}   « {shown} »")
 

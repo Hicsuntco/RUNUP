@@ -10,7 +10,7 @@ import XCTest
 final class AccordTests: XCTestCase {
 
     override func tearDown() {
-        AccordStore.shared.genre = .feminin
+        AccordStore.shared.appliquer(.feminin)
         super.tearDown()
     }
 
@@ -32,9 +32,9 @@ final class AccordTests: XCTestCase {
 
     /// Le choix suit le magasin, dans les deux sens.
     func testLeChoixSuitLeGenreEnCours() {
-        AccordStore.shared.genre = .feminin
+        AccordStore.shared.appliquer(.feminin)
         XCTAssertEqual(Accord.selon(f: "partie", m: "parti"), "partie")
-        AccordStore.shared.genre = .masculin
+        AccordStore.shared.appliquer(.masculin)
         XCTAssertEqual(Accord.selon(f: "partie", m: "parti"), "parti")
     }
 
@@ -61,7 +61,7 @@ final class AccordTests: XCTestCase {
     /// patron, serait couvert le jour où il est écrit.
     func testChaqueNiveauAUnLibelleDansLesDeuxGenres() {
         for genre in Genre.allCases {
-            AccordStore.shared.genre = genre
+            AccordStore.shared.appliquer(genre)
             for niveau in ExperienceLevel.allCases {
                 XCTAssertFalse(niveau.title.isEmpty, "\(niveau) n'a pas de libellé en \(genre)")
                 XCTAssertFalse(niveau.subtitle.isEmpty, "\(niveau) n'a pas de sous-titre")
@@ -77,7 +77,7 @@ final class AccordTests: XCTestCase {
     /// — et c'est exactement le moment où l'on regarde si l'app a écouté.
     @MainActor
     func testLInscriptionPoseLeGenreImmediatement() {
-        AccordStore.shared.genre = .feminin
+        AccordStore.shared.appliquer(.feminin)
         let profil = UserProfile(name: "Test")
         AdaptivePlanEngine.applyOnboarding(resultat(sexe: "male"), to: profil)
         XCTAssertEqual(AccordStore.shared.genre, .masculin)

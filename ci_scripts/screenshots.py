@@ -97,11 +97,34 @@ DEVICE_BOTTOM_MARGIN = 36
 # diverger : le contrôle aurait alors validé des accroches qui débordent, ce qui est pire que pas
 # de contrôle du tout.
 MARGE = 96
-TITRE_HAUT = 266
-TITRE_TAILLE = 118
-TITRE_INTERLIGNE = 126
-TITRE_LIGNES = 2             # hauteur réservée, pour que le sous-titre ne monte ni ne descende
-TITRE_CHASSE = -4.0          # resserrement : une grotesque d'interface flotte à cette taille-là
+# LA POLICE DE TITRAGE DE LA FICHE, nommée ici et nulle part ailleurs.
+#
+# L'app, elle, n'en a pas : six familles ont été essayées et refusées parce qu'elles avaient une
+# VOIX, et une interface ne doit pas en avoir (voir `DisplayFont`, qui raconte ce refus). Ce refus
+# vaut pour l'interface. Une fiche App Store est l'inverse — c'est une page de vente, vue une
+# seule fois, avant l'installation : n'y avoir aucune voix est un défaut, pas une qualité.
+#
+# Bricolage Grotesque, coupe 96 pt Condensed ExtraBold. Sept familles ont été composées sur la
+# vraie fiche avant celle-ci. Archivo et Chivo ressemblaient à Inter en plus gras — changer de
+# fichier sans changer de page. Fraunces donnait la plus belle page et la plus risquée : un serif
+# de titrage sur fond crème est devenu le cliché de l'époque. Anton avait l'impact et deux défauts
+# : ses descendantes touchaient le sous-titre, et « Tu n'es pas seule » en Anton se lit comme un
+# slogan de salle de sport, ce qui n'est pas la voix de cette app.
+#
+# La coupe retenue est le croisement des deux dernières : la DENSITÉ d'Anton, obtenue par l'axe de
+# largeur de Bricolage poussé à 75, et les lettres de Bricolage. À 142 points, les dix-huit titres
+# des trois langues tiennent chacun sur UNE ligne — c'est la condensation qui le permet, et c'est
+# ce qui donne au bloc de texte sa densité.
+#
+# Le fichier vit dans `appstore/`, pas dans `RunUp/Resources/Fonts` : il ne sert qu'à composer des
+# images sur la machine, il n'entre pas dans l'app, et il ne doit pas pouvoir être confondu avec
+# une police d'interface par `check_fonts.py`. Sa licence SIL OFL est à côté, comme elle l'exige.
+TITRE_POLICE = ROOT / "appstore/polices/BricolageGrotesque-96pt-Condensed-ExtraBold.ttf"
+TITRE_HAUT = 300
+TITRE_TAILLE = 142
+TITRE_INTERLIGNE = 150
+TITRE_LIGNES = 1             # hauteur réservée, pour que le sous-titre ne monte ni ne descende
+TITRE_CHASSE = -1.0          # resserrement : la coupe est déjà condensée, il en faut peu
 SOUS_TAILLE = 46
 SOUS_INTERLIGNE = 60
 EYEBROW_TAILLE = 30
@@ -283,7 +306,8 @@ def cadre(rang: int, bandeau: str) -> Image.Image:
     return bande(bandeau).crop((x, 0, x + CANVAS[0], CANVAS[1])).copy()
 
 
-def wrap(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont, width: int) -> list[str]:
+def wrap(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont, width: int,
+         tracking: float = 0.0) -> list[str]:
     """Coupe l'accroche en lignes qui tiennent dans `width`.
 
     On mesure le texte réellement rendu plutôt que de compter les caractères : les accroches sont
@@ -295,11 +319,17 @@ def wrap(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont, wid
     « temps. » — au milieu d'un jeu où les autres tenaient sur une ligne. Personne ne l'avait vu
     parce que rien ne le disait : l'image se composait sans broncher.
     """
+    # LE RESSERREMENT COMPTE DANS LA MESURE, et il ne comptait pas.
+    #
+    # Le titre est tracé lettre par lettre avec une chasse négative (voir `tracked`) : il occupe
+    # donc MOINS de place que ce que `textlength` annonce. Mesuré sans, un titre de 1 091 px
+    # réellement rendus en annonçait 1 113 et passait à la ligne pour vingt-deux pixels qui
+    # n'existent pas. Le défaut est muet — la coupure a l'air d'un choix.
     lines: list[str] = []
     line = ""
     for word in text.split():
         candidate = f"{line} {word}".strip()
-        if draw.textlength(candidate, font=font) <= width or not line:
+        if tracked_width(draw, candidate, font, tracking) <= width or not line:
             line = candidate
         else:
             lines.append(line)
@@ -462,8 +492,8 @@ def _accroche(canvas: Image.Image, caption, rang: int, total: int) -> None:
     # qui suit descendaient donc de 126 px sur deux images. Dans le carrousel, où l'on voit les
     # images l'une après l'autre au même endroit de l'écran, c'est un sautillement — et c'est
     # exactement ce que la même règle corrige déjà pour l'appareil, posé à hauteur fixe.
-    titre_font = ImageFont.truetype(str(FONTS / "Inter-Bold.ttf"), TITRE_TAILLE)
-    lignes = wrap(draw, titre, titre_font, CANVAS[0] - MARGE * 2)
+    titre_font = ImageFont.truetype(str(TITRE_POLICE), TITRE_TAILLE)
+    lignes = wrap(draw, titre, titre_font, CANVAS[0] - MARGE * 2, TITRE_CHASSE)
     y = TITRE_HAUT + (TITRE_LIGNES - len(lignes)) * TITRE_INTERLIGNE
     for ligne in lignes:
         tracked(draw, (MARGE, y), ligne, titre_font, ENCRE + (255,), TITRE_CHASSE)
@@ -576,7 +606,7 @@ def overflowing_captions(captions: dict) -> list[str]:
     réservait qu'une, et il aurait laissé passer un sous-titre de deux depuis.
     """
     probe = ImageDraw.Draw(Image.new("RGB", (1, 1)))
-    title_font = ImageFont.truetype(str(FONTS / "Inter-Bold.ttf"), TITRE_TAILLE)
+    title_font = ImageFont.truetype(str(TITRE_POLICE), TITRE_TAILLE)
     sub_font = ImageFont.truetype(str(FONTS / "Inter-Light.ttf"), SOUS_TAILLE)
     out: list[str] = []
     for locale, bloc in sorted(captions.items()):
@@ -589,7 +619,8 @@ def overflowing_captions(captions: dict) -> list[str]:
             ):
                 if not text:
                     continue
-                lignes = len(wrap(probe, text, font, width))
+                lignes = len(wrap(probe, text, font, width,
+                                  TITRE_CHASSE if label == "titre" else 0.0))
                 if lignes > maxi:
                     out.append(f"{locale} n°{rank} {label} : {lignes} lignes pour {maxi} — « {text} »")
     return out

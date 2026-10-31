@@ -112,17 +112,22 @@ MARGE = 96
 # slogan de salle de sport, ce qui n'est pas la voix de cette app.
 #
 # La coupe retenue est le croisement des deux dernières : la DENSITÉ d'Anton, obtenue par l'axe de
-# largeur de Bricolage poussé à 75, et les lettres de Bricolage. À 142 points, les dix-huit titres
+# largeur de Bricolage poussé à 75, et les lettres de Bricolage. À 152 points, les dix-huit titres
 # des trois langues tiennent chacun sur UNE ligne — c'est la condensation qui le permet, et c'est
 # ce qui donne au bloc de texte sa densité.
+#
+# LA GRAISSE EST 600 ET NON 800. À 800, les contreformes de « e », « a » et « é » se referment :
+# la ligne devient une masse avant d'être un mot. 600 les rouvre, et la taille passe de 142 à 152
+# pour que la présence ne se perde pas en chemin — la place libérée par la graisse plus fine est
+# exactement celle que la taille reprend. 500 et 700 sont à une ligne d'ici si l'arbitrage change.
 #
 # Le fichier vit dans `appstore/`, pas dans `RunUp/Resources/Fonts` : il ne sert qu'à composer des
 # images sur la machine, il n'entre pas dans l'app, et il ne doit pas pouvoir être confondu avec
 # une police d'interface par `check_fonts.py`. Sa licence SIL OFL est à côté, comme elle l'exige.
-TITRE_POLICE = ROOT / "appstore/polices/BricolageGrotesque-96pt-Condensed-ExtraBold.ttf"
+TITRE_POLICE = ROOT / "appstore/polices/BricolageGrotesque-96pt-Condensed-SemiBold.ttf"
 TITRE_HAUT = 300
-TITRE_TAILLE = 142
-TITRE_INTERLIGNE = 150
+TITRE_TAILLE = 152
+TITRE_INTERLIGNE = 160
 TITRE_LIGNES = 1             # hauteur réservée, pour que le sous-titre ne monte ni ne descende
 TITRE_CHASSE = -1.0          # resserrement : la coupe est déjà condensée, il en faut peu
 SOUS_TAILLE = 46

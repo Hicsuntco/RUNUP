@@ -163,7 +163,7 @@ struct FriendsView: View {
                     commentsActivity = nil
                     Task {
                         try? await Task.sleep(for: .milliseconds(400))
-                        reportTarget = ReportTarget(targetType: "comment", targetId: comment.id, displayName: String(localized: "le commentaire de \(comment.name)"))
+                        reportTarget = ReportTarget(targetType: "comment", targetId: comment.id, displayName: String(localized: "le commentaire de \(comment.nomComplet)"))
                     }
                 },
                 onBlock: { comment in
@@ -434,7 +434,7 @@ struct FriendsView: View {
                     AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 34, seed: user.id)
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: 4) {
-                            Text(user.lastName.map { "\(user.name) \($0)" } ?? user.name)
+                            Text(user.nomComplet)
                                 .font(RUFont.sans(.label, weight: .medium)).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
                             if user.isPrivate {
                                 Image(systemName: "lock.fill").font(.system(size: 9)).foregroundColor(RUColor.text3)
@@ -462,7 +462,7 @@ struct FriendsView: View {
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
         .contextMenu {
             Button("Signaler \(user.name)") {
-                reportTarget = ReportTarget(targetType: "user", targetId: user.id, displayName: user.name)
+                reportTarget = ReportTarget(targetType: "user", targetId: user.id, displayName: user.nomComplet)
             }
             Button("Bloquer \(user.name)", role: .destructive) {
                 pendingBlock = (user.id, user.name)
@@ -495,7 +495,7 @@ struct FriendsView: View {
             ForEach(incomingRequests) { user in
                 HStack(spacing: 12) {
                     AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 32, seed: user.id)
-                    Text(user.name).font(RUFont.sans(.label, weight: .medium)).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
+                    Text(user.nomComplet).font(RUFont.sans(.label, weight: .medium)).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
                     Spacer(minLength: 8)
                     Button(action: { Task { await respond(user, accept: false) } }) {
                         Image(systemName: "xmark").font(.system(size: 11, weight: .bold)).foregroundColor(RUColor.text2)
@@ -617,7 +617,7 @@ struct FriendsView: View {
                     onKudos: { Task { await toggleKudos(item) } },
                     onComment: { commentsActivity = item },
                     onReport: {
-                        reportTarget = ReportTarget(targetType: "activity", targetId: item.id, displayName: String(localized: "l'activité de \(item.name)"))
+                        reportTarget = ReportTarget(targetType: "activity", targetId: item.id, displayName: String(localized: "l'activité de \(item.nomComplet)"))
                     },
                     onBlock: { pendingBlock = (item.userId, item.name) },
                     onDelete: { pendingDeleteActivity = item },
@@ -849,7 +849,7 @@ private struct PeopleListSheet: View {
                     ForEach(people) { user in
                         HStack(spacing: 12) {
                             AvatarView(urlString: user.avatarUrl, base64DataURI: user.avatarBase64, initial: String(user.name.prefix(1)), size: 34, seed: user.id)
-                            Text(user.lastName.map { "\(user.name) \($0)" } ?? user.name)
+                            Text(user.nomComplet)
                                 .font(RUFont.sans(.label, weight: .medium)).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
                             Spacer(minLength: 8)
                             Button(actionLabel) {

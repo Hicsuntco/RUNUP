@@ -369,8 +369,8 @@ async function handleMine(req, res, userId) {
   // real array_agg over `user_badges`) instead of anything computed only from this device's own
   // local history.
   const { rows: leaderboard } = await sql`
-    SELECT id, name, xp_total, rank, bio, avatar_data, avatar_url, joined_at, activities_count, badge_keys, role FROM (
-      SELECT u.id, u.name, u.xp_total, u.bio, u.avatar_data, u.avatar_url, cm.joined_at,
+    SELECT id, name, last_name, xp_total, rank, bio, avatar_data, avatar_url, joined_at, activities_count, badge_keys, role FROM (
+      SELECT u.id, u.name, u.last_name, u.xp_total, u.bio, u.avatar_data, u.avatar_url, cm.joined_at,
              -- Qui tient le club. La créatrice est organisatrice par construction, sans ligne
              -- de rôle à elle : c'est clubs.created_by qui le dit, et le calculer ici évite à
              -- l'app de porter la règle une deuxième fois.
@@ -417,7 +417,7 @@ async function handleMine(req, res, userId) {
   // can offer a "% objectif" ranking mode alongside the raw-km one — still ordered by km here,
   // the client re-sorts client-side when that mode is selected.
   const { rows: weekly } = await sql`
-    SELECT u.id, u.name, u.avatar_data, u.avatar_url, u.weekly_target_km, COALESCE(SUM(a.distance_km), 0) AS week_km
+    SELECT u.id, u.name, u.last_name, u.avatar_data, u.avatar_url, u.weekly_target_km, COALESCE(SUM(a.distance_km), 0) AS week_km
     FROM club_members cm
     JOIN users u ON u.id = cm.user_id
     LEFT JOIN activities a ON a.user_id = u.id AND a.club_id = cm.club_id
@@ -426,7 +426,7 @@ async function handleMine(req, res, userId) {
     WHERE cm.club_id = ${clubId}
       AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
       AND u.id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
-    GROUP BY u.id, u.name, u.avatar_data, u.avatar_url, u.weekly_target_km
+    GROUP BY u.id, u.name, u.last_name, u.avatar_data, u.avatar_url, u.weekly_target_km
     ORDER BY week_km DESC, u.name ASC
     LIMIT 100
   `;
@@ -517,7 +517,8 @@ async function handleMine(req, res, userId) {
     const weekKm = Number(r.week_km);
     const targetKm = r.weekly_target_km != null ? Number(r.weekly_target_km) : null;
     return {
-      id: r.id, name: r.name, avatarBase64: r.avatar_data || null, avatarUrl: r.avatar_url || null,
+      id: r.id, name: r.name, lastName: r.last_name || null,
+      avatarBase64: r.avatar_data || null, avatarUrl: r.avatar_url || null,
       weekKm, rank: i + 1, isMe: r.id === userId,
       targetKm,
       // null (not 0) when this member has no target on record yet — the client falls back to
@@ -538,7 +539,7 @@ async function handleMine(req, res, userId) {
       coverUrl: club.cover_url || null,
     },
     leaderboard: leaderboard.map((r) => ({
-      id: r.id, name: r.name, xp: r.xp_total, rank: Number(r.rank), isMe: r.id === userId,
+      id: r.id, name: r.name, lastName: r.last_name || null, xp: r.xp_total, rank: Number(r.rank), isMe: r.id === userId,
       bio: r.bio || null,
       avatarBase64: r.avatar_data || null,
       avatarUrl: r.avatar_url || null,
@@ -857,7 +858,7 @@ async function handleHighlights(req, res, userId) {
              r.distance_km, r.discipline,
              COUNT(*)::int AS members,
              json_agg(json_build_object(
-               'id', u.id, 'name', u.name,
+               'id', u.id, 'name', u.name, 'lastName', u.last_name,
                'avatarUrl', u.avatar_url, 'avatarBase64', u.avatar_data
              ) ORDER BY u.name) AS runners
         FROM race_followers f
@@ -880,7 +881,7 @@ async function handleHighlights(req, res, userId) {
     // gagnerait tous les classements d'allure d'un club pour toujours.
     sql`
       WITH sorties AS (
-        SELECT a.id, a.user_id, u.name, u.avatar_url, u.avatar_data, a.created_at,
+        SELECT a.id, a.user_id, u.name, u.last_name, u.avatar_url, u.avatar_data, a.created_at,
                a.distance_km, a.duration_seconds, a.elevation_gain_m,
                CASE WHEN a.distance_km > 0 AND a.duration_seconds > 0
                     THEN a.duration_seconds / a.distance_km END AS sec_par_km
@@ -891,16 +892,16 @@ async function handleHighlights(req, res, userId) {
            AND a.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
            AND a.user_id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
       )
-      (SELECT 'distance' AS genre, id, user_id, name, avatar_url, avatar_data, created_at,
+      (SELECT 'distance' AS genre, id, user_id, name, last_name, avatar_url, avatar_data, created_at,
               distance_km, duration_seconds, elevation_gain_m, sec_par_km
          FROM sorties WHERE distance_km IS NOT NULL ORDER BY distance_km DESC LIMIT 1)
       UNION ALL
-      (SELECT 'allure', id, user_id, name, avatar_url, avatar_data, created_at,
+      (SELECT 'allure', id, user_id, name, last_name, avatar_url, avatar_data, created_at,
               distance_km, duration_seconds, elevation_gain_m, sec_par_km
          FROM sorties WHERE sec_par_km IS NOT NULL AND distance_km >= 5
         ORDER BY sec_par_km ASC LIMIT 1)
       UNION ALL
-      (SELECT 'denivele', id, user_id, name, avatar_url, avatar_data, created_at,
+      (SELECT 'denivele', id, user_id, name, last_name, avatar_url, avatar_data, created_at,
               distance_km, duration_seconds, elevation_gain_m, sec_par_km
          FROM sorties WHERE elevation_gain_m > 0 ORDER BY elevation_gain_m DESC LIMIT 1)
     `,
@@ -959,7 +960,8 @@ async function handleHighlights(req, res, userId) {
       members: r.members,
       // Six visages au plus : au-delà, la pile déborde de la ligne et le compte dit le reste.
       runners: (r.runners || []).slice(0, 6).map((u) => ({
-        id: u.id, name: u.name, avatarUrl: u.avatarUrl || null, avatarBase64: u.avatarBase64 || null,
+        id: u.id, name: u.name, lastName: u.lastName || null,
+        avatarUrl: u.avatarUrl || null, avatarBase64: u.avatarBase64 || null,
       })),
     })),
     records: records.rows.map((r) => ({
@@ -967,6 +969,7 @@ async function handleHighlights(req, res, userId) {
       activityId: r.id,
       userId: r.user_id,
       name: r.name,
+      lastName: r.last_name || null,
       avatarUrl: r.avatar_url || null,
       avatarBase64: r.avatar_data || null,
       createdAt: r.created_at,

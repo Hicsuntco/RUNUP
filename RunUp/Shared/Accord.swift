@@ -48,11 +48,31 @@ enum Genre: String, CaseIterable {
 /// chacune aurait demandé de le passer en paramètre à une trentaine d'endroits dont la plupart
 /// n'ont rien d'autre à en faire. Il est rafraîchi au lancement et à chaque fois que le profil
 /// change — voir `AppState`.
+///
+/// # LU AVANT LA PREMIÈRE IMAGE, pour la même raison que `ThemeStore`
+///
+/// « Rafraîchi au lancement » voulait dire : par `AppState.init`, qui tourne dans le `onAppear`
+/// de la racine, donc APRÈS la première image. Un homme ouvrait l'app sur une phrase au féminin
+/// et la voyait se corriger. Le genre est donc recopié dans `UserDefaults` à chaque changement
+/// et relu ici, au premier accès à `shared`. Le profil reste la vérité et écrase ce cache dès
+/// qu'il est lu ; voir l'en-tête de `ThemeStore`, c'est le même mécanisme et le même argument.
 @Observable
 final class AccordStore {
     static let shared = AccordStore()
-    var genre: Genre = .feminin
-    private init() {}
+    private(set) var genre: Genre
+    private static let cle = "accord.genre.v1"
+
+    private init() {
+        genre = UserDefaults.standard.string(forKey: Self.cle).flatMap(Genre.init(rawValue:)) ?? .feminin
+    }
+
+    /// Le seul chemin d'écriture — `private(set)` pour la même raison que dans `ThemeStore` :
+    /// une affectation directe aurait changé la voix de l'app sans rien enregistrer, et le
+    /// lancement suivant serait reparti sur le féminin.
+    func appliquer(_ genre: Genre) {
+        self.genre = genre
+        UserDefaults.standard.set(genre.rawValue, forKey: Self.cle)
+    }
 }
 
 /// Choisit entre deux phrases déjà traduites.

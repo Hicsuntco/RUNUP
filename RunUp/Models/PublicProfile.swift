@@ -15,7 +15,7 @@ import Foundation
 /// privé » et « cette personne n'a encore rien couru » sont deux écrans différents : le premier
 /// invite à demander à suivre, le second n'invite à rien. Quand il est faux, les sorties ne sont
 /// pas masquées côté app — la requête n'est pas faite du tout.
-struct PublicProfile: Decodable, Identifiable, Hashable {
+struct PublicProfile: Decodable, Identifiable, Hashable, Nomme {
     var id: String
     var name: String
     var lastName: String?
@@ -37,13 +37,10 @@ struct PublicProfile: Decodable, Identifiable, Hashable {
     var joinedAt: Date
     var canSeeRuns: Bool
 
-    var nomComplet: String {
-        guard let lastName, !lastName.isEmpty else { return name }
-        return "\(name) \(lastName)"
-    }
-
     var jeLaSuis: Bool { followStatus == "accepted" }
     var demandeEnvoyee: Bool { followStatus == "pending" }
+
+    var nomDeFamille: String? { lastName }
 }
 
 /// Ce que rend `api/friends/profile` : la personne, et ses vingt dernières sorties — vides quand

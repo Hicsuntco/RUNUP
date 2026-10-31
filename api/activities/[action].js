@@ -429,7 +429,7 @@ async function handleWall(req, res, userId, porteeForcee) {
   if (portee === 'club' && !clubId) return res.status(200).json({ items: [], racePosts: [] });
 
   const rows = portee === 'courses' ? [] : (await sql`
-    SELECT a.id, a.text, a.created_at, u.name, u.id AS user_id, u.avatar_data, u.avatar_url,
+    SELECT a.id, a.text, a.created_at, u.name, u.last_name, u.id AS user_id, u.avatar_data, u.avatar_url,
            a.distance_km, a.duration_seconds, a.avg_pace, a.elevation_gain_m, a.is_personal_record,
            a.content_key, a.discipline, a.route_preview, a.title, a.note, a.edited_at, a.photo_url,
            (SELECT COUNT(*)::int FROM activity_kudos k WHERE k.activity_id = a.id) AS kudos,
@@ -441,8 +441,12 @@ async function handleWall(req, res, userId, porteeForcee) {
            --
            -- Sans ordre défini : la table des kudos ne date pas ses lignes. Trois noms parmi ceux
            -- qui ont aimé, donc, pas « les trois derniers » : la ligne ne prétend rien de plus.
+           -- Le nom COMPLET, composé ici : le client reçoit un tableau de chaînes, pas des
+           -- objets, et « Aimé par Sofia » n'avait donc nulle part où porter un nom de
+           -- famille. Rogné, parce qu'un compte sans nom de famille donnerait « Sofia  ».
            (SELECT COALESCE(json_agg(t.name), '[]'::json) FROM (
-              SELECT u2.name FROM activity_kudos k2 JOIN users u2 ON u2.id = k2.user_id
+              SELECT trim(u2.name || ' ' || COALESCE(u2.last_name, '')) AS name
+                FROM activity_kudos k2 JOIN users u2 ON u2.id = k2.user_id
                WHERE k2.activity_id = a.id
                  AND k2.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
                  AND k2.user_id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ${userId})
@@ -450,7 +454,7 @@ async function handleWall(req, res, userId, porteeForcee) {
            -- Le dernier commentaire, en aperçu. Une carte qui affiche « 💬 2 » demande d'ouvrir
            -- une feuille pour savoir si ces deux commentaires valent le détour ; celle qui montre
            -- le dernier répond à la question sur place.
-           (SELECT json_build_object('name', u3.name, 'text', c3.text)
+           (SELECT json_build_object('name', u3.name, 'lastName', u3.last_name, 'text', c3.text)
               FROM activity_comments c3 JOIN users u3 ON u3.id = c3.user_id
              WHERE c3.activity_id = a.id
                AND c3.user_id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ${userId})
@@ -537,6 +541,7 @@ async function handleWall(req, res, userId, porteeForcee) {
       id: r.id,
       userId: r.user_id,
       name: r.name,
+      lastName: r.last_name || null,
       avatarBase64: r.avatar_data || null,
       avatarUrl: r.avatar_url || null,
       text: r.text,
@@ -622,7 +627,7 @@ async function handleCommentsList(req, res, userId) {
   }
 
   const { rows } = await sql`
-    SELECT c.id, c.text, c.created_at, u.id AS user_id, u.name, u.avatar_data, u.avatar_url
+    SELECT c.id, c.text, c.created_at, u.id AS user_id, u.name, u.last_name, u.avatar_data, u.avatar_url
     FROM activity_comments c
     JOIN users u ON u.id = c.user_id
     WHERE c.activity_id = ${activityId}
@@ -637,6 +642,7 @@ async function handleCommentsList(req, res, userId) {
       id: r.id,
       userId: r.user_id,
       name: r.name,
+      lastName: r.last_name || null,
       avatarBase64: r.avatar_data || null,
       avatarUrl: r.avatar_url || null,
       text: r.text,
@@ -803,7 +809,11 @@ async function handleRoutesNearby(req, res, userId) {
     SELECT r.id, r.name, r.distance_km, r.elevation_gain_m, r.duration_seconds,
            r.preview_points, r.start_lat, r.start_lng, r.locality, r.country_code,
            r.photo_url, r.saves_count, r.created_at,
-           u.name AS author_name, u.username AS author_username, u.avatar_url AS author_avatar,
+           -- Le nom COMPLET de qui a partagé : l'app lit un seul champ texte (« Partagé par
+           -- Camille Roy »), elle n'a pas où ranger un nom de famille à part. Rogné, sinon
+           -- un compte sans nom de famille rendrait « Camille  ».
+           trim(u.name || ' ' || COALESCE(u.last_name, '')) AS author_name,
+           u.username AS author_username, u.avatar_url AS author_avatar,
            EXISTS (SELECT 1 FROM route_saves s WHERE s.route_id = r.id AND s.user_id = ${userId}) AS saved
     FROM routes r
     JOIN users u ON u.id = r.user_id
@@ -832,7 +842,11 @@ async function handleRouteDetail(req, res, userId) {
     SELECT r.id, r.name, r.notes, r.distance_km, r.elevation_gain_m, r.duration_seconds,
            r.points, r.preview_points, r.start_lat, r.start_lng, r.locality, r.country_code,
            r.photo_url, r.saves_count, r.created_at, r.user_id,
-           u.name AS author_name, u.username AS author_username, u.avatar_url AS author_avatar,
+           -- Le nom COMPLET de qui a partagé : l'app lit un seul champ texte (« Partagé par
+           -- Camille Roy »), elle n'a pas où ranger un nom de famille à part. Rogné, sinon
+           -- un compte sans nom de famille rendrait « Camille  ».
+           trim(u.name || ' ' || COALESCE(u.last_name, '')) AS author_name,
+           u.username AS author_username, u.avatar_url AS author_avatar,
            EXISTS (SELECT 1 FROM route_saves s WHERE s.route_id = r.id AND s.user_id = ${userId}) AS saved
     FROM routes r
     JOIN users u ON u.id = r.user_id
@@ -890,7 +904,11 @@ async function handleRoutesMine(req, res, userId) {
     SELECT r.id, r.name, r.distance_km, r.elevation_gain_m, r.duration_seconds,
            r.preview_points, r.start_lat, r.start_lng, r.locality, r.country_code,
            r.photo_url, r.saves_count, r.created_at,
-           u.name AS author_name, u.username AS author_username, u.avatar_url AS author_avatar,
+           -- Le nom COMPLET de qui a partagé : l'app lit un seul champ texte (« Partagé par
+           -- Camille Roy »), elle n'a pas où ranger un nom de famille à part. Rogné, sinon
+           -- un compte sans nom de famille rendrait « Camille  ».
+           trim(u.name || ' ' || COALESCE(u.last_name, '')) AS author_name,
+           u.username AS author_username, u.avatar_url AS author_avatar,
            TRUE AS saved
     FROM routes r JOIN users u ON u.id = r.user_id
     WHERE r.user_id = ${userId}
@@ -900,7 +918,11 @@ async function handleRoutesMine(req, res, userId) {
     SELECT r.id, r.name, r.distance_km, r.elevation_gain_m, r.duration_seconds,
            r.preview_points, r.start_lat, r.start_lng, r.locality, r.country_code,
            r.photo_url, r.saves_count, r.created_at,
-           u.name AS author_name, u.username AS author_username, u.avatar_url AS author_avatar,
+           -- Le nom COMPLET de qui a partagé : l'app lit un seul champ texte (« Partagé par
+           -- Camille Roy »), elle n'a pas où ranger un nom de famille à part. Rogné, sinon
+           -- un compte sans nom de famille rendrait « Camille  ».
+           trim(u.name || ' ' || COALESCE(u.last_name, '')) AS author_name,
+           u.username AS author_username, u.avatar_url AS author_avatar,
            TRUE AS saved
     FROM route_saves s
     JOIN routes r ON r.id = s.route_id
@@ -980,7 +1002,7 @@ async function handleRouteComments(req, res, userId) {
   if (!isUuid(routeId)) return res.status(400).json({ error: 'bad_request' });
 
   const { rows } = await sql`
-    SELECT c.id, c.text, c.created_at, u.id AS user_id, u.name, u.avatar_data, u.avatar_url
+    SELECT c.id, c.text, c.created_at, u.id AS user_id, u.name, u.last_name, u.avatar_data, u.avatar_url
     FROM route_comments c
     JOIN users u ON u.id = c.user_id
     WHERE c.route_id = ${routeId}
@@ -994,6 +1016,7 @@ async function handleRouteComments(req, res, userId) {
       id: r.id,
       userId: r.user_id,
       name: r.name,
+      lastName: r.last_name || null,
       avatarBase64: r.avatar_data || null,
       avatarUrl: r.avatar_url || null,
       text: r.text,

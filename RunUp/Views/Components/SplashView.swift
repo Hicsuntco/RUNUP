@@ -57,8 +57,20 @@ struct SplashView: View {
                         Rectangle().scaleEffect(x: reveal, y: 1, anchor: .leading)
                     }
             }
-            .opacity(opacity)
         }
+        // LE FONDU PORTE L'ÉCRAN ENTIER, FOND COMPRIS — et c'était là le sursaut.
+        //
+        // Il ne portait que le logo. Le fond, lui, restait opaque jusqu'à ce que `onFinished`
+        // retire la vue : le mot s'effaçait sur un fond plein, puis l'app apparaissait d'un
+        // coup, en une image. Un fondu suivi d'une coupe.
+        //
+        // Posé sur le `ZStack`, le même fondu découvre progressivement `ContentRouterView`, qui
+        // est déjà dessiné dessous — l'ouverture devient un fondu enchaîné et ne coûte pas une
+        // milliseconde de plus.
+        .opacity(opacity)
+        // Rien à toucher ici, et pendant les trois dixièmes du fondu l'écran d'ouverture
+        // avalait les gestes destinés à l'app qui apparaît dessous.
+        .allowsHitTesting(false)
         .onAppear { jouer() }
     }
 

@@ -5,7 +5,7 @@ import Observation
 /// server-side XP total (see `api/me.js`), the source of truth for the Club leaderboard once
 /// signed in (as opposed to `UserProfile.xp`, which stays purely local for the app's own
 /// gamification UI outside Club).
-struct AuthenticatedUser: Codable, Equatable {
+struct AuthenticatedUser: Codable, Equatable, Nomme {
     var id: String
     var name: String
     var xpTotal: Int
@@ -16,6 +16,8 @@ struct AuthenticatedUser: Codable, Equatable {
     /// A chosen, unique handle — nil until she sets one. The only fully reliable way to find one
     /// specific person by search, same reasoning as `lastName`.
     var username: String?
+
+    var nomDeFamille: String? { lastName }
     /// L'adresse du compte, telle que le SERVEUR la voit.
     ///
     /// L'app ne la connaît pas autrement : elle est saisie à l'inscription et jamais relue, et

@@ -83,7 +83,7 @@ struct ActivityCommentsSheet: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Button(action: { if !moi { appState.ouvrirLeProfil(comment.userId) } }) {
-                        Text(comment.name).font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                        Text(comment.nomComplet).font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                     }
                     .buttonStyle(PressableStyle())
                     .disabled(moi)

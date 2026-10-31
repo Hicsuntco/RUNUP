@@ -556,7 +556,7 @@ struct RacePageView: View {
 
             if let reponseA {
                 HStack(spacing: 6) {
-                    Text("Réponse à \(reponseA.author.name)")
+                    Text("Réponse à \(reponseA.author.nomComplet)")
                         .font(RUFont.sans(.small, weight: .semibold))
                         .foregroundColor(RUColor.text2)
                     Button(action: { self.reponseA = nil }) {
@@ -711,7 +711,7 @@ struct RacePageView: View {
                         AvatarView(urlString: message.author.avatarUrl, base64DataURI: message.author.avatarBase64,
                                    initial: String(message.author.name.prefix(1)), size: 32, seed: message.author.id)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(message.author.name)
+                            Text(message.author.nomComplet)
                                 .font(RUFont.sans(.label, weight: .bold))
                                 .foregroundColor(RUColor.textPrimary)
                             Text(message.createdAt.relativeDescription)

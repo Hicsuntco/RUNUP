@@ -126,7 +126,7 @@ struct ActivityDetailView: View {
         }
         .buttonStyle(PressableStyle())
         .accessibilityLabel(s.isMine ? Text(s.nomComplet)
-                                     : Text(String(localized: "Voir le profil de \(s.name)")))
+                                     : Text(String(localized: "Voir le profil de \(s.nomComplet)")))
     }
 
     private var pastilleDeRecord: some View {

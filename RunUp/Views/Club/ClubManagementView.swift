@@ -356,7 +356,7 @@ struct ClubManagementView: View {
         HStack(spacing: 12) {
             AvatarView(urlString: member.avatarUrl, base64DataURI: member.avatarBase64, initial: String(member.name.prefix(1)), size: 36, seed: member.isMe ? nil : member.id)
             VStack(alignment: .leading, spacing: 2) {
-                Text(member.isMe ? String(localized: "\(member.name) · toi") : member.name)
+                Text(member.isMe ? String(localized: "\(member.nomComplet) · toi") : member.nomComplet)
                     .font(RUFont.sans(.label, weight: member.isMe ? .semibold : .regular))
                     .foregroundColor(RUColor.textPrimary)
                     .lineLimit(1)
@@ -468,7 +468,7 @@ struct ClubMemberProfileView: View {
             VStack(spacing: 14) {
                 AvatarView(urlString: member.avatarUrl, base64DataURI: member.avatarBase64, initial: String(member.name.prefix(1)), size: 72, seed: member.isMe ? nil : member.id)
                     .padding(.top, 18)
-                Text(member.name).font(RUFont.sans(.title, weight: .bold)).foregroundColor(RUColor.textPrimary)
+                Text(member.nomComplet).font(RUFont.sans(.title, weight: .bold)).foregroundColor(RUColor.textPrimary)
                 Text("Niveau \(level) · \(levelTitle)").font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
                 Text("Membre depuis \(Self.joinedFormatter.string(from: member.joinedAt))")
                     .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)

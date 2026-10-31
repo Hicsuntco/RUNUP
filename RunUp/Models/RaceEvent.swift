@@ -116,7 +116,7 @@ struct RaceFollow: Decodable, Hashable {
 }
 
 /// Quelqu'un qui prépare la même course.
-struct RaceRunner: Decodable, Identifiable, Hashable {
+struct RaceRunner: Decodable, Identifiable, Hashable, Nomme {
     var id: String
     var name: String
     var lastName: String?
@@ -135,12 +135,9 @@ struct RaceRunner: Decodable, Identifiable, Hashable {
     var km4Weeks: Double?
     var runs4Weeks: Int?
 
-    var nomComplet: String {
-        guard let lastName, !lastName.isEmpty else { return name }
-        return "\(name) \(lastName)"
-    }
-
     var partageSonEntrainement: Bool { km4Weeks != nil }
+
+    var nomDeFamille: String? { lastName }
 }
 
 /// Un message du fil de la course : une question, une recherche de partenaire, une annonce de

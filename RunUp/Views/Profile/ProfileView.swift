@@ -125,7 +125,7 @@ struct ProfileView: View {
             HStack(alignment: .top, spacing: 14) {
                 avatarButton
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(profile.name).displayStyle(.title).foregroundColor(RUColor.textPrimary)
+                    Text(profile.nomComplet).displayStyle(.title).foregroundColor(RUColor.textPrimary)
                     if let pseudo = auth.currentUser?.username, !pseudo.isEmpty {
                         Text(verbatim: "@\(pseudo)")
                             .font(RUFont.sans(.body))

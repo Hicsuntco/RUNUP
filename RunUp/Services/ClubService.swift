@@ -34,9 +34,12 @@ struct ClubSearchResult: Decodable, Identifiable, Hashable {
     var memberCount: Int
 }
 
-struct LeaderboardRow: Decodable, Identifiable, Hashable {
+struct LeaderboardRow: Decodable, Identifiable, Hashable, Nomme {
     var id: String
     var name: String
+    /// Le nom de famille, pour que cette personne porte ici le nom qu'elle porte ailleurs.
+    /// Voir `Nomme` : le serveur l'avait déjà sous la main, l'app le jetait.
+    var lastName: String?
     /// « owner » | « organiser » | « member ». Dit par le serveur plutôt que déduit ici : la
     /// créatrice est organisatrice par construction, sans ligne de rôle à elle, et porter cette
     /// règle une deuxième fois dans l'app serait l'occasion qu'elles divergent.
@@ -63,13 +66,18 @@ struct LeaderboardRow: Decodable, Identifiable, Hashable {
     /// Real, permanent achievement keys synced server-side (see `ClubBadgeCatalog`) — what makes
     /// badges visible on every member's profile, not just the device that earned them.
     var badgeKeys: [String]
+    var nomDeFamille: String? { lastName }
+
 }
 
 /// One row of the WEEKLY board — real km run this week (Monday reset, server-computed), the
 /// fresh race a newcomer can win even against members with months of XP.
-struct WeeklyRow: Decodable, Identifiable, Hashable {
+struct WeeklyRow: Decodable, Identifiable, Hashable, Nomme {
     var id: String
     var name: String
+    /// Le nom de famille, pour que cette personne porte ici le nom qu'elle porte ailleurs.
+    /// Voir `Nomme` : le serveur l'avait déjà sous la main, l'app le jetait.
+    var lastName: String?
     var avatarUrl: String?
     var avatarBase64: String?
     var weekKm: Double
@@ -82,6 +90,8 @@ struct WeeklyRow: Decodable, Identifiable, Hashable {
     /// `round(weekKm / targetKm * 100)`, server-computed — nil whenever `targetKm` is nil so the
     /// UI can fall back to raw km for that one row instead of a misleading "0%".
     var pctOfTarget: Int?
+    var nomDeFamille: String? { lastName }
+
 }
 
 /// Club-wide pulse for the current week — total km + how many members actually ran.
@@ -230,12 +240,15 @@ enum PhraseDeSortie {
 /// Sans elle, un fil mélangé ne dit plus pourquoi telle personne s'y trouve — et c'est ce qui
 /// sépare un réseau d'un annuaire. Optionnelle parce que les deux anciens fils ne la renvoient
 /// pas, et que l'app doit continuer de les décoder.
-struct FeedItem: Decodable, Identifiable {
+struct FeedItem: Decodable, Identifiable, Nomme {
     /// « moi » | « club » | « amis ». Nil quand la réponse vient d'un ancien fil.
     var source: String?
     var id: String
     var userId: String
     var name: String
+    /// Le nom de famille, pour que cette personne porte ici le nom qu'elle porte ailleurs.
+    /// Voir `Nomme` : le serveur l'avait déjà sous la main, l'app le jetait.
+    var lastName: String?
     var avatarUrl: String?
     var avatarBase64: String?
     var text: String
@@ -289,13 +302,18 @@ struct FeedItem: Decodable, Identifiable {
     /// Le dernier commentaire, en aperçu.
     var lastComment: FeedComment?
 
-    struct FeedComment: Decodable, Equatable {
+    /// Le dernier commentaire en aperçu : qui, et quoi. `Nomme` parce qu'une ligne
+    /// « Camille Roy : bien joué » nomme quelqu'un exactement comme la carte au-dessus.
+    struct FeedComment: Decodable, Equatable, Nomme {
         var name: String
+        var lastName: String?
         var text: String
+
+        var nomDeFamille: String? { lastName }
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, userId, name, avatarUrl, avatarBase64, text, createdAt
+        case id, userId, name, lastName, avatarUrl, avatarBase64, text, createdAt
         case distanceKm, durationSeconds, avgPace, elevationGainM, isPersonalRecord, contentKey
         case discipline
         case kudos, kudoedByMe, commentsCount
@@ -312,6 +330,9 @@ struct FeedItem: Decodable, Identifiable {
         id = try c.decode(String.self, forKey: .id)
         userId = try c.decode(String.self, forKey: .userId)
         name = try c.decode(String.self, forKey: .name)
+        // Tolérant comme les autres clés arrivées après coup, et pour la même raison : le
+        // serveur et l'app ne se déploient jamais en même temps.
+        lastName = try c.decodeIfPresent(String.self, forKey: .lastName)
         avatarUrl = try c.decodeIfPresent(String.self, forKey: .avatarUrl)
         avatarBase64 = try c.decodeIfPresent(String.self, forKey: .avatarBase64)
         text = try c.decode(String.self, forKey: .text)
@@ -415,18 +436,25 @@ struct FeedItem: Decodable, Identifiable {
         guard let durationSeconds, durationSeconds > 0 else { return nil }
         return TimeFormat.duree(durationSeconds)
     }
+
+    var nomDeFamille: String? { lastName }
 }
 
 /// A real comment on a club-mate's activity — several per activity/user, unlike kudos (one toggle
 /// per user per activity).
-struct CommentItem: Decodable, Identifiable {
+struct CommentItem: Decodable, Identifiable, Nomme {
     var id: String
     var userId: String
     var name: String
+    /// Le nom de famille, pour que cette personne porte ici le nom qu'elle porte ailleurs.
+    /// Voir `Nomme` : le serveur l'avait déjà sous la main, l'app le jetait.
+    var lastName: String?
     var avatarUrl: String?
     var avatarBase64: String?
     var text: String
     var createdAt: Date
+
+    var nomDeFamille: String? { lastName }
 }
 
 /// A real account found via search, or listed in a following/followers/requests list —
@@ -434,7 +462,7 @@ struct CommentItem: Decodable, Identifiable {
 /// nil (not following), "pending" (request sent, awaiting approval — only for a private account),
 /// or "accepted". Only meaningful on search results; the following/followers/incomingRequests
 /// lists are already scoped to one specific status by construction.
-struct PublicUser: Decodable, Identifiable, Hashable {
+struct PublicUser: Decodable, Identifiable, Hashable, Nomme {
     var id: String
     var name: String
     /// Nil unless she's set it — lets a search result show "Charlotte Grudé" instead of just
@@ -451,6 +479,8 @@ struct PublicUser: Decodable, Identifiable, Hashable {
     /// suggestions : une liste de noms sans explication ressemble à un annuaire, et on ne suit
     /// pas un annuaire.
     var reason: String?
+
+    var nomDeFamille: String? { lastName }
 }
 
 /// The caller's own follow graph, independent of any club — see `ClubService.fetchFriendsList`.
@@ -1437,20 +1467,28 @@ struct ClubRace: Decodable, Identifiable {
 /// Juste de quoi dessiner un visage et ouvrir une page. Pas un `PublicUser` : celui-ci porte des
 /// champs — compte privé, relation de suivi — qu'une pile d'avatars n'a aucune raison de
 /// demander au serveur.
-struct ClubRunner: Decodable, Identifiable, Hashable {
+struct ClubRunner: Decodable, Identifiable, Hashable, Nomme {
     var id: String
     var name: String
+    /// Le nom de famille, pour que cette personne porte ici le nom qu'elle porte ailleurs.
+    /// Voir `Nomme` : le serveur l'avait déjà sous la main, l'app le jetait.
+    var lastName: String?
     var avatarUrl: String?
     var avatarBase64: String?
+
+    var nomDeFamille: String? { lastName }
 }
 
 /// Un record du club : une vraie sortie, avec qui l'a courue.
-struct ClubRecord: Decodable, Identifiable {
+struct ClubRecord: Decodable, Identifiable, Nomme {
     /// « distance » | « allure » | « denivele ».
     var genre: String
     var activityId: String
     var userId: String
     var name: String
+    /// Le nom de famille, pour que cette personne porte ici le nom qu'elle porte ailleurs.
+    /// Voir `Nomme` : le serveur l'avait déjà sous la main, l'app le jetait.
+    var lastName: String?
     var avatarUrl: String?
     var avatarBase64: String?
     var createdAt: Date
@@ -1461,6 +1499,8 @@ struct ClubRecord: Decodable, Identifiable {
     /// `avg_pace` est du texte (« 5:38 ») : trié comme tel, « 10:12 » passerait avant « 9:30 ».
     var secPerKm: Double?
     var id: String { genre }
+
+    var nomDeFamille: String? { lastName }
 }
 
 /// LA SORTIE DÉROULÉE.
@@ -1472,7 +1512,7 @@ struct ClubRecord: Decodable, Identifiable {
 /// par une version de l'app qui n'envoyait pas encore ces champs, une séance saisie à la main,
 /// une course sans montre cardio — les trois existent, et l'écran dit « pas mesuré » au lieu
 /// d'afficher un zéro qui passerait pour une mesure.
-struct ActivityDetail: Decodable, Identifiable {
+struct ActivityDetail: Decodable, Identifiable, Nomme {
     var id: String
     var userId: String
     var name: String
@@ -1504,10 +1544,6 @@ struct ActivityDetail: Decodable, Identifiable {
     /// paires lat/lng, et les altitudes dans le même ordre. Les altitudes manquent souvent — une
     /// sortie d'avant ce champ, ou un GPS dont la précision verticale n'était pas digne de foi.
     var route: [RunRecord.RoutePoint]
-    var nomComplet: String {
-        guard let lastName, !lastName.isEmpty else { return name }
-        return "\(name) \(lastName)"
-    }
 
     var localizedText: String {
         PhraseDeSortie.localisee(text: text, contentKey: contentKey, distanceKm: distanceKm)
@@ -1577,6 +1613,8 @@ struct ActivityDetail: Decodable, Identifiable {
             route = []
         }
     }
+
+    var nomDeFamille: String? { lastName }
 }
 
 /// Un message d'une page de course, tel qu'il apparaît dans le mur : il porte le NOM de sa course,

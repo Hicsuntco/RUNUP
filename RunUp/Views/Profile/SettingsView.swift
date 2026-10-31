@@ -336,7 +336,7 @@ struct SettingsView: View {
 
     private func selectMode(isLight: Bool) {
         profile.isLightMode = isLight
-        ThemeStore.shared.isLightMode = isLight
+        ThemeStore.shared.appliquer(isLightMode: isLight)
         appState.publishWidgetSnapshot()
     }
 
@@ -369,14 +369,14 @@ struct SettingsView: View {
 
     private func choisirLHabillage(_ h: Habillage) {
         profile.habillageID = h.rawValue
-        ThemeStore.shared.habillage = h
+        ThemeStore.shared.appliquer(habillage: h)
         Haptics.selection()
         appState.publishWidgetSnapshot()
     }
 
     private func selectAccent(_ theme: AccentTheme) {
         profile.accentThemeID = theme.id
-        ThemeStore.shared.themeID = theme.id
+        ThemeStore.shared.appliquer(themeID: theme.id)
         appState.publishWidgetSnapshot()
     }
 

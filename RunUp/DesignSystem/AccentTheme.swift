@@ -136,16 +136,59 @@ struct AccentTheme: Identifiable, Equatable {
 /// during any view's `body`, however that reference was obtained, so `RUColor.rose` etc. stay
 /// reactive with zero call-site changes. `AppState` mirrors `UserProfile.accentThemeID` (the
 /// persisted source of truth) into this on load; `ProfileView`'s picker updates both together.
+///
+/// # L'APPARENCE EST RELUE AVANT LA PREMIÈRE IMAGE, ET ELLE NE L'ÉTAIT PAS
+///
+/// La source de vérité reste `UserProfile`, en base. Mais ce profil est lu par `AppState.init`,
+/// qui tourne dans le `onAppear` de la racine — c'est-à-dire APRÈS que SwiftUI a dessiné la
+/// première image. Cette classe démarrait donc sur ses valeurs par défaut (sombre, accent rose,
+/// habillage neutre) et recevait les vraies une image plus tard.
+///
+/// Ce qu'on voyait, et qui a été signalé comme « un petit sursaut à l'ouverture » : quiconque
+/// avait changé de thème voyait l'app s'ouvrir en sombre puis basculer en clair ; quiconque
+/// avait changé d'accent voyait tout le rose se changer en sa couleur. Une fois par lancement,
+/// tous les jours.
+///
+/// Les trois valeurs sont donc RECOPIÉES dans `UserDefaults` à chaque changement, et relues
+/// dans `init` — qui s'exécute au premier accès à `shared`, pendant la première évaluation d'un
+/// `body`, donc avant le moindre pixel. `UserDefaults` n'est pas la vérité : c'est un cache
+/// d'amorçage, écrasé par le profil dès qu'il est lu. C'est aussi pourquoi un cache qui se
+/// perdrait ne casse rien — on retomberait simplement sur l'ancien comportement.
 @Observable
 final class ThemeStore {
     static let shared = ThemeStore()
-    var themeID: String = AccentTheme.defaultID
+
+    private(set) var themeID: String
     /// Mirrors `UserProfile.isLightMode` the same way `themeID` mirrors `accentThemeID` — see
     /// `RUColor`'s theme-aware tokens.
-    var isLightMode: Bool = false
+    private(set) var isLightMode: Bool
     /// Miroir de `UserProfile.habillageID`, exactement comme `themeID` et `isLightMode`
     /// au-dessus : les jetons de `RUColor` sont calculés, ils lisent cet objet observé, et
     /// basculer ici redessine l'app entière sans toucher à un seul appelant.
-    var habillage: Habillage = .defaut
-    private init() {}
+    private(set) var habillage: Habillage
+
+    private static let cleTheme = "apparence.accent.v1"
+    private static let cleClair = "apparence.clair.v1"
+    private static let cleHabillage = "apparence.habillage.v1"
+
+    private init() {
+        let d = UserDefaults.standard
+        themeID = d.string(forKey: Self.cleTheme) ?? AccentTheme.defaultID
+        isLightMode = d.bool(forKey: Self.cleClair)
+        habillage = Habillage.depuis(d.string(forKey: Self.cleHabillage))
+    }
+
+    /// Le seul chemin d'écriture, et c'est pour ça que les propriétés sont `private(set)` : une
+    /// affectation directe depuis un écran de réglages aurait changé l'app sans rien écrire, et
+    /// le réglage serait revenu en arrière au lancement suivant. Chaque paramètre absent laisse
+    /// sa valeur inchangée, pour que l'écran d'apparence puisse n'en basculer qu'un.
+    func appliquer(themeID: String? = nil, isLightMode: Bool? = nil, habillage: Habillage? = nil) {
+        if let themeID { self.themeID = themeID }
+        if let isLightMode { self.isLightMode = isLightMode }
+        if let habillage { self.habillage = habillage }
+        let d = UserDefaults.standard
+        d.set(self.themeID, forKey: Self.cleTheme)
+        d.set(self.isLightMode, forKey: Self.cleClair)
+        d.set(self.habillage.rawValue, forKey: Self.cleHabillage)
+    }
 }

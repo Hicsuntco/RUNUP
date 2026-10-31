@@ -131,6 +131,7 @@ enum CaptureSeed {
         try? contexte.save()
 
         let profil = UserProfile(name: "Charlotte")
+        profil.lastName = "Perret"
         contexte.insert(profil)
         // Posé AVANT `applyOnboarding` sans que l'ordre importe : `AppState` recopie ce champ
         // dans `ThemeStore` au moment où il charge le profil, donc bien après.
@@ -224,32 +225,32 @@ enum CaptureSeed {
                     "isOpen": true, "isOwner": false, "city": "Paris 19e",
                     "description": "On se retrouve au bassin de la Villette les mardis et les dimanches. Tous les rythmes, du premier 5 km au marathon." },
           "leaderboard": [
-            { "id": "1", "name": "Charlotte", "xp": 4180, "rank": 1, "isMe": true,
+            { "id": "1", "name": "Charlotte", "lastName": "Perret", "xp": 4180, "rank": 1, "isMe": true,
               "bio": "Je cours le matin, avant que la ville se réveille.", "joinedAt": "\(ilYAJours(214))",
               "activitiesCount": 16, "badgeKeys": ["firstRun", "tenRuns", "streak7", "distance50"] },
-            { "id": "2", "name": "Inès", "xp": 3940, "rank": 2, "isMe": false, "role": "owner",
+            { "id": "2", "name": "Inès", "lastName": "Lambert", "xp": 3940, "rank": 2, "isMe": false, "role": "owner",
               "joinedAt": "\(ilYAJours(301))", "activitiesCount": 14,
               "badgeKeys": ["firstRun", "tenRuns", "earlyRun"] },
-            { "id": "3", "name": "Margaux", "xp": 3610, "rank": 3, "isMe": false, "role": "organiser",
+            { "id": "3", "name": "Margaux", "lastName": "Hubert", "xp": 3610, "rank": 3, "isMe": false, "role": "organiser",
               "joinedAt": "\(ilYAJours(168))", "activitiesCount": 12,
               "badgeKeys": ["firstRun", "tenRuns", "interval3"] },
-            { "id": "4", "name": "Sarah", "xp": 3180, "rank": 4, "isMe": false,
+            { "id": "4", "name": "Sarah", "lastName": "Benali", "xp": 3180, "rank": 4, "isMe": false,
               "joinedAt": "\(ilYAJours(96))", "activitiesCount": 9,
               "badgeKeys": ["firstRun", "weekendWarrior"] },
-            { "id": "5", "name": "Lina", "xp": 2870, "rank": 5, "isMe": false,
+            { "id": "5", "name": "Lina", "lastName": "Diallo", "xp": 2870, "rank": 5, "isMe": false,
               "joinedAt": "\(ilYAJours(41))", "activitiesCount": 6,
               "badgeKeys": ["firstRun"] }
           ],
           "weekly": [
-            { "id": "3", "name": "Margaux", "weekKm": 48.6, "rank": 1, "isMe": false,
+            { "id": "3", "name": "Margaux", "lastName": "Hubert", "weekKm": 48.6, "rank": 1, "isMe": false,
               "targetKm": 52.0, "pctOfTarget": 93 },
-            { "id": "2", "name": "Inès", "weekKm": 41.2, "rank": 2, "isMe": false,
+            { "id": "2", "name": "Inès", "lastName": "Lambert", "weekKm": 41.2, "rank": 2, "isMe": false,
               "targetKm": 45.0, "pctOfTarget": 92 },
-            { "id": "1", "name": "Charlotte", "weekKm": 33.8, "rank": 3, "isMe": true,
+            { "id": "1", "name": "Charlotte", "lastName": "Perret", "weekKm": 33.8, "rank": 3, "isMe": true,
               "targetKm": 32.0, "pctOfTarget": 106 },
-            { "id": "4", "name": "Sarah", "weekKm": 22.4, "rank": 4, "isMe": false,
+            { "id": "4", "name": "Sarah", "lastName": "Benali", "weekKm": 22.4, "rank": 4, "isMe": false,
               "targetKm": 30.0, "pctOfTarget": 75 },
-            { "id": "5", "name": "Lina", "weekKm": 12.1, "rank": 5, "isMe": false }
+            { "id": "5", "name": "Lina", "lastName": "Diallo", "weekKm": 12.1, "rank": 5, "isMe": false }
           ],
           "weekStats": { "totalKm": 158.1, "activeMembers": 5 },
           "challenge": {
@@ -288,12 +289,12 @@ enum CaptureSeed {
         // ci-dessous l'a dit tout de suite, au lieu de livrer une sixième image fausse.
         let fil = """
         [
-          { "id": "a", "userId": "2", "name": "Inès", "text": "a couru 12,4 km · Sortie longue",
+          { "id": "a", "userId": "2", "name": "Inès", "lastName": "Lambert", "text": "a couru 12,4 km · Sortie longue",
             "createdAt": "\(ilYA(3))", "distanceKm": 12.4, "durationSeconds": 4190,
             "avgPace": "5:38", "elevationGainM": 86, "isPersonalRecord": false,
             "contentKey": "long_run", "kudos": 7, "kudoedByMe": true, "commentsCount": 2,
-            "kudosNames": ["Charlotte", "Margaux", "Sarah"],
-            "lastComment": { "name": "Charlotte", "text": "\(commentaire())" },
+            "kudosNames": ["Charlotte Perret", "Margaux Hubert", "Sarah Benali"],
+            "lastComment": { "name": "Charlotte", "lastName": "Perret", "text": "\(commentaire())" },
             "routePreview": [
               [48.88120, 2.36900], [48.88433, 2.37412], [48.88739, 2.37922],
               [48.89030, 2.38427], [48.89303, 2.38924], [48.89557, 2.39413],
@@ -306,16 +307,16 @@ enum CaptureSeed {
               [48.89050, 2.39992], [48.88721, 2.39393], [48.88390, 2.38789],
               [48.88054, 2.38178], [48.87707, 2.37563]
             ] },
-          { "id": "b", "userId": "3", "name": "Margaux", "text": "a couru 6,0 km · Fractionné",
+          { "id": "b", "userId": "3", "name": "Margaux", "lastName": "Hubert", "text": "a couru 6,0 km · Fractionné",
             "createdAt": "\(ilYA(9))", "distanceKm": 6.0, "durationSeconds": 1764,
             "avgPace": "4:54", "isPersonalRecord": true,
             "contentKey": "vo2max_intervals", "kudos": 11, "kudoedByMe": false, "commentsCount": 4,
-            "kudosNames": ["Inès", "Lina", "Charlotte"] },
-          { "id": "c", "userId": "5", "name": "Lina", "text": "a couru 8,2 km · Tempo",
+            "kudosNames": ["Inès Lambert", "Lina Diallo", "Charlotte Perret"] },
+          { "id": "c", "userId": "5", "name": "Lina", "lastName": "Diallo", "text": "a couru 8,2 km · Tempo",
             "createdAt": "\(ilYA(22))", "distanceKm": 8.2, "durationSeconds": 2583,
             "avgPace": "5:15", "elevationGainM": 42, "isPersonalRecord": false,
             "contentKey": "tempo_run", "kudos": 5, "kudoedByMe": false, "commentsCount": 1,
-            "kudosNames": ["Charlotte"] }
+            "kudosNames": ["Charlotte Perret"] }
         ]
         """
 
@@ -344,12 +345,12 @@ enum CaptureSeed {
           "isPrivate": false,
           "following": [
             { "id": "2", "name": "Inès", "lastName": "Lambert", "username": "ines", "isPrivate": false },
-            { "id": "3", "name": "Margaux", "username": "margaux", "isPrivate": false },
-            { "id": "5", "name": "Lina", "isPrivate": false }
+            { "id": "3", "name": "Margaux", "lastName": "Hubert", "username": "margaux", "isPrivate": false },
+            { "id": "5", "name": "Lina", "lastName": "Diallo", "isPrivate": false }
           ],
           "followers": [
             { "id": "2", "name": "Inès", "lastName": "Lambert", "username": "ines", "isPrivate": false },
-            { "id": "4", "name": "Sarah", "isPrivate": false }
+            { "id": "4", "name": "Sarah", "lastName": "Benali", "isPrivate": false }
           ],
           "incomingRequests": [
             { "id": "6", "name": "Camille", "lastName": "Roux", "isPrivate": false }
@@ -402,7 +403,7 @@ enum CaptureSeed {
                   "raceDate": "2027-04-04", "discipline": "run", "kind": "partner",
                   "text": "Je vise 3h30, sorties longues le dimanche matin au bois. Quelqu'un sur ce rythme ?",
                   "closed": false, "kudos": 4, "kudoedByMe": true, "createdAt": "\(ilYA(5))",
-                  "author": { "id": "3", "name": "Margaux", "isPrivate": false }
+                  "author": { "id": "3", "name": "Margaux", "lastName": "Hubert", "isPrivate": false }
                 }
               ]
             }
@@ -437,7 +438,7 @@ enum CaptureSeed {
                   "isPrivate": false, "followStatus": "accepted", "targetChrono": "3:48",
                   "targetPaceSecPerKm": 324, "lookingForPartner": true,
                   "km4Weeks": 146.0, "runs4Weeks": 14 },
-                { "id": "5", "name": "Lina", "isPrivate": false, "targetChrono": "sub-4",
+                { "id": "5", "name": "Lina", "lastName": "Diallo", "isPrivate": false, "targetChrono": "sub-4",
                   "lookingForPartner": false }
               ],
               "posts": [
@@ -445,17 +446,17 @@ enum CaptureSeed {
                   "text": "Je vise 3h30, sorties longues le dimanche matin au bois. Quelqu'un sur ce rythme ?",
                   "closed": false, "isMine": false, "kudos": 4, "kudoedByMe": true,
                   "createdAt": "\(ilYA(5))",
-                  "author": { "id": "3", "name": "Margaux", "isPrivate": false } },
+                  "author": { "id": "3", "name": "Margaux", "lastName": "Hubert", "isPrivate": false } },
                 { "id": "m2", "kind": "bib_offer",
                   "text": "Je cède mon dossard, blessure au genou. Distance marathon.",
                   "closed": false, "isMine": false, "kudos": 1, "kudoedByMe": false,
                   "createdAt": "\(ilYA(26))",
-                  "author": { "id": "5", "name": "Lina", "isPrivate": false } },
+                  "author": { "id": "5", "name": "Lina", "lastName": "Diallo", "isPrivate": false } },
                 { "id": "m3", "kind": "message",
                   "text": "Le ravito du 30e est à droite, pas à gauche comme l'an dernier.",
                   "closed": false, "isMine": false, "kudos": 11, "kudoedByMe": false,
                   "createdAt": "\(ilYA(52))",
-                  "author": { "id": "2", "name": "Inès", "isPrivate": false } }
+                  "author": { "id": "2", "name": "Inès", "lastName": "Lambert", "isPrivate": false } }
               ]
             }
             """
@@ -520,9 +521,9 @@ enum CaptureSeed {
                             "raceDate": "2027-04-04", "distanceKm": 42.195, "discipline": "run" },
                   "members": 3,
                   "runners": [
-                    { "id": "1", "name": "Charlotte" },
-                    { "id": "2", "name": "Inès" },
-                    { "id": "3", "name": "Margaux" }
+                    { "id": "1", "name": "Charlotte", "lastName": "Perret" },
+                    { "id": "2", "name": "Inès", "lastName": "Lambert" },
+                    { "id": "3", "name": "Margaux", "lastName": "Hubert" }
                   ]
                 },
                 {
@@ -530,19 +531,19 @@ enum CaptureSeed {
                             "raceDate": "2026-10-11", "distanceKm": 20.0, "discipline": "run" },
                   "members": 2,
                   "runners": [
-                    { "id": "4", "name": "Sarah" },
-                    { "id": "5", "name": "Lina" }
+                    { "id": "4", "name": "Sarah", "lastName": "Benali" },
+                    { "id": "5", "name": "Lina", "lastName": "Diallo" }
                   ]
                 }
               ],
               "records": [
-                { "genre": "distance", "activityId": "a", "userId": "2", "name": "Inès",
+                { "genre": "distance", "activityId": "a", "userId": "2", "name": "Inès", "lastName": "Lambert",
                   "createdAt": "\(ilYA(3))", "distanceKm": 12.4, "durationSeconds": 4190,
                   "elevationGainM": 86, "secPerKm": 337.9 },
-                { "genre": "allure", "activityId": "b", "userId": "3", "name": "Margaux",
+                { "genre": "allure", "activityId": "b", "userId": "3", "name": "Margaux", "lastName": "Hubert",
                   "createdAt": "\(ilYA(9))", "distanceKm": 6.0, "durationSeconds": 1764,
                   "secPerKm": 294.0 },
-                { "genre": "denivele", "activityId": "c", "userId": "5", "name": "Lina",
+                { "genre": "denivele", "activityId": "c", "userId": "5", "name": "Lina", "lastName": "Diallo",
                   "createdAt": "\(ilYA(22))", "distanceKm": 8.2, "durationSeconds": 2583,
                   "elevationGainM": 42, "secPerKm": 315.0 }
               ],
@@ -568,15 +569,15 @@ enum CaptureSeed {
                 { "id": "mc1", "parentId": null,
                   "text": "La berge est fermée jusqu'au 12 entre les deux ponts. On passe par la rue de Crimée en attendant.",
                   "createdAt": "\(ilYA(6))", "kudos": 5, "kudoedByMe": false, "isMine": false,
-                  "author": { "id": "3", "name": "Margaux", "isPrivate": false } },
+                  "author": { "id": "3", "name": "Margaux", "lastName": "Hubert", "isPrivate": false } },
                 { "id": "mc2", "parentId": "mc1",
                   "text": "Merci, j'allais y aller ce soir !",
                   "createdAt": "\(ilYA(5))", "kudos": 1, "kudoedByMe": true, "isMine": false,
-                  "author": { "id": "4", "name": "Sarah", "isPrivate": false } },
+                  "author": { "id": "4", "name": "Sarah", "lastName": "Benali", "isPrivate": false } },
                 { "id": "mc3", "parentId": null,
                   "text": "Bienvenue à Lina qui nous rejoint cette semaine 🎉",
                   "createdAt": "\(ilYA(30))", "kudos": 9, "kudoedByMe": true, "isMine": false,
-                  "author": { "id": "2", "name": "Inès", "isPrivate": false } }
+                  "author": { "id": "2", "name": "Inès", "lastName": "Lambert", "isPrivate": false } }
               ]
             }
             """

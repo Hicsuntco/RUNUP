@@ -199,7 +199,7 @@ struct RouteDetailSheet: View {
 
                         VStack(alignment: .leading, spacing: 2) {
                             HStack(spacing: 6) {
-                                Text(commentaire.name)
+                                Text(commentaire.nomComplet)
                                     .font(RUFont.sans(.body, weight: .semibold))
                                     .foregroundColor(RUColor.textPrimary)
                                 Text(commentaire.createdAt.relativeDescription)
@@ -217,7 +217,7 @@ struct RouteDetailSheet: View {
                         Button("Signaler ce commentaire") {
                             cibleSignalee = ReportTarget(targetType: "route_comment",
                                                          targetId: commentaire.id,
-                                                         displayName: commentaire.name)
+                                                         displayName: commentaire.nomComplet)
                             reportReason = ""
                             reportPresented = true
                         }

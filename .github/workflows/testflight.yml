@@ -327,6 +327,11 @@ jobs:
       - name: Vérifier que les teintes d'en-tête nomment quelque chose
         run: python3 ci_scripts/check_teintes.py
 
+      # Le nom de quelqu'un s'écrit à un seul endroit : trois façons de le réécrire à côté, et
+      # c'est par là que « Charlotte » et « Charlotte Grudé » ont fini par coexister.
+      - name: Vérifier que le nom de quelqu'un ne s'écrit qu'à un endroit
+        run: python3 ci_scripts/check_nom.py
+
       - name: Vérifier que le compteur du Club ne compte que des gestes délibérés
         run: python3 ci_scripts/check_club_metrics.py
 

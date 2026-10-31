@@ -184,7 +184,7 @@ struct ActivityFeedRow: View {
                 if let last = item.lastComment {
                     // Une carte qui affiche « 💬 2 » oblige à ouvrir une feuille pour savoir si
                     // ces deux commentaires valent le détour. Celle-ci répond sur place.
-                    (Text(last.name).font(RUFont.sans(.small, weight: .bold))
+                    (Text(last.nomComplet).font(RUFont.sans(.small, weight: .bold))
                      + Text(verbatim: "  ")
                      + Text(last.text).font(RUFont.sans(.small)))
                         .foregroundColor(RUColor.text2)
@@ -424,7 +424,7 @@ struct ActivityFeedRow: View {
                            urlString: item.avatarUrl, base64DataURI: item.avatarBase64,
                            initial: String(item.name.prefix(1)), size: 32, seed: isMine ? nil : item.userId)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(item.name)
+                    Text(item.nomComplet)
                         .font(RUFont.sans(.label, weight: .bold))
                         .foregroundColor(onDark ? .white : RUColor.textPrimary)
                         .lineLimit(1).minimumScaleFactor(0.8)

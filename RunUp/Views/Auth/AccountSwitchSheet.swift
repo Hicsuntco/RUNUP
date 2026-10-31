@@ -26,7 +26,7 @@ struct AccountSwitchSheet: View {
 
             // Le nom du profil local, pas celui du compte qui arrive : c'est lui qui est à l'écran
             // en ce moment, et c'est de lui qu'on parle.
-            Text("Ce téléphone contient le profil de \(appState.profile.name) — son programme, son historique et ses réglages. Tu viens de te connecter avec un autre compte.")
+            Text("Ce téléphone contient le profil de \(appState.profile.nomComplet) — son programme, son historique et ses réglages. Tu viens de te connecter avec un autre compte.")
                 .font(RUFont.sans(.body))
                 .foregroundColor(RUColor.text2)
                 .lineSpacing(3)
@@ -61,7 +61,7 @@ struct AccountSwitchSheet: View {
         // celle-ci efface les trois à la fois. Le bouton est en plus rose plein, celui qu'on
         // tape par réflexe partout ailleurs dans l'app.
         .confirmationDialog(
-            Text("Effacer le programme et l'historique de \(appState.profile.name) ?"),
+            Text("Effacer le programme et l'historique de \(appState.profile.nomComplet) ?"),
             isPresented: $confirming, titleVisibility: .visible
         ) {
             Button("Tout effacer", role: .destructive) { appState.startFreshForNewAccount() }

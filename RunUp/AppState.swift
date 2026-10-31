@@ -244,10 +244,10 @@ final class AppState {
         // Le genre, miroité comme le thème et pour la même raison : les phrases qui s'accordent
         // vivent dans des vues, des services et des modèles, et faire descendre le profil
         // jusqu'à chacune n'aurait servi qu'à ça. Voir `Accord`.
-        AccordStore.shared.genre = Genre.depuis(sexe: self.profile.sex)
-        ThemeStore.shared.themeID = self.profile.accentThemeID
-        ThemeStore.shared.isLightMode = self.profile.isLightMode
-        ThemeStore.shared.habillage = Habillage.depuis(self.profile.habillageID)
+        AccordStore.shared.appliquer(Genre.depuis(sexe: self.profile.sex))
+        ThemeStore.shared.appliquer(themeID: self.profile.accentThemeID,
+                                    isLightMode: self.profile.isLightMode,
+                                    habillage: Habillage.depuis(self.profile.habillageID))
         NotificationService.shared.rescheduleDailyReminder(for: self.profile)
         NotificationService.shared.rescheduleInactivityReminder(for: self.profile)
         NotificationService.shared.scheduleWeeklyRecapReminder(for: self.profile)
@@ -817,10 +817,10 @@ final class AppState {
             // ces trois services ont en mémoire depuis l'ouverture de l'app.
             AdaptivePlanEngine.refreshProgramForCurrentDate(profile)
             rafraichirLaCourseLibre()
-            AccordStore.shared.genre = Genre.depuis(sexe: profile.sex)
-            ThemeStore.shared.themeID = profile.accentThemeID
-            ThemeStore.shared.isLightMode = profile.isLightMode
-            ThemeStore.shared.habillage = Habillage.depuis(profile.habillageID)
+            AccordStore.shared.appliquer(Genre.depuis(sexe: profile.sex))
+            ThemeStore.shared.appliquer(themeID: profile.accentThemeID,
+                                        isLightMode: profile.isLightMode,
+                                        habillage: Habillage.depuis(profile.habillageID))
             NotificationService.shared.rescheduleDailyReminder(for: profile)
             screen = .home
             return .faite(courses: compte.courses, messages: compte.messages,

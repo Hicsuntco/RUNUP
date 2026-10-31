@@ -183,7 +183,7 @@ struct WallView: View {
                                     onComment: { commentsFor = item },
                                     onReport: {
                                         reportTarget = ReportTarget(targetType: "activity", targetId: item.id,
-                                                                    displayName: item.name)
+                                                                    displayName: item.nomComplet)
                                     },
                                     onBlock: { pendingBlock = (item.userId, item.name) },
                                     onDelete: { Task { await supprimer(item) } },
@@ -251,7 +251,7 @@ struct WallView: View {
                 onCommentPosted: { Task { await charger() } },
                 onReport: { commentaire in
                     reportTarget = ReportTarget(targetType: "comment", targetId: commentaire.id,
-                                                displayName: commentaire.name)
+                                                displayName: commentaire.nomComplet)
                 },
                 onBlock: { commentaire in pendingBlock = (commentaire.userId, commentaire.name) }
             )
@@ -375,7 +375,7 @@ struct WallView: View {
                         .frame(width: 34, height: 34)
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(post.author.name)
+                            Text(post.author.nomComplet)
                                 .font(RUFont.sans(.label, weight: .bold))
                                 .foregroundColor(RUColor.textPrimary)
                                 .lineLimit(1)

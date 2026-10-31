@@ -79,7 +79,7 @@ enum AdaptivePlanEngine {
         // toute première session après l'inscription s'adresserait au féminin à quelqu'un qui
         // vient de répondre « Homme », et il faudrait relancer l'app pour que ça se corrige.
         // C'est exactement le moment où l'on regarde si l'app a écouté.
-        AccordStore.shared.genre = Genre.depuis(sexe: result.sex)
+        AccordStore.shared.appliquer(Genre.depuis(sexe: result.sex))
         profile.tempsSemaineMin = result.tempsSemaineMin
         profile.tempsWeekEndMin = result.tempsWeekEndMin
         profile.volumeActuel = result.volumeActuel

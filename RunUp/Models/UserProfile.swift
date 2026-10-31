@@ -653,3 +653,15 @@ final class UserProfile {
         }
     }
 }
+
+/// MON PROPRE NOM S'ÉCRIT COMME CELUI DES AUTRES.
+///
+/// L'en-tête du Profil affichait le prénom seul là où la page de n'importe qui d'autre affiche
+/// prénom et nom. On lisait donc son nom complet partout dans l'app SAUF chez soi.
+///
+/// `lastName` est ici une chaîne VIDE quand il n'y en a pas, et non un optionnel — c'est une
+/// contrainte de SwiftData, voir le commentaire de la propriété. Le protocole, lui, parle en
+/// optionnel : la traduction tient en une ligne, et elle est faite une fois.
+extension UserProfile: Nomme {
+    var nomDeFamille: String? { lastName.isEmpty ? nil : lastName }
+}

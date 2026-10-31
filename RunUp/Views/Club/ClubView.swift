@@ -224,7 +224,7 @@ struct ClubView: View {
                     commentsActivity = nil
                     Task {
                         try? await Task.sleep(for: .milliseconds(400))
-                        reportTarget = ReportTarget(targetType: "comment", targetId: comment.id, displayName: String(localized: "le commentaire de \(comment.name)"))
+                        reportTarget = ReportTarget(targetType: "comment", targetId: comment.id, displayName: String(localized: "le commentaire de \(comment.nomComplet)"))
                     }
                 },
                 onBlock: { comment in
@@ -399,7 +399,7 @@ struct ClubView: View {
                         showManagement = false
                         Task {
                             try? await Task.sleep(for: .milliseconds(400))
-                            reportTarget = ReportTarget(targetType: "user", targetId: member.id, displayName: member.name)
+                            reportTarget = ReportTarget(targetType: "user", targetId: member.id, displayName: member.nomComplet)
                         }
                     },
                     onBlock: { member in
@@ -1164,7 +1164,7 @@ struct ClubView: View {
                 }
                 Spacer(minLength: 8)
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text(record.name)
+                    Text(record.nomComplet)
                         .font(RUFont.sans(.body, weight: .semibold))
                         .foregroundColor(RUColor.text2)
                         .lineLimit(1)
@@ -1779,7 +1779,7 @@ struct ClubView: View {
         HStack(spacing: 12) {
             rang(displayRank, estMoi: entry.isMe)
             AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28, seed: entry.isMe ? nil : entry.id)
-            Text(entry.isMe ? String(localized: "\(entry.name) · toi") : entry.name)
+            Text(entry.isMe ? String(localized: "\(entry.nomComplet) · toi") : entry.nomComplet)
                 .font(RUFont.sans(.label, weight: entry.isMe ? .semibold : .regular))
                 .foregroundColor(RUColor.textPrimary)
                 .lineLimit(1)
@@ -1851,7 +1851,7 @@ struct ClubView: View {
         HStack(spacing: 12) {
             rang(entry.rank, estMoi: entry.isMe)
             AvatarView(urlString: entry.avatarUrl, base64DataURI: entry.avatarBase64, initial: String(entry.name.prefix(1)), size: 28, seed: entry.isMe ? nil : entry.id)
-            Text(entry.isMe ? String(localized: "\(entry.name) · toi") : entry.name)
+            Text(entry.isMe ? String(localized: "\(entry.nomComplet) · toi") : entry.nomComplet)
                 .font(RUFont.sans(.label, weight: entry.isMe ? .semibold : .regular))
                 .foregroundColor(RUColor.textPrimary)
                 .lineLimit(1)
@@ -1872,7 +1872,7 @@ struct ClubView: View {
         .contextMenu {
             if !entry.isMe {
                 Button("Signaler \(entry.name)") {
-                    reportTarget = ReportTarget(targetType: "user", targetId: entry.id, displayName: entry.name)
+                    reportTarget = ReportTarget(targetType: "user", targetId: entry.id, displayName: entry.nomComplet)
                 }
                 Button("Bloquer \(entry.name)", role: .destructive) {
                     pendingBlock = (entry.id, entry.name)
@@ -1926,7 +1926,7 @@ struct ClubView: View {
                         onKudos: { Task { await toggleKudos(item) } },
                         onComment: { commentsActivity = item },
                         onReport: {
-                            reportTarget = ReportTarget(targetType: "activity", targetId: item.id, displayName: String(localized: "l'activité de \(item.name)"))
+                            reportTarget = ReportTarget(targetType: "activity", targetId: item.id, displayName: String(localized: "l'activité de \(item.nomComplet)"))
                         },
                         onBlock: { pendingBlock = (item.userId, item.name) },
                         onDelete: { pendingDeleteActivity = item },
@@ -1981,7 +1981,7 @@ struct ClubView: View {
         VStack(alignment: .leading, spacing: 8) {
             if let reponseA {
                 HStack(spacing: 6) {
-                    Text("Réponse à \(reponseA.author.name)")
+                    Text("Réponse à \(reponseA.author.nomComplet)")
                         .font(RUFont.sans(.small, weight: .semibold))
                         .foregroundColor(RUColor.text2)
                     Button(action: { self.reponseA = nil }) {
@@ -2103,7 +2103,7 @@ struct ClubView: View {
                                    initial: String(message.author.name.prefix(1)), size: 32,
                                    seed: message.isMine ? nil : message.author.id)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(message.author.name)
+                            Text(message.author.nomComplet)
                                 .font(RUFont.sans(.label, weight: .bold))
                                 .foregroundColor(RUColor.textPrimary)
                             Text(message.createdAt.relativeDescription)
@@ -2124,7 +2124,7 @@ struct ClubView: View {
                     } else {
                         Button("Signaler ce message") {
                             reportTarget = ReportTarget(targetType: "club_post", targetId: message.id,
-                                                        displayName: message.author.name)
+                                                        displayName: message.author.nomComplet)
                         }
                         Button("Bloquer \(message.author.name)", role: .destructive) {
                             pendingBlock = (message.author.id, message.author.name)

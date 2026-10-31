@@ -498,17 +498,23 @@ def clean_status_bar(shot: Image.Image) -> Image.Image:
     return shot
 
 
-def _accroche(canvas: Image.Image, caption, rang: int, total: int) -> None:
-    """Le numéro, le titre et le sous-titre, calés à gauche sur la même marge."""
+def _accroche(canvas: Image.Image, caption, rang: int, total: int, numero: bool = True) -> None:
+    """Le numéro, le titre et le sous-titre, calés à gauche sur la même marge.
+
+    `numero` est faux pour l'aperçu vidéo : « 03 / 07 » dit une chose vraie d'une fiche qu'on fait
+    défiler — ces images sont une suite, on peut revenir en arrière — et une chose fausse d'un
+    film, qu'on subit dans l'ordre et sans compteur.
+    """
     titre, sous = (caption, "") if isinstance(caption, str) else (caption[0], caption[1])
     draw = ImageDraw.Draw(canvas)
 
     # « 03 / 06 ». Une numérotation ne se met pas pour décorer : celle-ci dit une chose vraie —
     # ces six images sont une suite, et se lisent dans l'ordre. En chasse fixe, comme tous les
     # chiffres de l'app.
-    rang_font = ImageFont.truetype(str(FONTS / "DMMono-Medium.ttf"), EYEBROW_TAILLE)
-    tracked(draw, (MARGE, TITRE_HAUT - 62), f"{rang:02d} / {total:02d}", rang_font,
-            ENCRE + (105,), EYEBROW_CHASSE)
+    if numero:
+        rang_font = ImageFont.truetype(str(FONTS / "DMMono-Medium.ttf"), EYEBROW_TAILLE)
+        tracked(draw, (MARGE, TITRE_HAUT - 62), f"{rang:02d} / {total:02d}", rang_font,
+                ENCRE + (105,), EYEBROW_CHASSE)
 
     # LE BLOC DE TEXTE A UNE HAUTEUR FIXE, et le titre s'y aligne par le BAS.
     #

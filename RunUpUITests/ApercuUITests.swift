@@ -98,13 +98,28 @@ final class ApercuUITests: XCTestCase {
         // Le test dit donc l'heure qu'il est au moment où l'app paraît. Le workflow connaît
         // celle où l'enregistrement a commencé ; la soustraction donne exactement ce qu'il faut
         // couper.
-        ecrire("\(Date().timeIntervalSince1970)", sous: "debut.txt")
+        depart = Date().timeIntervalSince1970
+        ecrire("\(depart)", sous: "debut.txt")
 
-        plan(app, onglet: nil, pose: 1.6, defilements: 1)        // l'accueil
-        plan(app, onglet: .coach, pose: 1.8, defilements: 1)     // le coach
-        plan(app, onglet: .stats, pose: 1.6, defilements: 1)     // les stats
-        plan(app, onglet: .profil, pose: 1.6, defilements: 1)    // le profil
-        plan(app, onglet: .prog, pose: 2.0, defilements: 0)      // retour à l'accueil
+        plan(app, "accueil", onglet: nil, pose: 1.6, defilements: 1)
+        plan(app, "coach", onglet: .coach, pose: 1.8, defilements: 1)
+        plan(app, "stats", onglet: .stats, pose: 1.6, defilements: 1)
+        plan(app, "profil", onglet: .profil, pose: 1.6, defilements: 1)
+        plan(app, "retour", onglet: .prog, pose: 2.0, defilements: 0)
+
+        // LE DÉCOUPAGE VIENT D'ICI, parce que c'est ici qu'on le connaît.
+        //
+        // Le montage a besoin de savoir où commence et où finit chaque plan. Les deviner depuis
+        // les durées écrites plus haut serait faux : un glissement lent dure ce qu'il dure, une
+        // transition d'onglet aussi, et les deux varient avec la charge de la machine — le
+        // premier essai visait vingt-six secondes et en a duré trente-six.
+        //
+        // Le test relève donc l'heure à chaque bascule, et rend des décalages depuis le début de
+        // la prise. `ci_scripts/montage.py` y accroche les titres.
+        let json = "[" + bornes.map {
+            "{\"nom\":\"\($0.nom)\",\"debut\":\($0.debut - depart),\"fin\":\($0.fin - depart)}"
+        }.joined(separator: ",") + "]"
+        ecrire(json, sous: "temps.json")
 
         // L'HEURE DE LA FIN, pour que la vidéo s'arrête sur l'accueil.
         //
@@ -116,14 +131,22 @@ final class ApercuUITests: XCTestCase {
         ecrire("\(Date().timeIntervalSince1970)", sous: "fin.txt")
     }
 
+    private var depart: TimeInterval = 0
+    private var bornes: [(nom: String, debut: TimeInterval, fin: TimeInterval)] = []
+
     /// Un plan : on y va, on laisse voir, on défile une fois, on laisse voir encore.
-    private func plan(_ app: XCUIApplication, onglet: Onglet?, pose: TimeInterval, defilements: Int) {
+    ///
+    /// La bascule d'onglet est HORS du plan : elle appartient à la coupe, pas à l'image. Le plan
+    /// commence quand l'écran est en place, ce qui évite au montage de garder une transition.
+    private func plan(_ app: XCUIApplication, _ nom: String, onglet: Onglet?,
+                      pose: TimeInterval, defilements: Int) {
         if let onglet {
             app.coordinate(withNormalizedOffset: CGVector(dx: onglet.rawValue, dy: Self.barre)).tap()
             // Les transitions d'onglet de `RootTabView` durent moins d'une demi-seconde ; on
             // laisse une marge pour que le plan ne commence pas pendant le fondu.
             Thread.sleep(forTimeInterval: 0.6)
         }
+        let debut = Date().timeIntervalSince1970
         Thread.sleep(forTimeInterval: pose)
         for _ in 0..<defilements {
             // Un glissement LENT, et c'est tout l'écart avec les captures. Là-bas on défile pour
@@ -135,6 +158,7 @@ final class ApercuUITests: XCTestCase {
                          withVelocity: .slow, thenHoldForDuration: 0.1)
             Thread.sleep(forTimeInterval: 1.2)
         }
+        bornes.append((nom, debut, Date().timeIntervalSince1970))
     }
 
     private func ecrire(_ texte: String, sous nom: String) {

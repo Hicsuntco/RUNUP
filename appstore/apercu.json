@@ -1,0 +1,104 @@
+{
+  "fr-FR": {
+    "ouverture": {
+      "mot": "RUNUP",
+      "sous": "Course · Trail · Triathlon",
+      "duree": 1.8
+    },
+    "fin": {
+      "mot": "RUNUP",
+      "sous": "Sur l'App Store",
+      "duree": 1.6
+    },
+    "plans": {
+      "accueil": [
+        "Ta journée, en un écran",
+        "Ta séance du jour, ta forme, ta dernière sortie."
+      ],
+      "coach": [
+        "Un coach qui t'a lue",
+        "Il répond sur tes allures, pas en généralités."
+      ],
+      "stats": [
+        "Tes vrais records",
+        "Mesurés sur tes sorties, pas sur des moyennes."
+      ],
+      "profil": [
+        "Ce que tu construis",
+        "Tes badges, ton club, tes itinéraires."
+      ],
+      "retour": [
+        "Et demain, ça recommence",
+        "Le plan se recalcule sur ce que tu as couru."
+      ]
+    }
+  },
+  "en-US": {
+    "ouverture": {
+      "mot": "RUNUP",
+      "sous": "Road · Trail · Triathlon",
+      "duree": 1.8
+    },
+    "fin": {
+      "mot": "RUNUP",
+      "sous": "On the App Store",
+      "duree": 1.6
+    },
+    "plans": {
+      "accueil": [
+        "Your day, on one screen",
+        "Today's session, your form, your last run."
+      ],
+      "coach": [
+        "A coach who read you",
+        "It answers on your paces, not in generalities."
+      ],
+      "stats": [
+        "Your real records",
+        "Measured on your runs, not on averages."
+      ],
+      "profil": [
+        "What you're building",
+        "Your badges, your club, your routes."
+      ],
+      "retour": [
+        "And tomorrow, again",
+        "The plan recalculates on what you ran."
+      ]
+    }
+  },
+  "es-ES": {
+    "ouverture": {
+      "mot": "RUNUP",
+      "sous": "Ruta · Trail · Triatlón",
+      "duree": 1.8
+    },
+    "fin": {
+      "mot": "RUNUP",
+      "sous": "En el App Store",
+      "duree": 1.6
+    },
+    "plans": {
+      "accueil": [
+        "Tu día, en una pantalla",
+        "La sesión de hoy, tu forma, tu última carrera."
+      ],
+      "coach": [
+        "Un coach que te lee",
+        "Responde sobre tus ritmos, no en general."
+      ],
+      "stats": [
+        "Tus récords reales",
+        "Medidos en tus carreras, no en medias."
+      ],
+      "profil": [
+        "Lo que construyes",
+        "Tus insignias, tu club, tus rutas."
+      ],
+      "retour": [
+        "Y mañana, otra vez",
+        "El plan se recalcula según lo que corriste."
+      ]
+    }
+  }
+}

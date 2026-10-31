@@ -75,6 +75,8 @@ on:
       - "RunUpUITests/**"
       - "ci_scripts/screenshots.py"
       - "ci_scripts/apercu.py"
+      - "ci_scripts/montage.py"
+      - "appstore/apercu.json"
       # Tout ce qui se juge à l'œil et qu'aucun script ne sait relire.
       - "RunUp/Views/**"
       - "RunUp/DesignSystem/**"
@@ -383,18 +385,29 @@ jobs:
             # (démontage du test). Sans ces deux marques, le premier essai a rendu trente
             # secondes pile — le plafond d'Apple, pas une fin : le dernier plan était hors champ
             # et la vidéo s'achevait sur ce qui traînait derrière.
+            # LE DÉCALAGE ENTRE LA CAMÉRA ET LA PRISE. La première tourne pendant l'installation
+            # et le lancement de l'app ; la seconde commence quand l'app est à l'écran, et le
+            # test écrit l'heure qu'il est à ce moment-là. Les temps du découpage comptent depuis
+            # là : sans ce décalage, le montage irait chercher ses plans dans l'écran d'accueil
+            # du simulateur.
             lance=$(cat "$dossier/debut.txt")
-            fini=$(cat "$dossier/fin.txt")
-            debut=$(python3 -c "print(max(0.0, $lance - $depart - 0.4))")
-            duree=$(python3 -c "print(round($fini - $lance + 0.6, 2))")
-            echo "→ prise : de $debut s, pendant $duree s"
+            decalage=$(python3 -c "print(max(0.0, $lance - $depart))")
+            bandeau=$(python3 -c "import json,sys; print(json.load(open('appstore/captions.json'))[sys.argv[1]]['bandeau'])" "$langue")
+            echo "→ prise à $decalage s après le début de l'enregistrement"
 
-            # Le complément est à la couleur du fond CLAIR : l'app est filmée en thème clair pour
-            # s'accorder à la fiche, et six pixels d'encre sombre se verraient sur de l'os.
-            python3 ci_scripts/apercu.py \
+            # LE MONTAGE, ET PLUS LA CAPTATION. `apercu.py` conformait l'enregistrement au format
+            # d'Apple et s'arrêtait là : on envoyait un film de quelqu'un qui tapote des onglets.
+            # `montage.py` en fait la fiche animée — même fond, même châssis, même police, mêmes
+            # filets, même ligne courante — et coupe plan par plan sur le découpage que le test
+            # vient de relever.
+            "$RUNNER_TEMP/venv/bin/python" ci_scripts/montage.py \
               --entree "$dossier/brut.mov" \
               --sortie "$PWD/appstore/apercu/out/$langue.mp4" \
-              --debut "$debut" --duree "$duree" --fond 0xF4F3F8
+              --temps "$dossier/temps.json" \
+              --textes appstore/apercu.json \
+              --langue "$langue" \
+              --bandeau "$bandeau" \
+              --decalage "$decalage"
           done
           ls -la appstore/apercu/out
 

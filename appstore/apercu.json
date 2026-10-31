@@ -3,25 +3,37 @@
     "ouverture": {
       "mot": "RUNUP",
       "sous": "Course · Trail · Triathlon",
-      "duree": 1.8
+      "duree": 1.6
     },
     "fin": {
       "mot": "RUNUP",
       "sous": "Sur l'App Store",
-      "duree": 1.6
+      "duree": 1.4
     },
     "plans": {
       "accueil": [
         "Ta journée, en un écran",
         "Ta séance du jour, ta forme, ta dernière sortie."
       ],
+      "accueil-bas": [
+        "Et ce que tu as déjà couru",
+        "Trente jours, en distance et en allure."
+      ],
       "coach": [
         "Un coach qui t'a lue",
         "Il répond sur tes allures, pas en généralités."
       ],
+      "coach-bas": [
+        "Il connaît ta semaine",
+        "Et il dit quoi changer, séance par séance."
+      ],
       "stats": [
+        "Ta forme, mesurée",
+        "Sur tes vraies sorties, pas sur des moyennes."
+      ],
+      "stats-bas": [
         "Tes vrais records",
-        "Mesurés sur tes sorties, pas sur des moyennes."
+        "Une sortie par point, quatre semaines."
       ],
       "profil": [
         "Ce que tu construis",
@@ -37,25 +49,37 @@
     "ouverture": {
       "mot": "RUNUP",
       "sous": "Road · Trail · Triathlon",
-      "duree": 1.8
+      "duree": 1.6
     },
     "fin": {
       "mot": "RUNUP",
       "sous": "On the App Store",
-      "duree": 1.6
+      "duree": 1.4
     },
     "plans": {
       "accueil": [
         "Your day, on one screen",
         "Today's session, your form, your last run."
       ],
+      "accueil-bas": [
+        "And what you've already run",
+        "Thirty days, in distance and pace."
+      ],
       "coach": [
         "A coach who read you",
         "It answers on your paces, not in generalities."
       ],
+      "coach-bas": [
+        "It knows your week",
+        "And says what to change, session by session."
+      ],
       "stats": [
+        "Your form, measured",
+        "On your real runs, not on averages."
+      ],
+      "stats-bas": [
         "Your real records",
-        "Measured on your runs, not on averages."
+        "One run per point, four weeks."
       ],
       "profil": [
         "What you're building",
@@ -71,25 +95,37 @@
     "ouverture": {
       "mot": "RUNUP",
       "sous": "Ruta · Trail · Triatlón",
-      "duree": 1.8
+      "duree": 1.6
     },
     "fin": {
       "mot": "RUNUP",
       "sous": "En el App Store",
-      "duree": 1.6
+      "duree": 1.4
     },
     "plans": {
       "accueil": [
         "Tu día, en una pantalla",
         "La sesión de hoy, tu forma, tu última carrera."
       ],
+      "accueil-bas": [
+        "Y lo que ya has corrido",
+        "Treinta días, en distancia y en ritmo."
+      ],
       "coach": [
         "Un coach que te lee",
         "Responde sobre tus ritmos, no en general."
       ],
+      "coach-bas": [
+        "Conoce tu semana",
+        "Y dice qué cambiar, sesión a sesión."
+      ],
       "stats": [
+        "Tu forma, medida",
+        "En tus carreras reales, no en medias."
+      ],
+      "stats-bas": [
         "Tus récords reales",
-        "Medidos en tus carreras, no en medias."
+        "Una salida por punto, cuatro semanas."
       ],
       "profil": [
         "Lo que construyes",

@@ -101,10 +101,23 @@ final class ApercuUITests: XCTestCase {
         depart = Date().timeIntervalSince1970
         ecrire("\(depart)", sous: "debut.txt")
 
-        plan(app, "accueil", onglet: nil, pose: 1.6, defilements: 1)
-        plan(app, "coach", onglet: .coach, pose: 1.8, defilements: 1)
-        plan(app, "stats", onglet: .stats, pose: 1.6, defilements: 1)
-        plan(app, "profil", onglet: .profil, pose: 1.6, defilements: 1)
+        // HUIT PLANS PLUTÔT QUE CINQ, ET DES PLANS PLUS COURTS.
+        //
+        // « Un peu long », signalé sur le premier montage. Le film durait vingt-quatre secondes
+        // et Apple en exige quinze au minimum : ce n'est donc pas la durée totale qu'il fallait
+        // réduire, c'est la fréquence des coupes. Un plan de trois secondes et demie sur un
+        // écran qui ne bouge pas, c'est long ; le même écran en deux plans de deux secondes,
+        // non.
+        //
+        // Chaque onglet se découpe donc en deux : l'écran tel qu'il s'ouvre, puis l'écran une
+        // fois descendu. Deux titres, deux choses à dire, deux coupes.
+        plan(app, "accueil", onglet: nil, pose: 2.0, defilements: 0)
+        plan(app, "accueil-bas", onglet: nil, pose: 1.0, defilements: 1)
+        plan(app, "coach", onglet: .coach, pose: 2.0, defilements: 0)
+        plan(app, "coach-bas", onglet: nil, pose: 1.0, defilements: 1)
+        plan(app, "stats", onglet: .stats, pose: 2.0, defilements: 0)
+        plan(app, "stats-bas", onglet: nil, pose: 1.0, defilements: 1)
+        plan(app, "profil", onglet: .profil, pose: 2.0, defilements: 0)
         plan(app, "retour", onglet: .prog, pose: 2.0, defilements: 0)
 
         // LE DÉCOUPAGE VIENT D'ICI, parce que c'est ici qu'on le connaît.
@@ -149,14 +162,18 @@ final class ApercuUITests: XCTestCase {
         let debut = Date().timeIntervalSince1970
         Thread.sleep(forTimeInterval: pose)
         for _ in 0..<defilements {
-            // Un glissement LENT, et c'est tout l'écart avec les captures. Là-bas on défile pour
-            // atteindre un endroit, et vite. Ici le défilement EST le plan : pressé, il donne une
-            // bouillie illisible, et c'est ce qu'on remarque d'une vidéo mal faite.
+            // LE GLISSEMENT PASSE DE « LENT » À NORMAL, et c'est la moitié du « un peu long ».
+            //
+            // `.slow` sur trois dixièmes de l'écran prend près de deux secondes à lui seul : le
+            // geste durait plus longtemps que le plan qui le contenait. Un défilement à vitesse
+            // normale est ce que fait une vraie personne, et il se lit parfaitement à trente
+            // images par seconde — c'est pour l'œil d'un humain que la vidéo est faite, pas pour
+            // un arrêt sur image.
             let depart = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.70))
-            let arrivee = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.40))
-            depart.press(forDuration: 0.1, thenDragTo: arrivee,
-                         withVelocity: .slow, thenHoldForDuration: 0.1)
-            Thread.sleep(forTimeInterval: 1.2)
+            let arrivee = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.42))
+            depart.press(forDuration: 0.08, thenDragTo: arrivee,
+                         withVelocity: .default, thenHoldForDuration: 0.05)
+            Thread.sleep(forTimeInterval: 0.9)
         }
         bornes.append((nom, debut, Date().timeIntervalSince1970))
     }

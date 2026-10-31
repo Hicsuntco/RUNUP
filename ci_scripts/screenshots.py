@@ -78,26 +78,31 @@ BANDEAU_CHASSE = 5.0
 # appareil, ou d'une autre hauteur d'écran, continue de viser la même chose. Elle reste à
 # revérifier quand l'écran correspondant change de mise en page — le composeur imprime ce qu'il a
 # découpé, pour qu'un cadrage devenu faux se voie dans le journal.
-# LA BANDE DÉBORDE À DROITE, ET SEULEMENT À DROITE.
+# LA CARTE AGRANDIE NE DÉBORDE PAS. ELLE EST ENTIÈRE.
 #
-# Elle débordait des deux côtés, centrée, de cent cinq pixels. Signalé, et c'était juste : une
-# carte de l'app a quarante à soixante pixels de marge intérieure, donc cent cinq entament le
-# TEXTE. On lisait « ourse 12,4 km », « us rapide 5:06/km », un « 5:24 » amputé de son 5. Un mot
-# coupé ne se lit pas comme une mise en page, il se lit comme une erreur.
+# Deux versions ont essayé de la faire déborder, et les deux ont été signalées. Centrée et
+# débordant des deux côtés, elle coupait des mots : « ourse 12,4 km », « us rapide 5:06/km », un
+# « 5:24 » amputé de son 5 — une carte de l'app a quarante à soixante pixels de marge intérieure,
+# cent cinq entament donc le texte. Calée à gauche et ne débordant plus qu'à droite, elle en
+# coupait encore la moitié.
 #
-# Elle commence donc à la marge du titre — la bande et le texte partent du même bord, ce qui
-# accroche le gros plan à la grille typographique — et c'est le bord DROIT qui s'échappe. Rien
-# de ce qui se lit n'est perdu : ce qui sort du cadre est la fin d'un graphique ou d'un tracé,
-# c'est-à-dire ce qui continue sans qu'on ait besoin de le voir finir.
+# Le débordement est abandonné. Un mot coupé, un bouton coupé en deux, un graphique tranché : rien
+# de tout cela ne se lit comme une mise en page, tout se lit comme une erreur de cadrage — et sur
+# une fiche App Store, c'est ce qui distingue une page faite d'une page bâclée.
 #
-# Les fractions de droite sont choisies pour que la coupe tombe dans un graphique, jamais sur un
-# mot ni sur une pastille.
+# La carte tient donc entre les deux marges, en entier, avec ses quatre bords. ET C'EST QUAND MÊME
+# UN GROS PLAN : dans les cadres à appareil, l'écran est rendu à 700 px de large sur les 1320 de
+# la capture, soit 0,53. Ici la carte est rendue à 1 098 px sur 1 180, soit 0,93 — elle est donc
+# 1,75 fois plus grande que la même carte vue dans le téléphone d'à côté. Le rapport entre les
+# deux est ce qui fait le gros plan ; le débordement n'y était pour rien.
+#
+# Le raccord d'une image à l'autre, lui, n'a jamais reposé là-dessus : il est porté par les deux
+# filets et la ligne courante, qui traversent les six cadres sans rien couper de lisible.
 BANDES = {
-    2: (0.053, 0.130, 0.800, 0.340),    # le plan : le titre, puis les barres qui filent
-    4: (0.053, 0.372, 0.800, 0.694),    # le club : l'autrice, ses mesures, son tracé qui file
-    6: (0.053, 0.600, 0.638, 0.820),    # les stats : l'allure moyenne, et la courbe qui file
+    2: (0.053, 0.1423, 0.947, 0.4372),  # le plan : la carte « La forme du plan », entière
+    4: (0.053, 0.3996, 0.947, 0.8961),  # le club : la sortie du fil, entière
+    6: (0.053, 0.5565, 0.947, 0.8682),  # les stats : la carte « Allure moyenne », entière
 }
-BANDE_DEBORD = 150                       # ce qui dépasse du bord droit du cadre
 BANDE_CENTRE = 1600
 
 SCREEN_W = 700
@@ -531,7 +536,7 @@ def _bande_agrandie(canvas: Image.Image, shot: Image.Image, zone: tuple, rang: i
     w, h = shot.size
     x0, y0, x1, y1 = (round(zone[0] * w), round(zone[1] * h), round(zone[2] * w), round(zone[3] * h))
     morceau = shot.crop((x0, y0, x1, y1))
-    largeur = CANVAS[0] - MARGE + BANDE_DEBORD
+    largeur = CANVAS[0] - 2 * MARGE
     hauteur = round(largeur * morceau.height / morceau.width)
     morceau = morceau.resize((largeur, hauteur), Image.LANCZOS).convert("RGBA")
     rayon = 30

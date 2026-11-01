@@ -30,6 +30,27 @@ enum RUMotion {
     /// Ce qui répond au doigt : pastilles, boutons, bascules. Court et vif.
     static let snap = Animation.spring(duration: 0.26, bounce: 0.26)
 
+    /// LE CHANGEMENT D'ÉCRAN, et il ne jouait pas.
+    ///
+    /// `RootTabView` pose `.transition(appState.screen.transitionDecran)` depuis toujours, avec
+    /// deux branches écrites, commentées, et une correction documentée d'une version
+    /// précédente. Or une transition ne joue QUE si la mutation qui la déclenche est animée, et
+    /// aucun des sept endroits qui changent d'écran ne l'enveloppait. La transition était du
+    /// code mort qui avait l'air vivant.
+    ///
+    /// Ce qu'on voyait à la place : l'ancien écran retiré et le nouveau inséré dans la même
+    /// image. Quand le nouveau est lourd à construire — le Coach et sa conversation — il ne
+    /// paraît pas tout de suite, et on a TROIS IMAGES DE FOND VIDE. Mesuré sur un enregistrement
+    /// du simulateur : 0,10 s, entre la disparition de l'accueil et l'apparition du Coach.
+    ///
+    /// Avec l'animation, les deux écrans coexistent le temps du fondu : l'ancien couvre la
+    /// construction du nouveau, et il n'y a plus de trou à couvrir.
+    ///
+    /// `easeOut` et non un ressort : un fondu d'opacité qui rebondit rend l'écran instable. 0,22 s
+    /// est le temps qu'il faut pour que l'œil voie un enchaînement plutôt qu'une coupe, sans que
+    /// l'app paraisse lente — c'est deux fois moins que `settle`, qui habille des cartes.
+    static let ecran = Animation.easeOut(duration: 0.22)
+
     /// Ce qui arrive à l'écran : cartes, feuilles, lignes de liste.
     static let settle = Animation.spring(duration: 0.44, bounce: 0.12)
 

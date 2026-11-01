@@ -31,7 +31,7 @@ final class AppState {
     let auth = AuthService()
 
     var profile: UserProfile
-    var screen: AppScreen = .home
+    private(set) var screen: AppScreen = .home
     /// Real activities queued in `ClubActivityOutbox` waiting to reach the server (a spotty
     /// connection at the exact moment a run finished, or the server briefly unreachable) — kept in
     /// sync by `ClubActivityOutbox` itself on every enqueue/success/retry so History can show a
@@ -479,7 +479,7 @@ final class AppState {
         profile = fresh
 
         profileOwnerConflict = nil
-        screen = .home
+        go(.home)
         Analytics.shared.track(.accountSwitchedFresh)
     }
 
@@ -822,7 +822,7 @@ final class AppState {
                                         isLightMode: profile.isLightMode,
                                         habillage: Habillage.depuis(profile.habillageID))
             NotificationService.shared.rescheduleDailyReminder(for: profile)
-            screen = .home
+            go(.home)
             return .faite(courses: compte.courses, messages: compte.messages,
                           chaussures: compte.chaussures)
         } catch SauvegardeService.Echec.baseNonVide {
@@ -1049,8 +1049,12 @@ final class AppState {
     // `postClubActivity`/`retryPendingClubActivities` live in ClubActivityOutbox.swift — a local
     // outbox now backs the post so a failed network call doesn't silently drop it forever.
 
+    /// Le SEUL chemin pour changer d'écran, et c'est ce qui le rend animable une fois pour
+    /// toutes. Les six autres affectations de `screen` passent par ici ; `private(set)` interdit
+    /// qu'une septième se glisse ailleurs et reparte sans animation, ce qui ramènerait le trou
+    /// de trois images décrit dans `RUMotion.ecran`.
     func go(_ screen: AppScreen) {
-        self.screen = screen
+        withAnimation(RUMotion.ecran) { self.screen = screen }
     }
 
     /// `discipline` par défaut `.run` : les deux autres entrées — la carte de séance de
@@ -1063,7 +1067,7 @@ final class AppState {
         // in-progress run's LiveRunViewModel (which would orphan its timer/location task with no
         // RunRecord ever produced for it).
         guard !isRunActive else {
-            screen = .live
+            go(.live)
             return
         }
         let vm = LiveRunViewModel(profile: profile, healthKit: healthKit, discipline: discipline)
@@ -1081,7 +1085,7 @@ final class AppState {
         // silencieuse que les agrégations, un étage plus loin.
         Analytics.shared.track(.runStarted, ["session": .string(profile.todaySession.title),
                                              "discipline": .string(discipline.rawValue)])
-        screen = .live
+        go(.live)
     }
 
     func endLiveRun() -> RunRecord? {
@@ -1094,14 +1098,14 @@ final class AppState {
         // phantom workout in Apple Health either.
         guard record.distanceKm >= 0.1 || record.durationSeconds >= 120 else {
             toast(String(localized: "Course trop courte — rien n'a été enregistré."))
-            screen = .home
+            go(.home)
             return nil
         }
         vm.saveToHealthKit(record)
         modelContext.insert(record)
         AdaptivePlanEngine.markSessionDone(for: record, profile: profile)
         lastRun = record
-        screen = .recap
+        go(.recap)
         return record
     }
 

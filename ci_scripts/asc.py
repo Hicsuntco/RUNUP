@@ -1219,13 +1219,26 @@ def cmd_pret(args):
                     pas_prets.append(f"{im['attributes'].get('fileName')} ({etat_im}"
                                      + (f", {livraison.get('errors')}" if livraison.get("errors")
                                         else "") + ")")
+        # L'APERÇU VIDÉO EST CE QUE LA 3.3 A ET QUE LES VERSIONS PRÉCÉDENTES N'AVAIENT PAS.
+        # On imprime donc TOUT ce qu'Apple en dit, au lieu du seul état de livraison : une
+        # image d'affiche absente ou une vidéo sans adresse se lit ici et nulle part ailleurs.
         for jeu in call("GET",
                         f"appStoreVersionLocalizations/{loc['id']}/appPreviewSets")["data"]:
             for ap in call("GET", f"appPreviewSets/{jeu['id']}/appPreviews")["data"]:
-                livraison = ap["attributes"].get("assetDeliveryState") or {}
+                b = ap["attributes"]
+                livraison = b.get("assetDeliveryState") or {}
+                print(f"    aperçu {b.get('fileName')} : livraison {livraison.get('state')}, "
+                      f"affiche {b.get('previewFrameTimeCode') or 'AUCUNE'}, "
+                      f"vidéo {'oui' if b.get('videoUrl') else 'NON'}, "
+                      f"image {'oui' if b.get('previewImage') else 'NON'}, "
+                      f"type {jeu['attributes'].get('previewType')}")
+                if livraison.get("errors") or livraison.get("warnings"):
+                    print(f"      Apple dit : {livraison.get('errors')} "
+                          f"{livraison.get('warnings')}")
                 if livraison.get("state") != "COMPLETE":
-                    pas_prets.append(f"aperçu {ap['attributes'].get('fileName')} "
-                                     f"({livraison.get('state')})")
+                    pas_prets.append(f"aperçu {b.get('fileName')} ({livraison.get('state')})")
+                if not b.get("videoUrl"):
+                    pas_prets.append(f"aperçu {b.get('fileName')} sans adresse de vidéo")
         print(f"  {langue} : {captures} capture(s), "
               f"description {'oui' if a.get('description') else 'NON'}, "
               f"nouveautés {'oui' if a.get('whatsNew') else 'NON'}"

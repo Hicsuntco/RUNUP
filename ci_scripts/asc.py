@@ -1250,6 +1250,17 @@ def cmd_pret(args):
         if not a.get("description"):
             manques.append(f"{langue} n'a pas de description")
 
+    # 6. LES ABONNEMENTS. Une app par abonnement ne s'examine pas si l'un d'eux est incomplet,
+    #    et le refus porte alors sur la VERSION. C'est le dernier endroit où ce genre de blocage
+    #    se cache sans jamais être nommé.
+    for groupe, s in abonnements(aid):
+        b = s["attributes"]
+        etat = b.get("state")
+        print(f"  abonnement {b.get('productId')} ({groupe}) : état {etat}")
+        if etat in ("MISSING_METADATA", "WAITING_FOR_UPLOAD", "DEVELOPER_ACTION_NEEDED",
+                    "REJECTED"):
+            manques.append(f"l'abonnement {b.get('productId')} est en {etat}")
+
     print()
     if manques:
         print("CE QUI MANQUE :")

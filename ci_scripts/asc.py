@@ -416,10 +416,17 @@ def cmd_status(_):
                                   "REJECTED", "METADATA_REJECTED", "INVALID_BINARY"):
             for loc in sorted(locs, key=lambda l: l["attributes"]["locale"]):
                 langue, lid = loc["attributes"]["locale"], loc["id"]
-                captures = sum(
-                    len(call("GET", f"appScreenshotSets/{jeu['id']}/appScreenshots")["data"])
-                    for jeu in call(
-                        "GET", f"appStoreVersionLocalizations/{lid}/appScreenshotSets")["data"])
+                # PAR TYPE D'APPAREIL, ET PAS EN TOTAL. Un total de onze captures là où on en
+                # a envoyé six ne dit pas ce qui cloche ; « APP_IPHONE_67 6, APP_IPHONE_65 5 »
+                # dit tout de suite qu'un vieux jeu d'un autre format est resté sur la fiche,
+                # recopié depuis la version précédente au moment de créer celle-ci.
+                par_type = []
+                for jeu in call(
+                        "GET", f"appStoreVersionLocalizations/{lid}/appScreenshotSets")["data"]:
+                    combien = len(call(
+                        "GET", f"appScreenshotSets/{jeu['id']}/appScreenshots")["data"])
+                    par_type.append(f"{jeu['attributes']['screenshotDisplayType']} {combien}")
+                captures = ", ".join(sorted(par_type)) or "aucune"
                 etats = []
                 for jeu in call("GET",
                                 f"appStoreVersionLocalizations/{lid}/appPreviewSets")["data"]:
@@ -427,7 +434,7 @@ def cmd_status(_):
                         livraison = ap["attributes"].get("assetDeliveryState") or {}
                         etats.append(livraison.get("state", "?"))
                 apercus = f"{len(etats)} aperçu(s) {'/'.join(etats)}" if etats else "aucun aperçu"
-                print(f"      {langue} : {captures} capture(s), {apercus}")
+                print(f"      {langue} : {captures} | {apercus}")
 
 
 def cmd_ci(_):

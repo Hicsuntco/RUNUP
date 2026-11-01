@@ -406,6 +406,29 @@ def cmd_status(_):
         locs = call("GET", f"appStoreVersions/{v['id']}/appStoreVersionLocalizations")["data"]
         print(f"    localisations : {', '.join(sorted(l['attributes']['locale'] for l in locs)) or 'aucune'}")
 
+        # CE QUE LA FICHE MONTRE, SUR LA VERSION QU'ON PRÉPARE.
+        #
+        # Une version en vente est figée : rien à vérifier. Celle qu'on prépare, si. Un aperçu
+        # téléversé n'est pas un aperçu diffusable : Apple le transcode ensuite, et un échec de
+        # transcodage ne se découvre qu'au moment de soumettre. Une ligne ici évite de l'ap-
+        # prendre ce jour-là.
+        if a["appStoreState"] in ("PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED",
+                                  "REJECTED", "METADATA_REJECTED", "INVALID_BINARY"):
+            for loc in sorted(locs, key=lambda l: l["attributes"]["locale"]):
+                langue, lid = loc["attributes"]["locale"], loc["id"]
+                captures = sum(
+                    len(call("GET", f"appScreenshotSets/{jeu['id']}/appScreenshots")["data"])
+                    for jeu in call(
+                        "GET", f"appStoreVersionLocalizations/{lid}/appScreenshotSets")["data"])
+                etats = []
+                for jeu in call("GET",
+                                f"appStoreVersionLocalizations/{lid}/appPreviewSets")["data"]:
+                    for ap in call("GET", f"appPreviewSets/{jeu['id']}/appPreviews")["data"]:
+                        livraison = ap["attributes"].get("assetDeliveryState") or {}
+                        etats.append(livraison.get("state", "?"))
+                apercus = f"{len(etats)} aperçu(s) {'/'.join(etats)}" if etats else "aucun aperçu"
+                print(f"      {langue} : {captures} capture(s), {apercus}")
+
 
 def cmd_ci(_):
     """Les dernières exécutions Xcode Cloud : ont-elles tourné, et se sont-elles bien terminées ?

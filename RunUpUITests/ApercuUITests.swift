@@ -111,10 +111,17 @@ final class ApercuUITests: XCTestCase {
         //
         // Chaque onglet se découpe donc en deux : l'écran tel qu'il s'ouvre, puis l'écran une
         // fois descendu. Deux titres, deux choses à dire, deux coupes.
+        //
+        // DEUX DÉFILEMENTS ET NON TROIS, parce qu'un défilement coûte ce que la machine veut
+        // bien. Mesuré sur deux exécutions du harnais : 3,17 s, 3,20 s, 3,40 s, et une fois
+        // 4,67 s pour le même geste — et changer la vitesse demandée n'y a rien fait. C'est la
+        // charge d'une machine qu'on ne voit pas, pas le réglage. Trois plans de défilement
+        // poussaient le film à vingt-huit secondes, à deux du plafond d'Apple ; deux le gardent
+        // sous vingt même dans le pire des cas mesurés. Le Coach perd le sien : son texte est
+        // long, et le défiler n'apprend rien de plus que le lire.
         plan(app, "accueil", onglet: nil, pose: 2.0, defilements: 0)
         plan(app, "accueil-bas", onglet: nil, pose: 1.0, defilements: 1)
         plan(app, "coach", onglet: .coach, pose: 2.0, defilements: 0)
-        plan(app, "coach-bas", onglet: nil, pose: 1.0, defilements: 1)
         plan(app, "stats", onglet: .stats, pose: 2.0, defilements: 0)
         plan(app, "stats-bas", onglet: nil, pose: 1.0, defilements: 1)
         plan(app, "profil", onglet: .profil, pose: 2.0, defilements: 0)

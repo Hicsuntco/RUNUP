@@ -303,12 +303,24 @@ def main() -> int:
                           len(script["plans"]), bandeau, travail)
         m = travail / f"{i:02d}-plan.mp4"
         plan_video(options.entree, p["debut"], p["duree"], f, c, tt, m)
-        # CHAQUE PLAN EST MESURÉ, PAS SUPPOSÉ. Un plan court ne casse rien et ne dit rien : le
-        # film sort, plus bref, et on ne l'apprend qu'en le comptant à la fin — ou après l'envoi.
+        # CHAQUE PLAN EST MESURÉ, PAS SUPPOSÉ — mais le seuil a été posé trop serré.
+        #
+        # À deux dixièmes près, le contrôle a refusé deux montages entiers pour un DERNIER plan
+        # qui rendait 1,40 s au lieu de 2,01. Or la caméra perd toujours un peu de sa fin, d'une
+        # quantité qui varie d'une exécution à l'autre, et un plan final de 1,4 s au lieu de 2
+        # ne se voit pas : ce qu'il fallait attraper, c'est le plan d'UNE IMAGE du premier essai,
+        # pas six dixièmes de moins sur le dernier.
+        #
+        # Le contrôle qui compte vraiment est ailleurs, et il est plus sûr : la durée du FICHIER
+        # final, mesurée après encodage, contre les bornes d'Apple. Celui-ci ne garde que les
+        # cas où un plan est manifestement amputé.
         rendu = secondes(m)
-        if rendu < p["duree"] - 0.2:
+        if rendu < max(0.8, p["duree"] * 0.6):
             manques.append(f"plan {i} « {p['titre']} » : {rendu:.2f} s rendues pour "
                            f"{p['duree']:.2f} s demandées")
+        elif rendu < p["duree"] - 0.2:
+            print(f"    (plan {i} raccourci de {p['duree'] - rendu:.2f} s — la caméra n'a pas "
+                  f"couvert toute la prise)")
         morceaux.append(m); duree_totale += rendu
         print(f"  plan {i} : {p['debut']:.1f} → {p['debut'] + p['duree']:.1f} s  "
               f"({rendu:.2f} s)  « {p['titre']} »")

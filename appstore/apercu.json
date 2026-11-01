@@ -23,10 +23,6 @@
         "Un coach qui t'a lue",
         "Il répond sur tes allures, pas en généralités."
       ],
-      "coach-bas": [
-        "Il connaît ta semaine",
-        "Et il dit quoi changer, séance par séance."
-      ],
       "stats": [
         "Ta forme, mesurée",
         "Sur tes vraies sorties, pas sur des moyennes."
@@ -69,10 +65,6 @@
         "A coach who read you",
         "It answers on your paces, not in generalities."
       ],
-      "coach-bas": [
-        "It knows your week",
-        "And says what to change, session by session."
-      ],
       "stats": [
         "Your form, measured",
         "On your real runs, not on averages."
@@ -114,10 +106,6 @@
       "coach": [
         "Un coach que te lee",
         "Responde sobre tus ritmos, no en general."
-      ],
-      "coach-bas": [
-        "Conoce tu semana",
-        "Y dice qué cambiar, sesión a sesión."
       ],
       "stats": [
         "Tu forma, medida",

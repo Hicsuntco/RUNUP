@@ -129,15 +129,35 @@ jobs:
           "$RUNNER_TEMP/venv/bin/python" -m pip install --quiet Pillow
           echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
 
-      # ffmpeg est déjà sur les runners Ubuntu. On le vérifie quand même, et on éprouve d'abord le
-      # découpage : un aperçu refusé par App Store Connect ne dit pas laquelle des cinq
-      # contraintes a sauté, alors autant que les décisions qui y mènent soient testées.
-      - name: Vérifier le découpage de l'aperçu
-        if: inputs.action == 'assembler-l-apercu'
+      # FFMPEG N'EST PLUS SUR LES RUNNERS UBUNTU, et ce commentaire disait le contraire.
+      #
+      # Il l'a été, l'image 24.04 ne le porte plus, et l'essai d'envoi de l'aperçu s'est arrêté
+      # sur « ffprobe est introuvable ». C'est le bon arrêt — la commande mesure le film avant
+      # d'en parler à Apple — mais il valait mieux installer l'outil que supprimer la mesure.
+      #
+      # Une quarantaine de secondes, et seulement pour les deux actions qui touchent à la vidéo.
+      - name: Installer ffmpeg
+        if: inputs.action == 'assembler-l-apercu' || startsWith(inputs.action, 'pousser-l-apercu')
         run: |
           set -euo pipefail
+          if ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg
+          fi
           ffmpeg -version | head -1
-          cd ci_scripts && python3 test_apercu.py
+
+      # On éprouve le découpage avant de s'en servir : un aperçu refusé par App Store Connect ne
+      # dit pas laquelle des cinq contraintes a sauté, alors autant que les décisions qui y
+      # mènent soient testées.
+      - name: Vérifier le découpage de l'aperçu
+        if: inputs.action == 'assembler-l-apercu'
+        run: cd ci_scripts && python3 test_apercu.py
+
+      # Et pour l'envoi, le même principe : ce que la commande décide SANS parler à Apple —
+      # durée, cadence, taille d'image, poids — est éprouvé sur de vrais fichiers juste avant.
+      - name: Éprouver les règles de l'aperçu
+        if: startsWith(inputs.action, 'pousser-l-apercu')
+        run: cd ci_scripts && python3 test_asc_captures.py
 
       # LES IMAGES NE SONT PAS DANS LE DÉPÔT — `appstore/out/` est ignoré par git, et c'est
       # juste : dix-huit PNG de 900 ko regénérés à chaque changement d'accroche n'ont rien à

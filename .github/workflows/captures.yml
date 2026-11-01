@@ -76,6 +76,7 @@ on:
       - "ci_scripts/screenshots.py"
       - "ci_scripts/apercu.py"
       - "ci_scripts/montage.py"
+      - "ci_scripts/bascules.py"
       - "appstore/apercu.json"
       # Tout ce qui se juge à l'œil et qu'aucun script ne sait relire.
       - "RunUp/Views/**"
@@ -356,6 +357,16 @@ jobs:
       - name: Installer ffmpeg
         run: brew install ffmpeg
 
+      # LE COMPTEUR EST ÉPROUVÉ AVANT DE SERVIR, sur un film fabriqué dont on connaît le défaut
+      # à l'image près. Un compteur d'images vides qui se trompe est pire que pas de compteur :
+      # il dirait « zéro » sur un écran qui clignote, et on le croirait. Trois images de fond nu
+      # sont plantées dans le film d'essai ; le test vérifie qu'il en trouve trois.
+      #
+      # Ici et pas dans `testflight.yml` : il demande ffmpeg, qui vient d'être installé, et il
+      # prend quelques secondes.
+      - name: Éprouver la mesure des bascules
+        run: cd ci_scripts && "$RUNNER_TEMP/venv/bin/python" test_bascules.py
+
       - name: Filmer l'aperçu, langue par langue
         run: |
           set -euo pipefail
@@ -423,6 +434,37 @@ jobs:
               --textes appstore/apercu.json \
               --langue "$langue" \
               --bandeau "$bandeau" \
+              --decalage "$decalage"
+
+            # COMBIEN D'IMAGES VIDES À CHAQUE CHANGEMENT D'ONGLET.
+            #
+            # Le trou du Coach — barre d'onglets en place, contenu pas encore — a été compté à la
+            # main une fois : trois images, 0,10 s. Une main ne recompte pas à chaque commit, et
+            # le trou se reformera le jour où quelqu'un changera d'écran sans animer la mutation.
+            # C'est exactement ce qui était arrivé : la transition était écrite, commentée, et ne
+            # jouait pas.
+            #
+            # L'enregistrement brut contient les quatre bascules et le test en a relevé l'heure :
+            # il n'y a rien à filmer en plus, juste à compter dans ce qui est déjà là. Et c'est
+            # gratuit — la mesure lit un fichier qui existe déjà et qu'on jette ensuite.
+            #
+            # PAS DE PLAFOND POUR L'INSTANT : on mesure et on lit. Le plafond se posera sur un
+            # relevé, pas sur une intuition — en poser un maintenant serait inventer le nombre
+            # qu'on cherche.
+            #
+            # DEUX RELEVÉS, ET LE PREMIER EST CELUI QUI COMPTE. Le test ouvre chaque onglet une
+            # fois avant la prise, pour que l'aperçu montre l'app telle qu'on la voit au
+            # quotidien ; le défaut, lui, est à la PREMIÈRE ouverture. Mesurer la prise seule,
+            # c'est mesurer l'app une fois le trou passé, et conclure qu'il n'y en a pas.
+            echo "— première ouverture de chaque onglet —"
+            "$RUNNER_TEMP/venv/bin/python" ci_scripts/bascules.py \
+              --entree "$dossier/brut.mov" \
+              --temps "$dossier/prechauffage.json" \
+              --decalage "$decalage"
+            echo "— deuxième ouverture, celle que montre le film —"
+            "$RUNNER_TEMP/venv/bin/python" ci_scripts/bascules.py \
+              --entree "$dossier/brut.mov" \
+              --temps "$dossier/temps.json" \
               --decalage "$decalage"
           done
           ls -la appstore/apercu/out

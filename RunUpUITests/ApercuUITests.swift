@@ -70,6 +70,20 @@ final class ApercuUITests: XCTestCase {
         _ = app.wait(for: .runningForeground, timeout: 60)
         Thread.sleep(forTimeInterval: 1.5)
 
+        // L'HORODATAGE DU DÉPART, ÉCRIT SUR L'HÔTE, ET IL COUVRE AUSSI LE PRÉCHAUFFAGE.
+        //
+        // L'enregistrement commence avant que `xcodebuild` n'ait installé et lancé l'app : la
+        // vidéo s'ouvre donc sur plusieurs secondes d'écran d'accueil du simulateur, et leur
+        // durée varie d'une exécution à l'autre. Les deviner, c'est publier un aperçu qui
+        // commence sur du vide ou qui coupe la première seconde de l'app.
+        //
+        // Le test dit donc l'heure qu'il est au moment où l'app paraît. Le workflow connaît
+        // celle où l'enregistrement a commencé ; la soustraction donne exactement ce qu'il faut
+        // couper. Une seule horloge pour tout ce qui suit : le préchauffage comme la prise s'y
+        // repèrent, ce qui permet de mesurer le premier dans l'enregistrement.
+        depart = Date().timeIntervalSince1970
+        ecrire("\(depart)", sous: "debut.txt")
+
         // UNE PASSE À BLANC AVANT LA PRISE, ET ELLE CORRIGE QUELQUE CHOSE DE VISIBLE.
         //
         // Le premier essai montre, au moment où l'on passe sur le Coach, UN DEMI-SECONDE D'ÉCRAN
@@ -81,25 +95,26 @@ final class ApercuUITests: XCTestCase {
         // du maquillage : ce que montre l'aperçu est ce que voit quelqu'un qui a déjà ouvert
         // l'onglet une fois, c'est-à-dire tout le monde sauf à la toute première seconde.
         //
-        // Le trou lui-même reste un défaut de l'app, pas de la vidéo, et il se corrige là-bas.
-        for onglet in [Onglet.coach, .stats, .profil, .prog] {
-            app.coordinate(withNormalizedOffset: CGVector(dx: onglet.rawValue, dy: Self.barre)).tap()
-            Thread.sleep(forTimeInterval: 0.7)
+        // ET CETTE PASSE EST MAINTENANT RELEVÉE, parce qu'elle est le seul endroit où le défaut
+        // se voit. Elle ouvre chaque onglet pour la PREMIÈRE fois ; la prise, elle, ne montre
+        // que des onglets déjà ouverts. Mesurer la prise seule reviendrait à mesurer l'app une
+        // fois le défaut passé, et à conclure qu'il n'y en a pas.
+        //
+        // Les repères partent donc dans `prechauffage.json`, que `ci_scripts/bascules.py`
+        // relit : d'un côté combien d'images vides à la toute première ouverture, de l'autre
+        // combien à la deuxième. Deux nombres au lieu d'une impression.
+        //
+        // 1,4 s de pose et non 0,7 : la mesure prend sa référence un demi-seconde après
+        // l'arrivée de l'écran, et il lui faut de la marge avant l'appui suivant.
+        // Le type est écrit plutôt que déduit : un littéral de tuples mêlant une valeur nommée
+        // et des formes abrégées compile ou non selon l'humeur de l'inférence, et ici une erreur
+        // de compilation ne se découvre qu'au bout de quarante minutes de machine.
+        let passeAblanc: [(String, Onglet)] = [("coach", .coach), ("stats", .stats),
+                                               ("profil", .profil), ("accueil", .prog)]
+        for (nom, onglet) in passeAblanc {
+            plan(app, "première-\(nom)", onglet: onglet, pose: 1.4, defilements: 0, prise: false)
         }
         Thread.sleep(forTimeInterval: 0.8)
-
-        // L'HORODATAGE DU DÉPART, ÉCRIT SUR L'HÔTE.
-        //
-        // L'enregistrement commence avant que `xcodebuild` n'ait installé et lancé l'app : la
-        // vidéo s'ouvre donc sur plusieurs secondes d'écran d'accueil du simulateur, et leur
-        // durée varie d'une exécution à l'autre. Les deviner, c'est publier un aperçu qui
-        // commence sur du vide ou qui coupe la première seconde de l'app.
-        //
-        // Le test dit donc l'heure qu'il est au moment où l'app paraît. Le workflow connaît
-        // celle où l'enregistrement a commencé ; la soustraction donne exactement ce qu'il faut
-        // couper.
-        depart = Date().timeIntervalSince1970
-        ecrire("\(depart)", sous: "debut.txt")
 
         // HUIT PLANS PLUTÔT QUE CINQ, ET DES PLANS PLUS COURTS.
         //
@@ -136,10 +151,15 @@ final class ApercuUITests: XCTestCase {
         //
         // Le test relève donc l'heure à chaque bascule, et rend des décalages depuis le début de
         // la prise. `ci_scripts/montage.py` y accroche les titres.
-        let json = "[" + bornes.map {
-            "{\"nom\":\"\($0.nom)\",\"debut\":\($0.debut - depart),\"fin\":\($0.fin - depart)}"
-        }.joined(separator: ",") + "]"
-        ecrire(json, sous: "temps.json")
+        func decoupage(_ liste: [(nom: String, debut: TimeInterval, fin: TimeInterval,
+                                  bascule: Bool)]) -> String {
+            "[" + liste.map {
+                "{\"nom\":\"\($0.nom)\",\"debut\":\($0.debut - depart),"
+                + "\"fin\":\($0.fin - depart),\"bascule\":\($0.bascule)}"
+            }.joined(separator: ",") + "]"
+        }
+        ecrire(decoupage(bornes), sous: "temps.json")
+        ecrire(decoupage(prechauffage), sous: "prechauffage.json")
 
         // L'HEURE DE LA FIN, pour que la vidéo s'arrête sur l'accueil.
         //
@@ -152,14 +172,18 @@ final class ApercuUITests: XCTestCase {
     }
 
     private var depart: TimeInterval = 0
-    private var bornes: [(nom: String, debut: TimeInterval, fin: TimeInterval)] = []
+    private var bornes: [(nom: String, debut: TimeInterval, fin: TimeInterval, bascule: Bool)] = []
+    /// Les mêmes repères pour la passe à blanc. Ils ne vont pas au montage — ils ne sont pas des
+    /// plans du film — mais à la mesure, qui y lit la PREMIÈRE ouverture de chaque onglet.
+    private var prechauffage: [(nom: String, debut: TimeInterval, fin: TimeInterval,
+                                bascule: Bool)] = []
 
     /// Un plan : on y va, on laisse voir, on défile une fois, on laisse voir encore.
     ///
     /// La bascule d'onglet est HORS du plan : elle appartient à la coupe, pas à l'image. Le plan
     /// commence quand l'écran est en place, ce qui évite au montage de garder une transition.
     private func plan(_ app: XCUIApplication, _ nom: String, onglet: Onglet?,
-                      pose: TimeInterval, defilements: Int) {
+                      pose: TimeInterval, defilements: Int, prise: Bool = true) {
         if let onglet {
             app.coordinate(withNormalizedOffset: CGVector(dx: onglet.rawValue, dy: Self.barre)).tap()
             // Les transitions d'onglet de `RootTabView` durent moins d'une demi-seconde ; on
@@ -185,7 +209,12 @@ final class ApercuUITests: XCTestCase {
                          withVelocity: .fast, thenHoldForDuration: 0.05)
             Thread.sleep(forTimeInterval: 0.8)
         }
-        bornes.append((nom, debut, Date().timeIntervalSince1970))
+        // Les étiquettes sont écrites : un tuple nu se convertit parfois en tuple étiqueté et
+        // parfois non, selon le contexte, et ce genre d'implicite se paie à la compilation —
+        // c'est-à-dire ici, quinze minutes plus tard.
+        let borne = (nom: nom, debut: debut, fin: Date().timeIntervalSince1970,
+                     bascule: onglet != nil)
+        if prise { bornes.append(borne) } else { prechauffage.append(borne) }
     }
 
     private func ecrire(_ texte: String, sous nom: String) {

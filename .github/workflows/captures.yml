@@ -461,9 +461,10 @@ jobs:
             # il n'y a rien à filmer en plus, juste à compter dans ce qui est déjà là. Et c'est
             # gratuit — la mesure lit un fichier qui existe déjà et qu'on jette ensuite.
             #
-            # PAS DE PLAFOND POUR L'INSTANT : on mesure et on lit. Le plafond se posera sur un
-            # relevé, pas sur une intuition — en poser un maintenant serait inventer le nombre
-            # qu'on cherche.
+            # LE PLAFOND EST POSÉ, ET IL VIENT D'UN RELEVÉ. Vingt-quatre bascules mesurées —
+            # trois langues, deux passes, quatre onglets — rendent TOUTES zéro image vide. Le
+            # plafond est donc 1 : une image de marge pour un classement limite, et le trou de
+            # trois images qu'on vient de corriger ne repasserait pas.
             #
             # DEUX RELEVÉS, ET LE PREMIER EST CELUI QUI COMPTE. Le test ouvre chaque onglet une
             # fois avant la prise, pour que l'aperçu montre l'app telle qu'on la voit au
@@ -484,13 +485,15 @@ jobs:
               --entree "$dossier/brut.mov" \
               --temps "$dossier/prechauffage.json" \
               --decalage "$decalage" \
-              --temoins "appstore/raw/$langue/clair"
+              --temoins "appstore/raw/$langue/clair" \
+              --plafond 1
             echo "— deuxième ouverture, celle que montre le film —"
             "$RUNNER_TEMP/venv/bin/python" ci_scripts/bascules.py \
               --entree "$dossier/brut.mov" \
               --temps "$dossier/temps.json" \
               --decalage "$decalage" \
-              --temoins "appstore/raw/$langue/clair"
+              --temoins "appstore/raw/$langue/clair" \
+              --plafond 1
 
             # LE MONTAGE, une fois le découpage vérifié.
             #
@@ -514,12 +517,14 @@ jobs:
       # `always()` : un montage raté ne doit pas emporter les images avec lui. Elles sont la
       # livraison principale, elles sont déjà composées à ce stade, et les perdre pour une vidéo
       # trop courte obligerait à refaire quarante minutes de harnais pour rien.
-      # L'ENREGISTREMENT BRUT ET LES REPÈRES SONT PUBLIÉS, LE TEMPS DE RÉGLER LES DEUX HORLOGES.
+      # LES ENREGISTREMENTS BRUTS NE SONT PLUS PUBLIÉS, L'ALIGNEMENT EST CONFIRMÉ.
       #
-      # Le film est sorti plusieurs fois avec les titres décalés d'un plan sur les images, et
-      # rien dans le journal ne pouvait le montrer : il faut la matière première pour vérifier
-      # qu'un repère tombe là où on croit. Ces fichiers pèsent — ils sortiront de la liste une
-      # fois l'alignement confirmé.
+      # Ils ont servi une fois, et bien : c'est en les relisant qu'on a vu que la caméra démarre
+      # trois secondes après qu'on la lance. Trente mégaoctets par langue à chaque exécution
+      # pour une vérification qui est désormais faite par la machine, à chaque film, contre les
+      # captures de la passe claire — autant les laisser sur le disque du runner.
+      #
+      # Les repères, eux, restent : ils pèsent un kilo-octet et disent ce que le test a vu.
       #
       # (Le commentaire est ici et non dans la liste : dans un bloc littéral `|`, un dièse n'est
       # pas un commentaire, c'est une ligne de chemin de plus.)
@@ -532,7 +537,6 @@ jobs:
             appstore/raw/**
             appstore/out/**
             appstore/apercu/out/**
-            appstore/apercu/*/brut.mov
             appstore/apercu/*/*.json
             appstore/apercu/*/debut.txt
           if-no-files-found: error

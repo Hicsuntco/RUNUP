@@ -1162,11 +1162,16 @@ def cmd_pret(args):
         print(f"  fiche d'app : état {etat}, âge {a.get('appStoreAgeRating') or 'NON RENSEIGNÉ'}")
         if not a.get("appStoreAgeRating"):
             manques.append("la classification d'âge de la fiche d'app n'est pas renseignée")
-        rel = info.get("relationships", {})
-        for nom in ("primaryCategory", "secondaryCategory"):
-            cible = (rel.get(nom) or {}).get("data")
-            print(f"    {nom} : {cible['id'] if cible else 'aucune'}")
-        if not (rel.get("primaryCategory") or {}).get("data"):
+        # LA CATÉGORIE NE SE LIT QU'AVEC `include`. Sans lui la relation ne porte qu'un lien,
+        # jamais d'identifiant, et le premier jet de ce diagnostic a donc accusé une app en
+        # vente de n'avoir aucune catégorie. Une fausse alerte coûte autant qu'un silence.
+        detaille = call("GET", f"appInfos/{info['id']}?include=primaryCategory,secondaryCategory")
+        rel = detaille["data"].get("relationships", {})
+        principale = (rel.get("primaryCategory") or {}).get("data")
+        secondaire = (rel.get("secondaryCategory") or {}).get("data")
+        print(f"    catégories : {principale['id'] if principale else 'AUCUNE'}"
+              f"{' + ' + secondaire['id'] if secondaire else ''}")
+        if not principale:
             manques.append("la fiche d'app n'a pas de catégorie principale")
         for il in call("GET", f"appInfos/{info['id']}/appInfoLocalizations")["data"]:
             b = il["attributes"]
@@ -1183,21 +1188,52 @@ def cmd_pret(args):
               f"soumise {'oui' if a.get('submitted') else 'non'}")
         if a.get("state") in ("READY_FOR_REVIEW", "WAITING_FOR_REVIEW", "IN_REVIEW",
                               "UNRESOLVED_ISSUES"):
-            manques.append(f"une soumission est déjà ouverte (état {a.get('state')})")
+            for it in call("GET",
+                           f"reviewSubmissions/{s['id']}/items?include=appStoreVersion")["data"]:
+                cible = (it.get("relationships", {}).get("appStoreVersion", {}).get("data")
+                         or {}).get("id")
+                print(f"      article {it['id'][:8]} : état {it['attributes'].get('state')}, "
+                      f"version {cible or 'autre ressource'}"
+                      + (" ← la nôtre" if cible == vid else ""))
+            if a.get("state") != "READY_FOR_REVIEW":
+                manques.append(f"une soumission est déjà ouverte (état {a.get('state')})")
 
     # 5. CE QUE CHAQUE LANGUE DOIT PORTER.
     for loc in sorted(call("GET", f"appStoreVersions/{vid}/appStoreVersionLocalizations")["data"],
                       key=lambda l: l["attributes"]["locale"]):
         langue, a = loc["attributes"]["locale"], loc["attributes"]
-        captures = sum(
-            len(call("GET", f"appScreenshotSets/{jeu['id']}/appScreenshots")["data"])
-            for jeu in call("GET",
-                            f"appStoreVersionLocalizations/{loc['id']}/appScreenshotSets")["data"])
+        # L'ÉTAT DE LIVRAISON DE CHAQUE IMAGE, et pas seulement leur nombre.
+        #
+        # Une capture téléversée n'est pas une capture livrée : Apple la traite ensuite, et une
+        # image restée en traitement ou refusée rend la version non examinable. C'est le trou
+        # du premier jet de ce diagnostic : on vérifiait l'état des vidéos et on comptait les
+        # images sans jamais regarder le leur.
+        captures, pas_prets = 0, []
+        for jeu in call("GET",
+                        f"appStoreVersionLocalizations/{loc['id']}/appScreenshotSets")["data"]:
+            for im in call("GET", f"appScreenshotSets/{jeu['id']}/appScreenshots")["data"]:
+                captures += 1
+                livraison = im["attributes"].get("assetDeliveryState") or {}
+                etat_im = livraison.get("state")
+                if etat_im != "COMPLETE":
+                    pas_prets.append(f"{im['attributes'].get('fileName')} ({etat_im}"
+                                     + (f", {livraison.get('errors')}" if livraison.get("errors")
+                                        else "") + ")")
+        for jeu in call("GET",
+                        f"appStoreVersionLocalizations/{loc['id']}/appPreviewSets")["data"]:
+            for ap in call("GET", f"appPreviewSets/{jeu['id']}/appPreviews")["data"]:
+                livraison = ap["attributes"].get("assetDeliveryState") or {}
+                if livraison.get("state") != "COMPLETE":
+                    pas_prets.append(f"aperçu {ap['attributes'].get('fileName')} "
+                                     f"({livraison.get('state')})")
         print(f"  {langue} : {captures} capture(s), "
               f"description {'oui' if a.get('description') else 'NON'}, "
-              f"nouveautés {'oui' if a.get('whatsNew') else 'NON'}")
+              f"nouveautés {'oui' if a.get('whatsNew') else 'NON'}"
+              + (f" — PAS LIVRÉES : {', '.join(pas_prets)}" if pas_prets else ""))
         if captures == 0:
             manques.append(f"{langue} n'a aucune capture")
+        if pas_prets:
+            manques.append(f"{langue} a {len(pas_prets)} média(s) non livré(s)")
         if not a.get("description"):
             manques.append(f"{langue} n'a pas de description")
 

@@ -376,12 +376,38 @@ jobs:
             dossier="$PWD/appstore/apercu/$langue"
             rm -rf "$dossier"; mkdir -p "$dossier"
 
-            # L'HEURE DU DÉPART DE LA CAMÉRA. Le test écrira celle où l'app a paru ; la
-            # soustraction donne exactement ce qu'il faut couper au début, au lieu de le deviner.
-            depart=$(python3 -c "import time; print(time.time())")
+            # L'HEURE DU DÉPART DE LA CAMÉRA — CELLE DE LA CAMÉRA, PAS CELLE DE L'APPEL.
+            #
+            # Les deux sont séparées de TROIS SECONDES : `simctl` attache le simulateur, choisit
+            # l'écran, ouvre le fichier, et seulement ensuite enregistre. Pendant plusieurs
+            # exécutions, l'heure était prise avant tout ça, et le film était donc coupé trois
+            # secondes trop tard : sous chaque titre l'écran du plan SUIVANT, et pour finir
+            # l'écran d'accueil du simulateur à la place du dernier plan.
+            #
+            # Mesuré sur l'enregistrement brut, sur les huit bascules d'onglet d'une prise :
+            # écart constant de −3,17 s, étendue 0,7 s sur trente-cinq secondes. Un retard au
+            # démarrage, donc, et non une dérive — une première correction l'avait pris pour une
+            # différence de rythme entre les deux horloges et mettait les repères à l'échelle,
+            # ce qui déplaçait le découpage dans l'autre sens.
+            #
+            # `simctl` dit « Recording started » quand il commence. On l'attend, et on horodate
+            # cette ligne-là. Trente secondes de patience au plus : au-delà, on prend l'heure
+            # courante et on le dit, plutôt que de laisser le travail suspendu.
             xcrun simctl io "${{ steps.sim.outputs.udid }}" recordVideo \
-              --codec h264 --force "$dossier/brut.mov" &
+              --codec h264 --force "$dossier/brut.mov" > "$dossier/camera.log" 2>&1 &
             camera=$!
+            depart=""
+            for _ in $(seq 1 300); do
+              if grep -q "Recording started" "$dossier/camera.log" 2>/dev/null; then
+                depart=$(python3 -c "import time; print(time.time())")
+                break
+              fi
+              sleep 0.1
+            done
+            if [ -z "$depart" ]; then
+              echo "⚠︎ la caméra n'a pas annoncé qu'elle tournait — heure prise à l'aveugle"
+              depart=$(python3 -c "import time; print(time.time())")
+            fi
 
             TEST_RUNNER_RUNUP_LANG="$langue" \
             TEST_RUNNER_RUNUP_APERCU="1" \
@@ -404,14 +430,6 @@ jobs:
             # `-INT` et non `-KILL` : `simctl` ferme alors proprement le fichier. Tué net, il
             # laisse un .mov sans index, que ffmpeg lit mal ou pas du tout.
             kill -INT "$camera"
-            # LA DURÉE DU TOURNAGE, EN SECONDES DE MONTRE, prise au moment où la caméra s'arrête
-            # et non après l'écriture du fichier, qui n'enregistre plus rien.
-            #
-            # Elle sert à mettre les repères du test à l'échelle du fichier : `simctl` enregistre
-            # à cadence variable, le fichier est plus court que le tournage, et un repère pris à
-            # la seconde de montre tombe sur une image plus tardive. Le dernier plan du film
-            # montrait l'écran d'accueil du simulateur, et aucune durée ne pouvait le dire.
-            tournage=$(python3 -c "import time; print(time.time() - $depart)")
             wait "$camera" || true
 
             # LE DÉBUT ET LA FIN VIENNENT DU TEST, PAS D'UNE ESTIMATION.
@@ -430,21 +448,6 @@ jobs:
             decalage=$(python3 -c "print(max(0.0, $lance - $depart))")
             bandeau=$(python3 -c "import json,sys; print(json.load(open('appstore/captions.json'))[sys.argv[1]]['bandeau'])" "$langue")
             echo "→ prise à $decalage s après le début de l'enregistrement"
-
-            # LE MONTAGE, ET PLUS LA CAPTATION. `apercu.py` conformait l'enregistrement au format
-            # d'Apple et s'arrêtait là : on envoyait un film de quelqu'un qui tapote des onglets.
-            # `montage.py` en fait la fiche animée — même fond, même châssis, même police, mêmes
-            # filets, même ligne courante — et coupe plan par plan sur le découpage que le test
-            # vient de relever.
-            "$RUNNER_TEMP/venv/bin/python" ci_scripts/montage.py \
-              --entree "$dossier/brut.mov" \
-              --sortie "$PWD/appstore/apercu/out/$langue.mp4" \
-              --temps "$dossier/temps.json" \
-              --textes appstore/apercu.json \
-              --langue "$langue" \
-              --bandeau "$bandeau" \
-              --decalage "$decalage" \
-              --tournage "$tournage"
 
             # COMBIEN D'IMAGES VIDES À CHAQUE CHANGEMENT D'ONGLET.
             #
@@ -466,18 +469,43 @@ jobs:
             # fois avant la prise, pour que l'aperçu montre l'app telle qu'on la voit au
             # quotidien ; le défaut, lui, est à la PREMIÈRE ouverture. Mesurer la prise seule,
             # c'est mesurer l'app une fois le trou passé, et conclure qu'il n'y en a pas.
+            #
+            # ET ELLE PASSE AVANT LE MONTAGE, parce qu'elle vérifie aussi que chaque bascule
+            # tombe sur l'écran qu'elle vise — en la confrontant aux captures que la passe
+            # claire vient de prendre. C'est le contrôle qui manquait : un découpage décalé de
+            # trois secondes met chaque plan sur l'écran suivant, et aucune durée ne peut le
+            # dire. Mesuré sur une prise réelle, l'écart au bon écran vaut 4,8 et au plus proche
+            # des autres 24 : il n'y a pas de seuil à régler.
+            #
+            # Si le découpage est faux, on ne fabrique pas le film. Les images, elles, sont
+            # déjà composées et partent quand même.
             echo "— première ouverture de chaque onglet —"
             "$RUNNER_TEMP/venv/bin/python" ci_scripts/bascules.py \
               --entree "$dossier/brut.mov" \
               --temps "$dossier/prechauffage.json" \
               --decalage "$decalage" \
-              --tournage "$tournage"
+              --temoins "appstore/raw/$langue/clair"
             echo "— deuxième ouverture, celle que montre le film —"
             "$RUNNER_TEMP/venv/bin/python" ci_scripts/bascules.py \
               --entree "$dossier/brut.mov" \
               --temps "$dossier/temps.json" \
               --decalage "$decalage" \
-              --tournage "$tournage"
+              --temoins "appstore/raw/$langue/clair"
+
+            # LE MONTAGE, une fois le découpage vérifié.
+            #
+            # `apercu.py` conformait l'enregistrement au format d'Apple et s'arrêtait là : on
+            # envoyait un film de quelqu'un qui tapote des onglets. `montage.py` en fait la
+            # fiche animée — même fond, même châssis, même police, mêmes filets, même ligne
+            # courante — et coupe plan par plan sur le découpage que le test vient de relever.
+            "$RUNNER_TEMP/venv/bin/python" ci_scripts/montage.py \
+              --entree "$dossier/brut.mov" \
+              --sortie "$PWD/appstore/apercu/out/$langue.mp4" \
+              --temps "$dossier/temps.json" \
+              --textes appstore/apercu.json \
+              --langue "$langue" \
+              --bandeau "$bandeau" \
+              --decalage "$decalage"
           done
           ls -la appstore/apercu/out
 

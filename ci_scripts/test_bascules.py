@@ -188,39 +188,88 @@ with tempfile.TemporaryDirectory() as d:
                        capture_output=True, text=True)
     attendu("un décalage hors du film se dit", r.returncode, 1)
 
-# --- LES DEUX HORLOGES ---------------------------------------------------------------------
-# `simctl` rend un fichier plus court que le tournage : un repère pris à la seconde de montre
-# tombe sur une image plus tardive. C'est le défaut qui a mis l'écran d'accueil du simulateur
-# dans le dernier plan du film, sans qu'aucune durée ne bronche.
+# --- UNE RÉFÉRENCE DANS UN ENREGISTREMENT À CADENCE VARIABLE ------------------------------------
+# LE DÉFAUT EXACT QUI A FAIT ÉCHOUER UNE EXÉCUTION. `simctl` n'écrit pas d'image tant que l'écran
+# ne bouge pas : sur un écran posé, deux images peuvent être séparées d'une seconde. Demander
+# « la fenêtre d'un trentième de seconde à cet instant » n'y rend alors AUCUNE image, et la
+# mesure s'arrêtait en annonçant un enregistrement trop court — sur un fichier qui durait
+# quarante secondes de plus.
 with tempfile.TemporaryDirectory() as d:
     dossier = pathlib.Path(d)
     im_dir = dossier / "i"
     im_dir.mkdir()
-    for i in range(1, 61):
-        chargee(i % 2).convert("RGB").save(im_dir / f"{i:04d}.png")
-    film = dossier / "deux-secondes.mov"
+    # Trois secondes d'un écran parfaitement immobile, puis un autre.
+    for i in range(1, 91):
+        chargee(0 if i <= 60 else 1).convert("RGB").save(im_dir / f"{i:04d}.png")
+    fige = dossier / "fige.mov"
+    # `mpdecimate` jette les images identiques et `-fps_mode vfr` garde les horodatages : c'est
+    # ce que rend un enregistrement de simulateur sur un écran qui ne bouge pas.
     subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-framerate", "30",
-                    "-i", str(im_dir / "%04d.png"), "-c:v", "libx264", "-crf", "20",
-                    "-pix_fmt", "yuv420p", str(film)], check=True)
+                    "-i", str(im_dir / "%04d.png"), "-vf", "mpdecimate", "-fps_mode", "vfr",
+                    "-c:v", "libx264", "-crf", "20", "-pix_fmt", "yuv420p", str(fige)],
+                   check=True)
+    reference = bs.posee(fige, 1.5, dossier, "ref")
+    attendu("une référence au milieu d'un écran immobile existe", reference.size[0], 258)
+    # Et au-delà du fichier, on le dit encore.
+    try:
+        bs.posee(fige, 99.0, dossier, "loin")
+        attendu("au-delà du fichier, on le dit", "accepté", "refusé")
+    except SystemExit:
+        attendu("au-delà du fichier, on le dit", "refusé", "refusé")
 
-    # Sans durée de tournage : on ne corrige rien, et le chemin manuel garde son comportement.
-    attendu("sans tournage, échelle 1", bs.montage.echelle_horloges(film, None), 1.0)
-    attendu("tournage nul, échelle 1", bs.montage.echelle_horloges(film, 0), 1.0)
-    # Un fichier de 2 s pour 2,5 s de montre : les repères se resserrent de 20 %.
-    attendu("un fichier plus court resserre les repères",
-            round(bs.montage.echelle_horloges(film, 2.5), 3), 0.8)
-    # Hors de toute vraisemblance, c'est une erreur de mesure, pas une correction : un tournage
-    # mal relevé étirerait le découpage au lieu de le remettre en place, et le film sortirait
-    # faux sans que rien ne le dise.
-    def hors_limites(valeur):
-        try:
-            bs.montage.echelle_horloges(film, valeur)
-        except SystemExit:
-            return "refusé"
-        return "accepté"
-    attendu("un tournage dix fois trop long est refusé", hors_limites(20.0), "refusé")
-    attendu("un tournage deux fois trop court est refusé", hors_limites(1.0), "refusé")
-    attendu("la limite basse passe", hors_limites(2.0 / 0.95), "accepté")
+# --- L'ÉCRAN VISÉ EST-IL CELUI QU'ON VOIT -------------------------------------------------------
+# LE CONTRÔLE QUI MANQUAIT, et sans lequel trois films sont sortis faux. Un découpage décalé met
+# chaque plan sur l'écran suivant : vu des durées tout va bien, vu des horloges aussi — les plans
+# se suivent à trois secondes et un décalage de trois secondes se confond avec le voisin. Seul
+# l'écran lui-même ne se confond pas.
+with tempfile.TemporaryDirectory() as d:
+    dossier = pathlib.Path(d)
+    # Deux « écrans » photographiés, aux noms que le script attend.
+    (dossier / "diagnostic").mkdir(parents=True)
+    chargee(0).convert("RGB").save(dossier / "3-coach.png")
+    chargee(1).convert("RGB").save(dossier / "6-stats.png")
+    gabarit = chargee(0)
+    refs = bs.temoins(dossier, gabarit)
+    attendu("les captures présentes sont chargées", sorted(refs), ["coach", "stats"])
+    attendu("une capture absente ne bloque pas", "profil" in refs, False)
+    # L'image à reconnaître arrive rognée au-dessus de la barre d'onglets, comme celle que
+    # ffmpeg tire de l'enregistrement. La comparer non rognée à des témoins rognés fausserait
+    # tout — et les deux écarts seraient du bruit.
+    def comme_le_film(im):
+        return im.crop((0, 0, im.width, int(im.height * bs.HAUT_UTILE))).resize(gabarit.size)
+
+    attendu("l'écran du coach se reconnaît",
+            bs.le_plus_proche(comme_le_film(chargee(0)), refs)[0][0], "coach")
+    attendu("celui des stats aussi",
+            bs.le_plus_proche(comme_le_film(chargee(1)), refs)[0][0], "stats")
+    # Et l'écart au bon écran doit être FRANCHEMENT plus petit qu'à l'autre : c'est ce qui
+    # dispense de régler un seuil.
+    classement = bs.le_plus_proche(comme_le_film(chargee(1)), refs)
+    attendu("le bon écran gagne largement", classement[1][1] > 4 * max(classement[0][1], 0.5),
+            True)
+    # Les noms des plans du test visent le bon écran.
+    attendu("« première-coach » vise le coach", bs.ecran_vise("première-coach"), "coach")
+    attendu("« retour » vise l'accueil", bs.ecran_vise("retour"), "accueil")
+    attendu("« stats » vise les stats", bs.ecran_vise("stats"), "stats")
+
+# --- L'ALIGNEMENT DES DEUX HORLOGES -------------------------------------------------------------
+# LE DÉFAUT QUI A SORTI TROIS FILMS FAUX. Le test appuie sur l'onglet, attend 0,6 s, puis déclare
+# le plan : le changement d'écran doit tomber à 0,6 s du début du plan. Il tombait trois secondes
+# plus tôt, parce que la caméra met trois secondes à démarrer et que personne ne les comptait.
+# Aucune durée ne pouvait le dire — un plan de deux secondes découpé au mauvais endroit dure
+# toujours deux secondes.
+attendu("le changement juste où on l'attend",
+        round(bs.instant_du_changement(["avant"] * 9 + ["transition"] * 4 + ["posée"] * 14, 0.9), 2),
+        0.6)
+attendu("un changement trop tôt se chiffre",
+        round(bs.instant_du_changement(["transition"] * 4 + ["posée"] * 23, 0.9), 2), 0.9)
+attendu("un changement tardif aussi",
+        round(bs.instant_du_changement(["avant"] * 24 + ["posée"] * 3, 0.9), 2), 0.1)
+# Rien que l'écran d'avant : on n'a pas vu le changement, et on ne l'invente pas.
+attendu("aucun changement vu", bs.instant_du_changement(["avant"] * 27, 0.9), None)
+# La fenêtre ne commence pas sur l'écran d'avant : le premier élément décide, et c'est tout
+# l'intérêt — un désalignement de trois secondes met la fenêtre entière après la bascule.
+attendu("une fenêtre qui commence déjà posée", bs.instant_du_changement(["posée"] * 27, 0.9), 0.9)
 
 # --- LES CONSTANTES, contre une faute de frappe -------------------------------------------------
 attendu("cadence", bs.IPS, 30)

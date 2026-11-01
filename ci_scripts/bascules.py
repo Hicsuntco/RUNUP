@@ -45,9 +45,6 @@ import tempfile
 
 from PIL import Image, ImageChops, ImageStat
 
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import montage  # noqa: E402
-
 #: Les images par seconde auxquelles on relit l'enregistrement. Celles du montage : un défaut
 #: qu'on ne verrait pas à cette cadence ne part pas dans la vidéo.
 IPS = 30
@@ -65,6 +62,16 @@ HAUT_UTILE = 0.88
 #: écran posé, même sobre, tient entre 25 et 60 ; un fond uni tient sous 2. Quatre laisse passer
 #: un dégradé de fond sans laisser passer un écran.
 PLAT = 4.0
+
+#: Où le changement d'écran DOIT tomber : le test appuie sur l'onglet, attend 0,6 s, puis
+#: déclare le plan.
+ATTENDU_AVANT = 0.6
+
+#: De combien l'instant moyen peut s'en écarter avant qu'on parle d'un défaut d'alignement. Le
+#: fondu dure 0,22 s et la détection travaille à un trentième de seconde près ; une demi-seconde
+#: laisse passer ce bruit-là et attrape le décalage de trois secondes qui a sorti trois films
+#: faux.
+TOLERANCE_ALIGNEMENT = 0.5
 
 #: Au-dessus de cet écart moyen avec l'écran posé, l'image montre encore autre chose. Six gris
 #: sur 255 : plus que le bruit de l'encodeur, moins qu'un élément qui manque.
@@ -95,12 +102,23 @@ def images(entree: pathlib.Path, depart: float, duree: float,
 
 def posee(entree: pathlib.Path, instant: float, travail: pathlib.Path,
           prefixe: str) -> Image.Image:
-    """L'écran posé, pris bien à l'intérieur de la pose : la référence à laquelle on compare."""
-    suite = images(entree, instant, 1.0 / IPS, travail, prefixe)
-    if not suite:
+    """L'écran posé, pris bien à l'intérieur de la pose : la référence à laquelle on compare.
+
+    UNE IMAGE DEMANDÉE COMME UNE IMAGE, et non comme une fenêtre d'un trentième de seconde.
+    Le premier jet réclamait `-t 0.033` avec le filtre de cadence : sur un enregistrement à
+    cadence variable, cette fenêtre tombe régulièrement ENTRE deux images et ffmpeg n'en rend
+    aucune. La mesure échouait alors en annonçant « l'enregistrement est plus court que le
+    découpage » sur un fichier qui durait quarante secondes de plus.
+    """
+    travail.mkdir(parents=True, exist_ok=True)
+    chemin = travail / f"{prefixe}.png"
+    chemin.unlink(missing_ok=True)
+    ffmpeg("-ss", f"{max(0.0, instant):.3f}", "-i", str(entree), "-frames:v", "1",
+           "-vf", f"crop=in_w:in_h*{HAUT_UTILE}:0:0,scale=258:-2,format=gray", str(chemin))
+    if not chemin.exists():
         raise SystemExit(f"Aucune image à {instant:.2f} s : l'enregistrement est plus court "
                          f"que le découpage.")
-    return _gris(suite[0])
+    return _gris(chemin)
 
 
 def _ecart(im: Image.Image, reference: Image.Image) -> float:
@@ -170,6 +188,76 @@ def mise_en_place(classes: list[str]) -> tuple[int, int]:
     return pose - depart, classes[depart:pose].count("vide")
 
 
+#: À quel écran photographié chaque bascule doit ressembler. Les noms de gauche sont ceux des
+#: plans du test — « première-coach » comme « coach » visent le même écran, et « retour » revient
+#: à l'accueil.
+TEMOINS = {
+    "accueil": "1-accueil.png",
+    "coach": "3-coach.png",
+    "stats": "6-stats.png",
+    "profil": "diagnostic/profil.png",
+}
+
+
+def ecran_vise(nom: str) -> str:
+    return {"retour": "accueil"}.get(nom.removeprefix("première-"), nom.removeprefix("première-"))
+
+
+def temoins(dossier: pathlib.Path, gabarit: Image.Image) -> dict[str, Image.Image]:
+    """Les écrans photographiés par la passe claire, prêts à être comparés.
+
+    # POURQUOI COMPARER DES IMAGES ET PAS DES HORLOGES
+
+    Un découpage décalé de trois secondes met chaque plan sur l'écran SUIVANT. Vu des durées,
+    tout va bien — un plan de deux secondes dure deux secondes où qu'on le coupe. Vu des
+    horloges, tout va bien aussi : les plans se suivent à trois secondes d'intervalle, donc un
+    décalage de trois secondes se confond avec le plan d'à côté. C'est exactement ce qui a laissé
+    passer trois films faux.
+
+    Ce qui ne se confond pas, c'est l'écran lui-même. La passe claire vient de photographier les
+    quatre onglets : il suffit de demander auquel l'image ressemble le plus. Mesuré sur une
+    prise réelle, l'écart au bon écran vaut 4,8 et au plus proche des autres 24 — il n'y a pas de
+    seuil à régler, le plus proche gagne de cinq longueurs.
+    """
+    trouves = {}
+    for nom, fichier in TEMOINS.items():
+        chemin = dossier / fichier
+        if not chemin.is_file():
+            continue
+        with Image.open(chemin) as im:
+            gris = im.convert("L")
+            gris = gris.crop((0, 0, gris.width, int(gris.height * HAUT_UTILE)))
+            trouves[nom] = gris.resize(gabarit.size)
+    return trouves
+
+
+def le_plus_proche(image: Image.Image,
+                   references: dict[str, Image.Image]) -> list[tuple[str, float]]:
+    """Les écrans photographiés, du plus ressemblant au moins."""
+    return sorted(((nom, _ecart(image, ref)) for nom, ref in references.items()),
+                  key=lambda c: c[1])
+
+
+def instant_du_changement(classes: list[str], fenetre: float) -> float | None:
+    """Combien de secondes AVANT le début du plan l'écran a changé. `None` si on ne l'a pas vu.
+
+    # CE QUE CE NOMBRE SURVEILLE
+
+    L'alignement entre l'horloge du test et celle de l'enregistrement. Le test appuie sur
+    l'onglet, attend 0,6 s, puis déclare le plan : le changement doit donc tomber à 0,6 s avant
+    le début du plan, à la durée du fondu près.
+
+    S'il tombe ailleurs, les repères ne désignent pas ce qu'on croit — et c'est arrivé : pendant
+    plusieurs exécutions le film a été coupé trois secondes trop tard, parce que la caméra met
+    trois secondes à démarrer et que personne ne les comptait. Aucune durée ne pouvait le dire,
+    et c'est ce nombre-ci qui l'aurait dit.
+    """
+    for i, c in enumerate(classes):
+        if c != "avant":
+            return fenetre - i / IPS
+    return None
+
+
 def main() -> int:
     a = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -179,29 +267,20 @@ def main() -> int:
                    help="Le découpage relevé par le test (temps.json)")
     a.add_argument("--decalage", type=float, default=0.0,
                    help="Secondes entre le début de l'enregistrement et celui de la prise")
-    # LA DURÉE RÉELLE DU TOURNAGE. Même correction que dans `montage.py`, et pour la même
-    # raison : `simctl` enregistre à cadence variable, le fichier est plus court que le tournage,
-    # et un repère pris à la seconde de montre tombe sur une image plus tardive. Mesurer une
-    # bascule au mauvais endroit du fichier rendrait un nombre d'images vides qui ne parle de
-    # rien.
-    a.add_argument("--tournage", type=float, default=None,
-                   help="Secondes de montre entre le début et la fin de l'enregistrement")
     a.add_argument("--fenetre", type=float, default=FENETRE,
                    help=f"Secondes relues avant chaque plan (défaut {FENETRE})")
     a.add_argument("--plafond", type=int, default=None,
                    help="Nombre d'images vides au-delà duquel on échoue. Sans lui, on mesure "
                         "et on se tait : c'est l'état voulu tant qu'on n'a pas de relevé.")
+    a.add_argument("--temoins", type=pathlib.Path, default=None,
+                   help="Le dossier des captures claires (appstore/raw/<langue>/clair) : chaque "
+                        "bascule doit tomber sur l'écran qu'elle vise, et non sur son voisin")
     a.add_argument("--travail", type=pathlib.Path, default=None,
                    help="Dossier de travail (sinon un dossier temporaire)")
     options = a.parse_args()
 
     if shutil.which("ffmpeg") is None:
         raise SystemExit("ffmpeg est introuvable.")
-
-    # LA RÈGLE DES DEUX HORLOGES VIT DANS `montage.py`, et une seule fois. Les deux scripts
-    # lisent le même enregistrement avec les mêmes repères : une copie ici dériverait de l'autre
-    # au premier réglage, et la mesure cesserait de parler du film qu'on publie.
-    echelle = montage.echelle_horloges(options.entree, options.tournage)
 
     bornes = json.loads(options.temps.read_text(encoding="utf-8"))
     # `bascule` dit si le plan a été précédé d'un appui sur un onglet. Les plans qui défilent
@@ -219,12 +298,22 @@ def main() -> int:
         travail = options.travail
 
     try:
+        # TOUT CE QUI EST EN SECONDES DE MONTRE PASSE PAR LÀ, et rien d'autre : un seul endroit
+        # où le zéro de l'enregistrement est posé, donc un seul endroit à corriger le jour où il
+        # bouge.
+        def vers_fichier(seconde: float) -> float:
+            return seconde + options.decalage
+
         total_vides = 0
+        changements: list[float | None] = []
+        egares: list[str] = []
+        references: dict[str, Image.Image] = {}
         for i, b in enumerate(bascules, start=1):
-            debut = (b["debut"] + options.decalage) * echelle
-            reference = posee(options.entree, debut + 0.5, travail, f"ref{i}")
-            suite = images(options.entree, debut - options.fenetre, options.fenetre,
-                           travail, f"f{i}")
+            # La référence est prise un demi-seconde APRÈS le début du plan : l'écran y est
+            # posé, et c'est à lui qu'on compare ce qui précède.
+            reference = posee(options.entree, vers_fichier(b["debut"] + 0.5), travail, f"ref{i}")
+            suite = images(options.entree, vers_fichier(b["debut"] - options.fenetre),
+                           options.fenetre, travail, f"f{i}")
             # L'ÉCRAN D'AVANT, pris sur la PREMIÈRE image de la fenêtre. Le test laisse 0,6 s
             # entre l'appui sur l'onglet et le début du plan, et la fenêtre fait 0,9 s : son
             # premier tiers est donc encore l'écran précédent. Si ce n'est plus vrai — fenêtre
@@ -234,10 +323,60 @@ def main() -> int:
             vides = classes.count("vide")
             traversee, vides_traversee = mise_en_place(classes)
             total_vides += vides
+            # L'ÉCRAN EST-IL LE BON ? La question que les durées ne savent pas poser.
+            if options.temoins:
+                if not references:
+                    references = temoins(options.temoins, reference)
+                    if not references:
+                        raise SystemExit(f"Aucune capture claire dans {options.temoins} : "
+                                         f"la bascule ne peut pas être reconnue.")
+                classement = le_plus_proche(reference, references)
+                vise = ecran_vise(b["nom"])
+                proche, ecart = classement[0]
+                suivant = classement[1] if len(classement) > 1 else (proche, ecart)
+                if vise not in references:
+                    print(f"  {'':<10} (pas de capture pour « {vise} » — rien à confronter)")
+                elif proche != vise:
+                    egares.append(f"{b['nom']} montre « {proche} »")
+                    print(f"  {'':<10} ÉCRAN : ce plan vise « {vise} » et montre « {proche} » "
+                          f"(écart {ecart:.1f} contre {dict(classement)[vise]:.1f}).")
+                else:
+                    print(f"  {'':<10} écran « {vise} » reconnu (écart {ecart:.1f}, "
+                          f"le suivant à {suivant[1]:.1f})")
+
+            quand = instant_du_changement(classes, options.fenetre)
+            changements.append(quand)
             print(f"  {b['nom']:<10} {''.join(SYMBOLE[c] for c in classes)}")
             print(f"  {'':<10} {len(classes)} images sur {options.fenetre:.2f} s — "
                   f"mise en place : {traversee} images ({traversee / IPS:.2f} s), "
                   f"dont {vides_traversee} vide(s) ; {vides} vide(s) dans toute la fenêtre")
+            print(f"  {'':<10} changement d'écran à "
+                  + (f"{quand:.2f} s avant le plan (attendu {ATTENDU_AVANT:.2f})"
+                     if quand is not None
+                     else "un instant qu'on n'a pas vu : la fenêtre ne commence pas sur "
+                          "l'écran d'avant"))
+
+        if egares:
+            print(f"  DÉCOUPAGE : {len(egares)} bascule(s) tombent sur le mauvais écran — "
+                  f"{', '.join(egares)}. Le film est coupé au mauvais endroit de "
+                  f"l'enregistrement ; ce n'est pas une question de durée.")
+            return 1
+
+        vus = [c for c in changements if c is not None]
+        if vus:
+            moyen = sum(vus) / len(vus)
+            print(f"  → changement d'écran à {moyen:.2f} s du plan en moyenne "
+                  f"(attendu {ATTENDU_AVANT:.2f}, étendue {min(vus):.2f} → {max(vus):.2f}).")
+            if abs(moyen - ATTENDU_AVANT) > TOLERANCE_ALIGNEMENT:
+                print(f"  ALIGNEMENT : les repères sont décalés d'environ "
+                      f"{ATTENDU_AVANT - moyen:+.2f} s par rapport à l'enregistrement. "
+                      f"Le film est coupé au mauvais endroit — ce n'est pas une question de "
+                      f"durée, c'est l'image qui ne correspond pas au titre.")
+                return 1
+        else:
+            print("  → aucun changement d'écran repéré : la fenêtre ne commence jamais sur "
+                  "l'écran d'avant, donc l'alignement ne se vérifie pas.")
+            return 1
 
         print(f"  → {total_vides} image(s) vide(s) en tout sur {len(bascules)} bascule(s). "
               f"Le fondu de 0,22 s fait attendre une mise en place d'une petite dizaine "

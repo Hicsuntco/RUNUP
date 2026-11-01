@@ -207,6 +207,34 @@ def secondes(chemin: pathlib.Path) -> float:
          str(chemin)], capture_output=True, text=True, check=True).stdout.strip())
 
 
+def echelle_horloges(entree: pathlib.Path, tournage: float | None) -> float:
+    """Le rapport entre l'horloge de la montre et celle du fichier.
+
+    Les repères du test sont des secondes de montre. Celles du FICHIER n'avancent pas au même
+    rythme : `simctl` enregistre à cadence variable et laisse tomber des images sur un écran qui
+    ne bouge pas. Le fichier est donc plus court que le tournage, et un repère pris à la seconde
+    de montre tombe sur une image PLUS TARDIVE — au premier plan ça ne se voit pas, au septième
+    le film montrait l'écran d'accueil du simulateur.
+
+    Rien dans les durées ne pouvait le dire : un plan de deux secondes découpé au mauvais endroit
+    dure toujours deux secondes. Il a fallu regarder les images.
+
+    Sans durée de tournage, on rend 1,0 : l'appelant fait comme avant, et le chemin manuel
+    (`--plans`) n'a pas à connaître une horloge qu'il n'a pas mesurée.
+    """
+    if not tournage or tournage <= 0:
+        return 1.0
+    rapport = secondes(entree) / tournage
+    # UNE ÉCHELLE INVRAISEMBLABLE EST UNE ERREUR, PAS UNE CORRECTION. Un tournage mal mesuré —
+    # une variable vide, une soustraction à l'envers — étirerait le découpage au lieu de le
+    # remettre en place, et le film sortirait faux sans que rien ne le dise.
+    if not 0.5 <= rapport <= 1.5:
+        raise SystemExit(f"Échelle invraisemblable ({rapport:.3f}) : l'enregistrement "
+                         f"({secondes(entree):.1f} s) et le tournage ({tournage:.1f} s) ne "
+                         f"parlent pas du même moment.")
+    return rapport
+
+
 def assembler(morceaux: list[pathlib.Path], sortie: pathlib.Path, fond_hex: str) -> None:
     """Les plans bout à bout, puis une seule passe au format d'Apple.
 
@@ -250,6 +278,22 @@ def main() -> int:
     # comptent depuis l'instant où la prise commence. Sans ce décalage, le montage irait chercher
     # ses plans dans l'écran d'accueil du simulateur.
     a.add_argument("--decalage", type=float, default=0.0)
+    # LA DURÉE RÉELLE DU TOURNAGE, EN SECONDES DE MONTRE, et elle corrige un défaut qui ne se
+    # voyait pas dans les durées.
+    #
+    # Les repères du test sont des secondes de montre. Celles du FICHIER n'avancent pas au même
+    # rythme : `simctl` enregistre à cadence variable et laisse tomber des images sur un écran
+    # qui ne bouge pas. Le fichier est donc plus court que le tournage, et un repère pris à la
+    # seconde de montre tombe sur une image PLUS TARDIVE. Au premier plan ça ne se voit pas ; au
+    # septième, le film montrait l'écran d'accueil du simulateur.
+    #
+    # Rien dans les durées ne pouvait le dire : un plan de deux secondes découpé au mauvais
+    # endroit dure toujours deux secondes. Il a fallu regarder les images.
+    #
+    # Avec cette durée, le montage connaît le rapport entre les deux horloges et met les repères
+    # à l'échelle du fichier. Sans elle, il se tait et fait comme avant.
+    a.add_argument("--tournage", type=float, default=None,
+                   help="Secondes de montre entre le début et la fin de l'enregistrement")
     a.add_argument("--travail", type=pathlib.Path, default=None)
     a.add_argument("--fond", default="0xF4F3F8")
     options = a.parse_args()
@@ -258,6 +302,11 @@ def main() -> int:
         raise SystemExit("ffmpeg et ffprobe sont nécessaires.")
     if not options.entree.is_file():
         raise SystemExit(f"Enregistrement introuvable : {options.entree}")
+
+    echelle = echelle_horloges(options.entree, options.tournage)
+    if options.tournage:
+        print(f"  horloges : {options.tournage:.2f} s de tournage pour "
+              f"{secondes(options.entree):.2f} s de fichier — échelle {echelle:.4f}")
 
     if options.plans:
         script = json.loads(options.plans.read_text(encoding="utf-8"))
@@ -278,7 +327,8 @@ def main() -> int:
             "bandeau": options.bandeau,
             "ouverture": bloc.get("ouverture"),
             "fin": bloc.get("fin"),
-            "plans": [{"debut": b["debut"] + options.decalage, "duree": b["fin"] - b["debut"],
+            "plans": [{"debut": (b["debut"] + options.decalage) * echelle,
+                       "duree": (b["fin"] - b["debut"]) * echelle,
                        "rang": i, "titre": bloc["plans"][b["nom"]][0],
                        "sous": bloc["plans"][b["nom"]][1]}
                       for i, b in enumerate(bornes, start=1)],

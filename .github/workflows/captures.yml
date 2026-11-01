@@ -403,7 +403,16 @@ jobs:
             sleep 3
             # `-INT` et non `-KILL` : `simctl` ferme alors proprement le fichier. Tué net, il
             # laisse un .mov sans index, que ffmpeg lit mal ou pas du tout.
-            kill -INT "$camera"; wait "$camera" || true
+            kill -INT "$camera"
+            # LA DURÉE DU TOURNAGE, EN SECONDES DE MONTRE, prise au moment où la caméra s'arrête
+            # et non après l'écriture du fichier, qui n'enregistre plus rien.
+            #
+            # Elle sert à mettre les repères du test à l'échelle du fichier : `simctl` enregistre
+            # à cadence variable, le fichier est plus court que le tournage, et un repère pris à
+            # la seconde de montre tombe sur une image plus tardive. Le dernier plan du film
+            # montrait l'écran d'accueil du simulateur, et aucune durée ne pouvait le dire.
+            tournage=$(python3 -c "import time; print(time.time() - $depart)")
+            wait "$camera" || true
 
             # LE DÉBUT ET LA FIN VIENNENT DU TEST, PAS D'UNE ESTIMATION.
             #
@@ -434,7 +443,8 @@ jobs:
               --textes appstore/apercu.json \
               --langue "$langue" \
               --bandeau "$bandeau" \
-              --decalage "$decalage"
+              --decalage "$decalage" \
+              --tournage "$tournage"
 
             # COMBIEN D'IMAGES VIDES À CHAQUE CHANGEMENT D'ONGLET.
             #
@@ -460,12 +470,14 @@ jobs:
             "$RUNNER_TEMP/venv/bin/python" ci_scripts/bascules.py \
               --entree "$dossier/brut.mov" \
               --temps "$dossier/prechauffage.json" \
-              --decalage "$decalage"
+              --decalage "$decalage" \
+              --tournage "$tournage"
             echo "— deuxième ouverture, celle que montre le film —"
             "$RUNNER_TEMP/venv/bin/python" ci_scripts/bascules.py \
               --entree "$dossier/brut.mov" \
               --temps "$dossier/temps.json" \
-              --decalage "$decalage"
+              --decalage "$decalage" \
+              --tournage "$tournage"
           done
           ls -la appstore/apercu/out
 
@@ -474,6 +486,15 @@ jobs:
       # `always()` : un montage raté ne doit pas emporter les images avec lui. Elles sont la
       # livraison principale, elles sont déjà composées à ce stade, et les perdre pour une vidéo
       # trop courte obligerait à refaire quarante minutes de harnais pour rien.
+      # L'ENREGISTREMENT BRUT ET LES REPÈRES SONT PUBLIÉS, LE TEMPS DE RÉGLER LES DEUX HORLOGES.
+      #
+      # Le film est sorti plusieurs fois avec les titres décalés d'un plan sur les images, et
+      # rien dans le journal ne pouvait le montrer : il faut la matière première pour vérifier
+      # qu'un repère tombe là où on croit. Ces fichiers pèsent — ils sortiront de la liste une
+      # fois l'alignement confirmé.
+      #
+      # (Le commentaire est ici et non dans la liste : dans un bloc littéral `|`, un dièse n'est
+      # pas un commentaire, c'est une ligne de chemin de plus.)
       - name: Publier les captures
         if: always()
         uses: actions/upload-artifact@v4
@@ -483,5 +504,8 @@ jobs:
             appstore/raw/**
             appstore/out/**
             appstore/apercu/out/**
+            appstore/apercu/*/brut.mov
+            appstore/apercu/*/*.json
+            appstore/apercu/*/debut.txt
           if-no-files-found: error
           retention-days: 30

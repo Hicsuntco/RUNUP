@@ -45,6 +45,9 @@ import tempfile
 
 from PIL import Image, ImageChops, ImageStat
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import montage  # noqa: E402
+
 #: Les images par seconde auxquelles on relit l'enregistrement. Celles du montage : un défaut
 #: qu'on ne verrait pas à cette cadence ne part pas dans la vidéo.
 IPS = 30
@@ -176,6 +179,13 @@ def main() -> int:
                    help="Le découpage relevé par le test (temps.json)")
     a.add_argument("--decalage", type=float, default=0.0,
                    help="Secondes entre le début de l'enregistrement et celui de la prise")
+    # LA DURÉE RÉELLE DU TOURNAGE. Même correction que dans `montage.py`, et pour la même
+    # raison : `simctl` enregistre à cadence variable, le fichier est plus court que le tournage,
+    # et un repère pris à la seconde de montre tombe sur une image plus tardive. Mesurer une
+    # bascule au mauvais endroit du fichier rendrait un nombre d'images vides qui ne parle de
+    # rien.
+    a.add_argument("--tournage", type=float, default=None,
+                   help="Secondes de montre entre le début et la fin de l'enregistrement")
     a.add_argument("--fenetre", type=float, default=FENETRE,
                    help=f"Secondes relues avant chaque plan (défaut {FENETRE})")
     a.add_argument("--plafond", type=int, default=None,
@@ -187,6 +197,11 @@ def main() -> int:
 
     if shutil.which("ffmpeg") is None:
         raise SystemExit("ffmpeg est introuvable.")
+
+    # LA RÈGLE DES DEUX HORLOGES VIT DANS `montage.py`, et une seule fois. Les deux scripts
+    # lisent le même enregistrement avec les mêmes repères : une copie ici dériverait de l'autre
+    # au premier réglage, et la mesure cesserait de parler du film qu'on publie.
+    echelle = montage.echelle_horloges(options.entree, options.tournage)
 
     bornes = json.loads(options.temps.read_text(encoding="utf-8"))
     # `bascule` dit si le plan a été précédé d'un appui sur un onglet. Les plans qui défilent
@@ -206,7 +221,7 @@ def main() -> int:
     try:
         total_vides = 0
         for i, b in enumerate(bascules, start=1):
-            debut = b["debut"] + options.decalage
+            debut = (b["debut"] + options.decalage) * echelle
             reference = posee(options.entree, debut + 0.5, travail, f"ref{i}")
             suite = images(options.entree, debut - options.fenetre, options.fenetre,
                            travail, f"f{i}")

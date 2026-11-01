@@ -188,6 +188,40 @@ with tempfile.TemporaryDirectory() as d:
                        capture_output=True, text=True)
     attendu("un décalage hors du film se dit", r.returncode, 1)
 
+# --- LES DEUX HORLOGES ---------------------------------------------------------------------
+# `simctl` rend un fichier plus court que le tournage : un repère pris à la seconde de montre
+# tombe sur une image plus tardive. C'est le défaut qui a mis l'écran d'accueil du simulateur
+# dans le dernier plan du film, sans qu'aucune durée ne bronche.
+with tempfile.TemporaryDirectory() as d:
+    dossier = pathlib.Path(d)
+    im_dir = dossier / "i"
+    im_dir.mkdir()
+    for i in range(1, 61):
+        chargee(i % 2).convert("RGB").save(im_dir / f"{i:04d}.png")
+    film = dossier / "deux-secondes.mov"
+    subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-framerate", "30",
+                    "-i", str(im_dir / "%04d.png"), "-c:v", "libx264", "-crf", "20",
+                    "-pix_fmt", "yuv420p", str(film)], check=True)
+
+    # Sans durée de tournage : on ne corrige rien, et le chemin manuel garde son comportement.
+    attendu("sans tournage, échelle 1", bs.montage.echelle_horloges(film, None), 1.0)
+    attendu("tournage nul, échelle 1", bs.montage.echelle_horloges(film, 0), 1.0)
+    # Un fichier de 2 s pour 2,5 s de montre : les repères se resserrent de 20 %.
+    attendu("un fichier plus court resserre les repères",
+            round(bs.montage.echelle_horloges(film, 2.5), 3), 0.8)
+    # Hors de toute vraisemblance, c'est une erreur de mesure, pas une correction : un tournage
+    # mal relevé étirerait le découpage au lieu de le remettre en place, et le film sortirait
+    # faux sans que rien ne le dise.
+    def hors_limites(valeur):
+        try:
+            bs.montage.echelle_horloges(film, valeur)
+        except SystemExit:
+            return "refusé"
+        return "accepté"
+    attendu("un tournage dix fois trop long est refusé", hors_limites(20.0), "refusé")
+    attendu("un tournage deux fois trop court est refusé", hors_limites(1.0), "refusé")
+    attendu("la limite basse passe", hors_limites(2.0 / 0.95), "accepté")
+
 # --- LES CONSTANTES, contre une faute de frappe -------------------------------------------------
 attendu("cadence", bs.IPS, 30)
 attendu("fenêtre", bs.FENETRE, 0.9)

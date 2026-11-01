@@ -1151,16 +1151,41 @@ def cmd_pret(args):
             manques.append("la build n'a pas de déclaration de chiffrement "
                            "(« Missing Compliance »)")
 
-    # 3. LA CLASSIFICATION D'ÂGE, qui vit sur l'app et pas sur la version.
-    try:
-        age = call("GET", f"apps/{aid}/ageRatingDeclaration", strict=False)["data"]
-        print(f"  classification d'âge : {'renseignée' if age else 'ABSENTE'}")
-        if not age:
-            manques.append("la classification d'âge n'est pas renseignée")
-    except ErreurApple:
-        print("  classification d'âge : illisible depuis l'API")
+    # 3. LA FICHE D'APP, qui vit À CÔTÉ de la version et qui la bloque sans le dire.
+    #
+    # Catégories, classification d'âge, nom et sous-titre, politique de confidentialité : tout
+    # ça appartient à l'« appInfo » et non à la version. Une appInfo incomplète rend la version
+    # non examinable, et le message d'Apple parle pourtant de la version.
+    for info in call("GET", f"apps/{aid}/appInfos")["data"]:
+        a = info["attributes"]
+        etat = a.get("appStoreState") or a.get("state")
+        print(f"  fiche d'app : état {etat}, âge {a.get('appStoreAgeRating') or 'NON RENSEIGNÉ'}")
+        if not a.get("appStoreAgeRating"):
+            manques.append("la classification d'âge de la fiche d'app n'est pas renseignée")
+        rel = info.get("relationships", {})
+        for nom in ("primaryCategory", "secondaryCategory"):
+            cible = (rel.get(nom) or {}).get("data")
+            print(f"    {nom} : {cible['id'] if cible else 'aucune'}")
+        if not (rel.get("primaryCategory") or {}).get("data"):
+            manques.append("la fiche d'app n'a pas de catégorie principale")
+        for il in call("GET", f"appInfos/{info['id']}/appInfoLocalizations")["data"]:
+            b = il["attributes"]
+            print(f"    {b.get('locale')} : nom {'oui' if b.get('name') else 'NON'}, "
+                  f"confidentialité {'oui' if b.get('privacyPolicyUrl') else 'NON'}")
+            if not b.get("privacyPolicyUrl"):
+                manques.append(f"{b.get('locale')} n'a pas d'URL de confidentialité")
 
-    # 4. CE QUE CHAQUE LANGUE DOIT PORTER.
+    # 4. UNE SOUMISSION DÉJÀ OUVERTE. Apple n'en accepte qu'une à la fois, et un essai resté en
+    #    travers bloque tous les suivants avec le même message illisible.
+    for s in call("GET", f"apps/{aid}/reviewSubmissions?limit=5")["data"]:
+        a = s["attributes"]
+        print(f"  soumission {s['id'][:8]} : état {a.get('state')}, "
+              f"soumise {'oui' if a.get('submitted') else 'non'}")
+        if a.get("state") in ("READY_FOR_REVIEW", "WAITING_FOR_REVIEW", "IN_REVIEW",
+                              "UNRESOLVED_ISSUES"):
+            manques.append(f"une soumission est déjà ouverte (état {a.get('state')})")
+
+    # 5. CE QUE CHAQUE LANGUE DOIT PORTER.
     for loc in sorted(call("GET", f"appStoreVersions/{vid}/appStoreVersionLocalizations")["data"],
                       key=lambda l: l["attributes"]["locale"]):
         langue, a = loc["attributes"]["locale"], loc["attributes"]

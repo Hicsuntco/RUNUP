@@ -383,11 +383,13 @@ jobs:
                 -only-testing:RunUpUITests/ApercuUITests \
                 CODE_SIGNING_ALLOWED=NO
 
-            # UNE SECONDE ET DEMIE DE RAB AVANT DE COUPER. `xcodebuild` rend la main dès que le
-            # test est fini, et `simctl` n'écrit pas la toute fin de son tampon : le dernier
-            # plan du premier essai ne faisait qu'UNE IMAGE. On laisse la caméra dépasser la
-            # prise ; le montage, lui, sait où celle-ci s'arrête.
-            sleep 1.5
+            # TROIS SECONDES DE RAB AVANT DE COUPER, et une seconde et demie ne suffisait pas.
+            #
+            # `xcodebuild` rend la main dès le test fini, et `simctl` n'écrit pas la toute fin de
+            # son tampon. Au premier essai, sans rab, le dernier plan ne faisait qu'UNE IMAGE ;
+            # avec une seconde et demie, il en manquait encore 0,38 s — le garde-fou du montage
+            # l'a nommé, ce pour quoi il existe. Trois secondes couvrent largement.
+            sleep 3
             # `-INT` et non `-KILL` : `simctl` ferme alors proprement le fichier. Tué net, il
             # laisse un .mov sans index, que ffmpeg lit mal ou pas du tout.
             kill -INT "$camera"; wait "$camera" || true

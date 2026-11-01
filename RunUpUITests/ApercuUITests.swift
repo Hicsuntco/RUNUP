@@ -162,18 +162,21 @@ final class ApercuUITests: XCTestCase {
         let debut = Date().timeIntervalSince1970
         Thread.sleep(forTimeInterval: pose)
         for _ in 0..<defilements {
-            // LE GLISSEMENT PASSE DE « LENT » À NORMAL, et c'est la moitié du « un peu long ».
+            // LA VITESSE DU GESTE, TROISIÈME RÉGLAGE — ET C'EST LA MACHINE QUI A TRANCHÉ.
             //
-            // `.slow` sur trois dixièmes de l'écran prend près de deux secondes à lui seul : le
-            // geste durait plus longtemps que le plan qui le contenait. Un défilement à vitesse
-            // normale est ce que fait une vraie personne, et il se lit parfaitement à trente
-            // images par seconde — c'est pour l'œil d'un humain que la vidéo est faite, pas pour
-            // un arrêt sur image.
+            // `.slow` prenait près de deux secondes : le geste durait plus que le plan. `.default`
+            // paraissait raisonnable en local ; sur la machine du harnais, il a donné des plans de
+            // 3,4 s, et le film entier est monté à vingt-huit secondes — à deux du plafond
+            // d'Apple, et bien au-delà du « un peu long » qu'on corrigeait.
+            //
+            // C'est le genre de durée qu'on ne peut pas estimer : elle dépend de la charge d'une
+            // machine qu'on ne voit pas. `.fast` est un coup de pouce, ce que fait une vraie
+            // personne pour descendre dans une page, et ça se lit à trente images par seconde.
             let depart = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.70))
             let arrivee = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.42))
-            depart.press(forDuration: 0.08, thenDragTo: arrivee,
-                         withVelocity: .default, thenHoldForDuration: 0.05)
-            Thread.sleep(forTimeInterval: 0.9)
+            depart.press(forDuration: 0.06, thenDragTo: arrivee,
+                         withVelocity: .fast, thenHoldForDuration: 0.05)
+            Thread.sleep(forTimeInterval: 0.8)
         }
         bornes.append((nom, debut, Date().timeIntervalSince1970))
     }

@@ -643,6 +643,10 @@ def cmd_push_metadata(args):
 # appareil dans la fiche. La table est donc explicite, et une taille inconnue ARRÊTE la commande
 # plutôt que de deviner.
 TYPES_PAR_TAILLE = {
+    # La montre. Apple l'EXIGE dès que la build embarque une app watchOS, et c'est le cas :
+    # « Your binary indicates support for Apple Watch. You must provide an Apple Watch
+    # screenshot. » Taille rendue par le simulateur Series 11 46 mm, celle qu'Apple a acceptée.
+    (416, 496): "APP_WATCH_SERIES_10",
     (1320, 2868): "APP_IPHONE_69",   # iPhone 16/17 Pro Max
     (1290, 2796): "APP_IPHONE_67",   # iPhone 15/16 Pro Max — ce que produit screenshots.py
     (1284, 2778): "APP_IPHONE_67",
@@ -1067,7 +1071,17 @@ def cmd_prune_screenshots(args):
         sys.exit(f"La version {args.version} est en état {etat} : Apple la fige, "
                  f"il n'y a rien à retirer ici.")
     vid = versions[0]["id"]
-    gardes = set(args.garder)
+    # ON NOMME CE QU'ON RETIRE, ET PLUS CE QU'ON GARDE.
+    #
+    # La première version gardait `APP_IPHONE_67` et supprimait tout le reste. Elle a supprimé
+    # la capture Apple Watch et la capture iPad de la fiche, qui n'étaient pas des parasites :
+    # Apple les exige dès que la build embarque une app watchOS, et refuse la soumission sans
+    # elles. Le message d'erreur n'apparaît que dans l'interface web, et la version est restée
+    # bloquée deux heures.
+    #
+    # Une liste de ce qu'on garde est dangereuse parce qu'elle agit sur ce qu'elle ne connaît
+    # pas. Une liste de ce qu'on retire ne touche qu'à ce qu'on a nommé.
+    retires = set(args.retirer)
     total = 0
     for loc in sorted(call("GET", f"appStoreVersions/{vid}/appStoreVersionLocalizations")["data"],
                       key=lambda l: l["attributes"]["locale"]):
@@ -1075,7 +1089,7 @@ def cmd_prune_screenshots(args):
         for jeu in call("GET",
                         f"appStoreVersionLocalizations/{loc['id']}/appScreenshotSets")["data"]:
             type_ = jeu["attributes"]["screenshotDisplayType"]
-            if type_ in gardes:
+            if type_ not in retires:
                 continue
             images = call("GET", f"appScreenshotSets/{jeu['id']}/appScreenshots")["data"]
             total += len(images)
@@ -1086,12 +1100,12 @@ def cmd_prune_screenshots(args):
                 call("DELETE", f"appScreenshots/{im['id']}")
             call("DELETE", f"appScreenshotSets/{jeu['id']}")
             print(f"  {langue} · {type_} · {len(images)} image(s) retirées, jeu supprimé")
-    gardees = ", ".join(sorted(gardes))
+    nommes = ", ".join(sorted(retires))
     if args.dry_run:
-        print(f"\n(--dry-run : {total} image(s) hors de [{gardees}], rien n'a été supprimé)")
+        print(f"\n(--dry-run : {total} image(s) dans [{nommes}], rien n'a été supprimé)")
     else:
         print(f"\n{total} image(s) retirées de la version {args.version}. "
-              f"Formats gardés : {gardees}.")
+              f"Formats visés : {nommes}.")
 
 
 def cmd_pret(args):
@@ -1821,8 +1835,8 @@ def main():
     lb = sub.add_parser("liberer")
     lb.add_argument("--dry-run", action="store_true"); lb.set_defaults(func=cmd_liberer)
     pr = sub.add_parser("prune-screenshots"); pr.add_argument("version")
-    pr.add_argument("--garder", nargs="+", default=["APP_IPHONE_67"],
-                    help="Les formats à conserver ; tous les autres jeux sont supprimés")
+    pr.add_argument("--retirer", nargs="+", required=True,
+                    help="Les formats à supprimer, nommés un par un. Rien d'autre n'est touché.")
     pr.add_argument("--dry-run", action="store_true"); pr.set_defaults(func=cmd_prune_screenshots)
     ls = sub.add_parser("list-screenshots"); ls.add_argument("version")
     ls.set_defaults(func=cmd_list_screenshots)

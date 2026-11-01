@@ -57,6 +57,14 @@ def _():
     assert asc.TYPES_PAR_TAILLE[(1320, 2868)] != asc.TYPES_PAR_TAILLE[(1290, 2796)]
 
 
+@cas_test("la montre est une taille connue, parce qu'Apple l'exige")
+def _():
+    # « Your binary indicates support for Apple Watch. You must provide an Apple Watch
+    # screenshot. » La build embarque une app watchOS : sans cette capture, la soumission est
+    # refusée. Elle a été supprimée une fois, et la version est restée bloquée.
+    assert asc.TYPES_PAR_TAILLE[(416, 496)] == "APP_WATCH_SERIES_10"
+
+
 @cas_test("une taille inconnue n'est pas devinée")
 def _():
     assert (1000, 1000) not in asc.TYPES_PAR_TAILLE
@@ -90,7 +98,7 @@ def _():
 def _():
     for (l, h), type_ in asc.TYPES_PAR_TAILLE.items():
         assert l > 0 and h > 0, (l, h)
-        assert type_.startswith("APP_IPHONE_") or type_.startswith("APP_IPAD_"), type_
+        assert type_.startswith(("APP_IPHONE_", "APP_IPAD_", "APP_WATCH_")), type_
 
 
 # ── L'APERÇU VIDÉO ───────────────────────────────────────────────────────────────────────────

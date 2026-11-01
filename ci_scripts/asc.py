@@ -1094,6 +1094,98 @@ def cmd_prune_screenshots(args):
               f"Formats gardés : {gardees}.")
 
 
+def cmd_pret(args):
+    """Pourquoi Apple refuse d'examiner cette version. Lecture seule.
+
+    Un refus de soumission dit « cette ressource ne peut pas être examinée, voir les erreurs
+    associées » et ne nomme AUCUNE de ces erreurs. Elles ne sont lisibles que dans l'interface,
+    où il faut savoir où regarder. Cette commande va chercher les cas connus un par un et dit
+    lequel manque.
+    """
+    aid, _ = app_id()
+    versions = call("GET", f"apps/{aid}/appStoreVersions?filter[versionString]={args.version}")["data"]
+    if not versions:
+        sys.exit(f"Version {args.version} introuvable.")
+    v = versions[0]
+    vid = v["id"]
+    print(f"Version {args.version} — état {v['attributes']['appStoreState']}")
+    manques = []
+
+    # 1. LES INFORMATIONS DE VÉRIFICATION. Une version créée par l'API n'en hérite pas, et Apple
+    #    les exige : sans contact, pas d'examen. C'est le premier suspect d'un 409 sur une
+    #    version toute neuve.
+    try:
+        detail = call("GET", f"appStoreVersions/{vid}/appStoreReviewDetail",
+                      strict=False)["data"]
+    except ErreurApple:
+        detail = None
+    if not detail:
+        manques.append("les informations de vérification (contact, compte de démonstration) "
+                       "n'existent pas sur cette version")
+        print("  informations de vérification : ABSENTES")
+    else:
+        a = detail["attributes"]
+        qui = " ".join(filter(None, [a.get("contactFirstName"), a.get("contactLastName")]))
+        print(f"  informations de vérification : {qui or 'sans nom'}, "
+              f"{a.get('contactEmail') or 'sans courriel'}, "
+              f"démo {'oui' if a.get('demoAccountRequired') else 'non'}")
+        if not (a.get("contactEmail") and a.get("contactPhone")):
+            manques.append("le contact de vérification est incomplet")
+
+    # 2. LA BUILD. Attachée, et déclarée côté chiffrement — « Missing Compliance » bloque
+    #    l'examen sans jamais le dire autrement.
+    try:
+        build = call("GET", f"appStoreVersions/{vid}/build", strict=False)["data"]
+    except ErreurApple:
+        build = None
+    if not build:
+        manques.append("aucune build n'est attachée")
+        print("  build : AUCUNE")
+    else:
+        b = call("GET", f"builds/{build['id']}")["data"]["attributes"]
+        chiffrement = b.get("usesNonExemptEncryption")
+        print(f"  build : {b.get('version')} — état {b.get('processingState')}, "
+              f"chiffrement déclaré : "
+              f"{'non renseigné' if chiffrement is None else ('oui' if chiffrement else 'non')}")
+        if chiffrement is None:
+            manques.append("la build n'a pas de déclaration de chiffrement "
+                           "(« Missing Compliance »)")
+
+    # 3. LA CLASSIFICATION D'ÂGE, qui vit sur l'app et pas sur la version.
+    try:
+        age = call("GET", f"apps/{aid}/ageRatingDeclaration", strict=False)["data"]
+        print(f"  classification d'âge : {'renseignée' if age else 'ABSENTE'}")
+        if not age:
+            manques.append("la classification d'âge n'est pas renseignée")
+    except ErreurApple:
+        print("  classification d'âge : illisible depuis l'API")
+
+    # 4. CE QUE CHAQUE LANGUE DOIT PORTER.
+    for loc in sorted(call("GET", f"appStoreVersions/{vid}/appStoreVersionLocalizations")["data"],
+                      key=lambda l: l["attributes"]["locale"]):
+        langue, a = loc["attributes"]["locale"], loc["attributes"]
+        captures = sum(
+            len(call("GET", f"appScreenshotSets/{jeu['id']}/appScreenshots")["data"])
+            for jeu in call("GET",
+                            f"appStoreVersionLocalizations/{loc['id']}/appScreenshotSets")["data"])
+        print(f"  {langue} : {captures} capture(s), "
+              f"description {'oui' if a.get('description') else 'NON'}, "
+              f"nouveautés {'oui' if a.get('whatsNew') else 'NON'}")
+        if captures == 0:
+            manques.append(f"{langue} n'a aucune capture")
+        if not a.get("description"):
+            manques.append(f"{langue} n'a pas de description")
+
+    print()
+    if manques:
+        print("CE QUI MANQUE :")
+        for m in manques:
+            print(f"  - {m}")
+        return 1
+    print("Rien ne manque parmi ce que cette commande sait regarder.")
+    return 0
+
+
 def builds_for(aid: str, version: str):
     """Les builds envoyées SUR CETTE CHAÎNE DE VERSION, la plus récente d'abord.
 
@@ -1598,6 +1690,7 @@ def main():
     ps.add_argument("--dir", default="appstore/out",
                     help="dossier contenant un sous-dossier par langue (défaut : appstore/out)")
     ps.add_argument("--dry-run", action="store_true"); ps.set_defaults(func=cmd_push_screenshots)
+    pt = sub.add_parser("pret"); pt.add_argument("version"); pt.set_defaults(func=cmd_pret)
     pr = sub.add_parser("prune-screenshots"); pr.add_argument("version")
     pr.add_argument("--garder", nargs="+", default=["APP_IPHONE_67"],
                     help="Les formats à conserver ; tous les autres jeux sont supprimés")

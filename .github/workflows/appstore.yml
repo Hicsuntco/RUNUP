@@ -24,6 +24,7 @@ on:
           - composer-les-captures
           - pousser-les-captures-essai
           - pousser-les-captures
+          - pourquoi-pas-soumettable
           - lister-les-captures
           - nettoyer-les-captures-essai
           - nettoyer-les-captures
@@ -217,6 +218,7 @@ jobs:
             composer-les-captures)    python3 ci_scripts/screenshots.py "$LANGUE" ;;
             pousser-les-captures-essai) python3 ci_scripts/asc.py push-screenshots "$VERSION" --dir "$RUNNER_TEMP/captures/out" --dry-run ;;
             pousser-les-captures)     python3 ci_scripts/asc.py push-screenshots "$VERSION" --dir "$RUNNER_TEMP/captures/out" ;;
+            pourquoi-pas-soumettable) python3 ci_scripts/asc.py pret "$VERSION" ;;
             lister-les-captures)      python3 ci_scripts/asc.py list-screenshots "$VERSION" ;;
             nettoyer-les-captures-essai) python3 ci_scripts/asc.py prune-screenshots "$VERSION" --dry-run ;;
             nettoyer-les-captures)    python3 ci_scripts/asc.py prune-screenshots "$VERSION" ;;

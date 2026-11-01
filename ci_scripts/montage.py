@@ -161,8 +161,18 @@ def plan_video(entree: pathlib.Path, debut: float, duree: float,
                sortie: pathlib.Path) -> None:
     """Un plan : l'enregistrement dans l'écran, entre le décor et le châssis, titre par-dessus."""
     d, h = ENTREE_DUREE, ENTREE_MONTEE
+    # `fps` AVANT `trim`, ET C'EST LE DÉFAUT QUI A FAIT UN FILM TROP COURT.
+    #
+    # `simctl recordVideo` écrit en cadence VARIABLE : quand l'écran ne bouge pas, il n'émet
+    # presque aucune image. Un plan fixe de deux secondes ne contenait donc qu'une poignée
+    # d'images, et `trim` en rendait un peu plus d'une seconde — tandis que les plans où l'on
+    # défile, eux, sortaient entiers. La version française est descendue à 12,8 s, sous le
+    # plancher de quinze d'Apple.
+    #
+    # Remis en cadence fixe AVANT la découpe, les périodes immobiles retrouvent leurs images et
+    # une seconde de source fait une seconde de film.
     filtre = (
-        f"[0:v]trim=start={debut}:duration={duree},setpts=PTS-STARTPTS,"
+        f"[0:v]fps={IPS},trim=start={debut}:duration={duree},setpts=PTS-STARTPTS,"
         f"scale={ECRAN_WH[0]}:{ECRAN_WH[1]}[ecran];"
         f"[1:v]loop=loop=-1:size=1:start=0,setpts=N/{IPS}/TB[bg];"
         f"[bg][ecran]overlay={ECRAN_XY[0]}:{ECRAN_XY[1]}:shortest=1[pose];"
@@ -188,6 +198,13 @@ def plan_fixe(image: pathlib.Path, duree: float, sortie: pathlib.Path) -> None:
         ["ffmpeg", "-y", "-v", "error", "-loop", "1", "-i", str(image),
          "-t", f"{duree}", "-r", str(IPS), "-c:v", "libx264", "-crf", "16",
          "-pix_fmt", "yuv420p", str(sortie)], check=True)
+
+
+def secondes(chemin: pathlib.Path) -> float:
+    """La durée RÉELLE d'un fichier, telle que ffprobe la lit."""
+    return float(subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0",
+         str(chemin)], capture_output=True, text=True, check=True).stdout.strip())
 
 
 def assembler(morceaux: list[pathlib.Path], sortie: pathlib.Path, fond_hex: str) -> None:
@@ -271,6 +288,7 @@ def main() -> int:
     bandeau = script.get("bandeau", "")
 
     morceaux: list[pathlib.Path] = []
+    manques: list[str] = []
     duree_totale = 0.0
 
     ouverture = script.get("ouverture")
@@ -285,8 +303,15 @@ def main() -> int:
                           len(script["plans"]), bandeau, travail)
         m = travail / f"{i:02d}-plan.mp4"
         plan_video(options.entree, p["debut"], p["duree"], f, c, tt, m)
-        morceaux.append(m); duree_totale += p["duree"]
-        print(f"  plan {i} : {p['debut']:.1f} → {p['debut'] + p['duree']:.1f} s  « {p['titre']} »")
+        # CHAQUE PLAN EST MESURÉ, PAS SUPPOSÉ. Un plan court ne casse rien et ne dit rien : le
+        # film sort, plus bref, et on ne l'apprend qu'en le comptant à la fin — ou après l'envoi.
+        rendu = secondes(m)
+        if rendu < p["duree"] - 0.2:
+            manques.append(f"plan {i} « {p['titre']} » : {rendu:.2f} s rendues pour "
+                           f"{p['duree']:.2f} s demandées")
+        morceaux.append(m); duree_totale += rendu
+        print(f"  plan {i} : {p['debut']:.1f} → {p['debut'] + p['duree']:.1f} s  "
+              f"({rendu:.2f} s)  « {p['titre']} »")
 
     fin = script.get("fin")
     if fin:
@@ -295,17 +320,32 @@ def main() -> int:
         plan_fixe(img, fin["duree"], m)
         morceaux.append(m); duree_totale += fin["duree"]
 
-    # Les deux bornes d'Apple se vérifient ICI, avant l'encodage final : un aperçu refusé ne dit
-    # pas laquelle des cinq contraintes a sauté, et celle-ci est la plus facile à rater.
-    if not SECONDES_MIN <= duree_totale <= SECONDES_MAX:
+    # UN PLAN PLUS COURT QUE DEMANDÉ EST UNE ERREUR, pas un détail de rendu. C'est par là que le
+    # film est passé sous le plancher d'Apple sans que rien ne le dise.
+    if manques:
+        print("\nDes plans sont plus courts que l'enregistrement ne le permettait :", file=sys.stderr)
+        for x in manques:
+            print(f"  {x}", file=sys.stderr)
         raise SystemExit(
-            f"Le montage fait {duree_totale:.1f} s, et Apple en veut entre {SECONDES_MIN} et "
-            f"{SECONDES_MAX}. Ajoute ou retire un plan, ou change leur durée.")
+            "\nLa caméra n'a pas couvert toute la prise, ou le décalage est faux.")
 
     options.sortie.parent.mkdir(parents=True, exist_ok=True)
     assembler(morceaux, options.sortie, options.fond)
+
+    # LES DEUX BORNES D'APPLE SE VÉRIFIENT SUR LE FICHIER, PAS SUR LE PLAN.
+    #
+    # Elles l'étaient sur la somme des durées DEMANDÉES. Le premier montage en annonçait 17,8 et
+    # en a produit 12,8 : le contrôle validait une intention. Un contrôle qui ne mesure pas ce
+    # qui sort ne contrôle rien.
+    duree_reelle = secondes(options.sortie)
     poids = options.sortie.stat().st_size / 1_000_000
-    print(f"\n{options.sortie} — {duree_totale:.1f} s, {poids:.1f} Mo")
+    print(f"\n{options.sortie} — {duree_reelle:.1f} s, {poids:.1f} Mo")
+    if not SECONDES_MIN <= duree_reelle <= SECONDES_MAX:
+        raise SystemExit(
+            f"Le montage fait {duree_reelle:.1f} s, et Apple en veut entre {SECONDES_MIN} et "
+            f"{SECONDES_MAX}. Ajoute ou retire un plan, ou change leur durée.")
+    if poids > 500:
+        raise SystemExit("Au-delà des 500 Mo qu'Apple accepte.")
     return 0
 
 

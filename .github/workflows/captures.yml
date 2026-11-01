@@ -374,6 +374,11 @@ jobs:
                 -only-testing:RunUpUITests/ApercuUITests \
                 CODE_SIGNING_ALLOWED=NO
 
+            # UNE SECONDE ET DEMIE DE RAB AVANT DE COUPER. `xcodebuild` rend la main dès que le
+            # test est fini, et `simctl` n'écrit pas la toute fin de son tampon : le dernier
+            # plan du premier essai ne faisait qu'UNE IMAGE. On laisse la caméra dépasser la
+            # prise ; le montage, lui, sait où celle-ci s'arrête.
+            sleep 1.5
             # `-INT` et non `-KILL` : `simctl` ferme alors proprement le fichier. Tué net, il
             # laisse un .mov sans index, que ffmpeg lit mal ou pas du tout.
             kill -INT "$camera"; wait "$camera" || true
@@ -413,7 +418,11 @@ jobs:
 
       # Les brutes ET les composées. Les premières pour pouvoir juger ce que la machine a vu, les
       # secondes pour les déposer telles quelles dans App Store Connect.
+      # `always()` : un montage raté ne doit pas emporter les images avec lui. Elles sont la
+      # livraison principale, elles sont déjà composées à ce stade, et les perdre pour une vidéo
+      # trop courte obligerait à refaire quarante minutes de harnais pour rien.
       - name: Publier les captures
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: captures-app-store

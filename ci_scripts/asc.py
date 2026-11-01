@@ -999,6 +999,44 @@ def cmd_push_previews(args):
         print(f"\n{len(prevu)} aperçu(s) en ligne sur la version {args.version}.")
 
 
+def url_d_image(asset: dict) -> str:
+    """L'adresse publique d'une image de la fiche, à partir du gabarit que rend Apple.
+
+    Apple ne donne pas une URL mais un gabarit, `…/{w}x{h}bb.{f}`, où l'on pose soi-même la
+    taille voulue et le format. Sans ça, on ne peut pas REGARDER ce que la fiche montre : on ne
+    peut que compter, et compter ne dit pas si l'image date de l'ancienne identité.
+    """
+    gabarit = (asset or {}).get("templateUrl") or ""
+    return (gabarit.replace("{w}", str(asset.get("width", 1320)))
+                   .replace("{h}", str(asset.get("height", 2868)))
+                   .replace("{f}", "png"))
+
+
+def cmd_list_screenshots(args):
+    """Les captures d'une version, par langue et par format, avec leur adresse.
+
+    Lecture seule. Elle existe parce qu'un compte ne suffit pas : la fiche française portait
+    onze captures là où on en avait envoyé six, et il a fallu aller voir les cinq autres pour
+    savoir si c'était un actif ou un passif.
+    """
+    aid, _ = app_id()
+    versions = call("GET", f"apps/{aid}/appStoreVersions?filter[versionString]={args.version}")["data"]
+    if not versions:
+        sys.exit(f"Version {args.version} introuvable.")
+    vid = versions[0]["id"]
+    for loc in sorted(call("GET", f"appStoreVersions/{vid}/appStoreVersionLocalizations")["data"],
+                      key=lambda l: l["attributes"]["locale"]):
+        langue = loc["attributes"]["locale"]
+        for jeu in call("GET",
+                        f"appStoreVersionLocalizations/{loc['id']}/appScreenshotSets")["data"]:
+            type_ = jeu["attributes"]["screenshotDisplayType"]
+            images = call("GET", f"appScreenshotSets/{jeu['id']}/appScreenshots")["data"]
+            print(f"  {langue} · {type_} · {len(images)} image(s)")
+            for im in images:
+                a = im["attributes"]
+                print(f"      {a.get('fileName')}  {url_d_image(a.get('imageAsset'))}")
+
+
 def builds_for(aid: str, version: str):
     """Les builds envoyées SUR CETTE CHAÎNE DE VERSION, la plus récente d'abord.
 
@@ -1503,6 +1541,8 @@ def main():
     ps.add_argument("--dir", default="appstore/out",
                     help="dossier contenant un sous-dossier par langue (défaut : appstore/out)")
     ps.add_argument("--dry-run", action="store_true"); ps.set_defaults(func=cmd_push_screenshots)
+    ls = sub.add_parser("list-screenshots"); ls.add_argument("version")
+    ls.set_defaults(func=cmd_list_screenshots)
     pa = sub.add_parser("push-previews"); pa.add_argument("version")
     pa.add_argument("--dir", default="appstore/apercu/out",
                     help="Dossier des films, un <langue>.mp4 par langue")

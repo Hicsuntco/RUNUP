@@ -24,6 +24,7 @@ on:
           - composer-les-captures
           - pousser-les-captures-essai
           - pousser-les-captures
+          - lister-les-captures
           - pousser-l-apercu-essai
           - pousser-l-apercu
           - assembler-l-apercu
@@ -214,6 +215,7 @@ jobs:
             composer-les-captures)    python3 ci_scripts/screenshots.py "$LANGUE" ;;
             pousser-les-captures-essai) python3 ci_scripts/asc.py push-screenshots "$VERSION" --dir "$RUNNER_TEMP/captures/out" --dry-run ;;
             pousser-les-captures)     python3 ci_scripts/asc.py push-screenshots "$VERSION" --dir "$RUNNER_TEMP/captures/out" ;;
+            lister-les-captures)      python3 ci_scripts/asc.py list-screenshots "$VERSION" ;;
             pousser-l-apercu-essai)   python3 ci_scripts/asc.py push-previews "$VERSION" --dir "$RUNNER_TEMP/captures/apercu/out" --dry-run ;;
             pousser-l-apercu)         python3 ci_scripts/asc.py push-previews "$VERSION" --dir "$RUNNER_TEMP/captures/apercu/out" ;;
             assembler-l-apercu)       python3 ci_scripts/apercu.py --debut "${DEBUT:-0}" ;;

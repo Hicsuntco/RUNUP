@@ -1,6 +1,10 @@
 import Foundation
 import SwiftData
 import Observation
+// Pour `withAnimation` seul, dans `go(_:)`. Le fichier n'importait pas SwiftUI alors que
+// son propre en-tête dit qu'il « n'existe que pour être lu par SwiftUI » — l'import
+// manquait simplement parce qu'aucune ligne n'en avait eu besoin jusqu'ici.
+import SwiftUI
 import WidgetKit
 import CoreLocation
 import ActivityKit

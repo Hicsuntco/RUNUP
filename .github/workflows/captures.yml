@@ -80,6 +80,15 @@ on:
       # Tout ce qui se juge à l'œil et qu'aucun script ne sait relire.
       - "RunUp/Views/**"
       - "RunUp/DesignSystem/**"
+      # ET LES DEUX FICHIERS QUI DÉCIDENT DE CE QU'ON VOIT SANS ÊTRE DES VUES.
+      #
+      # `AppState` est le routeur — c'est lui qui dit quel écran est à l'écran, et désormais
+      # comment on passe de l'un à l'autre. Le correctif de la transition d'écran n'a touché que
+      # lui : les captures ne se sont pas relancées, et je n'ai donc pas pu mesurer ce que le
+      # correctif changeait. Un déclencheur qui rate le fichier le plus central de l'app rate
+      # sa raison d'être.
+      - "RunUp/AppState.swift"
+      - "RunUp/AppScreen.swift"
   workflow_dispatch:
     inputs:
       langues:

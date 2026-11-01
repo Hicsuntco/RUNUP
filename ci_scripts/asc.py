@@ -31,6 +31,12 @@ questionnaire de confidentialité, la classification d'âge, et le nom et le sou
 """
 import argparse, base64, datetime, hashlib, json, os, pathlib, re, subprocess, sys, tempfile, time
 import urllib.request, urllib.error
+import shutil
+
+# LES BORNES D'APPLE SONT ÉCRITES UNE FOIS, DANS `apercu.py`. Les recopier ici, c'est accepter
+# qu'un jour l'un des deux fichiers dise quinze secondes et l'autre dix-huit.
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import apercu  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 LISTING = ROOT / "APP_STORE_LISTING.md"
@@ -112,7 +118,22 @@ def token() -> str:
     return f"{header}.{payload}.{_b64(der_to_raw(der))}"
 
 
-def call(method: str, path: str, body=None):
+class ErreurApple(Exception):
+    """Un refus d'Apple qu'on a prévu de rattraper.
+
+    `call()` arrête le programme sur une erreur HTTP, et c'est le bon réflexe pour presque
+    tout : une fiche à moitié poussée est pire qu'une fiche pas poussée. Mais il existe un cas
+    où le refus EST la réponse qu'on cherche — demander à l'API quelle valeur elle accepte,
+    quand la documentation d'Apple ne se laisse pas lire. Pour celui-là, et lui seul,
+    `call(..., strict=False)` lève ceci au lieu de sortir.
+    """
+
+    def __init__(self, code: int, raisons: list):
+        super().__init__(f"HTTP {code} — " + " | ".join(raisons))
+        self.code, self.raisons = code, raisons
+
+
+def call(method: str, path: str, body=None, strict: bool = True):
     url = path if path.startswith("http") else f"{API}/{path}"
     data = json.dumps(body).encode() if body is not None else None
 
@@ -149,10 +170,16 @@ def call(method: str, path: str, body=None):
                 for err in json.loads(detail).get("errors", []):
                     ligne = f"{err.get('title')} — {err.get('detail')}"
                     raisons.append(ligne)
-                    print(f"  Apple : {ligne}", file=sys.stderr)
+                    # Un appel indulgent interroge l'API : son refus est une réponse, pas une
+                    # panne, et l'appelant dira lui-même ce qu'il en a tiré.
+                    if strict:
+                        print(f"  Apple : {ligne}", file=sys.stderr)
             except Exception:
-                print(detail, file=sys.stderr)
+                if strict:
+                    print(detail, file=sys.stderr)
                 raisons.append(detail[:400])
+            if not strict:
+                raise ErreurApple(e.code, raisons) from None
             fin = (" — " + " | ".join(raisons)) if raisons else ""
             sys.exit(f"HTTP {e.code} sur {method} {path}{fin}")
 
@@ -751,6 +778,197 @@ def cmd_push_screenshots(args):
         print(f"\n{total} capture(s) en ligne sur la version {args.version}.")
 
 
+# ── L'aperçu vidéo ────────────────────────────────────────────────────────────────────────────
+
+#: Les noms qu'Apple pourrait donner au type d'aperçu, par taille de vidéo, DANS L'ORDRE OÙ ON
+#: LES ESSAIE.
+#:
+#: Une liste et non une valeur, parce que je n'ai pas pu vérifier laquelle est la bonne. Les
+#: pages de référence de l'API d'Apple se peuplent côté navigateur : récupérées en ligne de
+#: commande, elles ne rendent que leur titre. Écrire `IPHONE_67` de mémoire aurait marché ou
+#: non, et un envoi de fiche n'est pas l'endroit où l'on tente sa chance.
+#:
+#: On demande donc à l'API elle-même : on regarde d'abord les jeux qui EXISTENT, et sinon on
+#: essaie les noms l'un après l'autre en rapportant ce qu'Apple répond à chacun. Le premier
+#: accepté est le bon, et il est imprimé — le jour où la liste se réduit à une valeur sûre,
+#: c'est ce journal-là qui le dira.
+#:
+#: Les captures d'écran, elles, utilisent `APP_IPHONE_67` : même famille d'appareils, préfixe
+#: peut-être différent. Les deux formes sont dans la liste pour cette raison.
+TYPES_APERCU_PAR_TAILLE = {
+    (886, 1920): ("IPHONE_67", "APP_IPHONE_67", "IPHONE_69", "APP_IPHONE_69"),
+    (1080, 1920): ("IPHONE_55", "APP_IPHONE_55"),
+    (750, 1334): ("IPHONE_47", "APP_IPHONE_47"),
+}
+
+
+def mesurer_mp4(chemin: pathlib.Path):
+    """(largeur, hauteur, secondes, images par seconde), lues par ffprobe.
+
+    Apple refuse un aperçu hors de ses bornes sans dire laquelle a sauté. Autant les mesurer
+    ici, où l'on peut nommer celle qui manque, plutôt que de lire « Invalid video » après trois
+    minutes de téléversement.
+    """
+    if shutil.which("ffprobe") is None:
+        sys.exit("ffprobe est introuvable — impossible de vérifier l'aperçu avant de l'envoyer.")
+    sortie = subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", "v:0",
+         "-show_entries", "stream=width,height,avg_frame_rate",
+         "-show_entries", "format=duration", "-of", "json", str(chemin)],
+        capture_output=True, text=True, check=True).stdout
+    donnees = json.loads(sortie)
+    flux = (donnees.get("streams") or [{}])[0]
+    num, _, den = (flux.get("avg_frame_rate") or "0/1").partition("/")
+    ips = float(num) / float(den) if float(den or 0) else 0.0
+    return (int(flux.get("width", 0)), int(flux.get("height", 0)),
+            float(donnees.get("format", {}).get("duration", 0.0)), ips)
+
+
+def jeu_d_apercus(loc_id: str, candidats: tuple) -> tuple:
+    """(identifiant du jeu, nom du type retenu). Le jeu existant d'abord, sinon on en crée un."""
+    for jeu in call("GET", f"appStoreVersionLocalizations/{loc_id}/appPreviewSets")["data"]:
+        type_vu = jeu["attributes"]["previewType"]
+        if type_vu in candidats:
+            return jeu["id"], type_vu
+
+    refus = []
+    for candidat in candidats:
+        try:
+            cree = call("POST", "appPreviewSets", {"data": {
+                "type": "appPreviewSets",
+                "attributes": {"previewType": candidat},
+                "relationships": {"appStoreVersionLocalization": {
+                    "data": {"type": "appStoreVersionLocalizations", "id": loc_id}}}}},
+                strict=False)
+            return cree["data"]["id"], candidat
+        except ErreurApple as e:
+            refus.append(f"{candidat} → {e}")
+    sys.exit("Aucun nom de type d'aperçu n'a été accepté :\n  " + "\n  ".join(refus))
+
+
+def envoyer_un_apercu(set_id: str, chemin: pathlib.Path) -> str:
+    """Réserve, téléverse, confirme — exactement comme une capture, et pour la même raison.
+
+    Apple ne reçoit pas un fichier : il donne des emplacements où écrire, puis attend qu'on lui
+    dise que c'est fini. Sans la confirmation, l'aperçu reste incomplet dans la fiche et la
+    soumission est refusée sans que rien n'ait échoué visiblement.
+
+    Une vidéo pèse cinq mégaoctets là où une capture en pèse un : Apple rend plus de morceaux,
+    et c'est la seule différence.
+    """
+    octets = chemin.read_bytes()
+    reserve = call("POST", "appPreviews", {"data": {
+        "type": "appPreviews",
+        "attributes": {"fileName": chemin.name, "fileSize": len(octets)},
+        "relationships": {"appPreviewSet": {
+            "data": {"type": "appPreviewSets", "id": set_id}}}}})["data"]
+
+    morceaux = reserve["attributes"].get("uploadOperations") or []
+    for operation in morceaux:
+        debut = operation["offset"]
+        televerser(operation, octets[debut:debut + operation["length"]])
+    print(f"      {len(morceaux)} morceau(x) téléversé(s)")
+
+    call("PATCH", f"appPreviews/{reserve['id']}", {"data": {
+        "type": "appPreviews", "id": reserve["id"],
+        "attributes": {"uploaded": True,
+                       "sourceFileChecksum": hashlib.md5(octets).hexdigest()}}})
+    return reserve["id"]
+
+
+def attendre_le_traitement(preview_id: str, patience: int = 180) -> str:
+    """L'état d'Apple après coup, parce qu'un téléversement réussi ne veut pas dire accepté.
+
+    Une vidéo est transcodée par Apple après réception. Tant que ce n'est pas fini, la fiche
+    porte un aperçu qui n'est pas diffusable, et c'est au moment de SOUMETTRE qu'on l'apprend.
+    Trois minutes d'attente ici valent mieux qu'un refus demain.
+    """
+    fin = time.time() + patience
+    etat = "?"
+    while time.time() < fin:
+        attributs = call("GET", f"appPreviews/{preview_id}")["data"]["attributes"]
+        livraison = attributs.get("assetDeliveryState") or {}
+        etat = livraison.get("state", "?")
+        if etat in ("COMPLETE", "FAILED"):
+            if etat == "FAILED":
+                erreurs = livraison.get("errors") or livraison.get("warnings") or []
+                print(f"      Apple a refusé la vidéo : {erreurs}")
+            return etat
+        time.sleep(5)
+    return f"{etat} (toujours en traitement après {patience} s)"
+
+
+def cmd_push_previews(args):
+    """Remplace l'aperçu vidéo d'une version par `appstore/apercu/out/<langue>.mp4`.
+
+    REMPLACE, ET NE COMPLÈTE PAS, comme pour les captures : Apple accepte trois aperçus par
+    taille d'appareil et par langue, et en ajouter un à chaque passage remplirait le jeu au
+    troisième en laissant trois versions du même film dans la fiche.
+    """
+    demande = pathlib.Path(args.dir)
+    dossier = demande if demande.is_absolute() else ROOT / demande
+    if not dossier.is_dir():
+        sys.exit(f"{dossier} n'existe pas. Fabrique les films d'abord, ou passe --dir.")
+
+    # TOUT EST LU ET VÉRIFIÉ AVANT QU'ON PARLE À APPLE. Un essai dont la version n'existe pas
+    # encore doit quand même dire ce qu'il enverrait, et une vidéo hors des bornes doit être
+    # nommée ici — pas trois minutes de téléversement plus tard, dans un « Invalid video ».
+    films = sorted(f for f in dossier.iterdir() if f.suffix.lower() == ".mp4")
+    if not films:
+        sys.exit(f"Aucun .mp4 dans {dossier}.")
+
+    prevu = []
+    for film in films:
+        largeur, hauteur, secondes, ips = mesurer_mp4(film)
+        poids = film.stat().st_size / 1e6
+        if (largeur, hauteur) not in TYPES_APERCU_PAR_TAILLE:
+            sys.exit(f"{film.name} : {largeur}×{hauteur} n'est pas une taille d'aperçu connue "
+                     f"d'Apple — rien n'a été envoyé.")
+        if not apercu.SECONDES_MIN <= secondes <= apercu.SECONDES_MAX:
+            sys.exit(f"{film.name} : {secondes:.1f} s, hors des "
+                     f"{apercu.SECONDES_MIN}–{apercu.SECONDES_MAX} s qu'Apple accepte.")
+        if ips > apercu.IMAGES_PAR_SECONDE + 0.5:
+            sys.exit(f"{film.name} : {ips:.1f} images par seconde, "
+                     f"au-delà des {apercu.IMAGES_PAR_SECONDE} qu'Apple accepte.")
+        if poids > 500:
+            sys.exit(f"{film.name} : {poids:.0f} Mo, au-delà des 500 Mo qu'Apple accepte.")
+        prevu.append((film.stem, film, (largeur, hauteur)))
+        print(f"  {film.stem} : {film.name} — {largeur}×{hauteur}, {secondes:.1f} s, "
+              f"{ips:.0f} i/s, {poids:.1f} Mo")
+
+    aid, _ = app_id()
+    versions = call("GET", f"apps/{aid}/appStoreVersions?filter[versionString]={args.version}")["data"]
+    if not versions:
+        sys.exit(f"\nVersion {args.version} introuvable. → create-version {args.version} d'abord.")
+    vid = versions[0]["id"]
+    localisations = {l["attributes"]["locale"]: l["id"]
+                     for l in call("GET", f"appStoreVersions/{vid}/appStoreVersionLocalizations")["data"]}
+
+    for langue, film, taille in prevu:
+        if langue not in localisations:
+            sys.exit(f"La version {args.version} n'a pas de localisation {langue}."
+                     f"  → push-metadata {args.version} d'abord.")
+        if args.dry_run:
+            continue
+
+        set_id, type_retenu = jeu_d_apercus(localisations[langue], TYPES_APERCU_PAR_TAILLE[taille])
+        anciens = call("GET", f"appPreviewSets/{set_id}/appPreviews")["data"]
+        for vieux in anciens:
+            call("DELETE", f"appPreviews/{vieux['id']}")
+        print(f"  {langue} ({type_retenu}) : {len(anciens)} aperçu(s) retiré(s), envoi de "
+              f"{film.name}")
+        preview_id = envoyer_un_apercu(set_id, film)
+        etat = attendre_le_traitement(preview_id)
+        print(f"  {langue} : {film.name} en ligne — état Apple : {etat}")
+
+    if args.dry_run:
+        print(f"\n(--dry-run : {len(prevu)} film(s) prêts, rien n'a été envoyé)")
+        print("   Les types d'aperçu seront essayés dans cet ordre : "
+              + ", ".join(TYPES_APERCU_PAR_TAILLE[prevu[0][2]]))
+    else:
+        print(f"\n{len(prevu)} aperçu(s) en ligne sur la version {args.version}.")
+
+
 def builds_for(aid: str, version: str):
     """Les builds envoyées SUR CETTE CHAÎNE DE VERSION, la plus récente d'abord.
 
@@ -1255,6 +1473,10 @@ def main():
     ps.add_argument("--dir", default="appstore/out",
                     help="dossier contenant un sous-dossier par langue (défaut : appstore/out)")
     ps.add_argument("--dry-run", action="store_true"); ps.set_defaults(func=cmd_push_screenshots)
+    pa = sub.add_parser("push-previews"); pa.add_argument("version")
+    pa.add_argument("--dir", default="appstore/apercu/out",
+                    help="Dossier des films, un <langue>.mp4 par langue")
+    pa.add_argument("--dry-run", action="store_true"); pa.set_defaults(func=cmd_push_previews)
     g = sub.add_parser("promo"); g.set_defaults(func=cmd_promo)
     gc = sub.add_parser("promo-create")
     gc.add_argument("--dry-run", action="store_true"); gc.set_defaults(func=cmd_promo_creer)

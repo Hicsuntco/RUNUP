@@ -24,6 +24,8 @@ on:
           - composer-les-captures
           - pousser-les-captures-essai
           - pousser-les-captures
+          - pousser-l-apercu-essai
+          - pousser-l-apercu
           - assembler-l-apercu
           - etat-des-builds
           - soumettre-essai
@@ -143,7 +145,7 @@ jobs:
       # va chercher ici. Sans numéro d'exécution, on prend la dernière réussie de la branche —
       # ce qu'on veut dans le cas courant, « je viens de les refaire ».
       - name: Récupérer les images composées
-        if: startsWith(inputs.action, 'pousser-les-captures')
+        if: startsWith(inputs.action, 'pousser-les-captures') || startsWith(inputs.action, 'pousser-l-apercu')
         env:
           GH_TOKEN: ${{ github.token }}
           RUN: ${{ inputs.captures }}
@@ -164,6 +166,9 @@ jobs:
             --dir "$RUNNER_TEMP/captures"
           echo "→ dossiers reçus :"
           ls -1 "$RUNNER_TEMP/captures/out"
+          # Les films vivent dans le même artéfact, à côté des images : c'est la même exécution
+          # de « Captures App Store » qui les a produits, à partir de la même app.
+          ls -1 "$RUNNER_TEMP/captures/apercu/out" 2>/dev/null || echo "  (pas de film)"
 
       - name: Exécuter
         env:
@@ -189,6 +194,8 @@ jobs:
             composer-les-captures)    python3 ci_scripts/screenshots.py "$LANGUE" ;;
             pousser-les-captures-essai) python3 ci_scripts/asc.py push-screenshots "$VERSION" --dir "$RUNNER_TEMP/captures/out" --dry-run ;;
             pousser-les-captures)     python3 ci_scripts/asc.py push-screenshots "$VERSION" --dir "$RUNNER_TEMP/captures/out" ;;
+            pousser-l-apercu-essai)   python3 ci_scripts/asc.py push-previews "$VERSION" --dir "$RUNNER_TEMP/captures/apercu/out" --dry-run ;;
+            pousser-l-apercu)         python3 ci_scripts/asc.py push-previews "$VERSION" --dir "$RUNNER_TEMP/captures/apercu/out" ;;
             assembler-l-apercu)       python3 ci_scripts/apercu.py --debut "${DEBUT:-0}" ;;
             etat-des-builds)          python3 ci_scripts/asc.py ci ;;
             soumettre-essai)          python3 ci_scripts/asc.py submit "$VERSION" $BUILD_OPT --dry-run ;;

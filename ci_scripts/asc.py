@@ -1327,6 +1327,48 @@ def annuler_soumission(aid: str, vid: str) -> bool:
     return False
 
 
+def cmd_liberer(args):
+    """Annule une soumission de revue OUVERTE ET VIDE, qui bloque la file sans rien contenir.
+
+    # D'OÙ ELLE VIENT
+
+    Envoyer une version en revue se fait en trois temps : ouvrir une soumission, y poser la
+    version comme article, la marquer envoyée. Si le deuxième temps échoue, le premier a déjà
+    eu lieu : il reste une soumission ouverte, vide, jamais envoyée. Apple n'en accepte qu'une
+    à la fois, et refuse les suivantes avec un message qui parle de la VERSION et pas d'elle.
+
+    # CE QU'ELLE NE TOUCHE PAS
+
+    Uniquement les soumissions sans aucun article et jamais envoyées. Une soumission qui porte
+    une version, en file ou en cours d'examen, n'est pas de son ressort : la retirer ferait
+    perdre la place dans la file, et c'est une décision, pas un ménage.
+    """
+    aid, _ = app_id()
+    annulees = 0
+    for s in call("GET", f"apps/{aid}/reviewSubmissions?limit=20")["data"]:
+        a = s["attributes"]
+        if a.get("state") != "READY_FOR_REVIEW" or a.get("submitted"):
+            continue
+        items = call("GET", f"reviewSubmissions/{s['id']}/items")["data"]
+        if items:
+            print(f"  {s['id'][:8]} : ouverte mais elle porte {len(items)} article(s), "
+                  f"on n'y touche pas.")
+            continue
+        if args.dry_run:
+            print(f"  {s['id'][:8]} : ouverte et vide, serait annulée.")
+        else:
+            call("PATCH", f"reviewSubmissions/{s['id']}", {"data": {
+                "type": "reviewSubmissions", "id": s["id"],
+                "attributes": {"canceled": True}}})
+            print(f"  {s['id'][:8]} : ouverte et vide, annulée.")
+        annulees += 1
+    if not annulees:
+        print("  Aucune soumission ouverte et vide. La file n'est pas bloquée par là.")
+    elif args.dry_run:
+        print(f"\n(--dry-run : {annulees} soumission(s), rien n'a été annulé)")
+    return 0
+
+
 def cmd_submit(args):
     """Attacher une build à la version, puis l'envoyer en revue.
 
@@ -1765,6 +1807,8 @@ def main():
                     help="dossier contenant un sous-dossier par langue (défaut : appstore/out)")
     ps.add_argument("--dry-run", action="store_true"); ps.set_defaults(func=cmd_push_screenshots)
     pt = sub.add_parser("pret"); pt.add_argument("version"); pt.set_defaults(func=cmd_pret)
+    lb = sub.add_parser("liberer")
+    lb.add_argument("--dry-run", action="store_true"); lb.set_defaults(func=cmd_liberer)
     pr = sub.add_parser("prune-screenshots"); pr.add_argument("version")
     pr.add_argument("--garder", nargs="+", default=["APP_IPHONE_67"],
                     help="Les formats à conserver ; tous les autres jeux sont supprimés")

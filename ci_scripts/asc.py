@@ -1037,6 +1037,63 @@ def cmd_list_screenshots(args):
                 print(f"      {a.get('fileName')}  {url_d_image(a.get('imageAsset'))}")
 
 
+def cmd_prune_screenshots(args):
+    """Supprime d'une version les jeux de captures d'un format qu'on ne fabrique pas.
+
+    # POURQUOI ÇA EXISTE
+
+    Créer une version recopie les captures de la précédente, tous formats confondus. La fiche
+    française de la 3.3 est arrivée avec quatre captures Apple Watch de juillet et une capture
+    iPad d'août, qu'aucune chaîne ne régénère : une course « terminée » de vingt mètres en sept
+    secondes, une autre de quatorze secondes, l'écran d'accueil de la montre montrant les icônes
+    d'autres applications, et une mise en page iPhone étirée dans un cadre d'iPad sur une app
+    qui ne vise que l'iPhone.
+
+    Ces images ne se corrigent pas, elles se retirent. Et elles reviendront à chaque version
+    tant que personne ne les retire : c'est pour ça que c'est une commande et pas un geste.
+
+    # CE QU'ELLE NE FAIT PAS
+
+    Elle ne touche qu'à la version nommée, et seulement si elle est modifiable. Une version en
+    vente est figée par Apple, et de toute façon ce n'est pas à elle qu'on veut toucher.
+    """
+    aid, _ = app_id()
+    versions = call("GET", f"apps/{aid}/appStoreVersions?filter[versionString]={args.version}")["data"]
+    if not versions:
+        sys.exit(f"Version {args.version} introuvable.")
+    etat = versions[0]["attributes"]["appStoreState"]
+    if etat not in ("PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED",
+                    "METADATA_REJECTED", "INVALID_BINARY"):
+        sys.exit(f"La version {args.version} est en état {etat} : Apple la fige, "
+                 f"il n'y a rien à retirer ici.")
+    vid = versions[0]["id"]
+    gardes = set(args.garder)
+    total = 0
+    for loc in sorted(call("GET", f"appStoreVersions/{vid}/appStoreVersionLocalizations")["data"],
+                      key=lambda l: l["attributes"]["locale"]):
+        langue = loc["attributes"]["locale"]
+        for jeu in call("GET",
+                        f"appStoreVersionLocalizations/{loc['id']}/appScreenshotSets")["data"]:
+            type_ = jeu["attributes"]["screenshotDisplayType"]
+            if type_ in gardes:
+                continue
+            images = call("GET", f"appScreenshotSets/{jeu['id']}/appScreenshots")["data"]
+            total += len(images)
+            if args.dry_run:
+                print(f"  {langue} · {type_} · {len(images)} image(s) seraient retirées")
+                continue
+            for im in images:
+                call("DELETE", f"appScreenshots/{im['id']}")
+            call("DELETE", f"appScreenshotSets/{jeu['id']}")
+            print(f"  {langue} · {type_} · {len(images)} image(s) retirées, jeu supprimé")
+    gardees = ", ".join(sorted(gardes))
+    if args.dry_run:
+        print(f"\n(--dry-run : {total} image(s) hors de [{gardees}], rien n'a été supprimé)")
+    else:
+        print(f"\n{total} image(s) retirées de la version {args.version}. "
+              f"Formats gardés : {gardees}.")
+
+
 def builds_for(aid: str, version: str):
     """Les builds envoyées SUR CETTE CHAÎNE DE VERSION, la plus récente d'abord.
 
@@ -1541,6 +1598,10 @@ def main():
     ps.add_argument("--dir", default="appstore/out",
                     help="dossier contenant un sous-dossier par langue (défaut : appstore/out)")
     ps.add_argument("--dry-run", action="store_true"); ps.set_defaults(func=cmd_push_screenshots)
+    pr = sub.add_parser("prune-screenshots"); pr.add_argument("version")
+    pr.add_argument("--garder", nargs="+", default=["APP_IPHONE_67"],
+                    help="Les formats à conserver ; tous les autres jeux sont supprimés")
+    pr.add_argument("--dry-run", action="store_true"); pr.set_defaults(func=cmd_prune_screenshots)
     ls = sub.add_parser("list-screenshots"); ls.add_argument("version")
     ls.set_defaults(func=cmd_list_screenshots)
     pa = sub.add_parser("push-previews"); pa.add_argument("version")

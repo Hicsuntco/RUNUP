@@ -101,25 +101,22 @@ Politique de confidentialité : https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## Nouveautés de cette version (4000 caractères max — obligatoire pour une mise à jour)
 ```
-Cette version ne change pas ce que l'app fait. Elle corrige ce qu'elle disait mal, et allège ce qu'elle faisait de trop pendant que tu cours.
+Cette version donne au Club ce qui lui manquait pour être un vrai club, et à chacun un nom et un visage.
 
-ELLE PARLE, MAINTENANT, PENDANT LA COURSE
-Avec VoiceOver, le chrono, la distance, l'allure et la fréquence cardiaque étaient annoncés une seule fois — au moment où le doigt les touchait — puis plus rien, pendant toute la sortie. Ils se suivent maintenant en continu, et le chiffre se tait quand la montre cesse d'émettre.
+LE CLUB, POUR DE VRAI
+Un mur où l'on se parle entre deux sorties. Des séances qui reviennent chaque semaine, avec leurs groupes de niveau. L'historique de qui était là mardi dernier. Plusieurs organisateurs au lieu d'un seul propriétaire, une ville, une photo de couverture, et une page publique à poser dans une bio. On rejoint un club par son nom, plus par un code à recopier.
 
-ET ELLE PARLE JUSTE, DANS LES TROIS LANGUES
-Zéro est au singulier en français, au pluriel en anglais et en espagnol — et toute l'app appliquait la règle française. « 0 run », « 0 badge », « 0 day in a row » le premier jour. Quatre libellés sortaient même en français pour tout le monde : l'en-tête de l'historique, la tuile JOURS de l'écran course, le compte-rendu d'import et les semaines passées des stats. Et « 12.4 km » s'écrit « 12,4 km » là où c'est la règle.
+UN FIL, ET PLUS UNE PILE DE TUILES
+Les sorties, les courses et les messages du club arrivent au même endroit, dans des cartes qu'on peut aimer et commenter, avec les photos de la sortie. Chaque nom ouvre la page de la personne : ses sorties, ses badges, ses records. Et la page d'une course dit qui la prépare, à quelle allure, et ce qu'ils s'y racontent.
 
-L'INSCRIPTION VA JUSQU'AU BOUT, QUELLE QUE SOIT LA TAILLE DU TEXTE
-En très grand texte, le bouton qui termine l'inscription sortait de l'écran, et rien ne permettait d'aller le chercher. Les écrans défilent. Les réglages chiffrés aussi : leur libellé se faisait rogner par le bouton d'à côté.
+TON NOM EST À TOI
+L'inscription demande ton prénom et ton nom dès la première question, et l'app t'appelle pareil partout. Les comptes créés avec Se connecter avec Apple s'appelaient tous Coureur : ils portent ton nom maintenant. Ta photo apparaît sur ton profil comme sur tes sorties.
 
-ON TE DIT OÙ TU EN ES
-L'inscription affiche le numéro de l'écran et ce qu'il en reste. Une barre muette ne dit pas « plus que deux écrans et ton plan est prêt ».
+ELLE PARLE PENDANT LA COURSE
+Avec VoiceOver, le chrono, la distance, l'allure et la fréquence cardiaque étaient annoncés une seule fois, au moment où le doigt les touchait. Ils se suivent maintenant en continu, et le chiffre se tait quand la montre cesse d'émettre.
 
-L'ESSAI GRATUIT DIT LA VÉRITÉ
-Il était annoncé à tout le monde. Un essai ne s'offre qu'une fois : si tu y as déjà eu droit, l'écran affiche le prix, pas une promesse.
-
-MOINS DE TRAVAIL PENDANT QUE TU COURS
-L'app réécrivait ton tracé entier sur le disque toutes les dix secondes, sur le fil qui dessine l'écran — un à-coup régulier sur les sorties longues. Elle interrogeait Santé 1440 fois pour une sortie de deux heures, là où une seule demande suffit. Et « Mes routes » relisait 375 000 positions à chaque défilement.
+ET CE QUI A ÉTÉ CORRIGÉ
+Le petit sursaut à l'ouverture a disparu, le passage d'un écran à l'autre se fait en fondu au lieu d'une coupe, et le jour d'une course ne change plus selon le fuseau du téléphone. Zéro est au singulier en français et au pluriel ailleurs, et 12,4 km s'écrit avec la virgule là où c'est la règle. En très grand texte, l'inscription va jusqu'au bout. L'essai gratuit n'est plus annoncé à qui y a déjà eu droit. Et l'app en fait beaucoup moins pendant que tu cours : plus d'à-coup sur les sorties longues.
 ```
 
 ## Mots-clés (100 caractères max, séparés par des virgules sans espace)
@@ -220,25 +217,22 @@ Privacy Policy: https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## What's New in This Version (4000 characters max — required for an update)
 ```
-This release doesn't change what the app does. It fixes what it said badly, and takes out the work it was doing while you run.
+This release gives the Club what it was missing to be a real club, and gives everyone a name and a face.
 
-IT SPEAKS DURING THE RUN NOW
-With VoiceOver, the timer, distance, pace and heart rate were announced once — the moment your finger touched them — and then nothing, for the whole run. They now update continuously, and the number goes quiet when the watch stops sending.
+THE CLUB, FOR REAL
+A wall to talk on between runs. Sessions that come back every week, with their pace groups. A record of who showed up last Tuesday. Several organisers instead of one owner, a city, a cover photo, and a public page you can drop into a bio. You join a club by its name now, not by copying a code.
 
-AND IT SPEAKS CORRECTLY, IN ALL THREE LANGUAGES
-Zero is singular in French and plural in English and Spanish — and the whole app was using the French rule. "0 run", "0 badge", "0 day in a row" on day one. Four labels came out in French for everyone: the history header, the DAYS tile on the race screen, the import summary and the past weeks in Stats. And "12.4 km" is written "12,4 km" where that's the rule.
+ONE FEED, NOT A PILE OF TILES
+Runs, races and club messages land in the same place, in cards you can like and comment on, with the photos from the run. Every name opens that person's page: their runs, their badges, their records. And a race page shows who is preparing it, at what pace, and what they are saying to each other.
 
-SIGN-UP REACHES THE END, AT ANY TEXT SIZE
-At the largest text sizes, the button that ends sign-up fell off the screen, with no way to reach it. Those screens now scroll. So do the number settings, whose label was being cut off by the stepper beside it.
+YOUR NAME IS YOURS
+Sign-up asks for your first and last name in the very first question, and the app calls you the same everywhere. Accounts created with Sign in with Apple were all called Runner. They carry your name now. Your photo shows on your profile and on your runs.
 
-YOU'RE TOLD WHERE YOU ARE
-Sign-up shows the screen number and how many are left. A silent bar doesn't say "two more screens and your plan is ready".
+IT SPEAKS DURING THE RUN
+With VoiceOver, the timer, distance, pace and heart rate were announced once, the moment your finger touched them. They now update continuously, and the number goes quiet when the watch stops sending.
 
-THE FREE TRIAL TELLS THE TRUTH
-It was announced to everyone. A trial is offered once: if you've already had it, the screen now shows the price, not a promise.
-
-LESS WORK WHILE YOU RUN
-The app rewrote your whole route to disk every ten seconds, on the thread that draws the screen — a regular stutter on long runs. It asked Health 1,440 times during a two-hour run, where one request is enough. And "My routes" re-read 375,000 positions on every scroll.
+AND WHAT GOT FIXED
+The small jolt when the app opened is gone, screens cross-fade instead of cutting, and a race date no longer shifts with the phone's time zone. Zero is plural in English, and decimals use your language's separator. At the largest text sizes, sign-up reaches its last button. The free trial is no longer offered to people who already used it. And the app does far less work while you run, so no more stutter on long outings.
 ```
 
 ## Keywords (100 characters max, comma-separated, no spaces)
@@ -318,25 +312,22 @@ Política de privacidad: https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## Novedades de esta versión (4000 caracteres máx. — obligatorio para una actualización)
 ```
-Esta versión no cambia lo que hace la app. Corrige lo que decía mal y quita el trabajo que hacía mientras corres.
+Esta versión le da al Club lo que le faltaba para ser un club de verdad, y a cada persona un nombre y una cara.
 
-AHORA HABLA DURANTE LA CARRERA
-Con VoiceOver, el crono, la distancia, el ritmo y la frecuencia cardiaca se anunciaban una sola vez —en el momento en que el dedo los tocaba— y después nada, durante toda la salida. Ahora se siguen en continuo, y el número se calla cuando el reloj deja de enviar.
+EL CLUB, DE VERDAD
+Un muro para hablar entre salidas. Sesiones que vuelven cada semana, con sus grupos de ritmo. El historial de quién vino el martes pasado. Varios organizadores en lugar de un solo propietario, una ciudad, una foto de portada y una página pública para poner en una bio. A un club se entra por su nombre, ya no con un código que copiar.
 
-Y HABLA BIEN, EN LOS TRES IDIOMAS
-El cero es singular en francés y plural en inglés y español, y toda la app aplicaba la regla francesa. «0 run», «0 badge», «0 day in a row» el primer día. Cuatro textos salían incluso en francés para todo el mundo: la cabecera del historial, la casilla DÍAS de la pantalla de carrera, el resumen de importación y las semanas pasadas de las estadísticas. Y «12.4 km» se escribe «12,4 km» donde esa es la norma.
+UN SOLO FEED, NO UNA PILA DE CASILLAS
+Las salidas, las carreras y los mensajes del club llegan al mismo sitio, en tarjetas que se pueden comentar y marcar con me gusta, con las fotos de la salida. Cada nombre abre la página de esa persona: sus salidas, sus insignias, sus récords. Y la página de una carrera dice quién la prepara, a qué ritmo y qué se cuentan.
 
-EL REGISTRO LLEGA HASTA EL FINAL, CON CUALQUIER TAMAÑO DE TEXTO
-Con el texto muy grande, el botón que termina el registro se salía de la pantalla, y no había forma de alcanzarlo. Esas pantallas ahora se desplazan. También los ajustes numéricos, cuya etiqueta quedaba recortada por el control de al lado.
+TU NOMBRE ES TUYO
+El registro pide tu nombre y tus apellidos en la primera pregunta, y la app te llama igual en todas partes. Las cuentas creadas con Iniciar sesión con Apple se llamaban todas Corredor: ahora llevan tu nombre. Tu foto aparece en tu perfil y en tus salidas.
 
-TE DECIMOS DÓNDE ESTÁS
-El registro muestra el número de pantalla y cuántas quedan. Una barra muda no dice «dos pantallas más y tu plan está listo».
+HABLA DURANTE LA CARRERA
+Con VoiceOver, el cronómetro, la distancia, el ritmo y la frecuencia cardíaca se anunciaban una sola vez, al tocarlos con el dedo. Ahora se siguen de forma continua, y el número se calla cuando el reloj deja de emitir.
 
-LA PRUEBA GRATIS DICE LA VERDAD
-Se anunciaba a todo el mundo. Una prueba se ofrece una vez: si ya la tuviste, la pantalla muestra el precio, no una promesa.
-
-MENOS TRABAJO MIENTRAS CORRES
-La app reescribía todo tu recorrido en el disco cada diez segundos, en el hilo que dibuja la pantalla: un tirón regular en las salidas largas. Preguntaba a Salud 1440 veces en una salida de dos horas, donde basta una sola petición. Y «Mis rutas» releía 375 000 posiciones en cada desplazamiento.
+Y LO QUE SE HA CORREGIDO
+El pequeño salto al abrir ha desaparecido, el paso de una pantalla a otra se hace con un fundido en vez de un corte, y el día de una carrera ya no cambia según el huso horario del teléfono. El cero va en plural en español, y 12,4 km se escribe con coma. Con texto muy grande, el registro llega hasta el final. La prueba gratuita ya no se anuncia a quien ya la ha usado. Y la app trabaja mucho menos mientras corres: se acabaron los tirones en las salidas largas.
 ```
 
 ## Palabras clave (100 caracteres máx., separadas por comas sin espacios)

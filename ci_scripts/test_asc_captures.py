@@ -13,6 +13,7 @@ la fiche, et on le découvre en la regardant.
 """
 
 import pathlib
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -21,10 +22,21 @@ import asc
 
 cas = []
 
+# CE FICHIER TOURNE SUR DEUX MACHINES QUI N'ONT PAS LE MÊME OUTILLAGE.
+#
+# `testflight.yml` l'exécute sur un runner Ubuntu nu, `captures.yml` après avoir installé
+# ffmpeg. Les cas de l'aperçu fabriquent de vrais fichiers vidéo : sans ffmpeg ils ne peuvent
+# pas s'exécuter, et ils ont fait échouer une construction entière sur un `FileNotFoundError`.
+#
+# Les ignorer en silence serait pire que l'échec : un test qu'on croit passé et qui ne tourne
+# nulle part. Ils sont donc NOMMÉS comme ignorés, et comptés à part — et ils tournent bien, à
+# chaque envoi d'aperçu, là où ffmpeg existe.
+FFMPEG = shutil.which("ffmpeg") is not None and shutil.which("ffprobe") is not None
 
-def cas_test(nom):
+
+def cas_test(nom, besoin_ffmpeg=False):
     def prendre(f):
-        cas.append((nom, f)); return f
+        cas.append((nom, f, besoin_ffmpeg)); return f
     return prendre
 
 
@@ -146,7 +158,7 @@ def _():
         assert len(set(candidats)) == len(candidats), f"doublon dans {candidats}"
 
 
-@cas_test("ffprobe rend la taille, la durée et la cadence")
+@cas_test("ffprobe rend la taille, la durée et la cadence", besoin_ffmpeg=True)
 def _():
     f = film(886, 1920, 2, 30)
     largeur, hauteur, secondes, ips = asc.mesurer_mp4(f)
@@ -155,25 +167,25 @@ def _():
     assert 29.5 <= ips <= 30.5, ips
 
 
-@cas_test("un film trop court est refusé en nommant la borne")
+@cas_test("un film trop court est refusé en nommant la borne", besoin_ffmpeg=True)
 def _():
     dit = refuse(film(886, 1920, 5).parent)
     assert "5.0 s" in dit and "15" in dit and "30" in dit, dit
 
 
-@cas_test("un film trop long aussi")
+@cas_test("un film trop long aussi", besoin_ffmpeg=True)
 def _():
     dit = refuse(film(886, 1920, 32).parent)
     assert "32" in dit and "hors des" in dit, dit
 
 
-@cas_test("une taille d'aperçu inconnue arrête la commande")
+@cas_test("une taille d'aperçu inconnue arrête la commande", besoin_ffmpeg=True)
 def _():
     dit = refuse(film(800, 1600, 20).parent)
     assert "800×1600" in dit and "rien n'a été envoyé" in dit, dit
 
 
-@cas_test("une cadence au-delà de trente images est refusée")
+@cas_test("une cadence au-delà de trente images est refusée", besoin_ffmpeg=True)
 def _():
     dit = refuse(film(886, 1920, 16, ips=60).parent)
     assert "images par seconde" in dit, dit
@@ -185,7 +197,7 @@ def _():
         assert "Aucun .mp4" in refuse(d)
 
 
-@cas_test("un film dans les clous passe la vérification et s'arrête faute de clé")
+@cas_test("un film dans les clous passe la vérification et s'arrête faute de clé", besoin_ffmpeg=True)
 def _():
     # La commande lit TOUT avant de parler à Apple : sans clé d'API, elle doit donc avoir déjà
     # mesuré le film. C'est ce qui permet à un essai de dire ce qu'il enverrait même quand la
@@ -195,13 +207,18 @@ def _():
 
 
 def main():
-    echecs = 0
-    for nom, f in cas:
+    echecs, ignores = 0, 0
+    for nom, f, besoin in cas:
+        if besoin and not FFMPEG:
+            ignores += 1; print(f"  ····  {nom}  (ignoré : ffmpeg absent de cette machine)")
+            continue
         try:
             f(); print(f"  ok   {nom}")
         except AssertionError as e:
             echecs += 1; print(f"  ÉCHEC {nom}\n        {e}")
-    print(f"\n{len(cas) - echecs}/{len(cas)} cas passent.")
+    joues = len(cas) - ignores
+    print(f"\n{joues - echecs}/{joues} cas passent"
+          + (f", {ignores} ignoré(s) faute de ffmpeg." if ignores else "."))
     return 1 if echecs else 0
 
 

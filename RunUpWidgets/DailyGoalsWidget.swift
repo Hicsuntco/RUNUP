@@ -215,11 +215,25 @@ struct DailyGoalsWidgetView: View {
         if snapshot.isRestDay { return String(localized: "Repos") }
         return (snapshot.progress[safe: 0] ?? 0) >= 1 ? "✓" : String(localized: "À faire")
     }
+    /// LE RESTE À FAIRE S'ÉCRIT COMME DANS L'APP, ET PLUS AVEC UN SIGNE MOINS.
+    ///
+    /// Le widget affichait « -600 » et « -15 000 ». Le code savait ce qu'il voulait dire — ce
+    /// qu'il reste — mais personne ne lit un moins comme ça : on lit un déficit, ou un défaut.
+    /// « -15 000 Pas » sur l'écran d'accueil d'une app de course ressemble à un bug, et c'est
+    /// le premier objet de la marque que son utilisatrice voit chaque matin.
+    ///
+    /// L'app, elle, écrit déjà « À FAIRE 0 /400 KCAL » sur l'accueil. Le widget la contredisait
+    /// donc sur le même téléphone. Il reprend sa forme : fait sur objectif.
+    private func accompli(_ restant: Int, objectif: Int) -> String {
+        guard objectif > 0 else { return restant > 0 ? grouped(restant) : "✓" }
+        guard restant > 0 else { return "✓" }
+        return "\(grouped(max(0, objectif - restant)))/\(grouped(objectif))"
+    }
     private var caloriesValue: String {
-        snapshot.activeCaloriesRemaining > 0 ? "-\(grouped(snapshot.activeCaloriesRemaining))" : "✓"
+        accompli(snapshot.activeCaloriesRemaining, objectif: snapshot.activeCaloriesGoal)
     }
     private var stepsValue: String {
-        snapshot.stepsRemaining > 0 ? "-\(grouped(snapshot.stepsRemaining))" : "✓"
+        accompli(snapshot.stepsRemaining, objectif: snapshot.stepsGoal)
     }
 
     var body: some View {
@@ -430,18 +444,31 @@ struct DailyGoalsWidgetView: View {
         .accessibilityElement(children: .combine)
     }
 
+    /// LE JOUR COURANT VIENT DE LA DATE, PAS DE L'INSTANTANÉ.
+    ///
+    /// L'en-tête du widget écrit « Mardi » à partir de `entryDate`, que le système tient à jour.
+    /// La pastille du jour, elle, lisait `state == .today` dans l'instantané publié par l'app —
+    /// un état figé au dernier passage dans l'app. Résultat visible sur un vrai téléphone : le
+    /// titre disait mardi pendant que la pastille cerclée était sur lundi. Deux parties du même
+    /// widget, deux jours différents.
+    ///
+    /// La bande va de lundi à dimanche (`UserProfile.weekStrip`, index 0 = lundi). Le rang du
+    /// jour se déduit donc de la date, et l'instantané ne garde que ce que lui seul sait : les
+    /// jours bouclés.
+    private var rangDuJour: Int { WidgetWeekDay.rangDuJour(entryDate) }
+
     private var weekDots: some View {
         HStack(spacing: 6) {
-            ForEach(Array(snapshot.weekStrip.enumerated()), id: \.offset) { _, day in
+            ForEach(Array(snapshot.weekStrip.enumerated()), id: \.offset) { rang, jour in
                 // `colors[0]` et non `colors[1]` : depuis que les trois objectifs portent trois
                 // teintes distinctes, l'index 1 n'est plus l'accent principal mais le violet du
                 // deuxième objectif. Une pastille de jour n'appartient à aucun objectif — elle
                 // doit porter l'accent de l'app, qui est désormais en tête de liste.
-                if day.isToday && !day.isDone {
+                if rang == rangDuJour && !jour.isDone {
                     Circle().stroke(colors[0], lineWidth: 1.3).frame(width: 6, height: 6)
                 } else {
                     Circle()
-                        .fill(day.isDone ? colors[0] : text2.opacity(0.4))
+                        .fill(jour.isDone ? colors[0] : text2.opacity(0.4))
                         .frame(width: 6, height: 6)
                 }
             }

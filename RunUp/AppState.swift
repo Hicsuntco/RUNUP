@@ -949,7 +949,10 @@ final class AppState {
             // `session == nil` : elle ratait les repos exprimés par une séance de zéro minute,
             // et surtout elle ignorait qu'une course efface le repos. Le widget affichait donc
             // deux objectifs quand l'app en comptait trois, sur le même écran d'accueil.
-            isRestDay: profile.isRestDayToday
+            isRestDay: profile.isRestDayToday,
+            // Les objectifs, pour que le widget écrive « 240/600 » comme l'app et non « -360 ».
+            activeCaloriesGoal: max(0, Int(profile.activeCaloriesGoal.rounded())),
+            stepsGoal: max(0, Int(profile.stepsGoal.rounded()))
         )
         // Only burn a WidgetKit reload (daily budget ~40-70) when something the widget shows
         // actually changed — browsing the color nuancier used to exhaust it and silently freeze

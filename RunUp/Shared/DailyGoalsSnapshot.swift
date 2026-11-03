@@ -28,6 +28,26 @@ struct WidgetWeekDay: Codable, Equatable {
     }
 
     private enum CodingKeys: String, CodingKey { case letter, isDone, isToday }
+
+    /// Le rang du jour dans la bande, lundi = 0, à partir d'une date.
+    ///
+    /// # POURQUOI LE WIDGET NE CROIT PLUS `isToday`
+    ///
+    /// L'en-tête du widget écrit « Mardi » à partir de la date que le système lui donne. La
+    /// pastille du jour lisait `isToday`, écrit par l'app au dernier instantané publié. Sur un
+    /// vrai téléphone, le titre disait mardi pendant que la pastille cerclée était sur lundi :
+    /// deux parties du même widget, deux jours différents, parce que l'une sait l'heure et
+    /// l'autre récite ce qu'on lui a dit la veille.
+    ///
+    /// L'instantané ne garde donc que ce que lui seul sait — les jours bouclés — et le rang du
+    /// jour se calcule.
+    ///
+    /// `Calendar.component(.weekday:)` rend 1 pour dimanche et 7 pour samedi. Ramener lundi à 0
+    /// est un décalage de +5 modulo 7, et c'est exactement le genre de calcul qu'on croit juste :
+    /// il est éprouvé sur les sept jours dans `RunUpTests`.
+    static func rangDuJour(_ date: Date, calendrier: Calendar = Calendar(identifier: .gregorian)) -> Int {
+        (calendrier.component(.weekday, from: date) + 5) % 7
+    }
 }
 
 /// The tiny slice of `UserProfile` the Home Screen widget needs, mirrored into an App Group
@@ -57,6 +77,18 @@ struct DailyGoalsSnapshot: Codable, Equatable {
     /// a real sentence ("Encore 110 kcal actives et 2400 pas") instead of just showing the ring.
     var activeCaloriesRemaining: Int
     var stepsRemaining: Int
+    /// Les objectifs eux-mêmes, et pas seulement ce qu'il en reste.
+    ///
+    /// Sans eux, le widget ne pouvait écrire que le reste, et il l'écrivait avec un signe moins :
+    /// « -600 ». L'app, sur le même écran d'accueil, écrit « À FAIRE 0 /400 KCAL ». Deux façons
+    /// de dire la même chose, dont une se lit comme un défaut. Avec l'objectif, le widget reprend
+    /// la forme de l'app.
+    ///
+    /// Décodés avec une valeur par défaut, comme `isRestDay` : un instantané écrit par une
+    /// version précédente ne doit pas faire échouer tout le décodage et renvoyer le widget à ses
+    /// données d'exemple.
+    var activeCaloriesGoal: Int = 0
+    var stepsGoal: Int = 0
     /// Monday...Sunday, mirrors `UserProfile.weekStrip` — the medium widget's compact
     /// done/today/upcoming row underneath the ring.
     var weekStrip: [WidgetWeekDay]
@@ -69,11 +101,13 @@ struct DailyGoalsSnapshot: Codable, Equatable {
     private enum CodingKeys: String, CodingKey {
         case progress, streak, accentThemeID, isLightMode, dailyGoalsDone, dailyGoalsTotal
         case activeCaloriesRemaining, stepsRemaining, weekStrip, isRestDay
+        case activeCaloriesGoal, stepsGoal
     }
 
     init(progress: [Double], streak: Int, accentThemeID: String, isLightMode: Bool,
          dailyGoalsDone: Int, dailyGoalsTotal: Int, activeCaloriesRemaining: Int,
-         stepsRemaining: Int, weekStrip: [WidgetWeekDay], isRestDay: Bool = false) {
+         stepsRemaining: Int, weekStrip: [WidgetWeekDay], isRestDay: Bool = false,
+         activeCaloriesGoal: Int = 0, stepsGoal: Int = 0) {
         self.progress = progress
         self.streak = streak
         self.accentThemeID = accentThemeID
@@ -84,6 +118,8 @@ struct DailyGoalsSnapshot: Codable, Equatable {
         self.stepsRemaining = stepsRemaining
         self.weekStrip = weekStrip
         self.isRestDay = isRestDay
+        self.activeCaloriesGoal = activeCaloriesGoal
+        self.stepsGoal = stepsGoal
     }
 
     init(from decoder: Decoder) throws {
@@ -100,6 +136,8 @@ struct DailyGoalsSnapshot: Codable, Equatable {
         stepsRemaining = try c.decodeIfPresent(Int.self, forKey: .stepsRemaining) ?? 0
         weekStrip = try c.decodeIfPresent([WidgetWeekDay].self, forKey: .weekStrip) ?? []
         isRestDay = try c.decodeIfPresent(Bool.self, forKey: .isRestDay) ?? false
+        activeCaloriesGoal = try c.decodeIfPresent(Int.self, forKey: .activeCaloriesGoal) ?? 0
+        stepsGoal = try c.decodeIfPresent(Int.self, forKey: .stepsGoal) ?? 0
     }
 
     /// The honest empty state — what the widget shows before the app has ever published

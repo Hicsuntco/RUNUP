@@ -55,6 +55,14 @@ témoins espagnols, eux, sont nets — le plus proche voisin est à 20,7 d'écar
 `bascules.py --preuves` garde désormais l'image de l'instant jugé, pleine taille et en couleurs,
 et l'artefact la publie — seulement quand le verdict est mauvais.
 
+**Suite, le soir même : le défaut ne s'est pas reproduit.** Deux exécutions complètes du harnais
+ont suivi, et leur étape de film est verte dans les trois langues — `es-ES.mp4` existe et son
+découpage tombe sur les bons écrans. C'était donc un accident de prise, pas un défaut de
+l'alignement : un appui d'onglet qui n'a pas pris, très probablement. Ce qu'il faut en retenir
+n'est pas la cause, qu'on ne connaîtra pas, mais le comportement : **le garde-fou a refusé de
+publier un film faux**, ce que trois films sortis avant lui n'avaient pas eu pour les arrêter. Et
+la prochaine fois, l'image sera dans l'artefact.
+
 **CETTE BRANCHE DE TRAVAIL EST LA PRODUCTION.** Découvert le 7 novembre à 17 h 20, dans
 l'incident ci-dessous. `main` n'a pas bougé depuis le 24 octobre et ne contient même pas
 `api/races/`, pourtant les routes `api/races/*` répondaient normalement en production. La preuve
@@ -327,6 +335,19 @@ comparaison, pas le trajet. Douze tests sur treize passaient ; c'est la construc
 lequel des deux mentait, et c'était le mien.
 
 ## Chantier 8 — les trois écrans que personne ne revoit
+
+**Terminé, et vérifié en regardant les images.** Les trois captures neuves — inscription, mur
+d'abonnement, course en cours — montrent bien ce qu'elles annoncent. Deux d'entre elles ne le
+faisaient pas au premier essai, et le harnais était vert : l'inscription montrait l'accueil de
+Charlotte (le stock SwiftData survit d'un lancement à l'autre, et sauter la graine ne l'efface
+pas), la course en cours montrait le décompte de trois secondes (deux secondes d'attente ne
+suffisaient pas). Les deux correctifs sont posés et les deux images sont justes.
+
+Ce que la course en cours montre, maintenant qu'on la voit : la carte au niveau du continent
+tant que le signal n'est pas pris — c'est l'état du simulateur, pas un défaut —, le bandeau
+« Recherche du signal GPS… », le panneau de mesures avec ses tirets d'absence, et les trois
+commandes. Elle se tient.
+
 
 L'inscription, parce qu'on ne s'inscrit qu'une fois. Le mur d'abonnement, parce qu'on est abonné et
 qu'`introShown` s'en souvient pour toujours. L'écran de course, parce qu'on le regarde en courant.

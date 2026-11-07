@@ -183,7 +183,21 @@ final class LocationService: NSObject {
         applyBackgroundUpdatesIfAuthorized()
     }
 
-    fileprivate func consomme(_ locations: [CLLocation]) {
+    /// `internal` ET NON `fileprivate`, ET C'EST LA RAISON D'ÊTRE DE CETTE PORTÉE.
+    ///
+    /// Cette méthode décide la DISTANCE DE CHAQUE COURSE. Elle porte trois règles que les
+    /// commentaires ci-dessous expliquent longuement et que rien ne vérifiait : le plancher de
+    /// bruit qui refuse un déplacement plus petit que la précision, le saut à plus de 12 m/s qui
+    /// coupe un segment après une perte de signal, et le seuil de confiance à 65 mètres.
+    ///
+    /// Le plancher de bruit est né d'un défaut mesuré : à un point par seconde sur vingt-cinq
+    /// minutes, le tremblement d'un fix immobile ajoutait un vrai +2 km à une course de 4 km. Une
+    /// règle qui corrige une erreur de cinquante pour cent mérite un test ; elle n'en avait aucun
+    /// parce qu'elle était inatteignable depuis l'extérieur du fichier.
+    ///
+    /// Elle reste hors du protocole de CoreLocation — c'est l'extension en bas qui le porte — donc
+    /// l'ouvrir ne donne à personne le droit de la confondre avec un rappel système.
+    func consomme(_ locations: [CLLocation]) {
         guard let newest = locations.last else { return }
         isSignalUnstable = newest.horizontalAccuracy > unstableAccuracyThreshold || newest.horizontalAccuracy < 0
         if newest.horizontalAccuracy >= 0 { hasFix = true }

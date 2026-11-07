@@ -139,13 +139,6 @@ enum CaptureSeed {
         return AppScreen(rawValue: String(brut))
     }
 
-    /// Pose l'état, dans un contexte neuf, et rend le profil.
-    ///
-    /// Le contexte est VIDÉ d'abord : un simulateur réutilisé d'une langue à l'autre garderait
-    /// sinon les relevés du tour précédent, et la capture des statistiques montrerait le double
-    /// du kilométrage à chaque passage.
-    @MainActor
-    @discardableResult
     /// VIDER SANS POSER, ET C'EST LE DRAPEAU `--inscription` QUI EN A BESOIN.
     ///
     /// Le stock SwiftData SURVIT d'un lancement à l'autre dans le même simulateur — c'est écrit
@@ -156,6 +149,7 @@ enum CaptureSeed {
     ///
     /// Je ne l'ai su qu'en REGARDANT l'image. Le test passait, le drapeau était lu, le fichier
     /// était écrit — et il montrait l'inverse de ce qu'il annonçait.
+    @MainActor
     static func viderLeStock(dans contexte: ModelContext) {
         // ON VIDE EN ALLANT CHERCHER, PAS EN LOT (voir `poser`).
         vider(UserProfile.self, dans: contexte)
@@ -164,6 +158,13 @@ enum CaptureSeed {
         try? contexte.save()
     }
 
+    /// Pose l'état, dans un contexte neuf, et rend le profil.
+    ///
+    /// Le contexte est VIDÉ d'abord : un simulateur réutilisé d'une langue à l'autre garderait
+    /// sinon les relevés du tour précédent, et la capture des statistiques montrerait le double
+    /// du kilométrage à chaque passage.
+    @MainActor
+    @discardableResult
     static func poser(dans contexte: ModelContext, maintenant: Date = .now) -> UserProfile {
         // ON VIDE EN ALLANT CHERCHER, PAS EN LOT.
         //

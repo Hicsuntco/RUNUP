@@ -185,7 +185,7 @@ struct RecapView: View {
                                     // pressure — without this, the spinner below just spun
                                     // forever and "PARTAGER MA COURSE" stayed disabled for good.
                                     VStack(spacing: 8) {
-                                        Image(systemName: "exclamationmark.triangle").font(.system(size: 20)).foregroundColor(RUColor.text3)
+                                        Image(systemName: "exclamationmark.triangle").font(RUFont.icone(.xlarge)).foregroundColor(RUColor.text3)
                                             .accessibilityHidden(true)
                                         Button("Réessayer") { renderShareCard(for: run) }
                                             .font(RUFont.sans(.body, weight: .semibold))
@@ -343,7 +343,7 @@ struct RecapView: View {
     private func recordBanner(_ kind: RecordKind) -> some View {
         HStack(spacing: 10) {
             Image(systemName: "trophy.fill")
-                .font(.system(size: 17, weight: .semibold))
+                .font(RUFont.icone(.large, weight: .semibold))
                 .foregroundColor(RUColor.amber)
                 .accessibilityHidden(true)
             Text(kind == .overall ? "Nouveau record personnel !" : "Meilleur temps sur ce parcours !")
@@ -422,7 +422,7 @@ struct RecapView: View {
                 if !run.route.isEmpty {
                     Button { tracePleinEcran = true } label: {
                         Image(systemName: "arrow.up.left.and.arrow.down.right")
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(RUFont.icone(.body, weight: .semibold))
                             .foregroundColor(RUColor.textPrimary)
                             .frame(width: 44, height: 44)
                             .background(.ultraThinMaterial, in: Circle())
@@ -553,7 +553,7 @@ struct RecapView: View {
 
     private func quietAction(icon: String, title: String) -> some View {
         HStack(spacing: 6) {
-            Image(systemName: icon).font(.system(size: 12, weight: .semibold))
+            Image(systemName: icon).font(RUFont.icone(.body, weight: .semibold))
             Text(title).font(RUFont.sans(.body, weight: .semibold))
         }
         .foregroundColor(RUColor.text2)

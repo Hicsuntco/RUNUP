@@ -16,7 +16,7 @@ struct NotificationsSheet: View {
                     // Was a blank scroll area under the title with no empty-state copy at all —
                     // every other list screen in the app at least says something here.
                     VStack(spacing: 10) {
-                        Image(systemName: "bell.slash").font(.system(size: 28)).foregroundColor(RUColor.text3)
+                        Image(systemName: "bell.slash").font(RUFont.icone(.hero)).foregroundColor(RUColor.text3)
                         Text("Rien pour l'instant").font(RUFont.sans(.emphasis, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                         Text("Tes séances, tes séries et l'activité du club apparaîtront ici.")
                             .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
@@ -49,7 +49,7 @@ struct NotificationsSheet: View {
                                     .overlay {
                                         if UIImage(systemName: n.icon) != nil {
                                             Image(systemName: n.icon)
-                                                .font(.system(size: 16, weight: .semibold))
+                                                .font(RUFont.icone(.medium, weight: .semibold))
                                                 .foregroundColor(.white)
                                         } else {
                                             Text(n.icon).font(.system(size: 15))

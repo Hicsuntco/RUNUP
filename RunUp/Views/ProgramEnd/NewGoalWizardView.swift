@@ -361,7 +361,7 @@ struct NewGoalWizardView: View {
                         .foregroundColor(RUColor.lime)
                 } else {
                     Image(systemName: "target")
-                        .font(.system(size: 24, weight: .semibold))
+                        .font(RUFont.icone(.xlarge, weight: .semibold))
                         .foregroundColor(RUColor.textPrimary)
                 }
             }

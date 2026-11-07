@@ -164,7 +164,7 @@ struct PublishRouteSheet: View {
                         self.photoItem = nil
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 22))
+                            .font(RUFont.icone(.xlarge))
                             .foregroundStyle(.white, .black.opacity(0.45))
                             .padding(8)
                     }

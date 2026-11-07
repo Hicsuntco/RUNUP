@@ -16,7 +16,7 @@ struct AccountSwitchSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             Image(systemName: "person.2.slash")
-                .font(.system(size: 30, weight: .semibold))
+                .font(RUFont.icone(.hero, weight: .semibold))
                 .foregroundColor(RUColor.amber)
                 .padding(.bottom, 2)
 

@@ -102,7 +102,7 @@ struct HomeView: View {
                                     .fill(RUColor.card)
                                     .overlay(Circle().stroke(RUColor.line, lineWidth: RUSpacing.hairline))
                                     .frame(width: 36, height: 36)
-                                    .overlay(Image(systemName: "bell").font(.system(size: 15)).foregroundColor(RUColor.textPrimary))
+                                    .overlay(Image(systemName: "bell").font(RUFont.icone(.medium)).foregroundColor(RUColor.textPrimary))
                                 if unreadCount > 0 {
                                     Circle().fill(RUColor.rose).frame(width: 8, height: 8)
                                         .overlay(Circle().stroke(RUColor.bg, lineWidth: 1.5))
@@ -386,7 +386,7 @@ struct HomeView: View {
                             Circle().fill(RUColor.rose)
                                 .frame(width: tailleMarqueur, height: tailleMarqueur)
                             Image(systemName: "checkmark")
-                                .font(.system(size: 10, weight: .bold))
+                                .font(RUFont.icone(.small, weight: .bold))
                                 .foregroundColor(RUColor.onRose)
                         } else if avecQuantieme {
                             Text("\(Calendar.current.component(.day, from: day.date))")
@@ -459,7 +459,7 @@ struct HomeView: View {
     /// lignes se côtoient, c'est précisément ce qui donne la forme de la semaine.
     private func sessionTag(_ isRestDay: Bool, family: SessionFamily) -> some View {
         HStack(spacing: 6) {
-            Image(systemName: isRestDay ? "moon.zzz.fill" : family.symbol).font(.system(size: 9, weight: .bold))
+            Image(systemName: isRestDay ? "moon.zzz.fill" : family.symbol).font(RUFont.icone(.micro, weight: .bold))
             Text(LocalizedStringKey(isRestDay ? "Aujourd'hui" : "Séance du jour"))
                 .font(RUFont.sans(.micro, weight: .bold)).tracking(0.2)
         }
@@ -513,7 +513,7 @@ struct HomeView: View {
             // le minimum d'Apple, et le bouton principal récupère la largeur rendue.
             Button(action: { Haptics.selection(); appState.openLogSession() }) {
                 Image(systemName: "plus")
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(RUFont.icone(.xlarge, weight: .semibold))
                     .foregroundColor(RUColor.text2)
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
@@ -704,7 +704,7 @@ struct HomeView: View {
             if let adjustment = session.adjustment {
                 HStack(spacing: 6) {
                     Image(systemName: "arrow.triangle.2.circlepath")
-                        .font(.system(size: 10, weight: .semibold))
+                        .font(RUFont.icone(.small, weight: .semibold))
                     // `LocalizedStringKey` et non `Text(String)` : la valeur STOCKÉE est une
                     // clé française (« Allégée · nuit courte »), que le catalogue traduit. La
                     // fiche détail l'affichait déjà traduite via `StatChip` ; l'accueil montrait
@@ -1103,7 +1103,7 @@ struct HomeView: View {
     /// visible streak does the most to make her not want to break it.
     private var streakChip: some View {
         HStack(spacing: 4) {
-            Image(systemName: "flame.fill").font(.system(size: 12))
+            Image(systemName: "flame.fill").font(RUFont.icone(.body))
             Text("\(profile.streak)").font(RUFont.sans(.label, weight: .bold))
         }
         .foregroundColor(profile.streak > 0 ? RUColor.amber : RUColor.text3)

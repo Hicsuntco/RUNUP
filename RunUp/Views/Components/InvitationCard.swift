@@ -42,7 +42,7 @@ struct InvitationCard: View {
             ShareLink(item: shareMessage) {
                 HStack(spacing: 8) {
                     Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(RUFont.icone(.body, weight: .semibold))
                     Text("Inviter un ami")
                         .font(RUFont.sans(.body, weight: .semibold))
                 }

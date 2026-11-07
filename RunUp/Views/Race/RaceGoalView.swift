@@ -188,7 +188,7 @@ struct RaceGoalView: View {
                     }) {
                         HStack(spacing: 12) {
                             Image(systemName: "person.2.fill")
-                                .font(.system(size: 15, weight: .semibold))
+                                .font(RUFont.icone(.medium, weight: .semibold))
                                 .foregroundColor(RUColor.violet)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Qui court la même course ?")
@@ -198,7 +198,7 @@ struct RaceGoalView: View {
                             }
                             Spacer(minLength: 0)
                             Image(systemName: "chevron.right")
-                                .font(.system(size: 12, weight: .bold)).foregroundColor(RUColor.text3)
+                                .font(RUFont.icone(.body, weight: .bold)).foregroundColor(RUColor.text3)
                         }
                         .padding(.horizontal, 14).padding(.vertical, 12)
                         .frame(minHeight: 44)
@@ -281,7 +281,7 @@ struct RaceGoalView: View {
                         Button { jourJOuvert = true } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: "list.bullet.clipboard")
-                                    .font(.system(size: 15, weight: .semibold))
+                                    .font(RUFont.icone(.medium, weight: .semibold))
                                     .foregroundColor(RUColor.violet)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Ravitaillement, matériel, la nuit")
@@ -291,7 +291,7 @@ struct RaceGoalView: View {
                                 }
                                 Spacer(minLength: 0)
                                 Image(systemName: "chevron.right")
-                                    .font(.system(size: 13, weight: .semibold)).foregroundColor(RUColor.text3)
+                                    .font(RUFont.icone(.body, weight: .semibold)).foregroundColor(RUColor.text3)
                             }
                             .padding(RUSpacing.cardPadding)
                             .ruCard()
@@ -307,7 +307,7 @@ struct RaceGoalView: View {
                         Button { jourJTriathlonOuvert = true } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: "list.bullet.clipboard")
-                                    .font(.system(size: 15, weight: .semibold))
+                                    .font(RUFont.icone(.medium, weight: .semibold))
                                     .foregroundColor(RUColor.violet)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Ravitaillement, transitions, combinaison")
@@ -317,7 +317,7 @@ struct RaceGoalView: View {
                                 }
                                 Spacer(minLength: 0)
                                 Image(systemName: "chevron.right")
-                                    .font(.system(size: 13, weight: .semibold)).foregroundColor(RUColor.text3)
+                                    .font(RUFont.icone(.body, weight: .semibold)).foregroundColor(RUColor.text3)
                             }
                             .padding(RUSpacing.cardPadding)
                             .ruCard()
@@ -334,7 +334,7 @@ struct RaceGoalView: View {
                         Button { jourJDuathlonOuvert = true } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: "list.bullet.clipboard")
-                                    .font(.system(size: 15, weight: .semibold))
+                                    .font(RUFont.icone(.medium, weight: .semibold))
                                     .foregroundColor(RUColor.violet)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Départ, ravitaillement, transitions")
@@ -344,7 +344,7 @@ struct RaceGoalView: View {
                                 }
                                 Spacer(minLength: 0)
                                 Image(systemName: "chevron.right")
-                                    .font(.system(size: 13, weight: .semibold)).foregroundColor(RUColor.text3)
+                                    .font(RUFont.icone(.body, weight: .semibold)).foregroundColor(RUColor.text3)
                             }
                             .padding(RUSpacing.cardPadding)
                             .ruCard()

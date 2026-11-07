@@ -387,7 +387,7 @@ struct LiveRunView: View {
     /// français : celle qu'on lit au moment précis où l'app a l'air cassée.
     private func bannerBody(icon: String, text: LocalizedStringKey) -> some View {
         HStack(spacing: 8) {
-            Image(systemName: icon).foregroundColor(Ink.amber).font(.system(size: 14))
+            Image(systemName: icon).foregroundColor(Ink.amber).font(RUFont.icone(.medium))
             Text(text)
                 .font(RUFont.sans(.body, weight: .semibold))
                 .foregroundColor(Ink.amberTexte)
@@ -402,7 +402,7 @@ struct LiveRunView: View {
     private func coachBubble(_ text: String) -> some View {
         HStack(spacing: 12) {
             Circle().fill(Ink.accent).frame(width: 34, height: 34)
-                .overlay(Image(systemName: "speaker.wave.2.fill").foregroundColor(.white).font(.system(size: 13)))
+                .overlay(Image(systemName: "speaker.wave.2.fill").foregroundColor(.white).font(RUFont.icone(.body)))
             VStack(alignment: .leading, spacing: 4) {
                 // Pas de `RUCardHeader` ici : son titre lit `textPrimary`, qui devient noir en
                 // mode clair — sur cette bulle sombre, le nom du coach disparaissait.
@@ -675,7 +675,7 @@ struct LiveRunView: View {
                     vm?.togglePause()
                 }) {
                     Image(systemName: vm?.isPaused == true ? "play.fill" : "pause.fill")
-                        .font(.system(size: 22))
+                        .font(RUFont.icone(.xlarge))
                         .foregroundColor(Ink.surBlanc)
                 }
                 .frame(width: 70, height: 70)
@@ -720,20 +720,20 @@ struct LiveRunView: View {
                 Circle().strokeBorder(Ink.accent.opacity(state == .listening ? 0.6 : 0.3), lineWidth: RUSpacing.hairline)
                 switch state {
                 case .idle:
-                    Image(systemName: "mic.fill").foregroundColor(Ink.accentSoft).font(.system(size: 15))
+                    Image(systemName: "mic.fill").foregroundColor(Ink.accentSoft).font(RUFont.icone(.medium))
                 case .listening:
-                    Image(systemName: "waveform").foregroundColor(Ink.accentSoft).font(.system(size: 15))
+                    Image(systemName: "waveform").foregroundColor(Ink.accentSoft).font(RUFont.icone(.medium))
                 case .thinking:
                     ProgressView().tint(Ink.accentSoft)
                 case .speaking:
-                    Image(systemName: "speaker.wave.2.fill").foregroundColor(Ink.accentSoft).font(.system(size: 15))
+                    Image(systemName: "speaker.wave.2.fill").foregroundColor(Ink.accentSoft).font(RUFont.icone(.medium))
                 }
             }
             .frame(width: 52, height: 52)
             .overlay(alignment: .bottomTrailing) {
                 if locked {
                     Image(systemName: "lock.fill")
-                        .font(.system(size: 9, weight: .bold))
+                        .font(RUFont.icone(.micro, weight: .bold))
                         .foregroundColor(Ink.accentSoft)
                         .padding(4)
                         // Le même fond et la même opacité que la bulle : c'est une icône, donc

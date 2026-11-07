@@ -80,7 +80,7 @@ struct RouteZoomView: View {
     private var fermer: some View {
         Button { dismiss() } label: {
             Image(systemName: "xmark")
-                .font(.system(size: 14, weight: .semibold))
+                .font(RUFont.icone(.medium, weight: .semibold))
                 .foregroundColor(RUColor.textPrimary)
                 .frame(width: 44, height: 44)
                 .background(.ultraThinMaterial, in: Circle())

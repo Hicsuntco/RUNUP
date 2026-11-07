@@ -314,7 +314,7 @@ struct ActivityFeedRow: View {
     /// là où le doigt vient de passer.
     private var eclatDApplaudissement: some View {
         Image(systemName: "hands.clap.fill")
-            .font(.system(size: 72))
+            .font(RUFont.icone(horsEchelle: 72))
             .foregroundStyle(.white)
             .shadow(color: .black.opacity(0.35), radius: 14)
             .scaleEffect(eclat ? 1 : 0.5)
@@ -387,7 +387,7 @@ struct ActivityFeedRow: View {
             }
         } label: {
             Image(systemName: "ellipsis")
-                .font(.system(size: 13, weight: .bold))
+                .font(RUFont.icone(.body, weight: .bold))
                 .foregroundColor(RUColor.text3)
                 .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
@@ -470,7 +470,7 @@ struct ActivityFeedRow: View {
     /// `RunRecord.beatsPersonalRecord`).
     private func recordBadge(onDark: Bool) -> some View {
         HStack(spacing: 4) {
-            Image(systemName: "trophy.fill").font(.system(size: 8, weight: .bold))
+            Image(systemName: "trophy.fill").font(RUFont.icone(.micro, weight: .bold))
             Text("RECORD")
         }
         .font(RUFont.sans(.micro, weight: .bold))
@@ -541,7 +541,7 @@ struct ActivityFeedRow: View {
             }) {
                 HStack(spacing: 8) {
                     Image(systemName: item.kudoedByMe ? "hands.clap.fill" : "hands.clap")
-                        .font(.system(size: 15, weight: .regular))
+                        .font(RUFont.icone(.medium, weight: .regular))
                     if item.kudos > 0 {
                         Text("\(item.kudos)")
                             .font(RUFont.sans(.body, weight: .semibold))
@@ -561,7 +561,7 @@ struct ActivityFeedRow: View {
             Button(action: onComment) {
                 HStack(spacing: 8) {
                     Image(systemName: "bubble.right")
-                        .font(.system(size: 15, weight: .regular))
+                        .font(RUFont.icone(.medium, weight: .regular))
                     if item.commentsCount > 0 {
                         Text("\(item.commentsCount)")
                             .font(RUFont.sans(.body, weight: .semibold))

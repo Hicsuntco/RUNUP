@@ -35,7 +35,10 @@ struct BadgeHexTile: View {
             // comme une version délavée de lui-même.
             .overlay(
                 Image(systemName: symbole)
-                    .font(.system(size: tailleDuSymbole, weight: .semibold))
+                    // HORS ÉCHELLE, ET POUR LA RAISON DES INITIALES D'UN AVATAR : la
+                    // taille suit le côté de l'hexagone, en continu. Ce n'est pas un cran, c'est
+                    // une proportion.
+                    .font(RUFont.icone(horsEchelle: tailleDuSymbole, weight: .semibold))
                     .foregroundColor(earned ? color : RUColor.text2)
             )
             .opacity(earned ? 1 : lockedOpacity)

@@ -85,7 +85,7 @@ struct PublicProfileView: View {
         HStack {
             Button(action: { dismiss() }) {
                 HStack(spacing: 6) {
-                    Image(systemName: "chevron.left").font(.system(size: 12, weight: .bold))
+                    Image(systemName: "chevron.left").font(RUFont.icone(.body, weight: .bold))
                     Text("Retour").font(RUFont.sans(.label, weight: .semibold))
                 }
                 .foregroundColor(RUColor.text2)
@@ -105,7 +105,7 @@ struct PublicProfileView: View {
                     Button("Bloquer", role: .destructive) { Task { await bloquer() } }
                 } label: {
                     Image(systemName: "ellipsis")
-                        .font(.system(size: 14, weight: .bold))
+                        .font(RUFont.icone(.medium, weight: .bold))
                         .foregroundColor(RUColor.text3)
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
@@ -270,7 +270,7 @@ struct PublicProfileView: View {
                 // au-dessus dit quoi faire.
                 VStack(spacing: 8) {
                     Image(systemName: "lock.fill")
-                        .font(.system(size: 20)).foregroundColor(RUColor.text3)
+                        .font(RUFont.icone(.xlarge)).foregroundColor(RUColor.text3)
                     Text("Ce compte est privé")
                         .font(RUFont.sans(.emphasis, weight: .bold))
                         .foregroundColor(RUColor.textPrimary)

@@ -109,7 +109,7 @@ struct FriendsView: View {
                 if let errorMessage {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 11))
+                            Image(systemName: "exclamationmark.triangle.fill").font(RUFont.icone(.small))
                             Text(errorMessage)
                                 .font(RUFont.sans(.small))
                                 .fixedSize(horizontal: false, vertical: true)
@@ -243,14 +243,14 @@ struct FriendsView: View {
 
     private var searchField: some View {
         HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass").font(.system(size: 13)).foregroundColor(RUColor.text3)
+            Image(systemName: "magnifyingglass").font(RUFont.icone(.body)).foregroundColor(RUColor.text3)
             TextField("", text: $query, prompt: Text("Pseudo, email ou nom…").foregroundColor(RUColor.text3))
                 .textInputAutocapitalization(.never)
                 .foregroundColor(RUColor.textPrimary)
                 .font(RUFont.sans(.label))
             if isSearchingMode {
                 Button(action: { query = "" }) {
-                    Image(systemName: "xmark.circle.fill").font(.system(size: 14)).foregroundColor(RUColor.text3)
+                    Image(systemName: "xmark.circle.fill").font(RUFont.icone(.medium)).foregroundColor(RUColor.text3)
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }
@@ -276,7 +276,7 @@ struct FriendsView: View {
                         ProgressView().controlSize(.small).tint(RUColor.text2)
                     } else {
                         Image(systemName: "person.crop.circle.badge.questionmark")
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(RUFont.icone(.body, weight: .semibold))
                     }
                     Text(contactsDenied ? "Autoriser l'accès aux contacts" : "Trouver mes contacts sur RUNUP")
                         .font(RUFont.sans(.label, weight: .semibold))
@@ -437,7 +437,7 @@ struct FriendsView: View {
                             Text(user.nomComplet)
                                 .font(RUFont.sans(.label, weight: .medium)).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
                             if user.isPrivate {
-                                Image(systemName: "lock.fill").font(.system(size: 9)).foregroundColor(RUColor.text3)
+                                Image(systemName: "lock.fill").font(RUFont.icone(.micro)).foregroundColor(RUColor.text3)
                             }
                         }
                         if let username = user.username {
@@ -498,7 +498,7 @@ struct FriendsView: View {
                     Text(user.nomComplet).font(RUFont.sans(.label, weight: .medium)).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
                     Spacer(minLength: 8)
                     Button(action: { Task { await respond(user, accept: false) } }) {
-                        Image(systemName: "xmark").font(.system(size: 11, weight: .bold)).foregroundColor(RUColor.text2)
+                        Image(systemName: "xmark").font(RUFont.icone(.small, weight: .bold)).foregroundColor(RUColor.text2)
                             .frame(width: 30, height: 30).background(RUColor.card2, in: Circle())
                             .frame(width: 44, height: 44)
                             .contentShape(Rectangle())
@@ -506,7 +506,7 @@ struct FriendsView: View {
                     .buttonStyle(PressableStyle())
                     .accessibilityLabel("Refuser \(user.name)")
                     Button(action: { Task { await respond(user, accept: true) } }) {
-                        Image(systemName: "checkmark").font(.system(size: 11, weight: .bold)).foregroundColor(RUColor.onRose)
+                        Image(systemName: "checkmark").font(RUFont.icone(.small, weight: .bold)).foregroundColor(RUColor.onRose)
                             .frame(width: 30, height: 30).background(RUColor.rose, in: Circle())
                             .frame(width: 44, height: 44)
                             .contentShape(Rectangle())

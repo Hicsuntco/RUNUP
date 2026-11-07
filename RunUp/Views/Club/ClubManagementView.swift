@@ -118,7 +118,7 @@ struct ClubManagementView: View {
         return HStack(spacing: 14) {
             Image(systemName: icon)
                 // Sans sa tuile teintée, comme les icônes d'en-tête, du plan et de Stats.
-                .font(.system(size: 17, weight: .semibold))
+                .font(RUFont.icone(.large, weight: .semibold))
                 .foregroundColor(tint)
                 .frame(width: 28)
             Text(title)
@@ -246,7 +246,7 @@ struct ClubManagementView: View {
                     } else {
                         RUColor.card
                         VStack(spacing: 6) {
-                            Image(systemName: "photo").font(.system(size: 20))
+                            Image(systemName: "photo").font(RUFont.icone(.xlarge))
                             Text("Ajouter une photo de couverture")
                                 .font(RUFont.sans(.small, weight: .semibold))
                         }
@@ -371,7 +371,7 @@ struct ClubManagementView: View {
             }
             Spacer(minLength: 8)
             Text("\(member.xp) XP").font(RUFont.mono(.small)).foregroundColor(RUColor.text2)
-            Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold)).foregroundColor(RUColor.text3)
+            Image(systemName: "chevron.right").font(RUFont.icone(.small, weight: .semibold)).foregroundColor(RUColor.text3)
         }
         .padding(.horizontal, 14).padding(.vertical, 12)
         .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
@@ -573,7 +573,7 @@ struct ClubMemberProfileView: View {
                                     .overlay(HexagonBadgeShape().stroke(badge.earned ? color.opacity(0.7) : RUColor.line, lineWidth: RUSpacing.hairline))
                                     .aspectRatio(1, contentMode: .fit)
                                     .overlay(Image(systemName: badge.symbole)
-                                        .font(.system(size: 20, weight: .semibold))
+                                        .font(RUFont.icone(.xlarge, weight: .semibold))
                                         .foregroundColor(ClubBadgeCatalog.color(for: badge.key)))
                                     .opacity(badge.earned ? 1 : 0.35)
                                 Text(badge.name)

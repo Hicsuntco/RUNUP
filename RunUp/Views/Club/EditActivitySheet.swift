@@ -194,7 +194,7 @@ struct EditActivitySheet: View {
             } else {
                 PhotosPicker(selection: $photoItem, matching: .images) {
                     HStack(spacing: 8) {
-                        Image(systemName: "camera.fill").font(.system(size: 14))
+                        Image(systemName: "camera.fill").font(RUFont.icone(.medium))
                         Text("Ajouter une photo")
                     }
                     .font(RUFont.sans(.label, weight: .semibold))
@@ -229,7 +229,7 @@ struct EditActivitySheet: View {
                 photoRetiree = true
             }) {
                 Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 22))
+                    .font(RUFont.icone(.xlarge))
                     .foregroundStyle(.white, .black.opacity(0.45))
                     .padding(8)
             }

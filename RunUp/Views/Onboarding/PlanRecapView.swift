@@ -40,7 +40,7 @@ struct PlanRecapView: View {
                         // celui de la carte choisie à l'étape 2 : l'écran se referme sur l'image
                         // qu'on avait touchée pour l'ouvrir.
                         Image(systemName: goal.symbole)
-                            .font(.system(size: 40, weight: .semibold))
+                            .font(RUFont.icone(horsEchelle: 40, weight: .semibold))
                             .foregroundColor(goal.tint)
                             .accessibilityHidden(true)
                         Text(goal.title)

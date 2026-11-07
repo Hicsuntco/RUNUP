@@ -34,7 +34,7 @@ struct PlusLockCard: View {
         VStack(alignment: .leading, spacing: compact ? 8 : 12) {
             HStack(spacing: 8) {
                 Image(systemName: "sparkles")
-                    .font(.system(size: compact ? 12 : 14, weight: .semibold))
+                    .font(RUFont.icone(compact ? .body : .medium, weight: .semibold))
                 Text(verbatim: "RUNUP PLUS")
                     .font(RUFont.sans(.micro, weight: .bold))
                     .tracking(1.6)

@@ -314,7 +314,7 @@ private struct RouteRow: View {
 
             VStack(spacing: 2) {
                 Image(systemName: route.saved ? "bookmark.fill" : "bookmark")
-                    .font(.system(size: 13))
+                    .font(RUFont.icone(.body))
                     .foregroundColor(route.saved ? RUColor.rose : RUColor.text3)
                 Text("\(route.savesCount)")
                     .font(RUFont.mono(.small))

@@ -112,7 +112,7 @@ struct PaywallView: View {
                     Spacer()
                     Button(action: onClose) {
                         Image(systemName: "xmark")
-                            .font(.system(size: 14, weight: .bold))
+                            .font(RUFont.icone(.medium, weight: .bold))
                             .foregroundColor(RUColor.onRose.opacity(0.85))
                             .frame(width: 44, height: 44)
                             .contentShape(Rectangle())
@@ -130,7 +130,7 @@ struct PaywallView: View {
             if let jours = subscriptions.joursDEssaiAnnoncables {
                 HStack(spacing: 8) {
                     Image(systemName: "sparkles")
-                        .font(.system(size: 13, weight: .bold))
+                        .font(RUFont.icone(.body, weight: .bold))
                     Text(Pluriel.choisir(jours,
                                          String(localized: "\(jours) jour offert"),
                                          String(localized: "\(jours) jours offerts")))
@@ -175,7 +175,7 @@ struct PaywallView: View {
                         // qu'ils sont censés annoncer — c'était l'élément le plus bruyant de
                         // l'écran pour l'information la moins importante.
                         Image(systemName: advantage.icon)
-                            .font(.system(size: 15, weight: .semibold))
+                            .font(RUFont.icone(.medium, weight: .semibold))
                             .foregroundColor(RUColor.rose)
                             .frame(width: 22, alignment: .center)
                         Text(advantage.text)
@@ -226,7 +226,7 @@ struct PaywallView: View {
         }) {
             HStack(spacing: 12) {
                 Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
-                    .font(.system(size: 19))
+                    .font(RUFont.icone(.large))
                     .foregroundColor(isSelected ? RUColor.rose : RUColor.text3)
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 8) {

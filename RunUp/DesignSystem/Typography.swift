@@ -226,6 +226,45 @@ enum RUFont {
 
     static func sansItalic(_ step: RUTextSize) -> Font { sansItalic(step.rawValue) }
 
+    /// L'ICÔNE, AU CRAN NOMMÉ — la troisième famille, et la dernière à n'avoir rien eu.
+    ///
+    /// Le titrage a `RUDisplaySize`, le texte courant `RUTextSize`, et les icônes avaient
+    /// VINGT-DEUX tailles écrites à la main sur 170 appels, de 8 à 72 points — 13, 14 et 15
+    /// voisinant sur 76 d'entre eux. Trois tailles dans deux points : des écarts trop petits
+    /// pour se lire comme une hiérarchie, assez grands pour que rien ne s'aligne. Personne ne
+    /// les avait décidées ; chaque écran avait été réglé à l'œil, puis recopié.
+    ///
+    /// ELLES NE SUIVENT PAS ENCORE LE RÉGLAGE DE TAILLE DU TEXTE, ET C'EST ÉCRIT ICI PLUTÔT
+    /// QU'AILLEURS. `Font.system(size:)` est figé : au deuxième cran d'accessibilité le texte
+    /// grandit de 94 % et l'icône qui l'accompagne reste où elle est. C'est un vrai défaut
+    /// d'accessibilité, et il n'est pas corrigé par cette passe-ci.
+    ///
+    /// La raison est celle qui a tenu le plafond de titrage à 1,6 × pendant des mois, et elle
+    /// est bonne : une icône qui double DANS UN CADRE QUI NE DOUBLE PAS déborde. La barre
+    /// d'onglets enferme ses symboles dans 22 points de haut, calculés pour qu'un symbole de 18
+    /// points y tienne sans déborder — et sa hauteur sert d'encart au bas de chaque écran. Une
+    /// dizaine de colonnes d'alignement (`.frame(width: 26)`, `.frame(width: 30)`) sont dans le
+    /// même cas. Ouvrir la croissance sans les avoir reprises ne rendrait pas l'app accessible :
+    /// ça la casserait à AX2 pour les gens qui y sont.
+    ///
+    /// CE QUI MANQUE POUR L'OUVRIR est exactement ce qui a permis de lever le plafond de
+    /// titrage : reprendre les cadres un par un, et REGARDER. Les captures en grand texte
+    /// existent désormais (`diagnostic/grand-texte/`, quatre écrans au deuxième cran
+    /// d'accessibilité) ; c'est le même chemin, et il se fait écran par écran, pas par un
+    /// `scaled()` posé ici.
+    static func icone(_ step: RUIconSize, weight: Font.Weight = .regular) -> Font {
+        icone(horsEchelle: step.rawValue, weight: weight)
+    }
+
+    /// La sortie de l'échelle, et son nom le dit à l'appel — même raison que `display`.
+    ///
+    /// Quatre, et toutes des illustrations plutôt que des icônes : le symbole de 72 points d'un
+    /// état vide, celui de 52 d'une carte de badge partagée, et les deux hexagones de badge
+    /// (42 et 40) dont la taille suit celle de leur médaillon.
+    static func icone(horsEchelle size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        .system(size: size, weight: weight)
+    }
+
     /// La variante numérique, `private` exprès : c'est par elle que les dix-neuf tailles sont
     /// arrivées. Le compilateur refuse maintenant un nombre écrit à la main hors de ce fichier,
     /// ce qu'aucune vérification d'intégration continue ne garantirait aussi bien — celle-ci ne
@@ -389,6 +428,31 @@ enum RUDisplaySize: CGFloat {
         case .figure, .hero, .banner: return true
         }
     }
+}
+
+/// Les sept crans d'icône de l'app.
+///
+/// Relevés sur les 170 appels existants plutôt qu'inventés : les deux tailles les plus employées
+/// — 13 et 15 points, 65 appels à elles deux — sont des crans, donc elles ne bougent pas. Les
+/// autres se déplacent d'un point, deux au plus.
+///
+/// La progression vaut 1,15 à 1,27 d'un cran au suivant, comme celle du texte courant : assez
+/// pour qu'on lise une hiérarchie, pas assez pour qu'un cran manque.
+enum RUIconSize: CGFloat {
+    /// 9 — une pastille, une marque d'état, posée SUR autre chose.
+    case micro = 9
+    /// 11 — l'icône d'une ligne secondaire, un chevron, une puce.
+    case small = 11
+    /// 13 — l'icône qui accompagne du texte courant. Le cran le plus employé.
+    case body = 13
+    /// 15 — l'icône d'un libellé de carte ou d'un bouton.
+    case medium = 15
+    /// 18 — l'icône d'un en-tête de section.
+    case large = 18
+    /// 22 — l'icône seule d'une commande ronde.
+    case xlarge = 22
+    /// 28 — l'icône d'un état vide, celle qu'on voit avant même de lire.
+    case hero = 28
 }
 
 /// Les six crans de texte de l'app.

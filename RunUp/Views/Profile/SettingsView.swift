@@ -89,7 +89,7 @@ struct SettingsView: View {
                 HStack {
                     Text("Voir l'offre").font(RUFont.sans(.body, weight: .semibold))
                     Spacer()
-                    Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold))
+                    Image(systemName: "chevron.right").font(RUFont.icone(.small, weight: .semibold))
                 }
                 .foregroundColor(RUColor.textPrimary)
                 .frame(minHeight: 44)
@@ -105,7 +105,7 @@ struct SettingsView: View {
                 HStack {
                     Text("Utiliser un code promo").font(RUFont.sans(.body, weight: .semibold))
                     Spacer()
-                    Image(systemName: "ticket").font(.system(size: 12, weight: .semibold))
+                    Image(systemName: "ticket").font(RUFont.icone(.body, weight: .semibold))
                 }
                 .foregroundColor(RUColor.textPrimary)
                 .frame(minHeight: 44)
@@ -117,7 +117,7 @@ struct SettingsView: View {
                 HStack {
                     Text("Gérer mon abonnement").font(RUFont.sans(.body, weight: .semibold))
                     Spacer()
-                    Image(systemName: "arrow.up.right").font(.system(size: 11, weight: .semibold))
+                    Image(systemName: "arrow.up.right").font(RUFont.icone(.small, weight: .semibold))
                 }
                 .foregroundColor(RUColor.textPrimary)
                 .frame(minHeight: 44)
@@ -145,7 +145,7 @@ struct SettingsView: View {
         Button(action: { dismiss(); appState.go(.shoes) }) {
             HStack(spacing: 12) {
                 Image(systemName: "shoeprints.fill")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(RUFont.icone(.body, weight: .semibold))
                     .foregroundColor(RUColor.rose2)
                     .frame(width: 22)
                 VStack(alignment: .leading, spacing: 2) {
@@ -197,7 +197,7 @@ struct SettingsView: View {
 
     private var appleHealthRow: some View {
         HStack(spacing: 12) {
-            Image(systemName: "apple.logo").font(.system(size: 16)).foregroundColor(RUColor.textPrimary)
+            Image(systemName: "apple.logo").font(RUFont.icone(.medium)).foregroundColor(RUColor.textPrimary)
             Text(ConnectedSource.apple.title).font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
             Spacer()
             Toggle("", isOn: Binding(
@@ -273,7 +273,7 @@ struct SettingsView: View {
                             Spacer(minLength: 0)
                             if Habillage.depuis(profile.habillageID) == h {
                                 Image(systemName: "checkmark")
-                                    .font(.system(size: 13, weight: .semibold))
+                                    .font(RUFont.icone(.body, weight: .semibold))
                                     .foregroundColor(RUColor.rose2)
                             }
                         }

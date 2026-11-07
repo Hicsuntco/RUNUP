@@ -54,7 +54,7 @@ struct SelectableCard: View {
             HStack(alignment: .center, spacing: 14) {
                 if let symbole {
                     Image(systemName: symbole)
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(RUFont.icone(.xlarge, weight: .semibold))
                         .foregroundColor(teinte)
                         // La même largeur pour les neuf : un drapeau et une balance n'ont pas la
                         // même empreinte, et sans cadre fixe les neuf titres ne s'alignent pas.

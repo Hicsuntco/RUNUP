@@ -90,7 +90,7 @@ struct ActivityDetailView: View {
     private var retour: some View {
         Button(action: { dismiss() }) {
             HStack(spacing: 6) {
-                Image(systemName: "chevron.left").font(.system(size: 12, weight: .bold))
+                Image(systemName: "chevron.left").font(RUFont.icone(.body, weight: .bold))
                 Text("Retour").font(RUFont.sans(.label, weight: .semibold))
             }
             .foregroundColor(RUColor.text2)
@@ -131,7 +131,7 @@ struct ActivityDetailView: View {
 
     private var pastilleDeRecord: some View {
         HStack(spacing: 4) {
-            Image(systemName: "trophy.fill").font(.system(size: 8, weight: .bold))
+            Image(systemName: "trophy.fill").font(RUFont.icone(.micro, weight: .bold))
             Text("RECORD")
         }
         .font(RUFont.sans(.micro, weight: .bold))
@@ -326,7 +326,7 @@ struct ActivityDetailView: View {
             Button(action: { Task { await applaudir() } }) {
                 HStack(spacing: 8) {
                     Image(systemName: s.kudoedByMe ? "hands.clap.fill" : "hands.clap")
-                        .font(.system(size: 16, weight: .regular))
+                        .font(RUFont.icone(.medium, weight: .regular))
                     if s.kudos > 0 {
                         Text("\(s.kudos)")
                             .font(RUFont.sans(.body, weight: .semibold))
@@ -343,7 +343,7 @@ struct ActivityDetailView: View {
 
             Button(action: { commentairesOuverts = true }) {
                 HStack(spacing: 8) {
-                    Image(systemName: "bubble.right").font(.system(size: 16, weight: .regular))
+                    Image(systemName: "bubble.right").font(RUFont.icone(.medium, weight: .regular))
                     if s.commentsCount > 0 {
                         Text("\(s.commentsCount)").font(RUFont.sans(.body, weight: .semibold))
                     }

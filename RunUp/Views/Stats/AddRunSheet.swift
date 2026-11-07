@@ -174,7 +174,7 @@ struct AddRunSheet: View {
     /// entry form and a settings form read as the same design language.
     private func rowIcon(_ systemName: String) -> some View {
         Image(systemName: systemName)
-            .font(.system(size: 13, weight: .semibold))
+            .font(RUFont.icone(.body, weight: .semibold))
             .foregroundColor(RUColor.rose2)
             .frame(width: 22)
     }
@@ -216,7 +216,7 @@ struct AddRunSheet: View {
             } label: {
                 HStack(spacing: 4) {
                     Text(discipline.title)
-                    Image(systemName: "chevron.up.chevron.down").font(.system(size: 10, weight: .semibold))
+                    Image(systemName: "chevron.up.chevron.down").font(RUFont.icone(.small, weight: .semibold))
                 }
                 .font(RUFont.sans(.emphasis, weight: .medium))
                 .foregroundColor(RUColor.text2)
@@ -260,7 +260,7 @@ struct AddRunSheet: View {
             } label: {
                 HStack(spacing: 4) {
                     Text(LocalizedStringKey(title))
-                    Image(systemName: "chevron.up.chevron.down").font(.system(size: 10, weight: .semibold))
+                    Image(systemName: "chevron.up.chevron.down").font(RUFont.icone(.small, weight: .semibold))
                 }
                 .font(RUFont.sans(.emphasis, weight: .medium))
                 .foregroundColor(RUColor.text2)
@@ -283,7 +283,7 @@ struct AddRunSheet: View {
             } label: {
                 HStack(spacing: 4) {
                     Text(selectedShoeName)
-                    Image(systemName: "chevron.up.chevron.down").font(.system(size: 10, weight: .semibold))
+                    Image(systemName: "chevron.up.chevron.down").font(RUFont.icone(.small, weight: .semibold))
                 }
                 .font(RUFont.sans(.emphasis, weight: .medium))
                 .foregroundColor(RUColor.text2)

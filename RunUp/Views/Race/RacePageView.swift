@@ -116,7 +116,7 @@ struct RacePageView: View {
     private var retour: some View {
         Button(action: { dismiss() }) {
             HStack(spacing: 6) {
-                Image(systemName: "chevron.left").font(.system(size: 12, weight: .bold))
+                Image(systemName: "chevron.left").font(RUFont.icone(.body, weight: .bold))
                 Text("Courses").font(RUFont.sans(.label, weight: .semibold))
             }
             .foregroundColor(RUColor.text2)
@@ -141,7 +141,7 @@ struct RacePageView: View {
                     Circle().fill(RUColor.card2)
                     Circle().strokeBorder(RUColor.line, lineWidth: RUSpacing.hairline)
                     Image(systemName: courante.disciplineSymbole)
-                        .font(.system(size: 17)).foregroundColor(RUColor.text2)
+                        .font(RUFont.icone(.large)).foregroundColor(RUColor.text2)
                 }
                 .frame(width: 46, height: 46)
 
@@ -183,7 +183,7 @@ struct RacePageView: View {
                 // n'accepte que http(s) — ni `javascript:`, ni `data:`, voir lib/courses.js.
                 Button(action: { openURL(url) }) {
                     HStack(spacing: 6) {
-                        Image(systemName: "link").font(.system(size: 11))
+                        Image(systemName: "link").font(RUFont.icone(.small))
                         Text("Site officiel").font(RUFont.sans(.body, weight: .semibold))
                     }
                     .foregroundColor(RUColor.rose2)
@@ -484,7 +484,7 @@ struct RacePageView: View {
                 }
             } label: {
                 Image(systemName: "ellipsis")
-                    .font(.system(size: 13, weight: .bold))
+                    .font(RUFont.icone(.body, weight: .bold))
                     .foregroundColor(RUColor.text3)
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
@@ -578,7 +578,7 @@ struct RacePageView: View {
                         .font(RUFont.sans(.small, weight: .semibold))
                         .foregroundColor(RUColor.text2)
                     Button(action: { self.reponseA = nil }) {
-                        Image(systemName: "xmark.circle.fill").font(.system(size: 13)).foregroundColor(RUColor.text3)
+                        Image(systemName: "xmark.circle.fill").font(RUFont.icone(.body)).foregroundColor(RUColor.text3)
                     }
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
@@ -672,7 +672,7 @@ struct RacePageView: View {
                 Button(action: { Task { await applaudir(message) } }) {
                     HStack(spacing: 8) {
                         Image(systemName: message.kudoedByMe ? "hands.clap.fill" : "hands.clap")
-                            .font(.system(size: 15, weight: .regular))
+                            .font(RUFont.icone(.medium, weight: .regular))
                         if message.kudos > 0 {
                             Text("\(message.kudos)")
                                 .font(RUFont.sans(.body, weight: .semibold))
@@ -698,7 +698,7 @@ struct RacePageView: View {
                 }) {
                     HStack(spacing: 8) {
                         Image(systemName: "bubble.right")
-                            .font(.system(size: 15, weight: .regular))
+                            .font(RUFont.icone(.medium, weight: .regular))
                         let reponsesCount = reponses(a: message).count
                         if reponsesCount > 0 {
                             Text("\(reponsesCount)")
@@ -760,7 +760,7 @@ struct RacePageView: View {
                     }
                 } label: {
                     Image(systemName: "ellipsis")
-                        .font(.system(size: 12, weight: .bold))
+                        .font(RUFont.icone(.body, weight: .bold))
                         .foregroundColor(RUColor.text3)
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())

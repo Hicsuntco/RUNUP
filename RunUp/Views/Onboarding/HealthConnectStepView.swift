@@ -90,7 +90,7 @@ private struct ConnectRow: View {
     private var icon: some View {
         switch source {
         case .apple:
-            Image(systemName: "apple.logo").font(.system(size: 18)).foregroundColor(RUColor.textPrimary)
+            Image(systemName: "apple.logo").font(RUFont.icone(.large)).foregroundColor(RUColor.textPrimary)
         case .strava:
             BrandLogoIcon(assetName: "strava-logo", fallbackText: "S", fullBleed: true, size: 26)
         case .garmin:

@@ -25,7 +25,7 @@ struct ShoesView: View {
                 } trailing: {
                     Button(action: { showAddShoe = true }) {
                         Image(systemName: "plus")
-                            .font(.system(size: 15, weight: .semibold))
+                            .font(RUFont.icone(.medium, weight: .semibold))
                             .foregroundColor(RUColor.textPrimary)
                             .frame(width: 36, height: 36)
                             .background(RUColor.card, in: Circle())
@@ -120,7 +120,7 @@ struct ShoesView: View {
                     Button("Supprimer", role: .destructive) { pendingDelete = shoe }
                 } label: {
                     Image(systemName: "ellipsis")
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(RUFont.icone(.medium, weight: .semibold))
                         .foregroundColor(RUColor.text2)
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())

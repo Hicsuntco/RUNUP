@@ -138,11 +138,11 @@ struct MoveSessionSheet: View {
             Spacer(minLength: 8)
             if warns {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: 13, weight: .semibold)).foregroundColor(RUColor.amber)
+                    .font(RUFont.icone(.body, weight: .semibold)).foregroundColor(RUColor.amber)
             }
             if chevron {
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold)).foregroundColor(RUColor.text3)
+                    .font(RUFont.icone(.body, weight: .semibold)).foregroundColor(RUColor.text3)
             }
         }
         .padding(.vertical, 12).padding(.horizontal, 12)

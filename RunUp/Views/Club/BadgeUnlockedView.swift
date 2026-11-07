@@ -31,7 +31,7 @@ struct BadgeUnlockedView: View {
                     Spacer()
                     Button(action: onDismiss) {
                         Image(systemName: "xmark")
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(RUFont.icone(.body, weight: .semibold))
                             .foregroundColor(RUColor.text3)
                             .frame(width: 44, height: 44)
                             .contentShape(Rectangle())
@@ -62,7 +62,7 @@ struct BadgeUnlockedView: View {
                         .overlay(HexagonBadgeShape().stroke(color.opacity(0.7), lineWidth: RUSpacing.hairline))
                         .frame(width: 108, height: 108)
                         .overlay(Image(systemName: badge.symbole)
-                            .font(.system(size: 42, weight: .semibold))
+                            .font(RUFont.icone(horsEchelle: 42, weight: .semibold))
                             .foregroundColor(ClubBadgeCatalog.color(for: badge.key)))
                         .shadow(color: color.opacity(0.4), radius: 26)
                         .scaleEffect(isRevealed ? 1 : 0.5)

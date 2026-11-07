@@ -142,7 +142,7 @@ struct ProfileView: View {
                 Spacer(minLength: 8)
                 Button(action: { showSettings = true }) {
                     Image(systemName: "gearshape.fill")
-                        .font(.system(size: 15))
+                        .font(RUFont.icone(.medium))
                         .foregroundColor(RUColor.textPrimary)
                         .frame(width: 36, height: 36)
                         .background(RUColor.card, in: Circle())
@@ -181,13 +181,13 @@ struct ProfileView: View {
             if objectifText == nil { appState.newGoalWizardPresented = true } else { appState.go(.race) }
         }) {
             HStack(spacing: 4) {
-                Image(systemName: "target").font(.system(size: 9)).foregroundColor(RUColor.text3)
+                Image(systemName: "target").font(RUFont.icone(.micro)).foregroundColor(RUColor.text3)
                 Text(objectifText ?? String(localized: "Choisir une course à préparer"))
                     .font(RUFont.sans(.small, weight: .semibold))
                     .foregroundColor(RUColor.text2)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
-                Image(systemName: "chevron.right").font(.system(size: 8, weight: .semibold)).foregroundColor(RUColor.text3)
+                Image(systemName: "chevron.right").font(RUFont.icone(.micro, weight: .semibold)).foregroundColor(RUColor.text3)
             }
             .padding(.horizontal, 10).padding(.vertical, 4)
             .background(RUColor.card, in: Capsule())
@@ -241,7 +241,7 @@ struct ProfileView: View {
                     // A small pencil badge is what actually tells her the avatar is
                     // tappable — a plain circle with no affordance reads as decoration.
                     Image(systemName: "pencil.circle.fill")
-                        .font(.system(size: 22))
+                        .font(RUFont.icone(.xlarge))
                         .foregroundColor(.white)
                         .background(RUColor.rose, in: Circle())
                         // Le cercle de fond du symbole déborde du disque de la photo : un liseré
@@ -389,7 +389,7 @@ struct ProfileView: View {
             guard let icon else { return Text(value) }
             // La police du segment l'emporte sur celle appliquée à la composition : la flamme
             // garde ses 11 pt sous un chiffre de 19.
-            return Text(Image(systemName: icon)).font(.system(size: 11)) + Text(" ") + Text(value)
+            return Text(Image(systemName: icon)).font(RUFont.icone(.small)) + Text(" ") + Text(value)
         }()
 
         return HStack(alignment: .firstTextBaseline, spacing: 4) {
@@ -451,7 +451,7 @@ struct ProfileView: View {
 
     private func firstDayFact(icon: String, value: String, label: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Image(systemName: icon).font(.system(size: 11, weight: .semibold)).foregroundColor(RUColor.rose)
+            Image(systemName: icon).font(RUFont.icone(.small, weight: .semibold)).foregroundColor(RUColor.rose)
             Text(value).displayStyle(.subtitle).foregroundColor(RUColor.textPrimary)
                 .lineLimit(1).minimumScaleFactor(0.6)
             Text(LocalizedStringKey(label))
@@ -529,7 +529,7 @@ struct ProfileView: View {
                 ZStack {
                     Circle().fill(RUColor.accentGradient())
                     Image(systemName: "square.stack.3d.up.fill")
-                        .font(.system(size: 15)).foregroundColor(.white)
+                        .font(RUFont.icone(.medium)).foregroundColor(.white)
                 }
                 .frame(width: 40, height: 40)
 
@@ -542,7 +542,7 @@ struct ProfileView: View {
                 }
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .bold))
+                    .font(RUFont.icone(.body, weight: .bold))
                     .foregroundColor(RUColor.text3)
                     .frame(width: 26, height: 26)
             }
@@ -578,7 +578,7 @@ struct ProfileView: View {
                             Circle().fill(teinte.opacity(0.16))
                         }
                         Image(systemName: icone)
-                            .font(.system(size: 15, weight: .semibold))
+                            .font(RUFont.icone(.medium, weight: .semibold))
                             .foregroundColor(degrade ? .white : teinte)
                     }
                     .frame(width: 38, height: 38)

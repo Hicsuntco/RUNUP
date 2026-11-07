@@ -20,7 +20,7 @@ struct RecoveryView: View {
                     // la famille « récupération » du plan : la récupération se dit d'une seule
                     // façon dans toute l'app.
                     Image(systemName: "leaf.fill")
-                        .font(.system(size: 30, weight: .medium))
+                        .font(RUFont.icone(.hero, weight: .medium))
                         .foregroundColor(RUColor.lime)
                         .accessibilityHidden(true)
                     Text("Place à la récupération").displayStyle(.title).foregroundColor(RUColor.textPrimary)

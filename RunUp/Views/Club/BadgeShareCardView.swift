@@ -26,7 +26,7 @@ struct BadgeShareCardView: View {
                     .overlay(HexagonBadgeShape().stroke(color.opacity(0.7), lineWidth: RUSpacing.hairline))
                     .frame(width: 132, height: 132)
                     .overlay(Image(systemName: badge.symbole)
-                        .font(.system(size: 52, weight: .semibold))
+                        .font(RUFont.icone(horsEchelle: 52, weight: .semibold))
                         .foregroundColor(ClubBadgeCatalog.color(for: badge.key)))
                     .shadow(color: color.opacity(0.45), radius: 30)
 

@@ -59,7 +59,7 @@ struct SocialView: View {
     private var backToProfile: some View {
         Button(action: { appState.go(.profile) }) {
             HStack(spacing: 6) {
-                Image(systemName: "chevron.left").font(.system(size: 12, weight: .bold))
+                Image(systemName: "chevron.left").font(RUFont.icone(.body, weight: .bold))
                 Text("Profil").font(RUFont.sans(.label, weight: .semibold))
             }
             .foregroundColor(RUColor.text2)

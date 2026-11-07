@@ -200,7 +200,7 @@ struct RingsView: View {
         HStack(spacing: 10) {
             Button(action: { changeDay(by: -1) }) {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 13, weight: .bold))
+                    .font(RUFont.icone(.body, weight: .bold))
                     .foregroundColor(RUColor.textPrimary)
                     .frame(width: 32, height: 32)
                     .background(RUColor.card, in: Circle())
@@ -223,7 +223,7 @@ struct RingsView: View {
 
             Button(action: { changeDay(by: 1) }) {
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .bold))
+                    .font(RUFont.icone(.body, weight: .bold))
                     .foregroundColor(isToday ? RUColor.text3 : RUColor.textPrimary)
                     .frame(width: 32, height: 32)
                     .background(RUColor.card, in: Circle())

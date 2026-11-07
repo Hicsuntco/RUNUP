@@ -114,7 +114,7 @@ struct WallView: View {
                 // du Club, et le sourcil et le titre retombent sur la marge avec le reste.
                 Button(action: { appState.go(.profile) }) {
                     HStack(spacing: 6) {
-                        Image(systemName: "chevron.left").font(.system(size: 12, weight: .bold))
+                        Image(systemName: "chevron.left").font(RUFont.icone(.body, weight: .bold))
                         Text("Profil").font(RUFont.sans(.label, weight: .semibold))
                     }
                     .foregroundColor(RUColor.text2)
@@ -369,7 +369,7 @@ struct WallView: View {
                         ZStack {
                             Circle().fill(RUColor.cyan.opacity(0.16))
                             Image(systemName: "flag.checkered")
-                                .font(.system(size: 13, weight: .semibold))
+                                .font(RUFont.icone(.body, weight: .semibold))
                                 .foregroundColor(RUColor.cyan)
                         }
                         .frame(width: 34, height: 34)
@@ -412,7 +412,7 @@ struct WallView: View {
             Button(action: { Task { await applaudirLaCourse(post) } }) {
                 HStack(spacing: 8) {
                     Image(systemName: post.kudoedByMe ? "hands.clap.fill" : "hands.clap")
-                        .font(.system(size: 15, weight: .regular))
+                        .font(RUFont.icone(.medium, weight: .regular))
                     if post.kudos > 0 {
                         Text("\(post.kudos)")
                             .font(RUFont.sans(.body, weight: .semibold))
@@ -462,7 +462,7 @@ struct WallView: View {
                 }
             } label: {
                 Image(systemName: "ellipsis")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(RUFont.icone(.medium, weight: .semibold))
                     .foregroundColor(RUColor.text3)
                     .frame(width: 34, height: 34)
                     .contentShape(Rectangle())
@@ -507,7 +507,7 @@ struct WallView: View {
     private var videHonnete: some View {
         VStack(spacing: 10) {
             Image(systemName: "square.stack.3d.up")
-                .font(.system(size: 26)).foregroundColor(RUColor.text3)
+                .font(RUFont.icone(.hero)).foregroundColor(RUColor.text3)
             Text(filtre == .tout
                  ? String(localized: "Rien pour l'instant")
                  : String(localized: "Rien sous ce filtre"))

@@ -67,7 +67,7 @@ struct TriathlonRaceDaySheet: View {
                        _ unite: LocalizedStringKey, _ minutes: Int) -> some View {
         HStack(spacing: 12) {
             Image(systemName: icone)
-                .font(.system(size: 14, weight: .semibold)).foregroundColor(RUColor.rose2)
+                .font(RUFont.icone(.medium, weight: .semibold)).foregroundColor(RUColor.rose2)
                 .frame(width: 22)
             VStack(alignment: .leading, spacing: 2) {
                 Text(titre)
@@ -87,7 +87,7 @@ struct TriathlonRaceDaySheet: View {
     private var ligneTransitions: some View {
         HStack(spacing: 12) {
             Image(systemName: "arrow.triangle.swap")
-                .font(.system(size: 14, weight: .semibold)).foregroundColor(RUColor.rose2)
+                .font(RUFont.icone(.medium, weight: .semibold)).foregroundColor(RUColor.rose2)
                 .frame(width: 22)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Transitions")

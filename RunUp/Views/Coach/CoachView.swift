@@ -219,7 +219,7 @@ struct CoachView: View {
             if !messages.isEmpty {
                 Button(action: { showClearConfirm = true }) {
                     Image(systemName: "trash")
-                        .font(.system(size: 13))
+                        .font(RUFont.icone(.body))
                         .foregroundColor(RUColor.text3)
                         .frame(width: 44, height: 44)
                         .background(RUColor.card, in: Circle())
@@ -266,7 +266,7 @@ struct CoachView: View {
         switch message.role {
         case .error:
             HStack(spacing: 10) {
-                Image(systemName: "exclamationmark.triangle.fill").foregroundColor(RUColor.amber).font(.system(size: 15))
+                Image(systemName: "exclamationmark.triangle.fill").foregroundColor(RUColor.amber).font(RUFont.icone(.medium))
                 Text(message.text).font(RUFont.sans(.label)).foregroundColor(RUColor.amberText).lineSpacing(2)
                 Spacer(minLength: 0)
                 Button("Réessayer") { retryLast() }
@@ -309,7 +309,7 @@ struct CoachView: View {
     private func appliedChangeRow(_ message: ChatMessage) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 12))
+                .font(RUFont.icone(.body))
                 .foregroundColor(RUColor.lime)
             Text(message.text)
                 .font(RUFont.sans(.small, weight: .semibold))
@@ -430,7 +430,7 @@ struct CoachView: View {
             Button(action: { send(vm?.draft ?? "") }) {
                 Image(systemName: "arrow.up")
                     .foregroundColor(canSend ? RUColor.onRose : RUColor.text3)
-                    .font(.system(size: 14, weight: .bold))
+                    .font(RUFont.icone(.medium, weight: .bold))
             }
             .frame(width: 44, height: 44)
             .background(canSend ? AnyShapeStyle(RUColor.rose) : AnyShapeStyle(RUColor.card2), in: Circle())

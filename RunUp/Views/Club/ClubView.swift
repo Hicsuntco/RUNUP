@@ -163,7 +163,7 @@ struct ClubView: View {
                     // Was color-only (rose text, no icon) — reads as regular text rather than an
                     // error, especially on a light theme with a pale accent swatch selected.
                     HStack(spacing: 6) {
-                        Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 11))
+                        Image(systemName: "exclamationmark.triangle.fill").font(RUFont.icone(.small))
                         Text(errorMessage).font(RUFont.sans(.small))
                     }
                     .foregroundColor(RUColor.rose)
@@ -340,13 +340,13 @@ struct ClubView: View {
                         // descend à la taille de ce qu'elle accompagne.
                         HStack(spacing: 6) {
                             Image(systemName: "person.3.fill")
-                                .font(.system(size: 10, weight: .semibold))
+                                .font(RUFont.icone(.small, weight: .semibold))
                                 .foregroundColor(RUColor.rose)
                             EyebrowLabel(text: "Le Club")
                         }
                         HStack(spacing: 6) {
                             Text(club.name).displayStyle(.title).foregroundColor(RUColor.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
-                            Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundColor(RUColor.text3)
+                            Image(systemName: "chevron.right").font(RUFont.icone(.body, weight: .semibold)).foregroundColor(RUColor.text3)
                         }
                         // CE QUE LE CLUB EST, ET OÙ IL COURT. Sans ces deux lignes, la page
                         // s'ouvrait sur un nom et un compte de membres — ce qui ne dit ni où
@@ -354,7 +354,7 @@ struct ClubView: View {
                         // débute, c'est-à-dire tout ce qu'on cherche à savoir d'un club.
                         if let ville = club.city, !ville.isEmpty {
                             HStack(spacing: 4) {
-                                Image(systemName: "mappin").font(.system(size: 9))
+                                Image(systemName: "mappin").font(RUFont.icone(.micro))
                                 Text(ville).font(RUFont.sans(.small, weight: .semibold))
                             }
                             .foregroundColor(RUColor.text2)
@@ -366,7 +366,7 @@ struct ClubView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
                         Image(systemName: "person.3.fill")
-                            .font(.system(size: 10, weight: .semibold))
+                            .font(RUFont.icone(.small, weight: .semibold))
                             .foregroundColor(RUColor.rose)
                         EyebrowLabel(text: "Le Club")
                     }
@@ -737,7 +737,7 @@ struct ClubView: View {
                     Spacer(minLength: 8)
                     Button(action: { showManagement = true }) {
                         HStack(spacing: 4) {
-                            Image(systemName: "plus").font(.system(size: 10, weight: .bold))
+                            Image(systemName: "plus").font(RUFont.icone(.small, weight: .bold))
                             Text("Créer").font(RUFont.sans(.small, weight: .semibold))
                         }
                         .foregroundColor(RUColor.rose2)
@@ -1418,7 +1418,7 @@ struct ClubView: View {
             RUCardHeader(title: "Sorties de groupe") {
                 Button(action: { showCreateEvent = true }) {
                     HStack(spacing: 4) {
-                        Image(systemName: "plus").font(.system(size: 10, weight: .bold))
+                        Image(systemName: "plus").font(RUFont.icone(.small, weight: .bold))
                         Text("Proposer").font(RUFont.sans(.small, weight: .semibold))
                     }
                     .foregroundColor(RUColor.rose2)
@@ -1445,7 +1445,7 @@ struct ClubView: View {
                             // rendez-vous du club, celui autour duquel le reste s'organise.
                             if event.repeatsWeekly == true {
                                 HStack(spacing: 4) {
-                                    Image(systemName: "arrow.triangle.2.circlepath").font(.system(size: 8, weight: .bold))
+                                    Image(systemName: "arrow.triangle.2.circlepath").font(RUFont.icone(.micro, weight: .bold))
                                     Text("CHAQUE SEMAINE")
                                 }
                                 .font(RUFont.sans(.micro, weight: .bold)).tracking(0.4)
@@ -1455,7 +1455,7 @@ struct ClubView: View {
                         Text(event.title).font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                         if let location = event.location, !location.isEmpty {
                             HStack(spacing: 4) {
-                                Image(systemName: "mappin").font(.system(size: 8))
+                                Image(systemName: "mappin").font(RUFont.icone(.micro))
                                 Text(location).font(RUFont.sans(.small))
                             }
                             .foregroundColor(RUColor.text2)
@@ -2007,7 +2007,7 @@ struct ClubView: View {
                         .font(RUFont.sans(.small, weight: .semibold))
                         .foregroundColor(RUColor.text2)
                     Button(action: { self.reponseA = nil }) {
-                        Image(systemName: "xmark.circle.fill").font(.system(size: 13)).foregroundColor(RUColor.text3)
+                        Image(systemName: "xmark.circle.fill").font(RUFont.icone(.body)).foregroundColor(RUColor.text3)
                     }
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
@@ -2035,7 +2035,7 @@ struct ClubView: View {
                 // rose qu'au moment où il peut vraiment envoyer.
                 Button(action: { Task { await publierSurLeMur() } }) {
                     Image(systemName: "arrow.up")
-                        .font(.system(size: 15, weight: .bold))
+                        .font(RUFont.icone(.medium, weight: .bold))
                         .foregroundColor(peutPublier ? RUColor.onRose : RUColor.text3)
                         .frame(width: 38, height: 38)
                         .background(peutPublier ? AnyShapeStyle(RUColor.rose) : AnyShapeStyle(RUColor.card2), in: Circle())
@@ -2067,7 +2067,7 @@ struct ClubView: View {
                 Button(action: { Task { await applaudirLeMessage(message) } }) {
                     HStack(spacing: 8) {
                         Image(systemName: message.kudoedByMe ? "hands.clap.fill" : "hands.clap")
-                            .font(.system(size: 15, weight: .regular))
+                            .font(RUFont.icone(.medium, weight: .regular))
                         if message.kudos > 0 {
                             Text("\(message.kudos)").font(RUFont.sans(.body, weight: .semibold))
                         }
@@ -2084,7 +2084,7 @@ struct ClubView: View {
                     brouillonDuClub = ""
                 }) {
                     HStack(spacing: 8) {
-                        Image(systemName: "bubble.right").font(.system(size: 15, weight: .regular))
+                        Image(systemName: "bubble.right").font(RUFont.icone(.medium, weight: .regular))
                         let compte = reponses(a: message).count
                         if compte > 0 {
                             Text("\(compte)").font(RUFont.sans(.body, weight: .semibold))
@@ -2154,7 +2154,7 @@ struct ClubView: View {
                     }
                 } label: {
                     Image(systemName: "ellipsis")
-                        .font(.system(size: 12, weight: .bold))
+                        .font(RUFont.icone(.body, weight: .bold))
                         .foregroundColor(RUColor.text3)
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())

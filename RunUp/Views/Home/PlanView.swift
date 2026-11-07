@@ -324,7 +324,7 @@ struct PlanView: View {
     private func navButton(systemName: String, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .font(.system(size: 13, weight: .bold))
+                .font(RUFont.icone(.body, weight: .bold))
                 .foregroundColor(enabled ? RUColor.textPrimary : RUColor.text4)
                 .frame(width: 32, height: 32)
                 .background(RUColor.card, in: Circle())
@@ -388,7 +388,7 @@ struct PlanView: View {
             if week.isCurrent && plannedCount > 0 {
                 Button(action: { Haptics.selection(); appState.openMoveSession() }) {
                     HStack(spacing: 6) {
-                        Image(systemName: "calendar.badge.clock").font(.system(size: 12, weight: .semibold))
+                        Image(systemName: "calendar.badge.clock").font(RUFont.icone(.body, weight: .semibold))
                         Text("Déplacer une séance").font(RUFont.sans(.small, weight: .semibold))
                     }
                     .foregroundColor(RUColor.text2)
@@ -406,7 +406,7 @@ struct PlanView: View {
                 // course, qui se règlent une fois pour toutes.
                 Button(action: { Haptics.selection(); appState.programSettingsPresented = true }) {
                     HStack(spacing: 6) {
-                        Image(systemName: "calendar").font(.system(size: 11, weight: .semibold))
+                        Image(systemName: "calendar").font(RUFont.icone(.small, weight: .semibold))
                         Text("Cette semaine suit tes jours de course · Les modifier")
                             .font(RUFont.sans(.small, weight: .semibold))
                             .multilineTextAlignment(.leading)
@@ -565,7 +565,7 @@ struct PlanView: View {
         // `isToday` ne sert plus : le jour courant est signalé par le fond de SA LIGNE, pas par
         // le contour de son icône. Le paramètre reste pour ne pas toucher les appelants.
         return Image(systemName: symbol)
-            .font(.system(size: 15, weight: .semibold))
+            .font(RUFont.icone(.medium, weight: .semibold))
             .foregroundColor(isRest ? tint.opacity(0.55) : tint)
             .frame(width: 30, height: 30)
     }

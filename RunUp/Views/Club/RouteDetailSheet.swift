@@ -238,7 +238,7 @@ struct RouteDetailSheet: View {
 
                 Button(action: { Task { await envoyer() } }) {
                     Image(systemName: "arrow.up.circle.fill")
-                        .font(.system(size: 28))
+                        .font(RUFont.icone(.hero))
                         .foregroundStyle(brouillon.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                                          ? RUColor.text3 : RUColor.rose)
                 }

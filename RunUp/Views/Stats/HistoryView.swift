@@ -111,7 +111,7 @@ struct HistoryView: View {
         } trailing: {
             Button(action: { showAddRun = true }) {
                 Image(systemName: "plus")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(RUFont.icone(.medium, weight: .semibold))
                     .foregroundColor(RUColor.textPrimary)
                     .frame(width: 36, height: 36)
                     .background(RUColor.card, in: Circle())
@@ -156,7 +156,7 @@ struct HistoryView: View {
     private var pendingSyncBanner: some View {
         HStack(spacing: 12) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 15))
+                .font(RUFont.icone(.medium))
                 .foregroundColor(RUColor.amberText)
                 .frame(width: 26)
                 // Sans son disque teinté : l'ambre reste au glyphe.
@@ -175,7 +175,7 @@ struct HistoryView: View {
                     appState.retryPendingClubActivities()
                 }) {
                     HStack(spacing: 6) {
-                        Image(systemName: "arrow.triangle.2.circlepath").font(.system(size: 10, weight: .semibold))
+                        Image(systemName: "arrow.triangle.2.circlepath").font(RUFont.icone(.small, weight: .semibold))
                         Text("Réessayer maintenant")
                     }
                     .font(RUFont.sans(.small, weight: .semibold))
@@ -262,7 +262,7 @@ struct HistoryView: View {
                     Button(action: { appState.pendingDebriefs.append(run) }) {
                         HStack(spacing: 6) {
                             Image(systemName: "arrow.uturn.backward")
-                                .font(.system(size: 9, weight: .semibold))
+                                .font(RUFont.icone(.micro, weight: .semibold))
                             Text("Ressenti manquant")
                                 .font(RUFont.sans(.micro, weight: .semibold))
                         }
@@ -319,7 +319,7 @@ struct HistoryView: View {
                 }
             } else {
                 Image(systemName: "figure.run")
-                    .font(.system(size: 18, weight: .medium))
+                    .font(RUFont.icone(.large, weight: .medium))
                     .foregroundColor(RUColor.text3)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(RUColor.card2)

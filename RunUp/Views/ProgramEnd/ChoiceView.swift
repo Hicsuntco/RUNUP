@@ -55,7 +55,7 @@ struct ChoiceView: View {
                 Button(action: { showNewGoal = true }) {
                     HStack(spacing: 14) {
                         Image(systemName: "target")
-                            .font(.system(size: 22, weight: .semibold))
+                            .font(RUFont.icone(.xlarge, weight: .semibold))
                             .foregroundColor(RUColor.rose2)
                             .frame(width: 26)
                             .accessibilityHidden(true)

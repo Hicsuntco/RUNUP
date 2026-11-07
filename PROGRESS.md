@@ -170,7 +170,35 @@ icône** et **4 portent du texte** : les deux chevrons « ‹ » des boutons de 
 affiche l'emoji d'une notification déjà enregistrée, et la coche typographique de l'assistant
 d'objectif. Les trois derniers sont des glyphes dans un cadre, et c'est justifié.
 
-### Ce qui reste vraiment : les icônes
+### Ce qui est fait : l'échelle d'icônes
+
+`RUIconSize`, sept crans — 9, 11, 13, 15, 18, 22, 28 — et `RUFont.icone(_:weight:)`. Les 170
+appels sont convertis, et `ci_scripts/check_icones.py` refuse désormais une taille écrite à la
+main dans `RunUp/Views` : il en reste **quatre**, toutes listées avec leur raison, et aucune
+n'est une icône (les deux chevrons « ‹ » des boutons de retour, le repli qui affiche l'emoji
+d'une notification déjà en base, la coche typographique de l'assistant d'objectif).
+
+Les crans sont relevés, pas inventés : **13 et 15 — les deux tailles les plus employées, 65
+appels à elles deux — sont des crans**, donc ces 65 appels rendent exactement ce qu'ils
+rendaient. Les autres se déplacent d'un point, deux au plus. Quatre sorties d'échelle restent,
+toutes des illustrations : 72 points pour un état vide, 52 pour une carte de badge partagée, 42
+et 40 pour deux hexagones dont la taille suit leur médaillon.
+
+### Ce qui n'est PAS fait, et pourquoi c'est écrit dans le code
+
+**Les icônes ne suivent toujours pas le réglage de taille du texte.** C'est un vrai défaut
+d'accessibilité et il reste ouvert. La raison est celle qui a tenu le plafond de titrage à 1,6 ×
+pendant des mois : une icône qui double dans un cadre qui ne double pas déborde. La barre
+d'onglets enferme ses symboles dans 22 points de haut, calculés pour qu'un symbole de 18 y tienne
+sans déborder — et sa hauteur sert d'encart au bas de chaque écran. Une dizaine de colonnes
+d'alignement (`.frame(width: 26)`, `.frame(width: 30)`) sont dans le même cas.
+
+Ouvrir la croissance sans reprendre ces cadres ne rendrait pas l'app accessible : **ça la
+casserait à AX2 pour exactement les gens qui en dépendent**. Ce qu'il faut est ce qui a permis de
+lever le plafond de titrage : reprendre les cadres un par un, et regarder. Les captures en grand
+texte existent maintenant pour ça.
+
+### Le relevé qui a mené là
 
 **170 icônes à taille figée, sur 22 valeurs différentes de 8 à 72 points** — dont 13, 14 et 15 pt
 voisinant sur 76 appels. C'est le même défaut que l'échelle de titrage avant `RUDisplaySize` :

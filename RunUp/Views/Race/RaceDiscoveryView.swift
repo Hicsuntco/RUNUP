@@ -97,7 +97,7 @@ struct RaceDiscoveryView: View {
     private var champDeRecherche: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
-                Image(systemName: "magnifyingglass").font(.system(size: 13)).foregroundColor(RUColor.text3)
+                Image(systemName: "magnifyingglass").font(RUFont.icone(.body)).foregroundColor(RUColor.text3)
                 TextField("Nom de la course, ou sa ville", text: $query)
                     .textFieldStyle(.plain)
                     .font(RUFont.sans(.emphasis))
@@ -106,7 +106,7 @@ struct RaceDiscoveryView: View {
                     .submitLabel(.search)
                 if !query.isEmpty {
                     Button(action: { query = "" }) {
-                        Image(systemName: "xmark.circle.fill").font(.system(size: 15)).foregroundColor(RUColor.text3)
+                        Image(systemName: "xmark.circle.fill").font(RUFont.icone(.medium)).foregroundColor(RUColor.text3)
                     }
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
@@ -193,7 +193,7 @@ struct RaceDiscoveryView: View {
                 ZStack {
                     Circle().fill(RUColor.rose.opacity(0.16))
                     Image(systemName: course.disciplineSymbole)
-                        .font(.system(size: 15)).foregroundColor(RUColor.rose)
+                        .font(RUFont.icone(.medium)).foregroundColor(RUColor.rose)
                 }
                 .frame(width: 40, height: 40)
 
@@ -224,7 +224,7 @@ struct RaceDiscoveryView: View {
                     }
                     if let suiveurs = course.followerCount, suiveurs > 0 {
                         HStack(spacing: 4) {
-                            Image(systemName: "person.2.fill").font(.system(size: 9))
+                            Image(systemName: "person.2.fill").font(RUFont.icone(.micro))
                             Text("\(suiveurs)").font(RUFont.mono(.small))
                         }
                         .foregroundColor(RUColor.text3)
@@ -243,7 +243,7 @@ struct RaceDiscoveryView: View {
     private var videHonnete: some View {
         VStack(spacing: 10) {
             Image(systemName: "flag.checkered")
-                .font(.system(size: 26)).foregroundColor(RUColor.text3)
+                .font(RUFont.icone(.hero)).foregroundColor(RUColor.text3)
             Text("Aucune course en vue")
                 .font(RUFont.sans(.emphasis, weight: .bold))
                 .foregroundColor(RUColor.textPrimary)

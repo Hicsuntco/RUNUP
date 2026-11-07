@@ -163,7 +163,7 @@ struct TabBarView: View {
                 // itself, but the selection dot one layer down didn't match that with its own.
                 .animation(.easeOut(duration: 0.2), value: on)
             Image(systemName: icon)
-                .font(.system(size: 18, weight: on ? .semibold : .regular))
+                .font(RUFont.icone(.large, weight: on ? .semibold : .regular))
                 .foregroundColor(color)
                 // UN CADRE FIXE, ET C'EST LA MOITIÉ DU CORRECTIF.
                 //
@@ -254,7 +254,7 @@ struct TabBarView: View {
                 // et c'est la seule chose que ce rond ait jamais eu à dire. C'est le libellé
                 // en dessous qui porte le vélo — changer les deux ferait un bouton différent
                 // au lieu du même bouton dans un autre mode.
-                .overlay(Image(systemName: "play.fill").foregroundColor(RUColor.onRose).font(.system(size: 13)))
+                .overlay(Image(systemName: "play.fill").foregroundColor(RUColor.onRose).font(RUFont.icone(.body)))
                 // 0,55 de rose sur 14 points de flou : le bouton RUN ne se posait pas sur
                 // la barre, il l'éclairait. Ramené à une ombre qui le décolle sans le faire
                 // rayonner — c'est un bouton, pas une lampe.

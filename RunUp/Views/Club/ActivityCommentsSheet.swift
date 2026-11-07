@@ -114,7 +114,7 @@ struct ActivityCommentsSheet: View {
 
             Button(action: { Task { await send() } }) {
                 Image(systemName: "arrow.up.circle.fill")
-                    .font(.system(size: 30))
+                    .font(RUFont.icone(.hero))
                     .foregroundColor(newText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? RUColor.text3 : RUColor.rose)
                     .frame(width: 44, height: 44)
             }

@@ -145,7 +145,7 @@ struct DebriefSheet: View {
                             // emojis ne l'étaient pas — un bonhomme en lotus ne se compare pas à
                             // un pouce levé.
                             Image(systemName: impactLines[i].0)
-                                .font(.system(size: 15, weight: .semibold))
+                                .font(RUFont.icone(.medium, weight: .semibold))
                                 .foregroundColor(i == 0 ? RUColor.cyan : RUColor.ember)
                                 .frame(width: 20)
                                 .accessibilityHidden(true)

@@ -55,7 +55,7 @@ struct RUCardHeader<Accessory: View>: View {
                 // L'icône reste, seule et à même le fond. Elle porte exactement la même
                 // information ; c'est son emballage qui n'en portait aucune.
                 Image(systemName: icon)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(RUFont.icone(.medium, weight: .semibold))
                     .foregroundColor(tint)
                     .frame(width: 20)
             }
@@ -162,7 +162,7 @@ struct RUStatTile: View {
             // porte un titre de CARTE, et une tuile n'en a pas.
             HStack(spacing: 6) {
                 Image(systemName: icon)
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(RUFont.icone(.small, weight: .semibold))
                     .foregroundColor(tint)
                 Text(LocalizedStringKey(title))
                     .font(RUFont.sans(.small, weight: .medium))

@@ -336,6 +336,17 @@ jobs:
       # Le compilateur refuse maintenant un nombre nu ; il ne peut pas refuser la porte de
       # service `horsEchelle:`, et c'est par une porte de service que les vingt-six étaient
       # arrivées — une exception qui rend la suivante normale.
+      # LES ICÔNES ÉTAIENT LA TROISIÈME FAMILLE, ET LA DERNIÈRE SANS ÉCHELLE.
+      #
+      # Vingt-deux tailles écrites à la main sur 170 appels, de 8 à 72 points, dont 13, 14 et 15
+      # voisinant sur 76 d'entre eux. Le compilateur ne peut rien : `.font(.system(size:))` est
+      # une API de SwiftUI. Ce contrôle fixe donc la liste des exceptions, avec leur compte et
+      # leur raison — il en reste quatre, et ce sont des glyphes typographiques, pas des icônes.
+      - name: Vérifier qu'aucune taille d'icône n'est écrite à la main
+        run: |
+          cd ci_scripts && python3 test_icones.py
+          cd .. && python3 ci_scripts/check_icones.py
+
       - name: Vérifier que l'échelle de titrage reste fermée
         run: python3 ci_scripts/check_echelle.py
 

@@ -208,7 +208,7 @@ struct DisciplineDialView: View {
             onSelect(discipline)
         } label: {
             Image(systemName: discipline.sfSymbol)
-                .font(.system(size: 23, weight: actif ? .semibold : .regular))
+                .font(RUFont.icone(.xlarge, weight: actif ? .semibold : .regular))
                 .foregroundColor(actif ? RUColor.onRose : RUColor.text2)
                 .frame(width: DisciplineDial.tailleRond, height: DisciplineDial.tailleRond)
                 .background {

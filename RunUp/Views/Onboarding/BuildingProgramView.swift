@@ -100,7 +100,7 @@ struct BuildingProgramView: View {
                                     .fill(vm.buildProgress > i ? RUColor.rose : RUColor.card)
                                     .overlay(Circle().stroke(vm.buildProgress > i ? Color.clear : RUColor.line, lineWidth: 1))
                                 if vm.buildProgress > i {
-                                    Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundColor(.white)
+                                    Image(systemName: "checkmark").font(RUFont.icone(.small, weight: .bold)).foregroundColor(.white)
                                 } else if vm.buildProgress == i {
                                     Circle().fill(RUColor.rose).frame(width: 6, height: 6)
                                 }

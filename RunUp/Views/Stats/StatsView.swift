@@ -327,7 +327,7 @@ struct StatsView: View {
                 // Sans sa tuile teintée, comme les icônes d'en-tête et celles du plan : le
                 // glyphe porte l'information, son emballage n'en portait aucune.
                 Image(systemName: "map")
-                    .font(.system(size: 17, weight: .medium))
+                    .font(RUFont.icone(.large, weight: .medium))
                     .foregroundColor(RUColor.rose)
                     .frame(width: 26)
                 VStack(alignment: .leading, spacing: 2) {
@@ -342,7 +342,7 @@ struct StatsView: View {
                 }
                 Spacer(minLength: 8)
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 11, weight: .semibold)).foregroundColor(RUColor.text3)
+                    .font(RUFont.icone(.small, weight: .semibold)).foregroundColor(RUColor.text3)
             }
             .padding(12)
             .frame(minHeight: 44)
@@ -362,7 +362,7 @@ struct StatsView: View {
                 Text(showDeepAnalysis ? "Masquer l'analyse approfondie" : "Voir l'analyse approfondie")
                     .font(RUFont.sans(.body, weight: .semibold)).foregroundColor(RUColor.text2)
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 10, weight: .semibold)).foregroundColor(RUColor.text3)
+                    .font(RUFont.icone(.small, weight: .semibold)).foregroundColor(RUColor.text3)
                     .rotationEffect(.degrees(showDeepAnalysis ? 180 : 0))
                 Spacer(minLength: 0)
                 // `text3` et non `text4` : `text4` est à 20 % d'opacité, soit ~1,5:1 sur le fond

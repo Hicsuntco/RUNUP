@@ -145,7 +145,7 @@ struct MoreSettingsView: View {
         Button { ficheAdminOuverte = true } label: {
             HStack(spacing: 12) {
                 Image(systemName: "key.horizontal")
-                    .font(.system(size: 15, weight: .semibold)).foregroundColor(RUColor.violet)
+                    .font(RUFont.icone(.medium, weight: .semibold)).foregroundColor(RUColor.violet)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Fiche admin")
                         .font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
@@ -154,7 +154,7 @@ struct MoreSettingsView: View {
                 }
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold)).foregroundColor(RUColor.text3)
+                    .font(RUFont.icone(.body, weight: .semibold)).foregroundColor(RUColor.text3)
             }
             .padding(.horizontal, 14).padding(.vertical, 12)
             .frame(minHeight: 48)
@@ -223,7 +223,7 @@ struct MoreSettingsView: View {
     /// with nothing to distinguish one row from the next at a glance except the text itself.
     private func rowIcon(_ systemName: String, color: Color = RUColor.rose2) -> some View {
         Image(systemName: systemName)
-            .font(.system(size: 13, weight: .semibold))
+            .font(RUFont.icone(.body, weight: .semibold))
             .foregroundColor(color)
             .frame(width: 22)
     }
@@ -320,7 +320,7 @@ struct MoreSettingsView: View {
                                     .font(RUFont.sans(.emphasis, weight: .medium))
                                     .foregroundColor(RUColor.textPrimary)
                                 Image(systemName: "chevron.up.chevron.down")
-                                    .font(.system(size: 10, weight: .semibold))
+                                    .font(RUFont.icone(.small, weight: .semibold))
                                     .foregroundColor(RUColor.text3)
                             }
                         }
@@ -441,7 +441,7 @@ struct MoreSettingsView: View {
             Spacer()
             if !activitesEnDirectActives {
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(RUFont.icone(.body, weight: .semibold))
                     .foregroundColor(RUColor.text3)
             }
         }
@@ -557,7 +557,7 @@ struct MoreSettingsView: View {
                         appState.toast(String(localized: "Cycle réancré sur aujourd'hui"))
                     }) {
                         HStack(spacing: 8) {
-                            Image(systemName: "arrow.clockwise").font(.system(size: 12, weight: .semibold))
+                            Image(systemName: "arrow.clockwise").font(RUFont.icone(.body, weight: .semibold))
                             Text("Mes règles ont commencé aujourd'hui")
                                 .font(RUFont.sans(.body, weight: .semibold))
                         }

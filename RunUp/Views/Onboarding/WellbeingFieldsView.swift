@@ -91,7 +91,7 @@ struct WellbeingFieldsView: View {
                             // outside, so this is two custom 44×44 buttons instead.
                             HStack(spacing: 4) {
                                 Button(action: { vm.averageCycleLengthDays = max(21, vm.averageCycleLengthDays - 1) }) {
-                                    Image(systemName: "minus").font(.system(size: 12, weight: .bold))
+                                    Image(systemName: "minus").font(RUFont.icone(.body, weight: .bold))
                                         .frame(width: 44, height: 44)
                                         .contentShape(Rectangle())
                                 }
@@ -103,7 +103,7 @@ struct WellbeingFieldsView: View {
                                     .frame(minWidth: 56)
 
                                 Button(action: { vm.averageCycleLengthDays = min(35, vm.averageCycleLengthDays + 1) }) {
-                                    Image(systemName: "plus").font(.system(size: 12, weight: .bold))
+                                    Image(systemName: "plus").font(RUFont.icone(.body, weight: .bold))
                                         .frame(width: 44, height: 44)
                                         .contentShape(Rectangle())
                                 }

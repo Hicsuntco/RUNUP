@@ -126,7 +126,13 @@ struct WeeklyRecapView: View {
         return VStack(spacing: 10) {
             HStack(spacing: 10) {
                 statTile(value: String(format: "%.1f", locale: Locale.current, totalKm), unit: "km", label: String(localized: "Parcourus"),
-                         chip: bilan.kilometresSemainePrecedente > 0 ? (deltaKm >= 0 ? "▲ \(String(format: "%.1f", locale: Locale.current, deltaKm))" : "▼ \(String(format: "%.1f", locale: Locale.current, -deltaKm))") : nil,
+                         // L'UNITÉ, PARCE QUE SANS ELLE LE NOMBRE NE DIT RIEN. La pastille
+                         // affichait « ▼ 16,6 » à côté de « 14,1 km » : un écart en
+                         // KILOMÈTRES posé contre un total en kilomètres, sans rien pour les
+                         // distinguer — et le premier réflexe est de le lire comme un
+                         // pourcentage. Vu en regardant la capture de l'écran, pas en relisant
+                         // le code.
+                         chip: bilan.kilometresSemainePrecedente > 0 ? (deltaKm >= 0 ? "▲ \(String(format: "%.1f", locale: Locale.current, deltaKm)) km" : "▼ \(String(format: "%.1f", locale: Locale.current, -deltaKm)) km") : nil,
                          chipColor: deltaKm >= 0 ? RUColor.lime : RUColor.amber)
                 // `.allDisciplines` ET NON `weekRuns` NU. Le compte porte bien sur tout — une
                 // séance est une séance, qu'elle se courre, se roule ou se nage — mais
@@ -153,7 +159,7 @@ struct WeeklyRecapView: View {
     /// Deux écrans qui disent la même chose de deux façons : c'est précisément ce qui fait
     /// qu'une app se lit comme un assemblage. Le chiffre reprend l'encre du texte, le libellé
     /// reprend la micro-étiquette du système. Les couleurs sémantiques restent où elles
-    /// servent — la pastille d'écart « ▼ 19,6 » garde son ambre, parce que l'ambre y veut dire
+    /// servent — la pastille d'écart « ▼ 19,6 km » garde son ambre, parce que l'ambre y veut dire
     /// « moins bien que la semaine passée ».
     private func statTile(value: String, unit: String?, label: String, chip: String?, chipColor: Color) -> some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -247,7 +253,7 @@ struct WeeklyRecapView: View {
     private func recordCard(_ record: (label: String, value: String)) -> some View {
         HStack(spacing: 12) {
             Image(systemName: "trophy.fill")
-                .font(.system(size: 17, weight: .medium))
+                .font(RUFont.icone(.large, weight: .medium))
                 .foregroundColor(RUColor.rose)
                 .frame(width: 30)
                 // Sans son disque teinté : le rose reste au trophée.

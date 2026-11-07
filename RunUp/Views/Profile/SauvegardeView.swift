@@ -101,7 +101,7 @@ struct CarteDeSauvegarde: View {
 
     private func icone(_ nom: String) -> some View {
         Image(systemName: nom)
-            .font(.system(size: 13, weight: .semibold))
+            .font(RUFont.icone(.body, weight: .semibold))
             .foregroundColor(RUColor.rose2)
             .frame(width: 22)
     }

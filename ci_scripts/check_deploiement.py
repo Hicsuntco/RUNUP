@@ -19,10 +19,24 @@ Les chemins que l'app appelle vraiment, lus dans `RunUp/Services/*.swift` — pa
 
 # CE QUI COMPTE COMME « EXISTE »
 
-Tout sauf 404. Une route protégée répond 401 sans jeton, une route POST répond 405 sur un GET :
-les deux prouvent qu'une fonction est là. Seul 404 veut dire « rien n'est déployé à cette
-adresse ». On ne cherche donc pas à authentifier quoi que ce soit — il n'y a aucun secret ici, et
-ce contrôle n'en demande aucun.
+Une route protégée répond 401 sans jeton, une route POST répond 405 sur un GET : les deux
+prouvent qu'une fonction est là. Seul 404 veut dire « rien n'est déployé à cette adresse ». On ne
+cherche donc pas à authentifier quoi que ce soit — il n'y a aucun secret ici, et ce contrôle n'en
+demande aucun.
+
+# ET UNE DEUXIÈME CLASSE, QUI N'EST PAS LA MÊME CHOSE
+
+Un 500 ne veut pas dire « absente » — la fonction est là, elle démarre mal. Ce contrôle le disait
+donc comme une présence, et c'était juste et insuffisant : il est le SEUL endroit du dépôt qui
+regarde la production, et une fonction qui ne peut pas charger ses dépendances répond exactement
+ça. C'est le défaut que risque chaque montée de version du serveur : `jose` 6 n'est livré qu'en
+ESM, et `require('jose')` ne marche que sur les Node où `require(esm)` est actif par défaut
+(^20.19 || ^22.12 || >= 23). Vercel n'offre plus que 22.x, 24.x et 26.x, donc ça passe — mais
+c'est une condition qu'aucun test ne vérifie et que personne ne verrait tomber.
+
+LE RELEVÉ QUI AUTORISE CE REFUS. Les 83 adresses appelées par l'app, sondées le 7 novembre 2026 :
+69 répondent 401, 13 répondent 405, une répond 400. AUCUNE ne répond 5xx. Un 5xx n'est donc pas
+une réponse normale ici, et le refuser ne bloque rien de sain.
 """
 import argparse
 import concurrent.futures
@@ -88,6 +102,16 @@ def sonder(base: str, liste: list) -> list:
         return list(pool.map(verifier, liste))
 
 
+def en_erreur(statut: int) -> bool:
+    """Une fonction qui est là et qui tombe. 0 est une absence de réponse, pas un 5xx."""
+    return 500 <= statut < 600
+
+
+def a_revoir(resultats: list) -> list:
+    """Ce qui mérite un deuxième tour : un déploiement en cours rend 404, puis parfois 500."""
+    return [c for c, statut in resultats if statut == 404 or en_erreur(statut)]
+
+
 def main() -> int:
     arguments = argparse.ArgumentParser(description=__doc__)
     # LE DÉPLOIEMENT COURT APRÈS LE PUSH, PAS AVANT.
@@ -112,17 +136,20 @@ def main() -> int:
     while True:
         tour += 1
         resultats = sonder(base, liste)
-        if not [c for c, statut in resultats if statut == 404] or time.monotonic() >= limite:
+        if not a_revoir(resultats) or time.monotonic() >= limite:
             break
         reste = int(limite - time.monotonic())
-        print(f"  … des routes manquent encore (tour {tour}) — nouvelle tentative, {reste} s de patience")
+        print(f"  … des routes manquent ou tombent encore (tour {tour}) — "
+              f"nouvelle tentative, {reste} s de patience")
         time.sleep(15)
 
     absentes = [c for c, statut in resultats if statut == 404]
+    en_panne = [c for c, statut in resultats if en_erreur(statut)]
     injoignables = [c for c, statut in resultats if statut == 0]
 
     for chemin, statut in resultats:
-        marque = "✗" if statut == 404 else ("?" if statut == 0 else "·")
+        marque = "✗" if statut == 404 else ("!" if en_erreur(statut)
+                                            else ("?" if statut == 0 else "·"))
         print(f"  {marque} {statut or '—'}  {chemin}")
 
     if injoignables:
@@ -141,6 +168,21 @@ def main() -> int:
         print("l'intégration Git de Vercel : va voir l'onglet Deployments du projet, le dernier",
               file=sys.stderr)
         print("build a probablement échoué ou n'a jamais été déclenché.", file=sys.stderr)
+        return 1
+
+    if en_panne:
+        print(f"\n{len(en_panne)} route(s) DÉPLOYÉE(S) MAIS EN PANNE :\n", file=sys.stderr)
+        for chemin in en_panne:
+            print(f"  {chemin}", file=sys.stderr)
+        print("\nLa fonction est en ligne et répond 5xx avant même d'être authentifiée. La cause",
+              file=sys.stderr)
+        print("la plus courante est un chargement de module qui échoue — une dépendance montée de",
+              file=sys.stderr)
+        print("version, un `require` d'un paquet qui n'est plus livré en CommonJS, une variable",
+              file=sys.stderr)
+        print("d'environnement absente. Les tests ne peuvent pas le voir : ils tournent sur le",
+              file=sys.stderr)
+        print("Node de la machine GitHub, pas sur celui de Vercel.", file=sys.stderr)
         return 1
 
     print(f"\nDéploiement : les {len(liste)} routes appelées par l'app répondent ✓")

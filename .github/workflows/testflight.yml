@@ -319,11 +319,18 @@ jobs:
       # Le nom de l'en-tête de renouvellement est écrit côté client et côté serveur. S'ils
       # divergent, le serveur renouvelle dans le vide et elle se fait déconnecter tous les mois,
       # sans que le symptôme ressemble en rien à sa cause.
+      # `test_session.py` et `test_accent.py` existaient tous les deux et AUCUN workflow ne les
+      # lançait : les deux contrôles tournaient, leurs cas non. Un test qu'on n'exécute pas ne
+      # garde rien — il donne seulement l'impression que l'analyse est éprouvée.
       - name: Vérifier que la session se renouvelle des deux côtés
-        run: python3 ci_scripts/check_session.py
+        run: |
+          cd ci_scripts && python3 test_session.py
+          cd .. && python3 ci_scripts/check_session.py
 
       - name: Vérifier que la couleur de marque est la même partout
-        run: python3 ci_scripts/check_accent.py
+        run: |
+          cd ci_scripts && python3 test_accent.py
+          cd .. && python3 ci_scripts/check_accent.py
 
       # L'échelle de titrage avait vingt-six tailles écrites à la main, dont sept dans six points.
       # Le compilateur refuse maintenant un nombre nu ; il ne peut pas refuser la porte de

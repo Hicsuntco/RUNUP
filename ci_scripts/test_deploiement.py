@@ -59,6 +59,28 @@ def _():
     assert [x for x, s in faux + [("f", 404)] if s == 404] == ["f"]
 
 
+@cas_de("un 5xx n'est pas une absence, et n'est pas une santé non plus")
+def _():
+    # La phrase d'à côté reste vraie : 500 ne veut pas dire « rien n'est déployé ». Elle était
+    # juste et insuffisante — ce contrôle est le seul endroit du dépôt qui regarde la production,
+    # et une fonction qui n'arrive pas à charger ses dépendances répond exactement ça.
+    assert c.en_erreur(500) and c.en_erreur(502) and c.en_erreur(599)
+    assert not c.en_erreur(404), "404 a sa propre classe, avec son propre message"
+    assert not c.en_erreur(401) and not c.en_erreur(405) and not c.en_erreur(400)
+    # 0 est « pas de réponse du tout » — réseau, pas déploiement. Le confondre avec un 5xx
+    # ferait échouer le workflow sur une coupure de la machine GitHub.
+    assert not c.en_erreur(0)
+
+
+@cas_de("le deuxième tour reprend les absentes ET les tombées")
+def _():
+    resultats = [("a", 401), ("b", 404), ("c", 500), ("d", 405), ("e", 0)]
+    assert c.a_revoir(resultats) == ["b", "c"]
+    # Rien à revoir sur un relevé sain : c'est celui du 7 novembre 2026, 69 × 401, 13 × 405,
+    # 1 × 400, zéro 5xx. C'est ce relevé qui autorise à refuser un 5xx.
+    assert c.a_revoir([("a", 401)] * 69 + [("b", 405)] * 13 + [("c", 400)]) == []
+
+
 @cas_de("une panne de réseau ne s'écrit pas 404")
 def _():
     # `code()` rend 0 pour une exception non HTTP : un runner sans réseau ne doit pas faire croire

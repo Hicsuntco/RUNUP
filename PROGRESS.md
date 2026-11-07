@@ -68,13 +68,88 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 | 8 | Harnais de captures : photographier l'inscription, le paywall, l'écran de course | 0,5 j | **fait** |
 | 9 | Tests : `SubscriptionService` et `LocationService` d'abord | 2 j | **fait** |
 | 10 | Valeurs en dur → jetons du design system, les 15 % restants | 1,5 j | **fait** — il en restait six, pas 15 % |
-| 11 | Dépendances serveur : `jose` 6 et `bcryptjs` 3 | 0,5 j | à faire |
+| 11 | Dépendances serveur : `jose` 6 et `bcryptjs` 3 | 0,5 j | **fait** |
 | 12 | Accessibilité : tailles de texte dynamiques, indices VoiceOver | 1,5 j | à faire |
 | 13 | `ClubView.swift`, 2 699 lignes, à découper | 2 j | à faire |
 | 14 | Rapport de plantage maison, posté sur notre serveur | 1,5 j | à faire — décidé le 7 novembre |
 
 Le 14 est arrivé après coup, et je le ferais passer devant les finitions de design : c'est le seul
 moyen de savoir ce qui casse chez quelqu'un d'autre que nous. Le reste de l'ordre tient.
+
+## Chantier 11 — `jose` 6 et `bcryptjs` 3
+
+`jose` 5.9.6 → **6.2.15**, `bcryptjs` 2.4.3 → **3.0.3**. Les deux montées sont faites, et la
+deuxième touche les mots de passe : elle ne pouvait pas partir sur une lecture de notes.
+
+### Pourquoi monter
+
+Le tableau des versions soutenues, dans le paquet `jose` lui-même, ne liste plus que **v6.x** —
+pour les correctifs de sécurité comme pour les autres. La 5 ne reçoit donc plus rien.
+
+### Le vrai changement de rupture, et pourquoi il passe ici
+
+`jose` 6 n'est livré qu'en **ESM**. Son README le dit :
+
+> CJS style `let jose = require('jose')` is possible in Node.js versions where the `require(esm)`
+> feature is enabled by default (^20.19.0 || ^22.12.0 || >= 23.0.0).
+
+Or tout le serveur est en CommonJS — `lib/auth.js`, `lib/apns.js`, `api/auth/[action].js`. La
+montée ne tient donc qu'à une condition : le Node qui exécute les fonctions. Les versions que
+Vercel propose aujourd'hui sont 26.x (par défaut), 24.x et 22.x ; la 20.x est retirée depuis le
+1er octobre 2026. Les trois sont au-dessus du plancher, et la machine des tests est sur
+`node-version: "22"`, donc la dernière 22.x.
+
+**Aucun `engines` n'a été épinglé**, et c'est délibéré : écrire `"node": "22.x"` figerait la
+production sur une majeure que je ne vois pas — le réglage du projet vit chez Vercel, pas ici — et
+pourrait la faire DESCENDRE depuis la 26 par défaut. Le plancher est déjà garanti par ce que
+Vercel propose.
+
+`jose` 5 ne disparaît pas de l'arbre pour autant : `@vercel/oidc`, dépendance de `@vercel/blob`,
+l'épingle en `^5` et en garde une copie imbriquée. Ce n'est pas notre choix à faire.
+
+### `bcryptjs` 3, mesuré et non supposé
+
+Les empreintes déjà en base doivent continuer de se vérifier. Les deux versions installées côte à
+côte, sur la même machine :
+
+| | 2.4.3 | 3.0.3 |
+| --- | --- | --- |
+| Préfixe écrit | `$2a$` | `$2b$` |
+| Longueur | 60 | 60 |
+| Vérifie l'empreinte de l'autre | oui | oui |
+
+Donc : les mots de passe existants passent, et un retour en arrière reste possible — une empreinte
+`$2b$` écrite par la 3 se vérifie encore sous la 2.4.3. Un mauvais mot de passe est refusé. Le
+coût 12 prend 317 ms sur cette machine. La licence passe de MIT à BSD-3-Clause, et le paquet
+livre maintenant un exécutable `bin/bcrypt` dont on ne se sert pas.
+
+### Ce qui l'éprouve
+
+133 tests serveur verts sur les nouvelles versions. Et le seul appel de `jose` qu'aucun test ne
+couvre — `importPKCS8` + `SignJWT` en ES256 pour le jeton APNs — a été exécuté à la main sur une
+clé P-256 fabriquée pour l'occasion : signature et vérification bonnes, `alg`, `kid` et `iss`
+corrects.
+
+### Le contrôle qui manquait, et il ne manquait qu'à moitié
+
+`check_deploiement.py` sonde la production — c'est le seul endroit du dépôt qui la regarde. Il
+refusait un 404 (« rien n'est déployé là ») et comptait un **5xx comme une présence**, ce qui est
+exact et insuffisant : une fonction qui n'arrive pas à charger ses modules répond exactement ça.
+C'est le risque de cette montée-ci, et aucun test ne peut le voir — ils tournent sur le Node de
+GitHub, pas sur celui de Vercel.
+
+Deux classes de refus désormais, avec deux messages distincts. Le plafond vient d'un relevé : les
+83 adresses appelées par l'app, sondées le 7 novembre 2026, rendent **69 × 401, 13 × 405, 1 × 400,
+et aucun 5xx**. Un 5xx n'est donc pas une réponse normale, et le refuser ne bloque rien de sain.
+La patience de cinq minutes reprend maintenant les deux classes : un déploiement en cours rend
+404, puis parfois 500.
+
+### Deux fichiers de tests qui ne tournaient nulle part
+
+En vérifiant où `test_deploiement.py` était lancé, la réponse était : **nulle part**. Même chose
+pour `test_accent.py` et `test_session.py` — les trois contrôles tournaient, leurs cas non. Les
+trois sont maintenant dans leurs workflows, et l'audit a été refait sur les 25 fichiers
+`ci_scripts/test_*.py` : plus aucun orphelin.
 
 ## Chantier 10 — les valeurs en dur : six, pas 15 %
 

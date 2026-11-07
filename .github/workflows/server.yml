@@ -57,6 +57,19 @@ jobs:
       # sonder une seule fois, tout de suite, accuserait un déploiement en route. Le contrôle
       # s'arrête à la première ronde complète.
       #
-      # Aucun secret : il ne fait que constater qu'une adresse répond autre chose que 404.
+      # Aucun secret : il ne fait que constater qu'une adresse répond, et comment.
+      #
+      # DEUX CLASSES DE REFUS, et la deuxième est neuve : 404 veut dire « rien n'est déployé
+      # là », un 5xx veut dire « la fonction est là et elle ne démarre pas ». Les 83 adresses
+      # appelées par l'app, sondées le 7 novembre 2026, rendent 69 × 401, 13 × 405 et 1 × 400 —
+      # aucune ne rend 5xx. C'est ce relevé qui autorise à le refuser, et c'est le seul contrôle
+      # du dépôt capable de voir un module qui ne charge pas SUR LE NODE DE VERCEL, qui n'est pas
+      # celui de cette machine.
+      #
+      # ET SES PROPRES CAS SONT ÉPROUVÉS D'ABORD. `test_deploiement.py` existait et aucun
+      # workflow ne le lançait : un test qu'on n'exécute pas ne garde rien.
+      - name: Les cas de la sonde de déploiement
+        run: cd ci_scripts && python3 test_deploiement.py
+
       - name: Les routes que l'app appelle sont-elles déployées
         run: python3 ci_scripts/check_deploiement.py --patience 300

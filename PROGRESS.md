@@ -42,8 +42,8 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 | 6 | Bilan de la semaine — l'écran noté 5,5/10 | 1,5 j | **fait** |
 | 7 | États manquants : chargement de Stats et du Coach, erreurs d'inscription | 1 j | **fait** — l'item était faux |
 | 8 | Harnais de captures : photographier l'inscription, le paywall, l'écran de course | 0,5 j | **fait** |
-| 9 | Tests : `SubscriptionService` et `LocationService` d'abord | 2 j | à faire |
-| 10 | Valeurs en dur → jetons du design system, les 15 % restants | 1,5 j | à faire |
+| 9 | Tests : `SubscriptionService` et `LocationService` d'abord | 2 j | **fait** |
+| 10 | Valeurs en dur → jetons du design system, les 15 % restants | 1,5 j | **fait** — il en restait six, pas 15 % |
 | 11 | Dépendances serveur : `jose` 6 et `bcryptjs` 3 | 0,5 j | à faire |
 | 12 | Accessibilité : tailles de texte dynamiques, indices VoiceOver | 1,5 j | à faire |
 | 13 | `ClubView.swift`, 2 699 lignes, à découper | 2 j | à faire |
@@ -51,6 +51,75 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 
 Le 14 est arrivé après coup, et je le ferais passer devant les finitions de design : c'est le seul
 moyen de savoir ce qui casse chez quelqu'un d'autre que nous. Le reste de l'ordre tient.
+
+## Chantier 10 — les valeurs en dur : six, pas 15 %
+
+Trois barrières en gardent déjà une partie (`check_grille.py`, `check_teintes.py`,
+`check_contraste.py`), donc j'ai mesuré les deux classes qu'elles ne couvrent pas.
+
+### Les couleurs écrites à la main
+
+Vingt-et-une occurrences dans les vues, dont la plupart sont des palettes locales **assumées et
+documentées** : `Ink` (l'écran de course reste sombre dans les deux thèmes), la carte de partage et
+le cadre vidéo (de l'identité de marque, pas de l'interface), l'orange de Strava, et une variable.
+
+Quatre étaient de vrais défauts :
+
+1. **Le dégradé du tracé était écrit deux fois** — dont une dans `RUColor.traceBackground`. Et le
+   commentaire de ce jeton **prédit le défaut mot pour mot** : « il vivait en privé dans
+   `ActivityFeedRow`, parce qu'un seul écran en avait besoin […] une deuxième copie aurait divergé
+   au premier réglage — c'est exactement ce qui est arrivé aux dix rayons et aux dix-neuf écarts ».
+   `ActivityDetailView` **était** cette deuxième copie, trois lignes sous un commentaire qui
+   renvoie au fil.
+2. **`0x0A0A0E`**, le fond de l'écran de course, écrit en dur à son unique point d'usage — à quatre
+   centièmes de bleu près de `Ink.fond`. Deux noirs presque identiques écrits à la main sont la
+   façon exacte dont on obtient, un jour, deux noirs visiblement différents. Il s'appelle
+   `Ink.ecran`.
+3. **`0xFFD79A`**, l'ambre lisible des bandeaux. La raison de l'épingler est écrite depuis
+   longtemps en tête du fichier ; seule la valeur traînait en dur, soixante lignes plus loin que
+   son explication. Elle s'appelle `Ink.amberTexte`.
+4. **`0x0A0A0A`** contre `0x0A0A0E` : l'encre des commandes posées sur un disque blanc, à quatre
+   centièmes du fond de l'écran. L'écart n'a aucune raison d'être, et c'est tout l'argument pour
+   le nommer. `Ink.surBlanc`.
+
+### Les tailles de police
+
+178 emplois de `.font(.system(size:))`, et **162 sont du dimensionnement de symboles** — ce qui est
+légitime : un symbole SF se mesure en points, `RUFont` est une échelle de TEXTE. Des quinze autres,
+treize sont des icônes que mon premier classifieur avait manquées, et deux sont des glyphes
+typographiques assumés (la coche, l'emoji d'une notification déjà posée sur l'appareil).
+
+### La trouvaille que je n'ai pas changée
+
+`BackChevronButton` et `FrostedBackButton` — les deux boutons « retour » de l'app — dessinent leur
+chevron avec le **caractère** `‹` (U+2039, un guillemet simple) sizé en points, là où tout le reste
+de l'app utilise `chevron.left`. Un caractère tiré de la police système ne suit ni la graisse ni la
+couleur comme un symbole, et il ne s'accordera jamais avec les `chevron.right` des lignes voisines :
+l'app a donc un chevron gauche dessiné d'une façon et un chevron droit d'une autre. C'est le même
+argument que celui qui a fait retirer les émojis.
+
+Je ne l'ai pas changé parce que ça touche le bouton retour de **chaque** écran et que je ne peux pas
+voir le résultat avant de pousser. Le harnais photographie vingt-et-un écrans : la bonne façon de le
+faire est de le changer et de regarder.
+
+## Chantier 9 — les tests qui manquaient vraiment
+
+`SubscriptionService` était **déjà couvert, et bien** : sa décision vit dans `Entitlement`, sous
+test, avec une table de vérité complète et un commentaire qui dit de quel côté la règle penche
+quand elle ne sait pas. Ses deux autres sorties ont leurs fichiers. Le reste est de la plomberie
+StoreKit — un test unitaire n'y vérifierait pas notre code, il vérifierait Apple.
+
+Le vrai trou était **`LocationService.consomme`**, qui décide la distance de chaque course. Trois
+règles longuement expliquées dans le code et éprouvées par rien, parce qu'elles étaient
+inatteignables depuis l'extérieur du fichier : le plancher de bruit (né d'un défaut mesuré : **+2 km
+sur une course de 4 km**), le saut à plus de 12 m/s, le seuil de confiance à 65 mètres. Les trois se
+trompent **en silence**.
+
+Treize tests. Et l'un d'eux m'a pris en flagrant délit : j'avais écrit l'invariant juste dans un
+test et **son contraire huit lignes plus bas**. Le plancher de bruit ne met pas à jour
+`lastLocation`, donc les pas écartés s'additionnent — un signal flou perd une fenêtre de
+comparaison, pas le trajet. Douze tests sur treize passaient ; c'est la construction qui m'a dit
+lequel des deux mentait, et c'était le mien.
 
 ## Chantier 8 — les trois écrans que personne ne revoit
 

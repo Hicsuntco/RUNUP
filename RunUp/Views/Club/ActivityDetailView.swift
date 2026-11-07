@@ -172,8 +172,14 @@ struct ActivityDetailView: View {
     /// sur du clair.
     private func trace(_ s: ActivityDetail) -> some View {
         ZStack {
-            LinearGradient(colors: [Color(hex: 0x1A1926), Color(hex: 0x0E0D16)],
-                           startPoint: .topLeading, endPoint: .bottomTrailing)
+            // `RUColor.traceBackground`, ET NON UNE TROISIÈME COPIE DES DEUX MÊMES TEINTES.
+            //
+            // Le jeton existe, et son commentaire prédisait ce défaut mot pour mot : « il vivait
+            // en privé dans `ActivityFeedRow`, parce qu'un seul écran en avait besoin […] une
+            // deuxième copie aurait divergé au premier réglage — c'est exactement ce qui est
+            // arrivé aux dix rayons et aux dix-neuf écarts ». Cette ligne-ci ÉTAIT la deuxième
+            // copie, écrite trois lignes sous un commentaire qui renvoie au fil.
+            RUColor.traceBackground
             SelfDrawingRoute(route: s.route, lineWidth: 3.5,
                              colors: [RUColor.rose, RUColor.violet],
                              targetPoints: 140, showsStart: true)

@@ -62,6 +62,21 @@ private enum Ink {
     /// Le fond des surfaces de cet écran. Il était écrit deux fois en dur — ici et dans le voile
     /// du bas — pour la même valeur.
     static let fond = Color(hex: 0x0E0E14)
+    /// Le fond de l'ÉCRAN, derrière la carte. Un cran plus sombre que `fond`, qui habille les
+    /// surfaces posées dessus — et il était écrit en dur à son unique point d'usage, à quatre
+    /// centièmes de bleu près de `fond`. Deux noirs presque identiques écrits à la main sont la
+    /// façon exacte dont on obtient, un jour, deux noirs visiblement différents.
+    static let ecran = Color(hex: 0x0A0A0E)
+    /// L'ambre LISIBLE, pour le texte des bandeaux. C'est la valeur sombre de `RUColor.amberText`
+    /// (0xFFD79A), épinglée ici parce que cet écran reste sombre dans les deux thèmes : en
+    /// apparence claire, `RUColor.amberText` descend à 0x8A5A00, qui disparaîtrait sur du noir.
+    /// La raison est écrite depuis longtemps en tête de ce fichier ; seule la valeur traînait en
+    /// dur, soixante lignes plus loin que son explication.
+    static let amberTexte = Color(hex: 0xFFD79A)
+    /// L'encre des commandes posées sur un disque BLANC — pause, reprise. Presque le noir de
+    /// `ecran`, mais pas lui : 0x0A0A0A contre 0x0A0A0E. L'écart n'a aucune raison d'être, et
+    /// c'est tout l'argument pour le nommer avant qu'il ne s'aggrave.
+    static let surBlanc = Color(hex: 0x0A0A0A)
     static let label = Color.white.opacity(0.55)
     static let line = Color.white.opacity(0.08)
     static let cyan = Color(hex: 0x38E0D0)
@@ -107,7 +122,7 @@ struct LiveRunView: View {
                 voileDeDepart(reste)
             }
         }
-        .background(Color(hex: 0x0A0A0E))
+        .background(Ink.ecran)
         .ignoresSafeArea()
         .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.85), value: topBannerText)
     }
@@ -375,7 +390,7 @@ struct LiveRunView: View {
             Image(systemName: icon).foregroundColor(Ink.amber).font(.system(size: 14))
             Text(text)
                 .font(RUFont.sans(.body, weight: .semibold))
-                .foregroundColor(Color(hex: 0xFFD79A))
+                .foregroundColor(Ink.amberTexte)
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
         // Surface neutre, l'ambre reste au texte. L'écran de course est toujours sombre : un
@@ -661,7 +676,7 @@ struct LiveRunView: View {
                 }) {
                     Image(systemName: vm?.isPaused == true ? "play.fill" : "pause.fill")
                         .font(.system(size: 22))
-                        .foregroundColor(Color(hex: 0x0A0A0A))
+                        .foregroundColor(Ink.surBlanc)
                 }
                 .frame(width: 70, height: 70)
                 .background(.white, in: Circle())

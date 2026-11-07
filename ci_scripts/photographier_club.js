@@ -52,6 +52,10 @@ const CAS = [
   // publier, et l'écran qui en dit le moins.
   { nom: "fr-solo", langue: "fr-FR", etat: 200,
     club: { ...CLUB, memberCount: 1, city: null, description: null, sessions: [] } },
+  // Une couverture dont l'URL ne répond pas : elle laissait un cadre cassé de 240 points qui
+  // poussait le nom du club hors de l'écran.
+  { nom: "fr-couverture-morte", langue: "fr-FR", etat: 200,
+    club: { ...CLUB, coverUrl: 'https://exemple.invalide/absente.png' } },
   // La couverture porte un guillemet droit. Si l'échappement est bon, l'attribut ne se referme
   // pas et aucun `onerror` ne s'exécute.
   { nom: "fr-mechant", langue: "fr-FR", etat: 200, club: {
@@ -93,6 +97,9 @@ const CAS = [
     if (!cta) defauts.push(`${cas.nom} : aucun bouton — même l'état d'erreur doit en avoir un`);
     if (cta && !/^https:\/\/apps\.apple\.com\//.test(cta)) {
       defauts.push(`${cas.nom} : le bouton mène à « ${cta} » et non à l'App Store`);
+    }
+    if (cas.nom === 'fr-couverture-morte' && attributsDeLimage) {
+      defauts.push("fr-couverture-morte : le cadre cassé est resté dans la page");
     }
     if (cas.nom === 'fr-mechant') {
       if (titre === 'VOLE') defauts.push("fr-mechant : la valeur est sortie de son attribut");

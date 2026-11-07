@@ -135,6 +135,7 @@
       locale: 'fr-FR', chargement: 'Chargement…', incomplet: "Ce lien n'est pas complet.",
       absent: "Ce club n'existe pas, ou n'est pas ouvert aux nouvelles arrivées.",
       membre: 'membre', membres: 'membres', seances: 'Les prochaines séances',
+      aucuneSeance: "Aucune séance annoncée pour l'instant.",
       repete: 'chaque semaine', depart: 'au départ', cta: 'Télécharger RUNUP',
       note: "Tu as déjà l'app ? Ouvre ce lien depuis ton iPhone.",
       confidentialite: 'Confidentialité'
@@ -143,6 +144,7 @@
       locale: 'en-GB', chargement: 'Loading…', incomplet: 'This link is incomplete.',
       absent: "This club doesn't exist, or isn't open to newcomers.",
       membre: 'member', membres: 'members', seances: 'Upcoming sessions',
+      aucuneSeance: 'No sessions announced yet.',
       repete: 'every week', depart: 'going', cta: 'Download RUNUP',
       note: 'Already have the app? Open this link on your iPhone.',
       confidentialite: 'Privacy'
@@ -151,6 +153,7 @@
       locale: 'es-ES', chargement: 'Cargando…', incomplet: 'Este enlace está incompleto.',
       absent: 'Este club no existe, o no está abierto a nuevas incorporaciones.',
       membre: 'miembro', membres: 'miembros', seances: 'Próximas sesiones',
+      aucuneSeance: 'Todavía no hay sesiones anunciadas.',
       repete: 'cada semana', depart: 'en la salida', cta: 'Descargar RUNUP',
       note: '¿Ya tienes la app? Abre este enlace desde tu iPhone.',
       confidentialite: 'Privacidad'
@@ -241,8 +244,14 @@
 
       if (club.description) html += '<p class="desc">' + echappe(club.description) + '</p>';
 
+      // L'ABSENCE DE SÉANCE SE DIT. Sans cette ligne, un club qui n'en a annoncé aucune et un
+      // club dont on cacherait les séances rendent exactement la même page : rien. Quelqu'un qui
+      // décide s'il vient a besoin de la différence.
+      html += '<h2>' + echappe(T.seances) + '</h2>';
+      if (!(club.sessions && club.sessions.length)) {
+        html += '<p class="lieu">' + echappe(T.aucuneSeance) + '</p>';
+      }
       if (club.sessions && club.sessions.length) {
-        html += '<h2>' + echappe(T.seances) + '</h2>';
         club.sessions.forEach(function (s) {
           html += '<div class="seance">';
           html += '<div class="quand">' + echappe(quand(s.startsAt));
@@ -260,6 +269,16 @@
       }
 
       corps.innerHTML = html + piedDePage(true);
+
+      // UNE COUVERTURE QUI NE CHARGE PAS LAISSAIT UN CADRE CASSÉ de 240 points, icône
+      // d'image absente comprise, qui poussait le nom du club sous la ligne de flottaison. Vu
+      // en regardant la capture du cas piégé — l'URL y est volontairement morte. La page se
+      // passe très bien de couverture (c'est le cas de tout club qui n'en a pas posé) : on
+      // retire l'image plutôt que de montrer son absence.
+      var couverture = corps.querySelector('img.cover');
+      if (couverture) {
+        couverture.addEventListener('error', function () { couverture.remove(); });
+      }
     })
     .catch(function () {
       // Un club fermé et un club inexistant répondent la même chose, et c'est voulu : « il

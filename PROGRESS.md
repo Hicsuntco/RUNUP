@@ -125,16 +125,28 @@ exemple. Rien n'était exploitable aujourd'hui (le serveur n'écrit dans `cover_
 stockage qu'il fabrique lui-même), et il suffisait d'une route acceptant une URL fournie par le
 client pour que ça le devienne. Les guillemets sont échappés.
 
+### Et deux autres, trouvés en regardant les images que la barrière venait de produire
+
+**Une couverture qui ne charge pas laissait un cadre cassé** de 240 points — icône d'image
+absente comprise — qui poussait le nom du club sous la ligne de flottaison. Vu sur la capture du
+cas piégé, dont l'URL est volontairement morte. La page se passe très bien de couverture (c'est
+le cas de tout club qui n'en a pas posé) : l'image se retire d'elle-même si elle échoue.
+
+**Un club sans séance ne disait rien du tout.** Aucun titre, aucune phrase : un club qui n'a rien
+annoncé et un club dont on cacherait les séances rendaient exactement la même page. Quelqu'un qui
+décide s'il vient a besoin de la différence. « Aucune séance annoncée pour l'instant. », dans les
+trois langues.
+
 ### Ce qui l'empêche de recommencer
 
-`.github/workflows/page-club.yml` : sept cas — trois langues, l'état normal, l'état
-« introuvable », un club d'une seule personne, et une couverture piégée — photographiés sur une
+`.github/workflows/page-club.yml` : huit cas — trois langues, l'état normal, l'état
+« introuvable », un club d'une seule personne, une couverture morte et une couverture piégée — photographiés sur une
 machine Linux en une minute. Il refuse une erreur JavaScript, une page sans bouton, un bouton qui
 ne mène pas à l'App Store, et un échappement qui laisse une valeur sortir de son attribut.
 Éprouvé dans les deux sens : sur la page corrigée il passe, sur une copie dont on a retiré
 l'échappement des guillemets il échoue en nommant les deux symptômes.
 
-Le reste ne se juge pas tout seul : les sept images partent dans l'artefact, et quelqu'un les
+Le reste ne se juge pas tout seul : les huit images partent dans l'artefact, et quelqu'un les
 ouvre.
 
 ## Chantier 12 — l'app en grand texte, enfin photographiée

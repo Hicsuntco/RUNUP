@@ -20,9 +20,9 @@
 #
 # ─── CE QUE FAIT CE WORKFLOW ─────────────────────────────────────────────────────────────────
 #
-# Sept cas — trois langues, l'état normal et l'état « club introuvable », un club d'une seule
-# personne, et une couverture piégée — photographiés sur une machine Linux en une minute. Pas de
-# macOS, pas de simulateur : c'est une page web.
+# Huit cas — trois langues, l'état normal et l'état « club introuvable », un club d'une seule
+# personne, une couverture morte et une couverture piégée — photographiés sur une machine Linux en
+# une minute. Pas de macOS, pas de simulateur : c'est une page web.
 #
 # Il refuse une erreur JavaScript, une page sans bouton, un bouton qui ne mène pas à l'App Store,
 # et un échappement qui laisse une valeur sortir de son attribut. Le reste ne se juge pas tout
@@ -60,7 +60,7 @@ jobs:
       # La page va chercher son club sur `/api/clubs/public` : elle doit donc être servie par un
       # serveur, pas ouverte en `file://` — où `fetch` est refusé par le navigateur. Le script
       # répond lui-même à cet appel, avec un club posé à la main.
-      - name: Photographier les sept cas
+      - name: Photographier les huit cas
         run: |
           set -euo pipefail
           mkdir -p page-club

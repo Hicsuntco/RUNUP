@@ -16,7 +16,7 @@ import CoreLocation
 @MainActor
 @Observable
 final class LocationService: NSObject {
-    private let manager: CLLocationManager
+    private let manager = CLLocationManager()
 
     private(set) var route: [CLLocationCoordinate2D] = []
     /// Parallel to `route` (same index, same length) — real GPS altitude per point when the fix's
@@ -34,7 +34,7 @@ final class LocationService: NSObject {
     /// seule façon que l'appelant ne puisse pas le confondre avec un arrêt.
     private(set) var currentSpeedMetersPerSecond: Double?
     private(set) var isSignalUnstable = false
-    private(set) var authorizationStatus: CLAuthorizationStatus
+    private(set) var authorizationStatus: CLAuthorizationStatus = .notDetermined
     /// Vrai dès qu'un point exploitable est arrivé. Une puce GNSS froide met 5 à 30 secondes à
     /// accrocher, et pendant tout ce temps le service n'a strictement rien à dire sur la course —
     /// ni la distance, ni l'allure, ni surtout si la coureuse bouge. Sans ce drapeau, l'appelant
@@ -65,19 +65,25 @@ final class LocationService: NSObject {
     /// again, which a full `stop()` (no more delegate callbacks at all) would make impossible.
     private(set) var isAccumulating = true
 
-    /// `nonisolated`, ET IL FAUT QUE ÇA RESTE VRAI.
+    /// `nonisolated`, ET IL FAUT QUE ÇA RESTE VRAI — avec son réglage repoussé d'une ligne.
     ///
-    /// `NSObject.init()` n'est pas isolé, et un remplacement ne peut pas être plus isolé que ce
-    /// qu'il remplace. Tout ce qui se passe ici est donc de l'INITIALISATION — poser les deux
-    /// propriétés de l'objet, régler un gestionnaire encore local — et jamais une lecture ou une
-    /// écriture d'état déjà partagé. C'est aussi pour ça que `manager` et `authorizationStatus`
-    /// n'ont plus de valeur par défaut : leur affectation ici devient de l'initialisation, qui
-    /// n'a pas besoin d'isolation, au lieu d'une mutation, qui en aurait besoin.
+    /// `NSObject.init()` n'est pas isolé, donc ce remplacement ne peut pas l'être : un
+    /// remplacement ne peut pas être plus isolé que ce qu'il remplace. Et un `init` `nonisolated`
+    /// ne peut rien écrire sur une classe `@MainActor` — j'ai cru qu'affecter une propriété sans
+    /// valeur par défaut compterait comme de l'initialisation, qui n'aurait pas eu besoin
+    /// d'isolation. Le compilateur dit non : « main actor-isolated property 'status' can not be
+    /// mutated from a nonisolated context ». Une affectation reste une mutation.
+    ///
+    /// Les propriétés gardent donc leur valeur par défaut, et tout le réglage passe par
+    /// `surLActeurPrincipal` — qui l'exécute TOUT DE SUITE, avant que l'`init` ne rende la main,
+    /// puisque les endroits qui construisent ce service sont `@MainActor`. Aucune ligne ne change
+    /// de moment d'exécution.
     nonisolated override init() {
-        let manager = CLLocationManager()
-        self.manager = manager
-        self.authorizationStatus = manager.authorizationStatus
         super.init()
+        surLActeurPrincipal { [self] in reglageInitial() }
+    }
+
+    private func reglageInitial() {
         manager.delegate = self
         // `Best` et non `BestForNavigation`. Apple documente ce dernier comme réservé à un
         // appareil branché sur secteur : fusion de capteurs supplémentaire, puce GNSS à plein
@@ -96,6 +102,7 @@ final class LocationService: NSObject {
         manager.desiredAccuracy = kCLLocationAccuracyBest
         manager.activityType = .fitness
         manager.pausesLocationUpdatesAutomatically = false
+        authorizationStatus = manager.authorizationStatus
     }
 
     func requestAuthorization() {

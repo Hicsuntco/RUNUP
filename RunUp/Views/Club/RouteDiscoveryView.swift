@@ -343,18 +343,20 @@ private struct RouteRow: View {
 @MainActor
 @Observable
 final class LocationPermission: NSObject {
-    private let manager: CLLocationManager
-    private(set) var status: CLAuthorizationStatus
+    private let manager = CLLocationManager()
+    private(set) var status: CLAuthorizationStatus = .notDetermined
 
-    /// `nonisolated` : `NSObject.init()` ne l'est pas, et un remplacement ne peut pas être plus
-    /// isolé que ce qu'il remplace. Cet initialiseur posait DÉJÀ ses deux propriétés depuis une
-    /// variable locale, donc il n'y avait rien à changer d'autre que l'annotation.
+    /// `nonisolated`, et le réglage repoussé sur l'acteur principal — voir le raisonnement écrit
+    /// en long dans `LocationService.init`. C'est ici que le compilateur a refusé net
+    /// l'affectation depuis un contexte non isolé, et il avait raison.
     nonisolated override init() {
-        let manager = CLLocationManager()
-        self.manager = manager
-        self.status = manager.authorizationStatus
         super.init()
+        surLActeurPrincipal { [self] in reglageInitial() }
+    }
+
+    private func reglageInitial() {
         manager.delegate = self
+        status = manager.authorizationStatus
     }
 
     var isGranted: Bool { status == .authorizedWhenInUse || status == .authorizedAlways }

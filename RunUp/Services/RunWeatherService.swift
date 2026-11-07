@@ -33,16 +33,17 @@ import WeatherKit
 /// le compilateur qui la tient.
 @MainActor
 final class RunWeatherService: NSObject {
-    private let manager: CLLocationManager
+    private let manager = CLLocationManager()
     private var enAttente: CheckedContinuation<CLLocation?, Never>?
 
-    /// `nonisolated` : `NSObject.init()` ne l'est pas, et un remplacement ne peut pas être plus
-    /// isolé que ce qu'il remplace. Tout est de l'initialisation ici — voir le même raisonnement,
-    /// écrit en long, dans `LocationService.init`.
+    /// `nonisolated`, et le réglage repoussé sur l'acteur principal — voir le raisonnement écrit
+    /// en long dans `LocationService.init`.
     nonisolated override init() {
-        let manager = CLLocationManager()
-        self.manager = manager
         super.init()
+        surLActeurPrincipal { [self] in reglageInitial() }
+    }
+
+    private func reglageInitial() {
         manager.delegate = self
         // Le kilomètre suffit largement, et c'est le réglage le moins coûteux en batterie.
         manager.desiredAccuracy = kCLLocationAccuracyKilometer

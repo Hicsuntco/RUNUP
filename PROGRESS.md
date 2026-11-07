@@ -18,6 +18,14 @@ n'apparaît, l'avant/après est écrit ici, et les trois langues ont été véri
 | Surveillance des plantages : Sentry, ou maison ? | Aucune dépendance Swift tierce dans le projet aujourd'hui. Sentry est un paquet SPM, donc la première ; « maison » veut dire poster le rapport sur notre propre serveur Vercel, moins complet et à écrire. Sans l'un des deux, un plantage chez une utilisatrice reste invisible. |
 | Contenu des séances HYROX | Il faut quelqu'un qui a couru un HYROX. L'équipe n'a pas cette compétence et ne doit pas l'inventer. |
 
+## Au passage
+
+**La version monte dès qu'une version est publiée.** Apple ferme le train d'une version publiée :
+depuis la sortie de la 3.3 le 3 novembre 2026, tout envoi à TestFlight en 3.3 est refusé (90186 et
+90062). Le défaut ne se voit qu'au DERNIER pas de la chaîne — construction verte, tests verts,
+archive signée, puis refus — donc après dix minutes de machine macOS. `project.yml` est passé en
+3.4, aux trois cibles.
+
 ## Les chantiers de l'audit
 
 Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.

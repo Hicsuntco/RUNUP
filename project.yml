@@ -67,7 +67,19 @@ targets:
           - fr
           - en
           - es
-        CFBundleShortVersionString: "3.3"
+        # APPLE FERME LE TRAIN D'UNE VERSION DÈS QU'ELLE EST PUBLIÉE.
+        #
+        # La 3.3 est sortie le 3 novembre 2026. Depuis, tout envoi à TestFlight en 3.3 est refusé
+        # avec deux erreurs : « The train version '3.3' is closed for new build submissions »
+        # (90186) et « CFBundleShortVersionString [3.3] must contain a higher version than that of
+        # the previously approved version » (90062). La construction est verte, les tests sont
+        # verts, l'archive est signée, et seul le dernier pas échoue — c'est-à-dire que le défaut
+        # ne se voit qu'après dix minutes de machine macOS.
+        #
+        # Ce numéro monte donc DÈS que la version précédente est publiée, et pas au moment de
+        # préparer la suivante. `CFBundleVersion` reste là pour mémoire : la chaîne l'impose aux
+        # trois cibles depuis `prepare_project.sh` (1000 + numéro d'exécution).
+        CFBundleShortVersionString: "3.4"
         CFBundleVersion: "14"
         # Synthesized launch storyboard (no custom .storyboard file) — a plain color is all it
         # can show (the real animated wordmark only runs once app code is live, see
@@ -246,7 +258,7 @@ targets:
         CFBundleDisplayName: RunUp
         # App Store validation requires an extension's version to match its host app's — keep
         # these two in step with `RunUp`'s `CFBundleShortVersionString`/`CFBundleVersion` above.
-        CFBundleShortVersionString: "3.3"
+        CFBundleShortVersionString: "3.4"
         CFBundleVersion: "14"
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
@@ -328,7 +340,7 @@ targets:
       properties:
         CFBundleDisplayName: RunUp
         # Must track the iOS app's version pair exactly — App Store validation requires it.
-        CFBundleShortVersionString: "3.3"
+        CFBundleShortVersionString: "3.4"
         CFBundleVersion: "14"
         WKApplication: true
         WKCompanionAppBundleIdentifier: com.hicsuntco.runup

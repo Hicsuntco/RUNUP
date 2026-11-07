@@ -392,7 +392,10 @@ final class AppState {
             // `try?` des deux côtés : c'est une réparation de confort, pas une étape dont
             // dépend quoi que ce soit. Hors ligne, elle retentera au prochain lancement.
             try? await service.updateProfile(name: prenom, lastName: nom.isEmpty ? nil : nom)
-            try? await auth.refreshMe()
+            // `_ =` : `refreshMe()` rend le compte rafraîchi, dont on n'a rien à faire ici — on
+            // ne voulait que l'effet de bord. Le laisser nu faisait avertir le compilateur à
+            // l'endroit même où `try?` dit déjà « et tant pis si ça échoue ».
+            _ = try? await auth.refreshMe()
         }
     }
 
@@ -934,7 +937,10 @@ final class AppState {
     /// accent/light-mode theme could have just changed, since the widget's own process has no way
     /// to observe `profile` directly (see `DailyGoalsSnapshot`).
     func publishWidgetSnapshot() {
-        let today = AdaptivePlanEngine.currentWeekdayIndex()
+        // Le `let today` qui vivait ici ne servait plus à rien : la pastille du jour du widget se
+        // calcule maintenant chez le widget, depuis la date de son entrée de chronologie (voir
+        // `WidgetWeekDay.rangDuJour`), parce qu'un rang publié vieillit à minuit alors que le
+        // widget, lui, continue de se redessiner.
         let snapshot = DailyGoalsSnapshot(
             progress: profile.dailyGoalsProgress,
             streak: profile.streak,

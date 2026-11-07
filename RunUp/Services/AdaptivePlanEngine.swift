@@ -1702,11 +1702,6 @@ enum AdaptivePlanEngine {
 
     // MARK: Debrief → rings/streak/xp/weekly RPE accumulator
 
-    /// Records this run's outcome but does **not** change any session — today's and the rest of
-    /// the week's sessions were already planned when the week began. The RPE just feeds the
-    /// accumulator that `refreshProgramForCurrentDate` averages at the next week boundary, and
-    /// (separately) the rolling window `UserProfile.readiness` reads for "forme du jour".
-    @discardableResult
     /// « Elle a couru ce jour-là » — le FAIT, séparé du ressenti.
     ///
     /// Ce marquage vivait à l'intérieur de `applyDebrief`, donc il n'avait lieu qu'à la
@@ -1769,7 +1764,31 @@ enum AdaptivePlanEngine {
         }
     }
 
-    static func applyDebrief(rpe: RPE, run: RunRecord, profile: UserProfile) -> String {
+    /// Records this run's outcome but does **not** change any session — today's and the rest of
+    /// the week's sessions were already planned when the week began. The RPE just feeds the
+    /// accumulator that `refreshProgramForCurrentDate` averages at the next week boundary, and
+    /// (separately) the rolling window `UserProfile.readiness` reads for "forme du jour".
+    ///
+    /// SA DOCUMENTATION ÉTAIT RESTÉE DOUZE FONCTIONS PLUS HAUT, AVEC UN `@discardableResult`.
+    ///
+    /// `markSessionDone` a été inséré ENTRE l'attribut et la fonction qu'il qualifiait. L'attribut
+    /// s'est donc recollé sur `markSessionDone`, qui ne rend rien — « '@discardableResult'
+    /// declared on a function returning 'Void' is unnecessary » — et les dix appels à
+    /// `applyDebrief` se sont mis à avertir « result of call is unused ». Onze avertissements sur
+    /// les treize du dépôt venaient de cette seule insertion, et la documentation décrivait, au
+    /// passage, une fonction qui n'était pas celle qu'elle surplombait.
+    ///
+    /// # ET LA CHAÎNE QU'ELLE RENDAIT N'ÉTAIT LUE PAR PERSONNE
+    ///
+    /// Elle rendait « Programme mis à jour · +120 XP ». Son unique appelant de l'app,
+    /// `DebriefSheet`, jetait la valeur et affichait la MÊME phrase, écrite une seconde fois chez
+    /// lui — et les deux copies avaient déjà divergé. Le compilateur le disait depuis le début,
+    /// sous la forme « result of call is unused », et l'attribut égaré faisait taire l'avertissement
+    /// exactement là où il avait raison.
+    ///
+    /// La fonction ne rend donc plus rien. La phrase appartient à l'écran qui l'affiche : elle y
+    /// est déjà, traduite, et elle n'a pas à exister en deux endroits dont un seul se voit.
+    static func applyDebrief(rpe: RPE, run: RunRecord, profile: UserProfile) {
         // `runValue` EST une distance COURUE — « Distance run today », lue par le classement du
         // club et par le bilan de fin de programme. Elle n'acceptait aucune condition, donc
         // quarante kilomètres de vélo y entraient tels quels : un chiffre de course gonflé par
@@ -1826,7 +1845,6 @@ enum AdaptivePlanEngine {
         profile.lastStreakDate = advanced.lastDay
         profile.xp += 120
         profile.completedDebriefsCount += 1
-        return "Programme mis à jour · +120 XP"
     }
 
     /// `streak` only ever increments in `applyDebrief` above — neither deleting a `RunRecord`

@@ -50,6 +50,26 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 Le 14 est arrivé après coup, et je le ferais passer devant les finitions de design : c'est le seul
 moyen de savoir ce qui casse chez quelqu'un d'autre que nous. Le reste de l'ordre tient.
 
+## Les treize avertissements du dépôt, et leur cause unique
+
+Onze des treize venaient d'UNE insertion. `markSessionDone` avait été écrit **entre** le
+`@discardableResult` de `applyDebrief` et `applyDebrief` elle-même. L'attribut s'est recollé sur
+`markSessionDone`, qui ne rend rien — « declared on a function returning 'Void' is unnecessary » —
+et les dix appels à `applyDebrief` se sont mis à avertir « result of call is unused ». La
+documentation, elle aussi restée en haut, décrivait une fonction qui n'était pas celle qu'elle
+surplombait.
+
+Et l'avertissement avait raison : `applyDebrief` rendait « Programme mis à jour · +120 XP » que
+**personne ne lisait**. Son unique appelant, `DebriefSheet`, jetait la valeur et affichait la même
+phrase écrite une seconde fois chez lui — les deux copies avaient déjà divergé. La fonction ne rend
+donc plus rien ; la phrase appartient à l'écran qui l'affiche.
+
+Les deux derniers : un `try? await auth.refreshMe()` dont on ne voulait que l'effet de bord, et un
+`let today` devenu inutile quand la pastille du jour du widget est passée au calcul chez le widget.
+
+**Zéro avertissement.** C'est ce qui rend la règle « aucun avertissement nouveau » vérifiable : un
+treizième se perdait dans douze.
+
 ## Chantier 2 — l'activité en direct
 
 ### Ce qui était faux

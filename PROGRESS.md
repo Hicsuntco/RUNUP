@@ -85,12 +85,29 @@ d'exécution, et l'isolation devient vérifiée. Le repli par `Task` existe parc
 quatre-vingt-dix minutes écran éteint, et un plantage au trentième kilomètre serait un prix absurde
 pour une vérification de type.
 
-### Le détail qui a demandé du soin
+### Le détail qui a demandé deux essais
 
-`NSObject.init()` n'est pas isolé, et un remplacement ne peut pas l'être plus. Les trois
-initialiseurs sont `nonisolated` et ne font plus que de l'**initialisation** : `manager` et
-`authorizationStatus` ont perdu leur valeur par défaut, pour que leur affectation soit de
-l'initialisation — qui n'a pas besoin d'isolation — au lieu d'une mutation, qui en aurait besoin.
+`NSObject.init()` n'est pas isolé, et un remplacement ne peut pas l'être plus : les trois
+initialiseurs sont donc `nonisolated`. Ça, c'était juste du premier coup.
+
+Ce qui était faux, c'est ce que j'ai cru qu'un tel `init` avait le droit de faire ensuite. J'avais
+retiré leur valeur par défaut à `manager` et `authorizationStatus`, en pensant que leur affectation
+compterait alors comme de l'**initialisation**, qui n'a pas besoin d'isolation, plutôt que comme
+une **mutation**, qui en a besoin. Le compilateur dit non, et il l'a dit en trois lignes dont une
+erreur franche :
+
+```
+RouteDiscoveryView.swift:355: error: main actor-isolated property 'status'
+can not be mutated from a nonisolated context
+```
+
+Les propriétés gardent donc leur valeur par défaut, et tout le réglage part dans un
+`reglageInitial()` isolé appelé par `surLActeurPrincipal` — qui l'exécute **tout de suite**, avant
+que l'`init` ne rende la main, puisque les trois constructions sont `@MainActor`.
+
+J'avais hésité entre deux formes et j'ai poussé la moins sûre sans le dire. La construction est le
+seul compilateur de ce projet : quand il y a un doute, la bonne méthode est de pousser la forme
+dont on est sûr.
 
 ### Ce qui le garde
 

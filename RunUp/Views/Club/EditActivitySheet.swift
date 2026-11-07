@@ -40,6 +40,8 @@ struct EditActivitySheet: View {
     // déduire des trois autres : « il y en avait une, je la retire » ressemblerait sinon à
     // « je n'en ai pas choisi », c'est-à-dire à « n'y touche pas ».
     @State private var photoItem: PhotosPickerItem?
+    /// Vrai le temps de décoder, réduire et encoder l'image choisie — voir `chargerLaPhoto`.
+    @State private var chargementPhoto = false
     @State private var photoPreview: UIImage?
     @State private var photoDataURI: String?
     @State private var photoRetiree = false
@@ -239,12 +241,32 @@ struct EditActivitySheet: View {
     /// sous les 500 ko que le serveur accepte tout en restant net en plein écran. Exactement la
     /// même chaîne que la photo d'un itinéraire et celle du profil : une troisième façon de
     /// préparer une image serait une troisième façon de dépasser le plafond.
+    ///
+    /// L'ATTENTE SE VOIT, ET L'ÉCHEC SE DIT.
+    ///
+    /// Le bouton affichait « Ajouter une photo » pendant tout le temps du décodage, du
+    /// redimensionnement et de l'encodage — une à deux secondes sur une photo de douze
+    /// mégapixels, pendant lesquelles l'écran ne bougeait pas. Le geste naturel est alors
+    /// d'appuyer une seconde fois.
+    ///
+    /// Et les trois `guard` sortaient en silence. Une photo restée sur iCloud, un format que
+    /// `UIImage` ne sait pas lire, un encodage qui échoue : dans les trois cas, rien ne se
+    /// passait et rien ne le disait — exactement le défaut du chantier 2, sur un autre écran.
     private func chargerLaPhoto(_ selection: PhotosPickerItem?) async {
-        guard let selection,
-              let data = try? await selection.loadTransferable(type: Data.self),
-              let image = UIImage(data: data) else { return }
+        guard let selection else { return }
+        chargementPhoto = true
+        errorMessage = nil
+        defer { chargementPhoto = false }
+        guard let data = try? await selection.loadTransferable(type: Data.self),
+              let image = UIImage(data: data) else {
+            errorMessage = String(localized: "Impossible de lire cette photo. Choisis-en une autre.")
+            return
+        }
         let reduite = image.resized(maxDimension: 1080)
-        guard let jpeg = reduite.jpegData(compressionQuality: 0.6) else { return }
+        guard let jpeg = reduite.jpegData(compressionQuality: 0.6) else {
+            errorMessage = String(localized: "Impossible de préparer cette photo. Choisis-en une autre.")
+            return
+        }
         photoPreview = reduite
         photoDataURI = "data:image/jpeg;base64," + jpeg.base64EncodedString()
         photoRetiree = false

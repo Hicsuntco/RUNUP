@@ -40,7 +40,7 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 | 4 | Finitions design : 2 émojis dans l'interface, 2 dégradés, vert isolé du profil d'élévation, boutons gris en capitales, segment blanc sur blanc, contraste de la bulle du coach | 1 j | à faire |
 | 5 | Données de démonstration : FC 148 seize fois, « Sortie » seize fois, défi « octobre » affiché en novembre | 4 h | **fait** |
 | 6 | Bilan de la semaine — l'écran noté 5,5/10 | 1,5 j | **fait** |
-| 7 | États manquants : chargement de Stats et du Coach, erreurs d'inscription | 1 j | à faire |
+| 7 | États manquants : chargement de Stats et du Coach, erreurs d'inscription | 1 j | **fait** — l'item était faux |
 | 8 | Harnais de captures : photographier l'inscription, le paywall, l'écran de course | 0,5 j | à faire |
 | 9 | Tests : `SubscriptionService` et `LocationService` d'abord | 2 j | à faire |
 | 10 | Valeurs en dur → jetons du design system, les 15 % restants | 1,5 j | à faire |
@@ -51,6 +51,44 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 
 Le 14 est arrivé après coup, et je le ferais passer devant les finitions de design : c'est le seul
 moyen de savoir ce qui casse chez quelqu'un d'autre que nous. Le reste de l'ordre tient.
+
+## Chantier 7 — les états manquants, qui ne manquaient pas
+
+Les **trois** affirmations de l'item sont fausses, et je les ai vérifiées une par une.
+
+- **Chargement de Stats** : l'écran n'a aucun appel réseau. Son `@Query` SwiftData est synchrone,
+  et son unique `.task` compte des tracés en mémoire. Il n'y a rien à attendre, donc rien à
+  annoncer.
+- **Chargement du Coach** : l'indicateur de frappe existe, animé, avec son `reduceMotion`.
+- **Erreurs d'inscription** : `SignInView` distingue **deux 409 différents** (« cette adresse a
+  déjà un compte avec mot de passe » et « un compte existe déjà »), le 401, le 422, et retombe sur
+  `PanneReseau.phrase` pour le reste. Le Coach fait pareil : un refus du modèle et une panne réseau
+  demandent deux choses différentes, et il les dit différemment.
+
+### Le balayage que l'item aurait dû faire
+
+Quinze écrans appellent le réseau. Pour chacun : annonce-t-il qu'il charge, dit-il quand il échoue,
+dit-il quand il est vide ? **Les quinze ont leurs états.** Mon scan en a d'abord signalé quatre
+comme incomplets, et les quatre étaient des faux positifs : il cherchait `isLoading` alors que ce
+dépôt écrit `saving`, `isPublishing`, `enCours`. Quatre sur quatre — la même erreur de clé de
+recherche que trois fois aujourd'hui.
+
+**Pas de barrière d'intégration continue pour cette règle**, et c'est un choix : un contrôle dont le
+premier jet produit 100 % de faux positifs finirait désactivé, et on perdrait les barrières qui
+marchent avec celle qui ne marche pas. C'est l'argument que `check_strings.py` écrit lui-même au
+sujet de sa cinquième zone aveugle.
+
+### Le seul vrai trou, et il n'était pas dans la liste
+
+Les deux feuilles qui joignent une photo. Après avoir choisi l'image, le bouton affichait toujours
+« Ajouter une photo » pendant tout le décodage, le redimensionnement et l'encodage — une à deux
+secondes sur une photo de douze mégapixels, pendant lesquelles l'écran ne bouge pas. Le geste
+naturel est alors d'appuyer une seconde fois.
+
+Et les trois `guard` sortaient **en silence** : une photo restée sur iCloud, un format que `UIImage`
+ne sait pas lire, un encodage qui échoue — rien ne se passait et rien ne le disait. Exactement le
+défaut du chantier 2, sur un autre écran. Le bouton annonce la préparation et se désactive pendant,
+et chaque échec a sa phrase.
 
 ## Chantier 6 — le bilan de la semaine
 

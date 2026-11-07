@@ -24,6 +24,8 @@ struct PublishRouteSheet: View {
     @State private var isPublishing = false
     @State private var errorMessage: String?
     @State private var photoItem: PhotosPickerItem?
+    /// Vrai le temps de décoder, réduire et encoder l'image choisie — voir `loadPhoto`.
+    @State private var chargementPhoto = false
     /// L'aperçu affiché ici, et le JPEG encodé prêt à partir. Les deux, parce que redimensionner
     /// à l'envoi ferait attendre au moment où l'on appuie sur « publier ».
     @State private var photoPreview: UIImage?
@@ -171,11 +173,19 @@ struct PublishRouteSheet: View {
             } else {
                 PhotosPicker(selection: $photoItem, matching: .images) {
                     HStack(spacing: 8) {
-                        Image(systemName: "photo.on.rectangle")
-                        Text("AJOUTER UNE PHOTO")
+                        if chargementPhoto {
+                            ProgressView().controlSize(.small).tint(RUColor.textPrimary)
+                            Text("PRÉPARATION…")
+                        } else {
+                            Image(systemName: "photo.on.rectangle")
+                            Text("AJOUTER UNE PHOTO")
+                        }
                     }
                 }
                 .buttonStyle(SecondaryButtonStyle())
+                // Choisir une seconde photo pendant que la première se prépare écraserait l'état
+                // en cours de route.
+                .disabled(chargementPhoto)
             }
         }
         .onChange(of: photoItem) { _, item in Task { await loadPhoto(item) } }
@@ -236,12 +246,32 @@ struct PublishRouteSheet: View {
     /// Redimensionnée et encodée dès la sélection : 1080 px sur le côté long, qualité 0,6, ce qui
     /// tient sous les 500 ko que `api/activities/routePhoto` accepte tout en restant net en plein
     /// écran. Même chaîne que la photo de profil, à l'échelle près.
+    ///
+    /// L'ATTENTE SE VOIT, ET L'ÉCHEC SE DIT.
+    ///
+    /// Le bouton affichait « Ajouter une photo » pendant tout le temps du décodage, du
+    /// redimensionnement et de l'encodage — une à deux secondes sur une photo de douze
+    /// mégapixels, pendant lesquelles l'écran ne bougeait pas. Le geste naturel est alors
+    /// d'appuyer une seconde fois.
+    ///
+    /// Et les trois `guard` sortaient en silence. Une photo restée sur iCloud, un format que
+    /// `UIImage` ne sait pas lire, un encodage qui échoue : dans les trois cas, rien ne se
+    /// passait et rien ne le disait — exactement le défaut du chantier 2, sur un autre écran.
     private func loadPhoto(_ item: PhotosPickerItem?) async {
-        guard let item,
-              let data = try? await item.loadTransferable(type: Data.self),
-              let image = UIImage(data: data) else { return }
+        guard let item else { return }
+        chargementPhoto = true
+        errorMessage = nil
+        defer { chargementPhoto = false }
+        guard let data = try? await item.loadTransferable(type: Data.self),
+              let image = UIImage(data: data) else {
+            errorMessage = String(localized: "Impossible de lire cette photo. Choisis-en une autre.")
+            return
+        }
         let resized = image.resized(maxDimension: 1080)
-        guard let jpeg = resized.jpegData(compressionQuality: 0.6) else { return }
+        guard let jpeg = resized.jpegData(compressionQuality: 0.6) else {
+            errorMessage = String(localized: "Impossible de préparer cette photo. Choisis-en une autre.")
+            return
+        }
         photoPreview = resized
         photoDataURI = "data:image/jpeg;base64," + jpeg.base64EncodedString()
     }

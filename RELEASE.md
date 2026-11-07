@@ -106,7 +106,11 @@ Puis, sur la machine :
 - **La version de Node du projet Vercel** ne se lit pas dans le dépôt. Elle a mis l'API à terre
   onze minutes le 7 novembre 2026 : `jose` 6 n'est livré qu'en ESM, la construction était verte,
   les 133 tests verts. `check_cjs.py` ferme cette porte-là ; le réglage reste invisible.
-- **La montre et l'iPad** n'ont pas de captures propres.
+- **La montre n'a pas de captures propres.** L'app de poignet a ses écrans, et aucun n'a jamais
+  été photographié : il n'existe pas de cible de test d'interface pour watchOS. L'iPad, lui, ne
+  pose pas la question — `TARGETED_DEVICE_FAMILY` vaut 1 dans les réglages de base comme dans
+  ceux du widget (seule la montre porte 4), donc RUNUP est une app iPhone et Apple ne demande
+  aucune image d'iPad.
 - **La page publique d'un club**, servie par le serveur, n'a jamais été relue.
 - **Le contenu des séances HYROX** attend quelqu'un qui en a couru un (voir `PROGRESS.md`).
 

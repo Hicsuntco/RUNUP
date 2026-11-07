@@ -1129,15 +1129,20 @@ enum AdaptivePlanEngine {
         }
     }
 
-    /// Eases the week's plan around three opt-in signals: the ease the coach set from the
-    /// conversation (`profile.trainingEase`), a flagged injury (`profile.injuryArea`), and the
-    /// estimated cycle phase (`profile.cyclePhase`). A no-op for anyone who has shared none.
+    /// Allège la semaine sur les signaux qui valent POUR TOUTE LA SEMAINE : l'allègement posé par
+    /// le coach depuis la conversation (`profile.trainingEase`), une blessure signalée
+    /// (`profile.injuryArea`), et le relief qu'elle a réellement autour d'elle
+    /// (`profile.terrains`). Sans effet pour qui n'a rien partagé de tout ça.
     ///
-    /// L'injury et le cycle ne changent JAMAIS la forme de la semaine (toujours easy/speed/
-    /// longRun) : ils allègent la charge et le disent dans le sous-titre, plutôt que de dévier en
-    /// silence de ce qui est écrit. L'allègement du coach, lui, PEUT la changer — c'est même tout
-    /// ce que « plus de fractionné » veut dire — et c'est pour ça qu'il remplace la séance au lieu
-    /// de la raboter : une séance de vitesse rabotée reste une séance de vitesse.
+    /// LA PHASE DU CYCLE N'EST PLUS ICI, et c'est tout l'objet de `ajusterPourLeCycle` : elle
+    /// change d'un jour à l'autre, donc elle ne peut pas se décider à l'échelle de la semaine.
+    /// Elle était lue une fois, le jour où l'app s'ouvrait, et recopiée sur les sept jours.
+    ///
+    /// L'injury ne change JAMAIS la forme de la semaine (toujours easy/speed/longRun) : elle
+    /// allège la charge et le dit dans le sous-titre, plutôt que de dévier en silence de ce qui
+    /// est écrit. L'allègement du coach, lui, PEUT la changer — c'est même tout ce que « plus de
+    /// fractionné » veut dire — et c'est pour ça qu'il remplace la séance au lieu de la raboter :
+    /// une séance de vitesse rabotée reste une séance de vitesse.
     private static func adjustForWellbeing(_ archetypes: [SessionArchetype], profile: UserProfile) -> [SessionArchetype] {
         var result = archetypes
         let injury = profile.injuryArea
@@ -1228,39 +1233,72 @@ enum AdaptivePlanEngine {
             }
         }
 
-        // Every phase gets a real, distinct treatment — not just menstrual with the other three
-        // silently ignored. Grounded in general exercise-physiology guidance (energy/recovery
-        // capacity shifts across the cycle), framed as a nudge to listen to her body, never as a
-        // medical claim.
-        if let phase = profile.cyclePhase {
-            result = result.map { a in
-                var eased = a
-                switch phase {
-                case .menstrual:
-                    // Energy/recovery capacity is typically lowest here — ease the whole week.
-                    eased.baseDuration = Int(Double(a.baseDuration) * 0.85)
-                    if a.role == .speed { eased.adaptationNote = "allégé (phase menstruelle)" }
-                case .luteal:
-                    // Progesterone rise can raise perceived effort for the same real pace — a
-                    // lighter touch than menstrual, and only on the hardest session.
-                    if a.role == .speed {
-                        eased.baseDuration = Int(Double(a.baseDuration) * 0.92)
-                        eased.adaptationNote = "vise le ressenti plus que le chrono (phase lutéale)"
-                    }
-                case .follicular:
-                    // Rising estrogen typically means rising energy/recovery capacity — a real
-                    // green light, not just "no adjustment".
-                    if a.role == .speed { eased.adaptationNote = "bon moment pour pousser (phase folliculaire)" }
-                case .ovulation:
-                    // Often the cycle's real performance peak — session stays exactly as planned,
-                    // said explicitly rather than leaving it unremarked.
-                    if a.role == .speed { eased.adaptationNote = "pic de forme estimé, allure comme prévu (ovulation)" }
-                }
-                return eased
-            }
-        }
-
         return result
+    }
+
+    /// L'adaptation posée par le suivi du cycle, SUR UNE SÉANCE ET POUR SON JOUR.
+    ///
+    /// # CE QUE DIT LA LITTÉRATURE, ET CE QUE L'APP EN FAISAIT
+    ///
+    /// La synthèse de référence est McNulty, Elliott-Sale, Dolan et al., « The Effects of
+    /// Menstrual Cycle Phase on Exercise Performance in Eumenorrheic Women: A Systematic Review
+    /// and Meta-Analysis », Sports Medicine 50(10) : 1813-1827, 2020. Soixante-dix-huit études,
+    /// un effet de groupe TRIVIAL (taille d'effet de l'ordre de −0,06), une qualité de preuve
+    /// faible, et une recommandation explicite d'approche individuelle. Le seul effet retenu est
+    /// une légère baisse de performance en phase folliculaire PRÉCOCE — c'est-à-dire autour des
+    /// règles.
+    ///
+    /// L'app affirmait quatre choses que cette synthèse ne soutient pas :
+    ///
+    ///   · « bon moment pour pousser (phase folliculaire) » — alors que la phase folliculaire
+    ///     précoce est précisément la seule où une baisse est mesurée ; l'app disait donc
+    ///     l'inverse du seul résultat disponible ;
+    ///   · « pic de forme estimé (ovulation) » — un pic de performance que la synthèse ne
+    ///     trouve pas ;
+    ///   · « vise le ressenti plus que le chrono (phase lutéale) », avec 8 % de durée en moins,
+    ///     sur un effet lutéal qui n'est pas établi ;
+    ///   · 15 % de durée en moins sur TOUTE la semaine menstruelle — footing et sortie longue
+    ///     comprises — pour un effet que la meilleure synthèse disponible qualifie de trivial.
+    ///
+    /// Quatre affirmations générales là où la littérature dit « ça dépend d'elle ». Et aucune ne
+    /// pouvait être démentie à l'écran : une phase annoncée n'est pas une prédiction qu'on peut
+    /// vérifier le lendemain.
+    ///
+    /// # CE QUI RESTE
+    ///
+    /// Un allègement MODESTE de la seule séance de qualité autour des règles, là où la baisse
+    /// est mesurée. Et quatre notes qui disent la phase estimée en renvoyant au ressenti, sans
+    /// rien promettre sur la forme — l'information qu'elle a demandée en activant le suivi, sans
+    /// la prédiction qu'on n'a pas les moyens de faire.
+    ///
+    /// Les quatre anciennes notes restent au catalogue de traduction : une semaine déjà
+    /// enregistrée les porte encore, et les retirer les ferait ressortir en français chez une
+    /// anglophone jusqu'à la régénération du lundi suivant.
+    private static func ajusterPourLeCycle(_ archetype: SessionArchetype,
+                                           phase: UserProfile.CyclePhase?) -> SessionArchetype {
+        // La note ne s'applique qu'à la séance de qualité : c'est la seule dont l'intensité se
+        // discute, et poser la même phrase sur les sept jours en ferait du décor.
+        guard let phase, archetype.role == .speed else { return archetype }
+        // UNE NOTE DÉJÀ POSÉE N'EST PAS ÉCRASÉE, et c'est un défaut réparé au passage : la phase
+        // s'écrivait par-dessus « adapté à ton genou · impact réduit ». La blessure explique une
+        // charge déjà réduite de 30 % pour une raison plus forte que l'information de phase, et
+        // c'est elle qu'il faut lire. Le cycle se tait alors, plutôt que de prendre sa place ou
+        // d'ajouter un rabais de plus sans que rien ne le dise.
+        guard archetype.adaptationNote == nil else { return archetype }
+
+        var ajuste = archetype
+        switch phase {
+        case .menstrual:
+            ajuste.baseDuration = Int((Double(archetype.baseDuration) * 0.9).rounded())
+            ajuste.adaptationNote = "phase menstruelle estimée · allégée, à juger au ressenti"
+        case .follicular:
+            ajuste.adaptationNote = "phase folliculaire estimée · à juger au ressenti"
+        case .ovulation:
+            ajuste.adaptationNote = "ovulation estimée · à juger au ressenti"
+        case .luteal:
+            ajuste.adaptationNote = "phase lutéale estimée · à juger au ressenti"
+        }
+        return ajuste
     }
 
     /// Les deux jours d'un enchaînement de week-end, ou `nil` quand la semaine de la coureuse ne
@@ -1330,6 +1368,21 @@ enum AdaptivePlanEngine {
         // qu'un, à l'endroit qui choisit la famille : une sixième famille de plan ne pourra
         // plus passer à côté sans qu'on l'écrive exprès.
         let templates = adjustForWellbeing(brut, profile: profile)
+        // LE VRAI JOUR DE CHAQUE SÉANCE, et non « aujourd'hui » sept fois.
+        //
+        // Cette fonction construit la semaine `weekNumber` du programme, qui n'est pas forcément
+        // la semaine en cours : `PlanView` l'appelle pour CHAQUE semaine du plan afin de la
+        // prévisualiser. Le lundi de cette semaine-là se calcule donc depuis le départ du
+        // programme, exactement comme `refreshProgramForCurrentDate` en déduit le numéro de
+        // semaine — même calendrier lundi-premier, même point de départ, sinon les deux ne
+        // parleraient pas de la même semaine.
+        //
+        // C'est de cette date que dépend la phase du cycle : sans elle, la phase du jour où l'app
+        // s'ouvrait était recopiée sur les sept jours et sur toutes les semaines à venir.
+        let calendrier = mondayCalendar
+        let lundiDeLaSemaine = calendrier
+            .dateInterval(of: .weekOfYear, for: profile.programStartDate ?? .now)?.start
+            .flatMap { calendrier.date(byAdding: .weekOfYear, value: weekNumber - 1, to: $0) }
         let sortedRunDays = profile.runningDays.sorted()
 
         let jourChoisi = profile.preferredLongRunDay.flatMap { sortedRunDays.contains($0) ? $0 : nil } ?? sortedRunDays.max()
@@ -1425,6 +1478,18 @@ enum AdaptivePlanEngine {
             } else {
                 archetype = templates[0]
             }
+
+            // La phase du cycle est lue POUR CE JOUR-LÀ. Elle arrive après le budget qualité :
+            // une séance de vitesse remplacée par un footing n'est plus la séance dont
+            // l'intensité se discute, et elle ne doit donc plus porter la note.
+            archetype = ajusterPourLeCycle(
+                archetype,
+                // Pas de date calculable, pas d'adaptation : mieux vaut ne rien annoncer
+                // qu'annoncer une phase posée sur un jour qu'on n'a pas su situer.
+                phase: lundiDeLaSemaine
+                    .flatMap { calendrier.date(byAdding: .day, value: weekday, to: $0) }
+                    .flatMap { profile.cyclePhase(on: $0) }
+            )
 
             // Taper deliberately ignores `tier`. Tier is an accumulator built up over Base and
             // Spécifique, and letting it keep inflating durations here would add 20-30 min to

@@ -633,17 +633,55 @@ final class UserProfile {
         case menstrual, follicular, ovulation, luteal
     }
 
-    /// Estimated from `lastPeriodStartDate` + `averageCycleLengthDays` via a standard
-    /// proportional phase model — real user-provided data, honestly approximate (same spirit as
-    /// `readiness`), never a fabricated guess. `nil` unless she's opted in and given a start
-    /// date; `AdaptivePlanEngine` treats `nil` as "no adjustment" rather than assuming a phase.
-    var cyclePhase: CyclePhase? {
+    /// LA PHASE LUTÉALE DURE QUATORZE JOURS ; LA FOLLICULAIRE, CE QUI RESTE.
+    ///
+    /// C'est le fait sur lequel repose tout ce calcul, et celui que la première version a
+    /// renversé : elle posait l'ovulation à `length / 2`, donc au MILIEU du cycle. Ça tombe
+    /// juste pour vingt-huit jours — le cas d'école — et faux partout ailleurs, parce que c'est
+    /// la seconde moitié qui est à peu près constante d'une femme à l'autre. L'ovulation se
+    /// compte donc à partir de la FIN du cycle, pas de son milieu :
+    ///
+    ///   · cycle de 21 jours : jour 7 attendu, `length / 2` disait 10 — trois jours trop tard ;
+    ///   · cycle de 28 jours : jour 14, les deux d'accord ;
+    ///   · cycle de 35 jours : jour 21 attendu, `length / 2` disait 17 — quatre jours trop tôt.
+    ///
+    /// L'erreur grandissait donc en s'éloignant de vingt-huit jours, c'est-à-dire exactement
+    /// pour celles dont le cycle n'est pas celui du manuel. Et elle était invisible : l'app
+    /// annonce une phase, jamais une date, donc rien à l'écran ne pouvait la contredire.
+    static let dureeLuteale = 14
+
+    /// La phase estimée POUR UN JOUR DONNÉ.
+    ///
+    /// # POURQUOI CETTE FONCTION PREND UNE DATE
+    ///
+    /// Le plan se construit pour SEPT jours d'un coup, et `PlanView` prévisualise en plus toutes
+    /// les semaines suivantes. La phase du jour où l'app s'ouvrait était recopiée sur les sept —
+    /// et sur les semaines d'après. Une semaine entière pouvait donc s'annoncer « phase
+    /// menstruelle » alors que les règles finissaient le mardi, et la semaine 9 du plan portait
+    /// la phase du jour où on l'avait regardée.
+    ///
+    /// Estimée depuis `lastPeriodStartDate` + `averageCycleLengthDays` : une donnée qu'elle a
+    /// saisie, honnêtement approximative (même esprit que `readiness`), jamais inventée. `nil`
+    /// tant qu'elle n'a pas activé le suivi et donné une date de départ ; `AdaptivePlanEngine`
+    /// traite `nil` comme « aucune adaptation » et non comme une phase supposée.
+    func cyclePhase(on date: Date, calendar: Calendar = .current) -> CyclePhase? {
         guard cycleTrackingEnabled, let lastPeriodStartDate else { return nil }
-        let length = max(21, min(35, averageCycleLengthDays))
-        let daysSince = Calendar.current.dateComponents([.day], from: lastPeriodStartDate, to: .now).day ?? 0
-        guard daysSince >= 0 else { return nil }
-        let cycleDay = (daysSince % length) + 1 // 1-indexed, wraps every `length` days
-        let ovulationDay = length / 2
+        // Les mêmes bornes qu'à l'écriture (voir `CycleTracking.clamped`), écrites une seule
+        // fois : deux copies finiraient par donner deux cycles différents.
+        let length = CycleTracking.clamped(averageCycleLengthDays)
+        // LES DEUX DATES RAMENÉES À MINUIT, et ce n'est pas de la précaution.
+        //
+        // `dateComponents([.day])` tronque. Une date de règles saisie à 14 h et un jour de
+        // séance qui vaut minuit sont séparés de « 0 jour » pendant vingt-quatre heures, et de
+        // « −1 jour » le jour même de la saisie — ce qui rendait `nil`, donc aucune adaptation,
+        // le jour précis où elle venait de l'enregistrer. Tout le cycle se décalait d'un jour
+        // selon l'heure à laquelle elle avait appuyé.
+        let depart = calendar.startOfDay(for: lastPeriodStartDate)
+        let jour = calendar.startOfDay(for: date)
+        guard let ecoules = calendar.dateComponents([.day], from: depart, to: jour).day,
+              ecoules >= 0 else { return nil }
+        let cycleDay = (ecoules % length) + 1 // 1-indexé, reboucle tous les `length` jours
+        let ovulationDay = length - Self.dureeLuteale
 
         switch cycleDay {
         case 1...5: return .menstrual
@@ -652,6 +690,9 @@ final class UserProfile {
         default: return .luteal
         }
     }
+
+    /// La phase estimée aujourd'hui — ce que l'écran des réglages et le coach lisent.
+    var cyclePhase: CyclePhase? { cyclePhase(on: .now) }
 }
 
 /// MON PROPRE NOM S'ÉCRIT COMME CELUI DES AUTRES.

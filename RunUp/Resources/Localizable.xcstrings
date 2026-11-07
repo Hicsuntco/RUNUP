@@ -4208,7 +4208,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aligerado por tu entrenador"
+            "value": "Aligerado por tu coach"
           }
         }
       }
@@ -14358,7 +14358,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tu entrenador en los auriculares"
+            "value": "Tu coach en los auriculares"
           }
         }
       }
@@ -14390,7 +14390,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El entrenador no ha podido responder a eso: reformúlalo."
+            "value": "El coach no ha podido responder a eso: reformúlalo."
           }
         }
       }
@@ -14406,7 +14406,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tu entrenador no ha podido responder a eso. Pruébalo de otra forma; y si es un dolor que persiste, consulta a un médico."
+            "value": "Tu coach no ha podido responder a eso. Pruébalo de otra forma; y si es un dolor que persiste, consulta a un médico."
           }
         }
       }
@@ -14422,7 +14422,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El entrenador no ha podido responder: %@."
+            "value": "El coach no ha podido responder: %@."
           }
         }
       }
@@ -14454,7 +14454,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El entrenador por voz forma parte de RUNUP Plus"
+            "value": "El coach por voz forma parte de RUNUP Plus"
           }
         }
       }
@@ -14505,7 +14505,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El entrenador, sin límite de mensajes"
+            "value": "El coach, sin límite de mensajes"
           }
         }
       }
@@ -21428,7 +21428,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Empezar de cero borra el plan, el historial de carreras y la conversación con el entrenador guardados en este dispositivo. Lo que pertenece al Club — las carreras publicadas, los kilómetros del club — permanece en la cuenta de cada persona."
+            "value": "Empezar de cero borra el plan, el historial de carreras y la conversación con el coach guardados en este dispositivo. Lo que pertenece al Club — las carreras publicadas, los kilómetros del club — permanece en la cuenta de cada persona."
           }
         }
       }
@@ -26453,7 +26453,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tu entrenador personal"
+            "value": "Tu coach personal"
           }
         }
       }
@@ -26470,7 +26470,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tu entrenador te llamará por tu nombre. El apellido sirve a tus amigos, para encontrarte en el Club."
+            "value": "Tu coach te llamará por tu nombre. El apellido sirve a tus amigos, para encontrarte en el Club."
           }
         }
       }
@@ -26831,7 +26831,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tu programa, tu entrenador y tus estadísticas. Sin que falte nada."
+            "value": "Tu programa, tu coach y tus estadísticas. Sin que falte nada."
           }
         }
       }

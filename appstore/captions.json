@@ -37,11 +37,11 @@
       ],
       [
         "The plan recalculates",
-        "Every week, on what you actually ran."
+        "Every week, from what you actually ran."
       ],
       [
-        "A coach who read you",
-        "It answers on your paces, not in generalities."
+        "A coach who's read you",
+        "It answers with your paces, not in generalities."
       ],
       [
         "You don't run alone",
@@ -58,7 +58,7 @@
     ]
   },
   "es-ES": {
-    "bandeau": "Ruta · Trail · Triatlón — un plan que se recalcula, un entrenador que te lee, un club que corre contigo",
+    "bandeau": "Ruta · Trail · Triatlón — un plan que se recalcula, un coach que te lee, un club que corre contigo",
     "accroches": [
       [
         "Tu día, en una pantalla",
@@ -70,7 +70,7 @@
       ],
       [
         "Un coach que te lee",
-        "Responde sobre tus ritmos, no en general."
+        "Responde con tus ritmos, no con generalidades."
       ],
       [
         "No corres sola",

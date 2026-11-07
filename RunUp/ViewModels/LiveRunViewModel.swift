@@ -752,13 +752,52 @@ final class LiveRunViewModel {
         publishWidgetRun()
     }
 
+    /// POURQUOI L'ACTIVITÉ EN DIRECT NE S'AFFICHE PAS, QUAND ELLE NE S'AFFICHE PAS.
+    ///
+    /// `startLiveActivity` avait deux sorties MUETTES : un `guard` sur l'interrupteur du système,
+    /// et un `try?` sur la demande. Les deux rendaient exactement le même écran — l'écran de
+    /// course ordinaire — et la coureuse qui verrouillait son téléphone n'y trouvait rien. Ni
+    /// elle ni nous ne pouvions distinguer « l'interrupteur des Réglages est éteint » de
+    /// « ActivityKit a refusé » de « tout va bien ».
+    ///
+    /// Ça a coûté une recherche entière : l'absence d'affichage sur l'écran verrouillé a été
+    /// prise pour un défaut de l'app alors que l'interrupteur « Activités en direct » était
+    /// simplement éteint dans les Réglages du téléphone. Une heure passée dans le code pour une
+    /// case à cocher — exactement ce qu'un message d'une ligne aurait évité.
+    ///
+    /// C'est aussi pour ça que les deux cas sont DISTINCTS et pas un seul « indisponible » : l'un
+    /// se répare en deux touches dans les Réglages, l'autre ne se répare pas du tout. Les
+    /// confondre reviendrait à envoyer la coureuse dans les Réglages pour rien.
+    enum RaisonSansActiviteEnDirect: Equatable {
+        /// L'interrupteur des Réglages est éteint — pour le système entier ou pour RunUp seule.
+        /// Réparable par elle, et c'est le seul cas où on l'envoie quelque part.
+        case desactiveeDansLesReglages
+        /// ActivityKit a refusé la demande. Le message est celui du système : il vaut pour un
+        /// rapport, pas pour une consigne, donc il n'est pas affiché tel quel.
+        case refuseeParLeSysteme(String)
+    }
+
+    /// `nil` quand l'activité en direct tourne — ou quand la course n'a pas encore démarré.
+    private(set) var raisonSansActiviteEnDirect: RaisonSansActiviteEnDirect?
+
     private func startLiveActivity() {
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+            raisonSansActiviteEnDirect = .desactiveeDansLesReglages
+            return
+        }
         let attributes = RunActivityAttributes(sessionTitle: session.displayTitle,
                                                plannedDurationMinutes: session.durationMinutes,
                                                disciplineRaw: discipline.rawValue)
         let state = RunActivityAttributes.ContentState(distanceKm: 0, elapsedSeconds: 0, paceLabel: "--:--", isPaused: false, timerReference: Date())
-        liveActivity = try? Activity.request(attributes: attributes, content: ActivityContent(state: state, staleDate: .now + 60), pushType: nil)
+        do {
+            liveActivity = try Activity.request(attributes: attributes,
+                                                content: ActivityContent(state: state, staleDate: .now + 60),
+                                                pushType: nil)
+            raisonSansActiviteEnDirect = nil
+        } catch {
+            liveActivity = nil
+            raisonSansActiviteEnDirect = .refuseeParLeSysteme(error.localizedDescription)
+        }
     }
 
     /// Écrit l'état de la course là où le widget de l'écran d'accueil peut le lire.

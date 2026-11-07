@@ -253,6 +253,50 @@ def _():
     assert motif.search("Von %2$lld Leuten, darunter %1$@")
 
 
+@cas_test("un littéral confié à un paramètre de méthode typé LocalizedStringKey est réclamé")
+def _():
+    source = """
+    struct Ecran: View {
+        var body: some View { bandeau(icone: "wifi.slash", texte: "Pas de réseau") }
+        private func bandeau(icone: String, texte: LocalizedStringKey) -> some View {
+            HStack { Image(systemName: icone); Text(texte) }
+        }
+    }
+    """
+    trouves = [cle for _, cle in ck.litteraux_des_methodes_localisees(source)]
+    assert "Pas de réseau" in trouves, trouves
+    # L'ICÔNE N'EST PAS UNE PHRASE. Son paramètre est un `String` : un nom de symbole SF n'a
+    # rien à faire au catalogue, et le réclamer noierait les vrais défauts.
+    assert "wifi.slash" not in trouves, trouves
+
+
+@cas_test("la règle est scellée au fichier : deux méthodes du même nom ne se contaminent pas")
+def _():
+    # Un premier jet indexait les méthodes par NOM seulement. Un `statTile(label:)` typé
+    # `LocalizedStringKey` dans un écran réclamait alors les littéraux du `statTile(label: String)`
+    # d'un autre écran : vingt-et-un défauts rapportés dont dix-sept appartenaient à la méthode
+    # d'à côté. C'est ce que ce cas interdit.
+    sans_localisation = """
+    struct Autre: View {
+        var body: some View { statTile(label: "Distance") }
+        private func statTile(label: String) -> some View { Text(label) }
+    }
+    """
+    assert ck.litteraux_des_methodes_localisees(sans_localisation) == []
+
+
+@cas_test("le vrai code : les cinq bandeaux de l'écran de course sont réclamés")
+def _():
+    source = (ck.RACINE / "RunUp/Views/Live/LiveRunView.swift").read_text(encoding="utf-8")
+    table = ck.methodes_localisees(source)
+    assert "text" in table.get("bannerBody", set()), table.get("bannerBody")
+    trouves = [cle for _, cle in ck.litteraux_des_methodes_localisees(source)]
+    # Les trois du GPS sortaient en français chez tout le monde : `bannerBody` prenait un
+    # `String`, donc `Text(text)` ne consultait jamais le catalogue où elles étaient traduites.
+    assert "Localisation refusée — ouvrir les Réglages" in trouves, trouves
+    assert len(trouves) >= 5, trouves
+
+
 @cas_test("le vrai catalogue est complet et entièrement traduit")
 def _():
     assert ck.main() == 0, "check_strings.py refuse le dépôt"

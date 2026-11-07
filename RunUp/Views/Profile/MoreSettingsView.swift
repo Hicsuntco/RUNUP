@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import ActivityKit
 
 /// "Plus de réglages" — reached from `ProfileView`'s bottom row, same one-tap cost the main page
 /// already paid for by being long: Programme, Santé & blessures, Cycle, Inviter, Compte are all
@@ -9,6 +10,7 @@ import UIKit
 /// nothing here is behind a second, internal tap once she's on this screen.
 struct MoreSettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     @Environment(AppState.self) private var appState
     private var profile: UserProfile { appState.profile }
     private var clubService: ClubService { ClubService(auth: appState.auth) }
@@ -21,6 +23,9 @@ struct MoreSettingsView: View {
     @State private var lastNameText = ""
     @State private var isSavingIdentity = false
     @State private var identityError: String?
+    /// L'interrupteur « Activités en direct » du téléphone, suivi en continu — voir
+    /// `ecranVerrouilleRow`.
+    @State private var activitesEnDirectActives = ActivityAuthorizationInfo().areActivitiesEnabled
 
     var body: some View {
         NavigationStack {
@@ -380,8 +385,77 @@ struct MoreSettingsView: View {
                     .accessibilityLabel("Alertes vocales d'allure")
             }
             .padding(RUSpacing.cardPadding)
+            Divider().background(RUColor.line)
+            ecranVerrouilleRow
         }
         .ruCard()
+        // `activityEnablementUpdates` ET NON UNE LECTURE AU MONTAGE. Cette ligne existe pour
+        // qu'elle aille rallumer l'interrupteur, donc elle est lue juste avant qu'il change —
+        // elle revient des Réglages dans la même session, et un état lu une seule fois resterait
+        // faux sous ses yeux, à l'endroit précis qui vient de lui demander d'agir.
+        .task {
+            for await actives in ActivityAuthorizationInfo().activityEnablementUpdates {
+                activitesEnDirectActives = actives
+            }
+        }
+    }
+
+    /// L'AFFICHAGE SUR L'ÉCRAN VERROUILLÉ : UNE LIGNE D'ÉTAT, PAS UNE BASCULE.
+    ///
+    /// L'interrupteur n'est pas à nous. iOS le tient, dans Réglages → RunUp → Activités en
+    /// direct, et aucune API ne le change depuis l'app. Une bascule ici promettrait de le faire
+    /// et n'y arriverait pas : la pire des deux options, parce qu'elle a l'air de marcher.
+    ///
+    /// La ligne dit donc ce qui est vrai, et quand c'est éteint elle ouvre l'endroit où ça se
+    /// rallume. C'est le pendant durable du bandeau de l'écran de course (voir
+    /// `LiveRunView.activiteEnDirectBanner`), qui s'efface au bout de quarante-cinq secondes :
+    /// un message qui ne dure pas peut se manquer, et celui-ci se trouve quand on le cherche.
+    /// UN BOUTON QUAND IL Y A QUELQUE CHOSE À OUVRIR, UNE LIGNE SINON — ET PAS UN BOUTON DÉSACTIVÉ.
+    ///
+    /// `.disabled(true)` aurait tenu en une ligne et c'est le mauvais outil : SwiftUI grise le
+    /// contenu d'un bouton désactivé. L'état NORMAL de cette ligne — l'affichage fonctionne —
+    /// serait donc le seul à paraître éteint, ce qui dit l'inverse de ce qu'il raconte.
+    @ViewBuilder
+    private var ecranVerrouilleRow: some View {
+        if activitesEnDirectActives {
+            ecranVerrouilleContenu
+        } else {
+            Button {
+                if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+            } label: {
+                ecranVerrouilleContenu
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var ecranVerrouilleContenu: some View {
+        HStack {
+            rowIcon(activitesEnDirectActives ? "lock.rectangle" : "lock.slash")
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Course sur l'écran verrouillé")
+                    .font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                Text(legendeEcranVerrouille)
+                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
+            }
+            Spacer()
+            if !activitesEnDirectActives {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(RUColor.text3)
+            }
+        }
+        .padding(RUSpacing.cardPadding)
+    }
+
+    /// Dans un membre typé `LocalizedStringKey` et non dans un ternaire posé sur `Text(…)` : un
+    /// littéral à l'intérieur d'un ternaire étalé échappe à `ci_scripts/check_strings.py`, qui le
+    /// dit lui-même et qui recommande exactement cette forme. La phrase sortirait en français
+    /// chez une anglophone sans que rien ne le signale.
+    private var legendeEcranVerrouille: LocalizedStringKey {
+        activitesEnDirectActives
+            ? "Le chrono et la distance restent visibles, téléphone verrouillé."
+            : "Coupé dans les Réglages du téléphone. Touche pour l'activer."
     }
 
     /// Only shown when `profile.sex == "female"` — lets her set up cycle tracking after

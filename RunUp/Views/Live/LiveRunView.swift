@@ -231,15 +231,35 @@ struct LiveRunView: View {
             // endroits afficherait « RÉP. 3/5 » deux fois sur le même écran.
         }
         .overlay(alignment: .top) {
+            // LE GPS PASSE DEVANT, ET LE SECOND MESSAGE S'EFFACE TOUT SEUL.
+            //
+            // Deux bandeaux au même endroit, donc un ordre à trancher. Le GPS gagne : il parle
+            // de la course elle-même, qui est en train de ne pas être enregistrée. L'écran
+            // verrouillé parle d'un confort, et il peut attendre que l'autre ait fini.
+            //
+            // Et il ne reste pas. Un bandeau qui tient toute la sortie pour une case à cocher
+            // est ce qui apprend à ne plus lire les bandeaux — alors que celui-ci n'a rien à
+            // dire après les premières secondes, où elle a le téléphone en main parce qu'elle
+            // vient d'appuyer sur « Démarrer ». `elapsedSeconds` suffit à le faire partir : le
+            // chrono de la course tourne déjà, et un deuxième compte à rebours pour l'éteindre
+            // serait un état de plus à tenir.
             if let state = vm?.gpsState, state != .ok {
                 gpsBanner(state)
                     .padding(.top, 48)
                     // The coach bubble right above gets a slide+fade via `topBannerText`'s
                     // animation; this sibling banner used to just pop in with no transition.
                     .transition(.move(edge: .top).combined(with: .opacity))
+            } else if messageEcranVerrouilleVisible, let raison = vm?.raisonSansActiviteEnDirect {
+                activiteEnDirectBanner(raison)
+                    .padding(.top, 48)
+                    .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.85), value: vm?.gpsState)
+        // Sans ça la `.transition` du bandeau ne joue pas : une transition ne s'exécute que si la
+        // mutation qui la déclenche est animée (voir `RUMotion.ecran`). Le bandeau du GPS avait
+        // sa ligne, celui-ci aurait apparu et disparu d'une image à l'autre.
+        .animation(RUMotion.ecran, value: messageEcranVerrouilleVisible)
         .onChange(of: vm?.gpsState) { _, state in
             // One buzz when the signal first degrades (not per frame it stays degraded) — she's
             // mid-run and not watching the screen; the warning is useless if it arrives silently.
@@ -298,7 +318,56 @@ struct LiveRunView: View {
         }
     }
 
-    private func bannerBody(icon: String, text: String) -> some View {
+    /// Le bandeau de l'écran verrouillé est-il encore à l'écran ? Un seul endroit décide, parce
+    /// que la condition sert deux fois : pour afficher, et pour animer l'apparition et le départ.
+    private var messageEcranVerrouilleVisible: Bool {
+        guard let vm, vm.raisonSansActiviteEnDirect != nil else { return false }
+        return vm.elapsedSeconds < Self.secondesDuMessageEcranVerrouille
+    }
+
+    /// Le temps que le message de l'écran verrouillé reste affiché. Quarante-cinq secondes : le
+    /// temps d'un démarrage, d'un regard sur le chrono, et d'un geste vers les Réglages si elle
+    /// le veut. Au-delà, elle court.
+    private static let secondesDuMessageEcranVerrouille: Double = 45
+
+    /// Deux situations, deux messages, et une seule des deux mène quelque part.
+    ///
+    /// L'interrupteur des Réglages se rallume en deux touches, donc le bandeau est un bouton.
+    /// Un refus d'ActivityKit ne se répare pas depuis les Réglages : y envoyer la coureuse serait
+    /// lui faire chercher une case qui n'existe pas. Elle lit alors ce qu'elle perd, et rien de
+    /// plus — c'est tout ce qu'il y a d'honnête à dire.
+    @ViewBuilder
+    private func activiteEnDirectBanner(_ raison: LiveRunViewModel.RaisonSansActiviteEnDirect) -> some View {
+        switch raison {
+        case .desactiveeDansLesReglages:
+            Button {
+                if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+            } label: {
+                bannerBody(icon: "lock.slash",
+                           text: "Rien sur l'écran verrouillé — ouvrir les Réglages")
+            }
+            .buttonStyle(.plain)
+            .contentShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+        case .refuseeParLeSysteme:
+            bannerBody(icon: "exclamationmark.triangle.fill",
+                       text: "Écran verrouillé indisponible pour cette course")
+        }
+    }
+
+    /// `LocalizedStringKey` ET NON `String`, ET C'EST TOUT LE DÉFAUT.
+    ///
+    /// `Text(uneVariableString)` ne consulte JAMAIS le catalogue : il rend la chaîne telle
+    /// quelle. Les trois avertissements GPS étaient donc affichés en français en anglais et en
+    /// espagnol — alors qu'ils sont au catalogue, traduits, depuis le début. Quelqu'un a fait le
+    /// travail de traduction, et le paramètre l'a jeté.
+    ///
+    /// Rien ne pouvait le signaler : `ci_scripts/check_strings.py` ne suit un littéral confié à
+    /// un paramètre que si le type le passe lui-même à `LocalizedStringKey` — ce qui est
+    /// exactement le geste qui manquait ici. Le contrôle et le défaut avaient la même cause.
+    ///
+    /// Et c'est la phrase « Localisation refusée — ouvrir les Réglages » qui sortait en
+    /// français : celle qu'on lit au moment précis où l'app a l'air cassée.
+    private func bannerBody(icon: String, text: LocalizedStringKey) -> some View {
         HStack(spacing: 8) {
             Image(systemName: icon).foregroundColor(Ink.amber).font(.system(size: 14))
             Text(text)

@@ -354,6 +354,79 @@ def litteraux_des_parametres_localises(source: str, table):
     return trouves
 
 
+# ── La SIXIÈME zone aveugle : un paramètre de MÉTHODE typé `LocalizedStringKey` ───────────────
+#
+#     private func bannerBody(icon: String, text: LocalizedStringKey) -> some View { … Text(text) }
+#     bannerBody(icon: "location.slash.fill", text: "Localisation refusée — ouvrir les Réglages")
+#
+# La règle précédente ne regarde que les INITIALISEURS de composants : `{type: étiquettes}`, puis
+# les appels `ObTitle(title: "…")`. Une méthode privée de la même vue n'y entre pas, et c'est la
+# forme la plus courante dans ce dépôt — chaque écran a ses `ligne(titre:)`, `tuile(label:)`,
+# `bannerBody(text:)`.
+#
+# CE QUE ÇA A COÛTÉ. `bannerBody` prenait un `String`, donc `Text(text)` rendait la chaîne telle
+# quelle : les trois avertissements GPS de l'écran de course sortaient EN FRANÇAIS en anglais et
+# en espagnol, alors qu'ils sont au catalogue, traduits, depuis le début. Quelqu'un avait fait le
+# travail de traduction et le paramètre le jetait. Dont « Localisation refusée — ouvrir les
+# Réglages » : la phrase qu'on lit au moment précis où l'app a l'air cassée.
+#
+# Le paramètre est maintenant un `LocalizedStringKey`, ce qui règle l'affichage. Cette règle-ci
+# règle la suite : elle réclame au catalogue tout littéral confié à un tel paramètre.
+#
+# AUCUN FAUX POSITIF POSSIBLE, et c'est pour ça qu'elle est écrite ici et pas ailleurs. Un
+# littéral passé à un paramètre déclaré `LocalizedStringKey` EST une clé de catalogue : c'est le
+# type, pas le nom du paramètre, qui le dit. La règle est donc scellée au fichier — une méthode
+# n'est appelée que depuis le type qui la porte, et deux fichiers peuvent avoir deux
+# `statTile(label:)` dont un seul localise. Un premier jet indexé par nom seul a rapporté
+# vingt-et-un défauts dont dix-sept étaient la méthode d'un autre écran.
+
+_METHODE_LOCALISEE = re.compile(
+    r"func\s+(\w+)\s*(?:<[^>]*>)?\s*\(([^)]*)\)", re.S)
+
+
+def methodes_localisees(source: str):
+    """{méthode: {étiquettes typées `LocalizedStringKey`}} pour UN fichier."""
+    table = {}
+    for m in _METHODE_LOCALISEE.finditer(re.sub(r"//[^\n]*", "", source)):
+        etiquettes = set(_PARAM_LOCALISE.findall(m.group(2)))
+        if etiquettes:
+            table.setdefault(m.group(1), set()).update(etiquettes)
+    return table
+
+
+def litteraux_des_methodes_localisees(source: str):
+    """Les littéraux confiés à une de ces étiquettes, dans le MÊME fichier : `(ligne, clé)`."""
+    table = methodes_localisees(source)
+    if not table:
+        return []
+    sans = re.sub(r"//[^\n]*", "", source)
+    trouves = []
+    for nom, etiquettes in table.items():
+        for appel in re.finditer(r"\b" + re.escape(nom) + r"\s*\(", sans):
+            depart = appel.end() - 1
+            niveau, fin = 0, None
+            for j in range(depart, len(sans)):
+                if sans[j] in "([{":
+                    niveau += 1
+                elif sans[j] in ")]}":
+                    niveau -= 1
+                    if niveau == 0:
+                        fin = j
+                        break
+            if fin is None:
+                continue
+            corps = sans[depart:fin]
+            for a in re.finditer(r"\b(\w+)\s*:\s*(?=\")", corps):
+                if a.group(1) not in etiquettes:
+                    continue
+                lu = lire_litteral(corps[a.end():], 1)
+                if lu is None:
+                    continue
+                ligne = sans[:depart + a.start()].count("\n") + 1
+                trouves.append((ligne, deswiftifie(lu[0])))
+    return trouves
+
+
 # ── Chaque type de séance doit avoir son titre et son sous-titre, dans les TROIS langues ───────
 #
 # `SessionKind.titleKey` compose « session.<brut>.title ». Ce n'est pas du français : c'est un
@@ -541,6 +614,16 @@ def main() -> int:
                         manquantes.append((f"{chemin}:{n}", cle))
             # Et les membres typés `LocalizedStringKey`, que les trois ouvertures ne voient pas.
             for n, cle in litteraux_des_cles_localisees(texte):
+                fixe = "".join(morceaux_fixes(cle))
+                if not any(c.isalpha() for c in fixe) or cle in cles:
+                    continue
+                if "\\(" in cle:
+                    motif = motif_de(cle)
+                    if any(motif.match(k) and SUBSTITUANT.search(k) for k in cles):
+                        continue
+                manquantes.append((f"{f.relative_to(RACINE)}:{n}", cle))
+            # Et ceux confiés à un paramètre de MÉTHODE typé `LocalizedStringKey`.
+            for n, cle in litteraux_des_methodes_localisees(texte):
                 fixe = "".join(morceaux_fixes(cle))
                 if not any(c.isalpha() for c in fixe) or cle in cles:
                     continue

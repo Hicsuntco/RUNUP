@@ -7999,6 +7999,23 @@
         }
       }
     },
+    "Coupé dans les Réglages du téléphone. Touche pour l'activer.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turned off in your phone's Settings. Tap to enable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivado en los Ajustes del teléfono. Toca para activarlo."
+          }
+        }
+      }
+    },
     "Courir": {
       "extractionState": "manual",
       "localizations": {
@@ -8280,6 +8297,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Carrera recuperada"
+          }
+        }
+      }
+    },
+    "Course sur l'écran verrouillé": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run on the Lock Screen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La carrera en la pantalla de bloqueo"
           }
         }
       }
@@ -14193,6 +14227,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "El Club es mejor en compañía"
+          }
+        }
+      }
+    },
+    "Le chrono et la distance restent visibles, téléphone verrouillé.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your time and distance stay visible while the phone is locked."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El tiempo y la distancia siguen visibles con el teléfono bloqueado."
           }
         }
       }
@@ -21788,6 +21839,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nada con este filtro"
+          }
+        }
+      }
+    },
+    "Rien sur l'écran verrouillé — ouvrir les Réglages": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing on the Lock Screen — open Settings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nada en la pantalla de bloqueo — abrir Ajustes"
           }
         }
       }
@@ -33484,6 +33552,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pantalla %1$lld de %2$lld"
+          }
+        }
+      }
+    },
+    "Écran verrouillé indisponible pour cette course": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lock Screen unavailable for this run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pantalla de bloqueo no disponible en esta carrera"
           }
         }
       }

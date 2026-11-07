@@ -338,12 +338,18 @@ private struct RouteRow: View {
 /// Volontairement séparé de `LocationService` : celui-ci allume le GPS, tient une trace et calcule
 /// une distance, tout ce dont cette carte n'a pas besoin. Ici on ne veut qu'une réponse — a-t-on
 /// le droit, oui ou non — et la poser une fois si personne ne l'a encore posée.
+/// `@MainActor` : `status` est lu par la vue et écrit par un rappel de CoreLocation. Le troisième
+/// délégué du dépôt, soigné comme les deux autres — voir `surLActeurPrincipal`.
+@MainActor
 @Observable
-final class LocationPermission: NSObject, CLLocationManagerDelegate {
+final class LocationPermission: NSObject {
     private let manager: CLLocationManager
     private(set) var status: CLAuthorizationStatus
 
-    override init() {
+    /// `nonisolated` : `NSObject.init()` ne l'est pas, et un remplacement ne peut pas être plus
+    /// isolé que ce qu'il remplace. Cet initialiseur posait DÉJÀ ses deux propriétés depuis une
+    /// variable locale, donc il n'y avait rien à changer d'autre que l'annotation.
+    nonisolated override init() {
         let manager = CLLocationManager()
         self.manager = manager
         self.status = manager.authorizationStatus
@@ -361,8 +367,14 @@ final class LocationPermission: NSObject, CLLocationManagerDelegate {
         manager.requestWhenInUseAuthorization()
     }
 
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+    fileprivate func majDuStatut() {
         status = manager.authorizationStatus
+    }
+}
+
+extension LocationPermission: CLLocationManagerDelegate {
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        surLActeurPrincipal { [self] in majDuStatut() }
     }
 }
 

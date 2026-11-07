@@ -22,11 +22,26 @@ import WeatherKit
 /// courses, le service se tait : faire surgir une demande d'accès à la position pour une
 /// fonctionnalité que personne n'a encore vue est le meilleur moyen de la faire refuser, et avec
 /// elle le suivi GPS des courses.
-final class RunWeatherService: NSObject, CLLocationManagerDelegate {
-    private let manager = CLLocationManager()
+/// `@MainActor`, ET C'EST LA RÉPONSE DE FOND À UNE COURSE QUI A DÉJÀ ÉTÉ RÉPARÉE À LA MAIN.
+///
+/// `enAttente` est un emplacement unique, écrit depuis `position(fallback:)` et depuis les deux
+/// rappels de CoreLocation. Rien ne garantissait que les trois parlaient depuis le même fil, et
+/// une continuation reprise deux fois FAIT TOMBER le processus. Le commentaire de
+/// `position(fallback:)` raconte une course qu'il a fallu voir pour la croire — deux demandes qui
+/// se chevauchent — et la parade écrite là-bas reste juste ; ce qu'elle n'avait pas, c'est une
+/// garantie que les deux demandes ne s'exécutent pas EN MÊME TEMPS. Elle l'a maintenant, et c'est
+/// le compilateur qui la tient.
+@MainActor
+final class RunWeatherService: NSObject {
+    private let manager: CLLocationManager
     private var enAttente: CheckedContinuation<CLLocation?, Never>?
 
-    override init() {
+    /// `nonisolated` : `NSObject.init()` ne l'est pas, et un remplacement ne peut pas être plus
+    /// isolé que ce qu'il remplace. Tout est de l'initialisation ici — voir le même raisonnement,
+    /// écrit en long, dans `LocationService.init`.
+    nonisolated override init() {
+        let manager = CLLocationManager()
+        self.manager = manager
         super.init()
         manager.delegate = self
         // Le kilomètre suffit largement, et c'est le réglage le moins coûteux en batterie.
@@ -114,22 +129,26 @@ final class RunWeatherService: NSObject, CLLocationManagerDelegate {
         return fallback.map { CLLocation(latitude: $0.latitude, longitude: $0.longitude) }
     }
 
-    // MARK: CLLocationManagerDelegate
-
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        reprendre(locations.last)
-    }
-
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        reprendre(nil)
-    }
 
     /// Une continuation reprise deux fois fait tomber le processus, et `requestLocation()` peut
     /// très bien rendre un point PUIS une erreur. Elle est donc consommée en la mettant à `nil`
     /// avant de l'utiliser — le second appel ne trouve plus rien à reprendre.
-    private func reprendre(_ location: CLLocation?) {
+    fileprivate func reprendre(_ location: CLLocation?) {
         guard let suite = enAttente else { return }
         enAttente = nil
         suite.resume(returning: location)
+    }
+}
+
+// Même raison que dans `LocationService` : le protocole n'est pas isolé, donc le retour sur
+// l'acteur principal est écrit là où il a lieu. Voir `surLActeurPrincipal` — ici l'ordre importe
+// moins (`reprendre` se consomme lui-même), mais un seul mécanisme vaut mieux que deux.
+extension RunWeatherService: CLLocationManagerDelegate {
+    nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        surLActeurPrincipal { [self] in reprendre(locations.last) }
+    }
+
+    nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        surLActeurPrincipal { [self] in reprendre(nil) }
     }
 }

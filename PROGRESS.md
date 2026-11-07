@@ -34,7 +34,7 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 | --- | --- | --- | --- |
 | 1 | Cycle : ovulation mal placée, phase du jour appliquée à la semaine, messages qui affirment | 1 j | **fait** |
 | 2 | Activité en direct : dire pourquoi elle ne démarre pas | 2 h | **fait** |
-| 3 | `@MainActor` sur `LocationService` et `RunWeatherService` | 3 h | à faire |
+| 3 | `@MainActor` sur `LocationService` et `RunWeatherService` | 3 h | **fait** |
 | 4 | Finitions design : 2 émojis dans l'interface, 2 dégradés, vert isolé du profil d'élévation, boutons gris en capitales, segment blanc sur blanc, contraste de la bulle du coach | 1 j | à faire |
 | 5 | Données de démonstration : FC 148 seize fois, « Sortie » seize fois, défi « octobre » affiché en novembre | 4 h | à faire |
 | 6 | Bilan de la semaine — l'écran noté 5,5/10 | 1,5 j | à faire |
@@ -49,6 +49,55 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 
 Le 14 est arrivé après coup, et je le ferais passer devant les finitions de design : c'est le seul
 moyen de savoir ce qui casse chez quelqu'un d'autre que nous. Le reste de l'ordre tient.
+
+## Chantier 3 — les délégués CoreLocation
+
+### Ce qui était faux
+
+L'audit en nommait deux, il y en avait **trois** : `LocationService`, `RunWeatherService`, et
+`LocationPermission` dans `RouteDiscoveryView`. Les trois publient de l'état lu par une vue à
+chaque image et l'écrivent depuis un rappel système, sans aucune garantie du compilateur. La
+promesse tenait sur un fait vrai mais invérifiable : `CLLocationManager` livre ses rappels sur la
+boucle d'exécution du fil où il a été créé, et les trois créations sont `@MainActor`.
+
+`RunWeatherService` est le cas le plus net. `enAttente` est un emplacement unique, écrit depuis
+`position(fallback:)` et depuis deux rappels, et **une continuation reprise deux fois fait tomber
+le processus**. Le fichier raconte déjà une course qu'il a fallu voir pour la croire — deux
+demandes qui se chevauchent — et la parade écrite à l'époque reste juste ; ce qu'elle n'avait pas,
+c'est une garantie que les deux demandes ne s'exécutent pas en même temps.
+
+### Pourquoi pas `Task { @MainActor in … }`
+
+C'est le patron déjà présent deux fois dans le dépôt (`WatchSessionService`,
+`VoiceCoachController`), et il est juste **là-bas** : WatchConnectivity et `AVSpeechSynthesizer`
+appellent leur délégué depuis leur propre file, donc le saut est obligatoire, et il s'agit d'un
+état à poser — pas d'une mesure à accumuler.
+
+`LocationService.didUpdateLocations` accumule : il compare chaque point au précédent, additionne
+une distance, alimente un lissage d'altitude. Or **deux `Task` non structurées n'ont aucun ordre
+garanti entre elles**. Deux lots de fixes traités à l'envers ne donnent pas un retard : ils
+donnent une distance fausse et un dénivelé faux, sur la mesure qui est tout le produit.
+
+`surLActeurPrincipal` fait donc le travail **tout de suite** quand on est déjà sur le fil principal
+(`MainActor.assumeIsolated`) : même ordre, même image, aucune ligne ne change de moment
+d'exécution, et l'isolation devient vérifiée. Le repli par `Task` existe parce que
+`assumeIsolated` seul fait tomber le processus si l'hypothèse est fausse — ce code tourne pendant
+quatre-vingt-dix minutes écran éteint, et un plantage au trentième kilomètre serait un prix absurde
+pour une vérification de type.
+
+### Le détail qui a demandé du soin
+
+`NSObject.init()` n'est pas isolé, et un remplacement ne peut pas l'être plus. Les trois
+initialiseurs sont `nonisolated` et ne font plus que de l'**initialisation** : `manager` et
+`authorizationStatus` ont perdu leur valeur par défaut, pour que leur affectation soit de
+l'initialisation — qui n'a pas besoin d'isolation — au lieu d'une mutation, qui en aurait besoin.
+
+### Ce qui le garde
+
+Le compilateur. L'isolation est une propriété de compilation : une construction verte EST la
+vérification, et inventer un test unitaire pour en faire semblant serait pire que rien.
+L'algorithme de distance de `LocationService` — plancher de bruit, saut à 12 m/s — n'a toujours
+aucun test ; c'est le chantier 9, qui le nomme.
 
 ## Les treize avertissements du dépôt, et leur cause unique
 

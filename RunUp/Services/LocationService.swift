@@ -6,9 +6,17 @@ import CoreLocation
 /// see README § Live Run, which leaves stylized-vs-real map as an implementation choice).
 /// Publishes route points, cumulative distance, and a GPS-instability flag driven by actual
 /// horizontal accuracy degradation rather than a scripted timer.
+/// `@MainActor` : tout ce que cette classe publie est lu par l'écran de course à chaque image —
+/// `route`, `distanceMeters`, `hasFix`, `currentSpeedMetersPerSecond` — et tout est écrit depuis
+/// les rappels de CoreLocation. Rien ne le garantissait : la promesse tenait sur le fait que
+/// `CLLocationManager` livre sur la boucle du fil où il a été créé, ce qui est vrai ici et que le
+/// compilateur ne pouvait ni vérifier ni empêcher de cesser d'être vrai. Les trois rappels sont
+/// donc `nonisolated` et reviennent explicitement sur l'acteur principal — SANS saut, voir
+/// `surLActeurPrincipal` : l'ordre des lots de fixes est la distance de la sortie.
+@MainActor
 @Observable
-final class LocationService: NSObject, CLLocationManagerDelegate {
-    private let manager = CLLocationManager()
+final class LocationService: NSObject {
+    private let manager: CLLocationManager
 
     private(set) var route: [CLLocationCoordinate2D] = []
     /// Parallel to `route` (same index, same length) — real GPS altitude per point when the fix's
@@ -26,7 +34,7 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     /// seule façon que l'appelant ne puisse pas le confondre avec un arrêt.
     private(set) var currentSpeedMetersPerSecond: Double?
     private(set) var isSignalUnstable = false
-    private(set) var authorizationStatus: CLAuthorizationStatus = .notDetermined
+    private(set) var authorizationStatus: CLAuthorizationStatus
     /// Vrai dès qu'un point exploitable est arrivé. Une puce GNSS froide met 5 à 30 secondes à
     /// accrocher, et pendant tout ce temps le service n'a strictement rien à dire sur la course —
     /// ni la distance, ni l'allure, ni surtout si la coureuse bouge. Sans ce drapeau, l'appelant
@@ -57,7 +65,18 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     /// again, which a full `stop()` (no more delegate callbacks at all) would make impossible.
     private(set) var isAccumulating = true
 
-    override init() {
+    /// `nonisolated`, ET IL FAUT QUE ÇA RESTE VRAI.
+    ///
+    /// `NSObject.init()` n'est pas isolé, et un remplacement ne peut pas être plus isolé que ce
+    /// qu'il remplace. Tout ce qui se passe ici est donc de l'INITIALISATION — poser les deux
+    /// propriétés de l'objet, régler un gestionnaire encore local — et jamais une lecture ou une
+    /// écriture d'état déjà partagé. C'est aussi pour ça que `manager` et `authorizationStatus`
+    /// n'ont plus de valeur par défaut : leur affectation ici devient de l'initialisation, qui
+    /// n'a pas besoin d'isolation, au lieu d'une mutation, qui en aurait besoin.
+    nonisolated override init() {
+        let manager = CLLocationManager()
+        self.manager = manager
+        self.authorizationStatus = manager.authorizationStatus
         super.init()
         manager.delegate = self
         // `Best` et non `BestForNavigation`. Apple documente ce dernier comme réservé à un
@@ -77,7 +96,6 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         manager.desiredAccuracy = kCLLocationAccuracyBest
         manager.activityType = .fitness
         manager.pausesLocationUpdatesAutomatically = false
-        authorizationStatus = manager.authorizationStatus
     }
 
     func requestAuthorization() {
@@ -138,12 +156,12 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         }
     }
 
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+    fileprivate func majDeLAutorisation() {
         authorizationStatus = manager.authorizationStatus
         applyBackgroundUpdatesIfAuthorized()
     }
 
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    fileprivate func consomme(_ locations: [CLLocation]) {
         guard let newest = locations.last else { return }
         isSignalUnstable = newest.horizontalAccuracy > unstableAccuracyThreshold || newest.horizontalAccuracy < 0
         if newest.horizontalAccuracy >= 0 { hasFix = true }
@@ -223,10 +241,27 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         }
     }
 
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+    fileprivate func signaleUnEchec() {
         isSignalUnstable = true
         // La vitesse connue devient périmée à l'instant où la localisation échoue : la garder
         // ferait croire à la pause automatique qu'elle mesure encore quelque chose.
         currentSpeedMetersPerSecond = nil
+    }
+}
+
+// `nonisolated` sur chacune : le protocole de CoreLocation n'est pas isolé, et les déclarer
+// telles quelles sur une classe `@MainActor` reviendrait à promettre au compilateur quelque chose
+// qu'il ne peut pas vérifier. Le retour sur l'acteur principal est donc écrit là où il a lieu.
+extension LocationService: CLLocationManagerDelegate {
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        surLActeurPrincipal { [self] in majDeLAutorisation() }
+    }
+
+    nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        surLActeurPrincipal { [self] in consomme(locations) }
+    }
+
+    nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        surLActeurPrincipal { [self] in signaleUnEchec() }
     }
 }

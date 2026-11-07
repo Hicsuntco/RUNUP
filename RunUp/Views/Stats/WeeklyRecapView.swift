@@ -33,7 +33,7 @@ struct WeeklyRecapView: View {
         return "\(start.formatted(.dateTime.day().locale(Locale.current)))-\(end.formatted(.dateTime.day().month(.wide).locale(Locale.current)))"
     }
 
-    private var todayWeekdayIndex: Int { DailyGoalsSnapshot.rangDuJour(.now) }
+    private var todayWeekdayIndex: Int { WidgetWeekDay.rangDuJour(.now) }
 
     /// Le libellé et la valeur du record, dans la langue courante. La décision de savoir s'il y
     /// EN A un appartient au bilan ; l'écrire appartient à la vue.

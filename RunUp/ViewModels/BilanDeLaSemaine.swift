@@ -83,7 +83,7 @@ struct BilanDeLaSemaine {
     var kilometresParJour: [Double] {
         var totaux = [Double](repeating: 0, count: 7)
         for seance in seances.onFoot {
-            totaux[DailyGoalsSnapshot.rangDuJour(seance.date)] += seance.distanceKm
+            totaux[WidgetWeekDay.rangDuJour(seance.date)] += seance.distanceKm
         }
         return totaux
     }

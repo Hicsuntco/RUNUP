@@ -29931,6 +29931,23 @@
         }
       }
     },
+    "ovulation estimée · à juger au ressenti": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "estimated ovulation · go by feel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ovulación estimada · guíate por las sensaciones"
+          }
+        }
+      }
+    },
     "ovulatoire": {
       "localizations": {
         "en": {
@@ -29992,6 +30009,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "aún no verificada"
+          }
+        }
+      }
+    },
+    "phase folliculaire estimée · à juger au ressenti": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "estimated follicular phase · go by feel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "fase folicular estimada · guíate por las sensaciones"
+          }
+        }
+      }
+    },
+    "phase lutéale estimée · à juger au ressenti": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "estimated luteal phase · go by feel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "fase lútea estimada · guíate por las sensaciones"
+          }
+        }
+      }
+    },
+    "phase menstruelle estimée · allégée, à juger au ressenti": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "estimated menstrual phase · eased, go by feel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "fase menstrual estimada · aligerada, guíate por las sensaciones"
           }
         }
       }

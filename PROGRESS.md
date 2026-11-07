@@ -63,6 +63,10 @@ est dans les déploiements que Vercel enregistre sur GitHub : **douze déploieme
 `lib/` ou `package.json` part donc EN LIGNE, tout de suite, chez les gens qui ont l'app. Il n'y a
 pas d'étape de préproduction, et il n'y a pas de relecture. À décider : est-ce voulu ?
 
+**La porte de sortie est écrite : [RELEASE.md](RELEASE.md).** Ce que les quatre chaînes
+garantissent et ce qu'elles ne garantissent pas, les quatre questions qu'aucune machine ne pose,
+les commandes à lancer dans l'ordre, et la liste honnête de ce qui n'est tenu par aucune barrière.
+
 ## Les chantiers de l'audit
 
 Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.

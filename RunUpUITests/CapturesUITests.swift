@@ -176,14 +176,22 @@ final class CapturesUITests: XCTestCase {
     /// commandes, la place de la bulle du coach, et le bandeau lui-même. Attendre d'avoir un GPS
     /// simulé pour photographier cet écran reviendrait à ne jamais le photographier.
     func test21CourseEnCoursDiagnostic() {
-        prendre(rang: 21, ecran: "live", nom: "course-en-cours", diagnostic: true, courseEnCours: true)
+        // SIX SECONDES, PARCE QUE LE DÉPART SE COMPTE À REBOURS.
+        //
+        // `LiveRunViewModel.demarrer` pose un décompte de trois secondes avant que la course ne
+        // commence vraiment, et le voile qui le porte couvre tout l'écran. Les deux secondes
+        // d'attente ordinaires photographiaient donc « 1 · Appuie pour partir tout de suite » —
+        // un écran réel, mais pas celui qu'on venait chercher. Je ne l'ai su qu'en regardant
+        // l'image.
+        prendre(rang: 21, ecran: "live", nom: "course-en-cours", diagnostic: true,
+                courseEnCours: true, attente: 6.0)
     }
 
     private func prendre(rang: Int, ecran: String, nom: String, diagnostic: Bool = false,
                          profil: String? = nil, course: Bool = false,
                          sortie: Bool = false, onglet: String? = nil, defilements: Int = 0,
                          inscription: Bool = false, paywall: Bool = false,
-                         courseEnCours: Bool = false) {
+                         courseEnCours: Bool = false, attente: TimeInterval = 2.0) {
         let clair = ProcessInfo.processInfo.environment["RUNUP_CAPTURES_CLAIR"] != nil
         let app = XCUIApplication()
         app.launchArguments = ["--captures", "--ecran=\(ecran)"]
@@ -228,7 +236,7 @@ final class CapturesUITests: XCTestCase {
         // Puis on laisse la première image se poser. Les animations d'entrée de
         // `ContentRouterView` durent moins d'une demi-seconde ; deux secondes laissent la marge
         // sur une machine chargée sans peser sur les dix-huit lancements.
-        Thread.sleep(forTimeInterval: 2.0)
+        Thread.sleep(forTimeInterval: attente)
 
         // LE DÉFILEMENT SE FAIT EN COORDONNÉES, PAS EN ÉLÉMENTS.
         //

@@ -146,6 +146,24 @@ enum CaptureSeed {
     /// du kilométrage à chaque passage.
     @MainActor
     @discardableResult
+    /// VIDER SANS POSER, ET C'EST LE DRAPEAU `--inscription` QUI EN A BESOIN.
+    ///
+    /// Le stock SwiftData SURVIT d'un lancement à l'autre dans le même simulateur — c'est écrit
+    /// juste en dessous, et c'est la raison pour laquelle `poser` commence par vider. Sauter
+    /// `poser` pour photographier l'inscription ne suffisait donc pas : les dix-huit tests qui
+    /// tournent avant avaient déjà écrit un profil complet, et la capture nommée « inscription »
+    /// montrait l'écran d'accueil de Charlotte.
+    ///
+    /// Je ne l'ai su qu'en REGARDANT l'image. Le test passait, le drapeau était lu, le fichier
+    /// était écrit — et il montrait l'inverse de ce qu'il annonçait.
+    static func viderLeStock(dans contexte: ModelContext) {
+        // ON VIDE EN ALLANT CHERCHER, PAS EN LOT (voir `poser`).
+        vider(UserProfile.self, dans: contexte)
+        vider(RunRecord.self, dans: contexte)
+        vider(ChatMessage.self, dans: contexte)
+        try? contexte.save()
+    }
+
     static func poser(dans contexte: ModelContext, maintenant: Date = .now) -> UserProfile {
         // ON VIDE EN ALLANT CHERCHER, PAS EN LOT.
         //
@@ -161,10 +179,7 @@ enum CaptureSeed {
         // Les messages aussi, et c'est nécessaire depuis que le simulateur n'est plus effacé
         // entre deux langues : sans ça, six lancements par langue empileraient dix-huit fois la
         // même conversation.
-        vider(UserProfile.self, dans: contexte)
-        vider(RunRecord.self, dans: contexte)
-        vider(ChatMessage.self, dans: contexte)
-        try? contexte.save()
+        viderLeStock(dans: contexte)
 
         let profil = UserProfile(name: "Charlotte")
         profil.lastName = "Perret"

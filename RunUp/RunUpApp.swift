@@ -122,7 +122,13 @@ private struct RootView: View {
                     // suffit donc à ouvrir sur `OnboardingContainerView`. Le mode démonstration
                     // reste allumé — c'est lui qui coupe le réseau et Santé, et une inscription
                     // qui appellerait un serveur absent se bloquerait au premier écran.
-                    if !CaptureSeed.inscriptionDemandee {
+                    if CaptureSeed.inscriptionDemandee {
+                        // VIDER, ET PAS SEULEMENT S'ABSTENIR DE POSER. Le stock SwiftData survit
+                        // d'un lancement à l'autre dans le même simulateur : les dix-huit tests
+                        // qui tournent avant celui-ci ont déjà écrit un profil complet, et la
+                        // capture nommée « inscription » montrait l'accueil de Charlotte.
+                        CaptureSeed.viderLeStock(dans: modelContext)
+                    } else {
                         CaptureSeed.poser(dans: modelContext)
                     }
                 }

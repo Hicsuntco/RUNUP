@@ -233,7 +233,7 @@ final class CycleTrackingTests: XCTestCase {
     /// son cycle. La phase s'écrit dans la note, elle ne se retranche plus de la durée.
     func testOutsideThePeriodNothingIsEasedAtAll() {
         let cal = lundiCalendrier
-        // Le lundi tombe au jour 6 du cycle : la semaine entière est folliculaire puis ovulatoire.
+        // Le lundi tombe au jour 6 du cycle : la semaine entière est en phase folliculaire.
         let debutRegles = cal.date(byAdding: .day, value: -5, to: lundi)
 
         let temoin = suivie(ilYaNJours: 0)
@@ -245,9 +245,11 @@ final class CycleTrackingTests: XCTestCase {
         suivi.lastPeriodStartDate = debutRegles
         suivi.programStartDate = lundi
 
-        XCTAssertNil((0..<7).compactMap {
-            cal.date(byAdding: .day, value: $0, to: lundi).flatMap { suivi.cyclePhase(on: $0) }
-        }.first { $0 == .menstrual }, "l'ancrage de ce test ne doit traverser aucun jour de règles")
+        let phasesDeLaSemaine = (0..<7).compactMap { jour -> UserProfile.CyclePhase? in
+            cal.date(byAdding: .day, value: jour, to: lundi).flatMap { suivi.cyclePhase(on: $0) }
+        }
+        XCTAssertFalse(phasesDeLaSemaine.contains(.menstrual),
+                       "l'ancrage de ce test ne doit traverser aucun jour de règles")
 
         let sans = AdaptivePlanEngine.generateWeekSessions(weekNumber: 1, tier: 1, profile: temoin)
         let avec = AdaptivePlanEngine.generateWeekSessions(weekNumber: 1, tier: 1, profile: suivi)
@@ -268,8 +270,11 @@ final class CycleTrackingTests: XCTestCase {
         let semaine = AdaptivePlanEngine.generateWeekSessions(weekNumber: 1, tier: 1, profile: profil)
         let notes = semaine.compactMap { $0.session?.adaptationNote }
         XCTAssertFalse(notes.isEmpty, "une blessure récente doit alléger au moins une séance")
+        let notesDeCycle = Set(
+            [UserProfile.CyclePhase.menstrual, .follicular, .ovulation, .luteal]
+                .compactMap { noteAttendue($0) })
         for note in notes {
-            XCTAssertFalse(note.contains("phase") && note.contains("estimée"),
+            XCTAssertFalse(notesDeCycle.contains(note),
                            "la phase a écrasé la note de la blessure : « \(note) »")
         }
     }

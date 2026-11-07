@@ -1380,8 +1380,13 @@ enum AdaptivePlanEngine {
         // C'est de cette date que dépend la phase du cycle : sans elle, la phase du jour où l'app
         // s'ouvrait était recopiée sur les sept jours et sur toutes les semaines à venir.
         let calendrier = mondayCalendar
-        let lundiDeLaSemaine = calendrier
+        // Les deux pas sur deux lignes, et ce n'est pas qu'une question de lisibilité : collé au
+        // `?.start`, le `.flatMap` s'applique à la `Date` DÉJÀ déballée par le chaînage optionnel,
+        // pas à l'optionnel. Le compilateur l'a dit — « value of type 'Date' has no member
+        // 'flatMap' » — et j'avais poussé avant de le lui demander.
+        let premierLundi = calendrier
             .dateInterval(of: .weekOfYear, for: profile.programStartDate ?? .now)?.start
+        let lundiDeLaSemaine = premierLundi
             .flatMap { calendrier.date(byAdding: .weekOfYear, value: weekNumber - 1, to: $0) }
         let sortedRunDays = profile.runningDays.sorted()
 

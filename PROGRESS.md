@@ -174,6 +174,19 @@ Trois fichiers de tests ne tournaient nulle part non plus : `test_deploiement.py
 `test_accent.py`, `test_session.py`. Ils sont dans leurs workflows, et l'audit est refait sur les
 26 fichiers `ci_scripts/test_*.py`.
 
+### La barrière qui empêche de le refaire
+
+`ci_scripts/check_cjs.py` lit, pour chaque `require('paquet')` de `api/` et `lib/`, le
+`package.json` du paquet installé : `"type": "module"` avec un `exports` qui ne propose aucune
+condition `require` est refusé. La règle n'est pas « est-ce que ça marche sur cette machine » —
+c'est précisément ce qui a trompé : Node 22 fait marcher `require('jose')`, et la version de Node
+qui exécute les fonctions ne se lit pas d'ici.
+
+Vérifié dans les deux sens : `jose` 5.10.0 et `bcryptjs` 2.4.3 passent, `jose` 6.2.15 est refusée
+en nommant `lib/auth.js` et `lib/apns.js`. Et `bcryptjs` 3 passerait : elle garde une condition
+`require` vers une livraison UMD — c'est la différence exacte entre les deux montées, et c'est
+celle que je n'avais pas regardée.
+
 ### Ce qu'il faut pour reprendre ce chantier
 
 Une seule chose : **la version de Node du projet Vercel** (Settings → General → Node.js Version).

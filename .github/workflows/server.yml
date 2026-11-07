@@ -57,6 +57,22 @@ jobs:
       # `npm ci` et non `npm install` : la suite doit tourner contre les versions EXACTES du
       # verrou, sinon un test vert ici ne dit rien de ce qui est déployé.
       - run: npm ci
+
+      # UNE DÉPENDANCE LIVRÉE EN ESM SEUL, CHARGÉE PAR `require`, MARCHE ICI ET TOMBE EN LIGNE.
+      #
+      # C'est la panne du 7 novembre 2026 : `jose` 6, construction Vercel verte, 133 tests verts,
+      # et toutes les routes de l'API en 500 pendant onze minutes. `require` d'un module ESM n'est
+      # actif par défaut que sur Node ^20.19, ^22.12 ou >= 23 ; cette machine est sur 22, donc
+      # elle ne POUVAIT pas voir le défaut, et la version de Node qui exécute les fonctions est un
+      # réglage du projet Vercel, hors du dépôt.
+      #
+      # Avant `npm test`, parce qu'une dépendance qui ne se charge pas en ligne rend les tests
+      # verts sans valeur. Après `npm ci`, parce qu'il lit les `package.json` installés.
+      - name: Les dépendances chargées par `require` sont-elles du CommonJS
+        run: |
+          cd ci_scripts && python3 test_cjs.py
+          cd .. && python3 ci_scripts/check_cjs.py
+
       - run: npm test
 
       # ─── ET EST-CE QUE C'EST EN LIGNE ? ────────────────────────────────────────────────────

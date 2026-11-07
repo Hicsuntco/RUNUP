@@ -117,10 +117,59 @@ dont 17 appartenaient à l'écran d'à côté.
 102 noms, zéro émoji restant dans l'interface, et c'est le simulateur qui valide chaque nom à
 chaque construction.
 
-### Ce qui reste du chantier 4
+### Les cinq autres points, mesurés un par un
 
-Les dégradés violets, le vert isolé du profil d'élévation, les boutons gris en capitales
-(ABONNÉ / MODIFIER / RETIRER), le segment blanc sur blanc, le contraste de la bulle du coach.
+L'audit s'étant trompé d'un facteur 25 sur les émojis, chaque point a été **mesuré** avant d'être
+touché. Deux se sont révélés faux, deux étaient réels, et un était une décision déjà documentée.
+
+**Le vert du profil d'élévation : à moitié vrai.** Sur l'écran de bilan le vert tient, parce que le
+« +123 m D+ » posé juste sous le graphe est vert aussi — la couleur y est le nom de la mesure. Sur
+la page d'activité du club, le D+ existe mais dans la grille générique, en `textPrimary`, à six
+cases du graphe : le vert ne désignait rien et c'était la seule tache de couleur d'une page rose et
+neutre. Repeindre le graphe aurait été pire — la même donnée en deux couleurs selon l'écran. C'est
+le D+ qui prend la couleur de sa courbe.
+
+**La bulle du coach : vrai, et le chiffre le dit.** La bulle est posée sur la carte MapKit, donc son
+`.ultraThinMaterial` capte un fond clair en apparence claire. À 0,85 d'opacité le fond effectif vaut
+`0x303036`, et le sourcil écrit dans la variante claire de l'accent y tombe à **4,25:1** pour
+l'accent par défaut — sous le seuil de 4,5:1 d'un petit texte. Le violet n'était qu'à 4,86. À 0,92,
+le rose monte à 5,25 et le violet à 6,00 : sept centièmes d'opacité que l'œil ne distingue pas.
+
+**Le segment blanc sur blanc : vrai, et pire que ce que l'audit disait.** La pastille active est
+`card` sur un rail `bg2` : **1,25:1 en clair, 1,04:1 en sombre**. Du blanc sur du blanc et du noir
+sur du noir, là où WCAG 1.4.11 demande 3:1 pour un élément qui porte un état. L'état était lisible,
+mais par le TEXTE seul. Elle porte maintenant un filet d'accent — 4,97:1 en sombre, 3,03:1 en clair
+— et non un remplissage : la raison écrite dans le code tient toujours (deux barres roses empilées
+ne se hiérarchisent plus), et le filet est la règle du dépôt.
+
+**Les boutons gris en capitales : faux.** `SecondaryButtonStyle` donne **16,27:1** en sombre et
+**15,39:1** en clair. Le reproche ne pouvait pas être le contraste. Ce que j'ai trouvé en regardant
+ce qu'ils FONT est autre chose, et je ne l'ai pas changé seul — voir ci-dessous.
+
+**Les dégradés violets : une décision déjà prise.** Quatre sites, dont deux sur les surfaces de
+partage (carte et vidéo) qui sont de l'identité de marque, pas de l'interface. Des deux autres, la
+pastille du niveau garde son dégradé : le commentaire du code montre qu'une passe précédente l'a
+décidé exprès (« un point de couleur, pas un aplat plein cadre »), et repasser par-dessus une
+décision documentée sans la poser serait exactement ce qu'il ne faut pas faire.
+
+Le FOND de cette carte, lui, était un vrai défaut : le même commentaire affirme « c'est maintenant
+une carte comme les autres » alors que seul le mode CLAIR avait été corrigé. En sombre elle gardait
+un dégradé de deux teintes écrites en dur qui n'existent nulle part ailleurs, un contour violet à
+30 % — un accent dilué, ce que le dépôt refuse partout — et des textes figés en blanc pour
+compenser ce fond. Trois symptômes, une cause, et un commentaire qui annonçait la correction des
+trois. C'est une carte, dans les deux thèmes.
+
+### Deux trouvailles que je n'ai PAS changées seul
+
+Toutes deux sur `SecondaryButtonStyle`, et toutes deux de l'**affordance**, pas du contraste.
+
+1. **« ABONNÉ » est une bascule déguisée en état.** Le bouton affiche l'état et son appui
+   désabonne (`basculerLAbonnement`). On croit lire un statut, on se désabonne. Même chose pour
+   « DEMANDE ENVOYÉE », dont l'appui annule la demande. La réparation est une question de voix
+   produit, pas de design system.
+2. **« RETIRER » est visuellement identique à « MODIFIER ».** Deux actions de conséquences
+   différentes au même poids, et `nePlusPreparer` part sans confirmation. Il n'existe pas de style
+   destructif dans le dépôt.
 
 ## Chantier 3 — les délégués CoreLocation
 

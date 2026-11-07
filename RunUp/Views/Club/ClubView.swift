@@ -594,14 +594,23 @@ struct ClubView: View {
     /// raison « cette carte reste sombre dans les deux thèmes, donc `text2` passerait
     /// sombre-sur-sombre ». Le symptôme était traité, pas la cause.
     ///
-    /// En clair, c'est maintenant une carte comme les autres. Ce qui ne bouge pas, c'est la
-    /// PASTILLE du niveau : elle garde son dégradé violet→rose, et reste le point de couleur de
-    /// la section. Un point, pas un aplat plein cadre.
+    /// C'est maintenant une carte comme les autres, DANS LES DEUX THÈMES — et ça ne l'était pas.
+    ///
+    /// La passe précédente a écrit cette phrase après n'avoir corrigé que le mode CLAIR. En
+    /// sombre, la carte gardait un dégradé violet composé de deux teintes écrites en dur
+    /// (0x241046 → 0x160B1F) qui n'existent nulle part ailleurs dans l'app, un contour violet à
+    /// 30 % — un accent dilué, ce que le dépôt refuse partout ailleurs — et, par conséquent, des
+    /// textes figés en blanc parce que `textPrimary` serait passé sombre-sur-sombre. Trois
+    /// symptômes, une cause, et un commentaire qui annonçait la correction des trois.
+    ///
+    /// La surface est donc `card` et le contour `cardBorder`, comme toute carte. Les deux encres
+    /// reprennent leurs jetons : il n'y a plus de fond spécial à compenser.
+    ///
+    /// CE QUI NE BOUGE PAS, et c'est la décision de la passe précédente : la PASTILLE du niveau
+    /// garde son dégradé violet→rose, et reste le point de couleur de la section. Un point, pas
+    /// un aplat plein cadre. La jauge d'XP le suit, pour la même raison.
     private var levelCard: some View {
         let info = levelInfo
-        let clair = RUColor.isLight
-        let encre = clair ? RUColor.textPrimary : Color.white
-        let encre2 = clair ? RUColor.text3 : Color.white.opacity(0.65)
         return HStack(spacing: 14) {
             Text("\(info.level)").displayStyle(.title).foregroundColor(.white)
                 .contentTransition(.numericText())
@@ -625,13 +634,13 @@ struct ClubView: View {
                 HStack(alignment: .firstTextBaseline) {
                     Text("Ton niveau dans le club")
                         .font(RUFont.sans(.small, weight: .semibold))
-                        .foregroundColor(encre2)
+                        .foregroundColor(RUColor.text3)
                     Spacer(minLength: 8)
-                    Text("\(info.xpIntoLevel) / \(info.xpForLevel) XP").font(RUFont.mono(.small)).foregroundColor(encre2)
+                    Text("\(info.xpIntoLevel) / \(info.xpForLevel) XP").font(RUFont.mono(.small)).foregroundColor(RUColor.text3)
                         .contentTransition(.numericText())
                 }
                 Text("Niveau \(info.level) · \(info.title)")
-                    .font(RUFont.sans(.title, weight: .bold)).foregroundColor(encre)
+                    .font(RUFont.sans(.title, weight: .bold)).foregroundColor(RUColor.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
                 LinearBar(fraction: Double(info.xpIntoLevel) / Double(info.xpForLevel), color: RUColor.violet, gradient: RUColor.violetRoseGradient)
             }
@@ -639,12 +648,9 @@ struct ClubView: View {
         .animation(.easeOut(duration: 0.4), value: info.level)
         .animation(.easeOut(duration: 0.4), value: info.xpIntoLevel)
         .padding(18)
-        .background(clair
-                    ? LinearGradient(colors: [RUColor.card, RUColor.card], startPoint: .topLeading, endPoint: .bottomTrailing)
-                    : LinearGradient(colors: [Color(hex: 0x241046), Color(hex: 0x160B1F)], startPoint: .topLeading, endPoint: .bottomTrailing),
-                    in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+        .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous)
-            .stroke(clair ? RUColor.cardBorder : RUColor.violet.opacity(0.3), lineWidth: RUSpacing.hairline))
+            .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 
     /// LA COUVERTURE DU CLUB.
@@ -1260,6 +1266,22 @@ struct ClubView: View {
                 .padding(.vertical, 10)
                 .frame(maxWidth: .infinity)
                 .background(tab == value ? RUColor.card : .clear, in: RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous))
+                // UN FILET D'ACCENT, PARCE QUE LA PASTILLE SEULE ÉTAIT INVISIBLE. Mesuré :
+                // `card` sur le rail `bg2` donne 1,25:1 en clair et 1,04:1 en sombre — du blanc
+                // sur du blanc, et du noir sur du noir. La règle WCAG 1.4.11 demande 3:1 pour un
+                // élément d'interface qui porte un état.
+                //
+                // L'état ÉTAIT lisible, mais par le texte seul (18,8:1 contre `text3`). Un
+                // sélecteur dont la pastille ne se voit pas est un sélecteur dont on ne comprend
+                // pas la forme : on lit trois mots dont un plus clair, pas un onglet choisi.
+                //
+                // Le filet et non le remplissage : la raison écrite au-dessus tient toujours —
+                // deux barres roses empilées ne se hiérarchisent plus. Un filet n'est pas un
+                // aplat, c'est la règle du dépôt (« un accent ne se dilue pas, il va au
+                // contour »), et c'est déjà ce que fait la pastille du classement juste à côté.
+                // Mesuré à 4,97:1 en sombre et 3,03:1 en clair.
+                .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusChip, style: .continuous)
+                    .stroke(tab == value ? RUColor.rose : .clear, lineWidth: RUSpacing.hairline))
                 .shadow(color: .black.opacity(tab == value && RUColor.isLight ? 0.08 : 0), radius: 3, x: 0, y: 1)
         }
         .buttonStyle(PressableStyle())

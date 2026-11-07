@@ -59,6 +59,9 @@ private enum Ink {
     /// L'accent de la coureuse, version fond sombre — quelle que soit l'apparence globale.
     static var accent: Color { AccentTheme.current.primary }
     static var accentSoft: Color { AccentTheme.current.light }
+    /// Le fond des surfaces de cet écran. Il était écrit deux fois en dur — ici et dans le voile
+    /// du bas — pour la même valeur.
+    static let fond = Color(hex: 0x0E0E14)
     static let label = Color.white.opacity(0.55)
     static let line = Color.white.opacity(0.08)
     static let cyan = Color(hex: 0x38E0D0)
@@ -395,7 +398,21 @@ struct LiveRunView: View {
             }
         }
         .padding(RUSpacing.cardPadding)
-        .background(Color(hex: 0x0E0E14).opacity(0.85), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+        // 0,92 ET NON 0,85, ET LE CHIFFRE EST MESURÉ.
+        //
+        // Cette bulle est posée sur la carte MapKit, et son `.ultraThinMaterial` capte donc ce
+        // qu'il y a dessous — une carte CLAIRE en apparence claire. Le sourcil « Coach · en
+        // direct » est écrit en `Ink.accentSoft`, c'est-à-dire la variante claire de l'accent
+        // choisi, en petit texte : il lui faut 4,5:1.
+        //
+        // À 0,85, le fond effectif vaut 0x303036 et l'accent par défaut — le rose clair 0xFF4D9E
+        // — y tombe à 4,25:1. Sous le seuil, pour le thème que presque tout le monde garde. Le
+        // violet n'était qu'à 4,86, donc à peine au-dessus. Les six autres thèmes passaient.
+        //
+        // À 0,92 le fond vaut 0x202026 : le rose monte à 5,25:1 et le violet à 6,00. Sept
+        // centièmes d'opacité en plus, que l'œil ne distingue pas d'un verre dépoli, et toute la
+        // palette passe avec de la marge.
+        .background(Ink.fond.opacity(0.92), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(Ink.accent.opacity(0.25), lineWidth: RUSpacing.hairline))
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
         .padding(.top, 90)
@@ -663,7 +680,7 @@ struct LiveRunView: View {
         .padding(.bottom, max(16, ScreenEdges.bottom + 8))
         .frame(maxWidth: .infinity)
         .background(
-            LinearGradient(colors: [Color(hex: 0x0E0E14).opacity(0.6), Color(hex: 0x0E0E14, opacity: 1)], startPoint: .top, endPoint: .bottom)
+            LinearGradient(colors: [Ink.fond.opacity(0.6), Ink.fond], startPoint: .top, endPoint: .bottom)
         )
         .background(.ultraThinMaterial)
         .clipShape(RoundedCornerShape(radius: 26, corners: [.topLeft, .topRight]))
@@ -704,7 +721,10 @@ struct LiveRunView: View {
                         .font(.system(size: 9, weight: .bold))
                         .foregroundColor(Ink.accentSoft)
                         .padding(4)
-                        .background(Color(hex: 0x0E0E14).opacity(0.85), in: Circle())
+                        // Le même fond et la même opacité que la bulle : c'est une icône, donc
+                        // 3:1 suffit et 0,85 passait déjà — mais deux opacités voisines sur le
+                        // même écran se voient, et la valeur ne s'écrit plus en dur.
+                        .background(Ink.fond.opacity(0.92), in: Circle())
                 }
             }
         }

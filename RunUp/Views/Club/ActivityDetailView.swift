@@ -225,7 +225,7 @@ struct ActivityDetailView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(mesure.valeur)
                         .displayStyle(.title)
-                        .foregroundColor(RUColor.textPrimary)
+                        .foregroundColor(mesure.teinte)
                         .lineLimit(1).minimumScaleFactor(0.6)
                     Text(LocalizedStringKey(mesure.libelle))
                         .font(RUFont.sans(.small))
@@ -240,14 +240,33 @@ struct ActivityDetailView: View {
         }
     }
 
-    private struct Mesure { var valeur: String; var libelle: String }
+    /// LE VERT DU PROFIL D'ÉLÉVATION N'AVAIT AUCUN PARTENAIRE SUR CETTE PAGE.
+    ///
+    /// `ElevationProfileView` trace sa courbe en `lime` partout dans l'app. Sur l'écran de bilan,
+    /// ce vert tient parce que le « +123 m D+ » posé juste sous le graphe est vert aussi : la
+    /// couleur y est le nom de la mesure. Ici, le D+ existe — mais dans la grille générique, en
+    /// `textPrimary`, à six cases du graphe. Le vert du graphe ne désignait donc rien, et c'était
+    /// la seule tache de couleur d'une page qui est rose et neutre du début à la fin.
+    ///
+    /// La réponse n'est PAS de repeindre le graphe : la même donnée dessinée en deux couleurs
+    /// selon l'écran serait un défaut plus grand que celui qu'on corrige. C'est le D+ qui prend la
+    /// couleur du graphe — une teinte de plus sur la page, mais qui dit quelque chose.
+    private struct Mesure {
+        var valeur: String
+        var libelle: String
+        /// La couleur de la VALEUR. Neutre par défaut : une distance et un temps ne sont pas
+        /// des accents, et en faire des couleurs reviendrait à n'en accentuer aucun.
+        var teinte: Color = RUColor.textPrimary
+    }
 
     private func mesures(_ s: ActivityDetail) -> [Mesure] {
         var out: [Mesure] = []
         if let km = s.distanceKm, km > 0 { out.append(Mesure(valeur: Distances.km(km), libelle: "distance")) }
         if let duree = s.durationDisplay { out.append(Mesure(valeur: duree, libelle: "temps")) }
         if let allure = s.avgPace, !allure.isEmpty { out.append(Mesure(valeur: allure, libelle: "allure")) }
-        if let dplus = s.elevationGainM, dplus > 0 { out.append(Mesure(valeur: "\(dplus) m", libelle: "D+")) }
+        if let dplus = s.elevationGainM, dplus > 0 {
+            out.append(Mesure(valeur: "\(dplus) m", libelle: "D+", teinte: RUColor.lime))
+        }
         if let fc = s.avgHeartRate { out.append(Mesure(valeur: "\(fc)", libelle: "bpm moyen")) }
         if let kcal = s.kcal { out.append(Mesure(valeur: "\(kcal)", libelle: "kcal")) }
         return out

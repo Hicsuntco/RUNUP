@@ -11,6 +11,8 @@ n'apparaît, l'avant/après est écrit ici, et les trois langues ont été véri
 | iOS seul pour l'instant ; Android plus tard | Charlotte | 7 novembre 2026 |
 | Régler tout ce que l'audit a relevé, sans exception | Charlotte | 7 novembre 2026 |
 | Surveillance des plantages : **maison**, pas Sentry — le rapport part sur notre serveur Vercel, aucune dépendance Swift tierce | Charlotte | 7 novembre 2026 |
+| « ABONNÉ » → le libellé dit l'action (« SE DÉSABONNER ») | Charlotte | 7 novembre 2026 |
+| « RETIRER » → une confirmation, pas un poids visuel différent | Charlotte | 7 novembre 2026 |
 
 ## Ce qui attend une décision
 
@@ -197,17 +199,19 @@ un dégradé de deux teintes écrites en dur qui n'existent nulle part ailleurs,
 compenser ce fond. Trois symptômes, une cause, et un commentaire qui annonçait la correction des
 trois. C'est une carte, dans les deux thèmes.
 
-### Deux trouvailles que je n'ai PAS changées seul
+### Deux trouvailles d'affordance, tranchées par Charlotte
 
-Toutes deux sur `SecondaryButtonStyle`, et toutes deux de l'**affordance**, pas du contraste.
+Toutes deux sur `SecondaryButtonStyle`, et toutes deux de l'**affordance**, pas du contraste — le
+style est à 16:1.
 
-1. **« ABONNÉ » est une bascule déguisée en état.** Le bouton affiche l'état et son appui
-   désabonne (`basculerLAbonnement`). On croit lire un statut, on se désabonne. Même chose pour
-   « DEMANDE ENVOYÉE », dont l'appui annule la demande. La réparation est une question de voix
-   produit, pas de design system.
-2. **« RETIRER » est visuellement identique à « MODIFIER ».** Deux actions de conséquences
-   différentes au même poids, et `nePlusPreparer` part sans confirmation. Il n'existe pas de style
-   destructif dans le dépôt.
+1. **« ABONNÉ » était une bascule déguisée en état.** Le bouton affichait l'état et son appui
+   désabonnait : on croyait lire un statut, on agissait. Décision du 7 novembre : **le libellé dit
+   l'action**. « SE DÉSABONNER » et « ANNULER LA DEMANDE ». L'état ne se perd pas — « se
+   désabonner » implique qu'on est abonnée.
+2. **« RETIRER » était visuellement identique à « MODIFIER »** et partait sans confirmation, alors
+   qu'il fait disparaître de la page et des groupes d'allure. Décision : **une confirmation**,
+   plutôt qu'un poids visuel différent. Le texte dit ce qu'on perd **et** que c'est réversible —
+   sans la seconde phrase, une confirmation fait hésiter sur un geste qui ne coûte rien à défaire.
 
 ## Chantier 3 — les délégués CoreLocation
 

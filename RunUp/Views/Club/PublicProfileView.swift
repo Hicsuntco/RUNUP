@@ -190,9 +190,17 @@ struct PublicProfileView: View {
         }
     }
 
+    /// LE LIBELLÉ DIT CE QUE L'APPUI FAIT, PAS CE QUI EST.
+    ///
+    /// Il affichait « ABONNÉ » et « DEMANDE ENVOYÉE » : deux ÉTATS, sur un bouton dont l'appui
+    /// désabonne ou annule la demande (`basculerLAbonnement`). On croyait lire un statut, et on
+    /// agissait. C'est la convention de Strava, et elle ne tient que parce qu'on l'a apprise
+    /// ailleurs — un bouton annonce ce que son appui fait.
+    ///
+    /// L'état ne se perd pas pour autant : « se désabonner » implique qu'on est abonnée.
     private func libelleDuBouton(_ profil: PublicProfile) -> String {
-        if profil.jeLaSuis { return String(localized: "ABONNÉ") }
-        if profil.demandeEnvoyee { return String(localized: "DEMANDE ENVOYÉE") }
+        if profil.jeLaSuis { return String(localized: "SE DÉSABONNER") }
+        if profil.demandeEnvoyee { return String(localized: "ANNULER LA DEMANDE") }
         // Un compte privé ne se suit pas d'un coup : on DEMANDE. Le dire sur le bouton évite la
         // surprise d'un écran qui ne change pas après l'appui.
         return profil.isPrivate ? String(localized: "DEMANDER À SUIVRE") : String(localized: "SUIVRE")

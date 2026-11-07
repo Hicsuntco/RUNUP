@@ -3328,23 +3328,6 @@
         }
       }
     },
-    "ABONNÉ": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "FOLLOWING"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "SIGUIENDO"
-          }
-        }
-      }
-    },
     "ACCÉLÈRE": {
       "extractionState": "manual",
       "localizations": {
@@ -3440,6 +3423,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "RITMO MED"
+          }
+        }
+      }
+    },
+    "ANNULER LA DEMANDE": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CANCEL REQUEST"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CANCELAR SOLICITUD"
           }
         }
       }
@@ -8695,23 +8695,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "MAÑANA · %@"
-          }
-        }
-      }
-    },
-    "DEMANDE ENVOYÉE": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "REQUESTED"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "SOLICITADO"
           }
         }
       }
@@ -15783,6 +15766,23 @@
         }
       }
     },
+    "Me retirer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove me"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitarme"
+          }
+        }
+      }
+    },
     "Meilleur temps sur ce parcours !": {
       "localizations": {
         "en": {
@@ -22356,6 +22356,23 @@
         }
       }
     },
+    "SE DÉSABONNER": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "UNFOLLOW"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DEJAR DE SEGUIR"
+          }
+        }
+      }
+    },
     "SEMAINE": {
       "localizations": {
         "en": {
@@ -25470,6 +25487,23 @@
         }
       }
     },
+    "Te retirer de cette course ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove yourself from this race?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Quitarte de esta carrera?"
+          }
+        }
+      }
+    },
     "Te suit": {
       "extractionState": "manual",
       "localizations": {
@@ -27268,6 +27302,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tendrás que volver a pedir el código de invitación para regresar."
+          }
+        }
+      }
+    },
+    "Tu disparaîtras de la page et des groupes d'allure. Tu pourras te redéclarer quand tu veux.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You'll disappear from the page and the pace groups. You can declare yourself again whenever you want."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desaparecerás de la página y de los grupos de ritmo. Puedes volver a declararte cuando quieras."
           }
         }
       }

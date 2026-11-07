@@ -49,6 +49,8 @@ struct RacePageView: View {
     @State private var cherchePartenaire = false
     @State private var partageEntrainement = false
     @State private var formulairePresente = false
+    /// Le retrait de la page demande confirmation — voir le bouton « RETIRER ».
+    @State private var retraitAConfirmer = false
 
     // Le mur
     @State private var genreDuMessage = "message"
@@ -222,7 +224,13 @@ struct RacePageView: View {
                     }
                     .buttonStyle(SecondaryButtonStyle())
 
-                    Button(action: { Task { await nePlusPreparer() } }) {
+                    // « RETIRER » DEMANDE, IL N'AGIT PLUS TOUT DE SUITE.
+                    //
+                    // Les deux boutons sont gris et identiques côte à côte : l'un ouvre un
+                    // formulaire, l'autre te fait disparaître de la page et des groupes d'allure.
+                    // Deux conséquences très différentes au même poids visuel, et le retrait
+                    // partait au premier appui.
+                    Button(action: { retraitAConfirmer = true }) {
                         Text("RETIRER")
                     }
                     .buttonStyle(SecondaryButtonStyle())
@@ -243,6 +251,16 @@ struct RacePageView: View {
         .padding(RUSpacing.cardPadding)
         .ruCard()
         .sheet(isPresented: $formulairePresente) { formulaireDeParticipation.runUpSheetStyle() }
+        // `role: .destructive` sur l'action et `.cancel` sur le refus : iOS colore et place les
+        // deux boutons lui-même, et VoiceOver annonce lequel retire. Le texte dit ce qu'on perd
+        // ET que c'est réversible — sans la seconde phrase, une confirmation fait hésiter sur un
+        // geste qui ne coûte rien à défaire.
+        .alert("Te retirer de cette course ?", isPresented: $retraitAConfirmer) {
+            Button("Me retirer", role: .destructive) { Task { await nePlusPreparer() } }
+            Button("Annuler", role: .cancel) { }
+        } message: {
+            Text("Tu disparaîtras de la page et des groupes d'allure. Tu pourras te redéclarer quand tu veux.")
+        }
     }
 
     private func ligneDInfo(titre: String, valeur: String) -> some View {

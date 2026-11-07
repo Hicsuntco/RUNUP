@@ -338,6 +338,33 @@ jobs:
             "$RUNNER_TEMP/venv/bin/python" ci_scripts/screenshots.py "$langue"
           done
 
+      # ── LE GRAND TEXTE A-T-IL PRIS ? ─────────────────────────────────────────────────────────
+      #
+      # Quatre captures nouvelles montrent l'app au deuxième cran d'accessibilité (AX2, ≈1,94 ×,
+      # le plus grand que le plafond de 2,0 × de `RUFont` couvre en entier). Elles existent parce
+      # que le relèvement de ce plafond, de 1,6 × à 2,0 ×, s'appuyait sur un travail de
+      # réorganisation ÉCRIT et jamais photographié.
+      #
+      # Et une capture verte ne prouve que deux choses : l'app n'a pas planté, un fichier a été
+      # écrit. Si `-UIPreferredContentSizeCategoryName` cessait d'être lu, les quatre images
+      # seraient des copies des captures ordinaires et le harnais resterait vert. On mesure donc
+      # l'écart entre chaque image et son ordinaire.
+      #
+      # SANS PLANCHER POUR L'INSTANT : c'est la première exécution, et le plancher doit venir
+      # d'un relevé, pas d'une intuition. Il sera posé quand les quatre écarts seront connus —
+      # comme le plafond d'images vides des bascules, qui vaut 1 parce que vingt-quatre bascules
+      # mesurées rendaient toutes zéro.
+      - name: Le grand texte a-t-il pris, langue par langue
+        run: |
+          set -euo pipefail
+          cd ci_scripts && "$RUNNER_TEMP/venv/bin/python" test_grand_texte.py
+          cd ..
+          for langue in ${{ steps.quoi.outputs.langues }}; do
+            echo "──────────── $langue · grand texte ────────────"
+            "$RUNNER_TEMP/venv/bin/python" ci_scripts/check_grand_texte.py \
+              --dossier "appstore/raw/$langue"
+          done
+
       # ── L'APERÇU VIDÉO, FILMÉ PAR LA MACHINE ─────────────────────────────────────────────────
       #
       # `appstore/APERCU.md` décrit la façon d'avant : filmer un iPhone à la main, six plans d'une

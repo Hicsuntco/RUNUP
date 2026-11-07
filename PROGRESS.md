@@ -19,6 +19,9 @@ n'apparaît, l'avant/après est écrit ici, et les trois langues ont été véri
 | Question | Pourquoi ça bloque |
 | --- | --- |
 | Contenu des séances HYROX | Il faut quelqu'un qui a couru un HYROX. L'équipe n'a pas cette compétence et ne doit pas l'inventer. |
+| Cette branche doit-elle être la production ? | Elle l'est : douze déploiements « Production » le 7 novembre, un par commit. Donc aucune relecture, aucune préproduction, et une panne de onze minutes ce jour-là. |
+| La version de Node du projet Vercel | Elle ne se lit que dans les paramètres du projet, et c'est la seule chose qui manque pour reprendre le chantier 11. Un `require` d'un paquet ESM en dépend, et une construction verte n'en dit rien. |
+| Le chevron « ‹ » des deux boutons de retour | `BackChevronButton` et `FrostedBackButton` dessinent un signe typographique à taille figée là où le reste de l'app emploie `chevron.left`. C'est un choix de dessin, pas un défaut : à trancher. |
 
 ## Au passage
 
@@ -52,6 +55,14 @@ témoins espagnols, eux, sont nets — le plus proche voisin est à 20,7 d'écar
 `bascules.py --preuves` garde désormais l'image de l'instant jugé, pleine taille et en couleurs,
 et l'artefact la publie — seulement quand le verdict est mauvais.
 
+**CETTE BRANCHE DE TRAVAIL EST LA PRODUCTION.** Découvert le 7 novembre à 17 h 20, dans
+l'incident ci-dessous. `main` n'a pas bougé depuis le 24 octobre et ne contient même pas
+`api/races/`, pourtant les routes `api/races/*` répondaient normalement en production. La preuve
+est dans les déploiements que Vercel enregistre sur GitHub : **douze déploiements
+« Production » le 7 novembre, un par commit de cette branche**. Chaque poussée qui touche `api/`,
+`lib/` ou `package.json` part donc EN LIGNE, tout de suite, chez les gens qui ont l'app. Il n'y a
+pas d'étape de préproduction, et il n'y a pas de relecture. À décider : est-ce voulu ?
+
 ## Les chantiers de l'audit
 
 Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
@@ -61,14 +72,14 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 | 1 | Cycle : ovulation mal placée, phase du jour appliquée à la semaine, messages qui affirment | 1 j | **fait** |
 | 2 | Activité en direct : dire pourquoi elle ne démarre pas | 2 h | **fait** |
 | 3 | `@MainActor` sur `LocationService` et `RunWeatherService` | 3 h | **fait** |
-| 4 | Finitions design : 2 émojis dans l'interface, 2 dégradés, vert isolé du profil d'élévation, boutons gris en capitales, segment blanc sur blanc, contraste de la bulle du coach | 1 j | à faire |
+| 4 | Finitions design : 2 émojis dans l'interface, 2 dégradés, vert isolé du profil d'élévation, boutons gris en capitales, segment blanc sur blanc, contraste de la bulle du coach | 1 j | **fait** |
 | 5 | Données de démonstration : FC 148 seize fois, « Sortie » seize fois, défi « octobre » affiché en novembre | 4 h | **fait** |
 | 6 | Bilan de la semaine — l'écran noté 5,5/10 | 1,5 j | **fait** |
 | 7 | États manquants : chargement de Stats et du Coach, erreurs d'inscription | 1 j | **fait** — l'item était faux |
 | 8 | Harnais de captures : photographier l'inscription, le paywall, l'écran de course | 0,5 j | **fait** |
 | 9 | Tests : `SubscriptionService` et `LocationService` d'abord | 2 j | **fait** |
 | 10 | Valeurs en dur → jetons du design system, les 15 % restants | 1,5 j | **fait** — il en restait six, pas 15 % |
-| 11 | Dépendances serveur : `jose` 6 et `bcryptjs` 3 | 0,5 j | **fait** |
+| 11 | Dépendances serveur : `jose` 6 et `bcryptjs` 3 | 0,5 j | **annulé le 7 novembre** — `jose` 6 a mis la production à terre, voir plus bas |
 | 12 | Accessibilité : tailles de texte dynamiques, indices VoiceOver | 1,5 j | à faire |
 | 13 | `ClubView.swift`, 2 699 lignes, à découper | 2 j | à faire |
 | 14 | Rapport de plantage maison, posté sur notre serveur | 1,5 j | à faire — décidé le 7 novembre |
@@ -76,80 +87,100 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 Le 14 est arrivé après coup, et je le ferais passer devant les finitions de design : c'est le seul
 moyen de savoir ce qui casse chez quelqu'un d'autre que nous. Le reste de l'ordre tient.
 
-## Chantier 11 — `jose` 6 et `bcryptjs` 3
+## Chantier 12 — l'app en grand texte, enfin photographiée
 
-`jose` 5.9.6 → **6.2.15**, `bcryptjs` 2.4.3 → **3.0.3**. Les deux montées sont faites, et la
-deuxième touche les mots de passe : elle ne pouvait pas partir sur une lecture de notes.
+Commencé par la mesure, et la mesure a corrigé l'item de l'audit.
 
-### Pourquoi monter
+### Ce que l'audit disait, et ce que le code dit
 
-Le tableau des versions soutenues, dans le paquet `jose` lui-même, ne liste plus que **v6.x** —
-pour les correctifs de sécurité comme pour les autres. La 5 ne reçoit donc plus rien.
+« Tailles de texte dynamiques » : c'est **déjà fait pour le texte**. `RUFont` fait passer chaque
+taille dessinée par `scaled(_:)`, qui lit le réglage iOS et plafonne à 2,0 ×. Sur les 174 appels
+à `.font(.system(size:))` du dépôt — le seul chemin qui contourne ce système — **167 portent une
+icône** et **4 portent du texte** : les deux chevrons « ‹ » des boutons de retour, le repli qui
+affiche l'emoji d'une notification déjà enregistrée, et la coche typographique de l'assistant
+d'objectif. Les trois derniers sont des glyphes dans un cadre, et c'est justifié.
 
-### Le vrai changement de rupture, et pourquoi il passe ici
+### Ce qui reste vraiment : les icônes
 
-`jose` 6 n'est livré qu'en **ESM**. Son README le dit :
+**170 icônes à taille figée, sur 22 valeurs différentes de 8 à 72 points** — dont 13, 14 et 15 pt
+voisinant sur 76 appels. C'est le même défaut que l'échelle de titrage avant `RUDisplaySize` :
+personne n'a décidé ces tailles, chaque écran a été réglé à l'œil puis recopié. Et aucune ne suit
+le réglage de taille du texte : à AX2, le texte grandit de 94 % et les icônes qui l'accompagnent
+restent où elles sont.
 
-> CJS style `let jose = require('jose')` is possible in Node.js versions where the `require(esm)`
-> feature is enabled by default (^20.19.0 || ^22.12.0 || >= 23.0.0).
+Classées par ce qui les contient : **97 à côté d'un texte** (elles doivent grandir avec lui),
+**60 dans un cadre chiffré** (les faire grandir les ferait déborder), 15 ni l'un ni l'autre.
 
-Or tout le serveur est en CommonJS — `lib/auth.js`, `lib/apns.js`, `api/auth/[action].js`. La
-montée ne tient donc qu'à une condition : le Node qui exécute les fonctions. Les versions que
-Vercel propose aujourd'hui sont 26.x (par défaut), 24.x et 22.x ; la 20.x est retirée depuis le
-1er octobre 2026. Les trois sont au-dessus du plancher, et la machine des tests est sur
-`node-version: "22"`, donc la dernière 22.x.
+### Mais d'abord : regarder l'app en grand texte
 
-**Aucun `engines` n'a été épinglé**, et c'est délibéré : écrire `"node": "22.x"` figerait la
-production sur une majeure que je ne vois pas — le réglage du projet vit chez Vercel, pas ici — et
-pourrait la faire DESCENDRE depuis la 26 par défaut. Le plancher est déjà garanti par ce que
-Vercel propose.
+Le plafond de `RUFont` est passé de 1,6 × à 2,0 × sur la foi d'un travail de réorganisation —
+rangées de mesures qui passent en colonne, bande des sept jours qui laisse tomber le quantième,
+barre d'onglets qui laisse tomber ses libellés. Tout cela est **écrit, commenté, et n'a jamais été
+photographié**. C'est exactement la forme de défaut que cette journée a trouvée quatre fois.
 
-`jose` 5 ne disparaît pas de l'arbre pour autant : `@vercel/oidc`, dépendance de `@vercel/blob`,
-l'épingle en `^5` et en garde une copie imbriquée. Ce n'est pas notre choix à faire.
+Quatre captures nouvelles, au deuxième cran d'accessibilité (AX2, ≈1,94 ×, le plus grand que le
+plafond couvre en entier) : l'accueil, les statistiques, la course en cours, le bilan de la
+semaine — les quatre endroits où un texte deux fois plus grand n'a nulle part où aller. Le
+réglage arrive par `-UIPreferredContentSizeCategoryName`, le même chemin que la langue.
 
-### `bcryptjs` 3, mesuré et non supposé
+Et `check_grand_texte.py` mesure l'écart entre chaque capture et son ordinaire : si le drapeau
+cessait d'être lu, les quatre images seraient des copies, le harnais resterait vert, et on
+croirait avoir vu l'app en grand texte. **Sans plancher pour l'instant** — il viendra du premier
+relevé, comme le plafond d'images vides des bascules.
 
-Les empreintes déjà en base doivent continuer de se vérifier. Les deux versions installées côte à
-côte, sur la même machine :
+## Chantier 11 — `jose` 6 : onze minutes de production à terre
 
-| | 2.4.3 | 3.0.3 |
-| --- | --- | --- |
-| Préfixe écrit | `$2a$` | `$2b$` |
-| Longueur | 60 | 60 |
-| Vérifie l'empreinte de l'autre | oui | oui |
+**Annulé.** `jose` 5.9.6 → 6.2.15 et `bcryptjs` 2.4.3 → 3.0.3 sont partis à 17 h 08 et sont
+revenus à 17 h 20. Entre les deux, **toutes les routes de l'API répondaient 500**.
 
-Donc : les mots de passe existants passent, et un retour en arrière reste possible — une empreinte
-`$2b$` écrite par la 3 se vérifie encore sous la 2.4.3. Un mauvais mot de passe est refusé. Le
-coût 12 prend 317 ms sur cette machine. La licence passe de MIT à BSD-3-Clause, et le paquet
-livre maintenant un exécutable `bin/bcrypt` dont on ne se sert pas.
+### La chronologie, mesurée
 
-### Ce qui l'éprouve
+| Heure (UTC) | Ce qui s'est passé |
+| --- | --- |
+| 17 h 00 | Les 83 adresses appelées par l'app : 69 × 401, 13 × 405, 1 × 400. Rien de cassé. |
+| 17 h 08 | Je pousse `jose` 6 et `bcryptjs` 3. |
+| 17 h 09 min 48 | Vercel déploie le commit **en production**, construction verte. |
+| 17 h 15 → 17 h 19 | Toutes les routes répondent 500, `x-vercel-error: FUNCTION_INVOCATION_FAILED`, sur quatre sondages. Les pages statiques servent. Vercel annonce « All Systems Operational ». |
+| 17 h 20 min 28 | Je pousse le retour arrière. |
+| 17 h 20 min 50 | Vercel le déploie en production. |
+| 17 h 20 min 59 | `api/events` répond de nouveau 405. Les 83 routes sont revenues. |
 
-133 tests serveur verts sur les nouvelles versions. Et le seul appel de `jose` qu'aucun test ne
-couvre — `importPKCS8` + `SignJWT` en ES256 pour le jeton APNs — a été exécuté à la main sur une
-clé P-256 fabriquée pour l'occasion : signature et vérification bonnes, `alg`, `kid` et `iss`
-corrects.
+### Ce que j'ai fait de travers
 
-### Le contrôle qui manquait, et il ne manquait qu'à moitié
+`jose` 6 n'est livré qu'en ESM, et tout le serveur est en CommonJS. Son README dit que
+`require('jose')` ne marche que là où `require(esm)` est actif par défaut
+(^20.19 || ^22.12 || >= 23). J'ai vérifié ce que Vercel **propose** — 26.x par défaut, 24.x,
+22.x, la 20.x retirée depuis le 1er octobre 2026 — et j'en ai conclu que le plancher était tenu
+quelle que soit la configuration du projet.
 
-`check_deploiement.py` sonde la production — c'est le seul endroit du dépôt qui la regarde. Il
-refusait un 404 (« rien n'est déployé là ») et comptait un **5xx comme une présence**, ce qui est
-exact et insuffisant : une fonction qui n'arrive pas à charger ses modules répond exactement ça.
-C'est le risque de cette montée-ci, et aucun test ne peut le voir — ils tournent sur le Node de
-GitHub, pas sur celui de Vercel.
+**Ce que Vercel propose à la sélection n'est pas ce sur quoi un projet existant tourne.** Le
+réglage vit dans les paramètres du projet, chez Vercel, et je n'ai aucun moyen de le lire d'ici.
+J'ai pris une liste de versions disponibles pour une mesure de la version déployée. Une
+construction verte ne prouve rien là-dessus : le chargement des modules se fait à l'exécution.
 
-Deux classes de refus désormais, avec deux messages distincts. Le plafond vient d'un relevé : les
-83 adresses appelées par l'app, sondées le 7 novembre 2026, rendent **69 × 401, 13 × 405, 1 × 400,
-et aucun 5xx**. Un 5xx n'est donc pas une réponse normale, et le refuser ne bloque rien de sain.
-La patience de cinq minutes reprend maintenant les deux classes : un déploiement en cours rend
-404, puis parfois 500.
+`FUNCTION_INVOCATION_FAILED` sur une fonction qui ne touche que `lib/db` (`api/events`) m'a
+d'abord fait écarter `jose` — à tort : toutes les fonctions partagent le même conteneur de
+construction, et c'est `api/auth` qui porte l'import. Je n'ai pas poussé le diagnostic plus loin
+avant de revenir en arrière, et c'était le bon ordre.
 
-### Deux fichiers de tests qui ne tournaient nulle part
+### Ce qui reste, et qui a fait son travail
 
-En vérifiant où `test_deploiement.py` était lancé, la réponse était : **nulle part**. Même chose
-pour `test_accent.py` et `test_session.py` — les trois contrôles tournaient, leurs cas non. Les
-trois sont maintenant dans leurs workflows, et l'audit a été refait sur les 25 fichiers
-`ci_scripts/test_*.py` : plus aucun orphelin.
+`check_deploiement.py` refusait un 404 et comptait un 5xx comme une présence. Je l'ai corrigée au
+même commit pour qu'un 5xx échoue, sur un relevé des 83 adresses. **Elle a trouvé cette panne
+vingt minutes plus tard** — c'est le seul contrôle du dépôt capable de la voir, et sans elle la
+production serait restée à terre jusqu'à ce que quelqu'un ouvre l'app.
+
+Trois fichiers de tests ne tournaient nulle part non plus : `test_deploiement.py`,
+`test_accent.py`, `test_session.py`. Ils sont dans leurs workflows, et l'audit est refait sur les
+26 fichiers `ci_scripts/test_*.py`.
+
+### Ce qu'il faut pour reprendre ce chantier
+
+Une seule chose : **la version de Node du projet Vercel** (Settings → General → Node.js Version).
+Au-dessus de 20.19, `jose` 6 passe tel quel et la montée prend deux minutes. En dessous, il faut
+soit monter le projet, soit convertir les trois fichiers concernés en `await import('jose')`.
+`bcryptjs` 3, lui, est mesuré et sans risque : la 2.4.3 écrit `$2a$`, la 3.0.3 écrit `$2b$`, et
+chacune vérifie l'empreinte de l'autre — les mots de passe en base passent, dans les deux sens.
 
 ## Chantier 10 — les valeurs en dur : six, pas 15 %
 

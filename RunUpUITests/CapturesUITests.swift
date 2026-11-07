@@ -187,11 +187,65 @@ final class CapturesUITests: XCTestCase {
                 courseEnCours: true, attente: 6.0)
     }
 
+    // ─── LE GRAND TEXTE, QUATRE ÉCRANS ────────────────────────────────────────────────────────
+    //
+    // AX2 et pas AX5, et le choix se lit dans `RUFont` : le plafond de l'app vaut 2,0 ×, AX2
+    // demande ≈1,94 × et passe donc en entier, tandis qu'AX3 à AX5 (2,35 / 2,76 / 3,12 ×) sont
+    // écrêtés. Photographier un cran écrêté montrerait le plafond, pas la mise en page.
+    //
+    // Quatre écrans, choisis sur ce qu'ils EMPILENT : l'accueil porte la bande des sept jours et
+    // trois rangées de mesures côte à côte ; les statistiques, les tuiles de records et de
+    // prédiction ; la course en cours, le panneau de mesures qu'on lit à bout de bras ; le bilan
+    // de la semaine, les quatre chiffres de la semaine et le graphique. Ce sont les quatre
+    // endroits où un texte deux fois plus grand n'a nulle part où aller.
+
+    func test22AccueilGrandTexte() throws {
+        try passeSombreSeulement()
+        prendre(rang: 22, ecran: "prog", nom: "grand-texte/accueil", diagnostic: true,
+                tailleDuTexte: Self.ax2)
+    }
+
+    func test23StatsGrandTexte() throws {
+        try passeSombreSeulement()
+        prendre(rang: 23, ecran: "stats", nom: "grand-texte/stats", diagnostic: true,
+                tailleDuTexte: Self.ax2)
+    }
+
+    func test24CourseEnCoursGrandTexte() throws {
+        try passeSombreSeulement()
+        prendre(rang: 24, ecran: "live", nom: "grand-texte/course-en-cours", diagnostic: true,
+                courseEnCours: true, attente: 6.0, tailleDuTexte: Self.ax2)
+    }
+
+    func test25BilanHebdoGrandTexte() throws {
+        try passeSombreSeulement()
+        prendre(rang: 25, ecran: "weeklyRecap", nom: "grand-texte/bilan-hebdo", diagnostic: true,
+                tailleDuTexte: Self.ax2)
+    }
+
+    /// Le deuxième des cinq crans d'accessibilité — `UIContentSizeCategory.accessibilityLarge`.
+    private static let ax2 = "UICTContentSizeCategoryAccessibilityL"
+
+    /// LA PASSE SOMBRE SEULEMENT, ET C'EST UNE QUESTION DE COÛT.
+    ///
+    /// Le harnais lance le même test deux fois par langue, une passe par thème. Quatre écrans de
+    /// plus dans les deux passes font vingt-quatre lancements ; dans une seule, douze. Et le
+    /// dossier `diagnostic/` est par construction celui de la passe sombre — « la passe claire
+    /// livre la fiche, la passe sombre produit le dossier qu'on regarde ».
+    ///
+    /// Ce n'est pas une affirmation que le clair tiendrait aussi : personne ne l'a vu. Le jour où
+    /// les quatre images sombres seront jugées, l'ajout du clair coûtera une ligne.
+    private func passeSombreSeulement() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["RUNUP_CAPTURES_CLAIR"] == nil,
+                          "Le grand texte se photographie dans la passe sombre.")
+    }
+
     private func prendre(rang: Int, ecran: String, nom: String, diagnostic: Bool = false,
                          profil: String? = nil, course: Bool = false,
                          sortie: Bool = false, onglet: String? = nil, defilements: Int = 0,
                          inscription: Bool = false, paywall: Bool = false,
-                         courseEnCours: Bool = false, attente: TimeInterval = 2.0) {
+                         courseEnCours: Bool = false, attente: TimeInterval = 2.0,
+                         tailleDuTexte: String? = nil) {
         let clair = ProcessInfo.processInfo.environment["RUNUP_CAPTURES_CLAIR"] != nil
         let app = XCUIApplication()
         app.launchArguments = ["--captures", "--ecran=\(ecran)"]
@@ -204,6 +258,19 @@ final class CapturesUITests: XCTestCase {
         if inscription { app.launchArguments += ["--inscription"] }
         if paywall { app.launchArguments += ["--paywall"] }
         if courseEnCours { app.launchArguments += ["--encours"] }
+        // LA TAILLE DU TEXTE, PAR LE MÊME CHEMIN QUE LA LANGUE.
+        //
+        // `TextSizeStore` lit `UIApplication.shared.preferredContentSizeCategory`, et
+        // `-UIPreferredContentSizeCategoryName` est ce qui la pose au lancement — c'est le
+        // réglage Réglages → Affichage → Taille du texte, dit de l'extérieur.
+        //
+        // Sans ça, le plafond de 2,0 × de `RUFont` et le travail de réorganisation qui l'a
+        // autorisé — rangées de mesures qui passent en colonne, bande des sept jours qui laisse
+        // tomber le quantième, barre d'onglets qui laisse tomber ses libellés — n'ont JAMAIS
+        // été photographiés. Ils sont écrits, commentés, et crus sur parole.
+        if let tailleDuTexte {
+            app.launchArguments += ["-UIPreferredContentSizeCategoryName", tailleDuTexte]
+        }
         // LE THÈME VIENT DE L'EXTÉRIEUR, COMME LA LANGUE, ET POUR LA MÊME RAISON.
         //
         // Le même test tourne une fois de plus avec `RUNUP_CAPTURES_CLAIR` posé, et c'est le

@@ -33,9 +33,15 @@ struct GoalStepView: View {
 /// repeated across onboarding.jsx and screensD.jsx.
 struct SelectableCard: View {
     var selected: Bool
-    /// Un nom de symbole SF, jamais un emoji — voir `GoalType.symbole`. `nil` pour les cartes qui
-    /// n'ont rien à illustrer (le choix du niveau, par exemple).
-    var symbole: String?
+    /// Un nom de symbole SF, jamais un emoji — voir `GoalType.symbole`.
+    ///
+    /// `nil` PAR DÉFAUT, et c'est ce qui a manqué au premier jet : sept des dix appels de ce
+    /// composant n'illustrent rien — les niveaux, les divisions HYROX, les formats de triathlon —
+    /// et écrivaient `emoji: nil` pour le dire. Un paramètre obligatoire les obligeait tous à
+    /// écrire `symbole: nil`, c'est-à-dire à répéter une absence. J'avais cherché les usages de
+    /// `GoalType.emoji` au lieu des appels du composant, donc je n'avais vu que trois sites sur
+    /// dix, et c'est la construction qui m'a appris les sept autres.
+    var symbole: String? = nil
     /// La teinte du symbole. Par défaut l'accent : une carte sans objectif n'a pas de couleur
     /// propre, et c'est l'appelant qui la connaît quand elle existe.
     var teinte: Color = RUColor.rose2

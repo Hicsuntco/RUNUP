@@ -31,7 +31,7 @@ struct TriathlonDetailsStepView: View {
                     ForEach(TriathlonFormat.allCases) { f in
                         // Les trois distances en sous-titre : c'est ce qui identifie un format
                         // sans employer de marque déposée. Voir `TriathlonFormat`.
-                        SelectableCard(selected: vm.triathlonFormat == f, emoji: nil, title: f.title, subtitle: f.resume) {
+                        SelectableCard(selected: vm.triathlonFormat == f, title: f.title, subtitle: f.resume) {
                             vm.selectTriathlonFormat(f)
                         }
                     }
@@ -41,7 +41,7 @@ struct TriathlonDetailsStepView: View {
                     .padding(.top, 24).padding(.bottom, 10)
                 VStack(spacing: 8) {
                     ForEach(NiveauDeNage.allCases) { n in
-                        SelectableCard(selected: vm.nageNiveau == n, emoji: nil, title: n.title, subtitle: n.subtitle) {
+                        SelectableCard(selected: vm.nageNiveau == n, title: n.title, subtitle: n.subtitle) {
                             vm.nageNiveau = n
                         }
                     }

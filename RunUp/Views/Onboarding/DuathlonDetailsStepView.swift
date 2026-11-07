@@ -31,7 +31,7 @@ struct DuathlonDetailsStepView: View {
                 VStack(spacing: 8) {
                     ForEach(DuathlonFormat.allCases) { f in
                         // Les trois distances en sous-titre, dans l'ordre où elles se courent.
-                        SelectableCard(selected: vm.duathlonFormat == f, emoji: nil, title: f.title, subtitle: f.resume) {
+                        SelectableCard(selected: vm.duathlonFormat == f, title: f.title, subtitle: f.resume) {
                             vm.selectDuathlonFormat(f)
                         }
                     }

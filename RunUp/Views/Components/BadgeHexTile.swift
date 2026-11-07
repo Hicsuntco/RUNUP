@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// L'hexagone d'un badge — surface, contour, emoji, état débloqué.
+/// L'hexagone d'un badge — surface, contour, symbole, état débloqué.
 ///
 /// Il existait en TROIS COPIES identiques au caractère près : deux dans le Club, une dans le
 /// Profil. C'est l'audit qui les a comptées, en constatant qu'un même défaut — une couleur
@@ -10,7 +10,7 @@ import SwiftUI
 ///
 /// LA COULEUR EST AU CONTOUR, ENTIÈRE. C'est la règle du dépôt : un accent ne se dilue pas. La
 /// surface est neutre pour tout le monde, et « débloqué » se lit à trois signes qui ne dépendent
-/// d'aucune teinte — le contour vif, l'opacité pleine, l'emoji net.
+/// d'aucune teinte — le contour vif, l'opacité pleine, le symbole net.
 struct BadgeHexTile: View {
     /// Le nom d'un symbole SF, pas un émoji : il prend la couleur du badge et la graisse du
     /// reste de l'app, là où un émoji est dessiné par le système dans son propre style.

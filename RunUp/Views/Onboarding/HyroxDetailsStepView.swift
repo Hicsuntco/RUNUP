@@ -20,7 +20,7 @@ struct HyroxDetailsStepView: View {
                     .padding(.top, 18).padding(.bottom, 10)
                 VStack(spacing: 8) {
                     ForEach(HyroxDivision.allCases) { d in
-                        SelectableCard(selected: vm.hyroxDivision == d, emoji: nil, title: d.title, subtitle: d.subtitle) {
+                        SelectableCard(selected: vm.hyroxDivision == d, title: d.title, subtitle: d.subtitle) {
                             vm.hyroxDivision = d
                         }
                     }

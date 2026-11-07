@@ -208,7 +208,7 @@ struct NewGoalWizardView: View {
             EyebrowLabel(text: "Format", color: RUColor.text3).padding(.bottom, 10)
             VStack(spacing: 8) {
                 ForEach(DuathlonFormat.allCases) { f in
-                    SelectableCard(selected: duathlonFormat == f, emoji: nil, title: f.title, subtitle: f.resume) {
+                    SelectableCard(selected: duathlonFormat == f, title: f.title, subtitle: f.resume) {
                         duathlonFormat = f
                         chrono = f.chronoPresets[safe: 1] ?? ""
                     }
@@ -253,7 +253,7 @@ struct NewGoalWizardView: View {
             EyebrowLabel(text: "Format", color: RUColor.text3).padding(.bottom, 10)
             VStack(spacing: 8) {
                 ForEach(TriathlonFormat.allCases) { f in
-                    SelectableCard(selected: triathlonFormat == f, emoji: nil, title: f.title, subtitle: f.resume) {
+                    SelectableCard(selected: triathlonFormat == f, title: f.title, subtitle: f.resume) {
                         triathlonFormat = f
                         chrono = f.chronoPresets[safe: 1] ?? ""
                     }
@@ -264,7 +264,7 @@ struct NewGoalWizardView: View {
                 .padding(.top, 18).padding(.bottom, 10)
             VStack(spacing: 8) {
                 ForEach(NiveauDeNage.allCases) { n in
-                    SelectableCard(selected: nageNiveau == n, emoji: nil, title: n.title, subtitle: n.subtitle) {
+                    SelectableCard(selected: nageNiveau == n, title: n.title, subtitle: n.subtitle) {
                         nageNiveau = n
                     }
                 }

@@ -862,9 +862,24 @@ enum CaptureSeed {
         case .vo2maxIntervals: base = 152
         default: base = 145
         }
-        // −4, −2, 0, +2, +4 puis on reboucle : déterministe, donc la même capture deux fois de
+        // −2, −1, 0, +1, +2 puis on reboucle : déterministe, donc la même capture deux fois de
         // suite donne la même image.
-        return base + (graine % 5) * 2 - 4
+        //
+        // C'ÉTAIT ±4, ET ÇA EFFAÇAIT CE QUE LES BASES DISENT. Six points séparent le tempo (158)
+        // du fractionné VMA (152) : une séance de VMA tourne EN MOYENNE plus bas qu'un tempo,
+        // parce que l'échauffement et les récupérations tirent la moyenne vers le bas, et c'est
+        // précisément ce que cette donnée de démonstration doit montrer. Avec ±4, les deux
+        // plages se chevauchaient (148–156 contre 154–162) : sur l'historique, le fractionné du
+        // 27 octobre affichait « FC moy 156 » et le tempo du 3 novembre « FC moy 156 » aussi.
+        // Vu sur la capture, pas dans le code.
+        //
+        // ET LE PAS EST D'UN POINT, PAS DE DEUX. Un pas de deux sur cinq valeurs rouvrait le
+        // chevauchement ; un pas de deux sur trois valeurs le fermait mais effaçait la variété —
+        // les seize sorties sont espacées de six rangs par type, donc toutes les séances d'un
+        // même type tombaient sur le MÊME reste modulo 3, et l'endurance affichait trois fois
+        // 144. C'est le défaut « FC 148 seize fois » en miniature, et je l'ai vu en relisant le
+        // relevé plutôt qu'en relisant la formule.
+        return base + (graine % 5) - 2
     }
 
     private static func historique(maintenant: Date) -> [RunRecord] {

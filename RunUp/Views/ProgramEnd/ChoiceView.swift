@@ -54,7 +54,11 @@ struct ChoiceView: View {
 
                 Button(action: { showNewGoal = true }) {
                     HStack(spacing: 14) {
-                        Text("🎯").font(.system(size: 26))
+                        Image(systemName: "target")
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundColor(RUColor.rose2)
+                            .frame(width: 26)
+                            .accessibilityHidden(true)
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Se fixer un nouvel objectif").displayStyle(.subtitle).foregroundColor(RUColor.textPrimary)
                             Text("Une nouvelle course, progresser encore, perdre du poids…")

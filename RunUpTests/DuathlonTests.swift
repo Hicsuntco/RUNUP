@@ -210,7 +210,7 @@ final class DuathlonTests: XCTestCase {
     /// ajoutée à la va-vite qui rendrait la chaîne vide ou recopierait celle du triathlon.
     func testLeDuathlonARepondu() {
         let d = GoalType.duathlon
-        for (nom, valeur) in [("title", d.title), ("subtitle", d.subtitle), ("emoji", d.emoji),
+        for (nom, valeur) in [("title", d.title), ("subtitle", d.subtitle), ("symbole", d.symbole),
                               ("etapeEyebrow", d.etapeEyebrow), ("etapeTitre", d.etapeTitre),
                               ("etapePromesse", d.etapePromesse)] {
             XCTAssertFalse(valeur.isEmpty, "\(nom) est vide")
@@ -289,7 +289,7 @@ final class DuathlonTests: XCTestCase {
         switch nom {
         case "title": return objectif.title
         case "subtitle": return objectif.subtitle
-        case "emoji": return objectif.emoji
+        case "symbole": return objectif.symbole
         case "etapeEyebrow": return objectif.etapeEyebrow
         case "etapeTitre": return objectif.etapeTitre
         default: return objectif.etapePromesse

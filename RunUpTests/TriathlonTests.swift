@@ -244,7 +244,7 @@ final class TriathlonTests: XCTestCase {
         for objectif in GoalType.allCases {
             XCTAssertFalse(objectif.title.isEmpty, "\(objectif) n'a pas de titre")
             XCTAssertFalse(objectif.subtitle.isEmpty, "\(objectif) n'a pas de sous-titre")
-            XCTAssertFalse(objectif.emoji.isEmpty, "\(objectif) n'a pas d'emoji")
+            XCTAssertFalse(objectif.symbole.isEmpty, "\(objectif) n'a pas de symbole")
             XCTAssertGreaterThan(objectif.recoveryDays, 0, "\(objectif) : récup à zéro")
         }
     }

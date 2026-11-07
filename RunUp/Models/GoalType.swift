@@ -43,20 +43,6 @@ enum GoalType: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    var emoji: String {
-        switch self {
-        case .race: return "🏁"
-        case .progress: return "📈"
-        case .restart: return "🌱"
-        case .weight: return "🔥"
-        case .health: return "⚡"
-        case .hyrox: return "🏋️"
-        case .ultraTrail: return "⛰️"
-        case .triathlon: return "🏊"
-        case .duathlon: return "🚴"
-        }
-    }
-
     /// Cet objectif est-il proposable à l'inscription ?
     ///
     /// LE ROBINET D'UN OBJECTIF LIVRÉ EN PLUSIEURS MORCEAUX. L'ultra-trail est arrivé en cinq
@@ -430,15 +416,6 @@ enum RPE: Int, Codable, CaseIterable, Identifiable {
     case tropDur, dur, justeBien, facile
 
     var id: Int { rawValue }
-
-    var emoji: String {
-        switch self {
-        case .tropDur: return "😮‍💨"
-        case .dur: return "😤"
-        case .justeBien: return "🙂"
-        case .facile: return "😎"
-        }
-    }
 
     var label: String {
         switch self {

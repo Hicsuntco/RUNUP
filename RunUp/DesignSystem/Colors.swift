@@ -457,4 +457,43 @@ extension GoalType {
         case .triathlon: return RUColor.azure
         }
     }
+
+    /// Le symbole de l'objectif, pour la même raison que `SessionFamily.symbol` juste au-dessus :
+    /// une couleur seule ne suffit pas, et il faut une forme.
+    ///
+    /// # IL Y AVAIT UN EMOJI ICI, ET LE PREMIER ÉCRAN DE L'APP EN PORTAIT NEUF
+    ///
+    /// 🏁 📈 🌱 🔥 ⚡ 🏋️ ⛰️ 🏊 🚴, sur « POURQUOI TU COURS ? ». Un emoji n'est pas un élément
+    /// d'identité : il est dessiné par le système, il change de style à chaque version d'iOS, il
+    /// ne prend pas la teinte de l'objectif, et il ne ressemble à rien d'autre dans l'app — qui
+    /// n'utilise que des symboles SF partout ailleurs.
+    ///
+    /// Sept des neuf noms ci-dessous étaient DÉJÀ employés ailleurs dans le dépôt, donc déjà
+    /// éprouvés : « dumbbell.fill » est le symbole du renforcement, « mountain.2.fill » celui
+    /// d'une course de trail, « leaf.fill » celui de la récupération. Les faire se répondre d'un
+    /// écran à l'autre vaut mieux que d'en inventer neuf nouveaux.
+    ///
+    /// Deux changements de SENS, et non de dessin :
+    ///
+    ///   · la perte de poids portait 🔥, qui parle de dépense. Elle porte une BALANCE, qui est ce
+    ///     qu'on regarde. Le feu, lui, revient à la série en cours, où il veut dire ce qu'il dit.
+    ///   · « Rester en forme » portait ⚡, qui parle d'intensité — l'inverse de ce que cet
+    ///     objectif propose. Il porte un cœur.
+    ///
+    /// `ci_scripts/check_symboles.py` et `SymbolesTests` garantissent que chacun de ces noms
+    /// existe : un nom faux ne dessine rien, en silence, et c'est exactement le risque qu'on prend
+    /// en écrivant neuf noms d'un coup.
+    var symbole: String {
+        switch self {
+        case .race: return "flag.checkered"
+        case .progress: return "chart.line.uptrend.xyaxis"
+        case .restart: return "leaf.fill"
+        case .weight: return "scalemass"
+        case .health: return "heart.fill"
+        case .hyrox: return "dumbbell.fill"
+        case .duathlon: return "bicycle"
+        case .ultraTrail: return "mountain.2.fill"
+        case .triathlon: return "figure.pool.swim"
+        }
+    }
 }

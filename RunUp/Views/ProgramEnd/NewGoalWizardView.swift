@@ -118,7 +118,7 @@ struct NewGoalWizardView: View {
     private var goalStep: some View {
         VStack(spacing: 8) {
             ForEach(goals) { g in
-                SelectableCard(selected: goal == g, emoji: g.emoji, title: g.title, subtitle: nil) { goal = g }
+                SelectableCard(selected: goal == g, symbole: g.symbole, teinte: g.tint, title: g.title, subtitle: nil) { goal = g }
             }
             Button("CONTINUER") { step = aUneDeuxiemeEtape ? 1 : 2 }
                 .buttonStyle(PrimaryButtonStyle(isDisabled: goal == nil))
@@ -354,9 +354,16 @@ struct NewGoalWizardView: View {
                 // IMMÉDIATEMENT et n'anime que le rendu : `buildPct` valait donc 100 dès la
                 // première image, et la coche verte de fin s'affichait au centre d'un anneau qui
                 // commençait tout juste à se remplir. Deux secondes de contradiction à l'écran.
-                Text(buildFinished ? "✓" : "🎯")
-                    .font(.system(size: 26))
-                    .foregroundColor(buildFinished ? RUColor.lime : RUColor.textPrimary)
+                // La coche reste un signe typographique ; la cible était un emoji.
+                if buildFinished {
+                    Text(verbatim: "✓")
+                        .font(.system(size: 26))
+                        .foregroundColor(RUColor.lime)
+                } else {
+                    Image(systemName: "target")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundColor(RUColor.textPrimary)
+                }
             }
             Text("Ton nouveau\nprogramme arrive").displayStyle(.title).multilineTextAlignment(.center).foregroundColor(RUColor.textPrimary)
         }

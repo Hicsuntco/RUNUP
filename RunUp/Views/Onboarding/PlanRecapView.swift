@@ -36,11 +36,12 @@ struct PlanRecapView: View {
                 VStack(spacing: 18) {
                     VStack(spacing: 10) {
                         EyebrowLabel(text: "Ton plan", color: goal.tint)
-                        // L'emoji de l'objectif, en grand. C'est le même que celui de la carte
-                        // choisie à l'étape 2 : l'écran se referme sur l'image qu'on avait touchée
-                        // pour l'ouvrir.
-                        Text(goal.emoji)
-                            .font(.system(size: 46))
+                        // Le symbole de l'objectif, en grand, dans sa teinte. C'est le même que
+                        // celui de la carte choisie à l'étape 2 : l'écran se referme sur l'image
+                        // qu'on avait touchée pour l'ouvrir.
+                        Image(systemName: goal.symbole)
+                            .font(.system(size: 40, weight: .semibold))
+                            .foregroundColor(goal.tint)
                             .accessibilityHidden(true)
                         Text(goal.title)
                             .displayStyle(.figure)

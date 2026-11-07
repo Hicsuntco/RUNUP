@@ -342,7 +342,10 @@ struct RecapView: View {
 
     private func recordBanner(_ kind: RecordKind) -> some View {
         HStack(spacing: 10) {
-            Text("🏆").font(.system(size: 20))
+            Image(systemName: "trophy.fill")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(RUColor.amber)
+                .accessibilityHidden(true)
             Text(kind == .overall ? "Nouveau record personnel !" : "Meilleur temps sur ce parcours !")
                 .font(RUFont.sans(.label, weight: .bold))
                 .foregroundColor(RUColor.textPrimary)

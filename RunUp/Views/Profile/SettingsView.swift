@@ -519,7 +519,16 @@ private struct StravaConnectionRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 12) {
-                Text("🟠").font(.system(size: 17))
+                // UNE PASTILLE, PAS UN SYMBOLE — ET UN ORANGE ÉCRIT EN DUR, EXPRÈS.
+                //
+                // Le 🟠 n'était pas de la décoration : il identifiait Strava par sa couleur. Un
+                // symbole SF perdrait ce repère, et aucune teinte de notre palette ne convient —
+                // ce 0xFC4C02 est l'orange de Strava, pas le nôtre. Le poser dans `RUColor`
+                // laisserait croire qu'il nous appartient et qu'il peut suivre un thème.
+                Circle()
+                    .fill(Color(hex: 0xFC4C02))
+                    .frame(width: 14, height: 14)
+                    .accessibilityHidden(true)
                 Text(verbatim: "Strava").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
                 if !auth.isSignedIn {

@@ -13,7 +13,8 @@ struct GoalStepView: View {
                     ForEach(GoalType.allCases.filter(\.estProposable)) { goal in
                         SelectableCard(
                             selected: vm.goal == goal,
-                            emoji: goal.emoji,
+                            symbole: goal.symbole,
+                            teinte: goal.tint,
                             title: goal.title,
                             subtitle: goal.subtitle
                         ) {
@@ -32,7 +33,12 @@ struct GoalStepView: View {
 /// repeated across onboarding.jsx and screensD.jsx.
 struct SelectableCard: View {
     var selected: Bool
-    var emoji: String?
+    /// Un nom de symbole SF, jamais un emoji — voir `GoalType.symbole`. `nil` pour les cartes qui
+    /// n'ont rien à illustrer (le choix du niveau, par exemple).
+    var symbole: String?
+    /// La teinte du symbole. Par défaut l'accent : une carte sans objectif n'a pas de couleur
+    /// propre, et c'est l'appelant qui la connaît quand elle existe.
+    var teinte: Color = RUColor.rose2
     var title: String
     var subtitle: String?
     var action: () -> Void
@@ -40,8 +46,14 @@ struct SelectableCard: View {
     var body: some View {
         Button(action: action) {
             HStack(alignment: .center, spacing: 14) {
-                if let emoji {
-                    Text(emoji).font(.system(size: 24))
+                if let symbole {
+                    Image(systemName: symbole)
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(teinte)
+                        // La même largeur pour les neuf : un drapeau et une balance n'ont pas la
+                        // même empreinte, et sans cadre fixe les neuf titres ne s'alignent pas.
+                        .frame(width: 26)
+                        .accessibilityHidden(true)
                 }
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title).font(RUFont.sans(.emphasis, weight: .bold)).foregroundColor(RUColor.textPrimary)

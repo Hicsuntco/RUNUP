@@ -51,7 +51,7 @@ struct DebriefSheet: View {
         // RPE at the boundary, so a flat promise ("relevée d'un palier") from one single tap
         // could contradict what actually happens after two harder sessions the same week.
         let nextWeekLabel = String(localized: "Semaine prochaine : ")
-        let streakLine = ("🔥", String(localized: "Série en cours : "), String(localized: "jour \(nextStreak)"))
+        let streakLine = ("flame.fill", String(localized: "Série en cours : "), String(localized: "jour \(nextStreak)"))
         // Sans abonnement il n'y a pas de programme à ajuster : promettre que la semaine
         // prochaine sera relevée ou allégée serait une promesse sur quelque chose d'invisible et
         // d'inexistant. Le ressenti reste demandé — il est enregistré avec la course et servira le
@@ -59,11 +59,11 @@ struct DebriefSheet: View {
         guard planUnlocked else { return [streakLine] }
         switch rpe {
         case .facile, .justeBien:
-            return [("📈", nextWeekLabel, String(localized: "compte pour relever l'intensité")), streakLine]
+            return [("arrow.up.right", nextWeekLabel, String(localized: "compte pour relever l'intensité")), streakLine]
         case .dur:
-            return [("👍", nextWeekLabel, String(localized: "compte pour garder ce niveau")), streakLine]
+            return [("equal", nextWeekLabel, String(localized: "compte pour garder ce niveau")), streakLine]
         case .tropDur:
-            return [("🧘", nextWeekLabel, String(localized: "compte pour alléger la charge")), streakLine]
+            return [("arrow.down.right", nextWeekLabel, String(localized: "compte pour alléger la charge")), streakLine]
         }
     }
 
@@ -106,10 +106,21 @@ struct DebriefSheet: View {
                 HStack(spacing: 6) {
                     ForEach(RPE.allCases) { opt in
                         Button(action: { rpe = opt }) {
-                            VStack(spacing: 6) {
-                                Text(opt.emoji).font(.system(size: 22))
-                                Text(opt.label).font(RUFont.sans(.micro, weight: .semibold)).foregroundColor(rpe == opt ? RUColor.rose2 : RUColor.text2)
-                            }
+                            // LE LIBELLÉ DIT DÉJÀ TOUT, ET LE VISAGE DISAIT MOINS.
+                            //
+                            // Les quatre choix portaient 😮‍💨 😤 🙂 😎 au-dessus de « Trop dur »,
+                            // « Dur », « Juste bien », « Facile ». Un visage ne dit rien de plus
+                            // que le mot qu'il surmonte, et il dit moins bien : il n'est pas
+                            // ordonné. L'échelle, elle, est ordonnée — et elle l'est déjà par la
+                            // position des quatre boutons, de gauche à droite.
+                            //
+                            // Le mot reprend donc la place, dans la taille que le visage occupait.
+                            Text(opt.label)
+                                .font(RUFont.sans(.label, weight: .semibold))
+                                .foregroundColor(rpe == opt ? RUColor.rose2 : RUColor.text2)
+                                .multilineTextAlignment(.center)
+                                .lineLimit(2)
+                                .minimumScaleFactor(0.8)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                             .background(rpe == opt ? RUColor.card2 : RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
@@ -128,7 +139,16 @@ struct DebriefSheet: View {
                                        title: planUnlocked ? "Impact sur ton programme" : "Ce que ça change")
                     ForEach(impactLines.indices, id: \.self) { i in
                         HStack(spacing: 12) {
-                            Text(impactLines[i].0).font(.system(size: 18))
+                            // Un symbole, plus un emoji : 📈 👍 🧘 sont devenus une flèche qui
+                            // monte, un signe égal et une flèche qui descend. Les trois états de
+                            // l'intensité de la semaine prochaine sont ORDONNÉS, et les trois
+                            // emojis ne l'étaient pas — un bonhomme en lotus ne se compare pas à
+                            // un pouce levé.
+                            Image(systemName: impactLines[i].0)
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(i == 0 ? RUColor.cyan : RUColor.ember)
+                                .frame(width: 20)
+                                .accessibilityHidden(true)
                             (Text(impactLines[i].1).foregroundColor(RUColor.text2)
                                 + Text(impactLines[i].2).foregroundColor(i == 0 ? RUColor.textPrimary : RUColor.cyan).fontWeight(.bold))
                                 .font(RUFont.sans(.label))

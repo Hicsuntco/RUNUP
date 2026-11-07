@@ -16,7 +16,13 @@ struct RecoveryView: View {
                 }
 
                 VStack(spacing: 12) {
-                    Text("🌿").font(.system(size: 34))
+                    // La feuille des pastilles vertes juste en dessous, et le même symbole que
+                    // la famille « récupération » du plan : la récupération se dit d'une seule
+                    // façon dans toute l'app.
+                    Image(systemName: "leaf.fill")
+                        .font(.system(size: 30, weight: .medium))
+                        .foregroundColor(RUColor.lime)
+                        .accessibilityHidden(true)
                     Text("Place à la récupération").displayStyle(.title).foregroundColor(RUColor.textPrimary)
                     Text("Ton corps a fait le plus dur. On souffle \(total) jours avant de repartir — c'est ce qui fait tenir les progrès dans la durée.")
                         .font(RUFont.sans(.label)).foregroundColor(RUColor.text2).multilineTextAlignment(.center).lineSpacing(3)

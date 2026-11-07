@@ -50,6 +50,78 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 Le 14 est arrivé après coup, et je le ferais passer devant les finitions de design : c'est le seul
 moyen de savoir ce qui casse chez quelqu'un d'autre que nous. Le reste de l'ordre tient.
 
+## Chantier 4 — les finitions de design (émojis faits)
+
+### Ce que l'audit avait mal compté
+
+L'audit disait « 2 émojis UI ». Il y en avait **57**, et « 2 dégradés » là où il y en a une
+trentaine dont quatre violets. L'audit avait compté ce qui se voyait sur dix-huit captures, pas ce
+qui est dans le code. La coche `✓` n'entre pas dans le compte : c'est un signe typographique, pas
+un emoji, et le widget s'en sert exprès.
+
+### Les deux moitiés du travail
+
+**Trente-cinq occurrences** étaient des émojis posés dans une phrase : aucune décision à prendre,
+juste à retirer. Un emoji qui tenait lieu de ponctuation rend le signe qu'il remplaçait. Vingt-huit
+clés du catalogue renommées, anglais et espagnol nettoyés de la même façon.
+
+**Vingt-deux** étaient des émojis utilisés comme **icône** — un glyphe seul, donc un remplaçant à
+trouver. Les neuf objectifs de l'inscription, les quatre visages du ressenti, trois pictogrammes de
+la fiche de débriefing, la série, la coupe, deux cibles, une feuille et la pastille Strava.
+
+### Ce qui a été décidé, écran par écran
+
+Sept des neuf symboles d'objectif étaient **déjà employés ailleurs dans le dépôt** — donc déjà
+éprouvés : `dumbbell.fill` est le symbole du renforcement, `mountain.2.fill` celui d'une course de
+trail, `leaf.fill` celui de la récupération. Les faire se répondre d'un écran à l'autre vaut mieux
+que d'en inventer neuf nouveaux. Chaque symbole prend la **teinte de son objectif**, qui existait
+déjà dans le système de design et que l'emoji ne pouvait pas porter.
+
+Deux changements de **sens**, pas de dessin :
+
+- la perte de poids portait 🔥, qui parle de dépense. Elle porte une **balance**, qui est ce qu'on
+  regarde. Le feu revient à la série en cours, où il veut dire ce qu'il dit.
+- « Rester en forme » portait ⚡, qui parle d'intensité — l'inverse de ce que cet objectif propose.
+  Il porte un **cœur**.
+
+Le **ressenti** perd ses quatre visages et garde ses quatre mots. Un visage ne dit rien de plus que
+le mot qu'il surmonte, et il dit moins bien : il n'est pas ordonné. L'échelle l'est déjà, par la
+position des boutons.
+
+La carte « semaine prochaine » passe de 📈 👍 🧘 à une **flèche qui monte, un signe égal, une
+flèche qui descend**. Les trois états sont ordonnés ; un bonhomme en lotus ne se compare pas à un
+pouce levé.
+
+La **pastille Strava** reste une pastille, dans l'orange de Strava écrit en dur. Le 🟠 n'était pas
+de la décoration : il identifiait la marque par sa couleur. Aucune teinte de notre palette ne
+convient, et poser `0xFC4C02` dans `RUColor` laisserait croire qu'il nous appartient.
+
+### La barrière posée avant le remplacement
+
+Un nom de symbole SF faux **ne dessine rien** : pas d'erreur, pas de journal, un cadre vide de la
+bonne taille. Écrire neuf noms d'un coup sur le premier écran de l'app, c'était neuf occasions
+d'expédier une icône invisible.
+
+`RunUpTests/SymbolesTests.swift` demande donc à `UIImage(systemName:)` de résoudre chaque nom — la
+seule façon de poser la question, le catalogue appartenant au système. `check_symboles.py` est le
+pont qui garantit que la liste éprouvée est exactement celle que le code emploie.
+
+**En l'écrivant, elle a trouvé que 33 noms déjà en production n'avaient jamais été éprouvés** :
+les sept familles de séance, la main qui n'applaudit pas encore dans un ternaire, et
+`lock.rectangle` / `lock.slash` que j'avais écrits moi-même au chantier 2 deux heures plus tôt. Mon
+premier jet d'extraction les manquait tous — il ne lisait que le littéral collé à `systemName:`.
+La lecture est maintenant pilotée par le site d'appel, avec deux précautions contre la collision de
+noms entre fichiers : la même erreur que dans mon inventaire d'émojis, qui annonçait 21 défauts
+dont 17 appartenaient à l'écran d'à côté.
+
+102 noms, zéro émoji restant dans l'interface, et c'est le simulateur qui valide chaque nom à
+chaque construction.
+
+### Ce qui reste du chantier 4
+
+Les dégradés violets, le vert isolé du profil d'élévation, les boutons gris en capitales
+(ABONNÉ / MODIFIER / RETIRER), le segment blanc sur blanc, le contraste de la bulle du coach.
+
 ## Chantier 3 — les délégués CoreLocation
 
 ### Ce qui était faux

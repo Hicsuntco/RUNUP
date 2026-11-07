@@ -5,8 +5,8 @@
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
     "@vercel/blob": "^2.6.1",
-    "bcryptjs": "^3.0.3",
-    "jose": "^6.2.15"
+    "bcryptjs": "^2.4.3",
+    "jose": "^5.9.6"
   },
   "scripts": {
     "test": "node ci_scripts/verifier_syntaxe.js && node --test tests/*.test.js",

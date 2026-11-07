@@ -155,7 +155,7 @@ struct SettingsView: View {
                         .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                 }
                 Spacer()
-                Text("›").foregroundColor(RUColor.text2)
+                Image(systemName: "chevron.right").font(RUFont.icone(.small, weight: .semibold)).foregroundColor(RUColor.text2)
             }
             .padding(.horizontal, 14).padding(.vertical, 14)
             .frame(minHeight: 44)
@@ -170,7 +170,7 @@ struct SettingsView: View {
             HStack {
                 Text("Plus de réglages").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
-                Text("›").foregroundColor(RUColor.text2)
+                Image(systemName: "chevron.right").font(RUFont.icone(.small, weight: .semibold)).foregroundColor(RUColor.text2)
             }
             .padding(.horizontal, 14).padding(.vertical, 14)
             // Sans forme de contact, la ligne n'est touchable que sur ses deux textes : le vide

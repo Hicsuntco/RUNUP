@@ -107,8 +107,17 @@ struct BackChevronButton: View {
 
     var body: some View {
         Button(action: action) {
-            Text("‹")
-                .font(.system(size: 22))
+            // LE SYMBOLE, ET PLUS LE CARACTÈRE. Ces deux boutons dessinaient « ‹ », un signe
+            // typographique, là où les cinq autres retours de l'app — le mur, le profil public,
+            // le social, le détail d'activité, la page de course — emploient `chevron.left`.
+            // Décision du 7 novembre : `chevron.left` partout.
+            //
+            // 15 points plutôt que les 13 des cinq autres : ceux-là sont suivis d'un mot et
+            // prennent leur rang dans une ligne de texte ; celui-ci est SEUL dans un cadre de
+            // 30 points, et à 13 il s'y perdrait. C'est aussi la hauteur que dessinait le « ‹ »
+            // de 22 points qu'il remplace.
+            Image(systemName: "chevron.left")
+                .font(RUFont.icone(.medium, weight: .semibold))
                 .foregroundColor(RUColor.text2)
                 .frame(width: 30, height: 30)
                 .frame(width: 44, height: 44)
@@ -126,8 +135,10 @@ struct FrostedBackButton: View {
 
     var body: some View {
         Button(action: action) {
-            Text("‹")
-                .font(.system(size: 20))
+            // Même cran que `BackChevronButton` : les deux retours autonomes de l'app se
+            // dessinent pareil, qu'ils soient posés sur une carte ou sur une photo.
+            Image(systemName: "chevron.left")
+                .font(RUFont.icone(.medium, weight: .semibold))
                 .foregroundColor(.white)
                 .frame(width: 34, height: 34)
                 .background(.black.opacity(0.45), in: Circle())

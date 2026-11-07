@@ -21,7 +21,7 @@ n'apparaît, l'avant/après est écrit ici, et les trois langues ont été véri
 | Contenu des séances HYROX | Il faut quelqu'un qui a couru un HYROX. L'équipe n'a pas cette compétence et ne doit pas l'inventer. |
 | Cette branche doit-elle être la production ? | Elle l'est : douze déploiements « Production » le 7 novembre, un par commit. Donc aucune relecture, aucune préproduction, et une panne de onze minutes ce jour-là. |
 | La version de Node du projet Vercel | Elle ne se lit que dans les paramètres du projet, et c'est la seule chose qui manque pour reprendre le chantier 11. Un `require` d'un paquet ESM en dépend, et une construction verte n'en dit rien. |
-| Le chevron « ‹ » des deux boutons de retour | `BackChevronButton` et `FrostedBackButton` dessinent un signe typographique à taille figée là où le reste de l'app emploie `chevron.left`. C'est un choix de dessin, pas un défaut : à trancher. |
+
 
 ## Au passage
 
@@ -74,6 +74,12 @@ pas d'étape de préproduction, et il n'y a pas de relecture. À décider : est-
 **La porte de sortie est écrite : [RELEASE.md](RELEASE.md).** Ce que les quatre chaînes
 garantissent et ce qu'elles ne garantissent pas, les quatre questions qu'aucune machine ne pose,
 les commandes à lancer dans l'ordre, et la liste honnête de ce qui n'est tenu par aucune barrière.
+
+**Les chevrons sont des symboles, décision du 7 novembre.** Les deux boutons de retour
+dessinaient le caractère « ‹ » là où cinq autres retours de l'app emploient déjà `chevron.left` ;
+six indicateurs de ligne dessinaient « › » dans des fichiers qui, deux lignes plus loin,
+employaient `chevron.right`. Huit caractères typographiques remplacés par les deux symboles, aux
+crans de l'échelle d'icônes. Il ne reste aucun `Text("›")` ni `Text("‹")` dans l'app.
 
 ## Les chantiers de l'audit
 

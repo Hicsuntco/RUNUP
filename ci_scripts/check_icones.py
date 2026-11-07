@@ -13,7 +13,7 @@ texte courant. Les icônes étaient la troisième famille, et la dernière à ne
 
 # CE QUI EST REGARDÉ
 
-Tout appel à `.font(.system(size:` dans `RunUp/Views`. Le compilateur ne peut pas l'interdire :
+Tout appel à `.font(.system(size:` dans `RunUp/Views`. Il en reste DEUX, et ce sont des glyphes : les deux chevrons « ‹ » des boutons de retour ont rejoint `chevron.left` le 7 novembre, sur décision de Charlotte. Le compilateur ne peut pas l'interdire :
 c'est une API de SwiftUI, pas une des nôtres. Ce contrôle fixe donc la liste des exceptions,
 fichier par fichier, avec son compte et sa raison — en ajouter une demande de modifier CE
 fichier, c'est-à-dire d'écrire pourquoi cet appel-là ne peut pas tenir sur les sept crans.
@@ -33,9 +33,6 @@ MOTIF = re.compile(r"\.font\(\s*\.system\(size:")
 
 # fichier → (nombre d'appels attendu, la raison)
 AUTORISE = {
-    "RunUp/Views/Components/HeaderView.swift":
-        (2, "les deux chevrons « ‹ » des boutons de retour : un signe typographique dans un "
-            "cadre, pas une icône"),
     "RunUp/Views/Home/Sheets/NotificationsSheet.swift":
         (1, "le repli qui affiche l'emoji d'une notification déjà enregistrée en base"),
     "RunUp/Views/ProgramEnd/NewGoalWizardView.swift":

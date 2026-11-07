@@ -207,7 +207,7 @@ struct MoreSettingsView: View {
                 rowIcon(icon)
                 Text(label).font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
                 Spacer()
-                Text("›").foregroundColor(RUColor.text2)
+                Image(systemName: "chevron.right").font(RUFont.icone(.small, weight: .semibold)).foregroundColor(RUColor.text2)
             }
             .padding(.horizontal, 14).padding(.vertical, 14)
             // Même défaut que la ligne qui mène ici : seuls l'icône, le libellé et le chevron
@@ -689,7 +689,7 @@ struct MoreSettingsView: View {
                             .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                     }
                     Spacer()
-                    Text("›").foregroundColor(RUColor.text2)
+                    Image(systemName: "chevron.right").font(RUFont.icone(.small, weight: .semibold)).foregroundColor(RUColor.text2)
                 }
                 .padding(.horizontal, 14).padding(.vertical, 14)
                 .frame(minHeight: 44)

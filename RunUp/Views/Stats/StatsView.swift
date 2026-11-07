@@ -65,7 +65,7 @@ struct StatsView: View {
                     Button(action: { appState.go(.history) }) {
                         HStack(spacing: 6) {
                             Text("Historique").font(RUFont.sans(.small, weight: .semibold))
-                            Text("›")
+                            Image(systemName: "chevron.right").font(RUFont.icone(.small, weight: .semibold))
                         }
                         .foregroundColor(RUColor.text2)
                         .padding(.horizontal, 12).padding(.vertical, 8)
@@ -416,7 +416,11 @@ struct StatsView: View {
                 RUCardHeader(icon: "calendar",
                              title: "Cette semaine",
                              subtitle: "Face à la semaine passée") {
-                    Text("›").font(RUFont.sans(.emphasis, weight: .bold)).foregroundColor(RUColor.text3)
+                    // Le chevron ne se prononce pas : il dit « ça s'ouvre », ce que le trait
+                    // de bouton annonce déjà.
+                    Image(systemName: "chevron.right")
+                        .font(RUFont.icone(.body, weight: .semibold)).foregroundColor(RUColor.text3)
+                        .accessibilityHidden(true)
                 }
                 WeekKmSummary(
                     doneKm: thisWeekKm,
@@ -433,6 +437,15 @@ struct StatsView: View {
             .ruCard()
         }
         .buttonStyle(PressableStyle())
+        // UNE SEULE ANNONCE, ET ELLE GARDE TOUT. La carte porte un titre, un sous-titre, des
+        // kilomètres et une note : sans ça, VoiceOver les énumère en quatre éléments dont aucun
+        // ne dit que c'est un bouton. `.combine` les fusionne et le trait de bouton reste.
+        //
+        // Posé en remplaçant le « › » typographique par `chevron.right` : le libellé du bouton
+        // n'a plus contenu aucun `Text`, et `check_a11y.py` l'a signalé comme une commande à
+        // icône sans nom. Il avait raison de poser la question, et la bonne réponse n'était pas
+        // un libellé qui aurait effacé les chiffres.
+        .accessibilityElement(children: .combine)
     }
 
     // MARK: Pace trend — was a fixed "VO2max 52.4" that never actually moved

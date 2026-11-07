@@ -157,6 +157,31 @@ l'échappement des guillemets il échoue en nommant les deux symptômes.
 Le reste ne se juge pas tout seul : les huit images partent dans l'artefact, et quelqu'un les
 ouvre.
 
+## La démonstration parlait français sur la fiche espagnole
+
+Vu sur la capture n° 4 de la fiche App Store espagnole : sous un écran entièrement en espagnol —
+« El Club », « Resumen · Clasificación · Actividad », « 18 miembros », « hace 3 h » — la
+description du club s'affiche en français, en toutes lettres et sur trois lignes.
+
+Le mécanisme existait déjà et était documenté : `echange()` et `commentaire()` choisissent la
+langue à la main, avec la bonne raison — « c'est du texte libre, que rien dans l'app ne sait
+retraduire ». Le reste du fil se refabrique à partir de `contentKey` (« a couru 6,0 km ·
+Fractionné » devient « ran 6.0 km · VO2max intervals » tout seul), et c'est précisément ce qui
+donnait l'impression que tout était traduit.
+
+**Onze autres phrases ne passaient par rien** : la description du club, la bio de Charlotte, les
+deux titres de séance hebdomadaire, les deux groupes d'allure de la séance de piste, les trois
+annonces du mur et les trois messages de la page de course. Toutes passent maintenant par un
+passeur unique, `libre(_:en:es:)`, plutôt que par onze `switch` recopiés.
+
+Les noms propres n'y passent pas : « Les Foulées du Canal », « Bassin de la Villette », « Stade
+Jules-Ladoumègue » et les prénoms restent ce qu'ils sont — un club parisien reste un club
+parisien, et c'est une décision, pas un oubli.
+
+Et les deux titres de séance sont désormais nommés **une seule fois** : ils paraissent aux
+séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
+auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
+
 ## Chantier 12 — l'app en grand texte, enfin photographiée
 
 Commencé par la mesure, et la mesure a corrigé l'item de l'audit.

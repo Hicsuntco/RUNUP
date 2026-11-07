@@ -284,14 +284,22 @@ enum CaptureSeed {
             return formateur.string(from: pose)
         }
 
+        // LES GROUPES D'ALLURE DE LA SÉANCE DE PISTE SONT DU TEXTE, ET ILS SONT AUSSI DES CLÉS.
+        //
+        // « VMA courte » et « VMA longue » nomment deux groupes et servent en même temps de clés
+        // dans `paceCounts` : les traduire demande de le faire aux deux endroits à la fois, d'où
+        // ces deux variables plutôt que quatre appels qui pourraient diverger.
+        let vmaCourte = libre("VMA courte", en: "Short intervals", es: "Series cortas")
+        let vmaLongue = libre("VMA longue", en: "Long intervals", es: "Series largas")
+
         let tableau = """
         {
           "club": { "id": "demo", "name": "Les Foulées du Canal", "memberCount": 18,
                     "isOpen": true, "isOwner": false, "city": "Paris 19e",
-                    "description": "On se retrouve au bassin de la Villette les mardis et les dimanches. Tous les rythmes, du premier 5 km au marathon." },
+                    "description": "\(libre("On se retrouve au bassin de la Villette les mardis et les dimanches. Tous les rythmes, du premier 5 km au marathon.", en: "We meet at the Bassin de la Villette on Tuesdays and Sundays. Every pace welcome, from a first 5K to a marathon.", es: "Nos vemos en el Bassin de la Villette los martes y los domingos. Todos los ritmos, desde el primer 5K hasta el maratón."))" },
           "leaderboard": [
             { "id": "1", "name": "Charlotte", "lastName": "Perret", "xp": 4180, "rank": 1, "isMe": true,
-              "bio": "Je cours le matin, avant que la ville se réveille.", "joinedAt": "\(ilYAJours(214))",
+              "bio": "\(libre("Je cours le matin, avant que la ville se réveille.", en: "I run in the morning, before the city wakes up.", es: "Corro por la mañana, antes de que la ciudad se despierte."))", "joinedAt": "\(ilYAJours(214))",
               "activitiesCount": 16, "badgeKeys": ["firstRun", "tenRuns", "streak7", "distance50"] },
             { "id": "2", "name": "Inès", "lastName": "Lambert", "xp": 3940, "rank": 2, "isMe": false, "role": "owner",
               "joinedAt": "\(ilYAJours(301))", "activitiesCount": 14,
@@ -323,14 +331,14 @@ enum CaptureSeed {
             "targetKm": 300, "progressKm": 212.5, "endDate": "\(dansDesJours(6))"
           },
           "events": [
-            { "id": "e1", "title": "Sortie longue au canal", "location": "Bassin de la Villette",
+            { "id": "e1", "title": "\(titreSortieLongue)", "location": "Bassin de la Villette",
               "startsAt": "\(dans(1, a: 9, 30))", "going": 9, "goingByMe": true, "isMine": false,
               "repeatsWeekly": true, "paceGroups": ["4:30", "5:15", "6:00"],
               "myPaceGroup": "5:15", "paceCounts": { "4:30": 2, "5:15": 4, "6:00": 3 } },
-            { "id": "e2", "title": "Fractionné sur piste", "location": "Stade Jules-Ladoumègue",
+            { "id": "e2", "title": "\(titreFractionnePiste)", "location": "Stade Jules-Ladoumègue",
               "startsAt": "\(dans(4, a: 19))", "going": 2, "goingByMe": false, "isMine": false,
-              "repeatsWeekly": true, "paceGroups": ["VMA courte", "VMA longue"],
-              "paceCounts": { "VMA courte": 1, "VMA longue": 1 } }
+              "repeatsWeekly": true, "paceGroups": ["\(vmaCourte)", "\(vmaLongue)"],
+              "paceCounts": { "\(vmaCourte)": 1, "\(vmaLongue)": 1 } }
           ]
         }
         """
@@ -466,7 +474,7 @@ enum CaptureSeed {
                 {
                   "id": "p1", "raceId": "demo-course", "raceName": "Marathon de Paris",
                   "raceDate": "2027-04-04", "discipline": "run", "kind": "partner",
-                  "text": "Je vise 3h30, sorties longues le dimanche matin au bois. Quelqu'un sur ce rythme ?",
+                  "text": "\(libre("Je vise 3h30, sorties longues le dimanche matin au bois. Quelqu'un sur ce rythme ?", en: "Aiming for 3:30, long runs on Sunday mornings in the woods. Anyone on that pace?", es: "Voy a por 3h30, tiradas largas los domingos por la mañana en el bosque. ¿Alguien a ese ritmo?"))",
                   "closed": false, "kudos": 4, "kudoedByMe": true, "createdAt": "\(ilYA(5))",
                   "author": { "id": "3", "name": "Margaux", "lastName": "Hubert", "isPrivate": false }
                 }
@@ -513,12 +521,12 @@ enum CaptureSeed {
                   "createdAt": "\(ilYA(5))",
                   "author": { "id": "3", "name": "Margaux", "lastName": "Hubert", "isPrivate": false } },
                 { "id": "m2", "kind": "bib_offer",
-                  "text": "Je cède mon dossard, blessure au genou. Distance marathon.",
+                  "text": "\(libre("Je cède mon dossard, blessure au genou. Distance marathon.", en: "Transferring my bib, knee injury. Marathon distance.", es: "Cedo mi dorsal, lesión de rodilla. Distancia maratón."))",
                   "closed": false, "isMine": false, "kudos": 1, "kudoedByMe": false,
                   "createdAt": "\(ilYA(26))",
                   "author": { "id": "5", "name": "Lina", "lastName": "Diallo", "isPrivate": false } },
                 { "id": "m3", "kind": "message",
-                  "text": "Le ravito du 30e est à droite, pas à gauche comme l'an dernier.",
+                  "text": "\(libre("Le ravito du 30e est à droite, pas à gauche comme l'an dernier.", en: "The aid station at 30K is on the right, not the left like last year.", es: "El avituallamiento del km 30 está a la derecha, no a la izquierda como el año pasado."))",
                   "closed": false, "isMine": false, "kudos": 11, "kudoedByMe": false,
                   "createdAt": "\(ilYA(52))",
                   "author": { "id": "2", "name": "Inès", "lastName": "Lambert", "isPrivate": false } }
@@ -578,6 +586,10 @@ enum CaptureSeed {
             // Les records pointent vers de VRAIES sorties du fil de démonstration : chacun
             // s'ouvre, et atterrit sur la sortie déroulée. Un record qui mène à une page vide
             // serait pire que pas de record du tout.
+            // LES MÊMES DEUX TITRES QUE LES SÉANCES À VENIR : l'historique du club rejoue les
+            // rendez-vous hebdomadaires, donc il les nomme pareil.
+            let sortieLongue = titreSortieLongue
+            let fractionnePiste = titreFractionnePiste
             let pepites = """
             {
               "races": [
@@ -616,9 +628,9 @@ enum CaptureSeed {
               "sessionHistory": {
                 "total": 41, "averageAttendees": 17,
                 "recent": [
-                  { "title": "Sortie longue au canal", "heldAt": "\(ilYAJours(6))", "attendees": 28 },
-                  { "title": "Fractionné sur piste", "heldAt": "\(ilYAJours(9))", "attendees": 14 },
-                  { "title": "Sortie longue au canal", "heldAt": "\(ilYAJours(13))", "attendees": 22 }
+                  { "title": "\(sortieLongue)", "heldAt": "\(ilYAJours(6))", "attendees": 28 },
+                  { "title": "\(fractionnePiste)", "heldAt": "\(ilYAJours(9))", "attendees": 14 },
+                  { "title": "\(sortieLongue)", "heldAt": "\(ilYAJours(13))", "attendees": 22 }
                 ]
               }
             }
@@ -632,15 +644,15 @@ enum CaptureSeed {
             {
               "posts": [
                 { "id": "mc1", "parentId": null,
-                  "text": "La berge est fermée jusqu'au 12 entre les deux ponts. On passe par la rue de Crimée en attendant.",
+                  "text": "\(libre("La berge est fermée jusqu'au 12 entre les deux ponts. On passe par la rue de Crimée en attendant.", en: "The towpath is closed until the 12th between the two bridges. We go via rue de Crimée in the meantime.", es: "El paseo del canal está cerrado hasta el día 12 entre los dos puentes. Mientras tanto pasamos por la rue de Crimée."))",
                   "createdAt": "\(ilYA(6))", "kudos": 5, "kudoedByMe": false, "isMine": false,
                   "author": { "id": "3", "name": "Margaux", "lastName": "Hubert", "isPrivate": false } },
                 { "id": "mc2", "parentId": "mc1",
-                  "text": "Merci, j'allais y aller ce soir !",
+                  "text": "\(libre("Merci, j'allais y aller ce soir !", en: "Thanks, I was heading there tonight!", es: "¡Gracias, iba a ir esta noche!"))",
                   "createdAt": "\(ilYA(5))", "kudos": 1, "kudoedByMe": true, "isMine": false,
                   "author": { "id": "4", "name": "Sarah", "lastName": "Benali", "isPrivate": false } },
                 { "id": "mc3", "parentId": null,
-                  "text": "Bienvenue à Lina qui nous rejoint cette semaine",
+                  "text": "\(libre("Bienvenue à Lina qui nous rejoint cette semaine", en: "Welcome to Lina, who joins us this week", es: "Bienvenida a Lina, que se une esta semana"))",
                   "createdAt": "\(ilYA(30))", "kudos": 9, "kudoedByMe": true, "isMine": false,
                   "author": { "id": "2", "name": "Inès", "lastName": "Lambert", "isPrivate": false } }
               ]
@@ -727,10 +739,44 @@ enum CaptureSeed {
     /// Et ça s'est vu : la série anglaise affichait « Belle allure sur la fin ! » sous une
     /// carte par ailleurs entièrement traduite.
     private static func commentaire() -> String {
+        libre("Belle allure sur la fin !",
+              en: "Great pace on the last stretch!",
+              es: "¡Qué ritmo en el tramo final!")
+    }
+
+    /// LES DEUX RENDEZ-VOUS HEBDOMADAIRES DU CLUB, NOMMÉS UNE SEULE FOIS.
+    ///
+    /// Ils paraissent à deux endroits — les séances à venir et l'historique des séances — et
+    /// c'est le même rendez-vous : deux copies finiraient par diverger, et le club annoncerait
+    /// une sortie qu'il n'a jamais tenue.
+    private static var titreSortieLongue: String {
+        libre("Sortie longue au canal", en: "Long run along the canal", es: "Tirada larga por el canal")
+    }
+
+    private static var titreFractionnePiste: String {
+        libre("Fractionné sur piste", en: "Track intervals", es: "Series en pista")
+    }
+
+    /// LE TEXTE LIBRE DE LA DÉMONSTRATION, DANS LA LANGUE DE LA CAPTURE.
+    ///
+    /// Trois phrases passaient déjà par un `switch` écrit à la main — la question au coach, sa
+    /// réponse, un commentaire du fil — avec la bonne raison : rien dans l'app ne sait
+    /// retraduire une phrase écrite par quelqu'un. Le reste du fil se refabrique tout seul à
+    /// partir de `contentKey`, et c'est pour ça qu'il paraissait traduit.
+    ///
+    /// ONZE AUTRES NE PASSAIENT PAR RIEN, et ça se voit sur la capture espagnole de la fiche
+    /// App Store : sous un écran par ailleurs entièrement en espagnol, la description du club
+    /// s'affiche en français. La règle est la même pour toutes ; ce passeur évite d'écrire le
+    /// même `switch` onze fois.
+    ///
+    /// Les noms propres n'y passent pas : « Les Foulées du Canal », « Bassin de la Villette »,
+    /// « Stade Jules-Ladoumègue » et les prénoms restent ce qu'ils sont dans les trois langues —
+    /// un club parisien reste un club parisien.
+    private static func libre(_ fr: String, en: String, es: String) -> String {
         switch Locale.current.language.languageCode?.identifier {
-        case "en": return "Great pace on the last stretch!"
-        case "es": return "¡Qué ritmo en el tramo final!"
-        default: return "Belle allure sur la fin !"
+        case "en": return en
+        case "es": return es
+        default: return fr
         }
     }
 

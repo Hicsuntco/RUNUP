@@ -19,6 +19,27 @@
 
   Les polices de l'app n'existent pas ici : la pile système suffit, et elle se charge
   instantanément — ce qui compte davantage sur une page ouverte depuis une story en 4G.
+
+  ─── TROIS DÉFAUTS CORRIGÉS LE 7 NOVEMBRE 2026, ET AUCUN NE SE VOYAIT SANS REGARDER LA PAGE ───
+
+  1. LE BOUTON NE MENAIT NULLE PART. « Rejoindre sur RUNUP » pointait sur la page elle-même
+     (`location.href`). Sur un iPhone où l'app est installée, iOS ouvre le lien dans l'app avant
+     que la page ne s'affiche — donc personne de ce côté-là ne voyait le bouton. Pour TOUS LES
+     AUTRES, c'est-à-dire exactement le public de cette page, le bouton rechargeait la page. Il
+     mène maintenant à l'App Store.
+  2. L'ÉTAT D'ERREUR ÉTAIT UN CUL-DE-SAC. Une phrase grise sur fond noir, sans marque, sans
+     issue. Un lien mort dans une bio renvoyait sur une page qui n'appartenait visiblement à
+     rien. Elle porte maintenant la marque et le même bouton.
+  3. LA PAGE N'EXISTAIT QU'EN FRANÇAIS, alors que l'app est livrée en trois langues. Les textes
+     suivent maintenant la langue du navigateur, et reprennent mot pour mot ceux du catalogue de
+     l'app (« %lld au départ » → « %lld going » / « %lld en la salida »).
+
+  Et `echappe` n'échappait pas les guillemets. Dans le CONTENU d'un élément, c'est sans
+  conséquence ; dans un ATTRIBUT — `src` de la couverture — une valeur contenant un guillemet
+  droit sort de l'attribut et en ouvre un autre, `onerror` par exemple. Aucune valeur ne peut en
+  contenir aujourd'hui (le serveur n'y écrit que des URL de stockage qu'il fabrique lui-même),
+  donc rien n'était exploitable ; il suffisait d'une route qui accepte une URL donnée par le
+  client pour que ça le devienne.
 -->
 <style>
   :root {
@@ -30,6 +51,7 @@
     --text3: #72727E;
     --rose: #F50D7A;
     --rose2: #FF4D9D;
+    --violet: #7053E6;
   }
   * { box-sizing: border-box; }
   body {
@@ -41,6 +63,11 @@
     -webkit-font-smoothing: antialiased;
   }
   .page { max-width: 560px; margin: 0 auto; padding: 0 20px 64px; }
+  /* L'en-tête est dans le HTML et non dans le script : il doit être là pendant le chargement,
+     et rester là quand le club est introuvable. Une page qui n'appartient à rien ne donne envie
+     de rien. */
+  .entete { display: flex; align-items: center; gap: 10px; padding: 18px 0 2px; }
+  .entete .mot { font-weight: 700; letter-spacing: .04em; font-size: .95rem; }
   /* 16:6 comme dans l'app : une bande, pas une photo — elle ne doit pas pousser le nom du club
      sous la ligne de flottaison. */
   .cover {
@@ -66,30 +93,103 @@
     padding: 16px; border-radius: 999px; margin-top: 32px;
   }
   .note { color: var(--text3); font-size: .82rem; text-align: center; margin-top: 14px; }
-  .etat { color: var(--text3); padding: 80px 0; text-align: center; }
+  .etat { color: var(--text2); padding: 56px 0 8px; text-align: center; }
   footer { color: var(--text3); font-size: .78rem; text-align: center; margin-top: 48px; }
   footer a { color: var(--text3); }
 </style>
 </head>
 <body>
-<div class="page" id="page">
-  <p class="etat" id="etat">Chargement…</p>
+<div class="page">
+  <div class="entete">
+    <svg width="34" height="34" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="marque" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#F50D7A"/>
+          <stop offset="1" stop-color="#7053E6"/>
+        </linearGradient>
+      </defs>
+      <rect width="100" height="100" rx="26" fill="url(#marque)"/>
+      <!-- Les quatre barres de `AppMarkView` : mêmes coordonnées, mêmes graisses, mêmes
+           opacités, dans le même carré de 100 — une marque recopiée à l'œil n'est plus la
+           marque. Le glyphe fait 0,62 du côté, donc centré à (100 − 62) / 2 = 19. -->
+      <g stroke="#fff" stroke-linecap="round" fill="none" transform="translate(19 19) scale(0.62)">
+        <line x1="11.75" y1="88" x2="15.5" y2="74" stroke-width="14" opacity="0.3"/>
+        <line x1="29.25" y1="88" x2="36.75" y2="60" stroke-width="19" opacity="0.5"/>
+        <line x1="49.25" y1="88" x2="61.25" y2="36" stroke-width="19" opacity="0.75"/>
+        <line x1="69.25" y1="88" x2="85.75" y2="12" stroke-width="19" opacity="1"/>
+      </g>
+    </svg>
+    <span class="mot">RUNUP</span>
+  </div>
+  <div id="corps">
+    <p class="etat" id="etat">Chargement…</p>
+  </div>
 </div>
 
 <script>
 (function () {
-  // L'identifiant vient du chemin (`/club/<uuid>`, réécrit vers ce fichier) ou de `?id=`, pour
-  // que le lien reste ouvrable même si la réécriture tombe.
+  // L'app est livrée en trois langues ; cette page n'existait qu'en français. Les textes sont
+  // ceux du catalogue de l'app, repris mot pour mot là où la phrase y existe déjà.
+  var TEXTES = {
+    fr: {
+      locale: 'fr-FR', chargement: 'Chargement…', incomplet: "Ce lien n'est pas complet.",
+      absent: "Ce club n'existe pas, ou n'est pas ouvert aux nouvelles arrivées.",
+      membre: 'membre', membres: 'membres', seances: 'Les prochaines séances',
+      repete: 'chaque semaine', depart: 'au départ', cta: 'Télécharger RUNUP',
+      note: "Tu as déjà l'app ? Ouvre ce lien depuis ton iPhone.",
+      confidentialite: 'Confidentialité'
+    },
+    en: {
+      locale: 'en-GB', chargement: 'Loading…', incomplet: 'This link is incomplete.',
+      absent: "This club doesn't exist, or isn't open to newcomers.",
+      membre: 'member', membres: 'members', seances: 'Upcoming sessions',
+      repete: 'every week', depart: 'going', cta: 'Download RUNUP',
+      note: 'Already have the app? Open this link on your iPhone.',
+      confidentialite: 'Privacy'
+    },
+    es: {
+      locale: 'es-ES', chargement: 'Cargando…', incomplet: 'Este enlace está incompleto.',
+      absent: 'Este club no existe, o no está abierto a nuevas incorporaciones.',
+      membre: 'miembro', membres: 'miembros', seances: 'Próximas sesiones',
+      repete: 'cada semana', depart: 'en la salida', cta: 'Descargar RUNUP',
+      note: '¿Ya tienes la app? Abre este enlace desde tu iPhone.',
+      confidentialite: 'Privacidad'
+    }
+  };
+
+  function langue() {
+    var demandees = (navigator.languages && navigator.languages.length)
+      ? navigator.languages : [navigator.language || 'fr'];
+    for (var i = 0; i < demandees.length; i++) {
+      var code = String(demandees[i]).toLowerCase().slice(0, 2);
+      if (TEXTES[code]) return code;
+    }
+    return 'fr';
+  }
+
+  var LANGUE = langue();
+  var T = TEXTES[LANGUE];
+  document.documentElement.lang = LANGUE;
+
+  // L'App Store plutôt que la page elle-même. Le lien universel est traité par iOS AVANT que la
+  // page ne s'affiche : qui voit ce bouton n'a pas l'app, et c'est précisément le public de
+  // cette page. L'identifiant 6790719663 est celui de la fiche publiée.
+  var APP_STORE = 'https://apps.apple.com/app/id6790719663';
+
   var chemin = location.pathname.split('/').filter(Boolean);
   var id = new URLSearchParams(location.search).get('id') || chemin[chemin.length - 1] || '';
 
-  var page = document.getElementById('page');
+  var corps = document.getElementById('corps');
   var etat = document.getElementById('etat');
+  etat.textContent = T.chargement;
 
+  // LES GUILLEMETS AUSSI. `textContent` → `innerHTML` n'échappe que `&`, `<` et `>` : dans un
+  // attribut entre guillemets, une valeur qui en contient un sort de l'attribut et en ouvre un
+  // autre. Voir l'en-tête du fichier.
   function echappe(texte) {
-    var d = document.createElement('div');
-    d.textContent = texte == null ? '' : String(texte);
-    return d.innerHTML;
+    return String(texte == null ? '' : texte)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   // « MAR. 28 OCT. · 19:00 », dans le fuseau de qui lit — une séance se donne à une heure
@@ -97,13 +197,27 @@
   function quand(iso) {
     var d = new Date(iso);
     if (isNaN(d.getTime())) return '';
-    var jour = d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
-    var heure = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    var jour = d.toLocaleDateString(T.locale, { weekday: 'short', day: 'numeric', month: 'short' });
+    var heure = d.toLocaleTimeString(T.locale, { hour: '2-digit', minute: '2-digit' });
     return (jour + ' · ' + heure).toUpperCase();
   }
 
+  function piedDePage(avecNote) {
+    // La note ne vaut que s'il y a un club à rejoindre : « ouvre ce lien depuis ton iPhone » sous
+    // un club introuvable enverrait quelqu'un refaire ce qui vient d'échouer.
+    return '<a class="cta" href="' + APP_STORE + '">' + echappe(T.cta) + '</a>'
+      + (avecNote ? '<p class="note">' + echappe(T.note) + '</p>' : '')
+      + '<footer><a href="https://hicsuntco.github.io/RUNUP/privacy.html">'
+      + echappe(T.confidentialite) + '</a></footer>';
+  }
+
+  // Un cul-de-sac n'est pas un état : il reste la marque, une phrase, et de quoi avancer.
+  function impasse(phrase) {
+    corps.innerHTML = '<p class="etat">' + echappe(phrase) + '</p>' + piedDePage(false);
+  }
+
   if (!id) {
-    etat.textContent = "Ce lien n'est pas complet.";
+    impasse(T.incomplet);
     return;
   }
 
@@ -122,40 +236,35 @@
 
       var meta = [];
       if (club.city) meta.push(echappe(club.city));
-      meta.push(club.memberCount + (club.memberCount > 1 ? ' membres' : ' membre'));
+      meta.push(club.memberCount + ' ' + echappe(club.memberCount > 1 ? T.membres : T.membre));
       html += '<p class="meta">' + meta.join(' · ') + '</p>';
 
       if (club.description) html += '<p class="desc">' + echappe(club.description) + '</p>';
 
       if (club.sessions && club.sessions.length) {
-        html += '<h2>Les prochaines séances</h2>';
+        html += '<h2>' + echappe(T.seances) + '</h2>';
         club.sessions.forEach(function (s) {
           html += '<div class="seance">';
           html += '<div class="quand">' + echappe(quand(s.startsAt));
-          if (s.repeatsWeekly) html += '<span class="repete">chaque semaine</span>';
+          if (s.repeatsWeekly) html += '<span class="repete">' + echappe(T.repete) + '</span>';
           html += '</div>';
           html += '<div class="titre">' + echappe(s.title) + '</div>';
           if (s.location) html += '<div class="lieu">' + echappe(s.location) + '</div>';
+          // Le singulier et le pluriel disaient la même chose des deux côtés du ternaire :
+          // « au départ » ne s'accorde pas, et « going » non plus.
           if (s.going > 0) {
-            html += '<div class="venus">' + s.going + (s.going > 1 ? ' au départ' : ' au départ') + '</div>';
+            html += '<div class="venus">' + s.going + ' ' + echappe(T.depart) + '</div>';
           }
           html += '</div>';
         });
       }
 
-      // Le lien EST cette page. Sur un iPhone où l'app est installée, iOS l'ouvre dedans sans
-      // passer par le navigateur (voir .well-known/apple-app-site-association) ; sinon il
-      // revient ici, ce qui est exactement ce qu'on veut qu'il fasse.
-      html += '<a class="cta" href="' + echappe(location.href) + '">Rejoindre sur RUNUP</a>';
-      html += '<p class="note">Ouvre l\'app RUNUP sur ton iPhone pour rejoindre ce club.</p>';
-      html += '<footer><a href="https://hicsuntco.github.io/RUNUP/privacy.html">Confidentialité</a></footer>';
-
-      page.innerHTML = html;
+      corps.innerHTML = html + piedDePage(true);
     })
     .catch(function () {
       // Un club fermé et un club inexistant répondent la même chose, et c'est voulu : « il
       // existe mais il est fermé » serait déjà une information sur lui.
-      etat.textContent = "Ce club n'existe pas, ou n'est pas ouvert aux nouvelles arrivées.";
+      impasse(T.absent);
     });
 })();
 </script>

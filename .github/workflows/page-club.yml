@@ -1,0 +1,81 @@
+# La page publique d'un club, photographiée.
+#
+# ─── CE QU'ELLE EST ──────────────────────────────────────────────────────────────────────────
+#
+# `public/club.html` est la SEULE surface de RUNUP qu'un inconnu voit avant d'avoir l'app : c'est
+# le lien qu'un crew met dans sa bio Instagram. Tout le reste — les vingt-cinq écrans, les trois
+# langues, les deux thèmes — est photographié par `captures.yml` depuis des semaines. Celle-ci,
+# jamais.
+#
+# ─── CE QUE ÇA A COÛTÉ ───────────────────────────────────────────────────────────────────────
+#
+# En l'ouvrant pour la première fois, le 7 novembre 2026, trois défauts se voyaient d'un coup
+# d'œil : le bouton « Rejoindre sur RUNUP » pointait sur la page elle-même et ne menait donc
+# nulle part pour qui n'a pas l'app — c'est-à-dire tout son public ; l'état d'erreur était une
+# phrase grise sur fond noir, sans marque et sans issue ; et tout était en français alors que
+# l'app est livrée en trois langues.
+#
+# Aucun test ne pouvait les trouver. Il n'y a rien à compiler, rien à exécuter, et le serveur
+# répond parfaitement. Il fallait regarder la page — et personne ne l'avait fait.
+#
+# ─── CE QUE FAIT CE WORKFLOW ─────────────────────────────────────────────────────────────────
+#
+# Sept cas — trois langues, l'état normal et l'état « club introuvable », un club d'une seule
+# personne, et une couverture piégée — photographiés sur une machine Linux en une minute. Pas de
+# macOS, pas de simulateur : c'est une page web.
+#
+# Il refuse une erreur JavaScript, une page sans bouton, un bouton qui ne mène pas à l'App Store,
+# et un échappement qui laisse une valeur sortir de son attribut. Le reste ne se juge pas tout
+# seul : les sept images partent dans l'artefact, et quelqu'un les ouvre. C'est la leçon du
+# 7 novembre — un vert dit qu'un fichier a été écrit, pas ce qu'il y a dessus.
+name: Page publique du club
+
+on:
+  push:
+    paths:
+      - "public/**"
+      - "ci_scripts/photographier_club.js"
+      - ".github/workflows/page-club.yml"
+  workflow_dispatch:
+
+jobs:
+  photographier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # Playwright est installé HORS du dépôt, dans le dossier temporaire de la machine : le
+      # `package.json` du dépôt décrit ce qui part en production chez Vercel, et un outil de
+      # photographie n'a rien à y faire. `NODE_PATH` suffit à ce que `require('playwright')` le
+      # trouve.
+      - name: Installer Playwright
+        run: |
+          set -euo pipefail
+          npm --prefix "$RUNNER_TEMP/pw" install --no-audit --no-fund playwright@1.64.1
+          "$RUNNER_TEMP/pw/node_modules/.bin/playwright" install --with-deps chromium
+
+      # La page va chercher son club sur `/api/clubs/public` : elle doit donc être servie par un
+      # serveur, pas ouverte en `file://` — où `fetch` est refusé par le navigateur. Le script
+      # répond lui-même à cet appel, avec un club posé à la main.
+      - name: Photographier les sept cas
+        run: |
+          set -euo pipefail
+          mkdir -p page-club
+          (cd public && python3 -m http.server 8731 >/dev/null 2>&1 &)
+          for _ in $(seq 1 20); do
+            curl -sf -o /dev/null "http://localhost:8731/club.html" && break
+            sleep 0.5
+          done
+          NODE_PATH="$RUNNER_TEMP/pw/node_modules" node ci_scripts/photographier_club.js page-club
+
+      - name: Publier les images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: page-club
+          path: page-club/**
+          if-no-files-found: error
+          retention-days: 30

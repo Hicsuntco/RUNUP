@@ -91,6 +91,52 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 Le 14 est arrivé après coup, et je le ferais passer devant les finitions de design : c'est le seul
 moyen de savoir ce qui casse chez quelqu'un d'autre que nous. Le reste de l'ordre tient.
 
+## La page publique d'un club, regardée pour la première fois
+
+`public/club.html` est la seule surface de RUNUP qu'un inconnu voit **avant** d'avoir l'app :
+c'est le lien qu'un crew met dans sa bio. Les vingt-cinq écrans de l'app sont photographiés à
+chaque commit, dans trois langues et deux thèmes. Celle-ci, jamais.
+
+### Ce qu'on voyait en l'ouvrant
+
+1. **Le bouton ne menait nulle part.** « Rejoindre sur RUNUP » pointait sur `location.href`,
+   c'est-à-dire sur la page elle-même. Sur un iPhone où l'app est installée, iOS ouvre le lien
+   dans l'app AVANT que la page ne s'affiche — personne de ce côté-là ne voyait jamais ce bouton.
+   Pour tous les autres, c'est-à-dire exactement le public de cette page, il rechargeait la page.
+   Il mène à l'App Store (`id6790719663`, relevé par `itunes.apple.com/lookup` sur l'identifiant
+   de l'app, pas recopié de mémoire).
+2. **L'état d'erreur était un cul-de-sac** : une phrase grise sur fond noir, sans marque, sans
+   issue. Un lien mort dans une bio tombait sur une page qui n'appartenait visiblement à rien.
+3. **Tout était en français**, alors que l'app est livrée en trois langues. Les textes suivent
+   maintenant le navigateur et reprennent mot pour mot ceux du catalogue de l'app : « %lld au
+   départ » → « %lld going » / « %lld en la salida », « CHAQUE SEMAINE » → « EVERY WEEK » /
+   « CADA SEMANA ».
+
+La marque de l'app est maintenant en tête de page, dans les deux états — les quatre barres de
+`AppMarkView`, mêmes coordonnées, mêmes graisses, mêmes opacités, recopiées en SVG depuis le
+code et non à l'œil.
+
+### Et l'échappement ne couvrait pas les attributs
+
+`echappe` passait par `textContent` → `innerHTML`, qui n'échappe que `&`, `<` et `>`. Dans le
+contenu d'un élément, c'est suffisant. Dans un **attribut** — le `src` de la couverture — une
+valeur contenant un guillemet droit sort de l'attribut et en ouvre un autre : `onerror`, par
+exemple. Rien n'était exploitable aujourd'hui (le serveur n'écrit dans `cover_url` que des URL de
+stockage qu'il fabrique lui-même), et il suffisait d'une route acceptant une URL fournie par le
+client pour que ça le devienne. Les guillemets sont échappés.
+
+### Ce qui l'empêche de recommencer
+
+`.github/workflows/page-club.yml` : sept cas — trois langues, l'état normal, l'état
+« introuvable », un club d'une seule personne, et une couverture piégée — photographiés sur une
+machine Linux en une minute. Il refuse une erreur JavaScript, une page sans bouton, un bouton qui
+ne mène pas à l'App Store, et un échappement qui laisse une valeur sortir de son attribut.
+Éprouvé dans les deux sens : sur la page corrigée il passe, sur une copie dont on a retiré
+l'échappement des guillemets il échoue en nommant les deux symptômes.
+
+Le reste ne se juge pas tout seul : les sept images partent dans l'artefact, et quelqu'un les
+ouvre.
+
 ## Chantier 12 — l'app en grand texte, enfin photographiée
 
 Commencé par la mesure, et la mesure a corrigé l'item de l'audit.

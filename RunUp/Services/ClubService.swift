@@ -956,13 +956,6 @@ struct ClubService {
         return response.savesCount
     }
 
-    /// Attache (ou retire) la photo d'un itinéraire dont je suis l'autrice.
-    ///
-    /// Séparé de `publishRoute` volontairement : la photo a besoin de l'identifiant de
-    /// l'itinéraire, donc elle ne peut partir qu'après. Et surtout, un échec d'envoi de photo ne
-    /// doit pas emporter la publication avec lui — un itinéraire sans photo reste utile, une
-    /// publication perdue ne l'est pas.
-    @discardableResult
     /// Pose ou retire la photo d'une sortie. `nil` la retire — sans condition, parce que
     /// quelqu'un qui réalise après coup que l'image en dit trop ne doit pas avoir à choisir entre
     /// la garder et effacer sa sortie.
@@ -974,6 +967,12 @@ struct ClubService {
         return response.photoUrl
     }
 
+    /// Attache (ou retire) la photo d'un itinéraire dont je suis l'autrice.
+    ///
+    /// Séparé de `publishRoute` volontairement : la photo a besoin de l'identifiant de
+    /// l'itinéraire, donc elle ne peut partir qu'après. Et surtout, un échec d'envoi de photo ne
+    /// doit pas emporter la publication avec lui — un itinéraire sans photo reste utile, une
+    /// publication perdue ne l'est pas.
     func setRoutePhoto(routeId: String, dataURI: String?) async throws -> String? {
         let response: RoutePhotoResponse = try await send(
             path: "api/activities/routePhoto", method: "POST",

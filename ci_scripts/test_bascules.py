@@ -252,6 +252,31 @@ with tempfile.TemporaryDirectory() as d:
     attendu("« retour » vise l'accueil", bs.ecran_vise("retour"), "accueil")
     attendu("« stats » vise les stats", bs.ecran_vise("stats"), "stats")
 
+# --- LA PIÈCE QUI ACCOMPAGNE LE VERDICT ---------------------------------------------------------
+# Le garde-fou a dit « ce plan montre le mauvais écran » sur une langue, une seule fois, et l'image
+# sur laquelle il s'était prononcé était déjà effacée : dossier de travail temporaire, brut non
+# publié, comparaison faite sur un gris de 258 pixels. Un verdict sans pièce ne se vérifie pas.
+# Ce qui est gardé doit donc être l'image TELLE QU'ELLE EST : taille réelle, couleurs, non rognée.
+with tempfile.TemporaryDirectory() as d:
+    dossier = pathlib.Path(d)
+    im_dir = dossier / "i"
+    im_dir.mkdir()
+    for i in range(1, 61):
+        chargee(0 if i <= 30 else 1).convert("RGB").save(im_dir / f"{i:04d}.png")
+    film = dossier / "film.mov"
+    subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-framerate", "30",
+                    "-i", str(im_dir / "%04d.png"),
+                    "-c:v", "libx264", "-crf", "20", "-pix_fmt", "yuv420p", str(film)],
+                   check=True)
+    garde = bs.preuve(film, 0.5, dossier / "preuves", "coach-montre-stats")
+    attendu("l'image jugée est écrite", garde.is_file(), True)
+    attendu("elle porte le nom du plan et de l'écran vu", garde.name, "coach-montre-stats.png")
+    with Image.open(garde) as im:
+        # Ni rognée au-dessus de la barre d'onglets, ni réduite à la largeur de comparaison :
+        # c'est l'écran entier qu'on veut reconnaître d'un coup d'œil.
+        attendu("elle fait la taille de l'écran, pas celle de la comparaison", im.size, (L, H))
+        attendu("elle est en couleurs", im.mode, "RGB")
+
 # --- L'ALIGNEMENT DES DEUX HORLOGES -------------------------------------------------------------
 # LE DÉFAUT QUI A SORTI TROIS FILMS FAUX. Le test appuie sur l'onglet, attend 0,6 s, puis déclare
 # le plan : le changement d'écran doit tomber à 0,6 s du début du plan. Il tombait trois secondes

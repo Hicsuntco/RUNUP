@@ -28,6 +28,30 @@ depuis la sortie de la 3.3 le 3 novembre 2026, tout envoi à TestFlight en 3.3 e
 archive signée, puis refus — donc après dix minutes de machine macOS. `project.yml` est passé en
 3.4, aux trois cibles.
 
+**Un attribut séparé de sa déclaration par une documentation change de propriétaire.** Swift
+l'accepte sans rien dire, et l'attribut s'applique à la déclaration SUIVANTE. En extrayant
+`viderLeStock` de `poser`, je l'ai posée entre les attributs de `poser` et sa déclaration :
+`@MainActor` s'est recollé sur `viderLeStock`, `poser` a perdu son isolation, et la construction
+des captures est morte — quarante minutes plus tard, parce qu'ici il n'y a pas de compilateur.
+C'était la deuxième fois : `AdaptivePlanEngine.swift` porte déjà le récit d'un
+`@discardableResult` resté douze fonctions plus haut. `ci_scripts/check_attributs.py` relit les
+281 fichiers Swift du dépôt et refuse ce motif ; il a trouvé un TROISIÈME cas le jour où il a été
+écrit (`ClubService.swift` : la documentation de `setRoutePhoto` avait glissé sur
+`setActivityPhoto`, avec son attribut). Son premier jet listait « RunUpWidget » au singulier — un
+dossier qui n'existe pas, et `rglob` sur un chemin absent ne rend rien, sans rien dire : le
+contrôle couvrait le widget en apparence. Il exige maintenant que chaque dossier existe.
+
+**Un garde-fou qui juge une image doit garder l'image.** Le contrôle de découpage du film
+d'aperçu a dit « ce plan vise le coach et montre les stats » sur l'espagnol — une langue sur
+trois, le français et l'anglais verts dans la même exécution. Il ne restait rien à regarder : le
+dossier de travail est temporaire, l'enregistrement brut n'est plus publié, et la comparaison
+porte sur un gris réduit à 258 pixels. Deux explications se calculent et tombent toutes les deux :
+un décalage uniforme de +3,1 s mettrait aussi le plan du profil sur l'accueil (il est reconnu), et
+une dérive d'horloge assez forte pour égarer le coach égarerait le profil davantage. Les quatre
+témoins espagnols, eux, sont nets — le plus proche voisin est à 20,7 d'écart. Donc : non élucidé.
+`bascules.py --preuves` garde désormais l'image de l'instant jugé, pleine taille et en couleurs,
+et l'artefact la publie — seulement quand le verdict est mauvais.
+
 ## Les chantiers de l'audit
 
 Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.

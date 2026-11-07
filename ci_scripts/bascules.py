@@ -121,6 +121,27 @@ def posee(entree: pathlib.Path, instant: float, travail: pathlib.Path,
     return _gris(chemin)
 
 
+def preuve(entree: pathlib.Path, instant: float, dossier: pathlib.Path, nom: str) -> pathlib.Path:
+    """L'image que la mesure a jugée, gardée en entier et en couleurs.
+
+    # POURQUOI CETTE FONCTION EXISTE
+
+    Le garde-fou disait « ce plan montre le mauvais écran » et jetait l'image sur laquelle il
+    s'était prononcé : le dossier de travail est temporaire, l'enregistrement brut n'est plus
+    publié, et la comparaison porte sur un gris réduit à 258 pixels de large. Restait un verdict
+    sans pièce — et une seule langue sur trois concernée, donc rien à reproduire ailleurs.
+
+    Ce qui part dans l'artefact est donc l'image À L'INSTANT JUGÉ, pleine taille, non rognée : de
+    quoi reconnaître l'écran d'un coup d'œil au lieu de le déduire. Seulement quand la mesure
+    échoue — quatre plans par langue en pleine résolution pèseraient plus que les captures.
+    """
+    dossier.mkdir(parents=True, exist_ok=True)
+    chemin = dossier / f"{nom}.png"
+    chemin.unlink(missing_ok=True)
+    ffmpeg("-ss", f"{max(0.0, instant):.3f}", "-i", str(entree), "-frames:v", "1", str(chemin))
+    return chemin
+
+
 def _ecart(im: Image.Image, reference: Image.Image) -> float:
     if im.size != reference.size:
         im = im.resize(reference.size)
@@ -275,6 +296,9 @@ def main() -> int:
     a.add_argument("--temoins", type=pathlib.Path, default=None,
                    help="Le dossier des captures claires (appstore/raw/<langue>/clair) : chaque "
                         "bascule doit tomber sur l'écran qu'elle vise, et non sur son voisin")
+    a.add_argument("--preuves", type=pathlib.Path, default=None,
+                   help="Où garder l'image jugée quand un plan tombe sur le mauvais écran. "
+                        "Sans lui, le verdict part sans sa pièce.")
     a.add_argument("--travail", type=pathlib.Path, default=None,
                    help="Dossier de travail (sinon un dossier temporaire)")
     options = a.parse_args()
@@ -340,6 +364,15 @@ def main() -> int:
                     egares.append(f"{b['nom']} montre « {proche} »")
                     print(f"  {'':<10} ÉCRAN : ce plan vise « {vise} » et montre « {proche} » "
                           f"(écart {ecart:.1f} contre {dict(classement)[vise]:.1f}).")
+                    # LE CLASSEMENT ENTIER, parce que deux nombres ne disent pas si l'image
+                    # ressemble à UN écran ou à aucun. Une image à moitié construite est loin de
+                    # tous : ça se lit sur quatre écarts, pas sur deux.
+                    print(f"  {'':<10} écarts : "
+                          + ", ".join(f"{n} {e:.1f}" for n, e in classement))
+                    if options.preuves:
+                        garde = preuve(options.entree, vers_fichier(b["debut"] + 0.5),
+                                       options.preuves, f"{b['nom']}-montre-{proche}")
+                        print(f"  {'':<10} image jugée gardée : {garde}")
                 else:
                     print(f"  {'':<10} écran « {vise} » reconnu (écart {ecart:.1f}, "
                           f"le suivant à {suivant[1]:.1f})")

@@ -286,6 +286,19 @@ jobs:
       - name: Vérifier que chaque symbole nommé est éprouvé par un test
         run: python3 ci_scripts/check_symboles.py
 
+      # UN ATTRIBUT SÉPARÉ DE SA DÉCLARATION PAR UNE DOCUMENTATION CHANGE DE PROPRIÉTAIRE.
+      #
+      # Swift l'accepte, et l'attribut s'applique alors à la déclaration qui suit — c'est-à-dire,
+      # après une insertion, à la fonction qu'on vient d'écrire. C'est arrivé deux fois : un
+      # `@discardableResult` recollé sur `markSessionDone` (avertissement, resté), et `@MainActor`
+      # recollé sur `viderLeStock`, qui a coûté une construction entière — quarante minutes, parce
+      # qu'ici il n'y a pas de compilateur. Le troisième cas, dans `ClubService`, a été trouvé par
+      # ce contrôle le jour où il a été écrit.
+      - name: Vérifier que chaque attribut touche sa déclaration
+        run: |
+          cd ci_scripts && python3 test_attributs.py
+          cd .. && python3 ci_scripts/check_attributs.py
+
       # Une commande dont le libellé est une icône ne s'annonce pas : VoiceOver dit « bouton », et
       # rien d'autre. Les siennes sont nommées une par une, et aucune n'est oubliée — cette
       # barrière n'est pas là pour rattraper une dette, elle est là pour que le prochain bouton

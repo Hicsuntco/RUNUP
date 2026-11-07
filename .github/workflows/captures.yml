@@ -486,6 +486,7 @@ jobs:
               --temps "$dossier/prechauffage.json" \
               --decalage "$decalage" \
               --temoins "appstore/raw/$langue/clair" \
+              --preuves "$dossier/preuves" \
               --plafond 1
             echo "— deuxième ouverture, celle que montre le film —"
             "$RUNNER_TEMP/venv/bin/python" ci_scripts/bascules.py \
@@ -493,6 +494,7 @@ jobs:
               --temps "$dossier/temps.json" \
               --decalage "$decalage" \
               --temoins "appstore/raw/$langue/clair" \
+              --preuves "$dossier/preuves" \
               --plafond 1
 
             # LE MONTAGE, une fois le découpage vérifié.
@@ -526,6 +528,12 @@ jobs:
       #
       # Les repères, eux, restent : ils pèsent un kilo-octet et disent ce que le test a vu.
       #
+      # ET L'IMAGE JUGÉE PART, MAIS SEULEMENT QUAND LE VERDICT EST MAUVAIS. Le garde-fou a dit
+      # « ce plan montre le mauvais écran » sur l'espagnol, une fois, et il ne restait rien à
+      # regarder : ni le brut, ni le gris réduit sur lequel il s'était prononcé. Un verdict sans
+      # pièce ne se vérifie pas. `--preuves` garde donc l'image de l'instant jugé, en entier —
+      # quelques centaines de kilo-octets, et rien du tout quand tout va bien.
+      #
       # (Le commentaire est ici et non dans la liste : dans un bloc littéral `|`, un dièse n'est
       # pas un commentaire, c'est une ligne de chemin de plus.)
       - name: Publier les captures
@@ -539,5 +547,6 @@ jobs:
             appstore/apercu/out/**
             appstore/apercu/*/*.json
             appstore/apercu/*/debut.txt
+            appstore/apercu/*/preuves/*.png
           if-no-files-found: error
           retention-days: 30

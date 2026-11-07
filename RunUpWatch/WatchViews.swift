@@ -325,7 +325,7 @@ struct WatchSummaryView: View {
                     metric(value: workout.avgHeartRate.map(String.init) ?? "--", unit: "bpm moy", accent: WTheme.violet)
                 }
 
-                Text("Ton bilan t'attend sur l'iPhone 📱")
+                Text("Ton bilan t'attend sur l'iPhone")
                     .font(WTheme.sansSemibold(11))
                     .foregroundStyle(WTheme.text2)
                     .multilineTextAlignment(.center)

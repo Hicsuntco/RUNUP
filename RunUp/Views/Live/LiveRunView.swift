@@ -170,7 +170,7 @@ struct LiveRunView: View {
         if let vc = vm?.voiceCoach {
             // Failures surface here too — a denied mic permission or a failed coach reply used to
             // leave the tap doing literally nothing visible.
-            if vc.state == .idle, let error = vc.lastError { return "⚠️ \(error)" }
+            if vc.state == .idle, let error = vc.lastError { return error }
             switch vc.state {
             case .listening: return vc.partialTranscript.isEmpty ? String(localized: "Je t'écoute…") : vc.partialTranscript
             case .thinking: return "…"

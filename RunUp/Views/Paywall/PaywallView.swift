@@ -400,7 +400,7 @@ struct PaywallView: View {
         switch await subscriptions.purchase(product) {
         case .subscribed:
             Analytics.shared.track(.purchaseCompleted, ["plan": plan])
-            appState.toast(String(localized: "Bienvenue dans RUNUP Plus 🎉"))
+            appState.toast(String(localized: "Bienvenue dans RUNUP Plus"))
             // ET ON FERME. Sans ça, Face ID validé et toast passé, il reste à l'écran le héros
             // « 7 jours offerts », les formules cochables et un bouton d'achat toujours actif :
             // rien ne dit que ça a marché, et le geste naturel est de retaper.

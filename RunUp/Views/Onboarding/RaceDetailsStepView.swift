@@ -87,7 +87,7 @@ struct RaceDetailsStepView: View {
                                 }
                             }
                         }
-                        SelectableChip(label: "Juste finir 😅", selected: vm.chrono == "finir" && !vm.isCustomChrono) {
+                        SelectableChip(label: "Juste finir", selected: vm.chrono == "finir" && !vm.isCustomChrono) {
                             vm.chrono = "finir"; vm.isCustomChrono = false
                         }
                         SelectableChip(label: "Mon propre temps", selected: vm.isCustomChrono) {

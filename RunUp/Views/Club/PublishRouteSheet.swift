@@ -271,7 +271,7 @@ struct PublishRouteSheet: View {
                     _ = try? await service.setRoutePhoto(routeId: id, dataURI: photoDataURI)
                 }
                 isPublishing = false
-                appState.toast(String(localized: "Itinéraire publié 🗺️"))
+                appState.toast(String(localized: "Itinéraire publié"))
                 onPublished(id)
                 dismiss()
             } catch {

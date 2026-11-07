@@ -78,7 +78,7 @@ struct PlanRecapView: View {
             // que le système ne demande l'autorisation des notifications (voir
             // `OnboardingContainerView.finish()`), pour que la boîte de dialogue ait une raison
             // d'apparaître au lieu de tomber de nulle part sur l'accueil.
-            Text("On t'enverra un petit rappel pour tes séances 🔔")
+            Text("On t'enverra un petit rappel pour tes séances")
                 .font(RUFont.sans(.small))
                 .multilineTextAlignment(.center)
                 .foregroundColor(RUColor.text3)

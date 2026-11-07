@@ -5200,36 +5200,36 @@
         }
       }
     },
-    "Beau rythme, reste régulier — c'est la constance qui paie 👊": {
+    "Beau rythme, reste régulier — c'est la constance qui paie": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Good rhythm, stay steady — consistency is what pays 👊"
+            "value": "Good rhythm, stay steady — consistency is what pays"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Buen ritmo, mantente constante — la constancia es lo que paga 👊"
+            "value": "Buen ritmo, mantente constante — la constancia es lo que paga"
           }
         }
       }
     },
-    "Beau rythme, reste régulière — c'est la constance qui paie 👊": {
+    "Beau rythme, reste régulière — c'est la constance qui paie": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Good rhythm, stay steady — consistency is what pays 👊"
+            "value": "Good rhythm, stay steady — consistency is what pays"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Buen ritmo, mantente constante — la constancia es lo que paga 👊"
+            "value": "Buen ritmo, mantente constante — la constancia es lo que paga"
           }
         }
       }
@@ -5282,19 +5282,19 @@
         }
       }
     },
-    "Bienvenue dans RUNUP Plus 🎉": {
+    "Bienvenue dans RUNUP Plus": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Welcome to RUNUP Plus 🎉"
+            "value": "Welcome to RUNUP Plus"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bienvenida a RUNUP Plus 🎉"
+            "value": "Bienvenida a RUNUP Plus"
           }
         }
       }
@@ -6780,6 +6780,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta actividad no tiene detalle guardado: ni tiempos por kilómetro, ni perfil, ni frecuencia cardiaca."
+          }
+        }
+      }
+    },
+    "Cette séance a été allégée aujourd'hui d'après ta forme du jour — la semaine reprend son cours normal demain.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This session was lightened today based on how you're doing — the week picks back up as planned tomorrow."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta sesión se ha aligerado hoy según tu estado — la semana retoma su curso normal mañana."
           }
         }
       }
@@ -8946,19 +8962,19 @@
         }
       }
     },
-    "Dernier bloc, c'est le moment — lâche tout dessus 🔥": {
+    "Dernier bloc, c'est le moment — lâche tout dessus": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Last block, this is the moment — give it everything 🔥"
+            "value": "Last block, this is the moment — give it everything"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Último bloque, es el momento — déjalo todo 🔥"
+            "value": "Último bloque, es el momento — déjalo todo"
           }
         }
       }
@@ -8996,35 +9012,35 @@
         }
       }
     },
-    "Dernière partie — finis proprement, sans t'arracher 🔥": {
+    "Dernière partie — finis proprement, sans t'arracher": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Final stretch — finish cleanly, without wrecking yourself 🔥"
+            "value": "Final stretch — finish cleanly, without wrecking yourself"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Última parte — termina limpio, sin destrozarte 🔥"
+            "value": "Última parte — termina limpio, sin destrozarte"
           }
         }
       }
     },
-    "Dernière répétition faite, bien joué 🔥 Retour au calme.": {
+    "Dernière répétition faite, bien joué. Retour au calme.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Last rep done, well done 🔥 Cool down time."
+            "value": "Last rep done, well done. Cool down time."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Última repetición hecha, bien hecho 🔥 Vuelta a la calma."
+            "value": "Última repetición hecha, bien hecho. Vuelta a la calma."
           }
         }
       }
@@ -12678,18 +12694,18 @@
         }
       }
     },
-    "Itinéraire publié 🗺️": {
+    "Itinéraire publié": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Route published 🗺️"
+            "value": "Route published"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ruta publicada 🗺️"
+            "value": "Ruta publicada"
           }
         }
       }
@@ -13371,35 +13387,19 @@
         }
       }
     },
-    "Journée bouclée · +120 XP 🎉": {
+    "Journée bouclée · +120 XP": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Day complete · +120 XP 🎉"
+            "value": "Day complete · +120 XP"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Día completado · +120 XP 🎉"
-          }
-        }
-      }
-    },
-    "Journée bouclée 🎉": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Day complete 🎉"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Día completado 🎉"
+            "value": "Día completado · +120 XP"
           }
         }
       }
@@ -13485,18 +13485,18 @@
         }
       }
     },
-    "Juste finir 😅": {
+    "Juste finir": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Just finish 😅"
+            "value": "Just finish"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Solo terminar 😅"
+            "value": "Solo terminar"
           }
         }
       }
@@ -14281,6 +14281,22 @@
         }
       }
     },
+    "Le coach a ajusté cette semaine à \"%@\" d'après ta forme la semaine dernière.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The coach adjusted this week to \"%@\" based on how you've been feeling lately."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El coach ajustó esta semana a \"%@\" según tu forma la semana pasada."
+          }
+        }
+      }
+    },
     "Le coach adapte tes séances de fractionné/VMA en conséquence, chaque semaine.": {
       "localizations": {
         "en": {
@@ -14901,6 +14917,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "El seguimiento de tus carreras, tu historial y el Club siguen siendo gratis."
+          }
+        }
+      }
+    },
+    "Le triangle marque les jours qui placeraient deux séances exigeantes l'une après l'autre. C'est permis, mais c'est ainsi qu'on se blesse.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The triangle marks days that would put two demanding sessions back to back. It's allowed, but that's how you get injured."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El triángulo marca los días que pondrían dos sesiones exigentes seguidas. Está permitido, pero así es como uno se lesiona."
           }
         }
       }
@@ -16621,6 +16654,22 @@
         }
       }
     },
+    "NOUVEAU RECORD": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NEW RECORD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NUEVO RÉCORD"
+          }
+        }
+      }
+    },
     "Nage": {
       "extractionState": "manual",
       "localizations": {
@@ -17622,18 +17671,18 @@
         }
       }
     },
-    "On t'enverra un petit rappel pour tes séances 🔔": {
+    "On t'enverra un petit rappel pour tes séances": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "We'll send you a little reminder for your sessions 🔔"
+            "value": "We'll send you a little reminder for your sessions"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Te enviaremos un pequeño recordatorio para tus sesiones 🔔"
+            "value": "Te enviaremos un pequeño recordatorio para tus sesiones"
           }
         }
       }
@@ -19804,18 +19853,18 @@
         }
       }
     },
-    "Programme mis à jour · +120 XP 🔥": {
+    "Programme mis à jour · +120 XP": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Plan updated · +120 XP 🔥"
+            "value": "Plan updated · +120 XP"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Plan actualizado · +120 XP 🔥"
+            "value": "Plan actualizado · +120 XP"
           }
         }
       }
@@ -19935,6 +19984,22 @@
         }
       }
     },
+    "Programme terminé": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Program complete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Programa terminado"
+          }
+        }
+      }
+    },
     "Programme terminé · récupération en cours": {
       "localizations": {
         "en": {
@@ -19947,22 +20012,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Programa terminado · recuperación en curso"
-          }
-        }
-      }
-    },
-    "Programme terminé 🏁": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Program complete 🏁"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Programa terminado 🏁"
           }
         }
       }
@@ -22371,34 +22420,34 @@
         }
       }
     },
-    "Salut %@ 👋 %@ %@ Une question avant de te lancer ?": {
+    "Salut %@. %@ %@ Une question avant de te lancer ?": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hey %@ 👋 %@ %@ Any question before you head out?"
+            "value": "Hey %@. %@ %@ Any question before you head out?"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hola %@ 👋 %@ %@ ¿Alguna pregunta antes de salir?"
+            "value": "Hola %@. %@ %@ ¿Alguna pregunta antes de salir?"
           }
         }
       }
     },
-    "Salut %@ 👋 %@ Une question avant de te lancer ?": {
+    "Salut %@. %@ Une question avant de te lancer ?": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hey %@ 👋 %@ Any question before you head out?"
+            "value": "Hey %@. %@ Any question before you head out?"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hola %@ 👋 %@ ¿Alguna pregunta antes de salir?"
+            "value": "Hola %@. %@ ¿Alguna pregunta antes de salir?"
           }
         }
       }
@@ -24285,18 +24334,18 @@
         }
       }
     },
-    "Séance enregistrée 💪 Bien joué.": {
+    "Séance enregistrée. Bien joué.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Session logged 💪 Well done."
+            "value": "Session logged. Well done."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sesión registrada 💪 Bien hecho."
+            "value": "Sesión registrada. Bien hecho."
           }
         }
       }
@@ -24334,67 +24383,67 @@
         }
       }
     },
-    "Séance solide 💪 Allure plutôt régulière du début à la fin.": {
+    "Séance solide. Allure plutôt régulière du début à la fin.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Solid session 💪 A fairly steady pace from start to finish."
+            "value": "Solid session. A fairly steady pace from start to finish."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sesión sólida 💪 Un ritmo bastante constante de principio a fin."
+            "value": "Sesión sólida. Un ritmo bastante constante de principio a fin."
           }
         }
       }
     },
-    "Séance solide 💪 Ton dernier kilomètre était ton plus rapide — tu avais encore du jus.": {
+    "Séance solide. Ton dernier kilomètre était ton plus rapide — tu avais encore du jus.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Solid session 💪 Your last kilometer was your fastest — you still had gas in the tank."
+            "value": "Solid session. Your last kilometer was your fastest — you still had gas in the tank."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sesión sólida 💪 Tu último kilómetro fue el más rápido — todavía te quedaban fuerzas."
+            "value": "Sesión sólida. Tu último kilómetro fue el más rápido — todavía te quedaban fuerzas."
           }
         }
       }
     },
-    "Séance solide 💪 Tu es parti fort et tu as tenu jusqu'au bout.": {
+    "Séance solide. Tu es parti fort et tu as tenu jusqu'au bout.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Solid session 💪 You started strong and held on all the way to the end."
+            "value": "Solid session. You started strong and held on all the way to the end."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sesión sólida 💪 Saliste fuerte y aguantaste hasta el final."
+            "value": "Sesión sólida. Saliste fuerte y aguantaste hasta el final."
           }
         }
       }
     },
-    "Séance solide 💪 Tu es partie fort et tu as tenu jusqu'au bout.": {
+    "Séance solide. Tu es partie fort et tu as tenu jusqu'au bout.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Solid session 💪 You started strong and held on all the way to the end."
+            "value": "Solid session. You started strong and held on all the way to the end."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sesión sólida 💪 Empezaste fuerte y aguantaste hasta el final."
+            "value": "Sesión sólida. Empezaste fuerte y aguantaste hasta el final."
           }
         }
       }
@@ -25056,18 +25105,18 @@
         }
       }
     },
-    "Ta meilleure semaine 🔥": {
+    "Ta meilleure semaine": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your best week 🔥"
+            "value": "Your best week"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tu mejor semana 🔥"
+            "value": "Tu mejor semana"
           }
         }
       }
@@ -25880,18 +25929,18 @@
         }
       }
     },
-    "Tes %lld objectifs du jour atteints 👏 +120 XP": {
+    "Tes %lld objectifs du jour atteints · +120 XP": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your %lld daily goals achieved 👏 +120 XP"
+            "value": "Your %lld daily goals achieved · +120 XP"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tus %lld objetivos del día logrados 👏 +120 XP"
+            "value": "Tus %lld objetivos del día logrados · +120 XP"
           }
         }
       }
@@ -26093,19 +26142,19 @@
         }
       }
     },
-    "Tiens ton allure sur chaque répétition, récupère bien entre les blocs 👊": {
+    "Tiens ton allure sur chaque répétition, récupère bien entre les blocs": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hold your pace on every rep, recover properly between blocks 👊"
+            "value": "Hold your pace on every rep, recover properly between blocks"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mantén el ritmo en cada serie, recupera bien entre bloques 👊"
+            "value": "Mantén el ritmo en cada serie, recupera bien entre bloques"
           }
         }
       }
@@ -26160,18 +26209,18 @@
         }
       }
     },
-    "Ton bilan t'attend sur l'iPhone 📱": {
+    "Ton bilan t'attend sur l'iPhone": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your debrief is waiting on your iPhone 📱"
+            "value": "Your debrief is waiting on your iPhone"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tu balance te espera en el iPhone 📱"
+            "value": "Tu balance te espera en el iPhone"
           }
         }
       }
@@ -34233,39 +34282,6 @@
         }
       }
     },
-    "⚠ marque les jours qui placeraient deux séances exigeantes l'une après l'autre. C'est permis, mais c'est ainsi qu'on se blesse.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "⚠ marks days that would put two demanding sessions back to back. It's allowed, but that's how you get injured."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "⚠ marca los días que pondrían dos sesiones exigentes seguidas. Está permitido, pero así es como uno se lesiona."
-          }
-        }
-      }
-    },
-    "⚠️ %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "⚠️ %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "⚠️ %@"
-          }
-        }
-      }
-    },
     "✓ Séance terminée": {
       "localizations": {
         "en": {
@@ -34311,54 +34327,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "✓ Terminado"
-          }
-        }
-      }
-    },
-    "🏆 NOUVEAU RECORD": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "🏆 NEW RECORD"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "🏆 NUEVO RÉCORD"
-          }
-        }
-      }
-    },
-    "💡 Cette séance a été allégée aujourd'hui d'après ta forme du jour — la semaine reprend son cours normal demain.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "💡 This session was lightened today based on how you're doing — the week picks back up as planned tomorrow."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "💡 Esta sesión se ha aligerado hoy según tu estado — la semana retoma su curso normal mañana."
-          }
-        }
-      }
-    },
-    "💡 Le coach a ajusté cette semaine à \"%@\" d'après ta forme la semaine dernière.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "💡 The coach adjusted this week to \"%@\" based on how you've been feeling lately."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "💡 El coach ajustó esta semana a \"%@\" según tu forma la semana pasada."
           }
         }
       }

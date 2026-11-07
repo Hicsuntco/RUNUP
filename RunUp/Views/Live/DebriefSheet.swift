@@ -27,16 +27,16 @@ struct DebriefSheet: View {
     private var insightMessage: String {
         let paces = run.splits.compactMap(PaceModel.parseSecPerKm)
         guard paces.count > 1, let minPace = paces.min(), let maxPace = paces.max(), maxPace > minPace else {
-            return String(localized: "Séance enregistrée 💪 Bien joué.")
+            return String(localized: "Séance enregistrée. Bien joué.")
         }
         if paces.last == minPace {
-            return String(localized: "Séance solide 💪 Ton dernier kilomètre était ton plus rapide — tu avais encore du jus.")
+            return String(localized: "Séance solide. Ton dernier kilomètre était ton plus rapide — tu avais encore du jus.")
         }
         if paces.first == minPace {
-            return Accord.selon(f: String(localized: "Séance solide 💪 Tu es partie fort et tu as tenu jusqu'au bout."),
-                                m: String(localized: "Séance solide 💪 Tu es parti fort et tu as tenu jusqu'au bout."))
+            return Accord.selon(f: String(localized: "Séance solide. Tu es partie fort et tu as tenu jusqu'au bout."),
+                                m: String(localized: "Séance solide. Tu es parti fort et tu as tenu jusqu'au bout."))
         }
-        return String(localized: "Séance solide 💪 Allure plutôt régulière du début à la fin.")
+        return String(localized: "Séance solide. Allure plutôt régulière du début à la fin.")
     }
 
     private var impactLines: [(String, String, String)] {
@@ -261,13 +261,13 @@ struct DebriefSheet: View {
                 if AdaptivePlanEngine.checkDailyGoalsBonus(appState.profile) {
                     appState.postClubActivity(type: "badge", text: String(localized: "a bouclé ses 3 objectifs du jour"), xpEarned: 120, contentKey: "daily_goals")
                     appState.notify(icon: "sparkles", colorHex: 0xC9FF3B, title: String(localized: "Journée bouclée"), text: String(localized: "Tes 3 objectifs du jour sont faits — +120 XP."))
-                    NotificationService.shared.postImmediateNotification(title: String(localized: "Journée bouclée 🎉"), body: String(localized: "Tes 3 objectifs du jour sont faits — +120 XP."))
+                    NotificationService.shared.postImmediateNotification(title: String(localized: "Journée bouclée"), body: String(localized: "Tes 3 objectifs du jour sont faits — +120 XP."))
                     Haptics.impact(.heavy)
                 }
                 // Today's session is done — an evening reminder for it would be stale now.
                 NotificationService.shared.rescheduleDailyReminder(for: appState.profile)
                 appState.publishWidgetSnapshot()
-                appState.toast(String(localized: "Programme mis à jour · +120 XP 🔥"))
+                appState.toast(String(localized: "Programme mis à jour · +120 XP"))
                 // Ask for a rating right after a run that felt good, not on a fixed schedule —
                 // `shouldRequestReview` also caps this to real milestones and a 90-day cooldown.
                 if appState.shouldRequestReview(rpe: rpe) {

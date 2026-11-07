@@ -339,18 +339,18 @@ final class LiveRunViewModel {
             cues = [
                 (6, String(localized: "C'est parti \(name). Échauffement tranquille, reste en Z2.")),
                 (120, String(localized: "Fin d'échauffement. Première répétition : vise \(targetPace), foulée relâchée.")),
-                (360, String(localized: "Tiens ton allure sur chaque répétition, récupère bien entre les blocs 👊")),
+                (360, String(localized: "Tiens ton allure sur chaque répétition, récupère bien entre les blocs")),
                 (720, String(localized: "Mi-séance, tu gères. Garde ta cadence sur les prochaines répétitions.")),
-                (1080, String(localized: "Dernier bloc, c'est le moment — lâche tout dessus 🔥"))
+                (1080, String(localized: "Dernier bloc, c'est le moment — lâche tout dessus"))
             ]
         } else {
             cues = [
                 (6, String(localized: "C'est parti \(name). Départ tranquille, laisse le corps se mettre en route.")),
                 (120, String(localized: "Trouve ton rythme de croisière : vise \(targetPace), foulée relâchée.")),
-                (360, Accord.selon(f: String(localized: "Beau rythme, reste régulière — c'est la constance qui paie 👊"),
-                                   m: String(localized: "Beau rythme, reste régulier — c'est la constance qui paie 👊"))),
+                (360, Accord.selon(f: String(localized: "Beau rythme, reste régulière — c'est la constance qui paie"),
+                                   m: String(localized: "Beau rythme, reste régulier — c'est la constance qui paie"))),
                 (720, String(localized: "Mi-séance, tu gères parfaitement. Garde ta cadence.")),
-                (1080, String(localized: "Dernière partie — finis proprement, sans t'arracher 🔥"))
+                (1080, String(localized: "Dernière partie — finis proprement, sans t'arracher"))
             ]
         }
         // Les consignes vocales ci-dessus viennent d'être construites à partir de cette séance :
@@ -610,7 +610,7 @@ final class LiveRunViewModel {
         case .recovery:
             showCue("Récupération — souffle, foulée relâchée.")
         case .cooldown:
-            showCue("Dernière répétition faite, bien joué 🔥 Retour au calme.")
+            showCue("Dernière répétition faite, bien joué. Retour au calme.")
         }
     }
 

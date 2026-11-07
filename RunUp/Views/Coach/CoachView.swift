@@ -133,7 +133,7 @@ struct CoachView: View {
         // la deuxième du premier message que lit quelqu'un qui découvre le coach.
         let sessionPart = String(localized: "Aujourd'hui, c'est \(profile.todaySession.displayTitle).")
         guard profile.hasReadinessData else {
-            return String(localized: "Salut \(profile.name) 👋 \(sessionPart) Une question avant de te lancer ?")
+            return String(localized: "Salut \(profile.name). \(sessionPart) Une question avant de te lancer ?")
         }
         let formPart: String
         switch profile.readiness {
@@ -142,7 +142,7 @@ struct CoachView: View {
         case 50..<65: formPart = String(localized: "Un peu de fatigue aujourd'hui (\(profile.readiness)/100).")
         default: formPart = String(localized: "Fatigue accumulée aujourd'hui (\(profile.readiness)/100).")
         }
-        return String(localized: "Salut \(profile.name) 👋 \(formPart) \(sessionPart) Une question avant de te lancer ?")
+        return String(localized: "Salut \(profile.name). \(formPart) \(sessionPart) Une question avant de te lancer ?")
     }
 
     /// CE QU'IL A LU — la preuve, pas un décor.

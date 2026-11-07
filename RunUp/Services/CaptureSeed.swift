@@ -575,7 +575,7 @@ enum CaptureSeed {
                   "createdAt": "\(ilYA(5))", "kudos": 1, "kudoedByMe": true, "isMine": false,
                   "author": { "id": "4", "name": "Sarah", "lastName": "Benali", "isPrivate": false } },
                 { "id": "mc3", "parentId": null,
-                  "text": "Bienvenue à Lina qui nous rejoint cette semaine 🎉",
+                  "text": "Bienvenue à Lina qui nous rejoint cette semaine",
                   "createdAt": "\(ilYA(30))", "kudos": 9, "kudoedByMe": true, "isMine": false,
                   "author": { "id": "2", "name": "Inès", "lastName": "Lambert", "isPrivate": false } }
               ]

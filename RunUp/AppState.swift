@@ -1040,8 +1040,8 @@ final class AppState {
         if AdaptivePlanEngine.checkDailyGoalsBonus(profile) {
             postClubActivity(type: "badge", text: String(localized: "a bouclé ses 3 objectifs du jour"), xpEarned: 120, contentKey: "daily_goals")
             notify(icon: "sparkles", colorHex: 0xC9FF3B, title: String(localized: "Journée bouclée"), text: String(localized: "Tes 3 objectifs du jour sont faits — +120 XP."))
-            NotificationService.shared.postImmediateNotification(title: String(localized: "Journée bouclée 🎉"), body: String(localized: "Tes 3 objectifs du jour sont faits — +120 XP."))
-            toast(String(localized: "Journée bouclée · +120 XP 🎉"))
+            NotificationService.shared.postImmediateNotification(title: String(localized: "Journée bouclée"), body: String(localized: "Tes 3 objectifs du jour sont faits — +120 XP."))
+            toast(String(localized: "Journée bouclée · +120 XP"))
         }
         // The sole publish for this event when HealthKit is connected — `init`/
         // `refreshProgramForCurrentDate` skip their own synchronous publish in that case so this

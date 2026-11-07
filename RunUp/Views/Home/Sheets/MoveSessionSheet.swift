@@ -112,7 +112,7 @@ struct MoveSessionSheet: View {
                 .padding(.top, 2)
 
             if destinations.contains(where: \.warns) {
-                Text("⚠ marque les jours qui placeraient deux séances exigeantes l'une après l'autre. C'est permis, mais c'est ainsi qu'on se blesse.")
+                Text("Le triangle marque les jours qui placeraient deux séances exigeantes l'une après l'autre. C'est permis, mais c'est ainsi qu'on se blesse.")
                     .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                     .padding(.top, 2)
             }

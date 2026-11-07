@@ -30,7 +30,7 @@ enum OfferCodeOutcome: Equatable {
     /// adressé à quelqu'un qui a simplement regardé — et il serait affiché neuf fois sur dix.
     var message: String? {
         switch self {
-        case .unlocked: return String(localized: "Bienvenue dans RUNUP Plus 🎉")
+        case .unlocked: return String(localized: "Bienvenue dans RUNUP Plus")
         case .nothingApplied: return nil
         case .sheetFailed: return String(localized: "L'écran des codes n'a pas pu s'ouvrir.")
         }

@@ -97,7 +97,7 @@ struct RunShareCardView: View {
         // instagramable shape.
         VStack(spacing: 0) {
             if isPersonalRecord {
-                Text("🏆 NOUVEAU RECORD")
+                Text("NOUVEAU RECORD")
                     .font(RUFont.sans(.body, weight: .bold))
                     .tracking(2)
                     .foregroundColor(secondaryColor)

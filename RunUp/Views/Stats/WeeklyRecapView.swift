@@ -101,7 +101,7 @@ struct WeeklyRecapView: View {
                 // and a bare `Text(String)` never resolves through it (see `EyebrowLabel`).
                 BackTitleHeaderView(
                     eyebrow: String(localized: "Semaine \(profile.weekNumber) · \(weekDateRangeLabel)"),
-                    title: isBestWeekEver ? "Ta meilleure semaine 🔥" : "Bilan de la semaine",
+                    title: isBestWeekEver ? "Ta meilleure semaine" : "Bilan de la semaine",
                     titleSize: .title
                 ) {
                     appState.go(.stats)

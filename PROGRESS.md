@@ -36,7 +36,7 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 | 2 | Activité en direct : dire pourquoi elle ne démarre pas | 2 h | **fait** |
 | 3 | `@MainActor` sur `LocationService` et `RunWeatherService` | 3 h | **fait** |
 | 4 | Finitions design : 2 émojis dans l'interface, 2 dégradés, vert isolé du profil d'élévation, boutons gris en capitales, segment blanc sur blanc, contraste de la bulle du coach | 1 j | à faire |
-| 5 | Données de démonstration : FC 148 seize fois, « Sortie » seize fois, défi « octobre » affiché en novembre | 4 h | à faire |
+| 5 | Données de démonstration : FC 148 seize fois, « Sortie » seize fois, défi « octobre » affiché en novembre | 4 h | **fait** |
 | 6 | Bilan de la semaine — l'écran noté 5,5/10 | 1,5 j | à faire |
 | 7 | États manquants : chargement de Stats et du Coach, erreurs d'inscription | 1 j | à faire |
 | 8 | Harnais de captures : photographier l'inscription, le paywall, l'écran de course | 0,5 j | à faire |
@@ -49,6 +49,44 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 
 Le 14 est arrivé après coup, et je le ferais passer devant les finitions de design : c'est le seul
 moyen de savoir ce qui casse chez quelqu'un d'autre que nous. Le reste de l'ordre tient.
+
+## Chantier 5 — les données de démonstration
+
+Premier point de l'audit dont les **trois** affirmations étaient exactes au chiffre près : seize
+sorties portant `avgHeartRate: 148`, seize portant `title: "Sortie"`, et un défi de club dont le
+mois est écrit en dur.
+
+### La fréquence cardiaque, et pourquoi le fractionné n'est pas le plus haut
+
+Ces valeurs sont des **moyennes de séance** — échauffement, récupérations et retour au calme
+compris — pas des pics. Un fractionné VMA touche Z5 pendant ses répétitions, mais ses
+trottinements de récupération tirent la moyenne vers le bas : elle finit **sous** celle d'un tempo,
+qui est un effort continu au seuil. Écrire 175 en moyenne sur un fractionné aurait été un chiffre
+faux sur une capture de l'App Store.
+
+Pour une coureuse intermédiaire (FC max ≈ 190) : footing facile 136, endurance 146, sortie longue
+144 (un peu au-dessus du footing facile à cause de la dérive cardiaque sur une heure et demie),
+tempo 158 — la plus haute des cinq — et fractionné 152. Une graine décale de quelques battements
+d'une sortie à l'autre : **8 valeurs distinctes au lieu d'une**.
+
+### Le titre, dont le vrai défaut était ailleurs
+
+Le seize fois « Sortie » avait **deux causes**, et la seconde touche de vraies utilisatrices :
+`HistoryView` affichait `run.title` — le libellé **français** de l'archétype, écrit à
+l'enregistrement — au lieu de `run.titreAffiche`. L'écran qui porte toute l'histoire de quelqu'un
+sortait donc en français pour une anglophone.
+
+L'accesseur existait, documenté, et était déjà utilisé par le bilan de course, la vidéo partagée et
+la carte du parcours. Il avait été oublié dans `HistoryView` (la ligne **et** son libellé VoiceOver)
+et dans `WeeklyRecapView`. Et il est strictement meilleur que ce qu'il remplace : il retombe sur le
+texte enregistré quand la sortie n'a pas de `sessionKind`, ce qui est exactement le cas que le
+commentaire d'`AddRunSheet` protège — une sortie importée de Strava avec son titre libre.
+
+### Le mois du défi
+
+Les captures de la 3.3 ont été prises en novembre : la fiche annonçait un défi **d'octobre**, avec
+six jours restants, à côté d'un historique daté de novembre. Le mois vient maintenant du
+calendrier, dans la langue de la capture, avec sa clé dans les trois langues.
 
 ## Chantier 4 — les finitions de design (émojis faits)
 

@@ -205,6 +205,19 @@ enum CaptureSeed {
 
         func dansDesJours(_ jours: Int) -> String { ilYA(-jours * 24) }
 
+        /// LE DÉFI DU CLUB PORTAIT « OCTOBRE », ÉCRIT EN DUR.
+        ///
+        /// Les captures de la 3.3 ont été prises en novembre : la fiche App Store annonçait donc
+        /// un défi d'octobre, avec six jours restants, à côté d'un historique daté de novembre.
+        /// Un mois écrit en dur dans une donnée de démonstration est périmé le mois suivant, et
+        /// personne ne pense à le relire — c'est le même défaut qu'une capture qui vieillit.
+        ///
+        /// Le mois vient donc du calendrier, dans la langue de la capture.
+        let defiDuMois: String = {
+            let mois = maintenant.formatted(.dateTime.month(.wide).locale(.current))
+            return String(localized: "300 km ensemble en \(mois)")
+        }()
+
         /// Une sortie de groupe À UNE HEURE RONDE, et pas « maintenant + 31 h ».
         ///
         /// Un décalage en heures depuis l'instant de la capture donne « DEMAIN · 13:01 » ou
@@ -254,7 +267,7 @@ enum CaptureSeed {
           ],
           "weekStats": { "totalKm": 158.1, "activeMembers": 5 },
           "challenge": {
-            "id": "d1", "title": "300 km ensemble en octobre",
+            "id": "d1", "title": "\(defiDuMois)",
             "targetKm": 300, "progressKm": 212.5, "endDate": "\(dansDesJours(6))"
           },
           "events": [
@@ -761,6 +774,47 @@ enum CaptureSeed {
         }
     }
 
+    /// LA FRÉQUENCE CARDIAQUE MOYENNE D'UNE SÉANCE, PAR TYPE DE SÉANCE.
+    ///
+    /// Les seize sorties de démonstration portaient toutes `148`. Seize fois le même chiffre dans
+    /// une colonne, sur les captures publiées à l'App Store : c'est le détail qui dit « ces
+    /// données sont inventées », et il le dit sur la fiche que quelqu'un lit avant de télécharger.
+    ///
+    /// # LE FRACTIONNÉ N'EST PAS LE PLUS HAUT, ET C'EST LE POINT
+    ///
+    /// Ces valeurs sont des MOYENNES DE SÉANCE, échauffement, récupérations et retour au calme
+    /// compris — pas des pics. Un fractionné VMA touche Z5 pendant ses répétitions, mais ses
+    /// trottinements de récupération et son échauffement tirent la moyenne vers le bas : elle
+    /// finit SOUS celle d'un tempo, qui est un effort continu au seuil. Mettre 175 en moyenne sur
+    /// un fractionné serait écrire un chiffre faux sur une capture d'écran de l'App Store.
+    ///
+    /// Les cinq valeurs, pour une coureuse de niveau intermédiaire (FC max ≈ 190) :
+    ///
+    ///   · footing facile — Z2 franc, 136 ;
+    ///   · footing d'endurance — Z2-3, 146 ;
+    ///   · sortie longue — Z2, 144 : un peu au-dessus du footing facile à cause de la dérive
+    ///     cardiaque, qui monte de quelques battements sur une heure et demie à allure constante ;
+    ///   · tempo — bloc au seuil plus échauffement, 158, la plus haute des cinq ;
+    ///   · fractionné VMA — 152, pour la raison écrite au-dessus.
+    ///
+    /// La graine décale de quelques battements d'une sortie à l'autre : deux footings du même mois
+    /// n'ont pas la même moyenne au battement près, et une colonne de valeurs identiques se
+    /// remarque autant qu'un seul chiffre répété.
+    private static func fcMoyenne(kind: SessionKind, graine: Int) -> Int {
+        let base: Int
+        switch kind {
+        case .easyFooting: base = 136
+        case .enduranceFooting: base = 146
+        case .longRun: base = 144
+        case .tempoRun: base = 158
+        case .vo2maxIntervals: base = 152
+        default: base = 145
+        }
+        // −4, −2, 0, +2, +4 puis on reboucle : déterministe, donc la même capture deux fois de
+        // suite donne la même image.
+        return base + (graine % 5) * 2 - 4
+    }
+
     private static func historique(maintenant: Date) -> [RunRecord] {
         let calendrier = Calendar.current
         // (jours en arrière, km, secondes/km, type de séance)
@@ -777,11 +831,15 @@ enum CaptureSeed {
         return sorties.enumerated().map { rang, sortie in
             let (jours, km, secParKm, kind) = sortie
             let releve = AdaptivePlanEngine.buildRunRecord(
-                title: "Sortie",
+                // Le libellé de la séance, et non « Sortie » seize fois. Traduit à l'ÉCRITURE,
+                // comme le fait `AddRunSheet` : ce champ porte aussi du texte libre venu de
+                // Strava, donc il n'est pas relu au catalogue. `titreAffiche` préfère de toute
+                // façon `sessionKind`, qui est posé juste en dessous — ce titre est le repli.
+                title: String(localized: String.LocalizationValue(kind.titleKey)),
                 elapsedSeconds: km * secParKm,
                 distanceKm: km,
                 kcal: Calories.estimate(.run, distanceKm: km, durationMinutes: Int(km * secParKm / 60)),
-                avgHeartRate: 148,
+                avgHeartRate: fcMoyenne(kind: kind, graine: rang),
                 elevationGainM: Int(km * 6),
                 sessionKind: kind
             )

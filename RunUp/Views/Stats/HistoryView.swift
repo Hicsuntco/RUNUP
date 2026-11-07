@@ -217,7 +217,18 @@ struct HistoryView: View {
                         Text("FC moy \(run.avgHeartRate)").font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                     }
                 }
-                Text(run.title)
+                // `titreAffiche` ET NON `title`, ET L'ACCESSEUR EXISTAIT DÉJÀ.
+                //
+                // `title` est le libellé FRANÇAIS de l'archétype, écrit à l'enregistrement : cette
+                // ligne sortait donc en français pour une anglophone, sur l'écran qui porte toute
+                // son histoire. `titreAffiche` lit le catalogue quand la sortie porte un
+                // `sessionKind`, et retombe sur le texte enregistré quand elle n'en a pas — ce qui
+                // est exactement le cas que le commentaire d'`AddRunSheet` protège, une sortie
+                // importée de Strava avec son titre libre.
+                //
+                // L'accesseur est documenté, utilisé par le bilan de course, la vidéo partagée et
+                // la carte du parcours. Il avait été oublié ici, et dans `WeeklyRecapView`.
+                Text(run.titreAffiche)
                     .font(RUFont.sans(.emphasis, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                     .lineLimit(1).minimumScaleFactor(0.8)
                 HStack(spacing: 12) {
@@ -326,7 +337,7 @@ struct HistoryView: View {
     private func runAccessibilityLabel(_ run: RunRecord) -> String {
         var parts: [String] = [
             run.date.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale.current)),
-            run.title,
+            run.titreAffiche,
             String(localized: "\(String(format: "%.1f", locale: Locale.current, run.distanceKm)) kilomètres"),
             String(localized: "durée \(PaceModel.formatDuration(Double(run.durationSeconds)))"),
             String(localized: "allure moyenne \(run.avgPace) par kilomètre")

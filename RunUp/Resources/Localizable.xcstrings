@@ -2865,6 +2865,23 @@
         }
       }
     },
+    "300 km ensemble en %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "300 km together in %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "300 km juntos en %@"
+          }
+        }
+      }
+    },
     "300 m de D+": {
       "extractionState": "manual",
       "localizations": {

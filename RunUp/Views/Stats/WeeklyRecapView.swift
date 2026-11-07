@@ -304,7 +304,8 @@ struct WeeklyRecapView: View {
     private func runRow(_ run: RunRecord) -> some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(run.title).font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
+                // `titreAffiche` : voir `HistoryView`, oublié ici pour la même raison.
+                Text(run.titreAffiche).font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
                 Text(run.date.formatted(.dateTime.weekday(.wide).day().month().locale(Locale.current))).font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
             }
             Spacer()

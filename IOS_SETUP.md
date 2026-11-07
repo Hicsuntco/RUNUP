@@ -244,6 +244,15 @@ devrait y être automatiquement, générée depuis `project.yml`) et relance le 
 1. Pousse ces changements sur la branche connectée à Vercel — le projet redéploie automatiquement
    et prend en compte le nouveau dossier `api/` (comptes, clubs, activités) et `package.json`
    (nouvelles dépendances : `@neondatabase/serverless`, `bcryptjs`, `jose`).
+
+   > **La branche connectée est une branche de travail, et elle est la PRODUCTION.** Au
+   > 7 novembre 2026, c'est `claude/runup-ios-swiftui-app-5b1yv6` : Vercel enregistre un
+   > déploiement « Production » par commit — douze ce jour-là. `main` n'a pas bougé depuis le
+   > 24 octobre et ne contient même pas `api/races/`. Donc : pas de préproduction, pas de
+   > relecture, et une modification de `api/`, `lib/` ou `package.json` est EN LIGNE dans la
+   > minute. Ce jour-là, une montée de `jose` 5 → 6 a mis toutes les routes à terre pendant onze
+   > minutes, construction Vercel verte à l'appui. La sonde `ci_scripts/check_deploiement.py` est
+   > ce qui l'a vu.
 2. Dans l'app : onglet **Le Club** → "Se connecter" → teste les 2 méthodes (Apple, email/mot de
    passe) → crée un club → termine une course → vérifie qu'elle apparaît dans le fil d'activité et
    que ton XP bouge dans le classement.

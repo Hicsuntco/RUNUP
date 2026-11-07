@@ -8,6 +8,22 @@
 #
 # Une machine Linux, quelques secondes, et le lanceur intégré à Node — aucune dépendance de test
 # à installer, donc rien qui puisse casser tout seul un lundi matin.
+#
+# ─── ET CES TESTS NE SONT PAS UNE BARRIÈRE : LA POUSSÉE EST DÉJÀ EN LIGNE ─────────────────────
+#
+# Vercel déploie la branche de travail `claude/runup-ios-swiftui-app-5b1yv6` EN PRODUCTION, à
+# chaque commit — douze déploiements « Production » le 7 novembre 2026, un par commit, enregistrés
+# par Vercel sur les déploiements GitHub du dépôt. Il n'y a pas de préproduction, et ce workflow
+# tourne PENDANT que le déploiement se fait, pas avant.
+#
+# Ce n'est donc pas un garde-fou avant mise en ligne, c'est un constat après. Le 7 novembre, une
+# montée de `jose` 5 vers 6 a mis toutes les routes de l'API à terre pendant onze minutes : la
+# construction Vercel était verte — `jose` 6 n'est livré qu'en ESM et `require` d'un module ESM
+# dépend de la version de Node, qui ne se lit pas d'ici. Ce qui l'a vu est l'étape
+# `check_deploiement.py` ci-dessous, qui sonde la production.
+#
+# Conséquence pratique : une modification de `api/`, `lib/` ou `package.json` part chez les gens
+# qui ont l'app, tout de suite. On la fait en le sachant, ou on ne la fait pas.
 name: Serveur
 
 on:

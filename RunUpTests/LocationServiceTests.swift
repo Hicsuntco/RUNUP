@@ -65,20 +65,39 @@ final class LocationServiceTests: XCTestCase {
         XCTAssertEqual(service.distanceMeters, 180, accuracy: 2)
     }
 
-    /// LE PLANCHER SUIT LA PRÉCISION ANNONCÉE, il n'est pas fixe.
+    /// LE PLANCHER SUIT LA PRÉCISION ANNONCÉE, ET IL COÛTE LA QUEUE DU TRAJET — PAS LE TRAJET.
     ///
-    /// À 25 mètres de précision, un pas de 20 mètres n'est pas distinguable d'un arrêt ; à 5
-    /// mètres de précision, il l'est. La même suite de points donne donc deux résultats, et c'est
-    /// voulu.
-    func testLePlancherSuitLaPrecisionAnnoncee() {
+    /// # MON PREMIER TEST ICI AFFIRMAIT ZÉRO, ET IL AVAIT TORT
+    ///
+    /// J'avais écrit que dix pas de vingt mètres à vingt-cinq mètres de précision ne comptent
+    /// rien, puisque chaque pas est sous le plancher. C'est faux, et le test juste au-dessus le
+    /// disait déjà : le plancher NE MET PAS À JOUR `lastLocation`, donc les pas écartés
+    /// s'additionnent jusqu'à franchir le seuil. Deux pas de vingt font quarante, quarante
+    /// dépasse vingt-cinq, et quarante sont comptés.
+    ///
+    /// J'avais donc écrit deux tests qui se contredisaient, et c'est la construction qui m'a dit
+    /// lequel des deux mentait.
+    ///
+    /// # CE QUE LE PLANCHER COÛTE VRAIMENT
+    ///
+    /// Sur un trajet en ligne droite, un signal flou mesure la même chose qu'un signal net, à
+    /// UNE FENÊTRE DE COMPARAISON PRÈS : les derniers mètres, ceux qui n'ont pas eu le temps
+    /// d'atteindre le seuil avant la fin, sont perdus. 180 mètres parcourus donnent 180 à cinq
+    /// mètres de précision et 160 à vingt-cinq.
+    ///
+    /// Ce n'est pas le trajet qu'il écarte, ce sont les détours : un fix qui part et revient dans
+    /// le rayon de sa propre imprécision n'ajoute rien, et c'est exactement ce qu'on lui demande.
+    func testLePlancherSuitLaPrecisionAnnonceeEtCouteLaQueueDuTrajet() {
         let flou = LocationService()
         let net = LocationService()
         for i in 0..<10 {
             flou.consomme([fix(metres: Double(i) * 20, secondes: Double(i) * 5, precision: 25)])
             net.consomme([fix(metres: Double(i) * 20, secondes: Double(i) * 5, precision: 5)])
         }
-        XCTAssertEqual(flou.distanceMeters, 0, accuracy: 0.001)
-        XCTAssertGreaterThan(net.distanceMeters, 150)
+        XCTAssertEqual(net.distanceMeters, 180, accuracy: 2, "le signal net doit tout mesurer")
+        XCTAssertEqual(flou.distanceMeters, 160, accuracy: 3,
+                       "le signal flou perd une fenêtre de comparaison, pas le trajet")
+        XCTAssertLessThan(flou.distanceMeters, net.distanceMeters)
     }
 
     /// Un déplacement lent mais réel finit par compter : il se mesure contre le dernier fix

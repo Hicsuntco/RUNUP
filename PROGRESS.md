@@ -39,7 +39,7 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 | 3 | `@MainActor` sur `LocationService` et `RunWeatherService` | 3 h | **fait** |
 | 4 | Finitions design : 2 émojis dans l'interface, 2 dégradés, vert isolé du profil d'élévation, boutons gris en capitales, segment blanc sur blanc, contraste de la bulle du coach | 1 j | à faire |
 | 5 | Données de démonstration : FC 148 seize fois, « Sortie » seize fois, défi « octobre » affiché en novembre | 4 h | **fait** |
-| 6 | Bilan de la semaine — l'écran noté 5,5/10 | 1,5 j | à faire |
+| 6 | Bilan de la semaine — l'écran noté 5,5/10 | 1,5 j | **fait** |
 | 7 | États manquants : chargement de Stats et du Coach, erreurs d'inscription | 1 j | à faire |
 | 8 | Harnais de captures : photographier l'inscription, le paywall, l'écran de course | 0,5 j | à faire |
 | 9 | Tests : `SubscriptionService` et `LocationService` d'abord | 2 j | à faire |
@@ -51,6 +51,52 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 
 Le 14 est arrivé après coup, et je le ferais passer devant les finitions de design : c'est le seul
 moyen de savoir ce qui casse chez quelqu'un d'autre que nous. Le reste de l'ordre tient.
+
+## Chantier 6 — le bilan de la semaine
+
+Mon audit avait noté cet écran 5,5/10 sans dire pourquoi. En le lisant, la raison est nette et
+elle est unique : **cinq définitions différentes de « la semaine »**, dans cinq propriétés privées
+d'une vue SwiftUI — donc aucune vérifiable, et deux qui se contredisaient sur le même écran.
+
+| Ce qui était affiché | Ce qui était compté | Ce qui aurait dû l'être |
+| --- | --- | --- |
+| « Parcourus » | à pied | à pied |
+| « Volume par jour (km) » | **toutes disciplines** | à pied |
+| « Ta meilleure semaine » | à pied cette semaine **vs toutes** les autres | à pied des deux côtés |
+| « Nouveau record d'allure » | **toutes** cette semaine vs course avant | course des deux côtés |
+| « Temps actif » | **à pied seulement** | toutes disciplines |
+| « Séances » | toutes, sans que ce soit écrit | toutes, écrit |
+
+### Le plus grave
+
+`avgPace` est stocké en secondes au kilomètre pour **toutes** les disciplines. Une sortie à vélo à
+20 km/h vaut donc 180 s/km, ce qui bat n'importe quelle allure de course à pied. L'écran annonçait
+**« Nouveau record d'allure · 3:00/km sur 20,0 km »** après une sortie à vélo : un record de course
+inventé par une discipline qui n'en est pas une.
+
+### La règle qui tranche les six cas
+
+**Les kilomètres ne s'additionnent pas entre disciplines, le temps si.** Vingt kilomètres à vélo ne
+sont pas vingt kilomètres en courant — les mettre dans le même total ne mesure rien. Une heure, en
+revanche, est une heure, et c'est précisément ce que « temps actif » veut dire à côté d'un compteur
+de kilomètres.
+
+`RunRecordDiscipline` portait déjà la doctrine, commentaire compris : `.allDisciplines` existe pour
+que « toutes » soit **une décision écrite, pas l'absence de décision**. Les cinq agrégations
+l'ignoraient ; plus aucune n'utilise `weekRuns` nu.
+
+### Et un sixième cas, dans la liste des séances
+
+La ligne écrivait `avgPace + "/km"` pour toutes les disciplines — donc **« 3:00/km » sous une sortie
+vélo**. `TimeFormat.rythme(_:secondesParKm:)` existe et relit le champ dans l'unité que la
+discipline *affiche* : au kilomètre à pied, aux cent mètres en bassin, en km/h à vélo.
+
+### Ce qui le garde
+
+Le calcul est sorti de la vue dans `BilanDeLaSemaine` — même raison que `PlanRecap`, et son
+en-tête l'explique : une vue SwiftUI ne se teste pas, une structure qui prend un historique et rend
+des nombres, oui. `RunUpTests/BilanDeLaSemaineTests.swift`, onze tests, dont « une sortie à vélo ne
+bat pas un record d'allure de course » et « la somme des barres est exactement le total affiché ».
 
 ## Chantier 5 — les données de démonstration
 

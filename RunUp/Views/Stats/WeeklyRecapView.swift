@@ -17,76 +17,37 @@ struct WeeklyRecapView: View {
     @State private var chartRevealed = false
     private var profile: UserProfile { appState.profile }
 
-    private var weekRange: Range<Date> { AdaptivePlanEngine.currentWeekRange() }
-    private var weekRuns: [RunRecord] { allRuns.filter { weekRange.contains($0.date) } }
-
-    private var lastWeekKm: Double {
-        let lastWeekRange = AdaptivePlanEngine.currentWeekRange(from: (Calendar.current.date(byAdding: .day, value: -7, to: .now) ?? .now))
-        return allRuns.onFoot.filter { lastWeekRange.contains($0.date) }.reduce(0) { $0 + $1.distanceKm }
-    }
-
-    private var totalKm: Double { weekRuns.onFoot.reduce(0) { $0 + $1.distanceKm } }
-    private var totalDurationSeconds: Int { weekRuns.onFoot.reduce(0) { $0 + $1.durationSeconds } }
-
-    private var avgPaceSecPerKm: Double? {
-        let paces = weekRuns.only(.run).compactMap { PaceModel.parseSecPerKm($0.avgPace) }
-        guard !paces.isEmpty else { return nil }
-        return paces.reduce(0, +) / Double(paces.count)
-    }
-
-    /// True only when this week's real distance beats every other real week on record — mirrors
-    /// the mockup's "TA MEILLEURE SEMAINE" title, but never claims it without the numbers to
-    /// back it (a generic title otherwise, rather than always claiming "best week").
-    private var isBestWeekEver: Bool {
-        guard totalKm > 0 else { return false }
-        var weekTotals: [Date: Double] = [:]
-        for run in allRuns {
-            let start = AdaptivePlanEngine.currentWeekRange(from: run.date).lowerBound
-            weekTotals[start, default: 0] += run.distanceKm
-        }
-        let otherWeeksMax = weekTotals.filter { $0.key != weekRange.lowerBound }.values.max() ?? 0
-        return totalKm > otherWeeksMax
+    /// LE CALCUL VIT DANS `BilanDeLaSemaine`, ET C'EST TOUT L'OBJET DE CE CHANTIER.
+    ///
+    /// Cet écran portait cinq définitions différentes de « la semaine », dans cinq propriétés
+    /// privées d'une vue SwiftUI — donc aucune n'était vérifiable, et deux se contredisaient sur
+    /// le même écran. Le détail de chacune est en tête de `BilanDeLaSemaine`, avec la règle qui
+    /// les tranche : les kilomètres ne s'additionnent pas entre disciplines, le temps si.
+    private var bilan: BilanDeLaSemaine {
+        BilanDeLaSemaine(historique: allRuns, semaine: AdaptivePlanEngine.currentWeekRange())
     }
 
     private var weekDateRangeLabel: String {
-        let start = weekRange.lowerBound
+        let start = bilan.semaine.lowerBound
         let end = Calendar.current.date(byAdding: .day, value: 6, to: start) ?? start
         return "\(start.formatted(.dateTime.day().locale(Locale.current)))-\(end.formatted(.dateTime.day().month(.wide).locale(Locale.current)))"
     }
 
-    /// A real, just-broken personal best inside this week's runs specifically (checked against
-    /// every OTHER week's runs, so a record set earlier this same week doesn't get re-claimed on
-    /// every visit) — prefers a pace record (the more universally exciting one for a runner) and
-    /// falls back to a distance record. Nil, not a fabricated one, when neither happened.
-    private var weekRecord: (label: String, value: String)? {
-        let priorRuns = allRuns.filter { !weekRange.contains($0.date) }
-        let priorBestPace = priorRuns.only(.run).compactMap { PaceModel.parseSecPerKm($0.avgPace) }.min()
-        let thisWeekBestPaceRun = weekRuns
-            .compactMap { run -> (RunRecord, Double)? in PaceModel.parseSecPerKm(run.avgPace).map { (run, $0) } }
-            .min(by: { $0.1 < $1.1 })
-        if let priorBestPace, let (run, pace) = thisWeekBestPaceRun, pace < priorBestPace {
-            return (String(localized: "Nouveau record d'allure"), String(localized: "\(PaceModel.formatDuration(pace))/km sur \(String(format: "%.1f", locale: Locale.current, run.distanceKm)) km"))
-        }
-        let priorBestDistance = priorRuns.onFoot.map(\.distanceKm).max() ?? 0
-        if let longest = weekRuns.onFoot.max(by: { $0.distanceKm < $1.distanceKm }), longest.distanceKm > priorBestDistance {
-            return (String(localized: "Nouveau record de distance"), String(format: "%.1f km", locale: Locale.current, longest.distanceKm))
-        }
-        return nil
-    }
+    private var todayWeekdayIndex: Int { DailyGoalsSnapshot.rangDuJour(.now) }
 
-    /// Real per-weekday distance within this week's runs, Monday...Sunday — same weekday remap
-    /// `AdaptivePlanEngine` uses elsewhere (`Calendar.component(.weekday)` is Sunday-first).
-    private var dailyVolumes: [Double] {
-        var totals = [Double](repeating: 0, count: 7)
-        for run in weekRuns {
-            let weekday = (Calendar.current.component(.weekday, from: run.date) + 5) % 7
-            totals[weekday] += run.distanceKm
+    /// Le libellé et la valeur du record, dans la langue courante. La décision de savoir s'il y
+    /// EN A un appartient au bilan ; l'écrire appartient à la vue.
+    private var recordAffiche: (label: String, value: String)? {
+        switch bilan.record {
+        case nil:
+            return nil
+        case .allure(let secParKm, let km):
+            return (String(localized: "Nouveau record d'allure"),
+                    String(localized: "\(PaceModel.formatDuration(secParKm))/km sur \(String(format: "%.1f", locale: Locale.current, km)) km"))
+        case .distance(let km):
+            return (String(localized: "Nouveau record de distance"),
+                    String(format: "%.1f km", locale: Locale.current, km))
         }
-        return totals
-    }
-
-    private var todayWeekdayIndex: Int {
-        (Calendar.current.component(.weekday, from: .now) + 5) % 7
     }
 
     var body: some View {
@@ -101,7 +62,7 @@ struct WeeklyRecapView: View {
                 // and a bare `Text(String)` never resolves through it (see `EyebrowLabel`).
                 BackTitleHeaderView(
                     eyebrow: String(localized: "Semaine \(profile.weekNumber) · \(weekDateRangeLabel)"),
-                    title: isBestWeekEver ? "Ta meilleure semaine" : "Bilan de la semaine",
+                    title: bilan.estLaMeilleureSemaine ? "Ta meilleure semaine" : "Bilan de la semaine",
                     titleSize: .title
                 ) {
                     appState.go(.stats)
@@ -111,14 +72,14 @@ struct WeeklyRecapView: View {
 
                 volumeChart
 
-                if let weekRecord {
-                    recordCard(weekRecord)
+                if let recordAffiche {
+                    recordCard(recordAffiche)
                 }
 
-                if let avgPaceSecPerKm {
+                if let allure = bilan.allureMoyenneSecParKm {
                     HStack {
                         RUCardHeader(icon: "speedometer", title: "Allure moyenne")
-                        Text(verbatim: "\(PaceModel.formatDuration(avgPaceSecPerKm))/km").displayStyle(.subtitle).foregroundColor(RUColor.textPrimary)
+                        Text(verbatim: "\(PaceModel.formatDuration(allure))/km").displayStyle(.subtitle).foregroundColor(RUColor.textPrimary)
                     }
                     .padding(18)
                     .ruCard()
@@ -126,7 +87,9 @@ struct WeeklyRecapView: View {
 
                 RUCardHeader(icon: "figure.run", title: "Courses de la semaine").padding(.top, 6)
 
-                if weekRuns.isEmpty {
+                // La liste montre TOUT ce qu'elle a fait, et c'est écrit : un bilan de semaine
+                // qui cacherait la sortie vélo du mardi ne serait pas un bilan de la semaine.
+                if bilan.seances.isEmpty {
                     Text("Pas encore de course cette semaine — tu as le temps.")
                         .font(RUFont.sans(.body))
                         .foregroundColor(RUColor.text2)
@@ -135,7 +98,7 @@ struct WeeklyRecapView: View {
                         .ruCard()
                 } else {
                     VStack(spacing: 8) {
-                        ForEach(weekRuns) { run in
+                        ForEach(bilan.seances) { run in
                             runRow(run)
                         }
                     }
@@ -150,7 +113,7 @@ struct WeeklyRecapView: View {
             // The one genuinely verified achievement moment on this screen (a real best week, or
             // a real PR) — deserves a stronger confirmation than the plain page-open every other
             // stats screen gets.
-            if isBestWeekEver || weekRecord != nil { Haptics.success() }
+            if bilan.estLaMeilleureSemaine || bilan.record != nil { Haptics.success() }
         }
     }
 
@@ -158,16 +121,22 @@ struct WeeklyRecapView: View {
     /// "distance totale" hero + a plain row of metrics underneath, matching the mockup's stat
     /// grid where the km figure is one cell among four, not a standalone hero.
     private var statsGrid: some View {
-        let deltaKm = totalKm - lastWeekKm
+        let totalKm = bilan.kilometres
+        let deltaKm = totalKm - bilan.kilometresSemainePrecedente
         return VStack(spacing: 10) {
             HStack(spacing: 10) {
                 statTile(value: String(format: "%.1f", locale: Locale.current, totalKm), unit: "km", label: String(localized: "Parcourus"),
-                         chip: lastWeekKm > 0 ? (deltaKm >= 0 ? "▲ \(String(format: "%.1f", locale: Locale.current, deltaKm))" : "▼ \(String(format: "%.1f", locale: Locale.current, -deltaKm))") : nil,
+                         chip: bilan.kilometresSemainePrecedente > 0 ? (deltaKm >= 0 ? "▲ \(String(format: "%.1f", locale: Locale.current, deltaKm))" : "▼ \(String(format: "%.1f", locale: Locale.current, -deltaKm))") : nil,
                          chipColor: deltaKm >= 0 ? RUColor.lime : RUColor.amber)
-                statTile(value: "\(weekRuns.count)", unit: nil, label: String(localized: "Séances"), chip: nil, chipColor: RUColor.lime)
+                // `.allDisciplines` ET NON `weekRuns` NU. Le compte porte bien sur tout — une
+                // séance est une séance, qu'elle se courre, se roule ou se nage — mais
+                // `RunRecordDiscipline` demande que « toutes » soit une décision ÉCRITE et non
+                // l'absence de décision, et c'est exactement ce qui manquait aux quatre autres
+                // agrégations de cet écran.
+                statTile(value: "\(bilan.nombreDeSeances)", unit: nil, label: String(localized: "Séances"), chip: nil, chipColor: RUColor.lime)
             }
             HStack(spacing: 10) {
-                statTile(value: PaceModel.formatTotalDuration(totalDurationSeconds), unit: nil, label: String(localized: "Temps actif"), chip: nil, chipColor: RUColor.cyan)
+                statTile(value: PaceModel.formatTotalDuration(bilan.secondesActives), unit: nil, label: String(localized: "Temps actif"), chip: nil, chipColor: RUColor.cyan)
                 statTile(value: "\(profile.streak)", unit: String(localized: "j"), label: String(localized: "Série"), chip: nil, chipColor: RUColor.amber)
             }
         }
@@ -208,7 +177,7 @@ struct WeeklyRecapView: View {
     }
 
     private var volumeChart: some View {
-        let bars = dailyVolumes
+        let bars = bilan.kilometresParJour
         let maxBar = max(bars.max() ?? 1, 1)
         return VStack(alignment: .leading, spacing: 12) {
             RUCardHeader(icon: "chart.bar.fill", title: "Volume par jour (km)")
@@ -301,6 +270,15 @@ struct WeeklyRecapView: View {
         .accessibilityLabel("\(record.label), \(record.value)")
     }
 
+    /// Le rythme d'une séance dans l'unité de SA discipline. Vide quand l'allure enregistrée
+    /// n'est pas lisible — une sortie saisie sans durée n'a pas de rythme, et « 0:00/km » serait
+    /// un chiffre inventé.
+    private func rythmeAffiche(_ run: RunRecord) -> String {
+        guard let secParKm = PaceModel.parseSecPerKm(run.avgPace), secParKm > 0 else { return "" }
+        let (valeur, unite) = TimeFormat.rythme(run.discipline, secondesParKm: secParKm)
+        return "\(valeur) \(unite)"
+    }
+
     private func runRow(_ run: RunRecord) -> some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
@@ -310,7 +288,11 @@ struct WeeklyRecapView: View {
             }
             Spacer()
             Text(String(format: "%.2f km", locale: Locale.current, run.distanceKm)).font(RUFont.mono(.body)).foregroundColor(RUColor.text2)
-            Text(run.avgPace + "/km").font(RUFont.mono(.body)).foregroundColor(RUColor.text2)
+            // `TimeFormat.rythme` ET NON `avgPace + "/km"`. Le champ est stocké en secondes au
+            // kilomètre pour toutes les disciplines ; c'est ce formateur qui le relit dans l'unité
+            // que la discipline AFFICHE — au kilomètre à pied, aux cent mètres en bassin, en km/h
+            // à vélo. Cette ligne écrivait « 3:00/km » sous une sortie vélo.
+            Text(verbatim: rythmeAffiche(run)).font(RUFont.mono(.body)).foregroundColor(RUColor.text2)
         }
         .padding(RUSpacing.cardPadding)
         .ruCard(radius: RUSpacing.radiusCard)

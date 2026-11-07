@@ -41,7 +41,7 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 | 5 | Données de démonstration : FC 148 seize fois, « Sortie » seize fois, défi « octobre » affiché en novembre | 4 h | **fait** |
 | 6 | Bilan de la semaine — l'écran noté 5,5/10 | 1,5 j | **fait** |
 | 7 | États manquants : chargement de Stats et du Coach, erreurs d'inscription | 1 j | **fait** — l'item était faux |
-| 8 | Harnais de captures : photographier l'inscription, le paywall, l'écran de course | 0,5 j | à faire |
+| 8 | Harnais de captures : photographier l'inscription, le paywall, l'écran de course | 0,5 j | **fait** |
 | 9 | Tests : `SubscriptionService` et `LocationService` d'abord | 2 j | à faire |
 | 10 | Valeurs en dur → jetons du design system, les 15 % restants | 1,5 j | à faire |
 | 11 | Dépendances serveur : `jose` 6 et `bcryptjs` 3 | 0,5 j | à faire |
@@ -51,6 +51,39 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 
 Le 14 est arrivé après coup, et je le ferais passer devant les finitions de design : c'est le seul
 moyen de savoir ce qui casse chez quelqu'un d'autre que nous. Le reste de l'ordre tient.
+
+## Chantier 8 — les trois écrans que personne ne revoit
+
+L'inscription, parce qu'on ne s'inscrit qu'une fois. Le mur d'abonnement, parce qu'on est abonné et
+qu'`introShown` s'en souvient pour toujours. L'écran de course, parce qu'on le regarde en courant.
+Les trois écrans les plus décisifs de l'app, et les trois qu'aucune capture n'avait jamais montrés
+— donc les trois qu'on jugeait de mémoire. Le dépôt écrit cette phrase trois fois déjà.
+
+- **`--inscription`** est le seul des trois à demander un drapeau **de moins** : `onboarded` vaut
+  `false` à la création, donc il suffit de ne pas poser la graine. Le mode démonstration reste
+  allumé — c'est lui qui coupe le réseau et Santé.
+- **`--paywall`** contourne `introShown` sans y toucher, donc il ne consomme pas la présentation
+  réelle.
+- **`--encours`** démarre une vraie course.
+
+### Le piège de l'écran de course
+
+`demarrer()` appelle `location.requestAuthorization()` : une **boîte de dialogue système** se
+serait posée sur la capture — au mieux une image de la boîte, au pire trente secondes d'attente
+suivies d'un écran qu'on n'a pas vu. La demande est maintenant gardée par `Demonstration.enCours`,
+comme huit autres endroits du dépôt, et c'est juste au-delà du harnais : une construction dont le
+profil et le club sont inventés et dont le réseau est coupé n'a aucune raison de réclamer la
+position de quelqu'un.
+
+Le micro et les notifications, vérifiés aussi, ne se demandent qu'au **geste** — pas à l'apparition.
+
+### Ce que la capture montrera, et ce qu'elle ne montrera pas
+
+**Pas de distance.** Le simulateur n'a pas de signal GPS : 0,00 km et le bandeau « Recherche du
+signal GPS… ». C'est l'état des premières secondes de chaque vraie course, et c'est tout ce qu'on
+vient regarder — la disposition, le panneau de mesures, les commandes, la place de la bulle du
+coach, et le bandeau lui-même. Attendre d'avoir un GPS simulé pour photographier cet écran
+reviendrait à ne jamais le photographier.
 
 ## Chantier 7 — les états manquants, qui ne manquaient pas
 

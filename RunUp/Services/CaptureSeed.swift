@@ -79,6 +79,42 @@ enum CaptureSeed {
         ProcessInfo.processInfo.arguments.contains("--sortie")
     }
 
+    /// `--inscription` : ne RIEN poser, pour photographier l'inscription.
+    ///
+    /// Les trois écrans les plus décisifs de l'app n'avaient jamais été photographiés — et ce sont
+    /// ceux qu'on ne revoit jamais soi-même : l'inscription, parce qu'on ne s'inscrit qu'une fois,
+    /// le mur d'abonnement, parce qu'on est abonné, et l'écran de course, parce qu'on le regarde
+    /// en courant. Une page qu'on ne photographie pas est une page qu'on juge de mémoire, et c'est
+    /// déjà écrit trois fois dans ce dépôt.
+    ///
+    /// Celui-ci est le seul des trois à ne pas demander un drapeau DE PLUS mais un drapeau DE
+    /// MOINS : `UserProfile.onboarded` vaut `false` à la création, donc il suffit de ne pas poser
+    /// la graine pour que `RunUpApp` ouvre sur `OnboardingContainerView`. Le mode démonstration
+    /// reste allumé — c'est lui qui coupe le réseau et Santé.
+    static var inscriptionDemandee: Bool {
+        ProcessInfo.processInfo.arguments.contains("--inscription")
+    }
+
+    /// `--paywall` : présenter le mur d'abonnement par-dessus l'écran.
+    ///
+    /// Il n'est pas un `AppScreen` — c'est une feuille plein écran posée à la racine — donc il se
+    /// demande à part, comme `--profil=`.
+    static var paywallDemande: Bool {
+        ProcessInfo.processInfo.arguments.contains("--paywall")
+    }
+
+    /// `--encours` : démarrer une course, pour photographier l'écran de course.
+    ///
+    /// ET IL N'Y AURA PAS DE DISTANCE DESSUS, C'EST ATTENDU. Le simulateur n'a pas de signal GPS,
+    /// donc `LocationService` n'accroche jamais : la capture montre 0,00 km et le bandeau
+    /// « Recherche du signal GPS… ». C'est précisément l'état des premières secondes de chaque
+    /// vraie course, et c'est tout ce qu'on vient vérifier ici — la disposition, le panneau de
+    /// mesures, les commandes, la place de la bulle du coach, et le bandeau lui-même. Attendre
+    /// d'avoir un GPS simulé pour photographier cet écran reviendrait à ne jamais le photographier.
+    static var courseEnCoursDemandee: Bool {
+        ProcessInfo.processInfo.arguments.contains("--encours")
+    }
+
     /// `--onglet=apercu|classement|activite` : l'onglet du Club à montrer.
     ///
     /// La démonstration ouvre le Club sur son fil, parce que c'est le seul des trois onglets

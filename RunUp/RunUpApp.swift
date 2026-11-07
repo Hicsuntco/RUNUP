@@ -116,7 +116,15 @@ private struct RootView: View {
                     // des captures n'est pas signée, donc elle n'a pas le droit HealthKit, et le
                     // premier appel tuait le processus. Voir `HealthKitService.desactiver()`.
                     HealthKitService.desactiver()
-                    CaptureSeed.poser(dans: modelContext)
+                    // SAUF POUR L'INSCRIPTION, QUI DEMANDE UN DRAPEAU DE MOINS.
+                    //
+                    // `UserProfile.onboarded` vaut `false` à la création : ne pas poser la graine
+                    // suffit donc à ouvrir sur `OnboardingContainerView`. Le mode démonstration
+                    // reste allumé — c'est lui qui coupe le réseau et Santé, et une inscription
+                    // qui appellerait un serveur absent se bloquerait au premier écran.
+                    if !CaptureSeed.inscriptionDemandee {
+                        CaptureSeed.poser(dans: modelContext)
+                    }
                 }
                 #endif
                 appState = AppState(modelContext: modelContext)
@@ -137,6 +145,13 @@ private struct RootView: View {
                 // les deux dans l'autre ordre la refermerait aussitôt.
                 if let profil = CaptureSeed.profilDemande {
                     appState?.ouvrirLeProfil(profil)
+                }
+                // UNE COURSE EN COURS, pour photographier l'écran de course. Il n'y aura pas de
+                // distance dessus : le simulateur n'a pas de GPS, donc la capture montre l'état
+                // des premières secondes d'une vraie course, bandeau de recherche compris. Voir
+                // `CaptureSeed.courseEnCoursDemandee`.
+                if CaptureSeed.courseEnCoursDemandee {
+                    appState?.startRun()
                 }
                 // Même ordre, même raison : la page d'une sortie se présente par-dessus l'écran.
                 if CaptureSeed.sortieDemandee, let id = appState?.cachedActivityDetail?.id {
@@ -299,6 +314,15 @@ private struct ContentRouterView: View {
             introShown = true
             showIntro = true
         }
+        #if DEBUG
+        // LE MUR D'ABONNEMENT, POUR LE HARNAIS DE CAPTURES.
+        //
+        // Il ne se montre spontanément qu'UNE fois dans la vie de l'app — à la sortie de
+        // l'inscription, et `introShown` s'en souvient pour toujours. C'est exactement pour ça
+        // qu'il n'avait jamais été photographié : on ne le revoit jamais soi-même. Le drapeau
+        // contourne `introShown` sans y toucher, donc il ne consomme pas la présentation réelle.
+        .onAppear { if CaptureSeed.paywallDemande { showIntro = true } }
+        #endif
         .environment(subscriptions)
         .task { await subscriptions.start() }
         // LE DROIT DE LA MAISON SUIT LE COMPTE CONNECTÉ, ET SEULEMENT LUI.

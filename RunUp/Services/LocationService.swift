@@ -105,7 +105,22 @@ final class LocationService: NSObject {
         authorizationStatus = manager.authorizationStatus
     }
 
+    /// EN MODE DÉMONSTRATION, ON NE DEMANDE RIEN.
+    ///
+    /// Le harnais de captures photographie désormais l'écran de course, et `demarrer()` appelle
+    /// cette méthode : une boîte de dialogue système posée par-dessus rendrait la capture
+    /// inutile — au mieux une image de la boîte, au pire une attente de trente secondes suivie
+    /// d'un écran qu'on n'a pas vu.
+    ///
+    /// Et c'est juste au-delà du harnais : une construction de démonstration, dont le profil et
+    /// le club sont inventés et dont le réseau est coupé, n'a aucune raison de réclamer la
+    /// position de quelqu'un. Huit autres endroits du dépôt posent déjà cette même garde.
+    ///
+    /// Conséquence attendue : `authorizationStatus` reste `.notDetermined`, donc `gpsState` vaut
+    /// `.searching` et l'écran affiche « Recherche du signal GPS… ». C'est exactement l'état des
+    /// premières secondes d'une vraie course.
     func requestAuthorization() {
+        guard !Demonstration.enCours else { return }
         manager.requestWhenInUseAuthorization()
     }
 

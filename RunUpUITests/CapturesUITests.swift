@@ -150,9 +150,40 @@ final class CapturesUITests: XCTestCase {
         prendre(rang: 18, ecran: "profile", nom: "profil-bas", diagnostic: true, defilements: 3)
     }
 
+    // MARK: Les trois écrans que personne ne revoit
+    //
+    // L'inscription, parce qu'on ne s'inscrit qu'une fois. Le mur d'abonnement, parce qu'on est
+    // abonné et qu'`introShown` s'en souvient pour toujours. L'écran de course, parce qu'on le
+    // regarde en courant. Ce sont les trois écrans les plus décisifs de l'app, et les trois
+    // qu'aucune capture n'avait jamais montrés — donc les trois qu'on jugeait de mémoire.
+
+    /// Le premier écran que voit quelqu'un. Aucune graine n'est posée : `onboarded` vaut `false`
+    /// à la création, donc l'app ouvre sur l'inscription d'elle-même.
+    func test19InscriptionDiagnostic() {
+        prendre(rang: 19, ecran: "prog", nom: "inscription", diagnostic: true, inscription: true)
+    }
+
+    /// Le mur d'abonnement, celui qui décide du chiffre d'affaires.
+    func test20PaywallDiagnostic() {
+        prendre(rang: 20, ecran: "prog", nom: "paywall", diagnostic: true, paywall: true)
+    }
+
+    /// L'ÉCRAN DE COURSE, SANS DISTANCE, ET C'EST ATTENDU.
+    ///
+    /// Le simulateur n'a pas de signal GPS : la capture montre 0,00 km et le bandeau
+    /// « Recherche du signal GPS… ». C'est l'état des premières secondes de chaque vraie course,
+    /// et c'est tout ce qu'on vient regarder ici — la disposition, le panneau de mesures, les
+    /// commandes, la place de la bulle du coach, et le bandeau lui-même. Attendre d'avoir un GPS
+    /// simulé pour photographier cet écran reviendrait à ne jamais le photographier.
+    func test21CourseEnCoursDiagnostic() {
+        prendre(rang: 21, ecran: "live", nom: "course-en-cours", diagnostic: true, courseEnCours: true)
+    }
+
     private func prendre(rang: Int, ecran: String, nom: String, diagnostic: Bool = false,
                          profil: String? = nil, course: Bool = false,
-                         sortie: Bool = false, onglet: String? = nil, defilements: Int = 0) {
+                         sortie: Bool = false, onglet: String? = nil, defilements: Int = 0,
+                         inscription: Bool = false, paywall: Bool = false,
+                         courseEnCours: Bool = false) {
         let clair = ProcessInfo.processInfo.environment["RUNUP_CAPTURES_CLAIR"] != nil
         let app = XCUIApplication()
         app.launchArguments = ["--captures", "--ecran=\(ecran)"]
@@ -161,6 +192,10 @@ final class CapturesUITests: XCTestCase {
         if course { app.launchArguments += ["--course", "--courses"] }
         if sortie { app.launchArguments += ["--sortie"] }
         if let onglet { app.launchArguments += ["--onglet=\(onglet)"] }
+        // Les trois écrans qu'on ne revoit jamais soi-même — voir `CaptureSeed`.
+        if inscription { app.launchArguments += ["--inscription"] }
+        if paywall { app.launchArguments += ["--paywall"] }
+        if courseEnCours { app.launchArguments += ["--encours"] }
         // LE THÈME VIENT DE L'EXTÉRIEUR, COMME LA LANGUE, ET POUR LA MÊME RAISON.
         //
         // Le même test tourne une fois de plus avec `RUNUP_CAPTURES_CLAIR` posé, et c'est le

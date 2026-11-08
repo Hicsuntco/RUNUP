@@ -100,6 +100,46 @@ six indicateurs de ligne dessinaient « › » dans des fichiers qui, deux ligne
 employaient `chevron.right`. Huit caractères typographiques remplacés par les deux symboles, aux
 crans de l'échelle d'icônes. Il ne reste aucun `Text("›")` ni `Text("‹")` dans l'app.
 
+**Un contrôle qui cherche un motif dans un fichier finit par se trouver lui-même.** Trois fois
+le 8 novembre. `check_cjs.py` refuse qu'un paquet livré en ESM seul soit chargé par `require` —
+et le correctif qu'il venait de faire écrire cite `require('jose')` dans son commentaire, donc il
+a signalé ce fichier-là. `check_filet.py` cite les deux formes qu'il refuse, dans sa propre
+documentation. `check_cablage.py` cherchait `"from PIL" in texte`, et sa propre ligne de
+recherche contenait ces mots : il s'est accusé lui-même de lire des images. Les deux premiers
+blanchissent les commentaires ; le troisième ne pouvait pas, puisque c'était son code — il lit
+les imports dans l'ARBRE syntaxique, qui ne contient que ce que Python exécute.
+
+**Un garde-fou qu'on croit avoir est pire que pas de garde-fou**, et quatre existaient sans
+tourner : `test_session.py`, `test_accent.py`, `check_profile.py` — écrit après un
+`exportArchive` refusé sur WeatherKit, douze minutes après le début de l'archivage — et
+`test_comparer.py`, écrit le 8 novembre. `check_cablage.py` exige maintenant que tout
+`check_*.py` et tout `test_*.py` de `ci_scripts/` soit nommé par un workflow, ou figure dans une
+liste de dispenses AVEC sa raison : une seule aujourd'hui, `check_profile.py`, avec ce qui lui
+manque pour être câblé.
+
+**Et câblé ne veut pas dire qu'il a de quoi tourner.** `test_comparer.py` était bien nommé par
+un workflow, et il a échoué dix minutes plus tard sur `ModuleNotFoundError: No module named
+'PIL'` : il était dans TestFlight, dont le python est celui du système. Les huit scripts du dépôt
+qui lisent des images tournent dans un job qui installe Pillow dans un venv. `check_cablage.py`
+pose donc la seconde question, et ne dépend lui-même de rien — c'est le job qui n'installe rien
+qui le lance, et `pip install` nu est refusé sur les runners macOS.
+
+**Le trait qui sépare deux lignes était écrit de deux façons, et une des deux était fausse.**
+Trente endroits posaient `Divider().background(RUColor.line)` : le `Divider` de SwiftUI a sa
+propre épaisseur — un pixel d'écran, un tiers de point sur un ×3 — et sa propre couleur, et
+`.background` peint derrière lui au lieu de le recolorer. Douze autres dessinaient le bon filet à
+la main. Aucun contrôle ne le voyait, aucune capture non plus : les écrans qui employaient
+`Divider` ne sont pas photographiés. `RUFilet` les remplace tous les quarante-deux et nomme son
+orientation au lieu de la deviner ; `check_filet.py` tient la porte.
+
+**Le harnais de captures ne dit pas ce qu'il y a sur les images**, et découper un écran
+photographié est par définition un changement qui ne doit rien changer à l'écran. `comparer.py`
+prend les captures d'avant et celles d'après et dit ce qui a bougé : écart moyen, nombre de
+pixels au-delà du bruit, et le CADRE qui les contient. Barre d'état masquée — elle porte l'heure,
+et un outil qui compte ce pixel-là dit « tout a changé » à chaque fois. Le compte de pixels est
+là à côté de la moyenne parce qu'un petit bloc changé du tout au tout ne pèse presque rien sur la
+moyenne d'une image de 2 796 points, et que c'est exactement la forme d'un défaut de découpage.
+
 ## Les chantiers de l'audit
 
 Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
@@ -117,8 +157,8 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 | 9 | Tests : `SubscriptionService` et `LocationService` d'abord | 2 j | **fait** |
 | 10 | Valeurs en dur → jetons du design system, les 15 % restants | 1,5 j | **fait** — il en restait six, pas 15 % |
 | 11 | Dépendances serveur : `jose` 6 et `bcryptjs` 3 | 0,5 j | **fait** — après une panne de onze minutes, une reproduction sur aperçu et un correctif éprouvé |
-| 12 | Accessibilité : tailles de texte dynamiques, indices VoiceOver | 1,5 j | à faire |
-| 13 | `ClubView.swift`, 2 699 lignes, à découper | 2 j | à faire |
+| 12 | Accessibilité : tailles de texte dynamiques, indices VoiceOver | 1,5 j | **en cours** — quatre écrans photographiés au deuxième cran, dix défauts vus et corrigés |
+| 13 | `ClubView.swift`, 2 721 lignes, à découper | 2 j | **commencé** — l'instrument d'abord (`comparer.py`), puis `boardDivider` → `RUFilet` |
 | 14 | Rapport de plantage maison, posté sur notre serveur | 1,5 j | à faire — décidé le 7 novembre |
 
 Le 14 est arrivé après coup, et je le ferais passer devant les finitions de design : c'est le seul
@@ -224,9 +264,12 @@ d'objectif. Les trois derniers sont des glyphes dans un cadre, et c'est justifi�
 
 `RUIconSize`, sept crans — 9, 11, 13, 15, 18, 22, 28 — et `RUFont.icone(_:weight:)`. Les 170
 appels sont convertis, et `ci_scripts/check_icones.py` refuse désormais une taille écrite à la
-main dans `RunUp/Views` : il en reste **quatre**, toutes listées avec leur raison, et aucune
-n'est une icône (les deux chevrons « ‹ » des boutons de retour, le repli qui affiche l'emoji
-d'une notification déjà en base, la coche typographique de l'assistant d'objectif).
+main dans `RunUp/Views` : il en reste **deux** depuis que les chevrons « ‹ » sont devenus
+`chevron.left`, toutes deux listées avec leur raison, et aucune n'est une icône (le repli qui
+affiche l'emoji d'une notification déjà en base, la coche typographique de l'assistant
+d'objectif). Le test, lui, RÉPÉTAIT le nombre quatre au lieu de le dériver de la liste : il est
+resté rouge dix minutes après le commit qui ramenait quatre à deux, parce que j'avais lancé les
+contrôles sans lancer leurs cas. D'où `ci_scripts/tout.sh`, qui lance les deux en une commande.
 
 Les crans sont relevés, pas inventés : **13 et 15 — les deux tailles les plus employées, 65
 appels à elles deux — sont des crans**, donc ces 65 appels rendent exactement ce qu'ils
@@ -305,6 +348,53 @@ Et `check_grand_texte.py` mesure l'écart entre chaque capture et son ordinaire 
 cessait d'être lu, les quatre images seraient des copies, le harnais resterait vert, et on
 croirait avoir vu l'app en grand texte. **Sans plancher pour l'instant** — il viendra du premier
 relevé, comme le plafond d'images vides des bascules.
+
+### Ce que les quatre captures ont montré, le 8 novembre
+
+Regardées, pas supposées. L'écart au texte ordinaire va de **19,1 à 27,4** sur les douze mesures
+— trois langues, quatre écrans : le réglage prend partout, et les images ne sont pas des copies.
+
+Trois des sept correctifs posés la veille tiennent, et la capture les montre : la pastille
+d'écart du bilan rejoint le flux au lieu de flotter, la barre d'onglets laisse tomber ses
+libellés, le bandeau GPS passe sur deux lignes. Restaient trois choses.
+
+1. **Les trois mesures de la course ne basculaient pas en colonne.** « --:-- » se cassait en deux
+   DANS sa cellule, et le libellé ALLURE descendait d'un cran sans plus s'aligner avec FC ni
+   KCAL — exactement le défaut que le `ViewThatFits` posé la veille existait pour corriger,
+   photographié une deuxième fois. `ViewThatFits` compare la taille IDÉALE de chaque candidat à
+   la place offerte, et la taille idéale d'un `Text` qui a le droit de revenir à la ligne est
+   toute petite : la rangée « tenait » toujours. Les cellules disent maintenant leur vraie
+   largeur — `lineLimit(1)` et `fixedSize(horizontal:)`. C'est le même raisonnement que le
+   `Spacer(minLength: 0)` de `RUMetricRow`, commenté depuis longtemps dans `ChipView.swift` :
+   un élément élastique rend la rangée inextensible à la mesure.
+
+2. **« Allure moy… » — un titre de section tronqué, deux fois**, sur les Stats et sur le bilan.
+   Le titre de `RUCardHeader` porte `lineLimit(1)` et `minimumScaleFactor(0.8)` : à côté d'un
+   accessoire il rétrécit d'un cinquième, puis se coupe — et c'est le seul mot qui dise de quoi
+   parle la carte. Corrigé dans le composant et non aux deux appels : au deuxième cran
+   d'accessibilité l'accessoire passe SOUS le titre, poussé à droite pour rester la valeur de cet
+   en-tête. Rien ne bouge aux tailles ordinaires, ni pour les soixante-douze en-têtes sans
+   accessoire.
+
+3. **La carte de trace n'était PAS rognée**, et j'avais commencé par la « corriger ». J'ai lu
+   « 8,1 km 5:18/km » coupé net et changé `height:` en `minHeight:`. Puis j'ai mis les deux
+   captures côte à côte : en taille ordinaire, « À faire / 612 / 9 240 » passe exactement pareil
+   derrière la barre d'onglets, qui est translucide et flottante. Modification annulée. On ne
+   change pas la mise en page d'un écran photographié pour un défaut qu'on n'a pas vu.
+
+### Et le film espagnol, qui n'avait pas le défaut qu'il annonçait
+
+La chaîne Captures est passée au rouge : « ce plan vise stats et montre profil (écart 24,4 contre
+25,0) ». Un quasi-ex æquo — là où un plan posé rend 6,4 contre 24,6 — et les trois autres plans du
+même film étaient reconnus sans hésitation. Le découpage était donc juste. C'est l'INSTANT du
+jugement qui ne l'était pas : l'image était prise à `debut + 0,5 s`, et « stats » a mis 0,57 s à
+se poser ce jour-là — dix-sept images sur vingt. On jugeait un mélange de l'écran qui part et de
+celui qui arrive.
+
+Le jugement se prend maintenant un quart de seconde avant la FIN du plan, qui dure deux secondes.
+La référence de transition, elle, reste à 0,5 s : c'est l'état vers lequel la fenêtre précédente
+converge, c'est son rôle. Et c'est `--preuves` qui a permis de le voir — le garde-fou a refusé le
+film ET gardé l'image jugée, ce pour quoi il avait été écrit la veille.
 
 ## Chantier 11 — `jose` 6 : onze minutes de panne, puis la cause, trouvée sur un aperçu
 

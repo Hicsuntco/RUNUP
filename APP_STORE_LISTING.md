@@ -429,31 +429,41 @@ par catégorie, dans l'ordre du formulaire. C'est à la main ou rien : l'API d'A
 ne sait pas écrire cette fiche — vérifié dans la spécification OpenAPI d'Apple (v4.6), 1 027
 chemins et aucun pour la confidentialité.
 
-### CE QUI EST DÉCLARÉ EN LIGNE AUJOURD'HUI, ET NE CORRESPOND PAS
+### CE QUI EST DÉCLARÉ CHEZ APPLE AUJOURD'HUI, ET NE CORRESPOND PAS
 
-Relevé le 8 novembre 2026 sur la fiche publique — `apps.apple.com/fr/app/id6790719663`, section
-« Confidentialité de l'app », rendue dans un navigateur sans en-tête puisque la page la charge
-en JavaScript. Ce n'est donc pas une supposition sur l'état de la fiche, c'est sa lecture.
+Relevé le 8 novembre 2026 sur la fiche elle-même, dans App Store Connect — pas sur la page
+publique, qui ne montre que les catégories. Dix types déclarés, contre quatorze au manifeste :
 
-| Données **liées** à vous | Données **non liées** à vous |
-| --- | --- |
-| Coordonnées, Contacts, Identifiants, Données d'utilisation | Santé et activité physique, Localisation, Contenu utilisateur |
+> « 10 data types collected from this app: Contacts, User ID, Product Interaction, Name,
+> Other User Content, Health, Email Address, Precise Location, Fitness, Other Usage Data »
 
-**Trois écarts, et un seul est nouveau.**
+**CINQ TYPES MANQUENT.** Ce n'est pas un détail de forme : chacun est une collecte réelle que la
+fiche ne déclare pas.
 
-1. **Santé, Localisation et Contenu utilisateur sont déclarés NON LIÉS** alors que le manifeste
-   les déclare liés — et depuis le 8 octobre au moins, donc la 3.3 publiée le 3 novembre est
-   partie ainsi. C'est l'écart qui compte : il déclare MOINS que ce que l'app fait. Ces trois
-   catégories voyagent rattachées au compte — un itinéraire publié porte son autrice, une sortie
-   au fil du club aussi.
-2. **Diagnostics est absent** — normal, Crash Data et Performance Data datent du 8 novembre et
-   n'ont jamais été soumis.
-3. **Contacts était déclaré ici et absent du manifeste.** Corrigé dans le manifeste plutôt
-   qu'enlevé de la fiche, en appliquant le raisonnement déjà écrit plus bas : la dispense se
-   plaide, une déclaration se lit.
+| À ajouter | Catégorie | Ce que l'app en fait |
+| --- | --- | --- |
+| **Coarse Location** | Location | la ville et le pays partent avec un itinéraire publié |
+| **Photos or Videos** | User Content | la photo de profil et celle d'un itinéraire, stockées sur le CDN |
+| **Device ID** | Identifiers | le jeton APNs, et l'identifiant anonyme de mesure d'audience |
+| **Crash Data** | Diagnostics | les rapports de panne (8 novembre 2026) |
+| **Performance Data** | Diagnostics | gels, processeur, disque, lancements lents |
 
-Donc, dans le formulaire : corriger **trois** réponses « lié à l'utilisatrice » de Non à Oui, et
-**ajouter** les deux lignes de Diagnostics. Le reste est déjà juste.
+**TROIS CATÉGORIES SONT DÉCLARÉES « NON LIÉES »** alors que le manifeste les déclare liées :
+User Content, Health & Fitness, Location. Vérifié dans l'historique du manifeste : c'est le cas
+depuis le 8 octobre au moins, donc la 3.3 publiée le 3 novembre est partie ainsi. C'est l'écart
+qui pèse le plus, parce qu'il déclare MOINS que ce que l'app fait — ces trois catégories voyagent
+rattachées au compte : un itinéraire publié porte son autrice, une sortie au fil du club aussi.
+
+**UN TYPE EST DÉCLARÉ EN TROP** : « Other Usage Data », que le manifeste ne porte pas — les
+événements d'usage sont couverts par Product Interaction. Déclarer en trop ne fait rejeter
+personne ; à retirer ou à laisser, c'est sans conséquence.
+
+**Et Contacts** était l'inverse : déclaré ici, absent du manifeste. Corrigé dans le manifeste
+plutôt qu'enlevé de la fiche, en appliquant le raisonnement écrit plus bas — la dispense se
+plaide, une déclaration se lit.
+
+Donc, dans le formulaire : **ajouter cinq types** et **corriger trois réponses « lié »** de Non à
+Oui. Les neuf types communs sont déjà justes.
 
 <!-- confidentialité: début (tableau dérivé du manifeste par check_confidentialite.py) -->
 

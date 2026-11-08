@@ -82,21 +82,33 @@ a rendu 0 pendant des semaines et −0,75 s le 8 novembre, sur le même harnais.
 −0,75 est parfait pour l'identité et faux pour le découpage : la fenêtre de 0,9 s qui cherche
 le changement d'écran tombe alors entièrement avant lui, et le garde-fou ne voit plus rien.
 
-**Le décalage se reprend donc sur le CHANGEMENT d'écran, qui est net.** `affinage` le cherche
-dans une fenêtre asymétrique — 2,0 s avant le plan, 1,2 s après, parce qu'au décalage fautif le
-changement tombe APRÈS le début de plan supposé — et ramène le décalage pour que le changement
-retombe à 0,6 s. La recherche grossière garde son rôle : ramener une horloge fausse de plusieurs
-secondes à moins d'une, ce qu'elle sait faire.
+**J'ai écrit un affinage pour reprendre ce décalage sur le changement d'écran, et je l'ai
+retiré.** Il a fait TROIS exécutions rouges — plus que le défaut qu'il visait — dont deux sur
+des prises dont l'horloge était juste : −0,62 s une fois, −1,33 s une autre.
 
-**Trois erreurs de ma part sur ce seul sujet, et la troisième est la plus instructive.** D'abord
-j'ai cru que l'instant où l'on regarde était en cause, et l'exécution suivante a rendu le même
-−0,75. Ensuite j'ai écrit un affinage dont la fenêtre ne couvrait pas le cas qui l'avait motivé.
-Enfin — et c'est celle qui compte — l'affinage a déplacé le découpage de −0,62 s sur une prise
-dont l'horloge était juste, parce que `instant_du_changement` rendait la PREMIÈRE image qui
-n'est plus l'écran d'avant. Sur 0,9 s ça marche ; sur 2 s, une seule image qui s'écarte — un
-défilement qui finit, une tuile de carte qui arrive — suffit à la faire tomber trop tôt. Elle
-rend maintenant la DERNIÈRE image de l'écran d'avant : même nombre sur une fenêtre propre, ce
-qui explique que tous les cas fabriqués passaient, et seul le second tient sur une vraie prise.
+La cause n'est pas dans l'affinage, elle est dans `classer` : il reconnaît l'écran d'avant en
+comparant chaque image à LA PREMIÈRE DE LA FENÊTRE. Ce choix n'est juste que pour une fenêtre
+courte — le test laisse 0,6 s entre l'appui et le début du plan, donc sur 0,9 s le premier tiers
+est encore l'écran précédent. Élargie à 2 s, la première image tombe n'importe où : au milieu
+de la transition d'avant, ou sur un écran encore vide. « Avant » ne correspond alors presque à
+rien, l'estimateur rend la longueur de la fenêtre, et l'affinage corrige d'autant. Les images
+gardées par `--preuves` le montrent sans discussion : trois écrans VIDES, barre d'onglets seule.
+
+Un affinage demanderait une autre référence pour « l'écran d'avant » — le témoin du plan
+PRÉCÉDENT, que la passe claire photographie. C'est faisable, ce n'est pas écrit, et la note
+au-dessus de `alignement` le dit. **En attendant, le défaut du plateau se solde par un film
+REFUSÉ**, ce qui est le comportement sûr : les images partent, le film faux ne part pas.
+
+**Trois erreurs de ma part sur ce seul sujet.** D'abord j'ai cru que l'instant où l'on regarde
+était en cause, et l'exécution suivante a rendu le même −0,75. Ensuite une fenêtre d'affinage
+qui ne couvrait pas le cas qui l'avait motivé. Enfin l'affinage lui-même, trois fois rouge.
+
+**Ce qui reste de ces tentatives, et qui est bon.** `instant_du_changement` prend la DERNIÈRE
+image de l'écran d'avant et non la première qui n'en est plus — même nombre sur une fenêtre
+propre, ce qui explique que tous les cas fabriqués passaient, et immunisé contre un
+clignotement. `instant_juge` regarde au MILIEU du plan : les deux réponses précédentes ne
+tenaient qu'un côté — le début tombait avant la pose des écrans lents (0,57 s mesuré), la fin
+dans l'action suivante, car les plans sont CONTIGUS.
 
 **Et un message disait l'inverse de sa condition.** « La fenêtre ne commence pas sur l'écran
 d'avant » s'affichait quand AUCUNE image de la fenêtre ne quitte l'écran d'avant. Il m'a fait
@@ -220,6 +232,15 @@ Swift.
 trois langues, deux thèmes, quatre écrans — rendent `ÉCART MAXIMAL=0,000` et `PIXELS=0` entre
 l'avant et l'après de la première extraction. C'est ce pour quoi `comparer.py` a été écrit avant
 d'y toucher.
+
+**Une feuille ne se présente que si la vue qui la porte est à l'écran, et deux ne l'étaient
+pas.** Relevé pour chacune des douze feuilles de `ClubView` : la vue qui la PORTE, et celle qui
+la DÉCLENCHE. « Modifier ce message » est sur le mur et sa feuille était sur l'Aperçu — les
+onglets s'excluent, donc le bouton ne faisait RIEN, et la feuille surgissait plus tard sans
+qu'on l'ait demandée. « Proposer une sortie » sur la carte qui propose de RÉVEILLER le club
+avait le même défaut : `if clubEnSommeil { carteClubAReveiller } else { eventsCard }`, et la
+feuille était sur la seconde. Sur un club endormi — le cas même où cette carte existe — le
+bouton ne faisait rien. Les deux remontent au corps ; les dix autres étaient chez elles.
 
 ## Les chantiers de l'audit
 

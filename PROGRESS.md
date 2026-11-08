@@ -309,6 +309,7 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 | 12 | Accessibilité : tailles de texte dynamiques, indices VoiceOver | 1,5 j | **fait** — sept écrans photographiés au deuxième cran, treize défauts vus et corrigés ; le reste mesuré et fermé, voir plus bas |
 | 13 | `ClubView.swift`, 2 721 lignes, à découper | 2 j | **fait** — 2 721 → 1 358 lignes, en six fichiers ; zéro pixel d'écart |
 | 14 | Rapport de plantage maison, posté sur notre serveur | 1,5 j | **fait** — par MetricKit, sans aucun gestionnaire de signal ; voir plus bas pourquoi |
+| 15 | Les erreurs qu'on avale : audit des 275 `try?` et `catch` | 1 j | **fait** — un défaut qui perdait des courses, et du code mort qu'un test tenait en vie |
 
 Le 14 est arrivé après coup, et il est passé devant les finitions de design : c'est le seul moyen
 de savoir ce qui casse chez quelqu'un d'autre que nous. Le reste de l'ordre tient.
@@ -395,6 +396,91 @@ parisien, et c'est une décision, pas un oubli.
 Et les deux titres de séance sont désormais nommés **une seule fois** : ils paraissent aux
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
+
+## Chantier 15 — les erreurs qu'on avale
+
+Annoncé à la fin du chantier 14 : MetricKit ne voit que ce que le système appelle une panne. Les
+erreurs rattrapées par l'app lui sont invisibles — de son point de vue, rien n'a mal tourné. Donc
+un audit, et un audit commence par compter.
+
+### LE RELEVÉ
+
+**275 sites** : 143 `try?`, 132 `catch`, et **zéro `try!`** — pas un seul point d'exclamation
+forcé dans toute l'app.
+
+Les `catch`, par ce que leur corps FAIT :
+
+| | |
+|---:|---|
+| **97** | montrent quelque chose à l'utilisatrice (`toast`, `errorMessage`, bannière) |
+| 8 | relancent l'erreur à l'appelant |
+| 5 | rendent un cas d'échec nommé (`.baseNonVide`, `.fichierIllisible`…) |
+| 4 | posent un état que l'écran lit (`loadFailed`, `storeState`…) |
+| 4 | annulent un changement optimiste |
+| 4 | sont VIDES |
+| 3 | rendent `nil` ou `[]` en silence |
+| 2 | arrêtent l'app en débogage |
+
+Les `try?` : 37 replis sur une valeur, 29 attentes (`Task.sleep`, qui n'échoue qu'à
+l'annulation), 26 encodages/décodages avec repli, 6 enregistrements SwiftData, 5 nettoyages de
+fichiers temporaires, 2 audio, 1 Santé, 37 divers.
+
+**Les quatre `catch` vides sont tous délibérés et tous commentés** — la photo de profil réessayée
+au prochain rafraîchissement, la montre non appairée, une suppression qui n'a rien bougé à
+l'écran, une page de fil qui reste juste. J'ai lu les douze candidats au silence un par un ; onze
+sont corrects.
+
+### LE DOUZIÈME : UNE COURSE DE MONTRE PERDUE POUR DE BON
+
+`WatchSessionService.handleCompletedRun` finissait par `try? appState.modelContext.save()`. Si
+cet enregistrement échouait, **tout le reste se déroulait quand même** :
+
+- l'identifiant de livraison entrait dans `seen`, donc la montre ne redélivrait plus jamais ;
+- la feuille de ressenti s'ouvrait ;
+- l'app annonçait « Course reçue de ta montre ⌚ ».
+
+Elle affirmait donc avoir reçu une course qui n'existait que dans la mémoire du processus, et qui
+disparaissait au lancement suivant sans que rien ne puisse la ramener.
+
+Ce qui rend ce défaut remarquable, c'est que **le commentaire juste au-dessus le décrivait déjà** :
+il raconte que le marqueur était autrefois posé avant l'enregistrement, qu'un processus tué entre
+les deux perdait la course, et il énonce la règle — « une livraison interrompue doit pouvoir
+recommencer ». Un échec d'enregistrement EST une interruption. La branche n'était simplement pas
+couverte.
+
+Corrigé avec l'idiome que les deux réparations de données d'`AppState` emploient déjà
+(`guard (try? save()) != nil else { return }`), plus deux choses : l'insertion est défaite, et
+l'app le DIT — « La course de ta montre n'a pas pu être enregistrée. Elle sera renvoyée », ce qui
+est vrai puisqu'on ne consomme pas l'identifiant.
+
+### ET DU CODE MORT QU'UN TEST TENAIT EN VIE
+
+`SauvegardeService.ecrire` était appelée par exactement un endroit : un test. Elle avait été
+écrite pour un `ShareLink(item:)`, remplacé depuis par un `fileExporter` — l'app encode, pose les
+octets dans un `SauvegardeDocument`, et laisse le système écrire.
+
+Le coût n'était pas la fonction, c'était son test. Son commentaire affirmait : « un vrai fichier
+sur un vrai disque, écrit puis relu, parce que c'est le seul trajet que la sauvegarde empruntera
+jamais. » Faux — et c'est le genre de phrase qui fait croire que l'export est couvert. Il
+emprunte maintenant le chemin réel, et la fonction est sortie du binaire.
+
+### CE QUI A ÉTÉ REGARDÉ ET LAISSÉ
+
+`GPXExporter.fileURL` rend `nil` si l'écriture échoue, et ses deux appelants font
+`if let url { ShareLink… }` : le bouton « Exporter en GPX » disparaît sans explication. Ça
+confond « pas applicable » et « cassé ». Laissé tel quel : l'écriture est un petit fichier dans
+le dossier temporaire, son seul échec réaliste est un disque plein — auquel cas bien d'autres
+choses cassent d'abord — et le corriger demanderait de rendre l'export paresseux (`Transferable`
+au lieu d'une URL) aux deux endroits. Le seuil où ça change : le jour où cette écriture grossit
+ou sort du dossier temporaire.
+
+### CE QUE L'AUDIT DIT DE L'APP
+
+Quatre-vingt-dix-sept `catch` sur cent trente-deux parlent à l'utilisatrice, aucun `try!` nulle
+part, et les silences sont presque tous écrits et justifiés. **Un seul défaut sur 275 sites.**
+C'était la bonne nouvelle possible, et c'est la raison pour laquelle ce chantier ne se termine
+PAS par « on rapporte toutes les erreurs rattrapées au serveur » : il n'y a pas de gisement
+d'erreurs avalées à instrumenter, il y en avait une.
 
 ## Chantier 14 — le rapport de panne, et la façon de le faire qui ne marche pas
 

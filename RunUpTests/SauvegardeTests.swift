@@ -357,8 +357,17 @@ final class SauvegardeTests: XCTestCase {
     // MARK: Le fichier lui-même
 
     func testLeFichierSEcritEtSeRelitDepuisLeDisque() throws {
-        // Pas une simulation : un vrai fichier sur un vrai disque, écrit puis relu, parce que
-        // c'est le seul trajet que la sauvegarde empruntera jamais.
+        // Pas une simulation : un vrai fichier sur un vrai disque, écrit puis relu — et écrit
+        // PAR LE CHEMIN DE L'APP.
+        //
+        // Ce test passait auparavant par `SauvegardeService.ecrire`, en affirmant en commentaire
+        // que c'était « le seul trajet que la sauvegarde empruntera jamais ». C'était faux :
+        // cette fonction avait été écrite pour un `ShareLink`, remplacé depuis par un
+        // `fileExporter`, et PLUS AUCUN code de l'app ne l'appelait. Le test tenait donc en vie
+        // une fonction morte, et faisait croire que l'export était couvert alors qu'il
+        // empruntait un autre chemin. `ecrire` a été retirée ; ce qui suit est ce que
+        // `CarteDeSauvegarde` fait vraiment : encoder, poser les octets dans un
+        // `SauvegardeDocument`, et laisser le système les écrire.
         let dossier = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: dossier, withIntermediateDirectories: true)
@@ -370,7 +379,11 @@ final class SauvegardeTests: XCTestCase {
             messages: [ChatMessage(role: .user, text: "Salut")], chaussures: [paire],
             versionApp: "3.1", le: Date(timeIntervalSince1970: 1_760_000_000))
 
-        let url = try XCTUnwrap(SauvegardeService.ecrire(origine, dans: dossier))
+        let data = try SauvegardeService.encodeur().encode(origine)
+        let url = dossier.appendingPathComponent(SauvegardeService.nomDeFichier(le: origine.creeLe))
+        // `fileWrapper(configuration:)` écrit exactement `contenu` et rien d'autre : poser ces
+        // octets-là sur le disque est ce que le système fait avec ce document.
+        try SauvegardeDocument(contenu: data).contenu.write(to: url, options: .atomic)
         XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
         let relue = try XCTUnwrap(SauvegardeService.lire(url))
 

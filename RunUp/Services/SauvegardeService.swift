@@ -60,21 +60,6 @@ enum SauvegardeService {
         return s
     }
 
-    /// Écrit la sauvegarde dans un fichier temporaire et rend son URL, à passer tel quel à
-    /// `ShareLink(item:)`. Nil si l'encodage ou l'écriture échoue — l'appelant doit le dire
-    /// plutôt que de proposer un bouton qui ne fait rien.
-    static func ecrire(_ sauvegarde: Sauvegarde, dans dossier: URL? = nil) -> URL? {
-        guard let data = try? encodeur().encode(sauvegarde) else { return nil }
-        let base = dossier ?? FileManager.default.temporaryDirectory
-        let url = base.appendingPathComponent(nomDeFichier(le: sauvegarde.creeLe))
-        do {
-            try data.write(to: url, options: .atomic)
-            return url
-        } catch {
-            return nil
-        }
-    }
-
     static func lire(_ url: URL) -> Sauvegarde? {
         guard let data = try? Data(contentsOf: url) else { return nil }
         return try? decodeur().decode(Sauvegarde.self, from: data)

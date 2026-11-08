@@ -13835,6 +13835,23 @@
         }
       }
     },
+    "La course de ta montre n'a pas pu être enregistrée. Elle sera renvoyée.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your watch run couldn't be saved. It will be sent again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha podido guardar la carrera de tu reloj. Se enviará de nuevo."
+          }
+        }
+      }
+    },
     "La course et l'assiette, dans un seul plan.": {
       "extractionState": "manual",
       "localizations": {

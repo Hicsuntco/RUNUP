@@ -163,7 +163,26 @@ final class WatchSessionService: NSObject {
         //
         // C'est la règle que les deux réparations de données énoncent déjà : « une réparation
         // interrompue doit pouvoir recommencer ». Une livraison interrompue aussi.
-        try? appState.modelContext.save()
+        //
+        // ET UN ÉCHEC D'ENREGISTREMENT EST UNE INTERRUPTION, EXACTEMENT COMME UN PROCESSUS TUÉ.
+        //
+        // Le `try?` qui était ici avalait cet échec et laissait TOUT LE RESTE se dérouler :
+        // l'identifiant entrait dans `seen` — donc la montre ne redélivrait plus jamais —, la
+        // feuille de ressenti s'ouvrait, et l'app annonçait « Course reçue de ta montre ⌚ ».
+        // Elle affirmait donc avoir reçu une course qui n'existait que dans la mémoire du
+        // processus, et qui disparaissait au lancement suivant sans que rien ne puisse la
+        // ramener. C'est le défaut que le paragraphe ci-dessus décrit, dans la seule branche
+        // qu'il ne couvrait pas.
+        //
+        // On défait donc l'insertion et on sort SANS consommer l'identifiant : la montre
+        // redélivrera. La séance marquée faite juste au-dessus n'est pas défaite — elle n'est
+        // pas enregistrée non plus, et `markSessionDone` est idempotent, donc la redélivrance
+        // la repose proprement.
+        guard (try? appState.modelContext.save()) != nil else {
+            appState.modelContext.delete(record)
+            appState.toast(String(localized: "La course de ta montre n'a pas pu être enregistrée. Elle sera renvoyée."))
+            return
+        }
         seen.append(payload.clientId)
         if seen.count > 100 { seen.removeFirst(seen.count - 100) }
         UserDefaults.standard.set(seen, forKey: Self.seenClientIdsKey)

@@ -534,7 +534,10 @@ final class ClubStore {
         await loadIfSignedIn(badges: badges)
     }
 
-    func reglerLaCouverture(dataURI: String, badges: [ClubBadge]) async throws {
+    /// `dataURI` est OPTIONNEL : retirer la couverture, c'est en poser une qui n'existe pas.
+    /// `ClubManagementView.onSetClubCover` et `ClubService.setClubCover` le disent tous les
+    /// deux ; je l'avais resserré en `String` en recopiant, et le compilateur l'a refusé.
+    func reglerLaCouverture(dataURI: String?, badges: [ClubBadge]) async throws {
         try await clubService.setClubCover(dataURI: dataURI)
         await loadIfSignedIn(badges: badges)
     }
@@ -618,7 +621,9 @@ final class ClubStore {
     /// Une sortie de groupe créée : insérée à sa place dans la liste plutôt que de relire tout
     /// le tableau — le serveur rend la sortie telle qu'il l'a enregistrée, il n'y a rien d'autre
     /// à apprendre de lui.
-    func creerLaSortie(title: String, location: String, startsAt: Date,
+    /// `location` est OPTIONNEL : une sortie peut n'avoir pas encore de lieu. Même erreur de
+    /// recopie que pour la couverture ci-dessus.
+    func creerLaSortie(title: String, location: String?, startsAt: Date,
                        repeatsWeekly: Bool, paceGroups: [String]) async throws {
         let created = try await clubService.createEvent(title: title, location: location,
                                                         startsAt: startsAt,
@@ -631,7 +636,7 @@ final class ClubStore {
     }
 
     /// Une sortie modifiée, suivie d'une relecture complète — voir le commentaire à l'appel.
-    func modifierLaSortie(_ event: ClubEvent, title: String, location: String, startsAt: Date,
+    func modifierLaSortie(_ event: ClubEvent, title: String, location: String?, startsAt: Date,
                           repeatsWeekly: Bool, paceGroups: [String],
                           badges: [ClubBadge]) async throws {
         try await clubService.updateEvent(eventId: event.id, title: title, location: location,

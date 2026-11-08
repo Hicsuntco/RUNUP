@@ -21,6 +21,8 @@ n'apparaît, l'avant/après est écrit ici, et les trois langues ont été véri
 | --- | --- |
 | Contenu des séances HYROX | Il faut quelqu'un qui a couru un HYROX. L'équipe n'a pas cette compétence et ne doit pas l'inventer. |
 | Cette branche doit-elle rester la production ? | Elle l'est, confirmé dans les réglages Vercel le 7 novembre : `Settings → Environments → Production → Branch Tracking` porte `claude/runup-ios-swiftui-app-5b1yv6`. Donc aucune relecture, aucune préproduction. Les aperçus, eux, sont maintenant éprouvables — voir le chantier 11. |
+| **Porter `privacy.html` sur `main`** | BLOQUANT POUR UNE SOUMISSION. La politique que lisent Apple et les utilisatrices est servie par GitHub Pages depuis `main`, pas depuis cette branche : mesuré le 8 novembre, la page en ligne est identique octet pour octet au `privacy.html` de `main`. Il lui manque le paragraphe des rapports de panne, que l'app envoie depuis ce jour-là, pendant que `PrivacyInfo.xcprivacy` déclare Crash Data et Performance Data. Une divergence entre le manifeste et la politique liée depuis la même fiche est un motif de rejet à part entière. `check_politique.py` affiche l'écart à chaque exécution de la chaîne Serveur ; il passera en refus (`--exiger`) le jour où la page rattrapera. Ça ne se fait pas depuis la branche de travail. |
+| Déclarer Crash Data et Performance Data sur la fiche App Store Connect | En *App Functionality*, pour concorder avec `PrivacyInfo.xcprivacy`. Le détail est dans `APP_STORE_LISTING.md` § Confidentialité. Même famille que la ligne ci-dessus : le manifeste et la fiche doivent dire la même chose. |
 
 
 ## Au passage

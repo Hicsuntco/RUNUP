@@ -11,6 +11,7 @@ n'apparaît, l'avant/après est écrit ici, et les trois langues ont été véri
 | iOS seul pour l'instant ; Android plus tard | Charlotte | 7 novembre 2026 |
 | Régler tout ce que l'audit a relevé, sans exception | Charlotte | 7 novembre 2026 |
 | Surveillance des plantages : **maison**, pas Sentry — le rapport part sur notre serveur Vercel, aucune dépendance Swift tierce | Charlotte | 7 novembre 2026 |
+| Et « maison » veut dire MetricKit, pas un gestionnaire de signal : Apple écrit que `backtrace` n'y est pas appelable, donc un rapport écrit là ne peut pas porter de pile d'appels. Voir le chantier 14. | l'équipe technique | 8 novembre 2026 |
 | « ABONNÉ » → le libellé dit l'action (« SE DÉSABONNER ») | Charlotte | 7 novembre 2026 |
 | « RETIRER » → une confirmation, pas un poids visuel différent | Charlotte | 7 novembre 2026 |
 
@@ -294,12 +295,12 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 | 9 | Tests : `SubscriptionService` et `LocationService` d'abord | 2 j | **fait** |
 | 10 | Valeurs en dur → jetons du design system, les 15 % restants | 1,5 j | **fait** — il en restait six, pas 15 % |
 | 11 | Dépendances serveur : `jose` 6 et `bcryptjs` 3 | 0,5 j | **fait** — après une panne de onze minutes, une reproduction sur aperçu et un correctif éprouvé |
-| 12 | Accessibilité : tailles de texte dynamiques, indices VoiceOver | 1,5 j | **en cours** — quatre écrans photographiés au deuxième cran, dix défauts vus et corrigés |
+| 12 | Accessibilité : tailles de texte dynamiques, indices VoiceOver | 1,5 j | **en cours** — sept écrans photographiés au deuxième cran, dix défauts vus et corrigés sur les quatre premiers |
 | 13 | `ClubView.swift`, 2 721 lignes, à découper | 2 j | **fait** — 2 721 → 1 358 lignes, en six fichiers ; zéro pixel d'écart |
-| 14 | Rapport de plantage maison, posté sur notre serveur | 1,5 j | à faire — décidé le 7 novembre |
+| 14 | Rapport de plantage maison, posté sur notre serveur | 1,5 j | **fait** — par MetricKit, sans aucun gestionnaire de signal ; voir plus bas pourquoi |
 
-Le 14 est arrivé après coup, et je le ferais passer devant les finitions de design : c'est le seul
-moyen de savoir ce qui casse chez quelqu'un d'autre que nous. Le reste de l'ordre tient.
+Le 14 est arrivé après coup, et il est passé devant les finitions de design : c'est le seul moyen
+de savoir ce qui casse chez quelqu'un d'autre que nous. Le reste de l'ordre tient.
 
 ## La page publique d'un club, regardée pour la première fois
 
@@ -383,6 +384,117 @@ parisien, et c'est une décision, pas un oubli.
 Et les deux titres de séance sont désormais nommés **une seule fois** : ils paraissent aux
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
+
+## Chantier 14 — le rapport de panne, et la façon de le faire qui ne marche pas
+
+Commencé par chercher comment on fait, et la recherche a renversé le plan.
+
+### LE PLAN D'ORIGINE, ET POURQUOI IL EST MORT
+
+La façon dont presque tous les rapporteurs de panne fonctionnent : poser un
+`NSSetUncaughtExceptionHandler` et des `sigaction` sur SIGSEGV, SIGABRT, SIGBUS, SIGILL, relever
+la pile d'appels depuis le gestionnaire, l'écrire dans un fichier, l'envoyer au lancement suivant.
+C'est ce qu'il fallait écrire. Ce n'est pas ce qui a été écrit, et la raison est une phrase.
+
+Quinn « The Eskimo! », de l'assistance aux développeurs d'Apple, dans « Implementing Your Own
+Crash Reporter » (developer.apple.com/forums/thread/113742) :
+
+> `backtrace` is not an async signal safe function.
+
+Un gestionnaire de signal ne peut appeler que des fonctions dites *async signal safe*, et cette
+liste ne contient ni `malloc` — donc « a crash reporter's signal handler cannot use Objective-C or
+Swift » — ni `backtrace`. Sans `backtrace`, pas de pile d'appels ; sans pile d'appels, un rapport
+de panne ne sert à rien. Le reste du texte ferme les autres portes :
+
+> On iOS […] your crash reporter must run inside the crashed process. That means it can never be
+> 100% reliable.
+
+> You must ensure that your crash reporter doesn't disrupt the Apple crash reporter.
+
+Et il nomme la sortie :
+
+> I recommend that you lean in to Apple's crash reporter. […] iOS 14 and macOS 12 report crashes
+> in MetricKit. This is a *very* cool feature, and I'm surprised by how few people use it
+> effectively.
+
+C'est exactement la règle 8 — chercher et citer avant d'écrire. Une journée de C contraint,
+impossible à relire et impossible à éprouver ici, a été remplacée par un abonnement.
+
+### CE QUI EST FAIT
+
+`RunUp/Services/Diagnostics.swift` s'abonne à MetricKit. iOS collecte la panne **hors** du
+processus mort — le même mécanisme que les rapports de l'organiseur Xcode — et la rend au
+lancement suivant. Jumeau volontaire d'`Analytics` : même file privée, même tampon sur disque,
+même discipline d'endpoint. Ce n'est pas de la copie, c'est la même forme pour le même problème.
+
+**Cinq genres arrivent, et quatre ne sont pas des plantages.** Un gel de plusieurs secondes, un
+dépassement de processeur, une écriture disque excessive, un lancement trop lent. Ce sont les
+pannes où l'app ne meurt pas : elle devient mauvaise. Un rapporteur de panne classique ne les voit
+JAMAIS, et c'est pourtant ce qu'une utilisatrice appelle « ça plante ».
+
+| Pièce | Rôle |
+| --- | --- |
+| `RunUp/Services/Diagnostics.swift` | l'abonnement, la traduction d'un lot MetricKit en lignes, le tampon sur disque |
+| `lib/pannes.js` | ce qu'on accepte d'un rapport, seul et testé — 19 cas dans `tests/crashes.test.js` |
+| `api/crashes.js` | l'endpoint : jeton facultatif, lot borné, genre inconnu jeté ligne par ligne |
+| `crash_reports` dans `db/schema.sql` | la table, avec sa charge `jsonb` et ses deux index |
+| `ci_scripts/check_pannes.py` | les trois accords, 14 cas dans `test_pannes.py` |
+
+### LA DÉGRADATION, QUI EST LA DÉCISION DE CONCEPTION
+
+Un rapport dont la charge JSON est abîmée ou trop grosse **perd sa pile d'appels et garde sa
+ligne**. « Combien de plantages sur la 2.9 » reste une information sans la pile ; refuser tout le
+rapport ferait disparaître le plantage au lieu de la pile. Et ce serait invisible, parce qu'une
+table de pannes vide ressemble trait pour trait à une app qui ne plante pas.
+
+C'est le même raisonnement partout : un champ trop long devient `NULL` plutôt que tronqué
+(tronquer fabriquerait une version qui n'existe pas, et elle serait agrégée comme telle), une date
+plus vieille qu'un mois cède à l'heure du serveur, un `isTestflight` qui n'est pas un vrai booléen
+devient `NULL` au lieu d'être coercé en `true`.
+
+### LE CONTRÔLE, ET SA TROISIÈME RÈGLE
+
+`check_pannes.py` compare `Diagnostics.Genre` et `KNOWN_KINDS` dans les deux sens, comme
+`check_events.py` le fait pour l'analytique. La raison est la même, l'enjeu est plus mauvais : un
+rapport de panne n'arrive que quand ça va mal, donc il n'y a aucun volume quotidien dont la chute
+sauterait aux yeux. La divergence qui a jeté onze événements d'analytique pendant des mois aurait
+ici **zéro symptôme**.
+
+Sa troisième règle n'est pas de la même nature. Tant que l'app s'abonne à MetricKit, le manifeste
+`PrivacyInfo.xcprivacy` doit déclarer `NSPrivacyCollectedDataTypeCrashData` **et**
+`NSPrivacyCollectedDataTypePerformanceData` — déclarer les plantages et oublier les gels est le
+piège exact, et il a son cas de test. Une déclaration incomplète fait refuser le binaire à
+l'**envoi**, avant toute revue humaine. Cette règle existe parce que la dérive s'est déjà produite
+ici : le manifeste a affirmé pendant des mois que le tracé GPS ne partait jamais, ce qui a cessé
+d'être vrai le jour où la table `routes` est apparue. Son propre en-tête mettait en garde contre
+exactement ça. Ça n'a pas suffi — c'est la définition d'un travail de machine.
+
+### CE QUI EST ÉCRIT NOIR SUR BLANC COMME NON COUVERT
+
+- **Les erreurs rattrapées.** Les 160 `try?` et 132 `catch` de l'app avalent des erreurs dont
+  MetricKit n'entendra jamais parler : de son point de vue, rien n'a mal tourné. C'est le chantier
+  suivant, et il commence par un audit de ces sites — pas par du code.
+- **Pas de regroupement.** Aucune colonne « signature », aucun compteur d'occurrences : regrouper
+  demanderait de symboliser côté serveur. À cette échelle on lit les lignes. Le seuil où ça
+  devient faux s'énonce : le jour où une requête rend plus de lignes qu'on n'en lit à l'œil.
+- **Rien sur le simulateur.** MetricKit ne collecte que sur un appareil réel, donc ce chemin ne
+  sera jamais éprouvé par le harnais. Ce qui est éprouvé, c'est tout ce qui est en dessous : les
+  règles d'acceptation (19 cas), les trois accords (14 cas), le découpage du schéma.
+- **Pas d'alerte.** Une panne arrive au lancement suivant, et personne n'est prévenu. Il faut
+  aller regarder la table.
+
+### L'API UTILISÉE EST DÉPRÉCIÉE EN iOS 27, ET C'EST LE BON CHOIX QUAND MÊME
+
+`MXMetricManager` et les classes `MX*` sont remplacées en iOS 27 par `MetricManager` et sa suite
+asynchrone `diagnosticReports`. RUNUP vise iOS 17 : la nouvelle API n'existe pas pour la
+quasi-totalité du parc, et les classes `MX*` sont là depuis iOS 14. Le jour où le plancher passe à
+27, la migration est dans un seul fichier.
+
+### CE QUI RESTE À FAIRE À LA MAIN
+
+La fiche App Store Connect doit déclarer **Crash Data** et **Performance Data** en *App
+Functionality*, pour concorder avec le manifeste — une divergence entre les deux est un motif de
+rejet à part entière. Le détail est dans `APP_STORE_LISTING.md` § Confidentialité.
 
 ## Chantier 12 — l'app en grand texte, enfin photographiée
 

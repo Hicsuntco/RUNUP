@@ -419,6 +419,18 @@ jobs:
       - name: Vérifier que le client et le serveur connaissent les mêmes événements
         run: python3 ci_scripts/check_events.py
 
+      # La même duplication, pour les genres de panne — et cette fois la divergence n'aurait
+      # AUCUN symptôme. Un rapport de panne n'arrive que quand ça va mal : il n'y a pas de
+      # volume quotidien dont la chute sauterait aux yeux, et une table de pannes vide ressemble
+      # trait pour trait à une app qui ne plante pas. Ce contrôle vérifie en plus que le
+      # manifeste de confidentialité déclare bien ce que l'app envoie : une déclaration
+      # incomplète fait refuser le binaire à l'ENVOI, avant toute revue humaine.
+      - name: Éprouver le contrôle des genres de panne
+        run: |
+          cd ci_scripts && python3 test_pannes.py
+      - name: Vérifier que le client, le serveur et le manifeste s'accordent sur les pannes
+        run: python3 ci_scripts/check_pannes.py
+
       # Une somme sur des relevés doit dire de quelle discipline elle parle. Sans ça, la première
       # sortie vélo entre dans la distance courue, emporte le record d'allure que personne ne
       # reprendra, use les chaussures et coche la séance de course du jour — sans qu'une seule

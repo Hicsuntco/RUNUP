@@ -168,6 +168,17 @@ private struct RootView: View {
             // Cold launch never fires the `scenePhase` handler below (there's no previous phase to
             // transition from), so this is the only place a launch-time open is counted.
             Analytics.shared.trackAppOpenedIfNewSession()
+            // LE RAPPORT DE PANNE, ET C'EST LE SEUL ENDROIT POSSIBLE.
+            //
+            // Une panne arrive au lancement SUIVANT : l'app était morte, iOS a collecté le
+            // rapport hors du processus, et MetricKit le rend à l'abonné dès qu'il y en a un. Si
+            // personne ne s'abonne au démarrage à froid, le rapport est perdu — il n'y a pas de
+            // deuxième occasion. D'où ici, et pas dans le gestionnaire de `scenePhase` plus bas,
+            // qui ne tire jamais au démarrage à froid.
+            //
+            // `demarrer()` envoie aussi ce qu'un lancement précédent n'a pas pu poster, pour la
+            // même raison : le cas normal est que l'app soit morte avant la fin de la requête.
+            Diagnostics.shared.demarrer()
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {

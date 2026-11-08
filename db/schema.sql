@@ -874,3 +874,57 @@ CREATE INDEX IF NOT EXISTS idx_club_session_history_club ON club_session_history
 -- déploiements concurrents ou une migration rejouée ne doivent pas doubler un mardi.
 CREATE UNIQUE INDEX IF NOT EXISTS idx_club_session_history_unique
   ON club_session_history (club_id, held_at, title);
+
+-- ── LES RAPPORTS DE PANNE ─────────────────────────────────────────────────────────────────────
+--
+-- Écrits par `api/crashes.js`, produits par `RunUp/Services/Diagnostics.swift`. Aucun SDK tiers,
+-- même raisonnement que la table `events` plus haut — et, détail qui n'en est pas un, aucun
+-- gestionnaire de signal : c'est iOS qui collecte la panne hors du processus mort, via MetricKit,
+-- et nous la rend au lancement suivant. Le pourquoi est écrit en tête du fichier Swift.
+--
+-- `kind` vaut 'crash', 'hang', 'cpu_exception', 'disk_write_exception' ou 'app_launch'. Les
+-- quatre derniers sont des pannes où l'app ne meurt pas, elle devient mauvaise : un gel de quatre
+-- secondes ne laisse aucune trace dans un rapporteur de panne classique, et c'est pourtant ce
+-- qu'une utilisatrice appelle « ça plante ».
+--
+-- `user_id` est renseigné quand la personne est connectée, et nul sinon — la majorité des gens
+-- n'ont pas de compte, toute l'app marche sans. Le garder a une seule utilité, réelle : répondre
+-- à « mon app plante » par autre chose qu'une question. ON DELETE SET NULL, donc supprimer son
+-- compte laisse la panne anonyme au lieu d'effacer le défaut à corriger.
+--
+-- `payload` est le JSON que MetricKit rend lui-même (`MXDiagnostic.jsonRepresentation()`), avec
+-- la pile d'appels NON SYMBOLISÉE. C'est ce qui permet de retrouver la ligne de code fautive plus
+-- tard, avec le dSYM de la version concernée — sans dSYM, ces adresses ne valent rien, ce qui est
+-- une raison de garder les dSYM aussi longtemps que ces lignes. Nul quand la charge dépassait le
+-- plafond du client : la ligne part quand même, parce que « combien de plantages sur la 2.9 »
+-- reste une information sans la pile.
+--
+-- CE QU'IL N'Y A PAS, ET C'EST VOULU : pas de colonne « signature », pas de compteur
+-- d'occurrences, donc pas de regroupement. Regrouper demanderait de symboliser côté serveur. À
+-- l'échelle d'aujourd'hui on lit les lignes ; le seuil où ça devient faux s'énonce simplement —
+-- le jour où une requête ici rend plus de lignes qu'on n'en lit à l'œil.
+CREATE TABLE IF NOT EXISTS crash_reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  anonymous_id TEXT,
+  kind TEXT NOT NULL,
+  app_version TEXT,
+  app_build TEXT,
+  os_version TEXT,
+  device_type TEXT,
+  is_testflight BOOLEAN,
+  -- Une ligne lisible à l'œil nu : le signal et le type d'exception d'un plantage, la durée d'un
+  -- gel. Elle existe pour qu'on puisse trier la table sans ouvrir `payload`.
+  note TEXT,
+  payload JSONB,
+  -- Quand la panne a eu lieu, d'après MetricKit, borné par le serveur. Distinct de `created_at`,
+  -- qui est l'arrivée : un appareil hors ligne peut livrer une panne d'il y a trois semaines, et
+  -- confondre les deux dates attribuerait le plantage à la version d'aujourd'hui.
+  occurred_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Les deux seules questions qu'on pose à cette table. « Qu'est-ce qui plante en ce moment »
+-- (par genre, le plus récent d'abord) et « est-ce que la 2.9 plante plus que la 2.8 » (par build).
+CREATE INDEX IF NOT EXISTS idx_crash_reports_kind_created ON crash_reports (kind, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_crash_reports_build_created ON crash_reports (app_build, created_at DESC);

@@ -6,9 +6,9 @@
   Deux sections, qui répondent à deux questions différentes :
 
   · NSPrivacyAccessedAPITypes — pourquoi l'app appelle certaines API dites « à motif obligatoire ».
-    Ici une seule : UserDefaults, utilisée par sept fichiers (Analytics, ClubActivityOutbox,
-    NotificationService, ReferralLinkHandler, WatchSessionService, DailyGoalsSnapshot,
-    OnboardingDraftStore). Motif CA92.1 : accès aux seules données de CETTE app et de son groupe
+    Ici une seule : UserDefaults, utilisée par huit fichiers (Analytics, Diagnostics,
+    ClubActivityOutbox, NotificationService, ReferralLinkHandler, WatchSessionService,
+    DailyGoalsSnapshot, OnboardingDraftStore). Motif CA92.1 : accès aux seules données de CETTE app et de son groupe
     d'app (l'extension widget lit `DailyGoalsSnapshot` par le groupe partagé), jamais aux
     préférences d'une autre.
 
@@ -209,6 +209,55 @@
       <array>
         <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
         <string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
+      </array>
+    </dict>
+
+    <!--
+      LES RAPPORTS DE PANNE. Produits par iOS lui-même et récupérés par MetricKit — voir
+      `RunUp/Services/Diagnostics.swift`, qui explique aussi pourquoi aucun gestionnaire de signal
+      n'est posé ici. Ce qui part : la pile d'appels NON SYMBOLISÉE (des adresses, inutilisables
+      sans notre dSYM), la version de l'app, la version d'iOS, le modèle d'appareil et la cause
+      technique de l'arrêt. Rien de ce que la personne écrit, rien d'Apple Santé, aucune position.
+
+      Déclaré LIÉ pour la même raison que l'identifiant d'appareil juste au-dessus : `api/crashes.js`
+      écrit l'identifiant anonyme et l'identifiant de compte sur la même ligne, donc le lien existe
+      réellement. Le déclarer « non lié » serait faux tant que cette écriture perdure.
+
+      Motif « fonctionnement de l'app » et non « analytique » : ces lignes servent à corriger des
+      défauts, pas à mesurer des usages. C'est le motif qu'Apple décrit pour les données de panne.
+    -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeCrashData</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+      </array>
+    </dict>
+
+    <!--
+      LES QUATRE AUTRES GENRES DU MÊME CANAL, qui ne sont pas des plantages : un gel de plusieurs
+      secondes, un dépassement de processeur, une écriture disque excessive, un lancement trop
+      lent. Apple range ça sous « Performance data, such as launch time, freeze rate, or energy
+      use » — c'est exactement ce que `Diagnostics.Genre` appelle `hang`, `cpu_exception`,
+      `disk_write_exception` et `app_launch`. Déclarer seulement les plantages aurait rendu cette
+      liste incomplète d'une famille entière, et l'incomplétude est un motif de rejet à part
+      entière (voir l'en-tête de ce fichier, et la localisation déclarée trop tard).
+    -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypePerformanceData</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
       </array>
     </dict>
 

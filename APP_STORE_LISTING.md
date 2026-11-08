@@ -360,9 +360,9 @@ support ci-dessous.
 
 ## Confidentialité (App Privacy)
 
-Cinq familles de données à déclarer. Une déclaration incomplète est un motif de rejet au même titre
+Sept familles de données à déclarer. Une déclaration incomplète est un motif de rejet au même titre
 qu'une description inexacte, et la moitié de ce qui suit n'existait pas avant les itinéraires
-partagés.
+partagés — les diagnostics, eux, datent du rapport de panne maison.
 
 **Localisation — précise, liée à l'utilisatrice.** Publier un itinéraire envoie un tracé GPS
 (`routes.points`, `start_lat`, `start_lng`, `locality`) rattaché au compte et **visible
@@ -402,6 +402,21 @@ cas, et on pourrait donc ne rien déclarer. Mais la dispense se plaide, alors qu
 lit : sur le carnet d'adresses, qui est la donnée la plus sensible qu'une app puisse demander,
 déclarer en trop n'a jamais fait rejeter personne et déclarer en moins est un motif de retrait.
 Préciser en notes de revue que rien ne quitte l'appareil en clair et que rien n'est conservé.
+
+**Diagnostics — Crash Data et Performance Data, liés à l'utilisatrice.** Les rapports de panne
+établis par iOS et récupérés par MetricKit (voir `api/crashes.js` et
+`RunUp/Services/Diagnostics.swift`) : pile d'appels non symbolisée, version de l'app, version
+d'iOS, modèle d'appareil, cause de l'arrêt. **Crash Data** couvre les plantages ; **Performance
+Data** couvre les quatre autres genres du même canal — gel, dépassement de processeur, écriture
+disque excessive, lancement trop lent. Usage : **App Functionality** dans les deux cas, pas
+Analytics : ces lignes servent à corriger des défauts, pas à mesurer des usages. **Liés**, parce
+que `api/crashes.js` écrit l'identifiant anonyme et l'identifiant de compte sur la même ligne.
+Rien de ce que la personne écrit, rien d'Apple Santé, aucune position. Conservés 180 jours.
+
+Les deux entrées correspondantes sont dans `RunUp/Resources/PrivacyInfo.xcprivacy`, et
+`ci_scripts/check_pannes.py` vérifie qu'elles y restent tant que le service existe. La fiche App
+Store Connect doit dire la même chose : une divergence entre le manifeste et la fiche est un motif
+de rejet à part entière.
 
 **Tracking : non.** Aucun SDK tiers, aucun IDFA, aucun partage avec un courtier de données — donc
 pas d'App Tracking Transparency à afficher.

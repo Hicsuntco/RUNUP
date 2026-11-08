@@ -14,12 +14,12 @@ Quatre chaînes, et chacune garantit une chose précise. Aucune ne garantit cell
 
 | Chaîne | Ce qu'elle prouve | Ce qu'elle ne prouve PAS |
 | --- | --- | --- |
-| **TestFlight** (`testflight.yml`) | 34 contrôles et 24 fichiers de cas passent, l'app compile, les tests unitaires passent, l'archive est signée et acceptée par App Store Connect | que les écrans sont justes — elle ne regarde aucune image |
-| **Serveur** (`server.yml`) | les dépendances `require` sont du CommonJS, 133 tests passent, et les 83 adresses appelées par l'app répondent autre chose qu'un 404 ou un 5xx **en production** | que la logique est juste sur des données réelles : il n'y a pas de base de test |
-| **Captures** (`captures.yml`) | l'app se lance dans trois langues et deux thèmes, 25 écrans sont photographiés, le découpage du film tombe sur les bons écrans | **ce qu'il y a sur les images.** Un vert dit deux choses : l'app n'a pas planté, un fichier a été écrit |
+| **TestFlight** (`testflight.yml`) | 35 contrôles et 24 fichiers de cas passent, l'app compile, les tests unitaires passent, l'archive est signée et acceptée par App Store Connect | que les écrans sont justes — elle ne regarde aucune image |
+| **Serveur** (`server.yml`) | les dépendances `require` sont du CommonJS, 152 tests passent, et les 84 adresses appelées par l'app répondent autre chose qu'un 404 ou un 5xx **en production** | que la logique est juste sur des données réelles : il n'y a pas de base de test |
+| **Captures** (`captures.yml`) | l'app se lance dans trois langues et deux thèmes, 28 écrans sont photographiés (21 ordinaires et 7 en grand texte), le découpage du film tombe sur les bons écrans | **ce qu'il y a sur les images.** Un vert dit deux choses : l'app n'a pas planté, un fichier a été écrit |
 | **Fiche** (`appstore.yml`) | les textes tiennent dans les champs d'Apple, l'aperçu respecte ses règles, tout est déposé | que la fiche dit vrai |
 
-Les 34 contrôles de TestFlight sont nommés dans `.github/workflows/testflight.yml`, un par étape.
+Les 35 contrôles de TestFlight sont nommés dans `.github/workflows/testflight.yml`, un par étape.
 L'un d'eux, `check_cablage.py`, veille sur les autres et sur les vingt-quatre fichiers de cas,
 et il pose deux questions.
 
@@ -48,7 +48,7 @@ d'autorisation non traduite renvoyée par Apple en ITMS-90738 **après** la livr
 ### a. Est-ce que j'ai REGARDÉ les captures ?
 
 Pas « est-ce que le harnais est vert ». Ouvrir l'artefact `captures-app-store` et regarder, dans
-l'ordre : les six images de la fiche, les quinze du dossier `diagnostic/`, et les quatre de
+l'ordre : les six images de la fiche, les quinze du dossier `diagnostic/`, et les sept de
 `diagnostic/grand-texte/`.
 
 Le 7 novembre 2026, deux captures neuves sur trois montraient le mauvais écran — l'écran d'accueil
@@ -92,10 +92,10 @@ est une valeur que personne n'a choisie.
 # et `test_icones.py` répétait un nombre devenu faux. Découvert sur la machine, dix minutes
 # plus tard.
 #
-# Compter DEUX MINUTES : 37 contrôles et 31 fichiers de cas, dont trois qui fabriquent des films
-# avec ffmpeg et quatre qui relancent un contrôle en sous-processus pour l'éprouver. 110 s
+# Compter DEUX MINUTES : 38 contrôles et 32 fichiers de cas, dont trois qui fabriquent des films
+# avec ffmpeg et quatre qui relancent un contrôle en sous-processus pour l'éprouver. 117 s
 # mesurées le 8 novembre 2026. Ce n'est pas une commande qu'on lance « pour voir », c'est la
-# porte. (Plus que les 34 et 24 de TestFlight : `tout.sh` lance AUSSI ce qui tourne dans les
+# porte. (Plus que les 35 et 24 de TestFlight : `tout.sh` lance AUSSI ce qui tourne dans les
 # autres chaînes — le serveur, les captures, la fiche.)
 sh ci_scripts/tout.sh
 
@@ -155,6 +155,13 @@ Puis, sur la machine :
   pose pas la question — `TARGETED_DEVICE_FAMILY` vaut 1 dans les réglages de base comme dans
   ceux du widget (seule la montre porte 4), donc RUNUP est une app iPhone et Apple ne demande
   aucune image d'iPad.
+- **Le rapport de panne ne voit ni le simulateur, ni les erreurs rattrapées.** `Diagnostics.swift`
+  s'abonne à MetricKit, donc iOS collecte la panne hors du processus mort et nous la rend au
+  lancement SUIVANT — il n'y a pas d'alerte, et rien du tout sur un simulateur, où MetricKit ne
+  collecte pas. Et par construction il ne voit que ce qui a mal tourné du point de vue du
+  système : les 160 `try?` et 132 `catch` de l'app avalent des erreurs dont MetricKit n'entendra
+  jamais parler. Une table `crash_reports` vide veut donc dire « rien de ce que le système
+  appelle une panne », pas « rien ne casse ».
 - **Le contenu des séances HYROX** attend quelqu'un qui en a couru un (voir `PROGRESS.md`).
 
 ---

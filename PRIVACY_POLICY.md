@@ -58,8 +58,17 @@ Pour savoir où l'application est confuse ou cassée (par exemple à quelle éta
 
 Ces événements sont rattachés à un identifiant aléatoire généré par l'application sur ton appareil, qui n'est lié à aucune donnée personnelle et change si tu réinstalles l'application. Si tu es connectée au Club, ils sont aussi rattachés à ton compte. Ils sont conservés au maximum 400 jours, puis supprimés automatiquement.
 
+### Rapports de panne
+Quand l'application plante, se bloque plusieurs secondes, consomme anormalement le processeur ou le disque, ou met trop longtemps à démarrer, iOS en établit un rapport technique. RUNUP le reçoit au lancement suivant et l'envoie à notre propre serveur.
+
+Ce rapport est produit par iOS, pas par nous : il contient la liste des fonctions du programme en cours d'exécution au moment de la panne (sous forme d'adresses, qui ne veulent rien dire sans nos propres fichiers de débogage), la version de l'application, la version d'iOS, le modèle d'appareil et la cause technique de l'arrêt. **Il ne contient rien de ce que tu écris, aucune donnée de santé, aucune position, aucun contenu de l'application.**
+
+Comme pour les statistiques d'usage, il est rattaché à l'identifiant aléatoire de ton appareil, et à ton compte si tu es connectée au Club. Les rapports de panne sont conservés au maximum 180 jours, puis supprimés automatiquement — passé ce délai, la version de l'application concernée n'est plus distribuée et le rapport ne sert plus à rien.
+
+Ces rapports nous arrivent par MetricKit, le mécanisme d'Apple prévu pour ça : RUNUP n'installe aucun gestionnaire de plantage de son côté, et n'embarque aucun outil tiers de rapport de panne.
+
 ### Aucune collecte publicitaire
-RUNUP ne contient aucun SDK publicitaire, aucun traceur tiers, aucun outil d'analyse tiers, et ne vend aucune donnée. Les statistiques d'usage décrites ci-dessus sont enregistrées par notre propre serveur, pour nous seuls, et ne sont partagées avec personne.
+RUNUP ne contient aucun SDK publicitaire, aucun traceur tiers, aucun outil d'analyse tiers, aucun outil tiers de rapport de panne, et ne vend aucune donnée. Les statistiques d'usage et les rapports de panne décrits ci-dessus sont enregistrés par notre propre serveur, pour nous seuls, et ne sont partagés avec personne.
 
 ## Où sont stockées tes données
 

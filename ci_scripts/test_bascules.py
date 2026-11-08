@@ -415,8 +415,8 @@ with tempfile.TemporaryDirectory() as d:
     attendu("la recherche n'emploie pas l'instant du verdict", appels, [])
     # Et l'inverse, pour que ce couple de cas dise les deux moitiés de la règle : le verdict,
     # lui, l'emploie bel et bien. Vérifié plus haut sur le film « lent ».
-    attendu("alors que le verdict, lui, regarde tard",
-            round(bs.instant_juge({"debut": 1.0, "fin": 3.0}), 2), 2.75)
+    attendu("alors que le verdict, lui, regarde au milieu",
+            round(bs.instant_juge({"debut": 1.0, "fin": 3.0}), 2), 2.0)
 
     for depart in (3.0, 0.0):
         trouve3, _, _, _ = bs.alignement(film, bascules, refs, depart, dossier)
@@ -445,10 +445,19 @@ with tempfile.TemporaryDirectory() as d:
 #
 # On fabrique un film où le plan met délibérément du temps à se poser, et on vérifie les deux
 # verdicts sur le même film : à `debut + 0,5 s` on se trompe, à la fin du plan on ne se trompe pas.
-attendu("l'instant jugé est pris un quart de seconde avant la fin",
-        round(bs.instant_juge({"debut": 3.5, "fin": 5.5}), 2), 5.25)
-attendu("un plan trop court garde l'ancien instant",
+attendu("l'instant jugé est pris au milieu du plan",
+        round(bs.instant_juge({"debut": 3.5, "fin": 5.5}), 2), 4.5)
+attendu("un plan trop court garde le plancher de pose",
         round(bs.instant_juge({"debut": 3.5, "fin": 3.6}), 2), 4.0)
+# LES DEUX CÔTÉS SONT GARANTIS, et c'est tout l'intérêt du milieu. Les deux premières réponses
+# ne tenaient qu'un côté : `debut + 0,5` tombait avant la pose des écrans lents, `fin − 0,25`
+# tombait dans l'action suivante — les plans sont CONTIGUS, « stats » finit à l'instant où le
+# défilement « stats-bas » commence — et, pour le dernier plan, dans le démontage du test.
+plan = {"debut": 23.87, "fin": 25.87}
+attendu("le milieu est après la pose la plus lente mesurée (0,57 s)",
+        bs.instant_juge(plan) - plan["debut"] > 0.57, True)
+attendu("et il est loin de l'action suivante",
+        plan["fin"] - bs.instant_juge(plan) >= 0.9, True)
 
 with tempfile.TemporaryDirectory() as d:
     dossier = pathlib.Path(d)
@@ -490,7 +499,7 @@ with tempfile.TemporaryDirectory() as d:
             abs(tot[0][1] - tot[1][1]) < 10, True)
 
     tard = bs.le_plus_proche(bs.posee(film, bs.instant_juge(plan), dossier, "tard"), refs)
-    attendu("à la fin du plan, c'est « stats » sans hésitation", tard[0][0], "stats")
+    attendu("au milieu du plan, c'est « stats » sans hésitation", tard[0][0], "stats")
     attendu("et l'écart au suivant est franc", tard[1][1] - tard[0][1] > 40, True)
 
 

@@ -51,6 +51,25 @@ cas-là. Le compte de pixels, lui, passe de 0 à cent mille.
 
 Et le même dossier comparé à lui-même rend 0,000 et zéro pixel : il n'y a pas de bruit de fond
 à soustraire entre deux captures du même état, une fois l'heure masquée.
+
+# DEUX ÉCRANS NE SE REPRODUISENT PAS D'UNE EXÉCUTION À L'AUTRE, ET IL FAUT LE SAVOIR
+
+Relevé en comparant deux exécutions séparées de trois heures, SANS aucun changement de code
+entre les deux sur ces écrans-là :
+
+- `diagnostic/course-en-cours` : une carte dont les tuiles n'arrivent pas au même moment, un
+  chronomètre qui tourne, des calories. 752 à 42 400 pixels d'écart selon la langue.
+- `diagnostic/profil` : la tuile « Amis » dit « 3 abonnements » à une heure et « 1 sortie
+  aujourd'hui » à une autre. Les données de démonstration sont datées RELATIVEMENT à l'heure
+  courante, et une sortie plantée « il y a trois heures » tombe hier ou aujourd'hui selon
+  l'heure à laquelle la chaîne tourne. ~3 000 pixels, toujours la même bande de 40 points.
+
+LES SIX IMAGES LIVRÉES À APPLE, ELLES, SONT REPRODUCTIBLES — `1-accueil` à `6-stats`, trois
+langues, deux thèmes, zéro pixel d'écart entre les deux exécutions. C'est ce qui compte pour la
+fiche, et c'est vérifié.
+
+Pour juger un découpage, nommer les écrans avec `--seulement` plutôt que tout comparer : les
+deux ci-dessus noieraient le verdict sous un bruit qui ne vient pas du code.
 """
 import argparse
 import pathlib

@@ -461,31 +461,37 @@ def alignement(entree: pathlib.Path, bascules: list, references: dict, decalage:
     return trouve, total / max(vises, 1), (-moins_bons) == vises, grossier
 
 
-#: Ce qu'on laisse au plan avant sa fin pour prendre l'image qui le juge. Un quart de seconde
-#: suffit à être à l'abri d'une coupure imprécise, et ne coûte rien : le plan est posé depuis
-#: longtemps à ce moment-là.
-MARGE_DE_FIN = 0.25
-
 #: Au plus tôt, l'image jugée est prise là — c'est aussi la référence qui sert à classer la
 #: fenêtre de transition qui précède, et elle n'a pas bougé.
 DELAI_DE_POSE = 0.5
 
 
 def instant_juge(b: dict) -> float:
-    """QUAND REGARDER UN PLAN POUR DIRE QUEL ÉCRAN IL MONTRE.
+    """QUAND REGARDER UN PLAN POUR DIRE QUEL ÉCRAN IL MONTRE : AU MILIEU.
 
-    C'était `debut + 0,5 s`, et c'est ce qui a mis le film espagnol au rouge le 8 novembre
-    2026 : le plan « stats » y met 0,57 s à se poser — dix-sept images sur vingt — et l'image
-    prise à 0,5 s est donc un MÉLANGE de l'écran qui part et de celui qui arrive. Le classement
-    rendait « profil 24,4, stats 25,0 » : un quasi-ex æquo, là où un plan posé donne 6,4 contre
-    24,6. Le découpage était juste, les trois autres plans étaient reconnus sans hésitation ;
-    c'est l'instant du jugement qui était mal choisi.
+    # DEUX MAUVAISES RÉPONSES AVANT CELLE-LÀ
 
-    On juge donc à la FIN du plan, qui dure deux secondes : tout ce qui devait arriver est
-    arrivé. Le plancher à `debut + 0,5 s` garde le comportement d'avant pour un plan si court
-    que sa fin précéderait sa pose.
+    `debut + 0,5 s` a mis le film espagnol au rouge le 8 novembre 2026 : le plan « stats » y met
+    0,57 s à se poser — dix-sept images sur vingt — et l'image prise à 0,5 s est donc un MÉLANGE
+    de l'écran qui part et de celui qui arrive. Le classement rendait « profil 24,4, stats
+    25,0 » : un quasi-ex æquo, là où un plan posé donne 6,4 contre 24,6.
+
+    `fin − 0,25 s` a mis le film français au rouge le même jour, et pour la raison inverse.
+    LES PLANS SONT CONTIGUS : « stats » finit à 25,87 s et le défilement « stats-bas » commence
+    à 25,87 s. Un quart de seconde avant la fin, l'écran repart déjà. Et pour le DERNIER plan,
+    cet instant tombe dans le démontage du test : l'image jugée ne ressemblait plus à aucun des
+    quatre témoins — 79,6 contre 105,7, là où un écran reconnu rend 6.
+
+    # CE QUI RESTE
+
+    Le milieu. Un plan dure deux secondes ; son milieu est à une seconde de son début — bien
+    après les 0,57 s de pose les plus lents mesurés — et à une seconde de sa fin, donc avant
+    que l'action suivante ne commence. C'est le seul instant dont les deux côtés sont garantis.
+
+    Le plancher à `debut + 0,5 s` ne sert plus que pour un plan si court que son milieu
+    précéderait sa pose ; il n'y en a aucun aujourd'hui.
     """
-    return max(b["debut"] + DELAI_DE_POSE, b["fin"] - MARGE_DE_FIN)
+    return max(b["debut"] + DELAI_DE_POSE, (b["debut"] + b["fin"]) / 2)
 
 
 def main() -> int:

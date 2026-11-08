@@ -10,46 +10,49 @@ struct ClubView: View {
     @Environment(AppState.self) private var appState
     @Query(sort: \RunRecord.date, order: .reverse) private var runs: [RunRecord]
 
+    /// LES DONNÉES DU CLUB ET LE RÉSEAU VIVENT À PART — voir `ClubStore`.
+    ///
+    /// Construit ici et non dans une `.task` : `@State` ne se laisse pas initialiser depuis
+    /// l'environnement, mais il se laisse initialiser depuis un paramètre, et `SocialView` a
+    /// l'environnement. Le magasin existe donc dès le premier rendu, ce qui évite d'avoir à
+    /// répondre à « que se passe-t-il si une vue s'affiche avant que son magasin existe ».
+    @State private var magasin: ClubStore
+
+    /// `@MainActor` EXPLICITE, parce que `ClubStore` l'est et qu'un `init` de structure ne
+    /// l'hérite pas forcément. Construire un objet isolé au fil principal depuis un contexte
+    /// qui ne l'est pas est une erreur de compilation, pas un avertissement — et il n'y a pas
+    /// de compilateur Swift ici pour la voir. Redondante si SwiftUI isole déjà `View`, et sans
+    /// coût dans ce cas.
+    @MainActor
+    init(appState: AppState) {
+        _magasin = State(initialValue: ClubStore(appState: appState))
+    }
+
     /// L'APERÇU EST LE BON ONGLET POUR DE VRAIES GENS, ET LE MAUVAIS POUR UNE CAPTURE.
     ///
     /// Il montre les kilomètres du club cette semaine, le défi en cours et les sorties de
     /// groupe prévues — trois choses qu'un club inventé n'a pas, donc trois états vides sous
     /// une accroche qui parle du fil du club. Le fil, lui, est plein. Voir `Demonstration`.
     @State private var tab: Tab = Tab.auDemarrage
-    @State private var board = ClubBoard(club: nil, leaderboard: [])
     /// Ce que le club prépare, et ce qu'il a fait de mieux. Chargé à part du tableau de bord :
     /// celui-ci part à chaque ouverture du Club, celui-là seulement quand l'aperçu s'affiche.
     @State private var highlights: ClubHighlights?
-    /// LE MUR DU CLUB : ce qu'on se dit entre deux sorties. Les messages vivent dans le même
-    /// onglet que les activités et s'y entrelacent par date — un mur à part aurait fait un
-    /// quatrième onglet pour une conversation de dix lignes.
-    @State private var posts: [ClubPost] = []
     @State private var brouillonDuClub = ""
     @State private var reponseA: ClubPost?
     @State private var envoiDuMessage = false
-    @State private var feed: [FeedItem] = []
     // Starts true (not false) so the very first render — before `.task` below has had a chance to
     // run — reads as "checking for your club" rather than immediately flashing the create/join
     // form. `.id(appState.screen)` on the parent means a fresh ClubView (and fresh isLoading=true)
     // is created every time this tab is opened, so this covers every visit, not just the first.
-    @State private var isLoading = true
-    @State private var errorMessage: String?
     @State private var showSignIn = false
     @State private var newClubName = ""
     @State private var clubQuery = ""
-    @State private var clubResultats: [ClubSearchResult] = []
-    @State private var clubSearchEnCours = false
-    @State private var clubSearchTask: Task<Void, Never>?
     @State private var reportTarget: ReportTarget?
     @State private var pendingBlock: (userId: String, name: String)?
     @State private var showManagement = false
     @State private var commentsActivity: FeedItem?
     /// La sortie en cours de modification — la sienne uniquement, le serveur le vérifie de son côté.
     @State private var editingActivity: FeedItem?
-    /// Set only when `syncBadgesIfNeeded` finds a key `badges` reports earned that isn't yet in
-    /// `profile.seenBadgeKeys` — i.e. genuinely just crossed the threshold this load, not merely
-    /// "earned at some point before this feature existed." Drives `BadgeUnlockedView`.
-    @State private var unlockedBadge: ClubBadge?
     @State private var showLeaveConfirm = false
     @State private var showCreateEvent = false
     /// La sortie de groupe qu'on est en train de modifier. Non nil présente `CreateEventSheet`
@@ -99,13 +102,18 @@ struct ClubView: View {
     private var clubService: ClubService { ClubService(auth: auth) }
 
     var body: some View {
+        // `@Bindable` LE TEMPS DU CORPS, et pour une seule liaison : la feuille du badge
+        // débloqué se présente par `item:`, qui veut un `Binding`. Un objet `@Observable` n'en
+        // fournit pas directement — c'est `@Bindable` qui en fabrique un. C'est le motif que
+        // donne la documentation d'Apple pour la migration vers Observation.
+        @Bindable var magasin = magasin
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
                 banniere
                 header
                 // Pleine largeur, SOUS l'en-tête et pas dedans : à côté du nom, elle aurait eu
                 // la moitié de la ligne et se serait tronquée au premier mot intéressant.
-                if let texte = board.club?.description, !texte.isEmpty {
+                if let texte = magasin.board.club?.description, !texte.isEmpty {
                     Text(texte)
                         .font(RUFont.sans(.body))
                         .foregroundColor(RUColor.text2)
@@ -114,12 +122,12 @@ struct ClubView: View {
 
                 if !auth.isSignedIn {
                     signInPrompt
-                } else if isLoading && board.club == nil {
+                } else if magasin.isLoading && magasin.board.club == nil {
                     // Without this, the ~few seconds `loadIfSignedIn` takes to fetch her real
                     // club read as "the create/join form flashes, then flips to the leaderboard" —
                     // confusing when she already has a club (looks like it vanished, not loaded).
                     loadingCard
-                } else if board.club == nil {
+                } else if magasin.board.club == nil {
                     clubSetupCard
                 } else {
                     clubTabs
@@ -127,7 +135,7 @@ struct ClubView: View {
                         switch tab {
                         case .overview: overviewContent
                         case .board:
-                            ClubBoardSection(board: board, isLoading: isLoading,
+                            ClubBoardSection(board: magasin.board, isLoading: magasin.isLoading,
                                              reportTarget: $reportTarget,
                                              pendingBlock: $pendingBlock)
                         case .feed: feedContent
@@ -136,12 +144,12 @@ struct ClubView: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
 
-                if let errorMessage {
+                if let message = magasin.errorMessage {
                     // Was color-only (rose text, no icon) — reads as regular text rather than an
                     // error, especially on a light theme with a pale accent swatch selected.
                     HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.triangle.fill").font(RUFont.icone(.small))
-                        Text(errorMessage).font(RUFont.sans(.small))
+                        Text(message).font(RUFont.sans(.small))
                     }
                     .foregroundColor(RUColor.rose)
                     .padding(.top, 4)
@@ -161,7 +169,7 @@ struct ClubView: View {
             .padding(.top, 8)
             .padding(.bottom, 130)
         }
-        .task { await loadIfSignedIn() }
+        .task { await magasin.loadIfSignedIn(badges: badges) }
         // Arrivée par le lien public d'un club : la recherche s'ouvre déjà remplie de son nom,
         // donc le bouton « Rejoindre » est à un geste. Le nom est consommé pour qu'un retour sur
         // l'onglet ne le réécrive pas par-dessus une recherche en cours.
@@ -178,9 +186,9 @@ struct ClubView: View {
         }
         // Même temporisation que la recherche de personnes : on cherche À LA FRAPPE, mais on
         // n'envoie pas une requête par lettre.
-        .onChange(of: clubQuery) { _, nouveau in chercherUnClub(nouveau) }
-        .refreshable { await loadIfSignedIn() }
-        .onChange(of: feed.count) { _, count in
+        .onChange(of: clubQuery) { _, nouveau in magasin.chercherUnClub(nouveau) }
+        .refreshable { await magasin.loadIfSignedIn(badges: badges) }
+        .onChange(of: magasin.feed.count) { _, count in
             if count > 0 { feedRevealed = true }
         }
         .sheet(isPresented: $showSignIn) {
@@ -188,7 +196,7 @@ struct ClubView: View {
                 .runUpSheetStyle(detents: [.large])
         }
         .sheet(item: $editingActivity) { activity in
-            EditActivitySheet(item: activity, onSaved: { Task { await loadFeed() } })
+            EditActivitySheet(item: activity, onSaved: { Task { await magasin.loadFeed() } })
                 .runUpSheetStyle()
         }
         .sheet(item: $commentsActivity) { activity in
@@ -196,7 +204,7 @@ struct ClubView: View {
                 activityId: activity.id,
                 currentUserId: auth.currentUser?.id,
                 clubService: clubService,
-                onCommentPosted: { bumpCommentsCount(activity.id) },
+                onCommentPosted: { magasin.bumpCommentsCount(activity.id) },
                 onReport: { comment in
                     commentsActivity = nil
                     Task {
@@ -215,7 +223,7 @@ struct ClubView: View {
                 .runUpSheetStyle(detents: [.large], gereSonBas: true)
         }
         .onChange(of: auth.isSignedIn) { _, signedIn in
-            if signedIn { Task { await loadIfSignedIn() } }
+            if signedIn { Task { await magasin.loadIfSignedIn(badges: badges) } }
         }
         // Report reason picker — App Store guideline 1.2. `reportTarget` is set by the context
         // menus on leaderboard rows / feed items / the club itself.
@@ -224,9 +232,9 @@ struct ClubView: View {
             isPresented: Binding(get: { reportTarget != nil }, set: { if !$0 { reportTarget = nil } }),
             presenting: reportTarget
         ) { target in
-            Button("Contenu inapproprié") { Task { await submitReport(target, reason: "Contenu inapproprié") } }
-            Button("Harcèlement") { Task { await submitReport(target, reason: "Harcèlement") } }
-            Button("Spam") { Task { await submitReport(target, reason: "Spam") } }
+            Button("Contenu inapproprié") { Task { await magasin.submitReport(target, reason: "Contenu inapproprié") } }
+            Button("Harcèlement") { Task { await magasin.submitReport(target, reason: "Harcèlement") } }
+            Button("Spam") { Task { await magasin.submitReport(target, reason: "Spam") } }
             Button("Annuler", role: .cancel) {}
         } message: { target in
             Text("Pourquoi signales-tu \(target.displayName) ?")
@@ -235,7 +243,7 @@ struct ClubView: View {
         // avant de demander confirmation ; le dialogue doit donc être porté par une vue qui, elle,
         // reste à l'écran. `leaveClub()` garde son propre garde-fou contre le double appel.
         .confirmationDialog("Quitter le club ?", isPresented: $showLeaveConfirm, titleVisibility: .visible) {
-            Button("Quitter", role: .destructive) { Task { await leaveClub() } }
+            Button("Quitter", role: .destructive) { Task { await magasin.leaveClub() } }
             Button("Annuler", role: .cancel) {}
         } message: {
             Text("Tu devras redemander le code d'invitation pour revenir.")
@@ -249,7 +257,7 @@ struct ClubView: View {
             // `pendingBlock` before an async Task body would read it (silent no-op otherwise).
             Button("Bloquer", role: .destructive) {
                 if let target = pendingBlock {
-                    Task { await confirmBlock(target.userId) }
+                    Task { await magasin.confirmBlock(target.userId) }
                 }
             }
             Button("Annuler", role: .cancel) {}
@@ -274,8 +282,8 @@ struct ClubView: View {
         } message: {
             Text("Elle disparaîtra du fil du club, avec ses applaudissements et commentaires. Tes XP restent acquis.")
         }
-        .fullScreenCover(item: $unlockedBadge) { badge in
-            BadgeUnlockedView(badge: badge, onDismiss: { unlockedBadge = nil })
+        .fullScreenCover(item: $magasin.unlockedBadge) { badge in
+            BadgeUnlockedView(badge: badge, onDismiss: { magasin.unlockedBadge = nil })
         }
     }
 
@@ -283,7 +291,7 @@ struct ClubView: View {
         do {
             try await clubService.deleteActivity(activityId: item.id)
             await MainActor.run {
-                feed.removeAll { $0.id == item.id }
+                magasin.feed.removeAll { $0.id == item.id }
                 appState.toast(String(localized: "Activité supprimée du fil."))
             }
         } catch {
@@ -300,7 +308,7 @@ struct ClubView: View {
         // la pastille une seule. Centrée, elle tombait en face du NOM, c'est-à-dire nulle part —
         // ni sur la première ligne ni sur la dernière. En haut, elle partage la ligne du sourcil.
         HStack(alignment: .top) {
-            if let club = board.club {
+            if let club = magasin.board.club {
                 Button(action: { showManagement = true }) {
                     VStack(alignment: .leading, spacing: 2) {
                         // « LE CLUB » EST UN SOURCIL, ET IL ÉTAIT ÉCRIT COMME UN INTERTITRE.
@@ -351,7 +359,7 @@ struct ClubView: View {
                 }
             }
             Spacer()
-            if let club = board.club {
+            if let club = magasin.board.club {
                 StatChip(text: Pluriel.choisir(club.memberCount,
                                                String(localized: "\(club.memberCount) membre"),
                                                String(localized: "\(club.memberCount) membres")),
@@ -360,13 +368,13 @@ struct ClubView: View {
         }
         .padding(.vertical, 2)
         .sheet(isPresented: $showManagement) {
-            if let club = board.club {
+            if let club = magasin.board.club {
                 ClubManagementView(
                     club: club,
-                    members: board.leaderboard,
-                    challenge: board.challenge,
+                    members: magasin.board.leaderboard,
+                    challenge: magasin.board.challenge,
                     onCreateChallenge: { title, targetKm, endDate in
-                        try await createChallenge(title: title, targetKm: targetKm, endDate: endDate)
+                        try await magasin.createChallenge(title: title, targetKm: targetKm, endDate: endDate)
                     },
                     onReport: { member in
                         // Dismiss the sheet first, then set the target once its dismiss animation
@@ -386,24 +394,24 @@ struct ClubView: View {
                             pendingBlock = (member.id, member.name)
                         }
                     },
-                    onUpdateBio: { bio in try await updateBio(bio) },
+                    onUpdateBio: { bio in try await magasin.updateBio(bio) },
                     onSetOpen: { ouvert in
                         try await clubService.setClubOpen(ouvert)
                         // Le tableau vient du serveur : on le relit plutôt que de deviner le
                         // nouvel état, pour que l'écran dise ce que le serveur a retenu.
-                        await loadIfSignedIn()
+                        await magasin.loadIfSignedIn(badges: badges)
                     },
                     onSetClubProfile: { description, ville in
                         try await clubService.setClubProfile(description: description, city: ville)
-                        await loadIfSignedIn()
+                        await magasin.loadIfSignedIn(badges: badges)
                     },
                     onSetClubCover: { dataURI in
                         try await clubService.setClubCover(dataURI: dataURI)
-                        await loadIfSignedIn()
+                        await magasin.loadIfSignedIn(badges: badges)
                     },
                     onSetMemberRole: { memberId, organisateur in
                         try await clubService.setMemberRole(memberId: memberId, organiser: organisateur)
-                        await loadIfSignedIn()
+                        await magasin.loadIfSignedIn(badges: badges)
                     },
                     // Même précaution que `onReport` ci-dessus : fermer la feuille, puis présenter
                     // le dialogue une fois son animation de fermeture passée.
@@ -473,9 +481,11 @@ struct ClubView: View {
                         .padding(.horizontal, 14).padding(.vertical, 12)
                         .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
-                    Button("Créer") { Task { await createClub() } }
-                        .buttonStyle(PrimaryButtonStyle(isDisabled: newClubName.trimmingCharacters(in: .whitespaces).isEmpty || isLoading))
-                        .disabled(newClubName.trimmingCharacters(in: .whitespaces).isEmpty || isLoading)
+                    Button("Créer") {
+                        Task { if await magasin.createClub(nom: newClubName) { newClubName = "" } }
+                    }
+                        .buttonStyle(PrimaryButtonStyle(isDisabled: newClubName.trimmingCharacters(in: .whitespaces).isEmpty || magasin.isLoading))
+                        .disabled(newClubName.trimmingCharacters(in: .whitespaces).isEmpty || magasin.isLoading)
                 }
             }
 
@@ -497,15 +507,15 @@ struct ClubView: View {
                     .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
 
-                if clubSearchEnCours {
+                if magasin.clubSearchEnCours {
                     ProgressView().frame(maxWidth: .infinity).padding(.vertical, 12)
-                } else if !clubQuery.trimmingCharacters(in: .whitespaces).isEmpty, clubResultats.isEmpty {
+                } else if !clubQuery.trimmingCharacters(in: .whitespaces).isEmpty, magasin.clubResultats.isEmpty {
                     Text("Aucun club ouvert ne porte ce nom.")
                         .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                         .padding(.vertical, 8)
                 }
-                ForEach(clubResultats) { trouve in
-                    Button(action: { Task { await joinClub(trouve) } }) {
+                ForEach(magasin.clubResultats) { trouve in
+                    Button(action: { Task { if await magasin.joinClub(trouve) { clubQuery = "" } } }) {
                         HStack(spacing: 10) {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(trouve.name)
@@ -532,7 +542,7 @@ struct ClubView: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(PressableStyle())
-                    .disabled(isLoading)
+                    .disabled(magasin.isLoading)
                 }
             }
         }
@@ -641,7 +651,7 @@ struct ClubView: View {
     /// club et ses trois onglets sous la ligne de flottaison, et on ouvrirait l'écran sur une
     /// image au lieu de l'ouvrir sur le club.
     @ViewBuilder private var banniere: some View {
-        if let brut = board.club?.coverUrl, !brut.isEmpty, let url = URL(string: brut) {
+        if let brut = magasin.board.club?.coverUrl, !brut.isEmpty, let url = URL(string: brut) {
             AsyncImage(url: url) { image in
                 image.resizable().scaledToFill()
             } placeholder: {
@@ -696,7 +706,7 @@ struct ClubView: View {
     /// qu'aucune sortie n'est prévue.
     private var challengeCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            if let challenge = board.challenge {
+            if let challenge = magasin.board.challenge {
                 HStack {
                     RUCardHeader(title: "Défi du club")
                     StatChip(text: String(localized: "J-\(daysLeft(until: challenge.endDate))"), color: RUColor.rose2)
@@ -730,7 +740,7 @@ struct ClubView: View {
                     .padding(.horizontal, 2)
             }
         }
-        .ruCarteSiPleine(board.challenge != nil)
+        .ruCarteSiPleine(magasin.board.challenge != nil)
     }
 
     private var clubTabs: some View {
@@ -752,9 +762,9 @@ struct ClubView: View {
     /// raison d'afficher sa phrase d'absence ; empilées, elles font une page qui ne dit rien
     /// trois fois.
     private var clubEnSommeil: Bool {
-        (board.weekStats?.totalKm ?? 0) == 0
-            && board.challenge == nil
-            && (board.events ?? []).isEmpty
+        (magasin.board.weekStats?.totalKm ?? 0) == 0
+            && magasin.board.challenge == nil
+            && (magasin.board.events ?? []).isEmpty
     }
 
     /// À plusieurs, mais rien de lancé. Les deux actions sont celles que portaient les
@@ -801,7 +811,7 @@ struct ClubView: View {
     /// Elle est donc partagée par les deux onglets plutôt que recopiée : un lien de partage
     /// dupliqué, c'est une des deux copies qui garde l'ancienne URL le jour où elle change.
     @ViewBuilder private var carteClubSeul: some View {
-        if let club = board.club {
+        if let club = magasin.board.club {
             VStack(alignment: .leading, spacing: 10) {
                 Text(verbatim: Accord.selon(f: String(localized: "Tu es seule dans \(club.name)"),
                                             m: String(localized: "Tu es seul dans \(club.name)")))
@@ -893,7 +903,7 @@ struct ClubView: View {
             // mais sur l'onglet Activité, qu'on n'ouvre pas quand on vient d'arriver. À
             // plusieurs, ce sont les deux boutons que portaient les intertitres disparus.
             if clubEnSommeil {
-                if board.club.map({ $0.memberCount <= 1 }) == true {
+                if magasin.board.club.map({ $0.memberCount <= 1 }) == true {
                     carteClubSeul
                 } else {
                     carteClubAReveiller
@@ -1207,7 +1217,7 @@ struct ClubView: View {
     private func segment(_ label: String, _ value: Tab) -> some View {
         Button(action: {
             withAnimation(.easeInOut(duration: 0.2)) { tab = value }
-            if value == .feed && feed.isEmpty { Task { await loadFeed() } }
+            if value == .feed && magasin.feed.isEmpty { Task { await magasin.loadFeed() } }
         }) {
             Text(label)
                 .font(RUFont.sans(.label, weight: .semibold))
@@ -1261,9 +1271,9 @@ struct ClubView: View {
     /// qu'on ne remarque pas que c'est le même. Les visages remplacent le chiffre : ils le
     /// contiennent (on les compte) et disent en plus QUI, ce que « 4 » ne dira jamais.
     private var weekPulseCard: some View {
-        let stats = board.weekStats
+        let stats = magasin.board.weekStats
         let km = String(format: "%.1f", locale: Locale.current, stats?.totalKm ?? 0)
-        let active = (board.weekly ?? []).filter { $0.weekKm > 0 }
+        let active = (magasin.board.weekly ?? []).filter { $0.weekKm > 0 }
         return VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 14) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -1386,12 +1396,12 @@ struct ClubView: View {
                 }
                 .buttonStyle(PressableStyle())
             }
-            if (board.events ?? []).isEmpty {
+            if (magasin.board.events ?? []).isEmpty {
                 Text("Aucune sortie prévue — propose un créneau, les autres n'ont qu'à dire « J'y serai ».")
                     .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                     .padding(.horizontal, 2)
             }
-            ForEach(board.events ?? []) { event in
+            ForEach(magasin.board.events ?? []) { event in
                 VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 2) {
@@ -1462,10 +1472,10 @@ struct ClubView: View {
                 let created = try await clubService.createEvent(title: title, location: location, startsAt: date,
                                                                 repeatsWeekly: chaqueSemaine, paceGroups: groupes)
                 await MainActor.run {
-                    var events = board.events ?? []
+                    var events = magasin.board.events ?? []
                     events.append(created)
                     events.sort { $0.startsAt < $1.startsAt }
-                    board.events = events
+                    magasin.board.events = events
                 }
             }
             .runUpSheetStyle()
@@ -1478,8 +1488,8 @@ struct ClubView: View {
                 // change ni de place ni de compteur. Recharger le mur entier pour une phrase
                 // ferait clignoter la liste sous les doigts de qui vient de la corriger.
                 await MainActor.run {
-                    if let i = posts.firstIndex(where: { $0.id == message.id }) {
-                        posts[i].text = texte
+                    if let i = magasin.posts.firstIndex(where: { $0.id == message.id }) {
+                        magasin.posts[i].text = texte
                     }
                 }
             }
@@ -1494,7 +1504,7 @@ struct ClubView: View {
                 // de date, donc de PLACE dans la liste, et ses présences par groupe d'allure
                 // dépendent de groupes qui viennent d'être réécrits. Reconstruire tout ça ici
                 // serait refaire le travail du serveur, moins bien.
-                await loadIfSignedIn()
+                await magasin.loadIfSignedIn(badges: badges)
             }, existant: event)
             .runUpSheetStyle()
         }
@@ -1565,24 +1575,24 @@ struct ClubView: View {
             do {
                 let result = try await clubService.toggleEventRsvp(eventId: event.id, paceGroup: groupe)
                 await MainActor.run {
-                    if let index = board.events?.firstIndex(where: { $0.id == event.id }) {
-                        board.events?[index].goingByMe = result.going
-                        board.events?[index].going = result.count
-                        board.events?[index].myPaceGroup = result.paceGroup
+                    if let index = magasin.board.events?.firstIndex(where: { $0.id == event.id }) {
+                        magasin.board.events?[index].goingByMe = result.going
+                        magasin.board.events?[index].going = result.count
+                        magasin.board.events?[index].myPaceGroup = result.paceGroup
                         // Le compte par groupe vient du serveur au prochain chargement ; en
                         // attendant, on bouge le sien pour que la pastille choisie réponde tout
                         // de suite. Un chiffre qui attend l'aller-retour se lit comme un geste
                         // qui n'a pas pris.
-                        var comptes = board.events?[index].paceCounts ?? [:]
+                        var comptes = magasin.board.events?[index].paceCounts ?? [:]
                         if let avant = event.myPaceGroup { comptes[avant] = max(0, (comptes[avant] ?? 1) - 1) }
                         if let apres = result.paceGroup { comptes[apres] = (comptes[apres] ?? 0) + 1 }
-                        board.events?[index].paceCounts = comptes
+                        magasin.board.events?[index].paceCounts = comptes
                     }
                 }
             } catch ClubServiceError.badResponse(404, _) {
                 // The event was already cancelled/expired server-side — leaving it in the local
                 // list would just let her tap it again and fail identically every time.
-                await MainActor.run { board.events?.removeAll { $0.id == event.id } }
+                await MainActor.run { magasin.board.events?.removeAll { $0.id == event.id } }
             } catch {
                 await MainActor.run { appState.toast(String(localized: "Impossible de répondre — réessaie.")) }
             }
@@ -1593,10 +1603,10 @@ struct ClubView: View {
         Task {
             do {
                 try await clubService.deleteEvent(eventId: event.id)
-                await MainActor.run { board.events?.removeAll { $0.id == event.id } }
+                await MainActor.run { magasin.board.events?.removeAll { $0.id == event.id } }
             } catch ClubServiceError.badResponse(404, _) {
                 // Already gone server-side — still fine to drop it locally.
-                await MainActor.run { board.events?.removeAll { $0.id == event.id } }
+                await MainActor.run { magasin.board.events?.removeAll { $0.id == event.id } }
             } catch {
                 // A real failure (network, 403 not-the-creator, ...) — keep it in the list rather
                 // than silently pretending the cancel worked when it didn't.
@@ -1621,13 +1631,13 @@ struct ClubView: View {
         // l'animation de révélation qui tournait sur ~45 lignes hors écran.
         LazyVStack(spacing: 0) {
             composeurDuMur
-            if feed.isEmpty && posts.isEmpty && !isLoading {
+            if magasin.feed.isEmpty && magasin.posts.isEmpty && !magasin.isLoading {
                 // Un fil vide a deux causes très différentes, et un seul message les traitait
                 // toutes les deux. Seule dans son club, « sois la première » demande de poster
                 // pour un public qui n'existe pas — ce qu'il faut, c'est des membres, et le code
                 // d'invitation était rangé deux écrans plus loin, dans Gestion du club. À
                 // plusieurs, la phrase d'origine est juste : il n'y a qu'à courir.
-                if board.club.map({ $0.memberCount <= 1 }) == true {
+                if magasin.board.club.map({ $0.memberCount <= 1 }) == true {
                     carteClubSeul
                 } else {
                     Text(verbatim: Accord.selon(f: String(localized: "Personne n'a encore rien posté — sois la première !"),
@@ -1647,7 +1657,7 @@ struct ClubView: View {
                         isMine: item.userId == auth.currentUser?.id,
                         revealed: feedRevealed,
                         index: index,
-                        onKudos: { Task { await toggleKudos(item) } },
+                        onKudos: { Task { await magasin.toggleKudos(item) } },
                         onComment: { commentsActivity = item },
                         onReport: {
                             reportTarget = ReportTarget(targetType: "activity", targetId: item.id, displayName: String(localized: "l'activité de \(item.nomComplet)"))
@@ -1691,12 +1701,12 @@ struct ClubView: View {
     private var entreesDuClub: [EntreeDuClub] {
         // Seulement les messages de premier niveau : une réponse s'affiche sous le sien, pas
         // au milieu du fil où elle n'aurait plus de question.
-        let messages = posts.filter { $0.parentId == nil }.map(EntreeDuClub.message)
-        return (feed.map(EntreeDuClub.sortie) + messages).sorted { $0.date > $1.date }
+        let messages = magasin.posts.filter { $0.parentId == nil }.map(EntreeDuClub.message)
+        return (magasin.feed.map(EntreeDuClub.sortie) + messages).sorted { $0.date > $1.date }
     }
 
     private func reponses(a message: ClubPost) -> [ClubPost] {
-        posts.filter { $0.parentId == message.id }.sorted { $0.createdAt < $1.createdAt }
+        magasin.posts.filter { $0.parentId == message.id }.sorted { $0.createdAt < $1.createdAt }
     }
 
     // MARK: - Écrire sur le mur
@@ -1882,18 +1892,18 @@ struct ClubView: View {
             // On RECHARGE plutôt que de fabriquer la ligne localement : le serveur décide de
             // l'identifiant et de la date, et deux appareils afficheraient sinon deux versions
             // du même message.
-            posts = (try? await clubService.fetchClubPosts()) ?? posts
+            magasin.posts = (try? await clubService.fetchClubPosts()) ?? magasin.posts
         } catch {
             appState.toast(PanneReseau.phrase(pour: error))
         }
     }
 
     private func applaudirLeMessage(_ message: ClubPost) async {
-        guard let index = posts.firstIndex(where: { $0.id == message.id }) else { return }
+        guard let index = magasin.posts.firstIndex(where: { $0.id == message.id }) else { return }
         do {
             let maintenant = try await clubService.toggleClubPostKudos(postId: message.id)
-            posts[index].kudoedByMe = maintenant
-            posts[index].kudos += maintenant ? 1 : -1
+            magasin.posts[index].kudoedByMe = maintenant
+            magasin.posts[index].kudos += maintenant ? 1 : -1
             Haptics.impact(.light)
         } catch {
             appState.toast(PanneReseau.phrase(pour: error))
@@ -1905,370 +1915,9 @@ struct ClubView: View {
             try await clubService.deleteClubPost(postId: message.id)
             // Les réponses partent avec lui côté serveur (ON DELETE CASCADE) : on fait pareil ici
             // plutôt que de laisser des réponses orphelines jusqu'au prochain chargement.
-            posts.removeAll { $0.id == message.id || $0.parentId == message.id }
+            magasin.posts.removeAll { $0.id == message.id || $0.parentId == message.id }
         } catch {
             appState.toast(PanneReseau.phrase(pour: error))
-        }
-    }
-
-    // MARK: Networking
-
-    private func loadIfSignedIn() async {
-        guard auth.isSignedIn else { return }
-        // Opportunistic: retries anything still stuck in the local outbox from a prior failed
-        // `postClubActivity` (see ClubActivityOutbox.swift) — e.g. a run posted on a spotty
-        // connection right before she opened Club to check the leaderboard.
-        appState.retryPendingClubActivities()
-        // A cached board/feed from a prior visit (see `AppState.cachedClubBoard`) renders
-        // immediately instead of blanking to the loading spinner on every single re-visit — the
-        // fetch below still runs to catch up, it just doesn't need to gate the UI this time.
-        if let cachedBoard = appState.cachedClubBoard {
-            board = cachedBoard
-            isLoading = false
-        }
-        if let cachedFeed = appState.cachedClubFeed {
-            feed = cachedFeed
-        }
-        // EN DÉMONSTRATION, LE CACHE EST TOUT.
-        //
-        // Il n'y a pas de serveur en face d'un simulateur : les trois requêtes ci-dessous
-        // échoueraient, et l'écran afficherait une ligne d'erreur en rose sous le classement —
-        // dans la capture, en bonne place. Le club posé par `CaptureSeed` est déjà là, complet ;
-        // il n'y a rien à aller chercher. Voir `Demonstration`.
-        if Demonstration.enCours {
-            posts = appState.cachedClubPosts ?? []
-            isLoading = false
-            return
-        }
-        errorMessage = nil
-        // These three requests used to run one after another (refreshMe → fetchBoard → feed),
-        // each paying its own network/cold-start latency on top of the last — the real cause of
-        // the ~5s wait before this tab showed anything (the create/join form sat there the whole
-        // time). None of them actually depends on another's result, so firing them concurrently
-        // cuts the wait to the slowest single request instead of the sum of all three.
-        // `Result` ET NON `try?`, ET C'EST TOUT L'OBJET DU CORRECTIF. `try?` efface la cause :
-        // les deux branches d'erreur ci-dessous n'avaient plus qu'un `nil` à interpréter, donc
-        // elles affirmaient « vérifie ta connexion » pour une session expirée comme pour un
-        // serveur en panne. Voir `PanneReseau`.
-        async let meAttempt = try? await auth.refreshMe()
-        async let boardAttempt = chargeBoard()
-        async let feedAttempt = chargeFeed()
-        // Le mur part avec les trois autres plutôt qu'après : il appartient au même onglet que
-        // les sorties, et une quatrième attente en série rendrait l'onglet Activité plus lent
-        // que les deux autres pour une liste de dix lignes.
-        async let murAttempt = try? await clubService.fetchClubPosts()
-        let (_, boardResult, feedResult, murResult) = await (meAttempt, boardAttempt, feedAttempt, murAttempt)
-        if let murResult { posts = murResult }
-
-        switch boardResult {
-        case .success(let chargé):
-            board = chargé
-            appState.cachedClubBoard = chargé
-            syncBadgesIfNeeded()
-            syncWeeklyTargetIfNeeded()
-        case .failure(let echec):
-            // Only surface the error when there's nothing already on screen to fall back to — a
-            // background refresh failing quietly behind still-valid cached content beats replacing
-            // it with an error banner over data that was fine a moment ago.
-            if appState.cachedClubBoard == nil {
-                errorMessage = PanneReseau.phrase(pour: echec)
-            }
-        }
-        // Piggyback a kudos check on every Club tab open, not just when switching to the
-        // "Fil d'activité" segment — otherwise a new kudos notification only ever surfaces if she
-        // happens to tap into the feed specifically.
-        switch feedResult {
-        case .success(let chargé):
-            feed = chargé
-            appState.cachedClubFeed = chargé
-            notifyNewKudos(in: chargé)
-            notifyNewComments(in: chargé)
-        case .failure(let echec):
-            // Board can still have loaded fine while this alone failed — without this, a failed
-            // feed fetch left `feed` empty with zero indication, so "Fil d'activité" read as a
-            // genuinely empty club instead of a failed load.
-            if errorMessage == nil, appState.cachedClubFeed == nil {
-                errorMessage = PanneReseau.phrase(pour: echec)
-            }
-        }
-        isLoading = false
-    }
-
-    /// Les deux chargements, rendus en `Result` pour garder la CAUSE de l'échec.
-    ///
-    /// Deux petites fonctions plutôt qu'un `do`/`catch` autour de chaque `async let` : `async let`
-    /// veut une expression, et les deux appels doivent rester lancés en parallèle — c'est ce qui
-    /// fait que l'onglet Club s'ouvre en un aller-retour et non deux.
-    private func chargeBoard() async -> Result<ClubBoard, Error> {
-        do { return .success(try await clubService.fetchBoard()) }
-        catch { return .failure(error) }
-    }
-
-    private func chargeFeed() async -> Result<[FeedItem], Error> {
-        do { return .success(try await clubService.fetchFeed()) }
-        catch { return .failure(error) }
-    }
-
-    private func loadFeed() async {
-        // En démonstration, le mur vient de la graine : pas de serveur en face d'un simulateur.
-        if Demonstration.enCours {
-            posts = appState.cachedClubPosts ?? []
-            return
-        }
-        do {
-            feed = try await clubService.fetchFeed()
-            notifyNewKudos(in: feed)
-            notifyNewComments(in: feed)
-        } catch {
-            errorMessage = PanneReseau.phrase(pour: error)
-        }
-        // Le mur, à part et sans bruit : un onglet Activité qui afficherait une erreur parce que
-        // le mur n'a pas répondu alors que les sorties sont là serait faux deux fois.
-        posts = (try? await clubService.fetchClubPosts()) ?? posts
-    }
-
-    /// Real kudos notifications — compares each of *your own* posts' current kudos count against
-    /// what was last seen (`profile.kudosSeenCounts`, keyed by activity id) and posts one bell
-    /// notification per post that gained new kudos since. Only ever moves forward (kudos are
-    /// additive from this client's point of view), so a post that lost kudos some other way isn't
-    /// treated as new claps by mistake.
-    private func notifyNewKudos(in feed: [FeedItem]) {
-        guard let myId = auth.currentUser?.id else { return }
-        for item in feed where item.userId == myId {
-            let seen = profile.kudosSeenCounts[item.id] ?? 0
-            if item.kudos > seen {
-                let gained = item.kudos - seen
-                appState.notify(
-                    icon: "hands.clap.fill", colorHex: 0xFF3B6B,
-                    title: String(localized: "Nouveaux encouragements"),
-                    text: Pluriel.choisir(gained,
-                        String(localized: "Quelqu'un a applaudi ta séance."),
-                        String(localized: "\(gained) personnes ont applaudi ta séance."))
-                )
-            }
-            profile.kudosSeenCounts[item.id] = item.kudos
-        }
-    }
-
-    private func createClub() async {
-        isLoading = true
-        errorMessage = nil
-        do {
-            _ = try await clubService.createClub(name: newClubName.trimmingCharacters(in: .whitespaces))
-            // Inside the `do`, after the call succeeded — an attempt that 422'd on the name, or
-            // never left the device, is not a club created.
-            Analytics.shared.track(.clubCreated)
-            newClubName = ""
-            board = try await clubService.fetchBoard()
-        } catch ClubServiceError.badResponse(422, _) {
-            errorMessage = String(localized: "Ce nom n'est pas autorisé — choisis-en un autre.")
-        } catch {
-            errorMessage = String(localized: "Impossible de créer le club.")
-        }
-        isLoading = false
-    }
-
-    /// Sets the club's active challenge and updates `board` immediately so the card on the main
-    /// page reflects it without a full refetch. Throws (rather than setting `errorMessage`, which
-    /// lives on the page underneath) so the create-challenge form — its own sheet stacked on top
-    /// of "Gestion du club" — can show its own inline error.
-    private func createChallenge(title: String, targetKm: Double, endDate: Date) async throws {
-        let challenge = try await clubService.createChallenge(title: title, targetKm: targetKm, endDate: endDate)
-        board.challenge = challenge
-    }
-
-    private func chercherUnClub(_ texte: String) {
-        clubSearchTask?.cancel()
-        let propre = texte.trimmingCharacters(in: .whitespaces)
-        guard propre.count >= 2 else {
-            clubResultats = []
-            clubSearchEnCours = false
-            return
-        }
-        clubSearchEnCours = true
-        clubSearchTask = Task {
-            try? await Task.sleep(for: .milliseconds(300))
-            guard !Task.isCancelled else { return }
-            let trouves = (try? await clubService.searchClubs(query: propre)) ?? []
-            guard !Task.isCancelled else { return }
-            await MainActor.run {
-                clubResultats = trouves
-                clubSearchEnCours = false
-            }
-        }
-    }
-
-    private func joinClub(_ club: ClubSearchResult) async {
-        isLoading = true
-        errorMessage = nil
-        do {
-            _ = try await clubService.joinClub(clubId: club.id)
-            // Same placement rule as `createClub` — a club that closed between the search and
-            // the tap (404) isn't a join. Created vs joined are tracked apart on purpose: a club
-            // that fills up and a club that gets created are two different signals, and one
-            // without the other says the invitation isn't landing.
-            Analytics.shared.track(.clubJoined)
-            clubQuery = ""
-            clubResultats = []
-            board = try await clubService.fetchBoard()
-        } catch ClubServiceError.badResponse(404, _) {
-            // Le club a été fermé ou supprimé entre la recherche et l'appui. Rare, mais c'est
-            // la seule chose que ce code puisse vouloir dire maintenant.
-            errorMessage = String(localized: "Ce club n'est plus ouvert.")
-        } catch {
-            errorMessage = String(localized: "Impossible de rejoindre ce club.")
-        }
-        isLoading = false
-    }
-
-    private func leaveClub() async {
-        guard !isLoading else { return }
-        isLoading = true
-        do {
-            try await clubService.leaveClub()
-            board = ClubBoard(club: nil, leaderboard: [])
-            feed = []
-            // Without this, re-opening Club after leaving would briefly show the OLD club's cached
-            // board/feed (see AppState.cachedClubBoard) before the next fetch caught up.
-            appState.cachedClubBoard = nil
-            appState.cachedClubFeed = nil
-            // Both dictionaries are keyed by activity UUIDs from the club she's leaving — none of
-            // those ids can ever appear in a feed she can see again, so without this they'd just
-            // accumulate permanently in UserProfile across every club she's ever cycled through.
-            profile.kudosSeenCounts.removeAll()
-            profile.commentsSeenCounts.removeAll()
-        } catch {
-            errorMessage = String(localized: "Impossible de quitter le club.")
-        }
-        isLoading = false
-    }
-
-    private func toggleKudos(_ item: FeedItem) async {
-        guard let index = feed.firstIndex(where: { $0.id == item.id }) else { return }
-        let wasKudoed = feed[index].kudoedByMe
-        feed[index].kudoedByMe.toggle()
-        feed[index].kudos += wasKudoed ? -1 : 1
-        do {
-            try await clubService.toggleKudos(activityId: item.id)
-        } catch {
-            // Roll back on failure — the optimistic toggle above was wrong. With feedback: a clap
-            // that silently un-claps itself just reads as a broken button.
-            //
-            // L'index est RECHERCHÉ À NOUVEAU, jamais celui capturé avant l'`await` : le fil a pu
-            // rétrécir pendant la requête (suppression d'une de ses propres activités, blocage
-            // d'un membre, rafraîchissement qui rend une liste plus courte), et écrire à l'ancien
-            // index terminait alors le processus. Si l'activité a disparu entre-temps, il n'y a
-            // plus rien à annuler — l'entrée n'est plus à l'écran.
-            guard let current = feed.firstIndex(where: { $0.id == item.id }) else { return }
-            feed[current].kudoedByMe = wasKudoed
-            feed[current].kudos += wasKudoed ? 1 : -1
-            // Un kudos perdu parce que la session a expiré n'a rien à voir avec le réseau.
-            appState.toast(PanneReseau.phrase(pour: error))
-        }
-    }
-
-    /// Optimistic local bump after posting a comment — avoids a full feed refetch just to reflect
-    /// the +1 this device already knows about.
-    private func bumpCommentsCount(_ activityId: String) {
-        guard let index = feed.firstIndex(where: { $0.id == activityId }) else { return }
-        feed[index].commentsCount += 1
-        if let myId = auth.currentUser?.id, feed[index].userId == myId {
-            profile.commentsSeenCounts[activityId] = feed[index].commentsCount
-        }
-    }
-
-    /// Same idea as `notifyNewKudos`: compares each of your own posts' current comment count
-    /// against what was last seen and posts one bell notification per post that gained new
-    /// comments since — never for comments left by yourself in `ActivityCommentsSheet`, since
-    /// `bumpCommentsCount` above already advances the "seen" mark for those.
-    private func notifyNewComments(in feed: [FeedItem]) {
-        guard let myId = auth.currentUser?.id else { return }
-        for item in feed where item.userId == myId {
-            let seen = profile.commentsSeenCounts[item.id] ?? 0
-            if item.commentsCount > seen {
-                let gained = item.commentsCount - seen
-                appState.notify(
-                    icon: "bubble.left.fill", colorHex: 0xFF3B6B,
-                    title: String(localized: "Nouveaux commentaires"),
-                    text: Pluriel.choisir(gained,
-                        String(localized: "Quelqu'un a commenté ta séance."),
-                        String(localized: "\(gained) personnes ont commenté ta séance."))
-                )
-            }
-            profile.commentsSeenCounts[item.id] = item.commentsCount
-        }
-    }
-
-    /// Saves the caller's own club-profile status and mirrors it into the local leaderboard so
-    /// re-opening "Gestion du club" reflects it immediately, without a full refetch.
-    private func updateBio(_ bio: String) async throws {
-        let saved = try await clubService.updateBio(bio)
-        if let index = board.leaderboard.firstIndex(where: { $0.isMe }) {
-            board.leaderboard[index].bio = saved
-        }
-    }
-
-    /// Syncs whichever of `badges` are currently earned up to the server — harmless to call every
-    /// time the board loads (the server upserts with `ON CONFLICT DO NOTHING`), and it's what
-    /// makes an achievement earned on this device show up on this member's profile for everyone
-    /// else in the club, not just locally. Also the one place that can tell a badge crossing its
-    /// threshold JUST NOW apart from one that's simply been sitting earned since before
-    /// `seenBadgeKeys` existed — see `BadgeUnlockedView`.
-    private func syncBadgesIfNeeded() {
-        let earned = badges.filter { $0.earned }
-        guard !earned.isEmpty else { return }
-        let earnedKeys = earned.map { $0.key }
-        Task { try? await clubService.syncBadges(earnedKeys) }
-
-        // First-ever pass on this device: seed `seenBadgeKeys` with whatever's already earned
-        // silently, no celebration — otherwise every pre-existing badge reads as "just unlocked!"
-        // the moment this feature first ships to someone who's been running for months.
-        guard profile.didBackfillSeenBadges else {
-            profile.seenBadgeKeys = earnedKeys
-            profile.didBackfillSeenBadges = true
-            return
-        }
-
-        let seen = Set(profile.seenBadgeKeys)
-        let newlyEarned = earned.filter { !seen.contains($0.key) }
-        guard !newlyEarned.isEmpty else { return }
-        // Mark every genuinely-new key seen up front (not just the one shown) — a batch of several
-        // badges crossed at once (e.g. right after importing old runs) celebrates one, not a stack
-        // of full-screen covers queued behind it, but none of the others should re-trigger later.
-        profile.seenBadgeKeys.append(contentsOf: newlyEarned.map { $0.key })
-        if unlockedBadge == nil {
-            unlockedBadge = newlyEarned.first
-        }
-    }
-
-    /// Keeps the server's copy of `plannedWeeklyKm` fresh so the "% objectif" leaderboard mode
-    /// reflects THIS week's real plan, not a stale one from whenever she last opened Club. Cheap
-    /// and safe to call on every load — same fire-and-forget spirit as `syncBadgesIfNeeded`.
-    private func syncWeeklyTargetIfNeeded() {
-        let target = profile.plannedWeeklyKm
-        Task { try? await clubService.syncWeeklyTarget(target) }
-    }
-
-    private func submitReport(_ target: ReportTarget, reason: String) async {
-        do {
-            try await clubService.report(targetType: target.targetType, targetId: target.targetId, reason: reason)
-            appState.toast(String(localized: "Signalement envoyé — merci"))
-        } catch {
-            appState.toast(String(localized: "Impossible d'envoyer le signalement, réessaie."))
-        }
-    }
-
-    private func confirmBlock(_ userId: String) async {
-        do {
-            try await clubService.blockUser(userId: userId)
-            // Refresh so the blocked person disappears from the leaderboard/feed immediately —
-            // both refetches only depend on blockUser having completed, not on each other, so
-            // they run concurrently instead of paying two round trips back to back.
-            async let boardAttempt = clubService.fetchBoard()
-            async let feedAttempt = clubService.fetchFeed()
-            (board, feed) = try await (boardAttempt, feedAttempt)
-        } catch {
-            errorMessage = String(localized: "Impossible de bloquer cette personne.")
         }
     }
 }

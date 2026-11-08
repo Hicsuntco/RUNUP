@@ -30,7 +30,10 @@ struct SocialView: View {
 
             Group {
                 switch mode {
-                case .club: ClubView()
+                // `appState` PASSE PAR LA PORTE, et c'est ce qui permet à `ClubView` de
+                // construire son magasin dès son `init` : `@State` ne s'initialise pas depuis
+                // l'environnement, mais il s'initialise depuis un paramètre. Voir `ClubStore`.
+                case .club: ClubView(appState: appState)
                 case .friends: FriendsView()
                 case .routes: RouteDiscoveryView()
                 case .races: RaceDiscoveryView()

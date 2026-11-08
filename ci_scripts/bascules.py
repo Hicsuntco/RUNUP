@@ -319,7 +319,25 @@ def alignement(entree: pathlib.Path, bascules: list, references: dict, decalage:
             if vise not in references:
                 continue
             try:
-                image = posee(entree, essai + instant_juge(b), travail, f"a{i}")
+                # LA RECHERCHE REGARDE TÔT, LE VERDICT REGARDE TARD, et ce n'est pas une
+                # incohérence : ce sont deux questions différentes.
+                #
+                # Le verdict demande « quel écran est-ce ? » et veut une image POSÉE, d'où
+                # `instant_juge`, à un quart de seconde de la fin du plan (voir sa note).
+                #
+                # La recherche, elle, demande « de combien l'horloge se trompe-t-elle ? », et
+                # il lui faut une image qui DISCRIMINE. Celle de la fin n'en est pas une : le
+                # plan dure deux secondes et l'écran y est posé sur plus d'une seconde et demie,
+                # donc une large plage de décalages met le bon écran sous la bonne marque. La
+                # recherche tombe alors n'importe où sur ce plateau — elle a rendu −0,75 s le
+                # 8 novembre, un décalage parfait pour l'identité et faux de trois quarts de
+                # seconde pour le découpage : la fenêtre de transition ne contenait plus le
+                # changement d'écran, et la mesure a dû dire qu'elle ne voyait rien.
+                #
+                # À un demi-seconde du début, au contraire, l'écran vient de changer : l'image
+                # bouge vite, donc la distance au témoin a un minimum NET. C'est le réglage qui
+                # tenait depuis le début, et il n'avait pas à bouger.
+                image = posee(entree, essai + b["debut"] + 0.5, travail, f"a{i}")
             except SystemExit:
                 total = float("inf")
                 break

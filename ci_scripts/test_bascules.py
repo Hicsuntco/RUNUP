@@ -331,6 +331,61 @@ with tempfile.TemporaryDirectory() as d:
     attendu("une horloge juste n'est pas corrigée", round(trouve2, 2), 0.0)
     attendu("et elle reste parfaite", parfait2, True)
 
+    # LE DÉCALAGE TROUVÉ DOIT SERVIR À DÉCOUPER, PAS SEULEMENT À RECONNAÎTRE.
+    #
+    # Le 8 novembre, la recherche a rendu −0,75 s en annonçant « chaque plan sur son écran » —
+    # et la mesure qui suit n'a plus rien vu : la fenêtre de transition ne contenait plus le
+    # changement d'écran. L'identité était juste, le découpage faux de trois quarts de seconde.
+    # La cause : la recherche jugeait sur l'image de la FIN du plan, où l'écran est posé depuis
+    # plus d'une seconde et demie — une large plage de décalages y met le bon écran, et la
+    # recherche tombe n'importe où sur ce plateau.
+    #
+    # Reconnaître ne suffit donc pas : on vérifie que le décalage trouvé remet le CHANGEMENT
+    # d'écran là où le film l'a mis. Dans ce film d'essai, les écrans changent toutes les trois
+    # secondes et les plans commencent une demi-seconde après : le changement doit tomber à
+    # 0,50 s du début du plan.
+    # ET ON VÉRIFIE LA DÉCISION ELLE-MÊME, parce qu'un film fabriqué ne peut pas la montrer.
+    #
+    # Le plateau n'existe que si les distances varient à peine d'un décalage à l'autre — c'est
+    # le bruit d'une vraie vidéo qui tranche alors, et ici il n'y en a pas : deux images
+    # identiques rendent exactement la même distance, le départage prend le plus petit décalage
+    # d'essai, et il tombe juste par hasard. J'ai remis le défaut dans le script pour vérifier :
+    # les quatre cas ci-dessous restaient VERTS. Un test qui ne tombe pas sur le défaut qu'il
+    # vise ne garde rien.
+    #
+    # On regarde donc À QUEL INSTANT la recherche prend ses images. La règle est courte et
+    # c'est elle qui a été enfreinte : près du DÉBUT du plan, là où l'écran vient de changer et
+    # où la distance au témoin a un minimum net — jamais vers la fin, où l'écran est posé
+    # depuis plus d'une seconde et demie et où toute une plage de décalages se vaut.
+    appels = []
+    vrai_juge = bs.instant_juge
+    try:
+        bs.instant_juge = lambda b: (appels.append(b["nom"]), vrai_juge(b))[1]
+        bs.alignement(film, bascules, refs, 0.0, dossier)
+    finally:
+        bs.instant_juge = vrai_juge
+    attendu("la recherche n'emploie pas l'instant du verdict", appels, [])
+    # Et l'inverse, pour que ce couple de cas dise les deux moitiés de la règle : le verdict,
+    # lui, l'emploie bel et bien. Vérifié plus haut sur le film « lent ».
+    attendu("alors que le verdict, lui, regarde tard",
+            round(bs.instant_juge({"debut": 1.0, "fin": 3.0}), 2), 2.75)
+
+    for depart in (3.0, 0.0):
+        trouve3, _, _ = bs.alignement(film, bascules, refs, depart, dossier)
+        ecarts = []
+        for i, b in enumerate(bascules, start=1):
+            ref = bs.posee(film, trouve3 + b["debut"] + 0.5, dossier, f"v{i}")
+            suite = bs.images(film, trouve3 + b["debut"] - 0.9, 0.9, dossier, f"w{i}")
+            classes = bs.classer(suite, ref, bs._gris(suite[0]) if suite else None)
+            quand = bs.instant_du_changement(classes, 0.9)
+            ecarts.append(quand)
+        attendu(f"le changement est vu sur les quatre plans (horloge annoncée {depart})",
+                all(q is not None for q in ecarts), True)
+        if all(q is not None for q in ecarts):
+            moyen = sum(ecarts) / len(ecarts)
+            attendu(f"et il tombe où le film l'a mis (horloge annoncée {depart})",
+                    abs(moyen - 0.5) < 0.2, True)
+
 # --- QUAND ON JUGE UN PLAN -----------------------------------------------------------------------
 # LE DÉFAUT DU 8 NOVEMBRE 2026, ET IL N'ÉTAIT PAS UN DÉFAUT DE DÉCOUPAGE.
 #

@@ -189,6 +189,158 @@ def _():
                            f"perdu :\n{sortie}")
 
 
+# --- LA SECONDE QUESTION : CE QUI TOURNE A-T-IL DE QUOI TOURNER ? --------------------------------
+
+def avec_workflow(tmp: str, fichiers: dict[str, str], workflow: str) -> pathlib.Path:
+    """Un faux dépôt dont on écrit le workflow à la main, jobs et étapes compris."""
+    racine = pathlib.Path(tmp)
+    scripts = racine / "ci_scripts"
+    workflows = racine / ".github" / "workflows"
+    scripts.mkdir(parents=True)
+    workflows.mkdir(parents=True)
+    for nom, contenu in fichiers.items():
+        (scripts / nom).write_text(contenu)
+    (workflows / "faux.yml").write_text(workflow)
+    copie = scripts / "regarde.py"
+    # La liste de dispenses du vrai dépôt est vidée : elle nomme `check_profile.py`, qui
+    # n'existe pas dans ce faux dépôt, et la règle de la dispense périmée partirait en premier.
+    source = (ICI / "check_cablage.py").read_text()
+    debut = source.index("DISPENSES = {")
+    fin = source.index("\n}\n", debut) + 3
+    copie.write_text(source[:debut] + "DISPENSES = {}\n" + source[fin:])
+    return copie
+
+
+SANS_VENV = """name: faux
+on:
+  push:
+    paths:
+      - "ci_scripts/test_image.py"
+jobs:
+  j:
+    steps:
+      - run: cd ci_scripts && python3 test_image.py
+"""
+
+AVEC_VENV = """name: faux
+on: [push]
+jobs:
+  j:
+    steps:
+      - run: python3 -m venv "$RUNNER_TEMP/venv" && "$RUNNER_TEMP/venv/bin/python" -m pip install Pillow
+      - run: cd ci_scripts && "$RUNNER_TEMP/venv/bin/python" test_image.py
+"""
+
+
+@cas_de("un script qui lit des images, dans un job sans Pillow, fait échouer")
+def _():
+    with tempfile.TemporaryDirectory() as tmp:
+        c = avec_workflow(tmp, {"test_image.py": "from PIL import Image\n"}, SANS_VENV)
+        code, sortie = lancer(c)
+        assert code == 1, f"le script sans Pillow est passé :\n{sortie}"
+        assert "test_image.py" in sortie and "SANS PILLOW" in sortie, sortie
+
+
+@cas_de("le même script avec le python du venv passe")
+def _():
+    with tempfile.TemporaryDirectory() as tmp:
+        c = avec_workflow(tmp, {"test_image.py": "from PIL import Image\n"}, AVEC_VENV)
+        code, sortie = lancer(c)
+        assert code == 0, f"un job qui fournit Pillow a été accusé :\n{sortie}"
+
+
+@cas_de("un venv poussé en tête du PATH compte aussi")
+def _():
+    """`appstore.yml` fait ainsi, et ses `python3` nus sont alors le python du venv."""
+    wf = """name: faux
+on: [push]
+jobs:
+  j:
+    steps:
+      - run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
+      - run: python3 ci_scripts/test_image.py
+"""
+    with tempfile.TemporaryDirectory() as tmp:
+        c = avec_workflow(tmp, {"test_image.py": "from PIL import Image\n"}, wf)
+        code, sortie = lancer(c)
+        assert code == 0, f"un venv mis en tête du PATH n'a pas compté :\n{sortie}"
+
+
+@cas_de("un script qui importe un VOISIN lisant des images est vu aussi")
+def _():
+    with tempfile.TemporaryDirectory() as tmp:
+        c = avec_workflow(tmp, {
+            "lecteur.py": "from PIL import Image\n",
+            "test_image.py": "import lecteur\n",
+        }, SANS_VENV)
+        code, sortie = lancer(c)
+        assert code == 1, f"l'import indirect n'a pas été vu :\n{sortie}"
+
+
+@cas_de("un filtre `paths:` ne compte pas comme un lancement")
+def _():
+    """SANS_VENV nomme `test_image.py` dans ses `paths:`. Si le contrôle lisait le fichier
+    entier au lieu des étapes, un script surveillé mais jamais lancé serait accusé."""
+    wf = """name: faux
+on:
+  push:
+    paths:
+      - "ci_scripts/test_image.py"
+jobs:
+  j:
+    steps:
+      - run: echo rien
+"""
+    with tempfile.TemporaryDirectory() as tmp:
+        c = avec_workflow(tmp, {"test_image.py": "from PIL import Image\n"}, wf)
+        code, sortie = lancer(c)
+        assert "SANS PILLOW" not in sortie, (
+            f"un `paths:` a été pris pour un lancement :\n{sortie}")
+
+
+@cas_de("un script qui PARLE de PIL sans l'importer n'est pas accusé")
+def _():
+    """LE DÉFAUT QUE CE CONTRÔLE A EU, LE JOUR DE SON ÉCRITURE.
+
+    Il cherchait `"from PIL" in texte`, et sa propre ligne de recherche contenait ces mots :
+    il s'est accusé lui-même. Les imports se lisent dans l'arbre syntaxique depuis.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        c = avec_workflow(tmp, {
+            "test_image.py": '# on cherchait "from PIL" dans le texte\nMOTIF = "import PIL"\n',
+        }, SANS_VENV)
+        code, sortie = lancer(c)
+        assert "SANS PILLOW" not in sortie, (
+            f"le contrôle a lu une chaîne comme un import :\n{sortie}")
+
+
+@cas_de("un workflow à deux jobs est refusé plutôt que deviné")
+def _():
+    """Le contrôle lit chaque workflow comme un seul job — les six du dépôt en portent un.
+
+    À deux, un job qui installe Pillow et un autre qui lance le script seraient confondus, et
+    le verdict serait « tout va bien » à tort. Un contrôle qui dit « je ne sais pas » vaut
+    mieux qu'un contrôle qui se trompe en silence.
+    """
+    wf = """name: faux
+on: [push]
+jobs:
+  preparer:
+    steps:
+      - run: python3 -m venv "$RUNNER_TEMP/venv"
+  lancer:
+    steps:
+      - run: python3 ci_scripts/test_image.py
+"""
+    with tempfile.TemporaryDirectory() as tmp:
+        c = avec_workflow(tmp, {"test_image.py": "from PIL import Image\n"}, wf)
+        code, sortie = lancer(c)
+        assert code != 0, f"un workflow à deux jobs est passé sans un mot :\n{sortie}"
+        assert "2 jobs" in sortie, sortie
+
+
 @cas_de("le vrai dépôt passe")
 def _():
     code, sortie = lancer(ICI / "check_cablage.py")

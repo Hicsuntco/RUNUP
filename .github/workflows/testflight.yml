@@ -288,15 +288,6 @@ jobs:
           cd ci_scripts && python3 test_cablage.py
           cd .. && python3 ci_scripts/check_cablage.py
 
-      # LE DÉCOUPAGE D'UN ÉCRAN PHOTOGRAPHIÉ NE DOIT RIEN CHANGER À L'IMAGE, et les captures ne
-      # le vérifient pas : un vert dit que l'app n'a pas planté et qu'un fichier a été écrit.
-      # `comparer.py` compare deux jeux de captures et dit ce qui a bougé — écart moyen, nombre
-      # de pixels, cadre qui les contient, barre d'état masquée parce qu'elle porte l'heure. Il
-      # prend des dossiers en arguments, donc il ne tourne pas ici : ce sont ses cas qui
-      # tournent, et ils éprouvent le seul endroit où l'outil pourrait mentir utilement — une
-      # moyenne basse sur un petit bloc changé du tout au tout.
-      - name: Vérifier que la comparaison de captures voit ce qui bouge
-        run: cd ci_scripts && python3 test_comparer.py
 
       # LE TRAIT QUI SÉPARE DEUX LIGNES ÉTAIT ÉCRIT DE DEUX FAÇONS, ET UNE DES DEUX ÉTAIT FAUSSE.
       #

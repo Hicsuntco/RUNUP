@@ -14,17 +14,23 @@ Quatre chaînes, et chacune garantit une chose précise. Aucune ne garantit cell
 
 | Chaîne | Ce qu'elle prouve | Ce qu'elle ne prouve PAS |
 | --- | --- | --- |
-| **TestFlight** (`testflight.yml`) | 33 contrôles et 24 fichiers de cas passent, l'app compile, les tests unitaires passent, l'archive est signée et acceptée par App Store Connect | que les écrans sont justes — elle ne regarde aucune image |
+| **TestFlight** (`testflight.yml`) | 34 contrôles et 24 fichiers de cas passent, l'app compile, les tests unitaires passent, l'archive est signée et acceptée par App Store Connect | que les écrans sont justes — elle ne regarde aucune image |
 | **Serveur** (`server.yml`) | les dépendances `require` sont du CommonJS, 133 tests passent, et les 83 adresses appelées par l'app répondent autre chose qu'un 404 ou un 5xx **en production** | que la logique est juste sur des données réelles : il n'y a pas de base de test |
 | **Captures** (`captures.yml`) | l'app se lance dans trois langues et deux thèmes, 25 écrans sont photographiés, le découpage du film tombe sur les bons écrans | **ce qu'il y a sur les images.** Un vert dit deux choses : l'app n'a pas planté, un fichier a été écrit |
 | **Fiche** (`appstore.yml`) | les textes tiennent dans les champs d'Apple, l'aperçu respecte ses règles, tout est déposé | que la fiche dit vrai |
 
-Les 33 contrôles de TestFlight sont nommés dans `.github/workflows/testflight.yml`, un par étape.
-L'un d'eux, `check_cablage.py`, veille sur les trente-deux autres et sur les vingt-quatre
-fichiers de cas : tout `check_*.py` et tout `test_*.py` de `ci_scripts/` doit être nommé par un
-workflow, ou figurer dans une liste de dispenses AVEC sa raison. Quatre garde-fous écrits et
-jamais câblés l'ont demandé — `test_session.py`, `test_accent.py`, `check_profile.py`, et
-`test_comparer.py`, attrapé le jour de son écriture par ce contrôle-là.
+Les 34 contrôles de TestFlight sont nommés dans `.github/workflows/testflight.yml`, un par étape.
+L'un d'eux, `check_cablage.py`, veille sur les autres et sur les vingt-quatre fichiers de cas,
+et il pose deux questions.
+
+1. **Est-ce que ça tourne ?** Tout `check_*.py` et tout `test_*.py` de `ci_scripts/` doit être
+   nommé par un workflow, ou figurer dans une liste de dispenses AVEC sa raison. Quatre
+   garde-fous écrits et jamais câblés l'ont demandé — `test_session.py`, `test_accent.py`,
+   `check_profile.py`, et `test_comparer.py`, attrapé le jour de son écriture.
+2. **Est-ce que ça a de quoi tourner ?** Un script qui lit des images doit être lancé par un job
+   qui fournit Pillow. `test_comparer.py` était bien câblé, dans TestFlight, dont le python du
+   système n'a pas Pillow : `ModuleNotFoundError`, dix minutes après le commit. Les huit scripts
+   du dépôt qui lisent des images tournent dans `captures.yml` ou `appstore.yml`, qui ont un venv.
 Ils existent tous parce qu'un défaut est passé : une clé de catalogue absente qui sort le texte en
 français chez tout le monde, un nom de symbole SF faux qui ne dessine rien du tout, une demande
 d'autorisation non traduite renvoyée par Apple en ITMS-90738 **après** la livraison.

@@ -30,7 +30,9 @@ Ce que ce contrôle ne dit PAS : qu'un contrôle câblé est juste, ni que ses c
 que ce soit. Il dit seulement qu'il tourne. C'est la seule question qu'une liste de fichiers
 sache poser, et c'est celle qui est passée quatre fois.
 """
+import ast
 import pathlib
+import re
 import sys
 
 ICI = pathlib.Path(__file__).resolve().parent
@@ -49,6 +51,97 @@ def fichiers() -> list[pathlib.Path]:
     return sorted(
         [p for p in ICI.glob("check_*.py")] + [p for p in ICI.glob("test_*.py")]
     )
+
+
+def lit_des_images(fichier: pathlib.Path, connus: dict[str, bool]) -> bool:
+    """Ce fichier a-t-il besoin de Pillow — directement, ou par un voisin de `ci_scripts` ?
+
+    `test_bascules.py` n'importe pas Pillow : il importe `bascules`, qui l'importe. Un seul
+    niveau suffit — c'est la forme qu'ont les huit scripts concernés, et deviner plus loin
+    coûterait plus que ça ne rapporte.
+    """
+    nom = fichier.name
+    if nom in connus:
+        return connus[nom]
+    connus[nom] = False  # coupe une éventuelle boucle d'imports
+    try:
+        arbre = ast.parse(fichier.read_text(encoding="utf-8"))
+    except SyntaxError:
+        # Un fichier qui ne se parse pas ne tournera pas non plus ; ce n'est pas à ce
+        # contrôle-ci de le dire, et le supposer sans Pillow serait une accusation de trop.
+        return False
+
+    # LES IMPORTS SE LISENT DANS L'ARBRE, PAS DANS LE TEXTE. Ce contrôle cherchait
+    # `"from PIL" in texte` — et sa propre ligne de recherche contenait ces mots. Il s'est
+    # donc accusé lui-même de lire des images. C'est la TROISIÈME fois aujourd'hui qu'un
+    # contrôle se lit : `check_cjs.py` et `check_filet.py` sur leurs commentaires, celui-ci
+    # sur son code. Les commentaires se blanchissent ; le code, non. L'arbre, lui, ne contient
+    # que ce que Python exécute.
+    importes = set()
+    for noeud in ast.walk(arbre):
+        if isinstance(noeud, ast.Import):
+            importes.update(a.name.split(".")[0] for a in noeud.names)
+        elif isinstance(noeud, ast.ImportFrom) and noeud.module and noeud.level == 0:
+            importes.add(noeud.module.split(".")[0])
+
+    direct = "PIL" in importes
+    if not direct:
+        for voisin in sorted(fichier.parent.glob("*.py")):
+            if voisin.name != nom and voisin.stem in importes:
+                if lit_des_images(voisin, connus):
+                    direct = True
+                    break
+    connus[nom] = direct
+    return direct
+
+
+def jobs_du_workflow(chemin: pathlib.Path) -> list[tuple[str, bool, str]]:
+    """Par job : (nom, le job fournit-il Pillow, le texte de ses commandes).
+
+    # POURQUOI CE N'EST PAS `yaml.safe_load`
+
+    Parce que ce contrôle tourne dans `testflight.yml`, dont le python est celui du système,
+    et que ce job n'installe RIEN. Dépendre de PyYAML ici serait exactement le défaut que la
+    seconde question de ce contrôle existe pour attraper — et `pip install` nu est refusé sur
+    les runners macOS, donc l'ajouter demanderait un venv de plus dans le job le plus long.
+
+    # CE QUI EST LU, ET CE QUI NE L'EST PAS
+
+    Les six workflows du dépôt portent UN job chacun. On lit donc le fichier comme un tout, et
+    on REFUSE DE JUGER celui qui en porterait deux : un job qui installe Pillow et un autre qui
+    lance le script seraient confondus, et le contrôle dirait « tout va bien » à tort. Mieux
+    vaut un contrôle qui dit « je ne sais pas » qu'un contrôle qui se trompe en silence.
+
+    Les lignes d'un filtre `paths:` — un élément de liste entre guillemets — nomment des
+    fichiers sans les lancer. Elles sont écartées, sinon un script surveillé par un workflow
+    passerait pour un script lancé par lui.
+    """
+    lignes = sans_commentaires(chemin.read_text(encoding="utf-8")).split("\n")
+
+    noms = []
+    dans_jobs = False
+    for ligne in lignes:
+        if not ligne.strip():
+            continue
+        if not ligne[:1].isspace():
+            dans_jobs = ligne.strip() == "jobs:"
+            continue
+        if dans_jobs and re.fullmatch(r"  ([A-Za-z_][\w-]*):\s*", ligne):
+            noms.append(ligne.strip().rstrip(":"))
+    if len(noms) > 1:
+        raise SystemExit(
+            f"{chemin.name} porte {len(noms)} jobs ({', '.join(noms)}). Ce contrôle lit chaque "
+            f"workflow comme un seul job — voir `jobs_du_workflow`. À reprendre avant de "
+            f"fusionner ce fichier.")
+
+    commandes = "\n".join(l for l in lignes
+                          if not re.fullmatch(r"\s*-\s*[\"'].*[\"']\s*", l))
+    # Pillow est fourni soit par un appel explicite au python du venv, soit par un venv poussé
+    # en tête du PATH — `appstore.yml` fait le second, et ses `python3` nus sont alors le
+    # python du venv.
+    fournit = ("venv/bin/python" in commandes
+               or ("venv/bin" in commandes and "GITHUB_PATH" in commandes))
+    return [(noms[0] if noms else chemin.stem, fournit, commandes)]
 
 
 def sans_commentaires(source: str) -> str:
@@ -110,6 +203,27 @@ def main() -> int:
                                  if n in workflows and n != "check_cablage.py")
     non_dispenses = [n for n in orphelins if n not in DISPENSES]
 
+    # DEUXIÈME QUESTION : CE QUI TOURNE A-T-IL DE QUOI TOURNER ?
+    #
+    # `test_comparer.py` était bien nommé par un workflow, et il a échoué dix minutes plus tard
+    # sur `ModuleNotFoundError: No module named 'PIL'` : je l'avais mis dans `testflight.yml`,
+    # dont le python du système n'a pas Pillow. Les huit scripts du dépôt qui lisent des images
+    # tournent tous dans un job qui installe Pillow dans un venv — sauf celui-là.
+    #
+    # Le contrôle le dit maintenant, et c'est la seule dépendance qu'il sache voir : elle a
+    # coûté une exécution, elle est portée par huit fichiers, et elle se vérifie sans deviner.
+    connus: dict[str, bool] = {}
+    images = {p.name for p in ICI.glob("*.py") if lit_des_images(p, connus)}
+    sans_pillow = []
+    dossier_wf = RACINE / ".github" / "workflows"
+    for chemin in sorted([*dossier_wf.glob("*.yml"), *dossier_wf.glob("*.yaml")]):
+        for job, fournit, commandes in jobs_du_workflow(chemin):
+            if fournit:
+                continue
+            for nom in sorted(images):
+                if nom in commandes:
+                    sans_pillow.append((f"{chemin.name}:{job}", nom))
+
     print(f"{len(tous)} fichier(s) de contrôle et de cas dans ci_scripts/")
     print(f"{len(tous) - len(orphelins)} nommé(s) par un workflow, "
           f"{len(orphelins)} non nommé(s)")
@@ -117,6 +231,17 @@ def main() -> int:
     for nom in sorted(DISPENSES):
         print(f"  dispensé : {nom}")
         print(f"             {DISPENSES[nom]}")
+
+    if sans_pillow:
+        print()
+        print("CES SCRIPTS LISENT DES IMAGES ET TOURNENT SANS PILLOW :", file=sys.stderr)
+        for ou, nom in sans_pillow:
+            print(f"  - {nom}  dans  {ou}", file=sys.stderr)
+        print("\nLe job doit installer Pillow dans un venv et appeler "
+              "\"$RUNNER_TEMP/venv/bin/python\" — ou pousser ce venv en tête du PATH, comme "
+              "`appstore.yml`. Les autres scripts qui lisent des images tournent dans "
+              "`captures.yml`.", file=sys.stderr)
+        return 1
 
     if non_dispenses:
         print()

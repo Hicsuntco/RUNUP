@@ -394,6 +394,21 @@ jobs:
       - name: Éprouver la mesure des bascules
         run: cd ci_scripts && "$RUNNER_TEMP/venv/bin/python" test_bascules.py
 
+      # LE DÉCOUPAGE D'UN ÉCRAN PHOTOGRAPHIÉ NE DOIT RIEN CHANGER À L'IMAGE, et cette chaîne-ci
+      # ne le vérifie pas : son vert dit que l'app n'a pas planté et qu'un fichier a été écrit.
+      # `comparer.py` compare deux jeux de captures et dit ce qui a bougé — écart moyen, nombre
+      # de pixels, cadre qui les contient, barre d'état masquée parce qu'elle porte l'heure. Il
+      # prend des dossiers en arguments, donc il ne tourne pas tout seul : ce sont ses cas qui
+      # tournent, et ils éprouvent le seul endroit où l'outil pourrait mentir utilement — une
+      # moyenne basse sur un petit bloc changé du tout au tout.
+      #
+      # ICI ET PAS DANS `testflight.yml`, POUR LA MÊME RAISON QUE LE TEST AU-DESSUS : il lit des
+      # images, donc il demande Pillow, et c'est ce venv qui le porte. Je l'avais mis dans
+      # TestFlight ; le runner macOS a répondu `ModuleNotFoundError: No module named 'PIL'` dix
+      # minutes plus tard. Les huit scripts du dépôt qui lisent des images sont tous ici.
+      - name: Éprouver la comparaison de captures
+        run: cd ci_scripts && "$RUNNER_TEMP/venv/bin/python" test_comparer.py
+
       - name: Filmer l'aperçu, langue par langue
         run: |
           set -euo pipefail

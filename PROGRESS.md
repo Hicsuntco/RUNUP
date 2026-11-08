@@ -440,6 +440,30 @@ JAMAIS, et c'est pourtant ce qu'une utilisatrice appelle « ça plante ».
 | `crash_reports` dans `db/schema.sql` | la table, avec sa charge `jsonb` et ses deux index |
 | `ci_scripts/check_pannes.py` | les trois accords, 14 cas dans `test_pannes.py` |
 
+### Ce qui a été VÉRIFIÉ en production, et les deux lignes que ça laisse
+
+Le déploiement réussi prouve que le schéma a été appliqué — `appliquer_schema.js` est la commande
+de construction, et « si ce script échoue, la construction échoue, donc RIEN n'est déployé ». Il
+ne prouve PAS que l'`INSERT` est juste : il a été écrit à la main contre un schéma écrit à la
+main, et une colonne mal nommée rendrait un 500 à chaque panne. Silencieusement : le client garde
+son tampon sur un 5xx et réessaie, donc rien ne se perd et rien n'arrive jamais non plus.
+
+Deux sondes envoyées à la production :
+
+| Ce qui est éprouvé | Réponse |
+| --- | --- |
+| un genre inconnu est jeté ligne par ligne, sans rien écrire | `accepted:0, rejected:1` |
+| l'`INSERT` passe, toutes colonnes nommées | `accepted:1` |
+| la colonne `payload` accepte du vrai JSON en `jsonb` | `accepted:1` |
+| un lot de six est refusé | `payload_too_large` |
+| `GET` est refusé | `405` |
+| `/api/events` répond toujours, non réécrit | `200` |
+
+Elles laissent **deux lignes** dans `crash_reports`, de genre `app_launch` et non `crash` — pour
+qu'aucun compte de plantages ne soit faussé — et dont la note dit en toutes lettres « SONDE DE
+DÉPLOIEMENT, pas une vraie panne ». C'est le prix assumé de la vérification : sans elles, la
+première preuve que la table marche aurait été la première panne de quelqu'un.
+
 ### LA DÉGRADATION, QUI EST LA DÉCISION DE CONCEPTION
 
 Un rapport dont la charge JSON est abîmée ou trop grosse **perd sa pile d'appels et garde sa

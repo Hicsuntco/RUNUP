@@ -418,6 +418,37 @@ Les deux entrées correspondantes sont dans `RunUp/Resources/PrivacyInfo.xcpriva
 Store Connect doit dire la même chose : une divergence entre le manifeste et la fiche est un motif
 de rejet à part entière.
 
+### Le tableau à saisir, dérivé du manifeste
+
+Ce qui suit n'est pas rédigé à la main : `ci_scripts/check_confidentialite.py` le DÉRIVE de
+`RunUp/Resources/PrivacyInfo.xcprivacy` et refuse de passer s'il a divergé. Le jour où le
+manifeste gagne une ligne, le contrôle rougit et affiche le tableau corrigé.
+
+Il faut le reporter dans **App Store Connect → Mon app → Confidentialité de l'app**, catégorie
+par catégorie, dans l'ordre du formulaire. C'est à la main ou rien : l'API d'App Store Connect
+ne sait pas écrire cette fiche — vérifié dans la spécification OpenAPI d'Apple (v4.6), 1 027
+chemins et aucun pour la confidentialité.
+
+<!-- confidentialité: début (tableau dérivé du manifeste par check_confidentialite.py) -->
+
+| Catégorie | Type de donnée | Lié à l'utilisatrice | Suivi | Finalités |
+| --- | --- | --- | --- | --- |
+| Contact Info | **Email Address** | Oui | Non | App Functionality |
+| Contact Info | **Name** | Oui | Non | App Functionality |
+| Health & Fitness | **Fitness** | Oui | Non | App Functionality |
+| Health & Fitness | **Health** | Oui | Non | App Functionality |
+| Location | **Coarse Location** | Oui | Non | App Functionality |
+| Location | **Precise Location** | Oui | Non | App Functionality |
+| User Content | **Other User Content** | Oui | Non | App Functionality |
+| User Content | **Photos or Videos** | Oui | Non | App Functionality |
+| Identifiers | **Device ID** | Oui | Non | App Functionality, Analytics |
+| Identifiers | **User ID** | Oui | Non | App Functionality |
+| Usage Data | **Product Interaction** | Oui | Non | Analytics |
+| Diagnostics | **Crash Data** | Oui | Non | App Functionality |
+| Diagnostics | **Performance Data** | Oui | Non | App Functionality |
+
+<!-- confidentialité: fin -->
+
 **Tracking : non.** Aucun SDK tiers, aucun IDFA, aucun partage avec un courtier de données — donc
 pas d'App Tracking Transparency à afficher.
 

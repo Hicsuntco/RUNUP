@@ -14,12 +14,12 @@ Quatre chaînes, et chacune garantit une chose précise. Aucune ne garantit cell
 
 | Chaîne | Ce qu'elle prouve | Ce qu'elle ne prouve PAS |
 | --- | --- | --- |
-| **TestFlight** (`testflight.yml`) | 36 contrôles et 25 fichiers de cas passent, l'app compile, les tests unitaires passent, l'archive est signée et acceptée par App Store Connect | que les écrans sont justes — elle ne regarde aucune image |
+| **TestFlight** (`testflight.yml`) | 37 contrôles et 26 fichiers de cas passent, l'app compile, les tests unitaires passent, l'archive est signée et acceptée par App Store Connect | que les écrans sont justes — elle ne regarde aucune image |
 | **Serveur** (`server.yml`) | les dépendances `require` sont du CommonJS, il y a au plus douze fonctions serverless, 155 tests passent, les 84 adresses appelées par l'app répondent autre chose qu'un 404 ou un 5xx **en production**, et l'écart entre la politique de confidentialité publiée et celle du dépôt est affiché | que la logique est juste sur des données réelles : il n'y a pas de base de test |
 | **Captures** (`captures.yml`) | l'app se lance dans trois langues et deux thèmes, 28 écrans sont photographiés (21 ordinaires et 7 en grand texte), le découpage du film tombe sur les bons écrans. Une seule série à la fois : un nouveau push annule la précédente, l'artefact qu'on ouvre étant celui de la tête de branche | **ce qu'il y a sur les images.** Un vert dit deux choses : l'app n'a pas planté, un fichier a été écrit |
 | **Fiche** (`appstore.yml`) | les textes tiennent dans les champs d'Apple, l'aperçu respecte ses règles, aucune bannière du système n'est sur les images qu'elle pousse, tout est déposé | que la fiche dit vrai |
 
-Les 36 contrôles de TestFlight sont nommés dans `.github/workflows/testflight.yml`, un par étape.
+Les 37 contrôles de TestFlight sont nommés dans `.github/workflows/testflight.yml`, un par étape.
 L'un d'eux, `check_cablage.py`, veille sur les autres et sur les vingt-quatre fichiers de cas,
 et il pose deux questions.
 
@@ -115,10 +115,10 @@ est une valeur que personne n'a choisie.
 # et `test_icones.py` répétait un nombre devenu faux. Découvert sur la machine, dix minutes
 # plus tard.
 #
-# Compter DEUX MINUTES : 41 contrôles et 36 fichiers de cas, dont trois qui fabriquent des films
+# Compter DEUX MINUTES : 42 contrôles et 37 fichiers de cas, dont trois qui fabriquent des films
 # avec ffmpeg, quatre qui relancent un contrôle en sous-processus pour l'éprouver, et deux qui
 # interrogent le réseau. 107 à 117 s mesurées le 8 novembre 2026. Ce n'est pas une commande qu'on
-# lance « pour voir », c'est la porte. (Plus que les 36 et 25 de TestFlight : `tout.sh` lance
+# lance « pour voir », c'est la porte. (Plus que les 37 et 26 de TestFlight : `tout.sh` lance
 # AUSSI ce qui tourne dans les autres chaînes — le serveur, les captures, la fiche.)
 sh ci_scripts/tout.sh
 

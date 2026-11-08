@@ -431,6 +431,22 @@ jobs:
       - name: Vérifier que le client, le serveur et le manifeste s'accordent sur les pannes
         run: python3 ci_scripts/check_pannes.py
 
+      # TROIS ENDROITS DISENT CE QUE L'APP COLLECTE, ET ILS DOIVENT DIRE LA MÊME CHOSE : le
+      # manifeste livré dans le binaire, la politique publiée (gardée par `check_politique.py`),
+      # et la fiche « App Privacy » d'App Store Connect. Une divergence entre le manifeste et la
+      # fiche est un motif de rejet à part entière.
+      #
+      # La troisième est la seule que rien ne pouvait tenir : l'API d'App Store Connect ne sait
+      # ni la lire ni l'écrire — vérifié dans la spécification OpenAPI d'Apple (v4.6), 1 027
+      # chemins et aucun pour la confidentialité. Ce contrôle DÉRIVE donc du manifeste le tableau
+      # exact à saisir et vérifie qu'il est bien celui écrit dans `APP_STORE_LISTING.md`. La
+      # fiche se remplit en recopiant un tableau qu'une machine tient à jour.
+      - name: Éprouver le contrôle de la fiche de confidentialité
+        run: |
+          cd ci_scripts && python3 test_confidentialite.py
+      - name: La fiche de confidentialité est-elle d'accord avec le manifeste
+        run: python3 ci_scripts/check_confidentialite.py
+
       # La chaîne des captures ne part pas à chaque commit : sa liste de chemins est un jugement
       # écrit à la main, et elle s'est trompée DEUX FOIS par omission — `AppState.swift` le
       # routeur, puis `RunUpApp.swift` qui porte la vue racine. Le défaut n'a aucun symptôme :

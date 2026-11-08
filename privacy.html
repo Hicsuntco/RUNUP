@@ -8,7 +8,7 @@
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;max-width:720px;margin:0 auto;padding:32px 20px 80px;line-height:1.6;color:#1a1a1a;background:#fff}
   h1{font-size:1.6rem;margin-bottom:.2em}
   h2{font-size:1.15rem;margin-top:2em;border-top:1px solid #eee;padding-top:1.2em}
-  a{color:#FF0F5B}
+  a{color:#F50D7A}
   .meta{color:#666;font-size:.9rem;margin-bottom:2em}
   ul{padding-left:1.3em}
 </style>
@@ -43,7 +43,9 @@ Contact : <strong>charlottegrudep@gmail.com</strong></p>
 
 <p><strong>Statistiques d'usage</strong> — pour savoir où l'application est confuse ou cassée (par exemple à quelle étape de l'inscription les gens abandonnent), RUNUP enregistre une courte liste d'événements d'usage sur notre propre serveur : ouverture de l'app, étapes de l'inscription vues et validées, course démarrée et course terminée, message envoyé au coach, club créé ou rejoint. Chaque événement est accompagné de quelques informations techniques sur l'action elle-même (numéro d'étape, distance et durée arrondies d'une course, ressenti indiqué) — jamais le contenu de ce que tu écris, en particulier jamais tes messages au coach. Ces événements sont rattachés à un identifiant aléatoire généré sur ton appareil, qui n'est lié à aucune donnée personnelle et change si tu réinstalles l'application ; si tu es connectée au Club, ils sont aussi rattachés à ton compte. Ils sont conservés au maximum 400 jours, puis supprimés automatiquement.</p>
 
-<p><strong>Aucune collecte publicitaire</strong> — RUNUP ne contient aucun SDK publicitaire, aucun traceur tiers, aucun outil d'analyse tiers, et ne vend aucune donnée. Les statistiques d'usage ci-dessus sont enregistrées par notre propre serveur, pour nous seuls, et ne sont partagées avec personne.</p>
+<p><strong>Rapports de panne</strong> — quand l'application plante, se bloque plusieurs secondes, consomme anormalement le processeur ou le disque, ou met trop longtemps à démarrer, iOS en établit un rapport technique. RUNUP le reçoit au lancement suivant et l'envoie à notre propre serveur. Ce rapport est produit par iOS, pas par nous : il contient la liste des fonctions du programme en cours d'exécution au moment de la panne (sous forme d'adresses, qui ne veulent rien dire sans nos propres fichiers de débogage), la version de l'application, la version d'iOS, le modèle d'appareil et la cause technique de l'arrêt. Il ne contient rien de ce que tu écris, aucune donnée de santé, aucune position, aucun contenu de l'application. Comme les statistiques d'usage, il est rattaché à l'identifiant aléatoire de ton appareil, et à ton compte si tu es connectée au Club. Les rapports de panne sont conservés au maximum 180 jours, puis supprimés automatiquement. Ils nous arrivent par MetricKit, le mécanisme d'Apple prévu pour ça : RUNUP n'installe aucun gestionnaire de plantage de son côté et n'embarque aucun outil tiers de rapport de panne.</p>
+
+<p><strong>Aucune collecte publicitaire</strong> — RUNUP ne contient aucun SDK publicitaire, aucun traceur tiers, aucun outil d'analyse tiers, aucun outil tiers de rapport de panne, et ne vend aucune donnée. Les statistiques d'usage et les rapports de panne ci-dessus sont enregistrés par notre propre serveur, pour nous seuls, et ne sont partagés avec personne.</p>
 
 <h2>Où sont stockées tes données</h2>
 <p>Ton profil, ton historique de courses et tes messages au coach restent localement sur ton appareil — désinstaller l'application supprime l'ensemble de ces données. Si tu te connectes pour le Club, ton compte (voir ci-dessus) est stocké sur notre serveur tant que tu ne le supprimes pas. Les seules autres données qui quittent l'appareil sont celles envoyées à notre serveur pour le coach, les statistiques d'usage décrites ci-dessus, et les données Apple Santé que tu choisis explicitement de synchroniser.</p>

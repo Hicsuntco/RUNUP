@@ -79,7 +79,7 @@ jobs:
       # treizième fait échouer la construction production entière, et AUCUNE chaîne ne rougit —
       # parce qu'aucune ne déploie. C'est arrivé deux fois : à l'ajout de l'analytique, puis le
       # 8 novembre 2026 à l'ajout du rapport de panne, où les quatre chaînes étaient vertes
-      # pendant que la production servait encore l'ancien `privacy.html`.
+      # pendant que la production n'avait rien reçu du tout.
       #
       # Avant `npm test` et avant la sonde, parce qu'un dépôt qui ne peut pas se déployer rend
       # tout le reste de ce workflow sans objet.
@@ -120,3 +120,19 @@ jobs:
 
       - name: Les routes que l'app appelle sont-elles déployées
         run: python3 ci_scripts/check_deploiement.py --patience 300
+
+      # LA POLITIQUE QUE LES GENS LISENT N'EST PAS CELLE DU DÉPÔT.
+      #
+      # L'adresse déposée sur la fiche App Store est servie par GitHub Pages depuis `main` : ni
+      # Vercel, ni cette branche. Les deux divergeaient le 8 novembre 2026, et dans le sens
+      # dangereux — `privacy.html` décrivait les rapports de panne, la page publiée non, alors
+      # que l'app les envoie depuis ce jour-là.
+      #
+      # SANS `--exiger` POUR L'INSTANT : la correction demande de porter `privacy.html` sur
+      # `main`, ce qui ne se fait pas depuis ici. Rendre la chaîne rouge pendant des jours pour
+      # une action qu'elle ne peut pas faire apprendrait à ignorer un rouge. Le jour où la page
+      # publiée rattrape le dépôt, `--exiger` entre ici.
+      - name: Les cas du contrôle de la politique publiée
+        run: cd ci_scripts && python3 test_politique.py
+      - name: La politique PUBLIÉE dit-elle ce que l'app collecte
+        run: python3 ci_scripts/check_politique.py

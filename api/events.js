@@ -20,9 +20,10 @@
 // fichier sous `api/` = UNE fonction serverless, et le plan Hobby en autorise douze. Il y en avait
 // douze ; `api/crashes.js` a été le treizième et a fait échouer TOUT déploiement production, sans
 // qu'aucune chaîne ne rougisse — c'est exactement ce que raconte l'en-tête
-// d'`api/account/[action].js`, le jour où l'analytique a été ajoutée. Le 8 novembre 2026, la
-// mesure qui l'a établi est que la production servait encore l'ANCIEN `privacy.html` : ce n'était
-// pas une route mal câblée, c'était le déploiement entier qui n'avait pas eu lieu.
+// d'`api/account/[action].js`, le jour où l'analytique a été ajoutée. Ce qui l'a établi le
+// 8 novembre 2026 : une fois le compte ramené à douze, `/api/crashes` a répondu 200 en moins
+// d'une minute — la réécriture, le gestionnaire et la migration du schéma arrivés d'un seul
+// coup. Le déploiement entier était bloqué, pas une route.
 //
 // Pourquoi la réécriture porte sur `/api/crashes` et pas sur `/api/events` : `/api/events` reste
 // servi par son propre fichier, donc l'adresse que des versions déjà installées appellent ne

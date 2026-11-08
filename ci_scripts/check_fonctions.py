@@ -15,9 +15,10 @@ n'a aucun symptôme du côté où l'on regarde :
     d'`api/account/[action].js` raconte la panne et le regroupement qui l'a réparée ;
   · le 8 novembre 2026, `api/crashes.js` a été le treizième. Les quatre chaînes étaient VERTES —
     TestFlight compris — parce qu'aucune ne déploie : c'est l'intégration Git de Vercel qui
-    déploie, et elle échoue ailleurs. Ce qui l'a établi n'est pas un journal de construction mais
-    une mesure : la production servait encore l'ANCIEN `privacy.html`, donc le déploiement entier
-    n'avait pas eu lieu.
+    déploie, et elle échoue ailleurs. Ce qui l'a établi n'est pas un journal de construction,
+    qu'on ne peut pas lire d'ici, mais une mesure : une fois le compte ramené à douze,
+    `/api/crashes` a répondu 200 en moins d'une minute — la réécriture, le gestionnaire et la
+    migration du schéma arrivés d'un seul coup. Le déploiement entier était bloqué, pas une route.
 
 Un déploiement qui n'a pas lieu laisse l'ancienne version servir. L'app continue de marcher, les
 tests restent verts, et tout ce qu'on vient d'écrire n'existe nulle part.

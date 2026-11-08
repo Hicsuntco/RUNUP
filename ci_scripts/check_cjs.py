@@ -46,6 +46,66 @@ COEUR = {
 }
 
 
+def sans_commentaires(source: str) -> str:
+    """Le même fichier, commentaires blanchis — sans décaler une seule colonne.
+
+    LE CONTRÔLE LISAIT SES PROPRES COMMENTAIRES. Le correctif de la panne du 7 novembre 2026
+    explique, dans `lib/auth.js`, pourquoi `jose` ne se charge plus par `require` — et la phrase
+    cite `require('jose')`. Ce script l'a comptée comme un appel et a signalé le fichier qu'il
+    venait de faire corriger.
+
+    On blanchit donc les commentaires, et on suit les chaînes pour ne pas couper sur le `//`
+    d'une URL. Les caractères blanchis sont remplacés par des espaces : les positions ne bougent
+    pas, et un message qui citerait une ligne la citerait juste.
+    """
+    sortie = []
+    i, n = 0, len(source)
+    chaine = None          # le guillemet ouvrant, ou None
+    commentaire = None     # "ligne" ou "bloc", ou None
+    while i < n:
+        c = source[i]
+        suivant = source[i + 1] if i + 1 < n else ""
+        if commentaire == "ligne":
+            if c == "\n":
+                commentaire = None
+                sortie.append(c)
+            else:
+                sortie.append(" ")
+        elif commentaire == "bloc":
+            if c == "*" and suivant == "/":
+                commentaire = None
+                sortie.append("  ")
+                i += 2
+                continue
+            sortie.append("\n" if c == "\n" else " ")
+        elif chaine:
+            sortie.append(c)
+            if c == "\\":
+                if i + 1 < n:
+                    sortie.append(source[i + 1])
+                    i += 2
+                    continue
+            elif c == chaine:
+                chaine = None
+        elif c in "\"'`":
+            chaine = c
+            sortie.append(c)
+        elif c == "/" and suivant == "/":
+            commentaire = "ligne"
+            sortie.append("  ")
+            i += 2
+            continue
+        elif c == "/" and suivant == "*":
+            commentaire = "bloc"
+            sortie.append("  ")
+            i += 2
+            continue
+        else:
+            sortie.append(c)
+        i += 1
+    return "".join(sortie)
+
+
 def paquets_requis() -> dict:
     """paquet → les fichiers qui le chargent par `require`."""
     trouves: dict[str, list[str]] = {}
@@ -55,7 +115,8 @@ def paquets_requis() -> dict:
             raise SystemExit(f"Le dossier « {dossier} » n'existe pas : ce contrôle ne relit pas "
                              f"ce qu'il annonce.")
         for chemin in sorted(base.rglob("*.js")):
-            for nom in REQUIRE.findall(chemin.read_text(encoding="utf-8")):
+            code = sans_commentaires(chemin.read_text(encoding="utf-8"))
+            for nom in REQUIRE.findall(code):
                 if nom.startswith(".") or nom.startswith("node:") or nom in COEUR:
                     continue
                 # `@echelle/paquet/sous-chemin` → le paquet, sans le sous-chemin.

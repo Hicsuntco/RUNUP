@@ -64,14 +64,46 @@ def _():
 
 # ── L'extraction des noms de paquets ──────────────────────────────────────────────────────────
 
-@cas_de("les quatre dépendances réelles du serveur sont vues")
+@cas_de("les trois dépendances chargées par require sont vues")
 def _():
     requis = ck.paquets_requis()
-    for paquet in ("jose", "bcryptjs", "@neondatabase/serverless", "@vercel/blob"):
+    for paquet in ("bcryptjs", "@neondatabase/serverless", "@vercel/blob"):
         assert paquet in requis, f"{paquet} manque — l'extraction ne lit plus le code"
-    # Et `jose` est bien attribué aux deux fichiers qui le chargent.
-    assert any(f.endswith("lib/auth.js") for f in requis["jose"])
-    assert any(f.endswith("lib/apns.js") for f in requis["jose"])
+    assert any(f.endswith("lib/auth.js") for f in requis["bcryptjs"])
+
+
+@cas_de("`jose` n'y est plus : il se charge par import(), et c'est le correctif de la panne")
+def _():
+    requis = ck.paquets_requis()
+    assert "jose" not in requis, (
+        "jose est de retour dans un `require` — c'est ce qui a mis l'API à terre le "
+        "7 novembre 2026, reproduit sur aperçu : `require` d'un paquet livré en ESM seul "
+        "n'est pas chargeable par l'empaquetage des fonctions de Vercel."
+    )
+    # Et il est bien là, chargé autrement : un `jose` absent des DEUX listes voudrait dire que
+    # quelqu'un a retiré la signature des jetons, pas qu'il a changé de chemin de chargement.
+    auth = (ICI.parent / "lib/auth.js").read_text(encoding="utf-8")
+    apns = (ICI.parent / "lib/apns.js").read_text(encoding="utf-8")
+    assert "import('jose')" in auth and "import('jose')" in apns
+
+
+@cas_de("un `require` cité dans un commentaire n'en est pas un")
+def _():
+    # Le correctif explique, dans `lib/auth.js`, pourquoi `jose` ne se charge plus par
+    # `require` — et la phrase cite l'appel. Le contrôle a d'abord signalé le fichier qu'il
+    # venait de faire corriger.
+    src = """
+    // Avant, on écrivait require('jose') ici, et c'est ce qui cassait.
+    /* require('bcryptjs') dans un bloc aussi */
+    const { sql } = require('../lib/db');
+    const lien = 'https://exemple.test//pas-un-commentaire';
+    """
+    propre = ck.sans_commentaires(src)
+    assert "require('jose')" not in propre
+    assert "require('bcryptjs')" not in propre
+    assert "require('../lib/db')" in propre
+    assert "https://exemple.test//pas-un-commentaire" in propre
+    assert len(propre) == len(src), "les positions doivent rester intactes"
 
 
 @cas_de("les modules du cœur et les chemins relatifs ne sont pas des paquets")

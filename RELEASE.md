@@ -103,9 +103,12 @@ Puis, sur la machine :
 - **La branche de travail est la production.** Vercel enregistre un déploiement « Production » par
   commit — douze le 7 novembre 2026. Il n'y a ni préproduction, ni relecture : une modification de
   `api/`, `lib/` ou `package.json` est en ligne dans la minute.
-- **La version de Node du projet Vercel** ne se lit pas dans le dépôt. Elle a mis l'API à terre
-  onze minutes le 7 novembre 2026 : `jose` 6 n'est livré qu'en ESM, la construction était verte,
-  les 133 tests verts. `check_cjs.py` ferme cette porte-là ; le réglage reste invisible.
+- **Ce que fait Vercel du code une fois construit ne se lit pas dans le dépôt.** `jose` 6, livré
+  en ESM seul et chargé par `require`, a mis l'API à terre onze minutes le 7 novembre 2026 :
+  construction verte, 133 tests verts, et le Node du projet (24.x) charge pourtant ce paquet sans
+  broncher en local. C'est l'empaquetage des fonctions qui ne sait pas le faire. `check_cjs.py`
+  ferme cette porte-là ; la vraie réponse est d'éprouver un déploiement d'aperçu avant la
+  production — ce qui demande de couper `Vercel Authentication` le temps de l'essai.
 - **La montre n'a pas de captures propres.** L'app de poignet a ses écrans, et aucun n'a jamais
   été photographié : il n'existe pas de cible de test d'interface pour watchOS. L'iPad, lui, ne
   pose pas la question — `TARGETED_DEVICE_FAMILY` vaut 1 dans les réglages de base comme dans

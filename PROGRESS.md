@@ -19,8 +19,7 @@ n'apparaît, l'avant/après est écrit ici, et les trois langues ont été véri
 | Question | Pourquoi ça bloque |
 | --- | --- |
 | Contenu des séances HYROX | Il faut quelqu'un qui a couru un HYROX. L'équipe n'a pas cette compétence et ne doit pas l'inventer. |
-| Cette branche doit-elle être la production ? | Elle l'est : douze déploiements « Production » le 7 novembre, un par commit. Donc aucune relecture, aucune préproduction, et une panne de onze minutes ce jour-là. |
-| La version de Node du projet Vercel | Elle ne se lit que dans les paramètres du projet, et c'est la seule chose qui manque pour reprendre le chantier 11. Un `require` d'un paquet ESM en dépend, et une construction verte n'en dit rien. |
+| Cette branche doit-elle rester la production ? | Elle l'est, confirmé dans les réglages Vercel le 7 novembre : `Settings → Environments → Production → Branch Tracking` porte `claude/runup-ios-swiftui-app-5b1yv6`. Donc aucune relecture, aucune préproduction. Les aperçus, eux, sont maintenant éprouvables — voir le chantier 11. |
 
 
 ## Au passage
@@ -97,7 +96,7 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 | 8 | Harnais de captures : photographier l'inscription, le paywall, l'écran de course | 0,5 j | **fait** |
 | 9 | Tests : `SubscriptionService` et `LocationService` d'abord | 2 j | **fait** |
 | 10 | Valeurs en dur → jetons du design system, les 15 % restants | 1,5 j | **fait** — il en restait six, pas 15 % |
-| 11 | Dépendances serveur : `jose` 6 et `bcryptjs` 3 | 0,5 j | **annulé le 7 novembre** — `jose` 6 a mis la production à terre, voir plus bas |
+| 11 | Dépendances serveur : `jose` 6 et `bcryptjs` 3 | 0,5 j | **fait** — après une panne de onze minutes, une reproduction sur aperçu et un correctif éprouvé |
 | 12 | Accessibilité : tailles de texte dynamiques, indices VoiceOver | 1,5 j | à faire |
 | 13 | `ClubView.swift`, 2 699 lignes, à découper | 2 j | à faire |
 | 14 | Rapport de plantage maison, posté sur notre serveur | 1,5 j | à faire — décidé le 7 novembre |
@@ -257,72 +256,74 @@ cessait d'être lu, les quatre images seraient des copies, le harnais resterait 
 croirait avoir vu l'app en grand texte. **Sans plancher pour l'instant** — il viendra du premier
 relevé, comme le plafond d'images vides des bascules.
 
-## Chantier 11 — `jose` 6 : onze minutes de production à terre
+## Chantier 11 — `jose` 6 : onze minutes de panne, puis la cause, trouvée sur un aperçu
 
-**Annulé.** `jose` 5.9.6 → 6.2.15 et `bcryptjs` 2.4.3 → 3.0.3 sont partis à 17 h 08 et sont
-revenus à 17 h 20. Entre les deux, **toutes les routes de l'API répondaient 500**.
+**Fait.** `jose` 5.9.6 → 6.2.15 et `bcryptjs` 2.4.3 → 3.0.3, après une panne, une reproduction
+hors production et un correctif éprouvé avant d'être poussé.
 
-### La chronologie, mesurée
+### La panne
 
-| Heure (UTC) | Ce qui s'est passé |
+| Heure (UTC) | |
 | --- | --- |
-| 17 h 00 | Les 83 adresses appelées par l'app : 69 × 401, 13 × 405, 1 × 400. Rien de cassé. |
-| 17 h 08 | Je pousse `jose` 6 et `bcryptjs` 3. |
-| 17 h 09 min 48 | Vercel déploie le commit **en production**, construction verte. |
-| 17 h 15 → 17 h 19 | Toutes les routes répondent 500, `x-vercel-error: FUNCTION_INVOCATION_FAILED`, sur quatre sondages. Les pages statiques servent. Vercel annonce « All Systems Operational ». |
-| 17 h 20 min 28 | Je pousse le retour arrière. |
-| 17 h 20 min 50 | Vercel le déploie en production. |
-| 17 h 20 min 59 | `api/events` répond de nouveau 405. Les 83 routes sont revenues. |
+| 17 h 00 | les 83 adresses : 69 × 401, 13 × 405, 1 × 400 |
+| 17 h 09 min 48 | `jose` 6 + `bcryptjs` 3 déployés **en production**, construction verte |
+| 17 h 15 → 17 h 19 | toutes les routes en 500, `FUNCTION_INVOCATION_FAILED`, quatre sondages |
+| 17 h 20 min 50 | retour arrière déployé |
+| 17 h 20 min 59 | tout revient |
 
-### Ce que j'ai fait de travers
+### Les deux explications fausses, dans l'ordre où je les ai eues
 
-`jose` 6 n'est livré qu'en ESM, et tout le serveur est en CommonJS. Son README dit que
-`require('jose')` ne marche que là où `require(esm)` est actif par défaut
-(^20.19 || ^22.12 || >= 23). J'ai vérifié ce que Vercel **propose** — 26.x par défaut, 24.x,
-22.x, la 20.x retirée depuis le 1er octobre 2026 — et j'en ai conclu que le plancher était tenu
-quelle que soit la configuration du projet.
+**« Le Node du projet est trop vieux. »** `jose` 6 n'est livré qu'en ESM, et `require` d'un module
+ESM n'est actif par défaut que sur Node ^20.19, ^22.12 ou ≥ 23. J'avais vérifié ce que Vercel
+*propose* et conclu que le plancher était tenu. Charlotte a ouvert le réglage : **le projet est
+sur Node 24.x**. L'explication tombe.
 
-**Ce que Vercel propose à la sélection n'est pas ce sur quoi un projet existant tourne.** Le
-réglage vit dans les paramètres du projet, chez Vercel, et je n'ai aucun moyen de le lire d'ici.
-J'ai pris une liste de versions disponibles pour une mesure de la version déployée. Une
-construction verte ne prouve rien là-dessus : le chargement des modules se fait à l'exécution.
+**« Alors c'est le code. »** Node 24.22 installé ici, les quatre points d'entrée du serveur
+chargés avec `jose` 6.2.15 et `bcryptjs` 3.0.3 : **les quatre chargent sans broncher**.
+L'explication tombe aussi.
 
-`FUNCTION_INVOCATION_FAILED` sur une fonction qui ne touche que `lib/db` (`api/events`) m'a
-d'abord fait écarter `jose` — à tort : toutes les fonctions partagent le même conteneur de
-construction, et c'est `api/auth` qui porte l'import. Je n'ai pas poussé le diagnostic plus loin
-avant de revenir en arrière, et c'était le bon ordre.
+### La reproduction, sur un déploiement d'aperçu
 
-### Ce qui reste, et qui a fait son travail
+Quatre aperçus sur une branche jetable, même code à chaque fois sauf la ligne testée. Il a fallu
+couper `Vercel Authentication` le temps de l'essai : sans ça, un aperçu répond 302 vers une page
+de connexion et ne se sonde pas.
 
-`check_deploiement.py` refusait un 404 et comptait un 5xx comme une présence. Je l'ai corrigée au
-même commit pour qu'un 5xx échoue, sur un relevé des 83 adresses. **Elle a trouvé cette panne
-vingt minutes plus tard** — c'est le seul contrôle du dépôt capable de la voir, et sans elle la
-production serait restée à terre jusqu'à ce que quelqu'un ouvre l'app.
+| Aperçu | Ce qui change | Résultat |
+| --- | --- | --- |
+| témoin | rien | 405 / 401 — sain, donc les variables d'environnement sont partagées |
+| épreuve | `jose` 6 + `bcryptjs` 3 par `require` | **500 partout** — la panne, rejouée |
+| bissection | `bcryptjs` 3 seul | 405 / 401 — sain |
+| correctif | `jose` 6 par `import()` | 405 / 401 — sain |
 
-Trois fichiers de tests ne tournaient nulle part non plus : `test_deploiement.py`,
-`test_accent.py`, `test_session.py`. Ils sont dans leurs workflows, et l'audit est refait sur les
-26 fichiers `ci_scripts/test_*.py`.
+**La cause : l'empaquetage des fonctions par Vercel ne sait pas charger par `require` un paquet
+livré en ESM seul.** Ni le code, ni la version de Node. Rien dans le dépôt ne pouvait le dire —
+construction verte, 133 tests verts, Node au-dessus du plancher. Seule une requête à un
+déploiement réel le disait. `bcryptjs` 3 est innocent : il garde une condition `require` vers une
+livraison UMD, et c'est toute la différence entre les deux montées.
 
-### La barrière qui empêche de le refaire
+### Le correctif
 
-`ci_scripts/check_cjs.py` lit, pour chaque `require('paquet')` de `api/` et `lib/`, le
-`package.json` du paquet installé : `"type": "module"` avec un `exports` qui ne propose aucune
-condition `require` est refusé. La règle n'est pas « est-ce que ça marche sur cette machine » —
-c'est précisément ce qui a trompé : Node 22 fait marcher `require('jose')`, et la version de Node
-qui exécute les fonctions ne se lit pas d'ici.
+`lib/auth.js` et `lib/apns.js` chargent `jose` par `await import('jose')`. C'est un import ESM
+ordinaire, qu'aucun empaqueteur n'a à interpréter. Le module est chargé une fois et gardé ; le jeu
+de clés d'Apple est construit à la première vérification au lieu de l'ouverture du fichier.
 
-Vérifié dans les deux sens : `jose` 5.10.0 et `bcryptjs` 2.4.3 passent, `jose` 6.2.15 est refusée
-en nommant `lib/auth.js` et `lib/apns.js`. Et `bcryptjs` 3 passerait : elle garde une condition
-`require` vers une livraison UMD — c'est la différence exacte entre les deux montées, et c'est
-celle que je n'avais pas regardée.
+### `bcryptjs` 3, mesuré
 
-### Ce qu'il faut pour reprendre ce chantier
+Les empreintes déjà en base doivent continuer de se vérifier. Les deux versions installées côte à
+côte : la 2.4.3 écrit `$2a$`, la 3.0.3 écrit `$2b$`, et **chacune vérifie l'empreinte de l'autre**.
+Les mots de passe existants passent, et un retour en arrière reste possible. Coût 12 : 317 ms. La
+licence passe de MIT à BSD-3-Clause.
 
-Une seule chose : **la version de Node du projet Vercel** (Settings → General → Node.js Version).
-Au-dessus de 20.19, `jose` 6 passe tel quel et la montée prend deux minutes. En dessous, il faut
-soit monter le projet, soit convertir les trois fichiers concernés en `await import('jose')`.
-`bcryptjs` 3, lui, est mesuré et sans risque : la 2.4.3 écrit `$2a$`, la 3.0.3 écrit `$2b$`, et
-chacune vérifie l'empreinte de l'autre — les mots de passe en base passent, dans les deux sens.
+### Les deux barrières
+
+`ci_scripts/check_cjs.py` refuse un paquet livré en ESM seul chargé par `require`. Il a d'abord
+signalé le fichier qu'il venait de faire corriger : le commentaire du correctif CITE
+`require('jose')` pour expliquer pourquoi il n'est plus là, et le contrôle lisait ses propres
+commentaires. Il les blanchit désormais, en suivant les chaînes pour ne pas couper sur le `//`
+d'une URL.
+
+`check_deploiement.py` refuse un 5xx depuis ce matin — c'est lui qui a vu la panne, vingt minutes
+après avoir été écrit.
 
 ## Chantier 10 — les valeurs en dur : six, pas 15 %
 

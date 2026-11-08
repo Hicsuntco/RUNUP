@@ -73,6 +73,22 @@ final class ClubStore {
     /// celui-ci part à chaque ouverture du Club, celui-là seulement quand l'aperçu s'affiche.
     var highlights: ClubHighlights?
 
+    /// Y A-T-IL QUELQUE CHOSE À MONTRER DANS LES TROIS SECTIONS DE PÉPITES ?
+    ///
+    /// La question existe parce que `ClubHighlightsSections` les regroupe en un seul enfant de
+    /// la pile de l'aperçu, là où elles en étaient trois. Trois sections vides ne laissent
+    /// aucun blanc — une pile n'espace pas autour du vide ; une pile VIDE, elle, est un enfant
+    /// de hauteur nulle que le parent espacerait quand même.
+    ///
+    /// La condition reprend donc celle de chaque section, et elle est tenue ICI, à côté de la
+    /// donnée qui la décide, plutôt que dans la vue qui l'emploie.
+    var aDesPepites: Bool {
+        !(highlights?.races.isEmpty ?? true)
+            || (highlights?.sessionHistory?.total ?? 0) > 0
+            || !(highlights?.records.isEmpty ?? true)
+            || highlights?.bestWeek != nil
+    }
+
     func chargerLesPepites() async {
         if Demonstration.enCours {
             highlights = appState.cachedClubHighlights

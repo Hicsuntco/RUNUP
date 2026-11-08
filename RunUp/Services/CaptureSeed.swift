@@ -701,11 +701,25 @@ enum CaptureSeed {
     /// débogage, garde la fausse conversation hors du binaire réel.
     private static func conversation(maintenant: Date) -> [ChatMessage] {
         let (question, reponse) = echange()
+        // CINQ HEURES EN ARRIÈRE, MAIS JAMAIS AVANT CE MATIN.
+        //
+        // L'écran du Coach porte un séparateur de jour au-dessus de la conversation, et il
+        // disait « HIER » ou « AUJOURD'HUI » selon l'HEURE à laquelle la chaîne tournait :
+        // cinq heures avant 07 h 00 tombent ce matin, cinq heures avant 01 h 18 tombent hier
+        // soir. `3-coach` est l'une des six images envoyées à Apple, et elle changeait donc de
+        // texte d'une exécution à l'autre sans que personne ne l'ait décidé. Relevé le
+        // 8 novembre 2026 en comparant deux exécutions séparées de six heures.
+        //
+        // `startOfDay` est toujours dans le passé — sauf à minuit pile, où il vaut l'instant
+        // même — donc le message reste antérieur à maintenant quoi qu'il arrive, et il reste
+        // du jour courant. Une conversation de coaching datée d'aujourd'hui est aussi ce
+        // qu'on veut MONTRER : un coach qui a répondu ce matin.
+        let ceMatin = Calendar.current.startOfDay(for: maintenant)
+        let pose = max(maintenant.addingTimeInterval(-3600 * 5), ceMatin)
         return [
-            ChatMessage(role: .user, text: question,
-                        timestamp: maintenant.addingTimeInterval(-3600 * 5)),
+            ChatMessage(role: .user, text: question, timestamp: pose),
             ChatMessage(role: .coach, text: reponse,
-                        timestamp: maintenant.addingTimeInterval(-3600 * 5 + 40)),
+                        timestamp: pose.addingTimeInterval(40)),
         ]
     }
 

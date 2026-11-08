@@ -72,9 +72,16 @@ Aucune heure fixe de la journée ne tient les deux : la chaîne a tourné à 01 
 et 18 h 00 est dans leur futur à toutes les deux. La vraie réponse serait de figer l'horloge du
 simulateur, ce que `simctl` ne fait pas pour l'app. On note donc, et on ne corrige pas.
 
-LES SIX IMAGES LIVRÉES À APPLE, ELLES, SONT REPRODUCTIBLES — `1-accueil` à `6-stats`, trois
-langues, deux thèmes, zéro pixel d'écart entre les deux exécutions. C'est ce qui compte pour la
-fiche, et c'est vérifié.
+ET J'AI DIT TROP VITE QUE LES SIX IMAGES LIVRÉES À APPLE ÉTAIENT REPRODUCTIBLES. Elles
+l'étaient entre les deux exécutions que j'avais comparées — 01 h 18 et 04 h 37, toutes deux
+après minuit. Une troisième à 07 h 00 a fait bouger `3-coach` dans les trois langues et les
+deux thèmes : le séparateur de jour au-dessus de la conversation passait de « HIER » à
+« AUJOURD'HUI », parce que le message était planté cinq heures en arrière. Deux exécutions qui
+s'accordent ne font pas une reproductibilité.
+
+Ce message est depuis borné au jour courant (`CaptureSeed.conversation`), ce qui rend `3-coach`
+stable et dit par la même occasion ce qu'on veut montrer : un coach qui a répondu ce matin. Les
+cinq autres images livrées n'ont pas bougé sur les trois exécutions.
 
 Pour juger un découpage, nommer les écrans avec `--seulement` plutôt que tout comparer : les
 deux ci-dessus noieraient le verdict sous un bruit qui ne vient pas du code.

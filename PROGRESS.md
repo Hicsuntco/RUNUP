@@ -295,7 +295,7 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 | 9 | Tests : `SubscriptionService` et `LocationService` d'abord | 2 j | **fait** |
 | 10 | Valeurs en dur → jetons du design system, les 15 % restants | 1,5 j | **fait** — il en restait six, pas 15 % |
 | 11 | Dépendances serveur : `jose` 6 et `bcryptjs` 3 | 0,5 j | **fait** — après une panne de onze minutes, une reproduction sur aperçu et un correctif éprouvé |
-| 12 | Accessibilité : tailles de texte dynamiques, indices VoiceOver | 1,5 j | **en cours** — sept écrans photographiés au deuxième cran, dix défauts vus et corrigés sur les quatre premiers |
+| 12 | Accessibilité : tailles de texte dynamiques, indices VoiceOver | 1,5 j | **fait** — sept écrans photographiés au deuxième cran, treize défauts vus et corrigés ; le reste mesuré et fermé, voir plus bas |
 | 13 | `ClubView.swift`, 2 721 lignes, à découper | 2 j | **fait** — 2 721 → 1 358 lignes, en six fichiers ; zéro pixel d'écart |
 | 14 | Rapport de plantage maison, posté sur notre serveur | 1,5 j | **fait** — par MetricKit, sans aucun gestionnaire de signal ; voir plus bas pourquoi |
 
@@ -601,6 +601,50 @@ Ce qui a été REGARDÉ et laissé : les textes libres tronqués en fin de ligne
 le sous-titre « Ton club, tes abonnements et tes c… », le nom d'un club long. Ce sont des limites
 de lignes posées exprès sur du contenu de longueur inconnue, pas des mises en page qui cassent, et
 la coupure se fait proprement sur un caractère de suite.
+
+### Ce qui restait du chantier 12, et pourquoi il est fermé
+
+« Indices VoiceOver » était la seconde moitié de l'item d'audit. Elle est fermée sur une mesure,
+pas sur une opinion.
+
+**Les commandes ont toutes un nom.** `check_a11y.py` existe déjà et le garantit : il refuse toute
+commande dont le libellé est une icône seule et qui n'a ni `accessibilityLabel`, ni
+`accessibilityHidden`, ni `accessibilityElement`. Il est vert. J'ai voulu le vérifier à part et
+j'ai écrit deux mesures fausses coup sur coup — la première a rendu trois défauts, tous faux
+positifs d'une fenêtre de lecture trop courte ; la seconde en a rendu un, faux lui aussi, parce
+que le texte du bouton était passé en ARGUMENT à `RUCardHeader` et non écrit dans un `Text`. La
+bonne réponse est zéro, et elle était déjà tenue par une machine.
+
+**Ce qui est DESSINÉ ne parle pas, et c'est délibéré partout.** Quinze fichiers dessinent de
+l'information (`Canvas`, `Path`, des rectangles dans un `GeometryReader`). Six ne portent aucune
+annotation, et aucun n'est un défaut :
+
+| Fichier | Pourquoi il se tait |
+| --- | --- |
+| `AppMarkView` | le logo : décoratif |
+| `HexagonBadgeShape` | une `Shape`, de la géométrie sans contenu |
+| `RunShareCardView` | rendu en image pour le partage, jamais à l'écran |
+| `DrawnRoute` | employé par le seul `RunVideoFrameView`, qui fabrique des images de vidéo |
+| `ProgressBars` | un `Rectangle` n'est pas un élément d'accessibilité : VoiceOver ne s'y arrête pas. Et aux six endroits où `LinearBar` sert, le nombre qu'elle dessine est ÉCRIT en toutes lettres juste à côté — « 180 / 250 XP », « 212 / 300 km — 71 % », « 245 km / 800 km », « Semaine 7/16 ». L'annoncer en plus ferait lire deux fois la même chose |
+| `ElevationProfileView` | son `RUCardHeader` le nomme, et `RecapView` porte déjà le commentaire qui le dit : « the min/max/gain numbers below it are combined into this card's own label instead » |
+
+**Les six indices restent six.** Le relevé : 127 `accessibilityLabel`, 58
+`accessibilityElement`, 29 `accessibilityAddTraits`, 25 `accessibilityHidden`, 15
+`accessibilityValue`, 6 `accessibilityHint`.
+
+Et la raison de ne pas en ajourer cent vingt d'un coup doit être dite correctement, parce que je
+l'ai d'abord dite faux. J'ai écrit que c'était « contre la recommandation d'Apple » : je n'ai pas
+pu sourcer cette phrase. La page de `accessibilityHint(_:)` dit ce qu'un indice EST —
+« Communicates to the user what happens after performing the view's action », avec pour exemples
+« Purchases the item », « Downloads the attachment » — et ne dit rien sur la parcimonie.
+
+La vraie raison tient en une distinction : **un libellé calculé depuis la donnée qu'il décrit ne
+peut pas mentir ; un indice est une affirmation sur un COMPORTEMENT.** « Ouvre la sortie en
+détail » est vrai ou faux selon ce que fait le bouton, et rien ici ne peut le vérifier — ni le
+compilateur, ni une capture, ni un contrôle. En écrire cent vingt reviendrait à poser cent vingt
+phrases sur le fonctionnement de l'app que personne n'aurait éprouvées. C'est la règle « rien de
+faux » appliquée aux textes de l'interface. Les six qui existent ont été écrits un par un, en
+regardant ce que la commande fait.
 
 ### Et la question inverse : est-ce que les écrans ORDINAIRES ont bougé ?
 

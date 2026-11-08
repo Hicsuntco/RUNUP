@@ -624,6 +624,13 @@ D'où `comparer.py --decalage`, qui cherche désormais si un décalage vertical 
 le dit en toutes lettres. Sur cette image : « le contenu d'après est 105 px plus bas (défilement
 moins loin) ; la moyenne passe de 19,904 à 1,435 → un défilement, pas une régression. »
 
+Et un écho du même défaut, un cran plus loin : modifier `comparer.py` n'a relancé que TestFlight.
+Quatre scripts — `comparer.py` et ses cas, ceux des bascules, le contrôle du grand texte et les
+siens — étaient lancés par `captures.yml` sans être dans son filtre de chemins. Câblés sur le
+papier, débranchés en pratique. `check_cablage.py` ne pouvait pas le voir : il vérifie qu'un
+script est NOMMÉ par un workflow, pas que ce workflow PARTE quand le script change.
+`check_declencheur.py` porte maintenant les deux règles.
+
 Deux défauts trouvés en ÉPROUVANT l'option, qui méritent d'être notés parce qu'aucun ne se voyait
 à la relecture : le gabarit de test posait une barre toutes les 24 lignes, donc un décalage de 48
 retombait exactement sur lui-même et l'écart tombait à zéro des deux côtés ; et la recherche

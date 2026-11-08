@@ -35,7 +35,11 @@ def cas_de(nom):
     return decorateur
 
 
-def workflow(entrees: str) -> str:
+#: Des étapes qui ne lancent aucun script : le défaut par défaut des cas existants.
+SANS_SCRIPT = "      - name: Photographier\n        run: xcodebuild test\n"
+
+
+def workflow(entrees: str, etapes: str = SANS_SCRIPT) -> str:
     return (
         "on:\n"
         "  push:\n"
@@ -47,19 +51,23 @@ def workflow(entrees: str) -> str:
         "    inputs:\n"
         "      langues:\n"
         '        description: "Langues"\n'
+        "jobs:\n"
+        "  captures:\n"
+        "    steps:\n"
+        f"{etapes}"
     )
 
 
 UNE_VUE = "struct Truc: View {\n    var body: some View { Text(\"x\") }\n}\n"
 
 
-def lance(entrees: str, fichiers: dict[str, str]):
+def lance(entrees: str, fichiers: dict[str, str], etapes: str = SANS_SCRIPT):
     """Pose un dépôt, pointe le contrôle dessus, rend (code de sortie, sortie)."""
     with tempfile.TemporaryDirectory() as d:
         racine = pathlib.Path(d)
         wf = racine / ".github/workflows/captures.yml"
         wf.parent.mkdir(parents=True)
-        wf.write_text(workflow(entrees), encoding="utf-8")
+        wf.write_text(workflow(entrees, etapes), encoding="utf-8")
         app = racine / "RunUp"
         for chemin, contenu in fichiers.items():
             f = app / chemin
@@ -189,6 +197,85 @@ def _():
     motifs = ck.chemins_declencheurs()
     for vue in ("RunUp/AppState.swift", "RunUp/RunUpApp.swift"):
         assert ck.couvert(vue, motifs), f"{vue} ne relance pas les captures"
+
+
+# --- La seconde règle : un script lancé doit déclencher la chaîne qui le lance ----------------
+
+COUVRE_TOUT = ('      - "RunUp/Views/**"\n'
+               '      - "ci_scripts/test_truc.py"\n')
+
+
+@cas_de("UN SCRIPT LANCÉ MAIS HORS DU FILTRE : refus, et il est nommé")
+def _():
+    # Le défaut réel du 8 novembre 2026 : quatre scripts étaient lancés par `captures.yml` sans
+    # être dans son filtre. Les modifier ne relançait pas la chaîne qui les exécute.
+    etapes = ("      - name: Éprouver la comparaison\n"
+              "        run: cd ci_scripts && python3 test_comparer.py\n")
+    code, sortie = lance('      - "RunUp/Views/**"\n', {"Views/E.swift": UNE_VUE}, etapes=etapes)
+    assert code == 1, sortie
+    assert "ci_scripts/test_comparer.py" in sortie, sortie
+    assert "débranché" in sortie, sortie
+
+
+@cas_de("un interpréteur autre que python3 compte quand même")
+def _():
+    # Le piège exact qui a fait rendre ZÉRO script à la première version : ce workflow lance ses
+    # scripts avec le python d'un environnement virtuel, pas avec `python3`.
+    etapes = ('      - name: Éprouver\n'
+              '        run: cd ci_scripts && "$RUNNER_TEMP/venv/bin/python" test_comparer.py\n')
+    code, sortie = lance('      - "RunUp/Views/**"\n', {"Views/E.swift": UNE_VUE}, etapes=etapes)
+    assert code == 1, f"le script lancé par un venv n'a pas été vu :\n{sortie}"
+    assert "test_comparer.py" in sortie, sortie
+
+
+@cas_de("un script seulement CITÉ dans un commentaire ne compte pas")
+def _():
+    etapes = ("      # On a envisagé python3 test_comparer.py ici, et on ne l'a pas fait.\n"
+              "      - name: Éprouver\n"
+              "        run: cd ci_scripts && python3 test_truc.py\n")
+    code, sortie = lance(COUVRE_TOUT, {"Views/E.swift": UNE_VUE}, etapes=etapes)
+    assert code == 0, f"un commentaire a été compté comme un lancement :\n{sortie}"
+    assert "1 scripts lancés" in sortie, sortie
+
+
+@cas_de("une entrée du filtre ne compte pas pour un lancement")
+def _():
+    # Sinon la règle serait tautologique : tout ce qui est dans le filtre serait « lancé », et
+    # elle ne pourrait jamais rien attraper.
+    entrees = ('      - "RunUp/Views/**"\n'
+               '      - "ci_scripts/test_comparer.py"\n'
+               '      - "ci_scripts/test_truc.py"\n')
+    code, sortie = lance(entrees, {"Views/E.swift": UNE_VUE})
+    assert code == 0, sortie
+    assert "0 scripts lancés" in sortie, f"le filtre a été compté comme un lancement :\n{sortie}"
+
+
+@cas_de("UN NOM DE SCRIPT SANS LANCEMENT LISIBLE : refus, la lecture a échoué")
+def _():
+    # La signature d'une expression cassée : le workflow parle bien de ces fichiers, mais la
+    # forme du lancement a changé et on n'y lit plus rien. C'est exactement ce qui est arrivé à
+    # la première version de cette règle, qui a rendu VERT en trouvant zéro script.
+    etapes = ("      - name: Éprouver\n"
+              "        run: cd ci_scripts && sh lancer_tout.sh test_comparer.py\n")
+    code, sortie = lance(COUVRE_TOUT, {"Views/E.swift": UNE_VUE}, etapes=etapes)
+    assert code == 1, f"un compte nul a rendu vert :\n{sortie}"
+    assert "analyse a échoué" in sortie, sortie
+
+
+@cas_de("un workflow qui ne lance aucun script est un cas normal, pas une panne")
+def _():
+    code, sortie = lance('      - "RunUp/Views/**"\n', {"Views/E.swift": UNE_VUE})
+    assert code == 0, f"un workflow sans script a été pris pour une lecture cassée :\n{sortie}"
+    assert "0 scripts lancés" in sortie, sortie
+
+
+@cas_de("le vrai dépôt : les scripts lancés par les captures sont tous dans son filtre")
+def _():
+    motifs = ck.chemins_declencheurs()
+    lances, _ = ck.scripts_lances()
+    assert lances, "aucun script lancé lu dans le vrai workflow"
+    debranches = [n for n in lances if not ck.couvert(f"ci_scripts/{n}", motifs)]
+    assert not debranches, f"lancés mais hors du filtre : {debranches}"
 
 
 def main():

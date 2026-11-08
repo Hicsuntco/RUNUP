@@ -79,6 +79,21 @@ on:
       - "ci_scripts/montage.py"
       - "ci_scripts/bascules.py"
       - "appstore/apercu.json"
+      # ET LES CINQ SCRIPTS QUE CE WORKFLOW EST LE SEUL À LANCER.
+      #
+      # Ils étaient nommés dans les étapes ci-dessous sans être dans ce filtre : les modifier ne
+      # relançait donc PAS la chaîne qui les exécute. `check_cablage.py` ne pouvait pas le voir —
+      # il vérifie qu'un script est nommé par un workflow, pas que ce workflow parte quand le
+      # script change. C'est la même omission que `RunUpApp.swift` juste en dessous, d'un cran
+      # plus loin, et `check_declencheur.py` la refuse maintenant aussi.
+      #
+      # Le prix est assumé : toucher l'un de ces cinq coûte vingt minutes de machine macOS. C'est
+      # exactement ce qu'on veut, puisque les exécuter EST la vérification.
+      - "ci_scripts/comparer.py"
+      - "ci_scripts/test_comparer.py"
+      - "ci_scripts/test_bascules.py"
+      - "ci_scripts/check_grand_texte.py"
+      - "ci_scripts/test_grand_texte.py"
       # Tout ce qui se juge à l'œil et qu'aucun script ne sait relire.
       - "RunUp/Views/**"
       - "RunUp/DesignSystem/**"

@@ -242,6 +242,13 @@ avait le même défaut : `if clubEnSommeil { carteClubAReveiller } else { events
 feuille était sur la seconde. Sur un club endormi — le cas même où cette carte existe — le
 bouton ne faisait rien. Les deux remontent au corps ; les dix autres étaient chez elles.
 
+L'audit a ensuite été passé sur LES 111 FICHIERS DE VUES de l'app, pas seulement sur le
+Club : cinq feuilles sont portées par une vue autre que celle qui les déclenche, et trois sont
+des faux positifs — le déclencheur est dans la même branche, l'heuristique ne sait pas le voir.
+Les deux du Club étaient les seules vraies. **Ce n'est pas devenu un contrôle** : trois faux
+positifs sur cinq feraient un garde-fou qu'on contourne, et savoir si deux vues sont dans la
+même branche demande l'arbre d'affichage, que rien ne lit sans exécuter l'app.
+
 ## Les chantiers de l'audit
 
 Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.

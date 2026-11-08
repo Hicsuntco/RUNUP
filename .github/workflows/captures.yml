@@ -134,6 +134,21 @@ on:
         type: string
         default: "auto"
 
+# UNE SEULE SÉRIE D'IMAGES À LA FOIS, ET LA PLUS RÉCENTE GAGNE.
+#
+# Ce workflow n'avait aucun groupe, donc les exécutions s'empilaient : le 8 novembre 2026, trois
+# tournaient en même temps et se disputaient les machines macOS — l'une est restée vingt minutes
+# sur la même étape pendant que la suivante attendait. Or une série de captures d'un commit
+# dépassé ne sert à rien : l'artefact qu'on ouvre est celui de la tête de branche.
+#
+# `cancel-in-progress: true` ici, et `false` dans `testflight.yml` : la différence n'est pas une
+# préférence. TestFlight SIGNE et ENVOIE un binaire à Apple ; l'interrompre au milieu laisse un
+# envoi à moitié fait, dans un service qu'on ne contrôle pas. Celui-ci ne produit qu'un artefact,
+# qu'on peut refaire d'un bouton.
+concurrency:
+  group: captures
+  cancel-in-progress: true
+
 jobs:
   captures:
     runs-on: macos-26

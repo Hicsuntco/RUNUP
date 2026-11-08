@@ -16,7 +16,7 @@ Quatre chaînes, et chacune garantit une chose précise. Aucune ne garantit cell
 | --- | --- | --- |
 | **TestFlight** (`testflight.yml`) | 36 contrôles et 25 fichiers de cas passent, l'app compile, les tests unitaires passent, l'archive est signée et acceptée par App Store Connect | que les écrans sont justes — elle ne regarde aucune image |
 | **Serveur** (`server.yml`) | les dépendances `require` sont du CommonJS, il y a au plus douze fonctions serverless, 155 tests passent, les 84 adresses appelées par l'app répondent autre chose qu'un 404 ou un 5xx **en production**, et l'écart entre la politique de confidentialité publiée et celle du dépôt est affiché | que la logique est juste sur des données réelles : il n'y a pas de base de test |
-| **Captures** (`captures.yml`) | l'app se lance dans trois langues et deux thèmes, 28 écrans sont photographiés (21 ordinaires et 7 en grand texte), le découpage du film tombe sur les bons écrans | **ce qu'il y a sur les images.** Un vert dit deux choses : l'app n'a pas planté, un fichier a été écrit |
+| **Captures** (`captures.yml`) | l'app se lance dans trois langues et deux thèmes, 28 écrans sont photographiés (21 ordinaires et 7 en grand texte), le découpage du film tombe sur les bons écrans. Une seule série à la fois : un nouveau push annule la précédente, l'artefact qu'on ouvre étant celui de la tête de branche | **ce qu'il y a sur les images.** Un vert dit deux choses : l'app n'a pas planté, un fichier a été écrit |
 | **Fiche** (`appstore.yml`) | les textes tiennent dans les champs d'Apple, l'aperçu respecte ses règles, tout est déposé | que la fiche dit vrai |
 
 Les 36 contrôles de TestFlight sont nommés dans `.github/workflows/testflight.yml`, un par étape.

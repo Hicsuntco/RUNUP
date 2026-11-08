@@ -391,6 +391,12 @@ struct LiveRunView: View {
             Text(text)
                 .font(RUFont.sans(.body, weight: .semibold))
                 .foregroundColor(Ink.amberTexte)
+                // LA HAUTEUR VIENT DU TEXTE, PAS DU CALQUE QUI LE PORTE. Ce bandeau est posé en
+                // `.overlay` sur la rangée du haut, qui fait la hauteur d'un bouton : la hauteur
+                // proposée était donc celle d'une ligne. Au deuxième cran d'accessibilité,
+                // « Recherche du signal GPS… » s'affichait « Recherche du signal GP… ». Un
+                // message d'état tronqué est un message qui ment.
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
         // Surface neutre, l'ambre reste au texte. L'écran de course est toujours sombre : un
@@ -639,18 +645,20 @@ struct LiveRunView: View {
             .accessibilityValue(String(localized: "\(PaceModel.formatDuration(vm?.elapsedSeconds ?? 0)), \(String(format: "%.2f", locale: Locale.current, vm?.distanceKm ?? 0)) kilomètres"))
             .accessibilityAddTraits(.updatesFrequently)
 
-            HStack(spacing: 10) {
-                paceMetric
-                // No live sensor stream means no real reading — "--" rather than a fabricated
-                // number (was a fake sine-wave formula dressed up as a live measurement).
-                liveMetric(
-                    vm?.heartRate.map { "\($0)" } ?? "--",
-                    String(localized: "FC · \(appState.profile.todaySession.zone)"),
-                    Ink.accent
-                )
-                // `liveMetric` rend son libellé par un `Text(String)` nu — mais « KCAL » est un
-                // symbole, il ne se traduit pas.
-                liveMetric("\(Int(vm?.kcal ?? 0))", "KCAL", Ink.cyan)
+            // TROIS DE FRONT QUAND ÇA TIENT, L'UNE SOUS L'AUTRE SINON.
+            //
+            // Trois cellules à un tiers de l'écran chacune, c'est 118 points. Au deuxième cran
+            // d'accessibilité, l'allure y est dessinée à 54 : « --:-- » n'y entre plus, et le
+            // texte passait à la ligne DANS sa cellule — le libellé « ALLURE » descendait d'un
+            // cran et ne s'alignait plus avec « FC » ni « KCAL ». Vu sur la capture en grand
+            // texte, sur l'écran qu'on lit en courant.
+            //
+            // `ViewThatFits` essaie la rangée, et prend la colonne quand elle ne tient pas.
+            // C'est le patron déjà employé par `RUMetricRow` et par les tuiles de records — et
+            // c'est lui qui avait permis de lever le plafond de titrage de 1,6 à 2,0 ×.
+            ViewThatFits(in: .horizontal) {
+                mesuresDeCourse(enColonne: false)
+                mesuresDeCourse(enColonne: true)
             }
 
             HStack(spacing: 18) {
@@ -658,7 +666,13 @@ struct LiveRunView: View {
                     Haptics.impact(.heavy)
                     showStopConfirm = true
                 }) {
+                    // LE MOT RÉTRÉCIT, LE CERCLE NON — et c'est la règle de la barre d'onglets.
+                    // À 52 points de diamètre, « STOP » au deuxième cran d'accessibilité
+                    // s'affichait « ST… ». Faire grandir les trois commandes ferait déborder la
+                    // rangée (52 + 70 + 52 à 1,94 × dépassent la largeur de l'écran), et ces
+                    // commandes-là se visent du pouce en courant : leur taille est une sécurité.
                     Text("STOP").displayStyle(.caption).tracking(1).foregroundColor(.white)
+                        .lineLimit(1).minimumScaleFactor(0.6)
                 }
                 .frame(width: 52, height: 52)
                 .background(Color.white.opacity(0.08), in: Circle())
@@ -824,6 +838,29 @@ struct LiveRunView: View {
         .accessibilityLabel(nomParle)
         .accessibilityValue(valeurParlee)
         .accessibilityAddTraits(.updatesFrequently)
+    }
+
+    /// Les trois mesures du bas, en rangée ou en colonne — mêmes cellules, même ordre.
+    @ViewBuilder
+    private func mesuresDeCourse(enColonne: Bool) -> some View {
+        let cellules = Group {
+            paceMetric
+            // No live sensor stream means no real reading — "--" rather than a fabricated
+            // number (was a fake sine-wave formula dressed up as a live measurement).
+            liveMetric(
+                vm?.heartRate.map { "\($0)" } ?? "--",
+                String(localized: "FC · \(appState.profile.todaySession.zone)"),
+                Ink.accent
+            )
+            // `liveMetric` rend son libellé par un `Text(String)` nu — mais « KCAL » est un
+            // symbole, il ne se traduit pas.
+            liveMetric("\(Int(vm?.kcal ?? 0))", "KCAL", Ink.cyan)
+        }
+        if enColonne {
+            VStack(spacing: 10) { cellules }
+        } else {
+            HStack(spacing: 10) { cellules }
+        }
     }
 
     private func liveMetric(_ value: String, _ label: String, _ color: Color) -> some View {

@@ -239,6 +239,36 @@ restent où elles sont.
 Classées par ce qui les contient : **97 à côté d'un texte** (elles doivent grandir avec lui),
 **60 dans un cadre chiffré** (les faire grandir les ferait déborder), 15 ni l'un ni l'autre.
 
+### Ce que les quatre captures ont trouvé, et ce qui est corrigé
+
+Douze mesures d'écart entre chaque capture en grand texte et son ordinaire : **17,3 à 31,3**. Le
+réglage a donc bien pris partout, et ce qu'on voit est l'app.
+
+**L'écran de course — celui qu'on lit à bout de bras — cassait en trois endroits.**
+
+| Défaut | Correctif |
+| --- | --- |
+| « Recherche du signal **GP…** » | le bandeau est posé en `.overlay` sur une rangée haute d'un bouton : la hauteur proposée était celle d'une ligne. `fixedSize(vertical:)` lui rend sa hauteur. |
+| le panneau de mesures s'effondrait — les tirets d'allure passaient à la ligne et « ALLURE » ne s'alignait plus | `ViewThatFits` : trois de front quand ça tient, l'une sous l'autre sinon. Le patron de `RUMetricRow`. |
+| le bouton d'arrêt affichait « **ST…** » | le mot rétrécit, le cercle non. Faire grandir les trois commandes ferait déborder la rangée (52 + 70 + 52 à 1,94 ×), et leur taille est une sécurité quand on les vise en courant. |
+
+**L'accueil.** « TA JOURNÉE » chevauchait l'anneau : l'anneau fait 186 points, son trait 15 × 0,74
+sur un canevas de 100, donc un carré inscrit de ≈ 102 points — le mot en demandait plus du
+double. Les deux lignes rétrécissent pour y tenir ; l'anneau, lui, ne grandit pas (il déborderait
+de l'écran). Et le tracé de la dernière sortie passait par-dessus les chiffres : le bandeau était
+haut de 150 points fixes, il suit maintenant le texte, plafonné à 2,0 × comme la typographie —
+c'est la proportion pour laquelle le voile dégradé a été réglé.
+
+**Le bilan de la semaine.** La pastille d'écart chevauchait le chiffre qu'elle commente. Elle
+rejoint le flux aux tailles d'accessibilité. Et l'écran Stats montrait déjà le MÊME écart dans le
+flux ET avec son unité — « ▼ 16,6 km » — là où le bilan affichait « ▼ 16,6 » tout court : un
+nombre sans unité à côté d'un total en kilomètres se lit comme un pourcentage. Les deux écrans
+disent maintenant la même chose de la même façon.
+
+**Stats.** « prochain palier : 30 jours » s'affichait « prochain palier :… » — exactement le
+défaut que le commentaire de ce bloc existe pour empêcher : « une barre aux deux tiers sans son
+palier est un pourcentage de rien ». Deux lignes plutôt qu'une.
+
 ### Mais d'abord : regarder l'app en grand texte
 
 Le plafond de `RUFont` est passé de 1,6 × à 2,0 × sur la foi d'un travail de réorganisation —

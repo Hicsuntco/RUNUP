@@ -13,6 +13,9 @@ import SwiftData
 struct WeeklyRecapView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// La pastille d'écart flotte dans un coin — sauf aux tailles d'accessibilité, où elle
+    /// passe dans le flux. Voir `statTile`.
+    @Environment(\.dynamicTypeSize) private var tailleDuTexte
     @Query(sort: \RunRecord.date, order: .reverse) private var allRuns: [RunRecord]
     @State private var chartRevealed = false
     private var profile: UserProfile { appState.profile }
@@ -168,6 +171,9 @@ struct WeeklyRecapView: View {
                 .font(RUFont.sans(.small, weight: .medium))
                 .foregroundColor(RUColor.text3)
                 .lineLimit(1).minimumScaleFactor(0.8)
+            if let chip, tailleDuTexte.isAccessibilitySize {
+                StatChip(text: chip, color: chipColor)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(RUSpacing.cardPadding)
@@ -175,8 +181,22 @@ struct WeeklyRecapView: View {
         // Floats in a corner instead of sharing the vertical flow, so the one tile that has a
         // chip (the km delta vs. last week) doesn't push its own number down relative to the
         // other 3 tiles that don't.
+        //
+        // ── SAUF AUX TAILLES D'ACCESSIBILITÉ, OÙ LE COIN N'EST PLUS LIBRE ────────────────
+        //
+        // Au deuxième cran, « 14,1 » occupe toute la largeur de la tuile et la pastille lui
+        // passait dessus : les deux se chevauchaient, le chiffre et son écart. Vu sur la
+        // capture en grand texte.
+        //
+        // Elle rejoint alors le flux, sous le libellé. L'argument d'origine — ne pas décaler
+        // ce chiffre-là par rapport aux trois autres — tient aux tailles ordinaires, où les
+        // quatre tuiles s'alignent ; à ce cran-là, chaque tuile est déjà plus haute que large
+        // et l'alignement ne se lit plus de toute façon.
+        //
+        // C'est aussi ce que fait déjà l'écran Stats, qui montre le MÊME écart dans le flux,
+        // et avec son unité — « ▼ 16,6 km ». Deux écrans, un seul traitement.
         .overlay(alignment: .topTrailing) {
-            if let chip {
+            if let chip, !tailleDuTexte.isAccessibilitySize {
                 StatChip(text: chip, color: chipColor).padding(8)
             }
         }

@@ -43,6 +43,19 @@ struct HomeView: View {
     /// taille du texte — voir `bandeDeSemaine(avecQuantieme:)`.
     @ScaledMetric(relativeTo: .body) private var tailleMarqueur: CGFloat = 19
 
+    /// La hauteur du bandeau de la dernière sortie, qui suit le réglage de taille du texte.
+    ///
+    /// LE CADRE SUIT LE TEXTE, PARCE QUE C'EST LE TEXTE QUI EST DESSUS. Le bandeau est un tracé
+    /// pleine image avec la date et les chiffres posés en blanc par-dessus, et un voile dégradé
+    /// qui garantit la lisibilité. À 150 points fixes, au deuxième cran d'accessibilité, les
+    /// chiffres montaient au-delà du voile et le trait rose leur passait en travers — vu sur la
+    /// capture en grand texte. En grandissant avec eux, le bandeau garde la proportion pour
+    /// laquelle le voile a été réglé.
+    ///
+    /// Plafonné à 300, soit 2,0 × — le même plafond que la typographie, et pour la même raison :
+    /// au-delà, personne n'a regardé.
+    @ScaledMetric(relativeTo: .body) private var hauteurDeLaTrace: CGFloat = 150
+
     private var profile: UserProfile { appState.profile }
     private var isFreeRun: Bool { profile.programPhase == .freerun }
     private var unreadCount: Int { unreadNotifications.count }
@@ -654,7 +667,7 @@ struct HomeView: View {
                     }
                     .padding(14)
                 }
-                .frame(height: 150)
+                .frame(height: min(hauteurDeLaTrace, 300))
                 .background(RUColor.card)
                 .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous)
@@ -995,6 +1008,18 @@ struct HomeView: View {
                         animateOnAppear: true,
                         strokeScale: 0.74
                     )
+                    // LE TEXTE RESTE DANS L'ANNEAU, ET L'ANNEAU NE BOUGE PAS.
+                    //
+                    // L'anneau fait 186 points, son trait 15 × 0,74 sur un canevas de 100 —
+                    // soit un diamètre intérieur de (100 − 2 × 11,1) × 1,86 ≈ 145 points, et un
+                    // carré inscrit de ≈ 102. Au deuxième cran d'accessibilité, « TA JOURNÉE »
+                    // en demandait plus du double : le mot chevauchait le trait de l'anneau.
+                    // Vu sur la capture en grand texte.
+                    //
+                    // Les deux lignes rétrécissent donc pour tenir. C'est le même arbitrage que
+                    // la barre d'onglets : ce qui porte une GÉOMÉTRIE ne grandit pas, ce qui
+                    // porte du texte s'adapte. Faire grandir l'anneau le ferait déborder de
+                    // l'écran au même cran.
                     VStack(spacing: 2) {
                         // `verbatim` : une fraction n'est pas une phrase, elle n'a rien à faire
                         // dans le catalogue de traduction.
@@ -1012,6 +1037,9 @@ struct HomeView: View {
                             .textCase(.uppercase)
                             .tracking(1.6)
                     }
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.4)
+                    .frame(maxWidth: 102)
                 }
                 // LA LÉGENDE LIT LA MÊME LISTE QUE L'ANNEAU, et c'est toute la correction.
                 //

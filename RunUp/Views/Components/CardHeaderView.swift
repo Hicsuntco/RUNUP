@@ -191,10 +191,15 @@ struct RUStatTile: View {
                 // en est et dont la note dit vers QUOI. L'une sans l'autre ne veut rien dire :
                 // une barre aux deux tiers sans son palier est un pourcentage de rien.
                 if let footnote {
+                    // DEUX LIGNES PLUTÔT QU'UNE, ET LA RAISON EST JUSTE AU-DESSUS. À une ligne
+                    // et 0,8 de réduction, « prochain palier : 30 jours » s'affichait
+                    // « prochain palier :… » au deuxième cran d'accessibilité — exactement le
+                    // défaut que ce bloc existe pour empêcher : une barre aux deux tiers sans
+                    // son palier est un pourcentage de rien. Vu sur la capture en grand texte.
                     Text(LocalizedStringKey(footnote))
                         .font(RUFont.sans(.small))
                         .foregroundColor(RUColor.text3)
-                        .lineLimit(1).minimumScaleFactor(0.8)
+                        .lineLimit(2).minimumScaleFactor(0.7)
                 }
             }
         }

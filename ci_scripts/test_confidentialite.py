@@ -46,20 +46,29 @@ FONCTIONNALITE = "NSPrivacyCollectedDataTypePurposeAppFunctionality"
 ANALYTIQUE = "NSPrivacyCollectedDataTypePurposeAnalytics"
 
 
-def lance(octets: bytes, corps_du_tableau: str, ecrire: bool = False, marqueurs: bool = True):
+def lance(octets: bytes, corps_du_tableau: str, ecrire: bool = False, marqueurs: bool = True,
+          releve=None, poser_releve: bool = False):
+    """`releve` : None, ou (date, empreinte) — empreinte "auto" = celle du tableau donné."""
     with tempfile.TemporaryDirectory() as d:
         racine = pathlib.Path(d)
         m = racine / "PrivacyInfo.xcprivacy"
         m.write_bytes(octets)
         f = racine / "APP_STORE_LISTING.md"
         if marqueurs:
-            f.write_text(f"# Fiche\n\n{ck.DEBUT}\n\n{corps_du_tableau}\n\n{ck.FIN}\n\nSuite.\n",
-                         encoding="utf-8")
+            ligne = ""
+            if releve is not None:
+                date, emp = releve
+                if emp == "auto":
+                    emp = ck.empreinte(corps_du_tableau)
+                ligne = f"\n<!-- confidentialité: relevé {date} empreinte={emp} -->"
+            f.write_text(f"# Fiche\n\n{ck.DEBUT}\n\n{corps_du_tableau}\n\n{ck.FIN}"
+                         f"{ligne}\n\nSuite.\n", encoding="utf-8")
         else:
             f.write_text("# Fiche\n\nPas de marqueurs ici.\n", encoding="utf-8")
         avant = (ck.MANIFESTE, ck.FICHE, sys.argv)
         ck.MANIFESTE, ck.FICHE = m, f
-        sys.argv = ["check_confidentialite.py"] + (["--ecrire"] if ecrire else [])
+        sys.argv = (["check_confidentialite.py"] + (["--ecrire"] if ecrire else [])
+                    + (["--releve"] if poser_releve else []))
         try:
             tampon = io.StringIO()
             with contextlib.redirect_stdout(tampon):
@@ -78,11 +87,12 @@ SON_TABLEAU = ("| Catégorie | Type de donnée | Lié à l'utilisatrice | Suivi 
                "| Diagnostics | **Crash Data** | Oui | Non | App Functionality |")
 
 
-@cas_de("manifeste et fiche d'accord : rien à signaler")
+@cas_de("manifeste, fiche et relevé d'accord : rien à signaler")
 def _():
-    code, sortie, _ = lance(manifeste(UN_TYPE), SON_TABLEAU)
+    code, sortie, _ = lance(manifeste(UN_TYPE), SON_TABLEAU, releve=("2026-11-08", "auto"))
     assert code == 0, sortie
     assert "1 types" in sortie, sortie
+    assert "2026-11-08" in sortie, "la date du relevé n'est pas dite : " + sortie
 
 
 @cas_de("UN TYPE AJOUTÉ AU MANIFESTE : refus, et le bon tableau est affiché")
@@ -105,9 +115,10 @@ def _():
     assert code == 0, sortie
     assert "Performance Data" in fiche, fiche
     assert "Suite." in fiche, "le reste de la fiche a été perdu :\n" + fiche
-    # Et une seconde passe sans --ecrire doit maintenant passer.
+    assert "périmé" in sortie, "--ecrire ne dit pas que le relevé est à refaire : " + sortie
+    # Et une seconde passe, relevé reposé, doit maintenant passer.
     corps = fiche.split(ck.DEBUT, 1)[1].split(ck.FIN, 1)[0].strip()
-    code, sortie, _ = lance(deux, corps)
+    code, sortie, _ = lance(deux, corps, releve=("2026-11-08", "auto"))
     assert code == 0, sortie
 
 
@@ -167,6 +178,75 @@ def _():
                            [FONCTIONNALITE, ANALYTIQUE]))
     code, sortie, _ = lance(deux_fins, SON_TABLEAU)
     assert "App Functionality, Analytics" in sortie, sortie
+
+
+@cas_de("LE DÉFAUT DU 8 NOVEMBRE : le dépôt est d'accord avec lui-même, la fiche d'Apple non")
+def _():
+    # Ce jour-là, cinq types manquaient chez Apple, trois catégories y étaient déclarées non
+    # liées, et Product Interaction portait la mauvaise finalité — pendant que ce contrôle
+    # était vert, parce qu'il ne comparait que deux fichiers du dépôt. Le relevé est la seule
+    # chose qui pouvait rougir : il dit « cette fiche a été vue contre un AUTRE tableau ».
+    deux = manifeste(UN_TYPE,
+                     ("NSPrivacyCollectedDataTypePerformanceData", True, False, [FONCTIONNALITE]))
+    son_tableau = ("| Catégorie | Type de donnée | Lié à l'utilisatrice | Suivi | Finalités |\n"
+                   "| --- | --- | --- | --- | --- |\n"
+                   "| Diagnostics | **Crash Data** | Oui | Non | App Functionality |\n"
+                   "| Diagnostics | **Performance Data** | Oui | Non | App Functionality |")
+    # La fiche du dépôt A SUIVI le manifeste ; seul le relevé date d'avant.
+    code, sortie, _ = lance(deux, son_tableau,
+                            releve=("2026-10-08", ck.empreinte(SON_TABLEAU)))
+    assert code == 1, "le contrôle est vert alors que la fiche d'Apple n'a pas été revue :\n" + sortie
+    assert "2026-10-08" in sortie, sortie
+    assert "Performance Data" in sortie, "le tableau à saisir n'est pas affiché :\n" + sortie
+    assert "App Store Connect" in sortie, sortie
+
+
+@cas_de("aucun relevé : le contrôle refuse plutôt que de supposer que quelqu'un a regardé")
+def _():
+    code, sortie, _ = lance(manifeste(UN_TYPE), SON_TABLEAU)
+    assert code == 1, sortie
+    assert "--releve" in sortie, sortie
+
+
+@cas_de("--releve date la fiche, et la passe suivante est verte")
+def _():
+    code, sortie, fiche = lance(manifeste(UN_TYPE), SON_TABLEAU, poser_releve=True)
+    assert code == 0, sortie
+    trouve = ck.RELEVE.search(fiche)
+    assert trouve, "aucune ligne de relevé posée :\n" + fiche
+    assert trouve.group(2) == ck.empreinte(SON_TABLEAU), fiche
+    assert "Suite." in fiche, "le reste de la fiche a été perdu :\n" + fiche
+    code, sortie, _ = lance(manifeste(UN_TYPE), SON_TABLEAU,
+                            releve=(trouve.group(1), trouve.group(2)))
+    assert code == 0, sortie
+
+
+@cas_de("--releve REFUSE de dater un tableau qui ne correspond pas encore au manifeste")
+def _():
+    # Sinon le relevé certifierait une fiche contre un tableau que personne n'a jamais saisi :
+    # le contrôle redeviendrait vert en ayant perdu la seule chose qu'il savait.
+    deux = manifeste(UN_TYPE,
+                     ("NSPrivacyCollectedDataTypePerformanceData", True, False, [FONCTIONNALITE]))
+    code, sortie, fiche = lance(deux, SON_TABLEAU, poser_releve=True)
+    assert code == 1, sortie
+    assert ck.RELEVE.search(fiche) is None, "un relevé a été posé quand même :\n" + fiche
+    assert "--ecrire" in sortie, sortie
+
+
+@cas_de("--releve REMPLACE le relevé d'avant, il n'en empile pas un second")
+def _():
+    _, _, fiche = lance(manifeste(UN_TYPE), SON_TABLEAU, poser_releve=True,
+                        releve=("2020-01-01", "aaaaaaaaaaaa"))
+    assert len(ck.RELEVE.findall(fiche)) == 1, "deux lignes de relevé :\n" + fiche
+    assert "2020-01-01" not in fiche, fiche
+
+
+@cas_de("une ligne de relevé mal formée compte pour pas de relevé")
+def _():
+    # Mieux vaut refuser que lire « empreinte=» comme une empreinte qui correspond.
+    code, sortie, _ = lance(manifeste(UN_TYPE), SON_TABLEAU, releve=("8-11-26", "auto"))
+    assert code == 1, sortie
+    assert "--releve" in sortie, sortie
 
 
 @cas_de("le vrai dépôt : la fiche et le manifeste sont d'accord")

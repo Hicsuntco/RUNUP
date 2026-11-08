@@ -429,41 +429,54 @@ par catégorie, dans l'ordre du formulaire. C'est à la main ou rien : l'API d'A
 ne sait pas écrire cette fiche — vérifié dans la spécification OpenAPI d'Apple (v4.6), 1 027
 chemins et aucun pour la confidentialité.
 
-### CE QUI EST DÉCLARÉ CHEZ APPLE AUJOURD'HUI, ET NE CORRESPOND PAS
+### CE QUI ÉTAIT DÉCLARÉ CHEZ APPLE, ET QUI A ÉTÉ CORRIGÉ LE 8 NOVEMBRE 2026
 
-Relevé le 8 novembre 2026 sur la fiche elle-même, dans App Store Connect — pas sur la page
-publique, qui ne montre que les catégories. Dix types déclarés, contre quatorze au manifeste :
+Relevé ce jour-là sur la fiche elle-même, dans App Store Connect. Dix types déclarés contre
+quatorze au manifeste — et la 3.3, publiée le 3 novembre, était partie ainsi.
 
 > « 10 data types collected from this app: Contacts, User ID, Product Interaction, Name,
 > Other User Content, Health, Email Address, Precise Location, Fitness, Other Usage Data »
 
-**CINQ TYPES MANQUENT.** Ce n'est pas un détail de forme : chacun est une collecte réelle que la
-fiche ne déclare pas.
+**CINQ TYPES MANQUAIENT.** Chacun est une collecte réelle que la fiche ne déclarait pas :
 
-| À ajouter | Catégorie | Ce que l'app en fait |
+| Ajouté | Catégorie | Ce que l'app en fait |
 | --- | --- | --- |
 | **Coarse Location** | Location | la ville et le pays partent avec un itinéraire publié |
 | **Photos or Videos** | User Content | la photo de profil et celle d'un itinéraire, stockées sur le CDN |
 | **Device ID** | Identifiers | le jeton APNs, et l'identifiant anonyme de mesure d'audience |
-| **Crash Data** | Diagnostics | les rapports de panne (8 novembre 2026) |
+| **Crash Data** | Diagnostics | les rapports de panne |
 | **Performance Data** | Diagnostics | gels, processeur, disque, lancements lents |
 
-**TROIS CATÉGORIES SONT DÉCLARÉES « NON LIÉES »** alors que le manifeste les déclare liées :
-User Content, Health & Fitness, Location. Vérifié dans l'historique du manifeste : c'est le cas
-depuis le 8 octobre au moins, donc la 3.3 publiée le 3 novembre est partie ainsi. C'est l'écart
-qui pèse le plus, parce qu'il déclare MOINS que ce que l'app fait — ces trois catégories voyagent
-rattachées au compte : un itinéraire publié porte son autrice, une sortie au fil du club aussi.
+**CINQ TYPES ÉTAIENT DÉCLARÉS « NON LIÉS »** alors que le manifeste les déclare liés : Photos or
+Videos, Other User Content, Health, Fitness et Precise Location. C'est l'écart qui pesait le plus,
+parce qu'il déclarait MOINS que ce que l'app fait — ces données voyagent rattachées au compte : un
+itinéraire publié porte son autrice, une sortie au fil du club aussi.
 
-**UN TYPE EST DÉCLARÉ EN TROP** : « Other Usage Data », que le manifeste ne porte pas — les
-événements d'usage sont couverts par Product Interaction. Déclarer en trop ne fait rejeter
-personne ; à retirer ou à laisser, c'est sans conséquence.
+**UNE FINALITÉ ÉTAIT FAUSSE** : Product Interaction portait « App Functionality » quand le
+manifeste dit « Analytics ». Seul écart qu'aucune capture d'écran n'avait montré ; il a fallu lire
+la fiche bloc par bloc.
 
-**Et Contacts** était l'inverse : déclaré ici, absent du manifeste. Corrigé dans le manifeste
-plutôt qu'enlevé de la fiche, en appliquant le raisonnement écrit plus bas — la dispense se
-plaide, une déclaration se lit.
+**UN TYPE ÉTAIT DÉCLARÉ EN TROP** : « Other Usage Data », que le manifeste ne porte pas — les
+événements d'usage sont couverts par Product Interaction, dont c'est la définition chez Apple
+(« taps, clics, défilement, et autres informations sur la façon dont la personne utilise l'app »).
+Retiré, pour que la fiche et le manifeste déclarent les mêmes quatorze types.
 
-Donc, dans le formulaire : **ajouter cinq types** et **corriger trois réponses « lié »** de Non à
-Oui. Les neuf types communs sont déjà justes.
+Vérifié après publication sur la page publique de l'App Store, storefronts français et américain :
+les huit catégories sont du côté « Données établissant un lien avec vous », et le bloc « Données
+n'établissant aucun lien avec vous » a disparu.
+
+### POURQUOI RIEN N'AVAIT ROUGI
+
+`check_confidentialite.py` était vert pendant tout ce temps, et il avait raison de l'être : il
+compare le manifeste et le tableau ci-dessous, deux fichiers de ce dépôt, et les deux étaient
+d'accord. Le troisième endroit — la fiche d'Apple, la seule que les gens lisent — n'était dans
+aucune comparaison, et aucune API ne sait la relire.
+
+Depuis le 8 novembre 2026, la fiche porte la **date de son dernier relevé à la main** et
+l'**empreinte du tableau qui était vrai ce jour-là**, juste sous le tableau. Le manifeste bouge,
+l'empreinte ne correspond plus, le contrôle rougit : il ne dit pas « la fiche est fausse », qu'il
+ne sait pas, mais « la fiche a été vue contre un autre tableau que celui-ci ». Une fois la saisie
+faite chez Apple, `python3 ci_scripts/check_confidentialite.py --releve` repose la date.
 
 <!-- confidentialité: début (tableau dérivé du manifeste par check_confidentialite.py) -->
 
@@ -485,6 +498,7 @@ Oui. Les neuf types communs sont déjà justes.
 | Diagnostics | **Performance Data** | Oui | Non | App Functionality |
 
 <!-- confidentialité: fin -->
+<!-- confidentialité: relevé 2026-11-08 empreinte=b76de973e66f -->
 
 **Tracking : non.** Aucun SDK tiers, aucun IDFA, aucun partage avec un courtier de données — donc
 pas d'App Tracking Transparency à afficher.

@@ -29,6 +29,21 @@ corrigé, et il n'y a qu'à le coller.
 Ce qu'il ne fait PAS : vérifier ce qui est RÉELLEMENT saisi chez Apple. Personne ne peut le lire.
 Il garantit que la consigne est juste, pas qu'elle a été suivie.
 
+# LE RELEVÉ, PARCE QUE « LA CONSIGNE EST JUSTE » NE SUFFISAIT PAS
+
+Le 8 novembre 2026, la consigne était juste depuis le matin et la fiche d'Apple était fausse
+depuis un mois : cinq types manquants, trois catégories déclarées non liées, et une finalité à
+côté (Product Interaction porté sur « App Functionality » quand le manifeste dit « Analytics »).
+Ce contrôle était VERT tout du long, et il avait raison de l'être : il comparait deux fichiers du
+dépôt, et les deux étaient d'accord. Le troisième endroit, celui qui compte, n'était dans aucune
+comparaison.
+
+Il ne peut toujours pas lire la fiche. Mais il peut savoir qu'elle est PEUT-ÊTRE en retard : la
+fiche porte la date de son dernier relevé à la main, et l'empreinte du tableau qui était vrai ce
+jour-là. Le manifeste change, l'empreinte ne correspond plus, le contrôle rougit — non pas pour
+dire « la fiche est fausse », qu'il ne sait pas, mais « la fiche a été relevée contre un autre
+tableau que celui-ci ». `--releve` la repose, APRÈS la saisie chez Apple et pas avant.
+
 # LES LIBELLÉS VIENNENT D'APPLE, PAS DE MA MÉMOIRE
 
 Les catégories, les types et les finalités ci-dessous sont relevés sur
@@ -37,8 +52,11 @@ manifeste qui n'y figure pas fait ARRÊTER ce script : il vaut mieux qu'il se ta
 qu'il invente une ligne de formulaire.
 """
 import argparse
+import datetime
+import hashlib
 import pathlib
 import plistlib
+import re
 import sys
 
 RACINE = pathlib.Path(__file__).resolve().parent.parent
@@ -47,6 +65,10 @@ FICHE = RACINE / "APP_STORE_LISTING.md"
 
 DEBUT = "<!-- confidentialité: début (tableau dérivé du manifeste par check_confidentialite.py) -->"
 FIN = "<!-- confidentialité: fin -->"
+
+#: Le relevé à la main de la fiche d'Apple : quand, et contre quel tableau.
+RELEVE = re.compile(
+    r"<!-- confidentialité: relevé (\d{4}-\d{2}-\d{2}) empreinte=([0-9a-f]{12}) -->")
 
 #: Clé du manifeste → (catégorie du formulaire, libellé du type). Relevé sur la page d'Apple.
 TYPES = {
@@ -135,18 +157,76 @@ def bloc_de_la_fiche() -> str:
     return texte.split(DEBUT, 1)[1].split(FIN, 1)[0].strip()
 
 
+def empreinte(tableau_texte: str) -> str:
+    """L'identité du tableau, en douze caractères. Il change, elle change."""
+    return hashlib.sha256(tableau_texte.encode("utf-8")).hexdigest()[:12]
+
+
+def releve_de_la_fiche():
+    """(date, empreinte) du dernier relevé à la main, ou None si la fiche n'en porte pas."""
+    trouve = RELEVE.search(FICHE.read_text(encoding="utf-8"))
+    return (trouve.group(1), trouve.group(2)) if trouve else None
+
+
+def poser_le_releve(attendu: str, aujourdhui: str) -> None:
+    """Écrit — ou remplace — la ligne de relevé juste après la fin du tableau."""
+    texte = FICHE.read_text(encoding="utf-8")
+    ligne = f"<!-- confidentialité: relevé {aujourdhui} empreinte={empreinte(attendu)} -->"
+    if RELEVE.search(texte):
+        texte = RELEVE.sub(lambda _: ligne, texte, count=1)
+    else:
+        texte = texte.replace(FIN, f"{FIN}\n{ligne}", 1)
+    FICHE.write_text(texte, encoding="utf-8")
+
+
 def main() -> int:
     options = argparse.ArgumentParser(description=__doc__)
     options.add_argument("--ecrire", action="store_true",
                          help="réécrire le tableau dans la fiche au lieu de refuser")
+    options.add_argument("--releve", action="store_true",
+                         help="dater le relevé de la fiche d'Apple — APRÈS l'avoir saisie")
     args = options.parse_args()
 
     attendu = tableau(lignes_attendues())
     trouve = bloc_de_la_fiche()
 
+    if args.releve:
+        if trouve != attendu:
+            print("Le tableau de la fiche ne correspond pas encore au manifeste :")
+            print("dater le relevé maintenant daterait le mauvais tableau.")
+            print("    `python3 ci_scripts/check_confidentialite.py --ecrire` d'abord.")
+            return 1
+        aujourdhui = datetime.date.today().isoformat()
+        poser_le_releve(attendu, aujourdhui)
+        print(f"Fiche App Store Connect relevée le {aujourdhui}, "
+              f"empreinte {empreinte(attendu)}.")
+        return 0
+
     if trouve == attendu:
         n = len(attendu.splitlines()) - 2
-        print(f"Confidentialité : {n} types de données, la fiche et le manifeste sont d'accord.")
+        releve = releve_de_la_fiche()
+        if releve is None:
+            print(f"{FICHE.name} ne dit pas quand la fiche d'Apple a été relevée.\n")
+            print("Le manifeste et la consigne sont d'accord — mais rien ici ne dit que la fiche")
+            print("d'App Store Connect a jamais été mise en face. Va la lire, corrige-la s'il le")
+            print("faut, puis :")
+            print("    `python3 ci_scripts/check_confidentialite.py --releve`")
+            return 1
+        date, vue = releve
+        if vue != empreinte(attendu):
+            print(f"La fiche d'Apple a été relevée le {date}, contre un AUTRE tableau "
+                  f"que celui-ci.\n")
+            print(f"    relevé ce jour-là : {vue}")
+            print(f"    tableau d'aujourd'hui : {empreinte(attendu)}\n")
+            print("Le manifeste a bougé depuis. Ce contrôle ne sait pas lire la fiche d'Apple —")
+            print("il sait seulement qu'elle n'a pas été revue depuis ce changement. Voici ce")
+            print("qu'elle doit dire :\n")
+            print(attendu)
+            print("\nUne fois saisi dans App Store Connect → Confidentialité de l'app :")
+            print("    `python3 ci_scripts/check_confidentialite.py --releve`")
+            return 1
+        print(f"Confidentialité : {n} types de données, la fiche et le manifeste sont d'accord "
+              f"(fiche Apple relevée le {date}).")
         return 0
 
     if args.ecrire:
@@ -155,6 +235,7 @@ def main() -> int:
         _, apres = reste.split(FIN, 1)
         FICHE.write_text(f"{avant}{DEBUT}\n\n{attendu}\n\n{FIN}{apres}", encoding="utf-8")
         print(f"Tableau réécrit dans {FICHE.name}.")
+        print("Le relevé de la fiche d'Apple est maintenant périmé : saisis-la, puis `--releve`.")
         return 0
 
     print(f"Le tableau de {FICHE.name} ne correspond plus au manifeste.\n")

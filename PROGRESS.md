@@ -142,6 +142,29 @@ et un outil qui compte ce pixel-là dit « tout a changé » à chaque fois. Le 
 là à côté de la moyenne parce qu'un petit bloc changé du tout au tout ne pèse presque rien sur la
 moyenne d'une image de 2 796 points, et que c'est exactement la forme d'un défaut de découpage.
 
+**Découper une pile SwiftUI n'est pas neutre, et deux questions restent sans réponse sûre.**
+Le classement est sorti de `ClubView` sans histoire : c'était un enfant unique d'un `Group`, le
+sortir ne change rien à la mise en page, et TestFlight est vert dessus. Les trois sections de
+pépites — ce que le club prépare, les séances tenues, les records — étaient au contraire trois
+enfants DIRECTS d'une pile espacée de 24, et les regrouper en fait un seul enfant. Deux
+comportements décident alors du résultat, et aucun des deux ne se lit dans la documentation :
+
+1. **Une pile sans enfant est-elle espacée comme une vue vide ?** Quand les trois sections se
+   taisent — un club tout neuf — chacune rendait une `EmptyView`, et une pile n'espace pas
+   autour d'une `EmptyView`. Une pile vide est, elle, une vue de hauteur nulle mais présente.
+   Quarante-huit points de blanc apparaîtraient là où l'aperçu a justement été retravaillé pour
+   ne plus montrer de sections vides.
+2. **`.task` part-il sur un `Group` dont le contenu est vide ?** La parade au point 1 est de ne
+   rien rendre quand il n'y a rien — mais `highlights` vaut `nil` au premier rendu, toujours,
+   donc la condition est fausse au moment même où le chargement doit partir. Les sources se
+   contredisent : les unes disent que `.task` ne part jamais sur un `Group` vide, une autre
+   qu'Apple l'a traité à part depuis iOS 26. Ce n'est pas une question à trancher par vote.
+
+L'extraction a donc été annulée, et la bonne réponse est celle que le relevé indiquait déjà :
+sortir les données et le réseau du club dans un magasin observable, et ne laisser aux vues que
+de l'affichage. Six états sur trente sont partagés par trois régions ou plus, et ce sont
+exactement ceux-là.
+
 ## Les chantiers de l'audit
 
 Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
@@ -160,7 +183,7 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 | 10 | Valeurs en dur → jetons du design system, les 15 % restants | 1,5 j | **fait** — il en restait six, pas 15 % |
 | 11 | Dépendances serveur : `jose` 6 et `bcryptjs` 3 | 0,5 j | **fait** — après une panne de onze minutes, une reproduction sur aperçu et un correctif éprouvé |
 | 12 | Accessibilité : tailles de texte dynamiques, indices VoiceOver | 1,5 j | **en cours** — quatre écrans photographiés au deuxième cran, dix défauts vus et corrigés |
-| 13 | `ClubView.swift`, 2 721 lignes, à découper | 2 j | **commencé** — l'instrument d'abord (`comparer.py`), puis `boardDivider` → `RUFilet` |
+| 13 | `ClubView.swift`, 2 721 lignes, à découper | 2 j | **en cours** — 2 721 → 2 423 lignes ; la suite demande un magasin observable |
 | 14 | Rapport de plantage maison, posté sur notre serveur | 1,5 j | à faire — décidé le 7 novembre |
 
 Le 14 est arrivé après coup, et je le ferais passer devant les finitions de design : c'est le seul

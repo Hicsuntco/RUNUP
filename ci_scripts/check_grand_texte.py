@@ -6,11 +6,11 @@
 `RUFont` plafonne la croissance du texte à 2,0 ×, et ce plafond a été relevé de 1,6 × sur la foi
 d'un travail de réorganisation : rangées de mesures qui passent en colonne, bande des sept jours
 qui laisse tomber le quantième, barre d'onglets qui laisse tomber ses libellés. Tout cela est
-écrit, commenté — et n'a jamais été PHOTOGRAPHIÉ. Quatre captures le montrent maintenant.
+écrit, commenté — et n'a jamais été PHOTOGRAPHIÉ. Sept captures le montrent maintenant.
 
 Reste qu'une capture verte ne prouve que deux choses : l'app n'a pas planté, et un fichier a été
 écrit. Elle ne dit rien de ce qu'il y a dessus. Si `-UIPreferredContentSizeCategoryName` cessait
-d'être lu — un renommage chez Apple, un drapeau mal orthographié — les quatre images seraient des
+d'être lu — un renommage chez Apple, un drapeau mal orthographié — les sept images seraient des
 copies des captures ordinaires, le harnais resterait vert, et on croirait avoir vu l'app en grand
 texte. C'est exactement la forme du défaut qui a laissé passer trois films d'aperçu faux.
 
@@ -31,6 +31,12 @@ plus à l'ordinaire. `captures.yml` pose `--plancher 10` : sous la plus basse ob
 quand on corrige un écran, ce qui est une raison de plus de ne pas serrer le plancher.
 Il n'y a rien entre 0,x et 17 à départager, donc rien à régler finement.
 
+Les trois écrans ajoutés le 8 novembre — la sortie dépliée, l'aperçu du club, le profil — n'ont
+AUCUNE mesure au relevé : le plancher de 10 leur est appliqué sans qu'on sache où ils tombent.
+C'est assumé. S'ils passent sous 10, les deux lectures possibles sont un écran qui ne réagit
+presque pas au grand texte (le défaut cherché) et un plancher trop serré pour cet écran-là ; on
+tranchera en regardant l'image, pas en desserrant le plancher d'office.
+
 Sans `--plancher`, on mesure et on se tait : c'est l'état voulu tant qu'on n'a pas de relevé.
 """
 import argparse
@@ -45,6 +51,9 @@ PAIRES = {
     "diagnostic/grand-texte/stats.png": "6-stats.png",
     "diagnostic/grand-texte/course-en-cours.png": "diagnostic/course-en-cours.png",
     "diagnostic/grand-texte/bilan-hebdo.png": "diagnostic/bilan-hebdo.png",
+    "diagnostic/grand-texte/sortie.png": "diagnostic/sortie.png",
+    "diagnostic/grand-texte/club-apercu.png": "diagnostic/club-apercu.png",
+    "diagnostic/grand-texte/profil.png": "diagnostic/profil.png",
 }
 
 

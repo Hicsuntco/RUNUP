@@ -223,18 +223,52 @@ final class CapturesUITests: XCTestCase {
                 tailleDuTexte: Self.ax2)
     }
 
+    // TROIS ÉCRANS DE PLUS, ET LA RAISON EST LE RENDEMENT DE LA MÉTHODE.
+    //
+    // Les quatre premiers ont rendu DIX défauts à la première exécution — une rangée de mesures
+    // qui ne basculait pas en colonne, deux titres de section tronqués, une pastille qui
+    // flottait. Quatre écrans sur les vingt et un que le harnais photographie, c'est la
+    // couverture qu'on avait ; les trois ajoutés ici sont les plus denses de ceux qui n'avaient
+    // jamais été vus en grand texte.
+    //
+    // · LA SORTIE DÉROULÉE est l'écran le plus CHIFFRÉ de l'app : six mesures, douze barres de
+    //   splits, un profil de terrain. Rien n'y plante quand la mise en page casse.
+    // · L'APERÇU DU CLUB empile le niveau, la semaine du club, le défi, les sorties de groupe,
+    //   ce que le club prépare et ses records — et il vient d'être redécoupé en quatre
+    //   fichiers, donc c'est aussi la première fois qu'on le regarde en grand texte après.
+    // · LE PROFIL est une grille de tuiles, et une grille est ce qui résiste le moins à un
+    //   texte deux fois plus grand.
+
+    func test26SortieGrandTexte() throws {
+        try passeSombreSeulement()
+        prendre(rang: 26, ecran: "club", nom: "grand-texte/sortie", diagnostic: true,
+                sortie: true, tailleDuTexte: Self.ax2)
+    }
+
+    func test27ClubApercuGrandTexte() throws {
+        try passeSombreSeulement()
+        prendre(rang: 27, ecran: "club", nom: "grand-texte/club-apercu", diagnostic: true,
+                onglet: "apercu", tailleDuTexte: Self.ax2)
+    }
+
+    func test28ProfilGrandTexte() throws {
+        try passeSombreSeulement()
+        prendre(rang: 28, ecran: "profile", nom: "grand-texte/profil", diagnostic: true,
+                tailleDuTexte: Self.ax2)
+    }
+
     /// Le deuxième des cinq crans d'accessibilité — `UIContentSizeCategory.accessibilityLarge`.
     private static let ax2 = "UICTContentSizeCategoryAccessibilityL"
 
     /// LA PASSE SOMBRE SEULEMENT, ET C'EST UNE QUESTION DE COÛT.
     ///
-    /// Le harnais lance le même test deux fois par langue, une passe par thème. Quatre écrans de
-    /// plus dans les deux passes font vingt-quatre lancements ; dans une seule, douze. Et le
-    /// dossier `diagnostic/` est par construction celui de la passe sombre — « la passe claire
+    /// Le harnais lance le même test deux fois par langue, une passe par thème. Sept écrans de
+    /// plus dans les deux passes font quarante-deux lancements ; dans une seule, vingt et un. Et
+    /// le dossier `diagnostic/` est par construction celui de la passe sombre — « la passe claire
     /// livre la fiche, la passe sombre produit le dossier qu'on regarde ».
     ///
     /// Ce n'est pas une affirmation que le clair tiendrait aussi : personne ne l'a vu. Le jour où
-    /// les quatre images sombres seront jugées, l'ajout du clair coûtera une ligne.
+    /// les sept images sombres seront jugées, l'ajout du clair coûtera une ligne.
     private func passeSombreSeulement() throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["RUNUP_CAPTURES_CLAIR"] == nil,
                           "Le grand texte se photographie dans la passe sombre.")

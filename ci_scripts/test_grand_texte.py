@@ -120,7 +120,7 @@ def _():
         assert sortie.returncode == 0, sortie.stdout + sortie.stderr
 
 
-@cas_de("les quatre paires visent des captures que le harnais prend vraiment")
+@cas_de("chaque paire vise des captures que le harnais prend vraiment")
 def _():
     test = (ICI.parent / "RunUpUITests/CapturesUITests.swift").read_text(encoding="utf-8")
     for grand, ordinaire in ck.PAIRES.items():

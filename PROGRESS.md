@@ -27,6 +27,15 @@ n'apparaît, l'avant/après est écrit ici, et les trois langues ont été véri
 
 ## Au passage
 
+**Une redondance en attente dans `privacy.html`.** « Aucun outil tiers de rapport de panne » y est
+dit deux fois, à deux paragraphes d'écart — repéré le 8 novembre par Charlotte en cherchant la
+phrase sur la page publiée. Ce n'est pas faux, c'est redondant, et ça ne valait pas un
+aller-retour de plus sur `main` : cette page est servie par GitHub Pages depuis `main`, donc s'y
+corriger demande de recopier le fichier à la main dans l'éditeur web. La consigne est écrite en
+commentaire DANS le fichier, juste au-dessus du paragraphe concerné — c'est le seul endroit que
+le prochain qui l'édite ouvrira forcément.
+
+
 **La version monte dès qu'une version est publiée.** Apple ferme le train d'une version publiée :
 depuis la sortie de la 3.3 le 3 novembre 2026, tout envoi à TestFlight en 3.3 est refusé (90186 et
 90062). Le défaut ne se voit qu'au DERNIER pas de la chaîne — construction verte, tests verts,

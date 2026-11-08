@@ -192,6 +192,49 @@ struct ClubView: View {
             SignInView()
                 .runUpSheetStyle(detents: [.large])
         }
+        // ET « PROPOSER UNE SORTIE » NE FAISAIT RIEN SUR UN CLUB EN SOMMEIL.
+        //
+        // Deux boutons posent `showCreateEvent` : le « + » de la carte des sorties, et celui de
+        // la carte qui propose de RÉVEILLER le club. Or ces deux cartes s'excluent —
+        // `if clubEnSommeil { carteClubAReveiller } else { eventsCard }` — et la feuille était
+        // accrochée à la seconde. Sur un club endormi, c'est-à-dire exactement le cas où cette
+        // carte existe, taper « Proposer une sortie » posait l'état et n'ouvrait rien ; et la
+        // feuille surgissait plus tard, sans qu'on l'ait demandée, le jour où le club se
+        // réveillait et où `eventsCard` revenait à l'écran.
+        //
+        // LA RÈGLE, ET ELLE VAUT POUR LES DOUZE : une feuille se pose sur une vue qui est à
+        // l'écran quand on la demande. Si le bouton et la feuille ne sont pas dans la même
+        // branche, la feuille remonte au corps.
+        .sheet(isPresented: $showCreateEvent) {
+            CreateEventSheet { title, location, date, chaqueSemaine, groupes in
+                try await magasin.creerLaSortie(title: title, location: location, startsAt: date,
+                                                repeatsWeekly: chaqueSemaine, paceGroups: groupes)
+            }
+            .runUpSheetStyle()
+        }
+        // LA FEUILLE D'ÉDITION D'UN MESSAGE DU MUR ÉTAIT ACCROCHÉE À `eventsCard`.
+        //
+        // C'est-à-dire à l'onglet APERÇU, alors que le bouton qui la déclenche — « Modifier ce
+        // message », dans l'en-tête d'un message — est sur l'onglet ACTIVITÉ. Les trois onglets
+        // s'excluent (`switch tab`), donc la vue qui portait la feuille n'était pas à l'écran
+        // au moment où l'on demandait à l'ouvrir : taper « Modifier ce message » ne faisait
+        // RIEN. Et pire que rien — l'état restait posé, et la feuille surgissait sans qu'on
+        // l'ait demandée au moment où l'on passait sur l'Aperçu.
+        //
+        // Trouvé en relevant, pour chaque feuille du fichier, la vue qui la porte et celle qui
+        // la déclenche. Sur douze, c'est la seule qui n'était pas chez elle. Elle rejoint ici
+        // les deux autres feuilles du mur, sur le corps, qui est à l'écran quel que soit
+        // l'onglet.
+        .sheet(item: $messageEnModification) { message in
+            EditTextPostSheet(titreDeLaFeuille: String(localized: "Modifier le message"),
+                              texteInitial: message.text) { texte in
+                // Recousu sur place plutôt que rechargé : un message n'a qu'un texte, il ne
+                // change ni de place ni de compteur. Recharger le mur entier pour une phrase
+                // ferait clignoter la liste sous les doigts de qui vient de la corriger.
+                try await magasin.modifierLeMessage(message, texte: texte)
+            }
+            .runUpSheetStyle()
+        }
         .sheet(item: $editingActivity) { activity in
             EditActivitySheet(item: activity, onSaved: { Task { await magasin.loadFeed() } })
                 .runUpSheetStyle()
@@ -1169,23 +1212,6 @@ struct ClubView: View {
                 // publié, quel qu'il soit. L'appui long reste, pour qui connaît le geste.
                 .contextMenu { menuDeLaSortie(event) }
             }
-        }
-        .sheet(isPresented: $showCreateEvent) {
-            CreateEventSheet { title, location, date, chaqueSemaine, groupes in
-                try await magasin.creerLaSortie(title: title, location: location, startsAt: date,
-                                                repeatsWeekly: chaqueSemaine, paceGroups: groupes)
-            }
-            .runUpSheetStyle()
-        }
-        .sheet(item: $messageEnModification) { message in
-            EditTextPostSheet(titreDeLaFeuille: String(localized: "Modifier le message"),
-                              texteInitial: message.text) { texte in
-                // Recousu sur place plutôt que rechargé : un message n'a qu'un texte, il ne
-                // change ni de place ni de compteur. Recharger le mur entier pour une phrase
-                // ferait clignoter la liste sous les doigts de qui vient de la corriger.
-                try await magasin.modifierLeMessage(message, texte: texte)
-            }
-            .runUpSheetStyle()
         }
         .sheet(item: $eventEnModification) { event in
             CreateEventSheet(onCreate: { title, location, date, chaqueSemaine, groupes in

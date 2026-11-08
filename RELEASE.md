@@ -114,6 +114,13 @@ python3 ci_scripts/comparer.py --avant /tmp/avant --apres /tmp/apres \
   --seulement club --pixels 0 --sortie /tmp/differences
 ```
 
+**Juger sur `--pixels`, pas sur `--plafond`.** Relevé sur les captures réelles du Club, en
+comparant le français à l'espagnol — tout le texte de l'écran changé, le pire cas qu'un
+découpage puisse produire : la moyenne ne bouge que de **3,4 à 6,0** sur 255, et le compte de
+pixels passe de zéro à **91 000 – 159 000**. Un plafond posé pour tolérer le rendu d'un dégradé
+laisserait passer la moitié de ces cas. Deux captures du même état, l'heure masquée, rendent
+0,000 et zéro pixel : il n'y a pas de bruit de fond à soustraire.
+
 Puis, sur la machine :
 
 1. **Captures App Store** → lancer → **ouvrir les images** (§ 2a).

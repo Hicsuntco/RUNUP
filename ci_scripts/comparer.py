@@ -32,6 +32,25 @@ désigne un bloc.
 
 Sans `--plafond`, on mesure et on se tait. Avec, on échoue au-delà — c'est la forme voulue
 pour un découpage, où le plafond est zéro à la tolérance de bruit près.
+
+# LE RELEVÉ QUI DIT POURQUOI LA MOYENNE NE SUFFIT PAS
+
+Mesuré sur les captures réelles du Club, en comparant le FRANÇAIS à l'ESPAGNOL — c'est-à-dire
+tout le texte de l'écran changé, le pire cas qu'un découpage puisse produire :
+
+    écran                  moyenne   pixels au-delà du bruit
+    4-club                   3,41        104 877
+    club-apercu              5,55        152 484
+    club-apercu-bas          3,43         90 973
+    club-classement          4,10        130 152
+    (et les quatre mêmes en thème clair : 3,77 à 5,99)
+
+Tout le texte d'un écran remplacé déplace la moyenne de QUATRE POINTS sur 255. Un plafond posé
+pour « tolérer le rendu d'un dégradé » — disons 5 — laisserait donc passer la moitié de ces
+cas-là. Le compte de pixels, lui, passe de 0 à cent mille.
+
+Et le même dossier comparé à lui-même rend 0,000 et zéro pixel : il n'y a pas de bruit de fond
+à soustraire entre deux captures du même état, une fois l'heure masquée.
 """
 import argparse
 import pathlib

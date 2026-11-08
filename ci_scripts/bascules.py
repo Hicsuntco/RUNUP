@@ -301,80 +301,33 @@ def instant_du_changement(classes: list[str], fenetre: float) -> float | None:
     return fenetre - (dernier + 1) / IPS
 
 
-#: La fenêtre de l'affinage, DE PART ET D'AUTRE du début de plan supposé.
-#:
-#: Elle est asymétrique, et le premier jet ne l'était pas — il regardait 2,5 s AVANT le plan,
-#: ce qui ne couvrait pas le cas même qui l'a motivé. Quand la recherche grossière rend −0,75 s
-#: alors que l'horloge est juste, le changement d'écran tombe 0,15 s APRÈS la fin d'une fenêtre
-#: qui s'arrête au début du plan : l'affinage n'aurait rien vu, et le décalage faux serait
-#: resté. 1,2 s après couvre toute l'erreur que la recherche grossière peut laisser, puisqu'au
-#: delà le plan tomberait sur un autre écran et qu'elle l'aurait refusé.
-AVANT_AFFINAGE = 2.0
-APRES_AFFINAGE = 1.2
-
-#: L'écart maximal admis entre les quatre changements observés. Relevé sur une prise saine :
-#: 0,53 à 0,80 s, soit 0,27 d'étendue. 0,40 laisse de la marge sans admettre qu'une des quatre
-#: mesures parle d'autre chose.
-ETENDUE_ADMISE = 0.40
-
-
-def affinage(entree: pathlib.Path, bascules: list, decalage: float,
-             travail: pathlib.Path) -> tuple[float | None, list[float]]:
-    """Le décalage repris sur le CHANGEMENT d'écran, qui est net là où l'identité est plate.
-
-    # POURQUOI LA RECHERCHE GROSSIÈRE NE SUFFIT PAS
-
-    Elle demande « ce plan montre-t-il le bon écran ? », et cette question a une réponse
-    identique sur DEUX SECONDES ET DEMIE : le test appuie sur l'onglet 0,6 s avant le début du
-    plan, et le plan dure deux secondes. L'écran visé est donc à l'image de −0,6 s à +2,0 s.
-    Tout décalage dans cette plage met les quatre plans sur leurs écrans, et la recherche n'a
-    plus que le bruit de l'image pour choisir. Elle a rendu 0 pendant des semaines et −0,75 le
-    8 novembre 2026, sur le même harnais et pour la même raison : un plateau et un tirage.
-
-    Et −0,75 est parfait pour l'identité et faux pour le DÉCOUPAGE. Le garde-fou qui suit
-    cherche le changement d'écran dans les 0,9 s qui précèdent chaque plan ; décalé de trois
-    quarts de seconde, cette fenêtre tombe entièrement avant le changement, et la mesure ne voit
-    plus rien. C'est le message qu'ont rendu trois exécutions de suite.
-
-    # CE QUI EST NET
-
-    Le changement lui-même. Il a lieu à `ATTENDU_AVANT` du début du plan — le test appuie, puis
-    attend, puis déclare — et il dure le temps d'un fondu. On le cherche donc dans une fenêtre
-    large, et le décalage juste est celui qui le ramène à `ATTENDU_AVANT`.
-
-    Rend `(decalage_affiné, instants_observés)`. Affiné vaut `None` quand un seul plan n'a pas
-    montré son changement : corriger sur trois plans quand le quatrième ne dit rien, ce serait
-    décider sans savoir pourquoi il se tait.
-    """
-    observes: list[float] = []
-    for i, b in enumerate(bascules, start=1):
-        depart = decalage + b["debut"] - AVANT_AFFINAGE
-        if depart < 0:
-            return None, observes
-        reference = posee(entree, decalage + b["debut"] + 0.5, travail, f"r{i}")
-        suite = images(entree, depart, AVANT_AFFINAGE + APRES_AFFINAGE, travail, f"n{i}")
-        if not suite:
-            return None, observes
-        classes = classer(suite, reference, _gris(suite[0]))
-        # `AVANT_AFFINAGE` et non la durée totale : `instant_du_changement` compte À REBOURS
-        # depuis le début de plan supposé, et il rend donc un nombre NÉGATIF quand le changement
-        # tombe après lui. C'est exactement ce qu'on veut savoir dans ce cas-là.
-        quand = instant_du_changement(classes, AVANT_AFFINAGE)
-        if quand is None:
-            return None, observes
-        observes.append(quand)
-    # QUATRE OBSERVATIONS QUI NE S'ACCORDENT PAS NE SE MOYENNENT PAS.
-    #
-    # Les quatre plans regardent le même enregistrement et la même horloge : leurs changements
-    # d'écran doivent tomber au même endroit, à la durée d'un fondu près. Sur une prise saine,
-    # l'étendue relevée vaut 0,27 s — de 0,53 à 0,80. Au-delà de 0,40, c'est qu'au moins une des
-    # quatre mesures regarde autre chose que le changement, et une moyenne n'y ferait que
-    # répartir l'erreur sur les quatre.
-    etendue = max(observes) - min(observes)
-    if etendue > ETENDUE_ADMISE:
-        return None, observes
-    moyen = sum(observes) / len(observes)
-    return decalage + ATTENDU_AVANT - moyen, observes
+# POURQUOI IL N'Y A PAS D'AFFINAGE, ALORS QUE LA RECHERCHE A UN PLATEAU
+#
+# La recherche par identité ne sait pas mieux qu'à une seconde près : « ce plan montre-t-il le
+# bon écran ? » a la même réponse sur deux secondes et demie, et le bruit de l'image tranche
+# dans cette plage. Elle a rendu −0,75 s deux fois en novembre 2026, et un découpage décalé de
+# trois quarts de seconde fait tomber la fenêtre de mesure entièrement avant le changement
+# d'écran : le garde-fou ne voit plus rien et refuse le film.
+#
+# J'AI ÉCRIT UN AFFINAGE POUR ÇA, ET IL A FAIT TROIS EXÉCUTIONS ROUGES — plus que le défaut
+# qu'il visait. Il reprenait le décalage sur le changement d'écran, mesuré dans une fenêtre
+# élargie. Voici pourquoi c'est impossible EN L'ÉTAT, et c'est la raison qu'il faut garder :
+#
+# `classer` reconnaît l'écran d'avant en comparant chaque image à LA PREMIÈRE DE LA FENÊTRE.
+# Ce choix n'est juste que pour une fenêtre courte : le test laisse 0,6 s entre l'appui sur
+# l'onglet et le début du plan, donc sur 0,9 s le premier tiers est encore l'écran précédent.
+# Élargie à 2 s, la première image tombe n'importe où — au milieu de la transition d'avant, ou
+# sur un écran encore vide — et « avant » ne correspond alors presque à rien. L'estimateur rend
+# la longueur de la fenêtre, l'affinage corrige d'autant, et le découpage part dans le décor :
+# −0,62 s une fois, −1,33 s une autre, sur des prises dont l'horloge était juste.
+#
+# Les images gardées par `--preuves` le montrent sans discussion : trois écrans VIDES, barre
+# d'onglets seule, parce que le découpage reculé de 1,33 s tombe avant que le contenu n'arrive.
+#
+# Un affinage demanderait donc une autre référence pour « l'écran d'avant » — le témoin du plan
+# PRÉCÉDENT, que la passe claire photographie — et non la première image d'une fenêtre. C'est
+# faisable et ce n'est pas écrit : tant que ça ne l'est pas, le défaut du plateau se solde par
+# un film refusé, ce qui est le comportement sûr.
 
 
 def alignement(entree: pathlib.Path, bascules: list, references: dict, decalage: float,
@@ -437,8 +390,10 @@ def alignement(entree: pathlib.Path, bascules: list, references: dict, decalage:
                 # il y a un plateau, et c'est le bruit de l'image qui tranche.
                 #
                 # Cette recherche sert donc à ce qu'elle sait faire : ramener une horloge
-                # fausse de PLUSIEURS SECONDES à moins d'une. `affinage` fait le reste, sur le
-                # changement d'écran, qui est net.
+                # fausse de PLUSIEURS SECONDES à moins d'une. Ce qui reste — jusqu'à trois
+                # quarts de seconde — n'est corrigé par rien, et la note au-dessus de
+                # `alignement` dit pourquoi : l'affinage que j'avais écrit pour ça a fait plus
+                # de dégâts que le défaut.
                 image = posee(entree, essai + b["debut"] + 0.5, travail, f"a{i}")
             except SystemExit:
                 total = float("inf")
@@ -452,13 +407,7 @@ def alignement(entree: pathlib.Path, bascules: list, references: dict, decalage:
         return decalage, float("inf"), False
     total, moins_bons, trouve = min(candidats)
     vises = sum(1 for b in bascules if ecran_vise(b["nom"]) in references)
-    # L'AFFINAGE, SUR LE DÉCALAGE GROSSIER. Il ne peut travailler qu'une fois l'horloge ramenée
-    # à moins d'une seconde — sa fenêtre fait 2,5 s et doit contenir le changement d'écran.
-    grossier = trouve
-    affine, _ = affinage(entree, bascules, grossier, travail)
-    if affine is not None:
-        trouve = affine
-    return trouve, total / max(vises, 1), (-moins_bons) == vises, grossier
+    return trouve, total / max(vises, 1), (-moins_bons) == vises, trouve
 
 
 #: Au plus tôt, l'image jugée est prise là — c'est aussi la référence qui sert à classer la
@@ -564,24 +513,12 @@ def main() -> int:
 
         # L'ALIGNEMENT PAR LE CONTENU, quand on le demande. Voir `alignement`.
         if options.aligner and references:
-            trouve, ecart, parfait, grossier = alignement(options.entree, bascules, references,
-                                                          decalage, travail)
+            trouve, ecart, parfait, _ = alignement(options.entree, bascules, references,
+                                                   decalage, travail)
             glissement = trouve - decalage
             print(f"  alignement : {glissement:+.2f} s "
                   f"(écart moyen {ecart:.1f} au meilleur décalage, "
                   f"{'chaque plan sur son écran' if parfait else 'IL EN RESTE UN DE TRAVERS'})")
-            # DEUX ÉTAPES, ET LA SECONDE EST CELLE QUI DÉCOUPE. La première ramène une horloge
-            # fausse de plusieurs secondes ; elle ne sait pas faire mieux qu'à une seconde près,
-            # parce que l'écran visé est à l'image sur 2,5 s. La seconde reprend le décalage sur
-            # le CHANGEMENT d'écran, qui est net. Voir `affinage`.
-            if trouve == grossier:
-                print("  → affinage impossible : un plan au moins n'a pas montré son changement "
-                      "d'écran. Le décalage reste celui de la recherche grossière, et la mesure "
-                      "qui suit dira ce qu'elle voit.")
-            else:
-                print(f"  → affiné de {trouve - grossier:+.2f} s sur le changement d'écran, "
-                      f"qui est net là où l'identité est plate "
-                      f"(recherche seule : {grossier:.2f} s, retenu : {trouve:.2f} s).")
             if abs(glissement) >= 0.5:
                 print(f"  → l'heure annoncée par la caméra était fausse de {glissement:+.2f} s. "
                       f"Le découpage suit le contenu, pas l'horloge.")

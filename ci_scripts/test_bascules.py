@@ -344,54 +344,6 @@ with tempfile.TemporaryDirectory() as d:
     # d'écran là où le film l'a mis. Dans ce film d'essai, les écrans changent toutes les trois
     # secondes et les plans commencent une demi-seconde après : le changement doit tomber à
     # 0,50 s du début du plan.
-    # L'AFFINAGE : LA SECONDE ÉTAPE, CELLE QUI DÉCOUPE.
-    #
-    # La recherche grossière a un PLATEAU — « ce plan montre-t-il le bon écran ? » a la même
-    # réponse sur deux secondes et demie — et c'est le bruit de l'image qui y tranche. Elle a
-    # rendu 0 pendant des semaines et −0,75 le 8 novembre, sur le même harnais. J'ai d'abord
-    # cru que l'instant choisi en était la cause ; l'exécution suivante a rendu le même −0,75,
-    # et c'est ce qui a fait chercher plus loin.
-    #
-    # L'affinage reprend le décalage sur le CHANGEMENT d'écran, qui est net. Dans ce film-ci,
-    # les écrans changent une demi-seconde avant chaque plan, et le test en attend 0,6 : le
-    # décalage juste est donc +0,10 s. LA PROPRIÉTÉ QUI COMPTE est qu'il rende cette même
-    # valeur quel que soit le point de départ — c'est précisément ce que la recherche grossière
-    # ne sait pas faire.
-    #
-    # Le premier plan est écarté : sa fenêtre de 2,5 s commencerait avant le début du film.
-    plans = bascules[1:]
-    #
-    # −0,75 EST LE CAS RÉEL : c'est ce qu'a rendu la recherche grossière trois exécutions de
-    # suite. À ce décalage, le changement d'écran tombe APRÈS le début de plan supposé — d'où la
-    # fenêtre asymétrique, dont le premier jet manquait, et qui aurait laissé passer ce cas-là.
-    for depart, nom in [(0.0, "horloge juste"), (0.4, "horloge en avance"),
-                        (-0.4, "horloge en retard"),
-                        (-0.75, "le décalage faux du 8 novembre"),
-                        (0.9, "une erreur dans l'autre sens")]:
-        affine, vus = bs.affinage(film, plans, depart, dossier)
-        attendu(f"l'affinage voit le changement sur les trois plans ({nom})", len(vus), 3)
-        attendu(f"et il rend le même décalage ({nom})",
-                affine is not None and abs(affine - 0.10) < 0.05, True)
-
-    # Et il se tait plutôt que de deviner quand un plan ne montre pas son changement : ici la
-    # fenêtre tomberait avant le début du film.
-    affine, _ = bs.affinage(film, bascules, -3.0, dossier)
-    attendu("une fenêtre hors du film ne rend pas de décalage", affine, None)
-
-    # ET QUAND LES QUATRE MESURES NE S'ACCORDENT PAS, IL SE TAIT AUSSI.
-    #
-    # Les plans regardent le même enregistrement et la même horloge : leurs changements doivent
-    # tomber au même endroit, à la durée d'un fondu près. Une étendue large veut dire qu'au
-    # moins une des mesures parle d'autre chose, et une moyenne n'y ferait que répartir
-    # l'erreur. On fabrique le désaccord en décalant les plans les uns par rapport aux autres.
-    bancals = [dict(b) for b in plans]
-    bancals[0]["debut"] += 0.6
-    bancals[-1]["debut"] -= 0.6
-    affine, vus = bs.affinage(film, bancals, 0.0, dossier)
-    attendu("quatre mesures qui se contredisent ne se moyennent pas", affine, None)
-    attendu("et on voit bien qu'elles se contredisent",
-            len(vus) == 3 and (max(vus) - min(vus)) > bs.ETENDUE_ADMISE, True)
-
     # ET ON VÉRIFIE LA DÉCISION ELLE-MÊME, parce qu'un film fabriqué ne peut pas la montrer.
     #
     # Le plateau n'existe que si les distances varient à peine d'un décalage à l'autre — c'est

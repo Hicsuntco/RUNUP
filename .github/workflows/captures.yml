@@ -54,7 +54,8 @@ name: Captures App Store
 # push : le trajet complet ne s'allonge que de l'écart entre les deux.
 #
 # Les `Models` et les `Services` restent dehors : ils n'ont pas de visage, et leurs défauts se
-# lisent dans les tests.
+# lisent dans les tests. Les `ViewModels`, eux, sont entrés — ils décident de ce qu'un écran
+# affiche, ce qui est exactement avoir un visage.
 #
 # PAS D'ÉTIQUETTE `captures-*`, et c'est une correction. La première version en avait une — mais
 # un `push` qui déclare `tags:` SANS `branches:` ne part QUE sur une étiquette : la règle de
@@ -81,7 +82,7 @@ on:
       # Tout ce qui se juge à l'œil et qu'aucun script ne sait relire.
       - "RunUp/Views/**"
       - "RunUp/DesignSystem/**"
-      # ET LES DEUX FICHIERS QUI DÉCIDENT DE CE QU'ON VOIT SANS ÊTRE DES VUES.
+      # ET LES QUATRE ENTRÉES QUI DÉCIDENT DE CE QU'ON VOIT SANS ÊTRE DANS `Views`.
       #
       # `AppState` est le routeur — c'est lui qui dit quel écran est à l'écran, et désormais
       # comment on passe de l'un à l'autre. Le correctif de la transition d'écran n'a touché que
@@ -90,6 +91,21 @@ on:
       # sa raison d'être.
       - "RunUp/AppState.swift"
       - "RunUp/AppScreen.swift"
+      # `RunUpApp.swift` EST LE SEUL FICHIER HORS DE `Views` ET `DesignSystem` QUI CONTIENNE DES
+      # VUES SwiftUI — mesuré, pas supposé : un seul `some View` dans tout le reste de `RunUp/`.
+      # Il porte `RootView`, donc la barre d'onglets, les feuilles présentées par-dessus, et le
+      # bloc qui pose le profil de démonstration que ces captures photographient. Il manquait.
+      # Le commit du rapport de panne l'a touché le 8 novembre 2026 : les captures ne se sont pas
+      # relancées, et rien n'aurait dit qu'une vue racine cassée était en ligne.
+      - "RunUp/RunUpApp.swift"
+      # LES `ViewModels` ONT UN VISAGE, contrairement aux `Models` et aux `Services` (voir
+      # ci-dessous). Les six décident de ce qu'au moins cinq écrans photographiés AFFICHENT :
+      # `BilanDeLaSemaine` les quatre chiffres du bilan, `CoachViewModel` la conversation,
+      # `LiveRunViewModel` les mesures de la course en cours, `PlanRecap` le plan, et
+      # `OnboardingViewModel` est lu par dix-huit vues dont celle de la capture « inscription ».
+      # Un chiffre faux sur l'écran de course ne casse rien, ne lève aucune alerte, et ne se voit
+      # que sur l'image.
+      - "RunUp/ViewModels/**"
   workflow_dispatch:
     inputs:
       langues:

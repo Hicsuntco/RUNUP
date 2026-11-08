@@ -431,6 +431,17 @@ jobs:
       - name: Vérifier que le client, le serveur et le manifeste s'accordent sur les pannes
         run: python3 ci_scripts/check_pannes.py
 
+      # La chaîne des captures ne part pas à chaque commit : sa liste de chemins est un jugement
+      # écrit à la main, et elle s'est trompée DEUX FOIS par omission — `AppState.swift` le
+      # routeur, puis `RunUpApp.swift` qui porte la vue racine. Le défaut n'a aucun symptôme :
+      # la chaîne reste verte parce qu'elle ne tourne pas, et les images en ligne datent d'avant
+      # la modification.
+      - name: Éprouver le contrôle du déclencheur des captures
+        run: |
+          cd ci_scripts && python3 test_declencheur.py
+      - name: Vérifier que toute vue relance les captures
+        run: python3 ci_scripts/check_declencheur.py
+
       # Une somme sur des relevés doit dire de quelle discipline elle parle. Sans ça, la première
       # sortie vélo entre dans la distance courue, emporte le record d'allure que personne ne
       # reprendra, use les chaussures et coche la séance de course du jour — sans qu'une seule

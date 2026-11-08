@@ -70,11 +70,11 @@ est une valeur que personne n'a choisie.
 ## 3. La porte, dans l'ordre
 
 ```sh
-# 1. Tous les contrôles qui n'ont besoin de rien d'autre que du dépôt.
-for f in ci_scripts/check_*.py; do python3 "$f" || echo "ÉCHEC $f"; done
-
-# 2. Tous les cas de ces contrôles. Un contrôle non éprouvé ne garde rien.
-cd ci_scripts && for f in test_*.py; do python3 "$f" || echo "ÉCHEC $f"; done; cd ..
+# 1 et 2. Tous les contrôles, ET tous leurs cas. Une seule commande, parce que j'ai déjà
+# poussé un contrôle vert dont le test était rouge : le 8 novembre, `check_icones.py` passait
+# et `test_icones.py` répétait un nombre devenu faux. Découvert sur la machine, dix minutes
+# plus tard.
+sh ci_scripts/tout.sh
 
 # 3. Le serveur.
 npm ci && python3 ci_scripts/check_cjs.py && npm test

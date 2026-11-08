@@ -165,6 +165,34 @@ sortir les données et le réseau du club dans un magasin observable, et ne lais
 de l'affichage. Six états sur trente sont partagés par trois régions ou plus, et ce sont
 exactement ceux-là.
 
+**`ClubStore` existe depuis, et il fait disparaître les deux questions au lieu d'y répondre.**
+Les neuf états de données, les dix-huit fonctions de réseau, puis les quinze appels qui
+traînaient au milieu des feuilles et des boutons : le mur, les sorties de groupe, les quatre
+réglages du club, la suppression d'activité et `highlights`. `ClubView` ne garde que ce qui est
+de l'écran — l'onglet affiché, les feuilles, les brouillons, les confirmations en attente — et
+ne connaît plus `clubService` que pour le passer à une sous-vue. 2 721 → 1 799 lignes.
+
+C'est `highlights` qui débloque les pépites : la donnée étant au magasin, la sous-vue n'en
+recevra qu'une copie en lecture et le parent gardera son `.task`. Il n'y a plus de `Group` vide
+dont il faudrait deviner le comportement.
+
+L'état de l'application entre par le CONSTRUCTEUR et non par chaque appel : onze des dix-huit
+fonctions le lisent, et le passer en paramètre aurait changé dix-huit corps — ce qui transforme
+un déménagement vérifiable en réécriture. `@State` ne s'initialise pas depuis l'environnement,
+mais il s'initialise depuis un paramètre, et c'est `SocialView` qui le passe.
+
+Le magasin s'appelle `magasin` et non `club`, et ce n'est pas une préférence : le fichier est
+plein de `if let club = board.club`, et le premier renommage a fait MASQUER le magasin par ces
+liants locaux dans quatre blocs. Trouvé en lisant le diff, avec trois autres dégâts du même
+renommage — les cases de l'énumération `Tab`, qui s'appellent `board` et `feed`, deux étiquettes
+d'argument, et un `if let errorMessage` devenu `if let magasin.errorMessage`, qui n'est pas du
+Swift.
+
+**Et le découpage ne change rien à l'écran, c'est mesuré.** Vingt-quatre captures du Club —
+trois langues, deux thèmes, quatre écrans — rendent `ÉCART MAXIMAL=0,000` et `PIXELS=0` entre
+l'avant et l'après de la première extraction. C'est ce pour quoi `comparer.py` a été écrit avant
+d'y toucher.
+
 ## Les chantiers de l'audit
 
 Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
@@ -183,7 +211,7 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 | 10 | Valeurs en dur → jetons du design system, les 15 % restants | 1,5 j | **fait** — il en restait six, pas 15 % |
 | 11 | Dépendances serveur : `jose` 6 et `bcryptjs` 3 | 0,5 j | **fait** — après une panne de onze minutes, une reproduction sur aperçu et un correctif éprouvé |
 | 12 | Accessibilité : tailles de texte dynamiques, indices VoiceOver | 1,5 j | **en cours** — quatre écrans photographiés au deuxième cran, dix défauts vus et corrigés |
-| 13 | `ClubView.swift`, 2 721 lignes, à découper | 2 j | **en cours** — 2 721 → 2 423 lignes ; la suite demande un magasin observable |
+| 13 | `ClubView.swift`, 2 721 lignes, à découper | 2 j | **en cours** — 2 721 → 1 799 lignes, le magasin est en place |
 | 14 | Rapport de plantage maison, posté sur notre serveur | 1,5 j | à faire — décidé le 7 novembre |
 
 Le 14 est arrivé après coup, et je le ferais passer devant les finitions de design : c'est le seul

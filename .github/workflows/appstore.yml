@@ -134,7 +134,9 @@ jobs:
       # DEVANT le PATH des étapes suivantes, pour que les `python3 …` d'après y trouvent Pillow
       # sans avoir à nommer un chemin.
       - name: Installer Pillow
-        if: inputs.action == 'composer-les-captures'
+        # Aussi pour l'ENVOI des captures, pas seulement pour leur composition : l'étape qui
+        # vérifie les bannières, plus bas, lit des images.
+        if: inputs.action == 'composer-les-captures' || startsWith(inputs.action, 'pousser-les-captures')
         run: |
           set -euo pipefail
           python3 -m venv --system-site-packages "$RUNNER_TEMP/venv"
@@ -202,6 +204,27 @@ jobs:
           # de « Captures App Store » qui les a produits, à partir de la même app.
           ls -1 "$RUNNER_TEMP/captures/apercu/out" 2>/dev/null || echo "  (pas de film)"
 
+      # ON VÉRIFIE CE QU'ON PUBLIE, PAS CE QU'UNE AUTRE CHAÎNE A VÉRIFIÉ.
+      #
+      # `captures.yml` refuse déjà une bannière du système posée sur une capture (voir son étape
+      # « Une bannière du système s'est-elle posée sur une capture »). Mais c'est ICI qu'on parle
+      # à Apple, et cette étape-ci télécharge l'artefact d'une exécution qu'on peut DÉSIGNER par
+      # son numéro — y compris une exécution antérieure au contrôle, ou simplement ancienne.
+      # Sans jeton d'API et sans parler à Apple : quelques secondes de Python sur des images
+      # déjà sur le disque. C'est le même principe que l'étape « Éprouver les règles de
+      # l'aperçu » juste au-dessus — ce que la commande décide sans parler à Apple est éprouvé
+      # sur de vrais fichiers, juste avant.
+      #
+      # Sur `raw/` et non sur `out/` : le plafond est calibré sur des captures d'app en thème
+      # sombre, et les images composées portent un fond de fiche clair où la mesure ne voudrait
+      # rien dire. Une bannière dans une brute se retrouve de toute façon dans la composée.
+      - name: Une bannière du système s'est-elle posée sur ces captures
+        if: startsWith(inputs.action, 'pousser-les-captures')
+        run: |
+          set -euo pipefail
+          cd ci_scripts && python3 test_banniere.py
+          cd .. && python3 ci_scripts/check_banniere.py \
+            --dossier "$RUNNER_TEMP/captures/raw" --plafond 25
       - name: Exécuter
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}

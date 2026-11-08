@@ -817,6 +817,15 @@ les captures SOMBRES uniquement. Le relevé de quatre-vingt-quatre captures sain
 haut — contre **59,7 %** pour celle qui portait la bannière. Le plafond est à 25 %, trois fois la
 plus claire observée, et il n'y a rien entre 8 et 60 à départager.
 
+**Et la chaîne qui PUBLIE le vérifie aussi.** `captures.yml` refusait déjà une bannière, mais
+c'est `appstore.yml` qui parle à Apple — et il télécharge l'artefact d'une exécution qu'on peut
+DÉSIGNER par son numéro, y compris une ancienne, antérieure au contrôle. Il relance donc la
+mesure sur les images qu'il s'apprête à pousser, avant de toucher à App Store Connect. Sur
+`raw/` et non `out/` : le plafond est calibré sur des captures en thème sombre, et les images
+composées portent un fond de fiche clair où la mesure ne voudrait rien dire — une bannière dans
+une brute se retrouve de toute façon dans la composée. C'est le principe que ce workflow applique
+déjà pour l'aperçu : ce que la commande décide sans parler à Apple est éprouvé juste avant.
+
 Il ne l'empêche pas, il la voit — et cette limite doit être dite honnêtement : **je n'ai pas
 trouvé comment l'empêcher.** La recherche n'a rien rendu sur une option de `simctl` qui
 musellerait les notifications du système, ce qui ne prouve pas qu'elle n'existe pas. Ce qui est

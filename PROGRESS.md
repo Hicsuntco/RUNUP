@@ -106,9 +106,21 @@ qui ne couvrait pas le cas qui l'avait motivé. Enfin l'affinage lui-même, troi
 **Ce qui reste de ces tentatives, et qui est bon.** `instant_du_changement` prend la DERNIÈRE
 image de l'écran d'avant et non la première qui n'en est plus — même nombre sur une fenêtre
 propre, ce qui explique que tous les cas fabriqués passaient, et immunisé contre un
-clignotement. `instant_juge` regarde au MILIEU du plan : les deux réponses précédentes ne
-tenaient qu'un côté — le début tombait avant la pose des écrans lents (0,57 s mesuré), la fin
-dans l'action suivante, car les plans sont CONTIGUS.
+clignotement.
+
+**Et une question qui était mal posée depuis le début.** « À quel instant juger un plan » a eu
+quatre réponses dans la journée, et les trois premières étaient fausses : `debut + 0,5 s`
+tombait avant la pose des écrans lents (0,57 s mesuré) ; `fin − 0,25 s` dans l'action suivante,
+car les plans sont CONTIGUS, et pour le dernier plan dans le démontage du test ; le MILIEU sur
+l'écran des Stats DÉJÀ DÉFILÉ — le test fait défiler pendant le plan, et pas toujours au même
+moment. Il n'existe pas d'instant unique qui soit sûr sur les quatre plans à chaque exécution.
+
+Ce qu'on veut savoir n'est pas « quel écran y a-t-il à cet instant précis », c'est « le film,
+coupé sur ce plan, montre-t-il le bon écran ». Le plan dure deux secondes et le film les montre
+toutes : il suffit qu'il CONTIENNE le bon écran. On regarde donc trois instants répartis dans
+le plan et on garde le meilleur. Un plan posé sur le MAUVAIS écran — le décalage de trois
+secondes qui a sorti trois films faux — n'a aucun instant qui corresponde, et reste refusé ;
+deux cas éprouvent les deux moitiés de la règle.
 
 **Et un message disait l'inverse de sa condition.** « La fenêtre ne commence pas sur l'écran
 d'avant » s'affichait quand AUCUNE image de la fenêtre ne quitte l'écran d'avant. Il m'a fait

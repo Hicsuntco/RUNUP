@@ -507,6 +507,26 @@ jobs:
             #
             # Si le découpage est faux, on ne fabrique pas le film. Les images, elles, sont
             # déjà composées et partent quand même.
+
+            # L'ALIGNEMENT, UNE FOIS, AVANT LES DEUX MESURES.
+            #
+            # La recherche coûte 132 extractions d'image ; les deux mesures qui suivent se
+            # repèrent sur le même enregistrement et la même horloge, donc elles partagent le
+            # décalage trouvé. Le chercher deux fois coûterait deux minutes par langue pour le
+            # même nombre.
+            mesure="$dossier/alignement.txt"
+            "$RUNNER_TEMP/venv/bin/python" ci_scripts/bascules.py \
+              --entree "$dossier/brut.mov" \
+              --temps "$dossier/temps.json" \
+              --decalage "$decalage" \
+              --temoins "appstore/raw/$langue/clair" \
+              --aligner --seulement-aligner | tee "$mesure"
+            aligne=$(sed -n 's/^DÉCALAGE=//p' "$mesure" | tail -1)
+            if [ -n "$aligne" ]; then
+              echo "→ découpage et film coupés sur $aligne s (la caméra annonçait $decalage s)"
+              decalage="$aligne"
+            fi
+
             echo "— première ouverture de chaque onglet —"
             "$RUNNER_TEMP/venv/bin/python" ci_scripts/bascules.py \
               --entree "$dossier/brut.mov" \
@@ -514,7 +534,6 @@ jobs:
               --decalage "$decalage" \
               --temoins "appstore/raw/$langue/clair" \
               --preuves "$dossier/preuves" \
-              --aligner \
               --plafond 1
             # L'ALIGNEMENT VIENT DU CONTENU, ET LE MONTAGE COUPE DESSUS.
             #
@@ -527,20 +546,13 @@ jobs:
             # décalages et on garde celui qui met les quatre plans sur leurs écrans. La dernière
             # ligne de la mesure le porte ; `tee` garde l'affichage dans le journal.
             echo "— deuxième ouverture, celle que montre le film —"
-            mesure="$dossier/mesure.txt"
             "$RUNNER_TEMP/venv/bin/python" ci_scripts/bascules.py \
               --entree "$dossier/brut.mov" \
               --temps "$dossier/temps.json" \
               --decalage "$decalage" \
               --temoins "appstore/raw/$langue/clair" \
               --preuves "$dossier/preuves" \
-              --aligner \
-              --plafond 1 | tee "$mesure"
-            aligne=$(sed -n 's/^DÉCALAGE=//p' "$mesure" | tail -1)
-            if [ -n "$aligne" ]; then
-              echo "→ le film sera coupé sur un décalage de $aligne s (annoncé : $decalage s)"
-              decalage="$aligne"
-            fi
+              --plafond 1
 
             # LE MONTAGE, une fois le découpage vérifié.
             #

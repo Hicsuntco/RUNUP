@@ -352,6 +352,11 @@ def main() -> int:
     a.add_argument("--temoins", type=pathlib.Path, default=None,
                    help="Le dossier des captures claires (appstore/raw/<langue>/clair) : chaque "
                         "bascule doit tomber sur l'écran qu'elle vise, et non sur son voisin")
+    a.add_argument("--seulement-aligner", dest="seulement_aligner", action="store_true",
+                   help="Chercher le décalage, l'écrire, et s'arrêter là — sans mesurer. Le "
+                        "workflow s'en sert une fois par langue, puis passe le décalage trouvé "
+                        "aux deux mesures : la recherche coûte 132 extractions d'image, et il "
+                        "n'y a aucune raison de la payer deux fois.")
     a.add_argument("--aligner", action="store_true",
                    help="Chercher le décalage qui met chaque plan sur l'écran qu'il vise, au "
                         "lieu de croire l'horloge. Écrit le décalage trouvé sur la sortie "
@@ -410,6 +415,17 @@ def main() -> int:
                 print(f"  → l'heure annoncée par la caméra était fausse de {glissement:+.2f} s. "
                       f"Le découpage suit le contenu, pas l'horloge.")
             decalage = trouve
+            if options.seulement_aligner:
+                # LA RECHERCHE REND LE DÉCALAGE, ELLE NE JUGE PAS. Même quand il reste un plan
+                # de travers, on rend 0 et on laisse passer : les deux mesures qui suivent
+                # tournent sur ce décalage, nomment le plan fautif et gardent l'image de
+                # l'instant jugé (`--preuves`). Échouer ici, c'est arrêter la chaîne sur
+                # « IL EN RESTE UN DE TRAVERS » sans rien à regarder — exactement le défaut
+                # que `--preuves` avait été écrit pour corriger.
+                print(f"DÉCALAGE={decalage:.3f}")
+                return 0
+        elif options.seulement_aligner:
+            raise SystemExit("--seulement-aligner demande --aligner et --temoins.")
 
         def vers_fichier(seconde: float) -> float:
             return seconde + decalage

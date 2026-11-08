@@ -64,6 +64,14 @@ entre les deux sur ces écrans-là :
   courante, et une sortie plantée « il y a trois heures » tombe hier ou aujourd'hui selon
   l'heure à laquelle la chaîne tourne. ~3 000 pixels, toujours la même bande de 40 points.
 
+ET ÇA NE SE CORRIGE PAS À PEU DE FRAIS. `CaptureSeed` prend déjà un `maintenant:` en
+paramètre, donc on pourrait le figer — mais à quelle valeur ? Les données plantées doivent être
+DANS LE PASSÉ de l'horloge de l'appareil, sinon « il y a trois heures » devient « dans
+quatorze heures », et elles doivent tomber AUJOURD'HUI pour que la fiche ne vieillisse pas.
+Aucune heure fixe de la journée ne tient les deux : la chaîne a tourné à 01 h 18 et à 04 h 37,
+et 18 h 00 est dans leur futur à toutes les deux. La vraie réponse serait de figer l'horloge du
+simulateur, ce que `simctl` ne fait pas pour l'app. On note donc, et on ne corrige pas.
+
 LES SIX IMAGES LIVRÉES À APPLE, ELLES, SONT REPRODUCTIBLES — `1-accueil` à `6-stats`, trois
 langues, deux thèmes, zéro pixel d'écart entre les deux exécutions. C'est ce qui compte pour la
 fiche, et c'est vérifié.

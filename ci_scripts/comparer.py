@@ -72,6 +72,22 @@ Aucune heure fixe de la journée ne tient les deux : la chaîne a tourné à 01 
 et 18 h 00 est dans leur futur à toutes les deux. La vraie réponse serait de figer l'horloge du
 simulateur, ce que `simctl` ne fait pas pour l'app. On note donc, et on ne corrige pas.
 
+- `diagnostic/club-apercu-bas` : TROISIÈME écran non reproductible, relevé le 8 novembre 2026, et
+  d'une autre nature que les deux précédents — le contenu est identique, c'est le DÉFILEMENT qui
+  ne retombe pas au même endroit. Le harnais donne un nombre de glissements, pas une destination,
+  et la distance parcourue dépend de l'inertie au moment où la capture est prise.
+
+  Mesuré : moyenne 16,3 et 813 202 pixels d'écart entre deux exécutions — cinq fois la moyenne et
+  neuf fois le compte de pixels d'un CHANGEMENT DE LANGUE COMPLET sur ce même écran (3,43 et
+  90 973 dans le tableau ci-dessus). C'est le plus gros chiffre que cet outil ait rendu, et il ne
+  vient pas du code. En décalant l'image d'après de 105 pixels vers le haut, la moyenne tombe de
+  20,1 à 1,03 — un minimum unique et net, donc un défilement et rien d'autre. D'où `--decalage`.
+
+  Pas corrigé, et la raison se chiffre : `sortie-bas` et `profil-bas`, qui défilent aussi, sont
+  revenus IDENTIQUES à la même exécution. Changer la stratégie de défilement — aller jusqu'au bas
+  plutôt que glisser N fois — recadrerait ces trois captures de diagnostic pour un défaut qui
+  n'apparaît que de temps en temps sur l'une d'elles.
+
 ET J'AI DIT TROP VITE QUE LES SIX IMAGES LIVRÉES À APPLE ÉTAIENT REPRODUCTIBLES. Elles
 l'étaient entre les deux exécutions que j'avais comparées — 01 h 18 et 04 h 37, toutes deux
 après minuit. Une troisième à 07 h 00 a fait bouger `3-coach` dans les trois langues et les
@@ -84,7 +100,18 @@ stable et dit par la même occasion ce qu'on veut montrer : un coach qui a répo
 cinq autres images livrées n'ont pas bougé sur les trois exécutions.
 
 Pour juger un découpage, nommer les écrans avec `--seulement` plutôt que tout comparer : les
-deux ci-dessus noieraient le verdict sous un bruit qui ne vient pas du code.
+trois ci-dessus noieraient le verdict sous un bruit qui ne vient pas du code.
+
+# `--decalage` : « ça a bougé » ou « ça a juste défilé » ?
+
+La question s'est posée le 8 novembre et a coûté une demi-heure à trancher à la main. Avec
+`--decalage`, chaque image qui diffère est aussi comparée à elle-même DÉCALÉE verticalement, de
+−200 à +200 pixels, et l'outil dit le décalage qui minimise l'écart et ce qu'il en reste.
+
+Un minimum net loin de zéro veut dire « même contenu, autre position » — donc un défilement, pas
+une régression. Un minimum à zéro, ou un creux mou, veut dire que la différence est dans le
+contenu et qu'il faut regarder l'image. L'option est volontairement facultative : la recherche
+coûte quatre cents comparaisons par image, et on ne la paye que quand on a une question.
 """
 import argparse
 import pathlib
@@ -121,6 +148,55 @@ def differences(avant: pathlib.Path, apres: pathlib.Path, haut: float, bruit: in
     return moyenne, comptes[255], marque.getbbox(), ecart
 
 
+#: Amplitude de la recherche de décalage, en pixels, de part et d'autre de zéro. Deux cents
+#: couvrent largement un glissement de plus ou de moins ; au-delà, deux écrans qui se
+#: ressemblent par hasard commenceraient à se trouver un faux minimum.
+AMPLITUDE = 200
+
+
+def meilleur_decalage(avant: pathlib.Path, apres: pathlib.Path, haut: float):
+    """Le décalage vertical qui rapproche le plus les deux images, et ce qu'il en reste.
+
+    Rend `(décalage, moyenne à ce décalage, moyenne sans décalage)`. Un minimum net loin de zéro
+    veut dire « même contenu, autre position » — un défilement, pas une régression.
+
+    La comparaison se fait sur une BANDE CENTRALE, pas sur l'image entière : le haut porte un
+    en-tête qui ne défile pas et le bas une barre d'onglets qui ne défile pas non plus. Les
+    inclure ferait croire à un contenu identique là où rien ne bouge, et tirerait le minimum
+    vers zéro.
+    """
+    a, b = gris(avant, haut), gris(apres, haut)
+    if a.size != b.size:
+        return None, None, None
+    largeur, hauteur = a.size
+    debut, fin = int(hauteur * 0.06), int(hauteur * 0.88)
+    bande = fin - debut
+    resultats = []
+    for dy in range(-AMPLITUDE, AMPLITUDE + 1):
+        # ON COMPARE CE QUI SE RECOUVRE, on ne saute pas le décalage.
+        #
+        # La première version refusait tout décalage qui faisait sortir la bande de l'image. Sur
+        # une capture de 2868 pixels la marge est de 160 et ça ne se voyait pas ; sur une image
+        # plus courte — un gabarit de test de 600 — la marge tombe à 33 et la recherche ne
+        # pouvait tout simplement PAS trouver un décalage de 48. Elle rendait alors le meilleur
+        # des petits décalages, avec un reste énorme, et un message qui disait le contraire de
+        # la vérité. Trouvé en éprouvant l'option, pas en la relisant.
+        y0 = max(debut, -dy)
+        y1 = min(fin, hauteur - dy)
+        # Sous les deux tiers de recouvrement, la moyenne porte sur un ruban : elle baisserait
+        # pour de mauvaises raisons, et un faux minimum vaut moins que pas de réponse.
+        if y1 - y0 < bande * 2 // 3:
+            continue
+        reference = a.crop((0, y0, largeur, y1))
+        candidat = b.crop((0, y0 + dy, largeur, y1 + dy))
+        resultats.append((dy, ImageStat.Stat(ImageChops.difference(reference, candidat)).mean[0]))
+    if not resultats:
+        return None, None, None
+    sans = dict(resultats).get(0)
+    dy, moyenne = min(resultats, key=lambda r: r[1])
+    return dy, moyenne, sans
+
+
 def images(dossier: pathlib.Path) -> dict[str, pathlib.Path]:
     return {str(p.relative_to(dossier)): p for p in sorted(dossier.rglob("*.png"))}
 
@@ -149,6 +225,9 @@ def main() -> int:
     a.add_argument("--haut", type=float, default=HAUT_MASQUE,
                    help=f"Fraction de la hauteur masquée en haut (barre d'état). "
                         f"{HAUT_MASQUE} par défaut.")
+    a.add_argument("--decalage", action="store_true",
+                   help="pour chaque image qui diffère, chercher si un décalage vertical "
+                        "l'explique — autrement dit : est-ce que ça a bougé, ou défilé ?")
     a.add_argument("--sortie", type=pathlib.Path, default=None,
                    help="Dossier où garder l'image de la différence, pour les seules images "
                         "qui diffèrent. Sans lui, on ne garde rien.")
@@ -193,6 +272,35 @@ def main() -> int:
         ou = (f"cadre x {cadre[0]}–{cadre[2]}, y {cadre[1]}–{cadre[3]} "
               f"(hors barre d'état)") if cadre else "aucun cadre"
         print(f"  ≠ {nom} : moyenne {moyenne:.3f}, {pixels} pixel(s) au-delà du bruit, {ou}")
+        if options.decalage:
+            dy, apres_decalage, sans = meilleur_decalage(gauche[nom], droite[nom], options.haut)
+            if dy is None:
+                print("      décalage : deux tailles d'image, rien à chercher.")
+            elif not sans:
+                # La bande centrale est identique telle quelle : ce qui diffère est en dehors
+                # d'elle. Dire « le décalage n'explique pas » serait trompeur — il n'y a rien à
+                # expliquer là où l'on a regardé. (Relevé en éprouvant l'option : un gabarit au
+                # motif périodique retombait sur lui-même, et le message d'alors mentait.)
+                print("      décalage : la bande centrale est identique sans décalage. "
+                      "Ce qui diffère est au-dessus ou en dessous d'elle.")
+            elif dy == 0:
+                print(f"      décalage : aucun ne fait mieux que zéro ({sans:.3f}). "
+                      "La différence est dans le CONTENU — regarde l'image.")
+            else:
+                # `dy` est le décalage appliqué à la fenêtre de l'image d'après : positif veut
+                # dire que son contenu est plus BAS, donc qu'elle a défilé MOINS loin. Donner le
+                # signe nu obligerait à refaire ce raisonnement à chaque lecture.
+                sens = "plus bas (défilement moins loin)" if dy > 0 else "plus haut (défilement plus loin)"
+                print(f"      décalage : le contenu d'après est {abs(dy)} px {sens} ; "
+                      f"la moyenne passe de {sans:.3f} à {apres_decalage:.3f}.")
+                # Un facteur quatre est net : sur les mesures du 8 novembre, un vrai défilement
+                # divisait l'écart par vingt. En deçà, le décalage n'explique pas grand-chose et
+                # dire « c'est juste un défilement » serait trop commode.
+                if sans and apres_decalage * 4 <= sans:
+                    print("      → même contenu à une autre position : un défilement, "
+                          "pas une régression.")
+                else:
+                    print("      → le décalage n'explique pas l'écart. Regarde l'image.")
         if options.sortie:
             options.sortie.mkdir(parents=True, exist_ok=True)
             cible = options.sortie / nom.replace("/", "-")

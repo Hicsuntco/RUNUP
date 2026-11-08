@@ -205,6 +205,83 @@ def _():
         assert gardees[0].name == "a-club.png", gardees[0].name
 
 
+# --- `--decalage` : « ça a bougé » ou « ça a juste défilé » ? ----------------------------------
+
+
+def ecran_varie() -> Image.Image:
+    """Un écran dont le contenu n'est PAS périodique.
+
+    Le gabarit ordinaire (`ecran`) pose une barre toutes les 24 lignes. C'est commode pour tout
+    le reste de ce fichier et FAUX pour éprouver un décalage : glissé de 48 pixels, il retombe
+    exactement sur lui-même, l'écart tombe à zéro à deux décalages à la fois, et le cas réussit
+    ou échoue pour une raison qui n'a rien à voir avec ce qu'on mesure. Relevé en l'écrivant.
+
+    Ici les barres sont à des hauteurs irrégulières mais FIXES — pas de tirage au sort : un cas
+    qui change d'une exécution à l'autre ne prouve rien.
+    """
+    im = Image.new("L", (L, H), 30)
+    hauteurs = [0, 17, 39, 44, 90, 103, 158, 171, 230, 266, 301, 355, 362, 418, 470, 505]
+    for i, y in enumerate(h + BARRE + 20 for h in hauteurs):
+        for yy in range(y, min(y + 6 + (i % 3), H)):
+            for x in range(20 + (i % 5) * 12, L - 20):
+                im.putpixel((x, yy), 200)
+    return im
+
+
+def defile(im: Image.Image, dy: int) -> Image.Image:
+    """La même image, son contenu remonté de `dy` pixels — ce que fait un glissement de plus.
+
+    La barre d'état ne bouge pas, puisqu'elle ne défile pas : la recopier telle quelle est ce
+    qui rend ce faux défilement fidèle, et c'est aussi ce qui empêche le test de réussir pour
+    une mauvaise raison (une image entièrement translatée se retrouverait trop facilement).
+    """
+    sortie = Image.new("L", im.size, 30)
+    sortie.paste(im.crop((0, dy, im.width, im.height)), (0, 0))
+    sortie.paste(im.crop((0, 0, im.width, BARRE)), (0, 0))
+    return sortie
+
+
+@cas_de("UN DÉFILEMENT EST RECONNU COMME TEL, avec son décalage")
+def _():
+    # Le cas réel du 8 novembre 2026 : `club-apercu-bas` rendait le plus gros écart que cet
+    # outil ait jamais mesuré — cinq fois un changement de langue complet — et ce n'était qu'un
+    # glissement arrêté 105 pixels plus loin.
+    with tempfile.TemporaryDirectory() as tmp:
+        avant, apres = deux_dossiers(tmp)
+        ecrire(avant, "club.png", ecran_varie())
+        ecrire(apres, "club.png", defile(ecran_varie(), 48))
+        code, sortie = lancer(avant, apres, "--decalage")
+        assert "48 px plus haut" in sortie, f"le décalage n'est pas trouvé :\n{sortie}"
+        assert "un défilement" in sortie, sortie
+        assert "régression" in sortie, sortie
+
+
+@cas_de("un vrai changement de contenu n'est PAS pris pour un défilement")
+def _():
+    # L'erreur que cette option pourrait introduire : excuser une régression en la baptisant
+    # défilement. Un bloc ajouté ne se rattrape par aucun décalage.
+    with tempfile.TemporaryDirectory() as tmp:
+        avant, apres = deux_dossiers(tmp)
+        ecrire(avant, "club.png", ecran())
+        ecrire(apres, "club.png", ecran(bloc=(200, 120)))
+        code, sortie = lancer(avant, apres, "--decalage")
+        assert "CONTENU" in sortie or "n'explique pas" in sortie, sortie
+        assert "un défilement, pas une régression" not in sortie, \
+            f"un changement de contenu a été excusé comme un défilement :\n{sortie}"
+
+
+@cas_de("sans --decalage, rien n'est cherché")
+def _():
+    # La recherche coûte quatre cents comparaisons par image : elle ne doit pas se payer
+    # quand on n'a pas posé la question.
+    with tempfile.TemporaryDirectory() as tmp:
+        avant, apres = deux_dossiers(tmp)
+        ecrire(avant, "club.png", ecran_varie())
+        ecrire(apres, "club.png", defile(ecran_varie(), 48))
+        code, sortie = lancer(avant, apres)
+        assert "décalage" not in sortie, sortie
+
+
 def main():
     echecs = 0
     for nom, f in cas:

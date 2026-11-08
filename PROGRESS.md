@@ -602,6 +602,35 @@ le sous-titre « Ton club, tes abonnements et tes c… », le nom d'un club long
 de lignes posées exprès sur du contenu de longueur inconnue, pas des mises en page qui cassent, et
 la coupure se fait proprement sur un caractère de suite.
 
+### Et la question inverse : est-ce que les écrans ORDINAIRES ont bougé ?
+
+Les trois correctifs ne devaient toucher que le cran d'accessibilité. `comparer.py` entre les
+captures d'avant et d'après, sur les quarante-deux images d'une langue : **trente-quatre
+identiques au pixel près**, et huit qui diffèrent — toutes expliquées.
+
+| Image | Écart | Explication |
+| --- | --- | --- |
+| les trois en grand texte corrigés | 11,6 à 17,7 | c'est le correctif |
+| `course-en-cours` (×3, dont la version claire et la version grand texte) | 0,17 à 1,12 | écran non reproductible, documenté : chronomètre, calories, tuiles qui n'arrivent pas au même moment |
+| `clair/diagnostic/profil` | 0,19 sur une bande de 38 points | écran non reproductible, documenté : la tuile « Amis » dépend de l'heure |
+| `diagnostic/club-apercu-bas` | **16,3 et 813 202 pixels** | TROISIÈME écran non reproductible, trouvé ce jour-là |
+
+Le dernier a coûté une demi-heure. Seize de moyenne, c'est cinq fois ce que rend un changement de
+LANGUE complet sur ce même écran — le plus gros chiffre que cet outil ait jamais rendu. Et ce
+n'était rien : le contenu est identique, le défilement s'est arrêté 105 pixels plus loin. Le
+harnais donne un nombre de glissements, pas une destination.
+
+D'où `comparer.py --decalage`, qui cherche désormais si un décalage vertical explique l'écart et
+le dit en toutes lettres. Sur cette image : « le contenu d'après est 105 px plus bas (défilement
+moins loin) ; la moyenne passe de 19,904 à 1,435 → un défilement, pas une régression. »
+
+Deux défauts trouvés en ÉPROUVANT l'option, qui méritent d'être notés parce qu'aucun ne se voyait
+à la relecture : le gabarit de test posait une barre toutes les 24 lignes, donc un décalage de 48
+retombait exactement sur lui-même et l'écart tombait à zéro des deux côtés ; et la recherche
+sautait silencieusement tout décalage qui faisait sortir la bande de l'image — invisible sur une
+capture de 2 868 pixels, fatal sur un gabarit de 600. Les deux sont corrigés et écrits dans le
+code.
+
 ### Mais d'abord : regarder l'app en grand texte
 
 Le plafond de `RUFont` est passé de 1,6 × à 2,0 × sur la foi d'un travail de réorganisation —

@@ -74,6 +74,34 @@ secondes, il retrouve zéro ; on dit la vérité, il ne déplace rien. (Et le pr
 test-là se trompait lui-même — deux de ses quatre écrans d'essai étaient identiques, parce que
 leur motif était modulo 2.)
 
+**Et cette recherche-là ne sait pas faire mieux qu'à une seconde près — c'est intrinsèque.** La
+question « ce plan montre-t-il le bon écran ? » a la MÊME RÉPONSE sur deux secondes et demie :
+le test appuie sur l'onglet 0,6 s avant le début du plan, et le plan dure deux secondes. Il n'y
+a pas de minimum à trouver, il y a un plateau, et c'est le bruit de l'image qui y tranche. Elle
+a rendu 0 pendant des semaines et −0,75 s le 8 novembre, sur le même harnais. Un décalage de
+−0,75 est parfait pour l'identité et faux pour le découpage : la fenêtre de 0,9 s qui cherche
+le changement d'écran tombe alors entièrement avant lui, et le garde-fou ne voit plus rien.
+
+**Le décalage se reprend donc sur le CHANGEMENT d'écran, qui est net.** `affinage` le cherche
+dans une fenêtre asymétrique — 2,0 s avant le plan, 1,2 s après, parce qu'au décalage fautif le
+changement tombe APRÈS le début de plan supposé — et ramène le décalage pour que le changement
+retombe à 0,6 s. La recherche grossière garde son rôle : ramener une horloge fausse de plusieurs
+secondes à moins d'une, ce qu'elle sait faire.
+
+**Trois erreurs de ma part sur ce seul sujet, et la troisième est la plus instructive.** D'abord
+j'ai cru que l'instant où l'on regarde était en cause, et l'exécution suivante a rendu le même
+−0,75. Ensuite j'ai écrit un affinage dont la fenêtre ne couvrait pas le cas qui l'avait motivé.
+Enfin — et c'est celle qui compte — l'affinage a déplacé le découpage de −0,62 s sur une prise
+dont l'horloge était juste, parce que `instant_du_changement` rendait la PREMIÈRE image qui
+n'est plus l'écran d'avant. Sur 0,9 s ça marche ; sur 2 s, une seule image qui s'écarte — un
+défilement qui finit, une tuile de carte qui arrive — suffit à la faire tomber trop tôt. Elle
+rend maintenant la DERNIÈRE image de l'écran d'avant : même nombre sur une fenêtre propre, ce
+qui explique que tous les cas fabriqués passaient, et seul le second tient sur une vraie prise.
+
+**Et un message disait l'inverse de sa condition.** « La fenêtre ne commence pas sur l'écran
+d'avant » s'affichait quand AUCUNE image de la fenêtre ne quitte l'écran d'avant. Il m'a fait
+raisonner une demi-heure sur la mauvaise cause.
+
 **L'épisode précédent, lui, ne s'était pas reproduit sur le coup.** Deux exécutions complètes du harnais
 ont suivi, et leur étape de film est verte dans les trois langues — `es-ES.mp4` existe et son
 découpage tombe sur les bons écrans. C'était donc un accident de prise, pas un défaut de

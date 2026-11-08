@@ -26,16 +26,16 @@ quelque chose que la page ne dit pas. L'inverse — une section publiée qui n'e
 dépôt — est signalé aussi, mais il est bien moins grave : une page qui déclare de trop ne trompe
 personne sur ce qui est pris.
 
-# POURQUOI IL MESURE SANS REFUSER, POUR L'INSTANT
+# IL REFUSE, DEPUIS LE JOUR MÊME
 
-Sans `--exiger`, il affiche la divergence et rend 0. C'est le même choix que `--plancher` dans
-`check_grand_texte.py`, et la raison est la même : la correction n'est pas dans ce dépôt. Publier
-la page demande de porter `privacy.html` sur `main`, ce qui n'appartient pas à cette branche.
-Rendre la chaîne rouge pendant des jours pour une action qu'elle ne peut pas faire apprendrait à
-ignorer un rouge — et une fausse alerte permanente finit par être contournée.
+`server.yml` lui passe `--exiger`. Il a mesuré sans refuser pendant quelques heures seulement :
+la correction ne se faisait pas depuis cette branche — la page est servie par GitHub Pages depuis
+`main` — et une chaîne rouge pendant des jours pour une action qu'elle ne peut pas faire apprend
+à ignorer un rouge. La page a rattrapé le 8 novembre 2026, vérifiée octet pour octet, et le
+drapeau est entré dans la foulée.
 
-Le jour où la page publiée rattrape le dépôt, `--exiger` entre dans `server.yml` et ce
-commentaire disparaît.
+Sans `--exiger`, il mesure et se tait : c'est la forme à reprendre si la situation se représente,
+la même que `--plancher` dans `check_grand_texte.py`.
 """
 import argparse
 import pathlib

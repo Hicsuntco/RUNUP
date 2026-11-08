@@ -128,11 +128,17 @@ jobs:
       # dangereux — `privacy.html` décrivait les rapports de panne, la page publiée non, alors
       # que l'app les envoie depuis ce jour-là.
       #
-      # SANS `--exiger` POUR L'INSTANT : la correction demande de porter `privacy.html` sur
-      # `main`, ce qui ne se fait pas depuis ici. Rendre la chaîne rouge pendant des jours pour
-      # une action qu'elle ne peut pas faire apprendrait à ignorer un rouge. Le jour où la page
-      # publiée rattrape le dépôt, `--exiger` entre ici.
+      # `--exiger` EST ENTRÉ LE 8 NOVEMBRE 2026, le jour même. La page publiée a rattrapé le
+      # dépôt — vérifié octet pour octet, `privacy.html` et `support.html` — donc le contrôle
+      # n'a plus de raison de se taire. Il mesurait sans refuser tant que la correction ne se
+      # faisait pas depuis cette branche : une chaîne rouge pendant des jours pour une action
+      # qu'elle ne peut pas faire apprend à ignorer un rouge.
+      #
+      # À partir d'ici, toute nouvelle section ajoutée à `privacy.html` fait ROUGIR la chaîne
+      # tant qu'elle n'est pas publiée sur `main`. C'est voulu : l'app ne doit pas collecter
+      # quelque chose que la page liée depuis la fiche App Store ne dit pas, et la dernière fois
+      # l'écart a duré le temps qu'il a fallu pour le remarquer à la main.
       - name: Les cas du contrôle de la politique publiée
         run: cd ci_scripts && python3 test_politique.py
       - name: La politique PUBLIÉE dit-elle ce que l'app collecte
-        run: python3 ci_scripts/check_politique.py
+        run: python3 ci_scripts/check_politique.py --exiger

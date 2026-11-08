@@ -88,11 +88,14 @@ par GitHub Pages depuis `main`, donc elle ne bouge pas quand cette branche bouge
 python3 ci_scripts/check_politique.py
 ```
 
-Il mesure et se tait tant que `--exiger` n'est pas passé, parce que la correction — porter
-`privacy.html` sur `main` — ne se fait pas depuis la branche de travail. Une section présente
+La chaîne Serveur le lance avec `--exiger` et ROUGIT sur une divergence. Une section présente
 ici et absente là-bas veut dire que l'app collecte quelque chose que la page ne dit pas, et la
 fiche de confidentialité d'App Store Connect le déclare pourtant : la divergence entre les deux
 est un motif de rejet à part entière.
+
+Si elle se représente, la correction ne se fait PAS depuis la branche de travail : la page est
+servie par GitHub Pages depuis `main`. Il faut y porter `privacy.html` — c'est deux copier-coller
+dans l'éditeur web de GitHub, et ça ne déclenche aucune de nos chaînes.
 
 ### d. Est-ce que c'est une décision, ou une absence de décision ?
 

@@ -14,6 +14,7 @@ n'apparaît, l'avant/après est écrit ici, et les trois langues ont été véri
 | Et « maison » veut dire MetricKit, pas un gestionnaire de signal : Apple écrit que `backtrace` n'y est pas appelable, donc un rapport écrit là ne peut pas porter de pile d'appels. Voir le chantier 14. | l'équipe technique | 8 novembre 2026 |
 | « ABONNÉ » → le libellé dit l'action (« SE DÉSABONNER ») | Charlotte | 7 novembre 2026 |
 | « RETIRER » → une confirmation, pas un poids visuel différent | Charlotte | 7 novembre 2026 |
+| `privacy.html` et `support.html` portés sur `main`, donc publiés : la politique dit maintenant ce que l'app collecte | Charlotte | 8 novembre 2026 |
 
 ## Ce qui attend une décision
 
@@ -21,7 +22,6 @@ n'apparaît, l'avant/après est écrit ici, et les trois langues ont été véri
 | --- | --- |
 | Contenu des séances HYROX | Il faut quelqu'un qui a couru un HYROX. L'équipe n'a pas cette compétence et ne doit pas l'inventer. |
 | Cette branche doit-elle rester la production ? | Elle l'est, confirmé dans les réglages Vercel le 7 novembre : `Settings → Environments → Production → Branch Tracking` porte `claude/runup-ios-swiftui-app-5b1yv6`. Donc aucune relecture, aucune préproduction. Les aperçus, eux, sont maintenant éprouvables — voir le chantier 11. |
-| **Porter `privacy.html` sur `main`** | BLOQUANT POUR UNE SOUMISSION. La politique que lisent Apple et les utilisatrices est servie par GitHub Pages depuis `main`, pas depuis cette branche : mesuré le 8 novembre, la page en ligne est identique octet pour octet au `privacy.html` de `main`. Il lui manque le paragraphe des rapports de panne, que l'app envoie depuis ce jour-là, pendant que `PrivacyInfo.xcprivacy` déclare Crash Data et Performance Data. Une divergence entre le manifeste et la politique liée depuis la même fiche est un motif de rejet à part entière. `check_politique.py` affiche l'écart à chaque exécution de la chaîne Serveur ; il passera en refus (`--exiger`) le jour où la page rattrapera. Ça ne se fait pas depuis la branche de travail. |
 | Déclarer Crash Data et Performance Data sur la fiche App Store Connect | En *App Functionality*, pour concorder avec `PrivacyInfo.xcprivacy`. Le détail est dans `APP_STORE_LISTING.md` § Confidentialité. Même famille que la ligne ci-dessus : le manifeste et la fiche doivent dire la même chose. |
 
 
@@ -515,6 +515,19 @@ exactement ça. Ça n'a pas suffi — c'est la définition d'un travail de machi
 asynchrone `diagnosticReports`. RUNUP vise iOS 17 : la nouvelle API n'existe pas pour la
 quasi-totalité du parc, et les classes `MX*` sont là depuis iOS 14. Le jour où le plancher passe à
 27, la migration est dans un seul fichier.
+
+### LA POLITIQUE PUBLIÉE A RATTRAPÉ, LE JOUR MÊME
+
+Le constat était que la page lue par Apple et les utilisatrices — servie par GitHub Pages depuis
+`main`, pas depuis cette branche — ne mentionnait pas les rapports de panne, alors que
+`testflight.yml` ENVOIE à chaque push (`xcrun altool --upload-app`) : des builds qui les
+collectent étaient déjà distribués. Pas une fuite, un manquement de déclaration, et sur une
+donnée qui ne contient ni texte écrit, ni santé, ni position.
+
+Charlotte a porté `privacy.html` et `support.html` sur `main` le 8 novembre. Vérifié octet pour
+octet : les deux pages publiées sont identiques à celles du dépôt. `check_politique.py` est passé
+en `--exiger` dans la foulée — toute nouvelle section ajoutée ici fera désormais rougir la chaîne
+tant qu'elle n'est pas publiée.
 
 ### CE QUI RESTE À FAIRE À LA MAIN
 

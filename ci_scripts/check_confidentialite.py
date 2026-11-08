@@ -56,6 +56,7 @@ TYPES = {
     "NSPrivacyCollectedDataTypeFitness": ("Health & Fitness", "Fitness"),
     "NSPrivacyCollectedDataTypePreciseLocation": ("Location", "Precise Location"),
     "NSPrivacyCollectedDataTypeCoarseLocation": ("Location", "Coarse Location"),
+    "NSPrivacyCollectedDataTypeContacts": ("Contacts", "Contacts"),
     "NSPrivacyCollectedDataTypePhotosorVideos": ("User Content", "Photos or Videos"),
     "NSPrivacyCollectedDataTypeOtherUserContent": ("User Content", "Other User Content"),
     "NSPrivacyCollectedDataTypeUserID": ("Identifiers", "User ID"),

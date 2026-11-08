@@ -429,6 +429,32 @@ par catégorie, dans l'ordre du formulaire. C'est à la main ou rien : l'API d'A
 ne sait pas écrire cette fiche — vérifié dans la spécification OpenAPI d'Apple (v4.6), 1 027
 chemins et aucun pour la confidentialité.
 
+### CE QUI EST DÉCLARÉ EN LIGNE AUJOURD'HUI, ET NE CORRESPOND PAS
+
+Relevé le 8 novembre 2026 sur la fiche publique — `apps.apple.com/fr/app/id6790719663`, section
+« Confidentialité de l'app », rendue dans un navigateur sans en-tête puisque la page la charge
+en JavaScript. Ce n'est donc pas une supposition sur l'état de la fiche, c'est sa lecture.
+
+| Données **liées** à vous | Données **non liées** à vous |
+| --- | --- |
+| Coordonnées, Contacts, Identifiants, Données d'utilisation | Santé et activité physique, Localisation, Contenu utilisateur |
+
+**Trois écarts, et un seul est nouveau.**
+
+1. **Santé, Localisation et Contenu utilisateur sont déclarés NON LIÉS** alors que le manifeste
+   les déclare liés — et depuis le 8 octobre au moins, donc la 3.3 publiée le 3 novembre est
+   partie ainsi. C'est l'écart qui compte : il déclare MOINS que ce que l'app fait. Ces trois
+   catégories voyagent rattachées au compte — un itinéraire publié porte son autrice, une sortie
+   au fil du club aussi.
+2. **Diagnostics est absent** — normal, Crash Data et Performance Data datent du 8 novembre et
+   n'ont jamais été soumis.
+3. **Contacts était déclaré ici et absent du manifeste.** Corrigé dans le manifeste plutôt
+   qu'enlevé de la fiche, en appliquant le raisonnement déjà écrit plus bas : la dispense se
+   plaide, une déclaration se lit.
+
+Donc, dans le formulaire : corriger **trois** réponses « lié à l'utilisatrice » de Non à Oui, et
+**ajouter** les deux lignes de Diagnostics. Le reste est déjà juste.
+
 <!-- confidentialité: début (tableau dérivé du manifeste par check_confidentialite.py) -->
 
 | Catégorie | Type de donnée | Lié à l'utilisatrice | Suivi | Finalités |
@@ -439,6 +465,7 @@ chemins et aucun pour la confidentialité.
 | Health & Fitness | **Health** | Oui | Non | App Functionality |
 | Location | **Coarse Location** | Oui | Non | App Functionality |
 | Location | **Precise Location** | Oui | Non | App Functionality |
+| Contacts | **Contacts** | Oui | Non | App Functionality |
 | User Content | **Other User Content** | Oui | Non | App Functionality |
 | User Content | **Photos or Videos** | Oui | Non | App Functionality |
 | Identifiers | **Device ID** | Oui | Non | App Functionality, Analytics |

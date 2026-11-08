@@ -178,6 +178,39 @@
       </array>
     </dict>
 
+    <!--
+      LE CARNET D'ADRESSES, ET POURQUOI IL ENTRE ICI ALORS QU'IL N'Y ÉTAIT PAS.
+      La fiche App Store Connect le déclare depuis toujours ; ce manifeste, non. La divergence a
+      été mesurée le 8 novembre 2026 en lisant l'étiquette publiée sur l'App Store : « Contacts »
+      y figure parmi les données liées, et ne figurait nulle part ici.
+
+      Le raisonnement est celui déjà écrit dans APP_STORE_LISTING.md, appliqué au manifeste :
+      « Apple dispense de déclaration les données qui ne servent qu'à traiter la requête en cours
+      et ne sont pas conservées — ce qui est exactement notre cas, et on pourrait donc ne rien
+      déclarer. Mais la dispense se plaide, alors qu'une déclaration se lit. » Déclarer en trop
+      n'a jamais fait rejeter personne ; déclarer en moins est un motif de retrait.
+
+      Ce qui sort de l'appareil : des empreintes SHA-256 d'adresses, calculées sur le téléphone
+      (voir `ContactMatcher`). Le serveur compare empreinte à empreinte contre la colonne générée
+      `users.email_sha256`, ne reçoit aucune adresse, n'en stocke aucune et ne conserve pas les
+      empreintes reçues. Les numéros ne sont jamais lus. Ça reste de la donnée DÉRIVÉE du carnet
+      d'adresses, et c'est elle qu'on déclare.
+
+      LIÉ : le résultat de la comparaison revient rattaché au compte qui a posé la question.
+    -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeContacts</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+      </array>
+    </dict>
+
     <!-- Identifiant de compte. -->
     <dict>
       <key>NSPrivacyCollectedDataType</key>

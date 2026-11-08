@@ -656,6 +656,17 @@ struct LiveRunView: View {
             // `ViewThatFits` essaie la rangée, et prend la colonne quand elle ne tient pas.
             // C'est le patron déjà employé par `RUMetricRow` et par les tuiles de records — et
             // c'est lui qui avait permis de lever le plafond de titrage de 1,6 à 2,0 ×.
+            //
+            // IL NE SUFFIT PAS, ET LA CAPTURE DU 8 NOVEMBRE L'A MONTRÉ. `ViewThatFits` compare
+            // la taille IDÉALE de chaque candidat à la place offerte, et la taille idéale d'un
+            // `Text` qui a le droit de revenir à la ligne est toute petite : la rangée « tenait »
+            // toujours, et « --:-- » se cassait en deux à l'intérieur de sa cellule. Le libellé
+            // ALLURE descendait alors d'un cran et ne s'alignait plus avec FC ni KCAL —
+            // exactement le défaut que ce bloc existait pour corriger, photographié deux fois.
+            //
+            // Les cellules disent donc leur VRAIE largeur : `lineLimit(1)` et
+            // `fixedSize(horizontal:)` sur chaque texte. La rangée ne tient plus quand elle ne
+            // tient pas, et la colonne prend la main.
             ViewThatFits(in: .horizontal) {
                 mesuresDeCourse(enColonne: false)
                 mesuresDeCourse(enColonne: true)
@@ -828,9 +839,13 @@ struct LiveRunView: View {
                 .contentTransition(.numericText())
                 .animation(RUMotion.respecting(reduceMotion, RUMotion.digit), value: value)
                 .foregroundColor(drift ? Ink.amber : Ink.accentSoft)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
             Text(label)
                 .font(RUFont.sans(.micro, weight: .bold)).tracking(1.5)
                 .foregroundColor(drift ? Ink.amber : Ink.label)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
         }
         .frame(maxWidth: .infinity)
         .animation(RUMotion.respecting(reduceMotion, RUMotion.snap), value: drift)
@@ -866,7 +881,11 @@ struct LiveRunView: View {
     private func liveMetric(_ value: String, _ label: String, _ color: Color) -> some View {
         VStack(spacing: 2) {
             Text(value).displayStyle(.figure).foregroundColor(color)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
             Text(label).font(RUFont.sans(.micro, weight: .bold)).tracking(1.5).foregroundColor(Ink.label)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
         }
         .frame(maxWidth: .infinity)
         // The screen most glanced at mid-run — was two separate stops ("8:32" then, later,

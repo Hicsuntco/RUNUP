@@ -357,7 +357,7 @@ struct PaywallView: View {
         // texte passeraient à travers le bouton.
         .background(
             RUColor.bg
-                .overlay(Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline),
+                .overlay(RUFilet(),
                          alignment: .top)
                 .ignoresSafeArea(edges: .bottom)
         )

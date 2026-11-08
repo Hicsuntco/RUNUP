@@ -873,7 +873,7 @@ struct HomeView: View {
     /// cette carte lui donnerait deux sommets, et on ne démarre pas la séance de demain.
     private func tomorrowRow(_ next: (title: String, minutes: Int)) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
+            RUFilet()
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Text("Demain")
                     .font(RUFont.sans(.micro, weight: .bold))

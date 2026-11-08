@@ -249,7 +249,7 @@ struct SettingsView: View {
                 .background(RUColor.card2, in: Capsule())
             }
 
-            Divider().background(RUColor.line)
+            RUFilet()
 
             // L'HABILLAGE — voir `Habillage`. Posé ICI, entre le mode et la couleur, parce que
             // c'est le même genre de réglage : il ne change rien à ce que l'app fait, seulement
@@ -257,7 +257,7 @@ struct SettingsView: View {
             Text("Habillage").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
             VStack(spacing: 0) {
                 ForEach(Array(Habillage.allCases.enumerated()), id: \.element.id) { index, h in
-                    if index > 0 { Divider().background(RUColor.line) }
+                    if index > 0 { RUFilet() }
                     Button { choisirLHabillage(h) } label: {
                         HStack(spacing: 12) {
                             apercuDHabillage(h)
@@ -286,7 +286,7 @@ struct SettingsView: View {
                 }
             }
 
-            Divider().background(RUColor.line)
+            RUFilet()
 
             Text("Couleur de l'app").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: 4), spacing: 18) {
@@ -424,7 +424,7 @@ struct SettingsView: View {
             }
             .padding(.horizontal, 14).padding(.vertical, 14)
 
-            Divider().background(RUColor.line)
+            RUFilet()
 
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .top) {
@@ -479,7 +479,7 @@ struct SettingsView: View {
                 .foregroundColor(RUColor.textPrimary)
             }
             .padding(.horizontal, 14).padding(.vertical, 14)
-            Divider().background(RUColor.line)
+            RUFilet()
             RUReglageRow(libelle: "Objectif calories actives") {
                 Stepper(
                     "\(Int(profile.activeCaloriesGoal)) kcal",

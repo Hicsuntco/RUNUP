@@ -947,7 +947,7 @@ struct ClubView: View {
                 RUCardHeader(title: "Ce que le club prépare")
                 VStack(spacing: 0) {
                     ForEach(Array(courses.enumerated()), id: \.element.id) { rang, course in
-                        if rang > 0 { boardDivider }
+                        if rang > 0 { RUFilet() }
                         ligneDeCourseDuClub(course)
                     }
                 }
@@ -1034,7 +1034,7 @@ struct ClubView: View {
                 }
                 VStack(spacing: 0) {
                     ForEach(Array(histo.recent.enumerated()), id: \.element.id) { rang, seance in
-                        if rang > 0 { boardDivider }
+                        if rang > 0 { RUFilet() }
                         HStack(spacing: 12) {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(Self.semaineFormatter.string(from: seance.heldAt))
@@ -1073,10 +1073,10 @@ struct ClubView: View {
                     // d'un club, c'est la phrase la plus à sa place.
                     if let semaine = highlights?.bestWeek {
                         ligneDeLaMeilleureSemaine(semaine)
-                        if !records.isEmpty { boardDivider }
+                        if !records.isEmpty { RUFilet() }
                     }
                     ForEach(Array(records.enumerated()), id: \.element.id) { rang, record in
-                        if rang > 0 { boardDivider }
+                        if rang > 0 { RUFilet() }
                         ligneDeRecord(record)
                     }
                 }
@@ -1716,29 +1716,25 @@ struct ClubView: View {
         }
     }
 
+    /// POURQUOI LE CLASSEMENT EST UNE LISTE À FILETS, ET NON UNE PILE DE CARTES.
+    ///
+    /// Les lignes étaient des cartes individuelles (fond `card2` + contour + rayon 14), empilées
+    /// avec 6 pt d'écart : douze membres donnaient douze cartes à contours, soit un classement
+    /// qui ressemblait à une liste de réglages. Un classement est une seule et même liste
+    /// ordonnée — un filet entre les lignes le dit, et ça permet d'en afficher nettement plus
+    /// par écran. La ligne « toi » garde, elle, son fond teinté : c'est le seul repère qui doit
+    /// sauter aux yeux, et il ressort beaucoup mieux maintenant qu'il est le seul fond de la
+    /// liste (le filet saute de part et d'autre pour ne pas venir couper ce bloc arrondi).
     private var weekBoardRows: some View {
         let rows = rankedWeekly
         return VStack(spacing: 0) {
             ForEach(Array(rows.enumerated()), id: \.element.id) { index, entry in
                 if index > 0 && !entry.isMe && !rows[index - 1].isMe {
-                    boardDivider
+                    RUFilet()
                 }
                 weekRow(entry, displayRank: index + 1)
             }
         }
-    }
-
-    /// Filet de séparation entre deux lignes de classement (`.lb-row`'s `border-top`).
-    ///
-    /// Les lignes étaient auparavant des cartes individuelles (fond `card2` + contour + rayon 14),
-    /// empilées avec 6 pt d'écart : douze membres donnaient douze cartes à contours, soit un
-    /// classement qui ressemblait à une liste de réglages. Un classement est une seule et même
-    /// liste ordonnée — un filet entre les lignes le dit, et ça permet d'en afficher nettement
-    /// plus par écran. La ligne « toi » garde, elle, son fond teinté : c'est le seul repère qui
-    /// doit sauter aux yeux, et il ressort beaucoup mieux maintenant qu'il est le seul fond de la
-    /// liste (le filet saute de part et d'autre pour ne pas venir couper ce bloc arrondi).
-    private var boardDivider: some View {
-        Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
     }
 
     /// Same pill-in-capsule idiom as `StatsView.rangePicker` — Km vs. "% objectif" for the weekly
@@ -1854,7 +1850,7 @@ struct ClubView: View {
         return VStack(spacing: 0) {
             ForEach(Array(rows.enumerated()), id: \.element.id) { index, entry in
                 if index > 0 && !entry.isMe && !rows[index - 1].isMe {
-                    boardDivider
+                    RUFilet()
                 }
                 generalRow(entry)
             }
@@ -2058,7 +2054,7 @@ struct ClubView: View {
             enTeteDeMessage(message)
             ForEach(reponses(a: message)) { reponse in
                 HStack(alignment: .top, spacing: 8) {
-                    Rectangle().fill(RUColor.line).frame(width: RUSpacing.hairline)
+                    RUFilet(.vertical)
                     enTeteDeMessage(reponse)
                 }
                 .padding(.leading, 10)

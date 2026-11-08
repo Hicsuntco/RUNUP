@@ -331,6 +331,66 @@ with tempfile.TemporaryDirectory() as d:
     attendu("une horloge juste n'est pas corrigée", round(trouve2, 2), 0.0)
     attendu("et elle reste parfaite", parfait2, True)
 
+# --- QUAND ON JUGE UN PLAN -----------------------------------------------------------------------
+# LE DÉFAUT DU 8 NOVEMBRE 2026, ET IL N'ÉTAIT PAS UN DÉFAUT DE DÉCOUPAGE.
+#
+# Le film espagnol a été refusé : « ce plan vise stats et montre profil (écart 24,4 contre 25,0) ».
+# Un quasi-ex æquo, là où un plan posé rend 6,4 contre 24,6 — et les trois autres plans du même
+# film étaient reconnus sans la moindre hésitation. L'alignement était donc juste. Ce qui ne
+# l'était pas, c'est l'INSTANT : « stats » a mis 0,57 s à se poser ce jour-là — dix-sept images
+# sur vingt — et l'image prise à 0,5 s était un mélange des deux écrans.
+#
+# On fabrique un film où le plan met délibérément du temps à se poser, et on vérifie les deux
+# verdicts sur le même film : à `debut + 0,5 s` on se trompe, à la fin du plan on ne se trompe pas.
+attendu("l'instant jugé est pris un quart de seconde avant la fin",
+        round(bs.instant_juge({"debut": 3.5, "fin": 5.5}), 2), 5.25)
+attendu("un plan trop court garde l'ancien instant",
+        round(bs.instant_juge({"debut": 3.5, "fin": 3.6}), 2), 4.0)
+
+with tempfile.TemporaryDirectory() as d:
+    dossier = pathlib.Path(d)
+    im_dir = dossier / "i"
+    im_dir.mkdir()
+
+    def uni(n):
+        """Deux écrans franchement différents : un clair, un sombre."""
+        return Image.new("L", (L, H), 40 + 150 * n)
+
+    # Trois secondes à 30 images : 0,0–1,0 s l'écran 0 (« profil »), 1,0–1,8 s un MÉLANGE des
+    # deux — l'écran qui arrive, pas encore posé — puis l'écran 1 (« stats ») jusqu'au bout.
+    for i in range(1, 91):
+        t_s = (i - 1) / 30
+        if t_s < 1.0:
+            im = uni(0)
+        elif t_s < 1.8:
+            im = Image.blend(uni(0), uni(1), 0.5)
+        else:
+            im = uni(1)
+        im.convert("RGB").save(im_dir / f"{i:04d}.png")
+    film = dossier / "lent.mov"
+    subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-framerate", "30",
+                    "-i", str(im_dir / "%04d.png"), "-c:v", "libx264", "-crf", "18",
+                    "-pix_fmt", "yuv420p", str(film)], check=True)
+
+    temoins_dir = dossier / "clair"
+    (temoins_dir / "diagnostic").mkdir(parents=True)
+    uni(0).convert("RGB").save(temoins_dir / "diagnostic" / "profil.png")
+    uni(1).convert("RGB").save(temoins_dir / "6-stats.png")
+    gabarit = bs.posee(film, 2.5, dossier, "g2")
+    refs = bs.temoins(temoins_dir, gabarit)
+
+    # Le plan « stats » commence à 1,0 s et dure deux secondes ; il se pose à 1,8 s.
+    plan = {"nom": "stats", "debut": 1.0, "fin": 3.0, "bascule": True}
+
+    tot = bs.le_plus_proche(bs.posee(film, plan["debut"] + 0.5, dossier, "tot"), refs)
+    attendu("à 0,5 s du début, le plan ne ressemble à aucun des deux écrans",
+            abs(tot[0][1] - tot[1][1]) < 10, True)
+
+    tard = bs.le_plus_proche(bs.posee(film, bs.instant_juge(plan), dossier, "tard"), refs)
+    attendu("à la fin du plan, c'est « stats » sans hésitation", tard[0][0], "stats")
+    attendu("et l'écart au suivant est franc", tard[1][1] - tard[0][1] > 40, True)
+
+
 # --- L'ALIGNEMENT DES DEUX HORLOGES -------------------------------------------------------------
 # LE DÉFAUT QUI A SORTI TROIS FILMS FAUX. Le test appuie sur l'onglet, attend 0,6 s, puis déclare
 # le plan : le changement d'écran doit tomber à 0,6 s du début du plan. Il tombait trois secondes

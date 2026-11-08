@@ -56,9 +56,9 @@ struct SignInView: View {
                         .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
 
                     HStack {
-                        Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
+                        RUFilet()
                         Text("ou").font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
-                        Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
+                        RUFilet()
                     }
 
                     emailForm

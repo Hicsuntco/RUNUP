@@ -136,7 +136,7 @@ struct RaceDiscoveryView: View {
             VStack(spacing: 0) {
                 ForEach(Array(results.enumerated()), id: \.element.id) { rang, course in
                     if rang > 0 {
-                        Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
+                        RUFilet()
                     }
                     ligne(course)
                 }
@@ -179,7 +179,7 @@ struct RaceDiscoveryView: View {
             VStack(spacing: 0) {
                 ForEach(Array(courses.enumerated()), id: \.element.id) { rang, course in
                     if rang > 0 {
-                        Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
+                        RUFilet()
                     }
                     ligne(course)
                 }

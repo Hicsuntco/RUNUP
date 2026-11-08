@@ -35,9 +35,9 @@ struct AdminSheet: View {
                     EyebrowLabel(text: "Le compte connecté", color: RUColor.text3)
                     VStack(spacing: 0) {
                         ligne("Adresse", compte?.email ?? String(localized: "inconnue du serveur"))
-                        Divider().background(RUColor.line)
+                        RUFilet()
                         ligne("Nom", compte?.name ?? "—")
-                        Divider().background(RUColor.line)
+                        RUFilet()
                         ligne("Identifiant", compte?.id ?? "—")
                     }
                     .ruCard()
@@ -45,11 +45,11 @@ struct AdminSheet: View {
                     EyebrowLabel(text: "Les droits", color: RUColor.text3)
                     VStack(spacing: 0) {
                         ligne("Compte de la maison", oui(compte?.isAdmin == true))
-                        Divider().background(RUColor.line)
+                        RUFilet()
                         ligne("Liste configurée côté serveur", oui(compte?.adminListConfigured == true))
-                        Divider().background(RUColor.line)
+                        RUFilet()
                         ligne("Abonnement App Store", abonnement)
-                        Divider().background(RUColor.line)
+                        RUFilet()
                         ligne("Plan complet ouvert", oui(subscriptions.unlocks(.raceGoal)))
                     }
                     .ruCard()
@@ -57,7 +57,7 @@ struct AdminSheet: View {
                     EyebrowLabel(text: "Cette installation", color: RUColor.text3)
                     VStack(spacing: 0) {
                         ligne("Version", "\(version) (\(build))")
-                        Divider().background(RUColor.line)
+                        RUFilet()
                         ligne("Serveur", AuthService.hoteDuServeur)
                     }
                     .ruCard()

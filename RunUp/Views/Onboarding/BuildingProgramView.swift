@@ -112,7 +112,7 @@ struct BuildingProgramView: View {
                             Spacer()
                         }
                         .padding(.vertical, 14)
-                        .overlay(Divider().background(RUColor.line), alignment: .bottom)
+                        .overlay(RUFilet(), alignment: .bottom)
                         .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: vm.buildProgress)
                     }
                 }

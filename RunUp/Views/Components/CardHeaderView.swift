@@ -42,7 +42,47 @@ struct RUCardHeader<Accessory: View>: View {
     var subtitle: String?
     @ViewBuilder var accessory: () -> Accessory
 
+    /// Lue pour savoir si l'accessoire descend sous le titre — voir `body`.
+    @Environment(\.dynamicTypeSize) private var tailleDuTexte
+
     var body: some View {
+        // L'ACCESSOIRE DESCEND SOUS LE TITRE EN GRAND TEXTE.
+        //
+        // Le titre porte `lineLimit(1)` et `minimumScaleFactor(0.8)` : à côté d'un accessoire
+        // — un sélecteur de période, un chevron, une valeur — il rétrécit d'un cinquième puis
+        // se fait COUPER. La capture en grand texte du 8 novembre l'a montré deux fois sur le
+        // même mot : « Allure moy… » sur les Stats, « Allure moy… » sur le bilan de la semaine.
+        // Un titre de section tronqué est le seul mot qui dise de quoi parle la carte.
+        //
+        // Au deuxième cran d'accessibilité, l'accessoire passe donc SOUS le titre, poussé à
+        // droite pour continuer de se lire comme la valeur de cet en-tête et non comme une
+        // ligne de plus. Aux tailles ordinaires, rien ne bouge — et rien ne bouge non plus
+        // pour les soixante-douze en-têtes sans accessoire, d'où le `Accessory.self`.
+        let aUnAccessoire = Accessory.self != EmptyView.self
+        return Group {
+            if tailleDuTexte.isAccessibilitySize && aUnAccessoire {
+                VStack(alignment: .leading, spacing: 8) {
+                    ligne
+                    HStack(spacing: 0) {
+                        Spacer(minLength: 0)
+                        accessory()
+                    }
+                }
+            } else {
+                HStack(alignment: .center, spacing: 8) {
+                    ligne
+                    accessory()
+                }
+            }
+        }
+        // Le titre, le sous-titre et l'icône décrivent UNE chose : trois arrêts VoiceOver pour un
+        // seul en-tête de carte, c'est trois fois le même contexte relu.
+        .accessibilityElement(children: .combine)
+    }
+
+    /// L'icône, le titre, le sous-titre, et l'espace qui pousse l'accessoire au bord — sans
+    /// l'accessoire, qui se place ici ou sous la ligne selon la taille du texte.
+    private var ligne: some View {
         HStack(alignment: .center, spacing: 8) {
             if let icon {
                 // La pastille teintée derrière l'icône est partie.
@@ -97,11 +137,7 @@ struct RUCardHeader<Accessory: View>: View {
                 }
             }
             Spacer(minLength: 6)
-            accessory()
         }
-        // Le titre, le sous-titre et l'icône décrivent UNE chose : trois arrêts VoiceOver pour un
-        // seul en-tête de carte, c'est trois fois le même contexte relu.
-        .accessibilityElement(children: .combine)
     }
 }
 

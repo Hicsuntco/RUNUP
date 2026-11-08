@@ -157,7 +157,7 @@ struct DebriefSheet: View {
                         .padding(.top, 12)
                         .padding(.bottom, i == 0 ? 12 : 0)
                         .overlay(alignment: .bottom) {
-                            if i == 0 { Divider().background(RUColor.line) }
+                            if i == 0 { RUFilet() }
                         }
                     }
                 }

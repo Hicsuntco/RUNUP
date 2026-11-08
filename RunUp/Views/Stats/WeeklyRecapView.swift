@@ -80,9 +80,18 @@ struct WeeklyRecapView: View {
                 }
 
                 if let allure = bilan.allureMoyenneSecParKm {
-                    HStack {
-                        RUCardHeader(icon: "speedometer", title: "Allure moyenne")
-                        Text(verbatim: "\(PaceModel.formatDuration(allure))/km").displayStyle(.subtitle).foregroundColor(RUColor.textPrimary)
+                    // LA VALEUR EST L'ACCESSOIRE DE L'EN-TÊTE, et non un voisin dans une pile.
+                    //
+                    // C'était `HStack { RUCardHeader; Text }`. Deux conséquences, les deux vues
+                    // sur la capture en grand texte du 8 novembre : le titre, qui porte
+                    // `lineLimit(1)`, rendait « Allure moy… » faute de place ; et VoiceOver
+                    // lisait deux arrêts — le nom de la mesure, puis, séparément, un nombre.
+                    // Confié au composant, le titre passe au-dessus de sa valeur au deuxième
+                    // cran d'accessibilité, et les deux se lisent d'un seul tenant.
+                    RUCardHeader(icon: "speedometer", title: "Allure moyenne") {
+                        Text(verbatim: "\(PaceModel.formatDuration(allure))/km")
+                            .displayStyle(.subtitle)
+                            .foregroundColor(RUColor.textPrimary)
                     }
                     .padding(18)
                     .ruCard()

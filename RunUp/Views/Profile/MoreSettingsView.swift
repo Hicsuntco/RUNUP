@@ -168,15 +168,15 @@ struct MoreSettingsView: View {
             // `programRow` reçoit un `String` (et non un littéral posé dans un `Text`) : sans
             // `String(localized:)` ces libellés ne passeraient jamais par le catalogue.
             programRow("flag.checkered", String(localized: "Voir mon objectif")) { dismiss(); appState.go(.race) }
-            Divider().background(RUColor.line)
+            RUFilet()
             programRow("slider.horizontal.3", String(localized: "Modifier jours & objectif")) { dismiss(); appState.openProgramSettings() }
-            Divider().background(RUColor.line)
+            RUFilet()
             // Opens the same wizard `ChoiceView` offers at the end of a program — only touches
             // goal/distance/allure/jours, keeps everything else (nom, blessures, cycle...) as-is.
             // The old "Refaire l'onboarding" re-asked all of it just to change the training plan.
             programRow("arrow.counterclockwise", String(localized: "Refaire un programme")) { dismiss(); appState.newGoalWizardPresented = true }
             if profile.programPhase != .freerun {
-                Divider().background(RUColor.line)
+                RUFilet()
                 // The direct route to `.freerun` — before this, the only way in was "Terminer le
                 // programme" -> several days of recovery countdown -> a "Choix" screen that
                 // finally offers it. That reads as the app forcing a rest phase just to stop and
@@ -190,7 +190,7 @@ struct MoreSettingsView: View {
                 }
             }
             if profile.programPhase == .active {
-                Divider().background(RUColor.line)
+                RUFilet()
                 programRow("checkmark.seal", String(localized: "Terminer le programme")) {
                     AdaptivePlanEngine.endProgram(profile)
                     appState.toast(String(localized: "Programme terminé · récupération en cours"))
@@ -281,7 +281,7 @@ struct MoreSettingsView: View {
             }
             .padding(RUSpacing.cardPadding)
 
-            Divider().background(RUColor.line)
+            RUFilet()
 
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
@@ -370,7 +370,7 @@ struct MoreSettingsView: View {
                     .accessibilityLabel("Pause automatique aux arrêts")
             }
             .padding(RUSpacing.cardPadding)
-            Divider().background(RUColor.line)
+            RUFilet()
             HStack {
                 rowIcon("speaker.wave.2")
                 VStack(alignment: .leading, spacing: 2) {
@@ -385,7 +385,7 @@ struct MoreSettingsView: View {
                     .accessibilityLabel("Alertes vocales d'allure")
             }
             .padding(RUSpacing.cardPadding)
-            Divider().background(RUColor.line)
+            RUFilet()
             ecranVerrouilleRow
         }
         .ruCard()
@@ -483,7 +483,7 @@ struct MoreSettingsView: View {
             .padding(.horizontal, 14).padding(.vertical, 14)
 
             if profile.cycleTrackingEnabled {
-                Divider().background(RUColor.line)
+                RUFilet()
                 VStack(alignment: .leading, spacing: 14) {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Date des dernières règles").font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
@@ -617,7 +617,7 @@ struct MoreSettingsView: View {
                     Spacer()
                 }
                 .padding(.horizontal, 14).padding(.vertical, 14)
-                Divider().background(RUColor.line)
+                RUFilet()
                 // L'ADRESSE DU COMPTE, TELLE QUE LE SERVEUR LA VOIT.
                 //
                 // Ce n'est pas un détail d'administration : avec « Se connecter avec Apple »,
@@ -640,13 +640,13 @@ struct MoreSettingsView: View {
                         Spacer(minLength: 0)
                     }
                     .padding(.horizontal, 14).padding(.vertical, 14)
-                    Divider().background(RUColor.line)
+                    RUFilet()
                 }
             }
             identityEditor
-            Divider().background(RUColor.line)
+            RUFilet()
             programRow("arrow.right.square", String(localized: "Se déconnecter")) { appState.auth.signOut(); dismiss() }
-            Divider().background(RUColor.line)
+            RUFilet()
             Button(action: { showDeleteAccountConfirm = true }) {
                 HStack(spacing: 12) {
                     rowIcon("trash", color: RUColor.rose)

@@ -78,15 +78,15 @@ struct AddRunSheet: View {
                     EyebrowLabel(text: "Informations générales", color: RUColor.text3)
                     VStack(spacing: 0) {
                         disciplineRow
-                        Divider().background(RUColor.line)
+                        RUFilet()
                         dateRow
-                        Divider().background(RUColor.line)
+                        RUFilet()
                         typeRow
-                        Divider().background(RUColor.line)
+                        RUFilet()
                         numRow(icon: "ruler", label: "Distance", value: $distanceText,
                                unit: discipline.uniteDeSaisieLabel,
                                placeholder: discipline.exempleDeDistance)
-                        Divider().background(RUColor.line)
+                        RUFilet()
                         numRow(icon: "clock", label: "Durée", value: $durationMinutesText, unit: "min", placeholder: "45")
                     }
                     .ruCard()

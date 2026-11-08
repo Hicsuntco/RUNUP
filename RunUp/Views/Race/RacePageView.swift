@@ -319,7 +319,7 @@ struct RacePageView: View {
                         detail: String(localized: "Tu apparais en haut de la liste, pour celles et ceux qui visent la même allure."),
                         actif: $cherchePartenaire
                     )
-                    Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
+                    RUFilet()
                     interrupteur(
                         titre: String(localized: "Montrer où j'en suis de ma préparation"),
                         detail: String(localized: "Les autres coureurs de cette course verront ton volume des 4 dernières semaines. Rien d'autre : ni tes parcours, ni tes allures réelles, ni tes dates de sortie."),
@@ -403,7 +403,7 @@ struct RacePageView: View {
                 VStack(spacing: 0) {
                     ForEach(Array(coureursAffiches.enumerated()), id: \.element.id) { rang, coureur in
                         if rang > 0 {
-                            Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
+                            RUFilet()
                         }
                         ligneDeCoureur(coureur)
                     }
@@ -646,9 +646,7 @@ struct RacePageView: View {
     private func bloc(_ message: RacePost, rang: Int) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             if rang > 0 {
-                Rectangle()
-                    .fill(RUColor.line)
-                    .frame(height: RUSpacing.hairline)
+                RUFilet()
                     .padding(.bottom, 6)
             }
             messageEnTete(message)
@@ -659,7 +657,7 @@ struct RacePageView: View {
 
             ForEach(reponses(a: message)) { reponse in
                 HStack(alignment: .top, spacing: 8) {
-                    Rectangle().fill(RUColor.line).frame(width: RUSpacing.hairline)
+                    RUFilet(.vertical)
                     messageEnTete(reponse)
                 }
                 .padding(.leading, 10)

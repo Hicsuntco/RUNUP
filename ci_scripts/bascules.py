@@ -319,7 +319,7 @@ def alignement(entree: pathlib.Path, bascules: list, references: dict, decalage:
             if vise not in references:
                 continue
             try:
-                image = posee(entree, essai + b["debut"] + 0.5, travail, f"a{i}")
+                image = posee(entree, essai + instant_juge(b), travail, f"a{i}")
             except SystemExit:
                 total = float("inf")
                 break
@@ -333,6 +333,33 @@ def alignement(entree: pathlib.Path, bascules: list, references: dict, decalage:
     total, moins_bons, trouve = min(candidats)
     vises = sum(1 for b in bascules if ecran_vise(b["nom"]) in references)
     return trouve, total / max(vises, 1), (-moins_bons) == vises
+
+
+#: Ce qu'on laisse au plan avant sa fin pour prendre l'image qui le juge. Un quart de seconde
+#: suffit à être à l'abri d'une coupure imprécise, et ne coûte rien : le plan est posé depuis
+#: longtemps à ce moment-là.
+MARGE_DE_FIN = 0.25
+
+#: Au plus tôt, l'image jugée est prise là — c'est aussi la référence qui sert à classer la
+#: fenêtre de transition qui précède, et elle n'a pas bougé.
+DELAI_DE_POSE = 0.5
+
+
+def instant_juge(b: dict) -> float:
+    """QUAND REGARDER UN PLAN POUR DIRE QUEL ÉCRAN IL MONTRE.
+
+    C'était `debut + 0,5 s`, et c'est ce qui a mis le film espagnol au rouge le 8 novembre
+    2026 : le plan « stats » y met 0,57 s à se poser — dix-sept images sur vingt — et l'image
+    prise à 0,5 s est donc un MÉLANGE de l'écran qui part et de celui qui arrive. Le classement
+    rendait « profil 24,4, stats 25,0 » : un quasi-ex æquo, là où un plan posé donne 6,4 contre
+    24,6. Le découpage était juste, les trois autres plans étaient reconnus sans hésitation ;
+    c'est l'instant du jugement qui était mal choisi.
+
+    On juge donc à la FIN du plan, qui dure deux secondes : tout ce qui devait arriver est
+    arrivé. Le plancher à `debut + 0,5 s` garde le comportement d'avant pour un plan si court
+    que sa fin précéderait sa pose.
+    """
+    return max(b["debut"] + DELAI_DE_POSE, b["fin"] - MARGE_DE_FIN)
 
 
 def main() -> int:
@@ -449,8 +476,15 @@ def main() -> int:
             traversee, vides_traversee = mise_en_place(classes)
             total_vides += vides
             # L'ÉCRAN EST-IL LE BON ? La question que les durées ne savent pas poser.
+            #
+            # ET ELLE SE POSE SUR UNE AUTRE IMAGE QUE LA RÉFÉRENCE DE TRANSITION. Celle-ci est
+            # prise à `debut + 0,5 s` parce que c'est l'état vers lequel la fenêtre qui précède
+            # converge — c'est son rôle, et il n'a pas changé. Mais 0,5 s ne suffit pas toujours
+            # à ce que l'écran soit POSÉ : « stats » a mis 0,57 s le 8 novembre, et l'image était
+            # alors à mi-chemin entre deux écrans. Voir `instant_juge`.
             if references:
-                classement = le_plus_proche(reference, references)
+                juge = posee(options.entree, vers_fichier(instant_juge(b)), travail, f"j{i}")
+                classement = le_plus_proche(juge, references)
                 vise = ecran_vise(b["nom"])
                 proche, ecart = classement[0]
                 suivant = classement[1] if len(classement) > 1 else (proche, ecart)
@@ -466,7 +500,7 @@ def main() -> int:
                     print(f"  {'':<10} écarts : "
                           + ", ".join(f"{n} {e:.1f}" for n, e in classement))
                     if options.preuves:
-                        garde = preuve(options.entree, vers_fichier(b["debut"] + 0.5),
+                        garde = preuve(options.entree, vers_fichier(instant_juge(b)),
                                        options.preuves, f"{b['nom']}-montre-{proche}")
                         print(f"  {'':<10} image jugée gardée : {garde}")
                 else:

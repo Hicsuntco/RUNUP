@@ -298,6 +298,19 @@ jobs:
       - name: Vérifier que la comparaison de captures voit ce qui bouge
         run: cd ci_scripts && python3 test_comparer.py
 
+      # LE TRAIT QUI SÉPARE DEUX LIGNES ÉTAIT ÉCRIT DE DEUX FAÇONS, ET UNE DES DEUX ÉTAIT FAUSSE.
+      #
+      # Trente endroits posaient `Divider().background(RUColor.line)`. Le `Divider` de SwiftUI a
+      # sa propre épaisseur — un pixel d'écran, un tiers de point sur un ×3 — et sa propre
+      # couleur ; `.background` peint derrière lui, elle ne le recolore pas. Douze autres
+      # dessinaient le bon filet à la main, sur une ligne qu'on ne relit pas et qu'on recopie.
+      # Aucun contrôle ne le voyait, et aucune capture non plus : les écrans qui employaient
+      # l'un des deux idiomes ne sont pas photographiés.
+      - name: Vérifier que chaque filet passe par RUFilet
+        run: |
+          cd ci_scripts && python3 test_filet.py
+          cd .. && python3 ci_scripts/check_filet.py
+
       # UN NOM DE SYMBOLE FAUX NE DESSINE RIEN, SANS ERREUR NI JOURNAL.
       #
       # `Image(systemName: "mountain.2.fill")` sur un nom inexistant rend un `Image` vide de la

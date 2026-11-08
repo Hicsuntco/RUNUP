@@ -56,7 +56,7 @@ struct CarteDeSauvegarde: View {
             }
             .buttonStyle(PressableStyle())
 
-            Divider().background(RUColor.line)
+            RUFilet()
 
             BoutonDeRestauration {
                 HStack(spacing: 12) {

@@ -66,7 +66,7 @@ extension View {
     func ruBarreDuBas<Contenu: View>(@ViewBuilder _ contenu: () -> Contenu) -> some View {
         safeAreaInset(edge: .bottom) {
             VStack(spacing: 0) {
-                Rectangle().fill(RUColor.line).frame(height: RUSpacing.hairline)
+                RUFilet()
                 contenu()
                     .padding(.horizontal, RUSpacing.pagePadding)
                     .padding(.top, 12)

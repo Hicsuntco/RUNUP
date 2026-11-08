@@ -9,10 +9,32 @@
 //      unanswerable as it was before.
 //   2. It takes a batch, not one event. The client buffers and flushes (see
 //      RunUp/Services/Analytics.swift) so a run never pays a network round trip per tap.
+//
+// # CETTE FONCTION SERT DEUX ADRESSES, ET CE N'EST PAS UN CHOIX D'ARCHITECTURE
+//
+// `/api/crashes` est réécrit vers ici par `vercel.json`, et le corps de la requête dit lequel des
+// deux canaux parle : une liste `reports` est un lot de rapports de panne, une liste `events` est
+// un lot d'événements d'usage. Les deux ne se croisent jamais.
+//
+// La raison est une limite de plateforme, mesurée deux fois dans ce dépôt. Vercel compte UN
+// fichier sous `api/` = UNE fonction serverless, et le plan Hobby en autorise douze. Il y en avait
+// douze ; `api/crashes.js` a été le treizième et a fait échouer TOUT déploiement production, sans
+// qu'aucune chaîne ne rougisse — c'est exactement ce que raconte l'en-tête
+// d'`api/account/[action].js`, le jour où l'analytique a été ajoutée. Le 8 novembre 2026, la
+// mesure qui l'a établi est que la production servait encore l'ANCIEN `privacy.html` : ce n'était
+// pas une route mal câblée, c'était le déploiement entier qui n'avait pas eu lieu.
+//
+// Pourquoi la réécriture porte sur `/api/crashes` et pas sur `/api/events` : `/api/events` reste
+// servi par son propre fichier, donc l'adresse que des versions déjà installées appellent ne
+// dépend de rien de nouveau. La seule adresse qui dépend de la réécriture est celle dont on n'a
+// encore rien perdu si elle rate — et `check_deploiement.py` la sonde à chaque déploiement.
+//
+// Le gestionnaire des pannes vit dans `lib/rapportsEntrants.js`, qui ne compte pour rien.
 const { sql } = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
 const { withErrorHandling, isUuid } = require('../lib/http');
 const { underDailyCap } = require('../lib/rateLimit');
+const { recevoirLesRapports } = require('../lib/rapportsEntrants');
 
 // Must match `Analytics.EventName` on the client — anything else is dropped rather than stored,
 // same reasoning as `KNOWN_BADGES` in api/clubs/[action].js: an endpoint that accepts arbitrary
@@ -102,6 +124,11 @@ const MAX_CLOCK_SKEW_MS = 5 * 60 * 1000;
 
 module.exports = withErrorHandling(async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+
+  // L'AIGUILLAGE DES DEUX CANAUX, sur le corps et non sur le chemin : avec une réécriture, ce que
+  // la fonction lit dans `req.url` dépend du détail d'implémentation de la plateforme, alors
+  // qu'une liste `reports` dans le corps est une chose que seul le client des pannes envoie.
+  if (Array.isArray((req.body || {}).reports)) return recevoirLesRapports(req, res);
 
   // Optional on purpose (see the file header) — `null` here is a normal, expected pre-signup
   // caller, not a rejection. `.catch` mirrors api/coach.js: a JWKS/DB hiccup while verifying must

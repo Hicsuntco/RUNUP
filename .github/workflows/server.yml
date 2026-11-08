@@ -73,6 +73,21 @@ jobs:
           cd ci_scripts && python3 test_cjs.py
           cd .. && python3 ci_scripts/check_cjs.py
 
+      # UN TREIZIÈME FICHIER SOUS `api/` NE DÉGRADE RIEN : IL EMPÊCHE TOUT DÉPLOIEMENT.
+      #
+      # Vercel compte un fichier sous `api/` = une fonction serverless, douze au plan Hobby. Le
+      # treizième fait échouer la construction production entière, et AUCUNE chaîne ne rougit —
+      # parce qu'aucune ne déploie. C'est arrivé deux fois : à l'ajout de l'analytique, puis le
+      # 8 novembre 2026 à l'ajout du rapport de panne, où les quatre chaînes étaient vertes
+      # pendant que la production servait encore l'ancien `privacy.html`.
+      #
+      # Avant `npm test` et avant la sonde, parce qu'un dépôt qui ne peut pas se déployer rend
+      # tout le reste de ce workflow sans objet.
+      - name: Combien de fonctions serverless, et combien le plan en autorise
+        run: |
+          cd ci_scripts && python3 test_fonctions.py
+          cd .. && python3 ci_scripts/check_fonctions.py
+
       - run: npm test
 
       # ─── ET EST-CE QUE C'EST EN LIGNE ? ────────────────────────────────────────────────────

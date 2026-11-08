@@ -14,12 +14,12 @@ Quatre chaînes, et chacune garantit une chose précise. Aucune ne garantit cell
 
 | Chaîne | Ce qu'elle prouve | Ce qu'elle ne prouve PAS |
 | --- | --- | --- |
-| **TestFlight** (`testflight.yml`) | 35 contrôles et 24 fichiers de cas passent, l'app compile, les tests unitaires passent, l'archive est signée et acceptée par App Store Connect | que les écrans sont justes — elle ne regarde aucune image |
-| **Serveur** (`server.yml`) | les dépendances `require` sont du CommonJS, 152 tests passent, et les 84 adresses appelées par l'app répondent autre chose qu'un 404 ou un 5xx **en production** | que la logique est juste sur des données réelles : il n'y a pas de base de test |
+| **TestFlight** (`testflight.yml`) | 36 contrôles et 25 fichiers de cas passent, l'app compile, les tests unitaires passent, l'archive est signée et acceptée par App Store Connect | que les écrans sont justes — elle ne regarde aucune image |
+| **Serveur** (`server.yml`) | les dépendances `require` sont du CommonJS, il y a au plus douze fonctions serverless, 155 tests passent, et les 84 adresses appelées par l'app répondent autre chose qu'un 404 ou un 5xx **en production** | que la logique est juste sur des données réelles : il n'y a pas de base de test |
 | **Captures** (`captures.yml`) | l'app se lance dans trois langues et deux thèmes, 28 écrans sont photographiés (21 ordinaires et 7 en grand texte), le découpage du film tombe sur les bons écrans | **ce qu'il y a sur les images.** Un vert dit deux choses : l'app n'a pas planté, un fichier a été écrit |
 | **Fiche** (`appstore.yml`) | les textes tiennent dans les champs d'Apple, l'aperçu respecte ses règles, tout est déposé | que la fiche dit vrai |
 
-Les 35 contrôles de TestFlight sont nommés dans `.github/workflows/testflight.yml`, un par étape.
+Les 36 contrôles de TestFlight sont nommés dans `.github/workflows/testflight.yml`, un par étape.
 L'un d'eux, `check_cablage.py`, veille sur les autres et sur les vingt-quatre fichiers de cas,
 et il pose deux questions.
 
@@ -92,10 +92,10 @@ est une valeur que personne n'a choisie.
 # et `test_icones.py` répétait un nombre devenu faux. Découvert sur la machine, dix minutes
 # plus tard.
 #
-# Compter DEUX MINUTES : 38 contrôles et 32 fichiers de cas, dont trois qui fabriquent des films
-# avec ffmpeg et quatre qui relancent un contrôle en sous-processus pour l'éprouver. 117 s
+# Compter DEUX MINUTES : 40 contrôles et 34 fichiers de cas, dont trois qui fabriquent des films
+# avec ffmpeg et quatre qui relancent un contrôle en sous-processus pour l'éprouver. 107 et 117 s
 # mesurées le 8 novembre 2026. Ce n'est pas une commande qu'on lance « pour voir », c'est la
-# porte. (Plus que les 35 et 24 de TestFlight : `tout.sh` lance AUSSI ce qui tourne dans les
+# porte. (Plus que les 36 et 25 de TestFlight : `tout.sh` lance AUSSI ce qui tourne dans les
 # autres chaînes — le serveur, les captures, la fiche.)
 sh ci_scripts/tout.sh
 
@@ -185,3 +185,11 @@ Elles tiennent en une page et elles ont toutes coûté quelque chose.
 4. **Ce qui marche sur la machine des tests ne dit rien de ce qui tourne en ligne.** Node 22 fait
    marcher `require` d'un module ESM. Le Node de Vercel, peut-être pas. La seule mesure valable
    d'une production est une requête à la production.
+
+Et une cinquième, du 8 novembre 2026 : **quatre chaînes vertes ne disent pas qu'un déploiement a
+eu lieu.** Le treizième fichier sous `api/` dépasse les douze fonctions serverless du plan Hobby,
+et Vercel refuse alors la construction production entière. Rien ne rougit ici — aucune de ces
+quatre chaînes ne déploie. Ce qui l'a établi n'est pas un journal de construction, c'est une
+mesure : la production servait encore l'ANCIEN `privacy.html`, donc ce n'était pas une route mal
+câblée, c'était le déploiement qui n'avait pas eu lieu. `check_fonctions.py` compte désormais, et
+la sonde `check_deploiement.py` reste la seule chose qui regarde la production elle-même.

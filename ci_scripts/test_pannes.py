@@ -185,9 +185,9 @@ def _():
         "lib/pannes.js ne filtre plus sur `KNOWN_KINDS` — ce contrôle garde une liste inutile."
     # Et l'endpoint doit vraiment passer par ce filtre : la liste pourrait être juste des deux
     # côtés et n'être appelée par personne.
-    route = (ck.RACINE / "api/crashes.js").read_text(encoding="utf-8")
+    route = (ck.RACINE / "lib/rapportsEntrants.js").read_text(encoding="utf-8")
     assert "nettoyerRapport" in route, \
-        "api/crashes.js n'appelle plus `nettoyerRapport` — le vocabulaire ne filtre plus rien."
+        "lib/rapportsEntrants.js n'appelle plus `nettoyerRapport` — le vocabulaire ne filtre rien."
 
 
 @cas_de("les cinq genres de MetricKit sont bien les cinq attendus")

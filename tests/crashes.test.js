@@ -180,16 +180,50 @@ test('une date illisible ou absente devient l\'heure du serveur, jamais une lign
 
 // --- L'endpoint lui-même -----------------------------------------------------------------------
 
-test('api/crashes.js passe bien par ces règles et borne le lot', () => {
+test('le gestionnaire passe bien par ces règles et borne le lot', () => {
   // Les bornes pourraient être justes et n'être appelées par personne.
-  const source = require('node:fs').readFileSync(require.resolve('../api/crashes.js'), 'utf8');
+  const source = require('node:fs').readFileSync(require.resolve('../lib/rapportsEntrants.js'), 'utf8');
   assert.match(source, /nettoyerRapport/);
   assert.match(source, /MAX_REPORTS_PER_BATCH/);
-  assert.match(source, /method_not_allowed/);
   // L'élagage et la politique de confidentialité doivent annoncer la même durée.
   assert.match(source, /180 days/);
   const politique = require('node:fs').readFileSync(
     require('node:path').join(__dirname, '..', 'PRIVACY_POLICY.md'), 'utf8');
   assert.match(politique, /180 jours/,
                'PRIVACY_POLICY.md n\'annonce pas la durée de conservation des rapports de panne');
+});
+
+// --- LE CÂBLAGE, qui est la pièce la plus fragile de tout ce chantier ------------------------
+
+test('/api/crashes EST RÉÉCRIT VERS /api/events, sinon l\'app poste dans le vide', () => {
+  // Le gestionnaire vit dans `lib/`, qui n'est pas une route : sans cette réécriture, l'adresse
+  // que `Diagnostics.swift` appelle rend 404, l'app reçoit un refus définitif, et elle JETTE le
+  // rapport (voir `permanentlyRefused` côté client). La panne serait silencieuse des deux côtés.
+  const vercel = JSON.parse(require('node:fs').readFileSync(
+    require('node:path').join(__dirname, '..', 'vercel.json'), 'utf8'));
+  const regle = (vercel.rewrites || []).find((r) => r.source === '/api/crashes');
+  assert.ok(regle, 'aucune réécriture pour /api/crashes dans vercel.json');
+  assert.strictEqual(regle.destination, '/api/events');
+});
+
+test('api/events.js aiguille sur `reports`, et sur le corps plutôt que sur le chemin', () => {
+  // Sur le chemin, ce que la fonction lit dépend du détail d'implémentation de la réécriture.
+  const source = require('node:fs').readFileSync(require.resolve('../api/events.js'), 'utf8');
+  assert.match(source, /Array\.isArray\(\(req\.body \|\| \{\}\)\.reports\)/);
+  assert.match(source, /recevoirLesRapports/);
+});
+
+test('UNE SEULE FONCTION DE PLUS ET PLUS RIEN NE SE DÉPLOIE', () => {
+  // Vercel compte un fichier sous `api/` = une fonction, et le plan Hobby en autorise douze.
+  // Le treizième fait échouer TOUT déploiement production, sans qu'aucune chaîne ne rougisse.
+  // C'est arrivé deux fois dans ce dépôt : à l'ajout de l'analytique, puis le 8 novembre 2026
+  // à l'ajout de `api/crashes.js`. `ci_scripts/check_fonctions.py` garde le compte ; ce cas-ci
+  // est là pour que la limite soit aussi écrite du côté où on lit les tests du serveur.
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const api = path.join(__dirname, '..', 'api');
+  const compter = (dossier) => fs.readdirSync(dossier, { withFileTypes: true })
+    .reduce((n, e) => n + (e.isDirectory() ? compter(path.join(dossier, e.name))
+                                          : (e.name.endsWith('.js') ? 1 : 0)), 0);
+  assert.ok(compter(api) <= 12, `${compter(api)} fonctions sous api/ : le plafond Hobby est 12`);
 });

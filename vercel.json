@@ -14,6 +14,10 @@
     {
       "source": "/club/:id",
       "destination": "/club.html"
+    },
+    {
+      "source": "/api/crashes",
+      "destination": "/api/events"
     }
   ]
 }

@@ -273,10 +273,32 @@ def instant_du_changement(classes: list[str], fenetre: float) -> float | None:
     trois secondes à démarrer et que personne ne les comptait. Aucune durée ne pouvait le dire,
     et c'est ce nombre-ci qui l'aurait dit.
     """
+    # LA DERNIÈRE IMAGE DE L'ÉCRAN D'AVANT, ET NON LA PREMIÈRE QUI N'EN EST PLUS.
+    #
+    # Les deux donnent le même nombre sur une fenêtre propre, et c'est ce que les cas
+    # fabriqués montrent. Sur un vrai enregistrement, non : il suffit d'UNE image qui
+    # s'écarte — un défilement qui finit, une tuile de carte qui arrive, une animation de
+    # l'écran précédent — pour que « la première qui n'est plus l'écran d'avant » tombe bien
+    # trop tôt. Le 8 novembre 2026, sur une fenêtre élargie à 2 s, elle a rendu 1,22 s là où le
+    # changement était à 0,6 : l'affinage a corrigé de −0,62 s, et le garde-fou suivant n'a
+    # plus rien vu du tout.
+    #
+    # L'écran change UNE FOIS et ne revient pas. Ce qu'on cherche est donc le dernier instant
+    # où l'on est encore sur l'écran d'avant, et tout ce qui clignote plus tôt est ignoré par
+    # construction.
+    dernier = None
     for i, c in enumerate(classes):
-        if c != "avant":
-            return fenetre - i / IPS
-    return None
+        if c == "avant":
+            dernier = i
+    if dernier is None:
+        # AUCUNE image de l'écran d'avant : le changement a eu lieu AVANT la fenêtre. On rend
+        # sa longueur — « au moins aussi tôt que ça » — plutôt que rien, parce que c'est une
+        # mesure, et c'est elle qui dit que le découpage tombe trop tard.
+        return fenetre
+    if dernier + 1 >= len(classes):
+        # Toute la fenêtre est sur l'écran d'avant : le changement est APRÈS elle.
+        return None
+    return fenetre - (dernier + 1) / IPS
 
 
 #: La fenêtre de l'affinage, DE PART ET D'AUTRE du début de plan supposé.
@@ -289,6 +311,11 @@ def instant_du_changement(classes: list[str], fenetre: float) -> float | None:
 #: delà le plan tomberait sur un autre écran et qu'elle l'aurait refusé.
 AVANT_AFFINAGE = 2.0
 APRES_AFFINAGE = 1.2
+
+#: L'écart maximal admis entre les quatre changements observés. Relevé sur une prise saine :
+#: 0,53 à 0,80 s, soit 0,27 d'étendue. 0,40 laisse de la marge sans admettre qu'une des quatre
+#: mesures parle d'autre chose.
+ETENDUE_ADMISE = 0.40
 
 
 def affinage(entree: pathlib.Path, bascules: list, decalage: float,
@@ -336,6 +363,16 @@ def affinage(entree: pathlib.Path, bascules: list, decalage: float,
         if quand is None:
             return None, observes
         observes.append(quand)
+    # QUATRE OBSERVATIONS QUI NE S'ACCORDENT PAS NE SE MOYENNENT PAS.
+    #
+    # Les quatre plans regardent le même enregistrement et la même horloge : leurs changements
+    # d'écran doivent tomber au même endroit, à la durée d'un fondu près. Sur une prise saine,
+    # l'étendue relevée vaut 0,27 s — de 0,53 à 0,80. Au-delà de 0,40, c'est qu'au moins une des
+    # quatre mesures regarde autre chose que le changement, et une moyenne n'y ferait que
+    # répartir l'erreur sur les quatre.
+    etendue = max(observes) - min(observes)
+    if etendue > ETENDUE_ADMISE:
+        return None, observes
     moyen = sum(observes) / len(observes)
     return decalage + ATTENDU_AVANT - moyen, observes
 
@@ -617,7 +654,7 @@ def main() -> int:
             print(f"  {'':<10} changement d'écran à "
                   + (f"{quand:.2f} s avant le plan (attendu {ATTENDU_AVANT:.2f})"
                      if quand is not None
-                     else "un instant qu'on n'a pas vu : la fenêtre ne commence pas sur "
+                     else "un instant qu'on n'a pas vu : aucune image de la fenêtre ne quitte "
                           "l'écran d'avant"))
 
         if egares:
@@ -638,8 +675,9 @@ def main() -> int:
                       f"durée, c'est l'image qui ne correspond pas au titre.")
                 return 1
         else:
-            print("  → aucun changement d'écran repéré : la fenêtre ne commence jamais sur "
-                  "l'écran d'avant, donc l'alignement ne se vérifie pas.")
+            print("  → aucun changement d'écran repéré : sur AUCUN plan la fenêtre ne quitte "
+                  "l'écran d'avant. Le changement est donc hors fenêtre — le découpage tombe "
+                  "à côté — et l'alignement ne se vérifie pas.")
             return 1
 
         print(f"  → {total_vides} image(s) vide(s) en tout sur {len(bascules)} bascule(s). "

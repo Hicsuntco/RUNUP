@@ -378,6 +378,20 @@ with tempfile.TemporaryDirectory() as d:
     affine, _ = bs.affinage(film, bascules, -3.0, dossier)
     attendu("une fenêtre hors du film ne rend pas de décalage", affine, None)
 
+    # ET QUAND LES QUATRE MESURES NE S'ACCORDENT PAS, IL SE TAIT AUSSI.
+    #
+    # Les plans regardent le même enregistrement et la même horloge : leurs changements doivent
+    # tomber au même endroit, à la durée d'un fondu près. Une étendue large veut dire qu'au
+    # moins une des mesures parle d'autre chose, et une moyenne n'y ferait que répartir
+    # l'erreur. On fabrique le désaccord en décalant les plans les uns par rapport aux autres.
+    bancals = [dict(b) for b in plans]
+    bancals[0]["debut"] += 0.6
+    bancals[-1]["debut"] -= 0.6
+    affine, vus = bs.affinage(film, bancals, 0.0, dossier)
+    attendu("quatre mesures qui se contredisent ne se moyennent pas", affine, None)
+    attendu("et on voit bien qu'elles se contredisent",
+            len(vus) == 3 and (max(vus) - min(vus)) > bs.ETENDUE_ADMISE, True)
+
     # ET ON VÉRIFIE LA DÉCISION ELLE-MÊME, parce qu'un film fabriqué ne peut pas la montrer.
     #
     # Le plateau n'existe que si les distances varient à peine d'un décalage à l'autre — c'est
@@ -489,6 +503,19 @@ with tempfile.TemporaryDirectory() as d:
 attendu("le changement juste où on l'attend",
         round(bs.instant_du_changement(["avant"] * 9 + ["transition"] * 4 + ["posée"] * 14, 0.9), 2),
         0.6)
+# LE CLIGNOTEMENT, ET POURQUOI ON PREND LA DERNIÈRE IMAGE DE L'ÉCRAN D'AVANT.
+#
+# Il suffit d'UNE image qui s'écarte — un défilement qui finit, une tuile de carte qui arrive,
+# une animation de l'écran précédent — pour que « la première image qui n'est plus l'écran
+# d'avant » tombe bien trop tôt. Le 8 novembre 2026, sur une fenêtre de 2 s, elle a rendu 1,22 s
+# là où le changement était à 0,60 : l'affinage a corrigé de −0,62 s, et le garde-fou suivant
+# n'a plus rien vu. Ici, le clignotement est à l'image 2 et le vrai changement à l'image 18.
+attendu("un clignotement au début de la fenêtre ne compte pas",
+        round(bs.instant_du_changement(
+            ["avant", "avant", "transition", "avant"] + ["avant"] * 14
+            + ["transition"] * 4 + ["posée"] * 5, 0.9), 2),
+        round(0.9 - 18 / bs.IPS, 2))
+
 attendu("un changement trop tôt se chiffre",
         round(bs.instant_du_changement(["transition"] * 4 + ["posée"] * 23, 0.9), 2), 0.9)
 attendu("un changement tardif aussi",

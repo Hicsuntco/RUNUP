@@ -274,6 +274,30 @@ jobs:
           cd ci_scripts && python3 test_strings.py
           cd .. && python3 ci_scripts/check_strings.py
 
+      # UN GARDE-FOU QU'ON CROIT AVOIR EST PIRE QUE PAS DE GARDE-FOU : on cesse de regarder
+      # l'endroit qu'il surveille. Quatre fois le même défaut, et jamais par négligence —
+      # écrire le contrôle et le câbler sont deux gestes, et le premier donne le sentiment
+      # d'avoir fini. `test_session.py` et `test_accent.py` existaient sans tourner.
+      # `check_profile.py`, écrit après un export refusé sur WeatherKit, ne tourne toujours
+      # nulle part — il attend le profil décodé, et il est dispensé en l'attendant.
+      # `test_comparer.py` aurait été le quatrième : ce contrôle l'a attrapé le jour même.
+      # C'est volontairement une étape haut placée : elle coûte une seconde et elle dit si
+      # les cinquante qui suivent sont bien toutes là.
+      - name: Vérifier que chaque contrôle et chaque test est bien lancé
+        run: |
+          cd ci_scripts && python3 test_cablage.py
+          cd .. && python3 ci_scripts/check_cablage.py
+
+      # LE DÉCOUPAGE D'UN ÉCRAN PHOTOGRAPHIÉ NE DOIT RIEN CHANGER À L'IMAGE, et les captures ne
+      # le vérifient pas : un vert dit que l'app n'a pas planté et qu'un fichier a été écrit.
+      # `comparer.py` compare deux jeux de captures et dit ce qui a bougé — écart moyen, nombre
+      # de pixels, cadre qui les contient, barre d'état masquée parce qu'elle porte l'heure. Il
+      # prend des dossiers en arguments, donc il ne tourne pas ici : ce sont ses cas qui
+      # tournent, et ils éprouvent le seul endroit où l'outil pourrait mentir utilement — une
+      # moyenne basse sur un petit bloc changé du tout au tout.
+      - name: Vérifier que la comparaison de captures voit ce qui bouge
+        run: cd ci_scripts && python3 test_comparer.py
+
       # UN NOM DE SYMBOLE FAUX NE DESSINE RIEN, SANS ERREUR NI JOURNAL.
       #
       # `Image(systemName: "mountain.2.fill")` sur un nom inexistant rend un `Image` vide de la
@@ -341,7 +365,10 @@ jobs:
       # Vingt-deux tailles écrites à la main sur 170 appels, de 8 à 72 points, dont 13, 14 et 15
       # voisinant sur 76 d'entre eux. Le compilateur ne peut rien : `.font(.system(size:))` est
       # une API de SwiftUI. Ce contrôle fixe donc la liste des exceptions, avec leur compte et
-      # leur raison — il en reste quatre, et ce sont des glyphes typographiques, pas des icônes.
+      # leur raison — il en reste deux depuis le passage aux chevrons SF, et ce sont des glyphes
+      # typographiques, pas des icônes. Le test DÉRIVE ce nombre de la liste au lieu de le
+      # répéter : il l'avait répété, et TestFlight est passé au rouge dix minutes après le
+      # commit qui ramenait quatre à deux.
       - name: Vérifier qu'aucune taille d'icône n'est écrite à la main
         run: |
           cd ci_scripts && python3 test_icones.py

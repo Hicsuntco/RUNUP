@@ -14,12 +14,17 @@ Quatre chaînes, et chacune garantit une chose précise. Aucune ne garantit cell
 
 | Chaîne | Ce qu'elle prouve | Ce qu'elle ne prouve PAS |
 | --- | --- | --- |
-| **TestFlight** (`testflight.yml`) | 32 contrôles et 22 fichiers de cas passent, l'app compile, les tests unitaires passent, l'archive est signée et acceptée par App Store Connect | que les écrans sont justes — elle ne regarde aucune image |
+| **TestFlight** (`testflight.yml`) | 33 contrôles et 24 fichiers de cas passent, l'app compile, les tests unitaires passent, l'archive est signée et acceptée par App Store Connect | que les écrans sont justes — elle ne regarde aucune image |
 | **Serveur** (`server.yml`) | les dépendances `require` sont du CommonJS, 133 tests passent, et les 83 adresses appelées par l'app répondent autre chose qu'un 404 ou un 5xx **en production** | que la logique est juste sur des données réelles : il n'y a pas de base de test |
 | **Captures** (`captures.yml`) | l'app se lance dans trois langues et deux thèmes, 25 écrans sont photographiés, le découpage du film tombe sur les bons écrans | **ce qu'il y a sur les images.** Un vert dit deux choses : l'app n'a pas planté, un fichier a été écrit |
 | **Fiche** (`appstore.yml`) | les textes tiennent dans les champs d'Apple, l'aperçu respecte ses règles, tout est déposé | que la fiche dit vrai |
 
-Les 32 contrôles de TestFlight sont nommés dans `.github/workflows/testflight.yml`, un par étape.
+Les 33 contrôles de TestFlight sont nommés dans `.github/workflows/testflight.yml`, un par étape.
+L'un d'eux, `check_cablage.py`, veille sur les trente-deux autres et sur les vingt-quatre
+fichiers de cas : tout `check_*.py` et tout `test_*.py` de `ci_scripts/` doit être nommé par un
+workflow, ou figurer dans une liste de dispenses AVEC sa raison. Quatre garde-fous écrits et
+jamais câblés l'ont demandé — `test_session.py`, `test_accent.py`, `check_profile.py`, et
+`test_comparer.py`, attrapé le jour de son écriture par ce contrôle-là.
 Ils existent tous parce qu'un défaut est passé : une clé de catalogue absente qui sort le texte en
 français chez tout le monde, un nom de symbole SF faux qui ne dessine rien du tout, une demande
 d'autorisation non traduite renvoyée par Apple en ITMS-90738 **après** la livraison.
@@ -125,12 +130,14 @@ Puis, sur la machine :
   pose pas la question — `TARGETED_DEVICE_FAMILY` vaut 1 dans les réglages de base comme dans
   ceux du widget (seule la montre porte 4), donc RUNUP est une app iPhone et Apple ne demande
   aucune image d'iPad.
-- **`check_profile.py` existe et ne tourne nulle part.** Il compare les capacités du profil de
-  provisionnement à celles que la cible demande, il a été écrit pour un `exportArchive` qui a
-  échoué sur `com.apple.developer.weatherkit` douze minutes après le début de l'archivage — et
-  aucun workflow ne l'appelle. Il prend trois arguments et demande le profil décodé, donc il a
-  sa place dans `testflight.yml` juste avant la signature. C'est la même forme de défaut que le
-  contrôle vert au test rouge : un garde-fou qu'on croit avoir.
+- **`check_profile.py` ne tourne nulle part, et c'est désormais écrit.** Il compare les
+  capacités du profil de provisionnement à celles que la cible demande ; il a été écrit pour un
+  `exportArchive` refusé sur `com.apple.developer.weatherkit`, douze minutes après le début de
+  l'archivage. Aucun workflow ne l'appelle, parce qu'il demande le profil décodé, qui n'existe
+  qu'au moment de la signature. Sa place est dans `testflight.yml` juste avant l'export. En
+  attendant, il figure dans les `DISPENSES` de `check_cablage.py` avec cette raison : c'est le
+  seul fichier de `ci_scripts/` qui ne tourne pas, et plus aucun autre ne peut le devenir en
+  silence.
 - **Le contenu des séances HYROX** attend quelqu'un qui en a couru un (voir `PROGRESS.md`).
 
 ---

@@ -261,6 +261,22 @@ Les deux du Club étaient les seules vraies. **Ce n'est pas devenu un contrôle*
 positifs sur cinq feraient un garde-fou qu'on contourne, et savoir si deux vues sont dans la
 même branche demande l'arbre d'affichage, que rien ne lit sans exécuter l'app.
 
+**Le chantier 13 s'est arrêté sur une mesure, pas sur une longueur.** Pour chacune des trois
+régions qui restaient dans `ClubView`, j'ai compté ce qu'elle citerait de l'extérieur si on la
+sortait :
+
+| région | lignes | ports | lignes par port |
+| --- | ---: | ---: | ---: |
+| les sorties de groupe | 228 | 4 | 57 |
+| le mur | 273 | 11 | 25 |
+| l'entrée du club | 120 | 8 | 15 |
+
+Les sorties sont parties. Les deux autres non : leurs actions — signaler, bloquer, commenter,
+modifier, supprimer — sont PRÉSENTÉES par le parent, donc chaque bouton devient un port. Les
+sortir échangerait de la longueur de fichier contre de la surface d'interface, ce qui n'est pas
+un gain. `ClubView` reste donc le plus gros fichier de vues de l'app, 1 358 contre 1 172 pour
+`HomeView`, et c'est assumé.
+
 ## Les chantiers de l'audit
 
 Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
@@ -279,7 +295,7 @@ Dans l'ordre d'exécution. « Effort » est l'estimation d'origine.
 | 10 | Valeurs en dur → jetons du design system, les 15 % restants | 1,5 j | **fait** — il en restait six, pas 15 % |
 | 11 | Dépendances serveur : `jose` 6 et `bcryptjs` 3 | 0,5 j | **fait** — après une panne de onze minutes, une reproduction sur aperçu et un correctif éprouvé |
 | 12 | Accessibilité : tailles de texte dynamiques, indices VoiceOver | 1,5 j | **en cours** — quatre écrans photographiés au deuxième cran, dix défauts vus et corrigés |
-| 13 | `ClubView.swift`, 2 721 lignes, à découper | 2 j | **en cours** — 2 721 → 1 799 lignes, le magasin est en place |
+| 13 | `ClubView.swift`, 2 721 lignes, à découper | 2 j | **fait** — 2 721 → 1 358 lignes, en six fichiers ; zéro pixel d'écart |
 | 14 | Rapport de plantage maison, posté sur notre serveur | 1,5 j | à faire — décidé le 7 novembre |
 
 Le 14 est arrivé après coup, et je le ferais passer devant les finitions de design : c'est le seul

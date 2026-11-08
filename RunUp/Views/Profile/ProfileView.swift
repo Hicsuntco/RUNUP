@@ -12,6 +12,8 @@ import UIKit
 struct ProfileView: View {
     @Environment(AppState.self) private var appState
     @Query(sort: \RunRecord.date, order: .reverse) private var runs: [RunRecord]
+    /// Lue pour savoir si la rangée de chiffres passe en colonne — voir `statRow`.
+    @Environment(\.dynamicTypeSize) private var tailleDuTexte
     private var profile: UserProfile { appState.profile }
     private var auth: AuthService { appState.auth }
     private var clubService: ClubService { ClubService(auth: auth) }
@@ -340,7 +342,22 @@ struct ProfileView: View {
     /// ligne nue, les chiffres deviennent le prolongement de l'en-tête (« qui je suis, où j'en
     /// suis ») et les seules vraies cartes de la page sont les deux destinations tapables.
     private var statRow: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 18) {
+        // EN GRAND TEXTE, LA RANGÉE DEVIENT UNE COLONNE.
+        //
+        // Trois chiffres et leurs libellés côte à côte au deuxième cran d'accessibilité : la
+        // capture du 8 novembre 2026 montre « jours de suite » qui passe à la ligne et tombe
+        // SOUS le chiffre du milieu, centré sous rien. Les trois valeurs restent alignées sur
+        // leur ligne de base, une quatrième ligne orpheline flotte en dessous, et la rangée ne
+        // se lit plus comme trois mesures mais comme un bloc mal composé.
+        //
+        // Ce n'est pas une troncature qu'on pourrait accepter : c'est une mise en page qui perd
+        // le lien entre un chiffre et son unité. En colonne, chaque mesure garde sa largeur
+        // entière, et c'est la réorganisation déjà appliquée ailleurs dans l'app (voir
+        // `RUCardHeader`, `WeeklyRecapView`) plutôt qu'un cas particulier de plus.
+        let disposition = tailleDuTexte.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10))
+            : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 18))
+        return disposition {
             // `statCell` reçoit un `String` : sans `String(localized:)` ces libellés n'atteindraient
             // jamais le catalogue.
             statCell(value: String(format: "%.0f", totalKm), label: String(localized: "km"))
@@ -361,7 +378,10 @@ struct ProfileView: View {
                      label: Pluriel.choisir(badgeCount,
                                             String(localized: "badge"),
                                             String(localized: "badges")))
-            Spacer(minLength: 0)
+            // Le ressort ne sert qu'en ligne, où il pousse les trois mesures à gauche. Dans une
+            // colonne il pousserait vers le BAS, et étirerait la rangée sur toute la hauteur
+            // disponible.
+            if !tailleDuTexte.isAccessibilitySize { Spacer(minLength: 0) }
         }
         .padding(.horizontal, 2)
     }

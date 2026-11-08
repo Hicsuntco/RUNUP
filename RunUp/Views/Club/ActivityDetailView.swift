@@ -25,6 +25,8 @@ struct ActivityDetailView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Lue pour savoir si la grille passe à deux colonnes — voir `grilleDeMesures`.
+    @Environment(\.dynamicTypeSize) private var tailleDuTexte
 
     var activityId: String
 
@@ -224,9 +226,20 @@ struct ActivityDetailView: View {
     /// été mesuré à zéro.
     private func grilleDeMesures(_ s: ActivityDetail) -> some View {
         let cases = mesures(s)
-        return LazyVGrid(columns: [GridItem(.flexible(), spacing: 10),
-                                   GridItem(.flexible(), spacing: 10),
-                                   GridItem(.flexible(), spacing: 10)], spacing: 10) {
+        // DEUX COLONNES EN GRAND TEXTE, ET UN LIBELLÉ QUI A LE DROIT DE PASSER À LA LIGNE.
+        //
+        // La capture du 8 novembre 2026 montre « bpm m… » : au deuxième cran d'accessibilité,
+        // « bpm moyen » ne tient pas dans un tiers de la largeur, et le `lineLimit(1)` du
+        // libellé le coupe. Un libellé tronqué est la seule chose qui dise ce que le chiffre
+        // mesure — sans lui, « 154 » n'est rien.
+        //
+        // Deux corrections ensemble, parce qu'aucune ne suffit : deux colonnes donnent la
+        // largeur, et deux lignes autorisées donnent la hauteur. Le chiffre, lui, garde son
+        // `lineLimit(1)` et son `minimumScaleFactor` : un chiffre coupé en deux serait pire
+        // qu'un chiffre rétréci.
+        let large = tailleDuTexte.isAccessibilitySize
+        let colonnes = Array(repeating: GridItem(.flexible(), spacing: 10), count: large ? 2 : 3)
+        return LazyVGrid(columns: colonnes, spacing: 10) {
             ForEach(cases, id: \.libelle) { mesure in
                 VStack(alignment: .leading, spacing: 4) {
                     Text(mesure.valeur)
@@ -236,7 +249,12 @@ struct ActivityDetailView: View {
                     Text(LocalizedStringKey(mesure.libelle))
                         .font(RUFont.sans(.small))
                         .foregroundColor(RUColor.text3)
-                        .lineLimit(1)
+                        .lineLimit(large ? 2 : 1)
+                        // `vertical: large` et non `true` : aux tailles ordinaires le libellé
+                        // tient sur une ligne et ce modificateur ne doit rien changer du tout.
+                        // Une grille déjà photographiée vingt-cinq fois n'a aucune raison de
+                        // bouger d'un pixel pour une correction qui ne la concerne pas.
+                        .fixedSize(horizontal: false, vertical: large)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 10).padding(.horizontal, 12)

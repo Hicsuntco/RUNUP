@@ -18,6 +18,9 @@ struct ClubView: View {
     /// répondre à « que se passe-t-il si une vue s'affiche avant que son magasin existe ».
     @State private var magasin: ClubStore
 
+    /// Lue pour savoir si les trois onglets s'empilent — voir `clubTabs`.
+    @Environment(\.dynamicTypeSize) private var tailleDuTexte
+
     /// `@MainActor` EXPLICITE, parce que `ClubStore` l'est et qu'un `init` de structure ne
     /// l'hérite pas forcément. Construire un objet isolé au fil principal depuis un contexte
     /// qui ne l'est pas est une erreur de compilation, pas un avertissement — et il n'y a pas
@@ -762,7 +765,24 @@ struct ClubView: View {
     }
 
     private var clubTabs: some View {
-        HStack(spacing: 2) {
+        // LES TROIS ONGLETS S'EMPILENT EN GRAND TEXTE, ET C'EST LA CAPTURE QUI L'A IMPOSÉ.
+        //
+        // Trois segments à un tiers de la largeur chacun ne peuvent pas tenir « Classement » au
+        // deuxième cran d'accessibilité. La capture du 8 novembre 2026 montre le résultat, et
+        // ce n'est pas une troncature — c'est une COUPURE DE MOT sans trait d'union :
+        //
+        //   · en français : « Classe / ment » ;
+        //   · en espagnol, les trois à la fois : « Resume / n », « Clasific / ación »,
+        //     « Activida / d ».
+        //
+        // Un onglet dont le nom est coupé en deux ne se lit plus comme un nom. Empilés, les trois
+        // ont la largeur entière et le problème disparaît sans rien rétrécir : rien ne vaut la
+        // peine d'être lu à 60 % de sa taille sur l'écran de quelqu'un qui a demandé du gros
+        // texte. Aux tailles ordinaires, rien ne bouge.
+        let disposition = tailleDuTexte.isAccessibilitySize
+            ? AnyLayout(VStackLayout(spacing: 2))
+            : AnyLayout(HStackLayout(spacing: 2))
+        return disposition {
             // `segment` reçoit un `String` (et non un littéral posé directement dans un `Text`) :
             // sans `String(localized:)` ces libellés ne passeraient jamais par le catalogue.
             segment(String(localized: "Aperçu"), .overview)

@@ -581,6 +581,27 @@ disent maintenant la même chose de la même façon.
 défaut que le commentaire de ce bloc existe pour empêcher : « une barre aux deux tiers sans son
 palier est un pourcentage de rien ». Deux lignes plutôt qu'une.
 
+### Trois écrans de plus, et trois défauts de plus (8 novembre, deuxième passe)
+
+Quatre écrans sur les vingt et un photographiés, c'était la couverture. Les trois ajoutés sont les
+plus denses de ceux qu'on n'avait jamais vus en grand texte : la sortie dépliée (l'écran le plus
+chiffré de l'app), l'aperçu du club (redécoupé en quatre fichiers la veille, donc jamais revu
+depuis), et le profil (une grille de tuiles). Les trois ont rendu un défaut chacun.
+
+| Écran | Défaut | Correctif |
+| --- | --- | --- |
+| Aperçu du club | **une coupure de mot, pas une troncature** : « Classe / ment » en français, et les TROIS à la fois en espagnol — « Resume / n », « Clasific / ación », « Activida / d ». Un onglet dont le nom est coupé en deux ne se lit plus comme un nom. | les trois segments s'empilent au cran d'accessibilité (`AnyLayout`). Chacun a la largeur entière, rien ne rétrécit. |
+| Profil | « jours de suite » passait à la ligne et tombait sous le chiffre du milieu, centré sous rien — une quatrième ligne orpheline qui casse le lien entre un chiffre et son unité. | la rangée de chiffres devient une colonne, comme `RUCardHeader` et `WeeklyRecapView` le font déjà. |
+| Sortie dépliée | « bpm m… » : `bpm moyen` ne tient pas dans un tiers de largeur, et le `lineLimit(1)` du libellé le coupait. Sans son libellé, « 154 » n'est rien. | deux colonnes au lieu de trois, ET deux lignes autorisées. Aucune des deux ne suffit seule. Le chiffre, lui, garde son `lineLimit(1)` : un chiffre coupé serait pire qu'un chiffre rétréci. |
+
+Le compte de la méthode est donc de **treize défauts sur sept écrans**, tous invisibles aux
+tailles ordinaires et tous vus sur une image.
+
+Ce qui a été REGARDÉ et laissé : les textes libres tronqués en fin de ligne — la bio du profil,
+le sous-titre « Ton club, tes abonnements et tes c… », le nom d'un club long. Ce sont des limites
+de lignes posées exprès sur du contenu de longueur inconnue, pas des mises en page qui cassent, et
+la coupure se fait proprement sur un caractère de suite.
+
 ### Mais d'abord : regarder l'app en grand texte
 
 Le plafond de `RUFont` est passé de 1,6 × à 2,0 × sur la foi d'un travail de réorganisation —

@@ -12,6 +12,7 @@ Le quatrième cas est celui du contrôle lui-même : il doit regarder les DEUX f
 et un contrôle.
 """
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
@@ -27,6 +28,28 @@ def cas_de(nom):
         cas.append((nom, f))
         return f
     return decorateur
+
+
+def source_du_controle(dispenses: dict[str, str] | None) -> str:
+    """Le contrôle, sa liste de dispenses remplacée par celle qu'on veut éprouver.
+
+    La déclaration est retrouvée par expression régulière et non par sa forme exacte : elle a
+    déjà changé une fois — de `DISPENSES = {…}` à `DISPENSES: dict[str, str] = {}` le jour où
+    la dernière dispense a disparu — et les cas sont tombés d'un coup.
+    """
+    source = (ICI / "check_cablage.py").read_text()
+    if dispenses is None:
+        return source
+    # Les deux formes que la déclaration a prises : le dictionnaire vide sur une ligne, et le
+    # bloc qui se ferme sur une accolade en colonne zéro.
+    motif = re.compile(r"^DISPENSES(?::[^=]*)? = \{(?:\}\n|.*?^\}\n)", re.S | re.M)
+    rendu = "DISPENSES = {\n"
+    for nom, raison in dispenses.items():
+        rendu += f'    "{nom}": "{raison}",\n'
+    rendu += "}\n"
+    source, n = motif.subn(rendu, source, count=1)
+    assert n == 1, "la déclaration DISPENSES n'a pas été retrouvée dans check_cablage.py"
+    return source
 
 
 def arborescence(tmp: str, fichiers: list[str], nommes: list[str],
@@ -54,16 +77,7 @@ def arborescence(tmp: str, fichiers: list[str], nommes: list[str],
     # le vrai `check_cablage.py` est, lui, câblé dans `testflight.yml`, et le dernier cas le
     # vérifie en le lançant tel quel.
     copie = scripts / "regarde.py"
-    source = (ICI / "check_cablage.py").read_text()
-    if dispenses is not None:
-        debut = source.index("DISPENSES = {")
-        fin = source.index("\n}\n", debut) + 3
-        rendu = "DISPENSES = {\n"
-        for nom, raison in dispenses.items():
-            rendu += f'    "{nom}": "{raison}",\n'
-        rendu += "}\n"
-        source = source[:debut] + rendu + source[fin:]
-    copie.write_text(source)
+    copie.write_text(source_du_controle(dispenses))
     return copie
 
 
@@ -98,6 +112,60 @@ def _():
         code, sortie = lancer(c)
         assert code == 1, f"un test non câblé est passé :\n{sortie}"
         assert "test_b.py" in sortie, sortie
+
+
+@cas_de("un fichier IMPORTÉ par un fichier câblé tourne aussi")
+def _():
+    """`check_profile.py` n'est nommé par aucun workflow, et sa règle tourne à chaque build :
+    `profils.py` est appelé et l'importe. Le contrôle ne regardait que les noms écrits dans
+    les workflows, et l'a donc inscrit en dispense avec la mention « ne tourne nulle part » —
+    fausse, et partie telle quelle dans RELEASE.md avant d'être rattrapée."""
+    with tempfile.TemporaryDirectory() as tmp:
+        c = arborescence(tmp,
+                         ["check_outil.py", "check_appelant.py"],
+                         ["check_appelant.py"], dispenses={})
+        (c.parent / "check_appelant.py").write_text("import check_outil\n")
+        code, sortie = lancer(c)
+        assert code == 0, f"un fichier lancé par un import a été déclaré orphelin :\n{sortie}"
+        assert "par import : check_outil.py" in sortie, sortie
+
+
+@cas_de("une chaîne d'imports compte sur toute sa longueur")
+def _():
+    with tempfile.TemporaryDirectory() as tmp:
+        c = arborescence(tmp,
+                         ["check_a.py", "check_b.py", "check_c.py"],
+                         ["check_c.py"], dispenses={})
+        (c.parent / "check_c.py").write_text("import check_b\n")
+        (c.parent / "check_b.py").write_text("import check_a\n")
+        code, sortie = lancer(c)
+        assert code == 0, f"la chaîne d'imports n'a pas été suivie :\n{sortie}"
+        assert "check_a.py" in sortie and "check_b.py" in sortie, sortie
+
+
+@cas_de("deux fichiers qui s'importent l'un l'autre ne tournent pas pour autant")
+def _():
+    """Sans mémo, la boucle rendrait « oui » à tout le monde : A tourne parce que B l'importe,
+    et B tourne parce que A l'importe. Aucun des deux n'est appelé par un workflow."""
+    with tempfile.TemporaryDirectory() as tmp:
+        c = arborescence(tmp, ["check_a.py", "check_b.py", "check_vrai.py"],
+                         ["check_vrai.py"], dispenses={})
+        (c.parent / "check_a.py").write_text("import check_b\n")
+        (c.parent / "check_b.py").write_text("import check_a\n")
+        code, sortie = lancer(c)
+        assert code == 1, f"une boucle d'imports a suffi à se déclarer câblée :\n{sortie}"
+        assert "check_a.py" in sortie and "check_b.py" in sortie, sortie
+
+
+@cas_de("une dispense sur un fichier lancé par un import fait échouer")
+def _():
+    with tempfile.TemporaryDirectory() as tmp:
+        c = arborescence(tmp, ["check_outil.py", "check_appelant.py"], ["check_appelant.py"],
+                         dispenses={"check_outil.py": "il ne tourne nulle part."})
+        (c.parent / "check_appelant.py").write_text("import check_outil\n")
+        code, sortie = lancer(c)
+        assert code == 1, f"une dispense devenue fausse est passée :\n{sortie}"
+        assert "DISPENSÉS ET POURTANT CÂBLÉS" in sortie, sortie
 
 
 @cas_de("une dispense couvre, et elle est affichée avec sa raison")
@@ -202,12 +270,7 @@ def avec_workflow(tmp: str, fichiers: dict[str, str], workflow: str) -> pathlib.
         (scripts / nom).write_text(contenu)
     (workflows / "faux.yml").write_text(workflow)
     copie = scripts / "regarde.py"
-    # La liste de dispenses du vrai dépôt est vidée : elle nomme `check_profile.py`, qui
-    # n'existe pas dans ce faux dépôt, et la règle de la dispense périmée partirait en premier.
-    source = (ICI / "check_cablage.py").read_text()
-    debut = source.index("DISPENSES = {")
-    fin = source.index("\n}\n", debut) + 3
-    copie.write_text(source[:debut] + "DISPENSES = {}\n" + source[fin:])
+    copie.write_text(source_du_controle({}))
     return copie
 
 

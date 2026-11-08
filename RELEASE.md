@@ -31,6 +31,12 @@ et il pose deux questions.
    qui fournit Pillow. `test_comparer.py` était bien câblé, dans TestFlight, dont le python du
    système n'a pas Pillow : `ModuleNotFoundError`, dix minutes après le commit. Les huit scripts
    du dépôt qui lisent des images tournent dans `captures.yml` ou `appstore.yml`, qui ont un venv.
+
+Il n'y a **aucune dispense** aujourd'hui. Il y en a eu une, et elle était fausse :
+`check_profile.py` n'est nommé par aucun workflow, et sa règle tourne pourtant à chaque build —
+`profils.py` est appelé et l'importe pour sa fonction `manquantes()`. Le contrôle ne regardait
+que les noms écrits dans les workflows ; il suit maintenant les imports. Une dispense fausse est
+pire qu'une dispense manquante : elle dit qu'on sait, et on ne sait pas.
 Ils existent tous parce qu'un défaut est passé : une clé de catalogue absente qui sort le texte en
 français chez tout le monde, un nom de symbole SF faux qui ne dessine rien du tout, une demande
 d'autorisation non traduite renvoyée par Apple en ITMS-90738 **après** la livraison.
@@ -95,8 +101,8 @@ python3 ci_scripts/check_deploiement.py
 ```
 
 `check_profile.py` attend trois arguments et `check_grand_texte.py` un dossier de captures :
-ni l'un ni l'autre ne s'exécute à vide, et `tout.sh` les saute pour cette raison. Le premier ne
-tourne nulle part ailleurs non plus — voir § 4.
+ni l'un ni l'autre ne s'exécute à vide, et `tout.sh` les saute pour cette raison. La règle du
+premier tourne quand même à chaque build, appelée par `profils.py`.
 
 `comparer.py` n'est pas un contrôle et ne figure donc pas dans `tout.sh` : c'est l'outil qui dit
 si un écran photographié a bougé. On lui donne les captures d'avant et celles d'après, il rend
@@ -136,14 +142,6 @@ Puis, sur la machine :
   pose pas la question — `TARGETED_DEVICE_FAMILY` vaut 1 dans les réglages de base comme dans
   ceux du widget (seule la montre porte 4), donc RUNUP est une app iPhone et Apple ne demande
   aucune image d'iPad.
-- **`check_profile.py` ne tourne nulle part, et c'est désormais écrit.** Il compare les
-  capacités du profil de provisionnement à celles que la cible demande ; il a été écrit pour un
-  `exportArchive` refusé sur `com.apple.developer.weatherkit`, douze minutes après le début de
-  l'archivage. Aucun workflow ne l'appelle, parce qu'il demande le profil décodé, qui n'existe
-  qu'au moment de la signature. Sa place est dans `testflight.yml` juste avant l'export. En
-  attendant, il figure dans les `DISPENSES` de `check_cablage.py` avec cette raison : c'est le
-  seul fichier de `ci_scripts/` qui ne tourne pas, et plus aucun autre ne peut le devenir en
-  silence.
 - **Le contenu des séances HYROX** attend quelqu'un qui en a couru un (voir `PROGRESS.md`).
 
 ---

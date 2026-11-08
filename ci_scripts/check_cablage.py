@@ -13,18 +13,26 @@ sentiment d'avoir fini.
 - `test_icones.py` répétait un nombre devenu faux. Il était bien câblé, celui-là, et c'est ce
   qui l'a montré : TestFlight est passé au rouge dix minutes après le commit. Un test non
   câblé n'aurait rien dit du tout.
-- `check_profile.py` compare les capacités du profil de provisionnement à celles que la cible
-  demande. Écrit après un `exportArchive` refusé sur WeatherKit, douze minutes après le début
-  de l'archivage. Appelé par aucun workflow — découvert en comptant les fichiers, pas en
-  lisant le code, le 8 novembre 2026.
+- `check_profile.py` a semblé en être un quatrième — et c'était une erreur de ce contrôle-ci,
+  qui ne regardait que les noms écrits dans les workflows. Sa règle tourne à chaque build,
+  appelée par `profils.py`. Voir plus bas : l'import compte.
 - `test_comparer.py` lui-même, écrit le même jour, n'aurait pas été câblé sans ce contrôle.
 
 # CE QUI EST VÉRIFIÉ
 
-Tout `ci_scripts/check_*.py` et `ci_scripts/test_*.py` est nommé dans au moins un fichier de
-`.github/workflows/`, ou bien figure dans `DISPENSES` ci-dessous AVEC SA RAISON. Une dispense
-n'est pas un silence : elles sont toutes affichées à chaque exécution, et une dispense qui ne
-correspond à aucun fichier fait échouer le contrôle — sinon la liste pourrirait sur place.
+Tout `ci_scripts/check_*.py` et `ci_scripts/test_*.py` tourne : il est nommé dans un fichier de
+`.github/workflows/`, ou bien IMPORTÉ par un fichier qui l'est, ou bien il figure dans
+`DISPENSES` ci-dessous AVEC SA RAISON. Une dispense n'est pas un silence : elles sont toutes
+affichées à chaque exécution, une dispense qui ne correspond à aucun fichier fait échouer le
+contrôle, et une dispense sur un fichier redevenu câblé aussi — sinon la liste pourrirait sur
+place.
+
+L'IMPORT COMPTE, ET IL A FALLU UNE DISPENSE FAUSSE POUR LE VOIR. `check_profile.py` n'est
+appelé par aucun workflow, et sa règle tourne pourtant à chaque build : `profils.py` est appelé
+et l'importe pour sa fonction `manquantes()`. Je l'avais inscrit en dispense avec la mention
+« ne tourne nulle part », et cette mention était partie dans RELEASE.md. Une dispense fausse est
+pire qu'une dispense manquante : elle dit qu'on sait, et on ne sait pas. Il n'y a plus aucune
+dispense aujourd'hui.
 
 Ce que ce contrôle ne dit PAS : qu'un contrôle câblé est juste, ni que ses cas couvrent quoi
 que ce soit. Il dit seulement qu'il tourne. C'est la seule question qu'une liste de fichiers
@@ -40,17 +48,60 @@ RACINE = ICI.parent
 
 #: fichier → pourquoi il ne peut pas être câblé. La raison est lue par un humain : elle doit
 #: dire ce qui manque pour le câbler, pas simplement « il ne tourne pas ».
-DISPENSES = {
-    "check_profile.py":
-        "demande le profil de provisionnement décodé, qui n'existe qu'au moment de la "
-        "signature. À câbler dans testflight.yml juste avant l'export — voir RELEASE.md § 4.",
-}
+DISPENSES: dict[str, str] = {}
 
 
 def fichiers() -> list[pathlib.Path]:
     return sorted(
         [p for p in ICI.glob("check_*.py")] + [p for p in ICI.glob("test_*.py")]
     )
+
+
+def importe(fichier: pathlib.Path) -> set[str]:
+    """Les modules que ce fichier importe, lus dans l'arbre syntaxique.
+
+    Dans l'arbre et non dans le texte : ce contrôle cherchait `"from PIL" in texte`, et sa
+    propre ligne de recherche contenait ces mots — il s'est accusé lui-même. L'arbre ne
+    contient que ce que Python exécute.
+    """
+    try:
+        arbre = ast.parse(fichier.read_text(encoding="utf-8"))
+    except SyntaxError:
+        return set()
+    modules = set()
+    for noeud in ast.walk(arbre):
+        if isinstance(noeud, ast.Import):
+            modules.update(a.name.split(".")[0] for a in noeud.names)
+        elif isinstance(noeud, ast.ImportFrom) and noeud.module and noeud.level == 0:
+            modules.add(noeud.module.split(".")[0])
+    return modules
+
+
+def tourne_par_import(fichier: pathlib.Path, nommes: set[str],
+                      connus: dict[str, bool]) -> bool:
+    """Ce fichier est-il importé, directement ou en chaîne, par un fichier qui tourne ?
+
+    `check_profile.py` n'est appelé par aucun workflow — et sa règle tourne pourtant à CHAQUE
+    build : `profils.py`, lui, est appelé, et il importe `check_profile` pour sa fonction
+    `manquantes()`. Je l'avais inscrit en dispense avec la mention « ne tourne nulle part », ce
+    qui était faux, et cette mention serait partie dans RELEASE.md et dans PROGRESS.md.
+
+    Une dispense fausse est pire qu'une dispense manquante : elle dit qu'on sait, et on ne sait
+    pas. D'où cette question-ci, posée avant celle de la dispense.
+    """
+    nom = fichier.name
+    if nom in connus:
+        return connus[nom]
+    connus[nom] = False  # coupe une éventuelle boucle d'imports
+    reponse = False
+    for voisin in sorted(fichier.parent.glob("*.py")):
+        if voisin.name == nom or fichier.stem not in importe(voisin):
+            continue
+        if voisin.name in nommes or tourne_par_import(voisin, nommes, connus):
+            reponse = True
+            break
+    connus[nom] = reponse
+    return reponse
 
 
 def lit_des_images(fichier: pathlib.Path, connus: dict[str, bool]) -> bool:
@@ -64,26 +115,7 @@ def lit_des_images(fichier: pathlib.Path, connus: dict[str, bool]) -> bool:
     if nom in connus:
         return connus[nom]
     connus[nom] = False  # coupe une éventuelle boucle d'imports
-    try:
-        arbre = ast.parse(fichier.read_text(encoding="utf-8"))
-    except SyntaxError:
-        # Un fichier qui ne se parse pas ne tournera pas non plus ; ce n'est pas à ce
-        # contrôle-ci de le dire, et le supposer sans Pillow serait une accusation de trop.
-        return False
-
-    # LES IMPORTS SE LISENT DANS L'ARBRE, PAS DANS LE TEXTE. Ce contrôle cherchait
-    # `"from PIL" in texte` — et sa propre ligne de recherche contenait ces mots. Il s'est
-    # donc accusé lui-même de lire des images. C'est la TROISIÈME fois aujourd'hui qu'un
-    # contrôle se lit : `check_cjs.py` et `check_filet.py` sur leurs commentaires, celui-ci
-    # sur son code. Les commentaires se blanchissent ; le code, non. L'arbre, lui, ne contient
-    # que ce que Python exécute.
-    importes = set()
-    for noeud in ast.walk(arbre):
-        if isinstance(noeud, ast.Import):
-            importes.update(a.name.split(".")[0] for a in noeud.names)
-        elif isinstance(noeud, ast.ImportFrom) and noeud.module and noeud.level == 0:
-            importes.add(noeud.module.split(".")[0])
-
+    importes = importe(fichier)
     direct = "PIL" in importes
     if not direct:
         for voisin in sorted(fichier.parent.glob("*.py")):
@@ -196,11 +228,16 @@ def main() -> int:
     # quatre fois : celui-là, c'est le fichier dont le nom n'apparaît nulle part. Les
     # commentaires sont blanchis, parce que le nom d'un fichier qu'on explique ne pas câbler
     # est écrit, justement, dans un commentaire. Le `tout.sh`, lui, exécute pour de vrai.
-    orphelins = [p.name for p in tous if p.name not in workflows]
+    nommes = {p.name for p in tous if p.name in workflows}
+    par_import: dict[str, bool] = {}
+    orphelins = [p.name for p in tous
+                 if p.name not in nommes and not tourne_par_import(p, nommes, par_import)]
+    indirects = sorted(p.name for p in tous
+                       if p.name not in nommes and p.name not in orphelins)
 
     dispenses_inutiles = sorted(set(DISPENSES) - {p.name for p in tous})
     dispenses_couvertes = sorted(n for n in DISPENSES
-                                 if n in workflows and n != "check_cablage.py")
+                                 if n in nommes or n in indirects)
     non_dispenses = [n for n in orphelins if n not in DISPENSES]
 
     # DEUXIÈME QUESTION : CE QUI TOURNE A-T-IL DE QUOI TOURNER ?
@@ -225,9 +262,11 @@ def main() -> int:
                     sans_pillow.append((f"{chemin.name}:{job}", nom))
 
     print(f"{len(tous)} fichier(s) de contrôle et de cas dans ci_scripts/")
-    print(f"{len(tous) - len(orphelins)} nommé(s) par un workflow, "
-          f"{len(orphelins)} non nommé(s)")
+    print(f"{len(nommes)} nommé(s) par un workflow, {len(indirects)} lancé(s) par un import, "
+          f"{len(orphelins)} ni l'un ni l'autre")
     print()
+    for nom in indirects:
+        print(f"  par import : {nom}")
     for nom in sorted(DISPENSES):
         print(f"  dispensé : {nom}")
         print(f"             {DISPENSES[nom]}")
@@ -273,8 +312,8 @@ def main() -> int:
         return 1
 
     print()
-    print("Chaque contrôle et chaque fichier de cas est nommé par un workflow, "
-          "ou dispensé avec sa raison.")
+    print("Chaque contrôle et chaque fichier de cas tourne : nommé par un workflow, importé "
+          "par un fichier qui l'est, ou dispensé avec sa raison.")
     return 0
 
 

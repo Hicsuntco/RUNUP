@@ -109,13 +109,15 @@ recherche contenait ces mots : il s'est accusé lui-même de lire des images. Le
 blanchissent les commentaires ; le troisième ne pouvait pas, puisque c'était son code — il lit
 les imports dans l'ARBRE syntaxique, qui ne contient que ce que Python exécute.
 
-**Un garde-fou qu'on croit avoir est pire que pas de garde-fou**, et quatre existaient sans
-tourner : `test_session.py`, `test_accent.py`, `check_profile.py` — écrit après un
-`exportArchive` refusé sur WeatherKit, douze minutes après le début de l'archivage — et
-`test_comparer.py`, écrit le 8 novembre. `check_cablage.py` exige maintenant que tout
+**Un garde-fou qu'on croit avoir est pire que pas de garde-fou**, et trois existaient sans
+tourner : `test_session.py`, `test_accent.py`, et `test_comparer.py`, écrit le 8 novembre.
+(Un quatrième, `check_profile.py`, a semblé en être un — et c'était le contrôle qui se
+trompait : sa règle tourne à chaque build, appelée par `profils.py`, qui l'importe. Il suit
+les imports depuis. Une dispense fausse est pire qu'une dispense manquante : elle dit qu'on
+sait, et on ne sait pas.) `check_cablage.py` exige maintenant que tout
 `check_*.py` et tout `test_*.py` de `ci_scripts/` soit nommé par un workflow, ou figure dans une
-liste de dispenses AVEC sa raison : une seule aujourd'hui, `check_profile.py`, avec ce qui lui
-manque pour être câblé.
+liste de dispenses AVEC sa raison — ou soit importé par un fichier qui, lui, est nommé. Il n'y
+a aucune dispense aujourd'hui.
 
 **Et câblé ne veut pas dire qu'il a de quoi tourner.** `test_comparer.py` était bien nommé par
 un workflow, et il a échoué dix minutes plus tard sur `ModuleNotFoundError: No module named

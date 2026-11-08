@@ -278,9 +278,11 @@ jobs:
       # l'endroit qu'il surveille. Quatre fois le même défaut, et jamais par négligence —
       # écrire le contrôle et le câbler sont deux gestes, et le premier donne le sentiment
       # d'avoir fini. `test_session.py` et `test_accent.py` existaient sans tourner.
-      # `check_profile.py`, écrit après un export refusé sur WeatherKit, ne tourne toujours
-      # nulle part — il attend le profil décodé, et il est dispensé en l'attendant.
-      # `test_comparer.py` aurait été le quatrième : ce contrôle l'a attrapé le jour même.
+      # `test_comparer.py` aurait été le troisième : ce contrôle l'a attrapé le jour même.
+      # Il pose aussi deux questions de plus — un script a-t-il de quoi tourner (Pillow), et
+      # est-il lancé par un fichier qui l'importe. La seconde lui a évité une fausse accusation :
+      # `check_profile.py` n'est nommé nulle part et sa règle tourne à chaque build, appelée par
+      # `profils.py`.
       # C'est volontairement une étape haut placée : elle coûte une seconde et elle dit si
       # les cinquante qui suivent sont bien toutes là.
       - name: Vérifier que chaque contrôle et chaque test est bien lancé

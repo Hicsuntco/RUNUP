@@ -348,8 +348,10 @@ réglage arrive par `-UIPreferredContentSizeCategoryName`, le même chemin que l
 
 Et `check_grand_texte.py` mesure l'écart entre chaque capture et son ordinaire : si le drapeau
 cessait d'être lu, les quatre images seraient des copies, le harnais resterait vert, et on
-croirait avoir vu l'app en grand texte. **Sans plancher pour l'instant** — il viendra du premier
-relevé, comme le plafond d'images vides des bascules.
+croirait avoir vu l'app en grand texte. **Le plancher vaut 10 depuis le 8 novembre**, et il vient
+de vingt-quatre mesures — deux exécutions, trois langues, quatre écrans — qui vont de 17,3 à 31,3.
+Deux copies du même écran ne diffèrent que par l'heure, soit une fraction de point : il n'y a rien
+entre 0,x et 17 à départager, donc rien à régler finement.
 
 ### Ce que les quatre captures ont montré, le 8 novembre
 

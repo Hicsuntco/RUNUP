@@ -350,10 +350,18 @@ jobs:
       # seraient des copies des captures ordinaires et le harnais resterait vert. On mesure donc
       # l'écart entre chaque image et son ordinaire.
       #
-      # SANS PLANCHER POUR L'INSTANT : c'est la première exécution, et le plancher doit venir
-      # d'un relevé, pas d'une intuition. Il sera posé quand les quatre écarts seront connus —
-      # comme le plafond d'images vides des bascules, qui vaut 1 parce que vingt-quatre bascules
-      # mesurées rendaient toutes zéro.
+      # LE PLANCHER EST POSÉ, ET IL VIENT DE DEUX RELEVÉS.
+      #
+      # Vingt-quatre mesures — deux exécutions complètes, trois langues, quatre écrans — vont de
+      # 17,3 à 31,3. La plus basse est l'accueil en anglais ; le bas de la distribution est donc
+      # connu, et il est loin de zéro.
+      #
+      # 10 est le plancher : sous la plus basse observée d'un facteur 1,7, et très au-dessus de
+      # ce que rendrait le défaut qu'on veut attraper. Si
+      # `-UIPreferredContentSizeCategoryName` cessait d'être lu — un renommage chez Apple, un
+      # drapeau mal orthographié — les quatre images seraient des COPIES des captures
+      # ordinaires et l'écart tomberait à la fraction de point que laisse l'horloge. Il n'y a
+      # rien entre 0,x et 17 à départager, donc rien à régler finement.
       - name: Le grand texte a-t-il pris, langue par langue
         run: |
           set -euo pipefail
@@ -362,7 +370,7 @@ jobs:
           for langue in ${{ steps.quoi.outputs.langues }}; do
             echo "──────────── $langue · grand texte ────────────"
             "$RUNNER_TEMP/venv/bin/python" ci_scripts/check_grand_texte.py \
-              --dossier "appstore/raw/$langue"
+              --dossier "appstore/raw/$langue" --plancher 10
           done
 
       # ── L'APERÇU VIDÉO, FILMÉ PAR LA MACHINE ─────────────────────────────────────────────────

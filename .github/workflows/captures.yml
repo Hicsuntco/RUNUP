@@ -440,7 +440,9 @@ jobs:
       # légitimement le haut. 25 % est trois fois la plus claire observée.
       #
       # Ça ne l'empêche pas, ça la voit : relancer la chaîne suffit, c'est une affaire de
-      # minutage. Ce qu'on refuse, c'est de LIVRER l'image.
+      # minutage. Ce qu'on refuse, c'est de LIVRER l'image. Empêcher la bannière serait mieux,
+      # et je n'ai pas trouvé comment — aucune option de `simctl` connue de moi ne musellera les
+      # notifications du système. Voir l'en-tête de `check_banniere.py`.
       - name: Une bannière du système s'est-elle posée sur une capture
         run: |
           set -euo pipefail

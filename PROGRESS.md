@@ -707,9 +707,12 @@ les captures SOMBRES uniquement. Le relevé de quatre-vingt-quatre captures sain
 haut — contre **59,7 %** pour celle qui portait la bannière. Le plafond est à 25 %, trois fois la
 plus claire observée, et il n'y a rien entre 8 et 60 à départager.
 
-Il ne l'empêche pas, il la voit. Museler les notifications du simulateur n'est pas quelque chose
-que `simctl` sache faire pour une app du système ; ce qu'on peut faire, et qui est fait, c'est
-refuser de livrer l'image.
+Il ne l'empêche pas, il la voit — et cette limite doit être dite honnêtement : **je n'ai pas
+trouvé comment l'empêcher.** La recherche n'a rien rendu sur une option de `simctl` qui
+musellerait les notifications du système, ce qui ne prouve pas qu'elle n'existe pas. Ce qui est
+documenté et voisin en ENVOIE (`simctl push`), fige la barre d'état (`status_bar override`) ou
+calme les journaux (`spawn log config`) ; aucun ne touche aux bannières. Ce qu'on peut faire sans
+rien supposer, c'est refuser de livrer l'image.
 
 ### Et la question inverse : est-ce que les écrans ORDINAIRES ont bougé ?
 

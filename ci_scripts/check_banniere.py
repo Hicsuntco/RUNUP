@@ -47,9 +47,17 @@ Sans `--plafond`, on mesure et on se tait — même forme que `check_grand_texte
 
 # CE QU'IL NE FAIT PAS
 
-Il n'empêche pas la bannière, il la voit. Empêcher demanderait de museler les notifications du
-simulateur, ce que `simctl` ne sait pas faire pour une app du système. Ce qu'on peut faire, et
-qui est fait, c'est refuser de livrer l'image.
+Il n'empêche pas la bannière, il la voit.
+
+Et il faut dire cette limite honnêtement : je n'ai PAS trouvé comment l'empêcher. La recherche
+n'a rien rendu sur une option de `simctl` qui musellerait les notifications du système — ce qui
+ne prouve pas qu'elle n'existe pas, seulement que je ne l'ai pas trouvée. Ce qui est documenté et
+voisin : `simctl push` en ENVOIE, `simctl status_bar override` fige la barre d'état,
+`simctl spawn log config` calme les journaux. Aucun des trois ne touche aux bannières.
+
+Ce qu'on peut faire sans rien supposer, et qui est fait : refuser de livrer l'image. Relancer la
+chaîne suffit, puisque c'est une affaire de minutage. Le jour où quelqu'un trouve la bonne
+incantation, elle remplace ce paragraphe.
 """
 import argparse
 import pathlib

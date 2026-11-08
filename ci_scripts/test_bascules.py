@@ -358,17 +358,13 @@ with tempfile.TemporaryDirectory() as d:
     # où la distance au témoin a un minimum net — jamais vers la fin, où l'écran est posé
     # depuis plus d'une seconde et demie et où toute une plage de décalages se vaut.
     appels = []
-    vrai_juge = bs.instant_juge
+    vrai_juge = bs.instants_juges
     try:
-        bs.instant_juge = lambda b: (appels.append(b["nom"]), vrai_juge(b))[1]
+        bs.instants_juges = lambda b: (appels.append(b["nom"]), vrai_juge(b))[1]
         bs.alignement(film, bascules, refs, 0.0, dossier)
     finally:
-        bs.instant_juge = vrai_juge
-    attendu("la recherche n'emploie pas l'instant du verdict", appels, [])
-    # Et l'inverse, pour que ce couple de cas dise les deux moitiés de la règle : le verdict,
-    # lui, l'emploie bel et bien. Vérifié plus haut sur le film « lent ».
-    attendu("alors que le verdict, lui, regarde au milieu",
-            round(bs.instant_juge({"debut": 1.0, "fin": 3.0}), 2), 2.0)
+        bs.instants_juges = vrai_juge
+    attendu("la recherche n'emploie pas les instants du verdict", appels, [])
 
     for depart in (3.0, 0.0):
         trouve3, _, _, _ = bs.alignement(film, bascules, refs, depart, dossier)
@@ -397,19 +393,23 @@ with tempfile.TemporaryDirectory() as d:
 #
 # On fabrique un film où le plan met délibérément du temps à se poser, et on vérifie les deux
 # verdicts sur le même film : à `debut + 0,5 s` on se trompe, à la fin du plan on ne se trompe pas.
-attendu("l'instant jugé est pris au milieu du plan",
-        round(bs.instant_juge({"debut": 3.5, "fin": 5.5}), 2), 4.5)
-attendu("un plan trop court garde le plancher de pose",
-        round(bs.instant_juge({"debut": 3.5, "fin": 3.6}), 2), 4.0)
-# LES DEUX CÔTÉS SONT GARANTIS, et c'est tout l'intérêt du milieu. Les deux premières réponses
-# ne tenaient qu'un côté : `debut + 0,5` tombait avant la pose des écrans lents, `fin − 0,25`
-# tombait dans l'action suivante — les plans sont CONTIGUS, « stats » finit à l'instant où le
-# défilement « stats-bas » commence — et, pour le dernier plan, dans le démontage du test.
+# TROIS INSTANTS, PAS UN — et la raison est dans `instants_juges` : aucun instant unique n'est
+# sûr sur les quatre plans à chaque exécution. `debut + 0,5` tombait avant la pose des écrans
+# lents, `fin − 0,25` dans l'action suivante (les plans sont CONTIGUS) ou dans le démontage du
+# test, et le MILIEU sur un écran déjà défilé — le test fait défiler les Stats pendant le plan.
+attendu("trois instants, répartis dans le plan",
+        [round(x, 2) for x in bs.instants_juges({"debut": 3.5, "fin": 5.5})],
+        [4.0, 4.5, 5.0])
+# LA GARANTIE N'EST PAS QUE CHAQUE INSTANT SOIT BON, c'est qu'il y en ait AU MOINS UN qui le
+# soit : après la pose la plus lente mesurée (0,57 s) et avant l'action qui suit. Le premier
+# des trois tombe à 0,5 s, donc parfois en pleine pose — et c'est sans conséquence puisqu'on
+# garde le meilleur des trois.
 plan = {"debut": 23.87, "fin": 25.87}
-attendu("le milieu est après la pose la plus lente mesurée (0,57 s)",
-        bs.instant_juge(plan) - plan["debut"] > 0.57, True)
-attendu("et il est loin de l'action suivante",
-        plan["fin"] - bs.instant_juge(plan) >= 0.9, True)
+instants = bs.instants_juges(plan)
+attendu("au moins un instant est posé ET avant la suite",
+        any(x - plan["debut"] > 0.57 and plan["fin"] - x >= 0.5 for x in instants), True)
+attendu("et aucun ne déborde du plan",
+        all(plan["debut"] <= x <= plan["fin"] for x in instants), True)
 
 with tempfile.TemporaryDirectory() as d:
     dossier = pathlib.Path(d)
@@ -450,9 +450,33 @@ with tempfile.TemporaryDirectory() as d:
     attendu("à 0,5 s du début, le plan ne ressemble à aucun des deux écrans",
             abs(tot[0][1] - tot[1][1]) < 10, True)
 
-    tard = bs.le_plus_proche(bs.posee(film, bs.instant_juge(plan), dossier, "tard"), refs)
+    tard = bs.le_plus_proche(bs.posee(film, bs.instants_juges(plan)[1], dossier, "tard"), refs)
     attendu("au milieu du plan, c'est « stats » sans hésitation", tard[0][0], "stats")
     attendu("et l'écart au suivant est franc", tard[1][1] - tard[0][1] > 40, True)
+
+    # LE MEILLEUR DES TROIS, ce qui est la règle du verdict depuis que le milieu s'est fait
+    # prendre par un défilement. On refait ici ce que la mesure fait : trois images, on garde
+    # celle qui ressemble le plus à quelque chose.
+    def meilleur_des_trois(b, suffixe):
+        retenu = None
+        for k, instant in enumerate(bs.instants_juges(b), start=1):
+            essai = bs.le_plus_proche(bs.posee(film, instant, dossier, f"{suffixe}{k}"), refs)
+            if retenu is None or essai[0][1] < retenu[0][1]:
+                retenu = essai
+        return retenu
+
+    meilleur = meilleur_des_trois(plan, "m")
+    attendu("le meilleur des trois instants reconnaît « stats »", meilleur[0][0], "stats")
+    attendu("et il est franc, alors que le premier instant ne l'était pas",
+            meilleur[1][1] - meilleur[0][1] > 40, True)
+
+    # ET IL NE SAUVE PAS UN PLAN POSÉ SUR LE MAUVAIS ÉCRAN. Le plan ci-dessous vise la fenêtre
+    # 0,0 → 0,9 s, où le film ne montre que l'écran « profil » : aucun de ses trois instants ne
+    # ressemble à « stats », donc le défaut de découpage reste refusé. C'est la moitié de la
+    # règle qu'il ne faut pas perdre en élargissant la recherche.
+    faux = {"nom": "stats", "debut": 0.0, "fin": 0.9, "bascule": True}
+    attendu("un plan posé sur le mauvais écran reste refusé",
+            meilleur_des_trois(faux, "f")[0][0], "profil")
 
 
 # --- L'ALIGNEMENT DES DEUX HORLOGES -------------------------------------------------------------

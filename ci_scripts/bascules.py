@@ -374,7 +374,7 @@ def alignement(entree: pathlib.Path, bascules: list, references: dict, decalage:
                 # incohérence : ce sont deux questions différentes.
                 #
                 # Le verdict demande « quel écran est-ce ? » et veut une image POSÉE, d'où
-                # `instant_juge`, à un quart de seconde de la fin du plan (voir sa note).
+                # `instants_juges`, qui en regarde trois et garde le meilleur (voir sa note).
                 #
                 # CETTE RECHERCHE-CI EST GROSSIÈRE, ET ELLE L'EST PAR NATURE.
                 #
@@ -410,37 +410,40 @@ def alignement(entree: pathlib.Path, bascules: list, references: dict, decalage:
     return trouve, total / max(vises, 1), (-moins_bons) == vises, trouve
 
 
-#: Au plus tôt, l'image jugée est prise là — c'est aussi la référence qui sert à classer la
-#: fenêtre de transition qui précède, et elle n'a pas bougé.
-DELAI_DE_POSE = 0.5
+#: Où regarder dans un plan, en fractions de sa durée. Trois instants, pas un.
+PARTS_JUGEES = (0.25, 0.5, 0.75)
 
 
-def instant_juge(b: dict) -> float:
-    """QUAND REGARDER UN PLAN POUR DIRE QUEL ÉCRAN IL MONTRE : AU MILIEU.
+def instants_juges(b: dict) -> list[float]:
+    """LES TROIS INSTANTS OÙ L'ON REGARDE UN PLAN — et pourquoi ce n'est plus un seul.
 
-    # DEUX MAUVAISES RÉPONSES AVANT CELLE-LÀ
+    # TROIS MAUVAISES RÉPONSES AVANT CELLE-LÀ, ET TOUTES POUR LA MÊME RAISON
 
-    `debut + 0,5 s` a mis le film espagnol au rouge le 8 novembre 2026 : le plan « stats » y met
-    0,57 s à se poser — dix-sept images sur vingt — et l'image prise à 0,5 s est donc un MÉLANGE
-    de l'écran qui part et de celui qui arrive. Le classement rendait « profil 24,4, stats
-    25,0 » : un quasi-ex æquo, là où un plan posé donne 6,4 contre 24,6.
+    `debut + 0,5 s` tombait avant la pose des écrans lents : « stats » met 0,57 s à se poser,
+    et l'image était alors un mélange de l'écran qui part et de celui qui arrive — « profil
+    24,4 contre stats 25,0 », un quasi-ex æquo là où un écran posé rend 6.
 
-    `fin − 0,25 s` a mis le film français au rouge le même jour, et pour la raison inverse.
-    LES PLANS SONT CONTIGUS : « stats » finit à 25,87 s et le défilement « stats-bas » commence
-    à 25,87 s. Un quart de seconde avant la fin, l'écran repart déjà. Et pour le DERNIER plan,
-    cet instant tombe dans le démontage du test : l'image jugée ne ressemblait plus à aucun des
-    quatre témoins — 79,6 contre 105,7, là où un écran reconnu rend 6.
+    `fin − 0,25 s` tombait dans l'action suivante, parce que les plans sont CONTIGUS ; et pour
+    le dernier plan, dans le démontage du test.
 
-    # CE QUI RESTE
+    Le MILIEU tenait les deux bords en théorie. En pratique, l'image gardée montre le plan
+    « stats » DÉJÀ DÉFILÉ : le test fait défiler l'écran pendant le plan, et pas toujours au
+    même moment. Il n'existe donc pas d'instant unique qui soit sûr sur les quatre plans et à
+    chaque exécution.
 
-    Le milieu. Un plan dure deux secondes ; son milieu est à une seconde de son début — bien
-    après les 0,57 s de pose les plus lents mesurés — et à une seconde de sa fin, donc avant
-    que l'action suivante ne commence. C'est le seul instant dont les deux côtés sont garantis.
+    # LA QUESTION ÉTAIT MAL POSÉE
 
-    Le plancher à `debut + 0,5 s` ne sert plus que pour un plan si court que son milieu
-    précéderait sa pose ; il n'y en a aucun aujourd'hui.
+    Ce qu'on veut savoir n'est pas « quel écran y a-t-il à cet instant précis », mais « le film,
+    coupé sur ce plan, montre-t-il le bon écran ». Un plan dure deux secondes et le film les
+    montre toutes : il suffit qu'il CONTIENNE le bon écran.
+
+    On regarde donc trois instants répartis dans le plan et on garde le MEILLEUR. Un plan posé
+    sur le mauvais écran — le défaut de trois secondes qui a sorti trois films faux — n'a aucun
+    instant qui corresponde, et reste refusé. Un plan qui se pose lentement ou qui défile en
+    chemin en a au moins un, et passe.
     """
-    return max(b["debut"] + DELAI_DE_POSE, (b["debut"] + b["fin"]) / 2)
+    duree = max(0.0, b["fin"] - b["debut"])
+    return [b["debut"] + part * duree for part in PARTS_JUGEES]
 
 
 def main() -> int:
@@ -562,10 +565,16 @@ def main() -> int:
             # prise à `debut + 0,5 s` parce que c'est l'état vers lequel la fenêtre qui précède
             # converge — c'est son rôle, et il n'a pas changé. Mais 0,5 s ne suffit pas toujours
             # à ce que l'écran soit POSÉ : « stats » a mis 0,57 s le 8 novembre, et l'image était
-            # alors à mi-chemin entre deux écrans. Voir `instant_juge`.
+            # alors à mi-chemin entre deux écrans. Voir `instants_juges`.
             if references:
-                juge = posee(options.entree, vers_fichier(instant_juge(b)), travail, f"j{i}")
-                classement = le_plus_proche(juge, references)
+                # LE MEILLEUR DES TROIS INSTANTS, et on retient lequel pour la preuve : une
+                # image gardée doit être celle sur laquelle le verdict s'est prononcé.
+                meilleur, classement = None, None
+                for k, instant in enumerate(instants_juges(b), start=1):
+                    juge = posee(options.entree, vers_fichier(instant), travail, f"j{i}-{k}")
+                    essai = le_plus_proche(juge, references)
+                    if classement is None or essai[0][1] < classement[0][1]:
+                        meilleur, classement = instant, essai
                 vise = ecran_vise(b["nom"])
                 proche, ecart = classement[0]
                 suivant = classement[1] if len(classement) > 1 else (proche, ecart)
@@ -581,7 +590,7 @@ def main() -> int:
                     print(f"  {'':<10} écarts : "
                           + ", ".join(f"{n} {e:.1f}" for n, e in classement))
                     if options.preuves:
-                        garde = preuve(options.entree, vers_fichier(instant_juge(b)),
+                        garde = preuve(options.entree, vers_fichier(meilleur),
                                        options.preuves, f"{b['nom']}-montre-{proche}")
                         print(f"  {'':<10} image jugée gardée : {garde}")
                 else:

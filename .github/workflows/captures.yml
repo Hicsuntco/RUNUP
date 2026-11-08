@@ -514,15 +514,33 @@ jobs:
               --decalage "$decalage" \
               --temoins "appstore/raw/$langue/clair" \
               --preuves "$dossier/preuves" \
+              --aligner \
               --plafond 1
+            # L'ALIGNEMENT VIENT DU CONTENU, ET LE MONTAGE COUPE DESSUS.
+            #
+            # L'heure annoncée par `simctl` est juste la plupart du temps, et parfois non : deux
+            # films ont été refusés par le garde-fou, un en espagnol le 7 novembre, un en anglais
+            # le 8, et les images gardées montrent le même symptôme — chaque plan sur l'écran du
+            # plan SUIVANT, soit un retard d'environ trois secondes.
+            #
+            # Les quatre écrans visés sont photographiés par la passe claire. On essaie donc des
+            # décalages et on garde celui qui met les quatre plans sur leurs écrans. La dernière
+            # ligne de la mesure le porte ; `tee` garde l'affichage dans le journal.
             echo "— deuxième ouverture, celle que montre le film —"
+            mesure="$dossier/mesure.txt"
             "$RUNNER_TEMP/venv/bin/python" ci_scripts/bascules.py \
               --entree "$dossier/brut.mov" \
               --temps "$dossier/temps.json" \
               --decalage "$decalage" \
               --temoins "appstore/raw/$langue/clair" \
               --preuves "$dossier/preuves" \
-              --plafond 1
+              --aligner \
+              --plafond 1 | tee "$mesure"
+            aligne=$(sed -n 's/^DÉCALAGE=//p' "$mesure" | tail -1)
+            if [ -n "$aligne" ]; then
+              echo "→ le film sera coupé sur un décalage de $aligne s (annoncé : $decalage s)"
+              decalage="$aligne"
+            fi
 
             # LE MONTAGE, une fois le découpage vérifié.
             #

@@ -54,7 +54,27 @@ témoins espagnols, eux, sont nets — le plus proche voisin est à 20,7 d'écar
 `bascules.py --preuves` garde désormais l'image de l'instant jugé, pleine taille et en couleurs,
 et l'artefact la publie — seulement quand le verdict est mauvais.
 
-**Suite, le soir même : le défaut ne s'est pas reproduit.** Deux exécutions complètes du harnais
+**Suite, le lendemain : il s'est reproduit, en anglais, et avec ses images.** Deux plans sur
+quatre tombaient sur l'écran du plan SUIVANT — le coach montrait les stats, le profil montrait
+l'accueil — et `--preuves` a gardé les deux images, qui le montrent sans discussion (la barre
+d'onglets y désigne l'onglet Stats sous un plan qui annonce le Coach).
+
+**Donc le découpage ne peut pas reposer sur l'heure annoncée par la caméra.** `simctl` dit
+« Recording started » avant d'écrire sa première image, et le reste de l'écart varie avec la
+charge de la machine. Une horloge qu'on ne peut pas vérifier n'est pas une mesure.
+
+`bascules.py --aligner` cherche donc le décalage par le CONTENU : les quatre écrans visés sont
+photographiés par la passe claire, on essaie des décalages au quart de seconde sur ±4 s, et on
+garde celui qui met les quatre plans sur leurs écrans. Le montage coupe sur ce décalage-là. Si
+aucun ne les met tous les quatre, la mesure le dit et le film n'est pas fabriqué — ce qui reste
+le bon comportement : à ce moment-là, ce n'est plus une horloge, c'est autre chose.
+
+Éprouvé dans les deux sens sur un film fabriqué dont on connaît le découpage : on ment de trois
+secondes, il retrouve zéro ; on dit la vérité, il ne déplace rien. (Et le premier jet de ce
+test-là se trompait lui-même — deux de ses quatre écrans d'essai étaient identiques, parce que
+leur motif était modulo 2.)
+
+**L'épisode précédent, lui, ne s'était pas reproduit sur le coup.** Deux exécutions complètes du harnais
 ont suivi, et leur étape de film est verte dans les trois langues — `es-ES.mp4` existe et son
 découpage tombe sur les bons écrans. C'était donc un accident de prise, pas un défaut de
 l'alignement : un appui d'onglet qui n'a pas pris, très probablement. Ce qu'il faut en retenir

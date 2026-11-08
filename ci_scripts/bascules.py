@@ -279,6 +279,62 @@ def instant_du_changement(classes: list[str], fenetre: float) -> float | None:
     return None
 
 
+def alignement(entree: pathlib.Path, bascules: list, references: dict, decalage: float,
+               travail: pathlib.Path, fenetre: float = 4.0, pas: float = 0.25) -> tuple:
+    """Le décalage qui met TOUS les plans sur l'écran qu'ils visent, et ce qu'il coûte.
+
+    # POURQUOI CHERCHER, PLUTÔT QUE CROIRE L'HORLOGE
+
+    Le découpage part de deux heures : celle que le test écrit quand l'app paraît, et celle que
+    le workflow relève quand `simctl` annonce « Recording started ». Leur différence est le
+    décalage. Elle est juste la plupart du temps — et parfois non : les 7 et 8 novembre 2026, le
+    garde-fou a refusé deux films, une fois en espagnol et une fois en anglais, et les images
+    gardées montrent le même symptôme — chaque plan tombe sur l'écran du plan SUIVANT, soit un
+    retard d'environ trois secondes. `simctl` annonce qu'il tourne avant d'écrire sa première
+    image, et le reste de l'écart varie avec la charge de la machine.
+
+    Une horloge qu'on ne peut pas vérifier n'est pas une mesure. Les quatre écrans visés, eux,
+    sont photographiés par la passe claire : on peut donc essayer des décalages et garder celui
+    qui met les quatre plans sur leurs écrans. C'est le contenu qui aligne le film, plus une
+    annonce de la caméra.
+
+    # CE QUE ÇA COÛTE
+
+    Une image par plan et par candidat — 4 × 33 extractions d'une image pour ±4 s au quart de
+    seconde, quelques dizaines de secondes. À comparer aux quarante minutes de harnais qu'un film
+    refusé fait recommencer.
+
+    Rend `(decalage_trouve, ecart_moyen, parfait)` : `parfait` dit si chaque plan tombe sur son
+    écran, et non seulement « au mieux qu'on ait trouvé ».
+    """
+    candidats = []
+    n = int(round(fenetre / pas))
+    for k in range(-n, n + 1):
+        essai = decalage + k * pas
+        if essai < 0:
+            continue
+        total, bons = 0.0, 0
+        for i, b in enumerate(bascules, start=1):
+            vise = ecran_vise(b["nom"])
+            if vise not in references:
+                continue
+            try:
+                image = posee(entree, essai + b["debut"] + 0.5, travail, f"a{i}")
+            except SystemExit:
+                total = float("inf")
+                break
+            classement = le_plus_proche(image, references)
+            total += dict(classement)[vise]
+            if classement[0][0] == vise:
+                bons += 1
+        candidats.append((total, -bons, essai))
+    if not candidats:
+        return decalage, float("inf"), False
+    total, moins_bons, trouve = min(candidats)
+    vises = sum(1 for b in bascules if ecran_vise(b["nom"]) in references)
+    return trouve, total / max(vises, 1), (-moins_bons) == vises
+
+
 def main() -> int:
     a = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -296,6 +352,10 @@ def main() -> int:
     a.add_argument("--temoins", type=pathlib.Path, default=None,
                    help="Le dossier des captures claires (appstore/raw/<langue>/clair) : chaque "
                         "bascule doit tomber sur l'écran qu'elle vise, et non sur son voisin")
+    a.add_argument("--aligner", action="store_true",
+                   help="Chercher le décalage qui met chaque plan sur l'écran qu'il vise, au "
+                        "lieu de croire l'horloge. Écrit le décalage trouvé sur la sortie "
+                        "standard, en dernière ligne, préfixé de « DÉCALAGE= ».")
     a.add_argument("--preuves", type=pathlib.Path, default=None,
                    help="Où garder l'image jugée quand un plan tombe sur le mauvais écran. "
                         "Sans lui, le verdict part sans sa pièce.")
@@ -325,13 +385,38 @@ def main() -> int:
         # TOUT CE QUI EST EN SECONDES DE MONTRE PASSE PAR LÀ, et rien d'autre : un seul endroit
         # où le zéro de l'enregistrement est posé, donc un seul endroit à corriger le jour où il
         # bouge.
+        decalage = options.decalage
+
+        # LES TÉMOINS SONT CHARGÉS D'ABORD, parce que l'alignement en a besoin avant la mesure.
+        # Le gabarit vient d'une image du film : les témoins sont ramenés à sa taille une fois
+        # pour toutes, et c'est la seule raison pour laquelle cette première extraction existe.
+        references: dict[str, Image.Image] = {}
+        if options.temoins:
+            gabarit = posee(options.entree, decalage + bascules[0]["debut"] + 0.5, travail, "g")
+            references = temoins(options.temoins, gabarit)
+            if not references:
+                raise SystemExit(f"Aucune capture claire dans {options.temoins} : "
+                                 f"la bascule ne peut pas être reconnue.")
+
+        # L'ALIGNEMENT PAR LE CONTENU, quand on le demande. Voir `alignement`.
+        if options.aligner and references:
+            trouve, ecart, parfait = alignement(options.entree, bascules, references,
+                                                decalage, travail)
+            glissement = trouve - decalage
+            print(f"  alignement : {glissement:+.2f} s "
+                  f"(écart moyen {ecart:.1f} au meilleur décalage, "
+                  f"{'chaque plan sur son écran' if parfait else 'IL EN RESTE UN DE TRAVERS'})")
+            if abs(glissement) >= 0.5:
+                print(f"  → l'heure annoncée par la caméra était fausse de {glissement:+.2f} s. "
+                      f"Le découpage suit le contenu, pas l'horloge.")
+            decalage = trouve
+
         def vers_fichier(seconde: float) -> float:
-            return seconde + options.decalage
+            return seconde + decalage
 
         total_vides = 0
         changements: list[float | None] = []
         egares: list[str] = []
-        references: dict[str, Image.Image] = {}
         for i, b in enumerate(bascules, start=1):
             # La référence est prise un demi-seconde APRÈS le début du plan : l'écran y est
             # posé, et c'est à lui qu'on compare ce qui précède.
@@ -348,12 +433,7 @@ def main() -> int:
             traversee, vides_traversee = mise_en_place(classes)
             total_vides += vides
             # L'ÉCRAN EST-IL LE BON ? La question que les durées ne savent pas poser.
-            if options.temoins:
-                if not references:
-                    references = temoins(options.temoins, reference)
-                    if not references:
-                        raise SystemExit(f"Aucune capture claire dans {options.temoins} : "
-                                         f"la bascule ne peut pas être reconnue.")
+            if references:
                 classement = le_plus_proche(reference, references)
                 vise = ecran_vise(b["nom"])
                 proche, ecart = classement[0]
@@ -415,6 +495,9 @@ def main() -> int:
               f"Le fondu de 0,22 s fait attendre une mise en place d'une petite dizaine "
               f"d'images ; des vides, aucune.")
         print("    < écran d'avant   _ fond nu, rien dessus   ~ en train d'arriver   = posé")
+        if options.aligner:
+            # La dernière ligne sert au workflow : le montage coupe sur CE décalage-là.
+            print(f"DÉCALAGE={decalage:.3f}")
         if options.plafond is not None and total_vides > options.plafond:
             print(f"  ÉCHEC : {total_vides} images vides pour un plafond de {options.plafond}.")
             return 1

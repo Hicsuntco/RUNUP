@@ -277,6 +277,60 @@ with tempfile.TemporaryDirectory() as d:
         attendu("elle fait la taille de l'écran, pas celle de la comparaison", im.size, (L, H))
         attendu("elle est en couleurs", im.mode, "RGB")
 
+# --- L'ALIGNEMENT PAR LE CONTENU -----------------------------------------------------------------
+# L'horloge de la caméra se trompe par intermittence : `simctl` annonce qu'il tourne avant
+# d'écrire sa première image. Deux films ont été refusés pour ça — un en espagnol, un en anglais —
+# et les images gardées montraient le même symptôme : chaque plan sur l'écran du plan SUIVANT.
+#
+# On fabrique donc un film dont on connaît le découpage à la demi-seconde près, on MENT au script
+# de trois secondes, et on vérifie qu'il retrouve le bon décalage tout seul.
+with tempfile.TemporaryDirectory() as d:
+    dossier = pathlib.Path(d)
+    im_dir = dossier / "i"
+    im_dir.mkdir()
+    # QUATRE ÉCRANS VRAIMENT DIFFÉRENTS, et le premier jet ne l'était pas : `chargee(0)` et
+    # `chargee(2)` rendent la même image — la phase des bandes est modulo 2 — donc le coach et le
+    # profil étaient indiscernables, et le test accusait l'alignement d'une faute de sa propre
+    # mise en scène.
+    def ecran(n):
+        im = Image.new("L", (L, H), 16 + 8 * n)
+        epaisseur = 4 + 3 * n
+        for y in range(0, H, epaisseur * 3):
+            for yy in range(y, min(y + epaisseur, H)):
+                for x in range(0, L):
+                    im.putpixel((x, yy), 210 - 30 * n)
+        return im
+
+    for i in range(1, 361):
+        ecran((i - 1) // 90).convert("RGB").save(im_dir / f"{i:04d}.png")
+    film = dossier / "quatre.mov"
+    subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-framerate", "30",
+                    "-i", str(im_dir / "%04d.png"), "-c:v", "libx264", "-crf", "18",
+                    "-pix_fmt", "yuv420p", str(film)], check=True)
+    temoins_dir = dossier / "clair"
+    (temoins_dir / "diagnostic").mkdir(parents=True)
+    ecran(0).convert("RGB").save(temoins_dir / "3-coach.png")
+    ecran(1).convert("RGB").save(temoins_dir / "6-stats.png")
+    ecran(2).convert("RGB").save(temoins_dir / "diagnostic" / "profil.png")
+    ecran(3).convert("RGB").save(temoins_dir / "1-accueil.png")
+
+    bascules = [{"nom": n, "debut": d0, "fin": d0 + 2.0, "bascule": True}
+                for n, d0 in [("coach", 0.5), ("stats", 3.5), ("profil", 6.5), ("retour", 9.5)]]
+    gabarit = bs.posee(film, 1.0, dossier, "g")
+    refs = bs.temoins(temoins_dir, gabarit)
+    attendu("les quatre témoins du film d'essai sont chargés", sorted(refs),
+            ["accueil", "coach", "profil", "stats"])
+
+    # Le décalage juste est 0 ; on annonce 3.
+    trouve, ecart, parfait = bs.alignement(film, bascules, refs, 3.0, dossier)
+    attendu("le décalage faux de +3 s est retrouvé", round(trouve, 2), 0.0)
+    attendu("et chaque plan tombe alors sur son écran", parfait, True)
+
+    # Et quand l'horloge est juste, la recherche ne déplace rien.
+    trouve2, _, parfait2 = bs.alignement(film, bascules, refs, 0.0, dossier)
+    attendu("une horloge juste n'est pas corrigée", round(trouve2, 2), 0.0)
+    attendu("et elle reste parfaite", parfait2, True)
+
 # --- L'ALIGNEMENT DES DEUX HORLOGES -------------------------------------------------------------
 # LE DÉFAUT QUI A SORTI TROIS FILMS FAUX. Le test appuie sur l'onglet, attend 0,6 s, puis déclare
 # le plan : le changement d'écran doit tomber à 0,6 s du début du plan. Il tombait trois secondes

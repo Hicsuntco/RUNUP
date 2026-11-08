@@ -602,6 +602,21 @@ le sous-titre « Ton club, tes abonnements et tes c… », le nom d'un club long
 de lignes posées exprès sur du contenu de longueur inconnue, pas des mises en page qui cassent, et
 la coupure se fait proprement sur un caractère de suite.
 
+### Le calage de l'heure du coach, qui attendait une exécution de nuit
+
+Une dette plus petite, et fermée le même jour. La fausse conversation du coach est plantée cinq
+heures en arrière, bornée au début du jour courant : sans cette borne, une chaîne qui tourne à
+03 h 00 pose le message à 22 h 00 la VEILLE, et `3-coach` — une des six images livrées à Apple —
+affiche un séparateur « HIER ». Le défaut est passé une fois, et n'a été vu qu'à la troisième
+exécution comparée.
+
+La borne était écrite, et **impossible à vérifier autrement qu'en attendant qu'une exécution
+tombe entre minuit et 05 h 00** — c'est-à-dire en confiant la vérification au hasard de l'heure
+à laquelle quelqu'un pousse. Elle est sortie dans `CaptureSeed.poseDeLaConversation`, et
+`CaptureSeedHeureTests` éprouve les vingt-quatre heures en une seconde : la pose tombe toujours
+le jour courant, le recul de cinq heures reste intact passé 05 h 00, et la réponse du coach —
+posée quarante secondes après la question — ne bascule pas au jour suivant non plus.
+
 ### Ce qui restait du chantier 12, et pourquoi il est fermé
 
 « Indices VoiceOver » était la seconde moitié de l'item d'audit. Elle est fermée sur une mesure,

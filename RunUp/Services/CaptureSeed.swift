@@ -699,6 +699,29 @@ enum CaptureSeed {
     /// dans la construction envoyée à l'App Store — un catalogue est livré en entier, et celles-ci
     /// n'ont rien à y faire. Un `switch` sur la langue, dans un fichier qui n'existe qu'en
     /// débogage, garde la fausse conversation hors du binaire réel.
+    /// L'instant où la fausse conversation du coach est plantée : cinq heures en arrière, mais
+    /// JAMAIS avant le début du jour courant.
+    ///
+    /// # CE QUE LA BORNE EMPÊCHE
+    ///
+    /// Sans elle, une chaîne qui tourne à 03 h 00 pose le message à 22 h 00 la veille, et la
+    /// capture `3-coach` — une des six livrées à Apple — affiche un séparateur « HIER » au-dessus
+    /// de la conversation. C'est arrivé : trois exécutions comparées, deux après minuit qui
+    /// s'accordaient et une troisième à 07 h 00 qui ne s'accordait plus. Voir l'en-tête de
+    /// `ci_scripts/comparer.py` — « deux exécutions qui s'accordent ne font pas une
+    /// reproductibilité ».
+    ///
+    /// # POURQUOI CETTE FONCTION EXISTE À PART
+    ///
+    /// Elle était écrite en deux lignes dans `conversation`, et ne pouvait donc être vérifiée
+    /// QUE par une exécution de la chaîne avant 05 h 00 — c'est-à-dire par le hasard de l'heure
+    /// à laquelle quelqu'un pousse. Sortie, elle se vérifie à toute heure, et
+    /// `CaptureSeedHeureTests` le fait pour les vingt-quatre.
+    static func poseDeLaConversation(_ maintenant: Date) -> Date {
+        let ceMatin = Calendar.current.startOfDay(for: maintenant)
+        return max(maintenant.addingTimeInterval(-3600 * 5), ceMatin)
+    }
+
     private static func conversation(maintenant: Date) -> [ChatMessage] {
         let (question, reponse) = echange()
         // CINQ HEURES EN ARRIÈRE, MAIS JAMAIS AVANT CE MATIN.
@@ -714,8 +737,7 @@ enum CaptureSeed {
         // même — donc le message reste antérieur à maintenant quoi qu'il arrive, et il reste
         // du jour courant. Une conversation de coaching datée d'aujourd'hui est aussi ce
         // qu'on veut MONTRER : un coach qui a répondu ce matin.
-        let ceMatin = Calendar.current.startOfDay(for: maintenant)
-        let pose = max(maintenant.addingTimeInterval(-3600 * 5), ceMatin)
+        let pose = Self.poseDeLaConversation(maintenant)
         return [
             ChatMessage(role: .user, text: question, timestamp: pose),
             ChatMessage(role: .coach, text: reponse,

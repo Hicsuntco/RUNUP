@@ -69,6 +69,22 @@ final class ClubStore {
     /// "earned at some point before this feature existed." Drives `BadgeUnlockedView`.
     var unlockedBadge: ClubBadge?
 
+    /// Ce que le club prépare, et ce qu'il a fait de mieux. Chargé à part du tableau de bord :
+    /// celui-ci part à chaque ouverture du Club, celui-là seulement quand l'aperçu s'affiche.
+    var highlights: ClubHighlights?
+
+    func chargerLesPepites() async {
+        if Demonstration.enCours {
+            highlights = appState.cachedClubHighlights
+            return
+        }
+        guard highlights == nil, auth.isSignedIn else { return }
+        // Silencieux en cas d'échec, et c'est voulu : ce sont deux sections EN PLUS. Une
+        // bannière d'erreur pour elles ferait croire que tout l'aperçu est en panne alors que
+        // le niveau, la semaine, le défi et les sorties sont là.
+        highlights = try? await clubService.fetchClubHighlights()
+    }
+
     /// `badges` pour la même raison que dans `syncBadgesIfNeeded`, qui est appelé plus bas.
     func loadIfSignedIn(badges: [ClubBadge]) async {
         guard auth.isSignedIn else { return }
@@ -445,5 +461,182 @@ final class ClubStore {
         } catch {
             errorMessage = String(localized: "Impossible de bloquer cette personne.")
         }
+    }
+
+    // MARK: Le mur
+
+    /// Rend `true` quand le message est parti, pour que le brouillon et la réponse en cours —
+    /// qui appartiennent à la vue — sachent qu'ils peuvent se vider. Même règle que
+    /// `createClub` : un magasin n'efface pas un champ de saisie.
+    @discardableResult
+    func publier(texte brut: String, enReponseA parent: ClubPost?) async -> Bool {
+        let texte = brut.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !texte.isEmpty else { return false }
+        do {
+            try await clubService.postClubMessage(text: texte, parentId: parent?.id)
+            // On RECHARGE plutôt que de fabriquer la ligne localement : le serveur décide de
+            // l'identifiant et de la date, et deux appareils afficheraient sinon deux versions
+            // du même message.
+            posts = (try? await clubService.fetchClubPosts()) ?? posts
+            return true
+        } catch {
+            appState.toast(PanneReseau.phrase(pour: error))
+            return false
+        }
+    }
+
+    func applaudirLeMessage(_ message: ClubPost) async {
+        guard let index = posts.firstIndex(where: { $0.id == message.id }) else { return }
+        do {
+            let maintenant = try await clubService.toggleClubPostKudos(postId: message.id)
+            posts[index].kudoedByMe = maintenant
+            posts[index].kudos += maintenant ? 1 : -1
+            Haptics.impact(.light)
+        } catch {
+            appState.toast(PanneReseau.phrase(pour: error))
+        }
+    }
+
+    func supprimerLeMessage(_ message: ClubPost) async {
+        do {
+            try await clubService.deleteClubPost(postId: message.id)
+            // Les réponses partent avec lui côté serveur (ON DELETE CASCADE) : on fait pareil ici
+            // plutôt que de laisser des réponses orphelines jusqu'au prochain chargement.
+            posts.removeAll { $0.id == message.id || $0.parentId == message.id }
+        } catch {
+            appState.toast(PanneReseau.phrase(pour: error))
+        }
+    }
+
+    /// Le texte d'un message déjà publié. La vue garde la feuille d'édition ; le magasin garde
+    /// la liste et l'appel.
+    func modifierLeMessage(_ message: ClubPost, texte: String) async throws {
+        try await clubService.updateClubPost(postId: message.id, text: texte)
+        if let i = posts.firstIndex(where: { $0.id == message.id }) {
+            posts[i].text = texte
+        }
+    }
+
+    // MARK: Les réglages du club
+
+    // LES QUATRE RÉGLAGES ONT LA MÊME FORME : l'appel, puis une relecture du tableau de bord.
+    // Le tableau vient du serveur, et on le relit plutôt que de deviner le nouvel état, pour
+    // que l'écran dise ce que le serveur a retenu. `badges` entre par la porte, comme partout
+    // où `loadIfSignedIn` est appelé — voir `syncBadgesIfNeeded`.
+
+    func ouvrirLeClub(_ ouvert: Bool, badges: [ClubBadge]) async throws {
+        try await clubService.setClubOpen(ouvert)
+        await loadIfSignedIn(badges: badges)
+    }
+
+    func reglerLaFiche(description: String, ville: String, badges: [ClubBadge]) async throws {
+        try await clubService.setClubProfile(description: description, city: ville)
+        await loadIfSignedIn(badges: badges)
+    }
+
+    func reglerLaCouverture(dataURI: String, badges: [ClubBadge]) async throws {
+        try await clubService.setClubCover(dataURI: dataURI)
+        await loadIfSignedIn(badges: badges)
+    }
+
+    func reglerLeRole(memberId: String, organisateur: Bool, badges: [ClubBadge]) async throws {
+        try await clubService.setMemberRole(memberId: memberId, organiser: organisateur)
+        await loadIfSignedIn(badges: badges)
+    }
+
+    /// Retirer une de ses propres activités du fil du club.
+    func confirmDeleteActivity(_ item: FeedItem) async {
+        do {
+            try await clubService.deleteActivity(activityId: item.id)
+            feed.removeAll { $0.id == item.id }
+            appState.toast(String(localized: "Activité supprimée du fil."))
+        } catch {
+            appState.toast(String(localized: "Suppression impossible — réessaie."))
+        }
+    }
+
+    // MARK: Les sorties de groupe
+
+    func toggleRsvp(_ event: ClubEvent, groupe: String? = nil) {
+        Haptics.selection()
+        Task {
+            do {
+                let result = try await clubService.toggleEventRsvp(eventId: event.id, paceGroup: groupe)
+                // LES `MainActor.run` ONT DISPARU EN ARRIVANT ICI. Ils étaient nécessaires dans
+                // la vue — une structure dont seules certaines parties sont isolées — et ne
+                // disent plus rien dans une classe `@MainActor` : tout y est déjà sur le fil
+                // principal, et un saut qui ne saute nulle part masque le code qu'il enveloppe.
+                if let index = board.events?.firstIndex(where: { $0.id == event.id }) {
+                    board.events?[index].goingByMe = result.going
+                    board.events?[index].going = result.count
+                    board.events?[index].myPaceGroup = result.paceGroup
+                    // Le compte par groupe vient du serveur au prochain chargement ; en
+                    // attendant, on bouge le sien pour que la pastille choisie réponde tout
+                    // de suite. Un chiffre qui attend l'aller-retour se lit comme un geste
+                    // qui n'a pas pris.
+                    var comptes = board.events?[index].paceCounts ?? [:]
+                    if let avant = event.myPaceGroup { comptes[avant] = max(0, (comptes[avant] ?? 1) - 1) }
+                    if let apres = result.paceGroup { comptes[apres] = (comptes[apres] ?? 0) + 1 }
+                    board.events?[index].paceCounts = comptes
+                }
+            } catch ClubServiceError.badResponse(404, _) {
+                // The event was already cancelled/expired server-side — leaving it in the local
+                // list would just let her tap it again and fail identically every time.
+                board.events?.removeAll { $0.id == event.id }
+            } catch {
+                appState.toast(String(localized: "Impossible de répondre — réessaie."))
+            }
+        }
+    }
+
+    func deleteEvent(_ event: ClubEvent) {
+        Task {
+            do {
+                try await clubService.deleteEvent(eventId: event.id)
+                board.events?.removeAll { $0.id == event.id }
+            } catch ClubServiceError.badResponse(404, _) {
+                // Already gone server-side — still fine to drop it locally.
+                board.events?.removeAll { $0.id == event.id }
+            } catch {
+                // A real failure (network, 403 not-the-creator, ...) — keep it in the list rather
+                // than silently pretending the cancel worked when it didn't.
+                appState.toast(String(localized: "Impossible d'annuler la sortie — réessaie."))
+            }
+        }
+    }
+
+    // LA BANDE DE BADGES A QUITTÉ L'ONGLET CLASSEMENT.
+    //
+    // Elle y affichait MES badges, sous le titre « Derniers badges », au bas d'un classement du
+    // CLUB — une deuxième statistique personnelle posée sur une page collective, après la carte
+    // de niveau. Et elle était déjà, en mieux, sur le Profil : les seize badges avec leur nom et
+    // leur progression, au lieu de six vignettes qu'il fallait faire défiler latéralement.
+    //
+    // Le calcul (`badges`) reste : c'est lui qui alimente la synchronisation vers le serveur et
+    // la célébration d'un badge débloqué.
+
+    /// Une sortie de groupe créée : insérée à sa place dans la liste plutôt que de relire tout
+    /// le tableau — le serveur rend la sortie telle qu'il l'a enregistrée, il n'y a rien d'autre
+    /// à apprendre de lui.
+    func creerLaSortie(title: String, location: String, startsAt: Date,
+                       repeatsWeekly: Bool, paceGroups: [String]) async throws {
+        let created = try await clubService.createEvent(title: title, location: location,
+                                                        startsAt: startsAt,
+                                                        repeatsWeekly: repeatsWeekly,
+                                                        paceGroups: paceGroups)
+        var events = board.events ?? []
+        events.append(created)
+        events.sort { $0.startsAt < $1.startsAt }
+        board.events = events
+    }
+
+    /// Une sortie modifiée, suivie d'une relecture complète — voir le commentaire à l'appel.
+    func modifierLaSortie(_ event: ClubEvent, title: String, location: String, startsAt: Date,
+                          repeatsWeekly: Bool, paceGroups: [String],
+                          badges: [ClubBadge]) async throws {
+        try await clubService.updateEvent(eventId: event.id, title: title, location: location,
+                                          startsAt: startsAt, repeatsWeekly: repeatsWeekly,
+                                          paceGroups: paceGroups)
+        await loadIfSignedIn(badges: badges)
     }
 }

@@ -34,9 +34,6 @@ struct ClubView: View {
     /// groupe prévues — trois choses qu'un club inventé n'a pas, donc trois états vides sous
     /// une accroche qui parle du fil du club. Le fil, lui, est plein. Voir `Demonstration`.
     @State private var tab: Tab = Tab.auDemarrage
-    /// Ce que le club prépare, et ce qu'il a fait de mieux. Chargé à part du tableau de bord :
-    /// celui-ci part à chaque ouverture du Club, celui-là seulement quand l'aperçu s'affiche.
-    @State private var highlights: ClubHighlights?
     @State private var brouillonDuClub = ""
     @State private var reponseA: ClubPost?
     @State private var envoiDuMessage = false
@@ -275,7 +272,7 @@ struct ClubView: View {
             // the whole action a silent no-op.
             Button("Supprimer", role: .destructive) {
                 if let item = pendingDeleteActivity {
-                    Task { await confirmDeleteActivity(item) }
+                    Task { await magasin.confirmDeleteActivity(item) }
                 }
             }
             Button("Annuler", role: .cancel) {}
@@ -284,18 +281,6 @@ struct ClubView: View {
         }
         .fullScreenCover(item: $magasin.unlockedBadge) { badge in
             BadgeUnlockedView(badge: badge, onDismiss: { magasin.unlockedBadge = nil })
-        }
-    }
-
-    private func confirmDeleteActivity(_ item: FeedItem) async {
-        do {
-            try await clubService.deleteActivity(activityId: item.id)
-            await MainActor.run {
-                magasin.feed.removeAll { $0.id == item.id }
-                appState.toast(String(localized: "Activité supprimée du fil."))
-            }
-        } catch {
-            await MainActor.run { appState.toast(String(localized: "Suppression impossible — réessaie.")) }
         }
     }
 
@@ -395,23 +380,15 @@ struct ClubView: View {
                         }
                     },
                     onUpdateBio: { bio in try await magasin.updateBio(bio) },
-                    onSetOpen: { ouvert in
-                        try await clubService.setClubOpen(ouvert)
-                        // Le tableau vient du serveur : on le relit plutôt que de deviner le
-                        // nouvel état, pour que l'écran dise ce que le serveur a retenu.
-                        await magasin.loadIfSignedIn(badges: badges)
-                    },
+                    onSetOpen: { try await magasin.ouvrirLeClub($0, badges: badges) },
                     onSetClubProfile: { description, ville in
-                        try await clubService.setClubProfile(description: description, city: ville)
-                        await magasin.loadIfSignedIn(badges: badges)
+                        try await magasin.reglerLaFiche(description: description, ville: ville,
+                                                        badges: badges)
                     },
-                    onSetClubCover: { dataURI in
-                        try await clubService.setClubCover(dataURI: dataURI)
-                        await magasin.loadIfSignedIn(badges: badges)
-                    },
+                    onSetClubCover: { try await magasin.reglerLaCouverture(dataURI: $0, badges: badges) },
                     onSetMemberRole: { memberId, organisateur in
-                        try await clubService.setMemberRole(memberId: memberId, organiser: organisateur)
-                        await magasin.loadIfSignedIn(badges: badges)
+                        try await magasin.reglerLeRole(memberId: memberId,
+                                                       organisateur: organisateur, badges: badges)
                     },
                     // Même précaution que `onReport` ci-dessus : fermer la feuille, puis présenter
                     // le dialogue une fois son animation de fermeture passée.
@@ -922,14 +899,14 @@ struct ClubView: View {
             recordsDuClub
             levelCard
         }
-        .task { await chargerLesPepites() }
+        .task { await magasin.chargerLesPepites() }
     }
 
     // MARK: - Ce que le club prépare
 
     @ViewBuilder
     private var coursesDuClub: some View {
-        if let courses = highlights?.races, !courses.isEmpty {
+        if let courses = magasin.highlights?.races, !courses.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 RUCardHeader(title: "Ce que le club prépare")
                 VStack(spacing: 0) {
@@ -1005,7 +982,7 @@ struct ClubView: View {
     /// trente ne sont pas le même club, et c'est la moyenne qui le dit.
     @ViewBuilder
     private var seancesTenues: some View {
-        if let histo = highlights?.sessionHistory, histo.total > 0 {
+        if let histo = magasin.highlights?.sessionHistory, histo.total > 0 {
             VStack(alignment: .leading, spacing: 10) {
                 RUCardHeader(title: "Les séances tenues")
                 HStack(alignment: .lastTextBaseline, spacing: 6) {
@@ -1050,15 +1027,15 @@ struct ClubView: View {
 
     @ViewBuilder
     private var recordsDuClub: some View {
-        let records = highlights?.records ?? []
-        if !records.isEmpty || highlights?.bestWeek != nil {
+        let records = magasin.highlights?.records ?? []
+        if !records.isEmpty || magasin.highlights?.bestWeek != nil {
             VStack(alignment: .leading, spacing: 10) {
                 RUCardHeader(title: "Les records du club")
                 VStack(spacing: 0) {
                     // LE RECORD COLLECTIF EN TÊTE, et c'est l'ordre juste : les trois suivants
                     // nomment quelqu'un, celui-ci dit ce que le club a fait ENSEMBLE. Sur la page
                     // d'un club, c'est la phrase la plus à sa place.
-                    if let semaine = highlights?.bestWeek {
+                    if let semaine = magasin.highlights?.bestWeek {
                         ligneDeLaMeilleureSemaine(semaine)
                         if !records.isEmpty { RUFilet() }
                     }
@@ -1201,17 +1178,6 @@ struct ClubView: View {
         }
     }
 
-    private func chargerLesPepites() async {
-        if Demonstration.enCours {
-            highlights = appState.cachedClubHighlights
-            return
-        }
-        guard highlights == nil, auth.isSignedIn else { return }
-        // Silencieux en cas d'échec, et c'est voulu : ce sont deux sections EN PLUS. Une
-        // bannière d'erreur pour elles ferait croire que tout l'aperçu est en panne alors que
-        // le niveau, la semaine, le défi et les sorties sont là.
-        highlights = try? await clubService.fetchClubHighlights()
-    }
 
 
     private func segment(_ label: String, _ value: Tab) -> some View {
@@ -1430,7 +1396,7 @@ struct ClubView: View {
                         }
                     }
                     Spacer()
-                    Button(action: { toggleRsvp(event) }) {
+                    Button(action: { magasin.toggleRsvp(event) }) {
                         VStack(spacing: 2) {
                             Text(event.goingByMe ? "J'y serai ✓" : "J'y serai")
                                 .font(RUFont.sans(.small, weight: .bold))
@@ -1469,42 +1435,30 @@ struct ClubView: View {
         }
         .sheet(isPresented: $showCreateEvent) {
             CreateEventSheet { title, location, date, chaqueSemaine, groupes in
-                let created = try await clubService.createEvent(title: title, location: location, startsAt: date,
-                                                                repeatsWeekly: chaqueSemaine, paceGroups: groupes)
-                await MainActor.run {
-                    var events = magasin.board.events ?? []
-                    events.append(created)
-                    events.sort { $0.startsAt < $1.startsAt }
-                    magasin.board.events = events
-                }
+                try await magasin.creerLaSortie(title: title, location: location, startsAt: date,
+                                                repeatsWeekly: chaqueSemaine, paceGroups: groupes)
             }
             .runUpSheetStyle()
         }
         .sheet(item: $messageEnModification) { message in
             EditTextPostSheet(titreDeLaFeuille: String(localized: "Modifier le message"),
                               texteInitial: message.text) { texte in
-                try await clubService.updateClubPost(postId: message.id, text: texte)
                 // Recousu sur place plutôt que rechargé : un message n'a qu'un texte, il ne
                 // change ni de place ni de compteur. Recharger le mur entier pour une phrase
                 // ferait clignoter la liste sous les doigts de qui vient de la corriger.
-                await MainActor.run {
-                    if let i = magasin.posts.firstIndex(where: { $0.id == message.id }) {
-                        magasin.posts[i].text = texte
-                    }
-                }
+                try await magasin.modifierLeMessage(message, texte: texte)
             }
             .runUpSheetStyle()
         }
         .sheet(item: $eventEnModification) { event in
             CreateEventSheet(onCreate: { title, location, date, chaqueSemaine, groupes in
-                try await clubService.updateEvent(eventId: event.id, title: title, location: location,
-                                                  startsAt: date, repeatsWeekly: chaqueSemaine,
-                                                  paceGroups: groupes)
                 // Rechargé plutôt que recousu à la main : la séance modifiée peut avoir changé
                 // de date, donc de PLACE dans la liste, et ses présences par groupe d'allure
                 // dépendent de groupes qui viennent d'être réécrits. Reconstruire tout ça ici
                 // serait refaire le travail du serveur, moins bien.
-                await magasin.loadIfSignedIn(badges: badges)
+                try await magasin.modifierLaSortie(event, title: title, location: location,
+                                                   startsAt: date, repeatsWeekly: chaqueSemaine,
+                                                   paceGroups: groupes, badges: badges)
             }, existant: event)
             .runUpSheetStyle()
         }
@@ -1516,7 +1470,7 @@ struct ClubView: View {
     private func menuDeLaSortie(_ event: ClubEvent) -> some View {
         if event.isMine {
             Button("Modifier cette sortie") { eventEnModification = event }
-            Button("Annuler cette sortie", role: .destructive) { deleteEvent(event) }
+            Button("Annuler cette sortie", role: .destructive) { magasin.deleteEvent(event) }
         }
     }
 
@@ -1539,7 +1493,7 @@ struct ClubView: View {
                     ForEach(groupes, id: \.self) { groupe in
                         let choisi = event.myPaceGroup == groupe
                         let compte = event.paceCounts?[groupe] ?? 0
-                        Button(action: { toggleRsvp(event, groupe: groupe) }) {
+                        Button(action: { magasin.toggleRsvp(event, groupe: groupe) }) {
                             HStack(spacing: 6) {
                                 Text(groupe)
                                     .font(RUFont.sans(.small, weight: .bold))
@@ -1568,62 +1522,6 @@ struct ClubView: View {
             }
         }
     }
-
-    private func toggleRsvp(_ event: ClubEvent, groupe: String? = nil) {
-        Haptics.selection()
-        Task {
-            do {
-                let result = try await clubService.toggleEventRsvp(eventId: event.id, paceGroup: groupe)
-                await MainActor.run {
-                    if let index = magasin.board.events?.firstIndex(where: { $0.id == event.id }) {
-                        magasin.board.events?[index].goingByMe = result.going
-                        magasin.board.events?[index].going = result.count
-                        magasin.board.events?[index].myPaceGroup = result.paceGroup
-                        // Le compte par groupe vient du serveur au prochain chargement ; en
-                        // attendant, on bouge le sien pour que la pastille choisie réponde tout
-                        // de suite. Un chiffre qui attend l'aller-retour se lit comme un geste
-                        // qui n'a pas pris.
-                        var comptes = magasin.board.events?[index].paceCounts ?? [:]
-                        if let avant = event.myPaceGroup { comptes[avant] = max(0, (comptes[avant] ?? 1) - 1) }
-                        if let apres = result.paceGroup { comptes[apres] = (comptes[apres] ?? 0) + 1 }
-                        magasin.board.events?[index].paceCounts = comptes
-                    }
-                }
-            } catch ClubServiceError.badResponse(404, _) {
-                // The event was already cancelled/expired server-side — leaving it in the local
-                // list would just let her tap it again and fail identically every time.
-                await MainActor.run { magasin.board.events?.removeAll { $0.id == event.id } }
-            } catch {
-                await MainActor.run { appState.toast(String(localized: "Impossible de répondre — réessaie.")) }
-            }
-        }
-    }
-
-    private func deleteEvent(_ event: ClubEvent) {
-        Task {
-            do {
-                try await clubService.deleteEvent(eventId: event.id)
-                await MainActor.run { magasin.board.events?.removeAll { $0.id == event.id } }
-            } catch ClubServiceError.badResponse(404, _) {
-                // Already gone server-side — still fine to drop it locally.
-                await MainActor.run { magasin.board.events?.removeAll { $0.id == event.id } }
-            } catch {
-                // A real failure (network, 403 not-the-creator, ...) — keep it in the list rather
-                // than silently pretending the cancel worked when it didn't.
-                await MainActor.run { appState.toast(String(localized: "Impossible d'annuler la sortie — réessaie.")) }
-            }
-        }
-    }
-
-    // LA BANDE DE BADGES A QUITTÉ L'ONGLET CLASSEMENT.
-    //
-    // Elle y affichait MES badges, sous le titre « Derniers badges », au bas d'un classement du
-    // CLUB — une deuxième statistique personnelle posée sur une page collective, après la carte
-    // de niveau. Et elle était déjà, en mieux, sur le Profil : les seize badges avec leur nom et
-    // leur progression, au lieu de six vignettes qu'il fallait faire défiler latéralement.
-    //
-    // Le calcul (`badges`) reste : c'est lui qui alimente la synchronisation vers le serveur et
-    // la célébration d'un badge débloqué.
 
     private var feedContent: some View {
         // `LazyVStack` : le serveur renvoie 50 activités, et un `VStack` les construisait TOUTES
@@ -1745,7 +1643,25 @@ struct ClubView: View {
                 // se lit comme une couleur ratée plutôt que comme un bouton en attente. Inactif,
                 // il prend la surface neutre des autres boutons-icônes de l'app ; il ne devient
                 // rose qu'au moment où il peut vraiment envoyer.
-                Button(action: { Task { await publierSurLeMur() } }) {
+                Button(action: {
+                    // L'ÉTAT D'ENVOI, LE BROUILLON ET LA RÉPONSE EN COURS RESTENT ICI : ce sont
+                    // trois choses de l'écran. Le magasin publie et recharge le mur, il rend si
+                    // ça a marché, et la vue décide alors de vider ce qui lui appartient.
+                    // LE GARDE EST ICI, AVANT LE DRAPEAU, comme il l'était avant le
+                    // déménagement : un brouillon vide ne doit pas faire clignoter le bouton en
+                    // « envoi en cours » le temps d'un `await` qui ne partira pas.
+                    guard peutPublier else { return }
+                    envoiDuMessage = true
+                    Task {
+                        let parti = await magasin.publier(texte: brouillonDuClub,
+                                                          enReponseA: reponseA)
+                        envoiDuMessage = false
+                        if parti {
+                            brouillonDuClub = ""
+                            reponseA = nil
+                        }
+                    }
+                }) {
                     Image(systemName: "arrow.up")
                         .font(RUFont.icone(.medium, weight: .bold))
                         .foregroundColor(peutPublier ? RUColor.onRose : RUColor.text3)
@@ -1776,7 +1692,7 @@ struct ClubView: View {
                 .padding(.leading, 10)
             }
             HStack(spacing: 18) {
-                Button(action: { Task { await applaudirLeMessage(message) } }) {
+                Button(action: { Task { await magasin.applaudirLeMessage(message) } }) {
                     HStack(spacing: 8) {
                         Image(systemName: message.kudoedByMe ? "hands.clap.fill" : "hands.clap")
                             .font(RUFont.icone(.medium, weight: .regular))
@@ -1853,7 +1769,7 @@ struct ClubView: View {
                     if message.isMine {
                         Button("Modifier ce message") { messageEnModification = message }
                         Button("Supprimer ce message", role: .destructive) {
-                            Task { await supprimerLeMessage(message) }
+                            Task { await magasin.supprimerLeMessage(message) }
                         }
                     } else {
                         Button("Signaler ce message") {
@@ -1880,44 +1796,4 @@ struct ClubView: View {
         }
     }
 
-    private func publierSurLeMur() async {
-        let texte = brouillonDuClub.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !texte.isEmpty else { return }
-        envoiDuMessage = true
-        defer { envoiDuMessage = false }
-        do {
-            try await clubService.postClubMessage(text: texte, parentId: reponseA?.id)
-            brouillonDuClub = ""
-            reponseA = nil
-            // On RECHARGE plutôt que de fabriquer la ligne localement : le serveur décide de
-            // l'identifiant et de la date, et deux appareils afficheraient sinon deux versions
-            // du même message.
-            magasin.posts = (try? await clubService.fetchClubPosts()) ?? magasin.posts
-        } catch {
-            appState.toast(PanneReseau.phrase(pour: error))
-        }
-    }
-
-    private func applaudirLeMessage(_ message: ClubPost) async {
-        guard let index = magasin.posts.firstIndex(where: { $0.id == message.id }) else { return }
-        do {
-            let maintenant = try await clubService.toggleClubPostKudos(postId: message.id)
-            magasin.posts[index].kudoedByMe = maintenant
-            magasin.posts[index].kudos += maintenant ? 1 : -1
-            Haptics.impact(.light)
-        } catch {
-            appState.toast(PanneReseau.phrase(pour: error))
-        }
-    }
-
-    private func supprimerLeMessage(_ message: ClubPost) async {
-        do {
-            try await clubService.deleteClubPost(postId: message.id)
-            // Les réponses partent avec lui côté serveur (ON DELETE CASCADE) : on fait pareil ici
-            // plutôt que de laisser des réponses orphelines jusqu'au prochain chargement.
-            magasin.posts.removeAll { $0.id == message.id || $0.parentId == message.id }
-        } catch {
-            appState.toast(PanneReseau.phrase(pour: error))
-        }
-    }
 }

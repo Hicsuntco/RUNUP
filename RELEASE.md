@@ -14,12 +14,12 @@ Quatre chaînes, et chacune garantit une chose précise. Aucune ne garantit cell
 
 | Chaîne | Ce qu'elle prouve | Ce qu'elle ne prouve PAS |
 | --- | --- | --- |
-| **TestFlight** (`testflight.yml`) | 35 contrôles passent, l'app compile, les tests unitaires passent, l'archive est signée et acceptée par App Store Connect | que les écrans sont justes — elle ne regarde aucune image |
+| **TestFlight** (`testflight.yml`) | 32 contrôles et 22 fichiers de cas passent, l'app compile, les tests unitaires passent, l'archive est signée et acceptée par App Store Connect | que les écrans sont justes — elle ne regarde aucune image |
 | **Serveur** (`server.yml`) | les dépendances `require` sont du CommonJS, 133 tests passent, et les 83 adresses appelées par l'app répondent autre chose qu'un 404 ou un 5xx **en production** | que la logique est juste sur des données réelles : il n'y a pas de base de test |
 | **Captures** (`captures.yml`) | l'app se lance dans trois langues et deux thèmes, 25 écrans sont photographiés, le découpage du film tombe sur les bons écrans | **ce qu'il y a sur les images.** Un vert dit deux choses : l'app n'a pas planté, un fichier a été écrit |
 | **Fiche** (`appstore.yml`) | les textes tiennent dans les champs d'Apple, l'aperçu respecte ses règles, tout est déposé | que la fiche dit vrai |
 
-Les 35 contrôles de TestFlight sont nommés dans `.github/workflows/testflight.yml`, un par étape.
+Les 32 contrôles de TestFlight sont nommés dans `.github/workflows/testflight.yml`, un par étape.
 Ils existent tous parce qu'un défaut est passé : une clé de catalogue absente qui sort le texte en
 français chez tout le monde, un nom de symbole SF faux qui ne dessine rien du tout, une demande
 d'autorisation non traduite renvoyée par Apple en ITMS-90738 **après** la livraison.
@@ -83,8 +83,19 @@ npm ci && python3 ci_scripts/check_cjs.py && npm test
 python3 ci_scripts/check_deploiement.py
 ```
 
-`check_profile.py` attend des arguments (il tourne dans l'étape de signature) et
-`check_grand_texte.py` attend un dossier de captures : les deux ne s'exécutent pas à vide.
+`check_profile.py` attend trois arguments et `check_grand_texte.py` un dossier de captures :
+ni l'un ni l'autre ne s'exécute à vide, et `tout.sh` les saute pour cette raison. Le premier ne
+tourne nulle part ailleurs non plus — voir § 4.
+
+`comparer.py` n'est pas un contrôle et ne figure donc pas dans `tout.sh` : c'est l'outil qui dit
+si un écran photographié a bougé. On lui donne les captures d'avant et celles d'après, il rend
+l'écart moyen, le nombre de pixels changés et le cadre qui les contient, barre d'état masquée. À
+lancer autour de toute réorganisation d'un écran que la chaîne Captures photographie :
+
+```sh
+python3 ci_scripts/comparer.py --avant /tmp/avant --apres /tmp/apres \
+  --seulement club --pixels 0 --sortie /tmp/differences
+```
 
 Puis, sur la machine :
 
@@ -114,7 +125,12 @@ Puis, sur la machine :
   pose pas la question — `TARGETED_DEVICE_FAMILY` vaut 1 dans les réglages de base comme dans
   ceux du widget (seule la montre porte 4), donc RUNUP est une app iPhone et Apple ne demande
   aucune image d'iPad.
-- **La page publique d'un club**, servie par le serveur, n'a jamais été relue.
+- **`check_profile.py` existe et ne tourne nulle part.** Il compare les capacités du profil de
+  provisionnement à celles que la cible demande, il a été écrit pour un `exportArchive` qui a
+  échoué sur `com.apple.developer.weatherkit` douze minutes après le début de l'archivage — et
+  aucun workflow ne l'appelle. Il prend trois arguments et demande le profil décodé, donc il a
+  sa place dans `testflight.yml` juste avant la signature. C'est la même forme de défaut que le
+  contrôle vert au test rouge : un garde-fou qu'on croit avoir.
 - **Le contenu des séances HYROX** attend quelqu'un qui en a couru un (voir `PROGRESS.md`).
 
 ---

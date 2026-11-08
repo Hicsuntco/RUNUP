@@ -91,6 +91,11 @@ est une valeur que personne n'a choisie.
 # poussé un contrôle vert dont le test était rouge : le 8 novembre, `check_icones.py` passait
 # et `test_icones.py` répétait un nombre devenu faux. Découvert sur la machine, dix minutes
 # plus tard.
+#
+# Compter DEUX MINUTES : 34 contrôles et 29 fichiers de cas, dont trois qui fabriquent des films
+# avec ffmpeg et quatre qui relancent un contrôle en sous-processus pour l'éprouver. 116 s
+# mesurées le 8 novembre 2026. Ce n'est pas une commande qu'on lance « pour voir », c'est la
+# porte.
 sh ci_scripts/tout.sh
 
 # 3. Le serveur.

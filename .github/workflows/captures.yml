@@ -352,11 +352,13 @@ jobs:
       #
       # LE PLANCHER EST POSÉ, ET IL VIENT DE DEUX RELEVÉS.
       #
-      # Vingt-quatre mesures — deux exécutions complètes, trois langues, quatre écrans — vont de
-      # 17,3 à 31,3. La plus basse est l'accueil en anglais ; le bas de la distribution est donc
-      # connu, et il est loin de zéro.
+      # Trente-six mesures — trois exécutions complètes, trois langues, quatre écrans — vont de
+      # 16,2 à 31,3. La plus basse est la course en cours en anglais, et elle a BAISSÉ le
+      # 8 novembre : les trois mesures de cet écran ne se cassent plus en deux, donc l'écran en
+      # grand texte ressemble un peu plus à l'ordinaire qu'avant. Le bas de la distribution est
+      # donc connu, et il bouge quand on corrige — raison de plus pour ne pas le serrer.
       #
-      # 10 est le plancher : sous la plus basse observée d'un facteur 1,7, et très au-dessus de
+      # 10 est le plancher : sous la plus basse observée d'un facteur 1,6, et très au-dessus de
       # ce que rendrait le défaut qu'on veut attraper. Si
       # `-UIPreferredContentSizeCategoryName` cessait d'être lu — un renommage chez Apple, un
       # drapeau mal orthographié — les quatre images seraient des COPIES des captures

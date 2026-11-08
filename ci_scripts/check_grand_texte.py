@@ -22,10 +22,13 @@ du même écran à la même taille ne diffèrent que par l'heure affichée.
 
 # LE RELEVÉ, ET LE PLANCHER QUI EN SORT
 
-Vingt-quatre mesures — deux exécutions complètes, trois langues, quatre écrans — vont de 17,3 à
-31,3. La plus basse est l'accueil en anglais. `captures.yml` pose donc `--plancher 10` : sous la
-plus basse observée d'un facteur 1,7, et très au-dessus de ce que rendrait le défaut qu'on veut
-attraper — deux copies du même écran ne diffèrent que par l'heure, soit une fraction de point.
+Trente-six mesures — trois exécutions complètes, trois langues, quatre écrans — vont de 16,2 à
+31,3. La plus basse est la course en cours en anglais, et elle a BAISSÉ le 8 novembre : les trois
+mesures de cet écran ne se cassent plus en deux, donc la version en grand texte ressemble un peu
+plus à l'ordinaire. `captures.yml` pose `--plancher 10` : sous la plus basse observée d'un facteur
+1,6, et très au-dessus de ce que rendrait le défaut qu'on veut attraper — deux copies du même
+écran ne diffèrent que par l'heure, soit une fraction de point. Le bas de la distribution bouge
+quand on corrige un écran, ce qui est une raison de plus de ne pas serrer le plancher.
 Il n'y a rien entre 0,x et 17 à départager, donc rien à régler finement.
 
 Sans `--plancher`, on mesure et on se tait : c'est l'état voulu tant qu'on n'a pas de relevé.

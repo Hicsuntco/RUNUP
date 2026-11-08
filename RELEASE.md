@@ -55,6 +55,11 @@ Le 7 novembre 2026, deux captures neuves sur trois montraient le mauvais écran 
 sous le titre « inscription », le décompte de départ sous « course en cours ». Les deux tests
 étaient verts. Je ne l'ai su qu'en ouvrant les fichiers.
 
+Et le 8 novembre, une notification d'iOS — « Ready for Apple Intelligence » — s'est posée en
+travers du haut de `1-accueil` en français, UNE DES SIX IMAGES LIVRÉES. Même vert, même silence,
+et elle n'a été vue qu'en comparant deux exécutions à la main. `check_banniere.py` la refuse
+maintenant ; relancer la chaîne suffit, c'est une affaire de minutage.
+
 ### b. Est-ce que la production est debout ?
 
 ```sh
@@ -107,11 +112,11 @@ est une valeur que personne n'a choisie.
 # et `test_icones.py` répétait un nombre devenu faux. Découvert sur la machine, dix minutes
 # plus tard.
 #
-# Compter DEUX MINUTES : 41 contrôles et 35 fichiers de cas, dont trois qui fabriquent des films
+# Compter DEUX MINUTES : 41 contrôles et 36 fichiers de cas, dont trois qui fabriquent des films
 # avec ffmpeg, quatre qui relancent un contrôle en sous-processus pour l'éprouver, et deux qui
-# interrogent le réseau. 107 à 117 s mesurées le 8 novembre 2026. Ce n'est pas une commande qu'on lance « pour voir », c'est la
-# porte. (Plus que les 36 et 25 de TestFlight : `tout.sh` lance AUSSI ce qui tourne dans les
-# autres chaînes — le serveur, les captures, la fiche.)
+# interrogent le réseau. 107 à 117 s mesurées le 8 novembre 2026. Ce n'est pas une commande qu'on
+# lance « pour voir », c'est la porte. (Plus que les 36 et 25 de TestFlight : `tout.sh` lance
+# AUSSI ce qui tourne dans les autres chaînes — le serveur, les captures, la fiche.)
 sh ci_scripts/tout.sh
 
 # 3. Le serveur.
@@ -121,9 +126,10 @@ npm ci && python3 ci_scripts/check_cjs.py && npm test
 python3 ci_scripts/check_deploiement.py
 ```
 
-`check_profile.py` attend trois arguments et `check_grand_texte.py` un dossier de captures :
-ni l'un ni l'autre ne s'exécute à vide, et `tout.sh` les saute pour cette raison. La règle du
-premier tourne quand même à chaque build, appelée par `profils.py`.
+`check_profile.py` attend trois arguments ; `check_grand_texte.py` et `check_banniere.py`
+attendent un dossier de captures. Aucun des trois ne s'exécute à vide, et `tout.sh` les saute
+pour cette raison — ils tournent dans la chaîne Captures, qui a les images. La règle du premier
+tourne quand même à chaque build, appelée par `profils.py`.
 
 `comparer.py` n'est pas un contrôle et ne figure donc pas dans `tout.sh` : c'est l'outil qui dit
 si un écran photographié a bougé. On lui donne les captures d'avant et celles d'après, il rend

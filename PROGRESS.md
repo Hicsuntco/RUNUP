@@ -685,6 +685,32 @@ phrases sur le fonctionnement de l'app que personne n'aurait éprouvées. C'est 
 faux » appliquée aux textes de l'interface. Les six qui existent ont été écrits un par un, en
 regardant ce que la commande fait.
 
+### Une bannière d'iOS sur une image livrée à Apple
+
+Trouvée par accident, en comparant une dernière fois deux exécutions pour vérifier qu'un
+refactorisage de `CaptureSeed` n'avait bougé aucun pixel. Une image avait bougé : `1-accueil.png`
+en français, 13,4 de moyenne dans la bande du haut.
+
+C'était une notification du système — « Ready for Apple Intelligence », émise par Réglages — posée
+en travers du haut de l'écran. Sur cette image, on ne voit ni le prénom, ni la date, ni la série :
+on voit une bannière grise qui parle d'autre chose, par-dessus l'app. Et c'est une des SIX images
+livrées à Apple.
+
+Rien ne pouvait l'attraper. Le test de capture était vert, parce qu'il dit deux choses et deux
+seulement : l'app n'a pas planté, un fichier a été écrit. Aucun contrôle ne regardait ces six
+images. Rien n'a été envoyé — `appstore.yml` ne part qu'au bouton — donc c'est une alerte, pas un
+dégât. La prochaine fois, c'est une question de minutage.
+
+`check_banniere.py` mesure la part de pixels clairs dans la bande où iOS pose ses bannières, sur
+les captures SOMBRES uniquement. Le relevé de quatre-vingt-quatre captures saines va de 1,3 % à
+8,0 % — les plus claires étant les écrans en grand texte, dont les titres occupent légitimement le
+haut — contre **59,7 %** pour celle qui portait la bannière. Le plafond est à 25 %, trois fois la
+plus claire observée, et il n'y a rien entre 8 et 60 à départager.
+
+Il ne l'empêche pas, il la voit. Museler les notifications du simulateur n'est pas quelque chose
+que `simctl` sache faire pour une app du système ; ce qu'on peut faire, et qui est fait, c'est
+refuser de livrer l'image.
+
 ### Et la question inverse : est-ce que les écrans ORDINAIRES ont bougé ?
 
 Les trois correctifs ne devaient toucher que le cran d'accessibilité. `comparer.py` entre les

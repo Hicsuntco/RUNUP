@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 echec=0
 for f in ci_scripts/check_*.py; do
   n=$(basename "$f")
-  case "$n" in check_profile.py|check_grand_texte.py) continue;; esac
+  case "$n" in check_profile.py|check_grand_texte.py|check_banniere.py) continue;; esac
   python3 "$f" >/dev/null 2>&1 || { echo "ÉCHEC $n"; echec=1; }
 done
 cd ci_scripts

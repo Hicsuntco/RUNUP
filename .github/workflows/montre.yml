@@ -127,6 +127,18 @@ jobs:
             exit 1
           fi
           echo "$trouvees" | sed 's/^/    /'
+
+          # ET CE QU'IL Y A DEDANS. Les trois dossiers existent — ça ne dit pas ce qu'ils
+          # portent. Un catalogue de chaînes compilé peut très bien produire un `en.lproj` qui
+          # rend la CLÉ française, et c'est exactement l'hypothèse à trancher : le paquet
+          # est-il en cause, ou le lancement ?
+          echo "→ ce que « Courir » vaut dans chaque langue du paquet :"
+          for lang in fr en es; do
+            f="$app/$lang.lproj/Localizable.strings"
+            if [ ! -f "$f" ]; then echo "    $lang : pas de Localizable.strings"; continue; fi
+            valeur=$(plutil -extract "Courir" raw -o - "$f" 2>/dev/null || echo "(clé absente)")
+            echo "    $lang : $valeur"
+          done
           for attendue in fr en es; do
             case "$trouvees" in
               *"$attendue.lproj"*) ;;
@@ -187,6 +199,12 @@ jobs:
             # réinstaller coûte deux secondes et évite de dépendre de cette certitude-là.
             xcrun simctl install "$udid" "$app"
             xcrun simctl launch --terminate-running-process "$udid" com.hicsuntco.runup.watchkitapp
+
+            # CE QUE L'APP ELLE-MÊME A RETENU, et pas seulement ce que l'appareil déclare. Si
+            # son domaine à elle porte une autre langue que le domaine global, c'est là que
+            # l'écart se voit — et nulle part ailleurs.
+            sien=$(xcrun simctl spawn "$udid" defaults read com.hicsuntco.runup.watchkitapp AppleLanguages 2>/dev/null | tr -d ' \n"' || echo "(rien)")
+            echo "    langue dans le domaine de l'app : $sien"
 
             # Attendre n'est pas vérifier : il n'y a pas de test ici, donc pas de
             # `waitForExistence`. Huit secondes, puis les deux contrôles ci-dessous.

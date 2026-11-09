@@ -29,7 +29,10 @@ def cas_de(nom):
 
 
 def lance(images: dict, table, ecrire: bool = False, sources: bool = True):
-    """`images` : {chemin relatif: octets}. Les chemins hors `requis/` sont posés à la racine."""
+    """`images` : {chemin relatif: octets}. Les chemins hors `requis/` sont posés à la racine.
+
+    Un chemin en `.swift` sert de code source fabriqué, pour les cas de l'empreinte du code.
+    """
     with tempfile.TemporaryDirectory() as d:
         racine = pathlib.Path(d)
         requis = racine / "appstore/requis"
@@ -144,6 +147,84 @@ def _():
     assert relu["ipad/fr-FR/1.png"]["empreinte"] == emp(AUTRE), relu
     assert relu["montre/fr-FR/1.png"]["source"] is None, relu
     assert relu["montre/fr-FR/1.png"]["constat"] == "à refaire", "le constat a été perdu : " + str(relu)
+
+
+CODE = {"RunUpWatch/WatchViews.swift": b"Circle().fill(rose)"}
+
+
+@cas_de("LE CODE A CHANGÉ : l'image ne montre plus l'écran que l'app dessine")
+def _():
+    # Le défaut exact du 9 novembre 2026 : le bouton est passé de la pilule au cercle le 6 août,
+    # et l'image livrée est restée celle d'avant pendant trois mois. Rien ne reliait l'une à
+    # l'autre, parce qu'une capture de montre n'a pas de capture brute intermédiaire.
+    images = dict(CODE, **{"appstore/requis/montre/fr-FR/1.png": b"photo",
+                           "appstore/raw-montre/fr-FR/1.png": b"photo"})
+    table = {"montre/fr-FR/1.png": {
+        "source": "appstore/raw-montre/fr-FR/1.png",
+        "empreinte": emp(b"photo"),
+        "code": "RunUpWatch",
+        "empreinte_code": "000000000000",
+    }}
+    code, sortie, _ = lance(images, table)
+    assert code == 1, "le code a changé et le contrôle est vert :\n" + sortie
+    assert "le code a changé" in sortie, sortie
+
+
+@cas_de("le code inchangé et la capture inchangée : vert")
+def _():
+    import check_requis as verif
+    images = dict(CODE, **{"appstore/requis/montre/fr-FR/1.png": b"photo",
+                           "appstore/raw-montre/fr-FR/1.png": b"photo"})
+    # L'empreinte du code se calcule SUR LE DÉPÔT FABRIQUÉ, donc après l'avoir posé : c'est
+    # `lance` qui déplace `ck.RACINE`, et la calculer avant la lirait sur le vrai dépôt.
+    table = {"montre/fr-FR/1.png": {
+        "source": "appstore/raw-montre/fr-FR/1.png",
+        "empreinte": emp(b"photo"),
+        "code": "RunUpWatch",
+        "empreinte_code": None,
+    }}
+    code, sortie, relu = lance(images, table, ecrire=True)
+    assert code == 0, sortie
+    table["montre/fr-FR/1.png"]["empreinte_code"] = relu["montre/fr-FR/1.png"]["empreinte_code"]
+    assert table["montre/fr-FR/1.png"]["empreinte_code"], "aucune empreinte de code posée : " + str(relu)
+    code, sortie, _ = lance(images, table)
+    assert code == 0, sortie
+
+
+@cas_de("UN FICHIER RENOMMÉ compte comme un changement de code")
+def _():
+    # Le chemin entre dans l'empreinte, pas seulement le contenu : déplacer une vue change ce qui
+    # est dessiné autant que la modifier, et un contrôle qui ne verrait que les octets laisserait
+    # passer une réorganisation entière.
+    images = dict(CODE, **{"appstore/requis/montre/fr-FR/1.png": b"photo",
+                           "appstore/raw-montre/fr-FR/1.png": b"photo"})
+    table = {"montre/fr-FR/1.png": {"source": "appstore/raw-montre/fr-FR/1.png",
+                                    "empreinte": emp(b"photo"),
+                                    "code": "RunUpWatch", "empreinte_code": None}}
+    _, _, relu = lance(images, table, ecrire=True)
+    avant = relu["montre/fr-FR/1.png"]["empreinte_code"]
+
+    renomme = {"RunUpWatch/Vues.swift": CODE["RunUpWatch/WatchViews.swift"],
+               "appstore/requis/montre/fr-FR/1.png": b"photo",
+               "appstore/raw-montre/fr-FR/1.png": b"photo"}
+    _, _, relu2 = lance(renomme, table, ecrire=True)
+    assert relu2["montre/fr-FR/1.png"]["empreinte_code"] != avant, \
+        "renommer un fichier n'a pas changé l'empreinte du code"
+
+
+@cas_de("un dossier de code qui n'existe pas fait s'arrêter, il ne vaut pas zéro")
+def _():
+    # `rglob` sur un chemin absent ne rend rien, SANS RIEN DIRE : l'empreinte d'un dossier vide
+    # est stable, donc le contrôle resterait vert en ne regardant plus rien. C'est le défaut que
+    # `check_attributs.py` a déjà eu avec « RunUpWidget » au singulier.
+    images = {"appstore/requis/montre/fr-FR/1.png": b"photo",
+              "appstore/raw-montre/fr-FR/1.png": b"photo"}
+    table = {"montre/fr-FR/1.png": {"source": "appstore/raw-montre/fr-FR/1.png",
+                                    "empreinte": emp(b"photo"),
+                                    "code": "RunUpWatch", "empreinte_code": "abc"}}
+    code, message, _ = lance(images, table)
+    assert code == "arret", f"attendu un arrêt, reçu {code} : {message}"
+    assert "RunUpWatch" in message, message
 
 
 @cas_de("le vrai dépôt : les images livrées sont décrites et à jour")

@@ -47,6 +47,28 @@ def empreinte(chemin: pathlib.Path) -> str:
     return hashlib.sha256(chemin.read_bytes()).hexdigest()[:12]
 
 
+def empreinte_du_code(dossier: str) -> str:
+    """L'empreinte du CODE QUI DESSINE l'écran photographié.
+
+    UNE CAPTURE NE VIEILLIT PAS TOUTE SEULE : c'est l'app qui bouge sous elle. Pour l'iPad, la
+    capture brute est la source et son empreinte suffit. Pour la montre, il n'y a pas de capture
+    intermédiaire versionnée : la chaîne photographie et l'image livrée EST la photo. Rien, alors,
+    ne relie l'image au code — et c'est très exactement ainsi que le bouton est passé de la
+    pilule au cercle le 6 août 2026 sans que l'image livrée bouge pendant trois mois.
+
+    Le chemin ET le contenu de chaque fichier entrent dans l'empreinte : un fichier renommé change
+    ce qui est dessiné autant qu'un fichier modifié.
+    """
+    racine = RACINE / dossier
+    if not racine.is_dir():
+        raise SystemExit(f"{dossier} n'est pas un dossier de ce dépôt — l'entrée est à revoir.")
+    h = hashlib.sha256()
+    for fichier in sorted(racine.rglob("*.swift")):
+        h.update(str(fichier.relative_to(RACINE)).encode("utf-8"))
+        h.update(fichier.read_bytes())
+    return h.hexdigest()[:12]
+
+
 def entrees() -> dict:
     if not SOURCES.exists():
         raise SystemExit(
@@ -72,6 +94,9 @@ def main() -> int:
     if args.ecrire:
         touchees = 0
         for clef, entree in table.items():
+            if entree.get("code"):
+                entree["empreinte_code"] = empreinte_du_code(entree["code"])
+                touchees += 1
             source = entree.get("source")
             if not source:
                 continue
@@ -98,6 +123,16 @@ def main() -> int:
         if entree is None:
             orphelines.append(clef)
             continue
+        # LE CODE D'ABORD : une image peut être faite de la bonne capture et montrer malgré tout
+        # un écran que l'app ne dessine plus, si la capture elle-même date d'avant un changement.
+        code = entree.get("code")
+        if code:
+            vue = empreinte_du_code(code)
+            if vue != entree.get("empreinte_code"):
+                perimees.append((clef, code,
+                                 f"le code a changé : {entree.get('empreinte_code')} → {vue}"))
+                continue
+
         source = entree.get("source")
         if not source:
             sans_source.append((clef, entree.get("constat", "")))

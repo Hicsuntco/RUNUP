@@ -175,7 +175,7 @@ def montre(langue: str):
     return dest
 
 
-def datee(clef: str, source: str) -> None:
+def datee(clef: str, source: str, code: str | None = None) -> None:
     """Pose l'empreinte de la capture dont une image livrée vient d'être faite.
 
     Écrite ICI et pas seulement par `check_requis.py --ecrire` : la commande qui FABRIQUE est la
@@ -184,11 +184,20 @@ def datee(clef: str, source: str) -> None:
     la fiche de confidentialité refuse, pour la même raison.
     """
     table = json.loads(TABLE.read_text(encoding="utf-8")) if TABLE.exists() else {}
-    table[clef] = {
+    entree = {
         "source": source,
         "empreinte": hashlib.sha256((s.ROOT / source).read_bytes()).hexdigest()[:12],
         "composee_par": "ci_scripts/requis.py",
     }
+    if code:
+        # L'empreinte du CODE QUI DESSINE l'écran, en plus de celle de la capture. Pour la montre
+        # il n'y a pas de capture intermédiaire versionnée : sans ce lien, rien ne rattache
+        # l'image livrée à l'app, et c'est ainsi qu'elle a vieilli de trois mois.
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import check_requis as verif  # noqa: PLC0415
+        entree["code"] = code
+        entree["empreinte_code"] = verif.empreinte_du_code(code)
+    table[clef] = entree
     TABLE.write_text(json.dumps(dict(sorted(table.items())), ensure_ascii=False, indent=2) + "\n",
                      encoding="utf-8")
 
@@ -211,7 +220,7 @@ def main() -> int:
             largeur, hauteur = Image.open(dest).size
             print(f"{dest.relative_to(s.ROOT)} — {largeur} × {hauteur}")
             datee(str(dest.relative_to(s.ROOT / "appstore/requis")),
-                  f"{MONTRE_BRUTE}/{langue}/{MONTRE_NOM}")
+                  f"{MONTRE_BRUTE}/{langue}/{MONTRE_NOM}", code="RunUpWatch")
     if faits == 0:
         print("Aucune capture trouvée : rien n'a été posé.")
         return 1

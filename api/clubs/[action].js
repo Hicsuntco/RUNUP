@@ -15,6 +15,7 @@ const MAX_CLUB_DESCRIPTION = 240;
 const MAX_CLUB_CITY = 80;
 const { sendPushToUsers } = require('../../lib/apns');
 const { underDailyCap } = require('../../lib/rateLimit');
+const { MAX_SUGGESTIONS, ligneSuggeree } = require('../../lib/clubsSuggeres');
 // Le même repli que la recherche de personnes : accents, casse, traits d'union, ligatures. Un
 // club qui s'appelle « Les Côtes de Belleville » doit se trouver en tapant « cotes ».
 const {
@@ -48,6 +49,9 @@ module.exports = withErrorHandling(async function handler(req, res) {
     case 'search':
       if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
       return handleSearchClubs(req, res, userId);
+    case 'suggested':
+      if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
+      return handleSuggestedClubs(req, res, userId);
     case 'setOpen':
       if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
       return handleSetOpen(req, res, userId);
@@ -256,6 +260,42 @@ async function handleSearchClubs(req, res, userId) {
     // le même résultat, et on ne rejoint plus un club à l'autre bout du pays par homonymie.
     items: rows.map((row) => ({ id: row.id, name: row.name, city: row.city || null, memberCount: row.member_count })),
   });
+}
+
+// LES CLUBS QU'ON PEUT REJOINDRE, SANS RIEN TAPER. Le pourquoi est dans `lib/clubsSuggeres.js`,
+// avec la mise en forme des lignes.
+//
+// Ce n'est PAS un annuaire complet : cinq lignes, choisies pour qu'on arrive dans un club vivant
+// plutôt que dans le plus gros. C'est l'ORDRE qui le décide — une séance à venir d'abord, puis
+// un mur qui a parlé récemment, puis le nombre de membres.
+//
+// AUCUNE POSITION N'ENTRE ICI. Classer par proximité aurait été plus utile, et aurait demandé
+// d'envoyer la ville ou les coordonnées de quelqu'un pour une liste de suggestions — une
+// nouvelle collecte, à déclarer au manifeste, dans la politique et chez Apple. Pour cinq lignes,
+// non.
+async function handleSuggestedClubs(req, res, userId) {
+  // Plafond plus bas que la recherche : cette route ne répond pas à une frappe, elle répond à
+  // l'ouverture d'un écran. Cent fois par jour est déjà beaucoup.
+  if (!(await underDailyCap('clubSuggest:' + userId, 100))) return res.status(429).json({ error: 'too_many_requests' });
+
+  const { rows } = await sql`
+    SELECT c.id, c.name, c.city,
+           (SELECT COUNT(*)::int FROM club_members m WHERE m.club_id = c.id) AS member_count,
+           EXISTS (SELECT 1 FROM club_events e
+                    WHERE e.club_id = c.id AND e.starts_at > now()) AS seance_prevue,
+           (SELECT MAX(p.created_at) FROM club_posts p WHERE p.club_id = c.id) AS dernier_message
+    FROM clubs c
+    WHERE c.is_open = true
+      AND c.id NOT IN (SELECT club_id FROM club_members WHERE user_id = ${userId})
+    ORDER BY seance_prevue DESC,
+             dernier_message DESC NULLS LAST,
+             member_count DESC,
+             c.name ASC
+    LIMIT ${MAX_SUGGESTIONS}
+  `;
+
+  const maintenant = Date.now();
+  res.status(200).json({ items: rows.map((row) => ligneSuggeree(row, maintenant)) });
 }
 
 // LE VERROU, ET IL N'APPARTIENT QU'À LA PERSONNE QUI A CRÉÉ LE CLUB.

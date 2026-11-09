@@ -62,6 +62,13 @@ final class ClubStore {
 
     var clubSearchEnCours = false
 
+    /// Les cinq clubs proposés quand le champ est vide. Chargés une fois par visite de l'écran :
+    /// ils ne dépendent de rien qu'on tape, et les recharger à chaque frappe ferait une requête
+    /// par lettre pour une liste qui ne bouge pas.
+    var clubSuggestions: [ClubSearchResult] = []
+
+    private var suggestionsChargees = false
+
     private var clubSearchTask: Task<Void, Never>?
 
     /// Set only when `syncBadgesIfNeeded` finds a key `badges` reports earned that isn't yet in
@@ -273,6 +280,17 @@ final class ClubStore {
     func createChallenge(title: String, targetKm: Double, endDate: Date) async throws {
         let challenge = try await clubService.createChallenge(title: title, targetKm: targetKm, endDate: endDate)
         board.challenge = challenge
+    }
+
+    /// Appelé par la carte « Rejoindre un club » quand elle apparaît.
+    ///
+    /// `suggestionsChargees` et non « la liste est vide » : un compte sans aucun club ouvert à
+    /// proposer rendrait une liste vide, et la liste vide relancerait la requête à chaque
+    /// réapparition de la carte. On retient qu'on a demandé, pas ce qu'on a reçu.
+    func chargerLesClubsSuggeres() async {
+        guard auth.isSignedIn, !suggestionsChargees else { return }
+        suggestionsChargees = true
+        clubSuggestions = await clubService.suggestedClubs()
     }
 
     func chercherUnClub(_ texte: String) {

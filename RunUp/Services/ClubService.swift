@@ -32,6 +32,15 @@ struct ClubSearchResult: Decodable, Identifiable, Hashable {
     /// de Nantes sont le même résultat, et on en rejoint une à l'autre bout du pays.
     var city: String?
     var memberCount: Int
+    /// LA RAISON DE LA LIGNE, et seulement quand c'est une SUGGESTION.
+    ///
+    /// `api/clubs/suggested` les renvoie, `api/clubs/search` non : on a demandé ce club-là par
+    /// son nom, il n'a pas à se justifier d'être dans la liste. D'où les optionnelles — un
+    /// `Bool` non optionnel ferait échouer le décodage de toute la recherche le jour où les deux
+    /// routes cesseraient d'être d'accord, et une recherche qui ne rend rien ressemble
+    /// exactement à « aucun club ne porte ce nom ».
+    var seancePrevue: Bool?
+    var actifRecemment: Bool?
 }
 
 struct LeaderboardRow: Decodable, Identifiable, Hashable, Nomme {
@@ -654,6 +663,17 @@ struct ClubService {
     func searchClubs(query: String) async throws -> [ClubSearchResult] {
         let response: ClubSearchResponse = try await send(path: "api/clubs/search", method: "GET", query: ["q": query])
         return response.items
+    }
+
+    /// LES CLUBS QU'ON PEUT REJOINDRE QUAND ON N'A RIEN À TAPER.
+    ///
+    /// La recherche exige deux caractères du nom, donc elle suppose qu'on sache déjà qu'un club
+    /// existe — le reproche exact qui avait fait retirer le code d'invitation. Cinq lignes, avec
+    /// la raison de chacune. Rend une liste vide plutôt que de lever : c'est un confort, et une
+    /// ligne d'erreur sous un champ de recherche se lirait comme un échec de la recherche.
+    func suggestedClubs() async -> [ClubSearchResult] {
+        let reponse: ClubSearchResponse? = try? await send(path: "api/clubs/suggested", method: "GET")
+        return reponse?.items ?? []
     }
 
     /// Nommer un organisateur, ou lui retirer le rôle. RÉSERVÉ à qui a créé le club — pas aux

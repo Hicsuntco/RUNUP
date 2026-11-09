@@ -4,8 +4,25 @@
     "empreinte": "6eaa47b3a012",
     "composee_par": "ci_scripts/requis.py"
   },
+  "montre/en-US/1-course-libre.png": {
+    "source": "appstore/raw-montre/en-US/1-course-libre.png",
+    "empreinte": "2df25853cc84",
+    "composee_par": "ci_scripts/requis.py",
+    "code": "RunUpWatch",
+    "empreinte_code": "fa665226059b"
+  },
+  "montre/es-ES/1-course-libre.png": {
+    "source": "appstore/raw-montre/es-ES/1-course-libre.png",
+    "empreinte": "eee643ea8b3f",
+    "composee_par": "ci_scripts/requis.py",
+    "code": "RunUpWatch",
+    "empreinte_code": "fa665226059b"
+  },
   "montre/fr-FR/1-course-libre.png": {
-    "source": null,
-    "constat": "Faite à la main, et ne montre pas l'app. Mesuré le 9 novembre 2026 DANS l'image : bouton pilule de 386 × 88 px sur 416 de large, quand le code dessine un cercle de 92 pt depuis le 6 août 2026 ; et « COURIR » en capitales, que la fonte d'affichage actuelle ne sait plus produire. Depuis le 9 novembre 2026, `captures.yml` sait la prendre pour de vrai — étape « Photographier la montre », sur un simulateur watchOS. Cette entrée perdra son `constat` et prendra une `source` au premier passage de la chaîne."
+    "source": "appstore/raw-montre/fr-FR/1-course-libre.png",
+    "empreinte": "c13bcf21cb3d",
+    "composee_par": "ci_scripts/requis.py",
+    "code": "RunUpWatch",
+    "empreinte_code": "fa665226059b"
   }
 }

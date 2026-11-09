@@ -410,6 +410,27 @@ iPhone**, et c'est ce qui rend la correction sans risque de ce côté.
    chacune des trois langues, exige que « Courir » rende **trois valeurs différentes**, et exige
    que chaque police de l'`UIAppFonts` soit dans le paquet. 29 cas dans `test_spec.py`.
 
+### Ce que la chaîne a rendu, une fois corrigé
+
+Run 5 de « Capture de la montre », commit `a0d27d0`, vert de bout en bout. Dans le paquet :
+`fr → Courir`, `en → Run`, `es → Correr`, et les trois Inter présentes. Les trois images ouvertes
+une par une : « Aujourd'hui / Course libre / Courir », « Today / Free run / Run », « Hoy / Carrera
+libre / Correr ». **23,6 % des pixels sous la barre d'état ont changé** par rapport à l'avant :
+ce n'est pas seulement la langue, c'est le rendu.
+
+`appstore/requis/montre/` porte maintenant trois images au lieu d'une, chacune avec l'empreinte de
+sa source et celle du code qui l'a dessinée. L'entrée `source: null` qui portait « faite à la main,
+et ne montre pas l'app » a disparu.
+
+### Deux écarts avec la DA, vus sur cette image et NON corrigés
+
+1. **Le bouton « Courir » est un dégradé rose → violet, en plein milieu de l'interface.** Règle 7 :
+   pas de dégradés dans l'interface. DA : le dégradé rose-violet ne va que sur l'icône, le splash
+   et le logo. L'accent d'action est `#F0225F`, plat. C'est l'élément principal de l'écran.
+2. **La phrase du bas est coupée par le bord, dans les trois langues.** Aucune des trois ne finit.
+
+Ce sont des décisions de design, pas de la livraison de ressources : elles attendent la phase 2.
+
 ### Ce que ça change pour la phase 2
 
 Toutes les captures de montre prises jusqu'ici montrent une app dans la mauvaise police et dans

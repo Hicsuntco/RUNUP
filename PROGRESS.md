@@ -488,11 +488,43 @@ exige que chaque police de l'`UIAppFonts` soit présente dans le paquet.
 disent qu'une déclaration VALIDE ne sonne pas, parce qu'un garde-fou qui refuse tout est aussi
 inutile qu'un garde-fou qui accepte tout.
 
+### Ce que la chaîne a rendu, une fois corrigé
+
+Run 5 de « Capture de la montre », commit `a0d27d0`, vert de bout en bout. Le paquet construit :
+
+```
+fr : « Courir » → Courir      ✓ Inter-Medium.ttf
+en : « Courir » → Run         ✓ Inter-Bold.ttf
+es : « Courir » → Correr      ✓ Inter-SemiBold.ttf
+```
+
+Les trois captures ouvertes une par une : « Aujourd'hui / Course libre / Courir », « Today / Free
+run / Run », « Hoy / Carrera libre / Correr ». Comparées à celles d'avant sous la barre d'état,
+**23,6 % des pixels ont changé** et la graisse d'« Aujourd'hui » n'est plus la même : ce n'est pas
+seulement la langue qui a bougé, c'est le rendu.
+
+`appstore/requis/montre/` porte désormais **trois** images au lieu d'une, chacune avec l'empreinte
+de sa source ET l'empreinte du code qui l'a dessinée. L'entrée `source: null` de `SOURCES.json` —
+celle qui portait le constat « faite à la main, et ne montre pas l'app » — a disparu.
+
 ### Ce que ça invalide
 
 Toutes les captures de montre prises jusqu'ici montrent une app dans la mauvaise police et dans la
 mauvaise langue. La note donnée à l'écran de course au poignet dans `AUDIT.md` § 9 a été mise sur
 une image qui n'était pas celle de l'app. **Elle est à refaire.**
+
+### Deux écarts avec la DA, vus sur l'image d'aujourd'hui et NON corrigés
+
+Ce chantier-ci était la livraison des ressources. Ces deux-là sont des décisions de design, donc
+ils attendent la phase 2 :
+
+1. **Le bouton « Courir » est un dégradé rose → violet, en plein milieu de l'interface.** La règle
+   7 dit « pas de dégradés dans l'interface », et la DA réserve le dégradé rose-violet à l'icône,
+   au splash et au logo. L'accent d'action est `#F0225F`, plat. C'est l'élément le plus important
+   de l'écran, et c'est l'infraction la plus visible du produit.
+2. **La phrase du bas est coupée par le bord de l'écran, dans les trois langues** : « Cours à ta
+   sensation — ta séance », « Run by feel — your session is on its », « Corre a tu ritmo; tu sesión
+   llega ». Aucune des trois ne finit.
 
 ### Ce qui reste ouvert
 

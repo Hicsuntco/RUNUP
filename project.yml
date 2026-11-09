@@ -18,22 +18,34 @@ targets:
     platform: iOS
     deploymentTarget: "17.0"
     sources:
+      # UNE SEULE ENTRÉE, ET ELLE PORTE AUSSI LES RESSOURCES.
+      #
+      # `RunUp/Resources/` est sous ce chemin. XcodeGen classe chaque fichier qu'il y trouve selon
+      # son extension, et les catalogues, les polices et le manifeste de confidentialité vont bien
+      # dans la phase « Copy Bundle Resources » : il n'y a rien à redéclarer. Il y avait ici une
+      # clé `resources:` qui les relistait — elle ne servait à rien, et pire que rien : voir le
+      # bloc sur les ressources de `RunUpWatch` plus bas, cette clé n'existe pas dans XcodeGen et
+      # ce qu'on y écrit est jeté sans un mot.
+      #
+      # Les trois fichiers de ce dossier qu'il faut savoir présents, et pourquoi :
+      #
+      # · `Localizable.xcstrings` — les traductions de l'app (fr, en, es).
+      #
+      # · `InfoPlist.xcstrings` — traduit les descriptions d'autorisation (`NS*UsageDescription`
+      #   ci-dessous). Sans ce catalogue, ces chaînes ne passent PAS par `Localizable.xcstrings`
+      #   — elles vivent dans l'Info.plist — et iOS affichait donc ses dialogues système en
+      #   français à tout le monde, au moment précis où l'on demande à quelqu'un l'accès à sa
+      #   position, à son micro et à ses données de santé. Ses clés sont les clés Info.plist
+      #   elles-mêmes, pas les phrases.
+      #
+      # · `PrivacyInfo.xcprivacy` — obligatoire depuis mai 2024 : sans ce fichier dans le bundle,
+      #   App Store Connect refuse le binaire à l'ENVOI (ITMS-91053), avant toute revue humaine.
+      #
+      # `ci_scripts/check_spec.py` vérifie que les polices enregistrées et les traductions sont
+      # réellement livrées à chaque cible qui les déclare — c'est ce contrôle qui manquait.
       - path: RunUp
         excludes:
           - "Resources/Fonts/*.md"
-    resources:
-      - path: RunUp/Resources/Fonts
-      - path: RunUp/Resources/Assets.xcassets
-      - path: RunUp/Resources/Localizable.xcstrings
-      # Traduit les descriptions d'autorisation ci-dessous (`NS*UsageDescription`). Sans ce
-      # catalogue, ces chaînes ne passent PAS par `Localizable.xcstrings` — elles vivent dans
-      # l'Info.plist — et iOS affichait donc ses dialogues système en français à tout le monde,
-      # au moment précis où l'on demande à quelqu'un l'accès à sa position, à son micro et à ses
-      # données de santé. Ses clés sont les clés Info.plist elles-mêmes, pas les phrases.
-      - path: RunUp/Resources/InfoPlist.xcstrings
-      # Obligatoire depuis mai 2024 : sans ce fichier dans le bundle, App Store Connect refuse le
-      # binaire à l'ENVOI (ITMS-91053), avant même toute revue humaine.
-      - path: RunUp/Resources/PrivacyInfo.xcprivacy
     # Build settings that can't be committed with their real values (the coach's shared secret)
     # come from here — a committed file of empty defaults that optionally includes the gitignored
     # `Secrets.xcconfig` holding the actual values. See Config.xcconfig and IOS_SETUP.md
@@ -228,30 +240,34 @@ targets:
           # Le widget dessine des anneaux et des objectifs, jamais un parcours : l'exclure est la
           # bonne réponse, plutôt que de tirer tout le modèle de données dans l'extension.
           - "RouteGeometry.swift" 
-    resources:
+      # ─── LES RESSOURCES PARTAGÉES PASSENT PAR `sources:` ──────────────────────────────────────
+      #
+      # Elles étaient sous une clé `resources:`, qui n'existe pas. Le pourquoi, la mesure et la
+      # citation sont écrits une seule fois, dans la cible `RunUpWatch` ci-dessous ; la même cause
+      # frappait les deux extensions, et pour la même raison : ces deux chemins sont HORS de
+      # `RunUpWidgets/`, donc rien d'autre ne les faisait entrer.
+      #
+      # Ce que ça coûtait ici : le widget de l'écran d'accueil affichait « BOUCLÉS », « SÉANCE »,
+      # « KCAL » en français à tout le monde, dans la police système au lieu d'Inter — à côté
+      # d'une app, elle, correctement traduite et correctement composée.
+      #
+      # `PrivacyInfo.xcprivacy` n'est pas relisté : il est dans `RunUpWidgets/`, donc l'entrée
+      # ci-dessus le porte déjà. L'extension est signée et livrée séparément de l'app, le
+      # manifeste de l'app ne la couvre pas, il lui faut le sien — et elle l'a.
       - path: RunUp/Resources/Fonts
+        buildPhase: resources
         excludes:
           - "*.md"
-          # Cette cible ne déclare que 3 fichiers dans son UIAppFonts. Les 5 autres du dossier
-          # partagé étaient tout de même copiés dans son bundle : non enregistrés, donc inertes —
-          # ~750 Ko de poids mort dans une extension. Ce que l'UIAppFonts n'enregistre pas ne peut
-          # de toute façon pas se charger, les retirer ne change rien à l'affichage.
+          # Cette cible ne déclare que 3 fichiers dans son UIAppFonts, et ce que l'UIAppFonts
+          # n'enregistre pas ne peut pas se charger : embarquer les 5 autres n'ajouterait que
+          # ~750 Ko de poids mort dans une extension.
           - "Inter-Light.ttf"
           - "Inter-Regular.ttf"
           - "Inter-Italic.ttf"
           - "DMMono-Regular.ttf"
           - "DMMono-Medium.ttf"
-      # L'extension est signée et livrée séparément de l'app : le manifeste de l'app ne la couvre
-      # pas, il lui faut le sien. Elle lit `DailyGoalsSnapshot` via UserDefaults du groupe partagé.
-      # LE CATALOGUE DE TRADUCTIONS. Il manquait, et le widget affichait donc ses libellés en
-      # français à TOUT LE MONDE — « BOUCLÉS », « SÉANCE », « KCAL » sur l'écran d'accueil d'une
-      # anglophone. Rien ne le signalait : `Text("Séance")` sans catalogue à charger retombe sur
-      # sa propre clé, qui est du français parfaitement lisible.
-      #
-      # La montre, elle, l'avait depuis le début. C'est en cherchant pourquoi les deux cibles ne
-      # se ressemblaient pas que l'écart est apparu.
       - path: RunUp/Resources/Localizable.xcstrings
-      - path: RunUpWidgets/PrivacyInfo.xcprivacy
+        buildPhase: resources
     info:
       path: RunUpWidgets/Info.plist
       properties:
@@ -292,6 +308,10 @@ targets:
     platform: watchOS
     deploymentTarget: "10.0"
     sources:
+      # Ce chemin porte le code de la montre ET ses deux ressources propres :
+      # `RunUpWatch/Assets.xcassets`, et `RunUpWatch/InfoPlist.xcstrings` — un catalogue distinct
+      # de celui de l'iPhone, parce que la montre a ses propres textes d'autorisation (« au
+      # poignet », « depuis la montre ») : les mêmes clés y portent d'autres phrases.
       - path: RunUpWatch
       # Only the hex/darken color math — the rest of Shared/ is widget/Live Activity plumbing
       # (RunActivityAttributes imports ActivityKit, which doesn't exist on watchOS).
@@ -313,28 +333,61 @@ targets:
       # `TimeFormat` référence `Discipline` pour choisir entre allure et vitesse : sans ce
       # fichier, la montre ne compile pas.
       - path: RunUp/Shared/Discipline.swift
-    resources:
-      - path: RunUpWatch/Assets.xcassets
+
+      # ─── LES RESSOURCES PARTAGÉES PASSENT PAR `sources:`, PAS PAR `resources:` ───────────────
+      #
+      # LA CLÉ `resources:` N'EXISTE PAS DANS XCODEGEN. Ces deux chemins étaient déclarés sous
+      # une clé `resources:` au niveau de la cible, et cette clé n'est pas une clé de cible :
+      # `Docs/ProjectSpec.md` § Target ne la liste pas, `Target.init(jsonDictionary:)` n'a aucune
+      # branche pour elle, et `SourceGenerator.getAllSourceFiles` ne regarde que `target.sources`.
+      # La valeur est donc jetée en silence — ni erreur, ni avertissement. C'est le ticket
+      # XcodeGen #1645, ouvert et non corrigé à ce jour (XcodeGen 2.46.0).
+      #
+      # CE QUE ÇA COÛTAIT, MESURÉ DANS LE PAQUET CONSTRUIT. Sonde du workflow « Capture de la
+      # montre » sur le commit 5cadd52 : `RunUpWatch.app` portait bien `fr.lproj`, `en.lproj` et
+      # `es.lproj`, mais chacun ne contenait QUE `InfoPlist.strings` — aucun `Localizable.strings`
+      # — et il n'y avait AUCUN fichier `.ttf` dans le paquet. Donc, pour tout le monde et depuis
+      # le premier jour de la cible montre :
+      #
+      #   · la montre parlait français quelle que soit la langue du téléphone. Chaque
+      #     `Text("Courir")` retombait sur sa CLÉ, qui est française et parfaitement lisible —
+      #     c'est pour ça que rien ne se voyait ;
+      #   · elle s'affichait dans la police système et pas en Inter, malgré les trois fichiers
+      #     enregistrés dans son `UIAppFonts` ci-dessous. Un `UIAppFonts` qui nomme un fichier
+      #     absent du paquet ne lève rien : SwiftUI retombe sur la police système en silence.
+      #
+      # POURQUOI PERSONNE NE L'A VU. Le build était vert — rien ne manquait à la compilation.
+      # `check_fonts.py` était vert — il comparait l'`UIAppFonts` au code et aux noms PostScript
+      # des fichiers, jamais à ce qui est LIVRÉ. Et les captures de la montre montraient un écran
+      # français, qu'on prenait pour la capture française. Le commentaire qui vivait ici disait
+      # même « sans lui, la montre restait entièrement en français » : la phrase était au passé,
+      # alors que la cause n'avait jamais été corrigée.
+      #
+      # CE QUI ATTERRISSAIT QUAND MÊME n'y arrivait pas par cette clé : `RunUpWatch/Assets.xcassets`
+      # et `RunUpWatch/InfoPlist.xcstrings` entrent par l'entrée `path: RunUpWatch` tout en haut,
+      # qui les contient. D'où la confusion : la cible avait trois `.lproj`, donc elle avait l'air
+      # trilingue. J'avais regardé le contenant, pas le contenu.
+      #
+      # `buildPhase: resources` est écrit explicitement plutôt que déduit de l'extension : c'est
+      # la seconde approche documentée sur le même ticket, et elle dit ce qu'on veut au lieu de
+      # l'espérer. `ci_scripts/check_spec.py` refuse désormais toute clé de cible inconnue, et
+      # vérifie que les polices enregistrées et les traductions déclarées sont bien livrées.
       - path: RunUp/Resources/Fonts
+        buildPhase: resources
         excludes:
           - "*.md"
-          # Cette cible ne déclare que 3 fichiers dans son UIAppFonts. Les 5 autres du dossier
-          # partagé étaient tout de même copiés dans son bundle : non enregistrés, donc inertes —
-          # ~750 Ko de poids mort dans une extension. Ce que l'UIAppFonts n'enregistre pas ne peut
-          # de toute façon pas se charger, les retirer ne change rien à l'affichage.
+          # Cette cible ne déclare que 3 fichiers dans son UIAppFonts, et ce que l'UIAppFonts
+          # n'enregistre pas ne peut pas se charger : embarquer les 5 autres n'ajouterait que
+          # ~750 Ko de poids mort au poignet.
           - "Inter-Light.ttf"
           - "Inter-Regular.ttf"
           - "Inter-Italic.ttf"
           - "DMMono-Regular.ttf"
           - "DMMono-Medium.ttf"
-      # Le MÊME catalogue de chaînes que l'app iPhone. Sans lui, la montre restait entièrement en
-      # français quelle que soit la langue de l'utilisatrice — chaque `Text("…")` retombait sur sa
-      # clé française faute de traduction à charger. Le partager plutôt que d'en créer un second
+      # Le MÊME catalogue de chaînes que l'app iPhone. Le partager plutôt que d'en créer un second
       # évite d'avoir à traduire deux fois les libellés communs (KM, TEMPS, KCAL, EN PAUSE…).
       - path: RunUp/Resources/Localizable.xcstrings
-      # Catalogue distinct de celui de l'iPhone : la montre a ses propres textes d'autorisation
-      # (« au poignet », « depuis la montre »), donc les mêmes clés y portent d'autres phrases.
-      - path: RunUpWatch/InfoPlist.xcstrings
+        buildPhase: resources
     info:
       path: RunUpWatch/Info.plist
       properties:

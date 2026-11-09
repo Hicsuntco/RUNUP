@@ -328,4 +328,102 @@ Dans l'ordre de gravité, et rien de plus :
   App Store. Le reste est jugé sur le code, et c'est dit à chaque fois.
 - Je n'ai **pas** lancé l'app : il n'y a pas de macOS ici. Tout ce qui se compile ou se
   photographie passe par la chaîne d'intégration.
-- Je n'ai **rien modifié**.
+- Je n'ai rien modifié **pendant l'état des lieux**. La seule exception est la section 13 : un
+  défaut trouvé en voulant photographier la montre, que tu m'as dit de corriger avant de passer
+  à la phase 2.
+
+---
+
+## 13. Le défaut trouvé en photographiant la montre — corrigé
+
+### Ce qui n'allait pas
+
+`project.yml` déclarait, sur **trois cibles**, les polices et le catalogue de traductions sous une
+clé `resources:`. **Cette clé n'existe pas dans XcodeGen.** La documentation officielle
+(`Docs/ProjectSpec.md` § Target) ne la liste pas parmi les clés d'une cible ;
+`Target.init(jsonDictionary:)` n'a aucune branche pour elle ; `SourceGenerator.getAllSourceFiles`
+ne regarde que `target.sources`. La valeur est donc lue puis jetée, **sans erreur ni
+avertissement** — c'est le ticket XcodeGen #1645, ouvert et non corrigé (XcodeGen 2.46.0).
+
+### Ce que ça coûtait, mesuré
+
+Sonde du paquet construit `RunUpWatch.app` (workflow « Capture de la montre », commit `5cadd52`) :
+
+| attendu dans le paquet | présent |
+|---|---|
+| `fr.lproj`, `en.lproj`, `es.lproj` | oui |
+| `Localizable.strings` dans chacun | **non, aucun** |
+| `Inter-Medium/Bold/SemiBold.ttf` | **non, aucun** |
+
+Donc, **pour tout le monde et depuis le premier jour de la cible montre** :
+
+- **la montre parlait français quelle que soit la langue du téléphone.** Chaque `Text("Courir")`
+  retombait sur sa clé, qui est française et parfaitement lisible — c'est pour ça que rien ne se
+  voyait ;
+- **elle s'affichait dans la police système, pas en Inter**, malgré les trois fichiers enregistrés
+  dans son `UIAppFonts`. Un `UIAppFonts` qui nomme un fichier absent du paquet ne lève rien :
+  SwiftUI retombe sur la police système en silence.
+
+**Le widget de l'écran d'accueil avait exactement le même défaut**, pour exactement la même
+raison — ses deux ressources partagées sont hors de `RunUpWidgets/`. « BOUCLÉS », « SÉANCE »,
+« KCAL » en français chez une anglophone, dans la police système, à côté d'une app correctement
+traduite et correctement composée. Celui-là n'était pas cherché : c'est le garde-fou écrit pour la
+montre qui l'a nommé.
+
+L'app iPhone, elle, n'a jamais été touchée : son unique entrée `sources: - path: RunUp` contient
+`RunUp/Resources/`, donc XcodeGen y trouvait tout. Sa clé `resources:` ne faisait rien non plus —
+elle redéclarait ce qui entrait déjà. **Retirer cette clé ne peut donc pas changer le binaire
+iPhone**, et c'est ce qui rend la correction sans risque de ce côté.
+
+### Pourquoi rien ne l'a signalé
+
+- **Le build était vert** : aucune ressource ne manque à la compilation.
+- **`check_fonts.py` était vert, et il avait raison de l'être.** Il compare le code, l'`UIAppFonts`
+  de chaque cible et les noms PostScript des fichiers. « Livrée » y veut dire « le fichier existe
+  dans `RunUp/Resources/Fonts` », jamais « la cible l'embarque ». Ce n'était pas sa question.
+- **Les captures de la montre montraient un écran français**, qu'on prenait pour la capture
+  française.
+- **Le commentaire de `project.yml` disait la chose au passé** : « sans lui, la montre restait
+  entièrement en français ». La phrase décrivait une correction qui n'avait jamais eu lieu.
+- **Et ma première sonde m'a fait annoncer le contraire.** Elle vérifiait que les trois dossiers
+  `.lproj` existaient. Ils existaient. J'ai conclu que le paquet allait bien, et je l'ai écrit.
+  La seconde sonde a regardé dedans : rien. J'avais mesuré le contenant.
+
+### Ce qui est corrigé, et ce qui empêche le retour
+
+1. **`project.yml`** : les trois clés `resources:` sont retirées. Les ressources partagées de la
+   montre et du widget passent par `sources:` avec `buildPhase: resources` écrit explicitement —
+   la seconde approche documentée sur le même ticket.
+2. **`ci_scripts/check_spec.py`** (nouveau) refuse toute clé de cible ou d'entrée `sources:`
+   absente des listes documentées, toute valeur inconnue de `buildPhase` et de `type`, **toute
+   police enregistrée dans un `UIAppFonts` que sa cible n'embarque pas**, et **toute cible qui
+   affiche du texte sans embarquer de catalogue de chaînes**. Lancé sur le `project.yml` d'avant,
+   il sort 11 plaintes ; sur celui d'après, zéro.
+3. Il lit le YAML **à la main**, parce que le python du runner macOS n'a pas PyYAML et que ce job
+   n'installe rien — la décision est déjà écrite dans `check_cablage.py`, et ce script l'avait
+   d'abord enfreinte. Un lecteur maison qui se trompe en silence serait pire que pas de contrôle,
+   donc il **refuse** tout ce qu'il ne comprend pas, et `test_spec.py` **compare sa lecture du
+   vrai `project.yml` à celle de PyYAML** partout où PyYAML existe. Cette comparaison a trouvé une
+   faute dans mon lecteur dès le premier essai (`- applinks:runup-nu.vercel.app`, sans espace après
+   le deux-points, lu comme une table au lieu d'une chaîne).
+4. **La sonde de `montre.yml` est devenue un garde-fou** : elle exige un `Localizable.strings` dans
+   chacune des trois langues, exige que « Courir » rende **trois valeurs différentes**, et exige
+   que chaque police de l'`UIAppFonts` soit dans le paquet. 29 cas dans `test_spec.py`.
+
+### Ce que ça change pour la phase 2
+
+Toutes les captures de montre prises jusqu'ici montrent une app dans la mauvaise police et dans
+la mauvaise langue. **Elles ne valent rien comme référence de direction artistique** — la note
+donnée à l'écran de course au poignet en section 9 a été mise sur une image qui n'était pas celle
+de l'app. Elle est à refaire.
+
+### Ce qui reste ouvert, et que je n'ai pas touché
+
+- **`RunUpWatch` n'embarque aucun `PrivacyInfo.xcprivacy`**, là où l'app et le widget ont le leur.
+  La cible montre n'appelle aucune API « à motif obligatoire » (ni `UserDefaults`, ni
+  `FileManager`) et n'envoie rien au serveur elle-même, donc l'absence se défend. Mais je n'ai pas
+  de source Apple qui dise si un paquet de montre embarqué doit porter le sien. **À trancher avant
+  le prochain envoi**, pas à deviner.
+- **Le widget ne déclare pas de `CFBundleLocalizations`.** Avec le catalogue désormais livré, ses
+  `.lproj` suffisent en principe à faire découvrir ses langues. En principe : ça se mesure sur un
+  appareil, et ça ne l'a pas été.

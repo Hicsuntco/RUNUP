@@ -14,6 +14,13 @@ Ce script fait ce que le compilateur ne fait pas. Pour chaque cible, il compare 
 
 Une police livrée mais non enregistrée est inerte ; une police enregistrée dans une cible ne l'est
 pas dans les autres. Les trois listes doivent coïncider, cible par cible.
+
+CE QU'IL NE VOIT PAS, ET QUI A COÛTÉ CHER. « Livrée » veut dire ici « le fichier existe dans
+`RunUp/Resources/Fonts` » — jamais « la cible l'embarque ». `RunUpWatch` et `RunUpWidgets`
+enregistraient trois Inter dans leur `UIAppFonts` et n'en embarquaient AUCUNE : leurs ressources
+étaient déclarées sous une clé `resources:` qui n'existe pas dans XcodeGen. Ce script était vert
+pendant tout ce temps, et il avait raison de l'être — ce n'est pas sa question.
+C'est celle de `check_spec.py`.
 """
 import re, struct, sys, pathlib
 

@@ -258,6 +258,22 @@ jobs:
       - name: Vérifier que les polices demandées sont livrées
         run: python3 ci_scripts/check_fonts.py
 
+      # ET MAINTENANT : SONT-ELLES LIVRÉES À LA CIBLE QUI LES ENREGISTRE ? Le contrôle ci-dessus
+      # compare le code, l'`UIAppFonts` de chaque cible et les noms PostScript des fichiers — il
+      # ne regarde jamais si la cible EMBARQUE le fichier. `RunUpWatch` et `RunUpWidgets`
+      # déclaraient leurs ressources sous une clé `resources:` qui n'existe pas dans XcodeGen :
+      # elle est jetée sans un mot (ticket #1645). Résultat, mesuré dans `RunUpWatch.app` : aucun
+      # `.ttf`, aucun `Localizable.strings`. La montre et le widget de l'écran d'accueil étaient
+      # donc français pour tout le monde, dans la police système, depuis le premier jour — avec
+      # un build vert, le contrôle des polices vert, et des captures parfaitement lisibles.
+      #
+      # Haut placée volontairement : elle lit un fichier et coûte une seconde, et elle dit si la
+      # construction qui suit vaut la peine d'être payée.
+      - name: Vérifier que project.yml dit vraiment ce qu'il fait
+        run: |
+          cd ci_scripts && python3 test_spec.py
+          cd .. && python3 ci_scripts/check_spec.py
+
       # Une clé absente du catalogue ne casse rien : `String(localized:)` rend la clé, et le texte
       # sort EN FRANÇAIS chez tout le monde. Ça ne se voit qu'en lançant l'app dans une autre
       # langue, sur l'écran concerné — autant dire jamais. L'audit en a trouvé cinq d'un coup,

@@ -44,6 +44,11 @@ on:
       - "ci_scripts/check_captures_montre.py"
       - "ci_scripts/test_captures_montre.py"
       - "ci_scripts/check_requis.py"
+      # Ce qui refuse un project.yml dont XcodeGen jetterait une partie en silence, et le
+      # catalogue que la montre embarque désormais pour de vrai.
+      - "ci_scripts/check_spec.py"
+      - "ci_scripts/test_spec.py"
+      - "RunUp/Resources/Localizable.xcstrings"
 
 concurrency:
   group: montre
@@ -111,49 +116,76 @@ jobs:
           fi
           echo "app=$app" >> "$GITHUB_OUTPUT"
 
-          # CE QUE LE PAQUET CONTIENT VRAIMENT, et c'est la question décisive.
+          # ── CE QUE LE PAQUET CONTIENT VRAIMENT ──────────────────────────────────────────────
           #
-          # Le simulateur a confirmé qu'il était en anglais — `defaults read -g AppleLanguages`
-          # rend bien `(en)` — et l'app a quand même rendu du français. Si le paquet ne porte pas
-          # de `en.lproj`, tout s'explique d'un coup : `Localizable.xcstrings` ne serait pas
-          # compilé dans la cible montre, et `Text("Courir")` retomberait sur sa CLÉ, qui est
-          # française. Ce ne serait alors pas un défaut de capture mais un défaut de l'app : une
-          # anglophone verrait du français à son poignet.
-          echo "→ localisations dans le paquet :"
-          trouvees=$(ls -d "$app"/*.lproj 2>/dev/null | xargs -n1 basename 2>/dev/null || true)
-          if [ -z "$trouvees" ]; then
-            echo "✗ AUCUN .lproj dans $app — la cible montre ne compile aucune traduction."
-            ls "$app"
-            exit 1
-          fi
-          echo "$trouvees" | sed 's/^/    /'
-
-          # ET CE QU'IL Y A DEDANS. Les trois dossiers existent — ça ne dit pas ce qu'ils
-          # portent. Un catalogue de chaînes compilé peut très bien produire un `en.lproj` qui
-          # rend la CLÉ française, et c'est exactement l'hypothèse à trancher : le paquet
-          # est-il en cause, ou le lancement ?
-          # ET LE CONTENU, PAS SEULEMENT LES NOMS. La sonde précédente listait les dossiers
-          # `.lproj` et les trois étaient là — mais aucun ne portait de `Localizable.strings`.
-          # J'avais regardé le contenant. Celle-ci regarde dedans.
+          # Ce bloc a commencé comme une sonde et il est devenu un garde-fou, parce qu'il a
+          # trouvé quelque chose. Son histoire, en trois temps :
+          #
+          #  1. Le simulateur confirmait être en anglais (`defaults read -g AppleLanguages` rend
+          #     bien `(en)`) et l'app rendait quand même du français.
+          #  2. Première sonde : les trois `.lproj` sont là. J'ai conclu que le paquet allait
+          #     bien. J'avais regardé le CONTENANT.
+          #  3. Seconde sonde, dedans : aucun `.lproj` ne portait de `Localizable.strings`, et il
+          #     n'y avait aucun `.ttf` dans le paquet. La cible montre déclarait ses ressources
+          #     sous une clé `resources:` qui n'existe pas dans XcodeGen (ticket #1645) — voir le
+          #     bloc dans `project.yml`. La montre parlait français à tout le monde et
+          #     s'affichait dans la police système, depuis toujours, sans un avertissement.
+          #
+          # Les contrôles ci-dessous sont donc écrits pour échouer sur la CAUSE. `check_spec.py`
+          # refuse maintenant la clé fantôme en lisant `project.yml` en une seconde ; ceci le
+          # double sur le produit construit, pour le jour où XcodeGen jettera autre chose.
           echo "→ à la racine du paquet :"
           ls "$app" | sed 's/^/    /'
-          echo "→ dans en.lproj :"
-          ls "$app/en.lproj" 2>/dev/null | sed 's/^/    /' || echo "    (pas de en.lproj)"
 
-          echo "→ ce que « Courir » vaut dans chaque langue du paquet :"
-          for lang in fr en es; do
-            f="$app/$lang.lproj/Localizable.strings"
-            if [ ! -f "$f" ]; then echo "    $lang : pas de Localizable.strings"; continue; fi
+          manque=0
+
+          # 1. LES TROIS LANGUES, ET UN `Localizable.strings` DANS CHACUNE.
+          for langue in fr en es; do
+            f="$app/$langue.lproj/Localizable.strings"
+            if [ ! -f "$f" ]; then
+              echo "✗ $langue : pas de $langue.lproj/Localizable.strings dans le paquet."
+              manque=1
+              continue
+            fi
             valeur=$(plutil -extract "Courir" raw -o - "$f" 2>/dev/null || echo "(clé absente)")
-            echo "    $lang : $valeur"
+            echo "    $langue : « Courir » → $valeur"
           done
-          for attendue in fr en es; do
-            case "$trouvees" in
-              *"$attendue.lproj"*) ;;
-              *) echo "✗ $attendue.lproj manque : l'app de poignet ne sait pas parler cette langue."
-                 exit 1 ;;
-            esac
+
+          # 2. ET ELLES DOIVENT DIRE TROIS CHOSES DIFFÉRENTES. Un catalogue compilé peut très bien
+          #    produire trois fichiers qui rendent tous la clé française : c'est exactement le
+          #    symptôme qu'on vient de passer une journée à ne pas voir.
+          if [ "$manque" -eq 0 ]; then
+            fr=$(plutil -extract "Courir" raw -o - "$app/fr.lproj/Localizable.strings")
+            en=$(plutil -extract "Courir" raw -o - "$app/en.lproj/Localizable.strings")
+            es=$(plutil -extract "Courir" raw -o - "$app/es.lproj/Localizable.strings")
+            if [ "$fr" = "$en" ] || [ "$fr" = "$es" ] || [ "$en" = "$es" ]; then
+              echo "✗ « Courir » rend la même chose dans deux langues : fr=$fr en=$en es=$es"
+              manque=1
+            fi
+          fi
+
+          # 3. LES POLICES ENREGISTRÉES DANS L'`UIAppFonts` DOIVENT ÊTRE DANS LE PAQUET.
+          #    Un `UIAppFonts` qui nomme un fichier absent ne lève rien : SwiftUI retombe sur la
+          #    police système en silence, et l'écran reste parfaitement lisible. C'est ce qui
+          #    s'est passé — j'ai regardé ces captures toute la matinée sans voir que ce n'était
+          #    pas Inter.
+          echo "→ polices enregistrées, et leur présence dans le paquet :"
+          for police in $(plutil -extract UIAppFonts json -o - "$app/Info.plist" | jq -r '.[]'); do
+            if [ -f "$app/$police" ]; then
+              echo "    ✓ $police"
+            else
+              echo "    ✗ $police — enregistrée, absente du paquet"
+              manque=1
+            fi
           done
+
+          if [ "$manque" -ne 0 ]; then
+            echo
+            echo "✗ Le paquet ne porte pas ce que project.yml lui promet. Lance"
+            echo "  python3 ci_scripts/check_spec.py — il nomme la cause en une seconde."
+            exit 1
+          fi
+          echo "✓ Paquet complet : trois langues distinctes, polices livrées."
 
       # ── LA LANGUE SE POSE SUR L'APPAREIL, PAS AU LANCEMENT ───────────────────────────────────
       #

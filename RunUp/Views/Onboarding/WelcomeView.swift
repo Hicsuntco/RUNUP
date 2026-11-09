@@ -14,7 +14,8 @@ struct WelcomeView: View {
 
     var body: some View {
         ZStack {
-            RadialGradient(colors: [RUColor.rose.opacity(RUColor.isLight ? 0 : 0.22), .clear], center: .top, startRadius: 0, endRadius: 420)
+            // Le halo rose du haut est parti : c'était un dégradé radial d'accent, déjà à
+            // opacité nulle en thème clair. Règle 7, et un écran d'accueil de moins à expliquer.
             RUColor.bg.opacity(0.001)
 
             VStack(spacing: 0) {

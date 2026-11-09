@@ -213,8 +213,7 @@ struct DisciplineDialView: View {
                 .frame(width: DisciplineDial.tailleRond, height: DisciplineDial.tailleRond)
                 .background {
                     if actif {
-                        Circle().fill(LinearGradient(colors: [RUColor.rose2, RUColor.rose],
-                                                     startPoint: .top, endPoint: .bottom))
+                        Circle().fill(RUColor.rose)
                     } else {
                         Circle().fill(.ultraThinMaterial.opacity(0.9))
                         Circle().fill(RUColor.card.opacity(RUColor.isLight ? 0.96 : 0.82))

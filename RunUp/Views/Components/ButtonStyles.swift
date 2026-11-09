@@ -16,16 +16,14 @@ struct PrimaryButtonStyle: ButtonStyle {
     var isDisabled: Bool = false
     var fill: AnyShapeStyle? = nil
 
-    /// Light mode gets a quiet rose2→rose gradient instead of a flat fill — one of the few
-    /// "signature" accent moments left once the glow shadow below is gone, so it needs to carry a
-    /// little more richness on its own. Dark mode keeps the flat fill it already had.
+    /// UN APLAT D'ACCENT, DANS LES DEUX THÈMES.
+    ///
+    /// Le clair recevait un dégradé rose2 → rose « parce qu'il reste peu de moments signature une
+    /// fois le halo parti, donc il doit porter un peu plus de richesse tout seul ». La règle 7
+    /// tranche : aucun dégradé dans l'interface. Et le sombre, lui, avait déjà l'aplat — les deux
+    /// thèmes ne montraient donc pas le même bouton, ce qui était un défaut en soi.
     private var resolvedFill: AnyShapeStyle {
-        // `RUColor.accentGradient` = le `--ru-gradient` de la maquette ; ce couple rose2 → rose
-        // était recopié à l'identique ici et dans `SelectableChip`. Direction verticale conservée
-        // (voir le commentaire du token) — rendu strictement identique à avant.
-        fill ?? (RUColor.isLight
-            ? AnyShapeStyle(RUColor.accentGradient(from: .top, to: .bottom))
-            : AnyShapeStyle(RUColor.rose))
+        fill ?? AnyShapeStyle(RUColor.rose)
     }
 
     func makeBody(configuration: Configuration) -> some View {
@@ -62,9 +60,11 @@ struct PrimaryButtonStyle: ButtonStyle {
 }
 
 extension PrimaryButtonStyle {
-    /// Violet→rose gradient variant used on the Paywall CTA.
+    /// La variante du bouton de l'abonnement : un aplat de violet, et plus un dégradé violet →
+    /// rose. Elle garde sa couleur à elle — c'est ce qui la distingue du bouton principal — mais
+    /// elle la pose à plat, comme tout le reste.
     static var violetRose: PrimaryButtonStyle {
-        PrimaryButtonStyle(fill: AnyShapeStyle(RUColor.violetRoseGradient))
+        PrimaryButtonStyle(fill: AnyShapeStyle(RUColor.violet))
     }
 }
 

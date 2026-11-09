@@ -23,13 +23,13 @@ struct OnboardingProgressBar: View {
 /// var(--ru-line); overflow: hidden }` + `.barfill { height: 100%; background: var(--ru-gradient);
 /// border-radius: 999px }`. Le fond `--ru-line` et la capsule correspondent déjà exactement.
 ///
-/// À noter pour les call sites : la maquette remplit TOUJOURS ses barres de progression avec
-/// `--ru-gradient` (= `RUColor.accentGradient()`), jamais d'un aplat uni — c'est aussi l'une des
-/// trois surfaces que la v28 garde volontairement pleines (« les jauges de progression (barfill,
-/// day-bars) […] sont des indicateurs fonctionnels, pas des surfaces décoratives »). Le paramètre
-/// `color` reste néanmoins requis et sans dégradé par défaut : `PhaseProgressBar` ci-dessous et
-/// `RingsView` passent des couleurs SÉMANTIQUES (une par phase, grise pour un jour de repos), que
-/// forcer en dégradé de marque effacerait.
+/// LE PARAMÈTRE `gradient` A DISPARU, ET AVEC LUI SES TROIS APPELANTS.
+///
+/// La maquette remplissait toujours ses jauges avec `--ru-gradient`, et trois écrans suivaient :
+/// le résumé hebdomadaire, la jauge d'XP du club, la jauge d'avancement du programme. Les autres
+/// passaient déjà une couleur SÉMANTIQUE — une par phase, grise pour un jour de repos — que le
+/// dégradé de marque aurait effacée. La règle 7 range tout le monde du même côté : une jauge est
+/// un indicateur, elle porte UNE couleur, et c'est l'appelant qui dit laquelle.
 struct LinearBar: View {
     var fraction: Double
     var color: Color
@@ -38,25 +38,19 @@ struct LinearBar: View {
     /// 6 est le pas mesuré vers cette valeur qui reste cohérent avec les quatre call sites qui
     /// passent déjà une hauteur explicite (5, 6 et 8) plutôt que de tous les contredire.
     var height: CGFloat = 6
-    var gradient: LinearGradient? = nil
 
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
                 Capsule().fill(background)
-                Group {
-                    if let gradient {
-                        Capsule().fill(gradient)
-                    } else {
-                        Capsule().fill(color)
-                    }
-                }
-                .frame(width: geo.size.width * max(0, min(fraction, 1)))
-                // `RingView` (the circular counterpart used for the same kind of goal/XP progress)
-                // animates its fill; this had none at all, so every screen using `LinearBar`
-                // instead — Club's XP bar, challenge progress, RingsView's goal rows, weekly stat
-                // tiles — snapped straight to the new value instead of filling in front of you.
-                .animation(.easeOut(duration: 0.8), value: fraction)
+                Capsule().fill(color)
+                    .frame(width: geo.size.width * max(0, min(fraction, 1)))
+                    // `RingView` (the circular counterpart used for the same kind of goal/XP
+                    // progress) animates its fill; this had none at all, so every screen using
+                    // `LinearBar` instead — Club's XP bar, challenge progress, RingsView's goal
+                    // rows, weekly stat tiles — snapped straight to the new value instead of
+                    // filling in front of you.
+                    .animation(.easeOut(duration: 0.8), value: fraction)
             }
         }
         .frame(height: height)

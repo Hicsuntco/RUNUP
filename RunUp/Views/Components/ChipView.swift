@@ -28,20 +28,16 @@ struct SelectableChip: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
             .frame(minHeight: 44)
-            // A flat solid fill read flat/dated — the same rose2→rose gradient the RUN button
-            // already uses gives selection real depth without introducing a new accent.
-            // `RUColor.accentGradient` = le `--ru-gradient` de la maquette, nommé plutôt que
-            // recopié une troisième fois. Direction verticale conservée : rendu identique à avant.
+            // UN APLAT D'ACCENT POUR LA PASTILLE SÉLECTIONNÉE.
             //
-            // Conservé tel quel après vérification : la maquette a trois traitements « on » pour
-            // ses sélecteurs et n'en désigne aucun comme LE bon — `.range-opt.on` est précisément
-            // ce dégradé plein + texte blanc, `.style-chip.on` un aplat d'encre, `.rpe-opt.on` une
-            // teinte pâle + contour accentué. Le nettoyage « moins de gros aplats roses » de la
-            // v28 ne visait que les pastilles de statut (`.follow-chip`, RSVP), pas les
-            // sélecteurs. Rien d'assez univoque pour changer.
+            // C'était un dégradé rose2 → rose, défendu par « un aplat se lit plat et daté ». La
+            // maquette elle-même proposait trois traitements « on » sans en désigner un : le
+            // dégradé, un aplat d'encre, une teinte pâle à contour accentué. Rien n'imposait le
+            // dégradé, et la règle 7 l'interdit. La sélection reste parfaitement lisible : c'est
+            // la seule pastille remplie de la rangée.
             .background(
                 selected
-                    ? AnyShapeStyle(RUColor.accentGradient(from: .top, to: .bottom))
+                    ? AnyShapeStyle(RUColor.rose)
                     : AnyShapeStyle(RUColor.card),
                 in: Capsule()
             )

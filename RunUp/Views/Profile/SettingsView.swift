@@ -294,7 +294,13 @@ struct SettingsView: View {
                     Button(action: { selectAccent(theme) }) {
                         ZStack {
                             Circle()
-                                .fill(LinearGradient(colors: [theme.primary, theme.tail], startPoint: .topLeading, endPoint: .bottomTrailing))
+                                // LA PASTILLE MONTRE LA COULEUR QU'ON CHOISIT, ET RIEN D'AUTRE.
+                                //
+                                // Elle portait un dégradé `primary → tail`, donc elle promettait
+                                // deux couleurs quand l'app n'en pose qu'une. Depuis que
+                                // l'interface est à plat, la promesse était en plus fausse : on
+                                // choisissait un dégradé et on recevait un aplat.
+                                .fill(theme.primary)
                                 .frame(width: 40, height: 40)
                             if profile.accentThemeID == theme.id {
                                 // Theme-aware — a white selection ring was invisible on the

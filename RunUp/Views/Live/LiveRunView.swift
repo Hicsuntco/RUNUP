@@ -713,16 +713,23 @@ struct LiveRunView: View {
         }
         .padding(.horizontal, 18)
         .padding(.top, 18)
-        // Le fond du panneau descend jusqu'au bord physique de l'écran — c'est son dégradé qui
-        // ferme l'image. Son CONTENU, lui, s'arrête au-dessus de la barre de geste : voir
-        // `ScreenEdges`. Le plancher à 16 garde la marge d'origine sur les modèles à bouton
-        // d'accueil, où l'encart vaut zéro.
+        // Le fond du panneau descend jusqu'au bord physique de l'écran. Son CONTENU, lui,
+        // s'arrête au-dessus de la barre de geste : voir `ScreenEdges`. Le plancher à 16 garde
+        // la marge d'origine sur les modèles à bouton d'accueil, où l'encart vaut zéro.
         .padding(.bottom, max(16, ScreenEdges.bottom + 8))
         .frame(maxWidth: .infinity)
-        .background(
-            LinearGradient(colors: [Ink.fond.opacity(0.6), Ink.fond], startPoint: .top, endPoint: .bottom)
-        )
-        .background(.ultraThinMaterial)
+        // UN PANNEAU EST UNE SURFACE, ET UNE SURFACE A UNE COULEUR.
+        //
+        // C'était un dégradé de `fond` à 60 % vers `fond`, posé sur du verre dépoli, « pour que
+        // le panneau émerge du contenu ». Ce que ça disait vraiment, c'est qu'il manquait un
+        // contraste entre le panneau et l'écran — et ce contraste a un nom depuis longtemps :
+        // `Ink.fond` est « le fond des surfaces de cet écran », `Ink.ecran` est le fond DERRIÈRE
+        // elles, un cran plus sombre. Le panneau prend donc sa propre couleur, et il se détache
+        // par ce qu'il est, pas par un fondu.
+        //
+        // Le verre dépoli part avec : il n'était visible qu'à travers les 60 % du haut du
+        // dégradé. Sous un aplat opaque, il ne rend plus rien du tout.
+        .background(Ink.fond)
         .clipShape(RoundedCornerShape(radius: 26, corners: [.topLeft, .topRight]))
         .overlay(RoundedCornerShape(radius: 26, corners: [.topLeft, .topRight]).stroke(Ink.line, lineWidth: RUSpacing.hairline))
     }

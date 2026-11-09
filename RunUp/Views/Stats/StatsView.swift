@@ -524,11 +524,12 @@ struct StatsView: View {
                         // frappe imprécise tombe sur le voisin plutôt que dans le vide, ce qui
                         // n'est pas vrai d'une pastille isolée. En dessous, il n'y a plus d'excuse.
                         .padding(.horizontal, 10).padding(.vertical, 10)
-                        // Same gradient fill as `SelectableChip` — a flat rose square inside this
-                        // pill read flat/dated next to it.
+                        // Même remplissage que `SelectableChip`, et c'est tout l'intérêt de le
+                        // dire ici : les deux portaient le même dégradé, les deux portent
+                        // maintenant le même aplat.
                         .background(
                             selectedRange == range
-                                ? AnyShapeStyle(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom))
+                                ? AnyShapeStyle(RUColor.rose)
                                 : AnyShapeStyle(Color.clear),
                             in: Capsule()
                         )

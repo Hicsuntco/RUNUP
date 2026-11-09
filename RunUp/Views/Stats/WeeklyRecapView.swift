@@ -238,7 +238,7 @@ struct WeeklyRecapView: View {
                         // rien dedans ». Aujourd'hui se marque sous l'axe, sur sa lettre.
                         .fill(
                             bars[i] > 0
-                                ? AnyShapeStyle(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom))
+                                ? AnyShapeStyle(RUColor.rose)
                                 : AnyShapeStyle(RUColor.card2)
                         )
                         // Bars grow up from the baseline day-by-day on appear — same "revealed,

@@ -180,7 +180,11 @@ struct RingsView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(18)
-                        .background(RadialGradient(colors: [RUColor.rose.opacity(0.2), .clear], center: .top, startRadius: 0, endRadius: 200), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+                        // C'était un halo radial d'accent. La félicitation se porte très bien
+                        // sans : elle a déjà son titre, son animation d'apparition et le fait
+                        // que les trois anneaux soient pleins. Un lavis d'accent à plat, le
+                        // même que les cartes héros, et la règle 7 est tenue.
+                        .background(RUColor.heroSurface, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
                         .scaleEffect(celebrationShown ? 1 : 0.85)
                         .opacity(celebrationShown ? 1 : 0)
                         .onAppear {

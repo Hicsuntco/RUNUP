@@ -188,11 +188,10 @@ struct ClubBoardSection: View {
                         // Même hauteur que le sélecteur de période des Stats, dont c'est l'idiome.
                         .padding(.horizontal, 10).padding(.vertical, 10)
                         .background(
-                            // Même dégradé d'accent que partout ailleurs, via le token partagé
-                            // (`--ru-gradient` de la maquette) plutôt qu'un couple recopié à la
-                            // main — c'est exactement ce que `RUColor.accentGradient` centralise.
+                            // Un aplat d'accent, comme toutes les pastilles sélectionnées de
+                            // l'app : c'était un dégradé, et la règle 7 l'interdit.
                             weeklyDisplayMode == mode
-                                ? AnyShapeStyle(RUColor.accentGradient(from: .top, to: .bottom))
+                                ? AnyShapeStyle(RUColor.rose)
                                 : AnyShapeStyle(Color.clear),
                             in: Capsule()
                         )

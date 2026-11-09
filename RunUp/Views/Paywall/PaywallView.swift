@@ -156,7 +156,7 @@ struct PaywallView: View {
         // d'état. `ignoresSafeArea` sur un enfant de `ScrollView` ne fait pas ce qu'on croit — la
         // vue est disposée dans l'espace du défilement — et la référence apportée fait exactement
         // ça : sa carte verte « Your Weekly Progress » est une carte arrondie en retrait.
-        .background(RUColor.accentGradient(from: .topLeading, to: .bottomTrailing),
+        .background(RUColor.rose,
                     in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
         .padding(.horizontal, RUSpacing.pagePadding)
         .padding(.top, onClose == nil ? 14 : 4)

@@ -236,7 +236,7 @@ struct ProfileView: View {
                     // du cercle : le diamètre visible reste exactement celui du cadre, sans
                     // déborder d'un demi-trait sur la mise en page ni sur le crayon d'édition.
                     .padding(4)
-                    .overlay(Circle().strokeBorder(RUColor.accentGradient(), lineWidth: 2))
+                    .overlay(Circle().strokeBorder(RUColor.rose, lineWidth: 2))
                 if isSavingAvatar {
                     ProgressView().tint(RUColor.textPrimary)
                 } else {
@@ -547,7 +547,7 @@ struct ProfileView: View {
         Button(action: { appState.go(.fil) }) {
             HStack(spacing: 12) {
                 ZStack {
-                    Circle().fill(RUColor.accentGradient())
+                    Circle().fill(RUColor.rose)
                     Image(systemName: "square.stack.3d.up.fill")
                         .font(RUFont.icone(.medium)).foregroundColor(.white)
                 }
@@ -593,7 +593,7 @@ struct ProfileView: View {
                         // leur teinte diluée dans le disque, à pleine intensité sur le symbole —
                         // le seul endroit de la tuile où la couleur est vraiment celle qu'on pose.
                         if degrade {
-                            Circle().fill(RUColor.accentGradient())
+                            Circle().fill(RUColor.rose)
                         } else {
                             Circle().fill(teinte.opacity(0.16))
                         }

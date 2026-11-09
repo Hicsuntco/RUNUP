@@ -274,6 +274,22 @@ jobs:
           cd ci_scripts && python3 test_spec.py
           cd .. && python3 ci_scripts/check_spec.py
 
+      # LA RÈGLE 7 : AUCUN DÉGRADÉ DANS L'INTERFACE.
+      #
+      # Vingt-quatre fichiers en portaient un, et personne n'avait mal travaillé : UN jeton du
+      # système de design le distribuait (`accentGradient`, `violetRoseGradient`), et les écrans
+      # l'appelaient comme il faut. C'est la raison pour laquelle le brief dit « le design system
+      # d'abord » — corriger les écrans sans corriger le jeton aurait tenu une semaine.
+      #
+      # Le contrôle compte les dégradés PAR FICHIER, contre une liste d'exceptions qui porte
+      # chacune sa raison écrite : la marque, une image produite (carte de partage, avatar), un
+      # voile qui rend un texte lisible sur un tracé, et l'anneau dont chaque arc vire vers la
+      # couleur de son voisin. Un de plus ou un de moins, et il parle.
+      - name: Vérifier qu'aucun dégradé décoratif n'est revenu
+        run: |
+          cd ci_scripts && python3 test_degrade.py
+          cd .. && python3 ci_scripts/check_degrade.py
+
       # Une clé absente du catalogue ne casse rien : `String(localized:)` rend la clé, et le texte
       # sort EN FRANÇAIS chez tout le monde. Ça ne se voit qu'en lançant l'app dans une autre
       # langue, sur l'écran concerné — autant dire jamais. L'audit en a trouvé cinq d'un coup,

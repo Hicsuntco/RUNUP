@@ -228,7 +228,7 @@ struct RaceGoalView: View {
                         }
                     }
                     if let total = shape.totalWeeks {
-                        LinearBar(fraction: min(1, Double(profile.weekNumber) / Double(total)), color: RUColor.rose, height: 8, gradient: LinearGradient(colors: [RUColor.rose, RUColor.lime], startPoint: .leading, endPoint: .trailing))
+                        LinearBar(fraction: min(1, Double(profile.weekNumber) / Double(total)), color: RUColor.rose, height: 8)
                         HStack {
                             phaseLabel(String(localized: "Base"), state: phaseState(endWeek: shape.baseWeeks))
                             Spacer()

@@ -127,12 +127,13 @@ enum RUColor {
     /// et 13 % — leurs valeurs de l'époque — et `card2` se réenfonce à `#EFEEF6`. Sur une page
     /// blanche, la profondeur est portée par le filet et la sous-surface, pas par le fond.
     ///
-    /// `pageBackground` reste un dégradé du point de vue du TYPE, avec deux arrêts identiques des
-    /// deux côtés : les 27 écrans qui l'utilisent à leur racine n'ont pas à savoir dans quel thème
-    /// ils se trouvent, et repasser à un dégradé un jour ne touchera pas un seul appel.
-    static var pageBackground: LinearGradient {
-        LinearGradient(colors: [bg, bg], startPoint: .top, endPoint: .bottom)
-    }
+    /// `pageBackground` ÉTAIT un `LinearGradient` à deux arrêts identiques, « pour pouvoir
+    /// repasser à un dégradé un jour sans toucher un seul appel ». On ne repassera pas : la règle
+    /// 7 interdit le dégradé dans l'interface, et un type qui annonce un dégradé là où il n'y en a
+    /// pas est une porte laissée ouverte sur trente-neuf écrans. C'est une couleur, et le type le
+    /// dit. Les appels ne changent pas : `Color` est un `ShapeStyle` et une `View`, comme
+    /// `LinearGradient`.
+    static var pageBackground: Color { bg }
     /// Un cran plus ENFONCÉ que `bg` en clair, un cran plus haut en sombre — dans les deux cas
     /// « la rainure dans laquelle une pastille `card` vient se poser » (rail des sélecteurs
     /// segmentés). C'est la relation qui compte, pas la direction.
@@ -320,50 +321,46 @@ enum RUColor {
         )
     }
 
-    /// L'équivalent du `--ru-gradient` de la maquette (`linear-gradient(135deg, rose2, rose)`) —
-    /// le dégradé d'accent « une seule famille », à ne pas confondre avec `brandGradient`
-    /// (rose → violet, deux familles).
-    ///
-    /// Ce couple `[rose2, rose]` était déjà recopié à l'identique dans `PrimaryButtonStyle` et
-    /// `SelectableChip` ; il est nommé ici pour que les deux ne puissent plus diverger. Les points
-    /// de départ/arrivée restent paramétrables parce que la maquette elle-même n'a pas une seule
-    /// direction : 135° (diagonale) sur les surfaces à peu près carrées, et le CTA plein largeur
-    /// garde volontairement sa version verticale (une diagonale sur un bouton large et bas se lit
-    /// comme un dégradé horizontal, pas comme la diagonale voulue).
-    static func accentGradient(from start: UnitPoint = .topLeading, to end: UnitPoint = .bottomTrailing) -> LinearGradient {
-        LinearGradient(colors: [rose2, rose], startPoint: start, endPoint: end)
-    }
+    // `accentGradient` (rose2 → rose) et `violetRoseGradient` (violet → rose) VIVAIENT ICI, et
+    // c'est de là qu'ils se répandaient : bouton principal, pastilles, barres de progression,
+    // avatar du profil, tableau du club, paywall, bouton RUN de la barre d'onglets. Ils sont
+    // partis. La règle 7 dit « aucun dégradé dans l'interface », et la direction artistique
+    // réserve le rose → violet à l'icône, au splash et au logo — c'est-à-dire à `brandGradient`
+    // ci-dessous, et à lui seul.
+    //
+    // Ce n'étaient pas vingt-quatre décisions d'écran : c'était UN jeton, recopié vingt-quatre
+    // fois par des gens qui faisaient bien leur travail en appelant le système de design. C'est
+    // la raison pour laquelle le brief dit « le design system d'abord ».
+    //
+    // Ce qui reste permis, et pourquoi, est écrit une fois pour toutes dans
+    // `ci_scripts/check_degrade.py`, qui refuse tout dégradé hors de sa liste.
 
+    /// LE SEUL DÉGRADÉ DE L'INTERFACE, et il ne peint que la marque.
+    ///
+    /// `AppMarkView` l'emploie pour le logo, qui est aussi ce que montrent l'icône et l'écran de
+    /// lancement. La direction artistique le nomme explicitement, et seulement là.
     static var brandGradient: LinearGradient {
         LinearGradient(colors: [rose, violet], startPoint: .topLeading, endPoint: .bottomTrailing)
     }
 
-    static var heroGradient: LinearGradient {
-        // Light mode used to wash hero cards in pale pink — soft, but it's part of what read as
-        // "gamified fitness app" rather than the neutral, premium register the light theme is
-        // meant to carry now. A barely-there cool-gray wash instead, dark mode's own pink-black
-        // tint (its energetic register is a deliberate, separate choice) is untouched.
-        // Le dégradé clair descendait vers `bg`. Tant que `bg` était blanc, il rendait une carte
-        // à peine grisée sur du blanc ; depuis que le fond de page est gris et les cartes
-        // blanches, il aurait fini exactement de la couleur de la page — une carte hero
-        // parfaitement invisible. En clair il descend donc vers `card`, la surface à laquelle
-        // elle appartient. Le sombre garde son ancrage sur `bg` : c'est là que sa teinte
-        // rose-noir doit se fondre.
-        LinearGradient(
-            // `#FBF8FB` était à 1,5 % du blanc : une carte annoncée « teintée rose » qui ne
-            // l'était pas, et qui ne l'aurait de toute façon pas été pour les sept autres
-            // palettes d'accent, ce gris étant écrit en dur. Un vrai lavis, dérivé de l'accent
-            // courant, donc juste quelle que soit la couleur choisie dans Profil → Apparence.
-            // LA BRANCHE SOMBRE AVAIT LE DÉFAUT QUE LA BRANCHE CLAIRE VENAIT DE CORRIGER. Le
-            // commentaire ci-dessus dit qu'un gris écrit en dur ne conviendrait pas aux sept
-            // autres palettes — et `#20101C` est un prune fixe, qui lave de rose-violet les onze
-            // cartes héros d'une utilisatrice en Lime ou en Cyan, avec une couleur qui n'existe
-            // nulle part ailleurs dans son app. Le thème sombre étant le défaut, c'était le cas
-            // le plus vu. Dérivé de l'accent comme l'autre, sur le fond de page.
-            colors: [isLight ? tint(rose, 0.12, over: card) : tint(rose, 0.10, over: bg), isLight ? card : bg],
-            startPoint: .top,
-            endPoint: .bottom
-        )
+    /// LA SURFACE D'UNE CARTE HÉROS — un aplat, et plus un lavis.
+    ///
+    /// C'était un dégradé qui descendait d'un lavis d'accent à 12 % vers la couleur de la carte.
+    /// Sa raison d'être n'a jamais été le dégradé lui-même, mais le fait qu'une carte héros se
+    /// distingue des autres : un aplat le fait aussi bien, et la règle 7 tranche le reste.
+    ///
+    /// 6 % et non 12 % : le lavis descendait LINÉAIREMENT de 12 % à 0, donc sa moyenne sur la
+    /// hauteur de la carte valait 6 %. Reprendre 12 % aurait doublé le poids perçu de onze cartes
+    /// d'un coup. Même raisonnement en sombre, où le lavis partait de 10 %.
+    ///
+    /// Le lavis est DÉRIVÉ de l'accent courant, pas écrit en dur : avec huit palettes au choix
+    /// (décision du 9 novembre, les huit restent), un gris ou un prune fixe serait faux pour sept
+    /// personnes sur huit. Les deux branches sont tombées dans ce piège, à des moments différents.
+    ///
+    /// En clair il se pose sur `card`, la surface à laquelle la carte appartient ; en sombre sur
+    /// `bg`, où sa teinte doit se fondre.
+    static var heroSurface: Color {
+        isLight ? tint(rose, 0.06, over: card) : tint(rose, 0.05, over: bg)
     }
 
     /// LE FOND SUR LEQUEL UN TRACÉ SE DESSINE, dans les DEUX thèmes.
@@ -376,14 +373,11 @@ enum RUColor {
     /// sur du blanc, il faudrait l'assombrir, donc changer ses couleurs selon le thème — et
     /// l'app aurait deux tracés au lieu d'un. Une photo, elle non plus, ne s'éclaircit pas
     /// parce que la page est claire.
-    static var traceBackground: LinearGradient {
-        LinearGradient(colors: [Color(hex: 0x1A1926), Color(hex: 0x0E0D16)],
-                       startPoint: .topLeading, endPoint: .bottomTrailing)
-    }
-
-    static var violetRoseGradient: LinearGradient {
-        LinearGradient(colors: [violet, rose], startPoint: .leading, endPoint: .trailing)
-    }
+    ///
+    /// C'était un dégradé diagonal de `#1A1926` à `#0E0D16` — une vignette, c'est-à-dire de la
+    /// décoration, et la règle 7 l'interdit. `#14131E` est le milieu exact des deux : la nuit sur
+    /// laquelle le tracé se lit est la même, elle n'est simplement plus dégradée.
+    static var traceBackground: Color { Color(hex: 0x14131E) }
 }
 
 /// La palette des familles de séance : une couleur par famille, la même partout.

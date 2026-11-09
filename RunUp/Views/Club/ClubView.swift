@@ -618,7 +618,10 @@ struct ClubView: View {
             Text("\(info.level)").displayStyle(.title).foregroundColor(.white)
                 .contentTransition(.numericText())
                 .frame(width: 52, height: 52)
-                .background(LinearGradient(colors: [RUColor.violet, RUColor.rose], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+                // La pastille du niveau portait un dégradé violet → rose écrit à la main, le
+                // même couple que la jauge d'XP juste en dessous. Les deux sont à plat : le
+                // niveau sur du violet, sa jauge sur du violet. Règle 7.
+                .background(RUColor.violet, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
             VStack(alignment: .leading, spacing: 8) {
                 // « TON NIVEAU », écrit. Sur une page qui parle du club du début à la fin, un
                 // « Niveau 17 » sans sujet se lit comme le niveau DU CLUB — ce qu'il n'est pas :
@@ -645,7 +648,7 @@ struct ClubView: View {
                 Text("Niveau \(info.level) · \(info.title)")
                     .font(RUFont.sans(.title, weight: .bold)).foregroundColor(RUColor.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
-                LinearBar(fraction: Double(info.xpIntoLevel) / Double(info.xpForLevel), color: RUColor.violet, gradient: RUColor.violetRoseGradient)
+                LinearBar(fraction: Double(info.xpIntoLevel) / Double(info.xpForLevel), color: RUColor.violet)
             }
         }
         .animation(.easeOut(duration: 0.4), value: info.level)

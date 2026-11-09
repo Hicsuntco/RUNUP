@@ -52,7 +52,7 @@ struct WeekKmSummary: View {
                 }
             }
             if plannedKm > 0 {
-                LinearBar(fraction: fraction, color: RUColor.rose, gradient: RUColor.accentGradient())
+                LinearBar(fraction: fraction, color: RUColor.rose)
             }
             if let footnote {
                 Text(footnote)

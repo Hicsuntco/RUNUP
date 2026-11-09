@@ -9,10 +9,12 @@ struct OnboardingContainerView: View {
 
     var body: some View {
         ZStack {
-            RadialGradient(colors: [RUColor.rose.opacity(vm.showWelcome ? 0.22 : 0.16), .clear], center: .top, startRadius: 0, endRadius: 420)
-            // NOTE : ce fond est posé APRÈS le halo, donc au-DESSUS de lui dans un ZStack — il le
-            // masque entièrement. C'est antérieur à ce changement et laissé tel quel : inverser
-            // l'ordre modifierait l'aspect de l'accueil d'onboarding, ce qui n'est pas l'objet ici.
+            // LE HALO ROSE EST PARTI, ET IL NE SERVAIT DÉJÀ À RIEN.
+            //
+            // Un dégradé radial d'accent était posé ici, puis `pageBackground` par-dessus dans
+            // le même ZStack — donc il le masquait ENTIÈREMENT. Il était noté, et laissé, parce
+            // qu'inverser l'ordre aurait changé l'aspect de l'écran. La règle 7 tranche la
+            // question dans l'autre sens : il n'y a plus de halo à remettre à l'endroit.
             RUColor.pageBackground
 
             if vm.showWelcome {

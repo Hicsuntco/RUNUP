@@ -248,7 +248,9 @@ struct TabBarView: View {
     private func pileDuBouton(avecLibelle: Bool) -> some View {
         VStack(spacing: Self.ecartDuBouton) {
             Circle()
-                .fill(LinearGradient(colors: [RUColor.rose2, RUColor.rose], startPoint: .top, endPoint: .bottom))
+                // LE BOUTON RUN, À PLAT. C'était le dégradé le plus vu de l'app : il est au
+                // centre de la barre, sur tous les écrans, en permanence. Règle 7.
+                .fill(RUColor.rose)
                 .frame(width: Self.diametreDuRond, height: Self.diametreDuRond)
                 // Le triangle reste, quelle que soit la discipline : il dit « ça démarre »,
                 // et c'est la seule chose que ce rond ait jamais eu à dire. C'est le libellé

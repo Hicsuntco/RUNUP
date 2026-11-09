@@ -17,6 +17,10 @@ n'apparaît, l'avant/après est écrit ici, et les trois langues ont été véri
 | `privacy.html` et `support.html` portés sur `main`, donc publiés : la politique dit maintenant ce que l'app collecte | Charlotte | 8 novembre 2026 |
 | Fiche App Privacy d'App Store Connect corrigée et publiée : cinq types ajoutés, cinq passés de « non lié » à « lié », Product Interaction remis sur Analytics, Other Usage Data retiré | Charlotte | 9 novembre 2026 |
 | Une carte de premiers jalons sur l'accueil, et des clubs proposés quand le champ de recherche est vide | Charlotte | 9 novembre 2026 |
+| **D1 — les huit thèmes d'accent restent.** Le brief demandait une seule couleur d'accent ; l'app en propose huit au choix, et elles restent. Tout jeton dérivé doit donc être juste pour les huit, jamais écrit en dur. | Charlotte | 9 novembre 2026 |
+| **D2 — fond clair par défaut, pas forcément chaud.** Le thème sombre était le défaut. Le `#FBF9F7` chaud du brief n'est pas imposé : le fond froid actuel peut rester. | Charlotte | 9 novembre 2026 |
+| **D3 — la barre basse garde ses cinq entrées.** Le brief en demandait trois. | Charlotte | 9 novembre 2026 |
+| **D4 — l'inscription reste longue, et vise le plan le plus sur mesure possible.** Le brief demandait trois questions ; la consigne est « fais au mieux pour quelque chose d'ultra sur mesure pour le plan ». La longueur du parcours n'est donc plus un défaut : sa qualité est le critère. | Charlotte | 9 novembre 2026 |
 
 ## Ce qui attend une décision
 
@@ -400,6 +404,92 @@ parisien, et c'est une décision, pas un oubli.
 Et les deux titres de séance sont désormais nommés **une seule fois** : ils paraissent aux
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
+
+## Chantier 19 — le dégradé sort de l'interface
+
+Premier chantier de la phase 3, et c'est le système de design — le brief l'impose, et la mesure
+dit pourquoi il avait raison.
+
+### Ce qui était faux
+
+Vingt-quatre fichiers portaient un dégradé. **Personne n'avait mal travaillé** : `AccentTheme`
+donne à chaque palette une couleur de queue (`tail`), et `RUColor` exposait `accentGradient`
+(rose2 → rose), `violetRoseGradient` (violet → rose), `heroGradient` et `traceBackground`. Les
+écrans appelaient le système de design, exactement comme il faut. **C'est le système qui
+distribuait le dégradé.**
+
+Corriger les écrans sans corriger les jetons aurait tenu une semaine.
+
+### Ce qui a changé
+
+| | Avant | Après |
+| --- | --- | --- |
+| `accentGradient` (rose2 → rose) | 7 appels : bouton principal, pastilles, sélecteurs, avatar, carte du fil, paywall | supprimé — `RUColor.rose`, un aplat |
+| `violetRoseGradient` | pastille de niveau et jauge d'XP du club, bouton de l'abonnement | supprimé — `RUColor.violet` |
+| `heroGradient` | lavis d'accent à 12 % descendant vers la carte, 11 cartes héros | `heroSurface`, un aplat à **6 %** — la moyenne du lavis qu'il remplace |
+| `traceBackground` | vignette `#1A1926` → `#0E0D16` sous chaque tracé GPS | `#14131E`, le milieu exact des deux |
+| `pageBackground` | un `LinearGradient` à deux arrêts identiques, « pour pouvoir y revenir un jour » | une `Color` — on n'y reviendra pas |
+| Bouton RUN de la barre | dégradé rose2 → rose, au centre de tous les écrans | aplat d'accent |
+| Bouton principal | dégradé en clair, aplat en sombre — **les deux thèmes ne montraient pas le même bouton** | aplat dans les deux |
+| Nuancier de Profil → Apparence | pastilles `primary → tail` : on choisissait un dégradé et on recevait un aplat | la couleur qu'on choisit, et rien d'autre |
+| Halo rose de l'onboarding | posé SOUS `pageBackground` dans le même `ZStack`, donc entièrement masqué — c'était noté, et laissé | parti |
+| Panneau de commandes de la séance | dégradé `fond` 60 % → `fond` sur du verre dépoli | `Ink.fond`, la couleur que le jeu de jetons avait déjà pour ça |
+| La montre | bouton de départ, anneau pointillé et deux anneaux de progression en rose → violet | aplat d'accent |
+| `LinearBar.gradient` | un paramètre, trois appelants | supprimé |
+
+**Le panneau de la séance est le seul endroit où je m'étais trompé en classant.** Je l'avais rangé
+dans « voile de lisibilité », sans regarder. C'est le fond d'un panneau, et `Ink.fond` existait
+depuis longtemps pour ça — « le fond des surfaces de cet écran », un cran au-dessus de `Ink.ecran`.
+Le verre dépoli part avec : il n'était visible qu'à travers les 60 % du haut du dégradé.
+
+### Ce qui reste, et pourquoi
+
+Treize dégradés dans dix fichiers, chacun avec sa raison écrite dans `check_degrade.py`. La règle
+appliquée n'est pas « aucun dégradé » mais celle-ci :
+
+> Un dégradé est interdit comme **décoration** d'un écran. Il reste permis quand il **porte une
+> information**, quand il **rend lisible**, ou quand il appartient à une **image produite**.
+
+- **La marque** : `brandGradient`, l'icône, le splash et le logo. C'est ce que la DA autorise.
+- **Une image produite** : les cartes de partage, les images de vidéo, l'avatar fabriqué pour
+  quelqu'un qui n'a pas mis de photo.
+- **Un voile qui sert à lire** : le noir sous le texte posé sur un tracé GPS, le fondu en bas du
+  défilement du récap.
+- **La couleur qui porte une information** : l'anneau des objectifs du jour, dont chaque arc vire
+  vers la couleur de son **voisin** pour que les deux se rejoignent dans la même teinte et que
+  l'anneau se lise comme un seul ruban ; et l'aire sous une courbe, qui s'efface vers le bas parce
+  que c'est la convention de lecture d'un graphe.
+
+### Ce qui le garde
+
+`ci_scripts/check_degrade.py` compte les dégradés **par fichier**, contre une liste d'exceptions
+qui porte chacune sa raison. Un de plus, un de moins, ou un fichier qui n'en porte plus aucun mais
+reste dans la liste : il parle dans les trois cas. Sur le dépôt d'avant il sort **13 plaintes** ;
+sur celui d'après, zéro.
+
+`test_degrade.py`, 16 cas. Cinq disent qu'un dégradé **nommé dans un commentaire** ne compte pas —
+sans eux, le garde-fou refuserait un fichier pour la phrase qui raconte sa correction, et la
+moitié des fichiers de ce chantier en portent une. Un cas a trouvé une exception dont la raison
+tenait en une ligne : c'était le panneau de la séance, mal classé.
+
+Et l'expression de recherche avait une faute, trouvée en écrivant ses cas : une anti-recherche
+arrière excluait `Color.rose.gradient`, c'est-à-dire exactement le raccourci qu'elle devait voir.
+
+### Ce que ça invalide, et qui n'est pas encore refait
+
+**Toutes les captures de l'App Store.** `check_requis.py` l'a dit tout seul dès que le code a
+changé — « le code a changé : fa665226059b → 3dd86db7a0dc » sur les trois images de montre. Les six
+captures iPhone montrent le même dégradé sur le bouton RUN, les pastilles et les boutons.
+
+Ce chantier n'est donc **pas terminé** tant que les deux chaînes n'ont pas rephotographié l'app et
+que les images ne sont pas versées. C'est la seule raison pour laquelle `tout.sh` n'est pas vert
+à ce commit, et c'est un garde-fou qui fait son travail, pas un défaut.
+
+### Ce qui n'est PAS fait, et qui était dans le même item de la phase 2
+
+**Le verre dépoli.** Six fichiers portent encore un `Material`, dont la barre d'onglets
+(`.ultraThinMaterial`). La règle 7 l'interdit aussi. C'est le chantier suivant : celui-ci traitait
+le dégradé, et un chantier à la fois.
 
 ## Chantier 18 — la montre et le widget parlaient français à tout le monde
 

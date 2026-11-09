@@ -17,7 +17,14 @@ private enum WTheme {
     static let text2 = Color.white.opacity(0.62)
     static let text3 = Color.white.opacity(0.38)
 
-    static let roseVioletGradient = LinearGradient(colors: [rose, violet], startPoint: .topLeading, endPoint: .bottomTrailing)
+    // `roseVioletGradient` VIVAIT ICI, et il peignait le bouton de départ, l'anneau pointillé
+    // qui l'entoure, et les deux anneaux de progression. C'était le dégradé le plus visible du
+    // produit : le seul objet de l'écran de poignet.
+    //
+    // Son propre code disait déjà qu'il aurait dû partir — « matches the flat, no-gradient
+    // scoreboard treatment the widgets and Live Activity moved to » — et la montre ne l'avait
+    // pas suivi. Règle 7 : aucun dégradé dans l'interface, et le rose → violet n'appartient qu'à
+    // l'icône, au splash et au logo.
 
     /// Passe par `DisplayFont` (RunUp/Shared) : même police et même facteur de taille que
     /// l'app et le widget, décidés à un seul endroit.
@@ -71,7 +78,7 @@ struct WatchStartView: View {
 
                 ZStack {
                     Circle()
-                        .strokeBorder(WTheme.roseVioletGradient, style: StrokeStyle(lineWidth: 2, dash: [4, 5]))
+                        .strokeBorder(WTheme.rose, style: StrokeStyle(lineWidth: 2, dash: [4, 5]))
                         .opacity(0.55)
                         .frame(width: 118, height: 118)
 
@@ -84,7 +91,7 @@ struct WatchStartView: View {
                             }
                         }
                         .frame(width: 92, height: 92)
-                        .background(WTheme.roseVioletGradient, in: Circle())
+                        .background(WTheme.rose, in: Circle())
                     }
                     .buttonStyle(.plain)
                     .disabled(workout.state == .starting)
@@ -208,7 +215,7 @@ struct WatchRunView: View {
                         ZStack(alignment: .leading) {
                             Capsule().fill(Color.white.opacity(0.12))
                             Capsule()
-                                .fill(workout.state == .paused ? AnyShapeStyle(Color.white.opacity(0.3)) : AnyShapeStyle(WTheme.roseVioletGradient))
+                                .fill(workout.state == .paused ? AnyShapeStyle(Color.white.opacity(0.3)) : AnyShapeStyle(WTheme.rose))
                                 .frame(width: geo.size.width * fraction)
                         }
                     }
@@ -304,7 +311,7 @@ struct WatchSummaryView: View {
 
                 ZStack {
                     Circle()
-                        .stroke(WTheme.roseVioletGradient, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                        .stroke(WTheme.rose, style: StrokeStyle(lineWidth: 4, lineCap: .round))
 
                     VStack(spacing: 0) {
                         Text(distanceLabel)

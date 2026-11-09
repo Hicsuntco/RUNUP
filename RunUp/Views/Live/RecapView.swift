@@ -178,7 +178,7 @@ struct RecapView: View {
                                     shareImage
                                         .resizable()
                                         .scaledToFit()
-                                        .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+                                        .background(RUColor.heroSurface, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
                                         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                                 } else if shareRenderFailed {
                                     // `ImageRenderer.uiImage` can come back nil under memory
@@ -198,7 +198,7 @@ struct RecapView: View {
                                     ProgressView().tint(RUColor.text2)
                                         .frame(width: Self.sharePreviewHeight * Self.shareCardAspect)
                                         .frame(maxHeight: .infinity)
-                                        .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+                                        .background(RUColor.heroSurface, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
                                 }
                             }
                             // 300 et non 230 : à 129 points de large la carte n'était pas
@@ -352,7 +352,7 @@ struct RecapView: View {
             Spacer(minLength: 0)
         }
         .padding(RUSpacing.cardPadding)
-        .background(RUColor.heroGradient, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+        .background(RUColor.heroSurface, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
 
@@ -382,7 +382,10 @@ struct RecapView: View {
 
     private func heroHeader(_ run: RunRecord) -> some View {
         ZStack(alignment: .bottomLeading) {
-            LinearGradient(colors: [RUColor.bg2, RUColor.bg], startPoint: .top, endPoint: .bottom)
+            // Le fond du bandeau de tête, derrière le tracé. C'était un dégradé `bg2 → bg` :
+            // de la décoration sous une carte, donc interdit par la règle 7. `bg2` seul tient
+            // le même rôle — un cran de séparation avec la page.
+            RUColor.bg2
             if !run.route.isEmpty {
                 RunRouteMapView(route: run.route)
                     .opacity(0.85)

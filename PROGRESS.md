@@ -15,16 +15,18 @@ n'apparaît, l'avant/après est écrit ici, et les trois langues ont été véri
 | « ABONNÉ » → le libellé dit l'action (« SE DÉSABONNER ») | Charlotte | 7 novembre 2026 |
 | « RETIRER » → une confirmation, pas un poids visuel différent | Charlotte | 7 novembre 2026 |
 | `privacy.html` et `support.html` portés sur `main`, donc publiés : la politique dit maintenant ce que l'app collecte | Charlotte | 8 novembre 2026 |
+| Fiche App Privacy d'App Store Connect corrigée et publiée : cinq types ajoutés, cinq passés de « non lié » à « lié », Product Interaction remis sur Analytics, Other Usage Data retiré | Charlotte | 9 novembre 2026 |
+| Une carte de premiers jalons sur l'accueil, et des clubs proposés quand le champ de recherche est vide | Charlotte | 9 novembre 2026 |
 
 ## Ce qui attend une décision
 
 | Question | Pourquoi ça bloque |
 | --- | --- |
 | Contenu des séances HYROX | Il faut quelqu'un qui a couru un HYROX. L'équipe n'a pas cette compétence et ne doit pas l'inventer. |
+| Que faire des neuf commits de `claude/running-club-finance-wwuq46` | Mesurés le 9 novembre : ni sur `main` ni sur la branche de travail. Deux idées en ont été reprises (chantiers 16 et 17). Restent une direction artistique concurrente — **Oswald** en fonte d'affichage, quand la branche de travail a tranché pour Inter — et des retouches de profil dont l'équivalent existe. Rien ne presse ; la branche ne se supprime pas tant que ce n'est pas tranché. |
+| Que faire de `ef3ad89`, sur `claude/new-session-otcd8z` | « La lecture des agrégats rentre dans `api/events.js` : douze fonctions, pas treize ». Quelqu'un s'est battu contre le même plafond Vercel, sur une autre branche, pour une autre fonctionnalité. Le code n'est nulle part ailleurs. |
+| `main` et la branche de travail n'ont en commun que le commit initial | 853 commits d'un côté, 50 de l'autre, aucune fusion depuis le 13 juillet. Ça n'empêche rien, sauf pour `privacy.html` et `support.html` : les deux pages qu'Apple affiche sont servies par GitHub Pages **depuis `main`**, donc mises à jour à la main. |
 | Cette branche doit-elle rester la production ? | Elle l'est, confirmé dans les réglages Vercel le 7 novembre : `Settings → Environments → Production → Branch Tracking` porte `claude/runup-ios-swiftui-app-5b1yv6`. Donc aucune relecture, aucune préproduction. Les aperçus, eux, sont maintenant éprouvables — voir le chantier 11. |
-| Corriger la fiche de confidentialité d'App Store Connect | **CINQ types manquent et TROIS réponses « lié » sont fausses.** Relevé sur la fiche elle-même le 8 novembre : dix types déclarés contre quatorze au manifeste. Manquent Coarse Location, Photos or Videos, Device ID, Crash Data, Performance Data. Et User Content, Health & Fitness, Location sont déclarés « non liés » alors que le manifeste les déclare liés — depuis le 8 octobre au moins, donc la 3.3 est partie ainsi : la fiche déclare MOINS que ce que l'app fait. Le détail et les gestes exacts sont dans `APP_STORE_LISTING.md` § Confidentialité. À la main : l'API d'Apple ne sait pas écrire cette fiche (spécification OpenAPI v4.6, 1 027 chemins, aucun pour la confidentialité). |
-| Supprimer la branche `essai/jose6` | Vérifié sans risque : elle porte les quatre commits de la bissection `jose`, et leur conclusion est appliquée sur la branche de travail (`import('jose')` paresseux dans `lib/auth.js`, mêmes versions). Mon environnement refuse les suppressions de branche ; point de restauration si besoin : `0f3220b74128a5ad2af7396fb8699ef2f4d864ee`. |
-| Réactiver `Require Log In` sur Vercel | Hors de ma portée : aucun jeton Vercel ici, et il ne doit pas en passer par la conversation. |
 
 
 ## Au passage
@@ -398,6 +400,117 @@ parisien, et c'est une décision, pas un oubli.
 Et les deux titres de séance sont désormais nommés **une seule fois** : ils paraissent aux
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
+
+## Chantier 17 — rejoindre un club sans en connaître un seul
+
+### Ce qui était faux
+
+La carte « Rejoindre un club » demandait un code à six lettres. Le code a été retiré, avec cette
+raison écrite dans `db/schema.sql` :
+
+> « Un code suppose qu'on l'ait reçu de quelqu'un, donc qu'on sache déjà que le club existe —
+> c'est-à-dire tout ce qu'une recherche rend inutile. »
+
+Le raisonnement était juste et il n'a pas été poussé jusqu'au bout. La recherche qui l'a remplacé
+exige **deux caractères du nom**, et le serveur refuse en dessous (`handleSearchClubs` rend une
+liste vide pour `q.length < 2`). Elle suppose donc elle aussi qu'on sache déjà qu'un club existe
+et comment il s'appelle. Quelqu'un qui ouvre cette carte sans connaître un seul nom voyait un
+champ vide et rien d'autre : la même porte fermée, deux crans plus loin.
+
+### Ce qui a changé
+
+Champ vide, cinq clubs ouverts. **Pas un annuaire** : une liste qu'on fait défiler demande de
+choisir, cinq lignes demandent d'en essayer une.
+
+L'ordre les choisit pour qu'on arrive dans un club **vivant** plutôt que dans le plus gros — une
+séance à venir d'abord, puis un mur qui a parlé dans les quatorze derniers jours, puis le nombre
+de membres. Quatorze jours et pas sept : sept ferait disparaître la mention pendant les vacances
+scolaires, c'est-à-dire au moment où quelqu'un cherche justement avec qui courir.
+
+Et chaque ligne porte **sa raison** — « Une séance prévue », « Actif ces jours-ci ». C'est la
+règle déjà écrite pour les suggestions de personnes : une liste de noms sans explication
+ressemble à un annuaire, et on ne suit pas un annuaire. Une séance à venir passe devant un mur
+actif, parce que l'une dit où se présenter samedi et l'autre seulement que le club n'est pas
+mort.
+
+### Ce qui a été refusé
+
+**Classer par proximité.** C'était la version la plus utile, et elle demandait d'envoyer la ville
+ou les coordonnées de quelqu'un pour obtenir une liste de suggestions : une collecte de plus, à
+déclarer au manifeste, dans la politique et chez Apple — le jour même où la fiche App Privacy
+venait d'être remise d'équerre. Pour cinq lignes, non.
+
+### Ce qui le garde
+
+`lib/clubsSuggeres.js` porte ce qui se calcule sans base de données, donc ce qui s'éprouve sans
+elle — même découpage que `lib/recherche.js` et `lib/pannes.js`, et `lib/` ne compte pas dans les
+douze fonctions Vercel. Neuf cas, dont les deux qui comptent :
+
+  · **une date illisible ne rend pas « actif » par accident.** `new Date('n'importe quoi')` rend
+    NaN, et NaN comparé à quoi que ce soit rend `false` — mais la comparaison écrite dans l'autre
+    sens aurait rendu `true` ;
+  · **un message daté dans le futur non plus.** Une horloge en avance, et « il y a -3 jours » est
+    bien inférieur à quatorze jours.
+
+Côté Swift, les deux booléens sont **optionnels**, parce que `api/clubs/search` ne les renvoie
+pas. Un `Bool` non optionnel ferait échouer le décodage de toute la recherche le jour où les deux
+routes cesseraient d'être d'accord — et une recherche qui ne rend rien ressemble exactement à
+« aucun club ne porte ce nom ».
+
+La **même vue de ligne** sert aux deux listes. Deux vues presque identiques auraient dérivé à la
+première retouche, et l'écart se serait lu comme une différence de nature entre un club trouvé et
+un club proposé. Il n'y en a pas.
+
+### Une erreur de ma part, en chemin
+
+J'ai annoncé à Charlotte que « parcourir les clubs, ça n'existe pas » après avoir regardé
+`api/clubs/public` — qui sert **une** page de club ouverte depuis un lien profond. La recherche
+existait, de bout en bout, dans un fichier que je n'avais pas ouvert. Le chantier s'est rétréci
+d'un annuaire complet à l'état vide d'un champ, ce qui était le vrai défaut.
+
+## Chantier 16 — la fenêtre entre la 3e et la 10e sortie
+
+### Ce qui était faux
+
+Le catalogue de badges marque la toute première course, puis la dixième. Entre les deux, rien qui
+compte les sorties — c'est-à-dire rien dans la fenêtre où l'on arrête.
+
+Mais la fenêtre n'était pas vide : elle était **mal remplie**. La carte des trente derniers jours
+s'affiche dès la première sortie et montre une **allure moyenne**. Au cinquième jour d'une
+reprise, c'était le seul chiffre de l'écran capable de donner tort à quelqu'un qui hésitait déjà.
+Et sa fenêtre **glisse** : elle redescend quand on ralentit, au moment précis où une redescente
+coûte le plus cher.
+
+### Ce qui a changé
+
+De la 3e à la 9e sortie, c'est une autre carte, et elle n'affiche **que des grandeurs qui ne
+peuvent pas baisser** : nombre de sorties, kilomètres cumulés, plus longue sortie.
+
+Les deux cartes ne coexistent pas. Avec moins de dix sorties, la fenêtre de trente jours contient
+à peu près tout ce qu'on a couru, et les afficher ensemble dirait deux fois la même chose.
+
+Elle s'arrête d'elle-même à la dixième, quand le badge prend le relais — pas de réglage, pas de
+croix à fermer, et elle ne revient jamais. Elle commence à la troisième : en dessous, « 1 sortie ·
+3 km · plus longue 3 km » dit trois fois la même chose.
+
+### Le chiffre écarté
+
+Le **nombre de jours** depuis la première sortie disait quelque chose de vrai sur la régularité —
+« 3 sorties en 9 jours » n'est pas « 3 sorties ». Il a été écarté pour la raison même qui fonde la
+carte : il grandit qu'on coure ou non. « 3 sorties en 40 jours » est un reproche déguisé en
+mesure.
+
+### Ce qui le garde
+
+Trois colonnes, **deux aux tailles d'accessibilité** — même règle que la grille de mesures
+d'`ActivityDetailView` : « PLUS LONGUE » en capitales espacées dans un tiers d'écran rétrécit
+déjà à 0,7 au corps normal.
+
+### D'où vient l'idée
+
+De `3477d46`, sur `claude/running-club-finance-wwuq46`, une branche d'août jamais fusionnée. Le
+code n'en est pas repris : ni le système de couleurs ni les contrôles de ce dépôt n'existaient
+alors. Seul le raisonnement l'a été — et corrigé sur un point, le compte des jours.
 
 ## Chantier 15 — les erreurs qu'on avale
 

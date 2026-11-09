@@ -30,9 +30,13 @@ def cas_de(nom):
     return decorateur
 
 
-def page(*sections: str) -> str:
-    corps = "\n".join(f"<p><strong>{s}</strong> — du texte.</p>" for s in sections)
-    return f"<html><body>\n{corps}\n</body></html>\n"
+def page(*sections) -> str:
+    """Chaque section est un titre, ou un couple (titre, corps)."""
+    morceaux = []
+    for s in sections:
+        titre, corps = s if isinstance(s, tuple) else (s, " — du texte.")
+        morceaux.append(f"<p><strong>{titre}</strong>{corps}</p>")
+    return "<html><body>\n" + "\n".join(morceaux) + "\n</body></html>\n"
 
 
 FICHE = ("## URLs requises\n"
@@ -108,6 +112,58 @@ def _():
     code, sortie = lance(page("A", "Rapports de panne"), page("A", "Parrainage"))
     assert sortie.index("Rapports de panne") < sortie.index("Parrainage"), sortie
     assert "moins grave" in sortie, sortie
+
+
+@cas_de("MÊME TITRE, TEXTE CHANGÉ : signalé, et les deux versions sont montrées")
+def _():
+    # Le défaut qu'un contrôle d'intertitres ne pouvait pas voir : une durée de conservation
+    # changée à l'intérieur d'un paragraphe dont le titre ne bouge pas.
+    ici = page(("Rapports de panne", " — conservés au maximum 180 jours, puis supprimés."))
+    la = page(("Rapports de panne", " — conservés au maximum 400 jours, puis supprimés."))
+    code, sortie = lance(ici, la, exiger=True)
+    assert code == 1, "le texte a changé et le contrôle est vert :\n" + sortie
+    assert "180" in sortie and "400" in sortie, "l'écart n'est pas montré :\n" + sortie
+    assert "Rapports de panne" in sortie, sortie
+
+
+@cas_de("UNE PHRASE RETIRÉE de la page publiée est vue, elle aussi")
+def _():
+    ici = page(("Aucune collecte publicitaire",
+                " — aucun SDK publicitaire, aucun outil tiers de rapport de panne."))
+    la = page(("Aucune collecte publicitaire", " — aucun SDK publicitaire."))
+    code, sortie = lance(ici, la, exiger=True)
+    assert code == 1, sortie
+    assert "rapport de panne" in sortie, sortie
+
+
+@cas_de("les espaces, les apostrophes et les insécables ne comptent pas pour une divergence")
+def _():
+    # Sinon le contrôle rougirait sur la mise en forme et on apprendrait à l'ignorer.
+    ici = page(("Statistiques d'usage", " — l'app\n  enregistre 400\u00a0jours."))
+    la = page(("Statistiques d\u2019usage", " — l\u2019app enregistre 400\u202fjours."))
+    code, sortie = lance(ici, la, exiger=True)
+    assert code == 0, "une différence de mise en forme a été prise pour un écart :\n" + sortie
+
+
+@cas_de("UN COMMENTAIRE HTML n'est pas du texte : il ne fait pas diverger")
+def _():
+    # La branche de travail porte un commentaire de report que `main` n'a pas. Personne ne le lit.
+    ici = ("<html><body>\n<!-- à faire à la prochaine passe -->\n"
+           "<p><strong>Rapports de panne</strong> — du texte.</p>\n</body></html>\n")
+    la = page("Rapports de panne")
+    code, sortie = lance(ici, la, exiger=True)
+    assert code == 0, "un commentaire a été pris pour du texte :\n" + sortie
+
+
+@cas_de("une section ABSENTE prime sur une section divergente : le danger d'abord")
+def _():
+    ici = page(("Rapports de panne", " — 180 jours."), "Statistiques d'usage")
+    la = page(("Rapports de panne", " — 400 jours."))
+    code, sortie = lance(ici, la, exiger=True)
+    assert code == 1, sortie
+    i_manque = sortie.index("ne dit pas tout")
+    assert i_manque >= 0, sortie
+    assert "Statistiques d'usage" in sortie, sortie
 
 
 @cas_de("une page publiée injoignable fait échouer, elle ne se saute pas")

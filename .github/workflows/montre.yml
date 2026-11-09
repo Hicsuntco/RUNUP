@@ -41,6 +41,8 @@ on:
       - "project.yml"
       # Ce qui pose l'image livrable et ce qui la vérifie.
       - "ci_scripts/requis.py"
+      - "ci_scripts/check_captures_montre.py"
+      - "ci_scripts/test_captures_montre.py"
       - "ci_scripts/check_requis.py"
 
 concurrency:
@@ -109,6 +111,30 @@ jobs:
           fi
           echo "app=$app" >> "$GITHUB_OUTPUT"
 
+          # CE QUE LE PAQUET CONTIENT VRAIMENT, et c'est la question décisive.
+          #
+          # Le simulateur a confirmé qu'il était en anglais — `defaults read -g AppleLanguages`
+          # rend bien `(en)` — et l'app a quand même rendu du français. Si le paquet ne porte pas
+          # de `en.lproj`, tout s'explique d'un coup : `Localizable.xcstrings` ne serait pas
+          # compilé dans la cible montre, et `Text("Courir")` retomberait sur sa CLÉ, qui est
+          # française. Ce ne serait alors pas un défaut de capture mais un défaut de l'app : une
+          # anglophone verrait du français à son poignet.
+          echo "→ localisations dans le paquet :"
+          trouvees=$(ls -d "$app"/*.lproj 2>/dev/null | xargs -n1 basename 2>/dev/null || true)
+          if [ -z "$trouvees" ]; then
+            echo "✗ AUCUN .lproj dans $app — la cible montre ne compile aucune traduction."
+            ls "$app"
+            exit 1
+          fi
+          echo "$trouvees" | sed 's/^/    /'
+          for attendue in fr en es; do
+            case "$trouvees" in
+              *"$attendue.lproj"*) ;;
+              *) echo "✗ $attendue.lproj manque : l'app de poignet ne sait pas parler cette langue."
+                 exit 1 ;;
+            esac
+          done
+
       # ── LA LANGUE SE POSE SUR L'APPAREIL, PAS AU LANCEMENT ───────────────────────────────────
       #
       # Deux tentatives ont échoué avant celle-ci, et elles ont échoué de la même façon : trois
@@ -127,6 +153,9 @@ jobs:
       - name: Photographier, langue par langue
         run: |
           set -euo pipefail
+          # Pillow sert à la comparaison des images, à la fin de cette étape.
+          python3 -m venv --system-site-packages "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/python" -m pip install --quiet --upgrade pillow
           udid="${{ steps.construire.outputs.udid }}"
           app="${{ steps.construire.outputs.app }}"
           prefs="$HOME/Library/Developer/CoreSimulator/Devices/$udid/data/Library/Preferences"
@@ -174,23 +203,24 @@ jobs:
             echo "→ $langue : $taille octets"
           done
 
-          # TROIS LANGUES NE DOIVENT PAS RENDRE LA MÊME IMAGE.
+          # TROIS LANGUES NE DOIVENT PAS RENDRE LA MÊME IMAGE — SANS COMPTER L'HORLOGE.
           #
-          # Le seuil ci-dessus dit qu'un écran a été dessiné. Il ne dit pas LEQUEL. Deux
-          # exécutions ont produit trois fichiers valides et identiques sans que rien ne rougisse.
-          doublons=$(sha256sum appstore/raw-montre/*/1-course-libre.png \
-            | awk '{print $1}' | sort | uniq -d)
-          if [ -n "$doublons" ]; then
-            echo "✗ Deux langues au moins rendent la MÊME capture : la langue n'a pas pris."
-            sha256sum appstore/raw-montre/*/1-course-libre.png
-            exit 1
-          fi
+          # Le pourquoi, et le défaut que la première version de ce garde-fou avait, sont dans
+          # `ci_scripts/check_captures_montre.py`. Il vit dans un script et non ici parce qu'un
+          # garde-fou qu'on ne peut pas éprouver est un garde-fou qu'on croit sur parole — et
+          # celui-ci s'est déjà trompé.
+          "$RUNNER_TEMP/venv/bin/python" ci_scripts/check_captures_montre.py appstore/raw-montre
+
+      # Un bloc littéral, et pas `run: "$RUNNER_TEMP/..."` sur une ligne : une valeur YAML qui
+      # COMMENCE par un guillemet est lue comme une chaîne entre guillemets, et ce qui suit la
+      # fermante fait échouer l'analyse. Attrapé ici avant de partir.
+      - name: Éprouver le garde-fou des captures de montre
+        run: |
+          "$RUNNER_TEMP/venv/bin/python" ci_scripts/test_captures_montre.py
 
       - name: Poser les images livrables et les vérifier
         run: |
           set -euo pipefail
-          python3 -m venv --system-site-packages "$RUNNER_TEMP/venv"
-          "$RUNNER_TEMP/venv/bin/python" -m pip install --quiet --upgrade pillow
           "$RUNNER_TEMP/venv/bin/python" ci_scripts/requis.py fr-FR en-US es-ES
           python3 ci_scripts/check_requis.py
 

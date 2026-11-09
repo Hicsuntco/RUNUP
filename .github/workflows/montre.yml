@@ -132,6 +132,14 @@ jobs:
           # portent. Un catalogue de chaînes compilé peut très bien produire un `en.lproj` qui
           # rend la CLÉ française, et c'est exactement l'hypothèse à trancher : le paquet
           # est-il en cause, ou le lancement ?
+          # ET LE CONTENU, PAS SEULEMENT LES NOMS. La sonde précédente listait les dossiers
+          # `.lproj` et les trois étaient là — mais aucun ne portait de `Localizable.strings`.
+          # J'avais regardé le contenant. Celle-ci regarde dedans.
+          echo "→ à la racine du paquet :"
+          ls "$app" | sed 's/^/    /'
+          echo "→ dans en.lproj :"
+          ls "$app/en.lproj" 2>/dev/null | sed 's/^/    /' || echo "    (pas de en.lproj)"
+
           echo "→ ce que « Courir » vaut dans chaque langue du paquet :"
           for lang in fr en es; do
             f="$app/$lang.lproj/Localizable.strings"

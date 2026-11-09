@@ -782,6 +782,16 @@ jobs:
       #
       # (Le commentaire est ici et non dans la liste : dans un bloc littéral `|`, un dièse n'est
       # pas un commentaire, c'est une ligne de chemin de plus.)
+      # LES DEUX IMAGES EXIGÉES PAR APPLE SORTENT DE LA MACHINE, ET CE N'EST PAS ALLÉ DE SOI.
+      #
+      # Elles manquaient au premier jet, et l'oubli était INVISIBLE : l'étape « Photographier la
+      # montre » passait au vert, `requis.py` composait, `check_requis.py` validait — tout cela
+      # sur le conteneur. Rien ne sortait, donc les images mouraient avec lui et le dépôt gardait
+      # celles d'août. Un vert qui ne mesure pas ce qu'on croit, une fois de plus.
+      #
+      # Le commentaire est ICI et pas dans le bloc `path:` en dessous : une ligne qui commence par
+      # « # » à l'intérieur d'un bloc littéral YAML n'est PAS un commentaire, c'est un motif de
+      # chemin de plus — qui ne correspondrait à rien, sans rien dire.
       - name: Publier les captures
         if: always()
         uses: actions/upload-artifact@v4
@@ -790,6 +800,8 @@ jobs:
           path: |
             appstore/raw/**
             appstore/out/**
+            appstore/raw-montre/**
+            appstore/requis/**
             appstore/apercu/out/**
             appstore/apercu/*/*.json
             appstore/apercu/*/debut.txt

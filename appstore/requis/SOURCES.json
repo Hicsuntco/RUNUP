@@ -1,28 +1,38 @@
 {
+  "ipad/en-US/1-accueil.png": {
+    "source": "appstore/raw/en-US/1-accueil.png",
+    "empreinte": "029967d138db",
+    "composee_par": "ci_scripts/requis.py"
+  },
+  "ipad/es-ES/1-accueil.png": {
+    "source": "appstore/raw/es-ES/1-accueil.png",
+    "empreinte": "94d6c5f8921e",
+    "composee_par": "ci_scripts/requis.py"
+  },
   "ipad/fr-FR/1-accueil.png": {
     "source": "appstore/raw/fr-FR/1-accueil.png",
-    "empreinte": "6eaa47b3a012",
+    "empreinte": "038a02e2189d",
     "composee_par": "ci_scripts/requis.py"
   },
   "montre/en-US/1-course-libre.png": {
     "source": "appstore/raw-montre/en-US/1-course-libre.png",
-    "empreinte": "2df25853cc84",
+    "empreinte": "47b95e4be43f",
     "composee_par": "ci_scripts/requis.py",
     "code": "RunUpWatch",
-    "empreinte_code": "fa665226059b"
+    "empreinte_code": "3dd86db7a0dc"
   },
   "montre/es-ES/1-course-libre.png": {
     "source": "appstore/raw-montre/es-ES/1-course-libre.png",
-    "empreinte": "eee643ea8b3f",
+    "empreinte": "64696a8628cd",
     "composee_par": "ci_scripts/requis.py",
     "code": "RunUpWatch",
-    "empreinte_code": "fa665226059b"
+    "empreinte_code": "3dd86db7a0dc"
   },
   "montre/fr-FR/1-course-libre.png": {
     "source": "appstore/raw-montre/fr-FR/1-course-libre.png",
-    "empreinte": "c13bcf21cb3d",
+    "empreinte": "551f1b7b208f",
     "composee_par": "ci_scripts/requis.py",
     "code": "RunUpWatch",
-    "empreinte_code": "fa665226059b"
+    "empreinte_code": "3dd86db7a0dc"
   }
 }

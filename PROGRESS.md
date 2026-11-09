@@ -485,11 +485,54 @@ Ce chantier n'est donc **pas terminé** tant que les deux chaînes n'ont pas rep
 que les images ne sont pas versées. C'est la seule raison pour laquelle `tout.sh` n'est pas vert
 à ce commit, et c'est un garde-fou qui fait son travail, pas un défaut.
 
-### Ce qui n'est PAS fait, et qui était dans le même item de la phase 2
+### Ce que la chaîne a rendu, et ce qu'elle a fait trouver
 
-**Le verre dépoli.** Six fichiers portent encore un `Material`, dont la barre d'onglets
-(`.ultraThinMaterial`). La règle 7 l'interdit aussi. C'est le chantier suivant : celui-ci traitait
-le dégradé, et un chantier à la fois.
+Les trois chaînes sur `e594cae`. « Capture de la montre » verte, « Captures App Store » verte —
+**donc l'app iPhone compile**, puisque cette chaîne la construit et la pilote sur simulateur. Et
+« TestFlight » rouge, arrêtée AVANT la compilation par le garde-fou des captures périmées, ce qui
+est exactement son travail.
+
+Les six captures iPhone, la montre et l'iPad sont refaites et versées. Le bouton RUN de la barre
+d'onglets, photographié avant et après : un dégradé vertical avec un halo, puis un aplat d'accent.
+
+**Et en vérifiant d'où venaient ces images, j'ai trouvé plus gros que le chantier.**
+
+### L'image iPad de l'App Store était composée d'une capture du 30 août
+
+`appstore/raw/fr-FR/1-accueil.png` porte la mention `36ed586 — 2026-08-30 — « Add files via
+upload »` : quatre captures déposées à la main, en français seulement, jamais revues depuis.
+`requis.py` compose l'image iPad À PARTIR DE CE FICHIER, et `appstore.yml` la pousse chez Apple
+DEPUIS LE DÉPÔT (`--dir appstore/requis/ipad`), pas depuis l'artéfact.
+
+Donc la fiche App Store montrait, sur iPad, l'app telle qu'elle était il y a trois mois.
+
+**Et le garde-fou écrit ce matin ne pouvait pas le voir.** `check_requis.py` vérifie que l'image
+livrée est cohérente AVEC SA SOURCE — pas que la source est fraîche. L'entrée iPad n'avait même
+pas d'`empreinte_code`, contrairement aux trois de la montre : un changement de code ne
+l'invalidait donc pas. L'image était parfaitement conforme à une capture périmée.
+
+Les captures iPhone, elles, n'ont jamais eu ce problème : `appstore.yml` va les chercher dans
+l'artéfact de la dernière exécution réussie de `captures.yml`. C'est le bon mécanisme — et c'est
+celui que l'iPad n'avait pas.
+
+**Corrigé ici** : les trois `1-accueil.png` de l'artéfact d'aujourd'hui remplacent la capture
+d'août, les trois autres fichiers d'août sont supprimés (rien ne les lisait, et ils avaient déjà
+provoqué un `file exists` à l'extraction — c'est écrit dans `appstore.yml`), et l'image iPad existe
+pour la première fois **dans les trois langues** au lieu du seul français.
+
+### Ce qui reste ouvert, et que je n'ai pas fait
+
+- **L'image iPad reste une copie versionnée**, donc elle redeviendra périmée au prochain chantier
+  qui touche l'accueil. Le bon correctif est structurel : que `appstore.yml` aille la chercher dans
+  l'artéfact, comme il le fait déjà pour les six captures iPhone. Un garde-fou de plus ne ferait
+  que signaler plus tôt une copie qui n'a pas à exister.
+- **Le verre dépoli.** Six fichiers portent encore un `Material`, dont la barre d'onglets
+  (`.ultraThinMaterial`). La règle 7 l'interdit aussi. Celui-ci traitait le dégradé, et un
+  chantier à la fois.
+- **La phrase du bas de la montre n'est pas « coupée », elle est sous la ligne de flottaison.**
+  L'écran est un `ScrollView` : le texte s'affiche entier si on fait défiler. Je l'avais annoncé
+  comme une troncature, c'était faux, et ça change le correctif — ce n'est pas une réparation de
+  mise en page mais un arbitrage de hiérarchie sur un écran de 46 mm.
 
 ## Chantier 18 — la montre et le widget parlaient français à tout le monde
 

@@ -1,0 +1,206 @@
+# La capture de l'app de poignet, seule et vite.
+#
+# ─── POURQUOI ELLE N'EST PAS DANS `captures.yml` ───────────────────────────────────────────────
+#
+# Elle y était, et elle y coûtait une heure par essai. La chaîne des captures photographie six
+# écrans dans trois langues et deux thèmes, puis filme l'aperçu : la montre est l'étape 13 sur 21,
+# donc chaque correction d'une ligne de `simctl` demandait d'attendre tout le reste.
+#
+# Et `workflow_dispatch` ne sauve pas : GitHub n'affiche le bouton « Run workflow » que pour les
+# workflows présents sur la branche PAR DÉFAUT. Tant que ce fichier n'est que sur la branche de
+# travail, il n'y a pas de bouton, et l'API répond 404. Le seul déclencheur qui marche d'ici est
+# un `push` sur les chemins ci-dessous.
+#
+# Séparée, elle prend cinq minutes : construire l'app de poignet, allumer un simulateur,
+# photographier trois fois. C'est ce qui rend la correction possible.
+#
+# ─── CE QU'ELLE FAIT ───────────────────────────────────────────────────────────────────────────
+#
+# 1. Construit `RunUpWatch` pour un simulateur watchOS — schéma `Montre`, voir `project.yml`.
+# 2. Pour chaque langue : pose la langue SUR L'APPAREIL, redémarre, lance, photographie.
+# 3. Refuse deux captures identiques, et une taille qu'Apple ne connaît pas.
+# 4. Publie les trois images brutes et les trois images livrables.
+#
+# AUCUN SECRET. Rien n'est signé, rien ne part chez Apple : on construit pour un simulateur.
+
+name: Capture de la montre
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - ".github/workflows/montre.yml"
+      # Le code qui dessine l'écran photographié. C'est le lien qui manquait : le bouton est passé
+      # de la pilule au cercle le 6 août 2026, et l'image livrée à Apple est restée celle d'avant
+      # pendant trois mois, parce que rien ne reliait l'une à l'autre.
+      - "RunUpWatch/**"
+      # La police et les couleurs que la montre emprunte à l'app.
+      - "RunUp/Shared/**"
+      # Le schéma qui la construit.
+      - "project.yml"
+      # Ce qui pose l'image livrable et ce qui la vérifie.
+      - "ci_scripts/requis.py"
+      - "ci_scripts/check_requis.py"
+
+concurrency:
+  group: montre
+  cancel-in-progress: true
+
+jobs:
+  montre:
+    runs-on: macos-26
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Choisir Xcode
+        run: |
+          set -euo pipefail
+          latest=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          echo "→ Xcode retenu : $latest"
+          sudo xcode-select -s "$latest"
+
+      - name: Installer XcodeGen
+        run: brew install xcodegen
+
+      - name: Préparer le projet
+        run: sh ci_scripts/prepare_project.sh
+
+      - name: Construire l'app de poignet
+        id: construire
+        run: |
+          set -euo pipefail
+          liste=$(xcrun simctl list devices available -j)
+          # LE BOÎTIER DE 46 mm, ET PAS SEULEMENT LA SÉRIE LA PLUS RÉCENTE.
+          #
+          # Un premier jet ne triait que par numéro de série. Les deux boîtiers d'une même série
+          # portent le même numéro, `sort_by` est stable, et `last` a rendu celui qui traînait en
+          # dernier : le 42 mm. La capture faisait 374 × 446, une taille absente de
+          # `TYPES_PAR_TAILLE` (`asc.py`), donc l'envoi se serait arrêté sur « taille inconnue »
+          # après une chaîne entièrement verte.
+          choisi=$(echo "$liste" | jq -c '
+            [.devices[][] | select(.name | test("^Apple Watch Series [0-9]+ \\(46mm\\)$"))]
+            | sort_by(.name | capture("Series (?<n>[0-9]+)") | .n | tonumber)
+            | last // empty')
+          udid=$(echo "$choisi" | jq -r '.udid // empty')
+          if [ -z "$udid" ]; then
+            echo "✗ Aucun simulateur Apple Watch 46 mm. Disponibles :"
+            echo "$liste" | jq -r '.devices[][].name' | sort -u
+            exit 1
+          fi
+          echo "→ $(echo "$choisi" | jq -r .name) : $udid"
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+
+          xcodebuild build \
+            -project RunUp.xcodeproj \
+            -scheme Montre \
+            -configuration Debug \
+            -destination "id=$udid" \
+            -derivedDataPath build/montre \
+            CODE_SIGNING_ALLOWED=NO
+
+          app=$(find build/montre/Build/Products -maxdepth 2 -name "RunUpWatch.app" -print -quit)
+          if [ -z "$app" ]; then
+            echo "✗ RunUpWatch.app introuvable sous build/montre/Build/Products :"
+            find build/montre/Build/Products -maxdepth 2 -print
+            exit 1
+          fi
+          echo "app=$app" >> "$GITHUB_OUTPUT"
+
+      # ── LA LANGUE SE POSE SUR L'APPAREIL, PAS AU LANCEMENT ───────────────────────────────────
+      #
+      # Deux tentatives ont échoué avant celle-ci, et elles ont échoué de la même façon : trois
+      # fichiers valides, byte pour byte identiques, tous en français.
+      #
+      #   · `-AppleLanguages "(en)"` passé en argument de lancement. C'est ce que font les tests
+      #     d'interface de l'iPhone (`ApercuUITests.swift`), et là-bas ça marche — mais là-bas
+      #     c'est XCUIApplication qui lance un processus neuf. Ici, non.
+      #   · `simctl launch --terminate-running-process`, pour écarter l'hypothèse d'un processus
+      #     qu'on ne relançait pas. Résultat identique, au bit près.
+      #
+      # La langue est donc écrite dans les préférences globales DE L'APPAREIL, simulateur éteint,
+      # puis l'appareil redémarre. C'est le seul endroit que watchOS lit avec certitude, et c'est
+      # vérifiable : l'étape RELIT ce qu'elle a posé et s'arrête si ça ne correspond pas, pour
+      # échouer sur la cause plutôt que sur le symptôme.
+      - name: Photographier, langue par langue
+        run: |
+          set -euo pipefail
+          udid="${{ steps.construire.outputs.udid }}"
+          app="${{ steps.construire.outputs.app }}"
+          prefs="$HOME/Library/Developer/CoreSimulator/Devices/$udid/data/Library/Preferences"
+          global="$prefs/.GlobalPreferences.plist"
+
+          for langue in fr-FR en-US es-ES; do
+            court=${langue%%-*}
+            echo "──────────── $langue ────────────"
+
+            xcrun simctl shutdown "$udid" 2>/dev/null || true
+            mkdir -p "$prefs"
+            [ -f "$global" ] || plutil -create binary1 "$global"
+            plutil -replace AppleLanguages -json "[\"$court\"]" "$global"
+            plutil -replace AppleLocale -json "\"${langue/-/_}\"" "$global"
+
+            xcrun simctl boot "$udid"
+            xcrun simctl bootstatus "$udid" -b
+
+            # ON RELIT CE QU'ON A POSÉ. Sans ça, l'étape ne saurait dire que « les images sont
+            # identiques » — pas POURQUOI, et c'est ce qui a coûté les deux essais précédents.
+            vu=$(xcrun simctl spawn "$udid" defaults read -g AppleLanguages 2>/dev/null | tr -d ' \n"' || true)
+            echo "→ langue lue sur l'appareil : $vu"
+            case "$vu" in
+              *"$court"*) ;;
+              *) echo "✗ L'appareil n'a pas pris « $court ». Lu : $vu"; exit 1 ;;
+            esac
+
+            # Réinstaller après chaque démarrage : un `shutdown` ne désinstalle rien, mais
+            # réinstaller coûte deux secondes et évite de dépendre de cette certitude-là.
+            xcrun simctl install "$udid" "$app"
+            xcrun simctl launch --terminate-running-process "$udid" com.hicsuntco.runup.watchkitapp
+
+            # Attendre n'est pas vérifier : il n'y a pas de test ici, donc pas de
+            # `waitForExistence`. Huit secondes, puis les deux contrôles ci-dessous.
+            sleep 8
+
+            dossier="appstore/raw-montre/$langue"
+            mkdir -p "$dossier"
+            xcrun simctl io "$udid" screenshot "$dossier/1-course-libre.png"
+            taille=$(wc -c < "$dossier/1-course-libre.png")
+            if [ "$taille" -lt 5000 ]; then
+              echo "✗ $langue : capture de $taille octets — l'écran n'était pas dessiné."
+              exit 1
+            fi
+            echo "→ $langue : $taille octets"
+          done
+
+          # TROIS LANGUES NE DOIVENT PAS RENDRE LA MÊME IMAGE.
+          #
+          # Le seuil ci-dessus dit qu'un écran a été dessiné. Il ne dit pas LEQUEL. Deux
+          # exécutions ont produit trois fichiers valides et identiques sans que rien ne rougisse.
+          doublons=$(sha256sum appstore/raw-montre/*/1-course-libre.png \
+            | awk '{print $1}' | sort | uniq -d)
+          if [ -n "$doublons" ]; then
+            echo "✗ Deux langues au moins rendent la MÊME capture : la langue n'a pas pris."
+            sha256sum appstore/raw-montre/*/1-course-libre.png
+            exit 1
+          fi
+
+      - name: Poser les images livrables et les vérifier
+        run: |
+          set -euo pipefail
+          python3 -m venv --system-site-packages "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/python" -m pip install --quiet --upgrade pillow
+          "$RUNNER_TEMP/venv/bin/python" ci_scripts/requis.py fr-FR en-US es-ES
+          python3 ci_scripts/check_requis.py
+
+      - name: Publier les captures de la montre
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: captures-montre
+          path: |
+            appstore/raw-montre/**
+            appstore/requis/montre/**
+          if-no-files-found: error
+          retention-days: 30

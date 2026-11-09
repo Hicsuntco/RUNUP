@@ -393,15 +393,22 @@ jobs:
         run: |
           set -euo pipefail
           liste=$(xcrun simctl list devices available -j)
-          # Le modèle le plus récent, trié par NUMÉRO de série et non par nom : « Series 9 »
-          # passerait après « Series 11 » en ordre alphabétique. Même piège que pour l'iPhone.
+          # LE BOÎTIER DE 46 mm, ET PAS SEULEMENT LA SÉRIE LA PLUS RÉCENTE.
+          #
+          # Le premier jet ne triait que par numéro de série. Les deux boîtiers d'une même série
+          # ont le même numéro, `sort_by` est stable, et `last` a donc rendu celui qui traînait en
+          # dernier dans la liste : le 42 mm. La capture faisait 374 × 446, une taille qu'Apple ne
+          # connaît pas — `TYPES_PAR_TAILLE` dans `asc.py` n'a que (416, 496) — donc l'envoi se
+          # serait ARRÊTÉ sur « taille inconnue », après une chaîne entièrement verte.
+          #
+          # Le nom est donc filtré sur le boîtier avant d'être trié sur la série.
           choisi=$(echo "$liste" | jq -c '
-            [.devices[][] | select(.name | test("^Apple Watch Series [0-9]+"))]
+            [.devices[][] | select(.name | test("^Apple Watch Series [0-9]+ \\(46mm\\)$"))]
             | sort_by(.name | capture("Series (?<n>[0-9]+)") | .n | tonumber)
             | last // empty')
           udid=$(echo "$choisi" | jq -r '.udid // empty')
           if [ -z "$udid" ]; then
-            echo "✗ Aucun simulateur Apple Watch. Disponibles :"
+            echo "✗ Aucun simulateur Apple Watch 46 mm. Disponibles :"
             echo "$liste" | jq -r '.devices[][].name' | sort -u
             exit 1
           fi
@@ -430,11 +437,18 @@ jobs:
             court=${langue%%-*}
             dossier="appstore/raw-montre/$langue"
             mkdir -p "$dossier"
-            xcrun simctl terminate "$udid" com.hicsuntco.runup.watchkitapp || true
-            # La langue est posée à CHAQUE lancement, pas une fois sur l'appareil : l'app lit
-            # `AppleLanguages` dans ses propres réglages, et un appareil remis en français entre
-            # deux passes donnerait trois fois la même image sans rien dire.
-            xcrun simctl launch "$udid" com.hicsuntco.runup.watchkitapp \
+            # `--terminate-running-process`, ET PAS UN `terminate` SUIVI D'UN `launch`.
+            #
+            # C'est ce qu'a coûté la première exécution : `terminate` rend la main avant que le
+            # processus soit mort, `launch` retrouvait celui d'avant et NE LE RELANÇAIT PAS. Les
+            # arguments de langue n'atteignaient donc jamais l'app après le premier tour, et les
+            # trois langues ont rendu trois fois la MÊME image, en français. Trois fichiers, trois
+            # étapes vertes, une seule capture.
+            #
+            # La langue passe par les arguments de lancement, comme pour l'iPhone — voir
+            # `ApercuUITests.swift`, qui pose exactement les deux mêmes.
+            xcrun simctl launch --terminate-running-process "$udid" \
+              com.hicsuntco.runup.watchkitapp \
               -AppleLanguages "($court)" -AppleLocale "$langue"
             # Attendre le dessin. Il n'y a rien à interroger : pas de test, donc pas de
             # `waitForExistence`. Huit secondes est le réglage, et l'image non vide exigée
@@ -448,6 +462,20 @@ jobs:
             fi
             echo "→ $langue : $taille octets"
           done
+
+          # TROIS LANGUES NE DOIVENT PAS RENDRE LA MÊME IMAGE.
+          #
+          # Le seuil de cinq kilo-octets ci-dessus dit qu'un écran a été dessiné. Il ne dit pas
+          # LEQUEL. La première exécution a produit trois fichiers valides, byte pour byte
+          # identiques, tous en français — et rien n'a rougi. Cette comparaison est le seul
+          # endroit où cet échec-là se voit.
+          doublons=$(sha256sum appstore/raw-montre/*/1-course-libre.png \
+            | awk '{print $1}' | sort | uniq -d)
+          if [ -n "$doublons" ]; then
+            echo "✗ Deux langues au moins rendent la MÊME capture : la langue n'a pas pris."
+            sha256sum appstore/raw-montre/*/1-course-libre.png
+            exit 1
+          fi
 
       # UN ENVIRONNEMENT VIRTUEL, PAS UN `pip install` NU.
       #

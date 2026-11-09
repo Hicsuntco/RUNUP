@@ -65,12 +65,24 @@ BRUT = b"une capture"
 AUTRE = b"une autre capture"
 
 
+def png(largeur: int, hauteur: int) -> bytes:
+    """Un PNG dont seul l'en-tête compte : `asc.taille_png` ne lit que les 24 premiers octets."""
+    import struct
+    import zlib
+    ihdr = struct.pack(">IIBBBBB", largeur, hauteur, 8, 2, 0, 0, 0)
+    bloc = struct.pack(">I", len(ihdr)) + b"IHDR" + ihdr
+    bloc += struct.pack(">I", zlib.crc32(b"IHDR" + ihdr) & 0xFFFFFFFF)
+    return b"\x89PNG\r\n\x1a\n" + bloc
+
+
 def emp(octets: bytes) -> str:
     return hashlib.sha256(octets).hexdigest()[:12]
 
 
+#: 416 × 496 : la seule taille de montre qu'Apple accepte, et une de celles que `asc.py` connaît.
+BONNE = png(416, 496)
 IMAGES = {
-    "appstore/requis/ipad/fr-FR/1.png": b"image composee",
+    "appstore/requis/ipad/fr-FR/1.png": BONNE,
     "appstore/raw/fr-FR/1-accueil.png": BRUT,
 }
 TABLE = {"ipad/fr-FR/1.png": {"source": "appstore/raw/fr-FR/1-accueil.png",
@@ -97,7 +109,7 @@ def _():
 def _():
     # C'est exactement la façon dont les deux précédentes ont vieilli : rien ne les décrivait,
     # donc rien ne pouvait constater qu'elles avaient vieilli.
-    images = dict(IMAGES, **{"appstore/requis/montre/fr-FR/1.png": b"mystere"})
+    images = dict(IMAGES, **{"appstore/requis/montre/fr-FR/1.png": BONNE})
     code, sortie, _ = lance(images, TABLE)
     assert code == 1, sortie
     assert "montre/fr-FR/1.png" in sortie, sortie
@@ -107,7 +119,7 @@ def _():
 def _():
     # Un rouge que personne ne peut éteindre s'apprend à être ignoré, et il emporterait avec lui
     # les rouges qu'on peut éteindre.
-    images = dict(IMAGES, **{"appstore/requis/montre/fr-FR/1.png": b"a refaire a la main"})
+    images = dict(IMAGES, **{"appstore/requis/montre/fr-FR/1.png": BONNE})
     table = dict(TABLE, **{"montre/fr-FR/1.png": {"source": None, "constat": "ne montre pas l'app"}})
     code, sortie, _ = lance(images, table)
     assert code == 0, sortie
@@ -124,7 +136,7 @@ def _():
 
 @cas_de("la capture source disparue est traitée comme une péremption, pas ignorée")
 def _():
-    images = {"appstore/requis/ipad/fr-FR/1.png": b"image composee"}
+    images = {"appstore/requis/ipad/fr-FR/1.png": BONNE}
     code, sortie, _ = lance(images, TABLE)
     assert code == 1, sortie
     assert "disparu" in sortie, sortie
@@ -140,7 +152,7 @@ def _():
 @cas_de("--ecrire repose les empreintes, et seulement celles qui ont une source")
 def _():
     images = dict(IMAGES, **{"appstore/raw/fr-FR/1-accueil.png": AUTRE,
-                             "appstore/requis/montre/fr-FR/1.png": b"a la main"})
+                             "appstore/requis/montre/fr-FR/1.png": BONNE})
     table = dict(TABLE, **{"montre/fr-FR/1.png": {"source": None, "constat": "à refaire"}})
     code, sortie, relu = lance(images, table, ecrire=True)
     assert code == 0, sortie
@@ -157,11 +169,11 @@ def _():
     # Le défaut exact du 9 novembre 2026 : le bouton est passé de la pilule au cercle le 6 août,
     # et l'image livrée est restée celle d'avant pendant trois mois. Rien ne reliait l'une à
     # l'autre, parce qu'une capture de montre n'a pas de capture brute intermédiaire.
-    images = dict(CODE, **{"appstore/requis/montre/fr-FR/1.png": b"photo",
-                           "appstore/raw-montre/fr-FR/1.png": b"photo"})
+    images = dict(CODE, **{"appstore/requis/montre/fr-FR/1.png": BONNE,
+                           "appstore/raw-montre/fr-FR/1.png": BONNE})
     table = {"montre/fr-FR/1.png": {
         "source": "appstore/raw-montre/fr-FR/1.png",
-        "empreinte": emp(b"photo"),
+        "empreinte": emp(BONNE),
         "code": "RunUpWatch",
         "empreinte_code": "000000000000",
     }}
@@ -173,13 +185,13 @@ def _():
 @cas_de("le code inchangé et la capture inchangée : vert")
 def _():
     import check_requis as verif
-    images = dict(CODE, **{"appstore/requis/montre/fr-FR/1.png": b"photo",
-                           "appstore/raw-montre/fr-FR/1.png": b"photo"})
+    images = dict(CODE, **{"appstore/requis/montre/fr-FR/1.png": BONNE,
+                           "appstore/raw-montre/fr-FR/1.png": BONNE})
     # L'empreinte du code se calcule SUR LE DÉPÔT FABRIQUÉ, donc après l'avoir posé : c'est
     # `lance` qui déplace `ck.RACINE`, et la calculer avant la lirait sur le vrai dépôt.
     table = {"montre/fr-FR/1.png": {
         "source": "appstore/raw-montre/fr-FR/1.png",
-        "empreinte": emp(b"photo"),
+        "empreinte": emp(BONNE),
         "code": "RunUpWatch",
         "empreinte_code": None,
     }}
@@ -196,17 +208,17 @@ def _():
     # Le chemin entre dans l'empreinte, pas seulement le contenu : déplacer une vue change ce qui
     # est dessiné autant que la modifier, et un contrôle qui ne verrait que les octets laisserait
     # passer une réorganisation entière.
-    images = dict(CODE, **{"appstore/requis/montre/fr-FR/1.png": b"photo",
-                           "appstore/raw-montre/fr-FR/1.png": b"photo"})
+    images = dict(CODE, **{"appstore/requis/montre/fr-FR/1.png": BONNE,
+                           "appstore/raw-montre/fr-FR/1.png": BONNE})
     table = {"montre/fr-FR/1.png": {"source": "appstore/raw-montre/fr-FR/1.png",
-                                    "empreinte": emp(b"photo"),
+                                    "empreinte": emp(BONNE),
                                     "code": "RunUpWatch", "empreinte_code": None}}
     _, _, relu = lance(images, table, ecrire=True)
     avant = relu["montre/fr-FR/1.png"]["empreinte_code"]
 
     renomme = {"RunUpWatch/Vues.swift": CODE["RunUpWatch/WatchViews.swift"],
-               "appstore/requis/montre/fr-FR/1.png": b"photo",
-               "appstore/raw-montre/fr-FR/1.png": b"photo"}
+               "appstore/requis/montre/fr-FR/1.png": BONNE,
+               "appstore/raw-montre/fr-FR/1.png": BONNE}
     _, _, relu2 = lance(renomme, table, ecrire=True)
     assert relu2["montre/fr-FR/1.png"]["empreinte_code"] != avant, \
         "renommer un fichier n'a pas changé l'empreinte du code"
@@ -217,14 +229,30 @@ def _():
     # `rglob` sur un chemin absent ne rend rien, SANS RIEN DIRE : l'empreinte d'un dossier vide
     # est stable, donc le contrôle resterait vert en ne regardant plus rien. C'est le défaut que
     # `check_attributs.py` a déjà eu avec « RunUpWidget » au singulier.
-    images = {"appstore/requis/montre/fr-FR/1.png": b"photo",
-              "appstore/raw-montre/fr-FR/1.png": b"photo"}
+    images = {"appstore/requis/montre/fr-FR/1.png": BONNE,
+              "appstore/raw-montre/fr-FR/1.png": BONNE}
     table = {"montre/fr-FR/1.png": {"source": "appstore/raw-montre/fr-FR/1.png",
-                                    "empreinte": emp(b"photo"),
+                                    "empreinte": emp(BONNE),
                                     "code": "RunUpWatch", "empreinte_code": "abc"}}
     code, message, _ = lance(images, table)
     assert code == "arret", f"attendu un arrêt, reçu {code} : {message}"
     assert "RunUpWatch" in message, message
+
+
+@cas_de("UNE TAILLE QU'APPLE NE CONNAÎT PAS est refusée, même si l'image est fraîche")
+def _():
+    # Le défaut du 9 novembre 2026 : le sélecteur de simulateur a pris la montre de 42 mm, et la
+    # capture faisait 374 × 446. Elle montrait le bon écran, elle était toute fraîche, et
+    # `asc.py push-screenshots` s'y serait arrêté sur « taille inconnue » — après une chaîne
+    # entièrement verte.
+    images = {"appstore/requis/montre/fr-FR/1.png": png(374, 446),
+              "appstore/raw-montre/fr-FR/1.png": png(374, 446)}
+    table = {"montre/fr-FR/1.png": {"source": "appstore/raw-montre/fr-FR/1.png",
+                                    "empreinte": emp(png(374, 446))}}
+    code, sortie, _ = lance(images, table)
+    assert code == 1, "une taille inconnue d'Apple est passée :\n" + sortie
+    assert "374 × 446" in sortie, sortie
+    assert "TYPES_PAR_TAILLE" in sortie, "la table n'est pas nommée :\n" + sortie
 
 
 @cas_de("le vrai dépôt : les images livrées sont décrites et à jour")

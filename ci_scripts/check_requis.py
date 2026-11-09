@@ -41,6 +41,15 @@ RACINE = pathlib.Path(__file__).resolve().parent.parent
 REQUIS = RACINE / "appstore/requis"
 SOURCES = REQUIS / "SOURCES.json"
 
+# LA TABLE DES TAILLES EST LUE CHEZ `asc.py`, PAS RECOPIÉE.
+#
+# C'est lui qui envoie les images à Apple, et il s'ARRÊTE devant une taille qu'il ne connaît pas
+# — « rien n'a été envoyé ». Une copie ici finirait par diverger de la sienne, et le contrôle
+# validerait alors des images que l'envoi refuse. Une copie qui n'existe pas ne peut pas dériver,
+# même raison que la palette de marque dans `screenshots.py`.
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import asc  # noqa: E402
+
 
 def empreinte(chemin: pathlib.Path) -> str:
     """Les douze premiers caractères du SHA-256. Assez pour qu'un changement se voie."""
@@ -116,12 +125,21 @@ def main() -> int:
         print(f"Aucune image dans {REQUIS.relative_to(RACINE)} — Apple en exige.")
         return 1
 
-    perimees, orphelines, sans_source = [], [], []
+    perimees, orphelines, sans_source, mauvaise_taille = [], [], [], []
     for image in images:
         clef = str(image.relative_to(REQUIS))
         entree = table.get(clef)
         if entree is None:
             orphelines.append(clef)
+            continue
+
+        # LA TAILLE D'ABORD : une image parfaitement à jour que `asc.py` refuse d'envoyer ne sert
+        # à rien. La première capture de montre faisait 374 × 446 — le simulateur de 42 mm au lieu
+        # de celui de 46 — et l'envoi se serait arrêté sur « taille inconnue », après une chaîne
+        # entièrement verte.
+        taille = asc.taille_png(image)
+        if taille not in asc.TYPES_PAR_TAILLE:
+            mauvaise_taille.append((clef, taille))
             continue
         # LE CODE D'ABORD : une image peut être faite de la bonne capture et montrer malgré tout
         # un écran que l'app ne dessine plus, si la capture elle-même date d'avant un changement.
@@ -149,6 +167,15 @@ def main() -> int:
         print(f"⚠ {clef} n'est faite d'aucune capture de ce dépôt.")
         if constat:
             print(f"    {constat}")
+
+    if mauvaise_taille:
+        print(f"\n{len(mauvaise_taille)} image(s) d'une taille qu'Apple ne connaît pas :\n")
+        for clef, (largeur, hauteur) in mauvaise_taille:
+            print(f"  · {clef} : {largeur} × {hauteur}")
+        print("\n    `asc.py push-screenshots` s'arrête devant une taille absente de sa table —")
+        print("    donc l'image ne partirait pas, quelle que soit sa fraîcheur. Les tailles")
+        print("    acceptées sont dans `TYPES_PAR_TAILLE` (`ci_scripts/asc.py`).")
+        return 1
 
     if orphelines:
         print(f"\n{len(orphelines)} image(s) livrée(s) qu'aucune entrée ne décrit :\n")

@@ -8962,6 +8962,23 @@
         }
       }
     },
+    "Depuis ta première sortie": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Since your first run"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desde tu primera salida"
+          }
+        }
+      }
+    },
     "Dernier bloc, c'est le moment — lâche tout dessus": {
       "extractionState": "manual",
       "localizations": {
@@ -19415,6 +19432,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Más lento %@/km"
+          }
+        }
+      }
+    },
+    "Plus longue": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Longest"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más larga"
           }
         }
       }

@@ -4,6 +4,7 @@ import SwiftData
 /// "Programme" home screen — mirrors `ProgScreen` in screensA.jsx.
 struct HomeView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var tailleDuTexte
     @Environment(AppState.self) private var appState
     @Environment(SubscriptionService.self) private var subscriptions
     // Scoped to unread only — this query exists solely to badge the bell icon with a count, but
@@ -200,7 +201,14 @@ struct HomeView: View {
 
                 // Les chiffres, pour tout le monde aussi, et cachés tant qu'il n'y a rien à
                 // montrer : « 0 km · 0 sortie » le premier jour est une carte qui décourage.
-                if trenteJours.count > 0 {
+                //
+                // DE LA 3e À LA 9e SORTIE, CE N'EST PAS LA BONNE CARTE, et c'est la carte des
+                // premiers jalons qui prend la place — voir `premiersJalons`. Les deux ensemble
+                // diraient deux fois la même chose : avec moins de dix sorties, la fenêtre de
+                // trente jours contient à peu près tout ce qu'on a couru.
+                if let jalons = premiersJalons {
+                    premiersJalonsCard(jalons).ruRises(reduceMotion)
+                } else if trenteJours.count > 0 {
                     statsCard.ruRises(reduceMotion)
                 }
 
@@ -930,6 +938,67 @@ struct HomeView: View {
     /// conteneur, donc un `GeometryReader` qui a besoin qu'on lui impose la hauteur qu'il est
     /// justement censé calculer. 236 occupe les deux tiers du contenu sur un téléphone courant,
     /// tient sur le plus étroit, et ne coûte aucune mesure.
+    // MARK: - Les premiers jalons
+
+    /// CE QUE L'APP NE DISAIT RIEN ENTRE LA 3e ET LA 10e SORTIE.
+    ///
+    /// Le catalogue de badges marque la toute première course, puis la dixième. Entre les deux,
+    /// rien qui compte les sorties — c'est-à-dire rien dans la fenêtre où l'on arrête. Et ce
+    /// qu'on avait à la place était pire que rien : la carte des trente derniers jours, qui
+    /// affiche une ALLURE MOYENNE. Au cinquième jour d'une reprise, c'est le seul chiffre de
+    /// l'écran capable de donner tort à quelqu'un qui hésite déjà.
+    ///
+    /// Cette carte-ci n'affiche donc QUE des grandeurs qui ne peuvent pas baisser : le nombre de
+    /// sorties, les kilomètres cumulés, la plus longue sortie. Aucune ne redescend d'une semaine
+    /// sur l'autre, quoi qu'on fasse.
+    ///
+    /// Le nombre de JOURS depuis la première sortie a été écarté pour cette raison exactement :
+    /// il grandit qu'on coure ou non. « 3 sorties en 40 jours » est un reproche déguisé en
+    /// mesure.
+    ///
+    /// Elle s'arrête à la dixième, quand le badge prend le relais — pas de réglage, pas de croix
+    /// à fermer, et elle ne revient jamais. Elle commence à la troisième : en dessous, « 1 sortie
+    /// · 3 km · plus longue 3 km » dit trois fois la même chose.
+    private var premiersJalons: (sorties: Int, km: Double, plusLongueKm: Double)? {
+        guard runs.count >= 3, runs.count < 10 else { return nil }
+        var km = 0.0, plusLongue = 0.0
+        for r in runs {
+            km += r.distanceKm
+            plusLongue = max(plusLongue, r.distanceKm)
+        }
+        return (runs.count, km, plusLongue)
+    }
+
+    /// Les trois chiffres, dans la mise en page des tuiles de `statsCard` — c'est la même famille
+    /// de carte, et la ressemblance est le propos : celle-ci ne remplace pas l'autre, elle la
+    /// précède.
+    ///
+    /// Pas un bouton : il n'y a rien derrière qu'on n'ait déjà sous les yeux. L'onglet Stats, avec
+    /// moins de dix sorties, montre les mêmes nombres et des courbes de trois points.
+    private func premiersJalonsCard(_ jalons: (sorties: Int, km: Double, plusLongueKm: Double)) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            RUCardHeader(icon: "chart.line.uptrend.xyaxis",
+                         title: String(localized: "Depuis ta première sortie"))
+            // Trois colonnes, DEUX aux tailles d'accessibilité — même règle et même raison que
+            // la grille de mesures d'`ActivityDetailView` : « PLUS LONGUE » en capitales
+            // espacées dans un tiers d'écran rétrécit déjà à 0,7 au corps normal, et n'a plus
+            // de place du tout au-delà.
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10),
+                                     count: tailleDuTexte.isAccessibilitySize ? 2 : 3),
+                      spacing: 14) {
+                statTile("\(jalons.sorties)", unit: nil, label: "Sorties")
+                // `locale:` parce que « 14.2 km » s'écrit « 14,2 km » en français et en espagnol —
+                // voir `check_decimales.py`.
+                statTile(String(format: "%.0f", locale: Locale.current, jalons.km),
+                         unit: "km", label: "Distance")
+                statTile(String(format: "%.1f", locale: Locale.current, jalons.plusLongueKm),
+                         unit: "km", label: "Plus longue")
+            }
+        }
+        .padding(RUSpacing.cardPadding)
+        .ruCard()
+    }
+
     /// Les trente derniers jours, en une passe sur la requête déjà faite.
     ///
     /// Trente jours plutôt que « six semaines » : c'est une fenêtre qui se maintient toute seule

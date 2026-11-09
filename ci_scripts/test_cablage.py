@@ -19,6 +19,12 @@ import sys
 import tempfile
 
 ICI = pathlib.Path(__file__).resolve().parent
+# Les autres cas lancent le contrôle en SOUS-PROCESSUS, sur des dépôts fabriqués. Celui du
+# nom caché dans celui d'un voisin porte sur une seule fonction et se lit mieux appelée
+# directement : fabriquer un dépôt entier pour éprouver une correspondance de chaîne
+# cacherait ce qu'on mesure.
+sys.path.insert(0, str(ICI))
+import check_cablage as ck  # noqa: E402
 
 cas = []
 
@@ -408,6 +414,23 @@ jobs:
 def _():
     code, sortie = lancer(ICI / "check_cablage.py")
     assert code == 0, f"le dépôt tel qu'il est ne passe pas :\n{sortie}"
+
+
+@cas_de("UN NOM CACHÉ DANS CELUI D'UN VOISIN NE COMPTE PAS")
+def _():
+    # Le défaut que ce contrôle a trouvé sur lui-même, le 9 novembre 2026. Le dépôt a gagné
+    # `requis.py` à côté de `check_requis.py` : `"requis.py" in texte` devenait vrai partout où
+    # le second était nommé.
+    #
+    # Le sens dangereux est celui-ci : un script ORPHELIN passe pour câblé parce qu'un voisin au
+    # nom plus long l'est. C'est exactement ce que ce contrôle existe pour empêcher.
+    texte = "      - name: X\n        run: python3 ci_scripts/check_requis.py\n"
+    assert not ck.nomme("requis.py", texte), \
+        "« requis.py » compte comme nommé alors que seul check_requis.py l'est"
+    assert ck.nomme("check_requis.py", texte)
+    assert ck.nomme("requis.py", "run: python3 ci_scripts/requis.py fr-FR\n")
+    # Et la borne de droite : un suffixe ne doit pas compter non plus.
+    assert not ck.nomme("requis.py", "ci_scripts/requis.pyc")
 
 
 def main():

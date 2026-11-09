@@ -77,6 +77,27 @@ def importe(fichier: pathlib.Path) -> set[str]:
     return modules
 
 
+def nomme(nom: str, texte: str) -> bool:
+    """`nom` est-il écrit dans `texte` comme un fichier, et pas comme la fin d'un autre ?
+
+    UNE SOUS-CHAÎNE NE SUFFIT PAS, et ce contrôle l'a appris sur lui-même. Le dépôt a gagné
+    `requis.py` à côté de `check_requis.py` et `test_requis.py` ; `"requis.py" in texte` est
+    alors vrai partout où l'un des deux autres est nommé. Le contrôle a donc rapporté que
+    `requis.py` — qui lit des images — tournait dans `testflight.yml`, qui n'a pas Pillow. Il
+    n'y tourne pas, et il ne s'y trouvait pas : seul son nom s'y cachait dans celui d'un voisin.
+
+    Le défaut était SILENCIEUX dans l'autre sens aussi, et c'est le grave : un fichier
+    `comparer.py` compte comme « nommé par un workflow » dès qu'un `test_comparer.py` l'est.
+    Un script orphelin pouvait donc passer pour câblé, ce qui est exactement ce que ce contrôle
+    existe pour empêcher.
+
+    La borne de gauche refuse une lettre, un chiffre, un `_`, un `-` ou un point avant le nom —
+    donc `check_requis.py` et `mon-requis.py` ne comptent pas, tandis que `ci_scripts/requis.py`,
+    `"requis.py"` et ` requis.py` comptent. Celle de droite refuse qu'autre chose suive.
+    """
+    return re.search(rf"(?<![\w.\-]){re.escape(nom)}(?![\w.\-])", texte) is not None
+
+
 def tourne_par_import(fichier: pathlib.Path, nommes: set[str],
                       connus: dict[str, bool]) -> bool:
     """Ce fichier est-il importé, directement ou en chaîne, par un fichier qui tourne ?
@@ -228,7 +249,7 @@ def main() -> int:
     # quatre fois : celui-là, c'est le fichier dont le nom n'apparaît nulle part. Les
     # commentaires sont blanchis, parce que le nom d'un fichier qu'on explique ne pas câbler
     # est écrit, justement, dans un commentaire. Le `tout.sh`, lui, exécute pour de vrai.
-    nommes = {p.name for p in tous if p.name in workflows}
+    nommes = {p.name for p in tous if nomme(p.name, workflows)}
     par_import: dict[str, bool] = {}
     orphelins = [p.name for p in tous
                  if p.name not in nommes and not tourne_par_import(p, nommes, par_import)]
@@ -258,7 +279,7 @@ def main() -> int:
             if fournit:
                 continue
             for nom in sorted(images):
-                if nom in commandes:
+                if nomme(nom, commandes):
                     sans_pillow.append((f"{chemin.name}:{job}", nom))
 
     print(f"{len(tous)} fichier(s) de contrôle et de cas dans ci_scripts/")

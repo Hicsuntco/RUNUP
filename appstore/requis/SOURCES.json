@@ -1,0 +1,11 @@
+{
+  "ipad/fr-FR/1-accueil.png": {
+    "source": "appstore/raw/fr-FR/1-accueil.png",
+    "empreinte": "6eaa47b3a012",
+    "composee_par": "ci_scripts/requis.py"
+  },
+  "montre/fr-FR/1-course-libre.png": {
+    "source": null,
+    "constat": "Ne montre pas l'app. Mesuré le 9 novembre 2026 dans l'image : bouton pilule de 386 x 88 px sur 416 de large, quand le code dessine un cercle de 92 pt depuis le 6 août 2026 ; et « COURIR » en capitales, que la fonte d'affichage actuelle ne sait plus produire. Une capture de montre se prend sur un simulateur watchOS, donc sur une machine macOS : ce projet n'a pas de cible de test d'interface pour watchOS, et rien ici ne peut la refaire."
+  }
+}

@@ -218,6 +218,12 @@ jobs:
       # Sur `raw/` et non sur `out/` : le plafond est calibré sur des captures d'app en thème
       # sombre, et les images composées portent un fond de fiche clair où la mesure ne voudrait
       # rien dire. Une bannière dans une brute se retrouve de toute façon dans la composée.
+      # Les images exigées par Apple en plus des six de l'iPhone. Ce contrôle est le seul
+      # endroit où une image composée d'une capture PÉRIMÉE se voit — et c'est ici qu'il compte,
+      # juste avant que la fiche parte.
+      - name: Les captures exigées montrent-elles l'app d'aujourd'hui
+        run: python3 ci_scripts/check_requis.py
+
       - name: Une bannière du système s'est-elle posée sur ces captures
         if: startsWith(inputs.action, 'pousser-les-captures')
         run: |

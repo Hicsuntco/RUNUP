@@ -191,6 +191,21 @@ Puis, sur la machine :
   système : les 160 `try?` et 132 `catch` de l'app avalent des erreurs dont MetricKit n'entendra
   jamais parler. Une table `crash_reports` vide veut donc dire « rien de ce que le système
   appelle une panne », pas « rien ne casse ».
+- **`main` et la branche de travail n'ont en commun que le commit initial.** Mesuré le 9 novembre
+  2026 : 853 commits d'un côté, 50 de l'autre, aucune fusion depuis le 13 juillet. Ça n'empêche
+  rien — l'app, Vercel et TestFlight sortent tous de la branche de travail — sauf sur un point :
+  `privacy.html` et `support.html`, les deux pages qu'Apple affiche sur la fiche, sont servies par
+  GitHub Pages **depuis `main`**. Elles se mettent donc à jour en recopiant le fichier à la main,
+  d'une branche à l'autre. `check_politique.py` compare la page PUBLIÉE au dépôt, texte compris,
+  précisément parce que c'est la manœuvre où l'on reporte un paragraphe sur deux.
+- **Deux branches portent du travail qui n'est ni sur `main` ni sur la branche de travail.**
+  `claude/running-club-finance-wwuq46`, neuf commits : annuaire de clubs, bouton d'invitation des
+  amis, comblement de l'accueil entre la 1re et la 10e sortie, thème clair sans pastel, et une
+  seule fonte d'affichage — **Oswald**, quand la branche de travail est sur Inter et DM Mono. Ce
+  n'est pas du reste, c'est une direction artistique concurrente jamais tranchée.
+  `claude/new-session-otcd8z`, un commit utile : `ef3ad89`, la lecture des agrégats rentrée dans
+  `api/events.js` pour tenir sous les douze fonctions Vercel — le même plafond que `lib/` a servi
+  à contourner ici, résolu autrement, ailleurs. `correction-auteur` ne porte rien d'unique.
 - **Le contenu des séances HYROX** attend quelqu'un qui en a couru un (voir `PROGRESS.md`).
 
 ---

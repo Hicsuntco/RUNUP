@@ -36,6 +36,8 @@ travail de `check_requis.py`.
 """
 from __future__ import annotations
 
+import hashlib
+import json
 import sys
 from pathlib import Path
 
@@ -48,9 +50,18 @@ import screenshots as s  # noqa: E402
 #: `TYPES_PAR_TAILLE` dans `asc.py`). Changer ce couple change la case où elle atterrit.
 IPAD = (2048, 2732)
 
-#: La capture dont l'image est faite. La première des six, celle de l'accueil : c'est l'écran que
-#: l'app ouvre, et le seul dont on soit sûr qu'il existe dans toutes les langues.
+#: Le registre de ce dont chaque image livrée est faite — lu par `check_requis.py`.
+TABLE = Path(s.ROOT) / "appstore/requis/SOURCES.json"
+
+#: La capture dont l'image iPad est faite. La première des six, celle de l'accueil : c'est
+#: l'écran que l'app ouvre, et le seul dont on soit sûr qu'il existe dans toutes les langues.
 SOURCE = "1-accueil.png"
+
+#: La capture de montre, prise par `captures.yml` sur un simulateur watchOS — voir son étape
+#: « Photographier la montre ». Elle n'est PAS composée : l'écran d'une montre fait 416 × 496, et
+#: Apple le veut tel quel. Il n'y a donc rien à poser autour, et l'image livrée est la capture.
+MONTRE_BRUTE = "appstore/raw-montre"
+MONTRE_NOM = "1-course-libre.png"
 
 MARGE = 150
 TITRE_HAUT = 300
@@ -147,18 +158,62 @@ def composer(langue: str):
     return dest
 
 
+def montre(langue: str):
+    """Pose la capture de montre telle quelle, si la chaîne en a pris une.
+
+    Rien n'est composé autour : l'écran d'une montre fait 416 × 496 et Apple le veut ainsi.
+    L'image livrée EST la capture — c'est pour ça qu'elle vaut mieux que celle qu'on remplace,
+    qui était dessinée à la main et montrait un écran qui n'existait plus.
+    """
+    brut = s.ROOT / MONTRE_BRUTE / langue / MONTRE_NOM
+    if not brut.exists():
+        print(f"  — {langue} : pas de capture de montre ({MONTRE_BRUTE}/{langue}).")
+        return None
+    dest = s.ROOT / "appstore/requis/montre" / langue / MONTRE_NOM
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(brut.read_bytes())
+    return dest
+
+
+def datee(clef: str, source: str) -> None:
+    """Pose l'empreinte de la capture dont une image livrée vient d'être faite.
+
+    Écrite ICI et pas seulement par `check_requis.py --ecrire` : la commande qui FABRIQUE est la
+    seule qui sache de quoi elle a fabriqué. Une empreinte reposée à part, après coup, pourrait
+    certifier une image que personne n'a recomposée — c'est exactement le piège que le relevé de
+    la fiche de confidentialité refuse, pour la même raison.
+    """
+    table = json.loads(TABLE.read_text(encoding="utf-8")) if TABLE.exists() else {}
+    table[clef] = {
+        "source": source,
+        "empreinte": hashlib.sha256((s.ROOT / source).read_bytes()).hexdigest()[:12],
+        "composee_par": "ci_scripts/requis.py",
+    }
+    TABLE.write_text(json.dumps(dict(sorted(table.items())), ensure_ascii=False, indent=2) + "\n",
+                     encoding="utf-8")
+
+
 def main() -> int:
     langues = sys.argv[1:] or ["fr-FR"]
     faits = 0
     for langue in langues:
         dest = composer(langue)
-        if dest is None:
-            continue
-        faits += 1
-        largeur, hauteur = Image.open(dest).size
-        print(f"{dest.relative_to(s.ROOT)} — {largeur} × {hauteur}")
+        if dest is not None:
+            faits += 1
+            largeur, hauteur = Image.open(dest).size
+            print(f"{dest.relative_to(s.ROOT)} — {largeur} × {hauteur}")
+            datee(str(dest.relative_to(s.ROOT / "appstore/requis")),
+                  f"appstore/raw/{langue}/{SOURCE}")
+    for langue in langues:
+        dest = montre(langue)
+        if dest is not None:
+            faits += 1
+            largeur, hauteur = Image.open(dest).size
+            print(f"{dest.relative_to(s.ROOT)} — {largeur} × {hauteur}")
+            datee(str(dest.relative_to(s.ROOT / "appstore/requis")),
+                  f"{MONTRE_BRUTE}/{langue}/{MONTRE_NOM}")
     if faits == 0:
-        print("Aucune capture d'accueil trouvée : rien n'a été composé.")
+        print("Aucune capture trouvée : rien n'a été posé.")
         return 1
     return 0
 

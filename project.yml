@@ -424,6 +424,25 @@ targets:
 # l'app. Le schéma `RunUp`, lui, ne connaît que `RunUpTests` et continue de livrer sur TestFlight
 # sans jamais démarrer un simulateur de plus.
 schemes:
+  # LA MONTRE A SON PROPRE SCHÉMA, et c'est ce qui permet de la PHOTOGRAPHIER.
+  #
+  # Aucune de ses vues n'avait jamais été capturée : il n'y a pas de cible de test d'interface
+  # pour watchOS, et l'image livrée à Apple était faite à la main — elle montrait un bouton
+  # pilule quand le code dessine un cercle depuis le 6 août 2026, et « COURIR » en capitales,
+  # que la fonte d'affichage actuelle ne sait plus produire.
+  #
+  # Une capture de montre ne passe pas par un test : on construit, on installe sur un simulateur
+  # watchOS, on lance, et `simctl io screenshot` photographie l'écran. Il faut donc un schéma
+  # qui construise CETTE cible seule — `Captures` construit l'app iPhone, sur une autre
+  # plateforme, et ne peut pas servir.
+  #
+  # Debug, comme `Captures`, et pour une raison plus faible mais réelle : c'est la configuration
+  # dans laquelle l'app est éprouvée partout ailleurs, et une capture doit montrer ce qu'on
+  # éprouve.
+  Montre:
+    build:
+      targets:
+        RunUpWatch: [run]
   Captures:
     build:
       targets:

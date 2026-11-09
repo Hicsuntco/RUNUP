@@ -75,6 +75,12 @@ on:
       - "RunUp/Services/CaptureSeed.swift"
       - "RunUpUITests/**"
       - "ci_scripts/screenshots.py"
+      # Les deux images qu'Apple exige en plus des six, et le témoin qui les garde. Le script
+      # qui les fabrique ET le contrôle qui les vérifie : si seul le premier était ici, changer
+      # le second ne relancerait rien, et c'est le contrôle qu'on croirait exécuté.
+      - "ci_scripts/requis.py"
+      - "ci_scripts/check_requis.py"
+      - "RunUpWatch/**"
       - "ci_scripts/apercu.py"
       - "ci_scripts/montage.py"
       - "ci_scripts/bascules.py"
@@ -367,6 +373,82 @@ jobs:
             echo
           done
 
+      # ── LA MONTRE, QUI N'AVAIT JAMAIS ÉTÉ PHOTOGRAPHIÉE ──────────────────────────────────────
+      #
+      # Apple EXIGE une capture de montre dès que la build embarque une app watchOS, et celle qui
+      # était livrée avait été faite à la main : relevée le 9 novembre 2026, elle montrait un
+      # bouton pilule de 386 × 88 px quand le code dessine un cercle de 92 pt depuis le 6 août, et
+      # « COURIR » en capitales, que la fonte d'affichage actuelle ne sait plus produire.
+      #
+      # Elle ne passe pas par un test d'interface : il n'y a pas de cible de test pour watchOS.
+      # On construit, on installe, on lance, on photographie. C'est plus fragile qu'un test — il
+      # faut attendre que l'écran soit dessiné, et attendre n'est pas vérifier — donc l'étape
+      # RÉCLAME une image non vide à la fin, et dit ce qu'elle a trouvé si elle échoue.
+      #
+      # L'app de poignet n'a pas besoin d'état : sans iPhone en face, `WatchConnectivityManager`
+      # ne rend aucune séance et l'écran affiche « Course libre », qui est exactement la capture
+      # voulue. Rien à semer, donc, et rien qui puisse se périmer en silence.
+      - name: Photographier la montre
+        id: montre
+        run: |
+          set -euo pipefail
+          liste=$(xcrun simctl list devices available -j)
+          # Le modèle le plus récent, trié par NUMÉRO de série et non par nom : « Series 9 »
+          # passerait après « Series 11 » en ordre alphabétique. Même piège que pour l'iPhone.
+          choisi=$(echo "$liste" | jq -c '
+            [.devices[][] | select(.name | test("^Apple Watch Series [0-9]+"))]
+            | sort_by(.name | capture("Series (?<n>[0-9]+)") | .n | tonumber)
+            | last // empty')
+          udid=$(echo "$choisi" | jq -r '.udid // empty')
+          if [ -z "$udid" ]; then
+            echo "✗ Aucun simulateur Apple Watch. Disponibles :"
+            echo "$liste" | jq -r '.devices[][].name' | sort -u
+            exit 1
+          fi
+          echo "→ $(echo "$choisi" | jq -r .name) : $udid"
+
+          xcodebuild build \
+            -project RunUp.xcodeproj \
+            -scheme Montre \
+            -configuration Debug \
+            -destination "id=$udid" \
+            -derivedDataPath build/montre \
+            CODE_SIGNING_ALLOWED=NO
+
+          app=$(find build/montre/Build/Products -maxdepth 2 -name "RunUpWatch.app" -print -quit)
+          if [ -z "$app" ]; then
+            echo "✗ RunUpWatch.app introuvable sous build/montre/Build/Products :"
+            find build/montre/Build/Products -maxdepth 2 -print
+            exit 1
+          fi
+
+          xcrun simctl boot "$udid" || true
+          xcrun simctl bootstatus "$udid" -b || true
+          xcrun simctl install "$udid" "$app"
+
+          for langue in ${{ steps.quoi.outputs.langues }}; do
+            court=${langue%%-*}
+            dossier="appstore/raw-montre/$langue"
+            mkdir -p "$dossier"
+            xcrun simctl terminate "$udid" com.hicsuntco.runup.watchkitapp || true
+            # La langue est posée à CHAQUE lancement, pas une fois sur l'appareil : l'app lit
+            # `AppleLanguages` dans ses propres réglages, et un appareil remis en français entre
+            # deux passes donnerait trois fois la même image sans rien dire.
+            xcrun simctl launch "$udid" com.hicsuntco.runup.watchkitapp \
+              -AppleLanguages "($court)" -AppleLocale "$langue"
+            # Attendre le dessin. Il n'y a rien à interroger : pas de test, donc pas de
+            # `waitForExistence`. Huit secondes est le réglage, et l'image non vide exigée
+            # ci-dessous est ce qui empêche ce réglage de passer pour une vérification.
+            sleep 8
+            xcrun simctl io "$udid" screenshot "$dossier/1-course-libre.png"
+            taille=$(wc -c < "$dossier/1-course-libre.png")
+            if [ "$taille" -lt 5000 ]; then
+              echo "✗ $langue : capture de $taille octets — l'écran n'était pas dessiné."
+              exit 1
+            fi
+            echo "→ $langue : $taille octets"
+          done
+
       # UN ENVIRONNEMENT VIRTUEL, PAS UN `pip install` NU.
       #
       # `python3 -m pip install pillow` est maintenant REFUSÉ sur les runners macOS :
@@ -385,6 +467,12 @@ jobs:
             echo "──────────── $langue ────────────"
             "$RUNNER_TEMP/venv/bin/python" ci_scripts/screenshots.py "$langue"
           done
+          # Les deux images qu'Apple exige en plus des six : l'iPad, composée de la capture
+          # d'accueil qu'on vient de prendre, et la montre, posée telle quelle. Elles sont dans
+          # la même étape parce qu'elles dépendent des mêmes captures fraîches — les séparer
+          # rouvrirait la porte par laquelle elles ont vieilli de trois mois.
+          "$RUNNER_TEMP/venv/bin/python" ci_scripts/requis.py ${{ steps.quoi.outputs.langues }}
+          python3 ci_scripts/check_requis.py
 
       # ── LE GRAND TEXTE A-T-IL PRIS ? ─────────────────────────────────────────────────────────
       #

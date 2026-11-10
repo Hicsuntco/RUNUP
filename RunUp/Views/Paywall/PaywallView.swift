@@ -397,28 +397,32 @@ struct PaywallView: View {
         guard let product = selected else { return }
         let plan: AnalyticsValue = .string(product.id == SubscriptionService.ProductID.yearly ? "yearly" : "monthly")
         Analytics.shared.track(.purchaseStarted, ["plan": plan])
-        switch await subscriptions.purchase(product) {
+        let issue = await subscriptions.purchase(product)
+        switch issue {
         case .subscribed:
             Analytics.shared.track(.purchaseCompleted, ["plan": plan])
-            appState.toast(String(localized: "Bienvenue dans RUNUP Plus"))
-            // ET ON FERME. Sans ça, Face ID validé et toast passé, il reste à l'écran le héros
-            // « 7 jours offerts », les formules cochables et un bouton d'achat toujours actif :
-            // rien ne dit que ça a marché, et le geste naturel est de retaper.
-            onClose?()
+        // UN ACHAT ABOUTI, LUI AUSSI : Apple a signé la transaction, le droit d'accès n'a
+        // simplement pas fini d'arriver. Le compter avec les échecs gonflerait un taux d'échec
+        // qui pousserait à corriger du code qui marche. Il est distingué par `unlock`, pour qu'on
+        // puisse mesurer combien de fois l'attente de trois secondes n'a pas suffi.
+        case .purchasedAwaitingUnlock:
+            Analytics.shared.track(.purchaseCompleted, ["plan": plan, "unlock": .string("deferred")])
         case .pending:
             // « En attente » n'est ni un succès ni un échec — typiquement Demander à acheter, sur
             // un compte enfant. Le ranger avec l'un des deux fausserait les deux.
             Analytics.shared.track(.purchaseFailed, ["plan": plan, "reason": .string("pending")])
-            appState.toast(String(localized: "Achat en attente d'approbation."))
         case .failed:
             Analytics.shared.track(.purchaseFailed, ["plan": plan, "reason": .string("failed")])
-            appState.toast(String(localized: "L'achat n'a pas abouti."))
         case .cancelled:
             // Distinct d'un échec, et c'est tout l'intérêt : ici la machinerie a parfaitement
             // fonctionné, la personne a lu le prix et a dit non. Un taux d'annulation élevé se
             // corrige sur l'offre ; un taux d'échec élevé se corrige dans le code.
             Analytics.shared.track(.purchaseCancelled, ["plan": plan])
         }
+        // Le message et la fermeture viennent de l'issue, pas d'un `if` par cas : c'est en
+        // écrivant la phrase à la main dans chaque branche qu'on finit par en annoncer une fausse.
+        if let message = issue.message { appState.toast(message) }
+        if issue.ferme { onClose?() }
     }
 
     /// Le résultat d'un code promo, dit seulement quand il y a quelque chose à dire.

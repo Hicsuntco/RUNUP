@@ -221,53 +221,90 @@ final class SubscriptionService {
         Entitlement.cacheHasPlus(active || !canSell)
     }
 
-    enum PurchaseOutcome { case subscribed, cancelled, pending, failed }
+    /// Attend le droit d'accès, brièvement, et s'arrête à la première réponse positive.
+    ///
+    /// LE DROIT N'ARRIVE PAS AVEC LA FIN DE L'ACHAT. Apple le livre par `Transaction.updates`,
+    /// quelques centaines de millisecondes plus tard — parfois plus. Poser la question une seule
+    /// fois, tout de suite, répondrait « rien » à quelqu'un qui vient de payer ou d'entrer un code
+    /// parfaitement valide, et l'app afficherait le verrou pendant que l'abonnement s'ouvre
+    /// derrière.
+    ///
+    /// D'où l'attente bornée. Elle s'arrête à la première réponse positive — donc immédiatement
+    /// dans le cas ordinaire, sans aucune pause — et elle abandonne au bout de trois secondes.
+    /// Rien n'est perdu si elle abandonne : `Transaction.updates` finira par livrer la transaction
+    /// et les écrans se déverrouilleront d'eux-mêmes. Ce qu'on perd, c'est seulement le message.
+    ///
+    /// Une fonction partagée, et non deux boucles jumelles : le code promo attendait déjà, l'achat
+    /// non, et c'est précisément cet écart qui faisait annoncer « L'achat n'a pas abouti. » après
+    /// une transaction signée par Apple. Deux copies de cette boucle, c'est la garantie que la
+    /// prochaine divergence passera inaperçue aussi longtemps.
+    private func attendreLeDroit() async {
+        for essai in 0..<8 {
+            await refreshEntitlement()
+            if isSubscribed == true { return }
+            if essai < 7 { try? await Task.sleep(for: .milliseconds(400)) }
+        }
+    }
 
     func purchase(_ product: Product) async -> PurchaseOutcome {
         isPurchasing = true
+        // Relâché APRÈS l'attente ci-dessous, et c'est voulu : le bouton reste désactivé le temps
+        // qu'on sache quoi répondre, au lieu de redevenir tapable sous le doigt de quelqu'un dont
+        // l'achat est en train d'aboutir.
         defer { isPurchasing = false }
+
+        // La décision ne se prend pas ici : voir `PurchaseOutcome`. Ici on ne fait que trois
+        // choses — demander, traduire la réponse de StoreKit, et laisser au droit le temps
+        // d'arriver.
+        let resultat = await resultatDeLAchat(product)
+
+        switch resultat {
+        // Rien à attendre : personne n'a payé, et dans le cas « Demander à acheter » le droit
+        // arrivera dans plusieurs minutes ou jamais — trois secondes de sablier n'y changeraient
+        // rien, sinon faire croire à une panne.
+        case .cancelled, .pending:
+            break
+        case .verified, .unverified, .unknown, .threw:
+            await attendreLeDroit()
+        }
+        return PurchaseOutcome.decide(result: resultat, isSubscribed: isSubscribed)
+    }
+
+    /// Ce que StoreKit a répondu, traduit sans rien décider.
+    ///
+    /// Une fonction à part pour que `purchase(_:)` reste lisible d'un coup d'œil — demander,
+    /// attendre, répondre — et pour qu'il n'y ait qu'UN seul `return` là où la réponse se décide.
+    private func resultatDeLAchat(_ product: Product) async -> PurchaseOutcome.StoreKitResult {
         do {
             switch try await product.purchase() {
             case .success(let verification):
-                guard case .verified(let transaction) = verification else { return .failed }
+                guard case .verified(let transaction) = verification else { return .unverified }
+                // `finish()` tout de suite : la transaction est honorée, et la laisser ouverte la
+                // ferait rejouer par `Transaction.updates` à chaque lancement de l'app.
                 await transaction.finish()
-                await refreshEntitlement()
-                return isSubscribed == true ? .subscribed : .failed
+                return .verified
             case .userCancelled:
                 return .cancelled
-            // « En attente » n'est pas un échec : c'est le cas Ask to Buy, où un parent doit
-            // approuver. La transaction arrivera plus tard par `Transaction.updates`.
             case .pending:
                 return .pending
             @unknown default:
-                return .failed
+                return .unknown
             }
         } catch {
-            return .failed
+            return .threw
         }
     }
 
     /// Ce qu'il faut faire une fois la feuille de code promo refermée.
     ///
-    /// LE DROIT N'ARRIVE PAS AVEC LA FERMETURE DE LA FEUILLE. Apple le livre par
-    /// `Transaction.updates`, quelques centaines de millisecondes plus tard — parfois plus. Poser
-    /// la question une seule fois, tout de suite, répondrait « rien » à quelqu'un qui vient
-    /// d'entrer un code parfaitement valide, et l'app afficherait le verrou pendant que
-    /// l'abonnement s'ouvre derrière.
-    ///
-    /// D'où l'attente bornée ci-dessous. Elle s'arrête à la première réponse positive — donc
-    /// immédiatement dans le cas ordinaire — et elle abandonne au bout de trois secondes. Rien
-    /// n'est perdu si elle abandonne : `Transaction.updates` finira par livrer la transaction et
-    /// les écrans se déverrouilleront d'eux-mêmes. Ce qu'on perd, c'est seulement le message.
+    /// L'attente est celle d'`attendreLeDroit()`, pour la raison qui y est écrite : le droit
+    /// n'arrive pas avec la fermeture de la feuille. Quand la feuille, elle, n'a pas pu s'ouvrir,
+    /// il n'y a rien à attendre — aucun code n'a été saisi — et une seule lecture suffit.
     func applyRedemption(sheetFailed: Bool) async -> OfferCodeOutcome {
         if sheetFailed {
             await refreshEntitlement()
         } else {
-            for essai in 0..<8 {
-                await refreshEntitlement()
-                if isSubscribed == true { break }
-                if essai < 7 { try? await Task.sleep(for: .milliseconds(400)) }
-            }
+            await attendreLeDroit()
         }
         return OfferCodeOutcome.decide(sheetFailed: sheetFailed, isSubscribed: isSubscribed)
     }

@@ -18376,6 +18376,22 @@
         }
       }
     },
+    "Paiement validé. Ton accès s'ouvre dans un instant.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Payment confirmed. Your access opens in a moment."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pago confirmado. Tu acceso se abrirá en un instante."
+          }
+        }
+      }
+    },
     "Paire par défaut": {
       "localizations": {
         "en": {

@@ -334,6 +334,22 @@ jobs:
           cd ci_scripts && python3 test_delais.py
           cd .. && python3 ci_scripts/check_delais.py
 
+      # « L'ACHAT N'A PAS ABOUTI. » APRÈS UNE TRANSACTION SIGNÉE PAR APPLE.
+      #
+      # `purchase(_:)` posait la question du droit d'accès UNE FOIS, juste après
+      # `transaction.finish()`, alors que `currentEntitlements` le publie quelques centaines de
+      # millisecondes plus tard. Quelqu'un qui vient d'être débité lisait donc un avertissement
+      # d'échec au-dessus d'un bouton d'achat toujours actif, et la statistique enregistrait un
+      # `purchaseFailed` — soit un taux d'échec faux, qui pousse à corriger du code qui marche.
+      #
+      # Le piège était déjà connu et déjà contourné trente lignes plus bas pour les codes promo,
+      # commentaire à l'appui. Deux chemins, un seul corrigé. Et invisible autrement qu'en payant
+      # pour de vrai : dans un simulateur, l'entitlement arrive instantanément.
+      - name: Vérifier que les issues de paiement se décident dans un type testé
+        run: |
+          cd ci_scripts && python3 test_paiement.py
+          cd .. && python3 ci_scripts/check_paiement.py
+
       # Une clé absente du catalogue ne casse rien : `String(localized:)` rend la clé, et le texte
       # sort EN FRANÇAIS chez tout le monde. Ça ne se voit qu'en lançant l'app dans une autre
       # langue, sur l'écran concerné — autant dire jamais. L'audit en a trouvé cinq d'un coup,

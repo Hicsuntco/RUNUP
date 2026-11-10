@@ -406,6 +406,91 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 28 — « L'achat n'a pas abouti. », dit à quelqu'un qu'Apple vient de débiter (A4)
+
+### L'item était mal posé, pour la quatrième fois
+
+`PHASE2.md` disait « `SubscriptionService` existe, aucun test de parcours d'achat », avec un risque
+« moyen, les achats se testent mal sans compte sandbox ». Les trois décisions du parcours étaient
+déjà **sorties de StoreKit et déjà sous test** : `Entitlement` (8 cas), `OfferCodeOutcome` (6 cas),
+`RestoreOutcome` (7 cas). Il ne manquait que la frontière StoreKit elle-même, qui ne se teste pas
+sans configuration `.storekit` et `StoreKitTest`.
+
+Mais en lisant le fichier pour l'écrire, une asymétrie à trente lignes d'écart.
+
+### Le défaut
+
+`applyRedemption(sheetFailed:)` attendait le droit d'accès jusqu'à 3,2 secondes, avec un
+commentaire qui disait pourquoi : poser la question une seule fois « répondrait “rien” à quelqu'un
+qui vient d'entrer un code parfaitement valide ».
+
+`purchase(_:)`, trente lignes plus haut, la posait **une fois** :
+
+```swift
+await transaction.finish()
+await refreshEntitlement()
+return isSubscribed == true ? .subscribed : .failed
+```
+
+Cette ligne tombe après une transaction **vérifiée** et terminée — Apple a signé, l'argent est
+engagé — et `Transaction.currentEntitlements` publie le droit quelques centaines de millisecondes
+plus tard. Le paywall en tirait les trois pires conséquences possibles d'un coup :
+
+1. le message **« L'achat n'a pas abouti. »** affiché à quelqu'un qui vient d'être débité ;
+2. un `purchaseFailed` enregistré — donc un taux d'échec faux, qui pousserait à corriger du code
+   qui marche, et la statistique qui devrait signaler le défaut est celle qu'il corrompt ;
+3. l'écran laissé ouvert, bouton d'achat toujours actif. C'est exactement le raisonnement que le
+   cas `.subscribed` du même fichier tient déjà pour expliquer pourquoi il ferme : « rien ne dit
+   que ça a marché, et le geste naturel est de retaper ». Ici, retaper veut dire payer une
+   seconde fois.
+
+Le piège était donc **déjà connu, déjà documenté et déjà contourné** dans le même fichier. Deux
+chemins, un seul corrigé. Et il ne se voit nulle part ailleurs que chez l'utilisatrice : dans un
+simulateur, l'entitlement arrive instantanément.
+
+### Ce qui a changé
+
+| | Avant | Après |
+| --- | --- | --- |
+| Après une transaction vérifiée | une seule lecture du droit | l'attente bornée d'`attendreLeDroit()`, celle des codes promo |
+| Droit pas encore publié | `.failed` → « L'achat n'a pas abouti. » | `.purchasedAwaitingUnlock` → « Paiement validé. Ton accès s'ouvre dans un instant. » |
+| Statistique dans ce cas | `purchase_failed` | `purchase_completed`, avec `unlock: deferred` pour compter les fois où 3,2 s n'ont pas suffi |
+| Écran | reste ouvert, bouton actif | se referme |
+| Signature non vérifiée | indistincte d'un échec réseau | `.unverified`, et le droit tranche s'il est là |
+| Où la décision vit | une ligne dans `SubscriptionService` | `PurchaseOutcome.decide`, pur, sans `import StoreKit` |
+| L'attente | deux boucles jumelles, une seule corrigée | une fonction, `attendreLeDroit()`, appelée par les deux |
+
+Le droit d'accès n'est **pas** mis à vrai à l'achat, et ce n'est pas un oubli : `refreshEntitlement`
+reste la seule source, relue de `currentEntitlements`, pour qu'un remboursement referme l'accès.
+Seul le message change.
+
+Une annulation reste une annulation, même chez quelqu'un d'abonné par ailleurs. La règle « le droit
+d'abord » de `RestoreOutcome` et `OfferCodeOutcome` ne s'applique qu'aux cas où StoreKit doute :
+là-bas on **cherche** un droit, ici StoreKit parle d'un achat précis et il est formel. Confondre les
+deux ferait compter une annulation comme une vente — c'est-à-dire fausserait la seule mesure qui
+dise si le prix est le problème.
+
+### Ce qui le garde
+
+`RunUpTests/PurchaseOutcomeTests.swift`, 10 cas, dont le premier est le défaut lui-même : une
+transaction vérifiée sans droit n'est jamais un échec, et son message n'est jamais celui de
+l'échec.
+
+`ci_scripts/check_paiement.py` et ses **16 cas**. Trois règles : une fonction qui rend une issue de
+paiement n'a droit qu'à **un seul `return`**, et il appelle `<Issue>.decide(` ; chaque issue vit
+dans `RunUp/Models/`, sans `import StoreKit`, avec son fichier de cas ; et **chaque cas de chaque
+issue est nommé dans ses cas de test** — ajouter une issue sans la vérifier rouvrirait le trou par
+le haut.
+
+Trois des seize cas ne vérifient qu'une chose : comment ce contrôle pourrait passer vert pour la
+mauvaise raison. Une signature reformatée et il ne reconnaît plus rien ; un `case a, b, c` sur une
+ligne et il laisse passer trois cas d'un coup ; une énumération déplacée et il félicite une liste
+vide. Il le dit dans les trois cas. Le quatrième a servi tout de suite : il comptait les six
+entrées de `StoreKitResult` parmi les issues, 17 au lieu de 11, et aurait exigé qu'on « teste » des
+entrées comme si c'étaient des réponses.
+
+La nouvelle phrase est au catalogue dans les trois langues.
+
 ## Chantier 27 — soixante secondes de roue qui tourne (A3)
 
 ### L'item était mal posé, pour la troisième fois

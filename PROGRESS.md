@@ -523,21 +523,24 @@ dont un qui fixe `ceil` plutôt que `round` — à dix observations le p50 est l
 cinq-et-demie, et `round` faisait sauter d'un palier, soit quatre fois plus de millisecondes
 annoncées.
 
-### Et elle ne part pas encore — délibérément
+### Elle ne partait pas encore, et maintenant si
 
-`Diagnostics.mesureDuLancementActive` est à **faux**, pour une raison qui n'est pas technique :
-**la politique publiée ne décrit pas encore cette mesure.** Collecter une donnée que la page liée
-depuis la fiche App Store ne mentionne pas est exactement le défaut que `check_politique.py` existe
-pour empêcher, et son commentaire dit que c'est le sens dangereux des deux.
+`Diagnostics.mesureDuLancementActive` est resté à **faux** le temps d'un chantier, pour une raison
+qui n'était pas technique : la politique **publiée** ne décrivait pas cette mesure. Collecter une
+donnée que la page liée depuis la fiche App Store ne mentionne pas est exactement le défaut que
+`check_politique.py` existe pour empêcher, dans le sens qu'il qualifie de dangereux.
 
-J'ai préparé le paragraphe, et le push vers `main` m'a été refusé : c'est un déploiement en
-production, et Charlotte avait autorisé un seul geste sur `main`, celui de la phrase sur les
-statistiques. Je ne l'ai pas contourné, et j'ai retiré le paragraphe de la branche de travail pour
-que les deux pages restent d'accord.
+J'avais préparé le paragraphe et le push vers `main` m'a été refusé — un déploiement en
+production, et l'autorisation d'alors portait sur un seul geste. Je ne l'ai pas contourné : j'ai
+retiré le paragraphe de la branche de travail pour que les deux pages restent d'accord, et j'ai
+posé un drapeau écrit en clair, avec sa raison et l'action qui le lève.
 
-**Ce qui l'ouvre, en un seul commit** : ajouter le paragraphe ci-dessous à `privacy.html` sur cette
-branche ET sur `main`, et passer la constante à `true`. `check_politique.py` dira si les deux pages
-se sont rejointes.
+Charlotte a autorisé le geste le 10 novembre. **L'ordre a été tenu** : la page a été publiée sur
+`main` d'abord, vérifiée servie par GitHub Pages — douze sections au lieu de onze, texte identique
+au dépôt — et la constante n'est passée à vrai qu'après. Il n'a donc jamais existé d'instant où
+l'app mesurait sans que la page le dise.
+
+Le paragraphe publié :
 
 > **Temps de lancement** — une fois par jour au plus, l'application envoie la mesure du temps que
 > ton téléphone a mis à afficher le premier écran, telle qu'iOS l'établit. Elle arrive sous forme
@@ -547,12 +550,21 @@ se sont rejointes.
 > Elle relève du choix décrit ci-dessus : si tu refuses les statistiques d'usage, elle n'est ni
 > enregistrée ni envoyée.
 
-Le manifeste, lui, n'a pas bougé : `PrivacyInfo.xcprivacy` déclare déjà `PerformanceData`, pour les
-diagnostics de lancement. Même nature de donnée, même finalité.
+La constante reste en place plutôt que d'être retirée : elle est l'interrupteur par lequel on
+arrête cette collecte sans toucher à rien d'autre.
+
+Le manifeste, lui, n'a pas bougé : `PrivacyInfo.xcprivacy` déclare déjà `PerformanceData`, pour
+les diagnostics de lancement. Même nature de donnée, même finalité.
 
 Et cette mesure **obéit au consentement**, contrairement aux rapports de panne : elle passe par
 `Analytics`, dont `enqueue` et `sendNextBatch` sont gardés par le choix fait à l'inscription. C'est
 pour ça que le paragraphe le dit — les deux cas voisins ne se comportent pas pareil.
+
+### Ce qu'on saura, et quand
+
+Rien ce soir. MetricKit livre un lot par appareil et par jour, depuis un appareil RÉEL — un
+simulateur n'en envoie pas. Les premiers chiffres arriveront dans la table `events`, événement
+`launch_measured`, et la promesse se lira directement dans la propriété `part_au_dessus_de_2s`.
 
 ## Chantier 31 — l'état vide, écrit une fois pour de bon (A5, le reliquat)
 

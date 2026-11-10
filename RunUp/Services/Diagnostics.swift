@@ -113,25 +113,23 @@ private struct LotDePannes: Encodable, Sendable {
 final class Diagnostics: NSObject, MXMetricManagerSubscriber, @unchecked Sendable {
     static let shared = Diagnostics()
 
-    /// LA MESURE DU TEMPS DE LANCEMENT EST PRÊTE ET NE PART PAS ENCORE.
+    /// LA MESURE DU TEMPS DE LANCEMENT PART, DEPUIS QUE LA PAGE LA DÉCRIT.
     ///
-    /// Elle est écrite, éprouvée (`HistogrammeTests`, 16 cas) et branchée dans
-    /// `didReceive(_:[MXMetricPayload])` plus bas. Elle est à FAUX pour une seule raison, et ce
-    /// n'est pas technique : **la politique de confidentialité publiée ne la décrit pas encore.**
+    /// Elle est restée à FAUX le temps d'un chantier, pour une raison qui n'était pas technique :
+    /// la politique de confidentialité PUBLIÉE ne la décrivait pas. Collecter une donnée que la
+    /// page liée depuis la fiche App Store ne mentionne pas est exactement le défaut que
+    /// `ci_scripts/check_politique.py` existe pour empêcher, et son commentaire dit lequel des
+    /// deux sens est le dangereux : celui-ci.
     ///
-    /// Collecter une donnée que la page liée depuis la fiche App Store ne mentionne pas est
-    /// exactement le défaut que `ci_scripts/check_politique.py` existe pour empêcher, et son
-    /// commentaire dit lequel des deux sens est le dangereux : celui-ci. La page est servie par
-    /// GitHub Pages depuis `main`, et y porter un paragraphe est un déploiement en production.
+    /// L'ordre a été tenu : le paragraphe « Temps de lancement » a été publié sur `main` —
+    /// GitHub Pages sert la page depuis là — AVANT que cette constante ne passe à vrai. Il n'a
+    /// donc jamais existé d'instant où l'app mesurait sans que la page le dise.
     ///
-    /// CE QUI L'OUVRE, en un seul geste : ajouter à `privacy.html` le paragraphe « Temps de
-    /// lancement » — son texte est prêt, voir `PROGRESS.md`, chantier 32 — sur CETTE branche et
-    /// sur `main`, et passer cette constante à `true` dans le même commit. `check_politique.py`
-    /// dira si les deux pages se sont bien rejointes.
-    ///
-    /// Un drapeau écrit en clair plutôt qu'un interrupteur caché : il porte sa raison, l'action
-    /// qui le lève, et le nom du contrôle qui vérifiera qu'elle a été faite.
-    static let mesureDuLancementActive = false
+    /// La constante reste, plutôt que d'être retirée : elle est l'interrupteur par lequel on
+    /// arrête cette collecte sans toucher à rien d'autre, et son nom dit ce qu'elle coupe. La
+    /// remettre à faux sans retirer le paragraphe est sans danger — une page qui déclare de trop
+    /// ne trompe personne sur ce qui est pris.
+    static let mesureDuLancementActive = true
 
     /// Le vocabulaire complet. Chaque valeur doit aussi figurer dans `KNOWN_KINDS` de
     /// `api/crashes.js`, qui jette tout le reste — et `ci_scripts/check_pannes.py` compare les
@@ -242,7 +240,7 @@ final class Diagnostics: NSObject, MXMetricManagerSubscriber, @unchecked Sendabl
     /// moisson large ferait collecter des données que la politique de confidentialité ne décrit
     /// pas.
     func didReceive(_ payloads: [MXMetricPayload]) {
-        // Voir `mesureDuLancementActive` : la page publiée ne décrit pas encore cette mesure.
+        // Voir `mesureDuLancementActive` : l'interrupteur de cette collecte.
         guard Self.mesureDuLancementActive, !Demonstration.enCours else { return }
         for payload in payloads {
             guard let lancement = payload.applicationLaunchMetrics else { continue }

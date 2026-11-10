@@ -333,9 +333,8 @@ struct FriendsView: View {
                 // adresses e-mail : quelqu'un inscrit avec une adresse absente du carnet, ou via
                 // « Masquer mon adresse » d'Apple, ne peut pas être trouvé par ce chemin — et
                 // laisser croire à un bug ferait chercher au mauvais endroit.
-                Text("Personne de ton carnet d'adresses n'a encore de compte, ou ils se sont inscrits avec une autre adresse. La recherche par nom reste le chemin le plus sûr.")
-                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text3).lineSpacing(3)
-                    .fixedSize(horizontal: false, vertical: true)
+                RUEmpty(forme: .ligne,
+                        message: String(localized: "Personne de ton carnet d'adresses n'a encore de compte, ou ils se sont inscrits avec une autre adresse. La recherche par nom reste le chemin le plus sûr."))
                     .padding(.vertical, 6)
             }
 
@@ -386,9 +385,9 @@ struct FriendsView: View {
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity).padding(.vertical, 18)
             } else if searchResults.isEmpty {
-                Text("Personne ne porte ce nom.")
-                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
-                    .frame(maxWidth: .infinity).padding(.vertical, 18)
+                RUEmpty(forme: .ligne, message: String(localized: "Personne ne porte ce nom."))
+                    .multilineTextAlignment(.center)
+                    .padding(.vertical, 18)
             }
             ForEach(searchResults) { user in
                 personRow(user) { followButton(for: user) }

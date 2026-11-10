@@ -64,10 +64,10 @@ struct HeatmapView: View {
                 Spacer()
             } else if parcours.isEmpty {
                 Spacer()
-                Text("Aucun parcours GPS enregistré pour l'instant — la carte se remplit après ta première course trackée.")
-                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
+                RUEmpty(icone: "map",
+                        titre: String(localized: "Aucun parcours"),
+                        message: String(localized: "La carte se remplit après ta première course suivie au GPS."))
+                    .padding(.horizontal, 24)
                 Spacer()
             } else if let cadrage {
                 Map(initialPosition: .region(cadrage)) {

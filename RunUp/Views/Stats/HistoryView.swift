@@ -31,8 +31,9 @@ struct HistoryView: View {
             }
 
             if runs.isEmpty {
-                Text("Aucune course pour l'instant — termine une sortie ou ajoutes-en une manuellement.")
-                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
+                RUEmpty(icone: "figure.run",
+                        titre: String(localized: "Pas encore de course"),
+                        message: String(localized: "Termine une sortie, ou ajoutes-en une à la main : l'historique se remplit tout seul ensuite."))
                     .padding(.horizontal, RUSpacing.pagePadding)
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)

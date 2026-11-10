@@ -89,8 +89,8 @@ struct ClubEventsSection: View {
                 .buttonStyle(PressableStyle())
             }
             if (magasin.board.events ?? []).isEmpty {
-                Text("Aucune sortie prévue — propose un créneau, les autres n'ont qu'à dire « J'y serai ».")
-                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                RUEmpty(forme: .ligne,
+                        message: String(localized: "Aucune sortie prévue — propose un créneau, les autres n'ont qu'à dire « J'y serai »."))
                     .padding(.horizontal, 2)
             }
             ForEach(magasin.board.events ?? []) { event in

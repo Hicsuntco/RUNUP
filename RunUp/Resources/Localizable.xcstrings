@@ -4804,6 +4804,22 @@
         }
       }
     },
+    "Aucun parcours": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No routes yet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna ruta"
+          }
+        }
+      }
+    },
     "Aucun parcours GPS enregistré pour l'instant — la carte se remplit après ta première course trackée.": {
       "localizations": {
         "en": {
@@ -4899,6 +4915,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "No hay lista de cuentas de la casa en el servidor. Crea la variable de entorno RUNUP_ADMIN_EMAILS en Vercel, con la dirección que se muestra abajo, y vuelve a desplegar."
+          }
+        }
+      }
+    },
+    "Aucune paire": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No pairs yet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ningún par"
           }
         }
       }
@@ -13916,6 +13948,22 @@
         }
       }
     },
+    "La carte se remplit après ta première course suivie au GPS.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The map fills in after your first GPS-tracked run."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El mapa se llena tras tu primera carrera con GPS."
+          }
+        }
+      }
+    },
     "La combinaison": {
       "extractionState": "manual",
       "localizations": {
@@ -18769,6 +18817,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Todavía no hay suficientes carreras"
+          }
+        }
+      }
+    },
+    "Pas encore de course": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No runs yet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no hay carreras"
           }
         }
       }
@@ -26175,6 +26239,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Termina tu primera salida en RunUp."
+          }
+        }
+      }
+    },
+    "Termine une sortie, ou ajoutes-en une à la main : l'historique se remplit tout seul ensuite.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finish a run, or add one by hand — your history fills in on its own from there."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Termina una salida, o añade una a mano: el historial se llena solo a partir de ahí."
           }
         }
       }

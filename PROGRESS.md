@@ -406,6 +406,60 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 25 — l'état vide, écrit une fois (A5)
+
+Règle 3 : chaque écran a ses états vide, erreur et chargement. Règle 4 : rien ne s'écrit deux
+fois. Ici la seconde perdait — « Aucun composant d'état vide partagé. Zéro fichier ne porte un
+`RUEmpty`. Chaque écran écrit le sien. »
+
+### Ils divergeaient, et pas qu'un peu
+
+Trois écrans pris au hasard, pour la même phrase — « il n'y a rien ici » :
+
+| | couleur | interligne | marges |
+| --- | --- | --- | --- |
+| `FriendsView` | `text3` | 3 | verticale 6, puis 18 ailleurs |
+| `HistoryView` | **`text2`** | aucun | horizontale de page |
+| `ShoesView` | **`text2`** | 3 | haute 4 |
+
+Deux couleurs de texte différentes pour dire la même chose : c'est la définition d'un système de
+design qui ne couvre pas un cas.
+
+### `RUEmpty`, et deux formes dont le choix n'est pas esthétique
+
+**`.bloc`** occupe la place d'un contenu absent : icône, titre, une phrase, éventuellement un
+bouton. C'est la forme d'un **écran** vide — l'historique sans course, le carnet sans paire, la
+carte sans parcours.
+
+**`.ligne`** ne pose qu'une phrase, parce que la section a déjà son en-tête et que lui ajouter un
+titre le redirait. C'est la forme d'une **section** vide dans un écran qui, lui, a du contenu.
+
+Remplacer une ligne par un bloc change la mise en page d'un écran qui marchait : le bloc se
+réserve aux endroits où il n'y a vraiment rien d'autre. C'est pourquoi le balayage n'a pas tout
+converti d'un coup.
+
+### Ce qui est converti
+
+| écran | forme | ce qui change |
+| --- | --- | --- |
+| `HistoryView` | `.bloc` | icône + titre, et une phrase réécrite |
+| `ShoesView` | `.bloc` | idem |
+| `HeatmapView` | `.bloc` | idem |
+| `FriendsView` ×2 | `.ligne` | la couleur et l'interligne deviennent ceux du système |
+| `ClubEventsSection` | `.ligne` | idem |
+
+### Ce qu'il n'est pas, et c'est écrit dans le fichier
+
+Ni un état d'erreur, ni un état de chargement. « Rien à montrer » et « ça n'a pas marché » sont
+deux phrases différentes, et les confondre fait dire « aucune course » à quelqu'un dont la
+requête vient d'échouer.
+
+### Ce qui reste
+
+Sept écrans portent encore une phrase d'état vide écrite à la main, toutes dans des sections où
+le `.ligne` conviendrait. Elles ne divergent plus que par leurs marges, et les convertir une à
+une demande d'ouvrir chaque écran pour vérifier que la mise en page ne bouge pas. À finir.
+
 ## Chantier 24 — le consentement aux statistiques d'usage (A2)
 
 Le point que l'audit appelait « le plus discutable du produit » : « Aucun écran ne présente un

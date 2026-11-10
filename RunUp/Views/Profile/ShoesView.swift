@@ -38,9 +38,9 @@ struct ShoesView: View {
                 }
 
                 if shoes.isEmpty {
-                    Text("Ajoute une paire pour suivre son usure — chaque course lui est attribuée automatiquement une fois que c'est ta paire par défaut.")
-                        .font(RUFont.sans(.body)).foregroundColor(RUColor.text2).lineSpacing(3)
-                        .padding(.top, 4)
+                    RUEmpty(icone: "shoe",
+                            titre: String(localized: "Aucune paire"),
+                            message: String(localized: "Ajoute une paire pour suivre son usure — chaque course lui est attribuée automatiquement une fois que c'est ta paire par défaut."))
                 } else {
                     ForEach(activeShoes) { shoe in shoeRow(shoe) }
 

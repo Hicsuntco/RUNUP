@@ -406,6 +406,44 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 38 — l'écran « tu n'as pas encore de club » (B5, quatrième morceau)
+
+### Ce qui est sorti
+
+`ClubSetupCard` — 118 lignes de code, le magasin et **deux liaisons** : les deux champs de
+saisie, `newClubName` et `clubQuery`. Tout le reste passe par le magasin, qui porte déjà
+`createClub`, `joinClub`, `clubSearchEnCours`, `clubResultats`, `clubSuggestions` et
+`chargerLesClubsSuggeres`. Le magasin faisait déjà le travail ; la vue n'avait qu'à le suivre.
+
+Les deux lignes de résultat descendent avec elle — `ligneDUnClubARejoindre` et
+`ligneDuClubTrouve` — parce qu'elles n'ont aucun autre appelant. Leur commentaire dit déjà
+pourquoi elles sont uniques : « deux vues presque identiques auraient dérivé à la première
+retouche, et l'écart se serait lu comme une différence de nature entre un club trouvé et un club
+proposé ».
+
+`ClubView` : **1 113 → 979 lignes.** Depuis le début de B5 : **1 425 → 979**, et six fichiers
+nommés par ce qu'ils montrent.
+
+### `signInPrompt` reste
+
+14 lignes, une liaison. Un fichier pour quatorze lignes coûte plus à lire qu'il ne fait gagner :
+on ouvre un fichier de plus pour voir un bouton « SE CONNECTER ». Le critère de la découpe n'a
+jamais été le nombre de lignes du fichier d'origine, c'est qu'une section ait un nom et un état
+propre. Celle-là a un nom et presque pas de corps.
+
+### Une section `// MARK:` devenue vide
+
+`// MARK: Signed in, no club yet` ne précédait plus rien. Un intertitre qui ne titre plus rien ne
+casse pas la compilation et ne se voit pas en lisant le code autour : il se voit à la couture,
+juste après avoir retiré ce qu'il annonçait. Retiré.
+
+### Ce qui prouve les chantiers 37 et 38
+
+**Une seule campagne de captures pour les deux.** Les deux découpes ont été poussées ensemble,
+parce que pousser pendant qu'une campagne tourne l'annule — c'est ce qui a fait perdre le run 159.
+La comparaison porte donc sur les deux d'un coup, contre la campagne du chantier 36. Pour une
+découpe qui ne doit rien changer, c'est le même verdict : identique au pixel, ou pas.
+
 ## Chantier 37 — un seuil écrit deux fois, trouvé en découpant (B5, troisième morceau)
 
 ### Le plan était plus grossier que le code, pour la deuxième fois sur ce même fichier

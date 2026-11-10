@@ -255,6 +255,12 @@ enum CaptureSeed {
 
         func ilYAJours(_ jours: Int) -> String { ilYA(jours * 24) }
 
+        /// Voir `poseDUneActiviteDuJour` : le recul est raboté au début du jour, pour que
+        /// « N sorties aujourd'hui » ne dépende pas de l'heure de la campagne.
+        func ilYAAujourdHui(_ heures: Int) -> String {
+            formateur.string(from: CaptureSeed.poseDUneActiviteDuJour(maintenant, ilYA: heures))
+        }
+
         func dansDesJours(_ jours: Int) -> String { ilYA(-jours * 24) }
 
         /// LE DÉFI DU CLUB PORTAIT « OCTOBRE », ÉCRIT EN DUR.
@@ -363,7 +369,7 @@ enum CaptureSeed {
         let fil = """
         [
           { "id": "a", "userId": "2", "name": "Inès", "lastName": "Lambert", "text": "a couru 12,4 km · Sortie longue",
-            "createdAt": "\(ilYA(3))", "distanceKm": 12.4, "durationSeconds": 4190,
+            "createdAt": "\(ilYAAujourdHui(3))", "distanceKm": 12.4, "durationSeconds": 4190,
             "avgPace": "5:38", "elevationGainM": 86, "isPersonalRecord": false,
             "contentKey": "long_run", "kudos": 7, "kudoedByMe": true, "commentsCount": 2,
             "kudosNames": ["Charlotte Perret", "Margaux Hubert", "Sarah Benali"],
@@ -381,12 +387,12 @@ enum CaptureSeed {
               [48.88054, 2.38178], [48.87707, 2.37563]
             ] },
           { "id": "b", "userId": "3", "name": "Margaux", "lastName": "Hubert", "text": "a couru 6,0 km · Fractionné",
-            "createdAt": "\(ilYA(9))", "distanceKm": 6.0, "durationSeconds": 1764,
+            "createdAt": "\(ilYAAujourdHui(9))", "distanceKm": 6.0, "durationSeconds": 1764,
             "avgPace": "4:54", "isPersonalRecord": true,
             "contentKey": "vo2max_intervals", "kudos": 11, "kudoedByMe": false, "commentsCount": 4,
             "kudosNames": ["Inès Lambert", "Lina Diallo", "Charlotte Perret"] },
           { "id": "c", "userId": "5", "name": "Lina", "lastName": "Diallo", "text": "a couru 8,2 km · Tempo",
-            "createdAt": "\(ilYA(22))", "distanceKm": 8.2, "durationSeconds": 2583,
+            "createdAt": "\(ilYAAujourdHui(22))", "distanceKm": 8.2, "durationSeconds": 2583,
             "avgPace": "5:15", "elevationGainM": 42, "isPersonalRecord": false,
             "contentKey": "tempo_run", "kudos": 5, "kudoedByMe": false, "commentsCount": 1,
             "kudosNames": ["Charlotte Perret"] }
@@ -717,6 +723,22 @@ enum CaptureSeed {
     /// QUE par une exécution de la chaîne avant 05 h 00 — c'est-à-dire par le hasard de l'heure
     /// à laquelle quelqu'un pousse. Sortie, elle se vérifie à toute heure, et
     /// `CaptureSeedHeureTests` le fait pour les vingt-quatre.
+    /// Une activité d'amie tombe AUJOURD'HUI, à toute heure de campagne.
+    ///
+    /// `ProfileView` compte les activités du jour — « 2 sorties aujourd'hui ». Avec un simple
+    /// recul en heures, « il y a 22 h » est HIER à 6 h du matin et AUJOURD'HUI à 23 h : la carte
+    /// disait 2 ou 3 selon l'heure à laquelle la machine tournait. C'est ce qui a fait différer
+    /// `profil-bas.png` entre les runs 160 et 162, en même temps que les badges.
+    ///
+    /// Même borne que `poseDeLaConversation`, et pour la même raison : le recul est gardé tant
+    /// qu'il tient dans la journée, raboté au début du jour sinon. Un recul ne peut pas être à la
+    /// fois stable en affichage relatif et stable en jour — il faut choisir, et c'est le jour qui
+    /// porte un nombre à l'écran.
+    static func poseDUneActiviteDuJour(_ maintenant: Date, ilYA heures: Int) -> Date {
+        let ceMatin = Calendar.current.startOfDay(for: maintenant)
+        return max(maintenant.addingTimeInterval(-Double(heures) * 3600), ceMatin)
+    }
+
     static func poseDeLaConversation(_ maintenant: Date) -> Date {
         let ceMatin = Calendar.current.startOfDay(for: maintenant)
         return max(maintenant.addingTimeInterval(-3600 * 5), ceMatin)
@@ -964,7 +986,42 @@ enum CaptureSeed {
         return base + (graine % 5) - 2
     }
 
-    private static func historique(maintenant: Date) -> [RunRecord] {
+    /// L'HEURE D'UNE SORTIE EST POSÉE, PAS HÉRITÉE DE LA CAMPAGNE.
+    ///
+    /// `ClubBadgeEngine` lit l'heure de chaque sortie : avant 7 h donne « Lève-tôt », à partir de
+    /// 21 h donne « Course de nuit ». Or l'historique était planté à `maintenant - N jours`, donc
+    /// à l'HEURE où la machine tourne. Une campagne à 18 h rendait « Badges · 6 sur 16 » ; la
+    /// même, à 22 h, rendait « 7 sur 16 » avec « Course de nuit » allumé et tous les badges
+    /// suivants décalés d'une case. Neuf images sur trois langues et deux thèmes.
+    ///
+    /// Ça s'est vu en comparant les runs 160 et 162 — un écart que j'ai d'abord cru venir d'une
+    /// découpe de vue. Et `4-club.png`, une des six images livrées à Apple, en dépendait : selon
+    /// l'heure, Apple recevait un profil avec ce badge ou sans.
+    ///
+    /// C'est la TROISIÈME fois que ce défaut revient sur un cas frère. Le fichier porte déjà la
+    /// leçon pour les sorties de groupe — « un décalage en heures depuis l'instant de la capture
+    /// donne “DEMAIN · 13:01” ou “VEN. · 06:01” selon le moment où la machine a pris la photo » —
+    /// et `CaptureSeedHeureTests` la porte pour la conversation du coach. Les deux posent l'heure
+    /// et calculent le jour. L'historique ne le faisait pas.
+    ///
+    /// Les heures choisies sont plausibles et toutes dans `7..<21`, donc aucun des deux badges
+    /// horaires ne s'allume par accident : la sortie longue le matin, le fractionné le soir comme
+    /// une séance de club, le reste au petit matin ou après le travail.
+    ///
+    /// Ce que ça ne règle pas : le JOUR de la semaine dérive toujours avec la date de campagne.
+    /// Mesuré sur les sept jours possibles, le compte de sorties de week-end va de 0 à 6, et
+    /// `weekendWarrior` en exige dix — le badge n'est donc jamais atteint, quelle que soit la
+    /// date. C'est vérifié, pas supposé.
+    static func heureDeLaSortie(_ kind: SessionKind) -> Int {
+        switch kind {
+        case .longRun, .specificLongRun: return 9
+        case .vo2maxIntervals, .lightIntervals: return 19
+        case .tempoRun: return 18
+        default: return 8
+        }
+    }
+
+    static func historique(maintenant: Date) -> [RunRecord] {
         let calendrier = Calendar.current
         // (jours en arrière, km, secondes/km, type de séance)
         let sorties: [(Int, Double, Double, SessionKind)] = [
@@ -992,7 +1049,11 @@ enum CaptureSeed {
                 elevationGainM: Int(km * 6),
                 sessionKind: kind
             )
-            releve.date = calendrier.date(byAdding: .day, value: -jours, to: maintenant) ?? maintenant
+            let jour = calendrier.date(byAdding: .day, value: -jours, to: maintenant) ?? maintenant
+            // La minute vient du rang, pas de l'horloge : déterministe, et seize sorties qui
+            // tombent toutes à l'heure pile sentent la donnée fabriquée.
+            releve.date = calendrier.date(bySettingHour: Self.heureDeLaSortie(kind),
+                                          minute: (rang * 7) % 60, second: 0, of: jour) ?? jour
             // Déjà débriefées : une course en attente de ressenti ouvre une feuille modale au
             // lancement, qui viendrait se poser au milieu de la capture.
             releve.debriefedAt = releve.date

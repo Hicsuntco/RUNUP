@@ -406,6 +406,94 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 40 — la capture héritait de l'heure de la machine
+
+### D'abord, ce que la comparaison a prouvé
+
+Campagne 162 contre campagne 160, 181 images. **Les quatre écrans du Club sont identiques au
+pixel** — `club-apercu`, `club-apercu-bas`, `club-classement`, `fil`. Les trois découpes des
+chantiers 36, 37 et 38 n'ont rien changé, et c'est prouvé par l'image.
+
+### Et ce qu'elle a trouvé en passant
+
+Vingt-six images diffèrent. `course-en-cours` est l'horloge, connue. Mais **`profil`,
+`profil-bas` et `grand-texte/profil` diffèrent dans les trois langues et les deux thèmes** — neuf
+images, systématiquement. Aucune de mes découpes ne touche cet écran.
+
+En regardant les deux images : **« Badges · 6 sur 16 » est devenu « 7 sur 16 »**, « Course de
+nuit » est allumé, et tous les badges suivants sont décalés d'une case. Et la carte des amies est
+passée de « 2 sorties aujourd'hui » à « 3 ».
+
+### La cause, vérifiée et non supposée
+
+`ClubBadgeEngine` lit l'heure de chaque sortie : `heure < 7` donne « Lève-tôt », `heure >= 21`
+donne « Course de nuit ». Or `CaptureSeed.historique` plantait chaque sortie à
+`maintenant - N jours` — donc **à l'heure où la machine tourne**.
+
+La campagne 160 a tourné à 18 h UTC, la 162 à 22 h. Le même code rend donc six badges ou sept
+selon l'heure de la journée.
+
+Deuxième manifestation, sur la même image : les trois activités d'amies sont posées 3 h, 9 h et
+22 h en arrière, et `ProfileView` compte celles du jour. « Il y a 22 h » est HIER à 6 h du matin
+et AUJOURD'HUI à 23 h.
+
+**Et `4-club.png` est une des six images livrées à Apple.** Selon l'heure de la campagne, Apple
+recevait un profil avec le badge « Course de nuit » ou sans.
+
+### La troisième fois, dans le fichier qui porte déjà la leçon
+
+`CaptureSeed.swift` contient, depuis un chantier précédent, cette phrase sur les sorties de
+groupe : « un décalage en heures depuis l'instant de la capture donne “DEMAIN · 13:01” ou
+“VEN. · 06:01” selon le moment où la machine a pris la photo ». La correction y est : l'heure est
+posée, le jour calculé.
+
+`CaptureSeedHeureTests.swift` porte la même leçon pour la conversation du coach, avec son
+en-tête : « deux exécutions comparées, à 01 h 18 et 04 h 37, s'accordaient ; une troisième à
+07 h 00 ne s'accordait plus ».
+
+L'historique des sorties et les activités d'amies ne l'avaient pas. Trois cas frères, deux
+corrigés, un oublié — le motif est exactement celui des chantiers 30 et 31.
+
+### Ce qui a changé
+
+- **L'heure de chaque sortie est posée**, et le jour continue de suivre la campagne : sortie
+  longue à 9 h, fractionné à 19 h comme une séance de club, le reste à 8 h ou 18 h. Toutes dans
+  `7..<21`, donc aucun des deux badges horaires ne s'allume par accident. La minute vient du rang,
+  pas de l'horloge — seize sorties à l'heure pile sentiraient la donnée fabriquée.
+- **Les trois activités d'amies sont bornées au jour**, exactement comme la conversation du coach :
+  le recul est gardé tant qu'il tient dans la journée, raboté au début du jour sinon. Un recul ne
+  peut pas être à la fois stable en affichage relatif et stable en jour ; c'est le jour qui porte
+  un nombre à l'écran, donc c'est lui qu'on stabilise.
+
+### Ce qui a été mesuré et ne pose pas de problème
+
+Le JOUR DE LA SEMAINE des sorties dérive toujours avec la date de campagne, et le badge
+« Guerrière du week-end » se lit dessus. Compté sur les sept jours possibles, le nombre de sorties
+de week-end va de **0 à 6** — et le badge en exige **dix**. Il n'est donc jamais atteint, quelle
+que soit la date. Vérifié, pas supposé.
+
+### Ce qui reste instable, et pourquoi on ne le corrige pas
+
+Les horodatages RELATIFS du fil du club — « il y a 3 h » — dépendent de l'heure de la campagne par
+construction, et c'est ce qu'on veut : un fil doit dire depuis combien de temps. C'est ce qui fait
+différer `4-club.png` dans une petite boîte d'une centaine de pixels. Un texte de largeur
+différente n'est pas un défaut ; un badge qui apparaît en était un.
+
+### Ce qui le garde
+
+Six cas de plus dans `CaptureSeedHeureTests`, qui éprouvent **les vingt-quatre heures** plutôt
+que d'attendre que l'heure qui casse tombe toute seule :
+
+- aucune sortie de l'historique ne tombe avant 7 h ni après 21 h, à toute heure de campagne ;
+- plus largement, l'heure de la campagne ne change **aucune** heure de l'historique — le cas
+  précédent ne tient que les deux bornes, celui-ci tient la reproductibilité ;
+- le JOUR, lui, suit toujours la campagne : la sortie la plus récente reste à deux jours ;
+- chaque type de séance a une heure plausible — le jour où quelqu'un en ajoutera un, le cas lui
+  rappellera que l'heure se décide ;
+- les trois activités d'amies tombent aujourd'hui à toute heure ;
+- et un recul qui tient dans la journée n'est PAS raboté, sans quoi le fil afficherait trois fois
+  la même minute.
+
 ## Chantier 39 — une non-réponse était plus optimiste que la réponse la plus prudente
 
 ### Ce qui était faux

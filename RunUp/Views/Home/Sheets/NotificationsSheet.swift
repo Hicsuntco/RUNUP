@@ -13,17 +13,12 @@ struct NotificationsSheet: View {
                 Text("Notifications").displayStyle(.title).foregroundColor(RUColor.textPrimary).padding(.top, 8)
 
                 if notifications.isEmpty {
-                    // Was a blank scroll area under the title with no empty-state copy at all —
-                    // every other list screen in the app at least says something here.
-                    VStack(spacing: 10) {
-                        Image(systemName: "bell.slash").font(RUFont.icone(.hero)).foregroundColor(RUColor.text3)
-                        Text("Rien pour l'instant").font(RUFont.sans(.emphasis, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                        Text("Tes séances, tes séries et l'activité du club apparaîtront ici.")
-                            .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
-                            .multilineTextAlignment(.center)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 60)
+                    // Était une zone de défilement vide sous le titre, sans un mot : tous les
+                    // autres écrans de liste disent au moins quelque chose ici.
+                    RUEmpty(icone: "bell.slash",
+                            titre: String(localized: "Rien pour l'instant"),
+                            message: String(localized: "Tes séances, tes séries et l'activité du club apparaîtront ici."))
+                        .padding(.top, 40)
                 }
 
                 VStack(spacing: 8) {

@@ -182,9 +182,8 @@ struct RouteDetailSheet: View {
             RUCardHeader(icon: "text.bubble", title: "Ce qu'on en sait")
 
             if commentaires.isEmpty {
-                Text("Personne n'a encore rien dit sur ce parcours.")
-                    .font(RUFont.sans(.body))
-                    .foregroundColor(RUColor.text3)
+                RUEmpty(forme: .ligne,
+                        message: String(localized: "Personne n'a encore rien dit sur ce parcours."))
             } else {
                 ForEach(commentaires) { commentaire in
                     HStack(alignment: .top, spacing: 10) {

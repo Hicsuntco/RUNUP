@@ -268,25 +268,13 @@ struct PublicProfileView: View {
                 // LE CŒUR DE L'ÉCRAN POUR UN COMPTE PRIVÉ. Une liste vide ferait croire que la
                 // personne ne court pas ; cette phrase dit pourquoi il n'y a rien, et le bouton
                 // au-dessus dit quoi faire.
-                VStack(spacing: 8) {
-                    Image(systemName: "lock.fill")
-                        .font(RUFont.icone(.xlarge)).foregroundColor(RUColor.text3)
-                    Text("Ce compte est privé")
-                        .font(RUFont.sans(.emphasis, weight: .bold))
-                        .foregroundColor(RUColor.textPrimary)
-                    Text("Demande à le suivre pour voir ses sorties.")
-                        .font(RUFont.sans(.body))
-                        .foregroundColor(RUColor.text3)
-                        .multilineTextAlignment(.center)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 26)
-                .ruCard()
+                RUEmpty(icone: "lock.fill",
+                        titre: String(localized: "Ce compte est privé"),
+                        message: String(localized: "Demande à le suivre pour voir ses sorties."))
+                    .ruCard()
             } else if (page?.items ?? []).isEmpty {
-                Text("Rien de publié pour l'instant.")
-                    .font(RUFont.sans(.body))
-                    .foregroundColor(RUColor.text3)
-                    .frame(maxWidth: .infinity)
+                RUEmpty(forme: .ligne,
+                        message: String(localized: "Rien de publié pour l'instant."))
                     .padding(.vertical, 24)
             } else {
                 ForEach(Array((page?.items ?? []).enumerated()), id: \.element.id) { index, item in

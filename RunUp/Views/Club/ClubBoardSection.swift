@@ -129,9 +129,9 @@ struct ClubBoardSection: View {
     private var weekBoardContent: some View {
         Group {
             if (board.weekly ?? []).isEmpty && !isLoading {
-                Text("Personne n'a encore couru cette semaine — lance-toi !")
-                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
-                    .frame(maxWidth: .infinity).padding(.vertical, 18)
+                RUEmpty(forme: .ligne,
+                        message: String(localized: "Personne n'a encore couru cette semaine — lance-toi !"))
+                    .padding(.vertical, 18)
             } else {
                 // La bascule Km / % objectif était posée seule, alignée à droite, sans rien
                 // dire de ce qu'elle bascule. La maquette lui donne son titre de section sur la

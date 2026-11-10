@@ -72,8 +72,8 @@ struct MoveSessionSheet: View {
             }
 
             if movableDays.isEmpty {
-                Text("Aucune séance à déplacer cette semaine.")
-                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text2)
+                RUEmpty(forme: .ligne,
+                        message: String(localized: "Aucune séance à déplacer cette semaine."))
             }
 
             // Une séance faite ne bouge pas : elle a eu lieu ce jour-là. Le dire ici évite de

@@ -533,8 +533,8 @@ struct ClubView: View {
                 if magasin.clubSearchEnCours {
                     ProgressView().frame(maxWidth: .infinity).padding(.vertical, 12)
                 } else if !rienDeTape, magasin.clubResultats.isEmpty {
-                    Text("Aucun club ouvert ne porte ce nom.")
-                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                    RUEmpty(forme: .ligne,
+                            message: String(localized: "Aucun club ouvert ne porte ce nom."))
                         .padding(.vertical, 8)
                 }
 
@@ -804,9 +804,8 @@ struct ClubView: View {
                     }
                     .buttonStyle(PressableStyle())
                 }
-                Text("Aucun défi en cours — un objectif de kilomètres à se partager, avec une date de fin.")
-                    .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
-                    .fixedSize(horizontal: false, vertical: true)
+                RUEmpty(forme: .ligne,
+                        message: String(localized: "Aucun défi en cours — un objectif de kilomètres à se partager, avec une date de fin."))
                     .padding(.horizontal, 2)
             }
         }
@@ -1166,10 +1165,9 @@ struct ClubView: View {
                 if magasin.board.club.map({ $0.memberCount <= 1 }) == true {
                     carteClubSeul
                 } else {
-                    Text(verbatim: Accord.selon(f: String(localized: "Personne n'a encore rien posté — sois la première !"),
-                                                m: String(localized: "Personne n'a encore rien posté — sois le premier !")))
-                        .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
-                        .frame(maxWidth: .infinity).padding(.vertical, 18)
+                    RUEmpty(message: Accord.selon(
+                        f: String(localized: "Personne n'a encore rien posté — sois la première !"),
+                        m: String(localized: "Personne n'a encore rien posté — sois le premier !")))
                 }
             }
             // ENTRELACÉS PAR DATE, pas empilés en deux listes. Un mur posé au-dessus des

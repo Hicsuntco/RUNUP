@@ -34,10 +34,14 @@ struct ActivityCommentsSheet: View {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 12) {
                             if comments.isEmpty {
-                                Text(verbatim: Accord.selon(f: String(localized: "Aucun commentaire pour l'instant — sois la première !"),
-                                                            m: String(localized: "Aucun commentaire pour l'instant — sois le premier !")))
-                                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
-                                    .frame(maxWidth: .infinity).padding(.vertical, 30)
+                                // Un `.bloc` SANS icône ni titre : la feuille s'intitule déjà
+                                // « Commentaires », et un symbole au-dessus d'une phrase isolée
+                                // attirerait l'œil sur ce qui manque. Le bloc est quand même la
+                                // bonne forme — la phrase est centrée au milieu d'une liste vide,
+                                // pas posée sous un en-tête de section.
+                                RUEmpty(message: Accord.selon(
+                                    f: String(localized: "Aucun commentaire pour l'instant — sois la première !"),
+                                    m: String(localized: "Aucun commentaire pour l'instant — sois le premier !")))
                             }
                             ForEach(comments) { comment in
                                 commentRow(comment)

@@ -61,6 +61,24 @@ def _sources():
     return [f.read_text(encoding="utf-8") for d in DOSSIERS for f in (RACINE / d).rglob("*.swift")]
 
 
+def _arguments(source: str, ouvrante: int) -> str:
+    """Les arguments d'un appel, parenthèses équilibrées, depuis la `(` à l'index donné.
+
+    Pas une expression régulière : un appel d'initialiseur tient sur plusieurs lignes et porte
+    des parenthèses internes — `RUEmpty(icone: "bell.slash", message: String(localized: "…"))`.
+    Un motif naïf s'arrête à la première `)` fermante, c'est-à-dire au milieu.
+    """
+    niveau = 0
+    for j in range(ouvrante, len(source)):
+        if source[j] == "(":
+            niveau += 1
+        elif source[j] == ")":
+            niveau -= 1
+            if niveau == 0:
+                return source[ouvrante + 1:j]
+    return source[ouvrante + 1:]
+
+
 def _corps(source: str, depart: int) -> str:
     """Le corps accoladé qui commence à la première `{` après `depart`."""
     i = source.find("{", depart)
@@ -135,6 +153,32 @@ def symboles_utilises():
                             e = re.search(re.escape(cible) + r'\s*:\s*("(?:[^"\\]|\\.)*")', args)
                             if e:
                                 noms.update(_LITTERAL.findall(e.group(1)))
+            # UNE PROPRIÉTÉ STOCKÉE DE STRUCTURE, résolue depuis les appels de son initialiseur.
+            #
+            # La troisième forme de réexpédition, et celle qui a manqué. `RUEmpty` porte
+            # `var icone: String?` et l'envoie à `systemName:` — mais une propriété STOCKÉE n'a
+            # pas de corps accoladé, donc la résolution de membre ci-dessus ne la voyait pas, et
+            # celle de paramètre ne regarde que les `func`.
+            #
+            # Ce que ça coûtait : au moment où les écrans ont adopté `RUEmpty`, leurs icônes sont
+            # devenues INVISIBLES à ce contrôle. Deux symboles — « bell.slash » et
+            # « square.stack.3d.up » — sont passés de « employés » à « plus employés » sans que
+            # rien ne change à l'écran. Et le sens qui compte est l'autre : un symbole inexistant
+            # passé à `RUEmpty(icone:)` ne serait plus éprouvé par personne, et un nom de symbole
+            # faux ne lève rien — il ne dessine rien.
+            for m in re.finditer(r"\bstruct\s+(\w+)\s*:[^{]*\{", src):
+                nom_struct = m.group(1)
+                corps = _corps(src, m.start())
+                if not re.search(r"\bvar\s+" + re.escape(cible) + r"\s*:\s*String\??", corps):
+                    continue
+                if ("systemName: " + cible) not in corps:
+                    continue
+                for src2 in sources:
+                    for appel in re.finditer(r"\b" + re.escape(nom_struct) + r"\s*\(", src2):
+                        args = _arguments(src2, appel.end() - 1)
+                        e = re.search(re.escape(cible) + r'\s*:\s*("(?:[^"\\]|\\.)*")', args)
+                        if e:
+                            noms.update(_LITTERAL.findall(e.group(1)))
     # Un nom de symbole ne contient ni espace ni accent : ce qui en porte vient d'un faux positif
     # de lecture (une phrase passée au même paramètre ailleurs), et le signaler noierait le reste.
     # Un nom de symbole SF est en minuscules, sans espace ni accent : « Classique » et « Nom »

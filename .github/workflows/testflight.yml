@@ -379,6 +379,22 @@ jobs:
           cd ci_scripts && python3 test_boutons.py
           cd .. && python3 ci_scripts/check_boutons.py
 
+      # DEUX COULEURS ET TROIS GRAISSES POUR LA MÊME PHRASE : « IL N'Y A RIEN ICI ».
+      #
+      # `RUEmpty` existait et six écrans l'utilisaient ; seize endroits continuaient d'écrire le
+      # leur, avec .bold/.semibold/.medium pour le titre, text3/text2 pour le message,
+      # .small/.body pour le corps, .hero/.xlarge pour l'icône. Et le composant partagé était
+      # LUI-MÊME le seul à ne pas utiliser `RUIconSize.hero`, dont la documentation dit « l'icône
+      # d'un état vide, celle qu'on voit avant même de lire ».
+      #
+      # Ce contrôle garde ce qui se garde — le bloc écrit à la main, le site d'appel qui restyle,
+      # le composant qui dérive — et DIT ce qu'il ne sait pas garder : la forme `.ligne` n'a
+      # aucune signature détectable, et une règle à trente dispenses ne décrit pas un défaut.
+      - name: Vérifier que l'état vide ne s'écrit qu'une fois
+        run: |
+          cd ci_scripts && python3 test_vides.py
+          cd .. && python3 ci_scripts/check_vides.py
+
       # Une clé absente du catalogue ne casse rien : `String(localized:)` rend la clé, et le texte
       # sort EN FRANÇAIS chez tout le monde. Ça ne se voit qu'en lançant l'app dans une autre
       # langue, sur l'écran concerné — autant dire jamais. L'audit en a trouvé cinq d'un coup,

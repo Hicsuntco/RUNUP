@@ -406,6 +406,85 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 31 — l'état vide, écrit une fois pour de bon (A5, le reliquat)
+
+`RUEmpty` existait depuis le chantier 25, et **six écrans l'utilisaient**. Seize endroits
+continuaient d'écrire le leur.
+
+### Ce que la mesure a donné
+
+| | valeurs trouvées pour la même phrase |
+| --- | --- |
+| graisse du titre | `.bold`, `.semibold`, `.medium` |
+| couleur du message | `text3`, `text2` |
+| corps du texte | `.small`, `.body` |
+| taille de l'icône | `.hero` (28), `.xlarge` (22) |
+
+Deux couleurs et trois graisses pour dire « il n'y a rien ici ». « Aucun défi en cours » existait
+dans deux fichiers, avec deux formulations et deux corps de texte.
+
+### Et le composant partagé était le seul à ne pas suivre le système
+
+`RUIconSize.hero` vaut 28, et sa documentation dit : *« l'icône d'un état vide, celle qu'on voit
+avant même de lire »*. `RUEmpty` utilisait `.xlarge` (22). Les trois états vides écrits à la main,
+eux, utilisaient bien `.hero`. La pièce censée mettre tout le monde d'accord était la seule à
+ignorer le cran que le système nomme pour elle.
+
+### Seize conversions, dans dix-sept fichiers
+
+Six appels au départ, **24 maintenant**. Les cas intéressants :
+
+- `FriendsView` recentrait une `.ligne`, alignée à gauche par construction — le site d'appel
+  reprenait une décision du composant. La forme était en fait un `.bloc` : il n'y a aucun en-tête
+  de section au-dessus, seulement un champ de recherche et une zone de résultats vide.
+- `PublicProfileView` portait **deux** états vides à la main, dont un que je n'ai vu qu'en
+  réparant l'accolade orpheline laissée par la première conversion.
+- `MoveSessionSheet` et `ClubBoardSection` n'étaient dans aucune de mes listes : c'est la mesure
+  qui les a sortis.
+
+### Ce qui n'a pas été converti, et pourquoi
+
+- **`StatsView.firstDayBanner`** — une carte héros avec en-tête, sous-titre et un paragraphe qui
+  promet ce que l'écran affichera. Ce n'est pas « il n'y a rien », c'est une promesse de premier
+  jour. La forcer dans `RUEmpty` aplatirait une intention.
+- **`FriendsView`, « Personne à suivre pour l'instant »** — un bloc d'appel à l'action avec
+  l'invitation par code, conçu comme tel et documenté sur huit lignes.
+- **`PaywallView`** — un état de CHARGEMENT, avec sa roue. `RUEmpty` dit explicitement qu'il n'est
+  ni une erreur ni un chargement.
+- **`RaceDiscoveryView.message(…)`** reste, pour son unique autre usage : une erreur de
+  chargement. « Rien à montrer » et « ça n'a pas marché » sont deux phrases différentes.
+
+### Un trou trouvé en passant, et plus grave que le chantier
+
+Le contrôle des symboles s'est mis à signaler « bell.slash » et « square.stack.3d.up » comme
+**éprouvés mais plus employés**. Cause : il lit l'argument de `systemName:` et sait remonter un
+membre calculé ou un paramètre de fonction — mais pas une **propriété stockée de structure**, qui
+n'a pas de corps accoladé. En adoptant `RUEmpty(icone:)`, les écrans rendaient donc leurs icônes
+invisibles à la vérification.
+
+La résolution ajoutée a immédiatement découvert **trois symboles jamais éprouvés** : `shoe`
+(`RUEmpty`), `clock` et `ruler` (`RUStatTile`, `RUCardHeader`). Trois familles de composants
+passent un nom de symbole par propriété stockée, et aucune de leurs icônes exclusives n'était
+vérifiée — depuis leur création. Un nom de symbole faux ne lève rien : il ne dessine rien.
+108 symboles sont désormais éprouvés.
+
+### Ce qui le garde — et ce qu'il avoue ne pas garder
+
+`ci_scripts/check_vides.py`, **15 cas**. Trois règles : aucun bloc composé à la main (grande icône
+teintée `text3` au-dessus d'un texte), aucun site d'appel qui restyle le composant, et le composant
+qui garde `.hero` et `text3`.
+
+**Et il dit ce qu'il ne sait pas faire.** La forme `.ligne` n'a aucune signature détectable : une
+phrase sous un en-tête de section ressemble à n'importe quelle autre phrase secondaire. La règle la
+plus large essayée — un `Text` teinté `text3` dans une branche qui teste `isEmpty` — a rendu
+**35 endroits pour environ 6 vrais** : des `!x.isEmpty` qui testent une présence, des `isValid`,
+des URL, des bios. Une règle à trente dispenses ne décrit pas un défaut, elle le noie, et on
+apprend à ignorer son rouge. Les conversions ont donc été faites en lisant, et c'est écrit.
+
+Un des quinze cas reproduit un défaut du garde-fou lui-même : il cherchait le nom du symbole de sa
+dispense dans la source dont `sans_commentaires` a effacé le contenu des chaînes. La seule dispense
+réelle ne s'appliquait jamais.
+
 ## Chantier 30 — huit boutons qui n'existaient pas, et une politique qui ne disait pas qu'on peut refuser
 
 Deux demandes de Charlotte — retirer la capture iPad de la fiche, ajouter à `privacy.html` la

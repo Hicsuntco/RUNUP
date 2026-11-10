@@ -157,8 +157,8 @@ struct ClubManagementView: View {
                 .background(RUColor.card2, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
             } else {
-                Text("Aucun défi en cours pour l'instant.")
-                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
+                RUEmpty(forme: .ligne,
+                        message: String(localized: "Aucun défi en cours pour l'instant."))
             }
         }
     }

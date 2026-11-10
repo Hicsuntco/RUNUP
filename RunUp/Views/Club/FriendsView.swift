@@ -385,9 +385,12 @@ struct FriendsView: View {
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity).padding(.vertical, 18)
             } else if searchResults.isEmpty {
-                RUEmpty(forme: .ligne, message: String(localized: "Personne ne porte ce nom."))
-                    .multilineTextAlignment(.center)
-                    .padding(.vertical, 18)
+                // UN BLOC, PAS UNE LIGNE. Le site d'appel recentrait une `.ligne`, qui est
+                // alignée à gauche par construction — c'est-à-dire qu'il reprenait une décision
+                // du composant. Mais la forme était juste : ici il n'y a aucun en-tête de
+                // section au-dessus, seulement un champ de recherche et une zone de résultats
+                // vide. C'est la définition du bloc, et le bloc est déjà centré.
+                RUEmpty(message: String(localized: "Personne ne porte ce nom."))
             }
             ForEach(searchResults) { user in
                 personRow(user) { followButton(for: user) }
@@ -841,9 +844,7 @@ private struct PeopleListSheet: View {
             ScrollView {
                 VStack(spacing: 6) {
                     if people.isEmpty {
-                        Text("Personne pour l'instant.")
-                            .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
-                            .frame(maxWidth: .infinity).padding(.vertical, 30)
+                        RUEmpty(message: String(localized: "Personne pour l'instant."))
                     }
                     ForEach(people) { user in
                         HStack(spacing: 12) {

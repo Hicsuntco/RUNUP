@@ -392,9 +392,8 @@ struct RacePageView: View {
             if coureursAffiches.isEmpty {
                 // Tournure sans accord : « sois le premier » obligerait à passer par `Accord`, et
                 // « la première / le premier » pour une phrase de vide n'en vaut pas les deux clés.
-                Text("Personne encore. Dis-le et les suivants te trouveront.")
-                    .font(RUFont.sans(.body))
-                    .foregroundColor(RUColor.text3)
+                RUEmpty(forme: .ligne,
+                        message: String(localized: "Personne encore. Dis-le et les suivants te trouveront."))
                     .padding(.vertical, 8)
             } else {
                 // DES LIGNES, PAS DES BOÎTES. Chaque coureur était dans un rectangle rempli posé
@@ -547,9 +546,8 @@ struct RacePageView: View {
             redaction
 
             if messagesDeTete.isEmpty {
-                Text("Rien d'écrit encore. Une question sur le parcours, le ravitaillement, l'hébergement — c'est ici.")
-                    .font(RUFont.sans(.body))
-                    .foregroundColor(RUColor.text3)
+                RUEmpty(forme: .ligne,
+                        message: String(localized: "Rien d'écrit encore. Une question sur le parcours, le ravitaillement, l'hébergement — c'est ici."))
                     .padding(.vertical, 8)
             } else {
                 VStack(spacing: 0) {

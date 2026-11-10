@@ -505,23 +505,16 @@ struct WallView: View {
     // MARK: - Le vide
 
     private var videHonnete: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "square.stack.3d.up")
-                .font(RUFont.icone(.hero)).foregroundColor(RUColor.text3)
-            Text(filtre == .tout
-                 ? String(localized: "Rien pour l'instant")
-                 : String(localized: "Rien sous ce filtre"))
-                .font(RUFont.sans(.emphasis, weight: .bold))
-                .foregroundColor(RUColor.textPrimary)
-            // Le vide le plus utile dit QUOI FAIRE, et ce n'est pas la même chose selon le filtre.
-            Text(messageDuVide)
-                .font(RUFont.sans(.body))
-                .foregroundColor(RUColor.text3)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
-        .padding(.horizontal, 18)
+        // Le vide le plus utile dit QUOI FAIRE, et ce n'est pas la même chose selon le filtre —
+        // voir `messageDuVide`. C'est la seule chose que cet écran décide ici ; la forme vient de
+        // `RUEmpty`.
+        RUEmpty(icone: "square.stack.3d.up",
+                titre: filtre == .tout
+                    ? String(localized: "Rien pour l'instant")
+                    : String(localized: "Rien sous ce filtre"),
+                message: messageDuVide)
+            .padding(.vertical, 18)
+            .padding(.horizontal, 18)
     }
 
     private var messageDuVide: String {

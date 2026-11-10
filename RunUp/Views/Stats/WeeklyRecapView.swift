@@ -102,11 +102,9 @@ struct WeeklyRecapView: View {
                 // La liste montre TOUT ce qu'elle a fait, et c'est écrit : un bilan de semaine
                 // qui cacherait la sortie vélo du mardi ne serait pas un bilan de la semaine.
                 if bilan.seances.isEmpty {
-                    Text("Pas encore de course cette semaine — tu as le temps.")
-                        .font(RUFont.sans(.body))
-                        .foregroundColor(RUColor.text2)
+                    RUEmpty(forme: .ligne,
+                            message: String(localized: "Pas encore de course cette semaine — tu as le temps."))
                         .padding(18)
-                        .frame(maxWidth: .infinity, alignment: .leading)
                         .ruCard()
                 } else {
                     VStack(spacing: 8) {

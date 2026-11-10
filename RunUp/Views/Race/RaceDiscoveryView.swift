@@ -126,7 +126,9 @@ struct RaceDiscoveryView: View {
             ProgressView().frame(maxWidth: .infinity).padding(.vertical, 24)
         } else if results.isEmpty {
             VStack(spacing: 12) {
-                message(String(localized: "Aucune course à venir ne porte ce nom."))
+                RUEmpty(forme: .ligne,
+                        message: String(localized: "Aucune course à venir ne porte ce nom."))
+                    .padding(.horizontal, 18)
                 // Le vide le plus utile de l'app : quelqu'un vient de taper le nom exact de la
                 // course qu'il prépare. Lui proposer de la créer là, avec ce nom déjà rempli, est
                 // la seule suite qui a du sens.
@@ -241,19 +243,9 @@ struct RaceDiscoveryView: View {
     }
 
     private var videHonnete: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "flag.checkered")
-                .font(RUFont.icone(.hero)).foregroundColor(RUColor.text3)
-            Text("Aucune course en vue")
-                .font(RUFont.sans(.emphasis, weight: .bold))
-                .foregroundColor(RUColor.textPrimary)
-            Text("Cherche celle que tu prépares. Sur sa page tu verras qui la court aussi, à quelle allure, et où ils en sont de leur préparation.")
-                .font(RUFont.sans(.body))
-                .foregroundColor(RUColor.text3)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 28)
+        RUEmpty(icone: "flag.checkered",
+                titre: String(localized: "Aucune course en vue"),
+                message: String(localized: "Cherche celle que tu prépares. Sur sa page tu verras qui la court aussi, à quelle allure, et où ils en sont de leur préparation."))
         .padding(.horizontal, 18)
     }
 

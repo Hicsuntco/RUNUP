@@ -68,7 +68,16 @@ struct RUEmpty: View {
             VStack(spacing: 10) {
                 if let icone {
                     Image(systemName: icone)
-                        .font(RUFont.icone(.xlarge))
+                        // `.hero` ET PAS `.xlarge`, PARCE QUE LE SYSTÈME LE DIT.
+                        //
+                        // `RUIconSize.hero` vaut 28 et sa documentation est sans ambiguïté :
+                        // « l'icône d'un état vide, celle qu'on voit avant même de lire ». Ce
+                        // composant utilisait `.xlarge` (22) — et les trois états vides écrits à
+                        // la main dans les écrans, eux, utilisaient bien `.hero`. Le composant
+                        // partagé était le seul à ne pas suivre le cran que le système nomme pour
+                        // lui, ce qui est le comble pour la pièce censée mettre tout le monde
+                        // d'accord.
+                        .font(RUFont.icone(.hero))
                         .foregroundColor(RUColor.text3)
                         .accessibilityHidden(true)
                 }

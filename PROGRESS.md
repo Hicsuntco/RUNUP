@@ -406,6 +406,69 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 33 — la montre coupait sa seule phrase, et rien ne le disait (B4)
+
+### Regardé, pas déduit
+
+Sur la capture que la fiche App Store publie, dans les trois langues :
+
+```
+en-US  11 lignes de pixels encrées jusqu'à la toute dernière (495/496)
+es-ES  11 lignes
+fr-FR  11 lignes
+```
+
+« Cours à ta sensation — ta séance arrive de l'iPhone. » était **tranchée en deux par l'arête
+basse**. L'écran est dans un `ScrollView`, donc la phrase était atteignable — en faisant défiler,
+sur une montre, une phrase d'explication posée sous un bouton géant. Autant dire jamais.
+
+### La cause, écrite dans le fichier lui-même
+
+L'anneau pointillé faisait **118 points sur les 248** de l'écran, et le commentaire du fichier le
+qualifiait : *« purely decorative since there's nothing to track yet »*. La moitié de l'écran pour
+une décoration, qui pousse dehors la seule phrase.
+
+| | avant | après |
+| --- | --- | --- |
+| anneau | 118 | 96 |
+| bouton | 92 | **76** (minimum tactile d'Apple : 44) |
+| écarts du `VStack` | 8 | 6 |
+
+Vingt-huit points rendus. Et la phrase prend désormais la hauteur qu'il lui faut (`fixedSize`) au
+lieu de celle qu'on lui laisse : une langue plus longue que les trois d'aujourd'hui repasserait
+sinon sous le bord sans que la mise en page bouge d'un point.
+
+### L'autre moitié de B4 était déjà tombée
+
+`PHASE2.md` annonçait aussi « le dégradé sur le bouton principal ». Mesuré : la montre ne porte
+**aucun** dégradé ni verre — ils sont partis avec le chantier 24. Restait le commentaire, qui
+décrivait encore un « dashed gradient ring ». Un commentaire qui décrit ce qui n'est plus là est
+la moitié d'un mensonge.
+
+### Ce qui le garde
+
+`check_captures_montre.py` savait dire que trois langues rendaient la même image. Il ne savait pas
+dire que les trois étaient COUPÉES. Il le dit : la bande basse — 2 % de la hauteur, cinq points —
+doit rester vierge.
+
+Elle ne juge aucune mise en page. Elle constate qu'au REPOS rien n'est tranché par l'arête, ce à
+quoi une image répond sans ambiguïté, contrairement à « est-ce joli ». **Éprouvée sur les vraies
+captures d'avant : elle rougit pour les trois langues.** Cinq cas nouveaux, dont deux pour les
+façons de passer vert à tort — un seuil d'encre à zéro accuserait toutes les captures réelles et
+on apprendrait à ignorer le rouge ; et la coupe doit l'emporter sur la comparaison des langues,
+parce que l'une se corrige dans la vue et l'autre dans la chaîne de capture.
+
+### Et un rouge délibéré, pendant un build
+
+Les trois captures livrées à Apple sont versionnées et portent l'empreinte du code de la montre.
+Changer ce code les périme, et `check_requis.py` l'a dit tout de suite — il a refusé le commit.
+
+Les réestampiller sur place aurait été lui mentir : déclarer à jour des images que personne n'a
+refaites. Et je ne peux pas les refaire ici, il faut un simulateur watchOS. Le chemin honnête était
+donc de pousser le code, laisser `montre.yml` refaire les captures, **les regarder**, et poser les
+images fraîches au commit suivant. Un build rouge sur une étape, dix minutes, et le garde-fou a
+fait exactement son travail.
+
 ## Chantier 32 — la mesure du lancement arrivait déjà, et une méthode vide la jetait (B7)
 
 `PHASE2.md` disait : « Le temps de lancement n'a jamais été relevé. La phase 4 exige premier écran

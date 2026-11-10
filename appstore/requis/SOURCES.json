@@ -1,23 +1,23 @@
 {
   "montre/en-US/1-course-libre.png": {
     "source": "appstore/raw-montre/en-US/1-course-libre.png",
-    "empreinte": "47b95e4be43f",
+    "empreinte": "32a9272d81f4",
     "composee_par": "ci_scripts/requis.py",
     "code": "RunUpWatch",
-    "empreinte_code": "3dd86db7a0dc"
+    "empreinte_code": "da473c31c362"
   },
   "montre/es-ES/1-course-libre.png": {
     "source": "appstore/raw-montre/es-ES/1-course-libre.png",
-    "empreinte": "64696a8628cd",
+    "empreinte": "73baf3cdc7fa",
     "composee_par": "ci_scripts/requis.py",
     "code": "RunUpWatch",
-    "empreinte_code": "3dd86db7a0dc"
+    "empreinte_code": "da473c31c362"
   },
   "montre/fr-FR/1-course-libre.png": {
     "source": "appstore/raw-montre/fr-FR/1-course-libre.png",
-    "empreinte": "551f1b7b208f",
+    "empreinte": "aff821ffc47d",
     "composee_par": "ci_scripts/requis.py",
     "code": "RunUpWatch",
-    "empreinte_code": "3dd86db7a0dc"
+    "empreinte_code": "da473c31c362"
   }
 }

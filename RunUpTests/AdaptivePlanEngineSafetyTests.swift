@@ -255,20 +255,40 @@ final class AdaptivePlanEngineSafetyTests: XCTestCase {
 
     // MARK: - Pace zones
 
-    /// At threshold × 0.92 the "VMA" session was only 8% faster than threshold — effectively a
-    /// second tempo run, never a VO2max stimulus. Real vVO2max sits ~12-18% faster.
+    /// CE TEST ÉTAIT VERT, ET IL VERROUILLAIT UN CHIFFRE INVENTÉ.
+    ///
+    /// Il exigeait un écart seuil→VMA de 11 à 20 %, sur la foi de son propre commentaire : « real
+    /// vVO2max sits ~12-18% faster ». Aucune source. Mesuré sur la table publiée de Jack Daniels,
+    /// l'écart vaut **7,7 à 8,2 %** — c'est-à-dire exactement la valeur que ce test interdisait,
+    /// et que le code portait AVANT d'être « corrigé » pour lui plaire.
+    ///
+    /// La correction a donc déplacé l'allure de VMA de juste à faux : × 0,87 de l'allure du 10 km
+    /// n'est pas l'allure d'intervalle de Daniels (× 0,925 à × 0,957) mais son allure de
+    /// RÉPÉTITION (× 0,872 à × 0,893) — l'allure du mile, tenable deux cents mètres, prescrite
+    /// pour des répétitions de trois à cinq minutes. Le raisonnement du commentaire était juste
+    /// sur le symptôme et faux sur le nombre, et il a sur-corrigé dans la direction qu'il voulait
+    /// corriger.
+    ///
+    /// Ce qu'on en retient : un test sans source ne verrouille pas une règle, il verrouille une
+    /// opinion — et il le fait d'autant mieux qu'il est vert. L'écart est désormais vérifié contre
+    /// la table elle-même, ligne par ligne, dans `VdotTests`. Ce cas-ci ne garde plus que ce qu'il
+    /// peut garder d'ici : que l'allure de VMA du plan est bien celle que `Vdot` calcule, et donc
+    /// que le plan ne s'est pas remis à multiplier.
     @MainActor
-    func testIntervalPaceIsAGenuineVO2maxStimulus() {
+    func testIntervalPaceComesFromTheDanielsModel() {
         let profile = makeProfile(goal: .race, distance: .k10, weeksUntilRace: 10)
         let zones = PaceModel.zones(for: profile)
 
         guard let intervalSec = PaceModel.parseSecPerKm(zones.interval) else {
             return XCTFail("Allure VMA illisible : \(zones.interval)")
         }
-        let gap = (zones.thresholdSecPerKm - intervalSec) / zones.thresholdSecPerKm
+        let attendu = Vdot.allure(vdot: zones.vdot, fraction: Vdot.Fraction.intervalle)
+        XCTAssertEqual(intervalSec, attendu, accuracy: 1.0,
+                       "L'allure de VMA du plan ne vient plus de `Vdot`")
 
-        XCTAssertGreaterThanOrEqual(gap, 0.11, "L'écart seuil→VMA (\(Int(gap * 100))%) est trop faible pour un vrai stimulus VO2max")
-        XCTAssertLessThanOrEqual(gap, 0.20, "L'écart seuil→VMA (\(Int(gap * 100))%) est irréaliste — ce n'est plus une allure tenable sur 800 m")
+        let ecart = (zones.thresholdSecPerKm - intervalSec) / zones.thresholdSecPerKm
+        XCTAssertEqual(ecart, 0.079, accuracy: 0.005,
+                       "L'écart seuil→VMA vaut \(Int(ecart * 1000))‰, la table de Daniels donne 77 à 82‰")
     }
 
     /// Ordering sanity: easy must be slower than marathon, which is slower than threshold, which

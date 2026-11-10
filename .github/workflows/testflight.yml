@@ -350,6 +350,21 @@ jobs:
           cd ci_scripts && python3 test_paiement.py
           cd .. && python3 ci_scripts/check_paiement.py
 
+      # QUATRE COEFFICIENTS ÉCRITS À LA MAIN DÉCIDAIENT DE CE QUE LES GENS COURENT.
+      #
+      # footing × 1,20, marathon × 1,08, seuil × 1,00, VMA × 0,87, sans source — le commentaire
+      # disait « in the spirit of standard recreational running pace calculators ». Confrontés à
+      # la table publiée de Jack Daniels, trois des quatre étaient faux : le footing 18 à 25 s/km
+      # trop rapide à tous les niveaux, sur l'allure qui porte 70 à 80 % du volume d'une semaine ;
+      # la VMA à l'allure du MILE, prescrite pour des répétitions de trois à cinq minutes.
+      #
+      # Et un test VERT interdisait la bonne réponse : il exigeait un écart seuil→VMA de 11 à 20 %
+      # sur la foi d'un commentaire sans source, quand la table en donne 7,7 à 8,2 %.
+      - name: Vérifier qu'aucune allure ne se décide par un coefficient écrit à la main
+        run: |
+          cd ci_scripts && python3 test_allures.py
+          cd .. && python3 ci_scripts/check_allures.py
+
       # Une clé absente du catalogue ne casse rien : `String(localized:)` rend la clé, et le texte
       # sort EN FRANÇAIS chez tout le monde. Ça ne se voit qu'en lançant l'app dans une autre
       # langue, sur l'écran concerné — autant dire jamais. L'audit en a trouvé cinq d'un coup,

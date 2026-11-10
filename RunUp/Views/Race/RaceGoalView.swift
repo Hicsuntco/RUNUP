@@ -38,9 +38,10 @@ struct RaceGoalView: View {
         return bouts[0] * 60 + bouts[1]
     }
 
-    /// Real target pace (seconds/km) implied by the goal chrono over the goal distance — falls
-    /// back to the reference threshold pace `PaceModel` already seeds the plan from when there's
-    /// no race chrono (progress/weight/restart/health goals).
+    /// L'allure cible qu'implique le temps visé sur la distance visée, ou `nil` si l'un des deux
+    /// manque — un objectif de progression, de poids, de reprise ou de santé n'a pas de chrono.
+    ///
+    /// Le repli, lui, est `allureDePrediction` ci-dessous.
     private var racePaceSecPerKm: Double? {
         guard let chrono = profile.raceChrono,
               let km = profile.effectiveRaceDistanceKm,
@@ -50,15 +51,34 @@ struct RaceGoalView: View {
         return totalSeconds / km
     }
 
+    /// L'allure sur laquelle se rabattre sans temps visé : celle que le VDOT du profil prédit
+    /// POUR CETTE DISTANCE-LÀ.
+    ///
+    /// # LE REPLI ÉTAIT L'ALLURE DE SEUIL, ET IL NE L'EST PLUS
+    ///
+    /// Le repli prenait `zones.thresholdSecPerKm` quelle que soit la course. Ça tenait à peu près
+    /// tant que le plan posait lui-même seuil = allure du 10 km : sur un 10 km, le repli était
+    /// l'allure du 10 km. Sur un semi, c'était déjà trop rapide, et sur un marathon beaucoup trop
+    /// — le tableau d'allure proposait un rythme de course d'une heure sur quarante-deux
+    /// kilomètres, et la ligne « Relance » cinq secondes plus vite encore.
+    ///
+    /// Depuis que le seuil est l'allure d'une course d'environ 67 minutes (voir `Vdot`), le repli
+    /// serait franchement faux. La prédiction par distance répond à la bonne question, avec le
+    /// nombre dont le plan tire déjà ses allures.
+    private var allureDePrediction: Double {
+        Vdot.allureDeCourse(vdot: PaceModel.zones(for: profile).vdot,
+                            km: profile.effectiveRaceDistanceKm ?? 10)
+    }
+
     private var targetPaceLabel: String {
-        PaceModel.formatDuration(racePaceSecPerKm ?? PaceModel.zones(for: profile).thresholdSecPerKm)
+        PaceModel.formatDuration(racePaceSecPerKm ?? allureDePrediction)
     }
 
     /// Splits the real goal distance into 3-4 pacing phases around the real target pace, instead
     /// of a fixed "1-3 / 4-8 / 9 / 10 km @ 4:52.../4:20" table that only ever made sense for a 10K.
     private var pacingPlan: [(String, String, String)] {
         let km = profile.effectiveRaceDistanceKm ?? 10
-        let base = racePaceSecPerKm ?? PaceModel.zones(for: profile).thresholdSecPerKm
+        let base = racePaceSecPerKm ?? allureDePrediction
         let totalKm = max(3, Int(km.rounded()))
         let startEnd = max(1, Int((Double(totalKm) * 0.2).rounded()))
         let cruiseEnd = min(totalKm - 1, max(startEnd + 1, Int((Double(totalKm) * 0.75).rounded())))

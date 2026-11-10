@@ -143,7 +143,7 @@ final class UserProfile {
     var preferredTimeOfDay: String?
     /// "open" | "pro" — only ever populated when `goalId == .hyrox`. Reuses `raceDate` (event
     /// date) and `raceChrono` (target finish time) rather than adding parallel fields, since
-    /// they mean the same thing for a HYROX goal; `PaceModel.referenceThresholdPace`'s
+    /// they mean the same thing for a HYROX goal; `PaceModel.referenceVdot`'s
     /// `.race`-only guard already keeps `raceChrono` from being misparsed as a running-race split.
     var hyroxDivision: String? = nil
     /// « sprint » | « olympique » | « half » | « longueDistance » — peuplé seulement quand

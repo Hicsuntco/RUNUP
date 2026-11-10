@@ -406,6 +406,161 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 29 — les allures du plan n'avaient aucune source (B1)
+
+C'est l'item le plus lourd de la liste, et le fond du produit : un plan dont les allures ne se
+défendent pas n'est pas un plan d'entraînement.
+
+### Ce qu'il y avait
+
+Quatre multiplications, dans `PaceModel.zones` :
+
+```swift
+easy:      paceText(thresholdSecPerKm * 1.20),
+marathon:  paceText(thresholdSecPerKm * 1.08),
+threshold: paceText(thresholdSecPerKm * 1.0),
+interval:  paceText(thresholdSecPerKm * 0.87),
+```
+
+L'ancrage était l'allure du 10 km, projetée par Riegel depuis la meilleure performance. Le
+commentaire du fichier avouait l'origine des quatre coefficients : *« deliberately simple […] in
+the spirit of standard recreational running pace calculators »*. Autrement dit, aucune source.
+
+### La méthode retenue
+
+Jack Daniels et Jimmy Gilbert, *Oxygen Power* (1979), deux équations :
+
+- le coût en oxygène d'une vitesse : `VO2 = −4,60 + 0,182258 v + 0,000104 v²`, v en m/min ;
+- la fraction de VO2max soutenable sur une durée :
+  `%VO2max = 0,8 + 0,1894393 e^(−0,012778 t) + 0,2989558 e^(−0,1932605 t)`, t en minutes.
+
+Leur quotient sur une performance réelle donne le VDOT. En sens inverse, un VDOT et une fraction
+donnent une allure.
+
+**Les fractions ne sont pas recopiées, elles sont mesurées.** Trois sites donnent trois valeurs
+différentes pour la même allure — pour le seuil, 83-88 %, 86-92 % et 88-92 %, et l'un des trois
+confond %VO2max et %FCmax. Elles ont donc été *retrouvées* depuis la table publiée : pour chaque
+allure et chaque VDOT, `coutEnOxygene(allure) / VDOT`. Le résultat est constant à un dixième de
+point sur tout l'intervalle VDOT 30-60, ce qui n'arrive pas par hasard :
+
+| Allure | Fraction mesurée | Étendue sur VDOT 30-60 |
+| --- | --- | --- |
+| footing, bord lent | 62,0 % | 61,9 – 62,1 |
+| footing, bord rapide | 70,0 % | 69,9 – 70,1 |
+| seuil | 88,0 % | 87,8 – 88,1 |
+| intervalle | 97,5 % | 97,3 – 97,7 |
+| marathon | **dérive de 80,5 à 82,5 %** | — |
+
+L'allure marathon n'est donc pas une fraction : chez Daniels, c'est l'allure du marathon *prédit*.
+Calculée comme telle, elle redonne la table à un demi-seconde près au lieu de trois.
+
+### Ce que la mesure a dit des quatre coefficients
+
+| | RunUp | Daniels (rapport à l'allure du 10 km) | Verdict |
+| --- | --- | --- | --- |
+| footing | × 1,20 | 1,199 → 1,376 selon le niveau | **faux** : au bord le plus rapide de la plage facile à VDOT 30, **devant** pour tout le monde au-dessus |
+| marathon | × 1,08 | 1,076 → 1,094 | **juste** |
+| seuil | × 1,00 | 1,003 → 1,037 | légèrement trop rapide, l'écart croît avec le niveau |
+| VMA | × 0,87 | intervalle 0,925 → 0,957 ; **répétition 0,872 → 0,893** | **faux** : c'est l'allure du mile, prescrite pour des répétitions de 3 à 5 minutes |
+
+En secondes par kilomètre, pour de vraies personnes :
+
+| VDOT | 10 km | footing Daniels | footing RunUp | écart | VMA Daniels | VMA RunUp | écart |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 30 | 1:03:49 | 8:01 | 7:39 | **−22 s** | 5:54 | 5:33 | **−21 s** |
+| 40 | 50:01 | 6:26 | 6:00 | **−25 s** | 4:41 | 4:21 | **−20 s** |
+| 50 | 41:20 | 5:22 | 4:58 | **−25 s** | 3:55 | 3:36 | **−19 s** |
+| 60 | 35:22 | 4:38 | 4:15 | **−24 s** | 3:23 | 3:05 | **−18 s** |
+
+Le footing porte 70 à 80 % du volume d'une semaine. C'est l'erreur la plus répandue de
+l'entraînement de loisir, et l'app la prescrivait.
+
+**Et aucun coefficient fixe ne pouvait être juste.** Les rapports de Daniels varient avec le
+niveau : footing/seuil passe de 1,2526 à 1,2659, VMA/10 km de 0,925 à 0,957. Un seul nombre se
+trompe forcément à une extrémité.
+
+### Le plus instructif : un test vert interdisait la bonne réponse
+
+`testIntervalPaceIsAGenuineVO2maxStimulus` exigeait un écart seuil→VMA de **11 à 20 %**, sur la
+foi de son propre commentaire : *« real vVO2max sits ~12-18% faster »*. Aucune source.
+
+Mesuré sur la table, l'écart vaut **7,7 à 8,2 %**. Le code l'avait eu — × 0,92, soit 8 % — puis
+l'a perdu pour satisfaire ce test. Le raisonnement du commentaire était juste sur le symptôme
+(« à 8 %, la séance de VMA était un second tempo ») et faux sur le nombre, et il a sur-corrigé
+dans la direction même qu'il voulait corriger.
+
+Un chiffre d'entraînement sans source n'est pas une approximation, c'est une invention. Et une
+invention sous test devient une invention protégée.
+
+### Riegel sort de l'ancrage
+
+L'exposant 1,06 a été ajusté par Peter Riegel sur des **records du monde** (« Athletic Records and
+Human Endurance », *American Scientist* 69(3), 1981) : un travail descriptif, pas un prédicteur
+individuel. Il n'est plus nécessaire ici — le VDOT se lit directement depuis n'importe quelle
+distance, et les quatre distances d'une même ligne de la table rendent le même VDOT à cinq
+centièmes près. Riegel reste le repli pour ce que Daniels ne couvre pas, en dessous de 1 500 m et
+au-delà du marathon, où l'appelant affiche une prédiction et non une consigne.
+
+### Deux autres faussetés trouvées en passant
+
+1. **Les statistiques prédisaient depuis l'allure de seuil « sur 10 km ».** Deux propriétés
+   séparées, l'une se repliant sur le seuil, l'autre sur dix. L'allure de seuil n'est pas celle
+   d'un 10 km — c'est celle d'une course d'environ 67 minutes. Le couple ne tenait que parce que
+   le plan se trompait de la même façon. La prédiction repart du VDOT du profil.
+2. **Le tableau d'allure du jour J se repliait sur le seuil, quelle que soit la distance.** Sur un
+   marathon, il proposait un rythme de course d'une heure sur quarante-deux kilomètres, et la
+   ligne « Relance » cinq secondes plus vite encore. Il repart de la prédiction **pour cette
+   distance-là**.
+
+### Les deux erreurs de signe contraire
+
+L'ancien code déduisait d'une allure de footing déclarée un seuil **14 s/km trop lent** (`/ 1.20`,
+quand Daniels donne 1,25 à 1,27), pendant qu'il déduisait d'un chrono un footing **25 s/km trop
+rapide**. Deux chemins d'entrée du questionnaire, deux erreurs opposées, et rien qui les
+rapproche. Une seule méthode, maintenant, dans les deux sens.
+
+### Ce qui ne change pas, délibérément
+
+Les trois constantes de niveau — 330, 285, 240 s/km — sont converties en VDOT (36,34 / 43,61 /
+53,94) de façon à rendre **exactement le même seuil** qu'avant. Seules les trois autres allures
+bougent, ce qui est l'objet du chantier. Les redécider est un autre travail, et il se pose : un
+VDOT de 36 est un 10 km en 54 minutes, ce qui n'est pas « débutante » mais « court déjà ». Personne
+n'a mesuré ce que courent les gens qui cochent cette case, et une constante devinée deux fois ne
+vaut pas mieux qu'une fois.
+
+### La bascule
+
+Rien n'est réécrit sous les pieds de personne. Une séance porte son allure en texte, posée à la
+génération de la semaine : les nouvelles allures paraissent à la prochaine régénération — un
+changement de réglage, ou le lundi suivant. La semaine commencée reste celle qu'on a sous les yeux,
+et aucune séance ne change entre le moment où on la lit et le moment où on la court.
+
+Conséquence attendue et correcte : à distance égale, une sortie longue dure environ 5 % plus
+longtemps, puisqu'on la court plus lentement.
+
+### Ce qui le garde
+
+`RunUpTests/VdotTests.swift`, 18 cas, et le premier ne teste pas notre code pour lui-même : il
+vérifie que les deux équations d'*Oxygen Power* retrouvent le VDOT de chaque ligne depuis le temps
+de 10 km de cette même ligne. Si ce n'était pas vrai, la table recopiée serait une paraphrase et
+tous les autres cas vérifieraient une invention. Les suivants vérifient l'inversion, allure par
+allure, à la seconde près — footing (deux bords), seuil, intervalle, marathon, et les quatre
+colonnes de temps de course. Puis l'ordre des allures sur toute la plage, la monotonie que la
+dichotomie suppose, l'aller-retour allure↔VDOT, le refus de l'ultra, et le bornage d'une saisie
+absurde.
+
+Deux cas existent uniquement pour empêcher le retour en arrière : l'un montre que le rapport
+footing/seuil n'est pas constant, donc qu'aucune multiplication ne peut le remplacer ; l'autre
+fixe l'écart seuil→VMA à celui de la table, avec sa source.
+
+`ci_scripts/check_allures.py` et ses **16 cas**. Trois règles : `PaceModel.zones` ne contient
+aucune arithmétique sur un littéral décimal — la forme exacte du défaut, et la seule qu'il puisse
+reprendre ; les quatre allures passent par `Vdot`, le marathon par `allureDeCourse` et non par une
+fraction ; chaque fraction de `Vdot.Fraction` est nommée dans les cas, qui doivent porter au moins
+sept lignes de la table **et citer leur source**. Trois des seize cas ne vérifient que les façons
+dont ce contrôle pourrait passer vert pour la mauvaise raison — une signature reformatée, une table
+amputée, une source effacée.
+
 ## Chantier 28 — « L'achat n'a pas abouti. », dit à quelqu'un qu'Apple vient de débiter (A4)
 
 ### L'item était mal posé, pour la quatrième fois

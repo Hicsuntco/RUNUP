@@ -17,40 +17,89 @@ enum PaceModel {
         /// `AdaptivePlanEngine` can compute a realistic long-run duration from a target distance
         /// without re-parsing the "M:SS" text.
         var easySecPerKm: Double
-        /// Raw seconds/km behind `threshold` — the same anchor `referenceThresholdPace` computed,
-        /// exposed so `StatsView` can project real race-time predictions from it too (via Riegel,
-        /// same as here) when there's no run history yet to predict from instead.
+        /// Raw seconds/km behind `threshold` — exposé pour les écrans qui ont besoin d'un
+        /// nombre d'ancrage plutôt que du texte, et pour les prédictions de temps de course.
         var thresholdSecPerKm: Double
+        /// L'indice de Daniels dont les quatre allures ci-dessus découlent.
+        ///
+        /// Exposé pour que les prédictions de temps de course des statistiques repartent du MÊME
+        /// nombre que le plan, au lieu d'une seconde formule. Deux méthodes de prédiction dans la
+        /// même app finissent toujours par s'écarter, et c'est toujours sur l'écran qui les montre
+        /// côte à côte que ça se voit.
+        var vdot: Double
     }
 
+    /// Les quatre allures du plan, par la méthode de Jack Daniels — voir `Vdot`.
+    ///
+    /// # CE QUI A CHANGÉ, ET POURQUOI
+    ///
+    /// Ces quatre allures étaient des POURCENTAGES FIXES d'une allure d'ancrage : × 1,20, × 1,08,
+    /// × 1,00, × 0,87. Confrontés à la table publiée de Daniels, trois des quatre étaient faux —
+    /// le footing de 18 à 25 s/km trop vite à tous les niveaux, la VMA à l'allure du MILE au lieu
+    /// de celle d'un intervalle de trois à cinq minutes, le seuil légèrement trop rapide. Seul le
+    /// marathon, × 1,08, était juste.
+    ///
+    /// Et aucun coefficient fixe ne pouvait l'être : les rapports de Daniels varient avec le
+    /// niveau. Les mesures, les fractions de VO2max et la façon dont elles ont été retrouvées sont
+    /// dans l'en-tête de `Vdot`.
+    ///
+    /// # LES PLANS DÉJÀ EN COURS
+    ///
+    /// Rien n'est réécrit sous les pieds de personne : une séance porte son allure en texte, posée
+    /// à la génération de la semaine. Les nouvelles allures paraissent donc à la prochaine
+    /// régénération — un changement de réglage, ou le lundi suivant — et la semaine commencée
+    /// reste celle qu'on a sous les yeux. C'est la bonne bascule, et c'est aussi la seule qui ne
+    /// change pas une séance entre le moment où on la lit et le moment où on la court.
     static func zones(for profile: UserProfile) -> Zones {
-        let thresholdSecPerKm = referenceThresholdPace(for: profile)
+        let vdot = referenceVdot(for: profile)
+        let seuil = Vdot.allure(vdot: vdot, fraction: Vdot.Fraction.seuil)
+        let footing = Vdot.allure(vdot: vdot, fraction: Vdot.Fraction.footing)
         return Zones(
-            easy: paceText(thresholdSecPerKm * 1.20),
-            marathon: paceText(thresholdSecPerKm * 1.08),
-            threshold: paceText(thresholdSecPerKm * 1.0),
-            // 13% faster than threshold, not the previous 8%. vVO2max — what "VMA" actually means —
-            // sits around 3-5K race pace, typically 12-18% faster than a threshold/10K pace. At 8%
-            // the "Fractionné VMA" session was effectively a second tempo run at threshold effort
-            // and never delivered the aerobic-power stimulus the session exists to produce.
-            interval: paceText(thresholdSecPerKm * 0.87),
-            easySecPerKm: thresholdSecPerKm * 1.20,
-            thresholdSecPerKm: thresholdSecPerKm
+            easy: paceText(footing),
+            // L'allure marathon de Daniels est l'allure du marathon PRÉDIT, et non une fraction
+            // fixe de VO2max : la fraction qu'elle implique dérive de 80,5 à 82,5 % le long de la
+            // table. La calculer comme une course de 42,195 km redonne la table à un demi-seconde
+            // près, là où une fraction fixe se tromperait de trois secondes au kilomètre.
+            marathon: paceText(Vdot.allureDeCourse(vdot: vdot, km: 42.195)),
+            threshold: paceText(seuil),
+            interval: paceText(Vdot.allure(vdot: vdot, fraction: Vdot.Fraction.intervalle)),
+            easySecPerKm: footing,
+            thresholdSecPerKm: seuil,
+            vdot: vdot
         )
     }
 
-    /// Projects a known pace at one distance onto any other distance via Riegel's formula —
-    /// exposed for `StatsView`'s race-time predictions, reusing the same model that seeds the
-    /// plan's own paces instead of a second, disconnected formula.
+    /// Projette une allure connue sur une autre distance.
+    ///
+    /// # RIEGEL N'EST PLUS LA PREMIÈRE RÉPONSE
+    ///
+    /// Cette fonction appliquait la formule de Riegel, `t₂ = t₁ · (d₂/d₁)^1,06`. L'exposant 1,06 a
+    /// été ajusté par Peter Riegel sur des RECORDS DU MONDE (« Athletic Records and Human
+    /// Endurance », *American Scientist* 69(3), 1981) ; c'était un travail descriptif, pas un
+    /// prédicteur individuel, et il surestime le marathon de quelqu'un qui court pour le plaisir.
+    ///
+    /// Le plan, lui, calcule désormais ses allures par Daniels, qui prédit un temps de course pour
+    /// n'importe quelle distance de sa plage. Garder Riegel ici aurait laissé DEUX méthodes de
+    /// prédiction dans la même app, sur deux écrans voisins — et le même reproche que le dépôt
+    /// s'adresse partout ailleurs sur la duplication d'une vérité.
+    ///
+    /// Daniels passe donc en premier : la performance de référence donne un VDOT, le VDOT donne le
+    /// temps sur la distance visée. Riegel reste le repli pour ce que la méthode ne couvre pas —
+    /// en dessous de 1 500 m, au-delà du marathon — où un nombre approximatif vaut mieux que rien,
+    /// puisque l'appelant affiche une prédiction et non une consigne d'entraînement.
     static func projectedPace(fromSecPerKm refSecPerKm: Double, fromKm refKm: Double, toKm targetKm: Double) -> Double {
         guard refKm > 0, targetKm > 0 else { return refSecPerKm }
+        if let vdot = Vdot.depuisPerformance(km: refKm, secondes: refSecPerKm * refKm),
+           targetKm >= Vdot.kmMin, targetKm <= Vdot.kmMax {
+            return Vdot.allureDeCourse(vdot: vdot, km: targetKm)
+        }
         let refTotalSeconds = refSecPerKm * refKm
         let projectedTotalSeconds = refTotalSeconds * pow(targetKm / refKm, 1.06)
         return projectedTotalSeconds / targetKm
     }
 
     /// Exposed so `StatsView` can compare a real predicted race time against the user's actual
-    /// target — same parsing `referenceThresholdPace` uses internally.
+    /// target — same parsing `referenceVdot` uses internally.
     static func parseChronoSeconds(_ text: String, distance: RaceDistance?) -> Double? {
         parseChrono(text, distance: distance)
     }
@@ -75,7 +124,7 @@ enum PaceModel {
         TimeFormat.duree(seconds)
     }
 
-    /// Seconds-per-km at "threshold" — the anchor every other zone is a percentage offset of.
+    /// Le VDOT de cette personne — l'indice dont les quatre allures découlent.
     ///
     /// # L'ORDRE A CHANGÉ, ET C'EST LE FOND DE L'AFFAIRE
     ///
@@ -94,47 +143,53 @@ enum PaceModel {
     ///      indication, et il vaut mieux que la quatrième ligne ;
     ///   4. les trois constantes du niveau déclaré, qui décidaient jusqu'ici du plan de tout le
     ///      monde sauf des coureurs sur route.
-    private static func referenceThresholdPace(for profile: UserProfile) -> Double {
-        if let recent = profile.bestRecentPerf, let parsed = parseFreeformPerf(recent), parsed.seconds > 0 {
-            return thresholdPace(fromPerformanceSeconds: parsed.seconds, km: parsed.km)
+    private static func referenceVdot(for profile: UserProfile) -> Double {
+        if let recent = profile.bestRecentPerf, let parsed = parseFreeformPerf(recent),
+           let vdot = Vdot.depuisPerformance(km: parsed.km, secondes: parsed.seconds) {
+            return vdot
         }
-        // L'allure de footing est une allure FACILE : le seuil se trouve 20 % plus vite, par le
-        // même rapport que `zones` applique dans l'autre sens pour redescendre du seuil au
-        // footing. Un seul coefficient pour les deux sens, qui ne peut donc pas diverger.
-        if let allure = AllureFooting(rawValue: profile.allureFooting ?? "")?.secondesParKm {
-            return min(540, max(150, allure / 1.20))
+        // L'allure de footing est une allure FACILE : son VDOT se lit donc à la fraction du
+        // footing, dans le même sens que `zones` l'applique pour redescendre. Une seule fraction
+        // pour les deux sens, qui ne peut donc pas diverger.
+        //
+        // L'ancien code faisait l'aller-retour avec `/ 1.20`, le coefficient du footing. Il se
+        // trompait des deux côtés à la fois : le rapport footing/seuil de Daniels vaut 1,25 à
+        // 1,27, donc d'une allure de footing déclarée on déduisait un seuil 14 s/km trop LENT,
+        // pendant que d'un chrono on déduisait un footing 25 s/km trop RAPIDE. Deux chemins
+        // d'entrée, deux erreurs de signe opposé, et rien qui les rapproche.
+        if let allure = AllureFooting(rawValue: profile.allureFooting ?? "")?.secondesParKm,
+           let vdot = Vdot.depuisAllure(secondesParKm: allure, fraction: Vdot.Fraction.footing) {
+            return vdot
         }
         // `== .race` ET PAS « tout objectif qui a un chrono ». C'est volontaire, et c'est le genre
-        // de condition qu'on « corrige » en croyant bien faire : un temps d'ultra passé dans
-        // Riegel donne une absurdité. Cent kilomètres en vingt heures se projette sur un 10 km en
-        // 1 h 45, soit une allure seuil de 9:00/km — et toutes les zones du plan en découleraient.
-        // Riegel vaut d'un 5 km à un marathon, pas d'un 100 miles à un 10 km : un ultra se finit
-        // en marchant les montées, ce qui ne dit rien de la vitesse de quiconque. Un objectif
-        // d'ultra garde donc l'ancrage par meilleure perf récente, puis par niveau déclaré.
+        // de condition qu'on « corrige » en croyant bien faire : un temps d'ultra n'est pas une
+        // performance au sens de Daniels. Cent kilomètres en vingt heures lui donnent un VDOT de
+        // 14 — un ultra se finit en marchant les montées, ce qui ne dit rien de la vitesse de
+        // quiconque. `Vdot.depuisPerformance` refuse donc tout ce qui dépasse le marathon, et un
+        // objectif d'ultra retombe sur la meilleure perf récente, puis sur le niveau déclaré.
         if profile.goalId == .race,
            let chrono = profile.raceChrono,
            let km = profile.effectiveRaceDistanceKm,
            let totalSeconds = parseChrono(chrono, distance: profile.raceDistance),
-           totalSeconds > 0 {
-            return thresholdPace(fromPerformanceSeconds: totalSeconds, km: km)
+           let vdot = Vdot.depuisPerformance(km: km, secondes: totalSeconds) {
+            return vdot
         }
+        // LES TROIS CONSTANTES DE NIVEAU N'ONT PAS ÉTÉ RETOUCHÉES, ET C'EST DÉLIBÉRÉ.
+        //
+        // Elles valaient 330, 285 et 240 s/km, lues comme une allure de seuil. Converties à la
+        // fraction du seuil, elles donnent exactement les VDOT ci-dessous, donc ce chemin rend le
+        // MÊME seuil qu'avant — seules les trois autres allures bougent, ce qui est tout l'objet
+        // de ce chantier.
+        //
+        // Les redécider serait un autre chantier, et il se pose : un VDOT de 36 est un 10 km en
+        // 54 minutes, ce qui n'est pas « débutante » mais « court déjà ». Le noter plutôt que le
+        // corriger en passant — personne n'a mesuré ce que les gens qui cochent « débutante »
+        // courent vraiment, et une constante devinée deux fois ne vaut pas mieux qu'une fois.
         switch profile.level {
-        case .debutante: return 330      // ≈ 5:30/km reference
-        case .intermediaire: return 285  // ≈ 4:45/km
-        case .confirmee: return 240      // ≈ 4:00/km
+        case .debutante: return 36.34     // seuil 5:30/km, 10 km en 54:17
+        case .intermediaire: return 43.61 // seuil 4:45/km, 10 km en 46:27
+        case .confirmee: return 53.94     // seuil 4:00/km, 10 km en 38:44
         }
-    }
-
-    /// Projects any real performance onto a 10K-equivalent time via Riegel's formula (a standard,
-    /// widely-used race-time conversion), then treats that 10K pace as the threshold-pace anchor
-    /// — a common approximation in recreational pace calculators.
-    private static func thresholdPace(fromPerformanceSeconds seconds: Double, km: Double) -> Double {
-        guard km > 0, seconds > 0 else { return 285 }
-        let projected10k = seconds * pow(10.0 / km, 1.06)
-        // Clamped to a plausible human range (≈2:30/km world-class down to ≈9:00/km walk-run) —
-        // a freeform "meilleure perf récente" entry (typos, a wildly mismatched distance/time
-        // pair) could otherwise project an absurd pace that then seeds every zone in the plan.
-        return min(540, max(150, projected10k / 10.0))
     }
 
     /// `chronoPresets` use "MM:SS" for 5K/10K but "H:MM" for semi/marathon (the presets

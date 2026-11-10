@@ -723,8 +723,8 @@ struct StatsView: View {
     // MARK: Race predictions — was 3 fixed fake times regardless of any real performance
 
     /// The fastest real run of at least 2km, if any — the most credible reference to project
-    /// race times from. Falls back to the same threshold-pace anchor already seeding the plan
-    /// (target time / best recent perf / level) when there's no run history yet.
+    /// race times from. Sans historique, `predictedSeconds(forKm:)` repart du VDOT du profil,
+    /// celui dont le plan tire déjà ses allures.
     private var bestRecentPerformance: (km: Double, secPerKm: Double)? {
         let candidates = runs.prefix(10).compactMap { run -> (Double, Double)? in
             guard run.distanceKm >= 2, let pace = PaceModel.parseSecPerKm(run.avgPace) else { return nil }
@@ -733,10 +733,6 @@ struct StatsView: View {
         return candidates.min(by: { $0.1 < $1.1 }).map { (km: $0.0, secPerKm: $0.1) }
     }
 
-    private var predictionReferenceKm: Double { bestRecentPerformance?.km ?? 10 }
-    private var predictionReferenceSecPerKm: Double {
-        bestRecentPerformance?.secPerKm ?? PaceModel.zones(for: profile).thresholdSecPerKm
-    }
 
     /// « Objectif 42 km → **12″ à gagner** sur ton objectif. », le gras teinté.
     ///
@@ -768,8 +764,26 @@ struct StatsView: View {
         return Text(phrase)
     }
 
+    /// Le temps prédit sur une distance, depuis la meilleure course réelle — ou, sans historique,
+    /// depuis le VDOT du profil.
+    ///
+    /// # LE REPLI DISAIT UNE CHOSE FAUSSE
+    ///
+    /// Il prenait l'allure de SEUIL du plan et la projetait « depuis 10 km » — deux propriétés
+    /// séparées, `predictionReferenceSecPerKm` et `predictionReferenceKm`, dont l'une se replie
+    /// sur le seuil et l'autre sur dix. L'allure de seuil n'est pas l'allure d'un 10 km : chez
+    /// Daniels, c'est celle d'une course d'environ 67 minutes. Le couple tenait à peu près tant
+    /// que le plan posait lui-même seuil = allure du 10 km, c'est-à-dire tant qu'il se trompait
+    /// de la même façon. Il ne tient plus, et il ne tenait que par cette coïncidence.
+    ///
+    /// Le VDOT du profil répond directement à la question, sans paire de référence à faire
+    /// coïncider — et c'est le MÊME nombre dont le plan tire ses allures, donc la prédiction et
+    /// le plan ne peuvent plus s'écarter.
     private func predictedSeconds(forKm targetKm: Double) -> Double {
-        PaceModel.projectedPace(fromSecPerKm: predictionReferenceSecPerKm, fromKm: predictionReferenceKm, toKm: targetKm) * targetKm
+        if let perf = bestRecentPerformance {
+            return PaceModel.projectedPace(fromSecPerKm: perf.secPerKm, fromKm: perf.km, toKm: targetKm) * targetKm
+        }
+        return Vdot.allureDeCourse(vdot: PaceModel.zones(for: profile).vdot, km: targetKm) * targetKm
     }
 
     /// A marathon-training runner never saw a marathon prediction here (the tile set was hardcoded

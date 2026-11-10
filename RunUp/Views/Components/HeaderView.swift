@@ -128,9 +128,15 @@ struct BackChevronButton: View {
     }
 }
 
-/// Frosted circular chevron used over imagery (Live Run, Recap hero). Same treatment as
-/// `BackChevronButton` above.
-struct FrostedBackButton: View {
+/// Le retour circulaire posé SUR une image (course en cours, bandeau du récap).
+///
+/// Il portait un `.ultraThinMaterial` sous un noir à 45 % — un verre dépoli, que la règle 7
+/// interdit. Un disque noir opaque à 55 % le remplace, et le chiffre est calculé plutôt que
+/// choisi : dans le pire cas, une image BLANCHE, le fond composé vaut 0,45 et le chevron blanc
+/// y tient 4,76:1. À l'ancien 0,45 il ne valait que 3,35:1 — au-dessus du seuil des icônes,
+/// sous celui du texte courant, et c'est le verre qui rattrapait la différence.
+/// Sur une image sombre, le disque ne peut qu'améliorer : jusqu'à 21:1.
+struct OverImageBackButton: View {
     var action: () -> Void
 
     var body: some View {
@@ -141,8 +147,7 @@ struct FrostedBackButton: View {
                 .font(RUFont.icone(.medium, weight: .semibold))
                 .foregroundColor(.white)
                 .frame(width: 34, height: 34)
-                .background(.black.opacity(0.45), in: Circle())
-                .background(.ultraThinMaterial, in: Circle())
+                .background(.black.opacity(0.55), in: Circle())
                 .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }

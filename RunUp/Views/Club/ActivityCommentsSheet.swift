@@ -123,7 +123,8 @@ struct ActivityCommentsSheet: View {
             .accessibilityLabel("Envoyer le commentaire")
         }
         .padding(.horizontal, 18).padding(.vertical, 10)
-        .background(.ultraThinMaterial)
+        // La barre d'écriture est posée au-dessus du fil : une surface, pas une vitre. Règle 7.
+        .background(RUColor.card)
     }
 
     private func load() async {

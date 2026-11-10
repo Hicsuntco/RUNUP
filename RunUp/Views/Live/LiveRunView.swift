@@ -140,9 +140,14 @@ struct LiveRunView: View {
     private func voileDeDepart(_ reste: Int) -> some View {
         Button { vm?.lancerMaintenant() } label: {
             ZStack {
+                // UN DÉCOMPTE EST UN MOMENT MODAL, PAS UNE VITRE.
+                //
+                // C'était un `.ultraThinMaterial` forcé en sombre par un `colorScheme` posé à
+                // la main — tout ce travail pour qu'un flou soit noir. `Ink.ecran` est déjà le
+                // fond DERRIÈRE les surfaces de cet écran : opaque, il dit « trois, deux, un »
+                // et rien d'autre. Règle 7.
                 Rectangle()
-                    .fill(.ultraThinMaterial)
-                    .environment(\.colorScheme, .dark)
+                    .fill(Ink.ecran)
                 VStack(spacing: 10) {
                     Text("\(reste)")
                         .font(RUFont.display(horsEchelle: 96))
@@ -233,15 +238,18 @@ struct LiveRunView: View {
     private var topOverlay: some View {
         HStack {
             HStack(spacing: 8) {
-                FrostedBackButton { appState.go(.home) }
+                OverImageBackButton { appState.go(.home) }
                 HStack(spacing: 6) {
                     liveDot
                     Text(libelleEtat)
                         .font(RUFont.display(.caption)).tracking(2).foregroundColor(Ink.accentSoft)
                 }
                 .padding(.horizontal, 12).padding(.vertical, 8)
+                // Une teinte d'accent à 16 % SUR une surface opaque, et plus sur un flou :
+                // posée sur du verre, la pastille changeait de couleur selon la carte qui
+                // passait dessous. Règle 7, et une teinte qui ne bouge plus.
                 .background(Ink.accent.opacity(0.16), in: Capsule())
-                .background(.ultraThinMaterial, in: Capsule())
+                .background(Ink.fond, in: Capsule())
             }
             Spacer()
             // La pastille de segment vivait ici, en haut à droite, en 12 pt. Elle est maintenant
@@ -402,7 +410,7 @@ struct LiveRunView: View {
         // Surface neutre, l'ambre reste au texte. L'écran de course est toujours sombre : un
         // ambre à 16 % y donnait un brun, cerclé du même brun. Un accent n'a que deux états.
         .background(Color.white.opacity(0.09), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+        .background(Ink.fond, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
     }
 
     private func coachBubble(_ text: String) -> some View {
@@ -419,23 +427,20 @@ struct LiveRunView: View {
             }
         }
         .padding(RUSpacing.cardPadding)
-        // 0,92 ET NON 0,85, ET LE CHIFFRE EST MESURÉ.
+        // OPAQUE, ET TOUTE L'ARITHMÉTIQUE QUI TENAIT ICI DISPARAÎT AVEC LE VERRE.
         //
-        // Cette bulle est posée sur la carte MapKit, et son `.ultraThinMaterial` capte donc ce
-        // qu'il y a dessous — une carte CLAIRE en apparence claire. Le sourcil « Coach · en
-        // direct » est écrit en `Ink.accentSoft`, c'est-à-dire la variante claire de l'accent
-        // choisi, en petit texte : il lui faut 4,5:1.
+        // Cette bulle est posée sur la carte MapKit. Tant qu'elle portait un
+        // `.ultraThinMaterial`, son fond dépendait de ce que la carte montrait à cet instant —
+        // claire en apparence claire — et il a fallu mesurer : le sourcil « Coach · en direct »
+        // est écrit en `Ink.accentSoft`, en petit texte, donc il lui faut 4,5:1. À 0,85 le rose
+        // clair tombait à 4,25:1 ; on était monté à 0,92 pour atteindre 5,25.
         //
-        // À 0,85, le fond effectif vaut 0x303036 et l'accent par défaut — le rose clair 0xFF4D9E
-        // — y tombe à 4,25:1. Sous le seuil, pour le thème que presque tout le monde garde. Le
-        // violet n'était qu'à 4,86, donc à peine au-dessus. Les six autres thèmes passaient.
-        //
-        // À 0,92 le fond vaut 0x202026 : le rose monte à 5,25:1 et le violet à 6,00. Sept
-        // centièmes d'opacité en plus, que l'œil ne distingue pas d'un verre dépoli, et toute la
-        // palette passe avec de la marge.
-        .background(Ink.fond.opacity(0.92), in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
+        // Avec un fond OPAQUE, le calcul ne dépend plus de rien. Les huit palettes, mesurées
+        // sur `Ink.fond` (#0E0E14) : rose 6,24:1, violet 7,13, magenta 7,80, corail 8,94,
+        // bleu 9,51, ambre 13,41, cyan 14,15, lime 17,24. La plus basse gagne un point entier
+        // sur ce qu'elle valait, et aucune ne bouge plus quand la carte défile.
+        .background(Ink.fond, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous).stroke(Ink.accent.opacity(0.25), lineWidth: RUSpacing.hairline))
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
         .padding(.top, 90)
         // Speaker icon + "Coach · en direct" eyebrow + the coach line were three separate stops.
         .accessibilityElement(children: .combine)

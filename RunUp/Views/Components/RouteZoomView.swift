@@ -57,7 +57,9 @@ struct RouteZoomView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
+        // Posée sur une carte MapKit, donc sur un contenu imprévisible : une surface opaque, et
+        // le contraste des chiffres ne dépend plus de ce qui défile dessous. Règle 7.
+        .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous)
             .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
     }
@@ -83,7 +85,7 @@ struct RouteZoomView: View {
                 .font(RUFont.icone(.medium, weight: .semibold))
                 .foregroundColor(RUColor.textPrimary)
                 .frame(width: 44, height: 44)
-                .background(.ultraThinMaterial, in: Circle())
+                .background(RUColor.card, in: Circle())
                 .overlay(Circle().stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                 .contentShape(Circle())
         }

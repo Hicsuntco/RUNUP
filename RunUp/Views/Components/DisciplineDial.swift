@@ -194,8 +194,9 @@ struct DisciplineDialView: View {
             .foregroundColor(visee == nil ? RUColor.text3 : RUColor.rose2)
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
-            .background(.ultraThinMaterial.opacity(0.9), in: Capsule())
-            .background(RUColor.card.opacity(RUColor.isLight ? 0.96 : 0.82), in: Capsule())
+            // Deux fonds empilés dont le premier était un verre dépoli posé devant une carte
+            // à 96 % : il ne floutait que 4 % de la page. Un seul aplat, règle 7.
+            .background(RUColor.card, in: Capsule())
             .contentTransition(.opacity)
             .animation(RUMotion.snap, value: vedette)
             .accessibilityHidden(true)
@@ -215,8 +216,7 @@ struct DisciplineDialView: View {
                     if actif {
                         Circle().fill(RUColor.rose)
                     } else {
-                        Circle().fill(.ultraThinMaterial.opacity(0.9))
-                        Circle().fill(RUColor.card.opacity(RUColor.isLight ? 0.96 : 0.82))
+                        Circle().fill(RUColor.card)
                     }
                 }
                 .overlay(Circle().stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))

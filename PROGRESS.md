@@ -405,6 +405,73 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 20 — le verre dépoli sort de l'interface
+
+La seconde moitié de la règle 7, et l'inverse du chantier 19 : **aucun jeton ne distribuait le
+verre dépoli**. Chaque écran écrivait `.ultraThinMaterial` à la main. Douze emplois dans sept
+fichiers, donc douze décisions, lues une par une.
+
+### Ce que la lecture a montré
+
+**Quatre d'entre eux ne floutaient presque rien.** La barre d'onglets empilait un
+`.ultraThinMaterial` à 90 % **devant** une carte à 92 % en clair : le flou ne captait que **8 %**
+de la page. Le sélecteur de discipline faisait pareil deux fois, devant une carte à 96 % — donc
+4 %. Une couche de composition de plus sur l'écran le plus vu de l'app, pour un effet que personne
+ne peut nommer.
+
+**Trois autres étaient posés sur une carte MapKit**, et leur contraste dépendait donc de ce qui
+défilait dessous. La bulle du coach portait **quinze lignes d'arithmétique** pour cette seule
+raison : il avait fallu monter son fond à 92 % d'opacité pour que le sourcil « Coach · en direct »
+tienne 4,5:1 au-dessus d'une carte claire.
+
+### Ce qui a changé
+
+| | Avant | Après |
+| --- | --- | --- |
+| Barre d'onglets | verre 90 % devant `card` 92 % | `card`, opaque |
+| Sélecteur de discipline (libellé et rond inactif) | verre 90 % devant `card` 96 % | `card`, opaque |
+| Décompte de départ | `.ultraThinMaterial` + un `colorScheme` posé à la main pour le forcer en sombre | `Ink.ecran`, opaque |
+| Pastille d'état de la séance | teinte d'accent sur du verre — elle changeait de couleur selon la carte dessous | la même teinte sur `Ink.fond` |
+| Bandeau de consigne | blanc 9 % sur du verre | blanc 9 % sur `Ink.fond` |
+| **Bulle du coach** | `Ink.fond` à 92 % + verre, et quinze lignes pour justifier le 92 | `Ink.fond` opaque, et l'arithmétique disparaît |
+| Bouton « agrandir le tracé » | verre sur le tracé | `card` |
+| Tracé plein écran : carte d'infos et croix | verre sur MapKit | `card` |
+| Retour posé sur une image | verre sous un noir à 45 % | un noir **opaque à 55 %**, calculé |
+| Barre d'écriture des commentaires | verre | `card` |
+
+### Deux chiffres, calculés et pas choisis
+
+**La bulle du coach.** Avec un fond opaque, le contraste du sourcil ne dépend plus de la carte.
+Les huit palettes, mesurées sur `Ink.fond` (#0E0E14) : rose **6,24:1**, violet 7,13, magenta 7,80,
+corail 8,94, bleu 9,51, ambre 13,41, cyan 14,15, lime 17,24. La plus basse gagne **un point
+entier** sur ce qu'elle valait à 92 % d'opacité, et aucune ne bouge plus quand la carte défile.
+
+**Le retour posé sur une image.** Le pire cas est une image BLANCHE. À l'ancien noir de 45 %, le
+fond composé vaut 0,55 et le chevron blanc n'y tient que **3,35:1** — au-dessus du seuil des
+icônes, sous celui du texte courant, et c'est le verre qui rattrapait la différence. À **55 %**,
+le fond vaut 0,45 et le chevron tient **4,76:1**. Sur une image sombre, le disque ne peut
+qu'améliorer : jusqu'à 21:1.
+
+### Deux noms qui mentaient
+
+`FrostedBackButton` est devenu `OverImageBackButton` — il n'a plus rien de dépoli. Et l'en-tête de
+`TabBarView` annonçait « Floating frosted-glass tab bar » : elle ne l'est plus.
+
+### Ce qui le garde
+
+`ci_scripts/check_verre.py`, même forme que `check_degrade.py` : un compte par fichier contre une
+liste d'exceptions qui porte chacune sa raison. **La liste est vide, et c'est l'état qu'on veut.**
+Elle existe pour qu'une exception future soit écrite avec sa raison plutôt que glissée dans un
+écran — et la question à laquelle il faudra répondre est « qu'est-ce qu'un flou fait ici qu'un
+aplat ne ferait pas ». Dans les douze cas de ce dépôt, la réponse était « rien ».
+
+Sur le dépôt d'avant : **7 fichiers, 12 verres**. Après : zéro.
+
+`test_verre.py`, 18 cas. Deux disent ce qui n'est PAS un verre dépoli — `chart.bar.fill` et
+`RUSpacing.tabBarHeight` — parce que `.bar` EST un `Material` de SwiftUI et qu'une expression trop
+large bloquerait le dépôt sur un nom d'icône. Un garde-fou qui refuse un nom de symbole finit par
+être désactivé.
+
 ## Chantier 19 — le dégradé sort de l'interface
 
 Premier chantier de la phase 3, et c'est le système de design — le brief l'impose, et la mesure

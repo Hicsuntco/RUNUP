@@ -290,6 +290,23 @@ jobs:
           cd ci_scripts && python3 test_degrade.py
           cd .. && python3 ci_scripts/check_degrade.py
 
+      # LA RÈGLE 7, DEUXIÈME MOITIÉ : PAS DE GLASSMORPHISM.
+      #
+      # Douze `Material` dans sept fichiers, et cette fois aucun jeton ne les distribuait : chaque
+      # écran écrivait `.ultraThinMaterial` à la main. Quatre d'entre eux étaient posés DEVANT une
+      # surface déjà opaque à plus de 90 % — ils ne floutaient que 4 à 8 % de la page, pour une
+      # couche de composition de plus sur l'écran le plus vu de l'app.
+      #
+      # Trois autres étaient posés sur une carte MapKit, donc leur contraste dépendait de ce qui
+      # défilait dessous : la bulle du coach portait quinze lignes d'arithmétique pour cette
+      # raison. Avec un fond opaque, le calcul ne dépend plus de rien.
+      #
+      # La liste d'exceptions est VIDE, et c'est l'état qu'on veut.
+      - name: Vérifier qu'aucun verre dépoli n'est revenu
+        run: |
+          cd ci_scripts && python3 test_verre.py
+          cd .. && python3 ci_scripts/check_verre.py
+
       # Une clé absente du catalogue ne casse rien : `String(localized:)` rend la clé, et le texte
       # sort EN FRANÇAIS chez tout le monde. Ça ne se voit qu'en lançant l'app dans une autre
       # langue, sur l'écran concerné — autant dire jamais. L'audit en a trouvé cinq d'un coup,

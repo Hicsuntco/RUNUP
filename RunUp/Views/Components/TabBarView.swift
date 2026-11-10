@@ -1,6 +1,8 @@
 import SwiftUI
 
-/// Floating frosted-glass tab bar with a raised center "Run" button. See README § Global Chrome.
+/// Barre d'onglets flottante, avec le bouton « Run » surélevé au centre. Voir README § Global Chrome.
+///
+/// Elle était en verre dépoli, et son nom le disait. Elle ne l'est plus : règle 7.
 struct TabBarView: View {
     var selected: AppScreen
     var onSelect: (AppScreen) -> Void
@@ -108,12 +110,19 @@ struct TabBarView: View {
         // exactement la hauteur de la barre ; agrandir les libellés d'onglet l'a rendu visible.
         //
         // Un fond dessiné DANS une forme habille la barre sans toucher au contenu.
-        .background(.ultraThinMaterial.opacity(0.9), in: Capsule())
+        // LE VERRE DÉPOLI EST PARTI, ET IL NE FLOUTAIT PRESQUE RIEN.
+        //
+        // Il y avait ici DEUX fonds : `.ultraThinMaterial` à 90 %, et derrière lui `card` à
+        // 92 % en clair. Le flou ne captait donc que 8 % de la page — le reste, c'était la
+        // carte. Il coûtait une couche de composition sur l'écran le plus vu de l'app pour un
+        // effet que personne ne peut nommer. Règle 7 : pas de verre dépoli.
+        //
         // La barre FLOTTE au-dessus du contenu, donc elle doit se lire comme une surface
         // surélevée — c'est-à-dire `card`, comme toutes les autres surfaces surélevées depuis
         // l'inversion du thème clair. Elle était figée à #EDEDF4, soit la couleur de la page en
         // un peu plus foncé : une barre censée être posée au-dessus se lisait comme un trou.
-        .background(RUColor.card.opacity(RUColor.isLight ? 0.92 : 0.72), in: Capsule())
+        // Opaque, maintenant : ce qui flotte au-dessus ne laisse pas voir au travers.
+        .background(RUColor.card, in: Capsule())
         .overlay(Capsule().stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
         // Et la barre elle-même arrête les touches, y compris dans les marges au-dessus et en
         // dessous des libellés : elle est posée SUR le contenu, elle doit se comporter comme

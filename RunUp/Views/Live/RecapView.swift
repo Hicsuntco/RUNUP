@@ -420,7 +420,7 @@ struct RecapView: View {
             // même `HStack` plutôt qu'empilés séparément — ils partagent la même marge haute,
             // celle qui dégage la barre d'état, et un second bloc l'aurait redite de son côté.
             HStack {
-                FrostedBackButton { closeRecap() }
+                OverImageBackButton { closeRecap() }
                 Spacer()
                 if !run.route.isEmpty {
                     Button { tracePleinEcran = true } label: {
@@ -428,7 +428,10 @@ struct RecapView: View {
                             .font(RUFont.icone(.body, weight: .semibold))
                             .foregroundColor(RUColor.textPrimary)
                             .frame(width: 44, height: 44)
-                            .background(.ultraThinMaterial, in: Circle())
+                            // Une surface opaque et pas un verre dépoli : ce bouton est posé
+                            // SUR le tracé, donc sur un contenu qu'on ne choisit pas. `card`
+                            // garantit son contraste quelle que soit la boucle dessous.
+                            .background(RUColor.card, in: Circle())
                             .overlay(Circle().stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
                             .contentShape(Circle())
                     }

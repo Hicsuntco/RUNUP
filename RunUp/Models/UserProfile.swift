@@ -349,7 +349,12 @@ final class UserProfile {
     var accentThemeID: String = AccentTheme.defaultID
     /// Dark (default) or light app-wide theme — same mirror-into-`ThemeStore` pattern as
     /// `accentThemeID`, see `RUColor`'s theme-aware tokens.
-    var isLightMode: Bool = false
+    /// CLAIR PAR DÉFAUT — décision de Charlotte, 9 novembre 2026.
+    ///
+    /// Le sombre n'avait jamais été CHOISI comme défaut : il tombait de `false`, la valeur qu'une
+    /// propriété booléenne prend quand personne ne se prononce. Ça ne vaut que pour un profil
+    /// NEUF : un profil déjà enregistré porte sa valeur, et personne ne se fait retourner son app.
+    var isLightMode: Bool = true
     /// L'habillage choisi — `Habillage.rawValue`. Voir `Habillage` : la direction artistique est
     /// un réglage, pas un commit, pour qu'en revenir coûte un appui.
     ///

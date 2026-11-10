@@ -406,6 +406,54 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 22 — le fond clair devient le défaut (D2)
+
+### Le sombre n'avait jamais été choisi
+
+`ThemeStore` lisait `UserDefaults.bool(forKey:)`, qui rend **`false` quand la clé est absente**.
+Et `UserProfile.isLightMode` valait `false`, la valeur qu'une propriété booléenne prend quand
+personne ne se prononce. Le thème sombre par défaut tombait donc de deux API, pas d'une décision.
+
+### Quatre endroits décidaient, et il fallait les quatre
+
+| Où | Quand ça décide | Avant | Après |
+| --- | --- | --- | --- |
+| `UserProfile.isLightMode` | un profil neuf | `false` | **`true`** |
+| `ThemeStore.init` | tout premier lancement, avant qu'un profil existe | `d.bool(forKey:)` → `false` | `d.object(forKey:) as? Bool ?? true` |
+| `DailyGoalsSnapshot.empty` | le widget avant que l'app ait jamais publié | `false` | **`true`** |
+| L'aperçu de la galerie de widgets | la galerie | `false` | **`true`** |
+
+N'en changer que deux aurait donné un widget sombre à côté d'une app claire — exactement la
+famille de défauts que ce dépôt passe sa semaine à trouver.
+
+### Le seul endroit qui reste à `false`, et c'est voulu
+
+Le décodage d'un instantané de widget qui n'a pas la clé : `?? false`. Un instantané sans cette
+clé a été écrit par une version de l'app ANTÉRIEURE à la clé, donc par quelqu'un qui a déjà un
+profil — et un profil déjà enregistré reste en sombre. Mettre `true` là afficherait un widget
+clair à côté d'une app sombre, le temps d'un lancement.
+
+### CE QUE ÇA NE FAIT PAS, ET JE L'AI DIT TROP VITE LA PREMIÈRE FOIS
+
+J'avais annoncé qu'on pourrait distinguer « n'a jamais touché le réglage » de « a choisi le
+sombre », en regardant si la clé `apparence.clair.v1` existe dans les préférences. **C'est faux.**
+`AppState` appelle `ThemeStore.appliquer(...)` à CHAQUE lancement pour synchroniser depuis le
+profil, donc la clé est écrite pour tout le monde, dès la première ouverture.
+
+Rien dans l'app n'enregistre si quelqu'un a choisi son thème. Les deux cas sont stockés à
+l'identique, `isLightMode = false`. Il n'y a donc aucune façon honnête de retourner l'app de
+quelqu'un sans risquer de retourner celle d'une personne qui avait décidé.
+
+**Conséquence, et elle compte : les comptes existants ne changent pas.** Le clair est le défaut
+des INSTALLATIONS NEUVES. Sur un téléphone qui a déjà l'app, rien ne bouge — il faut passer par
+Profil → Apparence.
+
+### Et la fiche App Store était déjà claire
+
+`screenshots.py` compose à partir de `appstore/raw/<langue>/clair/` : **la passe claire livre la
+fiche, la passe sombre sert au diagnostic.** Le magasin montrait donc du clair pendant que l'app
+ouvrait en sombre. Cette décision referme cet écart au lieu d'en ouvrir un.
+
 ## Chantier 21 — l'image iPad n'aurait jamais dû exister, et c'est moi qui l'avais fabriquée
 
 ### Ce que Charlotte a dit

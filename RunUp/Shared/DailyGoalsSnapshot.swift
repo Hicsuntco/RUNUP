@@ -129,6 +129,11 @@ struct DailyGoalsSnapshot: Codable, Equatable {
         // "rose" est la valeur de AccentTheme.defaultID, recopiee ici : ce fichier est
         // compile dans la cible RunUpWidgets, qui ne voit pas RunUp/DesignSystem.
         accentThemeID = try c.decodeIfPresent(String.self, forKey: .accentThemeID) ?? "rose"
+        // `false` ET NON `true`, CONTRAIREMENT AU DÉFAUT DE L'APP, et c'est voulu : un instantané
+        // sans cette clé a été écrit par une version de l'app ANTÉRIEURE à la clé, donc par
+        // quelqu'un qui a déjà un profil — et un profil déjà enregistré reste en sombre. Mettre
+        // `true` ici afficherait un widget clair à côté d'une app sombre, le temps du prochain
+        // lancement.
         isLightMode = try c.decodeIfPresent(Bool.self, forKey: .isLightMode) ?? false
         dailyGoalsDone = try c.decodeIfPresent(Int.self, forKey: .dailyGoalsDone) ?? 0
         dailyGoalsTotal = try c.decodeIfPresent(Int.self, forKey: .dailyGoalsTotal) ?? 3
@@ -140,10 +145,13 @@ struct DailyGoalsSnapshot: Codable, Equatable {
         stepsGoal = try c.decodeIfPresent(Int.self, forKey: .stepsGoal) ?? 0
     }
 
-    /// The honest empty state — what the widget shows before the app has ever published
-    /// (fresh install) instead of fabricated demo numbers.
+    /// L'état vide honnête — ce que le widget montre avant que l'app ait jamais publié
+    /// (installation neuve), plutôt que des chiffres de démonstration inventés.
+    ///
+    /// `isLightMode: true` : une installation neuve, c'est exactement le cas où l'app ouvre en
+    /// clair. Le widget doit dire la même chose qu'elle.
     static var empty: DailyGoalsSnapshot {
-        DailyGoalsSnapshot(progress: [0, 0, 0], streak: 0, accentThemeID: "rose", isLightMode: false,
+        DailyGoalsSnapshot(progress: [0, 0, 0], streak: 0, accentThemeID: "rose", isLightMode: true,
                            dailyGoalsDone: 0, dailyGoalsTotal: 3, activeCaloriesRemaining: 0,
                            stepsRemaining: 0, weekStrip: [])
     }

@@ -174,7 +174,14 @@ final class ThemeStore {
     private init() {
         let d = UserDefaults.standard
         themeID = d.string(forKey: Self.cleTheme) ?? AccentTheme.defaultID
-        isLightMode = d.bool(forKey: Self.cleClair)
+        // `d.bool(forKey:)` REND `false` QUAND LA CLÉ EST ABSENTE, et c'est de là que venait le
+        // thème sombre par défaut : personne ne l'avait choisi, il tombait de l'API. Au tout
+        // premier lancement, avant qu'un profil existe, on démarre donc en clair.
+        //
+        // Ce n'est qu'un cache d'amorçage : `AppState` écrase ces trois valeurs avec celles du
+        // profil dès qu'il est lu, à chaque lancement. Une personne qui a déjà un profil ne voit
+        // donc jamais cette ligne décider de quoi que ce soit.
+        isLightMode = d.object(forKey: Self.cleClair) as? Bool ?? true
         habillage = Habillage.depuis(d.string(forKey: Self.cleHabillage))
     }
 

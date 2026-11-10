@@ -65,6 +65,15 @@ const KNOWN_EVENTS = new Set([
   // `AppScreen.rawValue` — une quinzaine de valeurs possibles, donc agrégeable, sans identifiant
   // de contenu ni durée.
   'screen_viewed',
+  // La distribution du temps de lancement, telle qu'iOS la mesure sur l'appareil et la livre une
+  // fois par jour par MetricKit. Un événement par lot et par appareil, donc très rare. Ses props
+  // sont des agrégats — un compte, deux percentiles, la part au-dessus de deux secondes, et les
+  // paliers en une ligne compacte « 250:12,500:3 ». Aucune durée individuelle.
+  //
+  // C'est la seule mesure de la promesse « premier écran en moins de 2 secondes » : un chronomètre
+  // posé dans l'app démarrerait après le chargement dynamique et annoncerait donc des lancements
+  // plus rapides qu'ils ne sont.
+  'launch_measured',
   // Un message météo parti. Sa propriété `source` distingue l'ouverture de l'app d'un réveil en
   // arrière-plan accordé par iOS — et c'est le SEUL moyen de savoir si ces réveils se produisent :
   // iOS décide seul, ne le signale pas, et ne s'en explique jamais. Sans ce nom ici, l'événement

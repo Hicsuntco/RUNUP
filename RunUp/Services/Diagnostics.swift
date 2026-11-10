@@ -113,6 +113,26 @@ private struct LotDePannes: Encodable, Sendable {
 final class Diagnostics: NSObject, MXMetricManagerSubscriber, @unchecked Sendable {
     static let shared = Diagnostics()
 
+    /// LA MESURE DU TEMPS DE LANCEMENT EST PRÊTE ET NE PART PAS ENCORE.
+    ///
+    /// Elle est écrite, éprouvée (`HistogrammeTests`, 16 cas) et branchée dans
+    /// `didReceive(_:[MXMetricPayload])` plus bas. Elle est à FAUX pour une seule raison, et ce
+    /// n'est pas technique : **la politique de confidentialité publiée ne la décrit pas encore.**
+    ///
+    /// Collecter une donnée que la page liée depuis la fiche App Store ne mentionne pas est
+    /// exactement le défaut que `ci_scripts/check_politique.py` existe pour empêcher, et son
+    /// commentaire dit lequel des deux sens est le dangereux : celui-ci. La page est servie par
+    /// GitHub Pages depuis `main`, et y porter un paragraphe est un déploiement en production.
+    ///
+    /// CE QUI L'OUVRE, en un seul geste : ajouter à `privacy.html` le paragraphe « Temps de
+    /// lancement » — son texte est prêt, voir `PROGRESS.md`, chantier 32 — sur CETTE branche et
+    /// sur `main`, et passer cette constante à `true` dans le même commit. `check_politique.py`
+    /// dira si les deux pages se sont bien rejointes.
+    ///
+    /// Un drapeau écrit en clair plutôt qu'un interrupteur caché : il porte sa raison, l'action
+    /// qui le lève, et le nom du contrôle qui vérifiera qu'elle a été faite.
+    static let mesureDuLancementActive = false
+
     /// Le vocabulaire complet. Chaque valeur doit aussi figurer dans `KNOWN_KINDS` de
     /// `api/crashes.js`, qui jette tout le reste — et `ci_scripts/check_pannes.py` compare les
     /// deux listes dans les deux sens, parce que la même duplication a déjà coûté onze
@@ -194,7 +214,75 @@ final class Diagnostics: NSObject, MXMetricManagerSubscriber, @unchecked Sendabl
     /// ne se compile pas dans ce conteneur (aucune chaîne Swift ici), et rien ne permet donc de
     /// vérifier laquelle des deux méthodes du protocole est optionnelle. Trois lignes mortes
     /// coûtent moins qu'un cycle de douze minutes d'intégration continue pour l'apprendre.
-    func didReceive(_ payloads: [MXMetricPayload]) {}
+    /// LA MÉTHODE ÉTAIT VIDE, ET LA MESURE TOMBAIT PAR TERRE.
+    ///
+    /// `MXMetricPayload` est l'autre moitié de MetricKit : un lot quotidien, livré sur chaque
+    /// appareil réel, qui porte entre autres la DISTRIBUTION du temps de lancement. Le canal des
+    /// diagnostics, lui, ne livre que les lancements anormalement lents — et il est traité depuis
+    /// longtemps, dans `didReceive(_:[MXDiagnosticPayload])` juste au-dessus.
+    ///
+    /// On avait donc les cas extrêmes et pas la normale. La phase 4 du brief promet « premier
+    /// écran en moins de 2 secondes » : c'est une promesse sur la normale, et c'est exactement
+    /// cette moitié-là que ces accolades vides jetaient.
+    ///
+    /// # CE QUI EST LU, ET RIEN D'AUTRE
+    ///
+    /// `histogrammedTimeToFirstDraw` — le temps jusqu'à la première image dessinée, « the time
+    /// when the first CA commit is finished ». C'est bien « premier écran », et c'est la seule
+    /// mesure qui inclut ce qu'on ne peut PAS voir depuis Swift : le temps d'avant `main()`, le
+    /// chargement dynamique, la mise en place du processus. Un chronomètre posé dans l'app
+    /// démarrerait trop tard et annoncerait donc des lancements plus rapides qu'ils ne sont —
+    /// c'est-à-dire se tromperait dans le sens qui arrange, sur une promesse.
+    ///
+    /// La durée passe par `millisecondes(_:)`, qui CONVERTIT la `Measurement` au lieu de lire sa
+    /// valeur brute. L'unité native de ces paliers n'est documentée nulle part, et un facteur
+    /// mille ferait juger la promesse sur du vide.
+    ///
+    /// Le reste du lot n'est pas lu. Les gels et la mémoire sont d'autres chantiers, et une
+    /// moisson large ferait collecter des données que la politique de confidentialité ne décrit
+    /// pas.
+    func didReceive(_ payloads: [MXMetricPayload]) {
+        // Voir `mesureDuLancementActive` : la page publiée ne décrit pas encore cette mesure.
+        guard Self.mesureDuLancementActive, !Demonstration.enCours else { return }
+        for payload in payloads {
+            guard let lancement = payload.applicationLaunchMetrics else { continue }
+            let histogramme = Self.histogramme(lancement.histogrammedTimeToFirstDraw)
+            guard !histogramme.estVide else { continue }
+            var props: [String: AnalyticsValue] = [
+                "n": .int(histogramme.total),
+                "paliers": .string(histogramme.ligne),
+                // La version de l'app du lot, et non celle qui tourne maintenant : un lot peut
+                // couvrir plusieurs versions, et attribuer ses chiffres à la version du jour
+                // ferait apparaître une régression là où il n'y a qu'une mise à jour.
+                "version": .string(payload.latestApplicationVersion),
+                "plusieurs_versions": .bool(payload.includesMultipleApplicationVersions),
+            ]
+            if let p50 = histogramme.percentile(0.5) { props["p50_ms"] = .int(Int(p50)) }
+            if let p90 = histogramme.percentile(0.9) { props["p90_ms"] = .int(Int(p90)) }
+            // LA PROMESSE, CHIFFRÉE. Deux secondes, c'est la phase 4 du brief, et c'est la seule
+            // raison pour laquelle cette propriété existe plutôt que de se déduire des paliers.
+            if let part = histogramme.partAuDessusDe(ms: 2000) {
+                props["part_au_dessus_de_2s"] = .double((part * 1000).rounded() / 1000)
+            }
+            Analytics.shared.track(.lancementMesure, props)
+        }
+    }
+
+    /// La traduction d'un histogramme MetricKit, et le SEUL endroit qui touche cette API.
+    ///
+    /// Isolé à dessein. Le nom d'énumération des paliers et le type du seau ne sont pas
+    /// documentés par Apple d'une façon qu'on puisse citer, et tout ce qui compte — les
+    /// percentiles, la part au-dessus du seuil — vit dans `Histogramme`, qui ne connaît pas
+    /// MetricKit et se vérifie sans appareil.
+    private static func histogramme(_ brut: MXHistogram<UnitDuration>) -> Histogramme {
+        var paliers: [Histogramme.Palier] = []
+        for cas in brut.bucketEnumerator {
+            guard let seau = cas as? MXHistogramBucket<UnitDuration> else { continue }
+            paliers.append(.init(finMs: Double(millisecondes(seau.bucketEnd)),
+                                 compte: seau.bucketCount))
+        }
+        return Histogramme(paliers: paliers)
+    }
 
     // MARK: - La traduction d'un lot MetricKit en lignes de table
 

@@ -205,6 +205,18 @@ final class Analytics: @unchecked Sendable {
         /// c'est aussi, littéralement, l'app donnée gratuitement. Sans cet événement la fuite est
         /// invisible : ces gens-là ne se plaignent pas, ils utilisent l'app.
         case paywallProductsUnavailable = "paywall_products_unavailable"
+
+        // MARK: La promesse des deux secondes
+        //
+        // « Premier écran en moins de 2 secondes », phase 4 du brief, jamais relevé. iOS le
+        // mesure pourtant sur chaque appareil réel et le livre tous les jours par MetricKit —
+        // dans la moitié du protocole que `Diagnostics` implémentait par des accolades vides.
+        //
+        // Un événement par lot quotidien et par appareil, donc rare. Ses propriétés sont des
+        // agrégats : un compte, deux percentiles, la part au-dessus de deux secondes, et les
+        // paliers bruts en une ligne compacte. Aucune durée individuelle, rien qui désigne un
+        // lancement en particulier.
+        case lancementMesure = "launch_measured"
     }
 
     private static let baseURL = URL(string: "https://runup-nu.vercel.app")!

@@ -406,6 +406,91 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 32 — la mesure du lancement arrivait déjà, et une méthode vide la jetait (B7)
+
+`PHASE2.md` disait : « Le temps de lancement n'a jamais été relevé. La phase 4 exige premier écran
+en moins de 2 secondes. On ne peut pas tenir une promesse qu'on n'a pas mesurée. »
+
+Il n'y avait rien à construire pour la relever.
+
+### La moitié traitée, et la moitié jetée
+
+MetricKit a deux canaux, et `Diagnostics` était abonné aux deux :
+
+| | |
+| --- | --- |
+| `didReceive(_:[MXDiagnosticPayload])` | traité depuis longtemps — **cinq** listes, dont `appLaunchDiagnostics`, avec la durée dans la note. Chaque lancement anormalement lent arrive déjà, et `privacy.html` le décrit : « met trop longtemps à démarrer » |
+| `didReceive(_:[MXMetricPayload])` | **`{}`** |
+
+Une méthode vide. On avait donc les cas EXTRÊMES et pas la normale — et la promesse porte sur la
+normale.
+
+### Pourquoi iOS et pas un chronomètre dans l'app
+
+`histogrammedTimeToFirstDraw` est « the time when the first CA commit is finished » : c'est bien
+« premier écran ». Et c'est la seule mesure qui inclut ce qu'on ne peut pas voir depuis Swift —
+le temps d'avant `main()`, le chargement dynamique, la mise en place du processus. Un chronomètre
+posé dans l'app démarrerait trop tard et annoncerait donc des lancements **plus rapides** qu'ils ne
+sont : il se tromperait dans le sens qui arrange, sur une promesse.
+
+### Deux choses que je n'ai pas devinées
+
+La documentation d'Apple n'était pas citable sur deux points, et le blog qui l'approche ne les dit
+pas non plus :
+
+1. **L'unité des paliers.** Le code de référence lit `bucketEnd.value` brut et traite le résultat
+   comme des millisecondes, sans le dire. Un facteur mille ferait juger la promesse sur du vide.
+   `Diagnostics` porte déjà `millisecondes(_:)`, qui **convertit** la `Measurement` au lieu de lire
+   sa valeur — l'unité n'est donc pas une supposition.
+2. **Le nom de la propriété de début de palier.** Non vérifié, et pas nécessaire : les paliers sont
+   contigus, et les deux lectures utiles n'ont besoin que de la borne haute. Lire une propriété
+   dont on n'est pas sûr, pour une donnée dont on n'a pas besoin, c'est deux risques pour rien.
+
+### Les deux lectures se trompent exprès, et dans le même sens
+
+Un histogramme ne donne aucune durée, seulement des paliers. `Histogramme` l'assume :
+
+- `percentile(_:)` rend la **borne haute** du palier où le cumul franchit le seuil. « p90 =
+  1 500 ms » veut dire « neuf sur dix ont fini avant 1 500 ms » ;
+- `partAuDessusDe(ms:)` compte un palier **à cheval** sur le seuil comme étant au-dessus.
+
+Les deux penchent vers le pessimisme. C'est le bon sens pour une promesse : on ne veut pas la
+découvrir annoncée tenue parce qu'on arrondissait vers le bas. `HistogrammeTests`, **16 cas**,
+dont un qui fixe `ceil` plutôt que `round` — à dix observations le p50 est la cinquième, pas la
+cinq-et-demie, et `round` faisait sauter d'un palier, soit quatre fois plus de millisecondes
+annoncées.
+
+### Et elle ne part pas encore — délibérément
+
+`Diagnostics.mesureDuLancementActive` est à **faux**, pour une raison qui n'est pas technique :
+**la politique publiée ne décrit pas encore cette mesure.** Collecter une donnée que la page liée
+depuis la fiche App Store ne mentionne pas est exactement le défaut que `check_politique.py` existe
+pour empêcher, et son commentaire dit que c'est le sens dangereux des deux.
+
+J'ai préparé le paragraphe, et le push vers `main` m'a été refusé : c'est un déploiement en
+production, et Charlotte avait autorisé un seul geste sur `main`, celui de la phrase sur les
+statistiques. Je ne l'ai pas contourné, et j'ai retiré le paragraphe de la branche de travail pour
+que les deux pages restent d'accord.
+
+**Ce qui l'ouvre, en un seul commit** : ajouter le paragraphe ci-dessous à `privacy.html` sur cette
+branche ET sur `main`, et passer la constante à `true`. `check_politique.py` dira si les deux pages
+se sont rejointes.
+
+> **Temps de lancement** — une fois par jour au plus, l'application envoie la mesure du temps que
+> ton téléphone a mis à afficher le premier écran, telle qu'iOS l'établit. Elle arrive sous forme
+> de *paliers* — « tant de lancements terminés avant 250 millisecondes, tant avant 500 » — et
+> jamais sous forme de durées individuelles : aucun lancement en particulier n'est identifiable.
+> Elle sert à une seule chose, vérifier que le premier écran s'affiche en moins de deux secondes.
+> Elle relève du choix décrit ci-dessus : si tu refuses les statistiques d'usage, elle n'est ni
+> enregistrée ni envoyée.
+
+Le manifeste, lui, n'a pas bougé : `PrivacyInfo.xcprivacy` déclare déjà `PerformanceData`, pour les
+diagnostics de lancement. Même nature de donnée, même finalité.
+
+Et cette mesure **obéit au consentement**, contrairement aux rapports de panne : elle passe par
+`Analytics`, dont `enqueue` et `sendNextBatch` sont gardés par le choix fait à l'inscription. C'est
+pour ça que le paragraphe le dit — les deux cas voisins ne se comportent pas pareil.
+
 ## Chantier 31 — l'état vide, écrit une fois pour de bon (A5, le reliquat)
 
 `RUEmpty` existait depuis le chantier 25, et **six écrans l'utilisaient**. Seize endroits

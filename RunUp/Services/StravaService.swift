@@ -92,6 +92,7 @@ final class StravaService: NSObject {
         // y saute, le temps d'un accès.
         guard let token = await auth.token else { throw StravaServiceError.notSignedIn }
         var request = URLRequest(url: Self.baseURL.appending(path: path))
+        request.timeoutInterval = Delais.interactif
         request.httpMethod = method
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         if let body {

@@ -238,6 +238,7 @@ final class AuthService {
     func refreshMe() async throws -> AuthenticatedUser {
         guard let token else { throw AuthServiceError.notSignedIn }
         var request = URLRequest(url: Self.baseURL.appending(path: "api/me"))
+        request.timeoutInterval = Delais.interactif
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         let decoded: MeResponse = try await send(request)
         let user = AuthenticatedUser(
@@ -258,6 +259,7 @@ final class AuthService {
     func updateAvatar(dataURI: String?) async throws {
         guard let token else { throw AuthServiceError.notSignedIn }
         var request = URLRequest(url: Self.baseURL.appending(path: "api/account/avatar"))
+        request.timeoutInterval = Delais.televersement
         request.httpMethod = "POST"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
@@ -279,6 +281,7 @@ final class AuthService {
     func deleteAccount() async throws {
         guard let token else { throw AuthServiceError.notSignedIn }
         var request = URLRequest(url: Self.baseURL.appending(path: "api/account/delete"))
+        request.timeoutInterval = Delais.interactif
         request.httpMethod = "POST"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         let _: OkResponse = try await send(request)
@@ -310,6 +313,7 @@ final class AuthService {
     /// locally, offline included; the token then just expires on its own.
     private static func revokeSession(authToken: String) async {
         var request = URLRequest(url: baseURL.appending(path: "api/auth/signout"))
+        request.timeoutInterval = Delais.arrierePlan
         request.httpMethod = "POST"
         request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
         _ = try? await URLSession.shared.data(for: request)
@@ -319,6 +323,7 @@ final class AuthService {
 
     private func authenticate(path: String, body: [String: String]) async throws {
         var request = URLRequest(url: Self.baseURL.appending(path: path))
+        request.timeoutInterval = Delais.interactif
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)

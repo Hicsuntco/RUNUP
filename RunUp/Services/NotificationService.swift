@@ -58,6 +58,7 @@ final class NotificationService: NSObject {
     func sendPendingDeviceTokenIfSignedIn() async {
         guard let deviceTokenHex, let authToken = KeychainService.loadToken() else { return }
         var request = URLRequest(url: Self.baseURL.appending(path: "api/notifications/register"))
+        request.timeoutInterval = Delais.arrierePlan
         request.httpMethod = "POST"
         request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
@@ -72,6 +73,7 @@ final class NotificationService: NSObject {
     func unregisterDeviceToken(authToken: String) async {
         guard let deviceTokenHex else { return }
         var request = URLRequest(url: Self.baseURL.appending(path: "api/notifications/unregister"))
+        request.timeoutInterval = Delais.arrierePlan
         request.httpMethod = "POST"
         request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "content-type")

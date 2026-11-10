@@ -390,6 +390,7 @@ final class Analytics: @unchecked Sendable {
         }
 
         var request = URLRequest(url: Self.baseURL.appending(path: "api/events"))
+        request.timeoutInterval = Delais.arrierePlan
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         // Optional by design, on both ends: the endpoint accepts anonymous batches (the onboarding

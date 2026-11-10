@@ -125,6 +125,7 @@ enum CoachService {
         allowActions: Bool
     ) async throws -> CoachReply {
         var request = URLRequest(url: endpoint)
+        request.timeoutInterval = Delais.coach
         request.httpMethod = "POST"
         request.setValue(appSecret, forHTTPHeaderField: "x-runup-secret")
         request.setValue("application/json", forHTTPHeaderField: "content-type")

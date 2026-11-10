@@ -323,6 +323,17 @@ jobs:
           cd ci_scripts && python3 test_manifeste.py
           cd .. && python3 ci_scripts/check_manifeste.py
 
+      # SOIXANTE SECONDES DE ROUE QUI TOURNE, C'EST UNE APP CASSÉE.
+      #
+      # Les douze requêtes du dépôt partaient sans délai déclaré, donc avec celui d'Apple. Le
+      # défaut ne se voit jamais en développement : un aller-retour sur notre API prend 0,17 à
+      # 0,51 seconde, mesuré. Il n'existe que chez quelqu'un dans un train — et là, `PanneReseau`
+      # savait déjà écrire la bonne phrase, elle arrivait une minute trop tard.
+      - name: Vérifier qu'aucune requête ne part sans délai
+        run: |
+          cd ci_scripts && python3 test_delais.py
+          cd .. && python3 ci_scripts/check_delais.py
+
       # Une clé absente du catalogue ne casse rien : `String(localized:)` rend la clé, et le texte
       # sort EN FRANÇAIS chez tout le monde. Ça ne se voit qu'en lançant l'app dans une autre
       # langue, sur l'écran concerné — autant dire jamais. L'audit en a trouvé cinq d'un coup,

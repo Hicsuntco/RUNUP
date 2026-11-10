@@ -406,6 +406,57 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 27 — soixante secondes de roue qui tourne (A3)
+
+### L'item était mal posé, pour la troisième fois
+
+`PHASE2.md` disait « le mode hors ligne et la connexion lente ne sont pas éprouvés ». La moitié
+était fausse :
+
+- **`PanneReseau`** classe les pannes, rend la bonne phrase, et `check_reseau.py` interdit à un
+  écran d'affirmer une panne de réseau de son propre chef. **7 tests.**
+- **`ClubActivityOutbox`** garde une sortie publiée hors réseau, le serveur l'accepte sans doublon
+  (`ON CONFLICT (client_id) DO NOTHING`), la file est **attachée au compte** — terminer une course
+  en mode avion puis connecter un autre compte ne publie plus la course de la première sur le fil
+  de la seconde — et son `Codable` survit à une clé manquante. **4 tests.**
+
+Le hors-ligne est donc traité, et mieux que je ne l'avais écrit. **La latence, elle, ne l'était
+pas du tout.**
+
+### Ce que la mesure a donné
+
+**Aucun délai d'expiration n'était déclaré nulle part.** Les douze requêtes du dépôt partaient sur
+`URLSession.shared` avec les valeurs d'Apple : **soixante secondes** par requête.
+
+Soixante secondes de roue qui tourne, c'est une app cassée. `PanneReseau` savait écrire la bonne
+phrase — elle arrivait une minute après que la personne avait compris toute seule.
+
+Et ça ne se voit **jamais** en développement. Aller-retour réel sur notre API, `GET /api/me`, cinq
+fois depuis une machine filaire le 10 novembre 2026 : **0,17 à 0,51 seconde**. Le défaut n'existe
+que chez quelqu'un dans un train.
+
+### Les chiffres sont mesurés, pas choisis
+
+| | | pourquoi |
+| --- | --- | --- |
+| `interactif` | **15 s** | Trente fois le temps mesuré, cinq fois un mauvais aller-retour mobile qui FONCTIONNE. Le quart du défaut d'Apple. |
+| `coach` | **60 s** | Le seul appel où attendre est normal : on vient de poser une question et un modèle rédige. Le client n'a pas à renoncer avant le serveur. |
+| `televersement` | **60 s** | Une photo de plusieurs méga-octets sur un réseau lent prend légitimement plus de quinze secondes, et l'abandonner oblige à tout recommencer. |
+| `arrierePlan` | **20 s** | Personne ne regarde : événements d'usage, rapports de panne, inscription aux notifications. |
+
+### Et ça ne perd rien — c'est pour ça qu'on peut être bref
+
+Ce qui compte est **rejoué** : la sortie publiée attend dans l'outbox, les statistiques dans leur
+tampon, les rapports de panne reviennent au lancement suivant. Abandonner vite ne jette rien — ça
+remplace une minute de gel par une phrase honnête et un nouvel essai plus tard.
+
+### Ce qui le garde
+
+`ci_scripts/check_delais.py` : tout `URLRequest(` doit être suivi, dans les six lignes, d'un
+`timeoutInterval` **pris dans `Delais`**. Un délai écrit en dur sonne aussi — douze requêtes,
+douze occasions de diverger. 7 cas, dont celui du délai posé trop loin de l'appel : on le lit là
+où on lit la requête, pas sept lignes plus bas.
+
 ## Chantier 26 — la voix dit enfin la séance (B2) — et elle la disait en français à tout le monde
 
 ### Ce que je cherchais

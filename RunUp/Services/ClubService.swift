@@ -1316,6 +1316,7 @@ struct ClubService {
             url.append(queryItems: query.map { URLQueryItem(name: $0.key, value: $0.value) })
         }
         var request = URLRequest(url: url)
+        request.timeoutInterval = Delais.interactif
         request.httpMethod = method
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         if let body {

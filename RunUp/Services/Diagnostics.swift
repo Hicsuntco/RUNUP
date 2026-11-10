@@ -312,6 +312,7 @@ final class Diagnostics: NSObject, MXMetricManagerSubscriber, @unchecked Sendabl
         }
 
         var request = URLRequest(url: Self.baseURL.appending(path: "api/crashes"))
+        request.timeoutInterval = Delais.arrierePlan
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         // Facultatif des deux côtés, comme pour l'analytique : la plupart des gens n'ont pas de

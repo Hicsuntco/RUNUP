@@ -9570,18 +9570,18 @@
         }
       }
     },
-    "Douze moments du parcours — l'app s'ouvre, une étape est franchie, une course démarre. Jamais ce que tu écris, jamais ta position, jamais rien d'Apple Santé. Si tu refuses, rien n'est envoyé et ce qui était gardé est effacé.": {
+    "Douze moments du parcours — l'app s'ouvre, une étape est franchie, une course démarre. Jamais ce que tu écris, jamais ta position, jamais rien d'Apple Santé. Si tu refuses, aucune statistique n'est envoyée et ce qui était gardé est effacé.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Twelve moments along the way — the app opens, a step is completed, a run starts. Never what you write, never your location, never anything from Apple Health. If you say no, nothing is sent and whatever was held is erased."
+            "value": "Twelve moments along the way — the app opens, a step is completed, a run starts. Never what you write, never your location, never anything from Apple Health. If you say no, no statistics are sent and whatever was held is erased."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Doce momentos del recorrido: la app se abre, se completa un paso, empieza una carrera. Nunca lo que escribes, nunca tu ubicación, nunca nada de Apple Salud. Si dices que no, no se envía nada y lo que estaba guardado se borra."
+            "value": "Doce momentos del recorrido: la app se abre, se completa un paso, empieza una carrera. Nunca lo que escribes, nunca tu ubicación, nunca nada de Apple Salud. Si dices que no, no se envía ninguna estadística y lo que estaba guardado se borra."
           }
         }
       }
@@ -23407,18 +23407,18 @@
         }
       }
     },
-    "Si tu refuses, rien n'est envoyé et rien n'est gardé. L'app fonctionne exactement pareil.": {
+    "Si tu refuses, aucune statistique n'est envoyée ni gardée. L'app fonctionne exactement pareil.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "If you say no, nothing is sent and nothing is kept. The app works exactly the same."
+            "value": "If you say no, no statistics are sent and none are kept. The app works exactly the same."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Si dices que no, no se envía ni se guarda nada. La app funciona exactamente igual."
+            "value": "Si dices que no, no se envía ni se guarda ninguna estadística. La app funciona exactamente igual."
           }
         }
       }
@@ -27930,18 +27930,18 @@
         }
       }
     },
-    "Tu peux changer d'avis quand tu veux, dans Profil → Réglages.": {
+    "Tu peux changer d'avis quand tu veux, dans Profil → Réglages → Plus de réglages.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You can change your mind any time, in Profile → Settings."
+            "value": "You can change your mind any time, in Profile → Settings → More settings."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Puedes cambiar de opinión cuando quieras, en Perfil → Ajustes."
+            "value": "Puedes cambiar de opinión cuando quieras, en Perfil → Ajustes → Más ajustes."
           }
         }
       }

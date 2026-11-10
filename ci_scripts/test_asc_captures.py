@@ -206,6 +206,125 @@ def _():
     assert "hors des" not in dit and "inconnue" not in dit, dit
 
 
+# ── L'ÉLAGAGE DES CAPTURES QUI N'ONT AUCUNE RAISON D'ÊTRE ────────────────────────────────────
+#
+# La fiche de la 3.3 est partie EN VENTE avec une capture iPad : une mise en page iPhone étirée
+# dans un cadre d'iPad, sur une app qui ne vise que l'iPhone. Elle n'a pas pu en être retirée —
+# Apple fige une version en vente — et elle sera recopiée dans la 3.4 à sa création, comme dans
+# toutes les suivantes.
+#
+# `create-version` élague donc d'office. Ces cas tiennent les deux bords de ce geste : qu'il
+# retire bien ce qui n'a pas de raison d'être, et qu'il NE retire pas la capture Apple Watch, dont
+# l'absence bloque la soumission.
+
+
+class FausseFiche:
+    """Une fiche App Store en mémoire, pour exercer l'élagage sans parler à Apple."""
+
+    def __init__(self, jeux):
+        # jeux : {langue: [types d'affichage]}
+        self.jeux = {lg: list(types) for lg, types in jeux.items()}
+        self.supprimes = []
+        self.versions_creees = []
+
+    def call(self, methode, chemin, corps=None):
+        if methode == "POST" and chemin == "appStoreVersions":
+            self.versions_creees.append(corps["data"]["attributes"]["versionString"])
+            return {"data": {"id": "v-neuve", "attributes": {"appStoreState": "PREPARE_FOR_SUBMISSION"}}}
+        if methode == "GET" and "filter[versionString]" in chemin:
+            return {"data": []}
+        if methode == "GET" and chemin.endswith("appStoreVersionLocalizations"):
+            return {"data": [{"id": f"loc-{lg}", "attributes": {"locale": lg}}
+                             for lg in self.jeux]}
+        if methode == "GET" and chemin.endswith("appScreenshotSets"):
+            lg = chemin.split("appStoreVersionLocalizations/loc-")[1].split("/")[0]
+            return {"data": [{"id": f"jeu-{lg}-{t}", "attributes": {"screenshotDisplayType": t}}
+                             for t in self.jeux[lg]]}
+        if methode == "GET" and chemin.endswith("appScreenshots"):
+            jeu = chemin.split("appScreenshotSets/")[1].split("/")[0]
+            return {"data": [{"id": f"{jeu}-img{i}"} for i in range(3)]}
+        if methode == "DELETE":
+            self.supprimes.append(chemin)
+            return {}
+        raise AssertionError(f"appel non prévu : {methode} {chemin}")
+
+
+def avec_fiche(jeux, bloc):
+    """Exécute `bloc(fiche)` en remplaçant le réseau d'`asc` par une fiche en mémoire."""
+    fiche = FausseFiche(jeux)
+    vrai_call, vrai_app_id = asc.call, asc.app_id
+    asc.call = fiche.call
+    asc.app_id = lambda: ("app-1", "RUNUP")
+    try:
+        bloc(fiche)
+    finally:
+        asc.call, asc.app_id = vrai_call, vrai_app_id
+    return fiche
+
+
+TROIS_LANGUES = {"en-US": ["APP_IPHONE_67", "APP_IPAD_PRO_3GEN_129", "APP_WATCH_SERIES_10"],
+                 "es-ES": ["APP_IPHONE_67", "APP_IPAD_PRO_3GEN_129", "APP_WATCH_SERIES_10"],
+                 "fr-FR": ["APP_IPHONE_67", "APP_IPAD_PRO_3GEN_129", "APP_WATCH_SERIES_10"]}
+
+
+@cas_test("la capture Apple Watch n'est JAMAIS dans les formats sans raison")
+def _():
+    # Une première version de l'élagage gardait `APP_IPHONE_67` et supprimait tout le reste : elle
+    # a emporté la montre, qu'Apple EXIGE dès que la build embarque une app watchOS, et la version
+    # est restée bloquée deux heures sur un message qui n'apparaît que dans l'interface web.
+    for interdit in ("APP_WATCH_SERIES_10", "APP_WATCH_SERIES_7", "APP_WATCH_ULTRA",
+                     "APP_IPHONE_67", "APP_IPHONE_65"):
+        assert not any(interdit in f for f in asc.FORMATS_SANS_RAISON), \
+            f"{interdit} est dans FORMATS_SANS_RAISON : son absence bloque la soumission"
+
+
+@cas_test("les formats sans raison ne sont pas une liste vide")
+def _():
+    # Vert pour la mauvaise raison : une liste vide ferait passer tous les cas ci-dessous sans que
+    # l'élagage d'office ne retire jamais rien.
+    assert asc.FORMATS_SANS_RAISON, "la liste est vide : l'élagage d'office ne fait plus rien"
+
+
+@cas_test("l'élagage ne retire que les formats nommés, dans toutes les langues")
+def _():
+    f = avec_fiche(TROIS_LANGUES,
+                   lambda fi: asc.elaguer_les_captures("v-1", {"APP_IPAD_PRO_3GEN_129"}))
+    # Trois images par jeu, trois langues, plus la suppression du jeu lui-même.
+    assert len([c for c in f.supprimes if c.startswith("appScreenshots/")]) == 9, f.supprimes
+    assert len([c for c in f.supprimes if c.startswith("appScreenshotSets/")]) == 3, f.supprimes
+    assert all("IPAD" in c for c in f.supprimes), \
+        f"l'élagage a touché autre chose que l'iPad : {f.supprimes}"
+
+
+@cas_test("un essai ne supprime rien et compte quand même")
+def _():
+    compte = []
+    f = avec_fiche(TROIS_LANGUES,
+                   lambda fi: compte.append(
+                       asc.elaguer_les_captures("v-1", {"APP_IPAD_PRO_3GEN_129"}, dry_run=True)))
+    assert f.supprimes == [], f.supprimes
+    assert compte == [9], compte
+
+
+@cas_test("créer une version élague d'office la capture iPad recopiée")
+def _():
+    class Args:
+        version = "3.4"
+    f = avec_fiche(TROIS_LANGUES, lambda fi: asc.cmd_create_version(Args()))
+    assert f.versions_creees == ["3.4"], f.versions_creees
+    assert any("IPAD" in c for c in f.supprimes), \
+        "la version a été créée sans élaguer : la capture iPad repart pour une version"
+    assert not any("WATCH" in c for c in f.supprimes), \
+        f"l'élagage d'office a emporté la montre : {f.supprimes}"
+
+
+@cas_test("une fiche déjà propre se crée sans rien supprimer")
+def _():
+    f = avec_fiche({"fr-FR": ["APP_IPHONE_67", "APP_WATCH_SERIES_10"]},
+                   lambda fi: asc.cmd_create_version(type("A", (), {"version": "3.5"})()))
+    assert f.supprimes == [], f.supprimes
+
+
 def main():
     echecs, ignores = 0, 0
     for nom, f, besoin in cas:

@@ -45,11 +45,11 @@ struct StatistiquesStepView: View {
                         ligne(icone: "xmark.circle",
                               texte: String(localized: "Jamais ce que tu écris, jamais ta position, jamais rien d'Apple Santé."))
                         ligne(icone: "arrow.uturn.backward.circle",
-                              texte: String(localized: "Tu peux changer d'avis quand tu veux, dans Profil → Réglages."))
+                              texte: String(localized: "Tu peux changer d'avis quand tu veux, dans Profil → Réglages → Plus de réglages."))
                     }
                     .padding(.top, 24)
 
-                    Text("Si tu refuses, rien n'est envoyé et rien n'est gardé. L'app fonctionne exactement pareil.")
+                    Text("Si tu refuses, aucune statistique n'est envoyée ni gardée. L'app fonctionne exactement pareil.")
                         .font(RUFont.sans(.small))
                         .foregroundColor(RUColor.text3)
                         .fixedSize(horizontal: false, vertical: true)

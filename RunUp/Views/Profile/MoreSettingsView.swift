@@ -167,7 +167,7 @@ struct MoreSettingsView: View {
                 .tint(RUColor.rose)
                 .accessibilityLabel("Partager les statistiques d'usage")
             }
-            Text("Douze moments du parcours — l'app s'ouvre, une étape est franchie, une course démarre. Jamais ce que tu écris, jamais ta position, jamais rien d'Apple Santé. Si tu refuses, rien n'est envoyé et ce qui était gardé est effacé.")
+            Text("Douze moments du parcours — l'app s'ouvre, une étape est franchie, une course démarre. Jamais ce que tu écris, jamais ta position, jamais rien d'Apple Santé. Si tu refuses, aucune statistique n'est envoyée et ce qui était gardé est effacé.")
                 .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
                 .lineSpacing(2)
                 .fixedSize(horizontal: false, vertical: true)

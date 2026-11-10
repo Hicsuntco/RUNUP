@@ -406,6 +406,98 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 30 — huit boutons qui n'existaient pas, et une politique qui ne disait pas qu'on peut refuser
+
+Deux demandes de Charlotte — retirer la capture iPad de la fiche, ajouter à `privacy.html` la
+phrase sur le refus des statistiques. La première a buté sur un défaut que je n'avais pas vu.
+
+### Le bouton que je lui avais indiqué n'existait pas
+
+Je lui avais écrit : « workflow **App Store**, action **`nettoyer-les-captures`**, champ
+« retirer » ». Au premier appel, l'API a répondu :
+
+> Provided value 'lister-les-captures' for input 'action' not in the list of allowed values
+
+**GitHub ne construit le formulaire « Run workflow » que depuis la branche par défaut.**
+`appstore.yml` est le seul workflow du dépôt qui ne se déclenche qu'à la main — les six autres
+tournent aussi au push — et sa liste d'actions sur `main` est la seule qu'on puisse choisir. Le
+corps, lui, récupère explicitement la branche de travail pour y trouver `asc.py`.
+
+Huit actions étaient déclarées dans le dépôt et absentes de `main` :
+
+| | | |
+| --- | --- | --- |
+| `liberer-la-file` | `nettoyer-les-captures` | `pousser-l-apercu` |
+| `lister-les-captures` | `nettoyer-les-captures-essai` | `pousser-l-apercu-essai` |
+| `pourquoi-pas-soumettable` | `pousser-la-montre` | |
+
+Dont **deux chantiers entiers** : l'envoi des captures de la montre et l'aperçu vidéo de la fiche.
+Chacun écrit, testé, documenté — et impossible à lancer. L'entrée `retirer` manquait aussi, donc
+même en atteignant l'action, le champ n'aurait pas été là.
+
+C'est le défaut le plus discret rencontré jusqu'ici : le code existe, ses contrôles passent, sa
+documentation le décrit, et il ne s'exécute jamais. Et `main` portait **déjà** un commit intitulé
+« Le bouton qui envoie les captures doit vivre sur main, sinon il n'existe pas ». La leçon avait
+été apprise une fois et n'a pas tenu, faute de quoi que ce soit qui la vérifie.
+
+`ci_scripts/check_boutons.py` la vérifie maintenant, et **12 cas** le gardent. Deux d'entre eux
+reproduisent un défaut du garde-fou lui-même : son premier jet lisait `origin/main` et ne
+récupérait qu'en cas d'échec, or `git fetch origin main` ne met à jour que `FETCH_HEAD`. Il a donc
+comparé le dépôt du jour à un `main` vieux de plusieurs semaines — et s'est trompé à son premier
+essai réel. Il récupère d'abord, toujours, et échoue en le disant s'il ne peut pas regarder.
+
+### Et la capture iPad ne peut pas être retirée de là où elle est
+
+L'inventaire, une fois le bouton réparé, a donné l'état réel :
+
+```
+version 3.3      READY_FOR_SALE               plateforme IOS
+version 3.2      READY_FOR_SALE               plateforme IOS
+```
+
+Il n'existe **aucune version 3.4** sur App Store Connect — les builds 1496-1499 sont en
+TestFlight, c'est autre chose. La capture iPad est donc sur la **3.3, en vente, et Apple fige une
+version en vente.** Personne ne peut l'en retirer, moi compris.
+
+Ce qui se peut, en revanche, c'est qu'elle ne revienne pas. Créer une version recopie les captures
+de la précédente, tous formats confondus : la retirer à la main une fois ne règle rien, il faut
+s'en souvenir à chaque version. **`create-version` élague donc d'office**, sur une liste nommée
+`FORMATS_SANS_RAISON` qui ne contient que l'iPad, et le geste à ne pas oublier devient une chose
+qui arrive.
+
+La capture Apple Watch n'y est pas et ne doit pas y venir : Apple l'exige dès que la build embarque
+une app watchOS. Une première version de l'élagage, qui gardait l'iPhone et supprimait le reste,
+l'avait emportée et la version était restée bloquée deux heures. Un cas de test l'interdit
+nommément, avec cinq formats.
+
+### La politique, et ce que le refus ne couvre pas
+
+L'app pose la question à l'inscription — deux boutons, rien de coché d'avance — et le choix est
+révocable dans Profil › Réglages › Plus de réglages. La page décrivait la collecte sans dire qu'on
+peut la refuser.
+
+**Et en vérifiant au lieu de supposer** : les rapports de panne n'obéissent PAS à ce consentement.
+`Diagnostics.demarrer()` ne regarde que le mode démonstration, et `sendNextBatch` n'a aucune garde
+de consentement. La phrase ajoutée le dit donc explicitement, au lieu de laisser quelqu'un déduire
+de travers d'un paragraphe voisin.
+
+Deux textes de l'app disaient aussi « rien n'est envoyé » — vrai pour les statistiques, ambigu à
+côté d'un canal qui continue d'émettre. Ils disent maintenant « aucune statistique ». Et l'écran
+d'inscription indiquait « Profil → Réglages » pour revenir sur son choix : **le réglage est dans
+« Plus de réglages »**, une feuille à l'intérieur de Réglages. Quelqu'un qui suivait l'indication
+ne trouvait rien. Corrigé dans les trois langues.
+
+Enfin la redondance que la page signalait elle-même en commentaire depuis le 8 novembre est
+retirée — « n'embarque aucun outil tiers de rapport de panne » apparaissait deux fois à deux
+paragraphes d'écart. Le commentaire disait : « si tu modifies cette page, tu es cette prochaine
+fois. »
+
+### Ce qui reste à faire, et par qui
+
+La capture iPad disparaîtra **à la création de la version 3.4**, sans que personne n'ait à y
+penser. Créer cette version est une décision de sortie, pas une correction : elle attend
+Charlotte.
+
 ## Chantier 29 — les allures du plan n'avaient aucune source (B1)
 
 C'est l'item le plus lourd de la liste, et le fond du produit : un plan dont les allures ne se

@@ -596,6 +596,20 @@ def cmd_create_version(args):
         "attributes": {"platform": "IOS", "versionString": args.version},
         "relationships": {"app": {"data": {"type": "apps", "id": aid}}}}})
     print(f"Version {args.version} créée — état : {r['data']['attributes']['appStoreState']}")
+    # ET ON ÉLAGUE TOUT DE SUITE.
+    #
+    # Apple vient de recopier les captures de la version précédente, tous formats confondus —
+    # dont la capture iPad d'une app iPhone, qui n'a aucune raison d'être sur cette fiche et qui
+    # reviendra à chaque version tant que personne ne la retire. Voir `FORMATS_SANS_RAISON`.
+    #
+    # Ici et pas dans une étape séparée du workflow : une étape séparée est une étape qu'on
+    # oublie, et la fiche de la 3.3 est partie en vente avec cette image.
+    retires = elaguer_les_captures(r["data"]["id"], set(FORMATS_SANS_RAISON))
+    if retires:
+        print(f"{retires} image(s) recopiée(s) sans raison ont été retirées "
+              f"({', '.join(FORMATS_SANS_RAISON)}).")
+    else:
+        print(f"Aucune capture à élaguer ({', '.join(FORMATS_SANS_RAISON)} : rien de recopié).")
 
 
 def cmd_push_metadata(args):
@@ -1041,6 +1055,55 @@ def cmd_list_screenshots(args):
                 print(f"      {a.get('fileName')}  {url_d_image(a.get('imageAsset'))}")
 
 
+# LES FORMATS DE CAPTURE QUI N'ONT AUCUNE RAISON D'EXISTER SUR CETTE FICHE.
+#
+# RUNUP est une app iPhone : `TARGETED_DEVICE_FAMILY` vaut "1" pour l'app et pour le widget, et
+# Apple ne demande donc aucune image d'iPad. La capture iPad de la fiche était une mise en page
+# iPhone étirée dans un cadre d'iPad, datée d'août, qu'aucune chaîne ne régénérait.
+#
+# ELLE N'EST PAS DANS CETTE LISTE PARCE QU'ELLE EST LAIDE, MAIS PARCE QU'ELLE REVIENT.
+#
+# Créer une version recopie les captures de la précédente, tous formats confondus. La retirer à
+# la main une fois ne règle donc rien : il faut s'en souvenir à chaque version, ce que personne ne
+# fait trois versions de suite. `cmd_create_version` élague donc cette liste juste après avoir
+# créé la version, et le geste à ne pas oublier devient une chose qui arrive.
+#
+# La capture Apple Watch, elle, N'EST PAS ici et ne doit pas y venir : Apple l'exige dès que la
+# build embarque une app watchOS, et refuse la soumission sans elle. Une première version de
+# l'élagage gardait `APP_IPHONE_67` et supprimait tout le reste — elle a emporté la montre, et la
+# version est restée bloquée deux heures sur un message qui n'apparaît que dans l'interface web.
+FORMATS_SANS_RAISON = ["APP_IPAD_PRO_3GEN_129"]
+
+
+def elaguer_les_captures(vid, retires, dry_run=False):
+    """Supprime de cette version les jeux de captures des formats NOMMÉS. Rend le compte d'images.
+
+    Partagée entre `prune-screenshots`, qui la lance à la demande, et `create-version`, qui la
+    lance d'office sur `FORMATS_SANS_RAISON`. Une seule mise en œuvre : deux copies de cette
+    boucle finiraient par ne plus retirer les mêmes choses, et celle qui tourne d'office est
+    précisément celle que personne ne relit.
+    """
+    total = 0
+    for loc in sorted(call("GET", f"appStoreVersions/{vid}/appStoreVersionLocalizations")["data"],
+                      key=lambda l: l["attributes"]["locale"]):
+        langue = loc["attributes"]["locale"]
+        for jeu in call("GET",
+                        f"appStoreVersionLocalizations/{loc['id']}/appScreenshotSets")["data"]:
+            type_ = jeu["attributes"]["screenshotDisplayType"]
+            if type_ not in retires:
+                continue
+            images = call("GET", f"appScreenshotSets/{jeu['id']}/appScreenshots")["data"]
+            total += len(images)
+            if dry_run:
+                print(f"  {langue} · {type_} · {len(images)} image(s) seraient retirées")
+                continue
+            for im in images:
+                call("DELETE", f"appScreenshots/{im['id']}")
+            call("DELETE", f"appScreenshotSets/{jeu['id']}")
+            print(f"  {langue} · {type_} · {len(images)} image(s) retirées, jeu supprimé")
+    return total
+
+
 def cmd_prune_screenshots(args):
     """Supprime d'une version les jeux de captures d'un format qu'on ne fabrique pas.
 
@@ -1081,26 +1144,8 @@ def cmd_prune_screenshots(args):
     #
     # Une liste de ce qu'on garde est dangereuse parce qu'elle agit sur ce qu'elle ne connaît
     # pas. Une liste de ce qu'on retire ne touche qu'à ce qu'on a nommé.
-    retires = set(args.retirer)
-    total = 0
-    for loc in sorted(call("GET", f"appStoreVersions/{vid}/appStoreVersionLocalizations")["data"],
-                      key=lambda l: l["attributes"]["locale"]):
-        langue = loc["attributes"]["locale"]
-        for jeu in call("GET",
-                        f"appStoreVersionLocalizations/{loc['id']}/appScreenshotSets")["data"]:
-            type_ = jeu["attributes"]["screenshotDisplayType"]
-            if type_ not in retires:
-                continue
-            images = call("GET", f"appScreenshotSets/{jeu['id']}/appScreenshots")["data"]
-            total += len(images)
-            if args.dry_run:
-                print(f"  {langue} · {type_} · {len(images)} image(s) seraient retirées")
-                continue
-            for im in images:
-                call("DELETE", f"appScreenshots/{im['id']}")
-            call("DELETE", f"appScreenshotSets/{jeu['id']}")
-            print(f"  {langue} · {type_} · {len(images)} image(s) retirées, jeu supprimé")
-    nommes = ", ".join(sorted(retires))
+    total = elaguer_les_captures(vid, set(args.retirer), dry_run=args.dry_run)
+    nommes = ", ".join(sorted(set(args.retirer)))
     if args.dry_run:
         print(f"\n(--dry-run : {total} image(s) dans [{nommes}], rien n'a été supprimé)")
     else:

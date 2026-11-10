@@ -365,6 +365,20 @@ jobs:
           cd ci_scripts && python3 test_allures.py
           cd .. && python3 ci_scripts/check_allures.py
 
+      # DU CODE ÉCRIT, TESTÉ, DOCUMENTÉ, ET QUE PERSONNE NE PEUT LANCER.
+      #
+      # GitHub ne construit le formulaire « Run workflow » que depuis la branche par défaut. Huit
+      # actions de `appstore.yml` — dont l'envoi des captures de la montre et l'aperçu vidéo, deux
+      # chantiers entiers — étaient déclarées ici et absentes de `main`, donc injoignables. Rien
+      # ne le disait : le code existait, ses contrôles passaient, sa documentation le décrivait.
+      #
+      # `main` portait déjà un commit nommé « Le bouton qui envoie les captures doit vivre sur
+      # main, sinon il n'existe pas ». La leçon n'a pas tenu faute d'être vérifiée.
+      - name: Vérifier que les boutons existent là où GitHub les cherche
+        run: |
+          cd ci_scripts && python3 test_boutons.py
+          cd .. && python3 ci_scripts/check_boutons.py
+
       # Une clé absente du catalogue ne casse rien : `String(localized:)` rend la clé, et le texte
       # sort EN FRANÇAIS chez tout le monde. Ça ne se voit qu'en lançant l'app dans une autre
       # langue, sur l'écran concerné — autant dire jamais. L'audit en a trouvé cinq d'un coup,

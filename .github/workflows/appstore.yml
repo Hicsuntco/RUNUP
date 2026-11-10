@@ -24,6 +24,14 @@ on:
           - composer-les-captures
           - pousser-les-captures-essai
           - pousser-les-captures
+          - pourquoi-pas-soumettable
+          - liberer-la-file
+          - pousser-la-montre
+          - lister-les-captures
+          - nettoyer-les-captures-essai
+          - nettoyer-les-captures
+          - pousser-l-apercu-essai
+          - pousser-l-apercu
           - assembler-l-apercu
           - etat-des-builds
           - soumettre-essai
@@ -61,6 +69,11 @@ on:
         required: false
         type: string
         default: "0"
+      retirer:
+        description: "Formats de capture à SUPPRIMER (pour nettoyer-les-captures), séparés par des espaces"
+        required: false
+        type: string
+        default: ""
       branche:
         description: "Branche où lire la fiche et le script"
         required: true
@@ -120,22 +133,44 @@ jobs:
       # DEVANT le PATH des étapes suivantes, pour que les `python3 …` d'après y trouvent Pillow
       # sans avoir à nommer un chemin.
       - name: Installer Pillow
-        if: inputs.action == 'composer-les-captures'
+        # Aussi pour l'ENVOI des captures, pas seulement pour leur composition : l'étape qui
+        # vérifie les bannières, plus bas, lit des images.
+        if: inputs.action == 'composer-les-captures' || startsWith(inputs.action, 'pousser-les-captures')
         run: |
           set -euo pipefail
           python3 -m venv --system-site-packages "$RUNNER_TEMP/venv"
           "$RUNNER_TEMP/venv/bin/python" -m pip install --quiet Pillow
           echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
 
-      # ffmpeg est déjà sur les runners Ubuntu. On le vérifie quand même, et on éprouve d'abord le
-      # découpage : un aperçu refusé par App Store Connect ne dit pas laquelle des cinq
-      # contraintes a sauté, alors autant que les décisions qui y mènent soient testées.
-      - name: Vérifier le découpage de l'aperçu
-        if: inputs.action == 'assembler-l-apercu'
+      # FFMPEG N'EST PLUS SUR LES RUNNERS UBUNTU, et ce commentaire disait le contraire.
+      #
+      # Il l'a été, l'image 24.04 ne le porte plus, et l'essai d'envoi de l'aperçu s'est arrêté
+      # sur « ffprobe est introuvable ». C'est le bon arrêt — la commande mesure le film avant
+      # d'en parler à Apple — mais il valait mieux installer l'outil que supprimer la mesure.
+      #
+      # Une quarantaine de secondes, et seulement pour les deux actions qui touchent à la vidéo.
+      - name: Installer ffmpeg
+        if: inputs.action == 'assembler-l-apercu' || startsWith(inputs.action, 'pousser-l-apercu')
         run: |
           set -euo pipefail
+          if ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg
+          fi
           ffmpeg -version | head -1
-          cd ci_scripts && python3 test_apercu.py
+
+      # On éprouve le découpage avant de s'en servir : un aperçu refusé par App Store Connect ne
+      # dit pas laquelle des cinq contraintes a sauté, alors autant que les décisions qui y
+      # mènent soient testées.
+      - name: Vérifier le découpage de l'aperçu
+        if: inputs.action == 'assembler-l-apercu'
+        run: cd ci_scripts && python3 test_apercu.py
+
+      # Et pour l'envoi, le même principe : ce que la commande décide SANS parler à Apple —
+      # durée, cadence, taille d'image, poids — est éprouvé sur de vrais fichiers juste avant.
+      - name: Éprouver les règles de l'aperçu
+        if: startsWith(inputs.action, 'pousser-l-apercu')
+        run: cd ci_scripts && python3 test_asc_captures.py
 
       # LES IMAGES NE SONT PAS DANS LE DÉPÔT — `appstore/out/` est ignoré par git, et c'est
       # juste : dix-huit PNG de 900 ko regénérés à chaque changement d'accroche n'ont rien à
@@ -143,7 +178,7 @@ jobs:
       # va chercher ici. Sans numéro d'exécution, on prend la dernière réussie de la branche —
       # ce qu'on veut dans le cas courant, « je viens de les refaire ».
       - name: Récupérer les images composées
-        if: startsWith(inputs.action, 'pousser-les-captures')
+        if: startsWith(inputs.action, 'pousser-les-captures') || startsWith(inputs.action, 'pousser-l-apercu')
         env:
           GH_TOKEN: ${{ github.token }}
           RUN: ${{ inputs.captures }}
@@ -164,7 +199,37 @@ jobs:
             --dir "$RUNNER_TEMP/captures"
           echo "→ dossiers reçus :"
           ls -1 "$RUNNER_TEMP/captures/out"
+          # Les films vivent dans le même artéfact, à côté des images : c'est la même exécution
+          # de « Captures App Store » qui les a produits, à partir de la même app.
+          ls -1 "$RUNNER_TEMP/captures/apercu/out" 2>/dev/null || echo "  (pas de film)"
 
+      # ON VÉRIFIE CE QU'ON PUBLIE, PAS CE QU'UNE AUTRE CHAÎNE A VÉRIFIÉ.
+      #
+      # `captures.yml` refuse déjà une bannière du système posée sur une capture (voir son étape
+      # « Une bannière du système s'est-elle posée sur une capture »). Mais c'est ICI qu'on parle
+      # à Apple, et cette étape-ci télécharge l'artefact d'une exécution qu'on peut DÉSIGNER par
+      # son numéro — y compris une exécution antérieure au contrôle, ou simplement ancienne.
+      # Sans jeton d'API et sans parler à Apple : quelques secondes de Python sur des images
+      # déjà sur le disque. C'est le même principe que l'étape « Éprouver les règles de
+      # l'aperçu » juste au-dessus — ce que la commande décide sans parler à Apple est éprouvé
+      # sur de vrais fichiers, juste avant.
+      #
+      # Sur `raw/` et non sur `out/` : le plafond est calibré sur des captures d'app en thème
+      # sombre, et les images composées portent un fond de fiche clair où la mesure ne voudrait
+      # rien dire. Une bannière dans une brute se retrouve de toute façon dans la composée.
+      # Les images exigées par Apple en plus des six de l'iPhone. Ce contrôle est le seul
+      # endroit où une image composée d'une capture PÉRIMÉE se voit — et c'est ici qu'il compte,
+      # juste avant que la fiche parte.
+      - name: Les captures exigées montrent-elles l'app d'aujourd'hui
+        run: python3 ci_scripts/check_requis.py
+
+      - name: Une bannière du système s'est-elle posée sur ces captures
+        if: startsWith(inputs.action, 'pousser-les-captures')
+        run: |
+          set -euo pipefail
+          cd ci_scripts && python3 test_banniere.py
+          cd .. && python3 ci_scripts/check_banniere.py \
+            --dossier "$RUNNER_TEMP/captures/raw" --plafond 25
       - name: Exécuter
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
@@ -174,6 +239,7 @@ jobs:
           LANGUE: ${{ inputs.langue }}
           BUILD: ${{ inputs.build }}
           WHAT: ${{ inputs.action }}
+          RETIRER: ${{ inputs.retirer }}
         run: |
           set -euo pipefail
           export ASC_KEY_PATH="$RUNNER_TEMP/asc.p8"
@@ -189,6 +255,14 @@ jobs:
             composer-les-captures)    python3 ci_scripts/screenshots.py "$LANGUE" ;;
             pousser-les-captures-essai) python3 ci_scripts/asc.py push-screenshots "$VERSION" --dir "$RUNNER_TEMP/captures/out" --dry-run ;;
             pousser-les-captures)     python3 ci_scripts/asc.py push-screenshots "$VERSION" --dir "$RUNNER_TEMP/captures/out" ;;
+            pourquoi-pas-soumettable) python3 ci_scripts/asc.py pret "$VERSION" ;;
+            liberer-la-file)          python3 ci_scripts/asc.py liberer ;;
+            lister-les-captures)      python3 ci_scripts/asc.py list-screenshots "$VERSION" ;;
+            nettoyer-les-captures-essai) python3 ci_scripts/asc.py prune-screenshots "$VERSION" --retirer $RETIRER --dry-run ;;
+            nettoyer-les-captures)    python3 ci_scripts/asc.py prune-screenshots "$VERSION" --retirer $RETIRER ;;
+            pousser-la-montre)        python3 ci_scripts/asc.py push-screenshots "$VERSION" --dir appstore/requis/montre ;;
+            pousser-l-apercu-essai)   python3 ci_scripts/asc.py push-previews "$VERSION" --dir "$RUNNER_TEMP/captures/apercu/out" --dry-run ;;
+            pousser-l-apercu)         python3 ci_scripts/asc.py push-previews "$VERSION" --dir "$RUNNER_TEMP/captures/apercu/out" ;;
             assembler-l-apercu)       python3 ci_scripts/apercu.py --debut "${DEBUT:-0}" ;;
             etat-des-builds)          python3 ci_scripts/asc.py ci ;;
             soumettre-essai)          python3 ci_scripts/asc.py submit "$VERSION" $BUILD_OPT --dry-run ;;

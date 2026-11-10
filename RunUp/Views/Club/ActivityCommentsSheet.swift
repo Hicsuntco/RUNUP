@@ -32,7 +32,10 @@ struct ActivityCommentsSheet: View {
                     ProgressView().tint(RUColor.rose).frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     ScrollView {
-                        VStack(alignment: .leading, spacing: 12) {
+                        // `LazyVStack` : le fil des commentaires n'a pas de borne, et chaque
+                        // ligne porte un avatar à décoder. Un `VStack` les construirait TOUS à
+                        // l'ouverture de la feuille, y compris les quarante qu'on ne verra pas.
+                        LazyVStack(alignment: .leading, spacing: 12) {
                             if comments.isEmpty {
                                 // Un `.bloc` SANS icône ni titre : la feuille s'intitule déjà
                                 // « Commentaires », et un symbole au-dessus d'une phrase isolée

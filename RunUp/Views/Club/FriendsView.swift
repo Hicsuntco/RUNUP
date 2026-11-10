@@ -842,7 +842,10 @@ private struct PeopleListSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 6) {
+                // `LazyVStack` : une liste d'abonnés n'a pas de borne, et chaque ligne porte un
+                // `AvatarView` — une image à décoder. C'est exactement le cas que le fil du club
+                // a déjà réglé, avec le même commentaire.
+                LazyVStack(spacing: 6) {
                     if people.isEmpty {
                         RUEmpty(message: String(localized: "Personne pour l'instant."))
                     }

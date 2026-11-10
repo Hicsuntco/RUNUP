@@ -395,6 +395,21 @@ jobs:
           cd ci_scripts && python3 test_vides.py
           cd .. && python3 ci_scripts/check_vides.py
 
+      # « 63 FICHIERS UTILISENT ForEach, 11 SEULEMENT UNE LISTE PARESSEUSE » NE MESURAIT RIEN.
+      #
+      # Un `ForEach` sur les sept jours de la semaine n'a aucun besoin d'être paresseux, et un
+      # fichier qui en porte trois ne compte pas pour trois défauts. Le critère est la POSITION :
+      # sous un `ScrollView`, sans conteneur paresseux entre les deux, toutes les lignes se
+      # construisent à l'ouverture — y compris celles qu'on ne verra pas.
+      #
+      # Mesuré : 133 ForEach dans 63 fichiers, dix dans cette position, dont sept sur `allCases`
+      # ou `0..<7`. Les deux écrans que l'item nommait — le fil du club et l'historique — étaient
+      # déjà réglés. Il restait DEUX listes sans borne, chacune avec un avatar à décoder par ligne.
+      - name: Vérifier qu'aucune liste sans borne ne se construit d'un bloc
+        run: |
+          cd ci_scripts && python3 test_listes.py
+          cd .. && python3 ci_scripts/check_listes.py
+
       # Une clé absente du catalogue ne casse rien : `String(localized:)` rend la clé, et le texte
       # sort EN FRANÇAIS chez tout le monde. Ça ne se voit qu'en lançant l'app dans une autre
       # langue, sur l'écran concerné — autant dire jamais. L'audit en a trouvé cinq d'un coup,

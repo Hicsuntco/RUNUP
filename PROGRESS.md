@@ -406,6 +406,65 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 34 — deux listes sans borne, pas soixante-trois fichiers (B6)
+
+### L'item comptait la mauvaise chose
+
+`PHASE2.md` disait : « 63 fichiers utilisent `ForEach`, **11 seulement** une liste paresseuse. »
+Ce comptage ne mesure rien. Un `ForEach` sur les sept jours de la semaine n'a aucun besoin d'être
+paresseux, et un fichier qui en porte trois ne compte pas pour trois défauts.
+
+Le critère qui compte est la **position** : sous un `ScrollView`, sans `LazyVStack`, `LazyHStack`,
+`LazyVGrid` ni `List` entre les deux.
+
+| | |
+| --- | --- |
+| `ForEach` dans le dépôt | 133, dans 63 fichiers |
+| conteneurs paresseux | 13 |
+| **`ForEach` réellement construits d'un bloc sous un défilement** | **10** |
+| dont la source est bornée dans le code (`allCases`, `0..<7`) | 7 |
+
+### Et les deux écrans que l'item nommait étaient déjà réglés
+
+« Le fil du club et l'historique ne sont pas courts », disait-il. Mesuré :
+
+- **le fil du club** porte un `LazyVStack` depuis longtemps, avec son commentaire : « le serveur
+  renvoie 50 activités, et un `VStack` les construisait TOUTES » ;
+- **l'historique** est une `List` — paresseuse par construction, et choisie pour une autre raison
+  écrite sur place : `.swipeActions` ne marche que là.
+
+### Les deux qui restaient
+
+| écran | collection | ce que porte chaque ligne |
+| --- | --- | --- |
+| `ActivityCommentsSheet` | les commentaires d'une activité | un avatar à décoder |
+| `FriendsView` | la liste de personnes | un `AvatarView` |
+
+Aucune borne, et une image par ligne. Les deux passent en `LazyVStack`, avec le même commentaire
+que le fil du club — c'est le même cas.
+
+### Les trois qui restent, et pourquoi
+
+Bornées par une règle de produit que la syntaxe ne montre pas, donc **dispensées avec leur
+raison** : les groupes d'allure d'une sortie (« le produit en propose huit au plus », dit le
+commentaire de la vue), et les deux bandes de badges, bornées par `ClubBadgeCatalog.all`. Les
+trois sont des bandes horizontales à tuiles de largeur fixe, pas des listes qui croissent.
+
+### Ce qui le garde
+
+`ci_scripts/check_listes.py`, **16 cas**. La règle : un `ForEach` sous un défilement, sans
+conteneur paresseux, doit avoir une source dont la taille se lit DANS LE CODE — `X.allCases`, un
+intervalle littéral — ou une dispense nommée avec sa raison.
+
+Trois cas ne vérifient que les façons de passer vert à tort. Le plus utile : un `LazyVStack` posé
+**ailleurs dans le fichier** ne doit pas couvrir une liste qui ne s'y trouve pas — c'est
+l'imbrication qui décide, pas la présence du mot. Un autre fixe que `0..<items.count` n'est pas
+une borne : c'est la même collection, écrite autrement.
+
+Et le contrôle dit ce qu'il ne sait pas faire : il ne mesure aucune performance. Dix lignes de
+texte nu ne valent pas dix lignes à avatar, et il ne connaît pas la différence. Il constate qu'une
+liste sans borne est construite d'un bloc — une décision — et demande qu'elle soit prise exprès.
+
 ## Chantier 33 — la montre coupait sa seule phrase, et rien ne le disait (B4)
 
 ### Regardé, pas déduit

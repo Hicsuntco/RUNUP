@@ -42,9 +42,27 @@ private enum WTheme {
 
 /// Idle screen: today's session as pushed by the phone (title + target pace + duration), or a
 /// "course libre" framing when the phone hasn't synced anything yet — never a fake placeholder
-/// session. The COURIR button is a full circle (not a pill) with a dashed gradient ring around
-/// it, echoing the same rose→violet ring language used for real progress on the run/summary
-/// screens — here purely decorative since there's nothing to track yet.
+/// session. Le bouton COURIR est un cercle plein, entouré d'un anneau pointillé qui reprend le
+/// langage d'anneau des écrans de course et de bilan — ici purement décoratif, puisqu'il n'y a
+/// encore rien à suivre.
+///
+/// (Le commentaire disait « dashed gradient ring » : le dégradé est parti avec le chantier 24,
+/// l'anneau est d'un rose plat depuis. Un commentaire qui décrit ce qui n'est plus là est la
+/// moitié d'un mensonge.)
+///
+/// # L'ANNEAU PRENAIT LA MOITIÉ DE L'ÉCRAN, ET LA PHRASE DU BAS TOMBAIT DEHORS
+///
+/// Mesuré sur la capture requise par l'App Store, dans les trois langues : les ONZE dernières
+/// lignes de pixels portaient de l'encre, jusqu'à la toute dernière. « Cours à ta sensation — ta
+/// séance arrive de l'iPhone. » était tranchée en deux par le bord bas.
+///
+/// L'écran est dans un `ScrollView`, donc la phrase était atteignable — en faisant défiler, sur
+/// une montre, une phrase d'explication posée sous un bouton géant. Autant dire jamais. Et c'est
+/// cette image-là qu'Apple et les clientes voient sur la fiche.
+///
+/// L'anneau décoratif faisait 118 points sur les 248 de l'écran. Il en fait 96, le bouton 76 —
+/// très au-dessus des 44 points de cible tactile minimale d'Apple — et les écarts passent de 8 à
+/// 6. Vingt-huit points rendus à la seule phrase de l'écran.
 struct WatchStartView: View {
     @Environment(WatchWorkoutManager.self) private var workout
 
@@ -61,7 +79,7 @@ struct WatchStartView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
                 Text("Aujourd'hui")
                     .font(WTheme.sansBold(11))
                     .tracking(0.2)
@@ -80,7 +98,7 @@ struct WatchStartView: View {
                     Circle()
                         .strokeBorder(WTheme.rose, style: StrokeStyle(lineWidth: 2, dash: [4, 5]))
                         .opacity(0.55)
-                        .frame(width: 118, height: 118)
+                        .frame(width: 96, height: 96)
 
                     Button(action: { workout.start() }) {
                         Group {
@@ -90,7 +108,9 @@ struct WatchStartView: View {
                                 Text("Courir").font(WTheme.display(16)).foregroundStyle(.white)
                             }
                         }
-                        .frame(width: 92, height: 92)
+                        // 76 points, pas 92 : la cible tactile minimale d'Apple est 44, et les
+                        // seize points rendus ici sont ceux qui manquaient à la phrase du bas.
+                        .frame(width: 76, height: 76)
                         .background(WTheme.rose, in: Circle())
                     }
                     .buttonStyle(.plain)
@@ -107,6 +127,10 @@ struct WatchStartView: View {
                         .font(WTheme.sansSemibold(11))
                         .foregroundStyle(WTheme.text2)
                         .multilineTextAlignment(.center)
+                        // La phrase prend la hauteur qu'il lui faut, au lieu de celle qu'on lui
+                        // laisse. Sans ça, une langue plus longue que les trois d'aujourd'hui
+                        // repasserait sous le bord sans que la mise en page bouge d'un point.
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 if let message = workout.errorMessage {

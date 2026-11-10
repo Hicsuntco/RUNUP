@@ -105,6 +105,70 @@ def _():
     assert code == 0, "un pixel sous la barre n'a pas été vu :\n" + sortie
 
 
+# ── LA BANDE BASSE : QUELQUE CHOSE EST-IL TRANCHÉ PAR L'ARÊTE ? ──────────────────────────────
+#
+# Ce contrôle savait dire que trois langues rendaient la même image. Il ne savait pas dire que les
+# trois étaient COUPÉES — et elles l'étaient : onze lignes de pixels encrées jusqu'à la toute
+# dernière, dans les trois langues, sur la capture exigée par l'App Store.
+
+
+@cas_de("une capture coupée au bord bas est attrapée, dans chaque langue")
+def _():
+    a = capture("Course libre", "11:44")
+    b = capture("Free run", "11:45")
+    for im in (a, b):
+        ImageDraw.Draw(im).rectangle([0, 488, 415, 495], fill=(200, 200, 200))
+    code, sortie = lance({"fr-FR": a, "en-US": b})
+    assert code == 1, sortie
+    assert "TRANCHÉ" in sortie, sortie
+    assert "fr-FR" in sortie and "en-US" in sortie, sortie
+
+
+@cas_de("la toute dernière ligne suffit à accuser")
+def _():
+    # Le défaut réel touchait onze lignes, mais une seule suffit : au repos, ce qui atteint
+    # l'arête est coupé, et rien ne dit de combien.
+    a = capture("Course libre", "11:44")
+    ImageDraw.Draw(a).point((200, 495), fill=(255, 255, 255))
+    code, sortie = lance({"fr-FR": a, "en-US": capture("Free run", "11:45")})
+    assert code == 1, sortie
+    assert "fr-FR" in sortie and "TRANCHÉ" in sortie, sortie
+
+
+@cas_de("une mise en page qui respire ne dit rien")
+def _():
+    # Le texte des fausses captures est à mi-hauteur : rien n'approche le bord.
+    code, sortie = lance({"fr-FR": capture("Course libre", "11:44"),
+                          "en-US": capture("Free run", "11:45")})
+    assert code == 0, sortie
+    assert "TRANCHÉ" not in sortie, sortie
+
+
+@cas_de("le bruit de compression ne passe pas pour de l'encre")
+def _():
+    # VERT POUR LA MAUVAISE RAISON, À L'ENVERS : un seuil à zéro accuserait toutes les captures
+    # réelles, on apprendrait à ignorer le rouge, et la règle ne vaudrait plus rien. Le fond de
+    # la montre est noir ; un gris très sombre reste du fond.
+    a = capture("Course libre", "11:44")
+    ImageDraw.Draw(a).rectangle([0, 490, 415, 495], fill=(12, 12, 12))
+    code, sortie = lance({"fr-FR": a, "en-US": capture("Free run", "11:45")})
+    assert code == 0, "du bruit sombre a été pris pour du texte coupé :\n" + sortie
+
+
+@cas_de("le bord l'emporte sur la comparaison des langues")
+def _():
+    # Deux images identiques ET coupées : c'est la coupe qu'on veut lire d'abord, parce qu'elle
+    # se corrige dans la vue et l'autre dans la chaîne de capture. Mélanger les deux diagnostics
+    # ferait chercher au mauvais endroit.
+    a = capture("Course libre", "11:44")
+    ImageDraw.Draw(a).rectangle([0, 489, 415, 495], fill=(255, 255, 255))
+    b = a.copy()
+    code, sortie = lance({"fr-FR": a, "en-US": b})
+    assert code == 1, sortie
+    assert "TRANCHÉ" in sortie, sortie
+    assert "MÊME image" not in sortie, "les deux diagnostics sont mélangés :\n" + sortie
+
+
 def main():
     echecs = 0
     for nom, f in cas:

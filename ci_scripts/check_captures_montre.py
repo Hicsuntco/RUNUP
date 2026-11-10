@@ -29,6 +29,15 @@ from PIL import Image
 #: que l'heure n'entre jamais dans la comparaison quel que soit le boîtier.
 BANDE_HAUTE = 0.18
 
+#: La bande basse qui doit rester VIERGE. Deux pour cent de 496 font dix pixels, soit cinq points
+#: — une marge minuscule, et c'est voulu : on ne juge pas une mise en page, on constate qu'elle
+#: n'est pas TRANCHÉE par le bord.
+BANDE_BASSE = 0.02
+
+#: Au-dessus de quelle valeur un pixel compte comme encré. Le fond de la montre est noir ; 40 sur
+#: 255 laisse passer le bruit de compression et attrape tout texte, même gris.
+SEUIL_ENCRE = 40
+
 NOM = "1-course-libre.png"
 
 
@@ -37,6 +46,38 @@ def empreinte_du_contenu(chemin: pathlib.Path) -> str:
     image = Image.open(chemin).convert("RGB")
     sous = image.crop((0, int(image.height * BANDE_HAUTE), image.width, image.height))
     return hashlib.sha256(sous.tobytes()).hexdigest()[:12]
+
+
+def lignes_encrees_au_bord(chemin: pathlib.Path) -> int:
+    """Combien de lignes de pixels portent de l'encre dans la bande basse.
+
+    # POURQUOI CETTE RÈGLE EXISTE
+
+    Ce contrôle savait dire que trois langues rendaient la même image. Il ne savait pas dire que
+    les trois étaient COUPÉES — et elles l'étaient. Mesuré le 10 novembre 2026 sur la capture
+    exigée par l'App Store : les onze dernières lignes de pixels portaient de l'encre, jusqu'à la
+    toute dernière, dans les trois langues. « Cours à ta sensation — ta séance arrive de
+    l'iPhone. » était tranchée en deux par le bord bas de l'écran.
+
+    L'anneau décoratif du bouton occupait 118 points sur les 248 de la montre, et poussait dehors
+    la seule phrase de l'écran. L'écran est dans un `ScrollView`, donc la phrase était
+    atteignable en faisant défiler — sur une montre, sous un bouton géant. Autant dire jamais.
+
+    # CE QU'ELLE NE DIT PAS
+
+    Elle ne juge aucune mise en page : du texte peut légitimement s'approcher du bord. Elle
+    constate seulement qu'au REPOS — et une capture est prise au repos — rien n'est tranché par
+    l'arête. C'est une question à laquelle une image répond sans ambiguïté, contrairement à
+    « est-ce joli ».
+    """
+    image = Image.open(chemin).convert("RGB")
+    debut = image.height - max(1, int(image.height * BANDE_BASSE))
+    pixels = image.load()
+    encrees = 0
+    for y in range(debut, image.height):
+        if any(max(pixels[x, y]) > SEUIL_ENCRE for x in range(image.width)):
+            encrees += 1
+    return encrees
 
 
 def main() -> int:
@@ -53,14 +94,27 @@ def main() -> int:
 
     vues: dict[str, str] = {}
     doublons: list[tuple[str, str]] = []
+    coupees: list[tuple[str, int]] = []
     for chemin in captures:
         langue = chemin.parent.name
         empreinte = empreinte_du_contenu(chemin)
-        print(f"    {langue} : {empreinte}")
+        bord = lignes_encrees_au_bord(chemin)
+        print(f"    {langue} : {empreinte}" + (f"  ⟵ {bord} ligne(s) encrées au bord" if bord else ""))
+        if bord:
+            coupees.append((langue, bord))
         if empreinte in vues:
             doublons.append((vues[empreinte], langue))
         else:
             vues[empreinte] = langue
+
+    if coupees:
+        for langue, bord in coupees:
+            print(f"✗ {langue} : {bord} ligne(s) de pixels encrées jusqu'au bord bas — "
+                  f"quelque chose est TRANCHÉ par l'arête de l'écran.")
+        print("\n    Une capture est prise au repos. Ce qui touche le bord au repos est coupé,")
+        print("    et sur la montre c'est la seule phrase de l'écran qui l'était — dans les")
+        print("    trois langues, et sur l'image qu'Apple publie.")
+        return 1
 
     if doublons:
         for premiere, seconde in doublons:

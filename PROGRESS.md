@@ -454,6 +454,34 @@ Profil → Apparence.
 fiche, la passe sombre sert au diagnostic.** Le magasin montrait donc du clair pendant que l'app
 ouvrait en sombre. Cette décision referme cet écart au lieu d'en ouvrir un.
 
+### Ce que la bascule a fait rougir, et pourquoi c'était juste
+
+`check_banniere.py` a refusé la chaîne sur `diagnostic/inscription.png`, **88,7 % de pixels clairs
+en haut dans les trois langues**, là où le plafond est à 25 %.
+
+Ce n'était pas une bannière du système. Le contrôle mesure la clarté du haut de l'écran et suppose
+que tout ce qui n'est pas dans `clair/` est sombre. Or l'écran d'inscription est photographié
+**sans aucune graine** — `CapturesUITests` l'écrit : « aucune graine n'est posée : `onboarded`
+vaut `false` à la création, donc l'app ouvre sur l'inscription d'elle-même ». Sans profil, il n'y
+a pas d'`isLightMode` à appliquer : l'écran prend le défaut d'amorçage, désormais clair.
+
+**L'app obéissait, et le garde-fou l'a accusée.** Il apprend donc que l'inscription précède le
+profil, et la raison est écrite dans son en-tête.
+
+Son message disait aussi « relancer la chaîne suffit : la bannière est une affaire de minutage ».
+Ici, relancer n'aurait rien changé, et le tell était dans le relevé lui-même : **la même image, à
+88,7 %, trois fois.** Une bannière ne tombe pas trois fois sur la même image au même pourcentage.
+Le message le dit maintenant tout seul quand il voit ce motif.
+
+Trois cas de plus dans `test_banniere.py` : l'inscription sort du relevé, une vraie bannière sur
+un AUTRE écran sonne toujours, et le message reconnaît les trois langues. 11 cas.
+
+### Et l'écran, regardé
+
+L'inscription s'ouvre en clair — c'est le premier écran que voit quelqu'un, et c'est celui dont la
+décision change le plus. La séance en cours, elle, reste sombre comme prévu : son jeu de jetons
+`Ink` ne suit pas le thème, et c'est voulu.
+
 ## Chantier 21 — l'image iPad n'aurait jamais dû exister, et c'est moi qui l'avais fabriquée
 
 ### Ce que Charlotte a dit

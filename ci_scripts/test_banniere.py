@@ -121,6 +121,35 @@ def _():
         f"le dossier clair a été regardé :\n{sortie}"
 
 
+@cas_de("L'ÉCRAN D'INSCRIPTION N'EST PLUS UNE CAPTURE SOMBRE")
+def _():
+    # Il est photographié sans aucune graine : pas de profil, donc pas d'`isLightMode` à
+    # appliquer, donc le défaut d'amorçage — clair depuis le 9 novembre 2026. Le 10, il est
+    # entré dans le relevé à 88,7 % dans les trois langues et a fait rougir la chaîne.
+    code, sortie = lance({"fr-FR/1-accueil.png": ecran(0.02),
+                          "fr-FR/diagnostic/inscription.png": ecran(0.89, fond=240)})
+    assert code == 0, f"l'écran d'inscription a été mesuré comme s'il était sombre :\n{sortie}"
+
+
+@cas_de("et une VRAIE bannière sur un autre écran sonne toujours")
+def _():
+    # Le cas ci-dessus retire une image du relevé : il faut dire qu'il n'a rien retiré d'autre.
+    code, sortie = lance({"fr-FR/diagnostic/inscription.png": ecran(0.89, fond=240),
+                          "fr-FR/diagnostic/paywall.png": ecran(0.60)})
+    assert code == 1 and "paywall" in sortie, f"la bannière du paywall est passée :\n{sortie}"
+    assert "inscription" not in sortie, f"l'inscription a été accusée :\n{sortie}"
+
+
+@cas_de("la même image fautive dans trois langues : le message dit que ce n'est pas le minutage")
+def _():
+    # Le message d'origine disait « relancer la chaîne suffit ». Le 10 novembre, relancer n'aurait
+    # rien changé — c'était la même image à 88,7 % trois fois. Une bannière ne fait pas ça.
+    code, sortie = lance({f"{lg}/diagnostic/paywall.png": ecran(0.60)
+                          for lg in ("fr-FR", "en-US", "es-ES")})
+    assert code == 1, sortie
+    assert "MAIS PAS ICI" in sortie, f"le message n'a pas vu les trois langues :\n{sortie}"
+
+
 @cas_de("sans plafond, on mesure et on se tait")
 def _():
     code, sortie = lance({"fr-FR/1-accueil.png": ecran(0.60)}, plafond=None)

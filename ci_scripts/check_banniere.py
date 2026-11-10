@@ -26,6 +26,15 @@ gris clair qui barre toute la largeur.
 Seules les captures SOMBRES sont regardées. Celles du dossier `clair/` sont claires par
 construction, et la même mesure n'y voudrait rien dire.
 
+ET UNE CAPTURE DU DOSSIER SOMBRE N'EST PLUS SOMBRE : `diagnostic/inscription.png`. Elle est prise
+sans aucune graine — `CapturesUITests` l'écrit noir sur blanc, « aucune graine n'est posée :
+`onboarded` vaut `false` à la création, donc l'app ouvre sur l'inscription d'elle-même ». Sans
+profil, il n'y a pas d'`isLightMode` à appliquer : l'écran prend le défaut d'amorçage de
+`ThemeStore`, qui est CLAIR depuis le 9 novembre 2026. Une installation neuve ouvre en clair, et
+l'inscription est l'état le plus neuf qui soit.
+
+Elle sort donc du relevé, et le 10 novembre elle y entrait à 88,7 % dans les trois langues.
+
 # LE RELEVÉ, ET LE PLAFOND QUI EN SORT
 
 Quatre-vingt-quatre captures sombres d'une exécution complète — les six livrées et tout le
@@ -85,10 +94,18 @@ def part_de_clair(chemin: pathlib.Path) -> float:
         return sum(histo[CLAIR:]) / (bande.width * bande.height)
 
 
+#: Les écrans photographiés AVANT qu'un profil existe. Ils ne peuvent pas porter le thème du
+#: profil — il n'y en a pas — donc ils prennent le défaut d'amorçage, clair depuis le 9 novembre
+#: 2026. Les mesurer avec le plafond du thème sombre revient à refuser l'app pour avoir obéi.
+AVANT_LE_PROFIL = {"inscription"}
+
+
 def sombres(dossier: pathlib.Path):
     """Les captures du thème sombre, celles qu'on livre et celles du diagnostic."""
     for p in sorted(dossier.rglob("*.png")):
         if "clair" in p.relative_to(dossier).parts:
+            continue
+        if p.stem in AVANT_LE_PROFIL:
             continue
         yield p
 
@@ -125,6 +142,14 @@ def main() -> int:
         print("    du haut de l'écran. Une capture qui montre l'interface du système est un")
         print("    motif de refus chez Apple, et celle-ci ne montre de toute façon pas l'app.")
         print("    Relancer la chaîne suffit : la bannière est une affaire de minutage.")
+        if len({nom.name for nom, _ in fautives}) == 1 and len(fautives) > 1:
+            parts = {f"{part:.1%}" for _, part in fautives}
+            print()
+            print(f"    MAIS PAS ICI : c'est la MÊME image dans {len(fautives)} langues, "
+                  f"à {' / '.join(sorted(parts))}.")
+            print("    Une bannière est une affaire de minutage, donc elle ne tombe pas trois")
+            print("    fois sur la même image au même pourcentage. Cet écran est clair pour une")
+            print("    raison — relancer la chaîne ne changera rien. Ouvre l'image.")
         return 1
 
     print(f"Bannières : {len(images)} captures sombres regardées, "

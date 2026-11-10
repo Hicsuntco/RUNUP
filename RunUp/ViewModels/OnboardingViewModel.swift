@@ -5,7 +5,11 @@ import Observation
 /// plus a step 4 (injury/cycle) split out of what used to be a combined step 3.
 @Observable
 final class OnboardingViewModel {
-    static let totalSteps = 10
+    // Onze depuis le 10 novembre 2026 : une étape de plus, le consentement aux statistiques
+    // d'usage. Elle est posée AVANT la connexion à Santé, pour que « CRÉER MON PLAN » reste le
+    // dernier geste de l'inscription — un bouton qui annonce la fin ne peut pas être suivi d'un
+    // écran de plus.
+    static let totalSteps = 11
 
     /// Le dernier écran qui POSE UNE QUESTION. Au-delà, il ne reste que la construction du
     /// programme, qui ne demande rien et se regarde.
@@ -219,7 +223,11 @@ final class OnboardingViewModel {
         case 6: return runningDays.count >= joursMinimum && runningDaysTouched
                     && tempsSemaineMin != nil && tempsWeekEndMin != nil
         case 7: return levelTouched
+        // Le consentement aux statistiques : l'écran n'a pas de bouton « Continuer », il a DEUX
+        // boutons qui avancent, « D'accord » et « Non merci ». Il n'y a donc rien à valider ici,
+        // et surtout rien à pré-cocher — un consentement qui a un défaut n'en est pas un.
         case 8: return true
+        case 9: return true
         default: return true
         }
     }

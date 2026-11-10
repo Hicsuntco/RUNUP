@@ -8666,6 +8666,22 @@
         }
       }
     },
+    "D'ACCORD": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I'M IN"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DE ACUERDO"
+          }
+        }
+      }
+    },
     "D+": {
       "extractionState": "manual",
       "localizations": {
@@ -9454,6 +9470,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Espalda"
+          }
+        }
+      }
+    },
+    "Douze moments du parcours : l'app s'ouvre, une étape est franchie, une course démarre, le coach répond.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twelve moments along the way: the app opens, a step is completed, a run starts, the coach replies."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doce momentos del recorrido: la app se abre, se completa un paso, empieza una carrera, el coach responde."
+          }
+        }
+      }
+    },
+    "Douze moments du parcours — l'app s'ouvre, une étape est franchie, une course démarre. Jamais ce que tu écris, jamais ta position, jamais rien d'Apple Santé. Si tu refuses, rien n'est envoyé et ce qui était gardé est effacé.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twelve moments along the way — the app opens, a step is completed, a run starts. Never what you write, never your location, never anything from Apple Health. If you say no, nothing is sent and whatever was held is erased."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doce momentos del recorrido: la app se abre, se completa un paso, empieza una carrera. Nunca lo que escribes, nunca tu ubicación, nunca nada de Apple Salud. Si dices que no, no se envía nada y lo que estaba guardado se borra."
           }
         }
       }
@@ -13018,6 +13066,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "DÍAS"
+          }
+        }
+      }
+    },
+    "Jamais ce que tu écris, jamais ta position, jamais rien d'Apple Santé.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Never what you write, never your location, never anything from Apple Health."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nunca lo que escribes, nunca tu ubicación, nunca nada de Apple Salud."
           }
         }
       }
@@ -16756,6 +16820,22 @@
         }
       }
     },
+    "NON MERCI": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NO THANKS"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NO, GRACIAS"
+          }
+        }
+      }
+    },
     "NOUVEAU RECORD": {
       "localizations": {
         "en": {
@@ -17487,6 +17567,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "CREANDO\nTU PROGRAMA"
+          }
+        }
+      }
+    },
+    "ON PEUT COMPTER\nTES PAS DANS L'APP ?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MAY WE COUNT\nYOUR STEPS IN THE APP?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿PODEMOS CONTAR\nTUS PASOS EN LA APP?"
           }
         }
       }
@@ -18364,6 +18460,22 @@
         }
       }
     },
+    "Partager les statistiques d'usage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share usage statistics"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir estadísticas de uso"
+          }
+        }
+      }
+    },
     "Partager ma phase avec le coach": {
       "extractionState": "manual",
       "localizations": {
@@ -18689,6 +18801,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aún no desbloqueado"
+          }
+        }
+      }
+    },
+    "Pas tes pas de course — ceux que tu fais dans l'app. Savoir à quel écran les gens s'arrêtent est la seule façon de réparer ce qui coince.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not your running steps — the ones you take inside the app. Knowing which screen people stop on is the only way to fix what gets in the way."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No tus pasos corriendo — los que das dentro de la app. Saber en qué pantalla se detiene la gente es la única forma de arreglar lo que falla."
           }
         }
       }
@@ -23151,6 +23279,22 @@
         }
       }
     },
+    "Si tu refuses, rien n'est envoyé et rien n'est gardé. L'app fonctionne exactement pareil.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you say no, nothing is sent and nothing is kept. The app works exactly the same."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si dices que no, no se envía ni se guarda nada. La app funciona exactamente igual."
+          }
+        }
+      }
+    },
     "Signal GPS instable — position estimée": {
       "localizations": {
         "en": {
@@ -23835,6 +23979,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Estaciones"
+          }
+        }
+      }
+    },
+    "Statistiques d'usage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage statistics"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estadísticas de uso"
           }
         }
       }
@@ -27622,6 +27782,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ya no verás su puntuación ni sus actividades, sin tener que salir del club."
+          }
+        }
+      }
+    },
+    "Tu peux changer d'avis quand tu veux, dans Profil → Réglages.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can change your mind any time, in Profile → Settings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes cambiar de opinión cuando quieras, en Perfil → Ajustes."
           }
         }
       }
@@ -34306,6 +34482,22 @@
         }
       }
     },
+    "Étape 8 · la mesure": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 8 · measurement"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 8 · la medición"
+          }
+        }
+      }
+    },
     "Étape 8 · tes données": {
       "extractionState": "manual",
       "localizations": {
@@ -34319,6 +34511,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Paso 8 · tus datos"
+          }
+        }
+      }
+    },
+    "Étape 9 · tes données": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step 9 · your data"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso 9 · tus datos"
           }
         }
       }

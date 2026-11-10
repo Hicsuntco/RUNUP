@@ -105,7 +105,10 @@ struct OnboardingContainerView: View {
         case 5: WellbeingStepView(vm: vm) { advance() }
         case 6: RunningDaysStepView(vm: vm) { advance() }
         case 7: LevelStepView(vm: vm) { advance() }
-        case 8: HealthConnectStepView(vm: vm) { advance() }
+        // Le consentement aux statistiques, avant la dernière question. Voir
+        // `StatistiquesStepView` pour pourquoi il est ici et pas au premier écran.
+        case 8: StatistiquesStepView(vm: vm) { advance() }
+        case 9: HealthConnectStepView(vm: vm) { advance() }
         default: BuildingProgramView(vm: vm) { finish() }
         }
     }
@@ -144,7 +147,8 @@ struct OnboardingContainerView: View {
         case 5: return "wellbeing"
         case 6: return "running_days"
         case 7: return "level"
-        case 8: return "health_connect"
+        case 8: return "statistiques"
+        case 9: return "health_connect"
         default: return "building_program"
         }
     }

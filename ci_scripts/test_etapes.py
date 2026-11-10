@@ -130,6 +130,44 @@ def _():
     assert any("introuvable" in x for x in g), g
 
 
+@cas_test("UN SOURCIL QUI ANNONCE LE MAUVAIS NUMÉRO SONNE")
+def _():
+    # Le 10 novembre 2026, insérer le consentement aux statistiques a fait passer
+    # `HealthConnectStepView` de l'étape 8 à la 9 — et son sourcil disait toujours « Étape 8 ».
+    # Neuf écrans portent ce nombre en dur, et rien ne les reliait à leur place réelle.
+    griefs = ck.problemes(
+        vues={"GoalStepView.swift": 'ObTitle(eyebrow: "Étape 5 · ton objectif", title: "X")'},
+        conteneur=CONTENEUR, modele=MODELE)
+    assert any("GoalStepView" in g and "Étape 5" in g for g in griefs), griefs
+
+
+@cas_test("le bon numéro ne sonne pas")
+def _():
+    griefs = ck.problemes(
+        vues={"GoalStepView.swift": 'ObTitle(eyebrow: "Étape 1 · ton objectif", title: "X")'},
+        conteneur=CONTENEUR, modele=MODELE)
+    assert griefs == [], griefs
+
+
+@cas_test("un écran qui n'annonce aucun numéro n'est pas concerné")
+def _():
+    # Le premier écran dit « Pour commencer », et les écrans propres à une discipline tiennent
+    # leur sourcil de `GoalType`. Ne rien annoncer n'est pas se tromper.
+    griefs = ck.problemes(
+        vues={"NameStepView.swift": 'ObTitle(eyebrow: "Pour commencer", title: "X")'},
+        conteneur=CONTENEUR, modele=MODELE)
+    assert griefs == [], griefs
+
+
+@cas_test("un numéro cité dans un commentaire ne compte pas")
+def _():
+    griefs = ck.problemes(
+        vues={"GoalStepView.swift": '// elle était l\'Étape 8 · ancienne place\n'
+                                    'ObTitle(eyebrow: "Étape 1 · ton objectif", title: "X")'},
+        conteneur=CONTENEUR, modele=MODELE)
+    assert griefs == [], griefs
+
+
 @cas_test("le dépôt tel qu'il est passe")
 def _():
     assert ck.problemes() == [], ck.problemes()

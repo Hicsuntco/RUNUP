@@ -1,5 +1,9 @@
 import SwiftUI
 
+/// Étape 9 — les sources de données.
+/// (Elle était l'étape 8 jusqu'au 10 novembre 2026 : le consentement aux statistiques s'est
+/// inséré avant elle. Son numéro est écrit ici ET dans son sourcil ; `check_etapes.py` vérifie
+/// désormais que les deux s'accordent avec le `switch` du conteneur.)
 /// Step 7 — data source connections. Apple Santé uses the real HealthKit authorization prompt;
 /// Strava/Garmin are UI stubs per the brief ("peuvent rester des stubs à connecter pour une v1").
 struct HealthConnectStepView: View {
@@ -12,7 +16,7 @@ struct HealthConnectStepView: View {
             ObCorps {
                 VStack(spacing: 0) {
                     ObTitle(
-                        eyebrow: "Étape 8 · tes données",
+                        eyebrow: String(localized: "Étape 9 · tes données"),
                         title: "CONNECTE TA MONTRE",
                         subtitle: "Pour une forme du jour plus précise — FC, sommeil, sorties passées. Facultatif, tu peux le faire plus tard."
                     )

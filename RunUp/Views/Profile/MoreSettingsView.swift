@@ -48,6 +48,9 @@ struct MoreSettingsView: View {
                         cycleCard
                     }
 
+                    sectionTitle("Confidentialité")
+                    statistiquesCard
+
                     if appState.auth.isSignedIn {
                         sectionTitle("Inviter un ami")
                         InvitationCard()
@@ -139,6 +142,37 @@ struct MoreSettingsView: View {
 
     private func sectionTitle(_ text: String) -> some View {
         EyebrowLabel(text: text, color: RUColor.text3)
+    }
+
+    /// LE CONSENTEMENT AUX STATISTIQUES, RÉVOCABLE ICI.
+    ///
+    /// L'audit du 9 novembre 2026 : « Aucun écran ne présente un consentement explicite et
+    /// révocable aux statistiques d'usage. La politique les décrit ; l'app ne les propose pas à
+    /// refuser. » La question est posée à l'inscription (`StatistiquesStepView`) ; cette carte
+    /// est la seconde moitié — révocable, sinon ce n'est pas un consentement.
+    ///
+    /// Un retrait JETTE ce qui était gardé et n'enregistre plus rien : voir
+    /// `Analytics.consentir`.
+    private var statistiquesCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top) {
+                Text("Statistiques d'usage")
+                    .font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                Spacer()
+                Toggle("", isOn: Binding(
+                    get: { Analytics.shared.consentement == .accepte },
+                    set: { Analytics.shared.consentir($0 ? .accepte : .refuse) }
+                ))
+                .labelsHidden()
+                .tint(RUColor.rose)
+                .accessibilityLabel("Partager les statistiques d'usage")
+            }
+            Text("Douze moments du parcours — l'app s'ouvre, une étape est franchie, une course démarre. Jamais ce que tu écris, jamais ta position, jamais rien d'Apple Santé. Si tu refuses, rien n'est envoyé et ce qui était gardé est effacé.")
+                .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
+                .lineSpacing(2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .ruCard()
     }
 
     private var adminCard: some View {

@@ -406,6 +406,78 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 24 — le consentement aux statistiques d'usage (A2)
+
+Le point que l'audit appelait « le plus discutable du produit » : « Aucun écran ne présente un
+consentement explicite et révocable aux statistiques d'usage. La politique les décrit ; l'app ne
+les propose pas à refuser. »
+
+### Le problème que le dessin devait résoudre
+
+Les événements de l'inscription sont enregistrés **depuis le premier écran** — c'est l'entonnoir,
+et il n'a de sens que complet. Poser la question à la première seconde, avant d'avoir dit ce que
+l'app fait, serait impoli et inutile : personne ne décide de ça devant un écran vide. Mais tout
+envoyer d'abord et demander ensuite n'est pas un consentement.
+
+### La réponse : trois états, et un tampon
+
+`Analytics` a maintenant un consentement à **trois** états, et c'est le troisième qui résout tout :
+
+| état | on enregistre | on envoie |
+| --- | --- | --- |
+| `pasDemande` | oui, dans le tampon | **non** |
+| `accepte` | oui | oui — et ce qui était gardé part |
+| `refuse` | **non**, et le tampon est vidé | non |
+
+Un oui expédie ce qui attendait ; un non le **jette**. Rien ne part avant la réponse, et
+l'entonnoir reste mesurable pour qui accepte.
+
+La garde tient en deux lignes parce que le fichier était bien fait : `track`, `trackOnce` et
+`trackAppOpenedIfNewSession` passent **tous les trois** par `enqueue`, et `sendNextBatch` est le
+seul point d'envoi. C'est là que vivait déjà la garde du mode démonstration.
+
+**Un refus n'enregistre même plus.** Fermer l'envoi suffirait à tenir la promesse — mais accumuler
+dans un tampon des événements qu'on s'est engagé à ne jamais envoyer, c'est garder la chose tout
+en disant qu'on ne la prend pas.
+
+### Où la question est posée
+
+**Étape 8 de l'inscription**, juste avant la connexion à Santé — pour que « CRÉER MON PLAN » reste
+le dernier geste : un bouton qui annonce la fin ne peut pas être suivi d'un écran de plus.
+
+**Deux boutons, et aucun n'est le défaut.** Pas de case pré-cochée, pas de « Continuer » qui vaut
+oui. L'écran dit ce qui est mesuré (douze moments du parcours), ce qui ne l'est jamais (ce qu'on
+écrit, la position, Apple Santé), et qu'on peut changer d'avis.
+
+**Et révocable** : Profil → Réglages → Confidentialité. Sans ça ce n'est pas un consentement.
+
+### Ce que l'insertion a fait tomber, et c'était voulu
+
+Deux tests Swift pinaient la longueur de l'inscription, avec ce commentaire : « Si ça tombe en
+rouge, c'est qu'une étape a été ajoutée ou retirée. » Ils sont tombés en rouge. Mis à jour : neuf
+écrans de questions deviennent dix, et la phrase « plus que N écrans » compte cinq au lieu de
+quatre.
+
+### Et un nombre recopié que rien ne surveillait
+
+**Neuf écrans écrivent leur numéro d'étape EN DUR dans leur titre** — « Étape 6 · ton rythme ».
+Rien ne les reliait à leur place réelle. En insérant le consentement, `HealthConnect` est passée
+de 8 à 9 et son sourcil annonçait toujours « Étape 8 » : le numéro que lit la personne qui
+s'inscrit.
+
+C'est exactement le défaut que `check_etapes.py` existait pour empêcher — « c'est le propre d'un
+nombre recopié », dit son en-tête — mais il ne regardait que la logique, pas l'écran. Il compare
+maintenant le numéro du sourcil à celui du `switch`. Un écran qui n'annonce aucun numéro n'est pas
+concerné : ne rien dire n'est pas se tromper. Quatre cas de plus, 14 au total.
+
+### Ce qui reste, et qui ne peut pas se faire d'ici
+
+`privacy.html` décrit les statistiques mais ne dit pas qu'on peut les refuser. L'ajouter ferait
+rougir `check_politique.py --exiger` jusqu'à ce que la page soit portée sur `main` — et son
+en-tête met en garde contre exactement ça : « une chaîne rouge pendant des jours pour une action
+qu'elle ne peut pas faire apprend à ignorer un rouge ». La phrase est donc à ajouter **et** à
+porter dans le même geste.
+
 ## Chantier 23 — les trois portes juridiques (A6, A7, A8)
 
 ### A6 — un commentaire faux dans une déclaration légale

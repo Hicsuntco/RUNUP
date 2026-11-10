@@ -37,6 +37,7 @@ final class SymbolesTests: XCTestCase {
         "arrow.up.left.and.arrow.down.right",
         "arrow.up.right",
         "arrow.uturn.backward",
+        "arrow.uturn.backward.circle",
         "bell",
         "bell.slash",
         "bicycle",
@@ -49,6 +50,7 @@ final class SymbolesTests: XCTestCase {
         "camera.fill",
         "chart.line.uptrend.xyaxis",
         "checkmark",
+        "checkmark.circle",
         "checkmark.circle.fill",
         "chevron.down",
         "chevron.left",
@@ -126,6 +128,7 @@ final class SymbolesTests: XCTestCase {
         "trophy.fill",
         "waveform",
         "xmark",
+        "xmark.circle",
         "xmark.circle.fill",
     ]
 

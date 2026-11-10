@@ -212,6 +212,7 @@ final class Analytics: @unchecked Sendable {
     private static let anonymousIDKey = "analytics.anonymousID.v1"
     private static let firedOnceKey = "analytics.firedOnce.v1"
     private static let lastAppOpenKey = "analytics.lastAppOpen.v1"
+    private static let consentementKey = "analytics.consentement.v1"
 
     /// Flush after this many buffered events, on top of the background/foreground triggers — so a
     /// long session that never backgrounds still delivers, without paying a request per tap.
@@ -253,6 +254,41 @@ final class Analytics: @unchecked Sendable {
     /// anything identifying. It exists for one reason: without it the pre-account funnel is a pile
     /// of unrelated events with no way to tell one person's nine onboarding steps from nine
     /// people's first step. Reinstalling produces a new one, which is the honest behaviour.
+    /// LE CONSENTEMENT AUX STATISTIQUES D'USAGE, ET SES TROIS ÉTATS.
+    ///
+    /// Trois et pas deux : « pas encore demandé » n'est pas « refusé ». Les événements de
+    /// l'inscription sont enregistrés AVANT qu'on puisse poser la question — on ne va pas
+    /// l'interrompre à la première seconde pour parler de mesure d'audience — donc il faut un
+    /// état qui dise « garde, n'envoie pas encore ».
+    enum Consentement: String {
+        /// La question n'a pas encore été posée. On accumule, on n'envoie rien.
+        case pasDemande
+        /// Oui. Ce qui était gardé part, et la suite part au fil de l'eau.
+        case accepte
+        /// Non. Ce qui était gardé est jeté, et plus rien n'est même enregistré.
+        case refuse
+    }
+
+    /// L'état courant. Absent des préférences = jamais demandé.
+    var consentement: Consentement {
+        Consentement(rawValue: defaults.string(forKey: Self.consentementKey) ?? "") ?? .pasDemande
+    }
+
+    /// Le seul chemin d'écriture. Un refus JETTE ce qui était gardé — garder des événements
+    /// qu'on s'est engagé à ne pas envoyer serait la pire des deux options : on les conserve
+    /// sans les utiliser, et il suffirait d'un changement d'avis dans le code pour les expédier.
+    func consentir(_ choix: Consentement) {
+        defaults.set(choix.rawValue, forKey: Self.consentementKey)
+        queue.async { [self] in
+            if choix == .refuse {
+                buffer.removeAll()
+                persistBuffer()
+            } else if choix == .accepte {
+                sendNextBatch()
+            }
+        }
+    }
+
     var anonymousID: String {
         if let existing = defaults.string(forKey: Self.anonymousIDKey) { return existing }
         let fresh = UUID().uuidString
@@ -316,6 +352,11 @@ final class Analytics: @unchecked Sendable {
         // pas par `track`, et c'est justement la seconde qui tire au lancement — donc celle
         // qu'un garde posé là-haut aurait laissée passer.
         guard !Demonstration.enCours else { return }
+        // UN REFUS N'ENREGISTRE MÊME PLUS. L'envoi est déjà fermé plus bas, et ça suffirait à
+        // tenir la promesse ; mais accumuler dans un tampon des événements qu'on s'est engagé à
+        // ne jamais envoyer, c'est garder la chose tout en disant qu'on ne la prend pas. Le
+        // tampon d'une personne qui a refusé reste vide.
+        guard consentement != .refuse else { return }
         buffer.append(event)
         if buffer.count > Self.maxBufferedEvents {
             buffer.removeFirst(buffer.count - Self.maxBufferedEvents)
@@ -330,6 +371,14 @@ final class Analytics: @unchecked Sendable {
     }
 
     private func sendNextBatch() {
+        // RIEN NE PART AVANT UN OUI. C'est le seul point d'envoi du fichier, donc le seul endroit
+        // où cette garde a besoin d'exister — `track`, `trackOnce` et `trackAppOpenedIfNewSession`
+        // passent tous les trois par `enqueue` puis par ici.
+        //
+        // Tant que la question n'a pas été posée, les événements de l'inscription s'accumulent :
+        // c'est voulu, et c'est ce qui permet de la mesurer pour quelqu'un qui accepte ENSUITE,
+        // sans rien envoyer de celle qui refuse.
+        guard consentement == .accepte else { return }
         guard !isFlushing, !buffer.isEmpty else { return }
         let batch = Array(buffer.prefix(Self.maxEventsPerBatch))
         guard let body = try? Self.encoder.encode(AnalyticsBatch(anonymousId: anonymousID, events: batch)) else {

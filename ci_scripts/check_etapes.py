@@ -12,13 +12,26 @@ zéro jour, parce qu'il interrogeait une étape qui répond toujours oui.
 Rien ne cassait : ça compilait, les tests passaient, l'écran s'affichait. C'est le propre d'un
 nombre recopié.
 
-Ce script vérifie deux choses :
+Ce script vérifie trois choses :
 
   1. AUCUNE VUE N'ÉCRIT SON PROPRE NUMÉRO. `vm.peutContinuer` lit l'étape courante sur le
      modèle ; `canProceed(fromStep: 5)` dans une vue est le nombre recopié d'origine.
   2. LES TROIS LISTES COUVRENT LES MÊMES INDICES, de 0 à `totalSteps - 1`, chacune avec son
      `default` pour la dernière. Une étape ajoutée à l'une et oubliée dans l'autre est une
      étape qui s'affiche sans se valider, ou qui se valide sans s'afficher.
+
+  3. LE NUMÉRO ÉCRIT DANS LE SOURCIL EST CELUI DU `switch`. Neuf écrans affichent « Étape 6 ·
+     ton rythme » en dur dans leur titre. Rien ne les reliait à leur place réelle : insérer une
+     étape au milieu laissait neuf écrans annoncer un numéro faux, et c'est la personne qui
+     s'inscrit qui le lit.
+
+     Mesuré le 10 novembre 2026, en insérant le consentement aux statistiques : `HealthConnect`
+     passait de 8 à 9 et son sourcil disait toujours « Étape 8 ». C'est le même nombre recopié
+     que le point 1, à l'écran plutôt que dans la logique — et il était hors de portée du
+     contrôle qui existait pour ça.
+
+     Un écran sans numéro dans son sourcil — le premier, « Pour commencer », ou ceux dont le
+     sourcil vient de l'objectif — n'est pas concerné : ne rien annoncer n'est pas se tromper.
 """
 import re
 import sys
@@ -52,6 +65,34 @@ def cas_du_switch(source: str, ancre: str):
     return indices, "default:" in bloc
 
 
+#: `case 8: StatistiquesStepView(vm: vm) { advance() }` → 8, "StatistiquesStepView.swift".
+CAS_DE_VUE = re.compile(r"case\s+(\d+)\s*:\s*([A-Z]\w*StepView)\b")
+#: « Étape 9 · tes données », quelle que soit la façon de l'écrire autour.
+SOURCIL = re.compile(r"Étape\s+(\d+)\s*·")
+
+
+def vues_du_switch(conteneur_sans_commentaires: str) -> dict:
+    """indice → nom de fichier de la vue, pour les `case N: XStepView` directs.
+
+    Les `case` qui aiguillent sur plusieurs vues selon l'objectif — l'étape 3 — sont écartés :
+    leur sourcil vient de `GoalType`, pas d'un littéral, et il n'y a donc rien à comparer.
+    """
+    trouves = {}
+    for m in CAS_DE_VUE.finditer(conteneur_sans_commentaires):
+        indice = int(m.group(1))
+        if indice in trouves:
+            trouves[indice] = None          # plusieurs vues pour le même indice : on ne juge pas
+        else:
+            trouves[indice] = f"{m.group(2)}.swift"
+    return {i: v for i, v in trouves.items() if v}
+
+
+def numero_du_sourcil(source_sans_commentaires: str):
+    """Le numéro annoncé dans le titre de l'écran, ou None s'il n'en annonce pas."""
+    m = SOURCIL.search(source_sans_commentaires)
+    return int(m.group(1)) if m else None
+
+
 def problemes(vues=None, conteneur=None, modele=None):
     griefs = []
 
@@ -71,6 +112,19 @@ def problemes(vues=None, conteneur=None, modele=None):
     conteneur = conteneur if conteneur is not None else CONTENEUR.read_text(encoding="utf-8")
     modele = modele if modele is not None else MODELE.read_text(encoding="utf-8")
     c, m = sans_commentaires(conteneur), sans_commentaires(modele)
+
+    # 2. Le numéro du sourcil est celui du `switch`.
+    for indice, vue in vues_du_switch(c).items():
+        source = vues.get(vue)
+        if source is None:
+            continue
+        annonce = numero_du_sourcil(sans_commentaires(source))
+        if annonce is not None and annonce != indice:
+            griefs.append(
+                f"{vue} est l'étape {indice} dans `currentStep`, et son sourcil annonce "
+                f"« Étape {annonce} ».\n      C'est le numéro que lit la personne qui "
+                f"s'inscrit."
+            )
 
     total = re.search(r"totalSteps\s*=\s*(\d+)", m)
     if not total:

@@ -53,20 +53,25 @@ final class ResteALireTests: XCTestCase {
     }
 
     func testLePremierEcranConcerneCompteLesQuatreQuiRestent() {
-        // Point de départ (4) : restent un mot sur toi, les jours, le niveau, la montre.
+        // Point de départ (4) : restent un mot sur toi, les jours, le niveau, LES
+        // STATISTIQUES, la montre. Cinq depuis le 10 novembre 2026 — le consentement aux
+        // statistiques d'usage s'est inséré en étape 8, avant la montre.
         let restants = OnboardingViewModel.dernierEcranDeQuestions
             - OnboardingViewModel.premierEcranAvecLeReste
-        XCTAssertEqual(restants, 4, "l'inscription a changé de longueur — relis la phrase")
+        XCTAssertEqual(restants, 5, "l'inscription a changé de longueur — relis la phrase")
         let phrase = OnboardingViewModel.resteALire(apres: OnboardingViewModel.premierEcranAvecLeReste)
         XCTAssertEqual(phrase, String(localized: "Plus que \(restants) écrans, et ton plan est prêt."))
     }
 
     // MARK: - Les bornes elles-mêmes
 
-    func testLesBornesDecriventBienNeufEcransDeQuestions() {
+    func testLesBornesDecriventBienDixEcransDeQuestions() {
         // Si ça tombe en rouge, c'est qu'une étape a été ajoutée ou retirée : vérifie que la
         // dernière reste bien l'écran de construction, puis mets ce nombre à jour.
-        XCTAssertEqual(OnboardingViewModel.totalEcransDeQuestions, 9)
+        //
+        // Dix depuis le 10 novembre 2026 : le consentement aux statistiques d'usage est entré en
+        // étape 8. C'était neuf jusque-là, et ce test est tombé en rouge comme il devait.
+        XCTAssertEqual(OnboardingViewModel.totalEcransDeQuestions, 10)
         XCTAssertEqual(OnboardingViewModel.dernierEcranDeQuestions,
                        OnboardingViewModel.totalSteps - 2,
                        "le dernier écran de questions doit précéder celui de la construction")

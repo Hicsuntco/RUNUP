@@ -406,6 +406,66 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 37 — un seuil écrit deux fois, trouvé en découpant (B5, troisième morceau)
+
+### Le plan était plus grossier que le code, pour la deuxième fois sur ce même fichier
+
+Le chantier 35 annonçait « Rejoindre / réveiller : 231 lignes, 4 états ». Mesuré membre par
+membre : **286 lignes et six états**. Et surtout, ce n'est pas un groupe. Les huit membres que
+j'avais rangés ensemble font trois choses sans rapport :
+
+| ce que ça fait | membres | états |
+| --- | --- | --- |
+| trouver ou créer un club quand on n'en a pas | `signInPrompt`, `clubSetupCard`, `ligneDUnClubARejoindre`, `ligneDuClubTrouve` | `clubQuery`, `newClubName`, `showSignIn`, `magasin` |
+| réveiller un club endormi | `carteClubAReveiller` | `showCreateEvent`, `showManagement` |
+| dire qu'on y est seule | `carteClubSeul` | `magasin` |
+
+`banniere` n'appartenait à aucun des trois : elle est appelée depuis `body`, au-dessus de tout.
+
+### Ce qui est sorti, et pourquoi ces deux-là d'abord
+
+- `ClubAloneCard` — 53 lignes de corps, **zéro liaison**, le magasin seul. Elle était déjà
+  appelée **depuis deux onglets** : l'Aperçu et le fil. Son commentaire disait pourquoi on ne
+  l'avait pas recopiée — « un lien de partage dupliqué, c'est une des deux copies qui garde
+  l'ancienne URL le jour où elle change ». La sortir du fichier ne change rien à ce partage ; ça
+  le rend lisible depuis le nom du type.
+- `ClubWakeCard` — 40 lignes, **deux liaisons et aucun magasin**. Elle n'affiche aucune donnée du
+  club : deux boutons, c'est tout. C'est ce qui la rend bon marché malgré ses deux états.
+
+`ClubView` : **1 193 → 1 113 lignes**, et le quatrième groupe du chantier 35 — « trouver ou créer
+un club » — attend son tour.
+
+### Le défaut trouvé en découpant : un seuil écrit deux fois
+
+`magasin.board.club.map({ $0.memberCount <= 1 }) == true` était écrit **mot pour mot à deux
+endroits** — une fois dans l'Aperçu, une fois dans le fil — chacun pour choisir entre la carte de
+partage et autre chose. Les deux copies étaient à six cents lignes l'une de l'autre.
+
+Ce n'est pas un bug : les deux disent la même chose aujourd'hui. C'est le jour où « seule » cesse
+de vouloir dire « un membre » — un club où l'on compte les membres actifs, un invité qui n'a pas
+encore accepté — que l'une des deux reste en arrière, et le club annonce deux états différents de
+lui-même sur deux onglets. La règle est maintenant nommée une seule fois, `seuleDansSonClub`, à
+côté de `clubEnSommeil` qui est de la même nature.
+
+### Un renvoi qui ne survit pas à une découpe
+
+`ClubWakeCard` portait un commentaire qui disait « voir la note sur le bouton Partager **plus
+bas** ». Cette note est partie dans `ClubAloneCard.swift` avec sa carte. Un renvoi à une position
+dans un fichier ne survit pas au découpage de ce fichier, et personne ne le remarque : le
+commentaire reste grammaticalement correct, il désigne simplement le vide. Il est recopié en
+entier — c'est la règle des 44 points qui s'empilent sous les marges du style, et elle vaut pour
+les deux cartes.
+
+De même, un commentaire de `ClubView` décrivait encore `if clubEnSommeil { carteClubAReveiller }`,
+un membre qui n'existe plus sous ce nom.
+
+### Ce que `check_prive.py` n'aurait pas rattrapé ici
+
+`carteClubSeul` et `carteClubAReveiller` étaient des `private **var**`, pas des `func`. Le
+contrôle écrit au chantier 36 ne regarde que les fonctions, et pour une raison mesurée : étendu
+aux propriétés, il rendait 112 signalements faux. Les trois sites d'appel ont donc été vérifiés à
+la main, par `grep`, avant la découpe — pas par la chaîne.
+
 ## Chantier 36 — la chaîne verte sur du code qui ne compile pas (B5, deuxième morceau)
 
 ### Ce qui est sorti

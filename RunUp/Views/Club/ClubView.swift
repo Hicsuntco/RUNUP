@@ -197,7 +197,7 @@ struct ClubView: View {
         //
         // Deux boutons posent `showCreateEvent` : le « + » de la carte des sorties, et celui de
         // la carte qui propose de RÉVEILLER le club. Or ces deux cartes s'excluent —
-        // `if clubEnSommeil { carteClubAReveiller } else { eventsCard }` — et la feuille était
+        // `if clubEnSommeil { ClubWakeCard(…) } else { eventsCard }` — et la feuille était
         // accrochée à la seconde. Sur un club endormi, c'est-à-dire exactement le cas où cette
         // carte existe, taper « Proposer une sortie » posait l'état et n'ouvrait rien ; et la
         // feuille surgissait plus tard, sans qu'on l'ait demandée, le jour où le club se
@@ -692,103 +692,22 @@ struct ClubView: View {
     /// Les trois sections du haut de l'Aperçu, prises ensemble. Séparément, chacune a une bonne
     /// raison d'afficher sa phrase d'absence ; empilées, elles font une page qui ne dit rien
     /// trois fois.
+    /// Seule dans son club — et c'est alors son seul sujet.
+    ///
+    /// La règle était écrite DEUX FOIS mot pour mot, une fois dans l'Aperçu et une fois dans le
+    /// fil, chacune pour choisir entre la carte de partage et autre chose. Deux copies d'un même
+    /// seuil, c'est celle qu'on oublie le jour où il change.
+    private var seuleDansSonClub: Bool {
+        magasin.board.club.map { $0.memberCount <= 1 } == true
+    }
+
     private var clubEnSommeil: Bool {
         (magasin.board.weekStats?.totalKm ?? 0) == 0
             && magasin.board.challenge == nil
             && (magasin.board.events ?? []).isEmpty
     }
 
-    /// À plusieurs, mais rien de lancé. Les deux actions sont celles que portaient les
-    /// intertitres de « Défi du club » et « Sorties de groupe » — elles ne sont pas perdues avec
-    /// les sections, elles sont réunies là où quelqu'un les cherchera.
-    private var carteClubAReveiller: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Rien n'est lancé pour l'instant")
-                .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-            Text("Un défi à se partager, ou une sortie à proposer : c'est ce qui donne au club une raison de se retrouver cette semaine.")
-                .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
-                .fixedSize(horizontal: false, vertical: true)
-            // PAS DE `minHeight: 44` ICI — voir la note sur le bouton « Partager » plus bas.
-            // Le style le garantit déjà ; le réécrire dans le libellé l'EMPILE sous les marges
-            // du style et donne un pavé de soixante-douze points.
-            HStack(spacing: 10) {
-                Button(action: { showManagement = true }) {
-                    Text("Créer un défi")
-                        .font(RUFont.sans(.label, weight: .semibold))
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(SecondaryButtonStyle())
-                Button(action: { showCreateEvent = true }) {
-                    Text("Proposer une sortie")
-                        .font(RUFont.sans(.label, weight: .semibold))
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(SecondaryButtonStyle())
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(RUSpacing.cardPadding)
-        .ruCard()
-    }
 
-    /// SEULE DANS SON CLUB : LA SEULE CHOSE À FAIRE, ET ELLE EST DITE DEUX FOIS AU MÊME ENDROIT.
-    ///
-    /// Cette carte vivait dans l'onglet Activité, c'est-à-dire sur le troisième onglet d'un
-    /// écran qui s'ouvre sur le premier. Un club d'une personne n'a pourtant qu'un seul sujet —
-    /// trouver la deuxième — et l'Aperçu lui répondait par trois sections vides empilées :
-    /// « Personne n'a encore couru cette semaine », « Aucun défi en cours », « Aucune sortie
-    /// prévue ». Trois fois rien, en trois intertitres de même taille que de vraies sections.
-    ///
-    /// Elle est donc partagée par les deux onglets plutôt que recopiée : un lien de partage
-    /// dupliqué, c'est une des deux copies qui garde l'ancienne URL le jour où elle change.
-    @ViewBuilder private var carteClubSeul: some View {
-        if let club = magasin.board.club {
-            VStack(alignment: .leading, spacing: 10) {
-                Text(verbatim: Accord.selon(f: String(localized: "Tu es seule dans \(club.name)"),
-                                            m: String(localized: "Tu es seul dans \(club.name)")))
-                    .font(RUFont.sans(.label, weight: .semibold)).foregroundColor(RUColor.textPrimary)
-                // LE LIEN A REMPLACÉ LE CODE.
-                //
-                // Ce bloc affichait un code à six lettres et proposait de le partager, puis
-                // il a dit « cherche son nom dans l'onglet Club » — une consigne, et qui
-                // désignait un onglet qui n'existe plus. Il n'y a qu'une chose à envoyer
-                // maintenant, et c'est le lien juste en dessous.
-                Text("Un club prend vie à plusieurs — classement, défis, sorties de groupe. Envoie son lien aux gens avec qui tu cours.")
-                    .font(RUFont.sans(.body)).foregroundColor(RUColor.text3)
-                    .fixedSize(horizontal: false, vertical: true)
-                // UN VRAI LIEN, ENFIN. Ce message disait « cherche-le par son nom dans
-                // l'onglet Club » : une consigne, pas une invitation. Le lien ouvre
-                // maintenant la page publique du club — sa photo, sa ville, ses
-                // prochaines séances — et, sur un iPhone où l'app est installée,
-                // directement l'app.
-                // LE PAVÉ GRIS DE SOIXANTE-DOUZE POINTS, ET D'OÙ IL VENAIT.
-                //
-                // `SecondaryButtonStyle` garantit DÉJÀ la cible de 44 points — c'est écrit dans
-                // son corps : `.padding(.vertical, 14).frame(maxWidth: .infinity, minHeight: 44)`.
-                // Le libellé en redemandait 44 de son côté, et les deux ne se recouvrent pas :
-                // le style ajoute ses 14 points EN HAUT ET EN BAS d'un libellé déjà haut de 44.
-                // D'où 72 points de haut pour le mot « Partager » — un aplat gris qui occupait
-                // un tiers de la carte et la faisait ressembler à un formulaire.
-                //
-                // Et `GhostButtonStyle` plutôt que `Secondary`, parce que c'est le style de
-                // partage de la maquette : sa propre documentation cite « Partager ce badge » et
-                // « Partager ta course ». Fond de carte, libellé en accent — l'action se voit
-                // par sa COULEUR au lieu de se voir par sa masse.
-                ShareLink(item: String(localized: "Rejoins mon club \(club.name) sur RUNUP : https://runup-nu.vercel.app/club/\(club.id)")) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "square.and.arrow.up")
-                        Text("Partager")
-                    }
-                    .font(RUFont.sans(.label, weight: .semibold))
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(GhostButtonStyle())
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(RUSpacing.cardPadding)
-            .ruCard()
-        }
-    }
 
     /// Contenu de l'onglet Aperçu : « où en est le club en ce moment ». L'ordre suit celui de la
     /// maquette — l'état collectif (niveau, pouls, défi) d'abord, puis ce qui appelle une action
@@ -834,10 +753,11 @@ struct ClubView: View {
             // mais sur l'onglet Activité, qu'on n'ouvre pas quand on vient d'arriver. À
             // plusieurs, ce sont les deux boutons que portaient les intertitres disparus.
             if clubEnSommeil {
-                if magasin.board.club.map({ $0.memberCount <= 1 }) == true {
-                    carteClubSeul
+                if seuleDansSonClub {
+                    ClubAloneCard(magasin: magasin)
                 } else {
-                    carteClubAReveiller
+                    ClubWakeCard(showCreateEvent: $showCreateEvent,
+                                 showManagement: $showManagement)
                 }
             } else {
                 ClubWeekPulseCard(magasin: magasin)
@@ -930,8 +850,8 @@ struct ClubView: View {
                 // pour un public qui n'existe pas — ce qu'il faut, c'est des membres, et le code
                 // d'invitation était rangé deux écrans plus loin, dans Gestion du club. À
                 // plusieurs, la phrase d'origine est juste : il n'y a qu'à courir.
-                if magasin.board.club.map({ $0.memberCount <= 1 }) == true {
-                    carteClubSeul
+                if seuleDansSonClub {
+                    ClubAloneCard(magasin: magasin)
                 } else {
                     RUEmpty(message: Accord.selon(
                         f: String(localized: "Personne n'a encore rien posté — sois la première !"),

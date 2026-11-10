@@ -657,74 +657,6 @@ struct ClubView: View {
         return morceaux.joined(separator: " · ")
     }
 
-    private func daysLeft(until date: Date) -> Int {
-        max(0, Calendar.current.dateComponents([.day], from: .now, to: date).day ?? 0)
-    }
-
-    /// « 312 / 500 km — 62 % ». Le pourcentage est celui que la barre juste au-dessus dessine
-    /// déjà : la maquette le met en toutes lettres, et c'est le chiffre qu'on cherche vraiment
-    /// (« on en est où »), là où deux nombres bruts obligent à faire la division de tête. Rien
-    /// d'inventé — c'est exactement `progressKm / targetKm`, tous deux calculés côté serveur.
-    private func challengeProgressText(_ challenge: ClubChallenge) -> String {
-        // Pas de `String(localized:)` : deux nombres, une barre, « km ». Rien à traduire, et
-        // une clé au catalogue pour ça aurait deux traductions identiques à la française.
-        let base = "\(Int(challenge.progressKm)) / \(Int(challenge.targetKm)) km"
-        guard challenge.targetKm > 0 else { return base }
-        let pct = Int((challenge.progressKm / challenge.targetKm * 100).rounded())
-        return "\(base) — \(pct) %"
-    }
-
-    /// Any member can set the club's challenge (see "Gestion du club") — this used to always show
-    /// a fixed "100 km ce mois-ci" regardless of whether anyone had actually agreed to that goal.
-    /// `progressKm` is a real sum computed server-side over every member's logged runs since the
-    /// challenge was created, not just this device's local history.
-    /// UNE SECTION, PAS UNE CARTE — et surtout pas une carte VIDE.
-    ///
-    /// « Défi du club / Aucun défi en cours » occupait un rectangle plein de cent points de haut
-    /// pour dire qu'il n'y avait rien à dire. Deux de ces blocs se suivaient en tête de l'écran,
-    /// et c'est tout ce qu'on voyait d'un club qui démarre : deux grands cadres vides.
-    ///
-    /// L'invitation à en créer un reste, en une ligne discrète — c'est la même forme que
-    /// « Sorties de groupe » juste en dessous, qui n'a jamais eu besoin d'un cadre pour dire
-    /// qu'aucune sortie n'est prévue.
-    private var challengeCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            if let challenge = magasin.board.challenge {
-                HStack {
-                    RUCardHeader(title: "Défi du club")
-                    StatChip(text: String(localized: "J-\(daysLeft(until: challenge.endDate))"), color: RUColor.rose2)
-                }
-                Text(challenge.title).displayStyle(.subtitle).foregroundColor(RUColor.textPrimary)
-                LinearBar(fraction: challenge.targetKm > 0 ? min(1, challenge.progressKm / challenge.targetKm) : 0, color: RUColor.rose)
-                HStack {
-                    Text(challengeProgressText(challenge)).font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
-                    Spacer()
-                    Text("ensemble").font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
-                }
-            } else {
-                HStack {
-                    RUCardHeader(title: "Défi du club")
-                    Spacer(minLength: 8)
-                    Button(action: { showManagement = true }) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "plus").font(RUFont.icone(.small, weight: .bold))
-                            Text("Créer").font(RUFont.sans(.small, weight: .semibold))
-                        }
-                        .foregroundColor(RUColor.rose2)
-                        .padding(8)
-                        .frame(minHeight: 44)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(PressableStyle())
-                }
-                RUEmpty(forme: .ligne,
-                        message: String(localized: "Aucun défi en cours — un objectif de kilomètres à se partager, avec une date de fin."))
-                    .padding(.horizontal, 2)
-            }
-        }
-        .ruCarteSiPleine(magasin.board.challenge != nil)
-    }
-
     private var clubTabs: some View {
         // LES TROIS ONGLETS S'EMPILENT EN GRAND TEXTE, ET C'EST LA CAPTURE QUI L'A IMPOSÉ.
         //
@@ -908,8 +840,8 @@ struct ClubView: View {
                     carteClubAReveiller
                 }
             } else {
-                weekPulseCard
-                challengeCard
+                ClubWeekPulseCard(magasin: magasin)
+                ClubChallengeCard(magasin: magasin, showManagement: $showManagement)
                 ClubEventsSection(magasin: magasin, badges: badges,
                                   showCreateEvent: $showCreateEvent)
             }
@@ -985,83 +917,6 @@ struct ClubView: View {
     /// Mes badges. Le calcul vit dans `ClubBadgeEngine` (RunUp/Services) depuis que le profil
     /// les affiche aussi : deux écrans, une seule dérivation.
     private var badges: [ClubBadge] { ClubBadgeEngine.badges(runs: runs, profile: profile) }
-
-    /// The club's pulse this week — real collective km + how many members actually ran, computed
-    /// server-side over this Monday-started week. Gives the club a shared "we" number, not just
-    /// individual rankings.
-    /// Les kilomètres du club cette semaine, et qui les a courus.
-    ///
-    /// Le nombre de membres actifs vivait ici, en chiffre, ET trois cartes plus bas en pile
-    /// d'avatars sous son propre intertitre « Membres actifs cette semaine ». Deux blocs pour un
-    /// seul fait, séparés par le défi et les sorties de groupe — assez loin l'un de l'autre pour
-    /// qu'on ne remarque pas que c'est le même. Les visages remplacent le chiffre : ils le
-    /// contiennent (on les compte) et disent en plus QUI, ce que « 4 » ne dira jamais.
-    private var weekPulseCard: some View {
-        let stats = magasin.board.weekStats
-        let km = String(format: "%.1f", locale: Locale.current, stats?.totalKm ?? 0)
-        let active = (magasin.board.weekly ?? []).filter { $0.weekKm > 0 }
-        return VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 14) {
-                VStack(alignment: .leading, spacing: 2) {
-                    RUCardHeader(title: "Le club cette semaine", subtitle: "Kilomètres cumulés")
-                    // « 0,0 KM » EN GRAND N'EST PAS UNE INFORMATION, C'EST UN REPROCHE.
-                    //
-                    // Un club qui démarre, ou un lundi matin, ouvrait sur un zéro de vingt-six
-                    // points dans un cadre plein. Le chiffre ne s'écrit donc en grand que
-                    // lorsqu'il y a quelque chose à écrire ; sinon, une phrase.
-                    if stats?.totalKm ?? 0 > 0 {
-                        // « km » et non « KM » : sur ce même écran, les quatre records écrivent
-                        // déjà leur unité en minuscules. Deux casses pour la même unité, à trois
-                        // centimètres l'une de l'autre.
-                        RUChiffre(valeur: km, unite: "km")
-                    } else {
-                        Text("Personne n'a encore couru cette semaine.")
-                            .font(RUFont.sans(.small)).foregroundColor(RUColor.text3)
-                    }
-                }
-                Spacer(minLength: 8)
-            }
-            if !active.isEmpty {
-                HStack(spacing: 10) {
-                    HStack(spacing: -8) {
-                        ForEach(active.prefix(6)) { member in
-                            AvatarView(
-                                urlString: member.avatarUrl,
-                                base64DataURI: member.avatarBase64,
-                                initial: String(member.name.prefix(1)),
-                                size: 28,
-                                seed: member.isMe ? nil : member.id
-                            )
-                            .overlay(Circle().stroke(RUColor.card, lineWidth: 2))
-                        }
-                        if active.count > 6 {
-                            Text("+\(active.count - 6)")
-                                .font(RUFont.sans(.small, weight: .bold))
-                                .foregroundColor(RUColor.text2)
-                                .frame(width: 28, height: 28)
-                                .background(RUColor.card2, in: Circle())
-                                .overlay(Circle().stroke(RUColor.card, lineWidth: 2))
-                        }
-                    }
-                    Text(Pluriel.choisir(active.count,
-                                         String(localized: "\(active.count) membre a couru"),
-                                         String(localized: "\(active.count) membres ont couru")))
-                        .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
-                    Spacer(minLength: 0)
-                }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(Pluriel.choisir(active.count,
-                                                    String(localized: "\(active.count) membre a couru cette semaine"),
-                                                    String(localized: "\(active.count) membres ont couru cette semaine")))
-            }
-        }
-        // Les pastilles des membres actifs se cerclent de `RUColor.card` pour se chevaucher
-        // proprement : ce liseré n'a de sens que sur une carte. Posé sur le fond lavande, il
-        // dessinait des anneaux blancs autour des visages.
-        .padding(RUSpacing.cardPadding)
-        .ruCard()
-    }
-
 
     private var feedContent: some View {
         // `LazyVStack` : le serveur renvoie 50 activités, et un `VStack` les construisait TOUTES

@@ -410,6 +410,21 @@ jobs:
           cd ci_scripts && python3 test_listes.py
           cd .. && python3 ci_scripts/check_listes.py
 
+      # `private` au niveau d'un membre porte sur la déclaration englobante ET SON FICHIER. Sortir
+      # une section d'une grosse vue dans son propre fichier casse donc chaque appel à une
+      # `private func` restée derrière — le projet ne compile plus, et aucun contrôle de cette
+      # chaîne ne résout un symbole Swift. C'est arrivé le 10 novembre 2026 : la carte du défi,
+      # sortie de `ClubView`, appelait `daysLeft(until:)`. Chaîne verte, build rouge.
+      #
+      # Ce contrôle ne compile rien. Il constate une impossibilité : un nom déclaré `private` dans
+      # un seul fichier, appelé nu depuis un autre, ne peut pas se résoudre. Mesuré après
+      # correction sur 301 fichiers : zéro. Sa première version regardait aussi les propriétés et
+      # rendait 112 signalements, tous faux — des étiquettes d'argument.
+      - name: Vérifier qu'aucune fonction privée n'est appelée hors de son fichier
+        run: |
+          cd ci_scripts && python3 test_prive.py
+          cd .. && python3 ci_scripts/check_prive.py
+
       # Une clé absente du catalogue ne casse rien : `String(localized:)` rend la clé, et le texte
       # sort EN FRANÇAIS chez tout le monde. Ça ne se voit qu'en lançant l'app dans une autre
       # langue, sur l'écran concerné — autant dire jamais. L'audit en a trouvé cinq d'un coup,

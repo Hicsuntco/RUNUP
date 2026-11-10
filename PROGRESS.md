@@ -406,6 +406,79 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 36 — la chaîne verte sur du code qui ne compile pas (B5, deuxième morceau)
+
+### Ce qui est sorti
+
+Le groupe « vue d'ensemble » du chantier 35, mesuré à 205 lignes et deux états. Il s'est découpé
+en deux, parce que les deux cartes n'ont pas le même coût :
+
+- `ClubWeekPulseCard` — 87 lignes, **zéro liaison**. Elle ne demande que le magasin.
+- `ClubChallengeCard` — 83 lignes, **une** liaison : `showManagement`, parce que « créer un
+  défi » ouvre la gestion du club.
+
+`ClubView` : **1 338 → 1 193 lignes**, 43 membres, 19 états.
+
+### Le défaut : chaîne verte, code qui ne compile pas
+
+`ClubChallengeCard` appelait `daysLeft(until:)`, une `private func` restée dans `ClubView`. En
+Swift, `private` sur un membre porte sur la déclaration englobante **et son fichier** : l'appel ne
+se résout pas. Le projet ne compilait plus.
+
+`sh ci_scripts/tout.sh` était vert. Tous les contrôles, tous leurs cas. C'est normal : aucun ne
+résout un symbole Swift, et il n'y en aura pas un qui le fasse — ça demanderait un compilateur. Le
+coût de ce défaut n'est pas le correctif, qui prend une minute : c'est que la seule machine qui
+sait le dire est à quarante minutes d'ici, et qu'une découpe qui ne doit rien changer serait
+partie rouge.
+
+Ce qui l'a trouvé n'est pas un contrôle : c'est d'avoir relu les deux fichiers neufs en cherchant
+quels membres de `ClubView` ils utilisaient encore. Treize identifiants à vérifier, un seul faux.
+
+### Le contrôle, et ses deux premières versions fausses
+
+`check_prive.py` ne compile rien. Il constate **une** impossibilité : un nom déclaré `private`
+dans un seul fichier, appelé nu depuis un autre, ne peut pas se résoudre. Ce n'est pas un soupçon,
+c'est une erreur de compilation certaine.
+
+Les deux premières versions étaient fausses, chacune à sa manière, et c'est ce qui vaut d'être
+écrit ici :
+
+**La première signalait 112 défauts pour zéro défaut réel.** Elle regardait aussi les propriétés
+et les types, sur une référence nue au nom. Or un identifiant nu en Swift n'est pas forcément une
+référence : `RoundedRectangle(cornerRadius: 12)` contient `cornerRadius` nu, et c'est une
+*étiquette d'argument*, pas la propriété privée du même nom déclarée ailleurs. Même chose pour
+`opacity`, `filter`, `columns`, `password`. Un contrôle qui crie 112 fois dans le vide n'est pas
+prudent : on apprend à ne plus le lire. D'où la forme étroite — les `func` seules, et seulement
+la forme `nom(`.
+
+**La seconde ne rattrapait pas le défaut pour lequel elle était écrite.** Elle vidait le contenu
+des chaînes à la `re.sub`, comme les autres contrôles du dépôt — et l'appel vivait dans une
+interpolation : `String(localized: "J-\(daysLeft(until: challenge.endDate))")`. La regex effaçait
+le code avec le texte. J'ai remis `daysLeft` dans `ClubView` pour éprouver le contrôle sur le vrai
+défaut, et il a rendu vert. Un contrôle qui rate le cas qui l'a fait naître est pire que pas de
+contrôle : il rassure. Le lecteur de chaînes est maintenant un vrai parcours, qui jette le texte
+et **garde le code des interpolations**, imbrications comprises.
+
+C'est le même piège que `check_vides.py` avait rencontré en novembre, résolu là-bas en relisant la
+ligne brute. Le dépôt a donc deux contrôles qui ont buté sur la même fonction ; les autres s'en
+servent encore, et aucun ne regarde ce qui vit dans une interpolation.
+
+### Ce qui le prouve
+
+- `test_prive.py`, **21 cas**. Cinq sur ce qui doit être signalé, dont celui de l'interpolation et
+  celui de l'interpolation imbriquée dans une chaîne imbriquée. Huit sur ce qui ne doit **pas**
+  l'être — l'étiquette d'argument, l'appel de membre avec un point, le nom déclaré deux fois, le
+  nom dans un texte, le nom en commentaire, un suffixe. Cinq sur le lecteur de chaînes seul.
+- Mesuré sur les **301** fichiers Swift des quatre cibles, après correction : **zéro**.
+- Et le contrôle rendait vert depuis `ci_scripts/` tant qu'il lisait `RunUp/` en relatif — « aucun
+  fichier Swift trouvé ». Il est ancré sur la racine du dépôt, et un cas le tient.
+
+### Ce que ce contrôle ne voit pas
+
+Les propriétés et les types privés : le coût en faux positifs est prohibitif, mesuré à 112. Un nom
+déclaré deux fois dans la cible : l'appel pourrait se résoudre sur l'autre, le script passe son
+tour plutôt que d'accuser à tort. Et tout le reste de ce que fait un compilateur.
+
 ## Chantier 35 — ClubView, la découpe reprise par le bout le moins cher (B5, premier morceau)
 
 ### La mesure avant le découpage

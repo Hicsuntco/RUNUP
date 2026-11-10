@@ -568,96 +568,9 @@ struct ClubView: View {
 
     // MARK: Signed in, in a club
 
-    private var levelInfo: (level: Int, title: String, xpIntoLevel: Int, xpForLevel: Int) {
-        // Composés dans `Text("Niveau \(level) · \(title)")` en tant qu'argument : ils n'atteignent
-        // jamais un `LocalizedStringKey` par eux-mêmes, d'où `String(localized:)`.
-        let titles = [
-            String(localized: "Premiers pas"),
-            String(localized: "Foulée légère"),
-            String(localized: "Rythme trouvé"),
-            String(localized: "Foulée d'or"),
-            String(localized: "Vitesse de croisière"),
-            String(localized: "Endurance de fer"),
-            String(localized: "Élite locale")
-        ]
-        let xp = auth.currentUser?.xpTotal ?? 0
-        let xpPerLevel = 250
-        let level = xp / xpPerLevel + 1
-        let title = titles[min(max(level - 1, 0), titles.count - 1)]
-        return (level, title, xp % xpPerLevel, xpPerLevel)
-    }
-
-    /// LE SEUL OBJET SOMBRE D'UNE PAGE CLAIRE, ET IL ÉTAIT EN BAS DE CELLE-CI.
-    ///
-    /// Ce bloc gardait son dégradé violet nuit DANS LES DEUX THÈMES. En sombre, c'est le héros
-    /// de la page ; en clair, c'est un pavé noir au pied d'un écran pâle — c'est-à-dire
-    /// exactement le « gros cadre » qu'on avait retiré du HAUT de cette page, réapparu au bas.
-    ///
-    /// On le voit à ce que le code avouait déjà : les textes étaient figés en blanc, avec pour
-    /// raison « cette carte reste sombre dans les deux thèmes, donc `text2` passerait
-    /// sombre-sur-sombre ». Le symptôme était traité, pas la cause.
-    ///
-    /// C'est maintenant une carte comme les autres, DANS LES DEUX THÈMES — et ça ne l'était pas.
-    ///
-    /// La passe précédente a écrit cette phrase après n'avoir corrigé que le mode CLAIR. En
-    /// sombre, la carte gardait un dégradé violet composé de deux teintes écrites en dur
-    /// (0x241046 → 0x160B1F) qui n'existent nulle part ailleurs dans l'app, un contour violet à
-    /// 30 % — un accent dilué, ce que le dépôt refuse partout ailleurs — et, par conséquent, des
-    /// textes figés en blanc parce que `textPrimary` serait passé sombre-sur-sombre. Trois
-    /// symptômes, une cause, et un commentaire qui annonçait la correction des trois.
-    ///
-    /// La surface est donc `card` et le contour `cardBorder`, comme toute carte. Les deux encres
-    /// reprennent leurs jetons : il n'y a plus de fond spécial à compenser.
-    ///
-    /// CE QUI NE BOUGE PAS, et c'est la décision de la passe précédente : la PASTILLE du niveau
-    /// garde son dégradé violet→rose, et reste le point de couleur de la section. Un point, pas
-    /// un aplat plein cadre. La jauge d'XP le suit, pour la même raison.
-    private var levelCard: some View {
-        let info = levelInfo
-        return HStack(spacing: 14) {
-            Text("\(info.level)").displayStyle(.title).foregroundColor(.white)
-                .contentTransition(.numericText())
-                .frame(width: 52, height: 52)
-                // La pastille du niveau portait un dégradé violet → rose écrit à la main, le
-                // même couple que la jauge d'XP juste en dessous. Les deux sont à plat : le
-                // niveau sur du violet, sa jauge sur du violet. Règle 7.
-                .background(RUColor.violet, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
-            VStack(alignment: .leading, spacing: 8) {
-                // « TON NIVEAU », écrit. Sur une page qui parle du club du début à la fin, un
-                // « Niveau 17 » sans sujet se lit comme le niveau DU CLUB — ce qu'il n'est pas :
-                // il vient de mon XP à moi.
-                // L'XP MONTE SUR LA LIGNE DU SOURCIL, PARCE QUE LE TITRE SE REPLIE.
-                //
-                // « Niveau 17 · Élite locale » ne tient pas sur une ligne à 23,1 pt dans la
-                // largeur qui reste à droite de la pastille. Il passait donc sur deux lignes,
-                // et comme le compteur d'XP partageait sa rangée en `lastTextBaseline`, il se
-                // retrouvait échoué à droite de « Élite locale » — une forme en escalier, avec
-                // la jauge qui démarre sous un bloc de texte en deux morceaux.
-                //
-                // Les deux lignes du titre ne sont pas le problème : un titre long a le droit
-                // de se replier. C'est de lui accrocher un chiffre qui l'était. Le sourcil, lui,
-                // tient toujours sur une ligne et a de la place à droite.
-                HStack(alignment: .firstTextBaseline) {
-                    Text("Ton niveau dans le club")
-                        .font(RUFont.sans(.small, weight: .semibold))
-                        .foregroundColor(RUColor.text3)
-                    Spacer(minLength: 8)
-                    Text("\(info.xpIntoLevel) / \(info.xpForLevel) XP").font(RUFont.mono(.small)).foregroundColor(RUColor.text3)
-                        .contentTransition(.numericText())
-                }
-                Text("Niveau \(info.level) · \(info.title)")
-                    .font(RUFont.sans(.title, weight: .bold)).foregroundColor(RUColor.textPrimary)
-                    .fixedSize(horizontal: false, vertical: true)
-                LinearBar(fraction: Double(info.xpIntoLevel) / Double(info.xpForLevel), color: RUColor.violet)
-            }
-        }
-        .animation(.easeOut(duration: 0.4), value: info.level)
-        .animation(.easeOut(duration: 0.4), value: info.xpIntoLevel)
-        .padding(18)
-        .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusCard, style: .continuous)
-            .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
-    }
+    /// La carte du niveau est partie dans `ClubLevelCard`, et son calcul dans `NiveauDuClub`.
+    /// Elle était la moins chère à sortir des 1 425 lignes de ce fichier : aucun état à faire
+    /// passer, une seule donnée en entrée. Voir « Chantier 35 » dans `PROGRESS.md`.
 
     /// LA COUVERTURE DU CLUB.
     ///
@@ -1020,7 +933,7 @@ struct ClubView: View {
             if magasin.aDesPepites {
                 ClubHighlightsSections(highlights: magasin.highlights)
             }
-            levelCard
+            ClubLevelCard(xpTotal: auth.currentUser?.xpTotal ?? 0)
         }
         .task { await magasin.chargerLesPepites() }
     }

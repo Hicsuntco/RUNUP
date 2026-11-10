@@ -406,6 +406,65 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 35 — ClubView, la découpe reprise par le bout le moins cher (B5, premier morceau)
+
+### La mesure avant le découpage
+
+1 425 lignes, 51 membres. **844 lignes** sont déplaçables en quatre groupes cohérents ; il
+resterait 581, une taille raisonnable pour une vue-conteneur.
+
+Mais le nombre de lignes n'est pas le bon critère de risque. La vue porte **vingt états**, et
+chaque état qu'une section doit recevoir est un `@Binding` de plus — donc une chance de brancher
+le mauvais, dans un remaniement qui ne doit RIEN changer.
+
+| groupe | lignes | états à passer |
+| --- | --- | --- |
+| **Le niveau** | 101 | **0** |
+| La vue d'ensemble | 205 | 2 |
+| Rejoindre / réveiller | 231 | 4 |
+| Le mur et le fil | 263 | **10** |
+
+### Une erreur de plan, trouvée en lisant
+
+Mon premier regroupement mettait `segment` avec le niveau, sur la foi de son nom. En ouvrant le
+fichier : `segment` est le bouton d'un onglet, appelé par `clubTabs` quatre cents lignes plus
+loin, et il a besoin de `tab`. Le groupe « niveau » ne porte donc **aucun** état, et c'est ce qui
+en fait le premier morceau.
+
+C'est la sixième fois dans cette session qu'un plan écrit depuis un résumé ne survit pas au
+contact du code. Les mesures, elles, tiennent.
+
+### Ce qui est sorti
+
+- `NiveauDuClub` — le calcul du palier, pur et testé. Il vivait en propriété privée au milieu des
+  1 425 lignes : vérifiable seulement en ouvrant l'écran avec un compte au bon nombre de points,
+  c'est-à-dire jamais. Il porte pourtant trois décisions, dont une qui n'était écrite nulle part :
+  **au-delà du septième titre, on ne s'arrête pas de monter.** Le comportement existait — un
+  `min(max(…))` — et c'est exactement le bord qu'un remaniement transforme en plantage d'index ou
+  en « Premiers pas » retrouvé au niveau 12.
+- `ClubLevelCard` — la vue, qui ne connaît plus que son XP. Elle ne consulte plus `AuthService` :
+  l'appelant lui donne le nombre, donc elle se dessine pour n'importe quelle valeur.
+
+`ClubView` : **1 425 → 1 338 lignes.**
+
+### Ce qui le prouve
+
+`NiveauDuClubTests`, 9 cas : les deux bords du palier (où un `>=` mal placé décale tout le monde
+d'un niveau sans rien casser), les sept titres dans l'ordre, le huitième niveau qui garde le
+dernier titre, un XP négatif qui ne descend pas sous le niveau 1, et la monotonie.
+
+Et surtout : **les quatre écrans du Club sont photographiés**, et `comparer.py` existe pour ça. Il
+a été écrit pour la première découpe de ce fichier — son en-tête dit « `ClubView.swift` fait 2721
+lignes » — et il compare pixel à pixel en masquant la barre d'état. Une découpe qui ne doit rien
+changer se prouve par l'image, pas par une intention.
+
+### Ce que je ne découperai pas comme les autres
+
+**Le mur et le fil**, et ses dix `@Binding`. Dix états à faire passer n'est pas une section : c'est
+le signe qu'il lui faut son propre objet d'état, comme `magasin` en est déjà un pour le reste du
+Club. Le sortir en l'état transformerait une vue longue en une vue longue plus dix fils à ne pas
+confondre.
+
 ## Chantier 34 — deux listes sans borne, pas soixante-trois fichiers (B6)
 
 ### L'item comptait la mauvaise chose

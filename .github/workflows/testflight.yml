@@ -307,6 +307,22 @@ jobs:
           cd ci_scripts && python3 test_verre.py
           cd .. && python3 ci_scripts/check_verre.py
 
+      # UNE API « À MOTIF OBLIGATOIRE » SANS MANIFESTE EST UN REFUS À L'ENVOI.
+      #
+      # ITMS-91053 se déclenche sur l'USAGE d'une de ces API sans motif déclaré, et il tombe
+      # APRÈS l'archive — quinze minutes de machine macOS pour l'apprendre. `RunUpWatch`
+      # n'embarque aucun `PrivacyInfo.xcprivacy`, et c'est licite tant qu'elle n'appelle rien :
+      # vérifié le 10 novembre 2026 sur le journal d'envoi, « UPLOAD SUCCEEDED with no errors »
+      # pour une archive contenant `RunUp.app/Watch/RunUpWatch.app`.
+      #
+      # Une seule ligne rendrait ça faux : un `UserDefaults` écrit dans la montre pour y garder
+      # un réglage. Elle compile, les tests passent, et le refus arrive à l'envoi. Ce contrôle
+      # coûte une seconde et lit un fichier.
+      - name: Vérifier qu'aucune cible n'appelle une API à motif obligatoire sans la déclarer
+        run: |
+          cd ci_scripts && python3 test_manifeste.py
+          cd .. && python3 ci_scripts/check_manifeste.py
+
       # Une clé absente du catalogue ne casse rien : `String(localized:)` rend la clé, et le texte
       # sort EN FRANÇAIS chez tout le monde. Ça ne se voit qu'en lançant l'app dans une autre
       # langue, sur l'écran concerné — autant dire jamais. L'audit en a trouvé cinq d'un coup,

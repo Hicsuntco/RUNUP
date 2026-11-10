@@ -41,6 +41,9 @@ import pathlib
 import re
 import sys
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from swift import sans_commentaires  # noqa: E402
+
 RACINE = pathlib.Path(__file__).resolve().parent.parent
 CIBLES = ["RunUp", "RunUpWatch", "RunUpWidgets"]
 
@@ -53,36 +56,6 @@ VERRE = re.compile(
 
 #: fichier → (nombre de flous autorisés, pourquoi). Vide, et c'est voulu.
 PERMIS: dict[str, tuple[int, str]] = {}
-
-
-def sans_commentaires(source: str) -> str:
-    """Le code seul : ni `//`, ni `/* */`, ni le contenu des chaînes.
-
-    Même raison que dans `check_degrade.py` : la moitié des fichiers de ce chantier NOMMENT le
-    verre dépoli dans le commentaire qui raconte son départ. Les compter serait refuser un
-    fichier pour la phrase qui explique sa correction.
-    """
-    out, i, n = [], 0, len(source)
-    while i < n:
-        c = source[i]
-        if c == "/" and i + 1 < n and source[i + 1] == "/":
-            while i < n and source[i] != "\n":
-                i += 1
-        elif c == "/" and i + 1 < n and source[i + 1] == "*":
-            i += 2
-            while i + 1 < n and not (source[i] == "*" and source[i + 1] == "/"):
-                i += 1
-            i += 2
-        elif c == '"':
-            out.append(" ")
-            i += 1
-            while i < n and source[i] != '"':
-                i += 2 if source[i] == "\\" else 1
-            i += 1
-        else:
-            out.append(c)
-            i += 1
-    return "".join(out)
 
 
 def releve(racine=RACINE):

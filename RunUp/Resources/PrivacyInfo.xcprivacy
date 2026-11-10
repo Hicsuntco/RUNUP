@@ -145,11 +145,22 @@
       `CoachService.systemPrompt(for:)`. Rien ne vient d'Apple Santé : ce sont les réponses saisies
       à l'onboarding.
 
-      TODO(privacy) : la phase du cycle relève de l'article 9 du RGPD (donnée sensible) et exige un
-      consentement EXPLICITE, distinct. Aujourd'hui elle part sans que le réglage correspondant ne
-      mentionne aucune transmission. Deux issues possibles, et c'est une décision produit : soit
-      recueillir ce consentement, soit cesser de l'inclure dans le prompt — auquel cas cette entrée
-      doit être retirée d'ici.
+      LE CONSENTEMENT DE L'ARTICLE 9 EXISTE, ET CE PARAGRAPHE DISAIT LE CONTRAIRE.
+
+      Il portait un TODO affirmant que la phase du cycle « part sans que le réglage correspondant ne
+      mentionne aucune transmission ». C'était vrai quand la phrase a été écrite ; ça a cessé de
+      l'être, et personne n'est revenu ici — exactement le défaut contre lequel l'en-tête de ce
+      fichier met en garde, et qu'il avait déjà commis sur la localisation.
+
+      Ce qui existe aujourd'hui, vérifié le 10 novembre 2026 dans `MoreSettingsView` :
+      `shareCyclePhaseWithCoach` est un réglage DISTINCT du suivi du cycle, à l'arrêt par défaut,
+      dont le texte affiché nomme le destinataire comme un service extérieur et précise que
+      refuser ne change rien au programme — « le calcul se fait sur ton téléphone ». Le suivi
+      adapte le plan SUR L'APPAREIL sans que rien ne sorte ; seule cette case autorise l'envoi.
+      C'est un consentement explicite, spécifique, séparé et révocable.
+
+      L'entrée reste donc, et elle doit rester : quand la case est cochée, la donnée part
+      réellement. La déclarer est la seule chose honnête à faire.
     -->
     <dict>
       <key>NSPrivacyCollectedDataType</key>

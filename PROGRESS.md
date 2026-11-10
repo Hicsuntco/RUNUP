@@ -30,7 +30,7 @@ n'apparaît, l'avant/après est écrit ici, et les trois langues ont été véri
 | Contenu des séances HYROX | Il faut quelqu'un qui a couru un HYROX. L'équipe n'a pas cette compétence et ne doit pas l'inventer. |
 | Que faire des neuf commits de `claude/running-club-finance-wwuq46` | Mesurés le 9 novembre : ni sur `main` ni sur la branche de travail. Deux idées en ont été reprises (chantiers 16 et 17). Restent une direction artistique concurrente — **Oswald** en fonte d'affichage, quand la branche de travail a tranché pour Inter — et des retouches de profil dont l'équivalent existe. Rien ne presse ; la branche ne se supprime pas tant que ce n'est pas tranché. |
 | Que faire de `ef3ad89`, sur `claude/new-session-otcd8z` | « La lecture des agrégats rentre dans `api/events.js` : douze fonctions, pas treize ». Quelqu'un s'est battu contre le même plafond Vercel, sur une autre branche, pour une autre fonctionnalité. Le code n'est nulle part ailleurs. |
-| `main` et la branche de travail n'ont en commun que le commit initial | 853 commits d'un côté, 50 de l'autre, aucune fusion depuis le 13 juillet. Ça n'empêche rien, sauf pour `privacy.html` et `support.html` : les deux pages qu'Apple affiche sont servies par GitHub Pages **depuis `main`**, donc mises à jour à la main. |
+| `main` et la branche de travail n'ont en commun que le commit initial | 853 commits d'un côté, 50 de l'autre, aucune fusion depuis le 13 juillet. Ça n'empêche rien, sauf pour `privacy.html` : la page dont l'adresse est sur la fiche App Store est servie par GitHub Pages **depuis `main`**, donc mise à jour à la main. `check_politique.py` compare la page publiée en ligne au dépôt. |
 | Cette branche doit-elle rester la production ? | Elle l'est, confirmé dans les réglages Vercel le 7 novembre : `Settings → Environments → Production → Branch Tracking` porte `claude/runup-ios-swiftui-app-5b1yv6`. Donc aucune relecture, aucune préproduction. Les aperçus, eux, sont maintenant éprouvables — voir le chantier 11. |
 
 
@@ -405,6 +405,78 @@ parisien, et c'est une décision, pas un oubli.
 Et les deux titres de séance sont désormais nommés **une seule fois** : ils paraissent aux
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
+
+## Chantier 23 — les trois portes juridiques (A6, A7, A8)
+
+### A6 — un commentaire faux dans une déclaration légale
+
+`PrivacyInfo.xcprivacy` portait un `TODO(privacy)` affirmant que la phase du cycle « part sans que
+le réglage correspondant ne mentionne aucune transmission ». C'était vrai quand la phrase a été
+écrite ; ça a cessé de l'être, et personne n'est revenu — **exactement le défaut contre lequel
+l'en-tête de ce même fichier met en garde**, et qu'il avait déjà commis sur la localisation.
+
+Mesuré dans `MoreSettingsView` le 10 novembre : `shareCyclePhaseWithCoach` est un réglage
+**distinct** du suivi du cycle, **à l'arrêt par défaut**, dont le texte affiché **nomme le
+destinataire comme un service extérieur** et précise que refuser ne change rien au programme —
+« le calcul se fait sur ton téléphone ». C'est un consentement explicite, spécifique, séparé et
+révocable : l'article 9 est satisfait, et il l'était déjà.
+
+L'entrée `NSPrivacyCollectedDataTypeHealth` reste, et elle doit rester : quand la case est cochée,
+la donnée part réellement.
+
+### A7 — le manifeste de la montre : mesuré, plus deviné
+
+Je refusais de trancher faute de source. La documentation d'Apple ne traite pas le cas d'un paquet
+watchOS imbriqué et les sources publiques se contredisent. **Mais la validation d'Apple répond
+elle-même** — c'est elle qui émet ITMS-91053. Journal d'archive du 10 novembre, Xcode 26.6 :
+
+```
+ValidateEmbeddedBinary …/RunUp.app/Watch/RunUpWatch.app
+"com.hicsuntco.runup.watchkitapp" => "RunUp CI montre"
+No errors uploading archive at '…/RunUp.ipa'.
+UPLOAD SUCCEEDED with no errors
+```
+
+Un paquet contenant la montre **sans manifeste** passe la validation sans une erreur. Et c'est
+cohérent avec la règle : ITMS-91053 s'appelle « Missing API declaration » et se déclenche sur
+l'**usage** d'une API à motif obligatoire. `RunUpWatch` n'en appelle aucune.
+
+**Ce qui rendrait la réponse fausse tient en une ligne** : un `UserDefaults` écrit dans la montre
+pour y garder un réglage. Elle compile, les tests passent, et le refus tombe **à l'envoi**, après
+quinze minutes d'archive.
+
+`ci_scripts/check_manifeste.py` ferme la porte : pour chaque cible livrée, il compare les API à
+motif obligatoire qu'elle appelle — les cinq familles d'Apple — et le manifeste qu'elle embarque.
+Éprouvé en vrai : une ligne `UserDefaults` ajoutée à `WatchViews.swift` le fait sonner, en nommant
+la catégorie à déclarer et le fichier fautif. 10 cas.
+
+### A8 — l'item était mal posé, et la moitié était déjà faite
+
+`check_politique.py` **va chercher la page publiée EN LIGNE** et compare le texte de chaque
+section, commentaires ignorés, avec `--exiger` dans `server.yml`. C'est mieux que le garde-fou que
+j'avais proposé dans `PHASE2.md`, et ça existait avant.
+
+Et l'item parlait des « deux pages qu'Apple affiche ». **Il n'y en a qu'une.** Mesuré :
+
+| | |
+| --- | --- |
+| URL de politique sur la fiche | `https://hicsuntco.github.io/RUNUP/privacy.html` |
+| URL de support sur la fiche | `mailto:charlottegrudep@gmail.com` |
+| Dans l'app, « nous contacter » | le même `mailto:`, à deux endroits |
+| Ce qui pointe vers `support.html` | **rien** |
+
+`support.html` est publiée sur GitHub Pages et personne ne l'atteint. Quatre documents du dépôt —
+`AUDIT.md`, `RELEASE.md`, `PROGRESS.md`, `PHASE2.md` — affirmaient le contraire. Corrigés.
+
+**Ce qui reste, et c'est une décision de fiche, pas de code** : en faire la vraie URL de support,
+ou la supprimer. Une page se corrige sans passer par une revue ; un `mailto:` non.
+
+### Et une règle 4 réparée au passage
+
+`sans_commentaires` — la fonction qui décide ce qu'un contrôle VOIT dans du Swift — existait en
+deux copies, et `check_manifeste.py` allait en écrire une troisième. Trois copies, trois façons de
+diverger sur ce qui est vu. Elle vit maintenant dans `ci_scripts/swift.py`, et les trois
+l'importent.
 
 ## Chantier 22 — le fond clair devient le défaut (D2)
 
@@ -1201,7 +1273,9 @@ collectent étaient déjà distribués. Pas une fuite, un manquement de déclara
 donnée qui ne contient ni texte écrit, ni santé, ni position.
 
 Charlotte a porté `privacy.html` et `support.html` sur `main` le 8 novembre. Vérifié octet pour
-octet : les deux pages publiées sont identiques à celles du dépôt. `check_politique.py` est passé
+octet : les deux pages publiées sont identiques à celles du dépôt. *(Relevé le 10 novembre :
+`support.html` est publiée mais n'est l'adresse de personne — la fiche et l'app emploient un
+`mailto:`.)* `check_politique.py` est passé
 en `--exiger` dans la foulée — toute nouvelle section ajoutée ici fera désormais rougir la chaîne
 tant qu'elle n'est pas publiée.
 

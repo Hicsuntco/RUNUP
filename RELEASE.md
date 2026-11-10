@@ -200,10 +200,18 @@ Puis, sur la machine :
 - **`main` et la branche de travail n'ont en commun que le commit initial.** Mesuré le 9 novembre
   2026 : 853 commits d'un côté, 50 de l'autre, aucune fusion depuis le 13 juillet. Ça n'empêche
   rien — l'app, Vercel et TestFlight sortent tous de la branche de travail — sauf sur un point :
-  `privacy.html` et `support.html`, les deux pages qu'Apple affiche sur la fiche, sont servies par
-  GitHub Pages **depuis `main`**. Elles se mettent donc à jour en recopiant le fichier à la main,
-  d'une branche à l'autre. `check_politique.py` compare la page PUBLIÉE au dépôt, texte compris,
-  précisément parce que c'est la manœuvre où l'on reporte un paragraphe sur deux.
+  **`privacy.html`**, la page dont l'adresse est déposée sur la fiche App Store, est servie par
+  GitHub Pages **depuis `main`**. Elle se met donc à jour en recopiant le fichier à la main, d'une
+  branche à l'autre. `check_politique.py` va chercher la page PUBLIÉE en ligne et la compare au
+  dépôt, texte compris, précisément parce que c'est la manœuvre où l'on reporte un paragraphe sur
+  deux.
+- **`support.html` n'est la page de personne.** Mesuré le 10 novembre 2026 : la fiche App Store
+  déclare `mailto:charlottegrudep@gmail.com` comme URL de support, l'app propose ce même `mailto:`
+  à deux endroits, et `privacy.html` ne pointe pas vers `support.html`. La page est publiée sur
+  GitHub Pages et **rien n'y mène**. Quatre documents de ce dépôt parlaient des « deux pages
+  qu'Apple affiche » : il n'y en a qu'une. Soit on fait de `support.html` la vraie URL de support —
+  une page se corrige sans passer par une revue, un `mailto:` non — soit on la supprime. C'est une
+  décision de fiche, pas de code.
 - **Deux branches portent du travail qui n'est ni sur `main` ni sur la branche de travail.**
   `claude/running-club-finance-wwuq46`, neuf commits : annuaire de clubs, bouton d'invitation des
   amis, comblement de l'accueil entre la 1re et la 10e sortie, thème clair sans pastel, et une

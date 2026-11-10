@@ -39,6 +39,9 @@ import pathlib
 import re
 import sys
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from swift import sans_commentaires  # noqa: E402
+
 RACINE = pathlib.Path(__file__).resolve().parent.parent
 CIBLES = ["RunUp", "RunUpWatch", "RunUpWidgets"]
 
@@ -93,36 +96,6 @@ PERMIS = {
            "graphe : l'aire dit « voilà le volume », le fondu dit « ce n'est pas une surface "
            "pleine ». Un aplat la ferait lire comme une barre."),
 }
-
-
-def sans_commentaires(source: str) -> str:
-    """Le code seul : ni `//`, ni `/* */`, ni le contenu des chaînes.
-
-    Écrit à la main et éprouvé par ses cas, parce que la moitié des dégradés de ce dépôt sont
-    NOMMÉS dans un commentaire qui explique pourquoi ils sont partis. Les compter serait refuser
-    un fichier pour la phrase qui raconte sa correction.
-    """
-    out, i, n = [], 0, len(source)
-    while i < n:
-        c = source[i]
-        if c == "/" and i + 1 < n and source[i + 1] == "/":
-            while i < n and source[i] != "\n":
-                i += 1
-        elif c == "/" and i + 1 < n and source[i + 1] == "*":
-            i += 2
-            while i + 1 < n and not (source[i] == "*" and source[i + 1] == "/"):
-                i += 1
-            i += 2
-        elif c == '"':
-            out.append(" ")
-            i += 1
-            while i < n and source[i] != '"':
-                i += 2 if source[i] == "\\" else 1
-            i += 1
-        else:
-            out.append(c)
-            i += 1
-    return "".join(out)
 
 
 def releve(racine=RACINE):

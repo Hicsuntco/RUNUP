@@ -83,9 +83,11 @@ rien. `check_fonctions.py` refuse désormais le treizième ; c'est la raison pou
   écran écrit le sien. La règle 3 exige un état vide partout, la règle 4 exige qu'aucune valeur
   ne soit écrite deux fois — ici la deuxième perd.
 - **`main` et la branche de travail n'ont en commun que le commit initial** du 13 juillet : 853
-  commits d'un côté, 50 de l'autre. Sans conséquence, sauf pour `privacy.html` et `support.html`,
-  les deux pages qu'Apple affiche, servies par GitHub Pages **depuis `main`** et donc recopiées à
-  la main.
+  commits d'un côté, 50 de l'autre. Sans conséquence, sauf pour **`privacy.html`** — la page dont
+  l'adresse est sur la fiche App Store — servie par GitHub Pages **depuis `main`** et donc
+  recopiée à la main. `check_politique.py` compare la page publiée EN LIGNE au dépôt.
+  *(Corrigé le 10 novembre : cette ligne parlait de « deux pages ». `support.html` est publiée mais
+  rien n'y mène — la fiche et l'app emploient un `mailto:`. Voir `RELEASE.md`.)*
 - **Deux branches portent du travail qui n'est nulle part ailleurs** (voir `PROGRESS.md`).
 
 ---

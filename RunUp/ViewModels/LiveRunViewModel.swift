@@ -599,18 +599,49 @@ final class LiveRunViewModel {
         segmentStartDistanceKm = distanceKm
         segmentStartElapsed = elapsedSeconds
         Haptics.impact(.medium)
+
+        // RIEN DE TOUT CECI N'A DE SENS SUR UN VÉLO. `segmentLabel` se tait déjà pour une
+        // cycliste, et la consigne la suit : « Répétition 2/5 — vise 4:30/km » n'a pas de
+        // destinataire sur un vélo, à l'écran comme dans les oreilles.
+        guard suitLePlan else { return }
+
         let targetPace = session.pace
+        // `String(localized:)` ET NON UN LITTÉRAL NU, et ces quatre lignes étaient le défaut.
+        //
+        // `showCue` prend un `String` : un littéral passé là n'interroge PAS le catalogue, et le
+        // texte sortait en français chez tout le monde. Les clés étaient pourtant traduites dans
+        // les trois langues depuis longtemps — personne ne les demandait. Soixante lignes plus
+        // bas, la consigne de pause auto passe correctement par `String(localized:)`.
+        //
+        // `check_strings.py` ne pouvait pas le voir : il suit `String(localized:)` et
+        // `Text("…")`, et `showCue("…")` n'est ni l'un ni l'autre. Il connaît ce puits
+        // d'affichage depuis le 10 novembre 2026.
+        let consigne: String
         switch segment {
         case .warmup:
-            break
+            return
         case .rep(let n):
-            showCue(n == 1
-                ? "Échauffement terminé. Première répétition : vise \(targetPace)/km, foulée relâchée."
-                : "Répétition \(n)/\(reps) — vise \(targetPace)/km.")
+            consigne = n == 1
+                ? String(localized: "Échauffement terminé. Première répétition : vise \(targetPace)/km, foulée relâchée.")
+                : String(localized: "Répétition \(n)/\(reps) — vise \(targetPace)/km.")
         case .recovery:
-            showCue("Récupération — souffle, foulée relâchée.")
+            consigne = String(localized: "Récupération — souffle, foulée relâchée.")
         case .cooldown:
-            showCue("Dernière répétition faite, bien joué. Retour au calme.")
+            consigne = String(localized: "Dernière répétition faite, bien joué. Retour au calme.")
+        }
+        showCue(consigne)
+
+        // ET ELLE EST DITE À VOIX HAUTE, PAS SEULEMENT ÉCRITE.
+        //
+        // C'est le changement de fond. Une consigne de fractionné affichée sur un téléphone qu'on
+        // ne regarde pas — parce qu'on court — n'a pas été donnée. Le départ d'une répétition est
+        // le moment le plus utile de toute la séance, et c'était le seul que l'app taisait.
+        //
+        // Même réglage que les alertes d'allure : une seule question, « est-ce que le coach
+        // parle ? ». Deux interrupteurs pour deux sortes de phrases auraient demandé à quelqu'un
+        // de deviner laquelle il voulait taire.
+        if profile.paceAlertsEnabled {
+            voiceCoach?.announce(consigne)
         }
     }
 

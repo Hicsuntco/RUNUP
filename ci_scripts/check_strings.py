@@ -427,6 +427,79 @@ def litteraux_des_methodes_localisees(source: str):
     return trouves
 
 
+# ── La SEPTIÈME zone aveugle : un littéral confié à un PUITS D'AFFICHAGE typé `String` ────────
+#
+#     private func showCue(_ message: String) { … coachCue = message … }   // affiché par la vue
+#     showCue("Récupération — souffle, foulée relâchée.")
+#
+# Un `String` n'interroge jamais le catalogue. Le texte sortait donc EN FRANÇAIS chez tout le
+# monde, sur l'écran de course, au départ de chaque répétition d'un fractionné.
+#
+# CE QUE ÇA A COÛTÉ, ET POURQUOI C'EST LE PIRE DES SEPT. Les quatre clés étaient au catalogue,
+# TRADUITES dans les trois langues, depuis longtemps. Quelqu'un avait fait le travail et le
+# paramètre le jetait — exactement comme la sixième zone, en pire : soixante lignes plus bas dans
+# le MÊME fichier, la consigne de pause automatique passe correctement par `String(localized:)`.
+#
+# Pourquoi aucune des six règles précédentes ne le voyait : `showCue("…")` n'est ni
+# `String(localized:)`, ni `Text("…")`, ni un initialiseur de composant, ni un paramètre déclaré
+# `LocalizedStringKey`. C'est un `String` nu, et le type ne dit rien.
+#
+# LA RÈGLE EST DONC NOMMÉE, PAS DEVINÉE. On ne peut pas décider par le type qu'un `String` finira
+# à l'écran : il faut le savoir. `PUITS` liste les fonctions dont on SAIT que l'argument est
+# affiché. Y ajouter une fonction est une décision, et c'est la bonne forme — une règle qui
+# devinerait signalerait la moitié du dépôt.
+#: Fonctions dont l'argument `String` finit à l'écran. Un littéral nu y est un défaut.
+PUITS = {"showCue"}
+
+APPEL_PUITS = re.compile(r"\b(" + "|".join(sorted(PUITS)) + r")\s*\(")
+
+
+def litteraux_des_puits(source: str):
+    """(ligne, littéral) pour chaque littéral NU passé à un puits d'affichage.
+
+    Un littéral précédé de `localized:` ou de `LocalizedStringKey(` va bien : il est déjà résolu
+    quand il arrive là. C'est le littéral nu — y compris dans un ternaire, qui est la forme
+    qu'avait le défaut d'origine — qu'on cherche.
+    """
+    trouves = []
+    for m in APPEL_PUITS.finditer(source):
+        i = m.end()
+        profondeur, fin = 1, None
+        while i < len(source):
+            c = source[i]
+            if c == '"':
+                i += 1
+                while i < len(source) and source[i] != '"':
+                    i += 2 if source[i] == "\\" else 1
+            elif c == "(":
+                profondeur += 1
+            elif c == ")":
+                profondeur -= 1
+                if profondeur == 0:
+                    fin = i
+                    break
+            i += 1
+        if fin is None:
+            continue
+        argument = source[m.end():fin]
+        decalage = m.end()
+        for j, c in enumerate(argument):
+            if c != '"':
+                continue
+            avant = argument[:j].rstrip()
+            if avant.endswith("localized:") or avant.endswith("LocalizedStringKey("):
+                continue
+            # Ne compter que l'OUVERTURE d'un littéral, pas sa fermeture.
+            if argument[:j].count('"') % 2:
+                continue
+            ligne = source.count("\n", 0, decalage + j) + 1
+            # `lire_litteral` lit À PARTIR de `debut`, pas après : `j` est l'index du
+            # guillemet ouvrant, donc le contenu commence à `j + 1`.
+            lu = lire_litteral(argument, j + 1)
+            trouves.append((ligne, m.group(1), lu[0] if lu else ""))
+    return trouves
+
+
 # ── Chaque type de séance doit avoir son titre et son sous-titre, dans les TROIS langues ───────
 #
 # `SessionKind.titleKey` compose « session.<brut>.title ». Ce n'est pas du français : c'est un
@@ -579,9 +652,17 @@ def main() -> int:
             print(f"  … et {len(trous) - 20} autres", file=sys.stderr)
         return 1
     manquantes = []
+    #: (où, fonction, littéral) — des littéraux NUS passés à un puits d'affichage. Ce n'est pas
+    #: la même faute qu'une clé absente : la clé existe peut-être, traduite, et personne ne la
+    #: demande. Elle a donc sa propre liste et son propre message.
+    nus = []
     if True:
         for f in fichiers:
             texte = f.read_text(encoding="utf-8")
+            for n, fonction, brut in litteraux_des_puits(texte):
+                if not any(c.isalpha() for c in brut):
+                    continue
+                nus.append((f"{f.relative_to(RACINE)}:{n}", fonction, deswiftifie(brut)))
             for n, ligne in enumerate(texte.splitlines(), 1):
                 nue = ligne.strip()
                 if nue.startswith("//") or nue.startswith("///"):
@@ -646,6 +727,20 @@ def main() -> int:
     # Deux chemins peuvent nommer la même chaîne au même endroit (un membre typé qui est AUSSI
     # dans un appel localisé) : on ne la réclame qu'une fois.
     manquantes = sorted(set(manquantes))
+
+    if nus:
+        print(f"{len(nus)} littéral(aux) affiché(s) sans passer par le catalogue :\n",
+              file=sys.stderr)
+        for ou, fonction, cle in sorted(set(nus)):
+            court = cle if len(cle) <= 66 else cle[:63] + "…"
+            print(f"  {ou}  dans {fonction}(…)\n      « {court} »", file=sys.stderr)
+        print("\nUn `String` n'interroge JAMAIS le catalogue. La clé est peut-être là, traduite",
+              file=sys.stderr)
+        print("dans les trois langues — personne ne la demande, et le texte sort en français",
+              file=sys.stderr)
+        print("chez tout le monde. Enveloppe le littéral dans `String(localized:)`.",
+              file=sys.stderr)
+        return 1
 
     if not manquantes:
         nb = len(types_de_seance((RACINE / FICHIER_SEANCES).read_text(encoding="utf-8")))

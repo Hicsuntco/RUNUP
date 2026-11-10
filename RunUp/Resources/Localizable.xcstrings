@@ -4343,6 +4343,22 @@
         }
       }
     },
+    "Annonce chaque répétition et chaque récupération, et prévient si tu t'écartes de ton allure cible.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calls out every rep and every recovery, and warns you if you drift off your target pace."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anuncia cada repetición y cada recuperación, y avisa si te alejas de tu ritmo objetivo."
+          }
+        }
+      }
+    },
     "Annuel": {
       "extractionState": "manual",
       "localizations": {
@@ -8012,6 +8028,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Consigna, ritmo objetivo %@ por kilómetro"
+          }
+        }
+      }
+    },
+    "Consignes vocales": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spoken cues"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indicaciones por voz"
+          }
+        }
+      }
+    },
+    "Consignes vocales pendant la séance": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spoken cues during the session"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indicaciones por voz durante la sesión"
           }
         }
       }

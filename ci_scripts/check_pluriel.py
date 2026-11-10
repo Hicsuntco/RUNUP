@@ -51,7 +51,13 @@ HORS_PERIMETRE = {"RunUp/Shared/Pluriel.swift"}
 TOLEREES = {
     # « Première répétition » puis « Répétition 3/5 » : ce n'est pas un singulier contre un
     # pluriel, c'est la première répétition contre les suivantes. La phrase change entièrement.
-    ("RunUp/ViewModels/LiveRunViewModel.swift", "showCue(n == 1"),
+    #
+    # L'extrait était « showCue(n == 1 » jusqu'au 10 novembre 2026. La consigne est maintenant
+    # construite avant d'être affichée ET DITE À VOIX HAUTE, donc la ligne s'écrit autrement —
+    # et la tolérance, accrochée au texte pour ne pas dériver avec les numéros de ligne, a
+    # dérivé avec le texte. C'est le prix de ce choix, et il est le bon : une tolérance qui
+    # survit à une réécriture couvrirait une ligne que plus personne n'a relue.
+    ("RunUp/ViewModels/LiveRunViewModel.swift", "consigne = n == 1"),
     # `progress >= 1` est un SEUIL d'avancement (l'objectif est atteint), pas un compte : « ✓ »
     # contre « À faire ».
     ("RunUpWidgets/DailyGoalsWidget.swift", "(snapshot.progress[safe: 0] ?? 0) >= 1 ?"),

@@ -406,6 +406,74 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 26 — la voix dit enfin la séance (B2) — et elle la disait en français à tout le monde
+
+### Ce que je cherchais
+
+Face à Runna, le guidage vocal par intervalle est ce qui manquait : la voix ne disait que deux
+choses — « accélère un peu », « ralentis légèrement ». Rien sur le départ d'une répétition, rien
+sur sa fin.
+
+### Ce que j'ai trouvé en ouvrant le fichier
+
+**Les phrases existaient déjà.** `beginSegment` écrit depuis longtemps « Échauffement terminé.
+Première répétition : vise 4:30/km, foulée relâchée », « Récupération — souffle, foulée
+relâchée », « Dernière répétition faite, bien joué ». Elles étaient **affichées à l'écran**, et
+jamais dites.
+
+Une consigne de fractionné affichée sur un téléphone qu'on ne regarde pas — parce qu'on court —
+n'a pas été donnée.
+
+### Et un défaut plus grave, trouvé en passant
+
+Ces quatre phrases étaient des **littéraux Swift nus** passés à `showCue(_ message: String)`. Un
+`String` n'interroge jamais le catalogue : **elles sortaient en français chez tout le monde**, au
+départ de chaque répétition, sur l'écran le plus important de l'app.
+
+Et les quatre clés étaient au catalogue, **traduites dans les trois langues**, depuis longtemps.
+Quelqu'un avait fait le travail, et le paramètre le jetait. Soixante lignes plus bas dans le même
+fichier, la consigne de pause automatique passe correctement par `String(localized:)`.
+
+C'est le même défaut que la montre, au même endroit du produit : une traduction qui existe et que
+personne ne demande.
+
+### Pourquoi aucun des six contrôles ne le voyait
+
+`check_strings.py` porte **six** règles pour six angles morts, chacune avec son histoire. Aucune
+ne couvrait celui-ci : `showCue("…")` n'est ni `String(localized:)`, ni `Text("…")`, ni un
+initialiseur de composant, ni un paramètre déclaré `LocalizedStringKey`. C'est un `String` nu, et
+le type ne dit rien.
+
+**La septième règle est donc NOMMÉE, pas devinée.** On ne peut pas décider par le type qu'un
+`String` finira à l'écran : il faut le savoir. `PUITS` liste les fonctions dont on sait que
+l'argument est affiché. Y ajouter une fonction est une décision — une règle qui devinerait
+signalerait la moitié du dépôt.
+
+Elle lit l'argument complet, parenthèses équilibrées, donc **les deux branches d'un ternaire** :
+c'est exactement la forme qu'avait le défaut. Cinq cas, dont celui qui dit qu'un littéral passé à
+une autre fonction n'est pas concerné.
+
+### Ce qui change pour quelqu'un qui court
+
+| | Avant | Après |
+| --- | --- | --- |
+| Départ d'une répétition | écrit à l'écran, en français | **dit à voix haute**, dans sa langue |
+| Récupération | idem | idem |
+| Fin de la dernière répétition | idem | idem |
+| Sur un vélo | les consignes de course s'affichaient quand même | silence — `suitLePlan` les coupe |
+| Le réglage | « Alertes vocales d'allure » | « Consignes vocales » — une seule question : le coach parle-t-il ? |
+
+Un seul interrupteur, et c'est voulu : deux réglages pour deux sortes de phrases auraient demandé
+à quelqu'un de deviner laquelle il voulait taire.
+
+### Et une tolérance qui a dérivé avec le texte
+
+`check_pluriel.py` tolère `n == 1` dans ce fichier — « ce n'est pas un singulier contre un
+pluriel, c'est la première répétition contre les suivantes ». La tolérance s'accroche au TEXTE de
+la ligne, pour ne pas dériver avec les numéros ; la ligne a été réécrite, donc elle a dérivé avec
+le texte. C'est le prix de ce choix, et c'est le bon : une tolérance qui survit à une réécriture
+couvrirait une ligne que plus personne n'a relue.
+
 ## Chantier 25 — l'état vide, écrit une fois (A5)
 
 Règle 3 : chaque écran a ses états vide, erreur et chargement. Règle 4 : rien ne s'écrit deux

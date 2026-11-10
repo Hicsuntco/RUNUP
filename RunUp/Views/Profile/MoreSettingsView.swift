@@ -408,15 +408,15 @@ struct MoreSettingsView: View {
             HStack {
                 rowIcon("speaker.wave.2")
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Alertes vocales d'allure").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
-                    Text("Prévient à voix haute si tu t'écartes de ton allure cible.")
+                    Text("Consignes vocales").font(RUFont.sans(.emphasis, weight: .medium)).foregroundColor(RUColor.textPrimary)
+                    Text("Annonce chaque répétition et chaque récupération, et prévient si tu t'écartes de ton allure cible.")
                         .font(RUFont.sans(.small)).foregroundColor(RUColor.text2)
                 }
                 Spacer()
                 Toggle("", isOn: Binding(get: { profile.paceAlertsEnabled }, set: { profile.paceAlertsEnabled = $0 }))
                     .labelsHidden()
                     .tint(RUColor.rose)
-                    .accessibilityLabel("Alertes vocales d'allure")
+                    .accessibilityLabel("Consignes vocales pendant la séance")
             }
             .padding(RUSpacing.cardPadding)
             RUFilet()

@@ -23,6 +23,40 @@ def cas_test(nom):
     return deco
 
 
+# ── Zone 7 : un littéral NU confié à un puits d'affichage typé `String` ───────────────────────
+#
+# Le défaut du 10 novembre 2026 : les quatre consignes de fractionné de l'écran de course étaient
+# des littéraux passés à `showCue(_ message: String)`. Un `String` n'interroge jamais le
+# catalogue — les clés y étaient, traduites dans les trois langues, et personne ne les demandait.
+# Au départ de chaque répétition, en anglais comme en espagnol, la phrase sortait en français.
+
+@cas_test("un littéral nu passé à `showCue` est signalé")
+def _():
+    trouves = ck.litteraux_des_puits('showCue("Récupération — souffle.")')
+    assert [x[2] for x in trouves] == ["Récupération — souffle."], trouves
+
+@cas_test("le même, enveloppé dans `String(localized:)`, ne l'est pas")
+def _():
+    assert ck.litteraux_des_puits('showCue(String(localized: "Récupération."))') == []
+
+@cas_test("LES DEUX BRANCHES D'UN TERNAIRE SONT VUES")
+def _():
+    # C'est la forme exacte qu'avait le défaut : `showCue(n == 1 ? "…" : "…")`. Ne lire que le
+    # premier littéral en aurait laissé passer la moitié.
+    trouves = ck.litteraux_des_puits('showCue(n == 1 ? "Premier" : "Suivant")')
+    assert [x[2] for x in trouves] == ["Premier", "Suivant"], trouves
+
+@cas_test("une variable passée au puits ne dit rien — ce n'est pas la même faute")
+def _():
+    assert ck.litteraux_des_puits("showCue(consigne)") == []
+
+@cas_test("un littéral passé à une AUTRE fonction n'est pas concerné")
+def _():
+    # La règle est NOMMÉE : on ne peut pas deviner qu'un `String` finira à l'écran. Signaler
+    # tous les littéraux de tous les appels refuserait la moitié du dépôt.
+    assert ck.litteraux_des_puits('analytics.track("run_started")') == []
+
+
 # ── Zone 1 à 3 : les ouvertures et les membres typés ──────────────────────────────────────────
 
 def ouvre(ligne, attendu, nom):

@@ -86,7 +86,9 @@ def _():
 
 @cas_test("la première répétition contre les suivantes n'est pas un pluriel")
 def _():
-    extrait = '            showCue(n == 1\n                ? "Échauffement terminé."\n                : "Répétition \\(n)/\\(reps)")'
+    # L'écriture a changé le 10 novembre 2026 — la consigne est construite avant d'être
+    # affichée ET dite à voix haute — et la tolérance avec, puisqu'elle s'accroche au texte.
+    extrait = '            consigne = n == 1\n                ? String(localized: "Échauffement terminé.")\n                : String(localized: "Répétition \\(n)/\\(reps)")'
     position = extrait.index("== 1")
     assert ck.est_toleree("RunUp/ViewModels/LiveRunViewModel.swift", extrait, position)
 

@@ -89,9 +89,14 @@ enum PaceModel {
     /// puisque l'appelant affiche une prédiction et non une consigne d'entraînement.
     static func projectedPace(fromSecPerKm refSecPerKm: Double, fromKm refKm: Double, toKm targetKm: Double) -> Double {
         guard refKm > 0, targetKm > 0 else { return refSecPerKm }
-        if let vdot = Vdot.depuisPerformance(km: refKm, secondes: refSecPerKm * refKm),
+        // LE VDOT **BRUT**, ET PAS LE BORNÉ. Un plan a besoin d'un ancrage même pour une saisie
+        // extravagante ; une prédiction, non. Avec le borné, une référence hors plage ressortait
+        // ramenée au plancher, et la prédiction devenait un chiffre faux affiché avec aplomb —
+        // sur l'écran précis où quelqu'un décide de viser un marathon ou d'y renoncer.
+        if let brut = Vdot.depuisPerformanceBrut(km: refKm, secondes: refSecPerKm * refKm),
+           brut >= Vdot.vdotMin, brut <= Vdot.vdotMax,
            targetKm >= Vdot.kmMin, targetKm <= Vdot.kmMax {
-            return Vdot.allureDeCourse(vdot: vdot, km: targetKm)
+            return Vdot.allureDeCourse(vdot: brut, km: targetKm)
         }
         let refTotalSeconds = refSecPerKm * refKm
         let projectedTotalSeconds = refTotalSeconds * pow(targetKm / refKm, 1.06)

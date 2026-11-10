@@ -65,10 +65,12 @@ import Foundation
 ///
 /// # CE QUE CE MODÈLE NE SAIT PAS FAIRE
 ///
-/// Il ne vaut pas en ULTRA. Cent kilomètres en vingt heures lui donnent un VDOT de 14 — on finit
-/// un ultra en marchant les montées, ce qui ne dit rien de la vitesse de personne. La méthode de
-/// Daniels couvre du 1 500 m au marathon, et `depuisPerformance` refuse donc tout ce qui sort de
-/// cette plage, plutôt que de rendre un nombre que rien ne soutient.
+/// Il ne vaut pas en ULTRA. Cent kilomètres en vingt heures lui donnent un VDOT de 14 — celui de
+/// quelqu'un qui MARCHE, alors que finir cent kilomètres demande d'être solide. C'est que l'on
+/// finit un ultra en marchant les montées, et que la durée totale ne dit donc rien de la vitesse
+/// de personne. La méthode de Daniels couvre du 1 500 m au marathon, et `depuisPerformance` refuse
+/// donc par la DISTANCE tout ce qui sort de cette plage — pas par la valeur obtenue, qui tombe ici
+/// dans la plage plausible et serait acceptée sans cette garde.
 ///
 /// Et il ne mesure pas une VO2max. Le VDOT est un indice de PERFORMANCE : deux personnes de même
 /// VDOT courent le même 10 km sans avoir la même physiologie. C'est précisément ce qui le rend
@@ -129,25 +131,62 @@ enum Vdot {
     static let kmMin = 1.5
     static let kmMax = 42.3
 
-    /// La plage de VDOT plausibles.
+    /// La plage de VDOT plausibles. Les deux bornes se nomment.
     ///
-    /// 25 est un 10 km en 1 h 14, 85 un 10 km en 26 min — en dessous et au-dessus, on n'est plus
-    /// dans ce que ce questionnaire peut avoir recueilli, on est dans une saisie fautive.
-    static let vdotMin = 25.0
-    static let vdotMax = 85.0
+    /// # LE PREMIER JET AVAIT TORT DES DEUX CÔTÉS, ET C'ÉTAIT LE MÊME DÉFAUT QU'AILLEURS
+    ///
+    /// Il posait 25 et 85, sans rien derrière. Un test rouge a montré ce que ça coûtait. Quelqu'un
+    /// qui court son 10 km en 1 h 40 — une vraie personne, pas une faute de frappe — a un VDOT de
+    /// 17,2. Ramené de force à 25, son plan lui prescrivait des footings à **9:11/km**, c'est-à-dire
+    /// PLUS RAPIDES que son allure de course, et lui prédisait un marathon en 5 h 34 là où son
+    /// propre 10 km en annonce plus de 7. Un plancher inventé produisait exactement le genre de
+    /// mensonge que ce chantier existe pour retirer.
+    ///
+    /// Et le plafond était trop bas : le record du monde du marathon au moment où ces lignes sont
+    /// écrites — 1 h 59 min 30 s, Sabastian Sawe, Londres, 26 avril 2026 — vaut un VDOT de
+    /// **86,45**. Une performance humaine réelle était donc rabotée.
+    ///
+    /// # CE QUE LES DEUX BORNES DISENT MAINTENANT
+    ///
+    /// Le PLANCHER est la frontière entre marcher et courir. Une marche rapide se tient vers
+    /// 12:00/km ; un 10 km à cette allure — deux heures — donne un VDOT de 13,45. Le plancher est
+    /// posé juste en dessous pour que cette frontière elle-même reste dedans. Sous ce chiffre, on
+    /// ne décrit plus une course : un 10 km en trois heures vaut 7,1, un 5 km en deux heures 3,8.
+    ///
+    /// Le PLAFOND est posé bien au-dessus du record, et ce n'est pas un oubli : son travail est
+    /// d'écarter une faute de frappe, pas de suivre les records. Un 5 km tapé « 8 min » vaut 145,
+    /// un marathon tapé « 1 h » vaut 197 — l'écart avec 86 est si large que la valeur exacte du
+    /// plafond n'a aucune importance. Le dire évite qu'on vienne le corriger à chaque record, et
+    /// évite surtout qu'on l'abaisse en croyant le resserrer.
+    static let vdotMin = 13.0
+    static let vdotMax = 90.0
 
     // MARK: - Dans un sens : d'une performance au VDOT
 
-    /// Le VDOT d'une performance réelle, ou `nil` si elle sort de ce que la méthode couvre.
+    /// Le VDOT d'une performance, SANS bornage — ou `nil` si la distance sort de la plage de la
+    /// méthode.
+    ///
+    /// Séparé de `depuisPerformance` parce que les deux appelants ne veulent pas la même chose, et
+    /// que les confondre a produit un défaut. UN PLAN a besoin d'un point d'ancrage même pour une
+    /// saisie extravagante : il vaut mieux un plan borné qu'aucun plan. UNE PRÉDICTION, non — si
+    /// la performance de référence sort de ce que le modèle décrit, le borner revient à répondre
+    /// avec aplomb à une question qu'on n'a pas comprise.
+    static func depuisPerformanceBrut(km: Double, secondes: Double) -> Double? {
+        guard km >= kmMin, km <= kmMax, secondes > 0 else { return nil }
+        let vitesse = km * 1000 / (secondes / 60)
+        let brut = coutEnOxygene(vitesseMetresParMinute: vitesse)
+            / fractionSoutenable(minutes: secondes / 60)
+        guard brut.isFinite, brut > 0 else { return nil }
+        return brut
+    }
+
+    /// Le VDOT d'une performance réelle, borné à la plage plausible, ou `nil` si la distance sort
+    /// de ce que la méthode couvre.
     ///
     /// `nil` plutôt qu'un repli : c'est l'appelant qui sait quoi faire d'une absence, et un
     /// nombre faux ancrerait les quatre allures d'un plan entier.
     static func depuisPerformance(km: Double, secondes: Double) -> Double? {
-        guard km >= kmMin, km <= kmMax, secondes > 0 else { return nil }
-        let vitesse = km * 1000 / (secondes / 60)
-        let minutes = secondes / 60
-        let brut = coutEnOxygene(vitesseMetresParMinute: vitesse) / fractionSoutenable(minutes: minutes)
-        guard brut.isFinite, brut > 0 else { return nil }
+        guard let brut = depuisPerformanceBrut(km: km, secondes: secondes) else { return nil }
         return min(vdotMax, max(vdotMin, brut))
     }
 

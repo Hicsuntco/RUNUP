@@ -538,9 +538,46 @@ et aucune séance ne change entre le moment où on la lit et le moment où on la
 Conséquence attendue et correcte : à distance égale, une sortie longue dure environ 5 % plus
 longtemps, puisqu'on la court plus lentement.
 
+### Et le test rouge a trouvé un défaut que j'avais introduit
+
+Une seule défaillance sur 764 : `testProjectionScalesWithTheReferencePace`, qui exigeait qu'une
+référence deux fois plus lente donne une prédiction exactement deux fois plus lente. C'est vrai
+d'une loi de puissance et faux de la course à pied — la fraction de VO2max soutenue dépend de la
+durée, et la personne plus lente passe bien plus de temps sur la distance. Comme le test de la
+VMA, celui-ci verrouillait l'algèbre d'une formule en croyant verrouiller une vérité. **Deuxième
+fois dans le même chantier.**
+
+Mais en l'examinant, le vrai défaut, et il était de moi : **j'avais borné le VDOT entre 25 et 85,
+deux chiffres inventés** — exactement ce que ce chantier existe pour retirer.
+
+| | Mon premier jet | Ce que ça coûtait |
+| --- | --- | --- |
+| plancher | 25 | Quelqu'un qui court son 10 km en **1 h 40** a un VDOT de 17,2. Ramené à 25, son plan lui prescrivait des footings à **9:11/km** — plus rapides que son allure de course — et lui prédisait un marathon à 7:55/km, soit **plus vite au kilomètre que son propre 10 km** |
+| plafond | 85 | Le record du monde du marathon au moment où ces lignes sont écrites, **1 h 59 min 30 s** (Sabastian Sawe, Londres, 26 avril 2026), vaut **86,45**. Une performance humaine réelle était rabotée |
+
+Les deux bornes se nomment maintenant :
+
+- **plancher 13** — la frontière entre marcher et courir. Une marche rapide se tient vers
+  12:00/km ; un 10 km à cette allure, deux heures, donne 13,45. Le plancher est juste en dessous
+  pour que cette frontière reste dedans.
+- **plafond 90** — bien au-dessus du record, et délibérément : son travail est d'écarter une faute
+  de frappe, pas de suivre les records. Un 5 km tapé « 8 min » vaut 145, un marathon tapé « 1 h »
+  vaut 197. L'écart est si large que la valeur exacte du plafond n'a aucune importance — et le
+  dire est le seul argument qui la rende défendable.
+
+Et le bornage est désormais **séparé de la lecture**, parce que les deux appelants ne veulent pas
+la même chose : un plan a besoin d'un ancrage même pour une saisie extravagante — mieux un plan
+borné qu'aucun plan —, une prédiction non. Une référence hors plage repasse donc par Riegel, qui
+ne prétend à aucune physiologie, au lieu d'être ramenée au plancher et affichée avec aplomb.
+
+Le test de proportionnalité est remplacé par les deux propriétés qui sont vraies et qui comptent :
+plus lent reste plus lent, et **une plus longue distance n'est jamais prédite plus vite que la
+référence** — la promesse qui blesse, que le test de proportionnalité cherchait à atteindre sans
+y arriver.
+
 ### Ce qui le garde
 
-`RunUpTests/VdotTests.swift`, 18 cas, et le premier ne teste pas notre code pour lui-même : il
+`RunUpTests/VdotTests.swift`, 20 cas, et le premier ne teste pas notre code pour lui-même : il
 vérifie que les deux équations d'*Oxygen Power* retrouvent le VDOT de chaque ligne depuis le temps
 de 10 km de cette même ligne. Si ce n'était pas vrai, la table recopiée serait une paraphrase et
 tous les autres cas vérifieraient une invention. Les suivants vérifient l'inversion, allure par
@@ -551,7 +588,9 @@ absurde.
 
 Deux cas existent uniquement pour empêcher le retour en arrière : l'un montre que le rapport
 footing/seuil n'est pas constant, donc qu'aucune multiplication ne peut le remplacer ; l'autre
-fixe l'écart seuil→VMA à celui de la table, avec sa source.
+fixe l'écart seuil→VMA à celui de la table, avec sa source. Deux autres gardent les bornes : que
+le bornage reste séparé de la lecture, et que les bornes séparent bien un record du monde et une
+marche-course — dedans — d'une faute de frappe — dehors.
 
 `ci_scripts/check_allures.py` et ses **16 cas**. Trois règles : `PaceModel.zones` ne contient
 aucune arithmétique sur un littéral décimal — la forme exacte du défaut, et la seule qu'il puisse

@@ -217,9 +217,9 @@ final class VdotTests: XCTestCase {
 
     /// Une saisie absurde est bornée, pas propagée.
     ///
-    /// « 5 km en 8 min » est plus rapide que le record du monde ; « 5 km en 2 h » est une
-    /// promenade. Les deux doivent rendre un VDOT dans la plage, parce que le champ est du texte
-    /// libre et qu'une faute de frappe ne doit pas donner une allure de plan à deux chiffres.
+    /// « 5 km en 8 min » est plus rapide que tout record ; « 5 km en 2 h » est une promenade. Les
+    /// deux doivent rendre un VDOT dans la plage, parce que le champ est du texte libre et qu'une
+    /// faute de frappe ne doit pas donner une allure de plan à deux chiffres.
     func testLesSaisiesAbsurdesSontBornees() throws {
         let tropVite = try XCTUnwrap(Vdot.depuisPerformance(km: 5, secondes: 8 * 60))
         let tropLent = try XCTUnwrap(Vdot.depuisPerformance(km: 5, secondes: 2 * 3600))
@@ -227,7 +227,64 @@ final class VdotTests: XCTestCase {
         XCTAssertEqual(tropLent, Vdot.vdotMin, accuracy: 0.001)
         for v in [tropVite, tropLent] {
             let footing = Vdot.allure(vdot: v, fraction: Vdot.Fraction.footing)
-            XCTAssertTrue((150...600).contains(footing), "footing hors de l'humain : \(footing)")
+            XCTAssertTrue((150...900).contains(footing), "footing hors de l'humain : \(footing)")
+        }
+    }
+
+    /// LE BORNAGE N'EST PAS POUR TOUT LE MONDE, ET C'EST POUR ÇA QU'IL Y A DEUX FONCTIONS.
+    ///
+    /// Le premier jet n'en avait qu'une, bornée, avec un plancher inventé à 25. Quelqu'un qui
+    /// court son 10 km en 1 h 40 — une vraie personne — a un VDOT de 17,2 : ramené à 25, son plan
+    /// lui prescrivait des footings PLUS RAPIDES que son allure de course, et sa prédiction de
+    /// marathon tombait en dessous de son propre 10 km au kilomètre.
+    ///
+    /// Le plancher est donc descendu à la frontière marche/course, et le bornage est séparé : un
+    /// plan le veut — mieux un plan borné qu'aucun plan —, une prédiction non.
+    func testLeBornageEstSepareDeLaLecture() throws {
+        // Une vraie personne lente : les deux lectures doivent s'accorder, donc pas de bornage.
+        let lent = try XCTUnwrap(Vdot.depuisPerformanceBrut(km: 10, secondes: 100 * 60))
+        XCTAssertEqual(lent, try XCTUnwrap(Vdot.depuisPerformance(km: 10, secondes: 100 * 60)),
+                       accuracy: 0.001, "un 10 km en 1 h 40 est dans la plage, il ne doit rien subir")
+        XCTAssertGreaterThan(lent, Vdot.vdotMin)
+
+        // Et son footing doit rester plus LENT que son allure de course. C'était le défaut.
+        let footing = Vdot.allure(vdot: lent, fraction: Vdot.Fraction.footing)
+        XCTAssertGreaterThan(footing, 600,
+                             "footing à \(Int(footing)) s/km pour quelqu'un qui court à 600")
+
+        // Une saisie fautive, elle, s'écarte : le brut la laisse voir, le borné la rattrape.
+        let faute = try XCTUnwrap(Vdot.depuisPerformanceBrut(km: 5, secondes: 2 * 3600))
+        XCTAssertLessThan(faute, Vdot.vdotMin)
+        XCTAssertEqual(try XCTUnwrap(Vdot.depuisPerformance(km: 5, secondes: 2 * 3600)),
+                       Vdot.vdotMin, accuracy: 0.001)
+    }
+
+    /// LES DEUX BORNES SE NOMMENT, et le premier jet avait tort des deux côtés.
+    ///
+    /// Le plafond de 85 rabotait une performance humaine réelle : le record du monde du marathon
+    /// au moment où ces lignes sont écrites — 1 h 59 min 30 s — vaut 86,45. Le plancher de 25
+    /// écartait une vraie coureuse lente. Ce cas fixe les deux contre ce qu'ils doivent séparer :
+    /// dedans, un record et une marche-course ; dehors, une faute de frappe.
+    func testLesBornesSeparentUnRecordDUneFauteDeFrappe() throws {
+        // Le record du monde du marathon, 1 h 59 min 30 s : DEDANS, et à peine.
+        let record = try XCTUnwrap(Vdot.depuisPerformanceBrut(km: 42.195, secondes: 7170))
+        XCTAssertGreaterThan(record, 85, "le record vaut \(record)")
+        XCTAssertLessThan(record, Vdot.vdotMax, "le plafond rabote un record du monde")
+
+        // La frontière marche/course, un 10 km à 12:00/km : DEDANS aussi.
+        let marcheCourse = try XCTUnwrap(Vdot.depuisPerformanceBrut(km: 10, secondes: 7200))
+        XCTAssertGreaterThanOrEqual(marcheCourse, Vdot.vdotMin,
+                                    "la frontière marche/course vaut \(marcheCourse)")
+
+        // Et les fautes de frappe, très loin dehors — assez pour que la valeur exacte des bornes
+        // n'ait aucune importance, ce qui est le seul argument qui les rende défendables.
+        for (km, secondes) in [(5.0, 8.0 * 60), (42.195, 3600.0)] {
+            let trop = try XCTUnwrap(Vdot.depuisPerformanceBrut(km: km, secondes: secondes))
+            XCTAssertGreaterThan(trop, Vdot.vdotMax * 1.5, "\(km) km en \(Int(secondes)) s")
+        }
+        for (km, secondes) in [(5.0, 2.0 * 3600), (10.0, 3.0 * 3600)] {
+            let trop = try XCTUnwrap(Vdot.depuisPerformanceBrut(km: km, secondes: secondes))
+            XCTAssertLessThan(trop, Vdot.vdotMin * 0.6, "\(km) km en \(Int(secondes)) s")
         }
     }
 

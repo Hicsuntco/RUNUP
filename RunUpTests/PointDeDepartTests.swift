@@ -141,6 +141,67 @@ final class PointDeDepartTests: XCTestCase {
         }
     }
 
+    // MARK: 2 bis. Le niveau déclaré, pour qui n'a donné aucune allure
+
+    /// LE DÉFAUT QUI A FAIT ÉCRIRE CES CAS.
+    ///
+    /// « Débutante » + « je ne sais pas » calait le plan sur un footing de 6:54 au kilomètre,
+    /// alors que la tranche la plus lente que l'app propose est « plus de 7 min/km ». Une
+    /// non-réponse était donc PLUS OPTIMISTE que la réponse la plus prudente — et c'est
+    /// précisément au niveau « débutante » que vivent les gens qui courent à plus de 7 min/km.
+    func testUneDebutanteNestJamaisPlusRapideQueLaTrancheLaPlusLente() throws {
+        let allures = AllureFooting.allCases.compactMap { $0.secondesParKm }
+        let laPlusLente = try XCTUnwrap(allures.max())
+        XCTAssertEqual(ExperienceLevel.debutante.allureDeFootingSupposee.secondesParKm, laPlusLente,
+                       "le niveau débutante doit viser la tranche la plus lente de la liste")
+        XCTAssertGreaterThanOrEqual(seuil(profil(niveau: .debutante)),
+                                    seuil(profil(allureFooting: .plusDe7)),
+                                    "une non-réponse ne peut pas être plus rapide que la tranche la plus prudente")
+    }
+
+    /// Le niveau seul rend EXACTEMENT la tranche qu'il suppose : c'est tout ce qu'il prétend
+    /// dire. Les deux chemins passent par le même appel sur la même valeur, et si l'un des deux
+    /// est retouché sans l'autre, ce cas tombe — c'est déjà arrivé sur ce calcul, avec un
+    /// aller-retour qui se trompait des deux côtés à la fois et dans des sens opposés.
+    func testLeNiveauSeulVautSaTrancheDeFootingSupposee() {
+        for niveau in ExperienceLevel.allCases {
+            XCTAssertEqual(seuil(profil(niveau: niveau)),
+                           seuil(profil(allureFooting: niveau.allureDeFootingSupposee)),
+                           accuracy: 0.001,
+                           "\(niveau) ne vaut plus \(niveau.allureDeFootingSupposee)")
+        }
+    }
+
+    /// Aucun niveau ne désigne « je ne sais pas » — sans quoi le repli du repli, `Vdot.vdotMin`,
+    /// deviendrait le plan de tout un niveau sans que rien ne le dise.
+    func testAucunNiveauNeDesigneJeNeSaisPas() {
+        for niveau in ExperienceLevel.allCases {
+            XCTAssertNotNil(niveau.allureDeFootingSupposee.secondesParKm,
+                            "\(niveau) n'a pas d'allure supposée")
+        }
+    }
+
+    /// Aucun libellé qu'on touche pour se décrire ne suffit à produire l'allure de la tranche la
+    /// plus rapide. Celle-là ne s'atteint qu'en la cochant.
+    func testAucunNiveauNAtteintLaTrancheLaPlusRapide() {
+        let laPlusRapide = seuil(profil(allureFooting: .moinsDe5))
+        for niveau in ExperienceLevel.allCases {
+            XCTAssertGreaterThan(seuil(profil(niveau: niveau)), laPlusRapide,
+                                 "\(niveau) atteint la tranche la plus rapide sans l'avoir cochée")
+        }
+    }
+
+    /// Les trois niveaux sont ordonnés du plus lent au plus rapide. Une inversion ici
+    /// retournerait le plan de tout le monde qui n'a donné ni chrono ni allure.
+    func testLesTroisNiveauxSontOrdonnes() {
+        var precedent = Double.greatestFiniteMagnitude
+        for niveau in ExperienceLevel.allCases {
+            let valeur = seuil(profil(niveau: niveau))
+            XCTAssertLessThan(valeur, precedent, "\(niveau) casse l'ordre")
+            precedent = valeur
+        }
+    }
+
     // MARK: 3. Le volume actuel plafonne le palier de départ
 
     /// Les tranches disent des nombres cohérents entre elles — c'est sur eux que le moteur

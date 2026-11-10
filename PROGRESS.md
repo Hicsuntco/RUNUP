@@ -406,6 +406,99 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 39 — une non-réponse était plus optimiste que la réponse la plus prudente
+
+### Ce qui était faux
+
+`PaceModel` portait trois VDOT écrits en dur pour le niveau déclaré : 36,34 / 43,61 / 53,94. Le
+chantier 29 les avait laissés intacts exprès, en écrivant pourquoi : « un VDOT de 36 est un 10 km
+en 54 minutes, ce qui n'est pas “débutante” mais “court déjà” », et « une constante devinée deux
+fois ne vaut pas mieux qu'une fois ». La tâche a attendu une mesure.
+
+La mesure n'était pas celle que j'attendais. Je cherchais ce que courent les gens qui cochent
+« débutante » — donnée que personne n'a ici, et qui n'existe pas dans l'app. Ce qui se mesure,
+c'est une **incohérence interne**, et elle se vérifie en trois lignes.
+
+Converties à la fraction du footing, les trois constantes supposent des footings de :
+
+| niveau | ce que la constante supposait | 5 km équivalent |
+| --- | --- | --- |
+| débutante — « je cours depuis moins de 6 mois » | **6:54/km** | 26:08 |
+| intermédiaire — « je cours 2-3 fois par semaine » | **5:58/km** | 22:23 |
+| confirmée — « je m'entraîne sérieusement depuis des années » | **5:02/km** | 18:40 |
+
+Or l'app pose elle-même la question de l'allure de footing, et sa tranche la plus lente est
+**« plus de 7 min/km »**. Donc quelqu'un qui se déclarait débutante et répondait « je ne sais pas »
+— une vraie réponse, la première de la liste, prévue pour ça — recevait un plan calé sur
+**6:54/km, plus rapide que la tranche la plus prudente qu'on lui proposait de cocher**.
+
+Une non-réponse était plus optimiste que la réponse la plus prudente. Et c'est exactement au
+niveau « débutante » que vivent les gens qui courent à plus de 7 min/km.
+
+### Ce qui a changé
+
+Les trois constantes ne sont plus des nombres : chaque niveau désigne **la tranche de footing
+qu'elle aurait probablement cochée**, et les deux chemins passent ensuite par le même
+`Vdot.depuisAllure(…, fraction: .footing)` sur la même valeur.
+
+| niveau | tranche supposée | 5 km | 10 km | avant |
+| --- | --- | --- | --- | --- |
+| débutante | 7:30/km | 28:35 | 59:25 | 26:08 / 54:16 |
+| intermédiaire | 6:30/km | 24:29 | 50:49 | 22:23 / 46:27 |
+| confirmée | 5:30/km | 20:28 | 42:27 | 18:40 / 38:43 |
+
+La quatrième tranche — « moins de 5 min/km » — ne s'atteint **que** si elle la coche. Un libellé
+qu'on touche pour se décrire ne doit pas suffire à produire un footing sous les cinq minutes.
+
+**Et il n'y a plus trois nombres à maintenir.** C'était le vrai risque : ce calcul a déjà connu un
+aller-retour qui se trompait des deux côtés à la fois et dans des sens opposés — le `/ 1.20` du
+chantier 29. Deux chemins pour une question, une seule valeur, un seul appel.
+
+### Ce que ça change pour les gens
+
+Pour tout le monde qui n'a donné ni chrono, ni perf récente, ni allure de footing : **les allures
+de son plan ralentissent**, de 8 à 9 % selon le niveau. Personne ne perd son plan, et rien ne
+change pour qui a donné un chrono ou une allure — leurs trois chemins passent avant celui-ci.
+
+C'est une décision d'entraînement, et elle se discute : elle suppose que quelqu'un qui ne sait pas
+dire son allure n'est pas en train de courir plus vite que la tranche médiane de sa catégorie.
+L'inverse est possible pour une minorité, et le plan s'ajuste ensuite sur les sorties réellement
+enregistrées. Dans le doute, le sens de l'erreur compte : un plan trop lent se corrige à la
+première sortie loguée, un plan trop rapide se corrige à la blessure.
+
+### Ce qui le garde
+
+Cinq cas dans `PointDeDepartTests` :
+
+- **le défaut lui-même** — le niveau débutante ne peut pas être plus rapide que la tranche la plus
+  lente de la liste, et il doit viser précisément celle-là ;
+- le niveau seul vaut **exactement** la tranche qu'il suppose, à 1 ms près : si l'un des deux
+  chemins est retouché sans l'autre, le cas tombe ;
+- aucun niveau n'atteint la tranche la plus rapide ;
+- les trois niveaux restent ordonnés ;
+- aucun niveau ne désigne « je ne sais pas », sans quoi le repli du repli — `Vdot.vdotMin` —
+  deviendrait le plan de tout un niveau sans que rien ne le dise.
+
+### Ce que l'image ne prouvera pas
+
+**Les captures ne montreront aucune différence, et c'est normal.** Le profil de démonstration
+donne `bestRecentPerf: "10 km en 49:12"` — le PREMIER des quatre chemins — donc il n'atteint
+jamais la constante de niveau. Les 28 écrans photographiés sont rigoureusement identiques avant et
+après.
+
+Autrement dit : la seule preuve de ce chantier est ses cinq cas de test. Aucune capture ne montre
+jamais cet écran-là, parce qu'aucun profil de démonstration ne laisse les trois premières questions
+vides. C'est une limite réelle de la campagne de captures, et elle mérite d'être écrite plutôt que
+découverte en comparant deux images identiques et en concluant que rien n'a changé.
+
+### Ce qui n'a pas bougé, et pourquoi
+
+Les quatre tranches de footing et leur milieu (7:30, 6:30, 5:30, 4:30). Leur commentaire porte un
+raisonnement qui tient et qui va dans l'autre sens que l'intuition : pour une **allure**,
+sous-estimer n'est pas prudent — ça donne des footings trop lents que personne ne tient et des
+séances de qualité qui n'en sont plus. Le milieu de la tranche déclarée reste la réponse honnête.
+Ce chantier ne touche qu'au cas où **rien** n'a été déclaré.
+
 ## Chantier 38 — l'écran « tu n'as pas encore de club » (B5, quatrième morceau)
 
 ### Ce qui est sorti

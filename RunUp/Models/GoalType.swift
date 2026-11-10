@@ -306,6 +306,52 @@ enum ExperienceLevel: String, Codable, CaseIterable, Identifiable {
         case .confirmee: return String(localized: "Je m'entraîne sérieusement depuis des années")
         }
     }
+
+    /// LA TRANCHE DE FOOTING QU'ELLE AURAIT PROBABLEMENT COCHÉE — et rien de plus.
+    ///
+    /// # CE QUI ÉTAIT FAUX
+    ///
+    /// `PaceModel` portait trois VDOT écrits en dur — 36,34 / 43,61 / 53,94 — hérités de trois
+    /// allures de seuil littérales (5:30, 4:45, 4:00 au kilomètre). Converties à la fraction du
+    /// footing, elles supposent des footings de **6:54, 5:58 et 5:02 au kilomètre**.
+    ///
+    /// Or l'app propose elle-même quatre tranches de footing, dont la plus lente est « plus de
+    /// 7 min/km ». Donc quelqu'un qui se déclarait **débutante** et répondait « je ne sais pas »
+    /// à la question de l'allure recevait un plan calé sur 6:54 — **plus rapide** que s'il avait
+    /// coché la tranche la plus lente. Une non-réponse était plus optimiste que la réponse la
+    /// plus prudente, ce qui n'a aucun sens : c'est exactement au niveau « débutante » que
+    /// vivent les gens qui courent à plus de 7 min/km.
+    ///
+    /// # LA MESURE, ET CE QU'ELLE N'EST PAS
+    ///
+    /// Ce n'est pas une mesure de ce que courent les gens — personne n'a ces données ici, et
+    /// l'ancien commentaire le disait déjà. C'est une mesure d'**incohérence interne**, et elle
+    /// se vérifie : deux chemins d'entrée répondent à la même question, et l'un d'eux sortait de
+    /// l'échelle de l'autre.
+    ///
+    /// Les trois niveaux prennent donc les trois tranches les plus lentes, dans l'ordre. La
+    /// quatrième — « moins de 5 min/km » — ne s'atteint que si elle la coche : un libellé qu'on
+    /// touche pour se décrire ne doit pas suffire à produire un footing sous les 5 minutes.
+    ///
+    /// | niveau | tranche supposée | 5 km équivalent | avant |
+    /// | --- | --- | --- | --- |
+    /// | débutante | 7:30/km | 28:35 | 26:08 |
+    /// | intermédiaire | 6:30/km | 24:29 | 22:23 |
+    /// | confirmée | 5:30/km | 20:28 | 18:40 |
+    ///
+    /// # POURQUOI UNE TRANCHE ET PAS UN NOMBRE
+    ///
+    /// Les deux chemins passent maintenant par le même `Vdot.depuisAllure(…, fraction: .footing)`
+    /// sur la même valeur, donc ils ne peuvent plus diverger. Trois nombres en dur, c'est trois
+    /// occasions de corriger un chemin et pas l'autre — c'est déjà arrivé sur ce calcul, avec le
+    /// `/ 1.20` qui se trompait des deux côtés à la fois et dans des sens opposés.
+    var allureDeFootingSupposee: AllureFooting {
+        switch self {
+        case .debutante: return .plusDe7
+        case .intermediaire: return .de6a7
+        case .confirmee: return .de5a6
+        }
+    }
 }
 
 enum RaceDistance: String, Codable, CaseIterable, Identifiable {

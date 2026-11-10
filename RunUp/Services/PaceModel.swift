@@ -179,22 +179,24 @@ enum PaceModel {
            let vdot = Vdot.depuisPerformance(km: km, secondes: totalSeconds) {
             return vdot
         }
-        // LES TROIS CONSTANTES DE NIVEAU N'ONT PAS ÉTÉ RETOUCHÉES, ET C'EST DÉLIBÉRÉ.
+        // LE NIVEAU DÉCLARÉ : LA TRANCHE DE FOOTING QU'ELLE AURAIT PROBABLEMENT COCHÉE.
         //
-        // Elles valaient 330, 285 et 240 s/km, lues comme une allure de seuil. Converties à la
-        // fraction du seuil, elles donnent exactement les VDOT ci-dessous, donc ce chemin rend le
-        // MÊME seuil qu'avant — seules les trois autres allures bougent, ce qui est tout l'objet
-        // de ce chantier.
+        // Plus aucun VDOT en dur ici. Les trois anciens — 36,34 / 43,61 / 53,94 — supposaient des
+        // footings de 6:54, 5:58 et 5:02 au kilomètre, alors que l'app propose elle-même « plus de
+        // 7 min/km » : une débutante qui répondait « je ne sais pas » recevait donc un plan PLUS
+        // RAPIDE que si elle avait coché la tranche la plus lente. Le raisonnement complet et la
+        // table avant/après sont sur `ExperienceLevel.allureDeFootingSupposee`.
         //
-        // Les redécider serait un autre chantier, et il se pose : un VDOT de 36 est un 10 km en
-        // 54 minutes, ce qui n'est pas « débutante » mais « court déjà ». Le noter plutôt que le
-        // corriger en passant — personne n'a mesuré ce que les gens qui cochent « débutante »
-        // courent vraiment, et une constante devinée deux fois ne vaut pas mieux qu'une fois.
-        switch profile.level {
-        case .debutante: return 36.34     // seuil 5:30/km, 10 km en 54:17
-        case .intermediaire: return 43.61 // seuil 4:45/km, 10 km en 46:27
-        case .confirmee: return 53.94     // seuil 4:00/km, 10 km en 38:44
+        // Et c'est le MÊME appel que le chemin de l'allure déclarée, trois lignes plus haut, sur
+        // la même valeur : les deux ne peuvent plus diverger.
+        if let allure = profile.level.allureDeFootingSupposee.secondesParKm,
+           let vdot = Vdot.depuisAllure(secondesParKm: allure, fraction: Vdot.Fraction.footing) {
+            return vdot
         }
+        // `secondesParKm` ne rend `nil` que pour `jeNeSaisPas`, et aucun niveau ne la désigne —
+        // un cas de test le vérifie. Mais un repli doit rendre un nombre, et celui-ci est le plus
+        // bas de l'échelle, donc le plus prudent si quelqu'un ajoute un niveau sans allure.
+        return Vdot.vdotMin
     }
 
     /// `chronoPresets` use "MM:SS" for 5K/10K but "H:MM" for semi/marathon (the presets

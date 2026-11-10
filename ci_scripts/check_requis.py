@@ -6,11 +6,17 @@
 Les six captures d'iPhone sont fabriquées à chaque passage : `appstore/raw` → `screenshots.py` →
 la fiche. Elles ne peuvent donc pas vieillir sans qu'on le voie.
 
-Les deux autres — l'iPad et la montre, qu'Apple EXIGE dès que la build embarque une app watchOS —
-vivaient dans `appstore/requis/`, faites à la main une fois, et ni `screenshots.py`, ni `asc.py`,
-ni aucun des contrôles du dépôt ne les regardait. Relevé le 9 novembre 2026 sur la fiche publiée
-de la 3.3 : les deux montraient l'app du mois d'AOÛT. Trois mois de retard sur la seule surface
-que les gens voient avant d'installer.
+Celle de la montre, qu'Apple EXIGE dès que la build embarque une app watchOS, vivait dans
+`appstore/requis/`, faite à la main une fois, et ni `screenshots.py`, ni `asc.py`, ni aucun des
+contrôles du dépôt ne la regardait. Relevé le 9 novembre 2026 sur la fiche publiée de la 3.3 :
+elle montrait l'app du mois d'AOÛT. Trois mois de retard sur la seule surface que les gens voient
+avant d'installer.
+
+IL Y AVAIT AUSSI UNE IMAGE D'iPAD, et elle n'aurait jamais dû exister. `TARGETED_DEVICE_FAMILY`
+vaut 1 : RUNUP est une app iPhone, et Apple n'en demande aucune. Ce qui restait sur la fiche était
+une mise en page iPhone étirée dans un cadre d'iPad, héritée d'une version précédente — App Store
+Connect recopie les captures de la version d'avant, tous formats confondus. Elle ne se corrige
+pas, elle se RETIRE : `asc.py prune-screenshots <version> --retirer APP_IPAD_PRO_3GEN_129`.
 
 Ce n'est pas qu'une question de soin. Apple demande qu'une capture montre l'app telle qu'elle est.
 
@@ -59,11 +65,11 @@ def empreinte(chemin: pathlib.Path) -> str:
 def empreinte_du_code(dossier: str) -> str:
     """L'empreinte du CODE QUI DESSINE l'écran photographié.
 
-    UNE CAPTURE NE VIEILLIT PAS TOUTE SEULE : c'est l'app qui bouge sous elle. Pour l'iPad, la
-    capture brute est la source et son empreinte suffit. Pour la montre, il n'y a pas de capture
-    intermédiaire versionnée : la chaîne photographie et l'image livrée EST la photo. Rien, alors,
-    ne relie l'image au code — et c'est très exactement ainsi que le bouton est passé de la
-    pilule au cercle le 6 août 2026 sans que l'image livrée bouge pendant trois mois.
+    UNE CAPTURE NE VIEILLIT PAS TOUTE SEULE : c'est l'app qui bouge sous elle. Pour la montre, il
+    n'y a pas de capture intermédiaire versionnée : la chaîne photographie et l'image livrée EST
+    la photo. Rien, alors, ne relie l'image au code — et c'est très exactement ainsi que le bouton
+    est passé de la pilule au cercle le 6 août 2026 sans que l'image livrée bouge pendant trois
+    mois.
 
     Le chemin ET le contenu de chaque fichier entrent dans l'empreinte : un fichier renommé change
     ce qui est dessiné autant qu'un fichier modifié.

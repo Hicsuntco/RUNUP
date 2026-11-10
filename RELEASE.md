@@ -179,11 +179,17 @@ Puis, sur la machine :
   remettre sur **Standard Protection** une fois l'essai fini. C'est un réglage qui se coupe en
   deux clics et qui ne se rallume pas tout seul : il n'existe aucun contrôle de ce dépôt qui
   puisse voir qu'il est resté ouvert.
-- **La montre n'a pas de captures propres.** L'app de poignet a ses écrans, et aucun n'a jamais
-  été photographié : il n'existe pas de cible de test d'interface pour watchOS. L'iPad, lui, ne
-  pose pas la question — `TARGETED_DEVICE_FAMILY` vaut 1 dans les réglages de base comme dans
-  ceux du widget (seule la montre porte 4), donc RUNUP est une app iPhone et Apple ne demande
-  aucune image d'iPad.
+- **La montre est photographiée depuis le 9 novembre 2026** par `.github/workflows/montre.yml`,
+  dans les trois langues, et `check_requis.py` refuse une image qui ne montre plus l'app.
+- **L'iPad ne pose pas la question** — `TARGETED_DEVICE_FAMILY` vaut 1 dans les réglages de base
+  comme dans ceux du widget (seule la montre porte 4), donc RUNUP est une app iPhone et Apple ne
+  demande aucune image d'iPad. Ce dépôt en a pourtant FABRIQUÉ une pendant vingt-quatre heures,
+  le 9 novembre, alors que ce paragraphe disait déjà le contraire. Elle est partie le 10.
+  **Ce qui reste à faire une fois, à la main** : la fiche publiée porte encore la capture iPad
+  d'août, héritée d'une version précédente — App Store Connect recopie les captures de la version
+  d'avant, tous formats confondus. Action `nettoyer-les-captures` du workflow App Store, avec
+  `APP_IPAD_PRO_3GEN_129` dans le champ « retirer ». Et elle reviendra à chaque nouvelle version
+  tant qu'on ne la retire pas : c'est pour ça que c'est une commande et pas un geste.
 - **Le rapport de panne ne voit ni le simulateur, ni les erreurs rattrapées.** `Diagnostics.swift`
   s'abonne à MetricKit, donc iOS collecte la panne hors du processus mort et nous la rend au
   lancement SUIVANT — il n'y a pas d'alerte, et rien du tout sur un simulateur, où MetricKit ne

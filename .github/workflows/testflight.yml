@@ -683,8 +683,9 @@ jobs:
       - name: Vérifier la règle des profils de provisionnement
         run: python3 ci_scripts/test_profils.py
 
-      # Les deux images qu'Apple EXIGE en plus des six de l'iPhone — l'iPad et la montre — ont
-      # vieilli de trois mois sans que rien ne rougisse, parce que rien ne les regardait. Le
+      # L'image de montre qu'Apple EXIGE en plus des six de l'iPhone a vieilli de trois mois sans
+      # que rien ne rougisse, parce que rien ne la regardait. (Il y avait aussi une image d'iPad :
+      # elle n'aurait jamais dû exister — RUNUP est une app iPhone, voir `captures.yml`.) Le
       # contrôle est ici, qui tourne souvent, ET dans `appstore.yml`, juste avant la composition :
       # une capture refaite ne passe pas par ce workflow-ci (`appstore/**` est dans son
       # `paths-ignore`), et c'est précisément le moment où une image livrée se périme.

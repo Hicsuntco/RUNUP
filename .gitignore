@@ -42,24 +42,12 @@ appstore/out/
 appstore/raw/*/*
 !appstore/raw/*/.gitkeep
 
-# UNE EXCEPTION, ET UNE SEULE : la capture d'accueil de chaque langue.
+# L'EXCEPTION POUR `1-accueil.png` A VÉCU VINGT-QUATRE HEURES.
 #
-# `ci_scripts/requis.py` compose l'image iPad exigée par Apple À PARTIR DE CE FICHIER, et
-# `appstore.yml` pousse cette image DEPUIS LE DÉPÔT (`--dir appstore/requis/ipad`), pas depuis
-# l'artéfact. Sa source doit donc exister dans un clone neuf, sinon `check_requis.py` échoue sur
-# « la capture source a disparu » — mesuré dans un clone, et c'est ce qui a fait écrire ces
-# lignes — et la fiche ne part plus.
-#
-# Trois fichiers, un par langue, ~615 ko chacun. Pas les vingt-cinq : seulement celui que
-# quelque chose lit.
-#
-# CE N'EST PAS LA BONNE SOLUTION, et elle est écrite ici pour qu'on s'en souvienne. Une capture
-# versionnée redevient périmée au premier chantier qui touche l'accueil — c'est exactement
-# comme ça que l'image iPad de l'App Store s'est retrouvée à montrer l'app du 30 août pendant
-# trois mois. Le bon correctif est que `appstore.yml` aille chercher l'image iPad dans
-# l'artéfact de `captures.yml`, comme il le fait déjà pour les six captures d'iPhone. Ce jour-là,
-# ces trois lignes et les images de `appstore/requis/ipad/` disparaissent ensemble.
-!appstore/raw/*/1-accueil.png
+# Elle existait pour nourrir la composition d'une image iPad. Il n'y a pas d'image iPad :
+# `TARGETED_DEVICE_FAMILY` vaut 1, RUNUP est une app iPhone, et Apple n'en demande aucune. La
+# règle au-dessus redevient ce qu'elle était — aucune capture versionnée, elles vivent dans
+# l'artéfact — et c'est la bonne règle.
 
 # Assemblé par `ci_scripts/apercu.py` à partir de l'enregistrement déposé dans `appstore/apercu/`.
 # Même raison : la sortie se refait d'une commande, et un `.mp4` de cinquante mégaoctets par

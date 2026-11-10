@@ -1,19 +1,4 @@
 {
-  "ipad/en-US/1-accueil.png": {
-    "source": "appstore/raw/en-US/1-accueil.png",
-    "empreinte": "f5fa3ddba9cf",
-    "composee_par": "ci_scripts/requis.py"
-  },
-  "ipad/es-ES/1-accueil.png": {
-    "source": "appstore/raw/es-ES/1-accueil.png",
-    "empreinte": "d683acbcef4b",
-    "composee_par": "ci_scripts/requis.py"
-  },
-  "ipad/fr-FR/1-accueil.png": {
-    "source": "appstore/raw/fr-FR/1-accueil.png",
-    "empreinte": "d4ed695a8db2",
-    "composee_par": "ci_scripts/requis.py"
-  },
   "montre/en-US/1-course-libre.png": {
     "source": "appstore/raw-montre/en-US/1-course-libre.png",
     "empreinte": "47b95e4be43f",

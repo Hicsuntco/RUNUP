@@ -279,7 +279,10 @@ jobs:
       - name: Poser les images livrables et les vérifier
         run: |
           set -euo pipefail
-          "$RUNNER_TEMP/venv/bin/python" ci_scripts/requis.py fr-FR en-US es-ES
+          # `python3` nu, et plus le venv : depuis que l'image iPad a disparu, `requis.py` copie
+          # un fichier et lit une en-tête PNG — il n'a plus besoin de Pillow. Le venv reste pour
+          # `check_captures_montre.py`, qui compare vraiment des images.
+          python3 ci_scripts/requis.py fr-FR en-US es-ES
           python3 ci_scripts/check_requis.py
 
       - name: Publier les captures de la montre

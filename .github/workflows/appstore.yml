@@ -27,7 +27,6 @@ on:
           - pourquoi-pas-soumettable
           - liberer-la-file
           - pousser-la-montre
-          - pousser-l-ipad
           - lister-les-captures
           - nettoyer-les-captures-essai
           - nettoyer-les-captures
@@ -262,7 +261,6 @@ jobs:
             nettoyer-les-captures-essai) python3 ci_scripts/asc.py prune-screenshots "$VERSION" --retirer $RETIRER --dry-run ;;
             nettoyer-les-captures)    python3 ci_scripts/asc.py prune-screenshots "$VERSION" --retirer $RETIRER ;;
             pousser-la-montre)        python3 ci_scripts/asc.py push-screenshots "$VERSION" --dir appstore/requis/montre ;;
-            pousser-l-ipad)           python3 ci_scripts/asc.py push-screenshots "$VERSION" --dir appstore/requis/ipad ;;
             pousser-l-apercu-essai)   python3 ci_scripts/asc.py push-previews "$VERSION" --dir "$RUNNER_TEMP/captures/apercu/out" --dry-run ;;
             pousser-l-apercu)         python3 ci_scripts/asc.py push-previews "$VERSION" --dir "$RUNNER_TEMP/captures/apercu/out" ;;
             assembler-l-apercu)       python3 ci_scripts/apercu.py --debut "${DEBUT:-0}" ;;

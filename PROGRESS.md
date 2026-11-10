@@ -21,6 +21,7 @@ n'apparaît, l'avant/après est écrit ici, et les trois langues ont été véri
 | **D2 — fond clair par défaut, pas forcément chaud.** Le thème sombre était le défaut. Le `#FBF9F7` chaud du brief n'est pas imposé : le fond froid actuel peut rester. | Charlotte | 9 novembre 2026 |
 | **D3 — la barre basse garde ses cinq entrées.** Le brief en demandait trois. | Charlotte | 9 novembre 2026 |
 | **D4 — l'inscription reste longue, et vise le plan le plus sur mesure possible.** Le brief demandait trois questions ; la consigne est « fais au mieux pour quelque chose d'ultra sur mesure pour le plan ». La longueur du parcours n'est donc plus un défaut : sa qualité est le critère. | Charlotte | 9 novembre 2026 |
+| **Pas d'image iPad sur la fiche App Store.** « L'app iPad doit être différente, on ne va pas courir avec son iPad. » RUNUP est une app iPhone (`TARGETED_DEVICE_FAMILY` vaut 1) : Apple n'en demande aucune, et une mise en page iPhone étirée dans un cadre d'iPad n'est pas une app iPad. | Charlotte | 10 novembre 2026 |
 
 ## Ce qui attend une décision
 
@@ -404,6 +405,59 @@ parisien, et c'est une décision, pas un oubli.
 Et les deux titres de séance sont désormais nommés **une seule fois** : ils paraissent aux
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
+
+## Chantier 21 — l'image iPad n'aurait jamais dû exister, et c'est moi qui l'avais fabriquée
+
+### Ce que Charlotte a dit
+
+« L'app iPad doit être différente, on ne va pas courir avec son iPad. »
+
+### Ce que la mesure a donné
+
+`TARGETED_DEVICE_FAMILY` vaut **1** dans les réglages de base comme dans ceux du widget ; seule la
+montre porte 4. **RUNUP est une app iPhone**, et Apple ne demande donc aucune image d'iPad.
+
+Et le dépôt le savait. `RELEASE.md` portait déjà cette phrase, mot pour mot :
+
+> « L'iPad, lui, ne pose pas la question — `TARGETED_DEVICE_FAMILY` vaut 1 […], donc RUNUP est une
+> app iPhone et Apple ne demande aucune image d'iPad. »
+
+Et `asc.py` porte une commande écrite exprès pour la **retirer** de la fiche, dont le commentaire
+dit : « une mise en page iPhone étirée dans un cadre d'iPad sur une app qui ne vise que l'iPhone.
+Ces images ne se corrigent pas, elles se retirent. »
+
+**J'ai passé deux jours à fabriquer, garder et rafraîchir une image que le dépôt avait déjà
+décidé de supprimer.** Je l'ai régénérée deux fois, j'ai ajouté une exception au `.gitignore`
+pour la nourrir, j'ai cassé un clone neuf en le faisant, et j'ai ouvert une tâche pour résoudre
+structurellement un problème qui n'existait pas. Aucun de mes garde-fous ne pouvait l'attraper :
+ils vérifient qu'une image est à jour, pas qu'elle a lieu d'être.
+
+### Ce qui a changé
+
+| | Avant | Après |
+| --- | --- | --- |
+| `requis.py` | composait une image iPad (fond, accroche, cadre d'appareil, filets) et posait la montre | pose la montre, c'est tout — **160 lignes de moins, et plus de dépendance à Pillow** |
+| `appstore/requis/ipad/` | trois images versionnées | supprimé |
+| `appstore/raw/*/1-accueil.png` | trois captures versionnées contre la règle du `.gitignore` | supprimées, la règle redevient simple |
+| Exception du `.gitignore` | ajoutée la veille pour nourrir la composition | retirée, elle aura vécu vingt-quatre heures |
+| `appstore.yml` | une action `pousser-l-ipad` | retirée |
+| `captures.yml` | composait l'iPad à chaque passage | ne compose plus rien, vérifie la montre |
+| `SOURCES.json` | 6 entrées | 3 |
+
+### Ce qui reste à faire UNE FOIS, à la main
+
+La fiche publiée porte encore la capture iPad d'août — App Store Connect recopie les captures de
+la version précédente, tous formats confondus. Workflow **App Store**, action
+**`nettoyer-les-captures`**, champ « retirer » : **`APP_IPAD_PRO_3GEN_129`**.
+
+Et elle reviendra à chaque nouvelle version tant qu'on ne la retire pas. C'est écrit dans
+`RELEASE.md`.
+
+### La question produit, qui reste ouverte
+
+S'il devait y avoir une app iPad un jour, ce ne serait pas la même app : pas d'écran de séance en
+cours, mais le plan, les stats, le fil du club, le coach. C'est un chantier à part entière et il
+n'est pas dans la liste de la phase 2 — à y ajouter si tu le veux.
 
 ## Chantier 20 — le verre dépoli sort de l'interface
 

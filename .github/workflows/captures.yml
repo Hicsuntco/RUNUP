@@ -399,13 +399,20 @@ jobs:
             echo "──────────── $langue ────────────"
             "$RUNNER_TEMP/venv/bin/python" ci_scripts/screenshots.py "$langue"
           done
-          # Les deux images qu'Apple exige en plus des six : l'iPad, composée de la capture
-          # d'accueil qu'on vient de prendre, et la montre, posée telle quelle. Elles sont dans
-          # la même étape parce qu'elles dépendent des mêmes captures fraîches — les séparer
-          # rouvrirait la porte par laquelle elles ont vieilli de trois mois.
-          # L'iPad, composé des captures qu'on vient de prendre. La montre, elle, est posée par
-          # `montre.yml` : `requis.py` saute une langue dont il n'a pas la capture, et le dit.
-          "$RUNNER_TEMP/venv/bin/python" ci_scripts/requis.py ${{ steps.quoi.outputs.langues }}
+          # L'IMAGE iPAD COMPOSÉE ICI A DISPARU, ET C'ÉTAIT UNE ERREUR, PAS UNE SIMPLIFICATION.
+          #
+          # RUNUP est une app iPhone : `TARGETED_DEVICE_FAMILY` vaut 1 dans les réglages de base
+          # comme dans ceux du widget, seule la montre porte 4. Apple ne demande donc aucune
+          # image d'iPad — `RELEASE.md` l'écrivait déjà pendant que `requis.py` en fabriquait
+          # une, à partir d'une mise en page iPhone étirée dans un cadre d'iPad.
+          #
+          # La raison de fond est une décision produit : on ne court pas avec son iPad. Une app
+          # iPad de RunUp ne serait pas la même app, donc elle ne se photographie pas en
+          # étirant celle de l'iPhone.
+          #
+          # Il reste `check_requis.py`, qui vérifie que les images de montre VERSÉES dans le
+          # dépôt montrent toujours l'app d'aujourd'hui. Elles sont posées par `montre.yml`, pas
+          # ici : cette chaîne-ci ne construit pas la cible watchOS.
           python3 ci_scripts/check_requis.py
 
       # ── LE GRAND TEXTE A-T-IL PRIS ? ─────────────────────────────────────────────────────────
@@ -734,7 +741,6 @@ jobs:
           path: |
             appstore/raw/**
             appstore/out/**
-            appstore/requis/ipad/**
             appstore/apercu/out/**
             appstore/apercu/*/*.json
             appstore/apercu/*/debut.txt

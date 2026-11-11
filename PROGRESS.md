@@ -437,6 +437,13 @@ Deuxième manifestation, sur la même image : les trois activités d'amies sont 
 22 h en arrière, et `ProfileView` compte celles du jour. « Il y a 22 h » est HIER à 6 h du matin
 et AUJOURD'HUI à 23 h.
 
+**Et celle-là, `comparer.py` ne l'a pas vue.** Je l'ai vue à l'œil en ouvrant les deux images, et
+j'ai d'abord cru qu'elle faisait partie de l'écart mesuré : c'est faux. La carte « Amis » vit dans
+les 186 px du haut, que l'outil masque pour ignorer l'heure — iOS dessine l'heure par-dessus
+l'app, et sur une capture prise au milieu d'un défilement cette bande porte du contenu. Un « = »
+de cet outil veut donc dire « identique sous les 186 premiers pixels ». La limite est maintenant
+écrite dans son en-tête.
+
 **Et `4-club.png` est une des six images livrées à Apple.** Selon l'heure de la campagne, Apple
 recevait un profil avec le badge « Course de nuit » ou sans.
 
@@ -478,6 +485,23 @@ Les horodatages RELATIFS du fil du club — « il y a 3 h » — dépendent de l
 construction, et c'est ce qu'on veut : un fil doit dire depuis combien de temps. C'est ce qui fait
 différer `4-club.png` dans une petite boîte d'une centaine de pixels. Un texte de largeur
 différente n'est pas un défaut ; un badge qui apparaît en était un.
+
+### Ce qui le prouve
+
+La campagne **163 a tourné à 23 h** — plus tard encore que la 162, qui est celle qui avait allumé
+le badge. `profil-bas.png` y est **identique à celui de la campagne 160**, qui avait tourné à
+18 h, dans les trois langues et les deux thèmes. Deux campagnes de part et d'autre de l'heure qui
+faisait basculer le badge rendent la même image.
+
+Et le cas était plus dur qu'il n'y paraît : à 23 h l'ancien code allumait « Course de nuit », et à
+00 h il aurait allumé « Lève-tôt ». La campagne 163 a photographié les deux côtés de minuit sans
+que rien ne bouge sur cet écran.
+
+**Ce qui ne se compare pas d'une campagne à l'autre quand elles ne tombent pas le même jour.** La
+163 a commencé à 23 h 39 et fini après minuit : 73 images diffèrent de la 162, et c'est normal —
+le plan, l'accueil et le bilan hebdomadaire parlent d'aujourd'hui. Une comparaison à cheval sur
+minuit ne prouve rien sur une découpe. C'est pour ça que la preuve de B5 tient sur 160 → 162,
+deux campagnes du même jour.
 
 ### Ce qui le garde
 

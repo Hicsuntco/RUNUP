@@ -21,9 +21,18 @@ L'écart pixel à pixel en gris, image par image, entre deux dossiers de même f
 LA BARRE D'ÉTAT EST MASQUÉE, parce qu'elle porte l'heure : deux prises du même écran à deux
 minutes d'intervalle n'ont jamais exactement la même image, et une comparaison qui compte ce
 pixel-là ne peut rien dire. Le masque vaut 6,5 % de la hauteur — 181 px sur les 2796 de
-l'iPhone 15 Pro Max, pour une barre qui en fait 162. Ce qui est masqué n'est pas mesuré : si
-un défaut ne vit QUE sous l'heure, cet outil ne le verra pas, et il n'y a pas de place à
-RUNUP pour un écran dont le haut n'est que la barre d'état.
+l'iPhone 15 Pro Max, pour une barre qui en fait 162. Ce qui est masqué n'est pas mesuré.
+
+ET SUR UNE CAPTURE DÉFILÉE, CETTE BANDE N'EST PAS QUE LA BARRE D'ÉTAT. iOS dessine l'heure
+PAR-DESSUS l'app : sur `profil-bas.png`, pris au milieu d'un défilement, les 186 px du haut
+portent la carte « Amis · N sorties aujourd'hui », avec l'heure posée dessus. Le 11 novembre
+2026, ce nombre est passé de 2 à 3 entre deux campagnes, et cet outil a répondu « identique ».
+Le défaut était réel, il a été vu À L'ŒIL en ouvrant les deux images.
+
+Donc : un « = » de cet outil veut dire « identique SOUS les 186 premiers pixels », pas
+« identique ». Sur un écran défilé, il faut regarder le haut soi-même. Le masque ne peut pas
+être retiré — il existe pour l'heure, qui change à chaque prise — et c'est le genre de limite
+qui doit être écrite ici plutôt que redécouverte.
 
 Pour chaque image, trois nombres : l'écart MOYEN sur toute la surface mesurée, le nombre de
 pixels qui diffèrent de plus de `--bruit`, et le cadre qui les contient. Le cadre est ce qui

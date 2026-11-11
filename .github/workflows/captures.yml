@@ -268,9 +268,49 @@ jobs:
           xcrun simctl boot "${{ steps.sim.outputs.udid }}" || true
           xcrun simctl bootstatus "${{ steps.sim.outputs.udid }}" -b || true
 
+      # L'ENVIRONNEMENT PYTHON EST PRÉPARÉ AVANT LES CAPTURES, ET PAS AU MOMENT DE COMPOSER.
+      #
+      # Il vivait dans « Composer les images finales », c'est-à-dire APRÈS la prise de vue. Or la
+      # passe sombre se relit désormais elle-même avec `check_banniere.py`, qui demande Pillow :
+      # il doit donc exister avant. Le commentaire d'origine reste valable et le voici.
+      #
+      # UN ENVIRONNEMENT VIRTUEL, PAS UN `pip install` NU. `python3 -m pip install pillow` est
+      # REFUSÉ sur les runners macOS : « error: externally-managed-environment » (PEP 668). Le
+      # Python de Homebrew protège ses paquets, et l'exécution 5 est morte là — après avoir
+      # produit les dix-huit captures, à la toute dernière étape. `--break-system-packages`
+      # passerait, au prix d'abîmer l'installation Homebrew du runner ; un environnement virtuel
+      # ne touche à rien. `--system-site-packages` pour ne pas réinstaller ce qui est déjà là.
+      - name: Préparer Python
+        run: |
+          set -euo pipefail
+          python3 -m venv --system-site-packages "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/python" -m pip install --quiet --upgrade pillow
+
       - name: Photographier, langue par langue
         run: |
           set -euo pipefail
+
+          # La prise de vue est une fonction parce qu'elle sert DEUX fois : une passe, et sa
+          # reprise si une bannière du système s'est posée dessus. Deux copies du même
+          # `xcodebuild` seraient deux occasions d'en corriger une seule.
+          #
+          # LE PRÉFIXE `TEST_RUNNER_` N'EST PAS DÉCORATIF. Le test tourne dans un processus du
+          # SIMULATEUR, qui n'hérite pas de l'environnement du shell : poser `RUNUP_LANG=…`
+          # devant `xcodebuild` ne le ferait arriver nulle part, et le test lirait `nil` sans se
+          # plaindre — trois séries identiques en français, et aucune erreur pour le dire.
+          # `xcodebuild` transmet en revanche toute variable nommée `TEST_RUNNER_X` au lanceur,
+          # sous le nom `X`.
+          photographier() {
+            TEST_RUNNER_RUNUP_LANG="$1" \
+            TEST_RUNNER_RUNUP_CAPTURES_DIR="$2" \
+              xcodebuild test-without-building \
+                -project RunUp.xcodeproj \
+                -scheme Captures \
+                -destination "id=${{ steps.sim.outputs.udid }}" \
+                -derivedDataPath build/captures \
+                CODE_SIGNING_ALLOWED=NO
+          }
+
           for langue in ${{ steps.quoi.outputs.langues }}; do
             echo "──────────── $langue ────────────"
             dossier="$PWD/appstore/raw/$langue"
@@ -284,20 +324,34 @@ jobs:
             # et rend l'effacement inutile. Il coûtait une minute cinquante par langue, se
             # terminait sur un état de démarrage douteux, et l'app, elle, vide sa propre base à
             # chaque lancement (voir `CaptureSeed.poser`).
-            # LE PRÉFIXE `TEST_RUNNER_` N'EST PAS DÉCORATIF. Le test tourne dans un
-            # processus du SIMULATEUR, qui n'hérite pas de l'environnement du shell :
-            # poser `RUNUP_LANG=…` devant `xcodebuild` ne le ferait arriver nulle part, et le
-            # test lirait `nil` sans se plaindre — trois séries identiques en français, et
-            # aucune erreur pour le dire. `xcodebuild` transmet en revanche toute variable
-            # nommée `TEST_RUNNER_X` au lanceur, sous le nom `X`.
-            TEST_RUNNER_RUNUP_LANG="$langue" \
-            TEST_RUNNER_RUNUP_CAPTURES_DIR="$dossier" \
-              xcodebuild test-without-building \
-                -project RunUp.xcodeproj \
-                -scheme Captures \
-                -destination "id=${{ steps.sim.outputs.udid }}" \
-                -derivedDataPath build/captures \
-                CODE_SIGNING_ALLOWED=NO
+            photographier "$langue" "$dossier"
+
+            # UNE REPRISE, ET UNE SEULE, SI UNE BANNIÈRE DU SYSTÈME EST TOMBÉE DESSUS.
+            #
+            # iOS pose parfois une notification en travers d'une capture — « Ready for Apple
+            # Intelligence », deux fois en trois jours : le 8 novembre sur `1-accueil.png`, une
+            # des six images livrées à Apple, et le 10 sur `club-classement.png`.
+            #
+            # `check_banniere.py` l'attrape à la fin de la chaîne, et c'est l'essentiel : rien de
+            # fautif ne part. Mais la campagne échoue, et la relancer à la main coûte une HEURE de
+            # machine macOS. Reprise ici, c'est une langue à refaire, soit deux ou trois minutes,
+            # et ça reste dans la même exécution.
+            #
+            # Une seule reprise, volontairement. Une bannière est une affaire de minutage : si la
+            # seconde prise la revoit, ce n'est plus le minutage, et le contrôle de fin doit
+            # échouer pour qu'on aille regarder l'image. Deux essais qui échouent valent un
+            # signal ; dix valent une boucle qui cache un défaut.
+            #
+            # La passe CLAIRE n'est pas reprise : le contrôle ne sait pas la lire — une bande
+            # claire sur un écran clair ne dit rien — et il l'écrit lui-même.
+            if ! "$RUNNER_TEMP/venv/bin/python" ci_scripts/check_banniere.py \
+                   --dossier "$dossier" --plafond 25; then
+              echo "↻ reprise de $langue : une bannière du système s'est posée sur une capture."
+              rm -rf "$dossier"
+              mkdir -p "$dossier"
+              photographier "$langue" "$dossier"
+            fi
+
             echo "→ $(ls -1 "$dossier" | wc -l | tr -d ' ') capture(s) dans appstore/raw/$langue"
             ls -1 "$dossier"
           done
@@ -393,8 +447,6 @@ jobs:
       - name: Composer les images finales
         run: |
           set -euo pipefail
-          python3 -m venv --system-site-packages "$RUNNER_TEMP/venv"
-          "$RUNNER_TEMP/venv/bin/python" -m pip install --quiet --upgrade pillow
           for langue in ${{ steps.quoi.outputs.langues }}; do
             echo "──────────── $langue ────────────"
             "$RUNNER_TEMP/venv/bin/python" ci_scripts/screenshots.py "$langue"

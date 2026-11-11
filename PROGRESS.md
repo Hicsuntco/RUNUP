@@ -406,6 +406,56 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 41 — une bannière d'iOS ne coûte plus une heure
+
+### Ce qui était faux
+
+iOS pose parfois une notification en travers d'une capture. Deux fois en trois jours : le
+8 novembre sur `1-accueil.png` — une des six images livrées à Apple — et le 10 sur
+`club-classement.png`, 60,1 % de pixels clairs en haut pour un plafond à 25.
+
+`check_banniere.py` l'attrape, et c'est l'essentiel : rien de fautif ne part chez Apple. Mais il
+l'attrape **à la fin de la chaîne**, après les deux passes de prise de vue, la composition et les
+contrôles d'image. La campagne échoue donc au bout d'une heure, et la relancer en coûte une autre.
+
+### Ce qui a changé
+
+La passe sombre se relit **langue par langue, juste après l'avoir prise**, et se reprend une fois
+si une bannière est tombée dessus. Une langue à refaire, c'est deux ou trois minutes, et ça reste
+dans la même exécution.
+
+**Une seule reprise, volontairement.** Une bannière est une affaire de minutage ; si la seconde
+prise la revoit, ce n'est plus le minutage, et le contrôle de fin doit échouer pour qu'on aille
+regarder l'image. Deux essais qui échouent valent un signal, dix valent une boucle qui cache un
+défaut.
+
+L'environnement Python remonte avant les captures — il vivait dans « Composer les images
+finales », c'est-à-dire après la prise de vue, et le contrôle qui se relit a besoin de Pillow.
+
+### Ce qui n'est pas repris, et c'est écrit sur place
+
+**La passe claire.** Le contrôle ne sait pas la lire : une bande claire sur un écran clair ne dit
+rien, et il le déclare lui-même — « seules les captures SOMBRES sont regardées ». Reprendre une
+passe qu'on ne sait pas juger serait un geste sans mesure derrière.
+
+### Ce qui le prouve
+
+La logique de reprise a été éprouvée ici, sur les **vrais dossiers** des campagnes 161 (celle qui
+portait la bannière) et 163 (propre) :
+
+| première prise | reprise | résultat |
+| --- | --- | --- |
+| propre | — | vert, **aucune** reprise |
+| bannière | propre | vert, **une** reprise |
+| bannière | bannière | **rouge**, une seule reprise |
+
+Le troisième cas est celui qui compte : la boucle ne s'acharne pas, et l'échec reste visible.
+
+### Ce qui n'a pas été fait, faute de source
+
+Empêcher le simulateur de poser des bannières. Je n'ai trouvé aucune clé documentée pour ça, et
+une recette inventée qui marche par hasard est pire qu'une reprise explicite.
+
 ## Chantier 40 — la capture héritait de l'heure de la machine
 
 ### D'abord, ce que la comparaison a prouvé

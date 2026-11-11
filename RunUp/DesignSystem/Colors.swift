@@ -232,6 +232,27 @@ enum RUColor {
     /// carte ne peut plus le faire. 1,15:1 contre le blanc — faible dans l'absolu, mais c'est le
     /// maximum tolérable avant que la sous-surface ne devienne une carte à son tour.
     static var card2: Color { isLight ? Color(hex: 0xEDEBF4) : Color(hex: 0x201F2A) }
+
+    // ── LES DEUX SURFACES DE L'ÉCRAN DE SÉANCE ──────────────────────────────────────────────
+    //
+    // FIXES DANS LES DEUX THÈMES, et ce n'est pas un oubli. L'écran de course reste sombre même
+    // en apparence claire : on le regarde dehors, en mouvement, à bout de bras, et un fond blanc
+    // y perdrait le contraste que les chiffres demandent. Elles ne prennent donc PAS `isLight`.
+    //
+    // Elles vivaient dans un `enum Ink` au milieu de `LiveRunView`, avec leur raison. Deux
+    // couleurs écrites dans un fichier de vue restent deux valeurs en dur dans un écran — règle
+    // 4 — et surtout personne ne les trouve en ouvrant le système. Leur raison descend avec
+    // elles ; `Ink` garde ce qui dépend vraiment de cet écran.
+
+    /// Le fond des surfaces de l'écran de séance : la carte, le voile du bas.
+    static let seanceSurface = Color(hex: 0x0E0E14)
+
+    /// Le fond de l'écran de séance, DERRIÈRE les surfaces. Un cran plus sombre que
+    /// `seanceSurface`, à quatre centièmes de bleu près — l'écart est volontairement minuscule,
+    /// il ne sert qu'à poser les surfaces. Les deux étaient écrits à la main à des endroits
+    /// différents, et deux noirs presque identiques écrits à la main sont la façon exacte dont on
+    /// obtient, un jour, deux noirs visiblement différents.
+    static let seanceFond = Color(hex: 0x0A0A0E)
     /// Laissé à 11 %, volontairement, alors que `cardBorder` juste en dessous tombe à 5 %.
     ///
     /// Les deux ne font pas le même travail, et c'est écrit dans ce fichier depuis longtemps :

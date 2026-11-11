@@ -59,14 +59,14 @@ private enum Ink {
     /// L'accent de la coureuse, version fond sombre — quelle que soit l'apparence globale.
     static var accent: Color { AccentTheme.current.primary }
     static var accentSoft: Color { AccentTheme.current.light }
-    /// Le fond des surfaces de cet écran. Il était écrit deux fois en dur — ici et dans le voile
-    /// du bas — pour la même valeur.
-    static let fond = Color(hex: 0x0E0E14)
-    /// Le fond de l'ÉCRAN, derrière la carte. Un cran plus sombre que `fond`, qui habille les
-    /// surfaces posées dessus — et il était écrit en dur à son unique point d'usage, à quatre
-    /// centièmes de bleu près de `fond`. Deux noirs presque identiques écrits à la main sont la
-    /// façon exacte dont on obtient, un jour, deux noirs visiblement différents.
-    static let ecran = Color(hex: 0x0A0A0E)
+    /// Le fond des surfaces de cet écran, et le fond de l'écran derrière elles.
+    ///
+    /// Les VALEURS sont descendues dans `RUColor` — deux couleurs écrites dans un fichier de vue
+    /// restent deux valeurs en dur dans un écran, et personne ne les trouve en ouvrant le
+    /// système. Les deux noms restent ici : ils disent à quoi la couleur sert SUR CET ÉCRAN, ce
+    /// qu'un nom de jeton ne dit pas tout seul.
+    static let fond = RUColor.seanceSurface
+    static let ecran = RUColor.seanceFond
     /// L'ambre LISIBLE, pour le texte des bandeaux. C'est la valeur sombre de `RUColor.amberText`
     /// (0xFFD79A), épinglée ici parce que cet écran reste sombre dans les deux thèmes : en
     /// apparence claire, `RUColor.amberText` descend à 0x8A5A00, qui disparaîtrait sur du noir.

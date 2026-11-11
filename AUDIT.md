@@ -103,13 +103,21 @@ re-transmis dit toujours trois.
 ### 7. L'écran de séance
 
 - **Fond :** `#0E0E14` et `#0A0A0E`, pas le `#000000` du brief.
-- **Boutons :** mesurés à 52 et 70 points. Le brief demande **au moins 64**, et une pause « de la
-  taille d'une paume ». Deux des trois boutons sont sous le seuil.
+- **Boutons :** mesurés à 52, 70 et 52 points. **J'ai d'abord écrit que deux des trois étaient
+  sous le seuil des 64. C'est vrai du chiffre et faux du reproche.** Le bouton que le brief décrit
+  — la pause, « de la taille d'une paume » — fait 70. Et les deux autres ont une raison mesurée,
+  écrite sur place : à 52 + 70 + 52, au deuxième cran d'accessibilité (× 1,94), la rangée fait
+  338 points et déborde déjà d'un écran de 320. Les porter à 64 la ferait déborder plus tôt. Ce
+  n'est pas un oubli, c'est un arbitrage entre deux règles du brief — la taille des cibles et la
+  lisibilité en grand texte — et il est tranché du bon côté.
 - **Chiffre central :** 52 ou 64 points selon qu'une consigne est affichée. Lisible, mais loin du
-  « très grand corps » demandé.
-- **Et un second jeu de jetons.** `LiveRunView` porte un `enum Ink` avec deux couleurs écrites en
-  dur. C'est la **règle 4** — « toute valeur en dur dans un écran est un défaut » — et c'est le
-  seul endroit de l'app où un écran se donne sa propre palette.
+  « très grand corps » demandé. **Seul écart réel de cet écran.**
+- **Le `enum Ink`.** J'ai écrit « un second jeu de jetons, donc la règle 4 ». **C'était trop
+  dur.** `Ink` a été créé pour SUPPRIMER des valeurs écrites deux fois, chacune porte sa raison,
+  et l'essentiel dérive de `AccentTheme`. Le seul point juste était que deux couleurs de surface
+  vivaient dans un fichier de vue : personne ne les trouve en ouvrant le système. Elles sont
+  descendues dans `RUColor` — `seanceSurface` et `seanceFond` — avec leur raison, et `Ink` garde
+  les noms qui disent à quoi elles servent sur cet écran. **Corrigé le 11 novembre.**
 
 ### 8. Les durées d'animation
 

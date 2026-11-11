@@ -3854,6 +3854,23 @@
         }
       }
     },
+    "Affûtage, J-%lld : le volume baisse, l'intensité reste. C'est la fatigue qu'on enlève, pas la forme.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taper, %lld days out: volume drops, intensity stays. What comes off is the fatigue, not the fitness."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afinamiento, faltan %lld días: baja el volumen, la intensidad se queda. Lo que se quita es el cansancio, no la forma."
+          }
+        }
+      }
+    },
     "Agrandir le tracé": {
       "localizations": {
         "en": {
@@ -23108,6 +23125,23 @@
         }
       }
     },
+    "Semaine %lld : une semaine sur quatre est allégée, pour que les trois suivantes tiennent.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Week %lld: one week in four is a lighter one, so the next three hold up."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Semana %lld: una de cada cuatro semanas se aligera, para que las tres siguientes aguanten."
+          }
+        }
+      }
+    },
     "Semaine %lld prête, ajustée d'après ta forme de la semaine passée.": {
       "extractionState": "manual",
       "localizations": {
@@ -23121,6 +23155,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Semana %lld lista, ajustada según tu forma de la semana pasada."
+          }
+        }
+      }
+    },
+    "Semaine %lld sur %lld, bloc de base : on construit le volume avant de le spécialiser.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Week %1$lld of %2$lld, base block: we build the volume before sharpening it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Semana %1$lld de %2$lld, bloque de base: construimos el volumen antes de especializarlo."
+          }
+        }
+      }
+    },
+    "Semaine %lld sur %lld, bloc spécifique : les séances ressemblent de plus en plus à ta course.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Week %1$lld of %2$lld, specific block: the sessions look more and more like your race."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Semana %1$lld de %2$lld, bloque específico: las sesiones se parecen cada vez más a tu carrera."
           }
         }
       }

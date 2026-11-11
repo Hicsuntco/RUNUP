@@ -689,6 +689,28 @@ struct HomeView: View {
         }
     }
 
+    /// La phrase « pourquoi cette séance » du jour, quand il y en a une.
+    ///
+    /// Tout le raisonnement vit dans `PourquoiCetteSeance` — cette fonction ne fait que lui
+    /// tendre ce que le moteur sait. `adaptationNote` compte comme une explication au même titre
+    /// qu'`adjustment` : elle est recopiée dans le sous-titre de la séance (voir
+    /// `WorkoutSession.displaySubtitle`), donc la raison est déjà à l'écran.
+    private func pourquoiCetteSeance(_ session: WorkoutSession, estUnJourDeRepos: Bool) -> String? {
+        let shape = AdaptivePlanEngine.ProgramShape.compute(
+            goal: profile.goalId, raceDate: profile.raceDate,
+            from: profile.programStartDate ?? .now)
+        let jours = profile.raceDate.map {
+            Calendar.current.dateComponents([.day], from: .now, to: $0).day ?? 0
+        }
+        return PourquoiCetteSeance.phrase(.init(
+            bloc: AdaptivePlanEngine.trainingBlock(forWeek: profile.weekNumber, shape: shape),
+            semaine: profile.weekNumber,
+            semainesEnTout: shape.totalWeeks,
+            joursAvantLaCourse: jours,
+            dejaExplique: session.adjustment != nil || session.adaptationNote != nil,
+            estUnJourDeRepos: estUnJourDeRepos))
+    }
+
     private var sessionCard: some View {
         let session = profile.todaySession
         // `isRestDayToday` plutôt que la durée de la séance prescrite : COURIR EFFACE LE REPOS,
@@ -737,6 +759,26 @@ struct HomeView: View {
                 // Rose auparavant. C'est une EXPLICATION — « voici pourquoi la séance est ce
                 // qu'elle est » — et une explication n'est pas un accent : on la lit une fois,
                 // on n'agit pas dessus.
+                .foregroundColor(RUColor.text2)
+                .padding(.top, 6)
+            }
+            // ET LES AUTRES JOURS, CEUX OÙ LE MOTEUR N'A RIEN CORRIGÉ.
+            //
+            // `adjustment` n'existe que lorsqu'une séance a été ALLÉGÉE. La grande majorité des
+            // jours, la carte affichait donc une séance et se taisait sur la raison — alors que
+            // le moteur en a une : le bloc, le rang de la semaine, la distance à la course.
+            //
+            // En `else if`, jamais en plus : une correction est une explication plus précise que
+            // n'importe quelle phrase de bloc, et deux explications sur la même carte, c'est une
+            // de trop. Voir `PourquoiCetteSeance`, qui porte la décision et ses cas.
+            else if let pourquoi = pourquoiCetteSeance(session, estUnJourDeRepos: isRestDay) {
+                HStack(spacing: 6) {
+                    Image(systemName: "calendar")
+                        .font(RUFont.icone(.small, weight: .semibold))
+                    Text(pourquoi)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .font(RUFont.sans(.small, weight: .medium))
                 .foregroundColor(RUColor.text2)
                 .padding(.top, 6)
             }

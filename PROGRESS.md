@@ -410,6 +410,68 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 45 — dire pourquoi cette séance, aujourd'hui (C1)
+
+### Ce qui existait, et ce qui manquait
+
+L'app disait déjà pourquoi une séance avait été **allégée** : `adjustment` porte « Allégée · nuit
+courte », `adaptationNote` porte « adapté à ta cheville sensible · impact réduit ». La carte
+d'accueil les affiche en une ligne sous le titre, et son commentaire dit la bonne chose : « voici
+la séance, voici pourquoi elle est ce qu'elle est ».
+
+Mais ces lignes n'existent **que les jours où le moteur corrige**. Les autres — la grande
+majorité — la carte affiche une séance et se tait sur la raison. Or le moteur en a une : il sait
+dans quel bloc on est, qu'une semaine sur quatre est allégée, combien de semaines restent, et à
+quelle distance est la course.
+
+### La condition de l'item, et ce qui s'y conforme
+
+`PHASE2.md` la pose en toutes lettres : « à condition que la phrase vienne du moteur et pas d'un
+catalogue de phrases. Sinon c'est un texte générique, donc un défaut. »
+
+Une phrase par bloc serait exactement ce catalogue. Ce qui l'en sépare : **chaque phrase porte un
+nombre de CE plan.**
+
+| bloc | ce que la phrase dit | d'où vient le nombre |
+| --- | --- | --- |
+| décharge | « Semaine 8 : une semaine sur quatre est allégée, pour que les trois suivantes tiennent. » | la règle est `week % 4 == 0` dans `trainingBlock` |
+| affûtage | « Affûtage, J-12 : le volume baisse, l'intensité reste. C'est la fatigue qu'on enlève, pas la forme. » | la vraie date de course |
+| spécifique | « Semaine 9 sur 14, bloc spécifique : les séances ressemblent de plus en plus à ta course. » | `weekNumber` et `shape.totalWeeks` |
+| base | « Semaine 2 sur 14, bloc de base : on construit le volume avant de le spécialiser. » | les mêmes |
+
+Deux coureuses dans le même bloc ne lisent pas la même phrase, parce qu'elles ne sont pas à la
+même semaine. **Et là où le moteur n'a rien de chiffré à dire, la fonction rend `nil` et l'écran
+se tait** — un programme ouvert (« rester en forme ») n'a pas de total de semaines, donc la
+phrase de bloc deviendrait « on construit le volume », c'est-à-dire le texte générique interdit.
+
+### Ce qu'elle ne fait jamais
+
+**Parler par-dessus une correction.** Si le moteur a allégé la séance, c'est ça la raison du
+jour : elle est plus précise que n'importe quelle phrase de bloc. La nouvelle ligne est en `else
+if`, jamais en plus. Deux explications empilées sur la même carte, c'est une de trop.
+
+Et rien un jour de repos : la carte affiche « REPOS » et porte déjà sa ligne.
+
+### Ce qui le prouve
+
+`PourquoiCetteSeanceTests`, **9 cas**. Un banc qui vérifierait seulement « il y a une phrase »
+laisserait passer le catalogue ; ceux-ci vérifient l'inverse :
+
+- **la phrase change avec la semaine** — si cette assertion tombe, c'est qu'une phrase a perdu son
+  nombre et s'est mise à décrire le bloc au lieu du plan ;
+- les quatre blocs disent quatre choses différentes ;
+- une séance déjà expliquée n'en reçoit pas une deuxième, dans les quatre blocs ;
+- sans total de semaines, et sans date de course, les blocs concernés se taisent.
+
+### Et les trois langues
+
+`check_strings.py` a refusé la première version : quatre chaînes affichées absentes du catalogue,
+« chacune sortira EN FRANÇAIS en anglais et en espagnol ». Puis la deuxième : deux clés portaient
+des marqueurs positionnels (`%1$lld`), et **une clé est calculée à l'exécution depuis la phrase
+interpolée — elle ne porte jamais de position**. Une clé positionnelle n'est jamais trouvée, donc
+l'app aurait affiché la clé, c'est-à-dire le français, à tout le monde. La traduction, elle, a le
+droit d'en porter.
+
 ## Chantier 44 — la version 3.4, et l'élagage qui ne s'est pas fait tout seul
 
 ### Ce qui était attendu, et ce qui s'est passé

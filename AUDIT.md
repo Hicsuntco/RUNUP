@@ -8,6 +8,145 @@ je le dis à la place du chiffre.
 
 ---
 
+## Relecture du 11 novembre 2026 — l'écart avec la DA, remesuré
+
+Cet audit date du 7 novembre. Quarante-quatre chantiers ont passé depuis, et dix-sept des
+vingt-deux items de `PHASE2.md` sont faits. Je n'ai donc pas refait l'état des lieux à zéro :
+j'ai remesuré **ce qui a vieilli et ce qui est le plus actionnable**, c'est-à-dire l'écart avec la
+direction artistique, à la précision où le brief la donne — valeurs hexadécimales comprises.
+
+**Rien n'a été modifié.** Tout ce qui suit est une lecture.
+
+### 1. La palette : aucune des douze couleurs du brief n'existe dans le code
+
+Cherchées une par une, en hexadécimal, dans les 300 fichiers Swift : **zéro occurrence**, pour
+les douze.
+
+| rôle | brief | app aujourd'hui |
+| --- | --- | --- |
+| accent action | `#F0225F` | `#FF0A78` (thème « rose », défaut) |
+| accent secondaire | `#7B3FE4` | `#7C5CFF` |
+| fond consultation | `#FBF9F7` (blanc chaud) | `#F4F3F8` (gris-lavande froid) |
+| cartes | `#FFFFFF` | `#FFFFFF` ✓ |
+| fonds teintés | `#F3EEF4` | `#EDEBF4` |
+| texte | `#15121A` / `#6B6473` | `#15151C` / des opacités de noir |
+| fond séance | `#000000` | `#0E0E14` et `#0A0A0E` |
+| texte séance | `#FFFFFF` / `#A09AA8` | blanc / opacités |
+| cycle | `#F2B8A0` sur `#FDF1EC` | aucun jeton de cycle |
+
+Les écarts d'accent et de texte sont des nuances ; **le fond de consultation est un désaccord de
+nature** : le brief demande un blanc chaud, l'app pose un gris froid légèrement lavande. C'est
+précisément ce que la décision D2 avait laissé ouvert — « le `#FBF9F7` chaud du brief n'est pas
+imposé » — donc ce n'est pas une dérive, c'est une décision prise. Mais elle n'a jamais été
+confrontée au reste de la palette.
+
+### 2. Une teinte par intensité : la structure y est, les valeurs non, et il y en a sept
+
+Le brief demande cinq intensités à teinte fixe. L'app a bien **une teinte par famille de séance,
+la même partout** — c'est la structure demandée — mais elle en compte **sept**, et aucune valeur
+ne correspond :
+
+| brief | app (clair / sombre) |
+| --- | --- |
+| facile `#2FB37A` (vert) | endurance → `#6B9E00` / `#C8FF3D` (lime) |
+| seuil `#F5A524` | tempo → `#B86A00` / `#FFB03D` |
+| intervalles `#F0225F` | intervals → `ember` |
+| récupération `#5AA9E6` (bleu) | recovery → `#0E9C8C` / `#38E0D0` (turquoise) |
+| sortie longue `#7B3FE4` | longRun → `#5B3FD6` / `#9B7CFF` |
+| — | repos, et « fonctionnel » (HYROX) |
+
+**Et il y a une objection technique à la palette du brief**, qu'il faut poser avant de l'adopter :
+elle donne une seule valeur par intensité, alors que l'app porte deux thèmes et huit accents, et
+que `check_contraste.py` tient chaque couleur sur les deux fonds. `#F5A524` sur blanc donne environ
+1,9:1 — très au-dessous du seuil. Les valeurs du brief sont pensées pour un fond sombre ; les
+reprendre telles quelles casserait le contraste en mode clair, qui est désormais le défaut.
+
+### 3. Ce qui est conforme
+
+- **La typographie.** Le brief autorise « Geist, Inter Display ou General Sans » : l'app est
+  entièrement en **Inter**, chiffres tabulaires compris.
+- **Le dégradé.** Zéro dégradé décoratif, zéro verre dépoli, zéro emoji — mesuré, et tenu par
+  `check_degrade.py` et `check_verre.py`. Le rose → violet ne vit plus que sur le logo.
+- **L'accueil en flux vertical unique.**
+- **Live Activity, widget, complication Watch.**
+
+### 4. Les icônes : zéro Phosphor, zéro Lucide
+
+200 appels à `systemName:` — **SF Symbols à 100 %**. Le brief demande « un seul set d'icônes au
+trait 1,5 px (Phosphor ou Lucide), pictos de sport dans le même trait ».
+
+C'est un écart entier, et il n'est pas gratuit à combler : les SF Symbols s'alignent sur la ligne
+de base du texte, suivent le poids de la fonte et les tailles d'accessibilité tout seuls. Un set
+importé demande de refaire ces trois choses à la main, et `check_symboles.py` — qui vérifie
+aujourd'hui que les 108 symboles employés existent — devrait être réécrit.
+
+### 5. La barre basse, et le Club rangé sous « Profil »
+
+| | brief | app |
+| --- | --- | --- |
+| entrées | 3 — Aujourd'hui, Plan, Club | 5 — Prog, Coach, RUN, Stats, Profil |
+
+La décision D3 a tranché pour cinq. Mais il reste un écart qu'aucune décision n'a couvert : **le
+Club n'est pas dans la barre.** `RootTabView` le rattache à l'onglet Profil (`case .club, .fil:
+return .profile`), donc on y arrive par Profil puis un appui de plus.
+
+Or « il te connecte à un club » est l'un des trois différenciateurs que le brief demande de rendre
+évidents **dès le premier écran**. Aujourd'hui, c'est le seul des trois qui se trouve à deux
+niveaux de profondeur, sous un onglet qui parle de soi.
+
+### 6. L'inscription
+
+Dix étapes, vingt fichiers de vues. Le brief en demande trois ; la décision D4 a tranché pour la
+version longue, « ultra sur mesure pour le plan ». Pas un écart, une décision — mais le brief
+re-transmis dit toujours trois.
+
+### 7. L'écran de séance
+
+- **Fond :** `#0E0E14` et `#0A0A0E`, pas le `#000000` du brief.
+- **Boutons :** mesurés à 52 et 70 points. Le brief demande **au moins 64**, et une pause « de la
+  taille d'une paume ». Deux des trois boutons sont sous le seuil.
+- **Chiffre central :** 52 ou 64 points selon qu'une consigne est affichée. Lisible, mais loin du
+  « très grand corps » demandé.
+- **Et un second jeu de jetons.** `LiveRunView` porte un `enum Ink` avec deux couleurs écrites en
+  dur. C'est la **règle 4** — « toute valeur en dur dans un écran est un défaut » — et c'est le
+  seul endroit de l'app où un écran se donne sa propre palette.
+
+### 8. Les durées d'animation
+
+Le brief : 200 à 300 ms en consultation, quasi absentes en séance.
+
+`RUMotion` donne 220 ms pour le changement d'écran et 260 ms pour ce qui répond au doigt — dans la
+fourchette. Mais **440 ms** pour l'arrivée d'une carte, **800 ms** pour un anneau qui se remplit et
+**1 450 ms** pour un tracé qui se dessine, tous trois en consultation. Les trois ont une raison
+écrite dans `Motion.swift` ; aucune n'a été confrontée à la fourchette du brief.
+
+### 9. Ce que je n'ai pas refait, et pourquoi
+
+**Les notes sur 10, écran par écran.** L'audit du 7 novembre en porte ; les refaire aujourd'hui
+donnerait un chiffre que je ne saurais pas défendre autrement que par mon goût, et vingt-huit
+captures existent qui se regardent. Je préfère la table d'écarts ci-dessus, où chaque ligne est
+une mesure.
+
+**L'architecture, les dépendances, la sécurité, le RGPD, la relecture du head coach.** Les
+sections 1 à 8 et 10 de cet audit tiennent toujours : ce qui a bougé depuis y est consigné
+chantier par chantier dans `PROGRESS.md`, et les items correspondants de `PHASE2.md` sont marqués.
+
+### 10. Ce qui demande une décision, et que je ne prendrai pas seul
+
+Le brief que tu viens de renvoyer **contredit quatre décisions que tu as prises le 9 novembre**.
+Je ne sais pas si tu as changé d'avis ou si le brief est simplement le document d'origine :
+
+| le brief dit | tu avais tranché (D1–D4, 9 novembre) |
+| --- | --- |
+| « une seule couleur d'accent RunUp » | **D1** — les huit thèmes d'accent restent |
+| « fond blanc chaud `#FBF9F7` » | **D2** — fond clair oui, mais le froid actuel peut rester |
+| « barre basse à trois entrées » | **D3** — la barre garde ses cinq entrées |
+| « onboarding en trois questions » | **D4** — l'inscription reste longue |
+
+Tant que ce n'est pas tranché, je ne touche à aucun des quatre.
+
+---
+
 ## 0. Ce qu'il faut savoir avant de lire le reste
 
 Trois faits qui changent la lecture de tout le document.

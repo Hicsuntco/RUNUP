@@ -101,22 +101,31 @@ Politique de confidentialité : https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## Nouveautés de cette version (4000 caractères max — obligatoire pour une mise à jour)
 ```
-Cette version donne au Club ce qui lui manquait pour être un vrai club, et à chacun un nom et un visage.
+Cette version n'ajoute pas d'écran. Elle rend juste ce qui était déjà là — à commencer par les allures de ton plan.
 
-LE CLUB, POUR DE VRAI
-Un mur où l'on se parle entre deux sorties. Des séances qui reviennent chaque semaine, avec leurs groupes de niveau. L'historique de qui était là mardi dernier. Plusieurs organisateurs au lieu d'un seul propriétaire, une ville, une photo de couverture, et une page publique à poser dans une bio. On rejoint un club par son nom, plus par un code à recopier.
+TES ALLURES ONT ENFIN UNE SOURCE
+Les quatre allures du plan — footing, marathon, seuil, VMA — sortaient de quatre multiplications dont le code avouait lui-même qu'elles ne venaient de nulle part. Elles se calculent maintenant à partir des tables de Daniels et Gilbert, celles sur lesquelles les entraîneurs travaillent depuis 1979. Les footings étaient trop rapides, et la séance de VMA se courait à une allure qui n'était pas la sienne. Si tu n'as donné ni chrono ni allure de footing, ton plan part désormais d'une hypothèse prudente plutôt que d'un chiffre optimiste : une semaine trop facile coûte moins cher qu'une blessure.
 
-UN FIL, ET PLUS UNE PILE DE TUILES
-Les sorties, les courses et les messages du club arrivent au même endroit, dans des cartes qu'on peut aimer et commenter, avec les photos de la sortie. Chaque nom ouvre la page de la personne : ses sorties, ses badges, ses records. Et la page d'une course dit qui la prépare, à quelle allure, et ce qu'ils s'y racontent.
+ELLE TE PARLE DANS TA LANGUE
+Les phrases de la séance — « Échauffement terminé. Première répétition », « Dernière répétition faite, bien joué » — étaient écrites depuis longtemps, affichées à l'écran, et jamais dites. Elles se disent maintenant. Et la montre et le widget parlaient français à tout le monde, quelle que soit la langue du téléphone : ils parlent la tienne.
 
-TON NOM EST À TOI
-L'inscription demande ton prénom et ton nom dès la première question, et l'app t'appelle pareil partout. Les comptes créés avec Se connecter avec Apple s'appelaient tous Coureur : ils portent ton nom maintenant. Ta photo apparaît sur ton profil comme sur tes sorties.
+LE CYCLE, CALCULÉ COMME IL SE CALCULE
+L'ovulation était posée au milieu du cycle. C'est juste à vingt-huit jours et faux partout ailleurs : trois jours trop tard sur un cycle de 21 jours, quatre jours trop tôt sur un cycle de 35. Et la phase du jour était recopiée sur toute la semaine. Les deux sont corrigés.
 
-ELLE PARLE PENDANT LA COURSE
-Avec VoiceOver, le chrono, la distance, l'allure et la fréquence cardiaque étaient annoncés une seule fois, au moment où le doigt les touchait. Ils se suivent maintenant en continu, et le chiffre se tait quand la montre cesse d'émettre.
+UNE SEULE DÉFINITION DE « LA SEMAINE »
+Le bilan hebdomadaire en portait cinq, sur le même écran : « parcourus » comptait la course à pied, « volume par jour » comptait toutes les disciplines, et « ta meilleure semaine » comparait l'une à l'autre. Les chiffres se contredisaient sans le dire.
 
-ET CE QUI A ÉTÉ CORRIGÉ
-Le petit sursaut à l'ouverture a disparu, le passage d'un écran à l'autre se fait en fondu au lieu d'une coupe, et le jour d'une course ne change plus selon le fuseau du téléphone. Zéro est au singulier en français et au pluriel ailleurs, et 12,4 km s'écrit avec la virgule là où c'est la règle. En très grand texte, l'inscription va jusqu'au bout. L'essai gratuit n'est plus annoncé à qui y a déjà eu droit. Et l'app en fait beaucoup moins pendant que tu cours : plus d'à-coup sur les sorties longues.
+L'APP DIT CE QUI SE PASSE
+Une erreur de réseau disparaissait sans un mot. Un achat qu'Apple venait de débiter pouvait s'annoncer « L'achat n'a pas abouti ». L'activité en direct ne s'affichait pas sans jamais dire que la case était décochée dans les Réglages. L'accueil pouvait tourner une minute entière sur une roue. Chacun de ces silences est remplacé par une phrase.
+
+PLUS CALME À REGARDER
+Fond clair par défaut, dégradés et verre dépoli retirés de l'interface. Les écrans vides disent tous la même chose de la même façon. Aux plus grandes tailles de texte, les écrans vont jusqu'au bout de leur dernier bouton, et la seule phrase de la montre n'est plus coupée par le bord.
+
+TU CHOISIS
+Les statistiques d'usage se refusent, à l'inscription ou dans les réglages, et la politique de confidentialité dit ce qui part et ce qui ne part pas. Si tu refuses, aucune statistique n'est envoyée.
+
+ET UN CLUB, SANS EN CONNAÎTRE UN
+Le champ de recherche demandait le nom d'un club qu'il fallait déjà connaître. Quand il est vide, il propose maintenant des clubs ouverts.
 ```
 
 ## Mots-clés (100 caractères max, séparés par des virgules sans espace)
@@ -217,22 +226,31 @@ Privacy Policy: https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## What's New in This Version (4000 characters max — required for an update)
 ```
-This release gives the Club what it was missing to be a real club, and gives everyone a name and a face.
+This release adds no new screens. It makes what was already there correct, starting with the paces in your plan.
 
-THE CLUB, FOR REAL
-A wall to talk on between runs. Sessions that come back every week, with their pace groups. A record of who showed up last Tuesday. Several organisers instead of one owner, a city, a cover photo, and a public page you can drop into a bio. You join a club by its name now, not by copying a code.
+YOUR PACES FINALLY HAVE A SOURCE
+The plan's four paces — easy, marathon, threshold, intervals — came out of four multiplications that the code itself admitted came from nowhere. They are now computed from the Daniels and Gilbert tables, the ones coaches have worked from since 1979. Easy runs were too fast, and the interval session was run at a pace that wasn't its own. If you gave neither a race time nor an easy pace, your plan now starts from a careful assumption instead of an optimistic number: an easy week costs less than an injury.
 
-ONE FEED, NOT A PILE OF TILES
-Runs, races and club messages land in the same place, in cards you can like and comment on, with the photos from the run. Every name opens that person's page: their runs, their badges, their records. And a race page shows who is preparing it, at what pace, and what they are saying to each other.
+IT SPEAKS YOUR LANGUAGE
+The session's lines — "Warm-up done. First rep", "Last rep done, well played" — had been written for a long time, shown on screen, and never spoken. They are spoken now. And the watch and the widget spoke French to everyone, whatever the phone's language. They speak yours.
 
-YOUR NAME IS YOURS
-Sign-up asks for your first and last name in the very first question, and the app calls you the same everywhere. Accounts created with Sign in with Apple were all called Runner. They carry your name now. Your photo shows on your profile and on your runs.
+THE CYCLE, WORKED OUT THE WAY IT IS WORKED OUT
+Ovulation was placed in the middle of the cycle. That is right at twenty-eight days and wrong everywhere else: three days too late on a 21-day cycle, four days too early on a 35-day one. And the day's phase was copied across the whole week. Both are fixed.
 
-IT SPEAKS DURING THE RUN
-With VoiceOver, the timer, distance, pace and heart rate were announced once, the moment your finger touched them. They now update continuously, and the number goes quiet when the watch stops sending.
+ONE DEFINITION OF "THE WEEK"
+The weekly recap carried five of them on the same screen: "covered" counted running, "volume per day" counted every sport, and "your best week" compared one against the other. The numbers contradicted each other without saying so.
 
-AND WHAT GOT FIXED
-The small jolt when the app opened is gone, screens cross-fade instead of cutting, and a race date no longer shifts with the phone's time zone. Zero is plural in English, and decimals use your language's separator. At the largest text sizes, sign-up reaches its last button. The free trial is no longer offered to people who already used it. And the app does far less work while you run, so no more stutter on long outings.
+THE APP SAYS WHAT IS HAPPENING
+A network error vanished without a word. A purchase Apple had just charged you for could announce itself as "Purchase didn't go through". Live Activity simply didn't appear, and never said the switch was off in Settings. Home could spin for a full minute. Each of those silences has been replaced by a sentence.
+
+QUIETER TO LOOK AT
+Light background by default, gradients and frosted glass out of the interface. Empty screens all say the same thing the same way. At the largest text sizes, screens reach their last button, and the watch's one sentence is no longer cut off by the edge.
+
+YOU CHOOSE
+Usage statistics can be refused, at sign-up or in settings, and the privacy policy says what leaves and what doesn't. If you refuse, no usage statistics are sent.
+
+AND A CLUB, WITHOUT KNOWING ONE
+The search field asked for the name of a club you had to know already. When it is empty, it now suggests open clubs.
 ```
 
 ## Keywords (100 characters max, comma-separated, no spaces)
@@ -312,22 +330,31 @@ Política de privacidad: https://hicsuntco.github.io/RUNUP/privacy.html
 
 ## Novedades de esta versión (4000 caracteres máx. — obligatorio para una actualización)
 ```
-Esta versión le da al Club lo que le faltaba para ser un club de verdad, y a cada persona un nombre y una cara.
+Esta versión no añade pantallas. Corrige lo que ya estaba, empezando por los ritmos de tu plan.
 
-EL CLUB, DE VERDAD
-Un muro para hablar entre salidas. Sesiones que vuelven cada semana, con sus grupos de ritmo. El historial de quién vino el martes pasado. Varios organizadores en lugar de un solo propietario, una ciudad, una foto de portada y una página pública para poner en una bio. A un club se entra por su nombre, ya no con un código que copiar.
+TUS RITMOS POR FIN TIENEN UNA FUENTE
+Los cuatro ritmos del plan — rodaje, maratón, umbral y series — salían de cuatro multiplicaciones que el propio código admitía que no venían de ninguna parte. Ahora se calculan con las tablas de Daniels y Gilbert, con las que trabajan los entrenadores desde 1979. Los rodajes iban demasiado rápidos y la sesión de series se corría a un ritmo que no era el suyo. Si no has dado ni una marca ni un ritmo de rodaje, tu plan parte ahora de una hipótesis prudente en lugar de una cifra optimista: una semana demasiado fácil cuesta menos que una lesión.
 
-UN SOLO FEED, NO UNA PILA DE CASILLAS
-Las salidas, las carreras y los mensajes del club llegan al mismo sitio, en tarjetas que se pueden comentar y marcar con me gusta, con las fotos de la salida. Cada nombre abre la página de esa persona: sus salidas, sus insignias, sus récords. Y la página de una carrera dice quién la prepara, a qué ritmo y qué se cuentan.
+TE HABLA EN TU IDIOMA
+Las frases de la sesión — «Calentamiento terminado. Primera serie», «Última serie hecha, bien jugado» — estaban escritas desde hacía tiempo, se mostraban en pantalla y nunca se decían. Ahora se dicen. Y el reloj y el widget hablaban en francés a todo el mundo, fuera cual fuera el idioma del teléfono: ahora hablan el tuyo.
 
-TU NOMBRE ES TUYO
-El registro pide tu nombre y tus apellidos en la primera pregunta, y la app te llama igual en todas partes. Las cuentas creadas con Iniciar sesión con Apple se llamaban todas Corredor: ahora llevan tu nombre. Tu foto aparece en tu perfil y en tus salidas.
+EL CICLO, CALCULADO COMO SE CALCULA
+La ovulación se situaba en la mitad del ciclo. Eso es correcto con veintiocho días y falso en todo lo demás: tres días tarde en un ciclo de 21 días, cuatro días pronto en uno de 35. Y la fase del día se copiaba a toda la semana. Las dos cosas están corregidas.
 
-HABLA DURANTE LA CARRERA
-Con VoiceOver, el cronómetro, la distancia, el ritmo y la frecuencia cardíaca se anunciaban una sola vez, al tocarlos con el dedo. Ahora se siguen de forma continua, y el número se calla cuando el reloj deja de emitir.
+UNA SOLA DEFINICIÓN DE «LA SEMANA»
+El resumen semanal tenía cinco en la misma pantalla: «recorridos» contaba la carrera a pie, «volumen por día» contaba todos los deportes y «tu mejor semana» comparaba una con otra. Las cifras se contradecían sin decirlo.
 
-Y LO QUE SE HA CORREGIDO
-El pequeño salto al abrir ha desaparecido, el paso de una pantalla a otra se hace con un fundido en vez de un corte, y el día de una carrera ya no cambia según el huso horario del teléfono. El cero va en plural en español, y 12,4 km se escribe con coma. Con texto muy grande, el registro llega hasta el final. La prueba gratuita ya no se anuncia a quien ya la ha usado. Y la app trabaja mucho menos mientras corres: se acabaron los tirones en las salidas largas.
+LA APP DICE LO QUE PASA
+Un error de red desaparecía sin una palabra. Una compra que Apple acababa de cobrar podía anunciarse como «La compra no se ha completado». La actividad en directo no aparecía y nunca decía que la casilla estaba desactivada en Ajustes. El inicio podía girar un minuto entero. Cada uno de esos silencios se ha sustituido por una frase.
+
+MÁS TRANQUILA DE MIRAR
+Fondo claro por defecto, degradados y cristal esmerilado fuera de la interfaz. Las pantallas vacías dicen todas lo mismo de la misma manera. Con los tamaños de texto más grandes, las pantallas llegan hasta su último botón, y la única frase del reloj ya no la corta el borde.
+
+TÚ ELIGES
+Las estadísticas de uso se pueden rechazar, en el registro o en los ajustes, y la política de privacidad dice qué sale y qué no. Si las rechazas, no se envía ninguna estadística.
+
+Y UN CLUB, SIN CONOCER NINGUNO
+El buscador pedía el nombre de un club que había que conocer de antemano. Cuando está vacío, ahora propone clubes abiertos.
 ```
 
 ## Palabras clave (100 caracteres máx., separadas por comas sin espacios)

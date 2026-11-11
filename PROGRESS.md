@@ -457,6 +457,30 @@ quelles afficherait aux gens, sous une mise à jour 3.4, la liste de ce qu'ils o
 C'est le seul point qui reste entre la 3.4 et une soumission, et il demande un texte, pas une
 commande.
 
+### Suite, le même jour
+
+Les notes ont été écrites dans les trois langues, poussées, et Apple les a reçues — `fr-FR mis à
+jour, en-US mis à jour, es-ES mis à jour`, puis vérifié côté Apple plutôt que sur le message de
+l'outil qui venait de les envoyer : « description oui, **nouveautés oui** » dans les trois langues.
+
+`pourquoi-pas-soumettable` ne rend donc plus qu'une ligne :
+
+```
+CE QUI MANQUE :
+  - aucune build n'est attachée
+```
+
+La fiche est complète. Ce qui manque est une build en 3.4, c'est-à-dire un passage de la chaîne
+TestFlight — pas un texte.
+
+### Un détail vu en passant, et qui répond à une question ouverte
+
+Le `supportUrl` envoyé à Apple est `https://hicsuntco.github.io/RUNUP/privacy.html`. Autrement
+dit, le lien « Assistance » de la fiche App Store ouvre la politique de confidentialité. La
+question « que faire de `support.html`, que personne ne peut atteindre » traînait depuis le
+8 novembre : la réponse est qu'elle n'est pas seulement inatteignable, elle est **remplacée par la
+mauvaise page** à l'endroit même où Apple la propose.
+
 ## Chantier 43 — Apple recevait un tracé à moitié dessiné, et c'était au hasard
 
 ### D'abord, ce que la comparaison a prouvé

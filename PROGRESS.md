@@ -406,6 +406,57 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 44 — la version 3.4, et l'élagage qui ne s'est pas fait tout seul
+
+### Ce qui était attendu, et ce qui s'est passé
+
+La note disait : « créer la version 3.4, la capture iPad s'élaguera d'elle-même ». C'était vrai
+d'une seule façon de créer la version — le bouton `creer-la-version`, qui appelle
+`asc.py create-version` et élague d'office les formats de `FORMATS_SANS_RAISON`.
+
+La version a été créée depuis le site d'App Store Connect. Apple y recopie les captures de la
+version précédente, **tous formats confondus**, et aucun élagage n'a eu lieu. L'inventaire de la
+3.4 le disait noir sur blanc :
+
+```
+fr-FR · APP_IPAD_PRO_3GEN_129 · 1 image(s)
+    1-accueil.png
+```
+
+Une image d'iPad fabriquée à partir d'une mise en page iPhone étirée, sur une app dont
+`TARGETED_DEVICE_FAMILY` vaut 1, et que Charlotte avait décidé de retirer le 10 novembre.
+
+### Ce qui a été fait
+
+`nettoyer-les-captures`, format `APP_IPAD_PRO_3GEN_129`, après un essai à blanc qui a confirmé la
+portée : **une seule image, et la capture Apple Watch pas touchée** — celle-là, Apple l'exige dès
+que la build embarque une app watchOS, et une première version de l'élagage l'avait emportée.
+
+Inventaire après : trois langues × six captures iPhone, plus la capture de la montre. Plus d'iPad.
+
+### Ce que la note aurait dû dire
+
+« La capture iPad s'élaguera d'elle-même **si la version est créée par le bouton**. » Une
+instruction qui ne dit pas de quoi elle dépend n'est pas une instruction, c'est un pari — et ici
+le pari se perdait en silence, parce que rien dans App Store Connect ne signale qu'une image
+recopiée n'avait rien à faire là.
+
+### Ce que le contrôle de soumission a trouvé au passage
+
+`pourquoi-pas-soumettable` sur la 3.4, après l'élagage :
+
+- état PREPARE_FOR_SUBMISSION, informations de vérification présentes, abonnement APPROVED ;
+- six captures et un aperçu vidéo par langue, description présente ;
+- **« nouveautés NON » dans les trois langues.**
+
+Les notes de version existent dans `APP_STORE_LISTING.md` mais n'ont jamais été poussées vers la
+3.4. Et surtout : leur dernière modification est le commit du 1er novembre, « Les nouveautés de la
+3.3 parlent enfin de ce que la 3.3 contient ». **Ce sont les notes de la 3.3.** Les pousser telles
+quelles afficherait aux gens, sous une mise à jour 3.4, la liste de ce qu'ils ont déjà reçu.
+
+C'est le seul point qui reste entre la 3.4 et une soumission, et il demande un texte, pas une
+commande.
+
 ## Chantier 43 — Apple recevait un tracé à moitié dessiné, et c'était au hasard
 
 ### D'abord, ce que la comparaison a prouvé

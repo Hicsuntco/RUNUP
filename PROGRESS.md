@@ -463,6 +463,30 @@ contient `animationsFigees`. Retirer le vrai code laissait le contrôle vert : i
 propre explication. Deux cas du banc tiennent cette correction, et c'est exactement le piège que
 `check_vides` avait rencontré en novembre.
 
+### Ce qui le prouve
+
+**Campagne 167, à 13 h 55, contre la 166 à 12 h 43 — même jour.** 171 images sur 181 identiques.
+Neuf des dix écarts sont `course-en-cours`, le chronomètre d'une course en cours.
+
+Le dixième est `4-club.png` en espagnol, et c'est le verdict : il est **identique à celui de la
+campagne 165**, celle qui avait eu le tracé fini. Autrement dit, 167 est revenue à l'état posé, et
+c'est bien la 166 qui était l'exception.
+
+Sur les six variantes de `4-club.png`, cinq sont identiques au pixel entre 165 et 167. La sixième
+diffère de **13 sur 255 au maximum, sur cinq pixels** — de l'anticrénelage sur le bout arrondi du
+trait, sous le seuil de bruit de l'outil et invisible à l'œil.
+
+**Et le film garde son mouvement** — vérifié plutôt que supposé, parce que « Filmer l'aperçu »
+réussit même si le film ne bouge pas : aucune étape ne juge son contenu. Mesuré en extrayant les
+images à 10 par seconde et en comparant chaque image à la précédente :
+
+| | images qui bougent | écart moyen entre deux images |
+| --- | --- | --- |
+| campagne 166, avant | 16 % | 1,10 |
+| campagne 167, après | **27 %** | **1,75** |
+
+Plus de mouvement qu'avant, pas moins. Le drapeau est du bon côté.
+
 ### Ce qu'aucun script ne saura dire
 
 Si l'image est effectivement posée. Aucun contrôle ne lit une animation. La preuve reste la

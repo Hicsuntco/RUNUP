@@ -47,6 +47,18 @@ final class ClubStore {
 
     var board = ClubBoard(club: nil, leaderboard: [])
 
+    /// SEULE DANS SON CLUB — et c'est alors son seul sujet.
+    ///
+    /// La règle était écrite deux fois mot pour mot dans `ClubView`, une fois dans l'Aperçu et
+    /// une fois dans le fil (chantier 37). Elle y a été nommée une fois ; elle descend ici parce
+    /// que le mur, en sortant dans son propre fichier, en avait besoin aussi — et la recopier
+    /// une troisième fois aurait refait exactement le défaut qu'on venait de corriger.
+    ///
+    /// C'est un fait sur le club, pas sur un écran : c'est donc le magasin qui le porte.
+    var seuleDansSonClub: Bool {
+        board.club.map { $0.memberCount <= 1 } == true
+    }
+
     /// LE MUR DU CLUB : ce qu'on se dit entre deux sorties. Les messages vivent dans le même
     /// onglet que les activités et s'y entrelacent par date — un mur à part aurait fait un
     /// quatrième onglet pour une conversation de dix lignes.

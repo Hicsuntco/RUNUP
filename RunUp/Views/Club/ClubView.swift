@@ -29,6 +29,7 @@ struct ClubView: View {
     @MainActor
     init(appState: AppState) {
         _magasin = State(initialValue: ClubStore(appState: appState))
+        _mur = State(initialValue: MurDuClub())
     }
 
     /// L'APERÇU EST LE BON ONGLET POUR DE VRAIES GENS, ET LE MAUVAIS POUR UNE CAPTURE.
@@ -37,9 +38,6 @@ struct ClubView: View {
     /// groupe prévues — trois choses qu'un club inventé n'a pas, donc trois états vides sous
     /// une accroche qui parle du fil du club. Le fil, lui, est plein. Voir `Demonstration`.
     @State private var tab: Tab = Tab.auDemarrage
-    @State private var brouillonDuClub = ""
-    @State private var reponseA: ClubPost?
-    @State private var envoiDuMessage = false
     // Starts true (not false) so the very first render — before `.task` below has had a chance to
     // run — reads as "checking for your club" rather than immediately flashing the create/join
     // form. `.id(appState.screen)` on the parent means a fresh ClubView (and fresh isLoading=true)
@@ -50,19 +48,26 @@ struct ClubView: View {
     @State private var reportTarget: ReportTarget?
     @State private var pendingBlock: (userId: String, name: String)?
     @State private var showManagement = false
-    @State private var commentsActivity: FeedItem?
+
+    /// LE MUR A SON PROPRE OBJET D'ÉTAT, et c'est ce qui l'a rendu découpable.
+    ///
+    /// Huit `@State` vivaient ici à plat : le brouillon, l'envoi en cours, la réponse en cours,
+    /// les quatre feuilles du mur et le drapeau de révélation du fil. Les passer un par un à une
+    /// vue sortie du fichier aurait fait huit liaisons à ne pas confondre. Voir `MurDuClub`.
+    ///
+    /// Construit dans l'`init` comme le magasin, et pour la raison écrite au-dessus de celui-ci :
+    /// `MurDuClub` est `@MainActor`, et le construire depuis un contexte qui ne l'est pas est une
+    /// ERREUR DE COMPILATION. L'`init` l'est explicitement ; une valeur par défaut posée ici
+    /// dépendrait de ce que le compilateur déduit, et il n'y en a pas sous la main pour vérifier.
+    @State private var mur: MurDuClub
     /// La sortie en cours de modification — la sienne uniquement, le serveur le vérifie de son côté.
-    @State private var editingActivity: FeedItem?
     @State private var showLeaveConfirm = false
     @State private var showCreateEvent = false
     /// La sortie de groupe qu'on est en train de modifier. Non nil présente `CreateEventSheet`
     /// Le message du mur qu'on est en train de réécrire.
-    @State private var messageEnModification: ClubPost?
     /// My own feed activity pending delete confirmation (appui long → Supprimer).
-    @State private var pendingDeleteActivity: FeedItem?
     /// Drives the feed rows' staggered entrance — flipped once the first feed load lands, after
     /// which each row's own per-index delay takes over (same pattern as `RecapView`'s splits).
-    @State private var feedRevealed = false
 
     /// Trois destinations, pas un mur (`.club-tabs` dans la maquette).
     ///
@@ -105,6 +110,8 @@ struct ClubView: View {
         // fournit pas directement — c'est `@Bindable` qui en fabrique un. C'est le motif que
         // donne la documentation d'Apple pour la migration vers Observation.
         @Bindable var magasin = magasin
+        // Même raison pour le mur : les trois feuilles qu'il ouvre se présentent par `item:`.
+        @Bindable var mur = mur
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
                 banniere
@@ -138,7 +145,10 @@ struct ClubView: View {
                             ClubBoardSection(board: magasin.board, isLoading: magasin.isLoading,
                                              reportTarget: $reportTarget,
                                              pendingBlock: $pendingBlock)
-                        case .feed: feedContent
+                        case .feed:
+                            ClubWallView(magasin: magasin, mur: mur,
+                                         reportTarget: $reportTarget,
+                                         pendingBlock: $pendingBlock)
                         }
                     }
                     .transition(.opacity.combined(with: .move(edge: .top)))
@@ -189,7 +199,7 @@ struct ClubView: View {
         .onChange(of: clubQuery) { _, nouveau in magasin.chercherUnClub(nouveau) }
         .refreshable { await magasin.loadIfSignedIn(badges: badges) }
         .onChange(of: magasin.feed.count) { _, count in
-            if count > 0 { feedRevealed = true }
+            if count > 0 { mur.filDevoile = true }
         }
         .sheet(isPresented: $showSignIn) {
             SignInView()
@@ -228,7 +238,7 @@ struct ClubView: View {
         // la déclenche. Sur douze, c'est la seule qui n'était pas chez elle. Elle rejoint ici
         // les deux autres feuilles du mur, sur le corps, qui est à l'écran quel que soit
         // l'onglet.
-        .sheet(item: $messageEnModification) { message in
+        .sheet(item: $mur.messageEnModification) { message in
             EditTextPostSheet(titreDeLaFeuille: String(localized: "Modifier le message"),
                               texteInitial: message.text) { texte in
                 // Recousu sur place plutôt que rechargé : un message n'a qu'un texte, il ne
@@ -238,25 +248,25 @@ struct ClubView: View {
             }
             .runUpSheetStyle()
         }
-        .sheet(item: $editingActivity) { activity in
+        .sheet(item: $mur.editingActivity) { activity in
             EditActivitySheet(item: activity, onSaved: { Task { await magasin.loadFeed() } })
                 .runUpSheetStyle()
         }
-        .sheet(item: $commentsActivity) { activity in
+        .sheet(item: $mur.commentsActivity) { activity in
             ActivityCommentsSheet(
                 activityId: activity.id,
                 currentUserId: auth.currentUser?.id,
                 clubService: clubService,
                 onCommentPosted: { magasin.bumpCommentsCount(activity.id) },
                 onReport: { comment in
-                    commentsActivity = nil
+                    mur.commentsActivity = nil
                     Task {
                         try? await Task.sleep(for: .milliseconds(400))
                         reportTarget = ReportTarget(targetType: "comment", targetId: comment.id, displayName: String(localized: "le commentaire de \(comment.nomComplet)"))
                     }
                 },
                 onBlock: { comment in
-                    commentsActivity = nil
+                    mur.commentsActivity = nil
                     Task {
                         try? await Task.sleep(for: .milliseconds(400))
                         pendingBlock = (comment.userId, comment.name)
@@ -311,13 +321,13 @@ struct ClubView: View {
         // confirms instead of firing straight from the context menu.
         .alert(
             "Supprimer cette activité ?",
-            isPresented: Binding(get: { pendingDeleteActivity != nil }, set: { if !$0 { pendingDeleteActivity = nil } })
+            isPresented: Binding(get: { mur.pendingDeleteActivity != nil }, set: { if !$0 { mur.pendingDeleteActivity = nil } })
         ) {
             // The item is captured SYNCHRONOUSLY here: dismissing the alert nils
             // `pendingDeleteActivity` before an async Task body would get to read it, which made
             // the whole action a silent no-op.
             Button("Supprimer", role: .destructive) {
-                if let item = pendingDeleteActivity {
+                if let item = mur.pendingDeleteActivity {
                     Task { await magasin.confirmDeleteActivity(item) }
                 }
             }
@@ -558,15 +568,6 @@ struct ClubView: View {
     /// Les trois sections du haut de l'Aperçu, prises ensemble. Séparément, chacune a une bonne
     /// raison d'afficher sa phrase d'absence ; empilées, elles font une page qui ne dit rien
     /// trois fois.
-    /// Seule dans son club — et c'est alors son seul sujet.
-    ///
-    /// La règle était écrite DEUX FOIS mot pour mot, une fois dans l'Aperçu et une fois dans le
-    /// fil, chacune pour choisir entre la carte de partage et autre chose. Deux copies d'un même
-    /// seuil, c'est celle qu'on oublie le jour où il change.
-    private var seuleDansSonClub: Bool {
-        magasin.board.club.map { $0.memberCount <= 1 } == true
-    }
-
     private var clubEnSommeil: Bool {
         (magasin.board.weekStats?.totalKm ?? 0) == 0
             && magasin.board.challenge == nil
@@ -619,7 +620,7 @@ struct ClubView: View {
             // mais sur l'onglet Activité, qu'on n'ouvre pas quand on vient d'arriver. À
             // plusieurs, ce sont les deux boutons que portaient les intertitres disparus.
             if clubEnSommeil {
-                if seuleDansSonClub {
+                if magasin.seuleDansSonClub {
                     ClubAloneCard(magasin: magasin)
                 } else {
                     ClubWakeCard(showCreateEvent: $showCreateEvent,
@@ -703,277 +704,4 @@ struct ClubView: View {
     /// Mes badges. Le calcul vit dans `ClubBadgeEngine` (RunUp/Services) depuis que le profil
     /// les affiche aussi : deux écrans, une seule dérivation.
     private var badges: [ClubBadge] { ClubBadgeEngine.badges(runs: runs, profile: profile) }
-
-    private var feedContent: some View {
-        // `LazyVStack` : le serveur renvoie 50 activités, et un `VStack` les construisait TOUTES
-        // à l'ouverture de l'onglet — avatars décodés, deux passes d'ombre par carte, et
-        // l'animation de révélation qui tournait sur ~45 lignes hors écran.
-        LazyVStack(spacing: 0) {
-            composeurDuMur
-            if magasin.feed.isEmpty && magasin.posts.isEmpty && !magasin.isLoading {
-                // Un fil vide a deux causes très différentes, et un seul message les traitait
-                // toutes les deux. Seule dans son club, « sois la première » demande de poster
-                // pour un public qui n'existe pas — ce qu'il faut, c'est des membres, et le code
-                // d'invitation était rangé deux écrans plus loin, dans Gestion du club. À
-                // plusieurs, la phrase d'origine est juste : il n'y a qu'à courir.
-                if seuleDansSonClub {
-                    ClubAloneCard(magasin: magasin)
-                } else {
-                    RUEmpty(message: Accord.selon(
-                        f: String(localized: "Personne n'a encore rien posté — sois la première !"),
-                        m: String(localized: "Personne n'a encore rien posté — sois le premier !")))
-                }
-            }
-            // ENTRELACÉS PAR DATE, pas empilés en deux listes. Un mur posé au-dessus des
-            // sorties se serait lu comme une annonce épinglée ; mêlés, un message de lundi et
-            // une sortie de lundi se répondent, et c'est ce qui fait une conversation de club.
-            ForEach(Array(entreesDuClub.enumerated()), id: \.element.id) { index, entree in
-                switch entree {
-                case .sortie(let item):
-                    ActivityFeedRow(
-                        item: item,
-                        isMine: item.userId == auth.currentUser?.id,
-                        revealed: feedRevealed,
-                        index: index,
-                        onKudos: { Task { await magasin.toggleKudos(item) } },
-                        onComment: { commentsActivity = item },
-                        onReport: {
-                            reportTarget = ReportTarget(targetType: "activity", targetId: item.id, displayName: String(localized: "l'activité de \(item.nomComplet)"))
-                        },
-                        onBlock: { pendingBlock = (item.userId, item.name) },
-                        onDelete: { pendingDeleteActivity = item },
-                        onEdit: { editingActivity = item }
-                    )
-                case .message(let post):
-                    // Plus de filet : `blocDeMessage` est une carte comme les sorties, et c'est
-                    // l'écart entre deux cartes qui les sépare — même valeur qu'`ActivityFeedRow`,
-                    // pour que l'onglet garde un seul rythme quel que soit le type d'entrée.
-                    blocDeMessage(post)
-                        .padding(.bottom, 14)
-                }
-            }
-        }
-    }
-
-    /// Une entrée de l'onglet Activité : une sortie, ou un message du mur. Deux formes, une seule
-    /// liste triée — le même motif que le fil unique, pour la même raison.
-    private enum EntreeDuClub: Identifiable {
-        case sortie(FeedItem)
-        case message(ClubPost)
-
-        var id: String {
-            switch self {
-            case .sortie(let item): return "s-\(item.id)"
-            case .message(let post): return "m-\(post.id)"
-            }
-        }
-
-        var date: Date {
-            switch self {
-            case .sortie(let item): return item.createdAt
-            case .message(let post): return post.createdAt
-            }
-        }
-    }
-
-    private var entreesDuClub: [EntreeDuClub] {
-        // Seulement les messages de premier niveau : une réponse s'affiche sous le sien, pas
-        // au milieu du fil où elle n'aurait plus de question.
-        let messages = magasin.posts.filter { $0.parentId == nil }.map(EntreeDuClub.message)
-        return (magasin.feed.map(EntreeDuClub.sortie) + messages).sorted { $0.date > $1.date }
-    }
-
-    private func reponses(a message: ClubPost) -> [ClubPost] {
-        magasin.posts.filter { $0.parentId == message.id }.sorted { $0.createdAt < $1.createdAt }
-    }
-
-    // MARK: - Écrire sur le mur
-
-    private var composeurDuMur: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if let reponseA {
-                HStack(spacing: 6) {
-                    Text("Réponse à \(reponseA.author.nomComplet)")
-                        .font(RUFont.sans(.small, weight: .semibold))
-                        .foregroundColor(RUColor.text2)
-                    Button(action: { self.reponseA = nil }) {
-                        Image(systemName: "xmark.circle.fill").font(RUFont.icone(.body)).foregroundColor(RUColor.text3)
-                    }
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
-                    .accessibilityLabel("Annuler la réponse")
-                    Spacer(minLength: 0)
-                }
-            }
-            HStack(spacing: 10) {
-                TextField(reponseA == nil
-                          ? String(localized: "Dis quelque chose au club…")
-                          : String(localized: "Ta réponse…"),
-                          text: $brouillonDuClub, axis: .vertical)
-                    .textFieldStyle(.plain)
-                    .lineLimit(1...4)
-                    .font(RUFont.sans(.body))
-                    .foregroundColor(RUColor.textPrimary)
-                    .padding(.horizontal, 14).padding(.vertical, 10)
-                    .background(RUColor.card, in: RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous).stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline))
-                // UN ACCENT ÉTEINT N'EST PAS UN ACCENT DÉSACTIVÉ, C'EST UN ACCENT CASSÉ.
-                //
-                // Le bouton inactif était le rose de l'app à 35 % : un disque bordeaux terne, qui
-                // se lit comme une couleur ratée plutôt que comme un bouton en attente. Inactif,
-                // il prend la surface neutre des autres boutons-icônes de l'app ; il ne devient
-                // rose qu'au moment où il peut vraiment envoyer.
-                Button(action: {
-                    // L'ÉTAT D'ENVOI, LE BROUILLON ET LA RÉPONSE EN COURS RESTENT ICI : ce sont
-                    // trois choses de l'écran. Le magasin publie et recharge le mur, il rend si
-                    // ça a marché, et la vue décide alors de vider ce qui lui appartient.
-                    // LE GARDE EST ICI, AVANT LE DRAPEAU, comme il l'était avant le
-                    // déménagement : un brouillon vide ne doit pas faire clignoter le bouton en
-                    // « envoi en cours » le temps d'un `await` qui ne partira pas.
-                    guard peutPublier else { return }
-                    envoiDuMessage = true
-                    Task {
-                        let parti = await magasin.publier(texte: brouillonDuClub,
-                                                          enReponseA: reponseA)
-                        envoiDuMessage = false
-                        if parti {
-                            brouillonDuClub = ""
-                            reponseA = nil
-                        }
-                    }
-                }) {
-                    Image(systemName: "arrow.up")
-                        .font(RUFont.icone(.medium, weight: .bold))
-                        .foregroundColor(peutPublier ? RUColor.onRose : RUColor.text3)
-                        .frame(width: 38, height: 38)
-                        .background(peutPublier ? AnyShapeStyle(RUColor.rose) : AnyShapeStyle(RUColor.card2), in: Circle())
-                        .overlay(Circle().stroke(peutPublier ? Color.clear : RUColor.line, lineWidth: RUSpacing.hairline))
-                }
-                .buttonStyle(PressableStyle())
-                .disabled(!peutPublier)
-                .accessibilityLabel("Publier sur le mur du club")
-            }
-        }
-        .padding(.bottom, 18)
-    }
-
-    private var peutPublier: Bool {
-        !brouillonDuClub.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !envoiDuMessage
-    }
-
-    private func blocDeMessage(_ message: ClubPost) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            enTeteDeMessage(message)
-            ForEach(reponses(a: message)) { reponse in
-                HStack(alignment: .top, spacing: 8) {
-                    RUFilet(.vertical)
-                    enTeteDeMessage(reponse)
-                }
-                .padding(.leading, 10)
-            }
-            HStack(spacing: 18) {
-                Button(action: { Task { await magasin.applaudirLeMessage(message) } }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: message.kudoedByMe ? "hands.clap.fill" : "hands.clap")
-                            .font(RUFont.icone(.medium, weight: .regular))
-                        if message.kudos > 0 {
-                            Text("\(message.kudos)").font(RUFont.sans(.body, weight: .semibold))
-                        }
-                    }
-                    .foregroundColor(message.kudoedByMe ? RUColor.rose : RUColor.text2)
-                    .frame(minHeight: 44)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(PressableStyle())
-                .accessibilityLabel(message.kudoedByMe ? "Retirer ton applaudissement" : "Applaudir ce message")
-
-                Button(action: {
-                    reponseA = message
-                    brouillonDuClub = ""
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "bubble.right").font(RUFont.icone(.medium, weight: .regular))
-                        let compte = reponses(a: message).count
-                        if compte > 0 {
-                            Text("\(compte)").font(RUFont.sans(.body, weight: .semibold))
-                        }
-                    }
-                    .foregroundColor(RUColor.text2)
-                    .frame(minHeight: 44)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(PressableStyle())
-                .accessibilityLabel(String(localized: "Répondre à \(message.author.name)"))
-                Spacer(minLength: 0)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        // MÊME CARTE QUE LES SORTIES — voir la note jumelle sur `WallView.carteDeCourse`.
-        //
-        // Ce message du mur partageait le rythme à plat des sorties ; depuis qu'elles sont des
-        // cartes, c'est lui qui détonnerait en restant nu, et l'onglet Activité se lirait comme
-        // deux listes cousues plutôt que comme une conversation.
-        .padding(14)
-        .background(RUColor.card)
-        .clipShape(RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: RUSpacing.radiusInner, style: .continuous)
-                .stroke(RUColor.cardBorder, lineWidth: RUSpacing.hairline)
-        )
-    }
-
-    private func enTeteDeMessage(_ message: ClubPost) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 8) {
-                // Le bloc d'identité entier ouvre la page de la personne — la photo, le nom et
-                // l'heure ensemble, comme partout ailleurs.
-                Button(action: { if !message.isMine { appState.ouvrirLeProfil(message.author.id) } }) {
-                    HStack(spacing: 8) {
-                        AvatarView(urlString: message.author.avatarUrl, base64DataURI: message.author.avatarBase64,
-                                   initial: String(message.author.name.prefix(1)), size: 32,
-                                   seed: message.isMine ? nil : message.author.id)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(message.author.nomComplet)
-                                .font(RUFont.sans(.label, weight: .bold))
-                                .foregroundColor(RUColor.textPrimary)
-                            Text(message.createdAt.relativeDescription)
-                                .font(RUFont.sans(.small))
-                                .foregroundColor(RUColor.text3)
-                        }
-                    }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(PressableStyle())
-                Spacer(minLength: 0)
-                Menu {
-                    if message.isMine {
-                        Button("Modifier ce message") { messageEnModification = message }
-                        Button("Supprimer ce message", role: .destructive) {
-                            Task { await magasin.supprimerLeMessage(message) }
-                        }
-                    } else {
-                        Button("Signaler ce message") {
-                            reportTarget = ReportTarget(targetType: "club_post", targetId: message.id,
-                                                        displayName: message.author.nomComplet)
-                        }
-                        Button("Bloquer \(message.author.name)", role: .destructive) {
-                            pendingBlock = (message.author.id, message.author.name)
-                        }
-                    }
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(RUFont.icone(.body, weight: .bold))
-                        .foregroundColor(RUColor.text3)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Rectangle())
-                }
-                .accessibilityLabel("Plus d'options")
-            }
-            Text(message.text)
-                .font(RUFont.sans(.body))
-                .foregroundColor(RUColor.text2)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-
 }

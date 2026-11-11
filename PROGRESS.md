@@ -406,6 +406,82 @@ Et les deux titres de séance sont désormais nommés **une seule fois** : ils p
 séances à venir ET à l'historique du club, qui rejoue les mêmes rendez-vous. Deux copies
 auraient fini par diverger, et le club aurait annoncé une sortie qu'il n'a jamais tenue.
 
+## Chantier 42 — le mur, et les onze fils qu'il fallait ne pas confondre (B5, dernier morceau)
+
+### Pourquoi celui-ci n'était pas un déplacement
+
+Les quatre cartes sorties avant lui demandaient zéro ou un état : c'est ce qui les rendait sûres,
+et c'est pour ça qu'elles sont passées en premier. Le mur en touchait **onze sur les dix-huit** de
+`ClubView`.
+
+Onze n'est pas un signe de complexité, c'est un signe que **personne ne les possédait**. Ils
+traînaient à plat dans la grande vue, et sortir le mur tel quel aurait voulu dire passer onze fils
+à la main — chacun une occasion de brancher le mauvais, sans que rien ne le dise, dans un
+remaniement qui ne doit RIEN changer.
+
+### Ce qui a été fait
+
+**`MurDuClub`** porte les huit qui sont vraiment du mur : le brouillon, l'envoi en cours, la
+réponse en cours, les quatre feuilles qu'il ouvre et le drapeau de révélation du fil.
+
+**Les deux autres restent dehors, et ce n'est pas un oubli.** `reportTarget` et `pendingBlock`
+sont posés aussi par le classement et par la page du club ; les ranger dans le mur aurait fabriqué
+un propriétaire faux. Ils passent en liaison, comme ils le faisaient déjà vers `ClubBoardSection`.
+Deux liaisons au lieu de onze, et les deux qui restent sont celles qui le méritent.
+
+**`ClubWallView`** prend le magasin, le mur et ces deux liaisons.
+
+`ClubView` : **979 → 707 lignes**, 11 états au lieu de 18. Depuis le début de B5 : **1 425 → 707**.
+
+### Le vrai gain : trois règles qui n'étaient vérifiables nulle part
+
+Elles vivaient en propriétés privées d'une vue de 1 400 lignes, donc vérifiables seulement en
+ouvrant l'écran avec les bonnes données — un message, sa réponse, une sortie du même jour —
+c'est-à-dire jamais. Chacune porte une décision qui n'était écrite nulle part :
+
+- **une réponse n'entre pas dans le fil**, elle s'affiche sous son message. C'est la moins visible
+  des trois, et sa disparition ne casse rien : le fil se remplit simplement de répliques qui n'ont
+  plus de question au-dessus d'elles ;
+- **les sorties et les messages s'entrelacent par date**, ils ne s'empilent pas en deux listes. Un
+  mur posé au-dessus des sorties se lit comme une annonce épinglée ;
+- **les réponses se lisent dans l'ordre inverse du fil** — du plus ancien au plus récent. Un fil
+  se lit du plus récent parce qu'on vient voir les nouvelles ; une conversation se lit dans
+  l'ordre où elle s'est tenue. Deux tris opposés sur le même écran est exactement le genre
+  d'écart qu'on « corrige » en croyant bien faire.
+
+Et `peutPublier`, où `isEmpty` seul laisserait passer trois retours à la ligne.
+
+`MurDuClubTests`, **11 cas**, avec des données **décodées depuis du JSON** plutôt que construites
+à la main : `ClubPost` et `FeedItem` viennent du serveur, et une fixture écrite avec un `init`
+mémberwise cesserait de ressembler à ce que l'app reçoit.
+
+### Une troisième copie évitée de justesse
+
+`seuleDansSonClub` était lue par le fil ET par l'Aperçu. Le chantier 37 avait déjà nommé cette
+règle une fois après l'avoir trouvée écrite deux fois mot pour mot. En sortant le mur, le fil en
+avait besoin dans un autre fichier : la recopier aurait refait exactement le défaut qu'on venait
+de corriger. Elle descend donc sur `ClubStore` — c'est un fait sur le club, pas sur un écran.
+
+### Le piège que le fichier portait déjà écrit
+
+`MurDuClub` est `@MainActor`, et `ClubView.init` l'est explicitement avec sa raison en commentaire :
+« construire un objet isolé au fil principal depuis un contexte qui ne l'est pas est une ERREUR DE
+COMPILATION, pas un avertissement — et il n'y a pas de compilateur Swift ici pour la voir ». Le mur
+est donc construit dans l'`init` comme le magasin, et non en valeur par défaut qui dépendrait de ce
+que le compilateur déduit.
+
+### Deux défauts de ma propre extraction, attrapés en relisant
+
+Le renommage automatique en a produit deux que la chaîne ne pouvait pas voir :
+
+- `if let reponseA = mur.reponseA { … Text(mur.reponseA.author…) }` — la variable déballée était
+  redevenue optionnelle à l'intérieur de son propre bloc ;
+- `reponses(a: message)` n'a pas été remplacé, parce que mon motif terminait par `\b` après une
+  parenthèse fermante, où il ne peut pas s'accrocher.
+
+Les deux sont des erreurs de compilation, donc sans danger pour la production — mais à quarante
+minutes de machine d'ici. C'est la relecture du fichier produit qui les a trouvées, pas la chaîne.
+
 ## Chantier 41 — une bannière d'iOS ne coûte plus une heure
 
 ### Ce qui était faux
